@@ -6,7 +6,7 @@ pom.xml contains a template for running the flyway migrations.
 
 ## Create local dev db
 
-* Install PostgreSQL locally (or run with docker)
+* Install PostgreSQL with PostGIS extension locally (or run with docker)
 
 * Run commands in psql:
 
