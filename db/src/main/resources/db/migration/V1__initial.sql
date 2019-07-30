@@ -13,7 +13,7 @@ CREATE TYPE common.localized_text AS (
 );
 
 CREATE TABLE metadata.project_state (
- id SERIAL,
+ id SERIAL PRIMARY KEY,
  name common.localized_text[],
  validity daterange
 );
@@ -29,7 +29,7 @@ INSERT INTO metadata.project_state (name) VALUES
  ('{"(fi,Muu)","(en,Other)"}'::common.localized_text[]);
 
 CREATE TABLE metadata.projectgroup_phase (
- id SERIAL,
+ id SERIAL PRIMARY KEY,
  name common.localized_text[],
  validity daterange
 );
@@ -40,7 +40,7 @@ INSERT INTO metadata.projectgroup_phase (name) VALUES
  ('{"(fi,Kunnossapito)","(en,Maintenance)"}'::common.localized_text[]);
 
 CREATE TABLE metadata.project_phase (
- id SERIAL,
+ id SERIAL PRIMARY KEY,
  name TEXT,
  validity daterange
 );
@@ -81,9 +81,8 @@ CREATE TABLE projects.projectgroup (
     geometry geometry(Geometry,4326),
     name TEXT,
     description TEXT,
-    duration daterange, -- start/end dates
     county TEXT,
-    phase metadata.projectgroup_phase,
+    phase INT REFERENCES metadata.projectgroup_phase (id),
     url TEXT,
     created timestamp without time zone NOT NULL DEFAULT now(),
     deleted timestamp without time zone,
@@ -98,9 +97,10 @@ CREATE TABLE projects.project (
     geometry geometry(Geometry,4326),
     name TEXT,
     description TEXT,
-    state metadata.project_state,
-    phase metadata.project_phase,
+    state INT REFERENCES metadata.project_state (id),
+    phase INT REFERENCES metadata.project_phase (id),
     url TEXT,
+    duration daterange, -- start/end dates
 
     created timestamp without time zone NOT NULL DEFAULT now(),
     deleted timestamp without time zone,
@@ -130,3 +130,13 @@ CREATE TABLE projects.assignment (
     deleted_by INT REFERENCES users.user (id)
 
 );
+
+
+-- Insert test data here (TODO: these must be moved elsewhere after poc)
+INSERT INTO projects.projectgroup (name, description, phase) VALUES
+  ('Proof of concept planning projects','This is the 1st test project group for PoC planning projects', 1),
+  ('Implementation projects','The 2nd test project group for implementation', 2);
+
+INSERT INTO projects.project (name,description,state,phase,projectgroup_id) VALUES
+ ('Plan AWS setup project','Project for planning the AWS setup', 2, 1, 1),
+ ('Implement PoC', 'Project for implementing the PoC', 3,2,2);
