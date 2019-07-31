@@ -1,0 +1,11 @@
+{:deps {
+        tatut/postgrest-ui {:local/root "/Users/tatuta/projects/postgrest-ui"}
+        ;;{:git/url "https://github.com/tatut/postgrest-ui" :sha "b57a2c38a7e39376f3d68ff2be87302e3e63ae0b"}
+        webjure/tuck {:mvn/version "20181204"}
+        funcool/bide {:mvn/version "1.6.0"}
+        com.taoensso/timbre {:mvn/version "4.10.0"}
+        velho-allianssi/velho-ds {:git/url "https://github.com/velho-allianssi/velho-ds"
+                                  :sha "dee0935f667fc44d2eee4969019e140a1d82a562"}
+        stylefy {:mvn/version "1.12.0"}
+        data-frisk-reagent {:mvn/version "0.4.5"}}
+ :paths ["src/cljs" "target" "resources"]}
