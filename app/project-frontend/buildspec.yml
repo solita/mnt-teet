@@ -35,6 +35,7 @@ phases:
     commands:
       - echo Entered the post_build phase...
       - echo Build completed on `date`
+      - echo CURRENT DIR `pwd`
       - mkdir dist
       - cp $WD/resources/public/index.html dist
       - cp $WD/target/public/cljs-out/prod-main.js dist/main.js
