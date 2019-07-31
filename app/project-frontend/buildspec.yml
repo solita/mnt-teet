@@ -29,7 +29,6 @@ phases:
       - echo Build started on `date`
       - echo Directory `pwd` with contents `ls`
       - cd $WD && clj -m figwheel.main -O advanced -bo prod
-      - cd ../..
     finally:
       - echo This always runs even if the install command fails
   post_build:
@@ -37,13 +36,10 @@ phases:
       - echo Entered the post_build phase...
       - echo Build completed on `date`
       - echo CURRENT DIR `pwd`
-      - cp $WD/resources/public/index.html index.html
-      - cp $WD/target/public/cljs-out/prod-main.js main.js
-artifacts:
-  files:
-    - index.html
-    - main.js
-  discard-paths: yes
+      - aws s3 cp resources/public/index.html s3://teis-poc/index.html
+      - aws s3 cp target/public/cljs-out/prod-main.js s3://teis-poc/main.js
+      - aws s3api put-object-acl --bucket teis-poc --key index.html --acl public-read
+      - aws s3api put-object-acl --bucket teis-poc --key main.js --acl public-read
 cache:
   paths:
     - '/root/.m2/**/*'
