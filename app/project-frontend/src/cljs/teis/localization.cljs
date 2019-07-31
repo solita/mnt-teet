@@ -8,14 +8,15 @@
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
             [taoensso.timbre :as log]
-            [cljs.reader :as reader]))
+            [cljs.reader :as reader]
+            [postgrest-ui.display :as postgrest-display]))
 
 (def supported-languages #{"en" "et"})
 
 (defonce loaded-languages (atom {}))
 
 ;; FIXME: read language from user cookie
-(defonce selected-language (r/atom :en))
+(defonce selected-language (r/atom :et))
 
 (defn load-language!
   "Load the given language translation file, if it has not been loaded yet, and adds the language
@@ -135,3 +136,18 @@
    (tr-tree @selected-language tree-path))
   ([language tree-path]
    (get-in (get @loaded-languages language) tree-path)))
+
+
+(defmethod postgrest-display/label :default [table column]
+  (let [v (tr [:fields table column])]
+    (if (str/blank? v)
+      (let [v (tr [:fields :common column])]
+        (if (str/blank? v)
+          ;; Fallback to column name
+          column
+
+          ;; Use common field name
+          v))
+
+      ;; Field name has table specific name
+      v)))

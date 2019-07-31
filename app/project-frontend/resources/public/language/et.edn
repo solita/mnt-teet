@@ -12,5 +12,13 @@
   :cancel "Tühista"
   :add "Lisama"}
 
+ ;; Common texts
+ :common
+ {:general "Üldine"}
 
+ :project-groups
+ {:title "Projektirühmad"}
+
+ :projects
+ {:title "Projektid"}
  }

@@ -12,5 +12,13 @@
   :cancel "Cancel"
   :add "Add"}
 
+ ;; Common texts
+ :common
+ {:general "General"}
 
+ :project-groups
+ {:title "Project groups"}
+
+ :projects
+ {:title "Projects"}
  }

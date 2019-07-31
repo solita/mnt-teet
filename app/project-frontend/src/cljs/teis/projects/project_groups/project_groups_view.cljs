@@ -8,7 +8,8 @@
             [teis.ui.panels :as panels]
             [teis.ui.grid :as grid]
             [teis.ui.info :as info]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [teis.localization :refer [tr]]))
 
 (defn- link-to-project-group [{:strs [id name] :as group}]
   (log/info "project group"  group)
@@ -26,7 +27,7 @@
 (defn project-group-info [{:strs [name] :as group}]
   [panels/main-content-panel {:title name}
    [info/info {:data group}
-    {:title "Yleiset"
+    {:title (tr [:common :general])
      :keys ["name" "description"]}]])
 
 (defn project-group-page [e! {:keys [project-group] :as app}]

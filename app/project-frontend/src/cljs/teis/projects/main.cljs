@@ -13,14 +13,14 @@
             [postgrest-ui.elements]
             [teis.ui.material-ui :refer [Divider]]
             [datafrisk.core :as df]
-            [teis.localization :as localization]))
+            [teis.localization :as localization :refer [tr]]))
 
 (defn groups-and-projects-page [e! app]
   [:div
-   [panels/collapsible-panel {:title "Projektijoukot"}
+   [panels/collapsible-panel {:title (tr [:project-groups :title])}
     [project-groups-view/project-groups-listing e! app]]
    [Divider]
-   [panels/collapsible-panel {:title "Projektit"}
+   [panels/collapsible-panel {:title (tr [:projects :title])}
     [projects-view/projects-listing e! app]]])
 
 (defn main-view [e! {:keys [page] :as app}]
