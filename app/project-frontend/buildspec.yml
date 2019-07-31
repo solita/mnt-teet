@@ -24,7 +24,7 @@ phases:
       - echo Entered the build phase...
       - echo Build started on `date`
       - echo Directory `pwd` with contents `ls`
-      - cd app/projects-frontend/ && clojure -m figwheel.main -O advanced -bo prod
+      - cd app/project-frontend/ && clojure -m figwheel.main -O advanced -bo prod
     finally:
       - echo This always runs even if the install command fails
   post_build:
