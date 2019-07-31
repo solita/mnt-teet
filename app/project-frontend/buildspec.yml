@@ -28,9 +28,8 @@ phases:
       - echo Entered the build phase...
       - echo Build started on `date`
       - echo Directory `pwd` with contents `ls`
-      - pushd .
       - cd $WD && clj -m figwheel.main -O advanced -bo prod
-      - popd
+      - cd ../..
     finally:
       - echo This always runs even if the install command fails
   post_build:
