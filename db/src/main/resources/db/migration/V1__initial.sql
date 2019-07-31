@@ -1,24 +1,23 @@
-CREATE SCHEMA metadata;
 CREATE SCHEMA projects;
 CREATE SCHEMA common;
 CREATE SCHEMA users;
 
 CREATE EXTENSION postgis;
 
-CREATE TYPE metadata.fairway_type AS ENUM ('road','rail','water');
+CREATE TYPE common.fairway_type AS ENUM ('road','rail','water');
 
 CREATE TYPE common.localized_text AS (
   lang TEXT, -- language code
   text TEXT
 );
 
-CREATE TABLE metadata.project_state (
+CREATE TABLE projects.project_state (
  id SERIAL PRIMARY KEY,
  name common.localized_text[],
  validity daterange
 );
 
-INSERT INTO metadata.project_state (name) VALUES
+INSERT INTO projects.project_state (name) VALUES
  ('{"(fi,Ehdolla)","(en,Proposed)"}'::common.localized_text[]),
  ('{"(fi,Valmisteilla)","(en,In preparation)"}'::common.localized_text[]),
  ('{"(fi,Käynnissä)","(en,Started)"}'::common.localized_text[]),
@@ -28,24 +27,24 @@ INSERT INTO metadata.project_state (name) VALUES
  ('{"(fi,Hyväksytty)","(en,Approved)"}'::common.localized_text[]),
  ('{"(fi,Muu)","(en,Other)"}'::common.localized_text[]);
 
-CREATE TABLE metadata.projectgroup_phase (
+CREATE TABLE projects.projectgroup_phase (
  id SERIAL PRIMARY KEY,
  name common.localized_text[],
  validity daterange
 );
 
-INSERT INTO metadata.projectgroup_phase (name) VALUES
+INSERT INTO projects.projectgroup_phase (name) VALUES
  ('{"(fi,Suunnittelu)","(en,Planning)"}'::common.localized_text[]),
  ('{"(fi,Toteutus)","(en,Implementation)"}'::common.localized_text[]),
  ('{"(fi,Kunnossapito)","(en,Maintenance)"}'::common.localized_text[]);
 
-CREATE TABLE metadata.project_phase (
+CREATE TABLE projects.project_phase (
  id SERIAL PRIMARY KEY,
  name TEXT,
  validity daterange
 );
 
-INSERT INTO metadata.project_phase (name) VALUES
+INSERT INTO projects.project_phase (name) VALUES
  ('{"(fi,Esiselvitys)","(en,Pre-study)"}'),
  ('{"(fi,Liikenneselvitys)","(en,Traffic study)"}'),
  ('{"(fi,Tarveselvitys)","(en,Feasibility study)"}'),
@@ -82,7 +81,7 @@ CREATE TABLE projects.projectgroup (
     name TEXT,
     description TEXT,
     county TEXT,
-    phase INT REFERENCES metadata.projectgroup_phase (id),
+    phase INT REFERENCES projects.projectgroup_phase (id),
     url TEXT,
     created timestamp without time zone NOT NULL DEFAULT now(),
     deleted timestamp without time zone,
@@ -97,8 +96,8 @@ CREATE TABLE projects.project (
     geometry geometry(Geometry,4326),
     name TEXT,
     description TEXT,
-    state INT REFERENCES metadata.project_state (id),
-    phase INT REFERENCES metadata.project_phase (id),
+    state INT REFERENCES projects.project_state (id),
+    phase INT REFERENCES projects.project_phase (id),
     url TEXT,
     duration daterange, -- start/end dates
 
