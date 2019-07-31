@@ -11,7 +11,11 @@ phases:
     commands:
       - echo Entered the install phase...
       - apt-get update -y
-      - apt-get install -y maven clojure leiningen
+      - apt-get install -y bash rlwrap curl
+      - echo Download Clojure CLI tool
+      - curl -O https://download.clojure.org/install/linux-install-1.10.1.466.sh
+      - chmod +x linux-install-1.10.1.466.sh
+      - sudo ./linux-install-1.10.1.466.sh
     finally:
       - echo This always runs even if the update or install command fails
   pre_build:
@@ -24,7 +28,7 @@ phases:
       - echo Entered the build phase...
       - echo Build started on `date`
       - echo Directory `pwd` with contents `ls`
-      - cd app/project-frontend/ && clojure -m figwheel.main -O advanced -bo prod
+      - cd app/project-frontend/ && clj -m figwheel.main -O advanced -bo prod
     finally:
       - echo This always runs even if the install command fails
   post_build:
