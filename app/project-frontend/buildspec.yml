@@ -37,9 +37,9 @@ phases:
       - echo Build completed on `date`
       - echo CURRENT DIR `pwd`
       - mkdir dist
-      - cp $WD/resources/public/index.html dist
-      - cp $WD/target/public/cljs-out/prod-main.js dist/main.js
-      - zip -jr $WD/target/build.zip dist
+      - cp resources/public/index.html dist
+      - cp target/public/cljs-out/prod-main.js dist/main.js
+      - zip -jr target/build.zip dist
       - rm -rf dist
 artifacts:
   files:
