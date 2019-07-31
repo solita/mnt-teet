@@ -11,8 +11,7 @@ phases:
     commands:
       - echo Entered the install phase...
       - apt-get update -y
-      - apt-get install -y maven
-      - apt-get install -y clojure
+      - apt-get install -y maven clojure leiningen
     finally:
       - echo This always runs even if the update or install command fails
   pre_build:
@@ -24,27 +23,22 @@ phases:
     commands:
       - echo Entered the build phase...
       - echo Build started on `date`
-      - lein prod
+      - clj -m figwheel.main -O advanced -bo prod
     finally:
       - echo This always runs even if the install command fails
   post_build:
     commands:
       - echo Entered the post_build phase...
       - echo Build completed on `date`
-      - zip target/build.zip resource/public/index.html
+      - mkdir dist
+      - cp resources/public/index.html dist
+      - cp target/public/cljs-out/prod-main.js dist/main.js
+      - zip -jr target/build.zip dist
+      - rm -rf dist
 artifacts:
   files:
-    - target/messageUtil-1.0.jar
+    - target/build.zip
   discard-paths: yes
-  secondary-artifacts:
-    artifact1:
-      files:
-        - target/messageUtil-1.0.jar
-      discard-paths: yes
-    artifact2:
-      files:
-        - target/messageUtil-1.0.jar
-      discard-paths: yes
 cache:
   paths:
     - '/root/.m2/**/*'
