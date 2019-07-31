@@ -25,21 +25,7 @@ phases:
       - echo This always runs even if the login command fails
   build:
     commands:
-      - echo Entered the build phase...
-      - echo Build started on `date`
-      - echo Directory `pwd` with contents `ls`
-      - cd $WD && clj -m figwheel.main -O advanced -bo prod
-    finally:
-      - echo This always runs even if the install command fails
-  post_build:
-    commands:
-      - echo Entered the post_build phase...
-      - echo Build completed on `date`
-      - echo CURRENT DIR `pwd`
-      - aws s3 cp resources/public/index.html s3://teis-poc/index.html
-      - aws s3 cp target/public/cljs-out/prod-main.js s3://teis-poc/main.js
-      - aws s3api put-object-acl --bucket teis-poc --key index.html --acl public-read
-      - aws s3api put-object-acl --bucket teis-poc --key main.js --acl public-read
+      - cd $WD && bash build.sh
 cache:
   paths:
     - '/root/.m2/**/*'
