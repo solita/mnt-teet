@@ -3,6 +3,7 @@ version: 0.2
 env:
   variables:
     JAVA_HOME: "/usr/lib/jvm/java-8-openjdk-amd64"
+    WD: "app/project-frontend"
 
 phases:
   install:
@@ -27,7 +28,7 @@ phases:
       - echo Entered the build phase...
       - echo Build started on `date`
       - echo Directory `pwd` with contents `ls`
-      - cd app/project-frontend/ && clj -m figwheel.main -O advanced -bo prod
+      - cd $WD && clj -m figwheel.main -O advanced -bo prod
     finally:
       - echo This always runs even if the install command fails
   post_build:
@@ -35,13 +36,13 @@ phases:
       - echo Entered the post_build phase...
       - echo Build completed on `date`
       - mkdir dist
-      - cp resources/public/index.html dist
-      - cp target/public/cljs-out/prod-main.js dist/main.js
-      - zip -jr target/build.zip dist
+      - cp $WD/resources/public/index.html dist
+      - cp $WD/target/public/cljs-out/prod-main.js dist/main.js
+      - zip -jr $WD/target/build.zip dist
       - rm -rf dist
 artifacts:
   files:
-    - target/build.zip
+    - app/project-frontend/target/build.zip
   discard-paths: yes
 cache:
   paths:
