@@ -28,7 +28,9 @@ phases:
       - echo Entered the build phase...
       - echo Build started on `date`
       - echo Directory `pwd` with contents `ls`
+      - pushd .
       - cd $WD && clj -m figwheel.main -O advanced -bo prod
+      - popd
     finally:
       - echo This always runs even if the install command fails
   post_build:
@@ -36,14 +38,12 @@ phases:
       - echo Entered the post_build phase...
       - echo Build completed on `date`
       - echo CURRENT DIR `pwd`
-      - mkdir dist
-      - cp resources/public/index.html dist
-      - cp target/public/cljs-out/prod-main.js dist/main.js
-      - zip -jr target/build.zip dist
-      - rm -rf dist
+      - cp $WD/resources/public/index.html index.html
+      - cp $WD/target/public/cljs-out/prod-main.js main.js
 artifacts:
   files:
-    - app/project-frontend/target/build.zip
+    - index.html
+    - main.js
   discard-paths: yes
 cache:
   paths:
