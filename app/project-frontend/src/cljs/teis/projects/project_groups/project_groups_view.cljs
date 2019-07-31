@@ -9,7 +9,12 @@
             [teis.ui.grid :as grid]
             [teis.ui.info :as info]
             [taoensso.timbre :as log]
-            [teis.localization :refer [tr]]))
+            [teis.localization :as localization :refer [tr]]
+            [postgrest-ui.display :as postgrest-display]))
+
+(defmethod postgrest-display/display [:listing "projectgroup" {:table "phase" :select ["name"]}]
+  [_ _ _ {phase "name"}]
+  (localization/localized-text phase))
 
 (defn- link-to-project-group [{:strs [id name] :as group}]
   (log/info "project group"  group)
@@ -21,14 +26,17 @@
     :state (get-in app [:project-groups :listing])
     :set-state! #(e! (project-groups-controller/->SetListingState %))
     :table "projectgroup"
-    :select ["id" "name" "description"]
+    :select ["id" "name" "description"
+             {:table "phase" :select ["name"]}]
     :format {"name" link-to-project-group}}])
 
 (defn project-group-info [{:strs [name] :as group}]
   [panels/main-content-panel {:title name}
    [info/info {:data group}
     {:title (tr [:common :general])
-     :keys ["name" "description"]}]])
+     :table "projectgroup"
+     :keys ["name" "description" (fn [{phase "phase"}]
+                                   [(tr [:fields "projectgroup" "phase"]) (localization/localized-text (get phase "name"))])]}]])
 
 (defn project-group-page [e! {:keys [project-group] :as app}]
 
@@ -37,7 +45,7 @@
     :state project-group
     :set-state! #(e! (project-groups-controller/->SetProjectGroupState %))
     :table "projectgroup"
-    :select ["id" "name" "description" "county" "phase" "url"
+    :select ["id" "name" "description" "county" {:table "phase" :select ["name"]} "url"
              "created" "deleted" "modified" "created_by" "modified_by" "deleted_by"]
     :view project-group-info}
    (get-in app [:params :group])])

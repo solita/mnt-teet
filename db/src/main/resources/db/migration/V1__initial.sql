@@ -34,13 +34,13 @@ CREATE TABLE projects.projectgroup_phase (
 );
 
 INSERT INTO projects.projectgroup_phase (name) VALUES
- ('{"(fi,Suunnittelu)","(en,Planning)"}'::common.localized_text[]),
- ('{"(fi,Toteutus)","(en,Implementation)"}'::common.localized_text[]),
- ('{"(fi,Kunnossapito)","(en,Maintenance)"}'::common.localized_text[]);
+ ('{"(fi,Suunnittelu)","(en,Planning)","(et,Kavandamine)"}'::common.localized_text[]),
+ ('{"(fi,Toteutus)","(en,Implementation)","(et,Teostamine)"}'::common.localized_text[]),
+ ('{"(fi,Kunnossapito)","(en,Maintenance)","(et,Hooldamine)"}'::common.localized_text[]);
 
 CREATE TABLE projects.project_phase (
  id SERIAL PRIMARY KEY,
- name TEXT,
+ name common.localized_text[],
  validity daterange
 );
 

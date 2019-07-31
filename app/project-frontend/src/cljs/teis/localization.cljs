@@ -138,8 +138,23 @@
    (get-in (get @loaded-languages language) tree-path)))
 
 
-(defmethod postgrest-display/label :default [table column]
-  (let [v (tr [:fields table column])]
+;;;;;; Translate database field columns and localized text values
+
+
+(defn- column-key [column]
+  (cond
+
+    ;; Direct column name
+    (string? column) column
+
+    ;; Link to a localized text code, like {:table "phase" :select ["name"]}
+    ;; return table name
+    (and (map? column)
+         (= ["name"] (:select column))) (:table column)))
+
+(defn label-for-field [table column]
+  (let [column (column-key column)
+        v (tr [:fields table column])]
     (if (str/blank? v)
       (let [v (tr [:fields :common column])]
         (if (str/blank? v)
@@ -151,3 +166,21 @@
 
       ;; Field name has table specific name
       v)))
+
+(defmethod postgrest-display/label :default [table column]
+  (label-for-field table column))
+
+(defn text-for-lang [localized-text used-lang]
+  (some (fn [{:strs [lang text]}]
+          (when (= lang used-lang)
+            text))
+        localized-text))
+
+(defn localized-text
+  "Show localized text value for the current language"
+  ([lt]
+   (localized-text lt nil))
+  ([lt fallback-lang]
+   (or (text-for-lang lt (name @selected-language))
+       (text-for-lang lt fallback-lang)
+       "")))
