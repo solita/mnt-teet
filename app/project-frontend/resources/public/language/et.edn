@@ -1,0 +1,16 @@
+{;; Field names by table, :common for fallback shared
+ :fields
+ {:common {"name" "Nimi"
+           "description" "Kirjeldus"}
+
+  "project" {}
+  "projectgroup" {}}
+
+ ;; Common button labels
+ :buttons
+ {:save "Säästma"
+  :cancel "Tühista"
+  :add "Lisama"}
+
+
+ }

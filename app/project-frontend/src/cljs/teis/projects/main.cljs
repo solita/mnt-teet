@@ -5,7 +5,6 @@
 
             [teis.routes :as routes]
             [teis.app-state :as app-state]
-            [velho-ds.organisms.grid :as grid]
             [stylefy.core :as stylefy]
             [teis.ui.panels :as panels]
             [teis.projects.project-groups.project-groups-view :as project-groups-view]
@@ -13,7 +12,8 @@
             [postgrest-ui.impl.style.material]
             [postgrest-ui.elements]
             [teis.ui.material-ui :refer [Divider]]
-            [datafrisk.core :as df]))
+            [datafrisk.core :as df]
+            [teis.localization :as localization]))
 
 (defn groups-and-projects-page [e! app]
   [:div
@@ -34,8 +34,9 @@
   (routes/start!)
   (stylefy/init)
   (postgrest-ui.elements/set-default-style! :material)
-  (r/render [t/tuck app-state/app #'main-view]
-            (.getElementById js/document "projects-app")))
+  (localization/load-initial-language!
+   #(r/render [t/tuck app-state/app #'main-view]
+              (.getElementById js/document "projects-app"))))
 
 (defn ^:after-load after-load []
   (r/force-update-all))
