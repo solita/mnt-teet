@@ -13,21 +13,32 @@
             [postgrest-ui.elements]
             [teis.ui.material-ui :refer [Divider]]
             [datafrisk.core :as df]
-            [teis.localization :as localization :refer [tr]]))
+            [teis.localization :as localization :refer [tr]]
+            [teis.common.common-controller :as common-controller]
+            [teis.ui.headings :as headings]
+            [teis.ui.material-ui :refer [Paper]]
+            [teis.projects.search.search-view :as search-view]))
 
 (defn groups-and-projects-page [e! app]
   [:div
-   [panels/collapsible-panel {:title (tr [:project-groups :title])}
+   [panels/collapsible-panel {:title (tr [:project-groups :title])
+                              :open-atom (common-controller/query-param-boolean-atom app :opengroups)}
     [project-groups-view/project-groups-listing e! app]]
    [Divider]
-   [panels/collapsible-panel {:title (tr [:projects :title])}
+   [panels/collapsible-panel {:title (tr [:projects :title])
+                              :open-atom (common-controller/query-param-boolean-atom app :openprojects)}
     [projects-view/projects-listing e! app]]])
+
 
 (defn main-view [e! {:keys [page] :as app}]
   [:div
-   (case page
-     (:default-page :root :projects) [groups-and-projects-page e! app]
-     :project-group [project-groups-view/project-group-page e! app])
+   ;; Main header here
+   [headings/header {:title "TEIS projekti"
+                     :action [search-view/quick-search e! app]}]
+   [Paper
+    (case page
+      (:default-page :root :projects) [groups-and-projects-page e! app]
+      :project-group [project-groups-view/project-group-page e! app])]
    [df/DataFriskShell app]])
 
 (defn ^:export main []

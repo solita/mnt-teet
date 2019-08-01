@@ -16,3 +16,5 @@
 (define-mui-components Paper Typography)
 
 (define-mui-components Collapse Divider)
+
+(define-mui-components TextField)

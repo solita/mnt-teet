@@ -1,6 +1,12 @@
 (ns teis.ui.headings
   "Different page and section heading components"
-  (:require [velho-ds.organisms.grid :as grid]
-            [stylefy.core :as stylefy]
-            [velho-ds.tokens.color :as color]
-            [teis.ui.material-ui :refer [Card CardHeader]]))
+  (:require [reagent.core :as r]
+            [teis.ui.material-ui :refer [Card CardHeader TextField]]))
+
+(defn header [{:keys [title subtitle icon action]}]
+  [Card
+   [CardHeader (merge {:title title
+                       :subtitle subtitle}
+                      (when action
+                        {:action (r/as-element action)}))
+       ]])
