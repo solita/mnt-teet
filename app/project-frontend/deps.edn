@@ -8,5 +8,6 @@
                                   :sha "dee0935f667fc44d2eee4969019e140a1d82a562"
                                   :exclusions [cljsjs/react-with-addons]}
         stylefy {:mvn/version "1.12.0"}
-        data-frisk-reagent {:mvn/version "0.4.5" :exclusions [reagent]}}
+        data-frisk-reagent {:mvn/version "0.4.5" :exclusions [reagent]}
+        cljsjs/openlayers {:mvn/version "4.4.1-1"}}
  :paths ["src/cljs" "target" "resources"]}
