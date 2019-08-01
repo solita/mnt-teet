@@ -77,7 +77,7 @@ CREATE TABLE users.user (
 
 CREATE TABLE projects.projectgroup (
     id SERIAL PRIMARY KEY,
-    geometry geometry(Geometry,4326),
+    geometry geometry,
     name TEXT,
     description TEXT,
     county TEXT,
@@ -93,7 +93,7 @@ CREATE TABLE projects.projectgroup (
 
 CREATE TABLE projects.project (
     id SERIAL PRIMARY KEY,
-    geometry geometry(Geometry,4326),
+    geometry geometry,
     name TEXT,
     description TEXT,
     state INT REFERENCES projects.project_state (id),
@@ -113,7 +113,7 @@ CREATE TABLE projects.project (
 
 CREATE TABLE projects.assignment (
     id SERIAL PRIMARY KEY,
-    geometry geometry(Geometry,4326),
+    geometry geometry,
     name TEXT,
     description TEXT,
     url TEXT,
@@ -137,11 +137,12 @@ INSERT INTO projects.projectgroup (name, description, phase) VALUES
   ('Implementation projects','The 2nd test project group for implementation', 2);
 
 INSERT INTO projects.project (name,description,state,phase,projectgroup_id,geometry) VALUES
- ('Plan AWS setup project','Project for planning the AWS setup', 2, 1, 1, st_setsrid(st_geomfromgeojson('{"type": "LineString", "coordinates": [[23.73046875,58.78528524510292],[25.147705078125,59.67328836837126],[27.0263671875,58.842174856190105],[23.697509765625,58.722598828043374]]}'), 4326)),
- ('Implement PoC', 'Project for implementing the PoC', 3,2,2, st_setsrid(st_geomfromgeojson('{"type": "LineString", "coordinates": [ [25.51025390625,59.48414789449185], [24.906005859375,59.37239142233717],[25.762939453125,59.338792483494494],[25.015869140625,59.265880628258095],[25.751953125,59.24341475839977],[25.059814453125,59.12522577945005],[25.718994140624996,59.09138238455909]]}'), 4326));
+ ('Plan AWS setup project','Project for planning the AWS setup', 2, 1, 1, st_setsrid(st_geomfromgeojson('{"type": "LineString", "coordinates": [[2696394.7767341174, 8243938.0978665855],[2946280.7142341174, 8257578.7228665855],[2682290.0892341174, 8102122.4728665855],[2961899.4642341174, 8085200.5978665855]]}'), 3857)),
+ ('Implement PoC', 'Project for implementing the PoC', 3,2,2, st_setsrid(st_geomfromgeojson('{"type": "LineString", "coordinates": [[2753413.5267341174, 8274627.1603665855],[2975080.7142341174, 8044063.0978665855]]}'), 3857));
 
 
-CREATE FUNCTION projects.mvt_projectgroup_projects(id INT, xmin NUMERIC, ymin NUMERIC, xmax NUMERIC, ymax NUMERIC)
+CREATE FUNCTION projects.mvt_projectgroup_projects(
+   id INT, xmin NUMERIC, ymin NUMERIC, xmax NUMERIC, ymax NUMERIC)
 RETURNS bytea
 AS $$
 SELECT ST_AsMVT(tile) AS mvt
@@ -152,5 +153,5 @@ SELECT ST_AsMVT(tile) AS mvt
                                          st_makepoint($4, ymax)),
                             4096, NULL, false)
           FROM projects.project p
-         WHERE p.projectgroup_id = id) AS tile;
+         WHERE p.projectgroup_id = $1) AS tile;
 $$ LANGUAGE SQL STABLE;
