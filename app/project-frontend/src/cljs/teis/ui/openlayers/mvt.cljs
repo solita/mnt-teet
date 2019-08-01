@@ -15,28 +15,50 @@
             [goog.object :as gobj])
     (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn mvt-url [& params]
-  (str "maprender/mvt?" (str/join "&"
-                                  (map (fn [[name val]]
-                                         (str name "=" val))
-                                       (partition 2 params)))))
+(defn mvt-url [base-url & params]
+  (str base-url "?" (str/join "&"
+                              (map (fn [[name val]]
+                                     (str name "=" val))
+                                   params))))
 
-(defn hae-url [source parameters coord pixel-ratio projection]
+(defn hae-url [url source parameters coord pixel-ratio projection]
   (let [tile-grid (.getTileGridForProjection source projection)
         extent (.getTileCoordExtent tile-grid coord
                                     (ol-extent/createEmpty))
         [x1 y1 x2 y2] extent]
     (apply mvt-url
-           (concat  ["x1" x1 "y1" y1 "x2" x2 "y2" y2
-                     "r" (.getResolution tile-grid (aget coord 0))
-                     "pr" pixel-ratio]
-                    parameters))))
+           url
+           (merge {"xmin" x1 "ymin" y1 "xmax" x2 "ymax" y2
+                   ;;"r" (.getResolution tile-grid (aget coord 0))
+                   ;;"pr" pixel-ratio
+                   }
+                  parameters))))
+
+(defn load-tile [tile url]
+  (.log js/console "Loading: " url)
+  (let [format (.getFormat tile)]
+    (.setLoader
+     tile
+     (fn []
+       (-> (js/fetch url #js {:headers (doto (js/Headers.)
+                                         (.append "Accept" "application/octet-stream"))})
+           (.then #(.arrayBuffer %))
+           (.then (fn [buf]
+                    (let [features (.readFeatures format buf #js {:featureProjection "EPSG:3857"})
+                          projection (.readProjection format buf)]
+
+                      (.log js/console "FEATURES: " features)
+                      (.log js/console "PROJECTION: " projection)
+                      #_(.setFeatures tile features)
+                      (.onLoad tile features
+                               projection
+                               (.getLastExtent format))))))))))
 
 (defn post! [& args]
   ;; FIXME
   {})
 
-(defrecord MVT [source-name projection extent z-index selitteet opacity_ min-resolution max-resolution parametrit style-fn]
+(defrecord MVT [url source-name projection extent z-index selitteet opacity_ min-resolution max-resolution parametrit style-fn]
   Taso
   (aseta-z-index [this z-index]
     (assoc this :z-index z-index))
@@ -75,7 +97,8 @@
         (.setMaxResolution ol-layer max-resolution))
 
       (.setOpacity ol-layer (or opacity_ 1))
-      (.setTileUrlFunction source (partial hae-url source parametrit))
+      (.setTileLoadFunction source load-tile)
+      (.setTileUrlFunction source (partial hae-url url source parametrit))
       (when luo?
         (.set ol-layer "teis-source" source-name)
         (.addLayer ol3 ol-layer))
@@ -104,4 +127,4 @@
       ch)))
 
 (defn luo-mvt-taso [source-name projection extent selitteet opacity min-resolution max-resolution parametrit style-fn]
-  (->MVT source-name projection extent 99 selitteet opacity min-resolution max-resolution parametrit style-fn))
+  (->MVT "maprender/mvt" source-name projection extent 99 selitteet opacity min-resolution max-resolution parametrit style-fn))

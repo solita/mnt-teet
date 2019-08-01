@@ -10,7 +10,10 @@
             [teis.ui.info :as info]
             [taoensso.timbre :as log]
             [teis.localization :as localization :refer [tr]]
-            [postgrest-ui.display :as postgrest-display]))
+            [postgrest-ui.display :as postgrest-display]
+            [teis.map.map-view :as map-view]
+            [teis.map.map-layers :as map-layers]
+            [teis.map.map-features :as map-features]))
 
 (defmethod postgrest-display/display [:listing "projectgroup" {:table "phase" :select ["name"]}]
   [_ _ _ {phase "name"}]
@@ -39,13 +42,20 @@
                                    [(tr [:fields "projectgroup" "phase"]) (localization/localized-text (get phase "name"))])]}]])
 
 (defn project-group-page [e! {:keys [project-group] :as app}]
-
-  [postgrest-item-view/item-view
-   {:endpoint (get-in app [:config :project-registry-url])
-    :state project-group
-    :set-state! #(e! (project-groups-controller/->SetProjectGroupState %))
-    :table "projectgroup"
-    :select ["id" "name" "description" "county" {:table "phase" :select ["name"]} "url"
-             "created" "deleted" "modified" "created_by" "modified_by" "deleted_by"]
-    :view project-group-info}
-   (get-in app [:params :group])])
+  (let [group-id (get-in app [:params :group])
+        endpoint (get-in app [:config :project-registry-url])]
+    [:div.project-group-page
+     [map-view/map-view e! {:height "400px"
+                            :layers {:group-projects (map-layers/mvt-layer endpoint "mvt_projectgroup_projects"
+                                                                           {"id" group-id}
+                                                                           map-features/project-style)}}
+      app]
+     [postgrest-item-view/item-view
+      {:endpoint endpoint
+       :state project-group
+       :set-state! #(e! (project-groups-controller/->SetProjectGroupState %))
+       :table "projectgroup"
+       :select ["id" "name" "description" "county" {:table "phase" :select ["name"]} "url"
+                "created" "deleted" "modified" "created_by" "modified_by" "deleted_by"]
+       :view project-group-info}
+      group-id]]))

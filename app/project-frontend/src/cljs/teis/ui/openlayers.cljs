@@ -38,7 +38,12 @@
 
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
-(def projektio "EPSG:4326")
+;; EPSG:3857 = WGS 84 / Pseudo Mercator -- Spherical Mercator
+;; Used by google maps, open street map
+(def default-projection "EPSG:3857")
+
+
+
 (def suomen-extent nil)
 
 (def ^{:doc "Odotusaika millisekunteina, joka odotetaan että
@@ -164,16 +169,16 @@
 (defonce openlayers-kartan-leveys (atom nil))
 (defonce openlayers-kartan-korkeus (atom nil))
 
-(defn luo-kuvataso
+#_(defn luo-kuvataso
   "Luo uuden kuvatason joka hakee serverillä renderöidyn kuvan.
 Ottaa sisään vaihtelevat parametri nimet (string) ja niiden arvot.
 Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti."
   [lahde selitteet opacity min-resolution max-resolution & parametri-nimet-ja-arvot]
-  (kuvataso/luo-kuvataso projektio suomen-extent selitteet opacity min-resolution max-resolution
+  (kuvataso/luo-kuvataso nil suomen-extent selitteet opacity min-resolution max-resolution
                          (concat ["_" (name lahde)]
                                  parametri-nimet-ja-arvot)))
 
-(defn luo-mvt-taso
+#_(defn luo-mvt-taso
   "Luo uuden MVT (Mapbox Vector Tile) tason, joka hakee palvelimelta vektoridataa."
   [lahde selitteet opacity min-resolution max-resolution style-fn & parametri-nimet-ja-arvot]
   (mvt/luo-mvt-taso lahde projektio suomen-extent selitteet
@@ -182,12 +187,12 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                             parametri-nimet-ja-arvot)
                     style-fn))
 
-(defn luo-tile-taso
+#_(defn luo-tile-taso
   "Luo WMS tai WMTS lähteestä tason"
   [lahde opacity type url layer style]
   (tile/luo-tile-taso lahde projektio suomen-extent opacity type url {:layer layer :style style}))
 
-(defn luo-geojson-taso
+#_(defn luo-geojson-taso
   "Luo uuden GeoJSON tason, joka hakee tiedot annetusta URL-osoitteesta."
   [lahde opacity url style-fn]
   (geojson/luo-geojson-taso lahde projektio suomen-extent opacity url style-fn ))
@@ -282,6 +287,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                (when on-select (on-select [g] e)))
              (do
                (log/info "on-click" e)
+               (aset js/window "EVT" e)
                (when on-click (on-click e))))))))
 
 ;; dblclick on-clickille ei vielä tarvetta - zoomaus tulee muualta.
@@ -632,8 +638,9 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                                     :resolution initial-resolution
                                     :maxZoom max-zoom
                                     :minZoom min-zoom
-                                    :projection projektio
-                                    :extent (clj->js extent)}
+                                    ;:projection projektio
+                                    ;:extent (clj->js extent)
+                                    }
                                    (when current-zoom current-zoom)))))
 
     ;;(.log js/console "L.map = " ol3)
@@ -710,8 +717,10 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
     (loop [new-geometry-layers {}
            [layer & layers] (keys geometries)]
       (if-not layer
-        (reagent/set-state component {:geometry-layers new-geometry-layers
-                                      :geometries geometries})
+        (do
+          (log/info "NEW-GEOMETRY-LAYERS: " new-geometry-layers)
+          (reagent/set-state component {:geometry-layers new-geometry-layers
+                                        :geometries geometries}))
         (if-let [taso (get geometries layer)]
           (recur (assoc new-geometry-layers
                         layer (apply taso/paivita
