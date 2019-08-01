@@ -8,9 +8,9 @@
 
  ;; Common button labels
  :buttons
- {:save "Säästma"
+ {:save "Salvesta"
   :cancel "Tühista"
-  :add "Lisama"}
+  :add "Lisa"}
 
  ;; Common texts
  :common
