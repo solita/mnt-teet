@@ -12,5 +12,11 @@ pom.xml contains a template for running the flyway migrations.
 
 > CREATE ROLE teis WITH LOGIN SUPERUSER;
 > CREATE DATABASE teis OWNER teis;
+> CREATE ROLE authenticator;
+> CREATE ROLE teis_user NOLOGIN;
+> CREATE ROLE teis_anon NOLOGIN;
+> GRANT teis_user TO authenticator;
+> GRANT teis_anon TO authenticator;
+
 
 * Run migrations: mvn flyway:migrate
