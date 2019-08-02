@@ -21,4 +21,7 @@
 
  :projects
  {:title "Projektid"}
+
+ :search
+ {:quick-search "Kiirotsingu"}
  }

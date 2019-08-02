@@ -13,11 +13,18 @@
             [postgrest-ui.display :as postgrest-display]
             [teis.map.map-view :as map-view]
             [teis.map.map-layers :as map-layers]
-            [teis.map.map-features :as map-features]))
+            [teis.map.map-features :as map-features]
+            [teis.projects.search.search-interface :as search-interface]
+            [teis.ui.icons :as icons]))
 
 (defmethod postgrest-display/display [:listing "projectgroup" {:table "phase" :select ["name"]}]
   [_ _ _ {phase "name"}]
   (localization/localized-text phase))
+
+(defmethod search-interface/format-search-result "projectgroup" [{:keys [id label]}]
+  {:icon (icons/action-group-work)
+   :href (str "#/projectgroup/" id)
+   :text label})
 
 (defn- link-to-project-group [{:strs [id name] :as group}]
   (log/info "project group"  group)
@@ -44,6 +51,7 @@
 (defn project-group-page [e! {:keys [project-group] :as app}]
   (let [group-id (get-in app [:params :group])
         endpoint (get-in app [:config :project-registry-url])]
+    ^{:key group-id}
     [:div.project-group-page
      [map-view/map-view e! {:height "400px"
                             :layers {:group-projects (map-layers/mvt-layer endpoint "mvt_projectgroup_projects"
@@ -52,8 +60,9 @@
       app]
      [postgrest-item-view/item-view
       {:endpoint endpoint
-       :state project-group
-       :set-state! #(e! (project-groups-controller/->SetProjectGroupState %))
+       ;; FIXME: if we use global state, we need to clear it to fetch it again
+       ;;:state project-group
+       ;;:set-state! #(e! (project-groups-controller/->SetProjectGroupState %))
        :table "projectgroup"
        :select ["id" "name" "description" "county" {:table "phase" :select ["name"]} "url"
                 "created" "deleted" "modified" "created_by" "modified_by" "deleted_by"]
