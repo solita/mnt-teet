@@ -6,7 +6,7 @@
             [teis.common.common-controller]
             [teis.projects.search.search-controller :as search-controller]
             [teis.projects.search.search-interface :as search-interface]
-            [teis.ui.material-ui :refer [List ListItem ListItemIcon ListItemText ListItemLink]]))
+            [teis.ui.material-ui :refer [List ListItem ListItemIcon ListItemText]]))
 
 
 (defn quick-search [e! {:keys [quick-search]}]
