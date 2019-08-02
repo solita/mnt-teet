@@ -23,5 +23,5 @@
  {:title "Projektid"}
 
  :search
- {:quick-search "Kiirotsingu"}
+ {:quick-search "Otsi"}
  }
