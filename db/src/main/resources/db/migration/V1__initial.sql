@@ -175,3 +175,15 @@ SELECT ROW('project', p.id, p.name)::common.search_result
  WHERE p.name ILIKE '%'||q||'%'
     OR p.description ILIKE '%'||q||'%'
 $$ LANGUAGE SQL STABLE;
+
+CREATE FUNCTION projects.whoami() RETURNS TEXT
+AS $$
+BEGIN
+ IF current_user = 'teis_anon' THEN
+   RETURN 'You are anonymous';
+ ELSE
+   RETURN 'email: ' || current_setting('request.jwt.claim.email') ||
+          ', cognito username: ' || current_setting('request.jwt.claim.cognito:username');
+ END IF;
+END;
+$$ LANGUAGE plpgsql STABLE;
