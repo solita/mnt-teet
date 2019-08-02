@@ -1,7 +1,13 @@
 (ns teis.projects.project-groups.project-groups-controller
   "Tuck controller for project groups."
   (:require [tuck.core :as t]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [teis.routes :as routes]))
+
+(defrecord ClearProjectGroupState [])
+
+(defmethod routes/on-navigate-event :project-group [_]
+  (->ClearProjectGroupState))
 
 (defrecord OpenProjectGroup [group])
 
@@ -20,4 +26,8 @@
 
   SetProjectGroupState
   (process-event [{state :state} app]
-    (assoc app :project-group state)))
+    (assoc app :project-group state))
+
+  ClearProjectGroupState
+  (process-event [_ app]
+    (dissoc app :project-group)))

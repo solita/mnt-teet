@@ -60,9 +60,8 @@
       app]
      [postgrest-item-view/item-view
       {:endpoint endpoint
-       ;; FIXME: if we use global state, we need to clear it to fetch it again
-       ;;:state project-group
-       ;;:set-state! #(e! (project-groups-controller/->SetProjectGroupState %))
+       :state project-group
+       :set-state! #(e! (project-groups-controller/->SetProjectGroupState %))
        :table "projectgroup"
        :select ["id" "name" "description" "county" {:table "phase" :select ["name"]} "url"
                 "created" "deleted" "modified" "created_by" "modified_by" "deleted_by"]
