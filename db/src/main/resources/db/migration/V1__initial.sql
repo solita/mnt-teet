@@ -176,14 +176,29 @@ SELECT ROW('project', p.id, p.name)::common.search_result
     OR p.description ILIKE '%'||q||'%'
 $$ LANGUAGE SQL STABLE;
 
-CREATE FUNCTION projects.whoami() RETURNS TEXT
+CREATE TYPE common.authinfo AS (
+  authenticated bool,
+  username text,
+  email text
+);
+
+CREATE FUNCTION projects.whoami() RETURNS common.authinfo
 AS $$
 BEGIN
  IF current_user = 'teis_anon' THEN
-   RETURN 'You are anonymous';
+   RETURN ROW(false, NULL, NULL)::common.authinfo;
  ELSE
-   RETURN 'email: ' || current_setting('request.jwt.claim.email') ||
-          ', cognito username: ' || current_setting('request.jwt.claim.cognito:username');
+   RETURN ROW(true,
+              current_setting('request.jwt.claim.cognito:username'),
+              current_setting('request.jwt.claim.email'))::common.authinfo;
  END IF;
 END;
 $$ LANGUAGE plpgsql STABLE;
+
+GRANT USAGE ON SCHEMA projects to teis_anon;
+GRANT USAGE ON SCHEMA projects to teis_user;
+GRANT USAGE ON SCHEMA common TO teis_anon;
+GRANT USAGE ON SCHEMA common TO teis_user;
+
+GRANT SELECT ON projects.project TO teis_user;
+GRANT SELECT ON projects.projectgroup TO teis_user;
