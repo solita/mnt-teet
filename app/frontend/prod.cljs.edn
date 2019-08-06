@@ -1,1 +1,2 @@
-{:main teet.main}
+{:main teet.main
+ :libs ["src/js/kuvataso.js"]}
