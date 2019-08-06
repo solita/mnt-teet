@@ -11,7 +11,7 @@
             [teet.common.common-controller :as common-controller]
             [teet.localization :as localization :refer [tr]]
             [teet.project-groups.project-groups-view :as project-groups-view]
-            [teet.projects.projects.projects-view :as projects-view]
+            [teet.projects.projects-view :as projects-view]
             [teet.search.search-view :as search-view]
             [teet.routes :as routes]
             [teet.ui.headings :as headings]

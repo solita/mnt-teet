@@ -1,7 +1,7 @@
-(ns teet.projects.projects.projects-view
+(ns teet.projects.projects-view
   "Projects view"
   (:require [postgrest-ui.components.listing :as postgrest-listing]
-            [teet.projects.projects.projects-controller :as projects-controller]
+            [teet.projects.projects-controller :as projects-controller]
             [teet.search.search-interface :as search-interface]
             [teet.ui.icons :as icons]))
 

@@ -1,4 +1,4 @@
-(ns teet.projects.projects.projects-controller
+(ns teet.projects.projects-controller
   (:require [tuck.core :as t]))
 
 (defrecord SetListingState [state])
