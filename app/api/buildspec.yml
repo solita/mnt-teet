@@ -8,6 +8,9 @@ phases:
   install:
     runtime-versions:
       java: openjdk8
+  pre_build:
+    commands:
+      - $(aws ecr get-login --no-include-email --region eu-central-e)
   build:
     commands:
       - cd $WD && bash build.sh
