@@ -101,9 +101,9 @@ CREATE TABLE projects.project (
     url TEXT,
     duration daterange, -- start/end dates
 
-    created timestamp without time zone NOT NULL DEFAULT now(),
-    deleted timestamp without time zone,
-    modified timestamp without time zone,
+    created timestamptz NOT NULL DEFAULT now(),
+    deleted timestamptz,
+    modified timestamptz,
     projectgroup_id INT REFERENCES projects.projectgroup (id),
 
     created_by INT REFERENCES users.user (id),
@@ -119,9 +119,9 @@ CREATE TABLE projects.assignment (
     url TEXT,
     project_id INT REFERENCES projects.project (id),
 
-    created timestamp without time zone NOT NULL DEFAULT now(),
-    deleted timestamp without time zone,
-    modified timestamp without time zone,
+    created timestamptz NOT NULL DEFAULT now(),
+    deleted timestamptz,
+    modified timestamptz,
     projectgroup_id INT REFERENCES projects.projectgroup (id),
 
     created_by INT REFERENCES users.user (id),

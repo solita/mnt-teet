@@ -9,5 +9,6 @@
                                   :exclusions [cljsjs/react-with-addons]}
         stylefy {:mvn/version "1.12.0"}
         data-frisk-reagent {:mvn/version "0.4.5" :exclusions [reagent]}
-        cljsjs/openlayers {:mvn/version "4.4.1-1"}}
+        cljsjs/openlayers {:mvn/version "4.4.1-1"}
+        cljsjs/proj4 {:mvn/version "2.5.0-0"}}
  :paths ["src/cljs" "target" "resources"]}
