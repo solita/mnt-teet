@@ -31,6 +31,4 @@
       [layout/row {}
        [Button {:color "primary"
                 :on-click #(e! (login-controller/->Login))}
-        (tr [:login :login])]]
-
-      ]]]])
+        (tr [:login :login])]]]]]])

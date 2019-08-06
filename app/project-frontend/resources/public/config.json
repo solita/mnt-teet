@@ -1,1 +1,2 @@
-{"project-registry-url": "http://localhost:3000"}
+{"project-registry-url": "http://localhost:3000",
+ "login-url": "https://npjli48fc1.execute-api.eu-central-1.amazonaws.com/dev/auth"}

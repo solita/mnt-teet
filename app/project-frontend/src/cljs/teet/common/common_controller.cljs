@@ -87,3 +87,6 @@
                  (if result-path
                    (e! (->RPCResponse result-path data))
                    (e! (result-event data))))))))
+
+(defmethod tuck-effect/process-effect :navigate [e! {:keys [page params query]}]
+  (routes/navigate! page params query))

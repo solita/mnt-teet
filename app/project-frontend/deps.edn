@@ -1,6 +1,6 @@
 {:deps {reagent {:mvn/version "0.8.1" :exclusions [cljsjs/react-dom-server]}
         tatut/postgrest-ui ;{:local/root "/Users/tatuta/projects/postgrest-ui"}
-        {:git/url "https://github.com/tatut/postgrest-ui" :sha "bd8fb2a06cf77ad3edc74bba7b64a552d8093b3e"}
+        {:git/url "https://github.com/tatut/postgrest-ui" :sha "d00a2550c846709f4256fdb06f8542aa61e0518d"}
         webjure/tuck {:mvn/version "20181204" :exclusions [cljsjs/react]}
         funcool/bide {:mvn/version "1.6.0"}
         com.taoensso/timbre {:mvn/version "4.10.0"}

@@ -3,7 +3,8 @@
   (:require [postgrest-ui.components.listing :as postgrest-listing]
             [teet.projects.projects-controller :as projects-controller]
             [teet.search.search-interface :as search-interface]
-            [teet.ui.icons :as icons]))
+            [teet.ui.icons :as icons]
+            [teet.login.login-paths :as login-paths]))
 
 (defmethod search-interface/format-search-result "project" [{:keys [id label]}]
   {:icon [icons/file-folder-open]
@@ -13,6 +14,7 @@
 (defn projects-listing [e! app]
   [postgrest-listing/listing
    {:endpoint (get-in app [:config :project-registry-url])
+    :token (get-in app login-paths/token)
     :state (get-in app [:projects :listing])
     :set-state! #(e! (projects-controller/->SetListingState %))
     :table "project"

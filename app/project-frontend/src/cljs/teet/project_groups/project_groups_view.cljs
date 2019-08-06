@@ -15,7 +15,8 @@
             [teet.map.map-layers :as map-layers]
             [teet.map.map-features :as map-features]
             [teet.search.search-interface :as search-interface]
-            [teet.ui.icons :as icons]))
+            [teet.ui.icons :as icons]
+            [teet.login.login-paths :as login-paths]))
 
 (defmethod postgrest-display/display [:listing "projectgroup" {:table "phase" :select ["name"]}]
   [_ _ _ {phase "name"}]
@@ -33,6 +34,7 @@
 (defn project-groups-listing [e! app]
   [postgrest-listing/listing
    {:endpoint (get-in app [:config :project-registry-url])
+    :token (get-in app login-paths/token)
     :state (get-in app [:project-groups :listing])
     :set-state! #(e! (project-groups-controller/->SetListingState %))
     :table "projectgroup"
@@ -60,6 +62,7 @@
       app]
      [postgrest-item-view/item-view
       {:endpoint endpoint
+       :token (get-in app login-paths/token)
        :state project-group
        :set-state! #(e! (project-groups-controller/->SetProjectGroupState %))
        :table "projectgroup"
