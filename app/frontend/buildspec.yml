@@ -26,6 +26,12 @@ phases:
   build:
     commands:
       - cd $WD && bash build.sh
+artifacts:
+  files:
+    - resources/public/index.html
+    - target/public/cljs-out/prod-main.js
+    - resources/public/language/en.edn
+    - resources/public/language/et.edn
 cache:
   paths:
     - '/root/.m2/**/*'

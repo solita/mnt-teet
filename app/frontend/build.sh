@@ -9,7 +9,7 @@ function upload () {
 
 clj -m figwheel.main -O advanced -bo prod
 
-upload resources/public/index.html index.html
-upload target/public/cljs-out/prod-main.js main.js
-upload resources/public/language/en.edn language/en.edn
-upload resources/public/language/et.edn language/et.edn
+#upload resources/public/index.html index.html
+#upload target/public/cljs-out/prod-main.js main.js
+#upload resources/public/language/en.edn language/en.edn
+#upload resources/public/language/et.edn language/et.edn
