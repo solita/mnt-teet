@@ -14,5 +14,5 @@ phases:
   build:
     commands:
       - cd $WD && bash build.sh
-      - docker tag mnt-teet/teet-api:latest 512288025010.dkr.ecr.eu-central-1.amazonaws.com/teet-registry:latest
-      - docker push 512288025010.dkr.ecr.eu-central-1.amazonaws.com/teet-registry:latest
+      - docker tag mnt-teet/teet-api:latest 512288025010.dkr.ecr.eu-central-1.amazonaws.com/teet-api:latest
+      - docker push 512288025010.dkr.ecr.eu-central-1.amazonaws.com/teet-api:latest
