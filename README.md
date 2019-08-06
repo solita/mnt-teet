@@ -1,6 +1,6 @@
-# Maanteeamet Proof Of Concept AWS test
+# Maanteeamet TEET: Road Lifecycle Software
 
-Test repo for project registry + sample frontend and CI
+Maanteemat TEET project.
 
 ## Structure
 
