@@ -29,7 +29,7 @@ phases:
 artifacts:
   files:
     - index.html
-    - prod-main.js
+    - main.js
     - language/*.edn
     - config.json.tpl
 cache:
