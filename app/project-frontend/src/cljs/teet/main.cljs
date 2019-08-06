@@ -1,4 +1,4 @@
-(ns ^:figwheel-hooks teet.projects.main
+(ns ^:figwheel-hooks teet.main
   "TEET project registry frontend app."
   (:require [datafrisk.core :as df]
             [postgrest-ui.elements]

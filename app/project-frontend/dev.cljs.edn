@@ -1,3 +1,3 @@
-{:main teet.projects.main
+{:main teet.main
  :open-url false
  :libs ["src/js/kuvataso.js"]}
