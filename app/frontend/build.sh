@@ -9,7 +9,14 @@ function upload () {
 
 clj -m figwheel.main -O advanced -bo prod
 
-#upload resources/public/index.html index.html
-#upload target/public/cljs-out/prod-main.js main.js
-#upload resources/public/language/en.edn language/en.edn
-#upload resources/public/language/et.edn language/et.edn
+echo "Prepare artifacts"
+WD=`pwd`
+cd ../..
+
+mkdir language
+
+cp $WD/resources/public/index.html index.html
+cp $WD/target/public/cljs-out/prod-main.js main.js
+cp $WD/resources/public/language/en.edn language/en.edn
+cp $WD/resources/public/language/et.edn language/et.edn
+cp $WD/resources/public/config.json.tpl config.json.tpl
