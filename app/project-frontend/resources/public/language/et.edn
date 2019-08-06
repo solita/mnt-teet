@@ -24,4 +24,9 @@
 
  :search
  {:quick-search "Otsi"}
+
+ :login
+ {:username "Kasutaja"
+  :password "Salasõna"
+  :login "Sisenen"}
  }

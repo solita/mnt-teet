@@ -9,6 +9,7 @@
   {:icon [icons/file-folder-open]
    :text label
    :href (str "#/project/" id)})
+
 (defn projects-listing [e! app]
   [postgrest-listing/listing
    {:endpoint (get-in app [:config :project-registry-url])

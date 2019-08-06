@@ -1,12 +1,11 @@
 (ns ^:figwheel-hooks teet.main
-  "TEET project registry frontend app."
+  "TEET frontend app."
   (:require [datafrisk.core :as df]
             [postgrest-ui.elements]
 
             [postgrest-ui.impl.style.material]
             [reagent.core :as r]
             [stylefy.core :as stylefy]
-            [teet.app-state :as app-state]
             [teet.app-state :as app-state]
             [teet.common.common-controller :as common-controller]
             [teet.localization :as localization :refer [tr]]
@@ -15,9 +14,9 @@
             [teet.search.search-view :as search-view]
             [teet.routes :as routes]
             [teet.ui.headings :as headings]
-            [teet.ui.material-ui :refer [Divider]]
-            [teet.ui.material-ui :refer [Paper]]
+            [teet.ui.material-ui :refer [Divider Paper]]
             [teet.ui.panels :as panels]
+            [teet.login.login-view :as login-view]
             [tuck.core :as t]))
 
 (defn groups-and-projects-page [e! app]
@@ -32,16 +31,21 @@
 
 
 (defn main-view [e! {:keys [page user] :as app}]
-  [:div
-   ;; Main header here
-   [headings/header {:title "TEET projekti"
-                     :action [search-view/quick-search e! app]}]
-   [Paper
-    (case page
-      (:default-page :root :projects) [groups-and-projects-page e! app]
-      :project-group [project-groups-view/project-group-page e! app]
-      [:div "Unimplemented page: " (pr-str page)])]
-   [df/DataFriskShell app]])
+  (if (= page :login)
+    ;; Show only login dialog
+    [login-view/login-page e! app]
+
+    ;; Show other pages with header
+    [:<>
+     ;; Main header here
+     [headings/header {:title "TEET projekti"
+                       :action [search-view/quick-search e! app]}]
+     [Paper
+      (case page
+        (:default-page :root :projects) [groups-and-projects-page e! app]
+        :project-group [project-groups-view/project-group-page e! app]
+        [:div "Unimplemented page: " (pr-str page)])]
+     [df/DataFriskShell app]]))
 
 (defn ^:export main []
   (routes/start!)
