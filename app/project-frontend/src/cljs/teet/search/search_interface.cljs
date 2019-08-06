@@ -1,4 +1,4 @@
-(ns teet.projects.search.search-interface
+(ns teet.search.search-interface
   "Multimethods to hook into the search"
   (:require [teet.ui.icons :as icons]))
 

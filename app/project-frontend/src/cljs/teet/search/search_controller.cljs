@@ -1,4 +1,4 @@
-(ns teet.projects.search.search-controller
+(ns teet.search.search-controller
   "Controller for search views"
   (:require [tuck.core :as t]))
 

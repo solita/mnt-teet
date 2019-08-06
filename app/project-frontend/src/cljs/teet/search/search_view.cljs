@@ -1,11 +1,11 @@
-(ns teet.projects.search.search-view
+(ns teet.search.search-view
   "Quick search of projects and project groups"
   (:require [reagent.core :as r]
             [teet.ui.material-ui :refer [TextField Paper CircularProgress]]
             [teet.localization :refer [tr]]
             [teet.common.common-controller]
-            [teet.projects.search.search-controller :as search-controller]
-            [teet.projects.search.search-interface :as search-interface]
+            [teet.search.search-controller :as search-controller]
+            [teet.search.search-interface :as search-interface]
             [teet.ui.material-ui :refer [List ListItem ListItemIcon ListItemText]]))
 
 

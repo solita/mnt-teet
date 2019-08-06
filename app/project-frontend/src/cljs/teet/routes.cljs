@@ -50,8 +50,8 @@
 
 (defn requires-authentication? [{:keys [user page] :as app}]
   ;; PENDING: what pages require authentication?
-  ;; Return true for now to force everything to go through login page
-  true)
+  (and (nil? user)
+       (not= :login page)))
 
 (defn- send-startup-events [e! event]
   (if (vector? event)

@@ -1,10 +1,10 @@
-(ns teet.projects.project-groups.project-groups-view
+(ns teet.project-groups.project-groups-view
   "View for project groups: listing and form to add new one."
   (:require [reagent.core :as r]
             [tuck.core :as t]
             [postgrest-ui.components.listing :as postgrest-listing]
             [postgrest-ui.components.item-view :as postgrest-item-view]
-            [teet.projects.project-groups.project-groups-controller :as project-groups-controller]
+            [teet.project-groups.project-groups-controller :as project-groups-controller]
             [teet.ui.panels :as panels]
             [teet.ui.grid :as grid]
             [teet.ui.info :as info]
@@ -14,7 +14,7 @@
             [teet.map.map-view :as map-view]
             [teet.map.map-layers :as map-layers]
             [teet.map.map-features :as map-features]
-            [teet.projects.search.search-interface :as search-interface]
+            [teet.search.search-interface :as search-interface]
             [teet.ui.icons :as icons]))
 
 (defmethod postgrest-display/display [:listing "projectgroup" {:table "phase" :select ["name"]}]

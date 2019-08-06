@@ -10,9 +10,9 @@
             [teet.app-state :as app-state]
             [teet.common.common-controller :as common-controller]
             [teet.localization :as localization :refer [tr]]
-            [teet.projects.project-groups.project-groups-view :as project-groups-view]
+            [teet.project-groups.project-groups-view :as project-groups-view]
             [teet.projects.projects.projects-view :as projects-view]
-            [teet.projects.search.search-view :as search-view]
+            [teet.search.search-view :as search-view]
             [teet.routes :as routes]
             [teet.ui.headings :as headings]
             [teet.ui.material-ui :refer [Divider]]
@@ -31,7 +31,7 @@
     [projects-view/projects-listing e! app]]])
 
 
-(defn main-view [e! {:keys [page] :as app}]
+(defn main-view [e! {:keys [page user] :as app}]
   [:div
    ;; Main header here
    [headings/header {:title "TEET projekti"
@@ -39,7 +39,8 @@
    [Paper
     (case page
       (:default-page :root :projects) [groups-and-projects-page e! app]
-      :project-group [project-groups-view/project-group-page e! app])]
+      :project-group [project-groups-view/project-group-page e! app]
+      [:div "Unimplemented page: " (pr-str page)])]
    [df/DataFriskShell app]])
 
 (defn ^:export main []

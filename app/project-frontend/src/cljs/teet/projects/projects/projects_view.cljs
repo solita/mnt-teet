@@ -2,7 +2,7 @@
   "Projects view"
   (:require [postgrest-ui.components.listing :as postgrest-listing]
             [teet.projects.projects.projects-controller :as projects-controller]
-            [teet.projects.search.search-interface :as search-interface]
+            [teet.search.search-interface :as search-interface]
             [teet.ui.icons :as icons]))
 
 (defmethod search-interface/format-search-result "project" [{:keys [id label]}]

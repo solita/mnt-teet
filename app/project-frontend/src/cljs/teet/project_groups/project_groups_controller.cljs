@@ -1,4 +1,4 @@
-(ns teet.projects.project-groups.project-groups-controller
+(ns teet.project-groups.project-groups-controller
   "Tuck controller for project groups."
   (:require [tuck.core :as t]
             [taoensso.timbre :as log]
