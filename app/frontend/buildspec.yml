@@ -28,10 +28,10 @@ phases:
       - cd $WD && bash build.sh
 artifacts:
   files:
-    - resources/public/index.html
-    - target/public/cljs-out/prod-main.js
-    - resources/public/language/en.edn
-    - resources/public/language/et.edn
+    - app/frontend/resources/public/index.html
+    - app/frontend/target/public/cljs-out/prod-main.js
+    - app/frontend/resources/public/language/en.edn
+    - app/frontend/resources/public/language/et.edn
 cache:
   paths:
     - '/root/.m2/**/*'
