@@ -3,7 +3,7 @@ version: 0.2
 env:
   variables:
     JAVA_HOME: "/usr/lib/jvm/java-8-openjdk-amd64"
-    WD: "app/project-frontend"
+    WD: "app/frontend"
 
 phases:
   install:
