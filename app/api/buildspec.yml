@@ -5,7 +5,7 @@ env:
     WD: "app/api"
     IMAGE_REPO_NAME: "teet-api"
     IMAGE_TAG: "latest"
-    ECS_TASK_NAME: "teet-api-dev"
+    ECS_TASK_NAME: "teet-api"
 
 phases:
   install:
