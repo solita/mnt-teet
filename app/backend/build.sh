@@ -1,6 +1,6 @@
 #!/bin/sh
 
 clojure -A:pack -m mach.pack.alpha.jib \
-        --image-name 512288025010.dkr.ecr.eu-central-1.amazonaws.com/teet-service:latest \
+        --image-name $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG \
         --image-type registry \
         -m teet.main
