@@ -3,29 +3,30 @@ version: 0.2
 env:
   variables:
     JAVA_HOME: "/usr/lib/jvm/java-8-openjdk-amd64"
-    WD: "app/frontend"
+    FRONTEND: "app/frontend"
+    BACKEND: "app/backend"
 
 phases:
   install:
     runtime-versions:
       java: openjdk8
     commands:
-      - echo Entered the install phase...
       - apt-get update -y
       - apt-get install -y bash rlwrap curl
       - echo Download Clojure CLI tool
       - curl -O https://download.clojure.org/install/linux-install-1.10.1.466.sh
       - bash linux-install-1.10.1.466.sh
-    finally:
-      - echo This always runs even if the update or install command fails
   pre_build:
     commands:
-      - echo Entered the pre_build phase...
-    finally:
-      - echo This always runs even if the login command fails
+      - $(aws ecr get-login --no-include-email --region eu-central-1)
   build:
     commands:
-      - cd $WD && bash build.sh
+      - echo Building frontend ClojureScript app
+      - cd $FRONTEND && bash build.sh
+      - cd ../..
+      - cd $BACKEND
+      - bash resources.sh
+      - bash build.sh
 artifacts:
   files:
     - index.html

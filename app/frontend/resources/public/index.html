@@ -8,11 +8,17 @@
 
     <style id="_stylefy-constant-styles_"></style>
     <style id="_stylefy-styles_"></style>
+
+    <script type="text/javascript">
+      new Promise((resolve, reject) => {
+          window.resolveOnload = resolve;
+      }).then(() => { teet.main.main(); });
+
+    </script>
   </head>
-  <body onload="teet.main.main()">
-    <div id="projects-app"></div>
+  <body>
+    <div id="teet-frontend"></div>
     <script src="main.js"></script>
     <script src="https://unpkg.com/@material-ui/core@latest/umd/material-ui.development.js" crossorigin="anonymous"></script>
-
   </body>
 </html>

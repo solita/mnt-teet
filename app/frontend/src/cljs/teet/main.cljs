@@ -55,7 +55,9 @@
          (fn [_]
            (localization/load-initial-language!
             #(r/render [t/tuck app-state/app #'main-view]
-                       (.getElementById js/document "projects-app"))))))
+                       (.getElementById js/document "teet-frontend"))))))
 
 (defn ^:after-load after-load []
   (r/force-update-all))
+
+(js/resolveOnload)
