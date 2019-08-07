@@ -5,6 +5,9 @@ env:
     JAVA_HOME: "/usr/lib/jvm/java-8-openjdk-amd64"
     FRONTEND: "app/frontend"
     BACKEND: "app/backend"
+    IMAGE_REPO_NAME: "teet-service"
+    IMAGE_TAG: "latest"
+    ECS_TASK_NAME: "teet-service"
 
 phases:
   install:
@@ -25,6 +28,12 @@ phases:
       - cd $BACKEND
       - bash resources.sh
       - bash build.sh
+  post_build:
+   commands:
+     - cd ../..
+     - printf '[{"name":"%s","imageUri":"%s"}]' $ECS_TASK_NAME $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG > service.imagedefinitions.json
+artifacts:
+   files: service.imagedefinitions.json
 cache:
   paths:
     - '/root/.m2/**/*'
