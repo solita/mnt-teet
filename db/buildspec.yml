@@ -6,6 +6,7 @@ env:
     IMAGE_TAG: "latest"
     AWS_ACCOUNT_ID: "512288025010"
     AWS_DEFAULT_REGION: "eu-central-1"
+    ECS_TASK_NAME: "teet-db-migrate"
 
 phases:
   install:
@@ -19,3 +20,9 @@ phases:
       - cd db
       - docker build . -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+  post_build:
+   commands:
+     - cd ..
+     - printf '[{"name":"%s","imageUri":"%s"}]' $ECS_TASK_NAME $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG > db.imagedefinitions.json
+artifacts:
+   files: db.imagedefinitions.json
