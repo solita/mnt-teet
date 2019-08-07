@@ -1,0 +1,5 @@
+{:deps {org.flywaydb/flyway-core {:mvn/version "5.2.4"}
+        org.postgresql/postgresql {:mvn/version "42.2.5"}}
+ :paths ["src" "src/main/resources"]
+ :aliases {:pack {:extra-deps {pack/pack.alpha {:git/url "https://github.com/juxt/pack.alpha.git"
+                                                :sha "2769a6224bfb938e777906ea311b3daf7d2220f5"}}}}}
