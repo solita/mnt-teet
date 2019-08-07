@@ -3,6 +3,8 @@ version: 0.2
 env:
   variables:
     WD: "app/api"
+    IMAGE_REPO_NAME: "teet-api"
+    IMAGE_TAG: "latest"
 
 phases:
   install:
@@ -16,3 +18,8 @@ phases:
       - cd $WD && bash build.sh
       - docker tag mnt-teet/teet-api:latest 512288025010.dkr.ecr.eu-central-1.amazonaws.com/teet-api:latest
       - docker push 512288025010.dkr.ecr.eu-central-1.amazonaws.com/teet-api:latest
+  post_build:
+   commands:
+     - printf '[{"name":"your.task.definition.name","imageUri":"%s"}]' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG > imagedefinitions.json
+artifacts:
+   files: imagedefinitions.json
