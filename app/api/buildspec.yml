@@ -20,6 +20,7 @@ phases:
       - docker push 512288025010.dkr.ecr.eu-central-1.amazonaws.com/teet-api:latest
   post_build:
    commands:
+     - cd ../..
      - printf '[{"name":"your.task.definition.name","imageUri":"%s"}]' $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG > imagedefinitions.json
 artifacts:
    files: imagedefinitions.json
