@@ -159,18 +159,19 @@ $$ LANGUAGE SQL STABLE;
 CREATE TYPE common.search_result AS (
   type TEXT,
   id INT,
-  label TEXT
+  label TEXT,
+  data JSON
 );
 
 CREATE FUNCTION projects.quicksearch(q TEXT)
 RETURNS SETOF common.search_result
 AS $$
-SELECT ROW('projectgroup', pg.id, pg.name)::common.search_result
+SELECT ROW('projectgroup', pg.id, pg.name, NULL)::common.search_result
   FROM projects.projectgroup pg
  WHERE pg.name ILIKE '%'||q||'%'
     OR pg.description ILIKE '%'||q||'%'
 UNION ALL
-SELECT ROW('project', p.id, p.name)::common.search_result
+SELECT ROW('project', p.id, p.name, NULL)::common.search_result
   FROM projects.project p
  WHERE p.name ILIKE '%'||q||'%'
     OR p.description ILIKE '%'||q||'%'
