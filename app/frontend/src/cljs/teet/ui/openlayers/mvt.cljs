@@ -35,7 +35,7 @@
                   parameters))))
 
 (defn load-tile [tile url]
-  (.log js/console "Loading: " url)
+  ;;(.log js/console "Loading: " url)
   (let [format (.getFormat tile)]
     (.setLoader
      tile
@@ -46,10 +46,8 @@
            (.then (fn [buf]
                     (let [features (.readFeatures format buf #js {:featureProjection "EPSG:3857"})
                           projection (.readProjection format buf)]
-
-                      (.log js/console "FEATURES: " features)
-                      (.log js/console "PROJECTION: " projection)
-                      #_(.setFeatures tile features)
+                      ;;(.log js/console "FEATURES: " features)
+                      ;;(.log js/console "PROJECTION: " projection)
                       (.onLoad tile features
                                projection
                                (.getLastExtent format))))))))))

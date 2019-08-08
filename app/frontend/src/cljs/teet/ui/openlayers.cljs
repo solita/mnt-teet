@@ -24,7 +24,6 @@
             ;[teet.style.colors :as colors]
             ;[teet.ui.openlayers.featuret :refer [aseta-tyylit] :as featuret]
             [teet.ui.openlayers.geojson :as geojson]
-            [teet.ui.openlayers.geometriataso]
             [teet.ui.openlayers.kuvataso :as kuvataso]
             [teet.ui.openlayers.mvt :as mvt]
             [teet.ui.openlayers.projektiot :refer [projektio estonian-extent]]
