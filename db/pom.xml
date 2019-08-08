@@ -49,8 +49,8 @@
         <activeByDefault>true</activeByDefault>
       </activation>
       <properties>
-        <databaseUrl>jdbc:postgresql://localhost/teis</databaseUrl>
-        <databaseUser>teis</databaseUser>
+        <databaseUrl>jdbc:postgresql://localhost/teet</databaseUrl>
+        <databaseUser>teet</databaseUser>
       </properties>
     </profile>
   </profiles>

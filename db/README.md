@@ -10,13 +10,8 @@ pom.xml contains a template for running the flyway migrations.
 
 * Run commands in psql:
 
-> CREATE ROLE teis WITH LOGIN SUPERUSER;
-> CREATE DATABASE teis OWNER teis;
-> CREATE ROLE authenticator;
-> CREATE ROLE teis_user NOLOGIN;
-> CREATE ROLE teis_anon NOLOGIN;
-> GRANT teis_user TO authenticator;
-> GRANT teis_anon TO authenticator;
+> CREATE ROLE teet WITH LOGIN SUPERUSER;
+> CREATE DATABASE teet OWNER teet;
 
 
 * Run migrations: mvn flyway:migrate

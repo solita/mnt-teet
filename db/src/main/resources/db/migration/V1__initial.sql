@@ -1,3 +1,11 @@
+-- Create users for API
+
+CREATE ROLE authenticator LOGIN;
+CREATE ROLE teet_user NOLOGIN;
+CREATE ROLE teet_anon NOLOGIN;
+GRANT teet_user TO authenticator;
+GRANT teet_anon TO authenticator;
+
 CREATE SCHEMA projects;
 CREATE SCHEMA common;
 CREATE SCHEMA users;
@@ -186,7 +194,7 @@ CREATE TYPE common.authinfo AS (
 CREATE FUNCTION projects.whoami() RETURNS common.authinfo
 AS $$
 BEGIN
- IF current_user = 'teis_anon' THEN
+ IF current_user = 'teet_anon' THEN
    RETURN ROW(false, NULL, NULL)::common.authinfo;
  ELSE
    RETURN ROW(true,
@@ -196,10 +204,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE;
 
-GRANT USAGE ON SCHEMA projects to teis_anon;
-GRANT USAGE ON SCHEMA projects to teis_user;
-GRANT USAGE ON SCHEMA common TO teis_anon;
-GRANT USAGE ON SCHEMA common TO teis_user;
+GRANT USAGE ON SCHEMA projects to teet_anon;
+GRANT USAGE ON SCHEMA projects to teet_user;
+GRANT USAGE ON SCHEMA common TO teet_anon;
+GRANT USAGE ON SCHEMA common TO teet_user;
 
-GRANT SELECT ON projects.project TO teis_user;
-GRANT SELECT ON projects.projectgroup TO teis_user;
+GRANT SELECT ON projects.project TO teet_user;
+GRANT SELECT ON projects.projectgroup TO teet_user;
