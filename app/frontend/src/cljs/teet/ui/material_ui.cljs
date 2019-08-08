@@ -1,4 +1,5 @@
 (ns teet.ui.material-ui
+  (:refer-clojure :exclude [List])
   (:require [goog.object :as gobj]
             [reagent.core])
   (:require-macros [teet.ui.material-ui-macros :refer [define-mui-components]]))
