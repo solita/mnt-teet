@@ -13,7 +13,7 @@
           {:tuck.effect/type :debounce
            :timeout 300
            :effect {:tuck.effect/type :rpc
-                    :endpoint (get-in app [:config :project-registry-url])
+                    :endpoint (get-in app [:config :api-url])
                     :rpc "quicksearch"
                     :args {:q term}
                     :result-path [:quick-search :results]}})))

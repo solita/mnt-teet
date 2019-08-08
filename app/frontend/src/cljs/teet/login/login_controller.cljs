@@ -40,7 +40,7 @@
            :username (get-in app [:login :form :username])
            :password (get-in app [:login :form :password])
            :login-url (get-in app [:config :login-url])
-           :api-url (get-in app [:config :project-registry-url])}))
+           :api-url (get-in app [:config :api-url])}))
 
   SetTokens
   (process-event [{tokens :tokens} app]
@@ -48,7 +48,7 @@
     (t/fx (assoc-in app [:login :tokens] tokens)
           {::tuck-effect/type :fetch-user-info
            :token (get tokens "id_token")
-           :api-url (get-in app [:config :project-registry-url])}))
+           :api-url (get-in app [:config :api-url])}))
 
   SetUserInfo
   (process-event [{user :user} app]

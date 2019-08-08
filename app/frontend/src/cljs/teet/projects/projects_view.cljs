@@ -13,7 +13,7 @@
 
 (defn projects-listing [e! app]
   [postgrest-listing/listing
-   {:endpoint (get-in app [:config :project-registry-url])
+   {:endpoint (get-in app [:config :api-url])
     :token (get-in app login-paths/token)
     :state (get-in app [:projects :listing])
     :set-state! #(e! (projects-controller/->SetListingState %))

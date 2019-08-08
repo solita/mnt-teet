@@ -33,7 +33,7 @@
 
 (defn project-groups-listing [e! app]
   [postgrest-listing/listing
-   {:endpoint (get-in app [:config :project-registry-url])
+   {:endpoint (get-in app [:config :api-url])
     :token (get-in app login-paths/token)
     :state (get-in app [:project-groups :listing])
     :set-state! #(e! (project-groups-controller/->SetListingState %))
@@ -52,7 +52,7 @@
 
 (defn project-group-page [e! {:keys [project-group] :as app}]
   (let [group-id (get-in app [:params :group])
-        endpoint (get-in app [:config :project-registry-url])]
+        endpoint (get-in app [:config :api-url])]
     ^{:key group-id}
     [:div.project-group-page
      [map-view/map-view e! {:height "400px"
