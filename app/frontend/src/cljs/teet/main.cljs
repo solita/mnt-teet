@@ -51,11 +51,9 @@
   (routes/start!)
   (stylefy/init)
   (postgrest-ui.elements/set-default-style! :material)
-  (.then (app-state/init!)
-         (fn [_]
-           (localization/load-initial-language!
-            #(r/render [t/tuck app-state/app #'main-view]
-                       (.getElementById js/document "teet-frontend"))))))
+  (localization/load-initial-language!
+   #(r/render [t/tuck app-state/app #'main-view]
+              (.getElementById js/document "teet-frontend"))))
 
 (defn ^:after-load after-load []
   (r/force-update-all))
