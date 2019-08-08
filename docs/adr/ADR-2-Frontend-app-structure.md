@@ -19,7 +19,8 @@ Example: `teet.search.search-view` and `teet.search.search-controller`
 When referring to namespaces, use the last part of the name fully, e.g. `search-view`
 ```clojure
 (ns teet.search.search-view
-  (:require [teet.search.search-controller :as search-controller]))```
+  (:require [teet.search.search-controller :as search-controller]))
+```
 
 Features may use implementation specific sub-namespaces as seen fit.
 
