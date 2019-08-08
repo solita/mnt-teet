@@ -22,8 +22,8 @@
 
     [:body {:data-api-url (or (System/getProperty "API_URL") "/api")}
      [:div#teet-frontend]
-     [:script {:src "material-ui.production.min.js"}]
-     [:script {:src "main.js"}]]]])
+     [:script {:src "main.js"}]
+     [:script {:src "material-ui.production.min.js"}]]]])
 
 (defn index-route []
   {:status 200
