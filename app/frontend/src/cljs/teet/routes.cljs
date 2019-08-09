@@ -31,7 +31,7 @@
     ["/login" :login]
     ["/projects" :projects]
     ["/projectgroup/:group" :project-group]
-    ["/projectgroup/:group/project/:project" :projects-project]
+    ["/projectgroup/:group/project/:project" :project]
     ]))
 
 (defmulti on-navigate-event

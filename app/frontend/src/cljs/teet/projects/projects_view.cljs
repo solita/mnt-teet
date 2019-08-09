@@ -4,7 +4,8 @@
             [teet.projects.projects-controller :as projects-controller]
             [teet.search.search-interface :as search-interface]
             [teet.ui.icons :as icons]
-            [teet.login.login-paths :as login-paths]))
+            [teet.login.login-paths :as login-paths]
+            [teet.projects.project-form :as project-form]))
 
 (defmethod search-interface/format-search-result "project" [{:keys [id label]}]
   {:icon [icons/file-folder-open]
@@ -19,3 +20,8 @@
     :set-state! #(e! (projects-controller/->SetListingState %))
     :table "project"
     :select ["id" "name" "duration" "description"]}])
+
+
+(defn project-page [e! {{:keys [project]} :params :as app}]
+  (if (= "new" project)
+    [project-form/project-form e! (:project app)]))

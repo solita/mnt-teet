@@ -7,6 +7,7 @@
 (extend-protocol t/Event
   UpdateQuickSearchTerm
   (process-event [{term :term} app]
+    (.log js/console "NEW-TERM " term)
     (t/fx (-> app
               (assoc-in [:quick-search :results] nil)
               (assoc-in [:quick-search :term] term))

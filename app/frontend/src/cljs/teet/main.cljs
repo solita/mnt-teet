@@ -44,6 +44,7 @@
       (case page
         (:default-page :root :projects) [groups-and-projects-page e! app]
         :project-group [project-groups-view/project-group-page e! app]
+        :project [projects-view/project-page e! app]
         [:div "Unimplemented page: " (pr-str page)])]
      [df/DataFriskShell app]]))
 

@@ -3,7 +3,7 @@
   (:require [reagent.core :as r]
             [teet.ui.material-ui :refer [Card CardHeader CardActionArea CardActions CardContent
                                          Collapse
-                                         IconButton Button]]
+                                         IconButton Button Divider]]
             [teet.ui.icons :as icons]))
 
 (defn collapsible-panel
@@ -23,7 +23,15 @@
                                 [icons/navigation-expand-more])])}]
        [Collapse {:in open? :unmountOnExit true :timeout "auto"}
         [CardContent
+         [Divider]
          content]]])))
+
+(defn panel
+  "Simple content panel with title and content"
+  [{:keys [title]} content]
+  [Card
+   [CardHeader {:title title}]
+   [CardContent content]])
 
 (defn main-content-panel [{:keys [title]} content]
   [Card
