@@ -41,7 +41,6 @@
     :select ["id" "name" "description"
              {:table "phase" :select ["name"]}
              "created"]
-    :filter {"name" [:like "Plan%"]}
     :format {"name" link-to-project-group}}])
 
 (defn project-group-info [{:strs [name] :as group}]
