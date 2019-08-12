@@ -22,7 +22,7 @@ phases:
   build:
     commands:
       - cd db
-      - bash build.sh
+      - bash build.bash
   post_build:
    commands:
      - cd ..

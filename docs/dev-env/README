@@ -1,0 +1,12 @@
+
+
+Local dev setup:
+
+ - install Clojure - ensure "clojure" and "clj" commands are in $PATH
+ - set AWS env vars - needed even for local dev pull ECR hosted Docker images
+ - No PostgreSQL included (dockerized or otherwise) included,
+   install your own manually
+ - PostgREST & PostgreSQL
+    - run db/build.sh  -
+    - run app/api/build.sh - build PostgREST docker image
+ - app/frontend/dev.sh to start frontend
