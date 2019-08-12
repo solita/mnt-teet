@@ -1,0 +1,7 @@
+to create: docker run  -p 127.0.0.1:5432:5432 --name teetdb -e POSTGRES_PASSWORD=`cat pgpassword` --network docker_teet -d postgres
+exec in db container: apt-get install --no-install-recommends postgresql-11-postgis-2.5{,-scripts}
+using docker cp, insert a line to pg_hba.conf
+- docker cp teetdb:/var/lib/postgresql/data/pg_hba.conf .
+- echo host all all 172.17.0.0/16 trust >> pg_hba.conf
+- docker cp pg_hba.conf teetdb:/var/lib/postgresql/data/pg_hba.conf 
+(restart teetdb)
