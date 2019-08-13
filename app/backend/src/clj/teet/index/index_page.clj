@@ -20,7 +20,7 @@
      })
      .then(() => { teet.main.main(); });"]
 
-    [:body {:data-api-url (or (System/getProperty "API_URL") "/api")}
+    [:body {:data-api-url (or (System/getenv "API_URL") "/")}
      [:div#teet-frontend]
      [:script {:src "main.js"}]
      [:script {:src "material-ui.production.min.js"}]]]])
