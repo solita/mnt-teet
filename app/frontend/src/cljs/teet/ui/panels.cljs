@@ -12,7 +12,8 @@
   Additional :action can element can be provided to add another action to the panel header."
   [{:keys [title] :as opts} content]
   (r/with-let [open-atom (or (:open-atom opts) (r/atom false))]
-    (let [open? @open-atom]
+    (let [open-atom (or (:open-atom opts) open-atom)
+          open? @open-atom]
       [Card
        [CardHeader {:title title
                     :action (r/as-element
