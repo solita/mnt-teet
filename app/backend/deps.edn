@@ -1,7 +1,21 @@
 {:deps {http-kit {:mvn/version "2.3.0"}
         compojure {:mvn/version "1.6.1"}
         hiccup {:mvn/version "1.0.5"}
-        com.taoensso/timbre {:mvn/version "4.10.0"}}
+        com.taoensso/timbre {:mvn/version "4.10.0"}
+
+        ;; Data formats
+        cheshire {:mvn/version "5.9.0"}
+        org.clojure/data.csv {:mvn/version "0.1.4"}
+
+        ;; JWT and JWK
+        com.nimbusds/nimbus-jose-jwt {:mvn/version "5.14"}
+
+        ;; Database driver and libraries
+        org.postgresql/postgresql {:mvn/version "42.1.4"}
+        com.zaxxer/HikariCP {:mvn/version "2.6.1"}
+        webjure/jeesql {:mvn/version "0.4.7"}
+
+        }
  :paths ["src/clj" "resources"]
  :aliases {:pack {:extra-deps {pack/pack.alpha {:git/url "https://github.com/juxt/pack.alpha.git"
                                                 :sha "2769a6224bfb938e777906ea311b3daf7d2220f5"}}}}}
