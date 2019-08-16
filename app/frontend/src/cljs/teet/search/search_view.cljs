@@ -16,6 +16,7 @@
   (let [show-results? (r/atom false)]
     (common/component
      (hotkeys/hotkey "?" #(.focus (.getElementById js/document "quick-search")))
+     (hotkeys/hotkey "Escape" #(reset! show-results? false))
      (events/click-outside #(reset! show-results? false))
      (fn [e! {:keys [quick-search]}]
        [:<>
