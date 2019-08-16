@@ -2,7 +2,8 @@
   (:require [compojure.core :refer [GET routes]]
             [org.httpkit.client :as client]
             [cheshire.core :as cheshire]
-            [tara.json :as json])
+            [tara.json :as json]
+            [taoensso.timbre :as log])
   (:import (java.util UUID Base64)
            (java.net URLEncoder)))
 
@@ -12,7 +13,7 @@
 (defn auth-request [{:keys [authorization-endpoint] :as tara-endpoint}
                     {:keys [base-url client-id cookie-name] :as  client-properties}
                     {:keys [params] :as req}]
-  (println "REQ: " (pr-str req))
+  (println "TARA REQ: " (pr-str req))
   (let [state (str (UUID/randomUUID))
         nonce (str (UUID/randomUUID))
         scope (get params "scope" "openid")
@@ -20,13 +21,14 @@
                  "?scope=" (enc scope)
                  "&response_type=code"
                  "&client_id=" (enc client-id)
-                 "&redirect_url=" (enc (str base-url "/oauth/response"))
+                 "&redirect_url=" (enc (str base-url "/oauth2/idpresponse"))
                  "&state=" (enc state)
                  "&nonce=" (enc nonce)
                  (when-let [acr (get params "acr_values")]
                    (str "&acr_values=" (enc acr)))
                  (when-let [locales (get params "ui_locales")]
                    (str "&ui_locales=" (enc locales))))]
+    (println "FORWARDING TO TARA AUTH: " url)
     {:status 302
      :headers {"Location" url
                "Set-Cookie" (str (or cookie-name "TARAClient") "=" state "; Secure; HttpOnly")}
@@ -39,6 +41,7 @@
 (defn auth-response [{:keys [token-endpoint] :as tara-endpoint}
                      {:keys [client-id client-secret base-url on-error on-success] :as client-properties}
                      {params :params :as req}]
+  (log/info "TARA RESPONSE:" (pr-str req))
   (let [{:strs [code error error_description]} params]
     (if error
       ;; Returned from TARA with error
@@ -62,7 +65,7 @@
   client properties map."
   [tara-endpoint client-properties]
   (routes
-   (GET "/oauth/request" req
+   (GET "/oauth2/request" req
         (auth-request tara-endpoint client-properties req))
-   (GET "/oauth/response" req
+   (GET "/oauth2/idpresponse" req
         (auth-response tara-endpoint client-properties req))))
