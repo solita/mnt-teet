@@ -21,7 +21,7 @@
                  "?scope=" (enc scope)
                  "&response_type=code"
                  "&client_id=" (enc client-id)
-                 "&redirect_url=" (enc (str base-url "/oauth2/idpresponse"))
+                 "&redirect_uri=" (enc (str base-url "/oauth2/idpresponse"))
                  "&state=" (enc state)
                  "&nonce=" (enc nonce)
                  (when-let [acr (get params "acr_values")]
