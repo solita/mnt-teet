@@ -52,6 +52,7 @@
 
 (defonce hotkey-disallow #{"INPUT" "SELECT" "TEXTAREA"})
 (def space-key 32)
+(def escape 27)
 
 (defn- hotkey-disallowed?
   "Returns true when hotkey is disallowed
@@ -59,8 +60,10 @@
   SELECT tag is a special case. When doing position or sector measurements space key is the way actual measurement is done. The default behaviour
   of space in the select tag doesn't make sense in this context, so space hotkeys are let through."
   [active-tag kc]
-  (if (and (= active-tag "SELECT")
-           (= kc space-key))
+  (if (or
+        (and (= active-tag "SELECT")
+          (= kc space-key))
+        (= kc escape))
     false
     (some? (hotkey-disallow active-tag))))
 
@@ -70,8 +73,6 @@
           (fn [event]
             (when (not (.-ctrlKey event))
               (let [kc (.-keyCode event)]
-                (when (= 27 kc) ;; ESC key
-                  (.blur js/document.activeElement))
                 (when (and (not (hotkey-disallowed? (some-> js/document .-activeElement .-tagName) kc))
                            (not (@hotkey-down-keys kc)))
                   (swap! hotkey-down-keys conj kc)
