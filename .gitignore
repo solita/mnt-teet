@@ -3,3 +3,7 @@
 .cpcache
 .nrepl-port
 app/backend/resources
+
+# Intellij idea related ignores
+.idea
+*.iml
