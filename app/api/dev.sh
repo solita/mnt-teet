@@ -23,8 +23,10 @@ fi
 docker run $ARGS \
        -e PGRST_DB_URI="$URI" \
        -e PGRST_DB_ANON_ROLE="$ANON" \
-       -e PGRST_DB_SCHEMA="projects" \
-       -e PGRST_ROLE_CLAIM_KEY=".\"custom:role\"" \
-       -e COGNITO_REGION="eu-central-1" \
-       -e COGNITO_POOL_ID="eu-central-1_esU4rtEAi" \
-       mnt-teet/teet-api
+       -e PGRST_DB_SCHEMA="teet" \
+       postgrest/postgrest
+
+       #-e PGRST_ROLE_CLAIM_KEY=".\"custom:role\"" \
+       #-e COGNITO_REGION="eu-central-1" \
+       #-e COGNITO_POOL_ID="eu-central-1_esU4rtEAi" \
+       #mnt-teet/teet-api
