@@ -19,16 +19,6 @@
             [teet.login.login-view :as login-view]
             [tuck.core :as t]))
 
-(defn groups-and-projects-page [e! app]
-  [:div
-   [panels/collapsible-panel {:title (tr [:project-groups :title])
-                              :open-atom (common-controller/query-param-boolean-atom app :opengroups)}
-    [project-groups-view/project-groups-listing e! app]]
-   [Divider]
-   [panels/collapsible-panel {:title (tr [:projects :title])
-                              :open-atom (common-controller/query-param-boolean-atom app :openprojects)}
-    [projects-view/projects-listing e! app]]])
-
 
 (defn main-view [e! {:keys [page user] :as app}]
   (if (= page :login)
@@ -42,8 +32,7 @@
                        :action [search-view/quick-search e! app]}]
      [Paper
       (case page
-        (:default-page :root :projects) [groups-and-projects-page e! app]
-        :project-group [project-groups-view/project-group-page e! app]
+        (:default-page :root :projects) [projects-view/projects-page e! app]
         :project [projects-view/project-page e! app]
         [:div "Unimplemented page: " (pr-str page)])]
      [df/DataFriskShell app]]))
