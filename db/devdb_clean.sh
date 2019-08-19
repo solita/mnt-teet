@@ -11,11 +11,11 @@ function check_psql {
 check_psql
 
 echo "Dropping and recreating teis database."
-psql -c "DROP DATABASE teet;"
-psql -c "DROP ROLE authenticator;"
-psql -c "DROP ROLE teet_anon;"
-psql -c "DROP ROLE teet_user;"
-psql -c "CREATE DATABASE teet OWNER teet;"
+psql -h localhost -U postgres -c "DROP DATABASE teet;"
+psql -h localhost -U postgres -c "DROP ROLE authenticator;"
+psql -h localhost -U postgres -c "DROP ROLE teet_anon;"
+psql -h localhost -U postgres -c "DROP ROLE teet_user;"
+psql -h localhost -U postgres -c "CREATE DATABASE teet OWNER teet;"
 
 echo "Running migrations"
 mvn flyway:migrate
