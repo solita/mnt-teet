@@ -7,7 +7,7 @@
 (defn parse-thk-export-csv [input]
   (let [[headers & rows]
         (-> input
-            (io/reader :encoding "ISO-8859-1")
+            (io/reader :encoding "UTF-8")
             (csv/read-csv :separator \;))]
     (map #(zipmap headers %) rows)))
 
@@ -57,4 +57,5 @@
 
 (def i1 "/Volumes/GoogleDrive/Jaetut Drivet/Solita   Customers/Maanteeamet/Teiden elinkaaritiedon hallinta/Toteutusprojekti/Customer provided materials/THK_export.csv")
 
-(def t1 (parse-thk-export-csv i1))
+(defn run-test-import []
+  (import-thk-projects! db i1))
