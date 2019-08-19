@@ -62,7 +62,7 @@
             _ (log/info "TOKEN REQUEST: " (pr-str token-request))
             token-response @(client/post token-endpoint token-request)
             token (-> token-response :body json/parse)]
-        (if (contains? token "id_token")
+        (if (contains? token :id-token)
           (try
             (let [claims (token/verify tara-endpoint
                                        token
