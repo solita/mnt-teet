@@ -1,6 +1,7 @@
 (ns teet.index.index-page
   "Index page for TEET"
-  (:require [hiccup.core :as hiccup]))
+  (:require [hiccup.core :as hiccup]
+            [teet.util.build-info :as build-info]))
 
 (defn index-page []
   [:html
@@ -20,7 +21,8 @@
      })
      .then(() => { teet.main.main(); });"]
 
-    [:body {:data-api-url (or (System/getenv "API_URL") "/")}
+    [:body {:data-api-url (or (System/getenv "API_URL") "/")
+            :data-git-version (build-info/git-commit)}
      [:div#teet-frontend]
      [:script {:src "main.js"}]
      [:script {:src "material-ui.production.min.js"}]]]])
