@@ -53,7 +53,7 @@
       (let [token-request {:headers {"Authorization" (str "Basic "
                                                           (base64-encode (str client-id ":" client-secret)))
                                      "Content-Type" "application/x-www-form-urlencoded"}
-                           :body (str "grant_type=authorization"
+                           :body (str "grant_type=authorization_code"
                                       "&code=" (enc code)
                                       "&redirect_uri=" (enc base-url))
                            :as :text}
