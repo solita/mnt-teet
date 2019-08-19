@@ -43,6 +43,7 @@
                      {params :params :as req}]
   (log/info "TARA RESPONSE:" (pr-str req))
   (log/info "CLIENT PROPERTIES: " (pr-str client-properties))
+  (log/info "TARA ENDPOINT: " (pr-str tara-endpoint))
   (let [{:strs [code error error_description]} params]
     (if error
       ;; Returned from TARA with error
