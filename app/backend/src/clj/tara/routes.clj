@@ -3,7 +3,8 @@
             [org.httpkit.client :as client]
             [cheshire.core :as cheshire]
             [tara.json :as json]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [tara.token :as token])
   (:import (java.util UUID Base64)
            (java.net URLEncoder)))
 
@@ -39,7 +40,7 @@
                    (.getBytes string "UTF-8")))
 
 (defn auth-response [{:keys [token-endpoint] :as tara-endpoint}
-                     {:keys [client-id client-secret base-url on-error on-success] :as client-properties}
+                     {:keys [client-id client-secret base-url on-error on-success cookie-name] :as client-properties}
                      {params :params :as req}]
   (log/info "TARA RESPONSE:" (pr-str req))
   (log/info "CLIENT PROPERTIES: " (pr-str client-properties))
@@ -61,7 +62,20 @@
             _ (log/info "TOKEN REQUEST: " (pr-str token-request))
             token-response @(client/post token-endpoint token-request)
             token (-> token-response :body json/parse)]
-        (on-success token)))))
+        (if (contains? token "id_token")
+          (try
+            (let [claims (token/verify tara-endpoint
+                                       token
+                                       (get-in req [:cookies (or cookie-name "TARAClient") :value])
+                                       client-id)]
+              (log/info "GOT CLAIMS: " claims)
+              (on-success claims))
+            (catch Exception e
+              (on-error {:error "Exception thrown while verifying JWT token"
+                         :exception e})))
+
+          (on-error {:error "Received invalid token"
+                     :received-token token}))))))
 
 (defn tara-routes
   "Return a handler for authentication routes for the given TARA endpoint config map and
