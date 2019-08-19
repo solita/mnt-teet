@@ -2,14 +2,17 @@
   (:require [clojure.data.csv :as csv]
             [clojure.java.io :as io]
             [teet.thk.thk-db :as thk-db]
-            [clojure.string :as str]))
+            [clojure.string :as str])
+  (:import (org.apache.commons.io.input BOMInputStream)))
 
 (defn parse-thk-export-csv [input]
-  (let [[headers & rows]
-        (-> input
-            (io/reader :encoding "UTF-8")
-            (csv/read-csv :separator \;))]
-    (map #(zipmap headers %) rows)))
+  (with-open [raw-input-stream (io/input-stream input)
+              input-stream (BOMInputStream. raw-input-stream)]
+    (let [[headers & rows]
+          (-> input-stream
+              (io/reader :encoding "UTF-8")
+              (csv/read-csv :separator \;))]
+      (doall (map #(zipmap headers %) rows)))))
 
 (defn ->int [str]
   (when-not (str/blank? str)
