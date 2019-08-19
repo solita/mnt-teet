@@ -22,7 +22,6 @@
             ;[teet.geo :as geo]
             ;[teet.style.base :as style-base]
             ;[teet.style.colors :as colors]
-            ;[teet.ui.openlayers.featuret :refer [aseta-tyylit] :as featuret]
             [teet.ui.openlayers.geojson :as geojson]
             [teet.ui.openlayers.kuvataso :as kuvataso]
             [teet.ui.openlayers.mvt :as mvt]
@@ -47,22 +46,18 @@
 
 (def suomen-extent nil)
 
-(def ^{:doc "Odotusaika millisekunteina, joka odotetaan että
- kartan animoinnit on valmistuneet." :const true}
-  animaation-odotusaika 200)
-
-(def ^{:doc "ol3 näkymän resoluutio alkutilanteessa" :const true}
+(def ^{:doc "Initial resolution of ol3 view" :const true}
   initial-resolution 1200)
 
-(def ^{:doc "Pienin mahdollinen zoom-taso, johon käyttäjä voi zoomata ulos"
+(def ^{:doc "Smallest possible zoom level allowed for the user to zoom out"
        :const true}
   min-zoom 0)
-(def ^{:doc "Suurin mahdollinen zoom-taso, johon käyttäjä voi zoomata sisään"
+(def ^{:doc "Largest possible zoom level allowed for the user to zoom in"
        :const true}
   max-zoom 21)
 
 
-(def tooltipin-aika 3000)
+(def tooltip-time-ms 3000)
 
 ^{:doc "Set extent buffer to avoid zooming too close"}
 (def extent-buffer-default 1000)
@@ -71,51 +66,50 @@
 (defonce map-interactions (cljs.core/atom {}))
 
 
-;; Näihin atomeihin voi asettaa oman käsittelijän kartan
-;; klikkauksille ja hoveroinnille. Jos asetettu, korvautuu
-;; kartan normaali toiminta.
-;; Nämä ovat normaaleja cljs atomeja, eivätkä siten voi olla
-;; reagent riippuvuuksia.
-(defonce klik-kasittelija (cljs.core/atom []))
-(defonce hover-kasittelija (cljs.core/atom []))
+;; These atoms can be used to set custom handlers for map clicks and
+;; hovers. If set, they override the default behavior. Note that hese
+;; are normal cljs atoms, not reagent ones.
+(defonce click-handler (cljs.core/atom []))
+(defonce hover-handler (cljs.core/atom []))
 
-(defn aseta-klik-kasittelija!
-  "Asettaa kartan click käsittelijän. Palauttaa funktion, jolla käsittelijä poistetaan.
-  Käsittelijöitä voi olla useita samaan aikaan, jolloin vain viimeisenä lisättyä kutsutaan."
-  [funktio]
-  (swap! klik-kasittelija conj funktio)
-  #(swap! klik-kasittelija (fn [kasittelijat]
-                             (filterv (partial not= funktio) kasittelijat))))
+(defn set-click-handler!
+  "Sets a click handler for the map. Returns a function for removing the
+  handler. Multiple handlers can coexist, but only the most recently
+  added will be called."
+  [f]
+  (swap! click-handler conj f)
+  #(swap! click-handler (fn [handlers]
+                             (filterv (partial not= f) handlers))))
 
-(defn aseta-hover-kasittelija!
-  "Asettaa kartan hover käsittelijän. Palauttaa funktion, jolla käsittelijä poistetaan.
-  Käsittelijoitä voi olla useita samaan aikaan, jolloin vain viimeisenä lisättyä kutsutaan."
-  [funktio]
-  (swap! hover-kasittelija conj funktio)
-  #(swap! hover-kasittelija (fn [kasittelijat]
-                              (filterv (partial not= funktio) kasittelijat))))
+(defn set-hover-handler!
+  "Sets a hover handler for the map. Returns a function for removing the
+  handler. Multiple handlers can coexist, but only the most recently
+  added will be called."
+  [f]
+  (swap! hover-handler conj f)
+  #(swap! hover-handler (fn [handlers]
+                              (filterv (partial not= f) handlers))))
 
-;; Kanava, jolla voidaan komentaa karttaa
-(def komento-ch (chan))
-
+;; A channel for map commands
+(def command-ch (chan))
 
 (defn show-popup! [lat-lng content]
-  (go (>! komento-ch [::popup lat-lng content])))
+  (go (>! command-ch [::popup lat-lng content])))
 
 (defn hide-popup! []
-  (go (>! komento-ch [::hide-popup])))
+  (go (>! command-ch [::hide-popup])))
 
 (defn hide-popup-without-event! []
-  (go (>! komento-ch [::hide-popup-without-event])))
+  (go (>! command-ch [::hide-popup-without-event])))
 
 (defn invalidate-size! []
-  (go (>! komento-ch [::invalidate-size])))
+  (go (>! command-ch [::invalidate-size])))
 
-(defn aseta-kursori! [kursori]
-  (go (>! komento-ch [::cursor kursori])))
+(defn set-cursor! [kursori]
+  (go (>! command-ch [::cursor kursori])))
 
-(defn aseta-tooltip! [x y teksti]
-  (go (>! komento-ch [::tooltip x y teksti])))
+(defn set-tooltip! [x y teksti]
+  (go (>! command-ch [::tooltip x y teksti])))
 
 ;;;;;;;;;
 ;; Define the React lifecycle callbacks to manage the OpenLayers
@@ -124,91 +118,63 @@
 (declare update-ol3-geometries)
 
 
-(def ^:export the-kartta (atom nil))
+(def ^:export the-map (atom nil))
 
 (defmethod tuck.effect/process-effect :refresh-layer [_ {layer-name :layer}]
   (when-let [layer (some #(when (= (.get % "teet-layer-name") (name layer-name)) %)
-                         (.getArray (.getLayers @the-kartta)))]
+                         (.getArray (.getLayers @the-map)))]
     (log/info "Refreshing layer " layer)
     (.clear (.getSource layer))
     (.refresh (.getSource layer))))
 
 ;; expose map to browser for development and debugging
-(defn ^:export get-the-kartta [] @the-kartta)
+(defn ^:export get-the-map [] @the-map)
 
 (defn set-map-size! [w h]
-  (.setSize @the-kartta (clj->js [w h])))
+  (.setSize @the-map (clj->js [w h])))
 
-(defn keskita-kartta-pisteeseen! [keskipiste]
-  (when-let [ol3 @the-kartta]
-    (.setCenter (.getView ol3) (clj->js keskipiste))))
+(defn center-map-on-point! [center]
+  (when-let [ol3 @the-map]
+    (.setCenter (.getView ol3) (clj->js center))))
 
-(defn keskita-kartta-alueeseen! [alue]
-  (assert (vector? alue) "Alueen tulee vektori numeroita")
-  (assert (= 4 (count alue)) "Alueen tulee olla vektori [minx miny maxx maxy]")
-  (when-let [ol3 @the-kartta]
+(defn center-map-on-area! [area]
+  (assert (vector? area) "Area must be a vector of numbers")
+  (assert (= 4 (count area)) "Area must be a vector [minx miny maxx maxy]")
+  (when-let [ol3 @the-map]
     (let [view (.getView ol3)]
-      (.fit view (clj->js alue) (.getSize ol3)))))
+      (.fit view (clj->js area) (.getSize ol3)))))
 
-(defn extent-sisaltaa-extent? [iso pieni]
-  (assert (and (vector? iso) (vector? pieni)) "Alueen tulee vektori numeroita")
-  (assert (and (= 4 (count iso)) (= 4 (count pieni)))
-          "Alueen tulee olla vektori [minx miny maxx maxy]")
+(defn extent-contains-extent? [large small]
+  (assert (and (vector? large) (vector? small)) "Area must be a vector of numbers")
+  (assert (and (= 4 (count large)) (= 4 (count small)))
+          "Area must be a vector [minx miny maxx maxy]")
 
-  (ol/extent.containsExtent (clj->js iso) (clj->js pieni)))
+  (ol/extent.containsExtent (clj->js large) (clj->js small)))
 
-(defn ^:export debug-keskita [x y]
-  (keskita-kartta-pisteeseen! [x y]))
+(defn ^:export debug-center [x y]
+  (center-map-on-point! [x y]))
 
 (defn ^:export invalidate-size []
-  (.invalidateSize @the-kartta))
+  (.invalidateSize @the-map))
 
-(defn kartan-extent []
-  (when-let [k @the-kartta]
+(defn map-extent []
+  (when-let [k @the-map]
     (.calculateExtent (.getView k) (.getSize k))))
 
-(defonce openlayers-kartan-leveys (atom nil))
-(defonce openlayers-kartan-korkeus (atom nil))
+(defonce openlayers-map-width (atom nil))
+(defonce openlayers-map-height (atom nil))
 
-#_(defn luo-kuvataso
-  "Luo uuden kuvatason joka hakee serverillä renderöidyn kuvan.
-Ottaa sisään vaihtelevat parametri nimet (string) ja niiden arvot.
-Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti."
-  [lahde selitteet opacity min-resolution max-resolution & parametri-nimet-ja-arvot]
-  (kuvataso/luo-kuvataso nil suomen-extent selitteet opacity min-resolution max-resolution
-                         (concat ["_" (name lahde)]
-                                 parametri-nimet-ja-arvot)))
+(defn same-layer? [old new]
+  (kuvataso/sama? old new))
 
-#_(defn luo-mvt-taso
-  "Luo uuden MVT (Mapbox Vector Tile) tason, joka hakee palvelimelta vektoridataa."
-  [lahde selitteet opacity min-resolution max-resolution style-fn & parametri-nimet-ja-arvot]
-  (mvt/luo-mvt-taso lahde projektio suomen-extent selitteet
-                    opacity min-resolution max-resolution
-                    (concat ["_" (name lahde)]
-                            parametri-nimet-ja-arvot)
-                    style-fn))
-
-#_(defn luo-tile-taso
-  "Luo WMS tai WMTS lähteestä tason"
-  [lahde opacity type url layer style]
-  (tile/luo-tile-taso lahde projektio suomen-extent opacity type url {:layer layer :style style}))
-
-#_(defn luo-geojson-taso
-  "Luo uuden GeoJSON tason, joka hakee tiedot annetusta URL-osoitteesta."
-  [lahde opacity url style-fn]
-  (geojson/luo-geojson-taso lahde projektio suomen-extent opacity url style-fn ))
-
-(defn sama-kuvataso? [vanha uusi]
-  (kuvataso/sama? vanha uusi))
-
-(defn keskipiste
-  "Laskee geometrian keskipisteen extent perusteella"
+(defn center-point
+  "Calculates the center point of the geometry based on the extent"
   [geometria]
   (let [[x1 y1 x2 y2] (.getExtent geometria)]
     [(+ x1 (/ (- x2 x1) 2))
      (+ y1 (/ (- y2 y1) 2))]))
 
-(defn feature-geometria [feature layer]
+(defn feature-geometry [feature layer]
   (or
    ;; Normal geometry layer item
    (.get feature "teet-geometria")
@@ -218,17 +184,16 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
     :map/type (.get layer "teet-source")
     :map/id (.get feature "id")}))
 
-(defn- tapahtuman-geometria
-  "Hakee annetulle ol3 tapahtumalle geometrian. Palauttaa ensimmäisen löytyneen
-  geometrian."
-  ([this e] (tapahtuman-geometria this e true))
-  ([this e lopeta-ensimmaiseen?]
+(defn- event-geometry
+  "Obtains geometry for the given ol3 event. Returns the first geometry found."
+  ([this e] (event-geometry this e true))
+  ([this e return-first?]
    (let [geom (volatile! [])
          {:keys [ol3]} (reagent/state this)]
      (.forEachFeatureAtPixel ol3 (.-pixel e)
                              (fn [feature layer]
-                               (vswap! geom conj (feature-geometria feature layer))
-                               lopeta-ensimmaiseen?)
+                               (vswap! geom conj (feature-geometry feature layer))
+                               return-first?)
                              ;; Funktiolle voi antaa options, jossa hitTolerance. Eli radius, miltä featureita haetaan.
                              )
 
@@ -236,53 +201,53 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
        (empty? @geom)
        nil
 
-       lopeta-ensimmaiseen?
+       return-first?
        (first @geom)
 
        :else @geom))))
 
-(defn- laske-kartan-alue [ol3]
+(defn- get-map-area [ol3]
   (.calculateExtent (.getView ol3) (.getSize ol3)))
 
-(defn- tapahtuman-kuvaus
-  "Tapahtuman kuvaus ulkoisille käsittelijöille"
+(defn- event-description
+  "Event description for external handlers"
   [this e]
   (let [c (.-coordinate e)
         tyyppi (.-type e)]
-    {:tyyppi   (case tyyppi
+    {:type     (case tyyppi
                  "pointermove" :hover
                  "click" :click
                  "singleclick" :click
                  "dblclick" :dbl-click)
-     :geometria (tapahtuman-geometria this e)
-     :sijainti [(aget c 0) (aget c 1)]
+     :geometry (event-geometry this e)
+     :location [(aget c 0) (aget c 1)]
      :x        (aget (.-pixel e) 0)
      :y        (aget (.-pixel e) 1)}))
 
-(defn- aseta-postrender-kasittelija [_ ol3 on-postrender]
+(defn- set-postrender-handler [_ ol3 on-postrender]
   (.on ol3 "postrender"
        (fn [e]
          (when on-postrender
            (on-postrender e)))))
 
-(defn- aseta-zoom-kasittelija [_ ol3 on-zoom]
+(defn- set-zoom-handler [_ ol3 on-zoom]
   (.on (.getView ol3) "change:resolution"
        (fn [e]
          (when on-zoom
-           (on-zoom e (laske-kartan-alue ol3))))))
+           (on-zoom e (get-map-area ol3))))))
 
-(defn- aseta-drag-kasittelija [_ ol3 on-move]
+(defn- set-drag-handler [_ ol3 on-move]
   (.on ol3 "pointerdrag" (fn [e]
                            (when on-move
-                             (on-move e (laske-kartan-alue ol3))))))
+                             (on-move e (get-map-area ol3))))))
 
-(defn- aseta-klik-kasittelija [this ol3 on-click on-select]
+(defn- set-click-handler [this ol3 on-click on-select]
   (.on ol3 "singleclick"
        (fn [e]
-         (if-let [kasittelija (peek @klik-kasittelija)]
-           (kasittelija (tapahtuman-kuvaus this e))
+         (if-let [kasittelija (peek @click-handler)]
+           (kasittelija (event-description this e))
 
-           (if-let [g (tapahtuman-geometria this e true)]
+           (if-let [g (event-geometry this e true)]
              (do
                (log/info "on-select" g)
                (when on-select (on-select [g] e)))
@@ -291,98 +256,92 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                (aset js/window "EVT" e)
                (when on-click (on-click e))))))))
 
-;; dblclick on-clickille ei vielä tarvetta - zoomaus tulee muualta.
-(defn- aseta-dblclick-kasittelija [this ol3 on-click on-select]
+(defn- set-dblclick-handler [this ol3 on-click on-select]
   (.on ol3 "dblclick"
        (fn [e]
-         (if-let [kasittelija (peek @klik-kasittelija)]
-           (kasittelija (tapahtuman-kuvaus this e))
+         (if-let [handler (peek @click-handler)]
+           (handler (event-description this e))
            (when on-select
-             (when-let [g (tapahtuman-geometria this e false)]
+             (when-let [g (event-geometry this e false)]
                (on-select g e)))))))
 
-
-(defn aseta-hover-kasittelija [this ol3]
+(defn set-hover-handler [this ol3]
   (.on ol3 "pointermove"
        (fn [e]
-         (if-let [kasittelija (peek @hover-kasittelija)]
-           (kasittelija (tapahtuman-kuvaus this e))
+         (if-let [handler (peek @hover-handler)]
+           (handler (event-description this e))
 
            (reagent/set-state this
-                              (if-let [g (tapahtuman-geometria this e)]
+                              (if-let [g (event-geometry this e)]
                                 {:hover (assoc g
                                                :x (aget (.-pixel e) 0)
                                                :y (aget (.-pixel e) 1))}
                                 {:hover nil}))))))
 
 
-(defn keskita!
-  "Keskittää kartan näkymän annetun featureen sopivaksi."
+(defn center!
+  "Centers the map view to fit the given feature"
   [ol3 feature]
   (let [view (.getView ol3)
         extent (.getExtent (.getGeometry feature))]
     (.fit view extent (.getSize ol3))))
 
-(defn- poista-openlayers-popup!
-  "Älä käytä tätä suoraan, vaan kutsu poista-popup! tai
-  poista-popup-ilman-eventtia!"
+(defn- remove-openlayers-popup!
+  "Do not call this directly. Istead, use `remove-popup!` or `remove-popup-without-event!`"
   [this]
   (let [{:keys [ol3 popup]} (reagent/state this)]
     (when popup
       (.removeOverlay ol3 popup)
       (reagent/set-state this {:popup nil}))))
 
-(defn- poista-popup!
-  "Poistaa kartan popupin, jos sellainen on."
+(defn- remove-popup!
+  "Removes map popup if it exists."
   [this]
-  #_(t/julkaise! {:aihe :popup-suljettu})
-  (poista-openlayers-popup! this))
+  #_(t/julkaise! {:aihe :popup-suljettu}) ;; TODO Why is this commented out?
+  (remove-openlayers-popup! this))
 
-(defn- poista-popup-ilman-eventtia!
-  "Poistaa kartan popupin, jos sellainen on, eikä julkaise popup-suljettu
-  eventtiä."
+(defn- remove-popup-without-event!
+  "Removes map popup if it exists without publishing event."
   [this]
-  (poista-openlayers-popup! this))
+  (remove-openlayers-popup! this))
 
-(defn luo-overlay [koordinaatti sisalto]
+(defn create-overlay [coordinates contents]
   (let [elt (js/document.createElement "span")]
-    (reagent/render sisalto elt)
+    (reagent/render contents elt)
     (ol.Overlay. (clj->js {:element   elt
-                           :position  koordinaatti
+                           :position  coordinates
                            :stopEvent false}))))
 
 
-(defn- nayta-popup!
-  "Näyttää annetun popup sisällön annetussa koordinaatissa.
-  Mahdollinen edellinen popup poistetaan."
-  [this koordinaatti sisalto]
+(defn- display-popup!
+  "Displays the given popup contents in the given coordinates. If a
+  previous popup exists, it is removed."
+  [this coordinates contents]
   (let [{:keys [ol3 popup]} (reagent/state this)]
     (when popup
       (.removeOverlay ol3 popup))
-    (let [popup (luo-overlay
-                 koordinaatti
+    (let [popup (create-overlay coordinates
                  [:div.ol-popup
                   [:a.ol-popup-closer.klikattava
                    {:on-click #(do (.stopPropagation %)
                                    (.preventDefault %)
-                                   (poista-popup! this))}]
-                  sisalto])]
+                                   (remove-popup! this))}]
+                  contents])]
       (.addOverlay ol3 popup)
       (reagent/set-state this {:popup popup}))))
 
-;; Käytetään the-karttaa joka oli aiemmin "puhtaasti REPL-tunkkausta varten"
-(defn nykyinen-zoom-taso []
-  (some-> @the-kartta (.getView) (.getZoom)))
+(defn current-zoom-level []
+  (some-> @the-map (.getView) (.getZoom)))
 
-(defn aseta-zoom [zoom & [duration]]
-  (some-> @the-kartta (.getView) (.setZoom #js {:zoom zoom
-                                                :duration (or duration 250)})))
+(defn set-zoom [zoom & [duration]]
+  (some-> @the-map (.getView) (.setZoom #js {:zoom zoom
+                                             :duration (or duration 250)})))
 
 (defn animate-zoom [zoom & [duration]]
-  (some-> @the-kartta (.getView) (.animate #js {:zoom zoom
-                                                :duration (or duration 250)})))
+  (some-> @the-map (.getView) (.animate #js {:zoom zoom
+                                             :duration (or duration 250)})))
 
-(defn extent-keskipiste [[minx miny maxx maxy]]
+(defn extent-center [[minx miny maxx maxy]]
   (let [width (- maxx minx)
         height (- maxy miny)]
     [(+ minx (/ width 2))
@@ -397,11 +356,11 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 
 
 (defn add-interaction! [interaction key]
-  (some-> @the-kartta (.addInteraction interaction))
+  (some-> @the-map (.addInteraction interaction))
   (swap! map-interactions assoc key interaction))
 
 (defn remove-interaction! [key]
-  (some-> @the-kartta (.removeInteraction (key @map-interactions)))
+  (some-> @the-map (.removeInteraction (key @map-interactions)))
   (swap! map-interactions dissoc key))
 
 
@@ -529,17 +488,17 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 (defonce window-resize-listener-atom (atom nil))
 
 (defn- on-container-resize [this]
-  (let [uusi-leveys (.-offsetWidth
+  (let [new-width (.-offsetWidth
                       (aget (.-childNodes (reagent/dom-node this)) 0))
-        uusi-korkeus (.-offsetHeight
+        new-height (.-offsetHeight
                        (aget (.-childNodes (reagent/dom-node this)) 0))]
 
-    (when-not (and (= uusi-leveys
-                      @openlayers-kartan-leveys)
-                   (= uusi-korkeus
-                      @openlayers-kartan-korkeus))
-      (reset! openlayers-kartan-leveys uusi-leveys)
-      (reset! openlayers-kartan-korkeus uusi-korkeus)
+    (when-not (and (= new-width
+                      @openlayers-map-width)
+                   (= new-height
+                      @openlayers-map-height))
+      (reset! openlayers-map-width new-width)
+      (reset! openlayers-map-height new-height)
 
       (invalidate-size!))))
 
@@ -561,7 +520,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
         interaktiot (let [oletukset (ol-interaction/defaults
                                      #js {:mouseWheelZoom true
                                           :dragPan        false})]
-                      ;; ei kinetic-ominaisuutta!
+                      ;; No `kinetic` property!
                       (.push oletukset (ol-interaction/DragPan. #js {}))
                       oletukset)
 
@@ -572,24 +531,24 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
         ;; NOTE: Currently disabled, because implement our own map control tools
         ;; kontrollit (ol-control/defaults #js {})
 
-        map-optiot (clj->js {:layers       (mapv taustakartta/luo-taustakartta layers)
+        map-options (clj->js {:layers       (mapv taustakartta/luo-taustakartta layers)
                              :target       (:id mapspec)
                              :controls [] ;; :controls     kontrollit
                              :interactions interaktiot})
-        ol3 (ol/Map. map-optiot)
+        ol3 (ol/Map. map-options)
 
         ;; NOTE: Currently disabled, because implement our own map control tools
         ;; _ (.addControl ol3 (tasovalinta/tasovalinta ol3 layers))
 
         _ (reset!
-            openlayers-kartan-leveys
+            openlayers-map-width
             (.-offsetWidth (aget (.-childNodes (reagent/dom-node this)) 0)))
 
         _ (reset!
-            openlayers-kartan-korkeus
+            openlayers-map-height
             (.-offsetHeight (aget (.-childNodes (reagent/dom-node this)) 0)))
 
-        _ (reset! the-kartta ol3)
+        _ (reset! the-map ol3)
 
         _ (set-window-resize-listener this)
 
@@ -600,14 +559,14 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
         unmount-ch (chan)]
 
 
-    ;; Aloitetaan komentokanavan kuuntelu
-    (go-loop [[[komento & args] ch] (alts! [komento-ch unmount-ch])]
+    ;; Begin listening to command channel
+    (go-loop [[[command & args] ch] (alts! [command-ch unmount-ch])]
              (when-not (= ch unmount-ch)
-               (case komento
+               (case command
 
                  ::popup
                  (let [[coordinate content] args]
-                   (nayta-popup! this coordinate content))
+                   (display-popup! this coordinate content))
 
                  ::invalidate-size
                  (do
@@ -615,10 +574,10 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                    (.render ol3))
 
                  ::hide-popup
-                 (poista-popup! this)
+                 (remove-popup! this)
 
                  ::hide-popup-without-event
-                 (poista-popup-ilman-eventtia! this)
+                 (remove-popup-without-event! this)
 
                  ::cursor
                  (let [[cursor] args
@@ -632,10 +591,10 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                  (let [[x y teksti] args]
                    (reagent/set-state this
                                       {:hover {:x x :y y :tooltip teksti}})))
-               (recur (alts! [komento-ch unmount-ch]))))
+               (recur (alts! [command-ch unmount-ch]))))
 
     (.setView
-     ol3 (ol.View. (clj->js (merge {:center (clj->js (or center (extent-keskipiste extent)))
+     ol3 (ol.View. (clj->js (merge {:center (clj->js (or center (extent-center extent)))
                                     :resolution initial-resolution
                                     :maxZoom max-zoom
                                     :minZoom min-zoom
@@ -651,21 +610,21 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                              :unmount-ch      unmount-ch})
 
     ;; If mapspec defines callbacks, bind them to ol3
-    (aseta-klik-kasittelija this ol3
+    (set-click-handler this ol3
                             (:on-click mapspec)
                             (:on-select mapspec))
-    (aseta-dblclick-kasittelija this ol3
+    (set-dblclick-handler this ol3
                                 (:on-dblclick mapspec)
                                 (:on-dblclick-select mapspec))
-    (aseta-hover-kasittelija this ol3)
-    (aseta-drag-kasittelija this ol3 (:on-drag mapspec))
-    (aseta-zoom-kasittelija this ol3 (:on-zoom mapspec))
-    (aseta-postrender-kasittelija this ol3 (:on-postrender mapspec))
+    (set-hover-handler this ol3)
+    (set-drag-handler this ol3 (:on-drag mapspec))
+    (set-zoom-handler this ol3 (:on-zoom mapspec))
+    (set-postrender-handler this ol3 (:on-postrender mapspec))
 
     (update-ol3-geometries this (:geometries mapspec))
 
     (when-let [mount (:on-mount mapspec)]
-      (mount (laske-kartan-alue ol3)))))
+      (mount (get-map-area ol3)))))
 
 (defn ol3-will-unmount [this]
   (let [{:keys [unmount-ch]} (reagent/state this)]
@@ -691,7 +650,7 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
                           (:style mapspec))}]
      (when-let [piirra-tooltip? (:tooltip-fn mapspec)]
        (when-let [hover (-> c reagent/state :hover)]
-         (go (<! (timeout tooltipin-aika))
+         (go (<! (timeout tooltip-time-ms))
              (when (= hover (:hover (reagent/state c)))
                (reagent/set-state c {:hover nil})))
          (when-let [tooltipin-sisalto
