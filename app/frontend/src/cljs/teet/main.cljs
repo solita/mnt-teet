@@ -17,7 +17,8 @@
             [teet.ui.material-ui :refer [Divider Paper]]
             [teet.ui.panels :as panels]
             [teet.login.login-view :as login-view]
-            [tuck.core :as t]))
+            [tuck.core :as t]
+            [taoensso.timbre :as log]))
 
 
 (defn main-view [e! {:keys [page user] :as app}]
@@ -42,6 +43,14 @@
   (routes/start!)
   (stylefy/init)
   (postgrest-ui.elements/set-default-style! :material)
+
+  ;; Load user information
+  (-> (js/fetch "/userinfo" #js {:method "POST"})
+      (.then #(.json %))
+      (.then (fn [user]
+               (log/info "User: " user)
+               (swap! app-state/app merge :user user))))
+
   (localization/load-initial-language!
    #(r/render [t/tuck app-state/app #'main-view]
               (.getElementById js/document "teet-frontend"))))

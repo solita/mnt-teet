@@ -5,6 +5,9 @@
             [tara.endpoint :as tara-endpoint]
             [compojure.core :refer [routes]]
             [ring.middleware.params :as params]
+            [ring.middleware.cookies :as cookies]
+            [ring.middleware.session :as session]
+            [ring.middleware.session.cookie :as session-cookie]
             [taoensso.timbre :as log])
   (:gen-class))
 
@@ -16,24 +19,27 @@
      #'server
      (fn [_]
        (log/info "Starting TEET service in port " port)
-       (server/run-server
-        (params/wrap-params
-         (routes
-          (tara-routes/tara-routes (tara-endpoint/discover "https://tara-test.ria.ee/oidc")
-                                   {:client-id (System/getenv "TARA_CLIENT_ID")
-                                    :client-secret (System/getenv "TARA_CLIENT_SECRET")
-                                    :base-url (System/getenv "BASE_URL")
-                                    :on-error #(do
-                                                 (log/error "TARA auth error" %)
-                                                 {:status 500
-                                                  :body "Error processing TARA auth"})
-                                    :on-success #(do
-                                                   (log/info "TARA auth success, token: " %)
-                                                   {:status 302
-                                                    :headers {"Location" (System/getenv "BASE_URL")}})})
-          (routes/teet-routes)))
-        {:ip "0.0.0.0"
-         :port port})))))
+       (-> (routes
+            (tara-routes/tara-routes (tara-endpoint/discover "https://tara-test.ria.ee/oidc")
+                                     {:client-id (System/getenv "TARA_CLIENT_ID")
+                                      :client-secret (System/getenv "TARA_CLIENT_SECRET")
+                                      :base-url (System/getenv "BASE_URL")
+                                      :on-error #(do
+                                                   (log/error "TARA auth error" %)
+                                                   {:status 500
+                                                    :body "Error processing TARA auth"})
+                                      :on-success #(do
+                                                     (log/info "TARA auth success, token: " %)
+                                                     {:status 302
+                                                      ;; FIXME: create token for postgrest
+                                                      :session {:user %}
+                                                      :headers {"Location" (System/getenv "BASE_URL")}})})
+            (routes/teet-routes))
+           params/wrap-params
+           cookies/wrap-cookies
+           (session/wrap-session {:store (session-cookie/cookie-store {:key (.getBytes "FIXME:USE PARAMS")})})
+           (server/run-server {:ip "0.0.0.0"
+                               :port port}))))))
 
 (defn stop []
   (server))
