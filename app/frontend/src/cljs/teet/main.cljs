@@ -29,7 +29,8 @@
     [:<>
      ;; Main header here
      [headings/header {:title "TEET projekti"
-                       :action [search-view/quick-search e! app]}]
+                       ;:action [search-view/quick-search e! app]
+                       }]
      [Paper
       (case page
         (:default-page :root :projects) [projects-view/projects-page e! app]

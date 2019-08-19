@@ -1,6 +1,8 @@
 (ns teet.projects.projects-view
   "Projects view"
-  (:require [postgrest-ui.components.listing :as postgrest-listing]
+  (:require [reagent.core :as r]
+            [postgrest-ui.components.listing :as postgrest-listing]
+            [postgrest-ui.components.filters :as postgrest-filters]
             [teet.projects.projects-controller :as projects-controller]
             [teet.search.search-interface :as search-interface]
             [teet.ui.icons :as icons]
@@ -12,14 +14,17 @@
    :text label
    :href (str "#/project/" id)})
 
+(defn- project-filter [opts]
+  [postgrest-filters/simple-search-form ["searchable_text"] opts])
 
 (defn projects-listing [e! app]
-  [postgrest-listing/listing
-   {:endpoint (get-in app [:config :api-url])
+  [postgrest-listing/filtered-listing
+   {:filters-view project-filter
+    :endpoint (get-in app [:config :api-url])
     :token (get-in app login-paths/token)
     :state (get-in app [:projects :listing])
     :set-state! #(e! (projects-controller/->SetListingState %))
-    :table "thk_project"
+    :table "thk_project_search"
     :select ["id" "name" "estimated_duration" "road_nr" "km_range"]}])
 
 (defn projects-page [e! app]

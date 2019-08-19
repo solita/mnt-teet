@@ -1,5 +1,4 @@
 -- Create users for API
-
 CREATE ROLE authenticator LOGIN;
 CREATE ROLE teet_user NOLOGIN;
 CREATE ROLE teet_anon NOLOGIN;
@@ -8,6 +7,7 @@ GRANT teet_anon TO authenticator;
 
 CREATE SCHEMA teet;
 
+CREATE EXTENSION pg_trgm;
 CREATE EXTENSION postgis;
 
 
@@ -50,6 +50,16 @@ CREATE TABLE teet.thk_project (
 
   created timestamptz NOT NULL DEFAULT now() -- when this was created in TEET database
 );
+
+-- Create trigram index on expression containing all text we want to search from
+CREATE INDEX thk_project_search_idx
+    ON teet.thk_project
+ USING gin ((id||name||road_nr||procurement_no) gin_trgm_ops);
+
+CREATE VIEW teet.thk_project_search AS
+SELECT *, (id||name||road_nr||procurement_no) AS searchable_text
+  FROM teet.thk_project;
+
 
 
 CREATE TYPE teet.authinfo AS (
