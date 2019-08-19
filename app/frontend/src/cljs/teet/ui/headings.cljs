@@ -8,5 +8,4 @@
    [CardHeader (merge {:title title
                        :subtitle subtitle}
                       (when action
-                        {:action (r/as-element action)}))
-       ]])
+                        {:action (r/as-element action)}))]])

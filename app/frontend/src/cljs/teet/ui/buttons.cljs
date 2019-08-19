@@ -77,7 +77,7 @@
                label (str (or label (label-by-type type))
                           (when hotkey (format-hotkey hotkey)))]
            [:div
-            (stylefy/use-style (merge style-base/button-container
+            (stylefy/use-style (merge #_style-base/button-container
                                     wrapper-style))
             [Button (stylefy/use-style
                      style (merge
