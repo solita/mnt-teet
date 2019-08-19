@@ -8,11 +8,9 @@
             [teet.localization :refer [tr]]
             [teet.ui.buttons :as buttons]
             [teet.ui.common :as common]
-            [teet.ui.form-fields :as form-fields]
             [stylefy.core :as stylefy]
 
             ;; Require form fields implementation
-            [teet.ui.form-fields.selection]
 
             [teet.ui.grid :as grid]
             [teet.ui.icons :as icons]
@@ -242,7 +240,7 @@
           (if editable?
             [:div (merge (stylefy/use-style {} #_style-form/form-field)
                          {:data-form-field (cljs.core/name name)})
-             [form-fields/field (merge (assoc s
+             #_[form-fields/field (merge (assoc s
                                               :form? true
                                               :update! update-fn
                                               :error (when (and show-errors? (not (empty? errors)))
@@ -262,7 +260,7 @@
             [:div.form-control-static
              (if fmt
                (fmt ((or read #(get % name)) data))
-               [form-fields/show-value
+               #_[form-fields/show-value
                 (merge s {:read-only? true})
                 data])]))))}))
 
