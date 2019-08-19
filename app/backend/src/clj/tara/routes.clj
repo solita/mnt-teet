@@ -35,13 +35,14 @@
      :body "Redirecting to TARA login"}))
 
 (defn- base64-encode [string]
-  (String. (.encode (Base64/getEncoder)
-                    (.getBytes string))))
+  (.encodeToString (Base64/getEncoder)
+                   (.getBytes string "UTF-8")))
 
 (defn auth-response [{:keys [token-endpoint] :as tara-endpoint}
                      {:keys [client-id client-secret base-url on-error on-success] :as client-properties}
                      {params :params :as req}]
   (log/info "TARA RESPONSE:" (pr-str req))
+  (log/info "CLIENT PROPERTIES: " (pr-str client-properties))
   (let [{:strs [code error error_description]} params]
     (if error
       ;; Returned from TARA with error
@@ -49,14 +50,15 @@
                  :description error_description})
 
       ;; Auth succeeded, request token
-      (let [token-response @(client/post token-endpoint
-                                         {:headers {"Authorization" (str "Basic "
-                                                                         (base64-encode (str client-id ":" client-secret)))
-                                                    "Content-Type" "application/x-www-form-urlencoded"}
-                                          :body (str "grant_type=authorization"
-                                                     "&code=" (enc code)
-                                                     "&redirect_uri=" (enc base-url))
-                                          :as :text})
+      (let [token-request {:headers {"Authorization" (str "Basic "
+                                                          (base64-encode (str client-id ":" client-secret)))
+                                     "Content-Type" "application/x-www-form-urlencoded"}
+                           :body (str "grant_type=authorization"
+                                      "&code=" (enc code)
+                                      "&redirect_uri=" (enc base-url))
+                           :as :text}
+            _ (log/info "TOKEN REQUEST: " (pr-str token-request))
+            token-response @(client/post token-endpoint token-request)
             token (-> token-response :body json/parse)]
         (on-success token)))))
 
