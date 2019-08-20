@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 DBUSER="authenticator"
 ANON="teet_anon"
