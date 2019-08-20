@@ -2,24 +2,27 @@
   "TEET frontend app."
   (:require [datafrisk.core :as df]
             [postgrest-ui.elements]
-
             [postgrest-ui.impl.style.material]
             [reagent.core :as r]
             [stylefy.core :as stylefy]
+            [taoensso.timbre :as log]
             [teet.app-state :as app-state]
-            [teet.common.common-controller :as common-controller]
             [teet.localization :as localization :refer [tr]]
-            [teet.project-groups.project-groups-view :as project-groups-view]
+            [teet.login.login-view :as login-view]
             [teet.projects.projects-view :as projects-view]
-            [teet.search.search-view :as search-view]
             [teet.routes :as routes]
             [teet.ui.headings :as headings]
-            [teet.ui.material-ui :refer [Divider Paper]]
-            [teet.ui.panels :as panels]
-            [teet.login.login-view :as login-view]
+            [teet.ui.material-ui :refer [Paper Button Chip Avatar]]
             [tuck.core :as t]
-            [taoensso.timbre :as log]))
+            [teet.ui.icons :as icons]))
 
+(defn user-info [e! {:keys [given-name family-name] :as user}]
+  (if-not user
+    [Button {:color "primary"
+             :href "/oauth2/request"}
+     (tr [:login :login])]
+    [Chip {:avatar (r/as-element [Avatar [icons/action-face]])
+           :label (str given-name " " family-name)}]))
 
 (defn main-view [e! {:keys [page user] :as app}]
   (if (= page :login)
@@ -30,8 +33,7 @@
     [:<>
      ;; Main header here
      [headings/header {:title "TEET projekti"
-                       ;:action [search-view/quick-search e! app]
-                       }]
+                       :action [user-info e! user]}]
      [Paper
       (case page
         (:default-page :root :projects) [projects-view/projects-page e! app]

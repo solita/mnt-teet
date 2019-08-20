@@ -27,3 +27,6 @@
 
 ;; Layout
 (define-mui-components Container Grid)
+
+;; Data display
+(define-mui-components Chip Avatar)
