@@ -47,13 +47,15 @@
   (start {:mode :dev
           :port 4000
           :api {:shared-secret "secret1234567890secret1234567890"
-                :role "teet_user"}}))
+                :role "teet_user"
+                :url "http://localhost:3000"}}))
 
 (defn -main [& args]
   (start {:mode :prod
           :port 3000
           :api {:shared-secret (System/getenv "API_SHARED_SECRET")
-                :role "teet_user"}
+                :role "teet_user"
+                :url (System/getenv "API_URL")}
           :tara {:endpoint-url "https://tara-test.ria.ee/oidc" ; FIXME: parameterize for prod use
                  :client-id (System/getenv "TARA_CLIENT_ID")
                  :client-secret (System/getenv "TARA_CLIENT_SECRET")

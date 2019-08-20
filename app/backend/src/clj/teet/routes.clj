@@ -8,7 +8,7 @@
 (defn teet-routes [config]
   (routes
    (GET "/" _
-        (index-page/index-route (select-keys config [:mode :base-url])))
+        (index-page/index-route config))
 
    (POST "/userinfo" req
          {:status 200

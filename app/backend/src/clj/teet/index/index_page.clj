@@ -3,7 +3,7 @@
   (:require [hiccup.core :as hiccup]
             [teet.util.build-info :as build-info]))
 
-(defn index-page [{:keys [base-url mode]}]
+(defn index-page [{:keys [base-url mode api]}]
   (let [dev? (= mode :dev)]
     [:html
      [:head
@@ -27,7 +27,7 @@
      })
      .then(() => { teet.main.main(); });"]
 
-      [:body {:data-api-url (or (System/getenv "API_URL") "/")
+      [:body {:data-api-url (or (:url api) "/")
               :data-git-version (build-info/git-commit)}
        [:div#teet-frontend]
        [:script {:src (if dev? "http://localhost:9500/main.js" "main.js")}]
