@@ -21,9 +21,11 @@
 (define-mui-components Paper Typography)
 
 ;; Common utility components
-(define-mui-components Collapse Divider CircularProgress)
+(define-mui-components Collapse Divider CircularProgress Drawer AppBar)
 
 (define-mui-components TextField)
+
+(define-mui-components Typography)
 
 ;; Layout
 (define-mui-components Container Grid)

@@ -28,18 +28,19 @@
   (if (= page :login)
     ;; Show only login dialog
     [login-view/login-page e! app]
-
-    ;; Show other pages with header
-    [:<>
-     ;; Main header here
+    [:div {:style {:display "flex"}}
      [headings/header {:title "TEET projekti"
                        :action [user-info user]}]
-     [Paper
-      (case page
-        (:default-page :root :projects) [projects-view/projects-page e! app]
-        :project [projects-view/project-page e! app]
-        [:div "Unimplemented page: " (pr-str page)])]
-     [df/DataFriskShell app]]))
+     [:div {:style {:flex-grow 1}}
+      ;; Show other pages with header
+      [:<>
+       ;; Main header here
+       [Paper
+        (case page
+          (:default-page :root :projects) [projects-view/projects-page e! app]
+          :project [projects-view/project-page e! app]
+          [:div "Unimplemented page: " (pr-str page)])]
+       [df/DataFriskShell app]]]]))
 
 (defn ^:export main []
   (routes/start!)
