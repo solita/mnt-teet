@@ -25,7 +25,7 @@ docker run $ARGS \
        -e PGRST_DB_ANON_ROLE="$ANON" \
        -e PGRST_DB_SCHEMA="teet" \
        -e PGRST_JWT_SECRET="secret1234567890secret1234567890" \
-       postgrest/postgrest
+       postgrest/postgrest:v6.0.1-53b606e
 
        #-e PGRST_ROLE_CLAIM_KEY=".\"custom:role\"" \
        #-e COGNITO_REGION="eu-central-1" \
