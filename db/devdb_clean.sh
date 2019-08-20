@@ -10,14 +10,17 @@ function check_psql {
 
 check_psql
 
+PSQL="psql -h localhost -U postgres -c"
+
 echo "Dropping and recreating teis database."
-psql -h localhost -U postgres -c "DROP DATABASE IF EXISTS teet;"
-psql -h localhost -U postgres -c "DROP ROLE IF EXISTS authenticator;"
-psql -h localhost -U postgres -c "DROP ROLE IF EXISTS teet_anon;"
-psql -h localhost -U postgres -c "DROP ROLE IF EXISTS teet_user;"
-psql -h localhost -U postgres -c "DROP ROLE IF EXISTS teet;"
-psql -h localhost -U postgres -c "CREATE ROLE teet WITH LOGIN SUPERUSER;"
-psql -h localhost -U postgres -c "CREATE DATABASE teet OWNER teet;"
+$PSQL "DROP DATABASE IF EXISTS teet;"
+$PSQL "DROP ROLE IF EXISTS authenticator;"
+$PSQL "DROP ROLE IF EXISTS teet_anon;"
+$PSQL "DROP ROLE IF EXISTS teet_user;"
+$PSQL "DROP ROLE IF EXISTS teet;"
+$PSQL "CREATE ROLE teet WITH LOGIN SUPERUSER;"
+$PSQL "CREATE DATABASE teet OWNER teet;"
+$PSQL "CREATE ROLE authenticator LOGIN;"
 
 echo "Running migrations"
 mvn flyway:migrate

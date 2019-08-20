@@ -1,5 +1,4 @@
 -- Create users for API
-CREATE ROLE authenticator LOGIN;
 CREATE ROLE teet_user NOLOGIN;
 CREATE ROLE teet_anon NOLOGIN;
 GRANT teet_user TO authenticator;
