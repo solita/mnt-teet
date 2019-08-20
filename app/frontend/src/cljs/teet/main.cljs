@@ -16,7 +16,7 @@
             [tuck.core :as t]
             [teet.ui.icons :as icons]))
 
-(defn user-info [e! {:keys [given-name family-name] :as user}]
+(defn user-info [{:keys [given-name family-name] :as user}]
   (if-not user
     [Button {:color "primary"
              :href "/oauth2/request"}
@@ -33,7 +33,7 @@
     [:<>
      ;; Main header here
      [headings/header {:title "TEET projekti"
-                       :action [user-info e! user]}]
+                       :action [user-info user]}]
      [Paper
       (case page
         (:default-page :root :projects) [projects-view/projects-page e! app]
