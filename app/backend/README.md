@@ -9,4 +9,4 @@ Backend app hosts the index page and SPA application JS.
 # Running locally
 
 - Start a repl
-- Call `teet.main/reload`
+- Call `teet.main/restart`
