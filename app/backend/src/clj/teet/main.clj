@@ -9,6 +9,7 @@
             [ring.middleware.session :as session]
             [ring.middleware.session.cookie :as session-cookie]
             [teet.login.login-tara-token :as login-tara-token]
+            [teet.login.login-fake-routes :as login-fake-routes]
             [taoensso.timbre :as log])
   (:gen-class))
 
@@ -28,8 +29,8 @@
                                              :on-success (partial login-tara-token/tara-success-handler
                                                                   (:base-url tara))}))
             (do
-              (log/info "No TARA configuration present, TARA login not available.")
-              (constantly nil)))
+              (log/info "No TARA configuration present, using fake login.")
+              (login-fake-routes/fake-login-routes)))
           (routes/teet-routes config))
          params/wrap-params
          cookies/wrap-cookies
