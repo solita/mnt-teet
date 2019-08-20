@@ -29,7 +29,10 @@
                                       :on-error login-tara-token/tara-error-handler
                                       :on-success (partial login-tara-token/tara-success-handler
                                                            (System/getenv "BASE_URL"))})
-            (routes/teet-routes))
+            (routes/teet-routes
+             ;; FIXME: dummy config, load real config values from parameter store
+             {:api {:shared-secret "secret1234567890secret1234567890"
+                    :role "teet_user"}}))
            params/wrap-params
            cookies/wrap-cookies
            (session/wrap-session {:store (session-cookie/cookie-store {:key (.getBytes "FIXME:USE PARAMS")})})
