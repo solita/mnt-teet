@@ -50,8 +50,9 @@
   (-> (js/fetch "/userinfo" #js {:method "POST"})
       (.then #(.json %))
       (.then (fn [user]
-               (log/info "User: " (js->clj user))
-               (swap! app-state/app merge {:user user}))))
+               (let [user (js->clj user :keywordize-keys true)]
+                 (log/info "User: " user)
+                 (swap! app-state/app merge {:user user})))))
 
   (localization/load-initial-language!
    #(r/render [t/tuck app-state/app #'main-view]
