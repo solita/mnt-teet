@@ -1,6 +1,6 @@
 (ns teet.routes
   (:require [compojure.core :refer [GET POST routes]]
-            [compojure.route :refer [resources]]
+            [compojure.route :refer [resources files]]
             [teet.index.index-page :as index-page]
             [cheshire.core :as cheshire]
             [teet.login.login-api-token :as login-api-token]))
@@ -8,7 +8,7 @@
 (defn teet-routes [config]
   (routes
    (GET "/" _
-        (index-page/index-route))
+        (index-page/index-route (select-keys config [:mode :base-url])))
 
    (POST "/userinfo" req
          {:status 200
@@ -23,4 +23,11 @@
                                        user)})
                    {:authenticated? false}))})
 
-   (resources "/")))
+   (if (= :dev (:mode config))
+     ;; In dev mode, serve files under frontend figwheel build
+     (routes
+      (files "/" {:root "../frontend/target/public"})
+      (files "/" {:root "../frontend/resources/public"}))
+
+     ;; In prod mode, serve packaged resources
+     (resources "/"))))

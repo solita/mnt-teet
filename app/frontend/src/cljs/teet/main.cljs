@@ -52,7 +52,8 @@
       (.then (fn [user]
                (let [user (js->clj user :keywordize-keys true)]
                  (log/info "User: " user)
-                 (swap! app-state/app merge {:user user})))))
+                 (swap! app-state/app merge {:user (when (:authenticated? user)
+                                                     user)})))))
 
   (localization/load-initial-language!
    #(r/render [t/tuck app-state/app #'main-view]

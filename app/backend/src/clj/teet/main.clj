@@ -14,30 +14,28 @@
 
 (def server nil)
 
-(defn start []
-  (let [port 3000]
-    (alter-var-root
-     #'server
-     (fn [_]
-       (log/info "Starting TEET service in port " port)
-       (-> (routes
-            (tara-routes/tara-routes (tara-endpoint/discover "https://tara-test.ria.ee/oidc")
-                                     {:client-id (System/getenv "TARA_CLIENT_ID")
-                                      :client-secret (System/getenv "TARA_CLIENT_SECRET")
-                                      :base-url (System/getenv "BASE_URL")
-                                      :scopes ["openid" "email"]
-                                      :on-error login-tara-token/tara-error-handler
-                                      :on-success (partial login-tara-token/tara-success-handler
-                                                           (System/getenv "BASE_URL"))})
-            (routes/teet-routes
-             ;; FIXME: dummy config, load real config values from parameter store
-             {:api {:shared-secret "secret1234567890secret1234567890"
-                    :role "teet_user"}}))
-           params/wrap-params
-           cookies/wrap-cookies
-           (session/wrap-session {:store (session-cookie/cookie-store {:key (.getBytes "FIXME:USE PARAMS")})})
-           (server/run-server {:ip "0.0.0.0"
-                               :port port}))))))
+(defn start [{:keys [port tara] :as config}]
+  (alter-var-root
+   #'server
+   (fn [_]
+     (log/info "Starting TEET service in port " port)
+     (-> (routes
+          (if tara
+            (tara-routes/tara-routes (tara-endpoint/discover (:endpoint-url tara))
+                                     (merge tara
+                                            {:scopes ["openid" "email"]
+                                             :on-error login-tara-token/tara-error-handler
+                                             :on-success (partial login-tara-token/tara-success-handler
+                                                                  (:base-url tara))}))
+            (do
+              (log/info "No TARA configuration present, TARA login not available.")
+              (constantly nil)))
+          (routes/teet-routes config))
+         params/wrap-params
+         cookies/wrap-cookies
+         (session/wrap-session {:store (session-cookie/cookie-store {:key (.getBytes "FIXME:USE PARAMS")})})
+         (server/run-server {:ip "0.0.0.0"
+                             :port port})))))
 
 (defn stop []
   (server))
@@ -45,7 +43,18 @@
 (defn restart []
   (when server
     (stop))
-  (start))
+  ;; Dummy config for local testing use
+  (start {:mode :dev
+          :port 4000
+          :api {:shared-secret "secret1234567890secret1234567890"
+                :role "teet_user"}}))
 
 (defn -main [& args]
-  (start))
+  (start {:mode :prod
+          :port 3000
+          :api {:shared-secret (System/getenv "API_SHARED_SECRET")
+                :role "teet_user"}
+          :tara {:endpoint-url "https://tara-test.ria.ee/oidc" ; FIXME: parameterize for prod use
+                 :client-id (System/getenv "TARA_CLIENT_ID")
+                 :client-secret (System/getenv "TARA_CLIENT_SECRET")
+                 :base-url (System/getenv "BASE_URL")}}))
