@@ -4,7 +4,7 @@
 
 (defn fake-login-routes []
   (routes
-   ;; PENDING: we could add a simple for to select what dummy user identity to use
+   ;; PENDING: we could add a simple form to select what dummy user identity to use
    (GET "/oauth2/request" _
         {:status 302
          :headers {"Location" "/"}
