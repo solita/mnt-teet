@@ -2,6 +2,6 @@
   "Define app state paths for login items")
 
 
-(def token
+(def api-token
   "Token to the current JWT token for the logged in session."
-  [:login :tokens "id_token"])
+  [:user :api-token])

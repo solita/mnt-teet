@@ -22,7 +22,7 @@
   [postgrest-listing/filtered-listing
    {:filters-view project-filter
     :endpoint (get-in app [:config :api-url])
-    :token (get-in app login-paths/token)
+    :token (get-in app login-paths/api-token)
     :state (get-in app [:projects :listing])
     :set-state! #(e! (projects-controller/->SetListingState %))
     :table "thk_project_search"
@@ -30,13 +30,12 @@
     :drawer (fn [{:strs [id]}]
               [postgrest-item-view/item-view
                {:endpoint (get-in app [:config :api-url])
-                :token (get-in app login-paths/token)
+                :token (get-in app login-paths/api-token)
                 :table "thk_project"
                 :select ["name" "estimated_duration"
                          "road_nr" "km_range" "carriageway"
                          "procurement_no"]}
-               id])}
-   ])
+               id])}])
 
 (defn projects-page [e! app]
   [projects-listing e! app])
