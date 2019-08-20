@@ -8,6 +8,7 @@
             [ring.middleware.cookies :as cookies]
             [ring.middleware.session :as session]
             [ring.middleware.session.cookie :as session-cookie]
+            [teet.login.login-tara-token :as login-tara-token]
             [taoensso.timbre :as log])
   (:gen-class))
 
@@ -25,16 +26,9 @@
                                       :client-secret (System/getenv "TARA_CLIENT_SECRET")
                                       :base-url (System/getenv "BASE_URL")
                                       :scopes ["openid" "email"]
-                                      :on-error #(do
-                                                   (log/error "TARA auth error" %)
-                                                   {:status 500
-                                                    :body "Error processing TARA auth"})
-                                      :on-success #(do
-                                                     (log/info "TARA auth success, token: " %)
-                                                     {:status 302
-                                                      ;; FIXME: create token for postgrest
-                                                      :session {:user {:given-name (get-in % ["profile_attributes"])} %}
-                                                      :headers {"Location" (System/getenv "BASE_URL")}})})
+                                      :on-error login-tara-token/tara-error-handler
+                                      :on-success (partial login-tara-token/tara-success-handler
+                                                           (System/getenv "BASE_URL"))})
             (routes/teet-routes))
            params/wrap-params
            cookies/wrap-cookies
