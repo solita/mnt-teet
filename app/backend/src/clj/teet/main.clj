@@ -24,6 +24,7 @@
                                      {:client-id (System/getenv "TARA_CLIENT_ID")
                                       :client-secret (System/getenv "TARA_CLIENT_SECRET")
                                       :base-url (System/getenv "BASE_URL")
+                                      :scopes ["openid" "email"]
                                       :on-error #(do
                                                    (log/error "TARA auth error" %)
                                                    {:status 500
@@ -32,7 +33,7 @@
                                                      (log/info "TARA auth success, token: " %)
                                                      {:status 302
                                                       ;; FIXME: create token for postgrest
-                                                      :session {:user %}
+                                                      :session {:user {:given-name (get-in % ["profile_attributes"])} %}
                                                       :headers {"Location" (System/getenv "BASE_URL")}})})
             (routes/teet-routes))
            params/wrap-params

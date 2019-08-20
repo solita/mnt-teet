@@ -4,7 +4,8 @@
             [cheshire.core :as cheshire]
             [tara.json :as json]
             [taoensso.timbre :as log]
-            [tara.token :as token])
+            [tara.token :as token]
+            [clojure.string :as str])
   (:import (java.util UUID Base64)
            (java.net URLEncoder)))
 
@@ -12,14 +13,14 @@
   (URLEncoder/encode data))
 
 (defn auth-request [{:keys [authorization-endpoint] :as tara-endpoint}
-                    {:keys [base-url client-id cookie-name] :as  client-properties}
+                    {:keys [base-url client-id cookie-name scopes] :as  client-properties}
                     {:keys [params] :as req}]
   (println "TARA REQ: " (pr-str req))
   (let [state (str (UUID/randomUUID))
         nonce (str (UUID/randomUUID))
-        scope (get params "scope" "openid")
+        scopes (or scopes ["openid"])
         url (str authorization-endpoint
-                 "?scope=" (enc scope)
+                 "?scope=" (enc (str/join " " scopes))
                  "&response_type=code"
                  "&client_id=" (enc client-id)
                  "&redirect_uri=" (enc (str base-url "/oauth2/idpresponse"))
@@ -40,7 +41,8 @@
                    (.getBytes string "UTF-8")))
 
 (defn auth-response [{:keys [token-endpoint] :as tara-endpoint}
-                     {:keys [client-id client-secret base-url on-error on-success cookie-name] :as client-properties}
+                     {:keys [client-id client-secret base-url on-error on-success cookie-name
+                             scopes] :as client-properties}
                      {params :params :as req}]
   (log/info "TARA RESPONSE:" (pr-str req))
   (log/info "CLIENT PROPERTIES: " (pr-str client-properties))
