@@ -21,7 +21,7 @@
 (defn header
   [e! {:keys [title open?]} user]
   [:<>
-   [AppBar {:position "fixed"
+   [AppBar {:position "static"
             :className (<class navigation-style/appbar-position open?)}
     [Toolbar
      [user-info user true]]]
