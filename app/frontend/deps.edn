@@ -19,5 +19,8 @@
 
         ;; cljs-time
         com.andrewmcveigh/cljs-time {:mvn/version "0.5.2"}
+
+        ;; Utils
+        cljs-bean {:mvn/version "1.4.0"}
         }
  :paths ["src/cljs" "target" "resources"]}

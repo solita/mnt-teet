@@ -14,25 +14,28 @@
             [teet.routes :as routes]
             [teet.ui.material-ui :refer [Paper Button Chip Avatar MuiThemeProvider]]
             [tuck.core :as t]
-            [teet.ui.icons :as icons]))
+            [teet.ui.icons :as icons]
+            [teet.ui.theme :as theme]))
 
 (defn main-view [e! {:keys [page user navigation] :as app}]
-  (if (= page :login)
-    ;; Show only login dialog
-    [login-view/login-page e! app]
-    [:div {:style {:display "flex"}}
-     [navigation-view/header e! {:title "TEET projekti"
-                          :open? (:open? navigation)} user]
-     [:div {:style {:flex-grow 1}}
-      ;; Show other pages with header
-      [:<>
-       ;; Main header here
-       [Paper
-        (case page
-          (:default-page :root :projects) [projects-view/projects-page e! app]
-          :project [projects-view/project-page e! app]
-          [:div "Unimplemented page: " (pr-str page)])]
-       [df/DataFriskShell app]]]]))
+  [theme/theme-provider
+   (if (= page :login)
+     ;; Show only login dialog
+     [login-view/login-page e! app]
+     [:div {:style {:display "flex"}}
+      [navigation-view/header e! {:title "TEET projekti"
+                                  :open? (:open? navigation)} user]
+      [:div {:style {:flex-grow 1}}
+       ;; Show other pages with header
+       [:<>
+        ;; Main header here
+        [Paper
+         ;[Button {:variant "contained" :color "primary"} "hephep"]
+         (case page
+           (:default-page :root :projects) [projects-view/projects-page e! app]
+           :project [projects-view/project-page e! app]
+           [:div "Unimplemented page: " (pr-str page)])]
+        [df/DataFriskShell app]]]])])
 
 (defn ^:export main []
   (routes/start!)
