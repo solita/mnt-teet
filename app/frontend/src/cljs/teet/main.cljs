@@ -10,27 +10,20 @@
             [teet.localization :as localization :refer [tr]]
             [teet.login.login-view :as login-view]
             [teet.projects.projects-view :as projects-view]
+            [teet.navigation.navigation-view :as navigation-view]
             [teet.routes :as routes]
             [teet.ui.headings :as headings]
-            [teet.ui.material-ui :refer [Paper Button Chip Avatar]]
+            [teet.ui.material-ui :refer [Paper Button Chip Avatar MuiThemeProvider]]
             [tuck.core :as t]
             [teet.ui.icons :as icons]))
 
-(defn user-info [{:keys [given-name family-name] :as user}]
-  (if-not user
-    [Button {:color "primary"
-             :href "/oauth2/request"}
-     (tr [:login :login])]
-    [Chip {:avatar (r/as-element [Avatar [icons/action-face]])
-           :label (str given-name " " family-name)}]))
-
-(defn main-view [e! {:keys [page user] :as app}]
+(defn main-view [e! {:keys [page user navigation] :as app}]
   (if (= page :login)
     ;; Show only login dialog
     [login-view/login-page e! app]
     [:div {:style {:display "flex"}}
-     [headings/header {:title "TEET projekti"
-                       :action [user-info user]}]
+     [navigation-view/header e! {:title "TEET projekti"
+                          :open? (:open? navigation)} user]
      [:div {:style {:flex-grow 1}}
       ;; Show other pages with header
       [:<>

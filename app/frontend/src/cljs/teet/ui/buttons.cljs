@@ -91,7 +91,7 @@
                             (when button-attrs
                               button-attrs)))
              (if icon
-               (if (= type :icon)
+               nil #_(if (= type :icon)
                  [icons/labeled-icon [icon] label :top]
                  [icons/labeled-icon [icon] label])
                label)]]))})))
@@ -123,7 +123,7 @@
                       {:data-checked (boolean value)}
                       (when button-attrs
                         button-attrs))
-            [icons/labeled-icon (if value
+            #_[icons/labeled-icon (if value
                                   toggled-icon
                                   not-toggled-icon)
              label]]))})))
