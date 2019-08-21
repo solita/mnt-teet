@@ -34,7 +34,7 @@
 (defn project-groups-listing [e! app]
   [postgrest-listing/listing
    {:endpoint (get-in app [:config :api-url])
-    :token (get-in app login-paths/token)
+    :token (get-in app login-paths/api-token)
     :state (get-in app [:project-groups :listing])
     :set-state! #(e! (project-groups-controller/->SetListingState %))
     :table "projectgroup"
@@ -63,7 +63,7 @@
       app]
      [postgrest-item-view/item-view
       {:endpoint endpoint
-       :token (get-in app login-paths/token)
+       :token (get-in app login-paths/api-token)
        :state project-group
        :set-state! #(e! (project-groups-controller/->SetProjectGroupState %))
        :table "projectgroup"

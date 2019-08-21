@@ -50,7 +50,7 @@
   (doto (ol.layer.Image.
          #js {:source (ol.source.ImageWMS.
                        #js {:url url
-                            :params #js {:LAYERS layer :STYLE style :FORMAT "image/png"}})})
+                            :params #js {:VERSION "1.1.1" :LAYERS layer :STYLES style :FORMAT "image/png"}})})
     (.setVisible default)))
 
 (defmethod luo-taustakartta :osm [_]

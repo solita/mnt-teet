@@ -43,9 +43,6 @@
 (def default-projection "EPSG:3301")
 
 
-
-(def suomen-extent nil)
-
 (def ^{:doc "Initial resolution of ol3 view" :const true}
   initial-resolution 1200)
 
@@ -598,8 +595,8 @@
                                     :resolution initial-resolution
                                     :maxZoom max-zoom
                                     :minZoom min-zoom
-                                    ;:projection projektio
-                                    ;:extent (clj->js estonian-extent)
+                                    :projection default-projection
+                                    :extent (clj->js estonian-extent)
                                     }
                                    (when current-zoom current-zoom)))))
 

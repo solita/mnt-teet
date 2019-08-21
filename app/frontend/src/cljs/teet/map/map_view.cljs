@@ -7,10 +7,10 @@
 (def default-extent [20 50 30 60])
 
 ;; Center of Estonia in EPSG:3857
-(def default-center [2876047.9017341174, 8124120.910366586])
+;(def default-center [2876047.9017341174, 8124120.910366586])
 
 ;; Center of estonian coordinate system
-;(def default-center [516493.16 6513417.97])
+(def default-center [516493.16 6513417.97])
 
 (defn map-view [e! {:keys [height] :or {height "100%"} :as opts} app]
   (r/with-let [current-tool (volatile! (get-in app [:map :tool]))
@@ -111,7 +111,9 @@
                      (get-in app [:map :rotation])
                      0)
 
-         :layers [{:type :osm}
-                  #_{:type :tms
-                   :projection "EPSG:3301"
-                   :url "https://teeregister.mnt.ee/mapproxy/tms/1.0.0/Maa-ameti%20kaart/EPSG3301/{z}/{x}/{y}.png"}]}]])))
+         :layers (vec
+                  (for [layer ["BAASKAART" "MAANTEED" "pohi_vr2"]]
+                    {:type :wms :url "http://kaart.maaamet.ee/wms/alus?"
+                     :layer layer
+                     :style ""
+                     :default true}))}]])))
