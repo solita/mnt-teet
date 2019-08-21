@@ -28,7 +28,8 @@
      .then(() => { teet.main.main(); });"]
 
       [:body {:data-api-url (or (:url api) "/")
-              :data-git-version (build-info/git-commit)}
+              :data-git-version (build-info/git-commit)
+              :onload "resolveOnload()"}
        [:div#teet-frontend]
        [:script {:src (if dev? "http://localhost:9500/main.js" "main.js")}]
 

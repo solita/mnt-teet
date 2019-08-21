@@ -12,7 +12,7 @@
             [teet.projects.projects-view :as projects-view]
             [teet.navigation.navigation-view :as navigation-view]
             [teet.routes :as routes]
-            [teet.ui.material-ui :refer [Paper Button Chip Avatar MuiThemeProvider]]
+            [teet.ui.material-ui :refer [Paper Button Chip Avatar MuiThemeProvider CssBaseline]]
             [tuck.core :as t]
             [teet.ui.icons :as icons]
             [teet.ui.theme :as theme]))
@@ -23,13 +23,15 @@
      ;; Show only login dialog
      [login-view/login-page e! app]
      [:<>
+      [CssBaseline]
       [navigation-view/header e! {:title "TEET"
                                   :open? (:open? navigation)} user]
-      [Paper
-       (case page
-         (:default-page :root :projects) [projects-view/projects-page e! app]
-         :project [projects-view/project-page e! app]
-         [:div "Unimplemented page: " (pr-str page)])]
+      [:main
+       [Paper
+        (case page
+          (:default-page :root :projects) [projects-view/projects-page e! app]
+          :project [projects-view/project-page e! app]
+          [:div "Unimplemented page: " (pr-str page)])]]
       [df/DataFriskShell app]])])
 
 (defn ^:export main []
@@ -52,5 +54,3 @@
 
 (defn ^:after-load after-load []
   (r/force-update-all))
-
-(js/resolveOnload)

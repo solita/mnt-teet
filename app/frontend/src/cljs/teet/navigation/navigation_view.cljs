@@ -21,34 +21,34 @@
 (defn header
   [e! {:keys [title open?]} user]
   [:<>
-   [:nav
-    [Drawer {:class-name (<class navigation-style/drawer open?)
-             :classes {"paperAnchorDockedLeft" (<class navigation-style/drawer-paper)}
-             :variant "permanent"
-             :anchor "left"
-             :open open?}
-     [:div {:style {:display "flex"
-                    :align-items "center"
-                    :justify-content "space-between"
-                    :flex-direction "column"}}
-      [:div {:style {:padding "1rem"
-                     :display "flex"
-                     :align-items "center"
-                     :justify-content "space-between"}}
-       (when open?
-         [Typography {:variant "h6"}
-          [:div {:style {:display "inline-block"}}
-           [:img {:src "/img/teet-logo.png"}]
-           [:div {:style {:display "inline-block"
-                          :position "relative"
-                          :top -6 :left 5}}
-            title]]])
-       [IconButton {:color "primary"
-                    :on-click #(e! (navigation-controller/->ToggleDrawer))}
-        (if open?
-          [icons/navigation-chevron-left]
-          [icons/navigation-chevron-right])]]]]]
    [AppBar {:position "fixed"
-            :classes {"positionFixed" (<class navigation-style/appbar-position open?)}}
+            :className (<class navigation-style/appbar-position open?)}
     [Toolbar
-     [user-info user true]]]])
+     [user-info user true]]]
+
+   [Drawer {:class-name (<class navigation-style/drawer open?)
+            :classes {"paperAnchorDockedLeft" (<class navigation-style/drawer-paper)}
+            :variant "permanent"
+            :anchor "left"
+            :open open?}
+    [:div {:style {:display "flex"
+                   :align-items "center"
+                   :justify-content "space-between"
+                   :flex-direction "column"}}
+     [:div {:style {:padding "1rem"
+                    :display "flex"
+                    :align-items "center"
+                    :justify-content "space-between"}}
+      (when open?
+        [Typography {:variant "h6"}
+         [:div {:style {:display "inline-block"}}
+          [:img {:src "/img/teet-logo.png"}]
+          [:div {:style {:display "inline-block"
+                         :position "relative"
+                         :top -6 :left 5}}
+           title]]])
+      [IconButton {:color "primary"
+                   :on-click #(e! (navigation-controller/->ToggleDrawer))}
+       (if open?
+         [icons/navigation-chevron-left]
+         [icons/navigation-chevron-right])]]]]])
