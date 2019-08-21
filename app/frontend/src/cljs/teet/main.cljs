@@ -18,21 +18,23 @@
             [teet.ui.theme :as theme]))
 
 (defn main-view [e! {:keys [page user navigation] :as app}]
-  [theme/theme-provider
-   (if (= page :login)
-     ;; Show only login dialog
-     [login-view/login-page e! app]
-     [:<>
-      [CssBaseline]
-      [navigation-view/header e! {:title "TEET"
-                                  :open? (boolean (:open? navigation))} user]
-      [:main
-       [Paper
-        (case page
-          (:default-page :root :projects) [projects-view/projects-page e! app]
-          :project [projects-view/project-page e! app]
-          [:div "Unimplemented page: " (pr-str page)])]]
-      [df/DataFriskShell app]])])
+  (let [nav-open? (boolean (:open? navigation))]
+    [theme/theme-provider
+     (if (= page :login)
+       ;; Show only login dialog
+       [login-view/login-page e! app]
+       [:<>
+        [CssBaseline]
+        [navigation-view/header e! {:title "TEET"
+                                    :open? nav-open?} user]
+        [navigation-view/main-container
+         nav-open?
+         [Paper
+          (case page
+            (:default-page :root :projects) [projects-view/projects-page e! app]
+            :project [projects-view/project-page e! app]
+            [:div "Unimplemented page: " (pr-str page)])]]
+        [df/DataFriskShell app]])]))
 
 (defn ^:export main []
   (routes/start!)

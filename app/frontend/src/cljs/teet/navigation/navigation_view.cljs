@@ -26,8 +26,8 @@
     [Toolbar
      [user-info user true]]]
 
-   [Drawer {:class-name (<class navigation-style/drawer open?)
-            :classes {"paperAnchorDockedLeft" (<class navigation-style/drawer-paper)}
+   [Drawer {;:class-name (<class navigation-style/drawer open?)
+            :classes {"paperAnchorDockedLeft" (<class navigation-style/drawer open?)}
             :variant "permanent"
             :anchor "left"
             :open open?}
@@ -52,3 +52,7 @@
        (if open?
          [icons/navigation-chevron-left]
          [icons/navigation-chevron-right])]]]]])
+
+(defn main-container [navigation-open? content]
+  [:main {:class (<class navigation-style/main-container navigation-open?)}
+   content])

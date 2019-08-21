@@ -6,19 +6,17 @@
 (defn drawer
   [open?]
   (let [w (drawer-width open?)]
-    {:min-width w
-     :width w
-     :flex-shrink 0
-     :box-sizing "border-box"
-     :padding "0.25rem"
-     :white-space "nowrap"}))
-
-(defn drawer-paper
-  []
-  {:background-color "red"})
+    {:min-width (str w "px")
+     :width (str w "px")}))
 
 (defn appbar-position [drawer-open?]
   (let [dw (drawer-width drawer-open?)]
     {:z-index 10
      :width (str "calc(100% - " dw "px)")
      :margin-left (str dw "px")}))
+
+(defn main-container [drawer-open?]
+  (let [dw (drawer-width drawer-open?)]
+    {:z-index 10
+     :width (str "calc(100% - " dw "px)")
+     :margin-left (str "calc(0.5em + " dw "px)")}))
