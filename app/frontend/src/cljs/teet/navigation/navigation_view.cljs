@@ -1,6 +1,6 @@
 (ns teet.navigation.navigation-view
   (:require [reagent.core :as r]
-            [teet.ui.material-ui :refer [AppBar Button CardHeader TextField Typography Chip Avatar IconButton Drawer Divider Fab]]
+            [teet.ui.material-ui :refer [AppBar Toolbar Button Typography Chip Avatar IconButton Drawer]]
             [teet.ui.icons :as icons]
             [teet.localization :as localization :refer [tr]]
             [teet.navigation.navigation-controller :as navigation-controller]
@@ -20,28 +20,35 @@
 
 (defn header
   [e! {:keys [title open?]} user]
-  [:nav
-   [Drawer {:class-name (<class navigation-style/drawer open?)
-            :classes {"paperAnchorDockedLeft" (<class navigation-style/drawer-paper)}
-            :variant "permanent"
-            :anchor "left"
-            :open open?}
-    [:div {:style {:display "flex"
-                   :align-items "center"
-                   :justify-content "space-between"
-                   :flex-direction "column"}}
-     [:div {:style {:padding "1rem"
-                    :display "flex"
+  [:<>
+   [:nav
+    [Drawer {:class-name (<class navigation-style/drawer open?)
+             :classes {"paperAnchorDockedLeft" (<class navigation-style/drawer-paper)}
+             :variant "permanent"
+             :anchor "left"
+             :open open?}
+     [:div {:style {:display "flex"
                     :align-items "center"
-                    :justify-content "space-between"}}
-      (when open?
-        [Typography (merge {:variant "h6"})
-         title])
-      [IconButton {:color "primary"
-                   :on-click #(e! (navigation-controller/->ToggleDrawer))}
-       (if open?
-         [icons/navigation-chevron-left]
-         [icons/navigation-chevron-right])]]
-     [:<>
-      [user-info user open?]]]]])
-
+                    :justify-content "space-between"
+                    :flex-direction "column"}}
+      [:div {:style {:padding "1rem"
+                     :display "flex"
+                     :align-items "center"
+                     :justify-content "space-between"}}
+       (when open?
+         [Typography {:variant "h6"}
+          [:div {:style {:display "inline-block"}}
+           [:img {:src "/img/teet-logo.png"}]
+           [:div {:style {:display "inline-block"
+                          :position "relative"
+                          :top -6 :left 5}}
+            title]]])
+       [IconButton {:color "primary"
+                    :on-click #(e! (navigation-controller/->ToggleDrawer))}
+        (if open?
+          [icons/navigation-chevron-left]
+          [icons/navigation-chevron-right])]]]]]
+   [AppBar {:position "fixed"
+            :classes {"positionFixed" (<class navigation-style/appbar-position open?)}}
+    [Toolbar
+     [user-info user true]]]])

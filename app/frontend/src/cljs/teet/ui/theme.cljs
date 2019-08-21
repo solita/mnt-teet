@@ -4,8 +4,9 @@
             [cljs-bean.core :refer [->js]]))
 
 (def teet-theme
-  {:palette {:primary {:main "#ff0000"}}
-   :overrides {:MuiDrawer {:paper {:background-color "#e0e0e0"}}}})
+  {:palette {} ;; {:primary {:main "#ff0000"}}
+   :overrides {:MuiDrawer {:paper {:background-color "#e0e0e0"}}
+               :MuiAppBar {:positionFixed {:left "78px"}}}})
 
 (defn- create-theme [theme]
   (js/MaterialUI.createMuiTheme

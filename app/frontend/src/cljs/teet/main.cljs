@@ -22,20 +22,15 @@
    (if (= page :login)
      ;; Show only login dialog
      [login-view/login-page e! app]
-     [:div {:style {:display "flex"}}
-      [navigation-view/header e! {:title "TEET projekti"
+     [:<>
+      [navigation-view/header e! {:title "TEET"
                                   :open? (:open? navigation)} user]
-      [:div {:style {:flex-grow 1}}
-       ;; Show other pages with header
-       [:<>
-        ;; Main header here
-        [Paper
-         ;[Button {:variant "contained" :color "primary"} "hephep"]
-         (case page
-           (:default-page :root :projects) [projects-view/projects-page e! app]
-           :project [projects-view/project-page e! app]
-           [:div "Unimplemented page: " (pr-str page)])]
-        [df/DataFriskShell app]]]])])
+      [Paper
+       (case page
+         (:default-page :root :projects) [projects-view/projects-page e! app]
+         :project [projects-view/project-page e! app]
+         [:div "Unimplemented page: " (pr-str page)])]
+      [df/DataFriskShell app]])])
 
 (defn ^:export main []
   (routes/start!)
