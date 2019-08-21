@@ -25,7 +25,7 @@
      [:<>
       [CssBaseline]
       [navigation-view/header e! {:title "TEET"
-                                  :open? (:open? navigation)} user]
+                                  :open? (boolean (:open? navigation))} user]
       [:main
        [Paper
         (case page
