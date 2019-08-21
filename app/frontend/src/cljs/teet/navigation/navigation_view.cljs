@@ -3,7 +3,9 @@
             [teet.ui.material-ui :refer [AppBar Button CardHeader TextField Typography Chip Avatar IconButton Drawer Divider Fab]]
             [teet.ui.icons :as icons]
             [teet.localization :as localization :refer [tr]]
-            [teet.navigation.navigation-controller :as navigation-controller]))
+            [teet.navigation.navigation-controller :as navigation-controller]
+            [teet.navigation.navigation-style :as navigation-style]
+            [herb.core :refer [<class]]))
 
 (defn user-info [{:keys [given-name family-name] :as user} label?]
   (if-not user
@@ -19,16 +21,11 @@
 (defn header
   [e! {:keys [title open?]} user]
   [:nav
-   [Drawer {:variant "permanent"
+   [Drawer {:class-name (<class navigation-style/drawer open?)
+            :classes {"paperAnchorDockedLeft" (<class navigation-style/drawer-paper)}
+            :variant "permanent"
             :anchor "left"
-            :open open?
-            :style {:width (if open?
-                             "200px"
-                             "80px")
-                    :flex-shrink 0
-                    :box-sizing "border-box"
-                    :padding "0.25rem"
-                    :white-space "nowrap"}}
+            :open open?}
     [:div {:style {:display "flex"
                    :align-items "center"
                    :justify-content "space-between"

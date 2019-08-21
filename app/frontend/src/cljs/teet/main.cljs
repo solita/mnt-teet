@@ -12,7 +12,6 @@
             [teet.projects.projects-view :as projects-view]
             [teet.navigation.navigation-view :as navigation-view]
             [teet.routes :as routes]
-            [teet.ui.headings :as headings]
             [teet.ui.material-ui :refer [Paper Button Chip Avatar MuiThemeProvider]]
             [tuck.core :as t]
             [teet.ui.icons :as icons]))
