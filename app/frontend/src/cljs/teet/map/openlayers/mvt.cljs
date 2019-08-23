@@ -1,12 +1,12 @@
-(ns teet.ui.openlayers.mvt
+(ns teet.map.openlayers.mvt
   "Create an MVT layer from maprender service"
     (:require [kuvataso.Lahde]
             [ol.layer.VectorTile]
             [ol.source.VectorTile]
             [ol.format.MVT]
             [ol.extent :as ol-extent]
-            [teet.ui.openlayers.edistymispalkki :as palkki]
-            [teet.ui.openlayers.taso :refer [Taso]]
+            [teet.map.openlayers.edistymispalkki :as palkki]
+            [teet.map.openlayers.taso :refer [Taso]]
             [cljs.core.async :as async]
             [clojure.string :as str]
             [ol.style.Style]

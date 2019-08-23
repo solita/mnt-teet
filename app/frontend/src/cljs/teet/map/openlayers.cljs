@@ -1,4 +1,4 @@
-(ns teet.ui.openlayers
+(ns teet.map.openlayers
   "OpenLayers 3 kartta."
   (:require [cljs.core.async :refer [<! >! chan timeout alts!] :as async]
             [goog.style :as gstyle]
@@ -22,13 +22,13 @@
             ;[teet.geo :as geo]
             ;[teet.style.base :as style-base]
             ;[teet.style.colors :as colors]
-            [teet.ui.openlayers.geojson :as geojson]
-            [teet.ui.openlayers.kuvataso :as kuvataso]
-            [teet.ui.openlayers.mvt :as mvt]
-            [teet.ui.openlayers.projektiot :refer [projektio estonian-extent]]
-            [teet.ui.openlayers.taso :as taso]
-            [teet.ui.openlayers.taustakartta :as taustakartta]
-            [teet.ui.openlayers.tile :as tile]
+            [teet.map.openlayers.geojson :as geojson]
+            [teet.map.openlayers.kuvataso :as kuvataso]
+            [teet.map.openlayers.mvt :as mvt]
+            [teet.map.openlayers.projektiot :refer [projektio estonian-extent]]
+            [teet.map.openlayers.taso :as taso]
+            [teet.map.openlayers.taustakartta :as taustakartta]
+            [teet.map.openlayers.tile :as tile]
 
             [taoensso.timbre :as log]
 

@@ -1,4 +1,4 @@
-(ns teet.ui.openlayers.featuret
+(ns teet.map.openlayers.featuret
   "OpenLayers featureiden luonti Clojure data kuvauksien perusteella"
   (:require [ol.Feature]
 

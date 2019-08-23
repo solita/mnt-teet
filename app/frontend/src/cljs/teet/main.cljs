@@ -15,7 +15,7 @@
             [teet.ui.material-ui :refer [Paper Button Chip Avatar MuiThemeProvider CssBaseline]]
             [tuck.core :as t]
             [teet.ui.icons :as icons]
-            [teet.ui.theme :as theme]))
+            [teet.theme.theme-provider :as theme]))
 
 (defn main-view [e! {:keys [page user navigation] :as app}]
   (let [nav-open? (boolean (:open? navigation))]

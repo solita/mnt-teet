@@ -1,4 +1,4 @@
-(ns teet.ui.openlayers.edistymispalkki
+(ns teet.map.openlayers.edistymispalkki
   #_(:require [teet.asiakas.tapahtumat :as tapahtumat]))
 
 (def kuvatason-lataus (atom {:ladataan 0 :ladattu 0}))

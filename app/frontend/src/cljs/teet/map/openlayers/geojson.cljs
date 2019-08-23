@@ -1,9 +1,9 @@
-(ns teet.ui.openlayers.geojson
+(ns teet.map.openlayers.geojson
   "GeoJSON layer from URL"
   (:require [ol.source.Vector]
             [ol.format.GeoJSON]
             [ol.layer.Vector]
-            [teet.ui.openlayers.taso :refer [Taso]]))
+            [teet.map.openlayers.taso :refer [Taso]]))
 
 (defrecord GeoJSON [source-name projection extent z-index opacity_ url style-fn]
   Taso
