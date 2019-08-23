@@ -10,7 +10,8 @@ function check_psql {
 
 check_psql
 
-PSQL="psql -h localhost -U postgres -c"
+ARGS="-h localhost -U postgres"
+PSQL="psql $ARGS -c"
 PSQL_TEET="psql -h localhost -U teet -c"
 
 echo "Dropping and recreating teis database."
@@ -23,6 +24,12 @@ $PSQL "CREATE ROLE teet WITH LOGIN SUPERUSER;"
 $PSQL "CREATE DATABASE teet OWNER teet;"
 $PSQL "CREATE ROLE authenticator LOGIN;"
 
+
+echo "Restoring teeregister dump"
+$PSQL "CREATE EXTENSION postgis;"
+$PSQL "CREATE ROLE teeregister;"
+aws s3 cp s3://teet-dev-files/db/teeregister.full.dump.bz2 - | bzcat | psql $ARGS teet
+
 echo "Running migrations"
 mvn flyway:migrate
 
@@ -32,4 +39,5 @@ $PSQL_TEET "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA teet TO teet_anon;"
 echo "Adding all privileges in schema teet to teet_anon."
 $PSQL_TEET "GRANT SELECT, UPDATE, INSERT, DELETE ON ALL TABLES IN SCHEMA teet TO teet_user;"
 
-echo "Remember to import THK projects with teet.thk.thk-import/run-test-import!"
+echo "Importing THK projects with teet.thk.thk-import/run-test-import!"
+aws s3 cp s3://teet-dev-files/db/THK_export.csv - | (cd ../app/backend; clj -m teet.thk.thk-import)

@@ -50,7 +50,7 @@
       </activation>
       <properties>
         <databaseUrl>jdbc:postgresql://localhost/teet</databaseUrl>
-        <databaseUser>teet</databaseUser>
+        <databaseUser>postgres</databaseUser>
       </properties>
     </profile>
   </profiles>

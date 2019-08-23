@@ -6,8 +6,8 @@ GRANT teet_anon TO authenticator;
 
 CREATE SCHEMA teet;
 
-CREATE EXTENSION pg_trgm;
-CREATE EXTENSION postgis;
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS postgis;
 
 
 CREATE TYPE teet.localized_text AS (
