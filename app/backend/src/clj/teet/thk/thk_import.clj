@@ -54,11 +54,8 @@
 
 
 
-(def db {:dbtype "postgres"
-         :dbname "teet"
-         :user "teet"})
-
-(def i1 "/Volumes/GoogleDrive/Jaetut Drivet/Solita   Customers/Maanteeamet/Teiden elinkaaritiedon hallinta/Toteutusprojekti/Customer provided materials/THK_export.csv")
-
-(defn run-test-import []
-  (import-thk-projects! db i1))
+(defn -main [& args]
+  (import-thk-projects! {:dbtype "postgres"
+                         :dbname "teet"
+                         :user "teet"}
+                        System/in))
