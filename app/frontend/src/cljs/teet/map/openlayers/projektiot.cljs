@@ -1,4 +1,4 @@
-(ns teet.ui.openlayers.projektiot
+(ns teet.map.openlayers.projektiot
   "Karttaa varten tarvittavat extent alueet ja projektiot"
   (:require [ol.proj :as ol-proj]
             [proj4 :as proj4]))

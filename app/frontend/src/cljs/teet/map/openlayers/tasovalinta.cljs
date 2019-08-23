@@ -1,4 +1,4 @@
-(ns teet.ui.openlayers.tasovalinta
+(ns teet.map.openlayers.tasovalinta
   "Openlayers komponentin tasojen valintakontrolli.
   Kaikille taustakarttatasoille, jotka ovat valittavissa, lisätään
   kartalle on/off ikoninappi, josta tason saa kytkettyä päälle tai pois"

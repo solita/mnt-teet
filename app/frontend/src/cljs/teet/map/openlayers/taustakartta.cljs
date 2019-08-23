@@ -1,4 +1,4 @@
-(ns teet.ui.openlayers.taustakartta
+(ns teet.map.openlayers.taustakartta
   "Taustakarttatasojen muodostus. Luo karttakomponentille annetun määrittelyn
   perusteella sopivat OpenLayersin WMTS tasojen objektit."
   (:require [ol.source.WMTS]
@@ -9,7 +9,7 @@
             [ol.layer.Image]
             [ol.source.OSM]
             [ol.extent :as ol-extent]
-            [teet.ui.openlayers.projektiot :as p]
+            [teet.map.openlayers.projektiot :as p]
             [taoensso.timbre :as log]))
 
 

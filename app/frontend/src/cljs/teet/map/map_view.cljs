@@ -1,7 +1,7 @@
 (ns teet.map.map-view
   "Common map view"
   (:require [reagent.core :as r]
-            [teet.ui.openlayers :as openlayers]
+            [teet.map.openlayers :as openlayers]
             [taoensso.timbre :as log]))
 
 (def default-extent [20 50 30 60])

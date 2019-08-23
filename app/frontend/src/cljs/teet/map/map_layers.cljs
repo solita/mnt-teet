@@ -1,5 +1,5 @@
 (ns teet.map.map-layers
-  (:require [teet.ui.openlayers.mvt :as mvt]))
+  (:require [teet.map.openlayers.mvt :as mvt]))
 
 (defn mvt-layer [endpoint rpc-name parameters style-fn]
   (mvt/->MVT (str endpoint "/rpc/" rpc-name) ; base url

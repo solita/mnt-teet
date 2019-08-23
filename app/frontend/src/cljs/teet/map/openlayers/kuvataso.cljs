@@ -1,12 +1,12 @@
-(ns teet.ui.openlayers.kuvataso
+(ns teet.map.openlayers.kuvataso
   "Taso, joka hakee kuvan Teet palvelimelta"
   (:require [kuvataso.Lahde]
             [ol.layer.Tile]
             [ol.source.TileImage]
             [ol.extent :as ol-extent]
             #_[teet.asiakas.kommunikaatio :refer [karttakuva-url]]
-            [teet.ui.openlayers.edistymispalkki :as palkki]
-            [teet.ui.openlayers.taso :refer [Taso]]
+            [teet.map.openlayers.edistymispalkki :as palkki]
+            [teet.map.openlayers.taso :refer [Taso]]
             [cljs.core.async :as async]
             [clojure.string :as str]
             [taoensso.timbre :as log])

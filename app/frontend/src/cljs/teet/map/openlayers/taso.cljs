@@ -1,6 +1,6 @@
-(ns teet.ui.openlayers.taso
+(ns teet.map.openlayers.taso
   "Määrittelee karttatason kaltaisen protokollan"
-  (:require [teet.ui.openlayers.featuret :as featuret]))
+  (:require [teet.map.openlayers.featuret :as featuret]))
 
 (defprotocol Taso
   (aseta-z-index [this z-index]

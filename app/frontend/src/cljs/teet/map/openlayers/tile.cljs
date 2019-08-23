@@ -1,11 +1,11 @@
-(ns teet.ui.openlayers.tile
+(ns teet.map.openlayers.tile
   "WMS or WMTS tile layer"
   (:require [ol.layer.Tile]
             [ol.source.TileWMS]
             [ol.source.WMTS :as wmts-source]
             [ol.tilegrid.WMTS]
             [ol.format.WMTSCapabilities]
-            [teet.ui.openlayers.taso :refer [Taso]]
+            [teet.map.openlayers.taso :refer [Taso]]
             ;[teet.util.promise :refer [promise? p->]]
             ))
 
