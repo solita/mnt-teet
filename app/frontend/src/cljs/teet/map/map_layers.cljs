@@ -4,8 +4,8 @@
 (defn mvt-layer [endpoint rpc-name parameters style-fn]
   (mvt/->MVT (str endpoint "/rpc/" rpc-name) ; base url
              rpc-name ; source-name
-             "EPSG:3857" ; projection
-             [2149379.365139117 8432408.084854249 3476299.593004654 7747259.817069946] ;nil ; extent
+             "EPSG:3301" ; projection
+             nil ; extent
              99 ; z-index
              [] ; legend
              1 ; opacity

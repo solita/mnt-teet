@@ -44,7 +44,7 @@
                                          (.append "Accept" "application/octet-stream"))})
            (.then #(.arrayBuffer %))
            (.then (fn [buf]
-                    (let [features (.readFeatures format buf #js {:featureProjection "EPSG:3857"})
+                    (let [features (.readFeatures format buf #js {:featureProjection "EPSG:3301"})
                           projection (.readProjection format buf)]
                       ;;(.log js/console "FEATURES: " features)
                       ;;(.log js/console "PROJECTION: " projection)

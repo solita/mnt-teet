@@ -9,7 +9,9 @@
             [teet.login.login-paths :as login-paths]
             [teet.projects.project-form :as project-form]
             [postgrest-ui.components.item-view :as postgrest-item-view]
-            [teet.map.map-view :as map-view]))
+            [teet.map.map-view :as map-view]
+            [teet.map.map-layers :as map-layers]
+            [teet.map.map-features :as map-features]))
 
 (defmethod search-interface/format-search-result "project" [{:keys [id label]}]
   {:icon [icons/file-folder-open]
@@ -41,9 +43,11 @@
 (defn projects-page [e! app]
   [:<>
    [map-view/map-view e! {:height "400px"
-                          :layers {#_#_:group-projects (map-layers/mvt-layer endpoint "mvt_projectgroup_projects"
-                                                                         {"id" group-id}
-                                                                         map-features/project-style)}}
+                          :layers {:thk-projects
+                                   (map-layers/mvt-layer (get-in app [:config :api-url])
+                                                         "mvt_thk_projects"
+                                                         {"q" ""}
+                                                         map-features/project-style)}}
       app]
    [projects-listing e! app]])
 
