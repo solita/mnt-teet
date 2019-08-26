@@ -51,6 +51,8 @@
       <properties>
         <databaseUrl>jdbc:postgresql://localhost/teet</databaseUrl>
         <databaseUser>teet</databaseUser>
+        <baselineVersion>0</baselineVersion>
+        <baselineOnMigrate>true</baselineOnMigrate>
       </properties>
     </profile>
   </profiles>
