@@ -40,6 +40,8 @@
                          "procurement_no"]}
                id])}])
 
+(def ^:const project-pin-resolution-threshold 100)
+
 (defn projects-page [e! app]
   [:<>
    [map-view/map-view e! {:height "400px"
@@ -47,7 +49,14 @@
                                    (map-layers/mvt-layer (get-in app [:config :api-url])
                                                          "mvt_thk_projects"
                                                          {"q" ""}
-                                                         map-features/project-style)}}
+                                                         map-features/project-line-style
+                                                         {:max-resolution project-pin-resolution-threshold})
+                                   :thk-project-pins
+                                   (map-layers/geojson-layer (get-in app [:config :api-url])
+                                                             "geojson_thk_project_pins"
+                                                             {"q" ""}
+                                                             map-features/project-pin-style
+                                                             {:min-resolution project-pin-resolution-threshold})}}
       app]
    [projects-listing e! app]])
 

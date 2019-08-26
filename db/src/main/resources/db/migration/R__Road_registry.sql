@@ -72,8 +72,26 @@ SELECT ST_AsMVT(tile) AS mvt
                             4096, NULL, false)
           FROM teet.thk_project_search p
          WHERE ST_DWithin(p.geometry,
-                          ST_Setsrid(ST_MakeBox2D(ST_MakePoint($2, ymin),
-                                                  ST_MakePoint($4, ymax)), 3301),
+                          impl.scale_mvt_search_bbox(
+                            ST_Setsrid(ST_MakeBox2D(ST_MakePoint($2, ymin),
+                                                    ST_MakePoint($4, ymax)), 3301)),
                           1000)
            AND (q IS NULL OR q = '' OR p.searchable_text LIKE '%'||q||'%')) AS tile;
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;
+
+-- GeoJSON layer of all project centroids (to show pins at high zoom level)
+CREATE OR REPLACE FUNCTION teet.geojson_thk_project_pins(q TEXT) RETURNS TEXT
+AS $$
+WITH projects AS (
+SELECT *
+  FROM teet.thk_project_search p
+ WHERE (q IS NULL OR q = '' OR p.searchable_text LIKE '%'||q||'%')
+)
+SELECT row_to_json(fc)::TEXT
+  FROM (SELECT 'FeatureCollection' as type,
+                array_to_json(array_agg(f)) as features
+          FROM (SELECT 'Feature' as type,
+                       ST_AsGeoJSON(ST_Centroid(p.geometry))::json as geometry,
+                       json_object(ARRAY['id', p.id, 'tooltip', p.name]::TEXT[]) AS properties
+                  FROM projects p) f) fc;
+$$ LANGUAGE SQL STABLE;

@@ -3,9 +3,32 @@
   (:require [ol.source.Vector]
             [ol.format.GeoJSON]
             [ol.layer.Vector]
-            [teet.map.openlayers.taso :refer [Taso]]))
+            [teet.map.openlayers.taso :refer [Taso]]
+            [clojure.string :as str]
+            [taoensso.timbre :as log]))
 
-(defrecord GeoJSON [source-name projection extent z-index opacity_ url style-fn]
+(defn geojson-url [base-url & params]
+  (str base-url "?" (str/join "&"
+                              (map (fn [[name val]]
+                                     (str name "=" val))
+                                   params))))
+
+(defn load-features [^ol.source.Vector source url extent resolution projection]
+  (log/info "LOAD " url ", extent:" extent ", resolution: " resolution ", projection: " projection)
+  (-> (js/fetch url #js {:headers #js {"Accept" "application/octet-stream"}})
+      (.then #(.json %))
+      (.then (fn [json]
+               (log/info "loaded geojson: " json)
+               (def got-js json)
+               (let [features (-> source
+                                  .getFormat
+                                  (.readFeatures json #js {"dataProjection" "EPSG:3301"}))]
+                 (doto source
+                   (.addFeatures features)
+                   .refresh))))))
+
+(defrecord GeoJSON [source-name projection extent z-index opacity_ min-resolution max-resolution
+                    url style-fn]
   Taso
   (aseta-z-index [this z-index]
     (assoc this :z-index z-index))
@@ -31,7 +54,15 @@
                              :wrapX true
                              :style style-fn}))]
 
+      (.setLoader source (partial load-features source url))
+
       (.setOpacity ol-layer (or opacity_ 1))
+
+      (when (number? min-resolution)
+        (.setMinResolution ol-layer min-resolution))
+      (when (number? max-resolution)
+        (.setMaxResolution ol-layer max-resolution))
+
       (when luo?
         (.set ol-layer "teet-source" source-name)
         (.addLayer ol3 ol-layer))
@@ -47,6 +78,3 @@
 
   (hae-asiat-pisteessa [this koordinaatti extent]
     nil))
-
-(defn luo-geojson-taso [lahde projektio extent opacity url style-fn]
-  (->GeoJSON lahde projektio extent 0 opacity url style-fn))
