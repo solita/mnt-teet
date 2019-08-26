@@ -8,5 +8,4 @@
 (extend-protocol t/Event
   ToggleDrawer
   (process-event [_ app]
-    (log/info "Drawer toggle")
     (update-in app [:navigation :open?] not)))
