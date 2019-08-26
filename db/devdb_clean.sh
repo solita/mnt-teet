@@ -14,7 +14,7 @@ ARGS="-h localhost -U postgres"
 PSQL="psql $ARGS -c"
 PSQL_TEET="psql -h localhost -U teet -c"
 
-echo "Dropping and recreating teis database."
+echo "Dropping and recreating teet database."
 $PSQL "DROP DATABASE IF EXISTS teet;"
 $PSQL "DROP ROLE IF EXISTS authenticator;"
 $PSQL "DROP ROLE IF EXISTS teet_anon;"
