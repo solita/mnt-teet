@@ -21,14 +21,12 @@ $PSQL "DROP ROLE IF EXISTS teet_anon;"
 $PSQL "DROP ROLE IF EXISTS teet_user;"
 $PSQL "DROP ROLE IF EXISTS teet;"
 $PSQL "CREATE ROLE teet WITH LOGIN SUPERUSER;"
-$PSQL "CREATE DATABASE teet OWNER teet;"
+$PSQL "CREATE DATABASE teet TEMPLATE teet_template OWNER teet;" || {
+    echo if the above failed with error about missing template, you need to run devdb_create_template.sh script first.
+    exit 1
+}
 $PSQL "CREATE ROLE authenticator LOGIN;"
 
-
-echo "Restoring teeregister dump"
-$PSQL "CREATE EXTENSION postgis;"
-$PSQL "CREATE ROLE teeregister;"
-aws s3 cp s3://teet-dev-files/db/teeregister.full.dump.bz2 - | bzcat | psql $ARGS teet
 
 echo "Clearing flyway schema info from teeregister"
 $PSQL_TEET "TRUNCATE public.flyway_schema_history;"
@@ -44,4 +42,4 @@ echo "Adding all privileges in schema teet to teet_anon."
 $PSQL_TEET "GRANT SELECT, UPDATE, INSERT, DELETE ON ALL TABLES IN SCHEMA teet TO teet_user;"
 
 echo "Importing THK projects with teet.thk.thk-import/run-test-import!"
-aws s3 cp s3://teet-dev-files/db/THK_export.csv - | (cd ../app/backend; clj -m teet.thk.thk-import)
+aws s3 cp s3://teet-dev-files/db/THK_export.csv - | (cd ../app/backend && clj -m teet.thk.thk-import)
