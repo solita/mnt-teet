@@ -1,6 +1,6 @@
 (ns teet.map.openlayers.background
-  "Taustakarttatasojen muodostus. Luo karttakomponentille annetun määrittelyn
-  perusteella sopivat OpenLayersin WMTS tasojen objektit."
+  "Background layers.
+  Creates background map layer based on :type."
   (:require [ol.source.WMTS]
             [ol.tilegrid.WMTS]
             [ol.tilegrid.TileGrid]
@@ -8,12 +8,10 @@
             [ol.source.ImageWMS]
             [ol.layer.Image]
             [ol.source.OSM]
-            [ol.extent :as ol-extent]
             [teet.map.openlayers.projektiot :as p]
             [taoensso.timbre :as log]
 
-            [ol.format.WMTSCapabilities]
-            [ol.source.WMTS :as wmts-source]))
+            [ol.format.WMTSCapabilities]))
 
 
 (defn maa-amet-tilegrid
@@ -32,9 +30,9 @@
 
 
 (defmethod create-background-layer :maa-amet [{:keys [url layer default matrix-set style]
-                                        :or {url "https://tiles.maaamet.ee/tm/wmts"
-                                             matrix-set "LEST"
-                                             style "default"}}]
+                                               :or {url "https://tiles.maaamet.ee/tm/wmts"
+                                                    matrix-set "LEST"
+                                                    style "default"}}]
   (log/info "Creating Maa-amet background map: " layer)
   (doto (ol.layer.Tile.
          #js {:source
@@ -51,7 +49,7 @@
     (.setVisible default)))
 
 (defmethod create-background-layer :wms [{:keys [url layer style default] :as params}]
-  (log/info "Luodaan WMS karttataso: " params)
+  (log/info "Create WMS layer: " params)
   (doto (ol.layer.Image.
          #js {:source (ol.source.ImageWMS.
                        #js {:url url
@@ -59,7 +57,7 @@
     (.setVisible default)))
 
 (defmethod create-background-layer :osm [_]
-  (log/info "Luodaan OpenStreetMap karttataso.")
+  (log/info "Create OpenStreetMap layer.")
   (ol.layer.Tile. #js {:source (ol.source.OSM. (clj->js (merge {}
                                                                (when (= "dev" (.getAttribute js/document.body "data-environment"))
                                                                  {:url "http://localhost:4000/{z}/{x}/{y}.png"}))))}))
