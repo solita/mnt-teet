@@ -42,6 +42,23 @@ BEGIN
 END
 $$ LANGUAGE plpgsql STABLE;
 
+-- Trigger to update thk_project geometry
+CREATE OR REPLACE FUNCTION impl.update_project_geometry() RETURNS TRIGGER
+AS $$
+BEGIN
+  NEW.geometry := teet.road_part_geometry(NEW.road_nr::INTEGER, NEW.carriageway::INTEGER, NEW.km_range);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS update_project_geometry ON teet.thk_project;
+CREATE TRIGGER update_project_geometry
+BEFORE INSERT OR UPDATE
+ON teet.thk_project
+FOR EACH ROW EXECUTE PROCEDURE impl.update_project_geometry();
+
+
+-- MVT layer to get project geometries
 CREATE OR REPLACE FUNCTION teet.mvt_thk_projects(
    q TEXT, xmin NUMERIC, ymin NUMERIC, xmax NUMERIC, ymax NUMERIC)
 RETURNS bytea
@@ -49,10 +66,12 @@ AS $$
 SELECT ST_AsMVT(tile) AS mvt
   FROM (SELECT CONCAT(p.name) AS tooltip,
                p.id,
-               ST_AsMVTGeom(teet.road_part_geometry(p.road_nr::INTEGER, p.carriageway::INTEGER, p.km_range),
+               ST_AsMVTGeom(p.geometry,
                             st_makebox2d(st_makepoint($2, ymin),
                                          st_makepoint($4, ymax)),
                             4096, NULL, false)
           FROM teet.thk_project_search p
-         WHERE (q IS NULL OR q = '' OR p.searchable_text LIKE '%'||q||'%')) AS tile;
+         WHERE ST_Overlaps(p.geometry, st_makebox2d(st_makepoint($2, ymin),
+                                                    st_makepoint($4, ymax)))
+           AND (q IS NULL OR q = '' OR p.searchable_text LIKE '%'||q||'%')) AS tile;
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;
