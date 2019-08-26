@@ -27,7 +27,7 @@
             [teet.map.openlayers.mvt :as mvt]
             [teet.map.openlayers.projektiot :refer [projektio estonian-extent]]
             [teet.map.openlayers.taso :as taso]
-            [teet.map.openlayers.taustakartta :as taustakartta]
+            [teet.map.openlayers.background :as background]
             [teet.map.openlayers.tile :as tile]
 
             [taoensso.timbre :as log]
@@ -528,7 +528,7 @@
         ;; NOTE: Currently disabled, because implement our own map control tools
         ;; kontrollit (ol-control/defaults #js {})
 
-        map-options (clj->js {:layers       (mapv taustakartta/luo-taustakartta layers)
+        map-options (clj->js {:layers       (mapv background/create-background-layer layers)
                              :target       (:id mapspec)
                              :controls [] ;; :controls     kontrollit
                              :interactions interaktiot})

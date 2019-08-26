@@ -1,4 +1,4 @@
-(ns teet.map.openlayers.taustakartta
+(ns teet.map.openlayers.background
   "Taustakarttatasojen muodostus. Luo karttakomponentille annetun määrittelyn
   perusteella sopivat OpenLayersin WMTS tasojen objektit."
   (:require [ol.source.WMTS]
@@ -10,42 +10,47 @@
             [ol.source.OSM]
             [ol.extent :as ol-extent]
             [teet.map.openlayers.projektiot :as p]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+
+            [ol.format.WMTSCapabilities]
+            [ol.source.WMTS :as wmts-source]))
 
 
-(defn tilegrid []
+(defn maa-amet-tilegrid
+  "Pre-loaded from getcapabilities request"
+  []
   (ol.tilegrid.WMTS.
-   (clj->js {:origin (ol-extent/getTopLeft (.getExtent p/projektio))
-             :resolutions [8192 4096 2048 1024 512 256 128 64 32 16 8 4 2 1 0.5 0.25]
-             :matrixIds (range 16)
-             :tileSize 256})))
+   #js {:extent #js [40500.000000 5993000.000000
+                     1064500.000000 7017000.000000]
+        :resolutions #js [4000 2000 1000 500 250 125 62.5 31.25 15.625 7.8125 3.90625 1.953125
+                          0.9765625 0.48828125]
+        :matrixIds #js ["0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11" "12" "13"]
+        :tileSize 256}))
 
-(defn- wmts-layer [matrixset attribuutio url layer visible?]
+
+(defmulti create-background-layer :type)
+
+
+(defmethod create-background-layer :maa-amet [{:keys [url layer default matrix-set style]
+                                        :or {url "https://tiles.maaamet.ee/tm/wmts"
+                                             matrix-set "LEST"
+                                             style "default"}}]
+  (log/info "Creating Maa-amet background map: " layer)
   (doto (ol.layer.Tile.
          #js {:source
-              (ol.source.WMTS. #js {:attributions [(ol.Attribution.
-                                                    #js {:html attribuutio})]
+              (ol.source.WMTS. #js {:attributions #js [(ol.Attribution.
+                                                        #js {:html "Maa-amet"})]
                                     :url          url
                                     :layer        layer
-                                    :matrixSet    matrixset
+                                    :matrixSet    matrix-set
                                     :format       "image/png"
-                                    :projection   p/projektio
-                                    :tileGrid     (tilegrid)
-                                    :style        "default"
+                                    :projection   "EPSG:3301"
+                                    :tileGrid     (maa-amet-tilegrid)
+                                    :style        style
                                     :wrapX        true})})
-    (.setVisible visible?)))
+    (.setVisible default)))
 
-(defmulti luo-taustakartta :type)
-
-(defmethod luo-taustakartta :mml [{:keys [url layer default]}]
-  (log/info "Luodaan MML karttataso: " layer)
-  (wmts-layer "ETRS-TM35FIN" "MML" url layer default))
-
-(defmethod luo-taustakartta :livi [{:keys [url layer default]}]
-  (log/info "Luodaan livi karttataso: layer")
-  (wmts-layer "EPSG:3067_PTP_JHS180" "Liikennevirasto" url layer default))
-
-(defmethod luo-taustakartta :wms [{:keys [url layer style default] :as params}]
+(defmethod create-background-layer :wms [{:keys [url layer style default] :as params}]
   (log/info "Luodaan WMS karttataso: " params)
   (doto (ol.layer.Image.
          #js {:source (ol.source.ImageWMS.
@@ -53,13 +58,13 @@
                             :params #js {:VERSION "1.1.1" :LAYERS layer :STYLES style :FORMAT "image/png"}})})
     (.setVisible default)))
 
-(defmethod luo-taustakartta :osm [_]
+(defmethod create-background-layer :osm [_]
   (log/info "Luodaan OpenStreetMap karttataso.")
   (ol.layer.Tile. #js {:source (ol.source.OSM. (clj->js (merge {}
                                                                (when (= "dev" (.getAttribute js/document.body "data-environment"))
                                                                  {:url "http://localhost:4000/{z}/{x}/{y}.png"}))))}))
 
-(defmethod luo-taustakartta :tms [{:keys [projection url]}]
+(defmethod create-background-layer :tms [{:keys [projection url]}]
   (log/info "Create TMS background map layer: " url)
   (ol.layer.Tile. #js {:source (ol.source.TileImage.
                                 #js {:projection projection

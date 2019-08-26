@@ -111,7 +111,8 @@
                      (get-in app [:map :rotation])
                      0)
 
-         :layers (vec
+         :layers [{:type :maa-amet :layer "kaart" :default true}]
+         #_(vec
                   (for [layer ["BAASKAART" "MAANTEED" "pohi_vr2"]]
                     {:type :wms :url "http://kaart.maaamet.ee/wms/alus?"
                      :layer layer
