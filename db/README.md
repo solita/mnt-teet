@@ -1,6 +1,6 @@
-# Flyway migrations for TEIS database
+# Flyway migrations for TEET database
 
-All TEIS database migrations are in the same flyway migrations.
+All TEET database migrations are in the same flyway migrations.
 
 pom.xml contains a template for running the flyway migrations.
 

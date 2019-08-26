@@ -34,18 +34,19 @@
     [:div {:style {:display "flex"
                    :align-items "center"
                    :justify-content "space-between"
-                   :flex-direction "column"}}
+                   :flex-direction "column"
+                   :background-color "white"}}
      [:div {:style {:padding "1rem"
                     :display "flex"
                     :align-items "center"
                     :justify-content "space-between"}}
       (when open?
-        [Typography {:variant "h6"}
-         [:div {:style {:display "inline-block"}}
-          [:img {:src "/img/teet-logo.png"}]
-          [:div {:style {:display "inline-block"
-                         :position "relative"
-                         :top -6 :left 5}}
+        [:div {:style {:display "inline-block"}}
+         [:img {:src "/img/teet-logo.png"}]
+         [:div {:style {:display "inline-block"
+                        :position "relative"
+                        :top -6 :left 5}}
+          [Typography {:variant "h6"}
            title]]])
       [IconButton {:color "primary"
                    :on-click #(e! (navigation-controller/->ToggleDrawer))}

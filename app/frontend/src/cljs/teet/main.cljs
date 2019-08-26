@@ -13,6 +13,7 @@
             [teet.navigation.navigation-view :as navigation-view]
             [teet.routes :as routes]
             [teet.ui.material-ui :refer [Paper Button Chip Avatar MuiThemeProvider CssBaseline]]
+            [teet.ui.component-demo :as component-demo]
             [tuck.core :as t]
             [teet.ui.icons :as icons]
             [teet.theme.theme-provider :as theme]))
@@ -29,10 +30,11 @@
                                     :open? nav-open?} user]
         [navigation-view/main-container
          nav-open?
-         [Paper
+         [:<>
           (case page
             (:default-page :root :projects) [projects-view/projects-page e! app]
             :project [projects-view/project-page e! app]
+            :components [component-demo/demo]
             [:div "Unimplemented page: " (pr-str page)])]]
         [df/DataFriskShell app]])]))
 
