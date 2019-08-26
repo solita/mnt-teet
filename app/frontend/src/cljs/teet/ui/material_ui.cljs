@@ -16,14 +16,13 @@
 ;; Listing
 (define-mui-components List ListItem ListItemIcon ListItemText)
 
-(define-mui-components Button Fab IconButton)
+;; Form
+(define-mui-components Button Fab IconButton Checkbox TextField)
 
 (define-mui-components Paper Typography)
 
 ;; Common utility components
 (define-mui-components Collapse Divider CircularProgress Drawer AppBar MuiThemeProvider Toolbar CssBaseline)
-
-(define-mui-components TextField)
 
 ;; Layout
 (define-mui-components Container Grid)
