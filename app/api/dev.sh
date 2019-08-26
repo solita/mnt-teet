@@ -13,8 +13,8 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     ARGS="--rm -p 3000:3000"
     URI="postgres://$DBUSER@host.docker.internal:5432/teet"
 elif [[ "$OSTYPE" == "linux-gnu" ]]; then
-    ARGS="-d --rm --net=host -p 3000:3000"
-    URI="postgres://$DBUSER@127.0.0.1:5432/teet"
+    ARGS="-d --rm --link teetdb --network docker_teet --name teetapi -p 127.0.0.1:3000:3000"
+    URI="postgres://$DBUSER@teetdb:5432/teet"
 else
     echo "OS not supported"
     exit
