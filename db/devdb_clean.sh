@@ -34,6 +34,7 @@ echo "Clearing flyway schema info from teeregister"
 $PSQL_TEET "TRUNCATE public.flyway_schema_history;"
 
 echo "Running migrations"
+mvn flyway:baseline
 mvn flyway:migrate
 
 echo "Adding all privileges in schema teet to teet_anon."
