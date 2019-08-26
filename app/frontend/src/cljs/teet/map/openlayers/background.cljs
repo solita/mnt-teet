@@ -72,17 +72,3 @@
                                                 #js {:extent (clj->js p/estonian-extent)
                                                      :tileSize #js [256 256]})
                                      :url url})}))
-
-;;   source: new ol.source.TileImage({
-;;        projection: 'EPSG:3035',
-;;        tileGrid: new ol.tilegrid.TileGrid({
-;;          extent: [2409891.715, 1328424.080, 6143417.136, 5330401.505],
-;;          tileSize: [200, 200],
-;;          origin: [2409891.715, 1328424.080],
-;;          resolutions: [4000, 3000, 2000, 1000]
-;;        }),
-;;        tileUrlFunction: function(coordinate) {
-;;          return 'http://map-loader.appspot.com/srtm3035/'+coordinate[0]+
-;;              '/'+ coordinate[1] +'/'+ coordinate[2] +'.png';
-;;        }
-;;      })
