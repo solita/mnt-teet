@@ -67,11 +67,13 @@ SELECT ST_AsMVT(tile) AS mvt
   FROM (SELECT CONCAT(p.name) AS tooltip,
                p.id,
                ST_AsMVTGeom(p.geometry,
-                            st_makebox2d(st_makepoint($2, ymin),
-                                         st_makepoint($4, ymax)),
+                            ST_SetSRID(ST_MakeBox2D(ST_MakePoint($2, ymin),
+                                                    ST_MakePoint($4, ymax)), 3301),
                             4096, NULL, false)
           FROM teet.thk_project_search p
-         WHERE ST_Overlaps(p.geometry, st_makebox2d(st_makepoint($2, ymin),
-                                                    st_makepoint($4, ymax)))
+         WHERE ST_DWithin(p.geometry,
+                          ST_Setsrid(ST_MakeBox2D(ST_MakePoint($2, ymin),
+                                                  ST_MakePoint($4, ymax)), 3301),
+                          1000)
            AND (q IS NULL OR q = '' OR p.searchable_text LIKE '%'||q||'%')) AS tile;
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;
