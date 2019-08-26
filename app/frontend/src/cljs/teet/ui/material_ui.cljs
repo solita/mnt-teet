@@ -17,7 +17,7 @@
 (define-mui-components List ListItem ListItemIcon ListItemText)
 
 ;; Form
-(define-mui-components Button Fab IconButton Checkbox TextField)
+(define-mui-components Button Fab IconButton Checkbox TextField InputAdornment FormControl InputLabel Input)
 
 (define-mui-components Paper Typography)
 
