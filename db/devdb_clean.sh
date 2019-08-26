@@ -31,7 +31,7 @@ $PSQL "CREATE ROLE teeregister;"
 aws s3 cp s3://teet-dev-files/db/teeregister.full.dump.bz2 - | bzcat | psql $ARGS teet
 
 echo "Clearing flyway schema info from teeregister"
-$PSQL "TRUNCATE public.flyway_schema_history;"
+$PSQL_TEET "TRUNCATE public.flyway_schema_history;"
 
 echo "Running migrations"
 mvn flyway:migrate
