@@ -84,7 +84,7 @@ AS $$
 WITH projects AS (
 SELECT *
   FROM teet.thk_project_search p
- WHERE (q IS NULL OR q = '' OR p.searchable_text LIKE '%'||q||'%')
+ WHERE (q IS NULL OR q = '' OR p.searchable_text ILIKE '%'||q||'%')
 )
 SELECT row_to_json(fc)::TEXT
   FROM (SELECT 'FeatureCollection' as type,
