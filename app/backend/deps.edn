@@ -16,7 +16,8 @@
         webjure/jeesql {:mvn/version "0.4.7"}
         com.datomic/client-cloud {:mvn/version "0.8.78"}
         }
- :mvn/repos {"datomic-cloud" {:url "s3://datomic-releases-1fc2183a/maven/releases"}}
+ :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
+             "datomic-cloud" {:url "s3://datomic-releases-1fc2183a/maven/releases"}}
  :paths ["src/clj" "resources"]
  :aliases {:dev {:extra-deps {com.datomic/client-cloud {:mvn/version "0.8.78"}
                               com.datomic/ion-dev {:mvn/version "0.9.234"}}}
