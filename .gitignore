@@ -7,3 +7,5 @@
 .idea
 *.iml
 .DS_Store
+/app/backend/resources/public/language
+/app/backend/resources/public/*.js
