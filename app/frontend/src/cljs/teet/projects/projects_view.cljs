@@ -11,7 +11,8 @@
             [postgrest-ui.components.item-view :as postgrest-item-view]
             [teet.map.map-view :as map-view]
             [teet.map.map-layers :as map-layers]
-            [teet.map.map-features :as map-features]))
+            [teet.map.map-features :as map-features]
+            [teet.ui.material-ui :refer [TextField]]))
 
 (defmethod search-interface/format-search-result "project" [{:keys [id label]}]
   {:icon [icons/file-folder-open]
@@ -22,14 +23,15 @@
   [postgrest-filters/simple-search-form ["searchable_text"] opts])
 
 (defn projects-listing [e! app]
-  [postgrest-listing/filtered-listing
-   {:filters-view project-filter
+  [postgrest-listing/listing
+   {;:filters-view project-filter
     :endpoint (get-in app [:config :api-url])
     :token (get-in app login-paths/api-token)
     :state (get-in app [:projects :listing])
     :set-state! #(e! (projects-controller/->SetListingState %))
     :table "thk_project_search"
     :select ["id" "name" "estimated_duration" "road_nr" "km_range"]
+    :where (projects-controller/project-filter-where (get-in app [:projects :filter]))
     :drawer (fn [{:strs [id]}]
               [postgrest-item-view/item-view
                {:endpoint (get-in app [:config :api-url])
@@ -48,16 +50,19 @@
                           :layers {:thk-projects
                                    (map-layers/mvt-layer (get-in app [:config :api-url])
                                                          "mvt_thk_projects"
-                                                         {"q" ""}
+                                                         {"q" (get-in app [:projects :filter :text])}
                                                          map-features/project-line-style
                                                          {:max-resolution project-pin-resolution-threshold})
                                    :thk-project-pins
                                    (map-layers/geojson-layer (get-in app [:config :api-url])
                                                              "geojson_thk_project_pins"
-                                                             {"q" ""}
+                                                             {"q" (get-in app [:projects :filter :text])}
                                                              map-features/project-pin-style
                                                              {:min-resolution project-pin-resolution-threshold})}}
-      app]
+    app]
+   [TextField {:label "Search"
+               :value (or (get-in app [:projects :new-filter :text]) "")
+               :on-change #(e! (projects-controller/->UpdateProjectsFilter {:text (-> % .-target .-value)}))}]
    [projects-listing e! app]])
 
 (defn project-page [e! {{:keys [project]} :params :as app}]

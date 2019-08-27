@@ -9,7 +9,8 @@
   (str base-url "?"
        (str/join "&"
                  (map (fn [[name val]]
-                        (str name "=" (js/encodeURIComponent val)))
+                        (str name "=" (when val
+                                        (js/encodeURIComponent val))))
                       params))))
 
 (defn mvt-layer [endpoint rpc-name parameters style-fn {:keys [min-resolution max-resolution z-index opacity]

@@ -39,7 +39,8 @@
   (selitteet [this]
     [])
   (paivita [this ol3 ol-layer aiempi-paivitystieto]
-    (let [sama? (= 1 aiempi-paivitystieto)
+    (log/info "paivita! aiempi: " aiempi-paivitystieto)
+    (let [sama? (= url aiempi-paivitystieto)
           luo? (nil? ol-layer)
           source (if (and sama? (not luo?))
                    (.getSource ol-layer)
@@ -74,7 +75,7 @@
         ;; Jos ei luoda ja parametrit eivät ole samat
         ;; asetetaan uusi source ol layeriiin
         (.setSource ol-layer source))
-      [ol-layer 1]))
+      [ol-layer url]))
 
   (hae-asiat-pisteessa [this koordinaatti extent]
     nil))

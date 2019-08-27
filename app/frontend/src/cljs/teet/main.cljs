@@ -16,7 +16,8 @@
             [teet.ui.component-demo :as component-demo]
             [tuck.core :as t]
             [teet.ui.icons :as icons]
-            [teet.theme.theme-provider :as theme]))
+            [teet.theme.theme-provider :as theme]
+            [teet.common.common-controller]))
 
 (defn main-view [e! {:keys [page user navigation] :as app}]
   (let [nav-open? (boolean (:open? navigation))]
