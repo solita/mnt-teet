@@ -35,7 +35,7 @@
           (case page
             (:default-page :root :projects) [projects-view/projects-page e! app]
             :project [projects-view/project-page e! app]
-            :components [component-demo/demo]
+            :components [component-demo/demo e!]
             [:div "Unimplemented page: " (pr-str page)])]]
         [df/DataFriskShell app]])]))
 

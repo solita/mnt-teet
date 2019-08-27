@@ -26,6 +26,14 @@
    (if (= :dev (:mode config))
      ;; In dev mode, serve files under frontend figwheel build
      (routes
+      (POST "/success" req
+            {:status 200
+             :headers {"Content-Type" "application/json"}
+             :body (cheshire/encode {:success "great"})})
+      (POST "/fail" req
+            {:status 500
+             :headers {"Content-Type" "application/json"}
+             :body (cheshire/encode {:success "not"})})
       (files "/" {:root "../frontend/target/public"})
       (files "/" {:root "../frontend/resources/public"}))
 

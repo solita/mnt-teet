@@ -1,8 +1,9 @@
 (ns teet.ui.component-demo
   (:require [teet.ui.material-ui :refer [Paper Button Fab IconButton TextField Chip Avatar MuiThemeProvider CssBaseline Typography Divider Checkbox]]
+            [teet.ui.file-upload :refer [FileUpload ->TestFileUpload]]
             [teet.ui.icons :as icons]))
 (defn demo
-  []
+  [e!]
   [:div
    [:section
     [Typography {:variant "h1"}
@@ -81,4 +82,11 @@
       [TextField {:label "Tekstiä"}]
       [TextField {:label "Tekstiä" :placeholder "Placeholder" :variant :outlined}]
       [TextField {:label "Tekstiä" :placeholder "Placeholder" :error true}]
-      [TextField {:label "Tekstiä" :placeholder "Placeholder" :error true :variant :filled}]]]]])
+      [TextField {:label "Tekstiä" :placeholder "Placeholder" :error true :variant :filled}]]]
+    [:section
+     [Typography {:variant :h5}
+      "File upload"]
+     [:div {:style {:display "flex"
+                    :justify-content "space-evenly"
+                    :margin-bottom "2rem"}}
+      [FileUpload e! {:id "test-id" :event ->TestFileUpload}]]]]])
