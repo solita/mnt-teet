@@ -2,9 +2,11 @@
 .rebel_readline_history
 .cpcache
 .nrepl-port
-app/backend/resources
 
 # Intellij idea related ignores
 .idea
 *.iml
 .DS_Store
+/app/backend/resources/public/language
+/app/backend/resources/public/*.js
+.datomic-ions

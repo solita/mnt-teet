@@ -10,7 +10,9 @@
             [ring.middleware.session.cookie :as session-cookie]
             [teet.login.login-tara-token :as login-tara-token]
             [teet.login.login-fake-routes :as login-fake-routes]
-            [taoensso.timbre :as log])
+            [teet.db-api.db-api-dev :as db-api-dev]
+            [taoensso.timbre :as log]
+            [teet.environment :as environment])
   (:gen-class))
 
 (def server nil)
@@ -31,6 +33,7 @@
             (do
               (log/info "No TARA configuration present, using fake login.")
               (login-fake-routes/fake-login-routes)))
+          (db-api-dev/db-api-routes)
           (routes/teet-routes config))
          params/wrap-params
          cookies/wrap-cookies
@@ -42,6 +45,7 @@
   (server))
 
 (defn restart []
+  (environment/load-local-config!)
   (when server
     (stop))
   ;; Dummy config for local testing use
