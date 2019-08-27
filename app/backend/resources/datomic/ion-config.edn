@@ -1,5 +1,6 @@
 {:allow []
- :lambdas {:fetch-workflow
-           {:fn teet.workflow.workflow-ions/fetch-workflow
-            :doc "Fetch workflow by id"}}
+ :lambdas {:query
+           {:fn teet.db-api.db-api-ion/query-handler-ionized
+            :integration :api-gateway/proxy
+            :doc "Run query"}}
  :app-name "teet-dev-datomic"}
