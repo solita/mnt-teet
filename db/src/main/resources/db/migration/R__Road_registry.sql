@@ -72,9 +72,8 @@ SELECT ST_AsMVT(tile) AS mvt
                             4096, NULL, false)
           FROM teet.thk_project_search p
          WHERE ST_DWithin(p.geometry,
-                          impl.scale_mvt_search_bbox(
-                            ST_Setsrid(ST_MakeBox2D(ST_MakePoint($2, ymin),
-                                                    ST_MakePoint($4, ymax)), 3301)),
+                          ST_Setsrid(ST_MakeBox2D(ST_MakePoint($2, ymin),
+                                                  ST_MakePoint($4, ymax)), 3301),
                           1000)
            AND (q IS NULL OR q = '' OR p.searchable_text LIKE '%'||q||'%')) AS tile;
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;
