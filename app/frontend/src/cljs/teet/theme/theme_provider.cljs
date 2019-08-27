@@ -15,7 +15,9 @@
                :MuiToolBar {:root {:min-height "80px"}}     ;This doesn't properly target the toolbar inside appbar
                :MuiButton {:contained {:border-radius "2px"}}
                :MuiDrawer {:paper {:background-color theme-colors/primary
-                                   :box-shadow "5px 3px 5px #cecece"}
+                                   :color theme-colors/white
+                                   :box-shadow "5px 3px 5px #cecece"
+                                   "& .MuiListItemIcon-root" {:color :inherit}}
                            :paperAnchorDockedLeft {:border-right 0}}
                :MuiDivider {:root {:margin "1rem 0"}}}})
 
@@ -31,4 +33,3 @@
   [MuiThemeProvider
    {:theme (create-theme teet-theme)}
    content])
-
