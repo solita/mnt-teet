@@ -1,0 +1,5 @@
+{:allow []
+ :lambdas {:fetch-workflow
+           {:fn teet.workflow.workflow-ions/fetch-workflow
+            :doc "Fetch workflow by id"}}
+ :app-name "teet-dev-datomic"}
