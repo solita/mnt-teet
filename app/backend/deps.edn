@@ -19,7 +19,10 @@
         com.datomic/client-cloud {:mvn/version "0.8.78"}}
 
  :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
-             "teet-dev-files" {:url "s3://teet-dev-files/maven"}}
+             ;;"teet-dev-files" {:url "s3://teet-dev-files/maven"}
+             "datomic-cloud" {:url "s3://datomic-releases-1fc2183a/maven/releases"}
+
+             }
  :paths ["src/clj" "resources"]
  :aliases {:dev {:extra-deps {com.datomic/ion-dev {:mvn/version "0.9.234"}}}
            :pack {:extra-deps {pack/pack.alpha {:git/url "https://github.com/juxt/pack.alpha.git"
