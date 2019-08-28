@@ -17,13 +17,12 @@
         com.zaxxer/HikariCP {:mvn/version "2.6.1"}
         webjure/jeesql {:mvn/version "0.4.7"}
         com.datomic/client-cloud {:mvn/version "0.8.78"}
-        com.datomic/ion-dev {:mvn/version "0.9.234"}
 
         }
  :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
              "datomic-cloud" {:url "s3://datomic-releases-1fc2183a/maven/releases"}}
  :paths ["src/clj" "resources"]
- :aliases {
+ :aliases {:dev {:extra-deps {com.datomic/ion-dev {:mvn/version "0.9.234"}}}
            :pack {:extra-deps {pack/pack.alpha {:git/url "https://github.com/juxt/pack.alpha.git"
                                                 :sha "2769a6224bfb938e777906ea311b3daf7d2220f5"}}}}
 
