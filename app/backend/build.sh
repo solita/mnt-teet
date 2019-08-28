@@ -9,4 +9,4 @@ echo "{:git-commit \"$GIT_COMMIT\"}" > resources/build-info.edn
 #        --image-type registry \
 #        -m teet.main
 
-clojure -Adev -m datomic.ion.dev '{:op :push}'
+clojure -Adev -m datomic.ion.dev '{:op :push :region "eu-central-1"}'
