@@ -17,7 +17,8 @@
                :MuiDrawer {:paper {:background-color theme-colors/primary
                                    :color theme-colors/white
                                    :box-shadow "5px 3px 5px #cecece"
-                                   "& .MuiListItemIcon-root" {:color :inherit}}
+                                   "& .MuiListItemIcon-root" {:color :inherit
+                                                              :min-width "40px"}}
                            :paperAnchorDockedLeft {:border-right 0}}
                :MuiDivider {:root {:margin "1rem 0"}}}})
 
