@@ -1,7 +1,7 @@
 (ns teet.ui.component-demo
   (:require [clojure.string :as str]
             [teet.ui.material-ui :refer [Paper Button Fab IconButton TextField Chip Avatar MuiThemeProvider CssBaseline Typography Divider Checkbox]]
-            [teet.ui.file-upload :refer [FileUpload]]
+            [teet.ui.file-upload :as file-upload]
             [teet.ui.icons :as icons]
             [tuck.core :as t]))
 
@@ -102,9 +102,4 @@
      [:div {:style {:display "flex"
                     :justify-content "space-evenly"
                     :margin-bottom "2rem"}}
-      [FileUpload e! {:id "test-id" :event ->TestFileUpload}
-       [Button {:component "span"
-                :color :primary
-                :variant :outlined
-                :raised "true"}
-        "Drag or click to upload"]]]]]])
+      [file-upload/FileUploadButton {:id "upload-btn" :on-drop #(e! (->TestFileUpload %))}]]]]])
