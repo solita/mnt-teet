@@ -5,7 +5,8 @@
             [taoensso.timbre :as log]
             [teet.routes :as routes]
             [tuck.core :as t]
-            [tuck.effect :as tuck-effect]))
+            [tuck.effect :as tuck-effect]
+            [teet.transit :as transit]))
 
 
 (defn query-param-atom [{:keys [page params query] :as app} param-name read-param write-param]
@@ -84,6 +85,21 @@
                ;; FIXME: generic error handling
                (log/info "RESPONSE: " json)
                (let [data (js->clj json :keywordize-keys true)]
+                 (if result-path
+                   (e! (->RPCResponse result-path data))
+                   (e! (result-event data))))))))
+
+(defmethod tuck-effect/process-effect :query [e! {qn :query/name
+                                                  :keys [result-path result-event] :as q}]
+  (assert qn "Must specify :query/name of the query to run")
+  (assert (or result-path result-event) "Must specify :result-path or :result-event")
+  (-> (js/fetch (str "/query")
+                #js {:method "POST"
+                     :headers #js {"Content-Type" "application/json+transit"}
+                     :body (-> q (dissoc :tuck.effect/type) transit/clj->transit)})
+      (.then #(.text %))
+      (.then (fn [text]
+               (let [data (transit/transit->clj text)]
                  (if result-path
                    (e! (->RPCResponse result-path data))
                    (e! (result-event data))))))))
