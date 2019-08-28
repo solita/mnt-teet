@@ -17,6 +17,9 @@
       ;; Icons to support Material Design
       [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/icon?family=Material+Icons"}]
 
+      ;; Custom font
+      [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css?family=Roboto+Condensed&display=swap"}]
+
       ;; Style elements for stylefy
       [:style {:id "_stylefy-constant-styles_"}]
       [:style {:id "_stylefy-styles_"}]

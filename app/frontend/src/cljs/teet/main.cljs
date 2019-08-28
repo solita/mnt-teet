@@ -10,6 +10,7 @@
             [teet.localization :as localization :refer [tr]]
             [teet.login.login-view :as login-view]
             [teet.projects.projects-view :as projects-view]
+            [teet.project.project-view :as project-view]
             [teet.navigation.navigation-view :as navigation-view]
             [teet.routes :as routes]
             [teet.ui.material-ui :refer [Paper Button Chip Avatar MuiThemeProvider CssBaseline]]
@@ -34,7 +35,7 @@
          [:<>
           (case page
             (:default-page :root :projects) [projects-view/projects-page e! app]
-            :project [projects-view/project-page e! app]
+            :project [project-view/project-page e! app]
             :components [component-demo/demo e!]
             [:div "Unimplemented page: " (pr-str page)])]]
         [df/DataFriskShell app]])]))

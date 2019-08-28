@@ -1,10 +1,11 @@
 (ns teet.navigation.navigation-view
   (:require [reagent.core :as r]
             [teet.routes :as routes]
-            [teet.ui.material-ui :refer [AppBar Toolbar Button Typography Chip Avatar IconButton
+            [teet.ui.material-ui :refer [AppBar Toolbar Button Chip Avatar IconButton
                                          Drawer TextField InputAdornment FormControl InputLabel Input
                                          List ListItem ListItemText ListItemIcon]]
             [teet.ui.icons :as icons]
+            [teet.ui.typography :refer [Heading1]]
             [teet.theme.theme-colors :as theme-colors]
             [teet.localization :as localization :refer [tr]]
             [teet.navigation.navigation-controller :as navigation-controller]
@@ -83,8 +84,7 @@
             :className (<class navigation-style/appbar-position open?)
             :color :default}
     [Toolbar {:className (<class navigation-style/appbar)}
-     [Typography {:variant "h6"}
-      title]
+     [Heading1 title]
      [search-view/quick-search e!]]]
 
    [Drawer {;:class-name (<class navigation-style/drawer open?)

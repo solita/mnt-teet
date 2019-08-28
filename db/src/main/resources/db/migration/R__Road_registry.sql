@@ -94,3 +94,21 @@ SELECT row_to_json(fc)::TEXT
                        json_object(ARRAY['id', p.id, 'tooltip', p.name]::TEXT[]) AS properties
                   FROM projects p) f) fc;
 $$ LANGUAGE SQL STABLE;
+
+
+-- GeoJSON layer for a single project
+CREATE OR REPLACE FUNCTION teet.geojson_thk_project(id TEXT) RETURNS TEXT
+AS $$
+WITH projects AS (
+    SELECT *
+    FROM teet.thk_project_search p
+    WHERE p.id = $1
+)
+SELECT row_to_json(fc)::TEXT
+FROM (SELECT 'FeatureCollection' as type,
+             array_to_json(array_agg(f)) as features
+      FROM (SELECT 'Feature' as type,
+                   ST_AsGeoJSON(p.geometry)::json as geometry,
+                   json_object(ARRAY['id', p.id, 'tooltip', p.name]::TEXT[]) AS properties
+            FROM projects p) f) fc;
+$$ LANGUAGE SQL STABLE;
