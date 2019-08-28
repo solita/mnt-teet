@@ -1,0 +1,82 @@
+[{:db/ident :migration/workflow-initial
+  :txes [ ;; Workflow entity
+         [{:db/ident :workflow/name
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Name of this workflow"}
+
+          {:db/ident :thk/id
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "The THK projet id a workflow is associated with"}
+
+          {:db/ident :workflow/due-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "The planned due date"}
+
+          {:db/ident :workflow/phases
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many}]
+
+         ;; Phase
+         [{:db/ident :phase/name
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident :phase/ordinality
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident :phase/due-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident :phase/tasks
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many}]
+
+         ;; Task
+         [{:db/ident :task/name
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident :task/description
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident :task/assignee
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident :task/status
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one}]
+
+         ;; Task status
+         [{:db/ident :task.status/timestamp
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "When this status update was made"}
+
+          {:db/ident :task.status/status
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Status in this status update, references :task.status/* enum values"}
+
+          {:db/ident :task.status/user
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Reference to the user who made this status update"}
+
+          {:db/ident :task.status/comment
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Text comment in status update"}]
+
+         ;; Task status types
+         [{:db/ident :task.status/not-started}
+          {:db/ident :task.status/in-progress}
+          {:db/ident :task.status/completed}
+          {:db/ident :task.status/accepted}
+          {:db/ident :task.status/rejected}]]}]

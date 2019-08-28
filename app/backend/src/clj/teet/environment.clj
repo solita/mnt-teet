@@ -3,7 +3,8 @@
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
             [taoensso.timbre :as log]
-            [datomic.client.api :as d]))
+            [datomic.client.api :as d]
+            [clojure.java.io :as io]))
 
 (def config (atom {:datomic {:db-name "teet"
                              :client {:server-type :ion}}}))
@@ -28,5 +29,30 @@
 (def datomic-client
   (memoize #(d/client (config-value :datomic :client))))
 
+(def schema (delay (-> "schema.edn" io/resource slurp read-string)))
+
+(defn- migrate [conn]
+  (log/info "Migrate, db: " (:db-name conn))
+  (doseq [{ident :db/ident txes :txes} @schema
+          :let [db (d/db conn)
+                already-applied? (ffirst
+                                  (d/q '[:find ?m :where [?m :db/ident ?ident]
+                                         :in $ ?ident]
+                                       db ident))]]
+    (if already-applied?
+      (log/info "Migration " ident " is already applied.")
+      (do
+        (log/info "Applying migration " ident)
+        (doseq [tx txes]
+          (d/transact conn {:tx-data tx}))
+        (d/transact conn {:tx-data [{:db/ident ident}]}))))
+  (log/info "Migrations finished."))
+
+(def ^:private db-migrated? (atom false))
+
 (defn datomic-connection []
-  (d/connect (datomic-client) {:db-name (db-name)}))
+  (let [conn (d/connect (datomic-client) {:db-name (db-name)})]
+    (when-not @db-migrated?
+      (migrate conn)
+      (reset! db-migrated? true))
+    conn))
