@@ -18,8 +18,10 @@ TEET uses Datiomic Ion as a database.
 
 ## Connecting to Datomic locally
 
+- Set `AWS_PROFILE` to your TEET profile
 - Download [datomic-socks-proxy script](https://docs.datomic.com/cloud/files/datomic-socks-proxy)
   and add it to your path.
+- Run `datomic-socks-proxy teet-dev-datomic`
 - Add the contents of  [TEET-42](https://jira.mkm.ee/browse/TEET-42) to
   `../teet-local/config.edn` relative to the TEET project root.
 - Load and switch to `teet.environment`.
