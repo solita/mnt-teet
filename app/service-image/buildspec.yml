@@ -26,8 +26,8 @@ phases:
     commands:
       - echo Building frontend ClojureScript app
       - cd $FRONTEND
-      - bash resources.sh
       - bash build.sh
+      - bash resources.sh
       - cd ../..
       - cd $BACKEND
       - bash build.sh
@@ -36,7 +36,9 @@ phases:
      - cd ../..
      - printf '[{"name":"%s","imageUri":"%s"}]' $ECS_TASK_NAME $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG > service.imagedefinitions.json
 artifacts:
-   files: service.imagedefinitions.json
+   files:
+     - frontend-*.zip
+     - service.imagedefinitions.json
 cache:
   paths:
     - '/root/.m2/**/*'
