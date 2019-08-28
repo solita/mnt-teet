@@ -6,8 +6,18 @@
 
 ;;To target disabled buttons :MuiButton {:root {:&$disabled {//css here//}}
 
+(def data-label-style
+  {:fontFamily "Roboto Condensed"
+   :fontWeight 400
+   :fontSize "0.875rem"
+   :lineHeight 1.375
+   :letterSpacing "0.25px"
+   :color theme-colors/secondary
+   :textTransform :uppercase})
+
 (def teet-theme
-  {:palette {:primary {:main theme-colors/primary}
+  {:typography {:fontFamily "Roboto"}
+   :palette {:primary {:main theme-colors/primary}
              :secondary {:main theme-colors/secondary}
              :background {:default theme-colors/white}}
    :overrides {:MuiAppBar {:colorDefault {:background-color theme-colors/white}
@@ -20,7 +30,23 @@
                                    "& .MuiListItemIcon-root" {:color :inherit
                                                               :min-width "40px"}}
                            :paperAnchorDockedLeft {:border-right 0}}
-               :MuiDivider {:root {:margin "1rem 0"}}}})
+               :MuiDivider {:root {:margin "1rem 0"}}
+               :MuiTableHead {:root data-label-style}
+               :MuiTypography {:h1 {:fontFamily "Roboto Condensed"
+                                    :fontWeight 700
+                                    :fontSize "2rem"
+                                    :lineHeight 1.25}
+                               :h2 {:fontFamily "Roboto Condensed"
+                                    :fontWeight 700
+                                    :fontSize "1.5rem"
+                                    :lineHeight 1.25}
+                               :h3 { :fontFamily "Roboto Condensed"
+                                    :fontWeight 700
+                                    :fontSize "1.125rem"
+                                    :lineHeight 1.25}
+                               :body1 {:fontWeight 400
+                                       :fontSize "1rem"
+                                       :lineHeight 1.5}}}})
 
 (defn- create-theme [theme]
   (let [create-mui-theme (-> js/window
