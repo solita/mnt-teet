@@ -58,7 +58,8 @@
                                                              "geojson_thk_project_pins"
                                                              {"q" (get-in app [:projects :filter :text])}
                                                              map-features/project-pin-style
-                                                             {:min-resolution project-pin-resolution-threshold})}}
+                                                             {:min-resolution project-pin-resolution-threshold
+                                                              :fit-on-load? true})}}
     app]
    [TextField {:label "Search"
                :value (or (get-in app [:projects :new-filter :text]) "")

@@ -108,6 +108,16 @@
 (defn set-tooltip! [x y teksti]
   (go (>! command-ch [::tooltip x y teksti])))
 
+(defn fit!
+  "Fit map view to given extent or geometry.
+  If argument is a vector it is interpreted to be an extent [xmin ymin xmax ymax].
+  Otherwise argument should be OpenLayers JS extent or geometry object."
+  [extent-or-geometry]
+  (let [to (if (vector? extent-or-geometry)
+             (clj->js extent-or-geometry)
+             extent-or-geometry)]
+    (go (>! command-ch [::fit to]))))
+
 ;;;;;;;;;
 ;; Define the React lifecycle callbacks to manage the OpenLayers
 ;; Javascript objects.
@@ -587,8 +597,14 @@
                  ::tooltip
                  (let [[x y teksti] args]
                    (reagent/set-state this
-                                      {:hover {:x x :y y :tooltip teksti}})))
+                                      {:hover {:x x :y y :tooltip teksti}}))
+
+                 ::fit
+                 (let [[extent-or-geometry] args]
+                   (.fit (.getView ol3) extent-or-geometry)))
+
                (recur (alts! [command-ch unmount-ch]))))
+
 
     (.setView
      ol3 (ol.View. (clj->js (merge {:center (clj->js (or center (extent-center extent)))

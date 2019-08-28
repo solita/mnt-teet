@@ -1,6 +1,7 @@
 (ns teet.map.map-layers
   (:require [teet.map.openlayers.mvt :as mvt]
             [teet.map.openlayers.geojson :as geojson]
+            [teet.map.openlayers :as openlayers]
             [clojure.string :as str]))
 
 (def ^:const default-projection "EPSG:3301")
@@ -28,7 +29,7 @@
              style-fn))
 
 (defn geojson-layer [endpoint rpc-name parameters style-fn {:keys [min-resolution max-resolution
-                                                                   z-index opacity]
+                                                                   z-index opacity fit-on-load?]
                                                             :or {z-index 99
                                                                  opacity 1}}]
   (geojson/->GeoJSON rpc-name
@@ -38,4 +39,7 @@
                      opacity
                      min-resolution max-resolution
                      (url (str endpoint "/rpc/" rpc-name) parameters)
-                     style-fn))
+                     style-fn
+                     (when fit-on-load?
+                       (fn [{extent :extent}]
+                         (openlayers/fit! extent)))))
