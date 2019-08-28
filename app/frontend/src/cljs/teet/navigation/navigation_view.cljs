@@ -1,5 +1,6 @@
 (ns teet.navigation.navigation-view
   (:require [reagent.core :as r]
+            [teet.routes :as routes]
             [teet.ui.material-ui :refer [AppBar Toolbar Button Typography Chip Avatar IconButton
                                          Drawer TextField InputAdornment FormControl InputLabel Input
                                          List ListItem ListItemText ListItemIcon]]
@@ -10,17 +11,6 @@
             [teet.navigation.navigation-style :as navigation-style]
             [teet.search.search-view :as search-view]
             [herb.core :refer [<class]]))
-
-(defn user-info [{:keys [given-name family-name] :as user} label?]
-  (if-not user
-    [Button {:color :secondary
-             :href "/oauth2/request"}
-     (tr [:login :login])]
-    (if label?
-      [Chip {:avatar (r/as-element [Avatar [icons/action-face]])
-             :label (str given-name " " family-name)}]
-      [Avatar
-       [icons/action-face]])))
 
 (defn drawer-header
   [e! title open?]
@@ -36,13 +26,47 @@
                   :justify-content "space-between"}}
     (when open?
       [:div {:style {:display :flex}}
-       [:img {:style {:max-width "100%"}
-              :src "/img/maanteeametlogo.png"}]])
+       [:a {:href "/#/"}
+        [:img {:style {:max-width "100%"}
+               :src "/img/maanteeametlogo.png"}]]])
     [IconButton {:color :secondary
                  :on-click #(e! (navigation-controller/->ToggleDrawer))}
      (if open?
        [icons/navigation-chevron-left]
        [icons/navigation-chevron-right])]]])
+
+(defn page-listing
+  [e! open?]
+  [List
+   [ListItem {:component "a"
+              :href "/#/"
+              :align-items "center"
+              :button true}
+    [ListItemIcon {:style {:display :flex
+                           :justify-content :center}}
+     [icons/action-list]]
+    (when open?
+      [ListItemText {:primary (tr [:projects :title])}])]
+   [ListItem {:component "a"
+              :href "/#/components"
+              :align-items "center"
+              :button true}
+    [ListItemIcon {:style {:display :flex
+                           :justify-content :center}}
+     [icons/content-archive]]
+    (when open?
+      [ListItemText {:primary "Components"}])]])
+
+(defn user-info [{:keys [given-name family-name] :as user} label?]
+  (if-not user
+    [Button {:color :secondary
+             :href "/oauth2/request"}
+     (tr [:login :login])]
+    (if label?
+      [Chip {:avatar (r/as-element [Avatar [icons/action-face]])
+             :label (str given-name " " family-name)}]
+      [Avatar
+       [icons/action-face]])))
 
 (defn drawer-footer
   [user open?]
@@ -51,17 +75,6 @@
                  :display :flex
                  :justify-content :center}}
    [user-info user open?]])
-
-(defn page-listing
-  [e! open?]
-  [:div
-   [List
-    [ListItem {:alignItems "center"
-               :button true}
-     [ListItemIcon
-      [icons/action-list {:fontSize :large}]]
-     (when open?
-       [ListItemText {:primary "Projects"}])]]])
 
 (defn header
   [e! {:keys [title open?]} user]
