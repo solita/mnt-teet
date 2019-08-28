@@ -16,9 +16,8 @@
         org.postgresql/postgresql {:mvn/version "42.1.4"}
         com.zaxxer/HikariCP {:mvn/version "2.6.1"}
         webjure/jeesql {:mvn/version "0.4.7"}
-        com.datomic/client-cloud {:mvn/version "0.8.78"}
+        com.datomic/client-cloud {:mvn/version "0.8.78"}}
 
-        }
  :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
              "teet-dev-files" {:url "s3://teet-dev-files/maven"}}
  :paths ["src/clj" "resources"]
