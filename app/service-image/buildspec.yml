@@ -25,10 +25,11 @@ phases:
   build:
     commands:
       - echo Building frontend ClojureScript app
-      - cd $FRONTEND && bash build.sh
+      - cd $FRONTEND
+      - bash resources.sh
+      - bash build.sh
       - cd ../..
       - cd $BACKEND
-      - bash resources.sh
       - bash build.sh
   post_build:
    commands:
