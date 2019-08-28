@@ -1,16 +1,7 @@
 (ns teet.ui.file-upload
   (:require [reagent.core :as r]
             [taoensso.timbre :as log]
-            [teet.ui.material-ui :refer [Button]]
-            [tuck.core :as t]))
-
-(defrecord TestFileUpload [files])
-
-(extend-protocol t/Event
-  TestFileUpload
-  (process-event [{files :files} app]
-    (log/info (map #(.-name %) files))
-    app))
+            [teet.ui.material-ui :refer [Button]]))
 
 (defn ->vector [file-list]
   (mapv #(.item file-list %)
@@ -35,19 +26,18 @@
   (.preventDefault event)
   (e! (tuck-event (file-from-drop event))))
 
-(defn FileUpload [e! {:keys [id event]}]
-  [:<>
-   [:label {:htmlFor id
-            :on-drop (partial on-drop e! event)
-            :on-drag-over on-drag-over}
-    [:input {:style {:display "none"}
-             :id id
-             :multiple true
-             :droppable "true"
-             :type "file"
-             :on-change #(e! (event (file-vector %)))}]
-    [Button {:component "span"
-             :color :primary
-             :variant :outlined
-             :raised "true"}
-     "Upload"]]])
+(defn FileUpload
+  [e!
+   {:keys [id event]}
+   & children]
+  (into [:label
+         {:htmlFor id
+          :on-drop (partial on-drop e! event)
+          :on-drag-over on-drag-over}
+         [:input {:style {:display "none"}
+                  :id id
+                  :multiple true
+                  :droppable "true"
+                  :type "file"
+                  :on-change #(e! (event (file-vector %)))}]]
+        children))
