@@ -29,3 +29,6 @@
 
 ;; Data display
 (define-mui-components Chip Avatar)
+
+;; Icon
+(define-mui-components Icon)

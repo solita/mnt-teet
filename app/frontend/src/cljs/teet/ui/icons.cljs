@@ -1,11 +1,12 @@
 (ns teet.ui.icons
+  (:require [teet.ui.material-ui :refer [Icon]])
   (:require-macros [teet.ui.icons :refer [define-font-icons]]))
 
 ;; This file defines all material ui icons from:
 ;; https://material.io/tools/icons/?style=baseline
 
 ;; Action icons
-(define-font-icons {:prefix "action"}
+(define-font-icons {:prefix "action" :component Icon}
   "3d_rotation"
   "accessibility"
   "accessibility_new"
@@ -250,7 +251,7 @@
   "zoom_out")
 
 ;; Alert icons
-(define-font-icons {:prefix "alert"}
+(define-font-icons {:prefix "alert" :component Icon}
   "add_alert"
   "error"
   "error_outline"
@@ -258,7 +259,7 @@
   "warning")
 
 ;; Av icons
-(define-font-icons {:prefix "av"}
+(define-font-icons {:prefix "av" :component Icon}
   "4k"
   "add_to_queue"
   "airplay"
@@ -345,7 +346,7 @@
   "web_asset")
 
 ;; Communication icons
-(define-font-icons {:prefix "communication"}
+(define-font-icons {:prefix "communication" :component Icon}
   "alternate_email"
   "business"
   "call"
@@ -411,7 +412,7 @@
   "vpn_key")
 
 ;; Content icons
-(define-font-icons {:prefix "content"}
+(define-font-icons {:prefix "content" :component Icon}
   "add"
   "add_box"
   "add_circle"
@@ -462,7 +463,7 @@
   "where_to_vote")
 
 ;; Device icons
-(define-font-icons {:prefix "device"}
+(define-font-icons {:prefix "device" :component Icon}
   "access_alarm"
   "access_alarms"
   "access_time"
@@ -548,7 +549,7 @@
   "wifi_tethering")
 
 ;; Editor icons
-(define-font-icons {:prefix "editor"}
+(define-font-icons {:prefix "editor" :component Icon}
   "add_comment"
   "attach_file"
   "attach_money"
@@ -625,7 +626,7 @@
   "wrap_text")
 
 ;; File icons
-(define-font-icons {:prefix "file"}
+(define-font-icons {:prefix "file" :component Icon}
   "attachment"
   "cloud"
   "cloud_circle"
@@ -640,7 +641,7 @@
   "folder_shared")
 
 ;; Hardware icons
-(define-font-icons {:prefix "hardware"}
+(define-font-icons {:prefix "hardware" :component Icon}
   "cast"
   "cast_connected"
   "cast_for_education"
@@ -693,7 +694,7 @@
   "watch")
 
 ;; Image icons
-(define-font-icons {:prefix "image"}
+(define-font-icons {:prefix "image" :component Icon}
   "add_a_photo"
   "add_photo_alternate"
   "add_to_photos"
@@ -855,7 +856,7 @@
   "wb_sunny")
 
 ;; Maps icons
-(define-font-icons {:prefix "maps"}
+(define-font-icons {:prefix "maps" :component Icon}
   "360"
   "add_location"
   "atm"
@@ -937,7 +938,7 @@
   "zoom_out_map")
 
 ;; Navigation icons
-(define-font-icons {:prefix "navigation"}
+(define-font-icons {:prefix "navigation" :component Icon}
   "apps"
   "arrow_back"
   "arrow_back_ios"
@@ -971,7 +972,7 @@
   "unfold_more")
 
 ;; Notification icons
-(define-font-icons {:prefix "notification"}
+(define-font-icons {:prefix "notification" :component Icon}
   "adb"
   "airline_seat_flat"
   "airline_seat_flat_angled"
@@ -1026,7 +1027,7 @@
   "wifi_off")
 
 ;; Places icons
-(define-font-icons {:prefix "places"}
+(define-font-icons {:prefix "places" :component Icon}
   "ac_unit"
   "airport_shuttle"
   "all_inclusive"
@@ -1050,7 +1051,7 @@
   "spa")
 
 ;; Social icons
-(define-font-icons {:prefix "social"}
+(define-font-icons {:prefix "social" :component Icon}
   "cake"
   "domain"
   "group"
@@ -1084,7 +1085,7 @@
   "whatshot")
 
 ;; Toggle icons
-(define-font-icons {:prefix "toggle"}
+(define-font-icons {:prefix "toggle" :component Icon}
   "check_box"
   "check_box_outline_blank"
   "indeterminate_check_box"

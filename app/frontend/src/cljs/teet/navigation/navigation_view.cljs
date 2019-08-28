@@ -59,11 +59,9 @@
     [ListItem {:alignItems "center"
                :button true}
      [ListItemIcon
-      [icons/action-list {:color theme-colors/white
-                          :fontSize "large"}]]
+      [icons/action-list {:fontSize :large}]]
      (when open?
-       [ListItemText {:style {:color theme-colors/white}
-                      :primary "Projects"}])]]])
+       [ListItemText {:primary "Projects"}])]]])
 
 (defn header
   [e! {:keys [title open?]} user]
