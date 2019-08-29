@@ -100,4 +100,7 @@
      [:div {:style {:display "flex"
                     :justify-content "space-evenly"
                     :margin-bottom "2rem"}}
-      [file-upload/FileUploadButton {:id "upload-btn" :on-drop #(e! (->TestFileUpload %))}]]]]])
+      [file-upload/FileUploadButton {:id "upload-btn"
+                                     :on-drop #(e! (->TestFileUpload %))
+                                     :drop-message "Drop it like it's hot"}
+       "Click to upload"]]]]])

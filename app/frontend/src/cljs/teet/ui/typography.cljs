@@ -1,24 +1,30 @@
 (ns teet.ui.typography
   (:require [teet.ui.material-ui :refer [Typography]]))
 
+(defn- make-typography [typography-props]
+  (fn [& children]
+    (if (map? (first children))
+      (into [Typography (merge (first children) typography-props)] (rest children))
+      (into [Typography typography-props] children))))
+
 ;; TODO If first of children is map, merge with {:variant ...}
 (defn Heading1 [& children]
-  (into [Typography {:variant "h1"}] children))
+  (make-typography {:variant "h1"}))
 
 (defn Heading2 [& children]
-  (into [Typography {:variant "h2"}] children))
+  (make-typography {:variant "h2"}))
 
 (defn Heading3 [& children]
-  (into [Typography {:variant "h3"}] children))
+  (make-typography {:variant "h3"}))
 
 (defn Text [& children]
-  (into [Typography {:variant "body1"}] children))
+  (make-typography {:variant "body1"}))
 
 (defn Paragraph [& children]
-  (into [Typography {:variant "body1" :paragraph true}] children))
+  (make-typography {:variant "body1" :paragraph true}))
 
 (defn SectionHeading [& children]
-  (into [Typography {:variant "h6"}] children))
+  (make-typography {:variant "h6"}))
 
 (defn DataLabel [& children]
-  (into [Typography {:variant "subtitle1"}] children))
+  (make-typography {:variant "subtitle1"}))
