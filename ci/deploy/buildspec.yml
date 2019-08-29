@@ -18,6 +18,10 @@ phases:
       - cd ci/deploy
       - bash frontend.bash
       - bash datomic.bash
+  post_build:
+    commands:
+      - export
+      - bash ../scripts/slack.bash Deployed $COMMIT
 cache:
   paths:
     - '/root/.m2/**/*'
