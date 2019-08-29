@@ -16,7 +16,7 @@ phases:
   build:
     commands:
       - echo Fetching frontend build
-      - aws s3 s3://teet-build/frontend/frontend-$COMMIT.zip frontend.zip
+      - aws s3 cp s3://teet-build/frontend/frontend-$COMMIT.zip frontend.zip
       - mkdir frontend
       - cd frontend
       - unzip ../frontend.zip
