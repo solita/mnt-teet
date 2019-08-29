@@ -89,14 +89,15 @@
                    (e! (->RPCResponse result-path data))
                    (e! (result-event data))))))))
 
-(defmethod tuck-effect/process-effect :query [e! {qn :query/name
-                                                  :keys [result-path result-event] :as q}]
-  (assert qn "Must specify :query/name of the query to run")
+(defmethod tuck-effect/process-effect :query [e! {:keys [query result-path result-event] :as q}]
+  (assert (and (map? query)
+               (contains? query :query/name))
+          "Must specify :query map that contains :query/name of the query to run")
   (assert (or result-path result-event) "Must specify :result-path or :result-event")
   (-> (js/fetch (str "/query")
                 #js {:method "POST"
                      :headers #js {"Content-Type" "application/json+transit"}
-                     :body (-> q (dissoc :tuck.effect/type) transit/clj->transit)})
+                     :body (transit/clj->transit query)})
       (.then #(.text %))
       (.then (fn [text]
                (let [data (transit/transit->clj text)]

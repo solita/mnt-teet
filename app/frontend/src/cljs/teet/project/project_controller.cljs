@@ -14,4 +14,8 @@
   FetchProjectWorkflows
   (process-event [{project-id :project-id} app]
     (log/info "Fetching workflows for THK project: " project-id)
-    app))
+    (t/fx app
+          {:tuck.effect/type :query
+           :query {:query/name :workflow/list-project-workflows
+                   :thk-project-id project-id}
+           :result-path [:project project-id]})))

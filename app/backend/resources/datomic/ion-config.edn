@@ -1,6 +1,11 @@
 {:allow []
  :lambdas {:query
-           {:fn teet.db-api.db-api-ion/query-handler-ionized
+           {:fn teet.db-api.db-api-ion/db-api-query
             :integration :api-gateway/proxy
-            :doc "Run query"}}
+            :doc "Run query"}
+
+           :command
+           {:fn teet.db-api.db-api-ion/db-api-command
+            :integration :api-gateway/proxy
+            :doc "Execute a command"}}
  :app-name "teet-dev-datomic"}

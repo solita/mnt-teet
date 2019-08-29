@@ -10,9 +10,23 @@
   query function.
 
   Any other result is returned as is.
-  Dispatches on :query/name."
-  (fn [db query] (:query/name query)))
+  Dispatches on :query/name.
+
+  ctx is a map containing
+  :db the current database value
+  :user the current user"
+  (fn [ctx query] (:query/name query)))
 
 (defmulti command!
   "Execute a given named command and return the results.
-  Dispatches on :command/name.")
+  Commands are expected to side-effect (usually by transacting
+  new facts data).
+
+  Commands should return ids for any newly created entities.
+
+  Dispatches on :command/name.
+
+  ctx is a map containing
+  :conn (datomic connection)
+  :user the current user"
+  (fn [ctx command] (:command/name command)))
