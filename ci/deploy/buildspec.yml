@@ -21,7 +21,7 @@ phases:
   post_build:
     commands:
       - export
-      - bash ../scripts/slack.bash Deployed $COMMIT
+      - bash ../scripts/slack.bash Deploy $COMMIT
 cache:
   paths:
     - '/root/.m2/**/*'
