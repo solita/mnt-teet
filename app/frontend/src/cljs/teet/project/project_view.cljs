@@ -6,7 +6,8 @@
             [teet.map.map-view :as map-view]
             [teet.login.login-paths :as login-paths]
             [postgrest-ui.components.item-view :as postgrest-item-view]
-            [teet.ui.material-ui :refer [Grid Typography]]))
+            [teet.ui.material-ui :refer [Grid Typography]]
+            [teet.project.project-controller :as project-controller]))
 
 (defn project-data
   [{:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
