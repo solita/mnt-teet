@@ -5,6 +5,9 @@
 (def white "#fff")
 
 (def primary dark-blue)
+(defn primary-alpha [alpha]
+  (str "rgb(4, 30, 66, " alpha ")"))
+
 (def secondary light-blue)
 
 (def primary-text "#333333")
