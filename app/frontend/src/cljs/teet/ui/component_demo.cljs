@@ -3,7 +3,7 @@
             [teet.ui.material-ui :refer [Paper Button Fab IconButton TextField Chip Avatar MuiThemeProvider CssBaseline Divider Checkbox]]
             [teet.ui.file-upload :as file-upload]
             [teet.ui.icons :as icons]
-            [teet.ui.typography :refer [Heading1 Heading2 Heading3 Paragraph Text]]
+            [teet.ui.typography :refer [DataLabel Heading1 Heading2 Heading3 Paragraph SectionHeading Text]]
             [tuck.core :as t]))
 
 (defrecord TestFileUpload [files])
@@ -27,6 +27,8 @@
      [Heading1 "Heading 1"]
      [Heading2 "Heading 2"]
      [Heading3 "Heading 3"]
+     [SectionHeading "Section Heading"]
+     [DataLabel "Data Label / Table Heading"]
      [Text "This text uses typography component 'Text'. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."]
      [Paragraph "This text uses typography component 'Paragraph' and thus has a bottom margin."]
      [Paragraph "See?"]]]

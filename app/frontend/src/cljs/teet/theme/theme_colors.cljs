@@ -6,3 +6,6 @@
 
 (def primary dark-blue)
 (def secondary light-blue)
+
+(def primary-text "#333333")
+(def secondary-text "#53565A")
