@@ -16,3 +16,9 @@
 
 (defn Paragraph [& children]
   (into [Typography {:variant "body1" :paragraph true}] children))
+
+(defn SectionHeading [& children]
+  (into [Typography {:variant "h6"}] children))
+
+(defn DataLabel [& children]
+  (into [Typography {:variant "subtitle1"}] children))
