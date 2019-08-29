@@ -17,3 +17,4 @@ phases:
     commands:
       - cd ci/deploy
       - bash frontend.bash
+      - bash datomic.bash
