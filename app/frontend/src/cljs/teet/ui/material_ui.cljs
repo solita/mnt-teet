@@ -14,7 +14,7 @@
 (define-mui-components Card CardActionArea CardActions CardContent CardHeader CardMedia)
 
 ;; Listing
-(define-mui-components List ListItem ListItemIcon ListItemText)
+(define-mui-components List ListItem ListItemIcon ListItemText ListItemSecondaryAction)
 
 ;; Form
 (define-mui-components
@@ -25,7 +25,7 @@
 (define-mui-components Paper Typography)
 
 ;; Common utility components
-(define-mui-components Collapse Divider CircularProgress Drawer AppBar MuiThemeProvider Toolbar CssBaseline)
+(define-mui-components Collapse Divider CircularProgress Drawer AppBar MuiThemeProvider Toolbar CssBaseline Link)
 
 ;; Layout
 (define-mui-components Container Grid)
@@ -35,3 +35,6 @@
 
 ;; Icon
 (define-mui-components Icon)
+
+;; Progress
+(define-mui-components CircularProgress)
