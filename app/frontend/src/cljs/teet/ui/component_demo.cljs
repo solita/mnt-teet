@@ -3,6 +3,8 @@
             [teet.ui.material-ui :refer [Paper Button Fab IconButton TextField Chip Avatar MuiThemeProvider CssBaseline Divider Checkbox]]
             [teet.ui.file-upload :as file-upload]
             [teet.ui.icons :as icons]
+            [teet.ui.itemlist :as itemlist]
+            [teet.ui.progress :as progress]
             [teet.ui.typography :refer [DataLabel Heading1 Heading2 Heading3 Paragraph SectionHeading Text]]
             [tuck.core :as t]))
 
@@ -75,7 +77,8 @@
       [icons/navigation-check]]
      [Fab {:variant "extended"}
       [icons/navigation-check]
-      "FooBar"]]
+      "FooBar"]
+     [Divider]]
     [:section
      [Heading2
       "Checkbox"]
@@ -85,7 +88,8 @@
       [Checkbox {:color :default}]
       [Checkbox {:color :primary}]
       [Checkbox {:color :secondary}]
-      [Checkbox {:color :primary :disabled true}]]]
+      [Checkbox {:color :primary :disabled true}]]
+     [Divider]]
     [:section
      [Heading2 "Textfields"]
      [:div {:style {:display "flex"
@@ -94,7 +98,8 @@
       [TextField {:label "Tekstiä"}]
       [TextField {:label "Tekstiä" :placeholder "Placeholder" :variant :outlined}]
       [TextField {:label "Tekstiä" :placeholder "Placeholder" :error true}]
-      [TextField {:label "Tekstiä" :placeholder "Placeholder" :error true :variant :filled}]]]
+      [TextField {:label "Tekstiä" :placeholder "Placeholder" :error true :variant :filled}]]
+     [Divider]]
     [:section
      [Heading2 "File upload"]
      [:div {:style {:display "flex"
@@ -103,4 +108,37 @@
       [file-upload/FileUploadButton {:id "upload-btn"
                                      :on-drop #(e! (->TestFileUpload %))
                                      :drop-message "Drop it like it's hot"}
-       "Click to upload"]]]]])
+       "Click to upload"]]]]
+    [Divider]
+    [:section
+     [Heading2 "Itemlist component"]
+     [:div {:style {:width "50%"
+                    :margin "2rem 0"}}
+      [itemlist/ProgressList
+       {:title "itemlist title" :subtitle "Foo bar"}
+       [{:status :success
+         :name "First task"}
+        {:status :fail
+         :name "second task"}
+        {:status :created
+         :name "third task"}
+        {:status :created
+         :name "asdasd task"}
+        {:status :success
+         :name "fifth task"}]]]
+     [:div {:style {:width "50%"
+                    :margin "2rem 0"}}
+      [itemlist/LinkList
+       {:title "itemlist title" :subtitle "Foo bar"}
+       [{:link "/foo"
+         :name "First task"}
+        {:status :fail
+         :name "second task"}
+        {:link "/foo"
+         :name "third task"}
+        {:link "/foo"
+         :name "asdasd task"}
+        {:link "/:success"
+         :name "fifth task"}]]]
+
+     [Divider]]])
