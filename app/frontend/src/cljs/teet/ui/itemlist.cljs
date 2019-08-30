@@ -5,14 +5,13 @@
             [teet.ui.icons :as icons]
             [teet.ui.progress :as progress]
             [teet.ui.typography :refer [Heading1 Heading2 Heading3 Paragraph Text SectionHeading DataLabel]]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.theme.itemlist-theme :as itemlist-theme]
+            [herb.core :refer [<class]]))
 
 (defn ListHeading
   [title subtitle]
-  [:div {:style {:display :flex
-                 :justify-content :space-between
-                 :align-items :flex-end
-                 :border-bottom (str "3px solid " theme-colors/blue)}}
+  [:div {:class (<class itemlist-theme/heading)}
    [Heading2 title]
    (when subtitle
      [DataLabel subtitle])])
@@ -37,8 +36,11 @@
        [List
         {:dense false}
         (for [item items]
+          ^{:key (:name item)}
           [:<>
-           [ListItem {:button true}
+           [ListItem {:button true
+                      :component "a"
+                      :href (:link item)}
             [ListItemIcon
              (case (:status item)
                :success

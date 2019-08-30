@@ -117,14 +117,19 @@
       [itemlist/ProgressList
        {:title "itemlist title" :subtitle "Foo bar"}
        [{:status :success
+         :link "#/12"
          :name "First task"}
         {:status :fail
+         :link "#/123"
          :name "second task"}
         {:status :created
+         :link "#/1234"
          :name "third task"}
         {:status :created
+         :link "#/1323"
          :name "asdasd task"}
         {:status :success
+         :link "#/3232"
          :name "fifth task"}]]]
      [:div {:style {:width "50%"
                     :margin "2rem 0"}}
