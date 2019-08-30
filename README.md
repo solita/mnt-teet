@@ -1,6 +1,6 @@
 # Maanteeamet TEET: Road Lifecycle Software
 
-Maanteemat TEET project.
+Maanteeamet TEET project.
 
 ## Structure
 
@@ -9,9 +9,4 @@ Maanteemat TEET project.
 * app/ contains different parts of the application
 * app/api/ the TEET database API
 * app/frontend/ TEET frontend app
-* cfn/  contains all cloudformation templates
-* cfn/ci/  contains templates to setup codebuild and buckets (singleton)
-* cfn/db/  database cluster
-* cfn/services  ECR cluster and ECS task defs
-
-* cfn/auth  cognito user pool and TARA integration
+* app/backend/  Backend service code (Datomic Ions)
