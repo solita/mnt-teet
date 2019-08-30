@@ -17,4 +17,5 @@
   {:query '[:find (pull ?e [:workflow/name :workflow/due-date])
             :in $ ?thk-project-id
             :where [?e :thk/id ?thk-project-id]]
-   :args [db thk-project-id]})
+   :args [db thk-project-id]
+   :result-fn (partial mapv first)})
