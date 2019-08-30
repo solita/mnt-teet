@@ -6,7 +6,8 @@
                             {:workflow/phases
                              [:db/id
                               :phase/name
-                              {:phase/tasks [:db/id :task/status]}]}])
+                              :phase/due-date
+                              {:phase/tasks [:db/id :task/name :task/status]}]}])
             :in $ ?e ?project-id
             :where [?e :thk/id ?project-id]]
    :args [db workflow-id project-id]
