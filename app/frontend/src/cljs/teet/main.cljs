@@ -57,7 +57,6 @@
 
 (defn ^:export main []
   (routes/start!)
-  (stylefy/init)
   (postgrest-ui.elements/set-default-style! :material)
 
   ;; Load user information
