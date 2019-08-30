@@ -11,6 +11,7 @@
             [teet.login.login-view :as login-view]
             [teet.projects.projects-view :as projects-view]
             [teet.project.project-view :as project-view]
+            [teet.workflow.workflow-view :as workflow-view]
             [teet.navigation.navigation-view :as navigation-view]
             [teet.routes :as routes]
             [teet.ui.material-ui :refer [Paper Button Chip Avatar MuiThemeProvider CssBaseline]]
@@ -36,6 +37,7 @@
           (case page
             (:default-page :root :projects) [projects-view/projects-page e! app]
             :project [project-view/project-page e! app]
+            :project-workflow [workflow-view/workflow-page e! (get-in app [:workflow (params :workflow)])]
             :components [component-demo/demo e!]
             [:div "Unimplemented page: " (pr-str page) ", params: " (pr-str params)])]]
         [df/DataFriskShell app]])]))

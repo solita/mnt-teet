@@ -37,7 +37,8 @@
        (if (and (map? query-result)
                 (contains? query-result :query)
                 (contains? query-result :args))
-         (d/q query-result)
+         (let [result-fn (or (:result-fn query-result) identity)]
+           (result-fn (d/q (select-keys query-result [:query :args]))))
          query-result)))))
 
 (def command-handler
