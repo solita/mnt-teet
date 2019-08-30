@@ -20,7 +20,7 @@
           {:tuck.effect/type :query
            :query :workflow/list-project-workflows
            :args {:thk-project-id project-id}
-           :result-path [:project project-id]}))
+           :result-path [:project project-id :workflows]}))
 
   StartNewWorkflow
   (process-event [{:keys [project-id workflow]} app]

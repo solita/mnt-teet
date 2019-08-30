@@ -8,7 +8,8 @@
             [postgrest-ui.components.item-view :as postgrest-item-view]
             [teet.ui.material-ui :refer [Grid Typography]]
             [teet.project.project-controller :as project-controller]
-            [teet.ui.select :as select]))
+            [teet.ui.select :as select]
+            [teet.ui.itemlist :as itemlist]))
 
 (defn project-data
   [{:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
@@ -36,6 +37,22 @@
     [Grid {:item true :xs 8}
      [workflow-information]]
     [Grid {:item true :xs 4}
+     [postgrest-item-view/item-view
+      {:endpoint (get-in app [:config :api-url])
+       :token (get-in app login-paths/api-token)
+       :table "thk_project"
+       :select ["name" "estimated_duration"
+                "road_nr" "km_range" "carriageway"
+                "procurement_no"]
+       :view project-data}
+      project]]
+
+    [Grid {:item true :xs 4}
+     [itemlist/ProgressList
+      {:title "workflows"}
+      (for [wf (get-in app [:project project :workflows])]
+        {:name (:workflow/name wf)})]
+
      [postgrest-item-view/item-view
       {:endpoint (get-in app [:config :api-url])
        :token (get-in app login-paths/api-token)
