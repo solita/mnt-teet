@@ -6,20 +6,22 @@
             [teet.map.map-view :as map-view]
             [teet.login.login-paths :as login-paths]
             [postgrest-ui.components.item-view :as postgrest-item-view]
-            [teet.ui.material-ui :refer [Grid Typography]]
+            [teet.ui.material-ui :refer [Grid]]
             [teet.project.project-controller :as project-controller]
             [teet.ui.select :as select]
-            [teet.ui.itemlist :as itemlist]))
+            [teet.ui.itemlist :as itemlist]
+            [teet.ui.icons :as icons]))
 
 (defn project-data
   [{:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
-  [:<>
-   [Typography
-    "Project information"]])
-
-(defn workflow-information
-  []
-  [Typography "workflow"])
+  [itemlist/ItemList
+   {:title "Project information"}
+   [:div "Name: " name]
+   [:div "Est. duration: "estimated_duration]
+   [:div "Road number: " road_nr]
+   [:div "Km range: " km_range]
+   [:div "Carriageway: " carriageway]
+   [:div "Procurement number:" procurement_no]])
 
 (defn project-page [e! {{:keys [project]} :params :as app}]
   [:<>
@@ -33,26 +35,15 @@
                                      {:fit-on-load? true})}}
     app]
    [Grid {:container true
-          :style {:margin-top "2rem"}}
+          :style {:margin-top "2rem"}
+          :spacing 10}
     [Grid {:item true :xs 8}
-     [workflow-information]]
-    [Grid {:item true :xs 4}
-     [postgrest-item-view/item-view
-      {:endpoint (get-in app [:config :api-url])
-       :token (get-in app login-paths/api-token)
-       :table "thk_project"
-       :select ["name" "estimated_duration"
-                "road_nr" "km_range" "carriageway"
-                "procurement_no"]
-       :view project-data}
-      project]]
-
-    [Grid {:item true :xs 4}
      [itemlist/ProgressList
-      {:title "workflows"}
+      {:title "Workflows"}
       (for [wf (get-in app [:project project :workflows])]
-        {:name (:workflow/name wf)})]
-
+        {:name (:workflow/name wf)
+         :link (str "#/projects/" project "/workflows/" (:db/id wf))})]]
+    [Grid {:item true :xs 4}
      [postgrest-item-view/item-view
       {:endpoint (get-in app [:config :api-url])
        :token (get-in app login-paths/api-token)
@@ -63,7 +54,7 @@
        :view project-data}
       project]]]
 
-   [select/select-with-action {:label "New workflow"
+   [select/select-with-action {:label [:<> [icons/content-add] "New workflow"]
                                :item-label :name
                                :items [{:name "Pre-design"}]
                                :on-select #(e! (project-controller/->StartNewWorkflow project %))}]])
