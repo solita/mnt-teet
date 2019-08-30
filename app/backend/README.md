@@ -22,8 +22,9 @@ TEET uses Datiomic Ion as a database.
 - Download [datomic-socks-proxy script](https://docs.datomic.com/cloud/files/datomic-socks-proxy)
   and add it to your path.
 - Run `datomic-socks-proxy teet-dev-datomic`
-- Add the contents of  [TEET-42](https://jira.mkm.ee/browse/TEET-42) to
-  `../teet-local/config.edn` relative to the TEET project root.
+- Ensure you have
+  [mnt-teet-private](https://github.com/solita/mnt-teet-private)
+  repository checked out as a sibling directory to the TEET project.
 - Load and switch to `teet.environment`.
 - Eval `(load-local-config!)`.
 - Eval `(d/create-database (datomic-client) {:db-name (str (System/getProperty "user.name") "-dev")})`.
