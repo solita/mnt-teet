@@ -45,6 +45,9 @@
   Takes input as transit, invokes the query and returns
   the result as transit."
   (request
-   (fn [ctx command-def]
-     (or (check-spec (:command/name command-def) command-def)
-         (db-api/command! ctx command-def)))))
+   (fn [ctx {:keys [command payload]}]
+     (let [result
+           (or (check-spec command payload)
+               (db-api/command! (assoc ctx :command/name command) payload))]
+       (log/debug "command: " command ", payload: " payload ", result => " result)
+       result))))

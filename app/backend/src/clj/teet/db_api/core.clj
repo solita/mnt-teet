@@ -24,9 +24,14 @@
 
   Commands should return ids for any newly created entities.
 
-  Dispatches on :command/name.
+  Dispatches on :command/name in ctx.
 
   ctx is a map containing
-  :conn (datomic connection)
-  :user the current user"
-  (fn [ctx command] (:command/name command)))
+  :command/name   name of the comand to execute
+  :conn           (datomic connection)
+  :user           the current user
+
+  Payload is any data passed to the command.
+  The payload is checked against the spec of the command name.
+  "
+  (fn [ctx payload] (:command/name ctx)))

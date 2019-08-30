@@ -7,8 +7,4 @@
 
 
 (defmethod db-api/command! :workflow/create-project-workflow [{conn :conn} project-workflow]
-  ;; FIXME: automatically validate spec based on command
-  (when-not (s/valid? :workflow/project-workflow project-workflow)
-    (throw (ex-info "Project workflow is not valid"
-                    {:explain (s/explain-data :workflow/project-workflow project-workflow)})))
-  (d/transact conn {:tx-data [project-workflow]}))
+  (select-keys (d/transact conn {:tx-data [project-workflow]}) [:tempids]))
