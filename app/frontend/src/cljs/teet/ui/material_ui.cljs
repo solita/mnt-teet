@@ -35,6 +35,3 @@
 
 ;; Icon
 (define-mui-components Icon)
-
-;; Progress
-(define-mui-components CircularProgress)
