@@ -20,7 +20,7 @@
             [teet.theme.theme-provider :as theme]
             [teet.common.common-controller]))
 
-(defn main-view [e! {:keys [page user navigation] :as app}]
+(defn main-view [e! {:keys [page params user navigation] :as app}]
   (let [nav-open? (boolean (:open? navigation))]
     [theme/theme-provider
      (if (= page :login)
@@ -37,7 +37,7 @@
             (:default-page :root :projects) [projects-view/projects-page e! app]
             :project [project-view/project-page e! app]
             :components [component-demo/demo e!]
-            [:div "Unimplemented page: " (pr-str page)])]]
+            [:div "Unimplemented page: " (pr-str page) ", params: " (pr-str params)])]]
         [df/DataFriskShell app]])]))
 
 (defn ^:export main []
