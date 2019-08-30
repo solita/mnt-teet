@@ -7,7 +7,8 @@
             [teet.login.login-paths :as login-paths]
             [postgrest-ui.components.item-view :as postgrest-item-view]
             [teet.ui.material-ui :refer [Grid Typography]]
-            [teet.project.project-controller :as project-controller]))
+            [teet.project.project-controller :as project-controller]
+            [teet.ui.select :as select]))
 
 (defn project-data
   [{:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
@@ -43,4 +44,9 @@
                 "road_nr" "km_range" "carriageway"
                 "procurement_no"]
        :view project-data}
-      project]]]])
+      project]]]
+
+   [select/select-with-action {:label "New workflow"
+                               :item-label :name
+                               :items [{:name "Pre-design"}]
+                               :on-select #(e! (project-controller/->StartNewWorkflow project %))}]])
