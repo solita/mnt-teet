@@ -15,7 +15,7 @@ phases:
       - bash linux-install-1.10.1.466.sh
   build:
     commands:
-      - cd db && bash migrate.bash && cd ..
+      #- cd db && bash migrate.bash && cd ..
       - cd ci/deploy
       - bash frontend.bash
       - bash datomic.bash

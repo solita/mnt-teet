@@ -2,11 +2,13 @@
 
 echo "Fetch resources"
 
+mkdir resources/public/js
+
 echo " - Fetch Material UI"
-curl -o resources/public/material-ui.production.min.js https://unpkg.com/@material-ui/core@4.3.1/umd/material-ui.production.min.js
+curl -o resources/public/js/material-ui.production.min.js https://unpkg.com/@material-ui/core@4.3.1/umd/material-ui.production.min.js
 # FIXME: do a shasum check here
 
-cp target/public/cljs-out/prod-main.js resources/public/main.js
+cp target/public/cljs-out/prod-main.js resources/public/js/main.js
 
 echo "Package artifact"
 
