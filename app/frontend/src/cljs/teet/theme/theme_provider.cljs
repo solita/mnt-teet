@@ -27,6 +27,7 @@
   {:typography {:fontFamily "Roboto"}
    :palette {:primary {:main theme-colors/primary}
              :secondary {:main theme-colors/secondary}
+             :error {:main theme-colors/error}
              :background {:default theme-colors/white}
              :text {:primary theme-colors/primary-text
                     :secondary theme-colors/secondary-text}}
@@ -40,7 +41,7 @@
                                    "& .MuiListItemIcon-root" {:color :inherit
                                                               :min-width "40px"}}
                            :paperAnchorDockedLeft {:border-right 0}}
-               :MuiDivider {:root {:margin "1rem 0"}}
+               ;:MuiDivider {:root {:margin "1rem 0"}}
                :MuiTableHead {:root data-label-style}
                :MuiTypography {:h1 {:fontFamily "Roboto Condensed"
                                     :fontWeight 700
