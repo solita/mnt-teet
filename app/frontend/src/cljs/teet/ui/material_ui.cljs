@@ -20,7 +20,7 @@
 (define-mui-components
   Button Fab IconButton Checkbox TextField InputAdornment FormControl
   InputLabel Input
-  Select MenuItem Menu)
+  Select MenuItem Menu ButtonGroup)
 
 (define-mui-components Paper Typography)
 

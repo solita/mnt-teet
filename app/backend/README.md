@@ -27,5 +27,5 @@ TEET uses Datiomic Ion as a database.
   repository checked out as a sibling directory to the TEET project.
 - Load and switch to `teet.environment`.
 - Eval `(load-local-config!)`.
-- Eval `(d/create-database (datomic-client) {:db-name (str (System/getProperty "user.name") "-dev")})`.
+- Eval only when setting up `(d/create-database (datomic-client) {:db-name (str (System/getProperty "user.name") "-dev")})`. 
 - Eval `(datomic-connection) => {:db-name "yourname-dev", :database-id "foo", ...}`

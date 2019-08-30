@@ -47,7 +47,7 @@
                [icons/navigation-check {:style {:color theme-colors/success}}]
                :fail
                [icons/alert-error-outline {:color :error}]
-               "-")]
+               [icons/content-remove])]
             [SectionHeading (:name item)]
             [ListItemSecondaryAction
              [ListItemIcon

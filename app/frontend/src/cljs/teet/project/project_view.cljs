@@ -42,6 +42,7 @@
       {:title "Workflows"}
       (for [wf (get-in app [:project project :workflows])]
         {:name (:workflow/name wf)
+         :id (str (:db/id wf))
          :link (str "#/projects/" project "/workflows/" (:db/id wf))})]]
     [Grid {:item true :xs 4}
      [postgrest-item-view/item-view
@@ -56,5 +57,6 @@
 
    [select/select-with-action {:label [:<> [icons/content-add] "New workflow"]
                                :item-label :name
-                               :items [{:name "Pre-design"}]
+                               :items [{:name "Pre-design"}
+                                       {:name "Foo bar"}]
                                :on-select #(e! (project-controller/->StartNewWorkflow project %))}]])
