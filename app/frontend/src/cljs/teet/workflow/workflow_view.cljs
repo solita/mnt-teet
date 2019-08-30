@@ -13,6 +13,7 @@
      [itemlist/ProgressList
       {:title (:phase/name phase) :subtitle (some-> phase :phase/due-date format/date)}
       (for [{:task/keys [status name] :as task} (:phase/tasks phase)]
+        ^{:key name}
         {:status status
          :name name})])
    [:div (pr-str workflow)]])

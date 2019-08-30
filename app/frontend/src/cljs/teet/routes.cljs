@@ -31,7 +31,7 @@
     ["/login" :login]
     ["/projects" :projects]
     ["/projects/:project" :project]
-    ["/projects/:project/workflow/:workflow" :project-workflow]
+    ["/projects/:project/workflows/:workflow" :project-workflow]
     ["/components" :components]
     ;["/projectgroup/:group" :project-group]
     ;["/projectgroup/:group/project/:project" :project]

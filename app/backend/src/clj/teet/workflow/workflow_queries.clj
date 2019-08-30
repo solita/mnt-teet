@@ -14,7 +14,7 @@
    :result-fn ffirst})
 
 (defmethod db-api/query :workflow/list-project-workflows [{db :db} {:keys [thk-project-id]}]
-  {:query '[:find (pull ?e [:workflow/name :workflow/due-date])
+  {:query '[:find (pull ?e [:db/id :workflow/name :workflow/due-date])
             :in $ ?thk-project-id
             :where [?e :thk/id ?thk-project-id]]
    :args [db thk-project-id]

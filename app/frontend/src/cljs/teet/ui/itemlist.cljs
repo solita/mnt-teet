@@ -67,4 +67,3 @@
        [:li
         [Link {:href (:link item)}
          (:name item)]])]]])
-
