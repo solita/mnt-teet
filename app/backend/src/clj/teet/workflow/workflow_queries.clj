@@ -2,7 +2,7 @@
   (:require [teet.db-api.core :as db-api]))
 
 (defmethod db-api/query :workflow/fetch-workflow [{db :db} {:keys [project-id workflow-id]}]
-  {:query '[:find (pull ?e [:workflow/name
+  {:query '[:find (pull ?e [:db/id :workflow/name
                             {:workflow/phases
                              [:db/id
                               :phase/name
