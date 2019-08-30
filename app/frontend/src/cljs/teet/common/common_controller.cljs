@@ -105,5 +105,23 @@
                    (e! (->RPCResponse result-path data))
                    (e! (result-event data))))))))
 
+(defmethod tuck-effect/process-effect :command! [e! {:keys [command payload result-path result-event] :as q}]
+  (assert (keyword? command)
+          "Must specify :command keyword that names the command to execute")
+  (assert (some? payload)
+          "Must specify :payload for the command")
+  (assert (or result-path result-event) "Must specify :result-path or :result-event")
+  (-> (js/fetch (str "/command")
+                #js {:method "POST"
+                     :headers #js {"Content-Type" "application/json+transit"}
+                     :body (transit/clj->transit {:command command
+                                                  :payload payload})})
+      (.then #(.text %))
+      (.then (fn [text]
+               (let [data (transit/transit->clj text)]
+                 (if result-path
+                   (e! (->RPCResponse result-path data))
+                   (e! (result-event data))))))))
+
 (defmethod tuck-effect/process-effect :navigate [e! {:keys [page params query]}]
   (routes/navigate! page params query))
