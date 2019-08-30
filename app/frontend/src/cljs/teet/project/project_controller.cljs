@@ -18,8 +18,8 @@
     (log/info "Fetching workflows for THK project: " project-id)
     (t/fx app
           {:tuck.effect/type :query
-           :query {:query/name :workflow/list-project-workflows
-                   :thk-project-id project-id}
+           :query :workflow/list-project-workflows
+           :args {:thk-project-id project-id}
            :result-path [:project project-id]}))
 
   StartNewWorkflow

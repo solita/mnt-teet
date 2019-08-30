@@ -31,9 +31,9 @@
   Takes input as transit, invokes the query and returns
   the result as transit."
   (request
-   (fn [ctx query-def]
-     (let [query-result (or (check-spec (:query/name query-def) query-def)
-                            (db-api/query ctx query-def))]
+   (fn [ctx {:keys [query args]}]
+     (let [query-result (or (check-spec query args)
+                            (db-api/query (assoc ctx :query/name query) args))]
        (if (and (map? query-result)
                 (contains? query-result :query)
                 (contains? query-result :args))

@@ -10,12 +10,13 @@
   query function.
 
   Any other result is returned as is.
-  Dispatches on :query/name.
+  Dispatches on :query/name in ctx.
 
   ctx is a map containing
-  :db the current database value
-  :user the current user"
-  (fn [ctx query] (:query/name query)))
+  :query/name  the name of the query to run
+  :db          the current database value
+  :user        the current user"
+  (fn [ctx args] (:query/name ctx)))
 
 (defmulti command!
   "Execute a given named command and return the results.
