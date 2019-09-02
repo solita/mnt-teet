@@ -79,4 +79,52 @@
           {:db/ident :task.status/in-progress}
           {:db/ident :task.status/completed}
           {:db/ident :task.status/accepted}
-          {:db/ident :task.status/rejected}]]}]
+          {:db/ident :task.status/rejected}]]}
+
+ {:db/ident :geo/geometry-and-bbox
+  :txes [[{:db/ident :geo/wkt
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Well-Known Text representation of geometry (EPSG:3301)"}
+
+          {:db/ident :geo/bbox-min-x
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one
+           :db/doc "Minimum X coordinate value of geometry bounding box (rounded down)"}
+
+          {:db/ident :geo/bbox-max-x
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one
+           :db/doc "Maximum X coordinate value of geometry bounding box (rounded up)"}
+
+          {:db/ident :geo/bbox-min-y
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one
+           :db/doc "Minimum Y coordinate value of geometry bounding box (rounded down)"}
+
+          {:db/ident :geo/bbox-max-y
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one
+           :db/doc "Maximum Y coordinate value of geometry bounding box (rounded up)"}
+
+
+
+
+          ]]}
+
+ {:db/ident :document/document-entity
+  :txes [[{:db/ident :document/name
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Name of the document"}
+
+          {:db/ident :document/size
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one
+           :db/doc "Size of the document in bytes"}
+
+          {:db/ident :document/type
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "MIME type of the document"}]]}
+ ]
