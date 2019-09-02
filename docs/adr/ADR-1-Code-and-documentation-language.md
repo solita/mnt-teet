@@ -17,7 +17,10 @@ All domain concepts must be well defined and updated to a glossary of terms.
 
 ## Status
 
+Accepted
+
 ## Consequences
 - Con: customer communication is more difficult because native terms can't be used
 - Pro: no lock in to Finnish speaking developers
 - Pro: English is the de facto code language
+
