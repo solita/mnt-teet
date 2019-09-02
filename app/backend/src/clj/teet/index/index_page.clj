@@ -3,7 +3,11 @@
   (:require [hiccup.core :as hiccup]
             [teet.util.build-info :as build-info]))
 
-(defn index-page [{:keys [base-url mode api]}]
+(defn index-page
+  "DEV MODE INDEX PAGE.
+
+  If you add things here, also add them to index.html in frontend for production env."
+  [{:keys [base-url mode api]}]
   (let [dev? (= mode :dev)]
     [:html
      [:head
