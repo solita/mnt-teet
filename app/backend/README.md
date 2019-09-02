@@ -20,7 +20,7 @@ TEET uses Datiomic Ion as a database.
 
 - Set `AWS_PROFILE` to your TEET profile
 - Download [datomic-socks-proxy script](https://docs.datomic.com/cloud/files/datomic-socks-proxy)
-  and add it to your path.
+  and add it to your path or invoke it by absolute path.
 - Run `datomic-socks-proxy teet-dev-datomic`
 - Ensure you have
   [mnt-teet-private](https://github.com/solita/mnt-teet-private)
