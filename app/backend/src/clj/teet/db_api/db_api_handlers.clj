@@ -9,6 +9,8 @@
             ;; Require all namespaces that provide queries/commands
             [teet.workflow.workflow-queries]
             [teet.workflow.workflow-commands]
+            [teet.document.document-commands]
+
             [taoensso.timbre :as log]))
 
 

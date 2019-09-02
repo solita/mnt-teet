@@ -6,17 +6,48 @@
             [teet.ui.itemlist :as itemlist]
             [teet.ui.progress :as progress]
             [teet.ui.typography :refer [DataLabel Heading1 Heading2 Heading3 Paragraph SectionHeading Text]]
-            [tuck.core :as t]))
+            [tuck.core :as t]
+            [cljs-bean.core :refer [->clj]]
+            [taoensso.timbre :as log]))
 
 (defrecord TestFileUpload [files])
+(defrecord UploadFiles [files])
+(defrecord UploadFileUrlReceived [file url])
+
+(defn- file-info [^js/File f]
+  {:document/name (.-name f)
+   :document/size (.-size f)
+   :document/type (.-type f)
+   :thk/id "14935"})
+
 
 (extend-protocol t/Event
   TestFileUpload
   (process-event [{files :files} app]
     (js/alert (str "Dropped "
                    (str/join ", "
-                             (map #(str "\"" (.-name %) "\"") files))))
-    app))
+                             (map #(str "\"" (pr-str (file-info %)) "\"") files))))
+    app)
+
+  UploadFiles
+  (process-event [{files :files} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :document/upload
+           :payload (file-info (first files))
+           :result-event #(->UploadFileUrlReceived (first files) %)}))
+
+  UploadFileUrlReceived
+  (process-event [{:keys [file url]} app]
+    (log/info "upload file: " file " to URL: " url)
+    (-> (js/fetch (:url url) #js {:method "PUT"
+                              :body file})
+        (.then (fn [^js/Response resp]
+                 (if (.-ok resp)
+                   (log/info "Upload ok" (.-status resp))
+                   (log/warn "Upload failed: " (.-status resp) (.-statusText resp))))))
+    app)
+  )
 
 (defn demo
   [e!]
@@ -106,7 +137,7 @@
                     :justify-content "space-evenly"
                     :margin-bottom "2rem"}}
       [file-upload/FileUploadButton {:id "upload-btn"
-                                     :on-drop #(e! (->TestFileUpload %))
+                                     :on-drop #(e! (->UploadFiles %) #_(->TestFileUpload %))
                                      :drop-message "Drop it like it's hot"}
        "Click to upload"]]]]
     [Divider]
