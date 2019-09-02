@@ -12,7 +12,7 @@
 (defn load-local-config!
   "Load local development configuration from outside repository"
   []
-  (let [file (io/file ".." ".." ".." "teet-local" "config.edn")]
+  (let [file (io/file ".." ".." ".." "mnt-teet-private" "config.edn")]
     (when (.exists file)
       (log/info "Loading local config file: " file)
       (swap! config (fn [c]

@@ -14,15 +14,18 @@
 (define-mui-components Card CardActionArea CardActions CardContent CardHeader CardMedia)
 
 ;; Listing
-(define-mui-components List ListItem ListItemIcon ListItemText)
+(define-mui-components List ListItem ListItemIcon ListItemText ListItemSecondaryAction)
 
 ;; Form
-(define-mui-components Button Fab IconButton Checkbox TextField InputAdornment FormControl InputLabel Input)
+(define-mui-components
+  Button Fab IconButton Checkbox TextField InputAdornment FormControl
+  InputLabel Input
+  Select MenuItem Menu ButtonGroup)
 
 (define-mui-components Paper Typography)
 
 ;; Common utility components
-(define-mui-components Collapse Divider CircularProgress Drawer AppBar MuiThemeProvider Toolbar CssBaseline)
+(define-mui-components Collapse Divider CircularProgress Drawer AppBar MuiThemeProvider Toolbar CssBaseline Link)
 
 ;; Layout
 (define-mui-components Container Grid)

@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="UTF-8" />
     <!-- Fonts to support Material Design -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
     <!-- Icons to support Material Design -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
-
-    <style id="_stylefy-constant-styles_"></style>
-    <style id="_stylefy-styles_"></style>
 
     <script type="text/javascript">
       new Promise((resolve, reject) => {
@@ -16,9 +14,9 @@
 
     </script>
   </head>
-  <body data-api-url="http://localhost:3000">
+  <body data-api-url="https://api-dev-teet.solitacloud.fi" onload="resolveOnload()">
     <div id="teet-frontend"></div>
-    <script src="main.js"></script>
-    <script src="https://unpkg.com/@material-ui/core@latest/umd/material-ui.development.js" crossorigin="anonymous"></script>
+    <script src="js/main.js"></script>
+    <script src="js/material-ui.production.min.js"></script>
   </body>
 </html>

@@ -10,6 +10,8 @@
             [teet.localization :as localization :refer [tr]]
             [teet.login.login-view :as login-view]
             [teet.projects.projects-view :as projects-view]
+            [teet.project.project-view :as project-view]
+            [teet.workflow.workflow-view :as workflow-view]
             [teet.navigation.navigation-view :as navigation-view]
             [teet.routes :as routes]
             [teet.ui.material-ui :refer [Paper Button Chip Avatar MuiThemeProvider CssBaseline]]
@@ -19,29 +21,42 @@
             [teet.theme.theme-provider :as theme]
             [teet.common.common-controller]))
 
-(defn main-view [e! {:keys [page user navigation] :as app}]
+(defn page-and-title [e! {:keys [page params] :as app}]
+  (case page
+    (:default-page :root :projects)
+    {:title "TEET" :page [projects-view/projects-page e! app]}
+
+    :project
+    {:title "TEET" :page [project-view/project-page e! app]}
+
+    :project-workflow
+    (workflow-view/workflow-page-and-title e! app)
+
+    :components
+    {:title "Components" :page [component-demo/demo e!]}
+
+    ;; Fallback
+    {:title "Unimplemented page"
+     :page [:div "Unimplemented page: " (pr-str page) ", params: " (pr-str params)]}))
+
+(defn main-view [e! {:keys [page page-title params user navigation] :as app}]
   (let [nav-open? (boolean (:open? navigation))]
     [theme/theme-provider
      (if (= page :login)
        ;; Show only login dialog
        [login-view/login-page e! app]
-       [:<>
-        [CssBaseline]
-        [navigation-view/header e! {:title "TEET"
-                                    :open? nav-open?} user]
-        [navigation-view/main-container
-         nav-open?
+       (let [{:keys [page title]} (page-and-title e! app)]
          [:<>
-          (case page
-            (:default-page :root :projects) [projects-view/projects-page e! app]
-            :project [projects-view/project-page e! app]
-            :components [component-demo/demo e!]
-            [:div "Unimplemented page: " (pr-str page)])]]
-        [df/DataFriskShell app]])]))
+          [CssBaseline]
+          [navigation-view/header e! {:title title
+                                      :open? nav-open?} user]
+          [navigation-view/main-container
+           nav-open?
+           page]
+          [df/DataFriskShell app]]))]))
 
 (defn ^:export main []
   (routes/start!)
-  (stylefy/init)
   (postgrest-ui.elements/set-default-style! :material)
 
   ;; Load user information

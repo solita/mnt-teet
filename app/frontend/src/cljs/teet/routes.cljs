@@ -30,6 +30,8 @@
    [["/" :root]
     ["/login" :login]
     ["/projects" :projects]
+    ["/projects/:project" :project]
+    ["/projects/:project/workflows/:workflow" :project-workflow]
     ["/components" :components]
     ;["/projectgroup/:group" :project-group]
     ;["/projectgroup/:group/project/:project" :project]

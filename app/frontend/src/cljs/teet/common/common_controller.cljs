@@ -89,14 +89,33 @@
                    (e! (->RPCResponse result-path data))
                    (e! (result-event data))))))))
 
-(defmethod tuck-effect/process-effect :query [e! {qn :query/name
-                                                  :keys [result-path result-event] :as q}]
-  (assert qn "Must specify :query/name of the query to run")
+(defmethod tuck-effect/process-effect :query [e! {:keys [query args result-path result-event] :as q}]
+  (assert (keyword? query)
+          "Must specify :query keyword that names the query to run")
+  (assert (some? args) "Must specify :args for query")
   (assert (or result-path result-event) "Must specify :result-path or :result-event")
   (-> (js/fetch (str "/query")
                 #js {:method "POST"
                      :headers #js {"Content-Type" "application/json+transit"}
-                     :body (-> q (dissoc :tuck.effect/type) transit/clj->transit)})
+                     :body (transit/clj->transit {:query query :args args})})
+      (.then #(.text %))
+      (.then (fn [text]
+               (let [data (transit/transit->clj text)]
+                 (if result-path
+                   (e! (->RPCResponse result-path data))
+                   (e! (result-event data))))))))
+
+(defmethod tuck-effect/process-effect :command! [e! {:keys [command payload result-path result-event] :as q}]
+  (assert (keyword? command)
+          "Must specify :command keyword that names the command to execute")
+  (assert (some? payload)
+          "Must specify :payload for the command")
+  (assert (or result-path result-event) "Must specify :result-path or :result-event")
+  (-> (js/fetch (str "/command")
+                #js {:method "POST"
+                     :headers #js {"Content-Type" "application/json+transit"}
+                     :body (transit/clj->transit {:command command
+                                                  :payload payload})})
       (.then #(.text %))
       (.then (fn [text]
                (let [data (transit/transit->clj text)]

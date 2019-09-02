@@ -17,6 +17,9 @@
       ;; Icons to support Material Design
       [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/icon?family=Material+Icons"}]
 
+      ;; Custom font
+      [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css?family=Roboto+Condensed&display=swap"}]
+
       ;; Style elements for stylefy
       [:style {:id "_stylefy-constant-styles_"}]
       [:style {:id "_stylefy-styles_"}]
@@ -31,7 +34,7 @@
               :data-git-version (build-info/git-commit)
               :onload "resolveOnload()"}
        [:div#teet-frontend]
-       [:script {:src (if dev? "http://localhost:9500/main.js" "main.js")}]
+       [:script {:src (if dev? "cljs-out/dev-main.js" "main.js")}]
 
        [:script (if dev?
                   {:src "https://unpkg.com/@material-ui/core@latest/umd/material-ui.development.js"

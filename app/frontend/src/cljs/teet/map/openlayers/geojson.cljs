@@ -28,7 +28,7 @@
                    .refresh))))))
 
 (defrecord GeoJSON [source-name projection extent z-index opacity_ min-resolution max-resolution
-                    url style-fn]
+                    url style-fn on-change]
   Taso
   (aseta-z-index [this z-index]
     (assoc this :z-index z-index))
@@ -54,6 +54,10 @@
                         #js {:source source
                              :wrapX true
                              :style style-fn}))]
+
+      (when on-change
+        (.on source "change" #(on-change {:extent (.getExtent source)
+                                          :source source})))
 
       (.setLoader source (partial load-features source url))
 

@@ -12,7 +12,8 @@
             [teet.map.map-view :as map-view]
             [teet.map.map-layers :as map-layers]
             [teet.map.map-features :as map-features]
-            [teet.ui.material-ui :refer [TextField]]))
+            [teet.ui.material-ui :refer [TextField]]
+            [postgrest-ui.display :as display]))
 
 (defmethod search-interface/format-search-result "project" [{:keys [id label]}]
   {:icon [icons/file-folder-open]
@@ -21,6 +22,10 @@
 
 (defn- project-filter [opts]
   [postgrest-filters/simple-search-form ["searchable_text"] opts])
+
+(defmethod display/display [:listing "thk_project_search" "id"] [_ _ _ id]
+  [:a {:href (str "#/projects/" id)}
+   id])
 
 (defn projects-listing [e! app]
   [postgrest-listing/listing
@@ -31,16 +36,7 @@
     :set-state! #(e! (projects-controller/->SetListingState %))
     :table "thk_project_search"
     :select ["id" "name" "estimated_duration" "road_nr" "km_range"]
-    :where (projects-controller/project-filter-where (get-in app [:projects :filter]))
-    :drawer (fn [{:strs [id]}]
-              [postgrest-item-view/item-view
-               {:endpoint (get-in app [:config :api-url])
-                :token (get-in app login-paths/api-token)
-                :table "thk_project"
-                :select ["name" "estimated_duration"
-                         "road_nr" "km_range" "carriageway"
-                         "procurement_no"]}
-               id])}])
+    :where (projects-controller/project-filter-where (get-in app [:projects :filter]))}])
 
 (def ^:const project-pin-resolution-threshold 100)
 
@@ -58,13 +54,11 @@
                                                              "geojson_thk_project_pins"
                                                              {"q" (get-in app [:projects :filter :text])}
                                                              map-features/project-pin-style
-                                                             {:min-resolution project-pin-resolution-threshold})}}
+                                                             {:min-resolution project-pin-resolution-threshold
+                                                              :fit-on-load? true})}}
     app]
    [TextField {:label "Search"
                :value (or (get-in app [:projects :new-filter :text]) "")
                :on-change #(e! (projects-controller/->UpdateProjectsFilter {:text (-> % .-target .-value)}))}]
    [projects-listing e! app]])
 
-(defn project-page [e! {{:keys [project]} :params :as app}]
-  (if (= "new" project)
-    [project-form/project-form e! (:project app)]))

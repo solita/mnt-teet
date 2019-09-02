@@ -9,6 +9,8 @@ DECLARE
   startm INTEGER;
   endm INTEGER;
   mrange NUMRANGE;
+  start_point NUMERIC;
+  end_point NUMERIC;
 BEGIN
   -- Convert km_range to start/end meters
   startm := (lower(_km)*1000.0)::INTEGER;
@@ -20,23 +22,11 @@ BEGIN
               AND mrange && numrange(g.algus::NUMERIC, g.lopp::NUMERIC)
             ORDER BY g.teeosa
   LOOP
-    IF startm > r.algus AND endm < r.lopp THEN
-      -- Road is fully within this one segment
-      RAISE NOTICE 'wanted part % - % is fully in segment start/end: % - %', startm, endm, r.algus, r.lopp;
-      geom := ST_LineSubstring(r.line, LEAST(startm/r.shap_leng,1), LEAST(endm/r.shap_leng,1));
-    ELSIF startm > r.algus THEN
-      -- Road starts in this segment but continues in the next
-      RAISE NOTICE '% - % starts in this segment: % - %', startm, endm, r.algus, r.lopp;
-      geom := ST_LineSubstring(r.line, LEAST(startm/r.shap_leng,1), 1.0);
-    ELSIF endm < r.lopp THEN
-      -- Road ends in this segment
-      RAISE NOTICE '% - % ends in this segment: % - % => %', startm, endm, r.algus, r.lopp, endm/r.lopp;
-      geom := ST_LineMerge(ST_Collect(geom, ST_LineSubstring(r.line, 0.0, LEAST(endm/r.shap_leng,1))));
-    ELSE
-      -- This segment is fully in the wanted road part
-      RAISE NOTICE 'wanted road % - % contains segment fully % - %', startm, endm, r.algus, r.lopp;
-      geom := ST_LineMerge(ST_Collect(geom, r.line));
-    END IF;
+    -- Clamp start/end point for this segment between 0 and 1
+    start_point := GREATEST(0,LEAST((startm-r.algus)/r.shap_leng,1));
+    end_point := GREATEST(0,LEAST((endm-r.algus)/r.shap_leng,1));
+    --RAISE NOTICE 'startm - endmm: % - % , algus: %, len: %, taking part % - %', startm, endm, r.algus, r.shap_leng, start_point, end_point;
+    geom := ST_LineMerge(ST_Collect(geom, ST_LineSubstring(r.line, start_point, end_point)));
   END LOOP;
   RETURN geom;
 END
@@ -93,4 +83,22 @@ SELECT row_to_json(fc)::TEXT
                        ST_AsGeoJSON(ST_Centroid(p.geometry))::json as geometry,
                        json_object(ARRAY['id', p.id, 'tooltip', p.name]::TEXT[]) AS properties
                   FROM projects p) f) fc;
+$$ LANGUAGE SQL STABLE;
+
+
+-- GeoJSON layer for a single project
+CREATE OR REPLACE FUNCTION teet.geojson_thk_project(id TEXT) RETURNS TEXT
+AS $$
+WITH projects AS (
+    SELECT *
+    FROM teet.thk_project_search p
+    WHERE p.id = $1
+)
+SELECT row_to_json(fc)::TEXT
+FROM (SELECT 'FeatureCollection' as type,
+             array_to_json(array_agg(f)) as features
+      FROM (SELECT 'Feature' as type,
+                   ST_AsGeoJSON(p.geometry)::json as geometry,
+                   json_object(ARRAY['id', p.id, 'tooltip', p.name]::TEXT[]) AS properties
+            FROM projects p) f) fc;
 $$ LANGUAGE SQL STABLE;
