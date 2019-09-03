@@ -1,5 +1,5 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -eu
 
 echo "Fetching frontend build: $COMMIT"
 aws s3 cp s3://teet-build/teet-frontend/frontend-$COMMIT.zip frontend.zip

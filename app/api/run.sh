@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/usr/bin/env bash
+set -eu
 
 JWKS_URL="https://cognito-idp.$COGNITO_REGION.amazonaws.com/$COGNITO_POOL_ID/.well-known/jwks.json"
 echo Downloading JWKS from $JWKS_URL

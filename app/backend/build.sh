@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
+set -eu
 
 #GIT_COMMIT=`git rev-parse HEAD`
 

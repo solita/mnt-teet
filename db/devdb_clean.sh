@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+set -eu
 
 function check_psql {
     if ! [ -x "$(command -v psql)" ]; then
