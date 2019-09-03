@@ -94,7 +94,7 @@
           "Must specify :query keyword that names the query to run")
   (assert (some? args) "Must specify :args for query")
   (assert (or result-path result-event) "Must specify :result-path or :result-event")
-  (-> (js/fetch (str "/query")
+  (-> (js/fetch (str "/query/")
                 #js {:method "POST"
                      :headers #js {"Content-Type" "application/json+transit"}
                      :body (transit/clj->transit {:query query :args args})})
@@ -111,7 +111,7 @@
   (assert (some? payload)
           "Must specify :payload for the command")
   (assert (or result-path result-event) "Must specify :result-path or :result-event")
-  (-> (js/fetch (str "/command")
+  (-> (js/fetch (str "/command/")
                 #js {:method "POST"
                      :headers #js {"Content-Type" "application/json+transit"}
                      :body (transit/clj->transit {:command command

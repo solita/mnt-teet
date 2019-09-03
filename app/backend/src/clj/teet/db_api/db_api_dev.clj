@@ -4,12 +4,12 @@
 
 (defn db-api-routes []
   (routes
-   (POST "/query" req
+   (POST "/query/" req
          (#'db-api-handlers/query-handler req))
 
    ;; FIXME: URL params are not handled currently
-   (GET "/query" req
+   (GET "/query/" req
         (#'db-api-handlers/query-handler req))
 
-   (POST "/command" req
+   (POST "/command/" req
          (#'db-api-handlers/command-handler req))))
