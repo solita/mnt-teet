@@ -3,7 +3,6 @@ version: 0.2
 env:
   variables:
     JAVA_HOME: "/usr/lib/jvm/java-8-openjdk-amd64"
-    COMMIT: ""
 
 phases:
   install:
@@ -16,6 +15,7 @@ phases:
   build:
     commands:
       #- cd db && bash migrate.bash && cd ..
+      - export COMMIT=`git rev-parse HEAD`
       - cd ci/deploy
       - bash frontend.bash
       - bash datomic.bash
