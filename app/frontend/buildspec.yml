@@ -4,7 +4,7 @@ env:
   variables:
     JAVA_HOME: "/usr/lib/jvm/java-8-openjdk-amd64"
     FRONTEND: "app/frontend"
-    CHROMIUM_BROWSER: "/usr/bin/chromium-browser"
+    CHROMIUM_BROWSER: "chromium-browser"
 
 phases:
   install:
@@ -19,6 +19,8 @@ phases:
       - bash linux-install-1.10.1.466.sh
   pre_build:
     commands:
+      - harh -r
+      - echo `which chromium-browser`
       - cd $FRONTEND
       - clojure -A:test
   build:
