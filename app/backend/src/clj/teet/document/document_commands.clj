@@ -20,14 +20,24 @@
     :else
     nil))
 
-(defmethod db-api/command! :document/upload [{conn :conn} document]
-  (let [res (d/transact conn {:tx-data [(merge {:db/id "doc"} document)]})
+(defmethod db-api/command! :document/upload [{conn :conn} {task-id :task-id :as document}]
+  (let [doc (merge {:db/id "doc"}
+                   (dissoc document :task-id))
+        res (d/transact conn {:tx-data [(if task-id
+                                          ;; Task id specified, add this document in the task
+                                          {:db/id task-id
+                                           :task/documents [doc]}
+
+                                          ;; No task id specified
+                                          doc)]})
         bucket "teet-dev-documents" ;; FIXME: get from environment
-        key (str (get-in res [:tempids "doc"]) "-" (:document/name document))]
+        doc-id (get-in res [:tempids "doc"])
+        key (str doc-id "-" (:document/name document))]
 
     (or (validate-document document)
         {:url (str (s3/generate-presigned-url {:bucket-name bucket
                                                :key key
                                                :method "PUT"
                                                :expiration (Date. (+ (System/currentTimeMillis)
-                                                                     upload-url-expiration-ms))}))})))
+                                                                     upload-url-expiration-ms))}))
+         :document (d/pull (:db-after res) '[*] doc-id)})))
