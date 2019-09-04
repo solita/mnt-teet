@@ -19,3 +19,13 @@
             :where [?e :thk/id ?thk-project-id]]
    :args [db thk-project-id]
    :result-fn (partial mapv first)})
+
+(defmethod db-api/query :task/fetch-task [{db :db} {:keys [task-id]}]
+  {:query '[:find (pull ?e [:db/id :task/name
+                            {:phase/_tasks [:db/id :phase/name
+                                            {:workflow/_phases [:db/id :workflow/name :thk/id]}]}
+                            :task/status
+                            {:task/documents [*]}])
+            :in $ ?e]
+   :args [db task-id]
+   :result-fn ffirst})
