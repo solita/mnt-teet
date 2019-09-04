@@ -4,7 +4,7 @@ env:
   variables:
     JAVA_HOME: "/usr/lib/jvm/java-8-openjdk-amd64"
     FRONTEND: "app/frontend"
-    CHROMIUM_BROWSER: "chromium-browser"
+    CHROMIUM_BROWSER: "/usr/bin/chromium-browser"
 
 phases:
   install:
@@ -22,7 +22,7 @@ phases:
       - hash -r
       - echo `which chromium-browser`
       - cd $FRONTEND
-      - clojure -A:test
+      - timeout 5m clojure -A:test
   build:
     commands:
       - echo Building frontend ClojureScript app
