@@ -7,7 +7,8 @@
             [teet.ui.typography :refer [Heading1 Heading2 Heading3 Paragraph Text SectionHeading DataLabel]]
             [teet.theme.theme-colors :as theme-colors]
             [teet.theme.itemlist-theme :as itemlist-theme]
-            [herb.core :refer [<class]]))
+            [herb.core :refer [<class]]
+            [teet.ui.util :as util]))
 
 (defn ListHeading
   [title subtitle]
@@ -20,7 +21,7 @@
   [{:keys [title subtitle]} & children]
   [:div
    [ListHeading title subtitle]
-   children])
+   (util/with-keys children)])
 
 (defn ProgressList
   [titles items]
