@@ -10,6 +10,7 @@ phases:
     runtime-versions:
       java: openjdk8
     commands:
+      - apt-get install -y chromium-browser
       - echo Download Clojure CLI tool
       - curl -O https://download.clojure.org/install/linux-install-1.10.1.466.sh
       - bash linux-install-1.10.1.466.sh
