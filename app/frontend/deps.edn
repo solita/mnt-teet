@@ -23,6 +23,13 @@
         ;; Utils
         cljs-bean {:mvn/version "1.4.0"}
 
-        com.cognitect/transit-cljs {:mvn/version "0.8.256"}
-        }
- :paths ["src/cljs" "target" "resources"]}
+        com.cognitect/transit-cljs {:mvn/version "0.8.256"}}
+ :paths ["src/cljs" "target" "resources"]
+ :aliases {:test {:main-opts ["-m" "figwheel.main"
+                              "-co" "tests.cljs.edn"
+                              "-m" "teet.runner"]
+                  :extra-deps {webjure/drtest {:mvn/version "20190611"}}
+                  :extra-paths ["test"]}
+           :dev {:main-opts ["-m" "figwheel.main" "-b" "dev" "-r"]
+                 :extra-deps {webjure/drtest {:mvn/version "20190611"}}
+                 :extra-paths ["test"]}}}

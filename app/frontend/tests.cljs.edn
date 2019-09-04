@@ -1,0 +1,2 @@
+^{:launch-js "bin/chromium-headless.sh"}
+{:main teet.runner}
