@@ -6,20 +6,22 @@
             [teet.ui.icons :as icons]))
 
 ;; TODO this needs better styles and better dropdown menu
-(defn select-with-action [{:keys [items item-label label icon on-select width]}]
+(defn select-with-action [{:keys [items item-label icon on-select width placeholder
+                                  action-icon]
+                           :or {action-icon [icons/content-add]}}]
   (r/with-let [anchor (r/atom nil)
-               selected (r/atom {:name "Select Workflow"})]
+               selected (r/atom nil)]
     [:<>
      [ButtonGroup {:variant :contained :color :secondary}
       [Button {:color :secondary
                :variant :contained
                :on-click #(reset! anchor (.-target %))}
-       (:name @selected)]
+       (or (some-> @selected item-label) placeholder)]
       [Button {:color :secondary
                :variant :contained
                :size "small"
                :on-click #(on-select @selected)}
-       [icons/content-add]]]
+       action-icon]]
      [Menu {:open (boolean @anchor)
             :anchorEl @anchor}
       (doall

@@ -55,7 +55,7 @@
        :view project-data}
       project]]]
 
-   [select/select-with-action {:label [:<> [icons/content-add] "New workflow"]
+   [select/select-with-action {:placeholder "New workflow"
                                :item-label :name
                                :items [{:name "Pre-design"}
                                        {:name "Foo bar"}]
