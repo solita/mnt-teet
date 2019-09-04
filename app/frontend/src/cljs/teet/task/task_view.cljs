@@ -20,7 +20,9 @@
                               :action-icon [icons/action-done]
                               :on-select #(do
                                             (done-fn)
-                                            (e! :D))}])
+                                            (e! (task-controller/->UpdateTask
+                                                 task
+                                                 {:task/status (task-controller/new-status %)})))}])
 
 (defn task-page [e! _]
   (let [modify-field (r/atom nil)]
@@ -33,13 +35,14 @@
           [:div "Status: "
 
            [:div {:style {:display "inline-block"}}
-            (:db/ident status)
+            (-> status :task.status/status :db/ident)
             (when-not (= :status current-modify-field)
               [IconButton {:on-click #(reset! modify-field :status)}
                [icons/image-edit]])]
 
            (when (= :status current-modify-field)
              [change-task-status e! task #(reset! modify-field nil)])]
+
           [:div {:style {:font-size "75%"}}  "TASKI " (pr-str task)]]
 
          [itemlist/ItemList
