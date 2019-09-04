@@ -19,7 +19,8 @@
             [tuck.core :as t]
             [teet.ui.icons :as icons]
             [teet.theme.theme-provider :as theme]
-            [teet.common.common-controller]))
+            [teet.common.common-controller]
+            [teet.task.task-view :as task-view]))
 
 (defn page-and-title [e! {:keys [page params] :as app}]
   (case page
@@ -34,6 +35,9 @@
 
     :components
     {:title "Components" :page [component-demo/demo e!]}
+
+    :task
+    (task-view/task-page-and-title e! app)
 
     ;; Fallback
     {:title "Unimplemented page"

@@ -32,6 +32,7 @@
     ["/projects" :projects]
     ["/projects/:project" :project]
     ["/projects/:project/workflows/:workflow" :project-workflow]
+    ["/projects/:project/workflows/:workflow/task/:task" :task]
     ["/components" :components]
     ;["/projectgroup/:group" :project-group]
     ;["/projectgroup/:group/project/:project" :project]
