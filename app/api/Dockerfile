@@ -31,15 +31,13 @@ ENV PGRST_DB_URI= \
     PGRST_SERVER_HOST=*4 \
     PGRST_SERVER_PORT=3000 \
     PGRST_SERVER_PROXY_URI= \
-    PGRST_JWT_SECRET="@/tmp/postgrest-key.jwks" \
+    PGRST_JWT_SECRET= \
     PGRST_SECRET_IS_BASE64=false \
     PGRST_JWT_AUD= \
     PGRST_MAX_ROWS= \
     PGRST_PRE_REQUEST= \
-    PGRST_ROLE_CLAIM_KEY=".\"custom:role\"" \
-    PGRST_ROOT_SPEC= \
-    COGNITO_REGION= \
-    COGNITO_POOL_ID=
+    PGRST_ROLE_CLAIM_KEY=".role" \
+    PGRST_ROOT_SPEC=
 
 RUN groupadd -g 1000 postgrest && \
     useradd -r -u 1000 -g postgrest postgrest && \
