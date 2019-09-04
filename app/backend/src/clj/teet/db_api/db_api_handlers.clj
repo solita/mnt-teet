@@ -10,6 +10,7 @@
             [teet.workflow.workflow-queries]
             [teet.workflow.workflow-commands]
             [teet.document.document-commands]
+            [teet.document.document-queries]
 
             [taoensso.timbre :as log]))
 
@@ -18,8 +19,14 @@
   (fn [req]
     (let [conn (environment/datomic-connection)
           ctx {:conn conn :db (d/db conn)}
-          request-payload (transit/transit-request req)]
-      (transit/transit-response (handler-fn ctx request-payload)))))
+          request-payload (transit/transit-request req)
+          response (handler-fn ctx request-payload)]
+      (case (:format (meta response))
+        ;; If :format meta key is :raw, send output as ring response
+        :raw response
+
+        ;; Default to sending out transit response
+        (transit/transit-response response)))))
 
 (defn- check-spec [spec data]
   (if (nil? (s/get-spec spec))
