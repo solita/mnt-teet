@@ -14,7 +14,12 @@
       {:title (:phase/name phase) :subtitle (some-> phase :phase/due-date format/date)}
       (for [{task-id :db/id :task/keys [status name] :as task} (:phase/tasks phase)]
         ^{:key name}
-        {:status status
+        {:status (case (-> status :task.status/status :db/ident)
+                   (:task.status/completed :task.status/accepted) :success
+                   :task.status/rejected :fail
+
+                   ;; Fallback to unknown status
+                   :unknown)
          :name name
          :link (str "#/projects/" project-id "/workflows/" workflow-id "/task/" task-id)})])
    [:div (pr-str workflow)]])
