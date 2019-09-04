@@ -25,5 +25,7 @@
    :headers {"Content-Type" "application/json+transit"}
    :body (clj->transit data)})
 
-(defn transit-request [{:keys [body] :as req}]
-  (transit->clj body))
+(defn transit-request [{:keys [body params request-method] :as req}]
+  (case request-method
+    :get (transit->clj (get params "q"))
+    :post (transit->clj body)))
