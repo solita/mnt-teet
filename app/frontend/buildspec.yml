@@ -23,6 +23,7 @@ phases:
       - echo `which chromium-browser`
       - cd $FRONTEND
       - timeout 5m clojure -A:test
+      - cat target/public/cljs-out/tests/js-environment.log
   build:
     commands:
       - echo Building frontend ClojureScript app
