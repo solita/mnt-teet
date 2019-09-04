@@ -7,7 +7,9 @@
                              [:db/id
                               :phase/name
                               :phase/due-date
-                              {:phase/tasks [:db/id :task/name :task/status]}]}])
+                              {:phase/tasks [:db/id :task/name
+                                             {:task/status [:task.status/timestamp
+                                                            :task.status/status]}]}]}])
             :in $ ?e ?project-id
             :where [?e :thk/id ?project-id]]
    :args [db workflow-id project-id]
@@ -24,7 +26,7 @@
   {:query '[:find (pull ?e [:db/id :task/name
                             {:phase/_tasks [:db/id :phase/name
                                             {:workflow/_phases [:db/id :workflow/name :thk/id]}]}
-                            :task/status
+                            {:task/status [*]}
                             {:task/documents [*]}])
             :in $ ?e]
    :args [db task-id]
