@@ -89,21 +89,39 @@
                    (e! (->RPCResponse result-path data))
                    (e! (result-event data))))))))
 
-(defmethod tuck-effect/process-effect :query [e! {:keys [query args result-path result-event] :as q}]
+(defn- check-query-and-args [query args]
   (assert (keyword? query)
           "Must specify :query keyword that names the query to run")
-  (assert (some? args) "Must specify :args for query")
+  (assert (some? args) "Must specify :args for query"))
+
+(defmethod tuck-effect/process-effect :query [e! {:keys [query args result-path result-event method]
+                                                  :as q
+                                                  :or {method "POST"}}]
+  (check-query-and-args query args)
   (assert (or result-path result-event) "Must specify :result-path or :result-event")
-  (-> (js/fetch (str "/query/")
-                #js {:method "POST"
-                     :headers #js {"Content-Type" "application/json+transit"}
-                     :body (transit/clj->transit {:query query :args args})})
-      (.then #(.text %))
-      (.then (fn [text]
-               (let [data (transit/transit->clj text)]
-                 (if result-path
-                   (e! (->RPCResponse result-path data))
-                   (e! (result-event data))))))))
+  (let [payload  (transit/clj->transit {:query query :args args})]
+    (-> (case method
+          "GET" (js/fetch (str "/query/?q=" (js/encodeURIComponent payload))
+                          #js {:method "GET"})
+          "POST" (js/fetch "/query/"
+                           #js {:method "POST"
+                                :headers #js {"Content-Type" "application/json+transit"}
+                                :body payload}))
+        (.then #(.text %))
+        (.then (fn [text]
+                 (let [data (transit/transit->clj text)]
+                   (if result-path
+                     (e! (->RPCResponse result-path data))
+                     (e! (result-event data)))))))))
+
+(defn query-url
+  "Generate an URL to a query with the given args. This is useful for queries
+  that return raw ring responses that the browser can load directly (eg. link href).
+
+  For normal data returning queries, you should use the `:query` effect type."
+  [query args]
+  (check-query-and-args query args)
+  (str "/query/?q=" (js/encodeURIComponent (transit/clj->transit {:query query :args args}))))
 
 (defmethod tuck-effect/process-effect :command! [e! {:keys [command payload result-path result-event] :as q}]
   (assert (keyword? command)
