@@ -55,7 +55,7 @@
            [Divider]])]]]]))
 
 (defn LinkList
-  [titles items]
+  [titles items on-click-fn]
   [ItemList
    titles
    [:div {:style {:margin-top "1rem"}}
@@ -65,5 +65,6 @@
      (for [item items]
        ^{:key (:name item)}
        [:li
-        [Link {:href (:link item)}
+        [Link {:href (:link item)
+               :onClick on-click-fn}
          (:name item)]])]]])

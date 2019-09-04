@@ -53,8 +53,7 @@
 
 (defn requires-authentication? [{:keys [user page] :as app}]
   ;; PENDING: what pages require authentication?
-  false
-  #_(and (nil? user)
+  (and (nil? user)
        (not= :login page)))
 
 (defn- send-startup-events [e! event]
