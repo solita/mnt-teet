@@ -137,6 +137,17 @@
   ([language tree-path]
    (get-in (get @loaded-languages language) tree-path)))
 
+(let [warn (memoize (fn [msg]
+                      (.warn js/console "UNTRANSLATED MESSAGE: " msg)))]
+
+  (defn tr-fixme
+    "Indicate a message that hasn't been translated yet."
+    ([msg]
+     (warn msg)
+     msg)
+    ([msg parameters]
+     (warn msg)
+     (str msg " " (pr-str parameters)))))
 
 ;;;;;; Translate database field columns and localized text values
 
