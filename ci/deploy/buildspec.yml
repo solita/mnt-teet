@@ -17,6 +17,7 @@ phases:
       - export COMMIT=`git rev-parse HEAD`
       - cd db && bash migrate.bash && cd ..
       - cd ci/deploy
+      - bash api.bash
       - bash frontend.bash
       - bash datomic.bash
 
