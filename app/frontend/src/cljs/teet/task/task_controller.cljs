@@ -3,7 +3,8 @@
             [teet.routes :as routes]
             [goog.math.Long]
             [taoensso.timbre :as log]
-            [teet.document.document-controller]))
+            [teet.document.document-controller]
+            [teet.common.common-controller :as common-controller]))
 
 (defrecord FetchTask [task-id])
 (defrecord UploadDocuments [files])
@@ -32,3 +33,6 @@
              :task-id (goog.math.Long/fromString task)
              :project-id project
              :app-path [:task task :task/documents]}))))
+
+(defn download-document-url [doc]
+  (common-controller/query-url :document/download (select-keys doc [:db/id])))
