@@ -8,7 +8,7 @@
 (defrecord SetTokens [tokens])
 (defrecord SetUserInfo [user])
 
-(defmethod tuck-effect/process-effect :login [e! {:keys [username password  login-url]}]
+(defmethod tuck-effect/process-effect :login [e! {:keys [username password login-url]}]
   (-> (js/fetch login-url
                 #js {:method "PUT"
                      :headers #js {"Content-Type" "application/json"}
@@ -36,11 +36,14 @@
   (process-event [_ app]
     (log/info "Log in")
     (t/fx (assoc-in app [:login :progress?] true)
-          {::tuck-effect/type :login
-           :username (get-in app [:login :form :username])
-           :password (get-in app [:login :form :password])
-           :login-url (get-in app [:config :login-url])
-           :api-url (get-in app [:config :api-url])}))
+          {::tuck-effect/type :command!
+           :command :login
+           :payload {:username (get-in app [:login :form :username])}
+           :result-event (fn login-result-event-handler [result]
+                          (log/info "RESULT: " result)
+                          (def login-res-dbg result)
+                          )}
+           ))
 
   SetTokens
   (process-event [{tokens :tokens} app]

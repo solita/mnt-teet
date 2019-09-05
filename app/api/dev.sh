@@ -17,7 +17,7 @@ elif [[ "$OSTYPE" == "linux-gnu" ]]; then
     URI="postgres://$DBUSER@teetdb:5432/teet"
 else
     echo "OS not supported"
-    exit
+    exit 1
 fi
 
 docker run $ARGS \
