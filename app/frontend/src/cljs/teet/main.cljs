@@ -4,7 +4,6 @@
             [postgrest-ui.elements]
             [postgrest-ui.impl.style.material]
             [reagent.core :as r]
-            [stylefy.core :as stylefy]
             [taoensso.timbre :as log]
             [teet.app-state :as app-state]
             [teet.localization :as localization :refer [tr]]

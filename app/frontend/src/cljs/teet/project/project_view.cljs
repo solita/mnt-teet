@@ -1,6 +1,5 @@
 (ns teet.project.project-view
   (:require [reagent.core :as r]
-            [teet.projects.project-form :as project-form]
             [teet.map.map-features :as map-features]
             [teet.map.map-layers :as map-layers]
             [teet.map.map-view :as map-view]

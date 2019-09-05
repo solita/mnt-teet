@@ -7,7 +7,6 @@
             [teet.search.search-interface :as search-interface]
             [teet.ui.icons :as icons]
             [teet.login.login-paths :as login-paths]
-            [teet.projects.project-form :as project-form]
             [postgrest-ui.components.item-view :as postgrest-item-view]
             [teet.map.map-view :as map-view]
             [teet.map.map-layers :as map-layers]
@@ -61,4 +60,3 @@
                :value (or (get-in app [:projects :new-filter :text]) "")
                :on-change #(e! (projects-controller/->UpdateProjectsFilter {:text (-> % .-target .-value)}))}]
    [projects-listing e! app]])
-
