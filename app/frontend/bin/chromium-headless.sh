@@ -1,3 +1,3 @@
 #!/bin/sh
 
-"$CHROMIUM_BROWSER" --headless --disable-gpu --repl "$@"
+"$CHROMIUM_BROWSER" --headless --no-sandbox --disable-gpu --repl "$@"
