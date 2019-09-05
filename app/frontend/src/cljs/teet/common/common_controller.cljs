@@ -1,6 +1,7 @@
 (ns teet.common.common-controller
   "Common UI controller code"
   (:require [clojure.string :as str]
+            [cljs-bean.core :refer [->clj]]
             [reagent.core :as r]
             [taoensso.timbre :as log]
             [teet.routes :as routes]
@@ -8,6 +9,43 @@
             [tuck.effect :as tuck-effect]
             [teet.transit :as transit]))
 
+;; Helpers for faking backend requests in unit tests
+
+(defonce test-mode? (atom false))
+(defonce test-requests (atom []))
+
+(defn take-test-request!
+  "Return test request matching predicate and remove it from the list.
+  If no matching request is found, returns nil."
+  [pred]
+  (let [req (some (fn [candidate]
+                    (when (pred candidate)
+                      candidate))
+                  @test-requests)]
+    (when req
+      (swap! test-requests (fn [reqs]
+                             (filterv #(not= req %) reqs))))
+    req))
+
+(defn- send-fake! [type]
+  (fn [req]
+    (swap! test-requests conj (merge req {:type type}))))
+
+(def send-fake-query!
+  (send-fake! :query))
+
+(def send-fake-command!
+  (send-fake! :command))
+
+(def send-fake-postgrest-rpc!
+  (send-fake! :postgrest-rpc))
+
+(defn send-fake-postgrest-query! [url opts]
+  ((send-fake! :postgrest-query) {:url url
+                                  :opts (->clj opts)}))
+
+
+;; Controller for backend communication
 
 (defn query-param-atom [{:keys [page params query] :as app} param-name read-param write-param]
   (r/wrap (read-param (get query param-name))
@@ -57,37 +95,39 @@
     (assoc-in app path data)))
 
 
-(defmethod tuck-effect/process-effect :rpc [e! {:keys [rpc args result-path result-event endpoint method]}]
+(defmethod tuck-effect/process-effect :rpc [e! {:keys [rpc args result-path result-event endpoint method] :as q}]
   (assert rpc "Must specify :rpc function to call")
   (assert (map? args) "Must specify :args map")
   (assert (or result-path result-event) "Must specify result-path or result-event")
   (assert endpoint "Must specify :endpoint for PostgREST server")
   (assert #{nil :GET :POST} "Must specify :method :GET or :POST (default) ")
-  (-> (if (= method :GET)
-           ;; GET request, add parameters to URL
-           (js/fetch (str endpoint "/rpc/" rpc "?"
-                          (str/join "&"
-                                    (map (fn [[arg val]]
-                                           (str (if (keyword? arg)
-                                                  (name arg)
-                                                  arg)
-                                                "=" (js/encodeURIComponent (str val))))
-                                         args))))
+  (if @test-mode?
+    (send-fake-postgrest-rpc! q)
+    (-> (if (= method :GET)
+          ;; GET request, add parameters to URL
+          (js/fetch (str endpoint "/rpc/" rpc "?"
+                         (str/join "&"
+                                   (map (fn [[arg val]]
+                                          (str (if (keyword? arg)
+                                                 (name arg)
+                                                 arg)
+                                               "=" (js/encodeURIComponent (str val))))
+                                        args))))
 
-           ;; POST request, send parameters as JSON body
-           (js/fetch (str endpoint "/rpc/" rpc)
-                     #js {:method "POST"
-                          :headers #js {"Content-Type" "application/json"
-                                        "Accept" "application/json"}
-                          :body (-> args clj->js js/JSON.stringify)}))
-      (.then #(.json %))
-      (.then (fn [json]
-               ;; FIXME: generic error handling
-               (log/info "RESPONSE: " json)
-               (let [data (js->clj json :keywordize-keys true)]
-                 (if result-path
-                   (e! (->RPCResponse result-path data))
-                   (e! (result-event data))))))))
+          ;; POST request, send parameters as JSON body
+         (js/fetch (str endpoint "/rpc/" rpc)
+                   #js {:method "POST"
+                        :headers #js {"Content-Type" "application/json"
+                                      "Accept" "application/json"}
+                        :body (-> args clj->js js/JSON.stringify)}))
+       (.then #(.json %))
+       (.then (fn [json]
+                ;; FIXME: generic error handling
+                (log/info "RESPONSE: " json)
+                (let [data (js->clj json :keywordize-keys true)]
+                  (if result-path
+                    (e! (->RPCResponse result-path data))
+                    (e! (result-event data)))))))))
 
 (defn- check-query-and-args [query args]
   (assert (keyword? query)
@@ -99,20 +139,22 @@
                                                   :or {method "POST"}}]
   (check-query-and-args query args)
   (assert (or result-path result-event) "Must specify :result-path or :result-event")
-  (let [payload  (transit/clj->transit {:query query :args args})]
-    (-> (case method
-          "GET" (js/fetch (str "/query/?q=" (js/encodeURIComponent payload))
-                          #js {:method "GET"})
-          "POST" (js/fetch "/query/"
-                           #js {:method "POST"
-                                :headers #js {"Content-Type" "application/json+transit"}
-                                :body payload}))
-        (.then #(.text %))
-        (.then (fn [text]
-                 (let [data (transit/transit->clj text)]
-                   (if result-path
-                     (e! (->RPCResponse result-path data))
-                     (e! (result-event data)))))))))
+  (if @test-mode?
+    (send-fake-query! q)
+    (let [payload  (transit/clj->transit {:query query :args args})]
+      (-> (case method
+            "GET" (js/fetch (str "/query/?q=" (js/encodeURIComponent payload))
+                            #js {:method "GET"})
+            "POST" (js/fetch "/query/"
+                             #js {:method "POST"
+                                  :headers #js {"Content-Type" "application/json+transit"}
+                                  :body payload}))
+          (.then #(.text %))
+          (.then (fn [text]
+                   (let [data (transit/transit->clj text)]
+                     (if result-path
+                       (e! (->RPCResponse result-path data))
+                       (e! (result-event data))))))))))
 
 (defn query-url
   "Generate an URL to a query with the given args. This is useful for queries
@@ -129,17 +171,19 @@
   (assert (some? payload)
           "Must specify :payload for the command")
   (assert (or result-path result-event) "Must specify :result-path or :result-event")
-  (-> (js/fetch (str "/command/")
-                #js {:method "POST"
-                     :headers #js {"Content-Type" "application/json+transit"}
-                     :body (transit/clj->transit {:command command
-                                                  :payload payload})})
-      (.then #(.text %))
-      (.then (fn [text]
-               (let [data (transit/transit->clj text)]
-                 (if result-path
-                   (e! (->RPCResponse result-path data))
-                   (e! (result-event data))))))))
+  (if @test-mode?
+    (send-fake-command! q)
+    (-> (js/fetch (str "/command/")
+                  #js {:method "POST"
+                       :headers #js {"Content-Type" "application/json+transit"}
+                       :body (transit/clj->transit {:command command
+                                                    :payload payload})})
+        (.then #(.text %))
+        (.then (fn [text]
+                 (let [data (transit/transit->clj text)]
+                   (if result-path
+                     (e! (->RPCResponse result-path data))
+                     (e! (result-event data)))))))))
 
 (defmethod tuck-effect/process-effect :navigate [e! {:keys [page params query]}]
   (routes/navigate! page params query))
