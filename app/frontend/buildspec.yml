@@ -4,14 +4,14 @@ env:
   variables:
     JAVA_HOME: "/usr/lib/jvm/java-8-openjdk-amd64"
     FRONTEND: "app/frontend"
-    CHROMIUM_BROWSER: "/opt/google/chrome/google-chrome"
+    CHROMIUM_BROWSER: "/opt/google/chrome/chrome"
 
 phases:
   install:
     runtime-versions:
       java: openjdk8
     commands:
-      - ls -R /opt/google
+      - cat /opt/google/chrome/google-chrome
       - $CHROMIUM_BROWSER --version
       - echo Download Clojure CLI tool
       - curl -O https://download.clojure.org/install/linux-install-1.10.1.466.sh
