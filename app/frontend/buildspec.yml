@@ -20,7 +20,7 @@ phases:
     commands:
       - (cd $FRONTEND; timeout 2m clojure -A:test)
     finally:
-      - cat target/public/cljs-out/tests/js-environment.log
+      - (cd $FRONTEND; cat target/public/cljs-out/tests/js-environment.log)
   build:
     commands:
       - echo Building frontend ClojureScript app
