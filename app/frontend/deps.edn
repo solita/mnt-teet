@@ -3,7 +3,6 @@
         tatut/postgrest-ui {:git/url "https://github.com/tatut/postgrest-ui"
                             :sha "99b040316635f057277d732c2e9dcc89066da30f"}
         webjure/tuck {:mvn/version "20181204" :exclusions [cljsjs/react]}
-        stylefy {:mvn/version "1.12.0"}
         data-frisk-reagent {:mvn/version "0.4.5" :exclusions [reagent]}
         herb {:mvn/version "0.10.0"}
 
