@@ -4,7 +4,7 @@ env:
   variables:
     JAVA_HOME: "/usr/lib/jvm/java-8-openjdk-amd64"
     FRONTEND: "app/frontend"
-    CHROMIUM_BROWSER: "google-chrome"
+    CHROMIUM_BROWSER: "/opt/google/chrome/google-chrome"
 
 phases:
   install:
