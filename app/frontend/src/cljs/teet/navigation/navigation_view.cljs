@@ -58,7 +58,7 @@
     (when open?
       [ListItemText {:primary "Components"}])]])
 
-(defn user-info [{:keys [given-name family-name] :as user} label?]
+(defn user-info [{:user/keys [given-name family-name] :as user} label?]
   (if-not user
     [Button {:color :secondary
              :href "/oauth2/request"}
