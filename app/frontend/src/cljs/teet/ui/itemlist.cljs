@@ -67,5 +67,5 @@
        ^{:key (:name item)}
        [:li
         [Link {:href (:link item)
-               :onClick on-click-fn}
+               :onClick (on-click-fn item)}
          (:name item)]])]]])
