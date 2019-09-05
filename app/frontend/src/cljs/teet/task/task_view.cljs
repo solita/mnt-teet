@@ -59,7 +59,7 @@
                 ;; FIXME: make a nice document UI
                 [:br]
                 [:div [:a {:href (task-controller/download-document-url doc)} name]
-                 " (type: " type ", size: " size
+                 " (type: " type ", size: " size ") "
                  (when progress
                    [CircularProgress])
                  ]])))
