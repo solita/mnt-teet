@@ -59,24 +59,30 @@
     (when open?
       [ListItemText {:primary "Components"}])]])
 
-(defn user-info [{:keys [user/given-name user/family-name] :as user} label?]
-  (if-not user
-    [Button {:color :secondary
-             :href "/oauth2/request"}
-     (tr [:login :login])]
-    (if label?
-      [Chip {:avatar (r/as-element [Avatar [icons/action-face]])
-             :label (str given-name " " family-name)}]
-      [Avatar
-       [icons/action-face]])))
+(defn user-info [e! {:keys [user/given-name user/family-name] :as user} label?]
+  (let [handle-click! (fn user-clicked [x]
+                        (e! (navigation-controller/->GoToLogin)))]
+    (if-not user
+      [Button {:color :secondary
+               :href "/#/login"
+               :onClick handle-click!}
+       (tr [:login :login])]
+      (if label?
+        [Chip {:avatar (r/as-element [Avatar [icons/action-face]])
+               :label (str given-name " " family-name)
+               :href "login"
+               :onClick handle-click!}]
+        [Avatar
+         {:onClick handle-click!}
+         [icons/action-face]]))))
 
 (defn drawer-footer
-  [user open?]
+  [e! user open?]
   [:div {:style {:margin-top "auto"
                  :padding "1rem 0"
                  :display :flex
                  :justify-content :center}}
-   [user-info user open?]])
+   [user-info e! user open?]])
 
 (defn header
   [e! {:keys [title open?]} user]
@@ -95,7 +101,7 @@
             :open open?}
     [drawer-header e! title open?]
     [page-listing e! open?]
-    [drawer-footer user open?]]])
+    [drawer-footer e! user open?]]])
 
 (defn main-container [navigation-open? content]
   [:main {:class (<class navigation-style/main-container navigation-open?)}

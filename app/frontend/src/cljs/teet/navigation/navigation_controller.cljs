@@ -4,8 +4,16 @@
             [taoensso.timbre :as log]))
 
 (defrecord ToggleDrawer [])
+(defrecord GoToLogin [])
 
 (extend-protocol t/Event
   ToggleDrawer
   (process-event [_ app]
-    (update-in app [:navigation :open?] not)))
+    (update-in app [:navigation :open?] not))
+
+  GoToLogin
+  (process-event [_ app]
+    (log/info "GoToLogin event")
+    (t/fx app
+          {::tuck-effect/type :navigate
+           :page :login})))
