@@ -4,7 +4,7 @@
             [taoensso.timbre :as log]))
 
 (defrecord UpdateLoginForm [form])
-(defrecord Login [])
+(defrecord Login [user])
 (defrecord SetTokens [tokens])
 (defrecord SetUserInfo [user])
 
@@ -33,17 +33,17 @@
     (assoc-in app [:login :form] form))
 
   Login
-  (process-event [_ app]
-    (log/info "Log in")
+  (process-event [{user :user} app]
+    (log/info "->Login event: user:" (pr-str user))
     (t/fx (assoc-in app [:login :progress?] true)
-          {::tuck-effect/type :command!
-           :command :login
-           :payload {:username (get-in app [:login :form :username])}
-           :result-event (fn login-result-event-handler [result]
-                          (log/info "RESULT: " result)
-                          (def login-res-dbg result)
-                          )}
-           ))
+          {::tuck-effect/type :query
+           :query :user-session
+           :args {:user user}
+           :result-event (fn session-handler [result]
+                           (log/info "RESULT: " result)
+                           (if (contains? result "ok")
+                             (->SetUserInfo user)
+                             (->SetUserInfo nil)))}))
 
   SetTokens
   (process-event [{tokens :tokens} app]

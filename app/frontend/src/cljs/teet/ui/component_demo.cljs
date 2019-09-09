@@ -175,6 +175,8 @@
         {:link "/foo"
          :name "asdasd task"}
         {:link "/:success"
-         :name "fifth task"}]]]
+         :name "fifth task"}]
+       (fn on-click-handler [x]
+         (log/info "on click handler got:" (pr-str x)))]]
 
      [Divider]]])

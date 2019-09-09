@@ -11,7 +11,8 @@
             [teet.navigation.navigation-controller :as navigation-controller]
             [teet.navigation.navigation-style :as navigation-style]
             [teet.search.search-view :as search-view]
-            [herb.core :refer [<class]]))
+            [herb.core :refer [<class]]
+            [taoensso.timbre :as log]))
 
 (defn drawer-header
   [e! title open?]
@@ -58,7 +59,7 @@
     (when open?
       [ListItemText {:primary "Components"}])]])
 
-(defn user-info [{:keys [given-name family-name] :as user} label?]
+(defn user-info [{:keys [user/given-name user/family-name] :as user} label?]
   (if-not user
     [Button {:color :secondary
              :href "/oauth2/request"}
