@@ -3,10 +3,14 @@
   (:require [cljs.core.async :as async :refer [chan timeout close! <!]]
             [drtest.core :as drt]
             [drtest.step :as ds]
+            [postgrest-ui.impl.fetch :as postgrest-fetch]
             [reagent.core :as r]
             [teet.common.common-controller :as common-controller]
             [tuck.core :as t])
   (:require-macros [cljs.core.async.macros :refer [go]]))
+
+(reset! common-controller/test-mode? true)
+(reset! postgrest-fetch/fetch-impl common-controller/send-fake-postgrest-query!)
 
 ;;
 ;; Wait-request step
@@ -15,29 +19,38 @@
 (defn wait-request
   "Wait for test request matching predicate to be sent. Returns channel
   from which the request can be read."
-  [pred]
+  [pred retries]
   (go
-    (loop [req (common-controller/take-test-request! pred)]
-      (if req
-        req
-        (do
-          (<! (timeout 50))
-          (recur (common-controller/take-test-request! pred)))))))
+    (loop [req (common-controller/take-test-request! pred)
+           retries-left retries]
+      (cond (some? req) req
 
-(defn wait-request* [pred callback]
+            (not (pos? retries-left)) ::fail
+
+            :else
+            (do
+              (<! (timeout 50))
+              (recur (common-controller/take-test-request! pred)
+                     (dec retries-left)))))))
+
+(defn wait-request* [pred retries callback]
   (go
-    (callback (<! (wait-request pred)))))
+    (callback (<! (wait-request pred retries)))))
 
-(defmethod ds/execute :wait-request [{:keys [predicate as response] :as step-descriptor}
+(defmethod ds/execute :wait-request [{:keys [predicate retries as response] :as step-descriptor
+                                      :or {retries 10}}
                                      ctx ok fail]
   (wait-request* predicate
+                 retries
                  (fn [req]
-                   (when response
-                     ;; Automatically respond with the given value
-                     ((:on-success req) response))
-                   (ok (if as
-                         (assoc ctx as req)
-                         ctx)))))
+                   (if (= req ::fail)
+                     (fail (str "Request not caugth after " retries " retries."))
+                     (do (when response
+                           ;; Automatically respond with the given value
+                           ((:on-success req) response))
+                         (ok (if as
+                               (assoc ctx as req)
+                               ctx)))))))
 
 
 ;;
