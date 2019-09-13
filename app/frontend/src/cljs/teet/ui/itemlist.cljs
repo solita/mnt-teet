@@ -30,9 +30,6 @@
     [ItemList
      titles
      [:div {:style {:display :flex}}
-      [progress/circle
-       {:radius 30 :stroke 7}
-       {:success success :fail fails :total (count items)}]
       [:div {:style {:flex 1}}
        [List
         {:dense false}
@@ -51,9 +48,14 @@
                [icons/content-remove])]
             [SectionHeading (:name item)]
             [ListItemSecondaryAction
-             [ListItemIcon
-              [icons/navigation-chevron-right]]]]
-           [Divider]])]]]]))
+             [ListItemIcon {:style {:justify-content :flex-end}}
+              [icons/navigation-chevron-right {:color :secondary}]]]]
+           [Divider]])]]
+      [:div {:style {:text-align :center
+                     :margin "0 0.5rem"}}
+       [progress/circle
+        {:radius 70 :stroke 9}
+        {:success success :fail fails :total (count items)}]]]]))
 
 (defn LinkList
   [titles items on-click-fn]
