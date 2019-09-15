@@ -12,7 +12,9 @@
 (defmethod routes/on-navigate-event :project [{{project :project} :params}]
   (log/info "Navigated to project, fetch workflows for THK project: " project)
   (->FetchProjectWorkflows project)
-  (->FetchProjectDocuments project))
+  ;; TODO How to handle multiple queries? Or combine into a single
+  ;; query with all necessary data?
+  #_(->FetchProjectDocuments project))
 
 (extend-protocol t/Event
   FetchProjectWorkflows
