@@ -69,5 +69,25 @@
        ^{:key (:name item)}
        [:li
         [Link {:href (:link item)
-               :onClick (on-click-fn item)}
+               :onClick #(on-click-fn item)}
          (:name item)]])]]])
+
+(defn DocumentList [{:keys [documents download-fn]}]
+  [ItemList
+   {:title "Documents"}
+   (if (empty? documents)
+     [:div "No documents"]
+     (doall
+      (for [{id :db/id
+             :document/keys [name size type]
+             progress :progress
+             :as doc} documents]
+        ^{:key id}
+        [:div
+         ;; FIXME: make a nice document UI
+         [:br]
+         [:div [:a {:href (download-fn doc)} name]
+          " (type: " type ", size: " size ") "
+          (when progress
+            [CircularProgress])
+          ]])))])
