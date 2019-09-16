@@ -58,7 +58,8 @@
                [:div
                 ;; FIXME: make a nice document UI
                 [:br]
-                [:div [:a {:href (task-controller/download-document-url doc)} name]
+                [:div [:a {:href (task-controller/download-document-url doc)
+                           :target "_blank"} name]
                  " (type: " type ", size: " size ") "
                  (when progress
                    [CircularProgress])
