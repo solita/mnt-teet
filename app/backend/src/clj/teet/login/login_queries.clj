@@ -25,12 +25,3 @@
      "Content-Type" "application/json"
      :body "{\"ok\": true}"}))
 
-#_(defmethod db-api/query :user-session [{db :db} {user :user}]
-  (log/info "backend :user-session query received user:" user)
-  (when (user-ok? user)
-    ^{:format :raw}
-    {:status 200 
-    :headers {"Set-Cookie" (str "user-uuid=" (:user/id user) "; SameSite=Strict"
-                                )
-               "Content-Type" "text/plain"}
-     :body "Ok, Session cookie set."}))
