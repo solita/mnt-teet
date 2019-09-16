@@ -19,9 +19,11 @@
             [clojure.string :as str]))
 
 (defn- jwt-token [req]
-  (when-let [auth (get-in req [:headers "authorization"])]
-    (when (str/starts-with? auth "Bearer ")
-      (subs auth 7))))
+  (or
+   (when-let [auth (get-in req [:headers "authorization"])]
+     (when (str/starts-with? auth "Bearer ")
+       (subs auth 7)))
+   (get-in req [:params "t"])))
 
 (defn- request [handler-fn]
   (fn [req]

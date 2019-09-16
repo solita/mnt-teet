@@ -174,7 +174,9 @@
   [query args]
   (check-query-and-args query args)
   ;; FIXME: link needs token as well
-  (str "/query/?q=" (js/encodeURIComponent (transit/clj->transit {:query query :args args}))))
+  (str "/query/"
+       "?q=" (js/encodeURIComponent (transit/clj->transit {:query query :args args}))
+       "&t=" (js/encodeURIComponent @api-token)))
 
 (defmethod tuck-effect/process-effect :command! [e! {:keys [command payload result-path result-event] :as q}]
   (assert (keyword? command)
