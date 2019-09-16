@@ -10,3 +10,4 @@
 /app/backend/resources/public/language
 /app/backend/resources/public/*.js
 .datomic-ions
+.cache
