@@ -11,6 +11,7 @@
             [teet.workflow.workflow-commands]
             [teet.document.document-commands]
             [teet.document.document-queries]
+            [teet.login.login-queries]
 
             [taoensso.timbre :as log]))
 

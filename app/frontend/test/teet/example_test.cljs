@@ -1,7 +1,7 @@
 (ns teet.example-test
   (:require [teet.drtest :as drt :include-macros true]))
 
-(drt/define-drtest my-component-test
+(drt/define-drtest example-component-test
   {;; :screenshots? true ... TODO update drtest so that these can be run
    ;; without clj-chrome-devtools
    :initial-context {:app (drt/atom {})}}

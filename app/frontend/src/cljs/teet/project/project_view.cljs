@@ -1,5 +1,6 @@
 (ns teet.project.project-view
-  (:require [reagent.core :as r]
+  (:require [clojure.set :as set]
+            [reagent.core :as r]
             [teet.map.map-features :as map-features]
             [teet.map.map-layers :as map-layers]
             [teet.map.map-view :as map-view]
@@ -7,6 +8,7 @@
             [postgrest-ui.components.item-view :as postgrest-item-view]
             [teet.ui.material-ui :refer [Grid]]
             [teet.project.project-controller :as project-controller]
+            [teet.task.task-controller :as task-controller]
             [teet.ui.select :as select]
             [teet.ui.itemlist :as itemlist]
             [teet.ui.icons :as icons]))
@@ -21,6 +23,10 @@
    [:div "Km range: " km_range]
    [:div "Carriageway: " carriageway]
    [:div "Procurement number:" procurement_no]])
+
+(defn- project-documents [app project]
+  (->> (get-in app [:project project :documents])
+       (filter :document/name))) ;; TODO shouldn't be necessary
 
 (defn project-page [e! {{:keys [project]} :params :as app}]
   [:<>
@@ -52,7 +58,10 @@
                 "road_nr" "km_range" "carriageway"
                 "procurement_no"]
        :view project-data}
-      project]]]
+      project]
+     [itemlist/DocumentList
+      {:documents (project-documents app project)
+       :download-fn task-controller/download-document-url}]]]
 
    [select/select-with-action {:placeholder "New workflow"
                                :item-label :name

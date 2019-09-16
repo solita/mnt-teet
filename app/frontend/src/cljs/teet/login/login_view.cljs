@@ -26,7 +26,9 @@
          [CardHeader {:title (str given-name " " family-name)
                       :action (r/as-element
                                [Button {:color "primary"
-                                        :on-click #(e! (login-controller/->Login user))}
+                                        :on-click #(do
+                                                     (e! (login-controller/->Login user))
+                                                     (log/info "Login: " user))}
                                 "Login"])}]
          [CardContent
           [Typography

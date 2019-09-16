@@ -143,8 +143,7 @@
     [Divider]
     [:section
      [Heading2 "Itemlist component"]
-     [:div {:style {:width "50%"
-                    :margin "2rem 0"}}
+     [:div {:style {:margin "2rem 0"}}
       [itemlist/ProgressList
        {:title "itemlist title" :subtitle "Foo bar"}
        [{:status :success
@@ -175,6 +174,8 @@
         {:link "/foo"
          :name "asdasd task"}
         {:link "/:success"
-         :name "fifth task"}]]]
+         :name "fifth task"}]
+       (fn on-click-handler [x]
+         (log/info "on click handler got:" (pr-str x)))]]
 
      [Divider]]])
