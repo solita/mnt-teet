@@ -7,11 +7,12 @@
             [clojure.spec.alpha :as s]
 
             ;; Require all namespaces that provide queries/commands
-            [teet.workflow.workflow-queries]
-            [teet.workflow.workflow-commands]
-            [teet.document.document-commands]
-            [teet.document.document-queries]
-            [teet.login.login-queries]
+            teet.workflow.workflow-queries
+            teet.workflow.workflow-commands
+            teet.document.document-commands
+            teet.document.document-queries
+            teet.login.login-queries
+            teet.login.login-commands
 
             [taoensso.timbre :as log]))
 
