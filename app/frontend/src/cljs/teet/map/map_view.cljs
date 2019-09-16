@@ -2,7 +2,8 @@
   "Common map view"
   (:require [reagent.core :as r]
             [teet.map.openlayers :as openlayers]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [teet.routes :as routes]))
 
 (def default-extent [20 50 30 60])
 
@@ -70,7 +71,8 @@
                      ;;(handle-tool-click e! current-tool event)
                      )
 
-         :on-select (fn [items event]
+         :on-select (fn [[item & rest] event]
+                      (routes/navigate! :project {:project (:map/id item)})
                       ;; Either on-click or on-select will trigger. We must clear selected feature in both event handlers.
                       ;; Allow clearing selected feature only if not in approach mode
                       ;;(e! (map-controller/->ClearSelectedFeature))
