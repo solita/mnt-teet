@@ -8,7 +8,8 @@
             [reagent.core :as r]
             [teet.ui.icons :as icons]
             [teet.ui.select :as select]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [teet.user.user-info :as user-info]))
 
 (defn change-task-status [e! task done-fn]
   [select/select-with-action {:items [:task.status/not-started
@@ -31,13 +32,16 @@
      [itemlist/ItemList
       {:title "Comments"}
       (doall
-       (for [comment comments]
-         ^{:key (:comment/id comment)}
-         [:div (pr-str comment)
+       (for [{id :db/id :comment/keys [comment timestamp author]} (sort-by :comment/timestamp comments)]
+         ^{:key id}
+         [:div
+          (.toLocaleDateString timestamp) " " (.toLocaleTimeString timestamp) " "
+          [:em comment]
+          [:span " -- " [user-info/user-name e! (:user/id author)]]
           [:br]]))]
 
      ;;
-     [TextField {:placeholder "New comment..." :multiline true :rowsMax 5
+     [TextField {:placeholder "New comment..." ;;:multiline true :rowsMax 5
                  :value @new-comment-text
                  :on-change #(reset! new-comment-text (-> % .-target .-value))
                  :on-key-press #(when (= "Enter" (.-key %))
