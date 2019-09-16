@@ -1,12 +1,13 @@
 (ns teet.login.login-view
   "Login page"
   (:require [teet.login.login-controller :as login-controller]
-            [teet.ui.material-ui :refer [Container Card CardHeader CardContent Button
-                                         Typography]]
+            [teet.ui.material-ui :refer [Container Card CardHeader CardContent
+                                         Button Typography]]
             [teet.ui.layout :as layout]
             [teet.ui.itemlist]
-            [teet.localization :refer [tr]]
+            [teet.localization :as localization :refer [tr]]
             [teet.ui.icons :as icons]
+            [teet.ui.select :as select]
             [taoensso.timbre :as log]
             [reagent.core :as r]
             [teet.ui.typography :as typography]))
@@ -17,6 +18,18 @@
   [Container {:maxWidth "sm"}
    [typography/Heading1 "Maanteeamet TEET"]
    [layout/column {:content-style {:padding-bottom "2em"}}
+    [typography/Heading2 "Select language"]
+    [select/select-with-action {:placeholder (localization/language-names (name @localization/selected-language))
+                                :item-label :name
+                                :items [{:name (get localization/language-names "et")
+                                         :code "et"}
+                                        {:name (get localization/language-names "en")
+                                         :code "en"}]
+                                :on-select (fn [val]
+                                             (localization/load-language! (keyword (:code val))
+                                                                          (fn [language _]
+                                                                            (reset! localization/selected-language
+                                                                                    language))))}]
     [typography/Heading2 "Login with demo user"]
     (doall
      (for [{:user/keys [given-name family-name organization email] :as user} login-controller/mock-users]
