@@ -122,8 +122,10 @@
           ;; POST request, send parameters as JSON body
          (js/fetch (str endpoint "/rpc/" rpc)
                    #js {:method "POST"
-                        :headers #js {"Content-Type" "application/json"
-                                      "Accept" "application/json"}
+                        :headers (clj->js (merge
+                                           (api-token-header)
+                                           {"Content-Type" "application/json"
+                                            "Accept" "application/json"}))
                         :body (-> args clj->js js/JSON.stringify)}))
        (.then #(.json %))
        (.then (fn [json]
@@ -149,10 +151,13 @@
     (let [payload  (transit/clj->transit {:query query :args args})]
       (-> (case method
             "GET" (js/fetch (str "/query/?q=" (js/encodeURIComponent payload))
-                            #js {:method "GET"})
+                            #js {:method "GET"
+                                 :headers (clj->js (api-token-header))})
             "POST" (js/fetch "/query/"
                              #js {:method "POST"
-                                  :headers #js {"Content-Type" "application/json+transit"}
+                                  :headers (clj->js
+                                            (merge (api-token-header)
+                                                   {"Content-Type" "application/json+transit"}))
                                   :body payload}))
           (.then #(.text %))
           (.then (fn [text]
@@ -181,7 +186,9 @@
     (send-fake-command! q)
     (-> (js/fetch (str "/command/")
                   #js {:method "POST"
-                       :headers #js {"Content-Type" "application/json+transit"}
+                       :headers (clj->js
+                                 (merge (api-token-header)
+                                        {"Content-Type" "application/json+transit"}))
                        :body (transit/clj->transit {:command command
                                                     :payload payload})})
         (.then #(.text %))
