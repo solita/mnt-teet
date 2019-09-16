@@ -74,7 +74,7 @@
 
 (defonce debounce-timeouts (atom {}))
 
-(defmethod tuck-effect/process-effect :debounce [e! {:keys [event effect timeout id]}]
+(defmethod tuck-effect/process-effect :debounce [e! {:keys [event effect timeout id] :as foo}]
   (let [timeout-id (or id event)
         existing-timeout (get @debounce-timeouts timeout-id)]
     (when existing-timeout

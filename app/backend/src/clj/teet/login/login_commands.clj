@@ -22,3 +22,18 @@
 (defmethod db-api/command-authorization :login [_ _]
   ;; Always allow login to be used
   nil)
+
+(defmethod db-api/command! :refresh-token [{{:user/keys [id given-name family-name email person-id]} :user} _]
+  (login-api-token/create-token (environment/config-value :auth :jwt-secret) "teet_user"
+                                {:given-name given-name
+                                 :family-name family-name
+                                 :person-id person-id
+                                 :email email
+                                 :id id}))
+
+(defmethod db-api/command-authorization :refresh-token [{user :user} _]
+  (when-not (and user
+                 (every? #(contains? user %)
+                         [:user/id :user/given-name :user/family-name :user/person-id]))
+    (throw (ex-info "Can't refresh token, user information missing"
+                   {:user user}))))

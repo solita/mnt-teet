@@ -5,7 +5,12 @@
             [teet.login.login-paths :as login-paths]))
 
 (defrecord Login [demo-user])
-(defrecord SetToken [token])
+(defrecord SetToken [after-login? token])
+(defrecord RefreshToken [])
+
+(def ^{:const true
+       :doc "How often to refresh JWT token (15 minutes)"}
+  refresh-token-timeout-ms (* 1000 60 15))
 
 (extend-protocol t/Event
   Login
@@ -17,16 +22,31 @@
           {::tuck-effect/type :command!
            :command :login
            :payload user
-           :result-event ->SetToken}))
+           :result-event (partial ->SetToken true)}))
 
   SetToken
-  (process-event [{token :token} app]
-    (log/info "TOKEN: " token)
-    (t/fx (assoc-in app login-paths/api-token token)
-          {::tuck-effect/type :set-api-token
-           :token token}
-          {::tuck-effect/type :navigate
-           :page :projects})))
+  (process-event [{:keys [token after-login?]} app]
+    (log/info "TOKEN: " token ", after-login? " after-login?)
+    (let [effects [{::tuck-effect/type :set-api-token
+                    :token token}
+                   {::tuck-effect/type :debounce
+                    :id :refresh-token
+                    :timeout refresh-token-timeout-ms
+                    :event ->RefreshToken}]
+          effects (if after-login?
+                    (conj effects {::tuck-effect/type :navigate
+                                   :page :projects})
+                    effects)]
+      (apply t/fx (assoc-in app login-paths/api-token token)
+             effects)))
+
+  RefreshToken
+  (process-event [_ app]
+    (t/fx app
+          {::tuck-effect/type :command!
+           :command :refresh-token
+           :payload {}
+           :result-event (partial ->SetToken false)})))
 
 (def mock-users [{:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"
                   :user/person-id "1234567890"
