@@ -2,10 +2,12 @@
   (:require [teet.db-api.core :as db-api]
             [teet.environment :as environment]
             [taoensso.timbre :as log]
-            [teet.login.login-api-token :as login-api-token]))
+            [teet.login.login-api-token :as login-api-token]
+            [datomic.client.api :as d]))
 
 
-(defmethod db-api/command! :login [_ {:user/keys [id given-name family-name email person-id] :as user}]
+(defmethod db-api/command! :login [{conn :conn} {:user/keys [id given-name family-name email person-id] :as user}]
+  (d/transact conn {:tx-data [{:user/id id}]})
   (when (not= :dev (environment/config-value :env))
     (log/warn "Demo login can only be used in :dev environment")
     (throw (ex-info "Demo login not allowed"
