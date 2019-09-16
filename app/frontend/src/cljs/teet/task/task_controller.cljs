@@ -10,6 +10,7 @@
 (defrecord UploadDocuments [files])
 (defrecord UpdateTask [task updated-task]) ; update task info to database
 (defrecord UpdateTaskResponse [response])
+(defrecord AddCommentToTask [task-id comment])
 
 (defmethod routes/on-navigate-event :task [{{:keys [task]} :params}]
   (->FetchTask task))
@@ -50,7 +51,17 @@
   UpdateTaskResponse
   (process-event [{response :response} app]
     (log/info "GOT RESPONSE: " response)
-    app))
+    app)
+
+  AddCommentToTask
+  (process-event [{:keys [task-id comment]} app]
+    (log/info "comment: " comment " to task " task-id)
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :workflow/comment-task
+           :payload {:task-id task-id
+                     :comment comment}
+           :result-event #(->FetchTask (str task-id))})))
 
 (defn download-document-url [doc]
   (common-controller/query-url :document/download (select-keys doc [:db/id])))

@@ -16,5 +16,17 @@
 (defmethod db-api/command! :workflow/add-task-to-phase [{conn :conn} {phase-id :phase-id
                                                                       task :task}]
   (select-keys (d/transact conn {:tx-data [{:db/id phase-id
-                                            :phase/tasks [task]}]}) [:tempids])
-  )
+                                            :phase/tasks [task]}]}) [:tempids]))
+
+(defmethod db-api/command! :workflow/comment-task [{conn :conn
+                                                    user :user}
+                                                   {task-id :task-id
+                                                    comment :comment}]
+  (log/info "USER: " user)
+  (select-keys
+   (d/transact conn {:tx-data [{:db/id task-id
+                                :task/comments [{:db/id "comment"
+                                                 :comment/comment comment
+                                                 :comment/timestamp (java.util.Date.)
+                                                 :comment/author [:user/id (:user/id user)]}]}]})
+   [:tempids]))

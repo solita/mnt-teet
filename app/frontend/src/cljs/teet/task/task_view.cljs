@@ -4,10 +4,11 @@
             [teet.ui.itemlist :as itemlist]
             [teet.ui.file-upload :as file-upload]
             [teet.localization :refer [tr-fixme]]
-            [teet.ui.material-ui :refer [CircularProgress IconButton]]
+            [teet.ui.material-ui :refer [CircularProgress IconButton TextField]]
             [reagent.core :as r]
             [teet.ui.icons :as icons]
-            [teet.ui.select :as select]))
+            [teet.ui.select :as select]
+            [taoensso.timbre :as log]))
 
 (defn change-task-status [e! task done-fn]
   [select/select-with-action {:items [:task.status/not-started
@@ -24,9 +25,31 @@
                                                  task
                                                  {:task/status (task-controller/new-status %)})))}])
 
+(defn comments-view [e! task-id comments]
+  (r/with-let [new-comment-text (r/atom "")]
+    [:<>
+     [itemlist/ItemList
+      {:title "Comments"}
+      (doall
+       (for [comment comments]
+         ^{:key (:comment/id comment)}
+         [:div (pr-str comment)
+          [:br]]))]
+
+     ;;
+     [TextField {:placeholder "New comment..." :multiline true :rowsMax 5
+                 :value @new-comment-text
+                 :on-change #(reset! new-comment-text (-> % .-target .-value))
+                 :on-key-press #(when (= "Enter" (.-key %))
+                                  (e! (task-controller/->AddCommentToTask task-id @new-comment-text))
+                                  (reset! new-comment-text ""))}]
+
+
+     ]))
+
 (defn task-page [e! _]
   (let [modify-field (r/atom nil)]
-    (fn [e! {:task/keys [name status documents] :as task}]
+    (fn [e! {id :db/id :task/keys [name status documents comments] :as task}]
       (let [current-modify-field @modify-field]
         [:<>
          [itemlist/ItemList
@@ -45,6 +68,7 @@
 
           [:div {:style {:font-size "75%"}}  "TASKI " (pr-str task)]]
 
+         [comments-view e! id comments]
          [itemlist/ItemList
           {:title "Documents"}
           (if (empty? documents)

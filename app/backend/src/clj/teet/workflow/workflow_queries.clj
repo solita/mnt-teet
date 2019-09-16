@@ -27,7 +27,9 @@
                             {:phase/_tasks [:db/id :phase/name
                                             {:workflow/_phases [:db/id :workflow/name :thk/id]}]}
                             {:task/status [*]}
-                            {:task/documents [*]}])
+                            {:task/documents [*]}
+                            {:task/comments [:comment/comment :comment/timestamp
+                                             {:comment/author [:user/id]}]}])
             :in $ ?e]
    :args [db task-id]
    :result-fn ffirst})
