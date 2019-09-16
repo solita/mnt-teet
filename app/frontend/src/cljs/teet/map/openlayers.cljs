@@ -26,7 +26,7 @@
             [teet.map.openlayers.kuvataso :as kuvataso]
             [teet.map.openlayers.mvt :as mvt]
             [teet.map.openlayers.projektiot :refer [projektio estonian-extent]]
-            [teet.map.openlayers.taso :as taso]
+            [teet.map.openlayers.layer :as taso]
             [teet.map.openlayers.background :as background]
             [teet.map.openlayers.tile :as tile]
 
@@ -201,7 +201,7 @@
                              (fn [feature layer]
                                (vswap! geom conj (feature-geometry feature layer))
                                return-first?)
-                             ;; Funktiolle voi antaa options, jossa hitTolerance. Eli radius, miltä featureita haetaan.
+                             ;; Function can be given options, which contians hitTolerance. Meaning the radius, from which features are fetched.
                              )
 
      (cond
@@ -220,8 +220,8 @@
   "Event description for external handlers"
   [this e]
   (let [c (.-coordinate e)
-        tyyppi (.-type e)]
-    {:type     (case tyyppi
+        type (.-type e)]
+    {:type     (case type
                  "pointermove" :hover
                  "click" :click
                  "singleclick" :click
@@ -524,16 +524,16 @@
 (defn- ol3-did-mount [this current-zoom]
   "Initialize OpenLayers map for a newly mounted map component."
   (let [{layers :layers :as mapspec} (:mapspec (reagent/state this))
-        interaktiot (let [oletukset (ol-interaction/defaults
+        interactions (let [defaults (ol-interaction/defaults
                                      #js {:mouseWheelZoom true
                                           :dragPan        false})]
                       ;; No `kinetic` property!
-                      (.push oletukset (ol-interaction/DragPan. #js {}))
-                      oletukset)
+                      (.push defaults (ol-interaction/DragPan. #js {}))
+                      defaults)
 
         ;; Re-add later added interactions (if there are any) on re-mount
         _ (doseq [interaction (vals @map-interactions)]
-            (.push interaktiot interaction))
+            (.push interactions interaction))
 
         ;; NOTE: Currently disabled, because implement our own map control tools
         ;; kontrollit (ol-control/defaults #js {})
@@ -541,7 +541,7 @@
         map-options (clj->js {:layers       (mapv background/create-background-layer layers)
                              :target       (:id mapspec)
                              :controls [] ;; :controls     kontrollit
-                             :interactions interaktiot})
+                             :interactions interactions})
         ol3 (ol/Map. map-options)
 
         ;; NOTE: Currently disabled, because implement our own map control tools
@@ -661,20 +661,20 @@
             :style (merge {:width  (:width mapspec)
                            :height (:height mapspec)}
                           (:style mapspec))}]
-     (when-let [piirra-tooltip? (:tooltip-fn mapspec)]
+     (when-let [draw-tooltip? (:tooltip-fn mapspec)]
        (when-let [hover (-> c reagent/state :hover)]
          (go (<! (timeout tooltip-time-ms))
              (when (= hover (:hover (reagent/state c)))
                (reagent/set-state c {:hover nil})))
-         (when-let [tooltipin-sisalto
-                    (or (piirra-tooltip? hover)
+         (when-let [tooltip-content
+                    (or (draw-tooltip? hover)
                         (some-> (:tooltip hover) (constantly)))]
            [:div {:style (merge #_style-base/shadow {:position "absolute"
                           :background-color "white"
                           :border-radius "3px"
                           :padding "5px"
                           :left (+ 20 (:x hover)) :top (+ 10 (:y hover))})}
-            (tooltipin-sisalto)])))]))
+            (tooltip-content)])))]))
 
 (defn- update-ol3-geometries [component geometries]
   "Update the ol3 layers based on the data, mutates the ol3 map object."
@@ -683,7 +683,7 @@
     ;; Remove any layers that are no longer present
     (doseq [[key [layer _]] geometry-layers
             :when (nil? (get geometries key))]
-      (log/debug "POISTETAAN KARTTATASO " (name key) " => " layer)
+      (log/debug "REMOVING MAP LAYER " (name key) " => " layer)
       (.removeLayer ol3 layer))
 
     ;; For each current layer, update layer geometries

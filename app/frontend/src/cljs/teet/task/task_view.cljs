@@ -58,15 +58,16 @@
                [:div
                 ;; FIXME: make a nice document UI
                 [:br]
-                [:div [:a {:href (task-controller/download-document-url doc)} name]
+                [:div [:a {:href (task-controller/download-document-url doc)
+                           :target "_blank"} name]
                  " (type: " type ", size: " size ") "
                  (when progress
                    [CircularProgress])
-                 ]])))
-          [file-upload/FileUploadButton {:id "upload-document-to-task"
-                                         :on-drop #(e! (task-controller/->UploadDocuments %))
-                                         :drop-message "Drop to upload document to task"}
-           (tr-fixme "Click to upload document")]]]))))
+                 ]])))]
+         [file-upload/FileUploadButton {:id "upload-document-to-task"
+                                        :on-drop #(e! (task-controller/->UploadDocuments %))
+                                        :drop-message "Drop to upload document to task"}
+          (tr-fixme "Click to upload document")]]))))
 
 (defn task-page-and-title [e! {params :params :as app}]
   (let [id (params :task)

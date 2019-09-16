@@ -11,7 +11,7 @@
   (let [dev? (= mode :dev)]
     [:html
      [:head
-
+      [:meta {:charset "UTF-8"}]
       ;; Specify base-url if provided (local env needs this)
       (when base-url
         [:base {:href base-url}])

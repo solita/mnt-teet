@@ -3,7 +3,7 @@
   (:require [ol.source.Vector]
             [ol.format.GeoJSON]
             [ol.layer.Vector]
-            [teet.map.openlayers.taso :refer [Taso]]
+            [teet.map.openlayers.layer :refer [Layer]]
             [clojure.string :as str]
             [taoensso.timbre :as log]))
 
@@ -29,8 +29,8 @@
 
 (defrecord GeoJSON [source-name projection extent z-index opacity_ min-resolution max-resolution
                     url style-fn on-change]
-  Taso
-  (aseta-z-index [this z-index]
+  Layer
+  (set-z-index [this z-index]
     (assoc this :z-index z-index))
   (extent [this]
     nil)

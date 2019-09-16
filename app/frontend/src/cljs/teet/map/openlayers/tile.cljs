@@ -5,7 +5,7 @@
             [ol.source.WMTS :as wmts-source]
             [ol.tilegrid.WMTS]
             [ol.format.WMTSCapabilities]
-            [teet.map.openlayers.taso :refer [Taso]]
+            [teet.map.openlayers.layer :refer [Layer]]
             ;[teet.util.promise :refer [promise? p->]]
             ))
 
@@ -34,8 +34,8 @@
        #(ol.source.WMTS. %)))
 
 (defrecord Tile [source-name projection extent z-index opacity_ type url params]
-  Taso
-  (aseta-z-index [this z-index]
+  Layer
+  (set-z-index [this z-index]
     (assoc this :z-index z-index))
   (extent [this]
     nil)

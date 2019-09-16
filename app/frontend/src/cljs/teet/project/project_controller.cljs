@@ -5,12 +5,14 @@
             [tuck.core :as t]))
 
 (defrecord FetchProjectWorkflows [project-id])
+(defrecord FetchProjectDocuments [project-id])
 (defrecord StartNewWorkflow [project-id workflow])
 (defrecord OpenWorkflow [project-id workflow-id]) ; navigate to workflow page
 
 (defmethod routes/on-navigate-event :project [{{project :project} :params}]
   (log/info "Navigated to project, fetch workflows for THK project: " project)
-  (->FetchProjectWorkflows project))
+  [(->FetchProjectWorkflows project)
+   (->FetchProjectDocuments project)])
 
 (extend-protocol t/Event
   FetchProjectWorkflows
@@ -21,6 +23,15 @@
            :query :workflow/list-project-workflows
            :args {:thk-project-id project-id}
            :result-path [:project project-id :workflows]}))
+
+  FetchProjectDocuments
+  (process-event [{project-id :project-id} app]
+    (log/info "Fetching documents for THK project: " project-id)
+    (t/fx app
+          {:tuck.effect/type :query
+           :query :document/list-project-documents
+           :args {:thk-project-id project-id}
+           :result-path [:project project-id :documents]}))
 
   StartNewWorkflow
   (process-event [{:keys [project-id workflow]} app]

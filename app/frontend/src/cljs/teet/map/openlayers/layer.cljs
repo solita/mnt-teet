@@ -1,9 +1,9 @@
-(ns teet.map.openlayers.taso
+(ns teet.map.openlayers.layer
   "Määrittelee karttatason kaltaisen protokollan"
   (:require [teet.map.openlayers.featuret :as featuret]))
 
-(defprotocol Taso
-  (aseta-z-index [this z-index]
+(defprotocol Layer
+  (set-z-index [this z-index]
                  "Palauttaa uuden version tasosta, jossa z-index on asetettu")
   (extent [this] "Palauttaa tason geometrioiden extentin [minx miny maxx maxy]")
   (opacity [this]
@@ -25,8 +25,8 @@ sen lisätä se itse ol3 karttaan (addLayer)")
 
 ;; Wrapper raa'alle ol.layer tasolle joka toteuttaa Taso protokollan
 (defrecord OpenLayersTaso [layer]
-  Taso
-  (aseta-z-index [this z-index]
+  Layer
+  (set-z-index [this z-index]
     (.setZIndex layer z-index)
     this)
   (extent [this] nil)

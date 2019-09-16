@@ -9,8 +9,10 @@
             [tuck.effect :as tuck-effect]
             [teet.transit :as transit]))
 
-;; Helpers for faking backend requests in unit tests
 
+(defonce api-token (atom nil))
+
+;; Helpers for faking backend requests in unit tests
 (defonce test-mode? (atom false))
 (defonce test-requests (atom []))
 
@@ -94,6 +96,9 @@
   (process-event [{:keys [path data]} app]
     (assoc-in app path data)))
 
+(defn api-token-header []
+  (when @api-token
+    {"Authorization" (str "Bearer " @api-token)}))
 
 (defmethod tuck-effect/process-effect :rpc [e! {:keys [rpc args result-path result-event endpoint method] :as q}]
   (assert rpc "Must specify :rpc function to call")
@@ -117,8 +122,10 @@
           ;; POST request, send parameters as JSON body
          (js/fetch (str endpoint "/rpc/" rpc)
                    #js {:method "POST"
-                        :headers #js {"Content-Type" "application/json"
-                                      "Accept" "application/json"}
+                        :headers (clj->js (merge
+                                           (api-token-header)
+                                           {"Content-Type" "application/json"
+                                            "Accept" "application/json"}))
                         :body (-> args clj->js js/JSON.stringify)}))
        (.then #(.json %))
        (.then (fn [json]
@@ -144,10 +151,13 @@
     (let [payload  (transit/clj->transit {:query query :args args})]
       (-> (case method
             "GET" (js/fetch (str "/query/?q=" (js/encodeURIComponent payload))
-                            #js {:method "GET"})
+                            #js {:method "GET"
+                                 :headers (clj->js (api-token-header))})
             "POST" (js/fetch "/query/"
                              #js {:method "POST"
-                                  :headers #js {"Content-Type" "application/json+transit"}
+                                  :headers (clj->js
+                                            (merge (api-token-header)
+                                                   {"Content-Type" "application/json+transit"}))
                                   :body payload}))
           (.then #(.text %))
           (.then (fn [text]
@@ -163,7 +173,10 @@
   For normal data returning queries, you should use the `:query` effect type."
   [query args]
   (check-query-and-args query args)
-  (str "/query/?q=" (js/encodeURIComponent (transit/clj->transit {:query query :args args}))))
+  ;; FIXME: link needs token as well
+  (str "/query/"
+       "?q=" (js/encodeURIComponent (transit/clj->transit {:query query :args args}))
+       "&t=" (js/encodeURIComponent @api-token)))
 
 (defmethod tuck-effect/process-effect :command! [e! {:keys [command payload result-path result-event] :as q}]
   (assert (keyword? command)
@@ -175,7 +188,9 @@
     (send-fake-command! q)
     (-> (js/fetch (str "/command/")
                   #js {:method "POST"
-                       :headers #js {"Content-Type" "application/json+transit"}
+                       :headers (clj->js
+                                 (merge (api-token-header)
+                                        {"Content-Type" "application/json+transit"}))
                        :body (transit/clj->transit {:command command
                                                     :payload payload})})
         (.then #(.text %))
@@ -187,3 +202,7 @@
 
 (defmethod tuck-effect/process-effect :navigate [e! {:keys [page params query]}]
   (routes/navigate! page params query))
+
+(defmethod tuck-effect/process-effect :set-api-token [_ {token :token}]
+  (assert token "Must specify :token to set as new API token")
+  (reset! api-token token))

@@ -1,6 +1,31 @@
 (ns teet.db-api.core
   "TEET database API multimethods")
 
+(defmulti query-authorization
+  "Check authorization for query. Should throw exception on authorization failure.
+  Same arguments as query multimethod.
+
+  Default implementation checks that :user is valid in ctx."
+  (fn [ctx args] (:query/name ctx)))
+
+(defmulti command-authorization
+  "Check authorization for command. Should throw exception on authorization failure.
+  Same arguments as command! multimethod.
+
+  Default implementation checks that :user is valid in ctx."
+  (fn [ctx args] (:command/name ctx)))
+
+(defmethod query-authorization :default [{user :user query :query/name} _]
+  (when (nil? user)
+    (throw (ex-info "Unauthenticated access not allowed"
+                    {:query query}))))
+
+(defmethod command-authorization :default [{user :user command :command/name} _]
+  (when (nil? user)
+    (throw (ex-info "Unauthenticated access not allowed"
+                    {:command command}))))
+
+
 (defmulti query
   "Execute a given named query.
 

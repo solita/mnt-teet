@@ -30,9 +30,6 @@
     [ItemList
      titles
      [:div {:style {:display :flex}}
-      [progress/circle
-       {:radius 30 :stroke 7}
-       {:success success :fail fails :total (count items)}]
       [:div {:style {:flex 1}}
        [List
         {:dense false}
@@ -51,9 +48,14 @@
                [icons/content-remove])]
             [SectionHeading (:name item)]
             [ListItemSecondaryAction
-             [ListItemIcon
-              [icons/navigation-chevron-right]]]]
-           [Divider]])]]]]))
+             [ListItemIcon {:style {:justify-content :flex-end}}
+              [icons/navigation-chevron-right {:color :secondary}]]]]
+           [Divider]])]]
+      [:div {:style {:text-align :center
+                     :margin "0 0.5rem"}}
+       [progress/circle
+        {:radius 70 :stroke 9}
+        {:success success :fail fails :total (count items)}]]]]))
 
 (defn LinkList
   [titles items on-click-fn]
@@ -67,5 +69,25 @@
        ^{:key (:name item)}
        [:li
         [Link {:href (:link item)
-               :onClick (on-click-fn item)}
+               :onClick #(on-click-fn item)}
          (:name item)]])]]])
+
+(defn DocumentList [{:keys [documents download-fn]}]
+  [ItemList
+   {:title "Documents"}
+   (if (empty? documents)
+     [:div "No documents"]
+     (doall
+      (for [{id :db/id
+             :document/keys [name size type]
+             progress :progress
+             :as doc} documents]
+        ^{:key id}
+        [:div
+         ;; FIXME: make a nice document UI
+         [:br]
+         [:div [:a {:href (download-fn doc)} name]
+          " (type: " type ", size: " size ") "
+          (when progress
+            [CircularProgress])
+          ]])))])
