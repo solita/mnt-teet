@@ -9,8 +9,10 @@
             [tuck.effect :as tuck-effect]
             [teet.transit :as transit]))
 
-;; Helpers for faking backend requests in unit tests
 
+(defonce api-token (atom nil))
+
+;; Helpers for faking backend requests in unit tests
 (defonce test-mode? (atom false))
 (defonce test-requests (atom []))
 
