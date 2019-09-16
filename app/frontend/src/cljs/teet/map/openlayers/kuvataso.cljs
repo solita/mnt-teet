@@ -6,7 +6,7 @@
             [ol.extent :as ol-extent]
             #_[teet.asiakas.kommunikaatio :refer [karttakuva-url]]
             [teet.map.openlayers.edistymispalkki :as palkki]
-            [teet.map.openlayers.taso :refer [Taso]]
+            [teet.map.openlayers.layer :refer [Layer]]
             [cljs.core.async :as async]
             [clojure.string :as str]
             [taoensso.timbre :as log])
@@ -35,8 +35,8 @@
   )
 
 (defrecord Kuvataso [projection extent z-index selitteet opacity_ min-resolution max-resolution parametrit]
-  Taso
-  (aseta-z-index [this z-index]
+  Layer
+  (set-z-index [this z-index]
     (assoc this :z-index z-index))
   (extent [this]
     nil)

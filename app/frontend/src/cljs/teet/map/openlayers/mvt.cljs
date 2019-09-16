@@ -6,7 +6,7 @@
             [ol.format.MVT]
             [ol.extent :as ol-extent]
             [teet.map.openlayers.edistymispalkki :as palkki]
-            [teet.map.openlayers.taso :refer [Taso]]
+            [teet.map.openlayers.layer :refer [Layer]]
             [cljs.core.async :as async]
             [clojure.string :as str]
             [ol.style.Style]
@@ -57,8 +57,8 @@
   {})
 
 (defrecord MVT [url source-name projection extent z-index selitteet opacity_ min-resolution max-resolution parametrit style-fn]
-  Taso
-  (aseta-z-index [this z-index]
+  Layer
+  (set-z-index [this z-index]
     (assoc this :z-index z-index))
   (extent [this]
     nil)
