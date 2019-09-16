@@ -102,4 +102,30 @@
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/many
            :db/doc "Documents attached to a task"}]]}
- ]
+
+ {:db/ident :comments-for-task
+  :txes [[{:db/ident :comment/comment
+           :db/doc "Text of the comment"
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :comment/author
+           :db/doc "Author of the comment"
+           :db/cardinality :db.cardinality/one
+           :db/valueType :db.type/ref}
+          {:db/ident :comment/timestamp
+           :db/doc "When to comment was made"
+           :db/cardinality :db.cardinality/one
+           :db/valueType :db.type/instant}
+
+          ;; Add task comments
+          {:db/ident :task/comments
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "Comments for the task"}]]}
+
+ {:db/ident :user-info
+  :txes [[{:db/ident :user/id
+           :db/doc "UUID of user information. Links to external source."
+           :db/valueType :db.type/uuid
+           :db/cardinality :db.cardinality/one
+           :db/unique :db.unique/identity}]]}]
