@@ -4,7 +4,7 @@
             [taoensso.timbre :as log]
             [teet.login.login-paths :as login-paths]))
 
-(defrecord Login [user])
+(defrecord Login [demo-user])
 (defrecord SetToken [token])
 
 (extend-protocol t/Event
