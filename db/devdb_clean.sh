@@ -27,10 +27,6 @@ $PSQL "CREATE DATABASE teet TEMPLATE teet_template OWNER teet;" || {
 }
 $PSQL "CREATE ROLE authenticator LOGIN;"
 
-
-echo "Clearing flyway schema info from teeregister"
-$PSQL_TEET "TRUNCATE public.flyway_schema_history;"
-
 echo "Running migrations"
 mvn flyway:baseline -Dflyway.baselineVersion=0
 mvn flyway:migrate
