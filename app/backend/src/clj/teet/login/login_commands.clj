@@ -18,3 +18,7 @@
                                    :person-id person-id
                                    :email email
                                    :id id})))
+
+(defmethod db-api/command-authorization :login [_ _]
+  ;; Always allow login to be used
+  nil)
