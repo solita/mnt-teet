@@ -13,6 +13,9 @@
 
 (def supported-languages #{"en" "et"})
 
+(def language-names {"en" "English"
+                     "et" "Eesti keel"})
+
 (defonce loaded-languages (atom {}))
 
 ;; FIXME: read language from user cookie
