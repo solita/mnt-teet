@@ -3,7 +3,8 @@
             [teet.routes :as routes]
             [teet.ui.material-ui :refer [AppBar Toolbar Button Chip Avatar IconButton
                                          Drawer TextField InputAdornment FormControl InputLabel Input
-                                         List ListItem ListItemText ListItemIcon]]
+                                         List ListItem ListItemText ListItemIcon
+                                         Paper Tabs Tab]]
             [teet.ui.icons :as icons]
             [teet.ui.typography :refer [Heading1]]
             [teet.theme.theme-colors :as theme-colors]
@@ -12,7 +13,8 @@
             [teet.navigation.navigation-style :as navigation-style]
             [teet.search.search-view :as search-view]
             [herb.core :refer [<class]]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [teet.common.common-controller :as common-controller]))
 
 (defn drawer-header
   [e! title open?]
@@ -85,13 +87,31 @@
    [user-info e! user open?]])
 
 (defn header
-  [e! {:keys [title open?]} user]
+  [e! {:keys [title open? tabs]} user]
   [:<>
    [AppBar {:position "sticky"
             :className (<class navigation-style/appbar-position open?)
             :color :default}
+
+
     [Toolbar {:className (<class navigation-style/appbar)}
-     [Heading1 title]
+     (when-not tabs
+       [Heading1 title])
+     (let [selected-tab (first (keep-indexed
+                                (fn [i tab]
+                                  (when (:selected? tab)
+                                    i))
+                                tabs))]
+       [Tabs {:value selected-tab
+              :indicatorColor "primary"
+              :textColor "primary"} ; :onChange doesn't work
+        (doall
+         (map-indexed
+          (fn [i {:keys [title] :as tab}]
+            ^{:key i}
+            [Tab {:label title :on-click #(e! (common-controller/map->Navigate tab))}])
+          tabs))])
+
      [search-view/quick-search e!]]]
 
    [Drawer {;:class-name (<class navigation-style/drawer open?)

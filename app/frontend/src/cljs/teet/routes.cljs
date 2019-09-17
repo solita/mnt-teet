@@ -29,7 +29,8 @@
   (r/router
    [["/" :root]
     ["/login" :login]
-    ["/projects" :projects]
+    ["/projects/map" :projects]
+    ["/projects/list" :projects-list]
     ["/projects/:project" :project]
     ["/projects/:project/workflows/:workflow" :project-workflow]
     ["/projects/:project/workflows/:workflow/task/:task" :task]

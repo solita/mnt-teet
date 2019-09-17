@@ -24,7 +24,16 @@
 (defn page-and-title [e! {:keys [page params] :as app}]
   (case page
     (:default-page :root :projects)
-    {:title "TEET" :page [projects-view/projects-page e! app]}
+    {:title "TEET"
+     :tabs [{:page :projects :selected? true :title "Map"}
+            {:page :projects-list :selected? false :title "Project list"}]
+     :page [projects-view/projects-map-page e! app]}
+
+    :projects-list
+    {:title "TEET"
+     :tabs [{:page :projects :selected? false :title "Map"}
+            {:page :projects-list :selected? true :title "Project list"}]
+     :page [projects-view/projects-list-page e! app]}
 
     :project
     {:title "TEET" :page [project-view/project-page e! app]}
@@ -48,11 +57,12 @@
      (if (= page :login)
        ;; Show only login dialog
        [login-view/login-page e! app]
-       (let [{:keys [page title]} (page-and-title e! app)]
+       (let [{:keys [page title tabs]} (page-and-title e! app)]
          [:<>
           [CssBaseline]
           [navigation-view/header e! {:title title
-                                      :open? nav-open?} user]
+                                      :open? nav-open?
+                                      :tabs tabs} user]
           [navigation-view/main-container
            nav-open?
            page]

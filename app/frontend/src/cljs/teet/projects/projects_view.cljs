@@ -39,23 +39,26 @@
 
 (def ^:const project-pin-resolution-threshold 100)
 
-(defn projects-page [e! app]
+(defn projects-map-page [e! app]
+  [map-view/map-view e! {:height (- js/document.body.clientHeight 120) ; "400px"
+                         :layers {:thk-projects
+                                  (map-layers/mvt-layer (get-in app [:config :api-url])
+                                                        "mvt_thk_projects"
+                                                        {"q" (get-in app [:projects :filter :text])}
+                                                        map-features/project-line-style
+                                                        {:max-resolution project-pin-resolution-threshold})
+                                  :thk-project-pins
+                                  (map-layers/geojson-layer (get-in app [:config :api-url])
+                                                            "geojson_thk_project_pins"
+                                                            {"q" (get-in app [:projects :filter :text])}
+                                                            map-features/project-pin-style
+                                                            {:min-resolution project-pin-resolution-threshold
+                                                             :fit-on-load? true})}}
+   app])
+
+(defn projects-list-page [e! app]
   [:<>
-   [map-view/map-view e! {:height "400px"
-                          :layers {:thk-projects
-                                   (map-layers/mvt-layer (get-in app [:config :api-url])
-                                                         "mvt_thk_projects"
-                                                         {"q" (get-in app [:projects :filter :text])}
-                                                         map-features/project-line-style
-                                                         {:max-resolution project-pin-resolution-threshold})
-                                   :thk-project-pins
-                                   (map-layers/geojson-layer (get-in app [:config :api-url])
-                                                             "geojson_thk_project_pins"
-                                                             {"q" (get-in app [:projects :filter :text])}
-                                                             map-features/project-pin-style
-                                                             {:min-resolution project-pin-resolution-threshold
-                                                              :fit-on-load? true})}}
-    app]
+
    [TextField {:label "Search"
                :value (or (get-in app [:projects :new-filter :text]) "")
                :on-change #(e! (projects-controller/->UpdateProjectsFilter {:text (-> % .-target .-value)}))}]
