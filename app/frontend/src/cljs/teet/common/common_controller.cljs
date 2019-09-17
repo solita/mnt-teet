@@ -71,6 +71,7 @@
 
 (defrecord DebounceEffect [effect])
 (defrecord RPCResponse [path data])
+(defrecord Navigate [page params query])
 
 (defonce debounce-timeouts (atom {}))
 
@@ -94,7 +95,15 @@
 
   RPCResponse
   (process-event [{:keys [path data]} app]
-    (assoc-in app path data)))
+    (assoc-in app path data))
+
+  Navigate
+  (process-event [{:keys [page params query]} app]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page page
+           :params params
+           :query query})))
 
 (defn api-token-header []
   (when @api-token
