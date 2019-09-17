@@ -1,24 +1,10 @@
-{;; Field names by table, :common for fallback shared
+{:buttons {:cancel "Cancel", :save "Save", :add "Add"},
+ :common {:general "General"},
  :fields
- {:common {"name" "Name"
-           "description" "Description"}
-
-  "project" {}
-  "projectgroup" {}}
-
- ;; Common button labels
- :buttons
- {:save "Save"
-  :cancel "Cancel"
-  :add "Add"}
-
- ;; Common texts
- :common
- {:general "General"}
-
- :project-groups
- {:title "Project groups"}
-
- :projects
- {:title "Projects"}
- }
+ {:common {"name" "Name", "description" "Description"},
+  "projectgroup" {"phase" "Phase"}},
+ :foo "Quux",
+ :login {:login "Login", :password "Password", :username "Username"},
+ :project-groups {:title "Project groups"},
+ :projects {:title "Projects"},
+ :search {:quick-search "Search"}}

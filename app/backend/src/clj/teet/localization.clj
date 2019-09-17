@@ -64,7 +64,7 @@
    :et (pretty-print (localization-edn-for-language localizations :et))})
 
 (defn write-localization-edn! [localization-edn-str lang]
-  (spit (str "resources/public/language/" (name lang) ".edn")
+  (spit (str "../frontend/resources/public/language/" (name lang) ".edn")
         localization-edn-str))
 
 (defn write-localization-edns! [localization-edns-map]
