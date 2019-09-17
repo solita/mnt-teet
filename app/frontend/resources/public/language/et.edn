@@ -1,32 +1,10 @@
-{;; Field names by table, :common for fallback shared
+{:buttons {:cancel "Tühista", :save "Salvesta", :add "Lisa"},
+ :common {:general "Üldine"},
  :fields
- {:common {"name" "Nimi"
-           "description" "Kirjeldus"}
-
-  "project" {}
-  "projectgroup" {"phase" "Etapp"}}
-
- ;; Common button labels
- :buttons
- {:save "Salvesta"
-  :cancel "Tühista"
-  :add "Lisa"}
-
- ;; Common texts
- :common
- {:general "Üldine"}
-
- :project-groups
- {:title "Projektirühmad"}
-
- :projects
- {:title "Projektid"}
-
- :search
- {:quick-search "Otsi"}
-
- :login
- {:username "Kasutaja"
-  :password "Salasõna"
-  :login "Sisenen"}
- }
+ {:common {"name" "Nimi", "description" "Kirjeldus"},
+  "projectgroup" {"phase" "Etapp"}},
+ :foo "Bar",
+ :login {:login "Sisenen", :password "Salasõna", :username "Kasutaja"},
+ :project-groups {:title "Projektirühmad"},
+ :projects {:title "Projektid"},
+ :search {:quick-search "Otsi"}}
