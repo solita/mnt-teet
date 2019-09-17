@@ -35,3 +35,6 @@
 
 ;; Icon
 (define-mui-components Icon)
+
+;; Tabs
+(define-mui-components Tabs Tab TabPanel)
