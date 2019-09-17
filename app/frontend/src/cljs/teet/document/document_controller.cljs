@@ -57,8 +57,7 @@
   (assert project-id "Must specify THK project id with :project-id key")
   (assert (vector? app-path) "Must specify :app-path vector in app state to store uploaded document info")
   (assert files "Must specify :files to upload")
-  (let [file (first files)]
-    ;; FIXME: handle multiple uploads?
+  (doseq [file files]
     (e! (->UploadDocument file
                           (assoc (file-info file)
                                  :thk/id project-id
