@@ -16,6 +16,6 @@
 (defmethod db-api/query :document/list-project-documents [{db :db} {:keys [thk-project-id]}]
   {:query '[:find (pull ?e [:db/id :document/name :document/size :document/type])
             :in $ ?project-id
-            :where [?e :thk/id ?project-id]]
+            :where [?e :thk/id ?project-id] [?e :document/name _]]
    :args [db thk-project-id]
    :result-fn (partial mapv first)})
