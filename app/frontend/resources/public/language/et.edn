@@ -3,8 +3,7 @@
  :fields
  {:common {"name" "Nimi", "description" "Kirjeldus"},
   "projectgroup" {"phase" "Etapp"}},
- :foo "Bar",
  :login {:login "Sisenen", :password "Salasõna", :username "Kasutaja"},
  :project-groups {:title "Projektirühmad"},
- :projects {:title "Projektid"},
+ :projects {:title "Projektid", :map-view nil, :list-view nil},
  :search {:quick-search "Otsi"}}
