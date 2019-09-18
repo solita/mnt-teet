@@ -7,14 +7,15 @@
             [teet.map.map-view :as map-view]
             [teet.login.login-paths :as login-paths]
             [postgrest-ui.components.item-view :as postgrest-item-view]
-            [teet.ui.material-ui :refer [Grid]]
+            [teet.ui.material-ui :refer [Grid Button]]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-style :as project-style]
             [teet.task.task-controller :as task-controller]
             [teet.theme.theme-spacing :as theme-spacing]
             [teet.ui.select :as select]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.icons :as icons]))
+            [teet.ui.icons :as icons]
+            [teet.localization :refer [tr]]))
 
 (defn project-data
   [{:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
@@ -44,16 +45,17 @@
        :view project-data}
       project]
      [itemlist/ProgressList
-      {:title "Workflows"}
-      (for [wf (get-in app [:project project :workflows])]
-        {:name (:workflow/name wf)
-         :id (str (:db/id wf))
-         :link (str "#/projects/" project "/workflows/" (:db/id wf))})]
-     [select/select-with-action {:placeholder "New workflow"
-                                 :item-label :name
-                                 :items [{:name "Pre-design"}
-                                         {:name "Foo bar"}]
-                                 :on-select #(e! (project-controller/->StartNewWorkflow project %))}]]
+      {:title (tr [:project :phases])}
+      (for [p (get-in app [:project project :phases])]
+        {:name (:phase/name p)
+         :id (str (:db/id p))
+         :link (str "#/projects/" project "/phase/" (:db/id p))})]
+
+
+     [Button {:on-click #(e! (project-controller/->AddPhase))}
+      (tr [:project :add-phase])
+      [icons/content-add-circle-outline]]]
+
     [Grid {:item true :xs 6
            :className (<class project-style/project-map-column)}
      [map-view/map-view e! {:class (<class theme-spacing/fill-content)

@@ -15,10 +15,10 @@
    :args [db workflow-id project-id]
    :result-fn ffirst})
 
-(defmethod db-api/query :workflow/list-project-workflows [{db :db} {:keys [thk-project-id]}]
-  {:query '[:find (pull ?e [:db/id :workflow/name :workflow/due-date])
+(defmethod db-api/query :workflow/list-project-phases [{db :db} {:keys [thk-project-id]}]
+  {:query '[:find (pull ?e [:db/id :phase/name :phase/due-date])
             :in $ ?thk-project-id
-            :where [?e :thk/id ?thk-project-id] [?e :workflow/name _]]
+            :where [?e :thk/id ?thk-project-id] [?e :phase/name _]]
    :args [db thk-project-id]
    :result-fn (partial mapv first)})
 
