@@ -5,5 +5,8 @@
   "projectgroup" {"phase" "Etapp"}},
  :login {:login "Sisenen", :password "Salasõna", :username "Kasutaja"},
  :project-groups {:title "Projektirühmad"},
- :projects {:title "Projektid", :map-view nil, :list-view nil},
- :search {:quick-search "Otsi", :clear-filters nil}}
+ :projects
+ {:title "Projektid",
+  :map-view "Kaart",
+  :list-view "Projektide loetelu"},
+ :search {:quick-search "Otsi", :clear-filters "Puhasta filtrid"}}
