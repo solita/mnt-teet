@@ -1,9 +1,36 @@
 (ns teet.ui.select
   "Selection components"
   (:require [reagent.core :as r]
-            [teet.ui.material-ui :refer [Select MenuItem Menu Button IconButton Input InputLabel FormControl ButtonGroup]]
+            [teet.ui.material-ui :refer [Select MenuItem Menu Button IconButton
+                                         Input InputLabel FormControl ButtonGroup]]
             [taoensso.timbre :as log]
-            [teet.ui.icons :as icons]))
+            [teet.ui.icons :as icons]
+            material-ui))
+
+(defn outlined-select [{:keys [label items on-change value format-item type]
+                        :or {format-item :label}}]
+  (r/with-let [reference (r/atom nil)
+               label-width (r/atom 0)]
+    (let [option-idx (zipmap items (range))
+          change-value #(on-change (nth items (-> % .-target .-value)))]
+      [FormControl {:variant :outlined
+                    :style {:width "100%"}}
+       [InputLabel {:html-for "language-select"
+                    :ref (fn [el]
+                           (reset! reference el))} label]
+       [Select
+        {:value (option-idx value)
+         :name "language"
+         :label-width (or (some-> @reference .-offsetWidth) 12)
+         :input-props {:id "language-select"
+                       :name "language"}
+         :on-change change-value}
+        (doall
+          (map-indexed
+            (fn [i item]
+              (MenuItem {:value i
+                         :key i} (format-item item)))
+            items))]])))
 
 ;; TODO this needs better styles and better dropdown menu
 (defn select-with-action [{:keys [items item-label icon on-select width placeholder
