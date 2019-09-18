@@ -19,17 +19,21 @@
    [typography/Heading1 "Maanteeamet TEET"]
    [layout/column {:content-style {:padding-bottom "2em"}}
     [typography/Heading2 "Select language"]
-    [select/select-with-action {:placeholder (localization/language-names (name @localization/selected-language))
-                                :item-label :name
-                                :items [{:name (get localization/language-names "et")
-                                         :code "et"}
-                                        {:name (get localization/language-names "en")
-                                         :code "en"}]
-                                :on-select (fn [val]
-                                             (localization/load-language! (keyword (:code val))
-                                                                          (fn [language _]
-                                                                            (reset! localization/selected-language
-                                                                                    language))))}]
+    [select/outlined-select {:label "Language"
+                             :name "Language select"
+                             :value (case @localization/selected-language
+                                      :et
+                                      {:value "et" :label (get localization/language-names "et")}
+                                      :en
+                                      {:value "en" :label (get localization/language-names "en")})
+                             :items [{:value "et" :label (get localization/language-names "et")}
+                                     {:value "en" :label (get localization/language-names "en")}]
+                             :on-change (fn [val]
+                                          (localization/load-language!
+                                            (keyword (:value val))
+                                            (fn [language _]
+                                              (reset! localization/selected-language
+                                                language))))}]
     [typography/Heading2 "Login with demo user"]
     (doall
      (for [{:user/keys [given-name family-name organization email] :as user} login-controller/mock-users]

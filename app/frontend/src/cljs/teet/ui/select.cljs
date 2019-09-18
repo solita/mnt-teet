@@ -7,7 +7,7 @@
             [teet.ui.icons :as icons]
             material-ui))
 
-(defn outlined-select [{:keys [label items on-change value format-item type]
+(defn outlined-select [{:keys [label items on-change value format-item]
                         :or {format-item :label}}]
   (r/with-let [reference (r/atom nil)
                label-width (r/atom 0)]
