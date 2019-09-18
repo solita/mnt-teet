@@ -11,6 +11,11 @@
             [cljs.reader :as reader]
             [postgrest-ui.display :as postgrest-display]))
 
+(defn dev-mode? []
+  (when-let [host (-> js/window .-location .-host)]
+    (boolean (re-find #"localhost"
+                      host))))
+
 (def supported-languages #{"en" "et"})
 
 (def language-names {"en" "English"
@@ -106,7 +111,11 @@
   ([language message-path parameters]
    (let [language (get @loaded-languages language)]
      (assert language (str "Language " language " has not been loaded."))
-     (message (get-in language message-path) parameters))))
+     (let [msg (message (get-in language message-path) parameters)]
+       (if (or (not-empty msg)
+               (not (dev-mode?)))
+         msg
+         (str message-path))))))
 
 (s/fdef tr-key
         :args (s/cat :path (s/coll-of keyword?))
@@ -131,7 +140,10 @@
   "Utility for returning the first found translation path, or a fallback string (last parameter)"
   [& paths-and-fallback]
   (or (some #(let [result (tr %)]
-               (when-not (str/blank? result)
+               (println result)
+               (when-not (or (str/blank? result)
+                             (when (dev-mode?)
+                               (= \[ (first result))))
                  result))
             (butlast paths-and-fallback))
       (last paths-and-fallback)))
@@ -169,19 +181,10 @@
          (= ["name"] (:select column))) (:table column)))
 
 (defn label-for-field [table column]
-  (let [column (column-key column)
-        v (tr [:fields table column])]
-    (if (str/blank? v)
-      (let [v (tr [:fields :common column])]
-        (if (str/blank? v)
-          ;; Fallback to column name
-          column
-
-          ;; Use common field name
-          v))
-
-      ;; Field name has table specific name
-      v)))
+  (let [column (column-key column)]
+    (tr-or [:fields table column]   ;; Specific field name
+           [:fields :common column] ;; Common field name
+           column)))                ;; Fallback to column name
 
 (defmethod postgrest-display/label :default [table column]
   (label-for-field table column))

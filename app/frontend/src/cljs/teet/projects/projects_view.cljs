@@ -17,7 +17,7 @@
             [postgrest-ui.display :as display]
             postgrest-ui.elements
             [taoensso.timbre :as log]
-            [teet.localization :refer [tr tr-or]]
+            [teet.localization :as localization :refer [tr tr-or]]
             [clojure.string :as str]
             [teet.ui.panels :as panels]
             [goog.object :as gobj]))
@@ -49,9 +49,7 @@
      :direction (if (= :asc order) "asc" "desc")
      :hideSortIcon false
      :onClick on-click}
-    (tr-or [:fields "project" column]
-           [:fields :common column]
-           column)]
+    (localization/label-for-field "thk_project_search" column)]
    (case column
      "name" [column-filter e! filters "name" "text"]
      "road_nr" [column-filter e! filters "road_nr" "number"]
