@@ -7,8 +7,8 @@
 (defrecord FetchProjectPhases [project-id])
 (defrecord FetchProjectDocuments [project-id])
 
-(defrecord AddPhase []) ; open add phase modal dialog
-
+(defrecord OpenPhaseDialog []) ; open add phase modal dialog
+(defrecord ClosePhaseDialog [])
 
 (defmethod routes/on-navigate-event :project [{{project :project} :params}]
   (log/info "Navigated to project, fetch workflows for THK project: " project)
@@ -34,10 +34,18 @@
            :args {:thk-project-id project-id}
            :result-path [:project project-id :documents]}))
 
-  AddPhase
+  OpenPhaseDialog
   (process-event [_ app]
     (t/fx app
           {:tuck.effect/type :navigate
            :page :project
            :params {:project (get-in app [:params :project])}
-           :query {:add-phase 1}})))
+           :query {:add-phase 1}}))
+
+  ClosePhaseDialog
+  (process-event [_ app]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page :project
+           :params {:project (get-in app [:params :project])}
+           :query {}})))

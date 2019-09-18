@@ -3,7 +3,8 @@
   (:require [reagent.core :as r]
             [teet.ui.material-ui :refer [Card CardHeader CardActionArea CardActions CardContent
                                          Collapse
-                                         IconButton Button Divider]]
+                                         IconButton Button Divider
+                                         Dialog DialogTitle DialogContent]]
             [teet.ui.icons :as icons]))
 
 (defn collapsible-panel
@@ -40,3 +41,16 @@
   [Card
    [CardHeader {:title title}]
    [CardContent content]])
+
+(defn modal
+  "Simple modal container"
+  [{:keys [title on-close] :as opts} content]
+  (r/with-let [open-atom (or (:open-atom opts) (r/atom true))]
+    [Dialog {:open @open-atom
+             :on-close #(do
+                          (reset! open-atom false)
+                          (when on-close
+                            (on-close)))}
+     [DialogTitle {} title]
+     [DialogContent
+      content]]))

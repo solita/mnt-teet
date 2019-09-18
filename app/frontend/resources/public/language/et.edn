@@ -4,6 +4,7 @@
  {:common {"name" "Nimi", "description" "Kirjeldus"},
   "projectgroup" {"phase" "Etapp"}},
  :login {:login "Sisenen", :password "Salasõna", :username "Kasutaja"},
+ :project {:add-phase nil, :phases nil},
  :project-groups {:title "Projektirühmad"},
  :projects
  {:title "Projektid",

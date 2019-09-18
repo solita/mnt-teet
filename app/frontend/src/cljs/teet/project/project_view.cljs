@@ -15,7 +15,8 @@
             [teet.ui.select :as select]
             [teet.ui.itemlist :as itemlist]
             [teet.ui.icons :as icons]
-            [teet.localization :refer [tr]]))
+            [teet.localization :refer [tr]]
+            [teet.ui.panels :as panels]))
 
 (defn project-data
   [{:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
@@ -27,8 +28,14 @@
    [:div "Carriageway: " carriageway]
    [:div "Procurement number:" procurement_no]])
 
-(defn project-page [e! {{:keys [project]} :params :as app}]
+(defn project-page [e! {{:keys [project]} :params
+                        {:keys [add-phase]} :query :as app}]
   [:<>
+   (when add-phase
+     [panels/modal {:title (tr [:project :add-phase])
+                    :on-close #(e! (project-controller/->ClosePhaseDialog))}
+
+      [:div "lisääppäs vaihe"]])
    [Grid {:container true
           :className (<class project-style/project-grid-container)
           :spacing 10}
@@ -52,7 +59,7 @@
          :link (str "#/projects/" project "/phase/" (:db/id p))})]
 
 
-     [Button {:on-click #(e! (project-controller/->AddPhase))}
+     [Button {:on-click #(e! (project-controller/->OpenPhaseDialog))}
       (tr [:project :add-phase])
       [icons/content-add-circle-outline]]]
 
