@@ -17,20 +17,30 @@
             [postgrest-ui.display :as display]
             postgrest-ui.elements
             [taoensso.timbre :as log]
-            [teet.localization :refer [tr tr-or]]))
+            [teet.localization :refer [tr tr-or]]
+            [clojure.string :as str]))
 
 (defmethod search-interface/format-search-result "project" [{:keys [id label]}]
   {:icon [icons/file-folder-open]
    :text label
    :href (str "#/project/" id)})
 
-(defn- project-filter [opts]
-  [postgrest-filters/simple-search-form ["searchable_text"] opts])
-
 (defn link-to-project  [{:strs [id name]}]
   [:a {:href (str "#/projects/" id)} name])
 
-(defn- projects-header [e! {:keys [column style order on-click]}]
+(defn- column-filter [e! filters column type]
+  [TextField {:value (or (get filters column) "")
+              :type type
+              :on-change #(e! (projects-controller/->UpdateProjectsFilter
+                               column
+                               (let [v (-> % .-target .-value)]
+                                 (if (str/blank? v)
+                                   nil
+                                   (if (= "number" type)
+                                     (js/parseInt v)
+                                     v)))))}])
+
+(defn- projects-header [e! filters {:keys [column style order on-click]}]
   [TableCell {:sortDirection (if order (name order) false)}
    [TableSortLabel
     {:active (or (= order :asc) (= order :desc))
@@ -41,13 +51,13 @@
            [:fields :common column]
            column)]
    (case column
-     "name" [:div "hakukenttä"]
+     "name" [column-filter e! filters "name" "text"]
+     "road_nr" [column-filter e! filters "road_nr" "number"]
      [:span])])
 
 (defn projects-listing [e! app]
   [postgrest-listing/listing
-   {;:filters-view project-filter
-    :endpoint (get-in app [:config :api-url])
+   {:endpoint (get-in app [:config :api-url])
     :token (get-in app login-paths/api-token)
     :state (get-in app [:projects :listing])
     :set-state! #(e! (projects-controller/->SetListingState %))
@@ -57,7 +67,7 @@
     :accessor {"name" #(select-keys % ["name" "id"])}
     :format {"name" link-to-project}
     :where (projects-controller/project-filter-where (get-in app [:projects :filter]))
-    :header-fn (r/partial projects-header e!)}])
+    :header-fn (r/partial projects-header e! (get-in app [:projects :new-filter]))}])
 
 (def ^:const project-pin-resolution-threshold 100)
 
@@ -79,9 +89,4 @@
    app])
 
 (defn projects-list-page [e! app]
-  [:<>
-
-   [TextField {:label (tr [:search :quick-search])
-               :value (or (get-in app [:projects :new-filter :text]) "")
-               :on-change #(e! (projects-controller/->UpdateProjectsFilter {:text (-> % .-target .-value)}))}]
-   [projects-listing e! app]])
+  [projects-listing e! app])
