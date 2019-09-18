@@ -13,7 +13,7 @@
 ;; Center of estonian coordinate system
 (def default-center [516493.16 6513417.97])
 
-(defn map-view [e! {:keys [height] :or {height "100%"} :as opts} app]
+(defn map-view [e! {:keys [height class] :or {height "100%"} :as opts} app]
   (r/with-let [current-tool (volatile! (get-in app [:map :tool]))
                current-zoom (volatile! nil)
                current-res (volatile! nil)
@@ -34,7 +34,7 @@
          :style (merge {:user-select "none"}
                        (when (#{:bbox-select :position-select} @current-tool)
                          {:cursor "crosshair"}))
-         :class nil
+         :class class
          :extent (or extent default-extent)
          :center default-center
 
