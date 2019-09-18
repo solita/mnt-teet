@@ -46,7 +46,9 @@
   "Simple modal container"
   [{:keys [title on-close] :as opts} content]
   (r/with-let [open-atom (or (:open-atom opts) (r/atom true))]
-    [Dialog {:open @open-atom
+    [Dialog {:full-width true
+             :max-width "md"
+             :open @open-atom
              :on-close #(do
                           (reset! open-atom false)
                           (when on-close

@@ -9,6 +9,7 @@
 
 (defrecord OpenPhaseDialog []) ; open add phase modal dialog
 (defrecord ClosePhaseDialog [])
+(defrecord UpdatePhaseForm [form-data])
 
 (defmethod routes/on-navigate-event :project [{{project :project} :params}]
   (log/info "Navigated to project, fetch workflows for THK project: " project)
@@ -48,4 +49,9 @@
           {:tuck.effect/type :navigate
            :page :project
            :params {:project (get-in app [:params :project])}
-           :query {}})))
+           :query {}}))
+
+  UpdatePhaseForm
+  (process-event [{form-data :form-data} app]
+    (update-in app [:project (get-in app [:params :project]) :new-phase]
+               merge form-data)))
