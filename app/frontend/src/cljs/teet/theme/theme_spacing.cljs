@@ -5,4 +5,5 @@
 (def content-height (str "calc(100vh - " appbar-height ")"))
 
 (defn fill-content []
-  {:min-height content-height})
+  {:min-height content-height
+   :max-height content-height})

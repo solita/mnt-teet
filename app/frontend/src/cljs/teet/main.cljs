@@ -36,7 +36,10 @@
      :page [projects-view/projects-list-page e! app]}
 
     :project
-    {:title "TEET" :page [project-view/project-page e! app]}
+    {:title "TEET"
+     :tabs [{:page :projects :selected? false :title (tr [:projects :map-view])}
+            {:page :projects-list :selected? true :title (tr [:projects :list-view])}]
+     :page [project-view/project-page e! app]}
 
     :project-workflow
     (workflow-view/workflow-page-and-title e! app)

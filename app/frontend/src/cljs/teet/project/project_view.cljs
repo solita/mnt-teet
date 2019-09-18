@@ -9,6 +9,7 @@
             [postgrest-ui.components.item-view :as postgrest-item-view]
             [teet.ui.material-ui :refer [Grid]]
             [teet.project.project-controller :as project-controller]
+            [teet.project.project-style :as project-style]
             [teet.task.task-controller :as task-controller]
             [teet.theme.theme-spacing :as theme-spacing]
             [teet.ui.select :as select]
@@ -28,9 +29,11 @@
 (defn project-page [e! {{:keys [project]} :params :as app}]
   [:<>
    [Grid {:container true
-          :style {:margin-top "2rem"}
+          :className (<class project-style/project-grid-container)
           :spacing 10}
-    [Grid {:item true :xs 6}
+    [Grid {:item true
+           :className (<class project-style/project-data-column)
+           :xs 6}
      [postgrest-item-view/item-view
       {:endpoint (get-in app [:config :api-url])
        :token (get-in app login-paths/api-token)
@@ -46,36 +49,13 @@
         {:name (:workflow/name wf)
          :id (str (:db/id wf))
          :link (str "#/projects/" project "/workflows/" (:db/id wf))})]
-     [itemlist/ProgressList
-      {:title "Workflows"}
-      (for [wf (get-in app [:project project :workflows])]
-        {:name (:workflow/name wf)
-         :id (str (:db/id wf))
-         :link (str "#/projects/" project "/workflows/" (:db/id wf))})]
-     [itemlist/ProgressList
-      {:title "Workflows"}
-      (for [wf (get-in app [:project project :workflows])]
-        {:name (:workflow/name wf)
-         :id (str (:db/id wf))
-         :link (str "#/projects/" project "/workflows/" (:db/id wf))})]
-     [itemlist/ProgressList
-      {:title "Workflows"}
-      (for [wf (get-in app [:project project :workflows])]
-        {:name (:workflow/name wf)
-         :id (str (:db/id wf))
-         :link (str "#/projects/" project "/workflows/" (:db/id wf))})]
-     [itemlist/ProgressList
-      {:title "Workflows"}
-      (for [wf (get-in app [:project project :workflows])]
-        {:name (:workflow/name wf)
-         :id (str (:db/id wf))
-         :link (str "#/projects/" project "/workflows/" (:db/id wf))})]
      [select/select-with-action {:placeholder "New workflow"
                                  :item-label :name
                                  :items [{:name "Pre-design"}
                                          {:name "Foo bar"}]
                                  :on-select #(e! (project-controller/->StartNewWorkflow project %))}]]
-    [Grid {:item true :xs 6}
+    [Grid {:item true :xs 6
+           :className (<class project-style/project-map-column)}
      [map-view/map-view e! {:class (<class theme-spacing/fill-content)
                             :layers {:thk-project
                                      (map-layers/geojson-layer (get-in app [:config :api-url])
