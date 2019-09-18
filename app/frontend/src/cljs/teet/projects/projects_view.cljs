@@ -18,7 +18,9 @@
             postgrest-ui.elements
             [taoensso.timbre :as log]
             [teet.localization :refer [tr tr-or]]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.ui.panels :as panels]
+            [goog.object :as gobj]))
 
 (defmethod search-interface/format-search-result "project" [{:keys [id label]}]
   {:icon [icons/file-folder-open]
@@ -56,18 +58,29 @@
      [:span])])
 
 (defn projects-listing [e! app]
-  [postgrest-listing/listing
-   {:endpoint (get-in app [:config :api-url])
-    :token (get-in app login-paths/api-token)
-    :state (get-in app [:projects :listing])
-    :set-state! #(e! (projects-controller/->SetListingState %))
-    :table "thk_project_search"
-    :select ["id" "name" "road_nr" "km_range" "estimated_duration"]
-    :columns ["name" "road_nr" "km_range" "estimated_duration"]
-    :accessor {"name" #(select-keys % ["name" "id"])}
-    :format {"name" link-to-project}
-    :where (projects-controller/project-filter-where (get-in app [:projects :filter]))
-    :header-fn (r/partial projects-header e! (get-in app [:projects :new-filter]))}])
+  [panels/collapsible-panel
+   {:title (str (tr [:projects :title])
+                (when-let [total (get-in app [:projects :total-count])]
+                  (str " (" (get-in app [:projects :total-count]) ")")))
+    :open-atom (r/wrap true :D)}
+   [postgrest-listing/listing
+    {:endpoint (get-in app [:config :api-url])
+     :token (get-in app login-paths/api-token)
+     :state (get-in app [:projects :listing])
+     :set-state! #(e! (projects-controller/->SetListingState %))
+     :table "thk_project_search"
+     :select ["id" "name" "road_nr" "km_range" "estimated_duration"]
+     :columns ["name" "road_nr" "km_range" "estimated_duration"]
+     :accessor {"name" #(select-keys % ["name" "id"])}
+     :format {"name" link-to-project}
+     :where (projects-controller/project-filter-where (get-in app [:projects :filter]))
+     :header-fn (r/partial projects-header e! (get-in app [:projects :new-filter]))
+
+     ;; Extract total count from PostgREST range header
+     :on-fetch-response (fn [^js/Response resp]
+                          (when-let [r (.get (.-headers resp) "Content-Range")]
+                            (let [[_ total] (str/split r "/")]
+                              (e! (projects-controller/->SetTotalCount total)))))}]])
 
 (def ^:const project-pin-resolution-threshold 100)
 

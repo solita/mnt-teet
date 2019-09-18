@@ -5,6 +5,7 @@
 (defrecord UpdateProjectsFilter [column value])
 (defrecord SetProjectsFilter [filter])
 (defrecord SetListingState [state])
+(defrecord SetTotalCount [total])
 
 (extend-protocol t/Event
   SetListingState
@@ -22,7 +23,11 @@
 
   SetProjectsFilter
   (process-event [{f :filter} app]
-    (assoc-in app [:projects :filter] f)))
+    (assoc-in app [:projects :filter] f))
+
+  SetTotalCount
+  (process-event [{total :total} app]
+    (assoc-in app [:projects :total-count] total)))
 
 
 (defn project-filter-where [{:strs [name road_nr]}]
