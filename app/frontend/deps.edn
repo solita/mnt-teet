@@ -1,7 +1,7 @@
 {:deps {;; UI Libraries
         reagent {:mvn/version "0.8.1" :exclusions [cljsjs/react-dom-server]}
         tatut/postgrest-ui {:git/url "https://github.com/tatut/postgrest-ui"
-                            :sha "99b040316635f057277d732c2e9dcc89066da30f"}
+                            :sha "ab7b1fb83803966d7ccd980f4287fd02189abe58"}
         webjure/tuck {:mvn/version "20181204" :exclusions [cljsjs/react]}
         data-frisk-reagent {:mvn/version "0.4.5" :exclusions [reagent]}
         herb {:mvn/version "0.10.0"}
