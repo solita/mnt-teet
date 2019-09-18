@@ -7,7 +7,7 @@
             [teet.map.map-view :as map-view]
             [teet.login.login-paths :as login-paths]
             [postgrest-ui.components.item-view :as postgrest-item-view]
-            [teet.ui.material-ui :refer [Grid Button]]
+            [teet.ui.material-ui :refer [Grid Button TextField]]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-style :as project-style]
             [teet.task.task-controller :as task-controller]
@@ -16,7 +16,11 @@
             [teet.ui.itemlist :as itemlist]
             [teet.ui.icons :as icons]
             [teet.localization :refer [tr]]
-            [teet.ui.panels :as panels]))
+            [teet.ui.panels :as panels]
+            [teet.ui.date-picker :as date-picker]
+            [cljs-time.core :as t]
+            [cljs-time.format :as tf]
+            [taoensso.timbre :as log]))
 
 (defn project-data
   [{:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
@@ -45,7 +49,15 @@
                                             ;; phases need to be in database
                                             (name %))
                             :value (or (:phase/name phase) :none)
-                            :on-change #(e! (project-controller/->UpdatePhaseForm {:phase/name %}))}]])
+                            :on-change #(e! (project-controller/->UpdatePhaseForm {:phase/name %}))}]
+
+
+   [date-picker/date-input {:value (:phase/due-date phase)
+                            :on-change #(e! (project-controller/->UpdatePhaseForm {:phase/due-date %}))}]
+
+
+
+   ])
 
 (defn project-page [e! {{:keys [project]} :params
                         {:keys [add-phase]} :query :as app}]
