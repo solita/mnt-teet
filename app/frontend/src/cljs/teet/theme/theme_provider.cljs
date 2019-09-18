@@ -61,7 +61,11 @@
                                :subtitle1 data-label-style
                                :body1 {:fontWeight 400
                                        :fontSize "1rem"
-                                       :lineHeight 1.5}}}})
+                                       :lineHeight 1.5}}
+
+               :MuiTableSortLabel {:root {:display "inline-block" :width "100%"}
+                                   :icon {:float "right"}}
+               }})
 
 (defn- create-theme [theme]
   (let [create-mui-theme (-> js/window
