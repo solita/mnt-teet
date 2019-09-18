@@ -11,8 +11,11 @@
             [teet.map.map-view :as map-view]
             [teet.map.map-layers :as map-layers]
             [teet.map.map-features :as map-features]
-            [teet.ui.material-ui :refer [TextField]]
-            [postgrest-ui.display :as display]))
+            [teet.ui.material-ui :refer [TextField TableCell TableSortLabel]]
+            [postgrest-ui.display :as display]
+            postgrest-ui.elements
+            [taoensso.timbre :as log]
+            [teet.localization :refer [tr]]))
 
 (defmethod search-interface/format-search-result "project" [{:keys [id label]}]
   {:icon [icons/file-folder-open]
@@ -22,9 +25,17 @@
 (defn- project-filter [opts]
   [postgrest-filters/simple-search-form ["searchable_text"] opts])
 
-(defmethod display/display [:listing "thk_project_search" "id"] [_ _ _ id]
-  [:a {:href (str "#/projects/" id)}
-   id])
+(defn link-to-project  [{:strs [id name]}]
+  [:a {:href (str "#/projects/" id)} name])
+
+(defmethod postgrest-ui.elements/element [:material :listing-table-header-cell] [_ _ & [opts label order]]
+  [TableCell {:sortDirection (if order (name order) false)}
+   [TableSortLabel
+    {:active (or (= order :asc) (= order :desc))
+     :direction (if (= :asc order) "asc" "desc")
+     :hideSortIcon false
+     :onClick (:on-click opts)}
+    label]])
 
 (defn projects-listing [e! app]
   [postgrest-listing/listing
@@ -34,13 +45,18 @@
     :state (get-in app [:projects :listing])
     :set-state! #(e! (projects-controller/->SetListingState %))
     :table "thk_project_search"
-    :select ["id" "name" "estimated_duration" "road_nr" "km_range"]
+    :select ["id" "name" "road_nr" "km_range" "estimated_duration"]
+    :columns ["name" "road_nr" "km_range" "estimated_duration"]
+    :accessor {"name" #(do
+                         (log/info "ROW: " %)
+                         (select-keys % ["name" "id"]))}
+    :format {"name" link-to-project}
     :where (projects-controller/project-filter-where (get-in app [:projects :filter]))}])
 
 (def ^:const project-pin-resolution-threshold 100)
 
 (defn projects-map-page [e! app]
-  [map-view/map-view e! {:height (- js/document.body.clientHeight 120) ; "400px"
+  [map-view/map-view e! {:height "calc(100vh - 120px)"
                          :layers {:thk-projects
                                   (map-layers/mvt-layer (get-in app [:config :api-url])
                                                         "mvt_thk_projects"
@@ -59,7 +75,7 @@
 (defn projects-list-page [e! app]
   [:<>
 
-   [TextField {:label "Search"
+   [TextField {:label (tr [:search :quick-search])
                :value (or (get-in app [:projects :new-filter :text]) "")
                :on-change #(e! (projects-controller/->UpdateProjectsFilter {:text (-> % .-target .-value)}))}]
    [projects-listing e! app]])
