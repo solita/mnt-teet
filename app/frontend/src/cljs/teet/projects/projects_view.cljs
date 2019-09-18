@@ -35,10 +35,12 @@
      :direction (if (= :asc order) "asc" "desc")
      :hideSortIcon false
      :onClick on-click}
-    (tr-or (tr [:fields "project" column])
-           (tr [:fields :common column])
+    (tr-or [:fields "project" column]
+           [:fields :common column]
            column)]
-   [:div "hakukenttä"]])
+   (case column
+     "name" [:div "hakukenttä"]
+     [:span])])
 
 (defn projects-listing [e! app]
   [postgrest-listing/listing
@@ -50,9 +52,7 @@
     :table "thk_project_search"
     :select ["id" "name" "road_nr" "km_range" "estimated_duration"]
     :columns ["name" "road_nr" "km_range" "estimated_duration"]
-    :accessor {"name" #(do
-                         (log/info "ROW: " %)
-                         (select-keys % ["name" "id"]))}
+    :accessor {"name" #(select-keys % ["name" "id"])}
     :format {"name" link-to-project}
     :where (projects-controller/project-filter-where (get-in app [:projects :filter]))
     :header-fn (r/partial projects-header e!)}])
