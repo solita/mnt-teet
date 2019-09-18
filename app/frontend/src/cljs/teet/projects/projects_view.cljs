@@ -15,7 +15,7 @@
             [postgrest-ui.display :as display]
             postgrest-ui.elements
             [taoensso.timbre :as log]
-            [teet.localization :refer [tr]]))
+            [teet.localization :refer [tr tr-or]]))
 
 (defmethod search-interface/format-search-result "project" [{:keys [id label]}]
   {:icon [icons/file-folder-open]
@@ -28,14 +28,17 @@
 (defn link-to-project  [{:strs [id name]}]
   [:a {:href (str "#/projects/" id)} name])
 
-(defmethod postgrest-ui.elements/element [:material :listing-table-header-cell] [_ _ & [opts label order]]
+(defn- projects-header [e! {:keys [column style order on-click]}]
   [TableCell {:sortDirection (if order (name order) false)}
    [TableSortLabel
     {:active (or (= order :asc) (= order :desc))
      :direction (if (= :asc order) "asc" "desc")
      :hideSortIcon false
-     :onClick (:on-click opts)}
-    label]])
+     :onClick on-click}
+    (tr-or (tr [:fields "project" column])
+           (tr [:fields :common column])
+           column)]
+   [:div "hakukenttä"]])
 
 (defn projects-listing [e! app]
   [postgrest-listing/listing
@@ -51,7 +54,8 @@
                          (log/info "ROW: " %)
                          (select-keys % ["name" "id"]))}
     :format {"name" link-to-project}
-    :where (projects-controller/project-filter-where (get-in app [:projects :filter]))}])
+    :where (projects-controller/project-filter-where (get-in app [:projects :filter]))
+    :header-fn (r/partial projects-header e!)}])
 
 (def ^:const project-pin-resolution-threshold 100)
 
