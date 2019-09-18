@@ -1,6 +1,7 @@
 (ns teet.projects.projects-view
   "Projects view"
   (:require [reagent.core :as r]
+            [herb.core :refer [<class]]
             [postgrest-ui.components.listing :as postgrest-listing]
             [postgrest-ui.components.filters :as postgrest-filters]
             [teet.projects.projects-controller :as projects-controller]
@@ -11,6 +12,7 @@
             [teet.map.map-view :as map-view]
             [teet.map.map-layers :as map-layers]
             [teet.map.map-features :as map-features]
+            [teet.theme.theme-spacing :as theme-spacing]
             [teet.ui.material-ui :refer [TextField TableCell TableSortLabel]]
             [postgrest-ui.display :as display]
             postgrest-ui.elements
@@ -56,7 +58,7 @@
 (def ^:const project-pin-resolution-threshold 100)
 
 (defn projects-map-page [e! app]
-  [map-view/map-view e! {:height "calc(100vh - 120px)"
+  [map-view/map-view e! {:class (<class theme-spacing/fill-content)
                          :layers {:thk-projects
                                   (map-layers/mvt-layer (get-in app [:config :api-url])
                                                         "mvt_thk_projects"
