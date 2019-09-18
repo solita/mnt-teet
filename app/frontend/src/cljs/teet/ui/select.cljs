@@ -4,8 +4,7 @@
             [teet.ui.material-ui :refer [Select MenuItem Menu Button IconButton
                                          Input InputLabel FormControl ButtonGroup]]
             [taoensso.timbre :as log]
-            [teet.ui.icons :as icons]
-            material-ui))
+            [teet.ui.icons :as icons]))
 
 (defn outlined-select [{:keys [label items on-change value format-item]
                         :or {format-item :label}}]
