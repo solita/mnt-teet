@@ -128,11 +128,13 @@
       "")))
 
 (defn tr-or
-  "Utility for returning a default when a translation is not found."
-  [tr-result default-value]
-  (if (= "" tr-result)
-    default-value
-    tr-result))
+  "Utility for returning the first found translation path, or a fallback string (last parameter)"
+  [& paths-and-fallback]
+  (or (some #(let [result (tr %)]
+               (when-not (str/blank? result)
+                 result))
+            (butlast paths-and-fallback))
+      (last paths-and-fallback)))
 
 (defn tr-tree
   ([tree-path]
