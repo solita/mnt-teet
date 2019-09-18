@@ -44,4 +44,4 @@
 (define-mui-components Table TableRow TableHead TableCell TableSortLabel)
 
 ;; Dialogs and modals
-(define-mui-components Dialog DialogTitle DialogContent)
+(define-mui-components Dialog DialogTitle DialogContent Popover)
