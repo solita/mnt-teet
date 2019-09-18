@@ -6,6 +6,7 @@
 (defrecord SetProjectsFilter [filter])
 (defrecord SetListingState [state])
 (defrecord SetTotalCount [total])
+(defrecord ClearProjectsFilter [])
 
 (extend-protocol t/Event
   SetListingState
@@ -24,6 +25,11 @@
   SetProjectsFilter
   (process-event [{f :filter} app]
     (assoc-in app [:projects :filter] f))
+
+  ClearProjectsFilter
+  (process-event [_ app]
+    (-> app
+        (update-in [:projects] dissoc :filter :new-filter)))
 
   SetTotalCount
   (process-event [{total :total} app]

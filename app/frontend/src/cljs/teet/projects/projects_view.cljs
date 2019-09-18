@@ -13,7 +13,7 @@
             [teet.map.map-layers :as map-layers]
             [teet.map.map-features :as map-features]
             [teet.theme.theme-spacing :as theme-spacing]
-            [teet.ui.material-ui :refer [TextField TableCell TableSortLabel]]
+            [teet.ui.material-ui :refer [TextField TableCell TableSortLabel Button]]
             [postgrest-ui.display :as display]
             postgrest-ui.elements
             [taoensso.timbre :as log]
@@ -58,29 +58,37 @@
      [:span])])
 
 (defn projects-listing [e! app]
-  [panels/collapsible-panel
-   {:title (str (tr [:projects :title])
-                (when-let [total (get-in app [:projects :total-count])]
-                  (str " (" (get-in app [:projects :total-count]) ")")))
-    :open-atom (r/wrap true :D)}
-   [postgrest-listing/listing
-    {:endpoint (get-in app [:config :api-url])
-     :token (get-in app login-paths/api-token)
-     :state (get-in app [:projects :listing])
-     :set-state! #(e! (projects-controller/->SetListingState %))
-     :table "thk_project_search"
-     :select ["id" "name" "road_nr" "km_range" "estimated_duration"]
-     :columns ["name" "road_nr" "km_range" "estimated_duration"]
-     :accessor {"name" #(select-keys % ["name" "id"])}
-     :format {"name" link-to-project}
-     :where (projects-controller/project-filter-where (get-in app [:projects :filter]))
-     :header-fn (r/partial projects-header e! (get-in app [:projects :new-filter]))
+  (r/with-let [open? (r/atom true)]
+    (let [where (projects-controller/project-filter-where (get-in app [:projects :filter]))]
+      [panels/collapsible-panel
+       {:title (str (tr [:projects :title])
+                    (when-let [total (get-in app [:projects :total-count])]
+                      (str " (" total ")")))
+        :open-atom open?
+        :action [Button {:color "secondary"
+                         :on-click #(e! (projects-controller/->ClearProjectsFilter))
+                         :size "small"
+                         :disabled (empty? where)}
+                 [icons/content-clear]
+                 (tr [:search :clear-filters])]}
+       [postgrest-listing/listing
+        {:endpoint (get-in app [:config :api-url])
+         :token (get-in app login-paths/api-token)
+         :state (get-in app [:projects :listing])
+         :set-state! #(e! (projects-controller/->SetListingState %))
+         :table "thk_project_search"
+         :select ["id" "name" "road_nr" "km_range" "estimated_duration"]
+         :columns ["name" "road_nr" "km_range" "estimated_duration"]
+         :accessor {"name" #(select-keys % ["name" "id"])}
+         :format {"name" link-to-project}
+         :where where
+         :header-fn (r/partial projects-header e! (get-in app [:projects :new-filter]))
 
-     ;; Extract total count from PostgREST range header
-     :on-fetch-response (fn [^js/Response resp]
-                          (when-let [r (.get (.-headers resp) "Content-Range")]
-                            (let [[_ total] (str/split r "/")]
-                              (e! (projects-controller/->SetTotalCount total)))))}]])
+         ;; Extract total count from PostgREST range header
+         :on-fetch-response (fn [^js/Response resp]
+                              (when-let [r (.get (.-headers resp) "Content-Range")]
+                                (let [[_ total] (str/split r "/")]
+                                  (e! (projects-controller/->SetTotalCount total)))))}]])))
 
 (def ^:const project-pin-resolution-threshold 100)
 

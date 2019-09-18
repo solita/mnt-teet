@@ -7,4 +7,4 @@
  :project-groups {:title "Project groups"},
  :projects
  {:title "Projects", :map-view "Map", :list-view "Project list"},
- :search {:quick-search "Search"}}
+ :search {:quick-search "Search", :clear-filters "Clear filters"}}

@@ -6,4 +6,4 @@
  :login {:login "Sisenen", :password "Salasõna", :username "Kasutaja"},
  :project-groups {:title "Projektirühmad"},
  :projects {:title "Projektid", :map-view nil, :list-view nil},
- :search {:quick-search "Otsi"}}
+ :search {:quick-search "Otsi", :clear-filters nil}}
