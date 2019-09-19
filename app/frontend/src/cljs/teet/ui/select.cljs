@@ -10,17 +10,20 @@
             [tuck.core :as t]
             [teet.localization :refer [tr]]))
 
+
 (defn outlined-select [{:keys [label items on-change value format-item]
                         :or {format-item :label}}]
   (r/with-let [reference (r/atom nil)
-               label-width (r/atom 0)]
+               set-ref! (fn [el]
+                          (reset! reference el))
+               _ (log/info "outlined select created")]
     (let [option-idx (zipmap items (range))
-          change-value #(on-change (nth items (-> % .-target .-value)))]
+          change-value #(on-change (nth items (-> % .-target .-value)))
+          _ (log/info "render outlined select")]
       [FormControl {:variant :outlined
                     :style {:width "100%"}}
        [InputLabel {:html-for "language-select"
-                    :ref (fn [el]
-                           (reset! reference el))} label]
+                    :ref set-ref!} label]
        [Select
         {:value (option-idx value)
          :name "language"
@@ -73,11 +76,14 @@
 (defn select-enum
   "Select an enum value based on attribute. Automatically fetches enum values from database."
   [{:keys [e! attribute]}]
+  (log/info "NEW SELECT ENUM " attribute)
   (when-not (contains? @enum-values attribute)
+    (log/info "FETCHING VALUES " attribute)
     (e! (common-controller/->Query {:query :enum/values
                                     :args {:attribute attribute}
                                     :result-event (partial ->SetEnumValues attribute)})))
   (fn [{:keys [value on-change]}]
+    (log/info "SELECT ENUM RENDER")
     (let [tr* #(tr [:enum %])]
       (if-let [values (@enum-values attribute)]
         [outlined-select {:label (tr [:fields attribute])
