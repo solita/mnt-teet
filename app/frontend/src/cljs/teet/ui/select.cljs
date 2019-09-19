@@ -85,6 +85,7 @@
                           :on-change on-change
                           :items (into [:none] (sort-by tr* values))
                           :format-item #(if (= :none %)
-                                          (tr [:common :select :empty])
+                                          ;; PENDING: show better placeholder
+                                          [:em (tr [:common :select :empty])]
                                           (tr* %))}]
         [CircularProgress {:size 10}]))))

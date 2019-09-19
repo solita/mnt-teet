@@ -164,4 +164,16 @@
           {:db/ident :phase/status
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
-           :db/doc "Phase status enum ref"}]]}]
+           :db/doc "Phase status enum ref"}]]}
+
+ {:db/ident :phase-dates
+  :txes [[{:db/ident :phase/estimated-start-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "Estimated start date of phase"}
+          {:db/ident :phase/estimated-end-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "Estimated end date of phase"}]]}
+
+ ]

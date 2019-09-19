@@ -8,6 +8,6 @@
 
 (s/def :phase/phase (s/keys))
 
-(s/def :workflow/create-project-workflow
-  (s/keys :req [:thk/id :workflow/name]
-          :opt [:workflow/phases]))
+(s/def :phase/create-phase
+  (s/keys :req [:thk/id :phase/phase-name :phase/status
+                :phase/estimated-start-date :phase/estimated-end-date]))

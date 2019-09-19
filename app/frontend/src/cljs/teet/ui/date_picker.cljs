@@ -146,25 +146,28 @@
 
 (defn date-input
   "Combined text field and date picker input field"
-  [{:keys [value on-change]}]
+  [{:keys [label value on-change]}]
   (r/with-let [txt (r/atom (unparse-opt value))
                open? (r/atom false)
                ref (atom nil)]
     [:<>
-     [TextField {:value @txt
+     [TextField {:label label
+                 :value @txt
                  :ref #(reset! ref %)
+                 :variant "outlined"
                  :on-change #(let [v (-> % .-target .-value)]
                                (reset! txt v)
-                               (when-let [d (parse-opt v)]
-                                 (on-change d)))}]
+                               (when-let [^goog.date.Date d (parse-opt v)]
+                                 (on-change (.-date d))))}]
      [IconButton {:on-click #(reset! open? true)}
       [icons/action-calendar-today]]
      [Popover {:open @open?
                :anchorEl @ref
                :anchorOrigin {:vertical "bottom"
                               :horizontal "left"}}
-      [date-picker {:value value
-                    :on-change #(do
-                                  (reset! txt (unparse-opt %))
-                                  (on-change %)
-                                  (reset! open? false))}]]]))
+      [date-picker {:value (when value
+                             (goog.date.Date. value))
+                    :on-change (fn [^goog.date.Date d]
+                                 (reset! txt (unparse-opt d))
+                                 (on-change (.-date d))
+                                 (reset! open? false))}]]]))

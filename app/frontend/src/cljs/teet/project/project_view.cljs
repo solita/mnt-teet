@@ -39,9 +39,10 @@
                         {:keys [add-phase]} :query :as app}]
   [:<>
    (when add-phase
-     [panels/modal {:title (tr [:project :add-phase])
-                    :on-close #(e! (project-controller/->ClosePhaseDialog))}
-      [phase-view/phase-form e! (get-in app [:project project :new-phase])]])
+     (let [close (r/partial e! (project-controller/->ClosePhaseDialog))]
+       [panels/modal {:title (tr [:project :add-phase])
+                      :on-close close}
+        [phase-view/phase-form e! close (get-in app [:project project :new-phase])]]))
    [Grid {:container true
           :className (<class project-style/project-grid-container)
           :spacing 10}
@@ -60,7 +61,7 @@
      [itemlist/ProgressList
       {:title (tr [:project :phases])}
       (for [p (get-in app [:project project :phases])]
-        {:name (:phase/name p)
+        {:name (tr [:enum (:db/ident (:phase/phase-name p))])
          :id (str (:db/id p))
          :link (str "#/projects/" project "/phase/" (:db/id p))})]
 

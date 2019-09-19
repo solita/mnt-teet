@@ -7,8 +7,14 @@
             [taoensso.timbre :as log]))
 
 
-(defmethod db-api/command! :workflow/create-project-workflow [{conn :conn} project-workflow]
-  (select-keys (d/transact conn {:tx-data [project-workflow]}) [:tempids]))
+(defmethod db-api/command! :phase/create-phase [{conn :conn} phase]
+  (log/info "PHASE: " phase)
+  (select-keys
+   (d/transact
+    conn
+    {:tx-data [(select-keys phase [:thk/id :phase/phase-name :phase/status
+                                   :phase/estimated-start-date :phase/estimated-end-date])]})
+   [:tempids]))
 
 (defmethod db-api/command! :workflow/update-task [{conn :conn} task]
   (select-keys (d/transact conn {:tx-data [task]}) [:tempids]))
