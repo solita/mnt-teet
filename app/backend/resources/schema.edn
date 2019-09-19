@@ -128,4 +128,35 @@
            :db/doc "UUID of user information. Links to external source."
            :db/valueType :db.type/uuid
            :db/cardinality :db.cardinality/one
-           :db/unique :db.unique/identity}]]}]
+           :db/unique :db.unique/identity}]]}
+
+
+ {:db/ident :phase-names-and-statuses
+  :txes [[;; Phase names
+          {:db/ident :phase.name/pre-design}
+          {:db/ident :phase.name/preliminary-design}
+          {:db/ident :phase.name/detailed-design}
+          {:db/ident :phase.name/land-acquisition}
+          {:db/ident :phase.name/construction}
+          {:db/ident :phase.name/other}
+
+          ;; Phase statuses
+          {:db/ident :phase.status/in-progress}
+          {:db/ident :phase.status/research}
+          {:db/ident :phase.status/completed}
+          {:db/ident :phase.status/valid}
+          {:db/ident :phase.status/canceled}
+          {:db/ident :phase.status/expired}
+          {:db/ident :phase.status/other}
+
+          ;; phase name ref
+          {:db/ident :phase/phase-name
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Phase name enum ref"}
+
+          ;; phase status ref
+          {:db/ident :phase/status
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Phase status enum ref"}]]}]
