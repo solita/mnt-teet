@@ -8,25 +8,18 @@
   ;; Phase name (drop-down selector, a predefined list of phases: eskiisprojekt, eelprojekt, põhiprojekt, maade omandamine, ehitus)
   ;; Timeline (EstStart, EstEnd, assumptions entered only)
   ;; Status (drop-down selector, a predefined list of statuses)
-  [:<>
-   [select/outlined-select {:label (tr [:project :phase :name])
-                            :items [:none
-                                    :eskiisprojekt
-                                    :eelproject
-                                    :pohiprojekt
-                                    :maade-omandamine
-                                    :ehitus]
-                            :format-item #(case %
-                                            :none (tr [:common :select :empty])
-                                            ;; phases need to be in database
-                                            (name %))
-                            :value (or (:phase/name phase) :none)
-                            :on-change #(e! (phase-controller/->UpdatePhaseForm {:phase/name %}))}]
+  (let [update-field-fn (fn [field]
+                          #(e! (phase-controller/->UpdatePhaseForm {field %})))]
+    [:<>
+     [select/select-enum {:e! e!
+                          :attribute :phase/phase-name
+                          :value (or (:phase/phase-name phase) :none)
+                          :on-change (update-field-fn :phase/phase-name)}]
 
 
-   [date-picker/date-input {:value (:phase/due-date phase)
-                            :on-change #(e! (phase-controller/->UpdatePhaseForm {:phase/due-date %}))}]
+     [date-picker/date-input {:value (:phase/due-date phase)
+                              :on-change (update-field-fn :phase/due-date)}]
 
 
 
-   ])
+     ]))
