@@ -2,9 +2,13 @@
   "Selection components"
   (:require [reagent.core :as r]
             [teet.ui.material-ui :refer [Select MenuItem Menu Button IconButton
-                                         Input InputLabel FormControl ButtonGroup]]
+                                         Input InputLabel FormControl ButtonGroup
+                                         CircularProgress]]
             [taoensso.timbre :as log]
-            [teet.ui.icons :as icons]))
+            [teet.ui.icons :as icons]
+            [teet.common.common-controller :as common-controller]
+            [tuck.core :as t]
+            [teet.localization :refer [tr]]))
 
 (defn outlined-select [{:keys [label items on-change value format-item]
                         :or {format-item :label}}]
@@ -58,3 +62,29 @@
                                              (reset! anchor nil)) :value (str i)}
                        (item-label item)])
                     items))]]))
+
+(defonce enum-values (r/atom {}))
+(defrecord SetEnumValues [attribute values]
+  t/Event
+  (process-event [_ app]
+    (swap! enum-values assoc attribute values)
+    app))
+
+(defn select-enum
+  "Select an enum value based on attribute. Automatically fetches enum values from database."
+  [{:keys [e! attribute]}]
+  (when-not (contains? @enum-values attribute)
+    (e! (common-controller/->Query {:query :enum/values
+                                    :args {:attribute attribute}
+                                    :result-event (partial ->SetEnumValues attribute)})))
+  (fn [{:keys [value on-change]}]
+    (let [tr* #(tr [:enum %])]
+      (if-let [values (@enum-values attribute)]
+        [outlined-select {:label (tr [:fields attribute])
+                          :value (or value :none)
+                          :on-change on-change
+                          :items (into [:none] (sort-by tr* values))
+                          :format-item #(if (= :none %)
+                                          (tr [:common :select :empty])
+                                          (tr* %))}]
+        [CircularProgress {:size 10}]))))

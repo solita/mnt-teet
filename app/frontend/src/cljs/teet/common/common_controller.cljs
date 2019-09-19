@@ -187,6 +187,12 @@
        "?q=" (js/encodeURIComponent (transit/clj->transit {:query query :args args}))
        "&t=" (js/encodeURIComponent @api-token)))
 
+(defrecord Query [query-effect-map]
+  t/Event
+  (process-event [_ app]
+    (t/fx app
+          (assoc query-effect-map :tuck.effect/type :query))))
+
 (defmethod tuck-effect/process-effect :command! [e! {:keys [command payload result-path result-event] :as q}]
   (assert (keyword? command)
           "Must specify :command keyword that names the command to execute")
