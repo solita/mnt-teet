@@ -8,7 +8,8 @@
 (defrecord FetchProjectDocuments [project-id])
 (defrecord OpenPhaseDialog []) ; open add phase modal dialog
 (defrecord ClosePhaseDialog [])
-
+(defrecord OpenTaskDialog [phase-id])
+(defrecord CloseTaskDialog [])
 
 (defmethod routes/on-navigate-event :project [{{project :project} :params}]
   (log/info "Navigated to project, fetch workflows for THK project: " project)

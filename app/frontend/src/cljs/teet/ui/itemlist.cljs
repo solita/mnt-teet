@@ -8,19 +8,29 @@
             [teet.theme.theme-colors :as theme-colors]
             [teet.theme.itemlist-theme :as itemlist-theme]
             [herb.core :refer [<class]]
-            [teet.ui.util :as util]))
+            [teet.ui.util :as util]
+            [taoensso.timbre :as log]))
 
 (defn ListHeading
-  [title subtitle]
-  [:div {:class (<class itemlist-theme/heading)}
-   [Heading2 title]
+  [{:keys [title subtitle action variant]
+    :or {variant :primary}}]
+  [:div {:class (<class itemlist-theme/heading variant)}
+   (case variant
+     :primary [Heading2 title]
+     :secondary [Heading3 title])
+   (when action
+      [:div {:class (<class itemlist-theme/heading-action)}
+       action])
    (when subtitle
      [DataLabel subtitle])])
 
 (defn ItemList
-  [{:keys [title subtitle]} & children]
+  [{:keys [title subtitle variant]
+    :or {variant :primary}} & children]
   [:div
-   [ListHeading title subtitle]
+   [ListHeading {:title title
+                 :subtitle subtitle
+                 :variant variant}]
    (util/with-keys children)])
 
 (defn ProgressList

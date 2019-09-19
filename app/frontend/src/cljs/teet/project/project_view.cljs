@@ -7,7 +7,7 @@
             [teet.map.map-view :as map-view]
             [teet.login.login-paths :as login-paths]
             [postgrest-ui.components.item-view :as postgrest-item-view]
-            [teet.ui.material-ui :refer [Grid Button TextField]]
+            [teet.ui.material-ui :refer [Grid Button TextField Divider]]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-style :as project-style]
             [teet.task.task-controller :as task-controller]
@@ -15,7 +15,7 @@
             [teet.ui.select :as select]
             [teet.ui.itemlist :as itemlist]
             [teet.ui.icons :as icons]
-            [teet.localization :refer [tr]]
+            [teet.localization :refer [tr tr-fixme]]
             [teet.ui.panels :as panels]
             [teet.ui.date-picker :as date-picker]
             [cljs-time.core :as t]
@@ -58,17 +58,30 @@
                 "procurement_no"]
        :view project-data}
       project]
-     [itemlist/ProgressList
-      {:title (tr [:project :phases])}
-      (for [p (get-in app [:project project :phases])]
-        {:name (tr [:enum (:db/ident (:phase/phase-name p))])
-         :id (str (:db/id p))
-         :link (str "#/projects/" project "/phase/" (:db/id p))})]
+     [:<>
+      [itemlist/ListHeading {:title (tr [:project :phases])
+                             :action [Button {:on-click #(e! (project-controller/->OpenPhaseDialog))}
+                                      (tr [:project :add-phase])
+                                      [icons/content-add-circle]]}]
+      (doall
+       (for [{id :db/id
+              :phase/keys [phase-name tasks
+                           estimated-start-date estimated-end-date] :as p}
+             (get-in app [:project project :phases])]
+         ^{:key id}
+         [itemlist/ItemList {:title (tr [:enum (:db/ident phase-name)])
+                             :subtitle (str (.toLocaleDateString estimated-start-date) " - "
+                                            (.toLocaleDateString estimated-end-date))
+                             :variant :secondary}
+          (if (seq tasks)
+            (for [t tasks]
+              [:div (pr-str t)])
+            [:div [:em (tr [:project :phase :no-tasks])]])
 
-
-     [Button {:on-click #(e! (project-controller/->OpenPhaseDialog))}
-      (tr [:project :add-phase])
-      [icons/content-add-circle-outline]]]
+          [Button {:on-click (r/partial e! (project-controller/->OpenTaskDialog id))
+                   :size "small"}
+           [icons/content-add-circle]
+           (tr [:project :add-task])]]))]]
 
     [Grid {:item true :xs 6
            :className (<class project-style/project-map-column)}
