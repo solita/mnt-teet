@@ -27,7 +27,8 @@
         amazonica {:mvn/version "0.3.146" :exclusions [com.amazonaws/aws-java-sdk
                                                        com.amazonaws/amazon-kinesis-client]}
         com.amazonaws/aws-java-sdk-core {:mvn/version "1.11.623"}
-        com.amazonaws/aws-java-sdk-s3 {:mvn/version "1.11.623"}}
+        com.amazonaws/aws-java-sdk-s3 {:mvn/version "1.11.623"}
+        com.amazonaws/aws-java-sdk-ssm {:mvn/version "1.11.623"}}
 
  :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
              ;;"teet-dev-files" {:url "s3://teet-dev-files/maven"}
