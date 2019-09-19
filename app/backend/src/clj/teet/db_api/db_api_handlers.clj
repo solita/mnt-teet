@@ -13,6 +13,7 @@
             teet.document.document-queries
             teet.login.login-queries
             teet.login.login-commands
+            teet.enum.enum-queries
 
             [taoensso.timbre :as log]
             [teet.login.login-api-token :as login-api-token]

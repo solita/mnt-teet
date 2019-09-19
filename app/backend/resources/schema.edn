@@ -132,22 +132,27 @@
 
 
  {:db/ident :phase-names-and-statuses
-  :txes [[;; Phase names
-          {:db/ident :phase.name/pre-design}
-          {:db/ident :phase.name/preliminary-design}
-          {:db/ident :phase.name/detailed-design}
-          {:db/ident :phase.name/land-acquisition}
-          {:db/ident :phase.name/construction}
-          {:db/ident :phase.name/other}
+  :txes [[{:db/ident :enum/attribute
+           :db/doc "Correlates different enum values by keyword"
+           :db/valueType :db.type/keyword
+           :db/cardinality :db.cardinality/one}]
+
+         [;; Phase names
+          {:db/ident :phase.name/pre-design :enum/attribute :phase/phase-name}
+          {:db/ident :phase.name/preliminary-design  :enum/attribute :phase/phase-name}
+          {:db/ident :phase.name/detailed-design :enum/attribute :phase/phase-name}
+          {:db/ident :phase.name/land-acquisition :enum/attribute :phase/phase-name}
+          {:db/ident :phase.name/construction :enum/attribute :phase/phase-name}
+          {:db/ident :phase.name/other :enum/attribute :phase/phase-name}
 
           ;; Phase statuses
-          {:db/ident :phase.status/in-progress}
-          {:db/ident :phase.status/research}
-          {:db/ident :phase.status/completed}
-          {:db/ident :phase.status/valid}
-          {:db/ident :phase.status/canceled}
-          {:db/ident :phase.status/expired}
-          {:db/ident :phase.status/other}
+          {:db/ident :phase.status/in-progress :enum/attribute :phase/status}
+          {:db/ident :phase.status/research :enum/attribute :phase/status}
+          {:db/ident :phase.status/completed :enum/attribute :phase/status}
+          {:db/ident :phase.status/valid :enum/attribute :phase/status}
+          {:db/ident :phase.status/canceled :enum/attribute :phase/status}
+          {:db/ident :phase.status/expired :enum/attribute :phase/status}
+          {:db/ident :phase.status/other :enum/attribute :phase/status}
 
           ;; phase name ref
           {:db/ident :phase/phase-name
