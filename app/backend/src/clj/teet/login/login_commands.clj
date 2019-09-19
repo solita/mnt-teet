@@ -3,7 +3,8 @@
             [teet.environment :as environment]
             [taoensso.timbre :as log]
             [teet.login.login-api-token :as login-api-token]
-            [datomic.client.api :as d]))
+            [datomic.client.api :as d]
+            [teet.environment :as environment]))
 
 
 (defmethod db-api/command! :login [{conn :conn} {:user/keys [id given-name family-name email person-id] :as user}]
