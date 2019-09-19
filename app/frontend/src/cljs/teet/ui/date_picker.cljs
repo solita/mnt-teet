@@ -38,9 +38,11 @@
 (def locale {:et {:months ["jaan" "veebr" "märts" "apr" "mai" "juuni" "juuli" "aug" "sept" "okt" "nov" "dets"]
                   :days ["E" "T" "K" "N" "R" "L" "P"]
                   #_["esmaspäev" "teisipäev" "kolmapäev" "neljapäev" "reede" "laupäev" "pühapäev"]
+                  :today "Täna"
                   }
              :en {:months ["jan" "feb" "mar" "apr" "may" "jun" "jul" "aug" "sep" "oct" "nov" "dec"]
-                  :days ["mon" "tue" "wed" "thu" "fri" "sat" "sun"]}})
+                  :days ["mon" "tue" "wed" "thu" "fri" "sat" "sun"]
+                  :today "Today"}})
 
 (def format (tf/formatter "dd.MM.yyyy"))
 
@@ -74,7 +76,7 @@
   [{:keys [value on-change selectable?] :as opts}]
   (r/with-let [now (or value (t/now))
                nayta (atom [(.getYear now) (.getMonth now)])]
-    (let [{:keys [months days]} (get locale @localization/selected-language)
+    (let [{:keys [months days today]} (get locale @localization/selected-language)
           [year month] @nayta
           show-month (t/date-time year (inc month) 1)
           show-month-day? #(same-month? show-month %)]
@@ -140,7 +142,7 @@
                                 (.preventDefault %)
                                 (.stopPropagation %)
                                 (on-change (t/now)))}
-               "Tänään"]]]]])))
+               today]]]]])))
 
 (defn date-input
   "Combined text field and date picker input field"
