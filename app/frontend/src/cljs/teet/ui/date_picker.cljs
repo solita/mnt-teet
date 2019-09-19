@@ -147,12 +147,12 @@
 (defn date-input
   "Combined text field and date picker input field"
   [{:keys [label value on-change]}]
-  (r/with-let [txt (r/atom (unparse-opt value))
+  (r/with-let [txt (r/atom (some-> value goog.date.Date. unparse-opt))
                open? (r/atom false)
                ref (atom nil)]
     [:<>
      [TextField {:label label
-                 :value @txt
+                 :value (or @txt "")
                  :ref #(reset! ref %)
                  :variant "outlined"
                  :on-change #(let [v (-> % .-target .-value)]
