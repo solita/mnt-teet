@@ -20,7 +20,8 @@
             [teet.ui.date-picker :as date-picker]
             [cljs-time.core :as t]
             [cljs-time.format :as tf]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [teet.phase.phase-view :as phase-view]))
 
 (defn project-data
   [{:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
@@ -32,32 +33,7 @@
    [:div "Carriageway: " carriageway]
    [:div "Procurement number:" procurement_no]])
 
-(defn phase-form [e! phase]
-  ;; Phase name (drop-down selector, a predefined list of phases: eskiisprojekt, eelprojekt, põhiprojekt, maade omandamine, ehitus)
-  ;; Timeline (EstStart, EstEnd, assumptions entered only)
-  ;; Status (drop-down selector, a predefined list of statuses)
-  [:<>
-   [select/outlined-select {:label (tr [:project :phase :name])
-                            :items [:none
-                                    :eskiisprojekt
-                                    :eelproject
-                                    :pohiprojekt
-                                    :maade-omandamine
-                                    :ehitus]
-                            :format-item #(case %
-                                            :none (tr [:common :select :empty])
-                                            ;; phases need to be in database
-                                            (name %))
-                            :value (or (:phase/name phase) :none)
-                            :on-change #(e! (project-controller/->UpdatePhaseForm {:phase/name %}))}]
 
-
-   [date-picker/date-input {:value (:phase/due-date phase)
-                            :on-change #(e! (project-controller/->UpdatePhaseForm {:phase/due-date %}))}]
-
-
-
-   ])
 
 (defn project-page [e! {{:keys [project]} :params
                         {:keys [add-phase]} :query :as app}]
@@ -65,7 +41,7 @@
    (when add-phase
      [panels/modal {:title (tr [:project :add-phase])
                     :on-close #(e! (project-controller/->ClosePhaseDialog))}
-      [phase-form e! (get-in app [:project project :new-phase])]])
+      [phase-view/phase-form e! (get-in app [:project project :new-phase])]])
    [Grid {:container true
           :className (<class project-style/project-grid-container)
           :spacing 10}
