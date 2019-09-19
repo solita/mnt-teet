@@ -24,7 +24,7 @@
         org.clojure/core.async {:mvn/version "0.4.500"}
 
         com.cognitect/transit-cljs {:mvn/version "0.8.256"}}
- :paths ["src/cljs" "target" "resources"]
+ :paths ["src/cljs" "../common/src/cljc" "target" "resources"]
  :aliases {:test {:main-opts ["-m" "figwheel.main"
                               "-co" "tests.cljs.edn"
                               "-m" "teet.runner"]
