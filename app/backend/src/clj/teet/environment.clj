@@ -13,10 +13,10 @@
 (def config (atom {:datomic {:db-name "teet"
                              :client {:server-type :ion}}}))
 
-(defn init-ion-config! [config]
+(defn init-ion-config! [ion-config]
   (swap! config
          (fn [base-config]
-           (let [config (merge base-config config)
+           (let [config (merge base-config ion-config)
                  env (:env config)]
              (assoc-in config [:auth :jwt-secret]
                        (ssm-param (str "/teet-" (name env) "/api/jwt-secret")))))))
