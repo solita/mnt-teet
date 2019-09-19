@@ -4,10 +4,22 @@
             [clojure.java.io :as io]
             [taoensso.timbre :as log]
             [datomic.client.api :as d]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [amazonica.aws.simplesystemsmanagement :as ssm]))
+
+(defn- ssm-param [name]
+  (->> name (ssm/get-parameter :name) :parameter :value))
 
 (def config (atom {:datomic {:db-name "teet"
                              :client {:server-type :ion}}}))
+
+(defn init-ion-config! [config]
+  (swap! config
+         (fn [base-config]
+           (let [config (merge base-config config)
+                 env (:env config)]
+             (assoc-in config [:auth :jwt-secret]
+                       (ssm-param (str "/teet-" (name env) "/api/jwt-secret")))))))
 
 (defn load-local-config!
   "Load local development configuration from outside repository"
