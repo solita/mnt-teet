@@ -8,7 +8,7 @@
 
 (defmethod db-api/command! :login [{conn :conn} {:user/keys [id given-name family-name email person-id] :as user}]
   (d/transact conn {:tx-data [{:user/id id}]})
-  (when (not= :dev (environment/config-value :env))
+  #_(when (not= :dev (environment/config-value :env))
     (log/warn "Demo login can only be used in :dev environment")
     (throw (ex-info "Demo login not allowed"
                     {:demo-user user})))
