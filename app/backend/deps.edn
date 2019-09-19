@@ -34,7 +34,7 @@
              "datomic-cloud" {:url "s3://datomic-releases-1fc2183a/maven/releases"}
 
              }
- :paths ["src/clj" "resources"]
+ :paths ["src/clj" "../common/src/cljc" "resources"]
  :aliases {:dev {:extra-deps {com.datomic/ion-dev {:mvn/version "0.9.234"}}}
            :pack {:extra-deps {pack/pack.alpha {:git/url "https://github.com/juxt/pack.alpha.git"
                                                 :sha "2769a6224bfb938e777906ea311b3daf7d2220f5"}}}
