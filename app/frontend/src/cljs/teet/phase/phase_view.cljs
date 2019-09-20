@@ -15,6 +15,8 @@
     [Grid {:container true :spacing 1}
      [Grid {:item true :xs 12}
       [select/select-enum {:e! e!
+                           :id :phase/name
+                           :name (tr [:fields :phase/name])
                            :attribute :phase/phase-name
                            :value (or (:phase/phase-name phase) :none)
                            :on-change (update-field-fn :phase/phase-name)}]]
@@ -31,6 +33,8 @@
 
      [Grid {:item true :xs 12}
       [select/select-enum {:e! e!
+                           :id :phase/status
+                           :name (tr [:fields :phase/name])
                            :attribute :phase/status
                            :value (:phase/status phase)
                            :on-change (update-field-fn :phase/status)}]]
@@ -43,6 +47,4 @@
       [Button {:on-click #(e! (phase-controller/->CreatePhase))
                :color "primary"
                :variant "outlined"}
-       (tr [:buttons :save])]]
-
-     ]))
+       (tr [:buttons :save])]]]))

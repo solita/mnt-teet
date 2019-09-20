@@ -11,24 +11,30 @@
             [teet.localization :refer [tr]]))
 
 
-(defn outlined-select [{:keys [label items on-change value format-item]
+(defn outlined-select [{:keys [label name id items on-change value format-item show-empty-selection?]
                         :or {format-item :label}}]
   (r/with-let [reference (r/atom nil)
                set-ref! (fn [el]
                           (reset! reference el))]
     (let [option-idx (zipmap items (range))
-          change-value #(on-change (nth items (-> % .-target .-value)))]
+          change-value (fn [e]
+                         (let [val (-> e .-target .-value)]
+                           (if (= val "")
+                             (on-change nil)
+                             (on-change (nth items (-> e .-target .-value))))))]
       [FormControl {:variant :outlined
                     :style {:width "100%"}}
-       [InputLabel {:html-for "language-select"
+       [InputLabel {:html-for id
                     :ref set-ref!} label]
        [Select
-        {:value (option-idx value)
-         :name "language"
+        {:value (or (option-idx value) "")
+         :name name
          :label-width (or (some-> @reference .-offsetWidth) 12)
-         :input-props {:id "language-select"
-                       :name "language"}
+         :input-props {:id id
+                       :name name}
          :on-change change-value}
+        (when show-empty-selection?
+          (MenuItem {:value ""} [:em (tr [:common :select :empty])]))
         (doall
           (map-indexed
             (fn [i item]
@@ -56,13 +62,13 @@
      [Menu {:open (boolean @anchor)
             :anchorEl @anchor}
       (doall
-       (map-indexed (fn [i item]
-                      ^{:key i}
-                      [MenuItem {:on-click (fn [_]
-                                             (reset! selected item)
-                                             (reset! anchor nil)) :value (str i)}
-                       (item-label item)])
-                    items))]]))
+        (map-indexed (fn [i item]
+                       ^{:key i}
+                       [MenuItem {:on-click (fn [_]
+                                              (reset! selected item)
+                                              (reset! anchor nil)) :value (str i)}
+                        (item-label item)])
+          items))]]))
 
 (defonce enum-values (r/atom {}))
 (defrecord SetEnumValues [attribute values]
@@ -78,15 +84,14 @@
     (e! (common-controller/->Query {:query :enum/values
                                     :args {:attribute attribute}
                                     :result-event (partial ->SetEnumValues attribute)})))
-  (fn [{:keys [value on-change]}]
-    (let [tr* #(tr [:enum %])]
-      (if-let [values (@enum-values attribute)]
-        [outlined-select {:label (tr [:fields attribute])
-                          :value (or value :none)
-                          :on-change on-change
-                          :items (into [:none] (sort-by tr* values))
-                          :format-item #(if (= :none %)
-                                          ;; PENDING: show better placeholder
-                                          [:em (tr [:common :select :empty])]
-                                          (tr* %))}]
-        [CircularProgress {:size 10}]))))
+  (fn [{:keys [value on-change name id]}]
+    (let [tr* #(tr [:enum %])
+          values (@enum-values attribute)]
+      [outlined-select {:label (tr [:fields attribute])
+                        :name name
+                        :id id
+                        :value (or value :none)
+                        :on-change on-change
+                        :show-empty-selection? true
+                        :items (sort-by tr* values)
+                        :format-item tr*}])))

@@ -10,8 +10,10 @@
 (defn- ssm-param [name]
   (->> name (ssm/get-parameter :name) :parameter :value))
 
-(def config (atom {:datomic {:db-name "teet"
-                             :client {:server-type :ion}}}))
+(def init-config {:datomic {:db-name "teet"
+                            :client {:server-type :ion}}})
+
+(def config (atom init-config))
 
 (defn init-ion-config! [ion-config]
   (swap! config
@@ -27,9 +29,12 @@
   (let [file (io/file ".." ".." ".." "mnt-teet-private" "config.edn")]
     (when (.exists file)
       (log/info "Loading local config file: " file)
-      (swap! config (fn [c]
-                      (merge-with merge c
-                                  (read-string (slurp file))))))))
+      (reset! config (merge-with (fn [a b]
+                                   (if (and (map? a) (map? b))
+                                     (merge a b)
+                                     b))
+                                 init-config
+                                 (read-string (slurp file)))))))
 (defn db-name []
   (-> @config
       (get-in [:datomic :db-name])
@@ -43,22 +48,27 @@
 
 (def schema (delay (-> "schema.edn" io/resource slurp read-string)))
 
-(defn- migrate [conn]
-  (log/info "Migrate, db: " (:db-name conn))
-  (doseq [{ident :db/ident txes :txes} @schema
-          :let [db (d/db conn)
-                already-applied? (ffirst
-                                  (d/q '[:find ?m :where [?m :db/ident ?ident]
-                                         :in $ ?ident]
-                                       db ident))]]
-    (if already-applied?
-      (log/info "Migration " ident " is already applied.")
-      (do
-        (log/info "Applying migration " ident)
-        (doseq [tx txes]
-          (d/transact conn {:tx-data tx}))
-        (d/transact conn {:tx-data [{:db/ident ident}]}))))
-  (log/info "Migrations finished."))
+(defn migrate
+  ([conn]
+   (migrate conn false))
+  ([conn force?]
+   (log/info "Migrate, db: " (:db-name conn))
+   (doseq [{ident :db/ident txes :txes} @schema
+           :let [db (d/db conn)
+                 already-applied? (if force?
+                                    false
+                                    (ffirst
+                                     (d/q '[:find ?m :where [?m :db/ident ?ident]
+                                            :in $ ?ident]
+                                          db ident)))]]
+     (if already-applied?
+       (log/info "Migration " ident " is already applied.")
+       (do
+         (log/info "Applying migration " ident)
+         (doseq [tx txes]
+           (d/transact conn {:tx-data tx}))
+         (d/transact conn {:tx-data [{:db/ident ident}]}))))
+   (log/info "Migrations finished.")))
 
 (def ^:private db-migrated? (atom false))
 
