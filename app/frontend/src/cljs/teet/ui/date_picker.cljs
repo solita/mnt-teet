@@ -5,35 +5,35 @@
             [teet.ui.icons :as icons]
             [goog.events.EventType :as EventType]
             [cljs-time.format :as tf]
-            [teet.ui.material-ui :refer [TextField IconButton Popover]]
+            [teet.ui.material-ui :refer [TextField IconButton Popover ClickAwayListener]]
             [teet.ui.icons :as icons]
             [teet.localization :as localization]))
 
 (defn- date-seq [first-date last-date]
   (when-not (t/after? first-date last-date)
     (lazy-seq
-     (cons first-date
-           (date-seq (t/plus first-date (t/days 1)) last-date)))))
+      (cons first-date
+        (date-seq (t/plus first-date (t/days 1)) last-date)))))
 
 (defn- split-into-weeks
   "Return sequence of 6 week from the start of the calendar."
   [year month]
-  (let [month (inc month) ;; cljs-time uses natural month numbers
+  (let [month (inc month)                                   ;; cljs-time uses natural month numbers
         week-start (loop [date (t/date-time year month 1)]
                      (if (= 1 (t/day-of-week date))
                        date
                        (recur (t/minus date (t/days 1)))))]
     (partition
-     7
-     (date-seq week-start (t/plus week-start (t/weeks 6))))))
+      7
+      (date-seq week-start (t/plus week-start (t/weeks 6))))))
 
 (defn- same-month? [d1 d2]
   (and (= (t/month d1) (t/month d2))
-       (= (t/year d1) (t/year d2))))
+    (= (t/year d1) (t/year d2))))
 
 (defn- same-day? [d1 d2]
   (and (= (t/day d1) (t/day d2))
-       (same-month? d1 d2)))
+    (same-month? d1 d2)))
 
 (def locale {:et {:months ["jaan" "veebr" "märts" "apr" "mai" "juuni" "juuli" "aug" "sept" "okt" "nov" "dets"]
                   :days ["E" "T" "K" "N" "R" "L" "P"]
@@ -88,20 +88,20 @@
          [:td.date-picker-prev-month.clickable
           {:on-click #(do (.preventDefault %)
                           (swap! nayta
-                                 (fn [[year month]]
-                                   (if (= month 0)
-                                     [(dec year) 11]
-                                     [year (dec month)])))
+                            (fn [[year month]]
+                              (if (= month 0)
+                                [(dec year) 11]
+                                [year (dec month)])))
                           nil)}
           (icons/navigation-chevron-left)]
          [:td {:col-span 5} [:span.pvm-kuukausi (nth months month)] " " [:span.pvm-year year]]
          [:td.date-picker-next-month.clickable
           {:on-click #(do (.preventDefault %)
                           (swap! nayta
-                                 (fn [[year month]]
-                                   (if (= month 11)
-                                     [(inc year) 0]
-                                     [year (inc month)])))
+                            (fn [[year month]]
+                              (if (= month 11)
+                                [(inc year) 0]
+                                [year (inc month)])))
                           nil)}
           (icons/navigation-chevron-right)]]
         [:tr.date-picker-weekdays
@@ -115,21 +115,21 @@
           [:tr
            (for [paiva paivat
                  :let [valittava? (or (not (some? selectable?))
-                                      (selectable? paiva))]]
+                                    (selectable? paiva))]]
              ^{:key (str paiva)}
              [:td.pvm-paiva {:class (str
-                                     (if valittava?
-                                       "klikattava "
-                                       "pvm-disabloitu ")
-                                     (let [now (t/now)]
-                                       (when (and value (same-day? now value)) "pvm-tanaan "))
-                                     (when (and value
-                                                (= (t/day paiva) (t/day value))
-                                                (= (t/month paiva) (t/month value))
-                                                (= (t/year paiva) (t/year value)))
-                                       "pvm-valittu ")
-                                     (if (show-month-day? paiva)
-                                       "pvm-show-month-paiva" "pvm-muu-month-paiva"))
+                                      (if valittava?
+                                        "klikattava "
+                                        "pvm-disabloitu ")
+                                      (let [now (t/now)]
+                                        (when (and value (same-day? now value)) "pvm-tanaan "))
+                                      (when (and value
+                                              (= (t/day paiva) (t/day value))
+                                              (= (t/month paiva) (t/month value))
+                                              (= (t/year paiva) (t/year value)))
+                                        "pvm-valittu ")
+                                      (if (show-month-day? paiva)
+                                        "pvm-show-month-paiva" "pvm-muu-month-paiva"))
 
                              :on-click #(do (.stopPropagation %)
                                             (when valittava?
@@ -150,6 +150,8 @@
   (r/with-let [txt (r/atom (some-> value goog.date.Date. unparse-opt))
                open? (r/atom false)
                ref (atom nil)
+               close-input (fn [_]
+                             (reset! open? false))
                set-ref (fn [el]
                          (reset! ref el))]
     [:<>
@@ -167,9 +169,10 @@
                :anchorEl @ref
                :anchorOrigin {:vertical "bottom"
                               :horizontal "left"}}
-      [date-picker {:value (when value
-                             (goog.date.Date. value))
-                    :on-change (fn [^goog.date.Date d]
-                                 (reset! txt (unparse-opt d))
-                                 (on-change (.-date d))
-                                 (reset! open? false))}]]]))
+      [ClickAwayListener {:on-click-away close-input}
+       [date-picker {:value (when value
+                              (goog.date.Date. value))
+                     :on-change (fn [^goog.date.Date d]
+                                  (reset! txt (unparse-opt d))
+                                  (on-change (.-date d))
+                                  (close-input))}]]]]))
