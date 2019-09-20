@@ -149,11 +149,13 @@
   [{:keys [label value on-change]}]
   (r/with-let [txt (r/atom (some-> value goog.date.Date. unparse-opt))
                open? (r/atom false)
-               ref (atom nil)]
+               ref (atom nil)
+               set-ref (fn [el]
+                         (reset! ref el))]
     [:<>
      [TextField {:label label
                  :value (or @txt "")
-                 :ref #(reset! ref %)
+                 :ref set-ref
                  :variant "outlined"
                  :on-change #(let [v (-> % .-target .-value)]
                                (reset! txt v)

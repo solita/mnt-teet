@@ -47,6 +47,4 @@
       [Button {:on-click #(e! (phase-controller/->CreatePhase))
                :color "primary"
                :variant "outlined"}
-       (tr [:buttons :save])]]
-
-     ]))
+       (tr [:buttons :save])]]]))
