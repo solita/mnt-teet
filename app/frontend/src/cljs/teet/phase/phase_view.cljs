@@ -21,12 +21,12 @@
                            :value (or (:phase/phase-name phase) :none)
                            :on-change (update-field-fn :phase/phase-name)}]]
 
-     [Grid {:item true :xs 4}
+     [Grid {:item true :xs 6}
       [date-picker/date-input {:label (tr [:fields :phase :estimated-start-date])
                                :value (:phase/estimated-start-date phase)
                                :on-change (update-field-fn :phase/estimated-start-date)}]]
 
-     [Grid {:item true :xs 4}
+     [Grid {:item true :xs 6}
       [date-picker/date-input {:label (tr [:fields :phase :estimated-end-date])
                                :value (:phase/estimated-end-date phase)
                                :on-change (update-field-fn :phase/estimated-end-date)}]]

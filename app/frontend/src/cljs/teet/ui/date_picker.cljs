@@ -161,6 +161,7 @@
                  :value (or @txt "")
                  :ref set-ref
                  :variant "outlined"
+                 :full-width true
                  :on-change #(let [v (-> % .-target .-value)]
                                (reset! txt v)
                                (when-let [^goog.date.Date d (parse-opt v)]
