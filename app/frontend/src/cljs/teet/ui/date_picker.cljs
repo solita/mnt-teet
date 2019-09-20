@@ -148,7 +148,6 @@
                                          "pvm-disabloitu ")
                                        (if (show-month-day? day)
                                          "pvm-show-month-paiva" "pvm-muu-month-paiva"))}
-               (println "selected: " selected?)
                [IconButton
                 (merge
                   {:style {:width "36px"
@@ -169,9 +168,8 @@
         [:tfoot.pvm-tanaan-text
          [:tr [:td {:colSpan 7}
                [Button {:on-click #(do
-                                 (.preventDefault %)
-                                 (.stopPropagation %)
-                                 (on-change (t/now)))}
+                                     (.stopPropagation %)
+                                     (on-change (t/now)))}
                 today]]]]]])))
 
 (defn date-input
