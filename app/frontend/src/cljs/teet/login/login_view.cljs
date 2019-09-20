@@ -20,7 +20,8 @@
    [layout/column {:content-style {:padding-bottom "2em"}}
     [typography/Heading2 "Select language"]
     [select/outlined-select {:label "Language"
-                             :name "Language select"
+                             :id "language-select"
+                             :name "Language"
                              :value (case @localization/selected-language
                                       :et
                                       {:value "et" :label (get localization/language-names "et")}
