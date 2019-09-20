@@ -19,10 +19,10 @@
    ^{:attribute :phase/name}
    [select/select-enum {:attribute :phase/phase-name}]
 
-   ^{:xs 4 :attribute :phase/estimated-start-date}
+   ^{:xs 6 :attribute :phase/estimated-start-date}
    [date-picker/date-input {}]
 
-   ^{:xs 4 :attribute :phase/estimated-end-date}
+   ^{:xs 6 :attribute :phase/estimated-end-date}
    [date-picker/date-input {}]
 
    ^{:attribute :phase/status}

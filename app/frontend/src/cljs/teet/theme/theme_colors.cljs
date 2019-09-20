@@ -10,11 +10,11 @@
 
 (def dark-red "#91001D")
 
-(def primary dark-blue)
+(def primary light-blue)
 (defn primary-alpha [alpha]
   (str "rgb(4, 30, 66, " alpha ")"))
 
-(def secondary light-blue)
+(def secondary dark-blue)
 (def success green)
 (def error dark-red)
 

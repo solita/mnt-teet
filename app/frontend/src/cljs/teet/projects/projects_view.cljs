@@ -13,7 +13,7 @@
             [teet.map.map-layers :as map-layers]
             [teet.map.map-features :as map-features]
             [teet.theme.theme-spacing :as theme-spacing]
-            [teet.ui.material-ui :refer [TextField TableCell TableSortLabel Button]]
+            [teet.ui.material-ui :refer [TextField TableCell TableSortLabel Button Link]]
             [postgrest-ui.display :as display]
             postgrest-ui.elements
             [taoensso.timbre :as log]
@@ -28,7 +28,7 @@
    :href (str "#/project/" id)})
 
 (defn link-to-project  [{:strs [id name]}]
-  [:a {:href (str "#/projects/" id)} name])
+  [Link {:href (str "#/projects/" id)} name])
 
 (defn- column-filter [e! filters column type]
   [TextField {:value (or (get filters column) "")
