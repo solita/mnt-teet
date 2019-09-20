@@ -5,6 +5,7 @@
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
             [teet.ui.progress :as progress]
+            [teet.ui.select :as select]
             [teet.ui.typography :refer [DataLabel Heading1 Heading2 Heading3 Paragraph SectionHeading Text]]
             [tuck.core :as t]
             [cljs-bean.core :refer [->clj]]
@@ -25,27 +26,27 @@
   TestFileUpload
   (process-event [{files :files} app]
     (js/alert (str "Dropped "
-                   (str/join ", "
-                             (map #(str "\"" (pr-str (file-info %)) "\"") files))))
+                (str/join ", "
+                  (map #(str "\"" (pr-str (file-info %)) "\"") files))))
     app)
 
   UploadFiles
   (process-event [{files :files} app]
     (t/fx app
-          {:tuck.effect/type :command!
-           :command :document/upload
-           :payload (file-info (first files))
-           :result-event #(->UploadFileUrlReceived (first files) %)}))
+      {:tuck.effect/type :command!
+       :command :document/upload
+       :payload (file-info (first files))
+       :result-event #(->UploadFileUrlReceived (first files) %)}))
 
   UploadFileUrlReceived
   (process-event [{:keys [file url]} app]
     (log/info "upload file: " file " to URL: " url)
     (-> (js/fetch (:url url) #js {:method "PUT"
-                              :body file})
-        (.then (fn [^js/Response resp]
-                 (if (.-ok resp)
-                   (log/info "Upload ok" (.-status resp))
-                   (log/warn "Upload failed: " (.-status resp) (.-statusText resp))))))
+                                  :body file})
+      (.then (fn [^js/Response resp]
+               (if (.-ok resp)
+                 (log/info "Upload ok" (.-status resp))
+                 (log/warn "Upload failed: " (.-status resp) (.-statusText resp))))))
     app)
   )
 
@@ -140,42 +141,53 @@
                                      :on-drop #(e! (->UploadFiles %) #_(->TestFileUpload %))
                                      :drop-message "Drop it like it's hot"}
        "Click to upload"]]]]
-    [Divider]
-    [:section
-     [Heading2 "Itemlist component"]
-     [:div {:style {:margin "2rem 0"}}
-      [itemlist/ProgressList
-       {:title "itemlist title" :subtitle "Foo bar"}
-       [{:status :success
-         :link "#/12"
-         :name "First task"}
-        {:status :fail
-         :link "#/123"
-         :name "second task"}
-        {:status :created
-         :link "#/1234"
-         :name "third task"}
-        {:status :created
-         :link "#/1323"
-         :name "asdasd task"}
-        {:status :success
-         :link "#/3232"
-         :name "fifth task"}]]]
-     [:div {:style {:width "50%"
-                    :margin "2rem 0"}}
-      [itemlist/LinkList
-       {:title "itemlist title" :subtitle "Foo bar"}
-       [{:link "/foo"
-         :name "First task"}
-        {:status :fail
-         :name "second task"}
-        {:link "/foo"
-         :name "third task"}
-        {:link "/foo"
-         :name "asdasd task"}
-        {:link "/:success"
-         :name "fifth task"}]
-       (fn on-click-handler [x]
-         (log/info "on click handler got:" (pr-str x)))]]
+   [Divider]
+   [:section
+    [Heading2 "Itemlist component"]
+    [:div {:style {:margin "2rem 0"}}
+     [itemlist/ProgressList
+      {:title "itemlist title" :subtitle "Foo bar"}
+      [{:status :success
+        :link "#/12"
+        :name "First task"}
+       {:status :fail
+        :link "#/123"
+        :name "second task"}
+       {:status :created
+        :link "#/1234"
+        :name "third task"}
+       {:status :created
+        :link "#/1323"
+        :name "asdasd task"}
+       {:status :success
+        :link "#/3232"
+        :name "fifth task"}]]]
+    [:div {:style {:width "50%"
+                   :margin "2rem 0"}}
+     [itemlist/LinkList
+      {:title "itemlist title" :subtitle "Foo bar"}
+      [{:link "/foo"
+        :name "First task"}
+       {:status :fail
+        :name "second task"}
+       {:link "/foo"
+        :name "third task"}
+       {:link "/foo"
+        :name "asdasd task"}
+       {:link "/:success"
+        :name "fifth task"}]
+      (fn on-click-handler [x]
+        (log/info "on click handler got:" (pr-str x)))]]
 
-     [Divider]]])
+    [Divider]
+
+    [:div {:style {:width "50%"
+                   :margin "2rem 0"}}
+     [select/outlined-select {:value "et"
+                              :label "Language"
+                              :show-empty-selection? true
+                              :id "language-select"
+                              :name "Language"
+                              :items
+                              [{:value "et" :label "bar"}
+                               {:value "en" :label "baz"}]}]]]])
