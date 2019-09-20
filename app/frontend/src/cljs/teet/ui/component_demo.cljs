@@ -1,6 +1,6 @@
 (ns teet.ui.component-demo
   (:require [clojure.string :as str]
-            [teet.ui.material-ui :refer [Paper Button Fab IconButton TextField Chip Avatar MuiThemeProvider CssBaseline Divider Checkbox]]
+            [teet.ui.material-ui :refer [Paper Button Fab IconButton TextField Chip Avatar MuiThemeProvider CssBaseline Divider Checkbox InputAdornment]]
             [teet.ui.file-upload :as file-upload]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
@@ -9,7 +9,8 @@
             [teet.ui.typography :refer [DataLabel Heading1 Heading2 Heading3 Paragraph SectionHeading Text]]
             [tuck.core :as t]
             [cljs-bean.core :refer [->clj]]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [reagent.core :as r]))
 
 (defrecord TestFileUpload [files])
 (defrecord UploadFiles [files])
@@ -128,7 +129,15 @@
                     :justify-content "space-evenly"
                     :margin-bottom "2rem"}}
       [TextField {:label "Tekstiä"}]
-      [TextField {:label "Tekstiä" :placeholder "Placeholder" :variant :outlined}]
+      [TextField {:label "end adonrmnet"
+                  :placeholder "Placeholder"
+                  :variant :outlined
+                  :InputProps {:end-adornment
+                               (r/as-element
+                                 [InputAdornment {:position :end}
+                                  [IconButton {:on-click println
+                                               :edge "end"}
+                                   [icons/action-calendar-today]]])}}]
       [TextField {:label "Tekstiä" :placeholder "Placeholder" :error true}]
       [TextField {:label "Tekstiä" :placeholder "Placeholder" :error true :variant :filled}]]
      [Divider]]

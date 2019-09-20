@@ -5,7 +5,7 @@
             [teet.ui.icons :as icons]
             [goog.events.EventType :as EventType]
             [cljs-time.format :as tf]
-            [teet.ui.material-ui :refer [TextField IconButton Popover ClickAwayListener]]
+            [teet.ui.material-ui :refer [TextField IconButton Popover ClickAwayListener InputAdornment]]
             [teet.ui.icons :as icons]
             [teet.localization :as localization]))
 
@@ -152,6 +152,8 @@
                ref (atom nil)
                close-input (fn [_]
                              (reset! open? false))
+               open-input (fn [_]
+                            (reset! open? true))
                set-ref (fn [el]
                          (reset! ref el))]
     [:<>
@@ -162,9 +164,13 @@
                  :on-change #(let [v (-> % .-target .-value)]
                                (reset! txt v)
                                (when-let [^goog.date.Date d (parse-opt v)]
-                                 (on-change (.-date d))))}]
-     [IconButton {:on-click #(reset! open? true)}
-      [icons/action-calendar-today]]
+                                 (on-change (.-date d))))
+                 :InputProps {:end-adornment
+                               (r/as-element
+                                 [InputAdornment {:position :end}
+                                  [IconButton {:on-click open-input
+                                               :edge "end"}
+                                   [icons/action-calendar-today]]])}}]
      [Popover {:open @open?
                :anchorEl @ref
                :anchorOrigin {:vertical "bottom"
