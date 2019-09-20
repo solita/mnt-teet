@@ -19,4 +19,4 @@
 (defn force-migrations! []
   "Forces all migrations to rerun."
   (environment/load-local-config!)
-  (environment/migrate (db-connection)))
+  (environment/migrate (db-connection) true))
