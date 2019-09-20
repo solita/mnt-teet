@@ -5,9 +5,11 @@
             [teet.ui.icons :as icons]
             [goog.events.EventType :as EventType]
             [cljs-time.format :as tf]
-            [teet.ui.material-ui :refer [TextField IconButton Popover ClickAwayListener InputAdornment]]
+            [teet.ui.material-ui :refer [TextField IconButton Popover ClickAwayListener InputAdornment Typography Button]]
             [teet.ui.icons :as icons]
-            [teet.localization :as localization]))
+            [teet.localization :as localization]
+            [herb.core :refer [<class]]
+            [teet.ui.typography :as typography]))
 
 (defn- date-seq [first-date last-date]
   (when-not (t/after? first-date last-date)
@@ -63,6 +65,14 @@
     (unparse d)
     ""))
 
+(defn date-header
+  []
+  {:text-transform :capitalize})
+
+(defn day-header
+  []
+  {:text-align :center})
+
 (defn date-picker
   "Date picker component.
 
@@ -75,74 +85,94 @@
    :selectable?  fn to call for each date to check if it should be selectable"
   [{:keys [value on-change selectable?] :as opts}]
   (r/with-let [now (or value (t/now))
-               nayta (atom [(.getYear now) (.getMonth now)])]
+               showing (atom [(.getYear now) (.getMonth now)])]
     (let [{:keys [months days today]} (get locale @localization/selected-language)
-          [year month] @nayta
+          [year month] @showing
           show-month (t/date-time year (inc month) 1)
           show-month-day? #(same-month? show-month %)]
-      [:table.date-picker {:style {:display "table"
-                                   ;; Keep height stable (amount of rows changes depending on month)
-                                   :height "200px"}}
-       [:thead.date-picker-controls
-        [:tr
-         [:td.date-picker-prev-month.clickable
-          {:on-click #(do (.preventDefault %)
-                          (swap! nayta
-                            (fn [[year month]]
-                              (if (= month 0)
-                                [(dec year) 11]
-                                [year (dec month)])))
-                          nil)}
-          (icons/navigation-chevron-left)]
-         [:td {:col-span 5} [:span.pvm-kuukausi (nth months month)] " " [:span.pvm-year year]]
-         [:td.date-picker-next-month.clickable
-          {:on-click #(do (.preventDefault %)
-                          (swap! nayta
-                            (fn [[year month]]
-                              (if (= month 11)
-                                [(inc year) 0]
-                                [year (inc month)])))
-                          nil)}
-          (icons/navigation-chevron-right)]]
-        [:tr.date-picker-weekdays
-         (for [day days]
-           ^{:key day}
-           [:td {:width "14%"} day])]]
 
-       [:tbody.date-picker-dates
-        (for [paivat (split-into-weeks year month)]
-          ^{:key (str (first paivat))}
-          [:tr
-           (for [paiva paivat
-                 :let [valittava? (or (not (some? selectable?))
-                                    (selectable? paiva))]]
-             ^{:key (str paiva)}
-             [:td.pvm-paiva {:class (str
-                                      (if valittava?
-                                        "klikattava "
-                                        "pvm-disabloitu ")
-                                      (let [now (t/now)]
-                                        (when (and value (same-day? now value)) "pvm-tanaan "))
-                                      (when (and value
-                                              (= (t/day paiva) (t/day value))
-                                              (= (t/month paiva) (t/month value))
-                                              (= (t/year paiva) (t/year value)))
-                                        "pvm-valittu ")
-                                      (if (show-month-day? paiva)
-                                        "pvm-show-month-paiva" "pvm-muu-month-paiva"))
+      [:div
+       [:div {:style {:display :flex
+                      :justify-content :space-between
+                      :align-items :center}}
+        [IconButton
+         {:size :small
+          :on-click #(do (.preventDefault %)
+                         (swap! showing
+                           (fn [[year month]]
+                             (if (= month 0)
+                               [(dec year) 11]
+                               [year (dec month)])))
+                         nil)}
+         [icons/navigation-chevron-left {:color :primary}]]
+        [:span {:class (<class date-header)}
+         [:span (nth months month)] " " [:span.pvm-year year]]
+        [IconButton
+         {:size :small
+          :on-click #(do (.preventDefault %)
+                         (swap! showing
+                           (fn [[year month]]
+                             (if (= month 11)
+                               [(inc year) 0]
+                               [year (inc month)])))
+                         nil)}
+         [icons/navigation-chevron-right {:color :primary}]]]
+       [:table.date-picker {:style {:display "table"
+                                    ;; Keep height stable (amount of rows changes depending on month)
+                                    ;:height "200px"
+                                    }}
+        [:thead.date-picker-controls
+         [:tr.date-picker-weekdays
+          (for [day days]
+            ^{:key day}
+            [:td {:width "14%"
+                  :class (<class day-header)} day])]]
 
-                             :on-click #(do (.stopPropagation %)
-                                            (when valittava?
-                                              (on-change paiva))
-                                            nil)}
-              (t/day paiva)])])]
-       [:tfoot.pvm-tanaan-text
-        [:tr [:td {:colSpan 7}
-              [:a {:on-click #(do
-                                (.preventDefault %)
-                                (.stopPropagation %)
-                                (on-change (t/now)))}
-               today]]]]])))
+        [:tbody.date-picker-dates
+         (for [days (split-into-weeks year month)]
+           ^{:key (str (first days))}
+           [:tr
+            (for [day days
+                  :let [is-selectable? (or (not (some? selectable?))
+                                         (selectable? day))
+                        selected? (and value
+                                    (= (t/day day) (t/day value))
+                                    (= (t/month day) (t/month value))
+                                    (= (t/year day) (t/year value)))
+                        today? (and day (same-day? (t/now) day))]]
+              ^{:key (str day)}
+
+              [:td.pvm-paiva {:class (str
+                                       (if is-selectable?
+                                         "klikattava "
+                                         "pvm-disabloitu ")
+                                       (if (show-month-day? day)
+                                         "pvm-show-month-paiva" "pvm-muu-month-paiva"))}
+               (println "selected: " selected?)
+               [IconButton
+                (merge
+                  {:style {:width "36px"
+                           :height "36px"}
+                   :on-click #(do (.stopPropagation %)
+                                  (when is-selectable?
+                                    (on-change day))
+                                  nil)}
+                  (when selected?
+                    {:style {:width "36px"
+                             :height "36px"
+                             :background-color teet.theme.theme-colors/primary
+                             :color "white"}})
+                  (when today?
+                    {:color :primary}))
+                [typography/Text
+                 (t/day day)]]])])]
+        [:tfoot.pvm-tanaan-text
+         [:tr [:td {:colSpan 7}
+               [Button {:on-click #(do
+                                 (.preventDefault %)
+                                 (.stopPropagation %)
+                                 (on-change (t/now)))}
+                today]]]]]])))
 
 (defn date-input
   "Combined text field and date picker input field"
@@ -167,11 +197,11 @@
                                (when-let [^goog.date.Date d (parse-opt v)]
                                  (on-change (.-date d))))
                  :InputProps {:end-adornment
-                               (r/as-element
-                                 [InputAdornment {:position :end}
-                                  [IconButton {:on-click open-input
-                                               :edge "end"}
-                                   [icons/action-calendar-today]]])}}]
+                              (r/as-element
+                                [InputAdornment {:position :end}
+                                 [IconButton {:on-click open-input
+                                              :edge "end"}
+                                  [icons/action-calendar-today {:color :primary}]]])}}]
      [Popover {:open @open?
                :anchorEl @ref
                :anchorOrigin {:vertical "bottom"
