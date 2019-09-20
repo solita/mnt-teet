@@ -17,7 +17,8 @@
 
 (defmethod db-api/query :workflow/list-project-phases [{db :db} {:keys [thk-project-id]}]
   {:query '[:find (pull ?e [:db/id :phase/phase-name :phase/status
-                            :phase/estimated-start-date :phase/estimated-end-date])
+                            :phase/estimated-start-date :phase/estimated-end-date
+                            {:phase/tasks [*]}])
             :in $ ?thk-project-id
             :where [?e :thk/id ?thk-project-id] [?e :phase/phase-name _]]
    :args [db thk-project-id]

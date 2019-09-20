@@ -33,3 +33,14 @@
        user-by-id
        ((juxt :user/given-name :user/family-name))
        (str/join " ")))
+
+(defn user-name-and-email
+  "Show user name and email"
+  [e! user-id]
+  (let [[gn fn email] (->> user-id
+                           user-by-id
+                           ((juxt :user/given-name :user/family-name :user/email)))]
+    (str gn " " fn " (" email ")")))
+
+(defn list-user-ids []
+  (map :user/id mock-users))

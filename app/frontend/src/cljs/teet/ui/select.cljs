@@ -8,7 +8,8 @@
             [teet.ui.icons :as icons]
             [teet.common.common-controller :as common-controller]
             [tuck.core :as t]
-            [teet.localization :refer [tr]]))
+            [teet.localization :refer [tr]]
+            [teet.user.user-info :as user-info]))
 
 
 (defn outlined-select [{:keys [label name id items on-change value format-item show-empty-selection?]
@@ -95,3 +96,12 @@
                         :show-empty-selection? true
                         :items (sort-by tr* values)
                         :format-item tr*}])))
+
+(defn select-user
+  "Select user"
+  [{:keys [e! value on-change label]}]
+  [outlined-select {:label label
+                    :value value
+                    :on-change on-change
+                    :items (user-info/list-user-ids)
+                    :format-item (r/partial user-info/user-name-and-email e!)}])

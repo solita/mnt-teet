@@ -40,15 +40,13 @@
                         {:keys [add-phase add-task]} :query :as app}]
   [:<>
    (when add-phase
-     (let [close (r/partial e! (project-controller/->ClosePhaseDialog))]
-       [panels/modal {:title (tr [:project :add-phase])
-                      :on-close close}
-        [phase-view/phase-form e! close (get-in app [:project project :new-phase])]]))
+     [panels/modal {:title (tr [:project :add-phase])
+                    :on-close #(e! (project-controller/->ClosePhaseDialog))}
+      [phase-view/phase-form e! project-controller/->ClosePhaseDialog (get-in app [:project project :new-phase])]])
    (when add-task
-     (let [close (r/partial e! (project-controller/->CloseTaskDialog))]
-       [panels/modal {:title (tr [:project :add-task])
-                      :on-close close}
-        [task-view/task-form e! close add-task (get-in app [:project project :new-task])]]))
+     [panels/modal {:title (tr [:project :add-task])
+                    :on-close #(e! (project-controller/->CloseTaskDialog))}
+      [task-view/task-form e! project-controller/->CloseTaskDialog add-task (get-in app [:project project :new-task])]])
    [Grid {:container true
           :className (<class project-style/project-grid-container)
           :spacing 10}
@@ -79,9 +77,12 @@
                              :subtitle (str (.toLocaleDateString estimated-start-date) " - "
                                             (.toLocaleDateString estimated-end-date))
                              :variant :secondary}
+          ;;[:div (pr-str p)]
           (if (seq tasks)
             (for [t tasks]
-              [:div (pr-str t)])
+              [Button {:on-click #(js/alert "navigate to task page")}
+               [icons/file-folder]
+               (tr [:enum (:db/ident (:task/type t))])])
             [:div [:em (tr [:project :phase :no-tasks])]])
 
           [Button {:on-click (r/partial e! (project-controller/->OpenTaskDialog id))

@@ -20,7 +20,8 @@
   (select-keys (d/transact conn {:tx-data [task]}) [:tempids]))
 
 (defmethod db-api/command! :workflow/add-task-to-phase [{conn :conn} {phase-id :phase-id
-                                                                      task :task}]
+                                                                      task :task :as payload}]
+  (log/info "PAYLOAD: " payload)
   (select-keys (d/transact conn {:tx-data [{:db/id phase-id
                                             :phase/tasks [task]}]}) [:tempids]))
 

@@ -19,13 +19,17 @@
   ;; Responsible person (email)
   [form/form {:e! e!
               :value task
-              :on-change-event task-controller/->UpdateTaskForm}
+              :on-change-event task-controller/->UpdateTaskForm
+              :cancel-event close
+              :save-event task-controller/->CreateTask}
    ^{:xs 12 :attribute :task/type}
    [select/select-enum {:attribute :task/type}]
 
    ^{:attribute :task/description}
    [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
 
+   ^{:attribute :task/assignee}
+   [select/select-user {}]
    ])
 
 (defn change-task-status [e! task done-fn]

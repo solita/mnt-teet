@@ -12,6 +12,8 @@
 (defrecord UpdateTaskResponse [response])
 (defrecord AddCommentToTask [task-id comment])
 (defrecord UpdateTaskForm [form-data])
+(defrecord CreateTask [])
+(defrecord CreateTaskResult [result])
 
 (defmethod routes/on-navigate-event :task [{{:keys [task]} :params}]
   (->FetchTask task))
@@ -67,7 +69,31 @@
   UpdateTaskForm
   (process-event [{form-data :form-data} app]
     (log/info "form-data" form-data "; path= " [:project (get-in app [:params :project]) :new-task])
-    (update-in app [:project (get-in app [:params :project]) :new-task] merge form-data)))
+    (update-in app [:project (get-in app [:params :project]) :new-task] merge form-data))
+
+  CreateTask
+  (process-event [_ app]
+    (log/info "create task!")
+    (let [project-id (get-in app [:params :project])
+          phase-id (get-in app [:query :add-task])
+          task (get-in app [:project project-id :new-task])]
+      (t/fx app
+            {:tuck.effect/type :command!
+             :command :workflow/add-task-to-phase
+             :payload {:phase-id (goog.math.Long/fromString phase-id)
+                       :task (-> task
+                                 (update :task/assignee (fn [user-id] [:user/id user-id]))
+                                 (merge {:db/id "new-task"}))}
+             :result-event ->CreateTaskResult})))
+
+  CreateTaskResult
+  (process-event [{result :result} app]
+    (log/info "create task result: " result)
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page :project
+           :params {:project (get-in app [:params :project])}
+           :query {}})))
 
 (defn download-document-url [doc]
   (common-controller/query-url :document/download (select-keys doc [:db/id])))

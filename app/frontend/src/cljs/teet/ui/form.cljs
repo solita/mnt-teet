@@ -1,7 +1,7 @@
 (ns teet.ui.form
   "Common container for forms"
   (:require [reagent.core :as r]
-            [teet.ui.material-ui :refer [Grid]]
+            [teet.ui.material-ui :refer [Grid Button]]
             [teet.ui.util :as util]
             [teet.localization :refer [tr]]
             [goog.object :as gobj]))
@@ -9,13 +9,13 @@
 
 (defn form
   "Simple grid based form container."
-  [{:keys [e! on-change-event value]} & fields]
+  [{:keys [e! on-change-event cancel-event save-event value]} & fields]
   (r/with-let [update-attribute-fn (fn [field value]
                                      (let [v (if (gobj/containsKey value "target")
                                                (gobj/getValueByKeys value "target" "value")
                                                value)]
                                        (e! (on-change-event {field v}))))]
-    [Grid {:container true}
+    [Grid {:container true :spacing 1}
      (util/with-keys
        (map (fn [field]
               (assert (vector? field) "Field must be a hiccup vector")
@@ -32,4 +32,16 @@
                              (when md
                                {:md md}))
                  (update field 1 merge opts)]))
-            fields))]))
+            fields))
+     (when (or cancel-event save-event)
+       [Grid {:item true :xs 12 :align "right"}
+        (when cancel-event
+          [Button {:on-click (r/partial e! (cancel-event))
+                   :color "secondary"
+                   :variant "outlined"}
+           (tr [:buttons :cancel])])
+        (when save-event
+          [Button {:on-click (r/partial e! (save-event))
+                   :color "primary"
+                   :variant "outlined"}
+           (tr [:buttons :save])])])]))
