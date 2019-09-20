@@ -11,6 +11,7 @@
 (defrecord UpdateTask [task updated-task]) ; update task info to database
 (defrecord UpdateTaskResponse [response])
 (defrecord AddCommentToTask [task-id comment])
+(defrecord UpdateTaskForm [form-data])
 
 (defmethod routes/on-navigate-event :task [{{:keys [task]} :params}]
   (->FetchTask task))
@@ -61,7 +62,12 @@
            :command :workflow/comment-task
            :payload {:task-id task-id
                      :comment comment}
-           :result-event #(->FetchTask (str task-id))})))
+           :result-event #(->FetchTask (str task-id))}))
+
+  UpdateTaskForm
+  (process-event [{form-data :form-data} app]
+    (log/info "form-data" form-data "; path= " [:project (get-in app [:params :project]) :new-task])
+    (update-in app [:project (get-in app [:params :project]) :new-task] merge form-data)))
 
 (defn download-document-url [doc]
   (common-controller/query-url :document/download (select-keys doc [:db/id])))

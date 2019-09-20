@@ -4,19 +4,29 @@
             [teet.ui.itemlist :as itemlist]
             [teet.ui.file-upload :as file-upload]
             [teet.localization :refer [tr-fixme]]
-            [teet.ui.material-ui :refer [CircularProgress IconButton TextField]]
+            [teet.ui.material-ui :refer [CircularProgress IconButton TextField Grid]]
             [reagent.core :as r]
             [teet.ui.icons :as icons]
             [teet.ui.select :as select]
             [taoensso.timbre :as log]
-            [teet.user.user-info :as user-info]))
+            [teet.user.user-info :as user-info]
+            [teet.ui.form :as form]))
 
-(defn task-form [e! close phase-id]
+(defn task-form [e! close phase-id task]
   ;;Task definition (under project phase)
   ;; Task type (a predefined list of tasks: topogeodeesia, geoloogia, liiklusuuring, KMH eelhinnang, loomastikuuuring, arheoloogiline uuring, muu)
   ;; Description (short description of the task for clarification, 255char, in case more detailed description is needed, it will be uploaded as a file under the task)
   ;; Responsible person (email)
-  [:div "lisää taski vaiheeseen " phase-id])
+  [form/form {:e! e!
+              :value task
+              :on-change-event task-controller/->UpdateTaskForm}
+   ^{:xs 12 :attribute :task/type}
+   [select/select-enum {:attribute :task/type}]
+
+   ^{:attribute :task/description}
+   [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
+
+   ])
 
 (defn change-task-status [e! task done-fn]
   [select/select-with-action {:items [:task.status/not-started

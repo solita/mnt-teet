@@ -48,7 +48,7 @@
      (let [close (r/partial e! (project-controller/->CloseTaskDialog))]
        [panels/modal {:title (tr [:project :add-task])
                       :on-close close}
-        [task-view/task-form e! close add-task]]))
+        [task-view/task-form e! close add-task (get-in app [:project project :new-task])]]))
    [Grid {:container true
           :className (<class project-style/project-grid-container)
           :spacing 10}
