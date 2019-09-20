@@ -11,6 +11,13 @@
             [taoensso.timbre :as log]
             [teet.user.user-info :as user-info]))
 
+(defn task-form [e! close phase-id]
+  ;;Task definition (under project phase)
+  ;; Task type (a predefined list of tasks: topogeodeesia, geoloogia, liiklusuuring, KMH eelhinnang, loomastikuuuring, arheoloogiline uuring, muu)
+  ;; Description (short description of the task for clarification, 255char, in case more detailed description is needed, it will be uploaded as a file under the task)
+  ;; Responsible person (email)
+  [:div "lisää taski vaiheeseen " phase-id])
+
 (defn change-task-status [e! task done-fn]
   [select/select-with-action {:items [:task.status/not-started
                                       :task.status/in-progress

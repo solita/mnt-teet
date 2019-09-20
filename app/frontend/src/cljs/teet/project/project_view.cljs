@@ -21,7 +21,8 @@
             [cljs-time.core :as t]
             [cljs-time.format :as tf]
             [taoensso.timbre :as log]
-            [teet.phase.phase-view :as phase-view]))
+            [teet.phase.phase-view :as phase-view]
+            [teet.task.task-view :as task-view]))
 
 (defn project-data
   [{:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
@@ -36,13 +37,18 @@
 
 
 (defn project-page [e! {{:keys [project]} :params
-                        {:keys [add-phase]} :query :as app}]
+                        {:keys [add-phase add-task]} :query :as app}]
   [:<>
    (when add-phase
      (let [close (r/partial e! (project-controller/->ClosePhaseDialog))]
        [panels/modal {:title (tr [:project :add-phase])
                       :on-close close}
         [phase-view/phase-form e! close (get-in app [:project project :new-phase])]]))
+   (when add-task
+     (let [close (r/partial e! (project-controller/->CloseTaskDialog))]
+       [panels/modal {:title (tr [:project :add-task])
+                      :on-close close}
+        [task-view/task-form e! close add-task]]))
    [Grid {:container true
           :className (<class project-style/project-grid-container)
           :spacing 10}

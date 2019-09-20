@@ -49,4 +49,20 @@
           {:tuck.effect/type :navigate
            :page :project
            :params {:project (get-in app [:params :project])}
+           :query {}}))
+
+  OpenTaskDialog
+  (process-event [{phase-id :phase-id} app]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page :project
+           :params {:project (get-in app [:params :project])}
+           :query {:add-task phase-id}}))
+
+  CloseTaskDialog
+  (process-event [_ app]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page :project
+           :params {:project (get-in app [:params :project])}
            :query {}})))
