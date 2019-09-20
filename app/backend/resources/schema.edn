@@ -176,4 +176,21 @@
            :db/cardinality :db.cardinality/one
            :db/doc "Estimated end date of phase"}]]}
 
+ {:db/ident :migration/phase-task-definition
+  :txes [[;; Task type
+          {:db/ident :task.type/topogeodesy :enum/attribute :task/type}
+          {:db/ident :task.type/geology :enum/attribute :task/type}
+          {:db/ident :task.type/traffic-study :enum/attribute :task/type}
+          {:db/ident :task.type/eia-pre-assessment :enum/attribute :task/type}
+          {:db/ident :task.type/animal-study :enum/attribute :task/type}
+          {:db/ident :task.type/archeological-study :enum/attribute :task/type}
+          {:db/ident :task.type/other :enum/attribute :task/type}
+
+          ;; Task type ref
+          {:db/ident :task/type
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Task type enum ref"}
+
+          ]]}
  ]
