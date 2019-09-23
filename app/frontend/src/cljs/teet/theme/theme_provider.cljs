@@ -2,7 +2,8 @@
   (:require [teet.ui.material-ui :refer [MuiThemeProvider]]
             [cljs-bean.core :refer [->js]]
             [goog.object :as gobj]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.theme.theme-colors :as theme-colors]
+            [reagent.core :as r]))
 
 ;;To target disabled buttons :MuiButton {:root {:&$disabled {//css here//}}
 
@@ -76,6 +77,7 @@
       create-mui-theme)))
 
 (defn theme-provider [content]
-  [MuiThemeProvider
-   {:theme (create-theme teet-theme)}
-   content])
+  (r/with-let [theme (create-theme teet-theme)]
+    [MuiThemeProvider
+     {:theme theme}
+     content]))

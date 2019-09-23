@@ -29,7 +29,8 @@
    [select/select-enum {:e! e! :attribute :task/type}]
 
    ^{:attribute :task/description}
-   [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
+   [TextField {:full-width true :multiline true :rows 4 :maxrows 4
+               :variant :outlined}]
 
    ^{:attribute :task/assignee}
    [select/select-user {:e! e!}]])

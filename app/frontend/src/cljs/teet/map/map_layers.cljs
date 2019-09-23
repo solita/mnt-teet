@@ -28,6 +28,10 @@
              parameters
              style-fn))
 
+(defn fit-extent
+  [{extent :extent}]
+  (openlayers/fit! extent))
+
 (defn geojson-layer [endpoint rpc-name parameters style-fn {:keys [min-resolution max-resolution
                                                                    z-index opacity fit-on-load?]
                                                             :or {z-index 99
@@ -41,5 +45,4 @@
                      (url (str endpoint "/rpc/" rpc-name) parameters)
                      style-fn
                      (when fit-on-load?
-                       (fn [{extent :extent}]
-                         (openlayers/fit! extent)))))
+                       fit-extent)))

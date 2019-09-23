@@ -105,7 +105,7 @@
                                                             map-features/project-pin-style
                                                             {:min-resolution project-pin-resolution-threshold
                                                              :fit-on-load? true})}}
-   app])
+   {}])
 
 (defn projects-list-page [e! app]
   [projects-listing e! app])
