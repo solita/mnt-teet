@@ -15,6 +15,9 @@
 (defrecord CreateTask [])
 (defrecord CreateTaskResult [result])
 
+(defrecord OpenAddDocumentDialog [])
+(defrecord CloseAddDocumentDialog [])
+
 (defmethod routes/on-navigate-event :phase-task [{{:keys [task]} :params}]
   (->FetchTask task))
 
@@ -27,6 +30,25 @@
            :query :task/fetch-task
            :args {:task-id (goog.math.Long/fromString task-id)}
            :result-path [:task task-id]}))
+
+
+  OpenAddDocumentDialog
+  (process-event [_ app]
+    (t/fx app
+          {:tuck.effect/type :new-document
+           :task-id (get-in app [:params :task])}
+          {:tuck.effect/type :navigate
+           :page :phase-task
+           :params (:params app)
+           :query {:add-document 1}}))
+
+  CloseAddDocumentDialog
+  (process-event [_ app]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page :phase-task
+           :params (:params app)
+           :query {}}))
 
   UploadDocuments
   (process-event [{:keys [files]} {:keys [params] :as app}]

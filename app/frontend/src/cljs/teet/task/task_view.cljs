@@ -4,13 +4,16 @@
             [teet.ui.itemlist :as itemlist]
             [teet.ui.file-upload :as file-upload]
             [teet.localization :refer [tr-fixme tr]]
-            [teet.ui.material-ui :refer [CircularProgress IconButton TextField Grid]]
+            [teet.ui.material-ui :refer [CircularProgress IconButton TextField Grid
+                                         Button]]
             [reagent.core :as r]
             [teet.ui.icons :as icons]
             [teet.ui.select :as select]
             [taoensso.timbre :as log]
             [teet.user.user-info :as user-info]
-            [teet.ui.form :as form]))
+            [teet.ui.form :as form]
+            [teet.ui.panels :as panels]
+            [teet.document.document-view :as document-view]))
 
 (defn task-form [e! close phase-id task]
   ;;Task definition (under project phase)
@@ -72,8 +75,13 @@
 
      ]))
 
-(defn task-page [e! {:task/keys [documents description type assignee] :as task}]
+(defn task-page [e! {:task/keys [documents description type assignee] :as task
+                     query :query}]
   [:<>
+   (when (:add-document query)
+     [panels/modal {:title (tr [:task :new-document])
+                    :on-close (r/partial e! (task-controller/->CloseAddDocumentDialog))}
+      [document-view/document-form e! (:new-document task)]])
    [itemlist/ItemList
     {:title (tr [:enum (:db/ident type)])}
     [itemlist/Item {:label (tr [:fields :task/type])} (tr [:enum (:db/ident type)])]
@@ -99,7 +107,10 @@
            (when progress
              [CircularProgress])
            ]])))]
-   [file-upload/FileUploadButton {:id "upload-document-to-task"
+   [Button {:on-click #(e! (task-controller/->OpenAddDocumentDialog))}
+    [icons/content-add-circle]
+    (tr [:task :add-document])]
+   #_[file-upload/FileUploadButton {:id "upload-document-to-task"
                                   :on-drop #(e! (task-controller/->UploadDocuments %))
                                   :drop-message "Drop to upload document to task"}
     (tr-fixme "Click to upload document")]])
@@ -107,4 +118,5 @@
 (defn task-page-and-title [e! {params :params :as app}]
   (let [{:keys [task phase]} params]
     {:title task
-     :page [task-page e! (get-in app [:task task])]}))
+     :page [task-page e! {:query (:query app)
+                          :task (get-in app [:task task])}]}))

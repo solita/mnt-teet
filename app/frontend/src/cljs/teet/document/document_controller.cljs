@@ -2,8 +2,11 @@
   "Controller for managing document uploads"
   (:require [tuck.core :as t]
             [tuck.effect]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [goog.math.Long]
+            tuck.effect))
 
+(defrecord CreateDocument [task-id]) ; create empty document and link it to task
 (defrecord UploadDocument [file document app-path])
 (defrecord UploadDocumentUrlReceived [file document app-path result])
 (defrecord UpdateDocumentProgress [app-path document progress])
@@ -12,6 +15,9 @@
   {:document/name (.-name f)
    :document/size (.-size f)
    :document/type (.-type f)})
+
+(defmethod tuck.effect/process-effect :new-document [e! {task-id :task-id}]
+  (e! (->CreateDocument task-id)))
 
 (extend-protocol t/Event
   UploadDocument
@@ -22,6 +28,14 @@
            :command :document/upload
            :payload document
            :result-event #(->UploadDocumentUrlReceived file document app-path %)}))
+
+  CreateDocument
+  (process-event [{task-id :task-id} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :document/new-document
+           :payload {:task-id (goog.math.Long/fromString task-id)}
+           :result-path [:task task-id :new-document :db/id]}))
 
   UploadDocumentUrlReceived
   (process-event [{:keys [file app-path result]} app]
