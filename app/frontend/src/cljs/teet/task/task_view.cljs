@@ -26,13 +26,13 @@
               :cancel-event close
               :save-event task-controller/->CreateTask}
    ^{:xs 12 :attribute :task/type}
-   [select/select-enum {:attribute :task/type}]
+   [select/select-enum {:e! e! :attribute :task/type}]
 
    ^{:attribute :task/description}
    [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
 
    ^{:attribute :task/assignee}
-   [select/select-user {}]
+   [select/select-user {:e! e!}]
    ])
 
 (defn change-task-status [e! task done-fn]
@@ -75,7 +75,7 @@
 
      ]))
 
-(defn task-page [e! {:task/keys [documents description type assignee] :as task
+(defn task-page [e! {{:task/keys [documents description type assignee] :as task} :task
                      query :query}]
   [:<>
    (when (:add-document query)

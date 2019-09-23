@@ -2,9 +2,11 @@
   (:require [herb.core :refer [<class]]
             [reagent.core :as r]
             [taoensso.timbre :as log]
-            [teet.ui.material-ui :refer [Button]]
+            [teet.ui.material-ui :refer [Button IconButton]]
             [teet.ui.typography :refer [Heading1]]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.ui.icons :as icons]
+            [teet.localization :refer [tr]]))
 
 (defn- page-overlay []
   {;; Cover the whole page
@@ -124,3 +126,20 @@
                   :variant :outlined
                   :raised "true"}]
          children)])
+
+(defn files-field [{:keys [value on-change]}]
+  (log/info "RENDER")
+  [:div
+   [:ul
+    (doall
+     (map-indexed
+      (fn [i ^js/File file]
+        ^{:key i}
+        [:li (.-name file) [IconButton {:on-click #(on-change (into (subvec value 0 i)
+                                                                    (subvec value (inc i))))}
+                            [icons/action-delete]]])
+      value))]
+   [FileUploadButton {:id "files-field"
+                      :on-drop #(on-change (into (or value []) %))}
+    [icons/content-file-copy]
+    (tr [:common :select-files])]])

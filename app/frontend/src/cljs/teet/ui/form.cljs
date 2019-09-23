@@ -22,8 +22,7 @@
               (assert (map? (second field)) "First argument to field must be an options map")
               (let [{:keys [xs lg md attribute]} (meta field)
                     _ (assert (keyword? attribute) "All form fields must have :attribute meta key!")
-                    opts {:e! e!
-                          :value (get value attribute)
+                    opts {:value (get value attribute)
                           :on-change (r/partial update-attribute-fn attribute)
                           :label (tr [:fields attribute])}]
                 [Grid (merge {:item true :xs (or xs 12)}

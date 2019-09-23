@@ -6,7 +6,10 @@
             [goog.math.Long]
             tuck.effect))
 
-(defrecord CreateDocument [task-id]) ; create empty document and link it to task
+(defrecord CreateDocument []) ; create empty document and link it to task
+(defrecord CancelDocument []) ; cancel document creation
+(defrecord UpdateDocumentForm [form-data])
+
 (defrecord UploadDocument [file document app-path])
 (defrecord UploadDocumentUrlReceived [file document app-path result])
 (defrecord UpdateDocumentProgress [app-path document progress])
@@ -25,6 +28,10 @@
            :command :document/upload
            :payload document
            :result-event #(->UploadDocumentUrlReceived file document app-path %)}))
+
+  UpdateDocumentForm
+  (process-event [{form-data :form-data} app]
+    (update-in app [:task (get-in app [:params :task]) :new-document] merge form-data))
 
   CreateDocument
   (process-event [{task-id :task-id} app]
