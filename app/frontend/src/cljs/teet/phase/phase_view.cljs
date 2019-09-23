@@ -17,7 +17,7 @@
               :save-event phase-controller/->CreatePhase
               :cancel-event close}
    ^{:attribute :phase/phase-name}
-   [select/select-enum {:attribute :phase/phase-name}]
+   [select/select-enum {:e! e! :attribute :phase/phase-name}]
 
    ^{:xs 6 :attribute :phase/estimated-start-date}
    [date-picker/date-input {}]
@@ -26,4 +26,4 @@
    [date-picker/date-input {}]
 
    ^{:attribute :phase/status}
-   [select/select-enum {:attribute :phase/status}]])
+   [select/select-enum {:e! e! :attribute :phase/status}]])

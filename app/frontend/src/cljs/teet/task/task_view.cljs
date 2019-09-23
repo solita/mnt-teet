@@ -32,8 +32,7 @@
    [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
 
    ^{:attribute :task/assignee}
-   [select/select-user {:e! e!}]
-   ])
+   [select/select-user {:e! e!}]])
 
 (defn change-task-status [e! task done-fn]
   [select/select-with-action {:items [:task.status/not-started
