@@ -1,11 +1,15 @@
 (ns teet.ui.form
   "Common container for forms"
   (:require [reagent.core :as r]
-            [teet.ui.material-ui :refer [Grid Button]]
+            [teet.ui.material-ui :refer [Grid Button TextField]]
             [teet.ui.util :as util]
             [teet.localization :refer [tr]]
             [goog.object :as gobj]))
 
+
+(def default-value
+  "Mapping of component to default value. Some components don't want nil as the value (like text area)."
+  {TextField ""})
 
 (defn form
   "Simple grid based form container."
@@ -22,7 +26,7 @@
               (assert (map? (second field)) "First argument to field must be an options map")
               (let [{:keys [xs lg md attribute]} (meta field)
                     _ (assert (keyword? attribute) "All form fields must have :attribute meta key!")
-                    opts {:value (get value attribute)
+                    opts {:value (get value attribute (default-value (first field)))
                           :on-change (r/partial update-attribute-fn attribute)
                           :label (tr [:fields attribute])}]
                 [Grid (merge {:item true :xs (or xs 12)}
