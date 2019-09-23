@@ -16,6 +16,7 @@
             teet.enum.enum-queries
 
             [taoensso.timbre :as log]
+            [teet.logging :as logging]
             [teet.login.login-api-token :as login-api-token]
             [clojure.string :as str]))
 
@@ -29,17 +30,19 @@
 (defn- request [handler-fn]
   (fn [req]
     (let [user (some->> req jwt-token (login-api-token/verify-token
-                                       (environment/config-value :auth :jwt-secret)))
-          conn (environment/datomic-connection)
-          ctx {:conn conn :db (d/db conn) :user user}
-          request-payload (transit/transit-request req)
-          response (handler-fn ctx request-payload)]
-      (case (:format (meta response))
-        ;; If :format meta key is :raw, send output as ring response
-        :raw response
+                                       (environment/config-value :auth :jwt-secret)))]
+      (logging/with-context
+        {:user (.toString (:user/id user))}
+        (let [conn (environment/datomic-connection)
+              ctx {:conn conn :db (d/db conn) :user user}
+              request-payload (transit/transit-request req)
+              response (handler-fn ctx request-payload)]
+          (case (:format (meta response))
+            ;; If :format meta key is :raw, send output as ring response
+            :raw response
 
-        ;; Default to sending out transit response
-        (transit/transit-response response)))))
+            ;; Default to sending out transit response
+            (transit/transit-response response)))))))
 
 (defn- check-spec [spec data]
   (if (nil? (s/get-spec spec))
