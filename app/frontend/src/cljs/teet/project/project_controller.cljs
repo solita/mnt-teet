@@ -11,6 +11,8 @@
 (defrecord OpenTaskDialog [phase-id])
 (defrecord CloseTaskDialog [])
 
+
+
 (defmethod routes/on-navigate-event :project [{{project :project} :params}]
   (log/info "Navigated to project, fetch workflows for THK project: " project)
   [(->FetchProjectPhases project)

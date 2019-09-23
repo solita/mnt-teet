@@ -15,7 +15,7 @@
 (defrecord CreateTask [])
 (defrecord CreateTaskResult [result])
 
-(defmethod routes/on-navigate-event :task [{{:keys [task]} :params}]
+(defmethod routes/on-navigate-event :phase-task [{{:keys [task]} :params}]
   (->FetchTask task))
 
 

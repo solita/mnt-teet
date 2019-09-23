@@ -80,15 +80,17 @@
           ;;[:div (pr-str p)]
           (if (seq tasks)
             (for [t tasks]
-              [Button {:on-click #(js/alert "navigate to task page")}
+              [Button {:element "a"
+                       :href (str "#/projects/" project "/" id "/" (:db/id t))}
                [icons/file-folder]
                (tr [:enum (:db/ident (:task/type t))])])
             [:div [:em (tr [:project :phase :no-tasks])]])
 
-          [Button {:on-click (r/partial e! (project-controller/->OpenTaskDialog id))
-                   :size "small"}
-           [icons/content-add-circle]
-           (tr [:project :add-task])]]))]]
+          [:div
+           [Button {:on-click (r/partial e! (project-controller/->OpenTaskDialog id))
+                    :size "small"}
+            [icons/content-add-circle]
+            (tr [:project :add-task])]]]))]]
 
     [Grid {:item true :xs 6
            :className (<class project-style/project-map-column)}

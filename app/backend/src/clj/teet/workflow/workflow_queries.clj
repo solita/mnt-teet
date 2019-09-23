@@ -25,12 +25,12 @@
    :result-fn (partial mapv first)})
 
 (defmethod db-api/query :task/fetch-task [{db :db} {:keys [task-id]}]
-  {:query '[:find (pull ?e [:db/id :task/name
-                            {:phase/_tasks [:db/id :phase/name
-                                            {:workflow/_phases [:db/id :workflow/name :thk/id]}]}
-                            {:task/status [*]}
+  {:query '[:find (pull ?e [:db/id :task/description
+                            {:task/type [:db/ident]}
+                            {:task/assignee [:user/id]}
+                            {:phase/_tasks [:db/id {:phase/phase-name [:db/ident]}]}
                             {:task/documents [*]}
-                            {:task/comments [:comment/comment :comment/timestamp
+                            #_{:task/comments [:comment/comment :comment/timestamp
                                              {:comment/author [:user/id]}]}])
             :in $ ?e]
    :args [db task-id]

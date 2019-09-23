@@ -101,3 +101,8 @@
           (when progress
             [CircularProgress])
           ]])))])
+
+(defn Item [{:keys [label]} value]
+  [:div
+   [:b (str label ": ")]
+   value])

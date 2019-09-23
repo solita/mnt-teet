@@ -41,14 +41,11 @@
             {:page :projects-list :selected? true :title (tr [:projects :list-view])}]
      :page [project-view/project-page e! app]}
 
-    :project-workflow
-    (workflow-view/workflow-page-and-title e! app)
+    :phase-task
+    (task-view/task-page-and-title e! app)
 
     :components
     {:title "Components" :page [component-demo/demo e!]}
-
-    :task
-    (task-view/task-page-and-title e! app)
 
     ;; Fallback
     {:title "Unimplemented page"
