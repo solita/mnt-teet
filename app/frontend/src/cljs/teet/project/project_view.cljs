@@ -64,7 +64,7 @@
       project]
      [:<>
       [itemlist/ListHeading {:title (tr [:project :phases])
-                             :action [Button {:on-click #(e! (project-controller/->OpenPhaseDialog))}
+                             :action [Button {:on-click (r/partial e! (project-controller/->OpenPhaseDialog))}
                                       (tr [:project :add-phase])
                                       [icons/content-add-circle]]}]
       (doall
