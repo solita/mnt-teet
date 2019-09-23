@@ -193,4 +193,46 @@
            :db/doc "Task type enum ref"}
 
           ]]}
+
+
+ {:db/ident :migration/document-files
+  :txes [[{:db/ident :document/description
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Description of the document"}
+
+          {:db/ident :document/status
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Link to document status enum"}
+
+          {:db/ident :document.status/draft :enum/attribute :document/status}
+          {:db/ident :document.status/final :enum/attribute :document/status}
+
+          {:db/ident :document/files
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "Links to actual file attachments"}
+
+          ;; Actual file attachment info
+          {:db/ident :file/name
+            :db/valueType :db.type/string
+            :db/cardinality :db.cardinality/one
+            :db/doc "Name of the file"}
+
+           {:db/ident :file/size
+            :db/valueType :db.type/long
+            :db/cardinality :db.cardinality/one
+            :db/doc "Size of the file in bytes"}
+
+           {:db/ident :file/type
+            :db/valueType :db.type/string
+            :db/cardinality :db.cardinality/one
+            :db/doc "MIME type of the file"}]]}
+ {:db/ident :migration/document-comments
+  :txes [[{:db/ident :document/comments
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "Comments for the document"}]]}
+
  ]
