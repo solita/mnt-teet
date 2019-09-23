@@ -16,9 +16,6 @@
    :document/size (.-size f)
    :document/type (.-type f)})
 
-(defmethod tuck.effect/process-effect :new-document [e! {task-id :task-id}]
-  (e! (->CreateDocument task-id)))
-
 (extend-protocol t/Event
   UploadDocument
   (process-event [{:keys [file document app-path]} app]

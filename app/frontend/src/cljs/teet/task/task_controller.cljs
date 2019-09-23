@@ -35,8 +35,6 @@
   OpenAddDocumentDialog
   (process-event [_ app]
     (t/fx app
-          {:tuck.effect/type :new-document
-           :task-id (get-in app [:params :task])}
           {:tuck.effect/type :navigate
            :page :phase-task
            :params (:params app)
