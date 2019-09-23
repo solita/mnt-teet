@@ -101,4 +101,4 @@
                                                                {"id" project}
                                                                map-features/project-line-style
                                                                {:fit-on-load? true})}}
-      app]]]])
+      {}]]]])

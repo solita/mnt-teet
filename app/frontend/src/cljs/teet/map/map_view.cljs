@@ -13,17 +13,17 @@
 ;; Center of estonian coordinate system
 (def default-center [516493.16 6513417.97])
 
-(defn map-view [e! {:keys [height class] :or {height "100%"} :as opts} app]
-  (r/with-let [current-tool (volatile! (get-in app [:map :tool]))
+(defn map-view [e! {:keys [height class] :or {height "100%"} :as opts} map-data]
+  (r/with-let [current-tool (volatile! (get-in map-data [:tool]))
                current-zoom (volatile! nil)
                current-res (volatile! nil)
                on-zoom (volatile! nil)
                prev-selected-item (volatile! nil)]
 
-    (vreset! current-tool (get-in app [:map :tool]))
-    (vreset! on-zoom (get-in app [:map :on-zoom]))
+    (vreset! current-tool (get-in map-data [:tool]))
+    (vreset! on-zoom (get-in map-data [:on-zoom]))
 
-    (let [{:keys [extent]} (:map app)]
+    (let [{:keys [extent]} map-data]
       [:<>
        [openlayers/openlayers
         {:id "mapview"
@@ -95,22 +95,22 @@
                          ;; if item has no tooltip specified.
                          (constantly [:div tt])))
 
-         :geometries (merge (get-in app [:map :geometries])
-                            (get-in app [:map :layers])
+         :geometries (merge (get-in map-data [:geometries])
+                            (get-in map-data [:layers])
                             (:layers opts))
 
-         :current-zoom (get-in app [:map-info])
+         :current-zoom (get-in map-data [:map-info])
          ;; map of geometry layer keys to control map zoom. If a key's value changes map is re-zoomed
-         :zoom-to-geometries (get-in app [:map :zoom-to-geometries])
+         :zoom-to-geometries (get-in map-data [:zoom-to-geometries])
 
          ;; name of layer that should be the center when zooming to geometries
-         :center-on-geometry (get-in app [:map :center-on-geometry])
+         :center-on-geometry (get-in map-data [:center-on-geometry])
 
          ;; Use this to set a buffer for extent fitting on map view. If not defined, default value is used.
-         :extent-buffer (get-in app [:map :extent-buffer])
+         :extent-buffer (get-in map-data [:extent-buffer])
 
-         :rotation (if (get-in app [:map :rotate?])
-                     (get-in app [:map :rotation])
+         :rotation (if (get-in map-data [:rotate?])
+                     (get-in map-data [:rotation])
                      0)
 
          :layers [{:type :maa-amet :layer "kaart" :default true}]
