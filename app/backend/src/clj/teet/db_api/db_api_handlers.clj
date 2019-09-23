@@ -32,8 +32,7 @@
     (let [user (some->> req jwt-token (login-api-token/verify-token
                                        (environment/config-value :auth :jwt-secret)))]
       (logging/with-context
-        {:user (when-let [user-id (:user/id user)]
-                 (.toString user-id))}
+        {:user (str (:user/id user))}
         (let [conn (environment/datomic-connection)
               ctx {:conn conn :db (d/db conn) :user user}
               request-payload (transit/transit-request req)
