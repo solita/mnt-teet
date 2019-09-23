@@ -16,7 +16,7 @@
               :on-change-event phase-controller/->UpdatePhaseForm
               :save-event phase-controller/->CreatePhase
               :cancel-event close}
-   ^{:attribute :phase/name}
+   ^{:attribute :phase/phase-name}
    [select/select-enum {:attribute :phase/phase-name}]
 
    ^{:xs 6 :attribute :phase/estimated-start-date}
