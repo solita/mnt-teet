@@ -23,7 +23,10 @@
 (defmethod db-api/query :document/fetch-document [{db :db} {document-id :document-id}]
   {:query '[:find (pull ?e [:document/description :document/status
                             {:document/files [:file/name :file/size :file/type]}
-                            {:document/comments [:comment/comment :comment/author :comment/timestamp]}])
+                            {:document/comments [:comment/comment :comment/timestamp
+                                                 {:comment/author [:user/id]}]}])
             :in $ ?e]
    :args [db document-id]
-   :result-fn ffirst})
+   :result-fn #(-> %
+                   ffirst
+                   (update :document/comments (fn [comments] (sort-by :document/timestamp comments))))})

@@ -11,7 +11,9 @@
             [taoensso.timbre :as log]
             [herb.core :refer [<class]]
             [teet.localization :refer [tr]]
-            teet.document.document-spec))
+            teet.document.document-spec
+            [teet.ui.itemlist :as itemlist]
+            [teet.user.user-info :as user-info]))
 
 
 (defn document-form [e! {:keys [in-progress? progress] :as doc}]
@@ -44,14 +46,22 @@
      [Grid {:item true :xs 6}
       [:div "DOC: " (pr-str document)]]
      [Grid {:item true :xs 6 :classes {:item (<class theme-panels/side-panel)}}
-      [typography/SectionHeading (tr [:document :comments])]
+      [itemlist/ItemList {:title (tr [:document :comments])}
+       (doall
+        (for [{id :db/id
+               :comment/keys [author comment timestamp]} (:document/comments document)]
+          ^{:key id}
+          [:div (.toLocaleString timestamp) " "
+           [user-info/user-name e! (:user/id author)]
+           comment]))]
       [TextField {:value @new-comment
                   :on-change #(reset! new-comment (-> % .-target .-value))
                   :rows 4 :maxrows 4 :multiline true :full-width true
                   :placeholder (tr [:document :new-comment])}]
+
       [Button {:on-click #(do
-                            (reset! new-comment "")
-                            (e! (document-controller/->Comment @new-comment)))}
+                            (e! (document-controller/->Comment @new-comment))
+                            (reset! new-comment ""))}
        (tr [:buttons :save])]]]))
 
 (defn document-page-and-title [e! app]
