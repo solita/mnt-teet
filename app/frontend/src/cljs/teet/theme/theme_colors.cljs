@@ -22,3 +22,5 @@
 (def secondary-text "#53565A")
 
 (def gray100 "#d9d9d6")
+
+(def side-panel "#f5f5f5")

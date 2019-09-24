@@ -40,4 +40,14 @@
 
         {:url (document-storage/upload-url key)
          :document-id doc-id
-         :file (d/pull (:db-after res) '[*] file-id)})) )
+         :file (d/pull (:db-after res) '[*] file-id)})))
+
+(defmethod db-api/command! :document/comment [{conn :conn
+                                               user :user} {:keys [document-id comment]}]
+  (-> conn
+      (d/transact {:tx-data [{:db/id document-id
+                              :document/comments [{:db/id "new-comment"
+                                                   :comment/author [:user/id (:user/id user)]
+                                                   :comment/comment comment
+                                                   :comment/timestamp (java.util.Date.)}]}]})
+      (get-in [:tempids "new-comment"])))

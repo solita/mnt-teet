@@ -14,6 +14,7 @@
 (defrecord UploadFinished []) ; upload completed, can close dialog
 (defrecord UploadFileUrlReceived [file document-id url on-success])
 (defrecord FetchDocument [document-id]) ; fetch document
+(defrecord Comment [comment]) ; add comment to document
 
 (defmethod routes/on-navigate-event :task-document [{{:keys [document]} :params}]
   (->FetchDocument document))
@@ -33,6 +34,16 @@
            :query :document/fetch-document
            :args {:document-id (goog.math.Long/fromString document-id)}
            :result-path [:document document-id]}))
+
+  Comment
+  (process-event [{comment :comment} app]
+    (let [doc (get-in app [:params :document])]
+      (t/fx app
+            {:tuck.effect/type :command!
+             :command :document/comment
+             :payload {:document-id (goog.math.Long/fromString doc)
+                       :comment comment}
+             :result-event (fn [_] (->FetchDocument doc))})))
 
   UpdateDocumentForm
   (process-event [{form-data :form-data} app]
