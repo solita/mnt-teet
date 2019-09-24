@@ -12,7 +12,8 @@
             [teet.user.user-info :as user-info]))
 
 
-(defn outlined-select [{:keys [label name id items on-change value format-item show-empty-selection?]
+(defn outlined-select [{:keys [label name id items on-change value format-item show-empty-selection?
+                               error]
                         :or {format-item :label}}]
   (r/with-let [reference (r/atom nil)
                set-ref! (fn [el]
@@ -26,10 +27,12 @@
       [FormControl {:variant :outlined
                     :style {:width "100%"}}
        [InputLabel {:html-for id
-                    :ref set-ref!} label]
+                    :ref set-ref!
+                    :error (boolean error)} label]
        [Select
         {:value (or (option-idx value) "")
          :name name
+         :error (boolean error)
          :label-width (or (some-> @reference .-offsetWidth) 12)
          :input-props {:id id
                        :name name}
@@ -85,12 +88,13 @@
     (e! (common-controller/->Query {:query :enum/values
                                     :args {:attribute attribute}
                                     :result-event (partial ->SetEnumValues attribute)})))
-  (fn [{:keys [value on-change name id]}]
+  (fn [{:keys [value on-change name id error]}]
     (let [tr* #(tr [:enum %])
           values (@enum-values attribute)]
       [outlined-select {:label (tr [:fields attribute])
                         :name name
                         :id id
+                        :error (boolean error)
                         :value (or value :none)
                         :on-change on-change
                         :show-empty-selection? true
