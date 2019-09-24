@@ -115,6 +115,9 @@
            :params {:project (get-in app [:params :project])}
            :query {}})))
 
+(defn document-page-url [{{:keys [project phase task]} :params} doc]
+  (str "#/projects/" project "/" phase "/" task "/" (:db/id doc)))
+
 (defn download-document-url [doc]
   (common-controller/query-url :document/download (select-keys doc [:db/id])))
 

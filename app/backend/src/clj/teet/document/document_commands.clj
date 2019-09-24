@@ -20,38 +20,20 @@
     :else
     nil))
 
-(defmethod db-api/command! :document/upload [{conn :conn} {task-id :task-id :as document}]
-  (let [doc (merge {:db/id "doc"}
-                   (dissoc document :task-id))
-        res (d/transact conn {:tx-data [(if task-id
-                                          ;; Task id specified, add this document in the task
-                                          {:db/id task-id
-                                           :task/documents [doc]}
+;; Create new document and link it to task. Returns entity id for document.
+(defmethod db-api/command! :document/new-document [{conn :conn} {:keys [task-id document]}]
+  (-> conn
+      (d/transact {:tx-data [(merge {:db/id "new-document"}
+                                    (select-keys document [:document/status :document/description]))
+                             {:db/id task-id
+                              :task/documents [{:db/id "new-document"}]}]})
+      (get-in [:tempids "new-document"])))
 
-                                          ;; No task id specified
-                                          doc)]})
-        doc-id (get-in res [:tempids "doc"])
-        key (str doc-id "-" (:document/name document))]
-
-    (or (validate-document document)
-        {:url (document-storage/upload-url key)
-         :document (d/pull (:db-after res) '[*] doc-id)})))
-
-(defmethod db-api/command! :document/upsert-document [{conn :conn} doc]
-  (select-keys
-   (d/transact conn
-               {:tx-data [doc]})
-   [:tempids]))
-
-(defmethod db-api/command! :document/link-to-task [{conn :conn} {:keys [task-id document-id]}]
-  (d/transact {:tx-data [{:db/id task-id
-                          :task/documents [{:db/id document-id}]}]}))
-
-(defmethod db-api/command :document/upload-file [{conn :conn}
-                                                 {:keys [document-id file]}]
+(defmethod db-api/command! :document/upload-file [{conn :conn}
+                                                  {:keys [document-id file]}]
   (or (validate-file file)
       (let [res (d/transact conn {:tx-data [{:db/id (or document-id "new-document")
-                                             :document/files (assoc file {:db/id "new-file"})}]})
+                                             :document/files (assoc file :db/id "new-file")}]})
             doc-id (or document-id (get-in res [:tempids "new-document"]))
             file-id (get-in res [:tempids "new-file"])
             key (str doc-id "-" (:file/name file))]

@@ -13,7 +13,7 @@
 
 (defn form
   "Simple grid based form container."
-  [{:keys [e! on-change-event cancel-event save-event value]} & fields]
+  [{:keys [e! on-change-event cancel-event save-event value in-progress?]} & fields]
   (r/with-let [update-attribute-fn (fn [field value]
                                      (let [v (if (gobj/containsKey value "target")
                                                (gobj/getValueByKeys value "target" "value")
@@ -39,12 +39,14 @@
      (when (or cancel-event save-event)
        [Grid {:item true :xs 12 :align "right"}
         (when cancel-event
-          [Button {:on-click (r/partial e! (cancel-event))
+          [Button {:disabled (boolean in-progress?)
+                   :on-click (r/partial e! (cancel-event))
                    :color "secondary"
                    :variant "outlined"}
            (tr [:buttons :cancel])])
         (when save-event
-          [Button {:on-click (r/partial e! (save-event))
+          [Button {:disabled (boolean in-progress?)
+                   :on-click (r/partial e! (save-event))
                    :color "primary"
                    :variant "outlined"}
            (tr [:buttons :save])])])]))

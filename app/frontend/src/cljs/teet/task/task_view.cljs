@@ -76,7 +76,7 @@
      ]))
 
 (defn task-page [e! {{:task/keys [documents description type assignee] :as task} :task
-                     query :query}]
+                     query :query :as app}]
   [:<>
    (when (:add-document query)
      [panels/modal {:title (tr [:task :new-document])
@@ -94,29 +94,21 @@
       [:div "No documents"]
       (doall
        (for [{id :db/id
-              :document/keys [name size type]
-              progress :progress
+              :document/keys [description status]
               :as doc} documents]
          ^{:key id}
          [:div
           ;; FIXME: make a nice document UI
           [:br]
-          [:div [:a {:href (task-controller/download-document-url doc)
-                     :target "_blank"} name]
-           " (type: " type ", size: " size ") "
-           (when progress
-             [CircularProgress])
-           ]])))]
+          [:div [:a {:href (task-controller/document-page-url app doc)
+                     :target "_blank"} description]]])))]
    [Button {:on-click #(e! (task-controller/->OpenAddDocumentDialog))}
     [icons/content-add-circle]
-    (tr [:task :add-document])]
-   #_[file-upload/FileUploadButton {:id "upload-document-to-task"
-                                  :on-drop #(e! (task-controller/->UploadDocuments %))
-                                  :drop-message "Drop to upload document to task"}
-    (tr-fixme "Click to upload document")]])
+    (tr [:task :add-document])]])
 
 (defn task-page-and-title [e! {params :params :as app}]
   (let [{:keys [task phase]} params]
     {:title task
-     :page [task-page e! {:query (:query app)
+     :page [task-page e! {:params params
+                          :query (:query app)
                           :task (get-in app [:task task])}]}))
