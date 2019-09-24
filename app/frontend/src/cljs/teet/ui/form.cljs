@@ -13,15 +13,11 @@
   "Mapping of component to default value. Some components don't want nil as the value (like text area)."
   {TextField ""})
 
-(defn- invalid?
-  "Return true if data is invalid."
-  [spec data]
-  (and spec
-       (not (s/valid? spec data))))
-
 (defonce field-specs (atom {}))
 
-(defn- valid-attribute? [kw value]
+(defn- valid-attribute?
+  "Validate value based on spec of kw. Caches kw spec in field-specs atom."
+  [kw value]
   (if-let [spec (or (@field-specs kw)
                     ((swap! field-specs assoc kw (s/get-spec kw)) kw))]
     (not= :cljs.spec.alpha/invalid (s/conform spec value))
@@ -40,6 +36,27 @@
                                         (fn [value]
                                           (validate-attribute-fn attribute (on-change value))))))))
 
+(defn- contains-predicate [pred]
+  "Check that predicate matches:
+   (cljs.core/fn [%] (cljs.core/contains? % ?attr))
+
+  Returns ?attr or nil."
+  (and (seq? pred)
+       (= 3 (count pred))
+       (= 3 (count (nth pred 2)))
+       (= 'cljs.core/contains? (first (nth pred 2)))
+       (nth (nth pred 2) 2)))
+
+(defn- missing-attributes
+  "Return missing attribuets based on spec"
+  [spec value]
+  (into #{}
+        (when spec
+          (for [{:keys [pred] :as _problem} (:cljs.spec.alpha/problems (s/explain-data spec value))
+                :let [attribute (contains-predicate pred)]
+                :when attribute]
+            attribute))))
+
 (defn form
   "Simple grid based form container."
   [{:keys [e! on-change-event cancel-event save-event value in-progress? spec]} & fields]
@@ -51,12 +68,24 @@
                                        (e! (on-change-event {field v}))
                                        v))
                validate-attribute-fn (fn [field value]
-                                       (log/info "validate " field " = " value " => " (valid-attribute? field value))
+                                       ;;(log/info "validate " field " = " value " => " (valid-attribute? field value))
                                        (swap! invalid-attributes
                                               (fn [fields]
                                                 (if (valid-attribute? field value)
                                                   (disj fields field)
-                                                  (conj fields field)))))]
+                                                  (conj fields field)))))
+               validate-and-save (fn [e! save-event value fields]
+                                   (let [invalid-attrs (into (missing-attributes spec value)
+                                                             (for [{attr :attribute} (map meta fields)
+                                                                   :when (not (valid-attribute? attr (get value attr)))]
+                                                               attr))
+                                         valid? (or (nil? spec) (s/valid? spec value))]
+                                     (if-not valid?
+                                       ;; Spec validation failed, show errors for missing or invalid attributes
+                                       (reset! invalid-attributes invalid-attrs)
+
+                                       ;; Everything ok, apply save event
+                                       (e! (save-event)))))]
     [Grid {:container true :spacing 1}
      (util/with-keys
        (map (fn [field]
@@ -79,18 +108,17 @@
                   validate-attribute-fn attribute value)]))
             fields))
      (when (or cancel-event save-event)
-       (let [save-disabled? (boolean (or in-progress?
-                                         (invalid? spec value)))]
+       (let [disabled? (boolean in-progress?)]
          [Grid {:item true :xs 12 :align "right"}
           (when cancel-event
-            [Button {:disabled (boolean in-progress?)
+            [Button {:disabled disabled?
                      :on-click (r/partial e! (cancel-event))
                      :color "secondary"
                      :variant "outlined"}
              (tr [:buttons :cancel])])
           (when save-event
-            [Button {:disabled save-disabled?
-                     :on-click (r/partial e! (save-event))
+            [Button {:disabled disabled?
+                     :on-click (r/partial validate-and-save e! save-event value fields)
                      :color "primary"
                      :variant "outlined"}
              (tr [:buttons :save])])]))]))
