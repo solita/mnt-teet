@@ -49,6 +49,6 @@
           {::tuck-effect/type :command!
            :command :refresh-token
            :payload {}
-           :result-event (partial ->SetToken false)})))
+           :result-event (partial ->SetToken false nil)})))
 
 (def mock-users user-info/mock-users)
