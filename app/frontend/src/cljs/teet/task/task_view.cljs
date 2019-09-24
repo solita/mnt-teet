@@ -100,8 +100,7 @@
          [:div
           ;; FIXME: make a nice document UI
           [:br]
-          [:div [:a {:href (task-controller/document-page-url app doc)
-                     :target "_blank"} description]]])))]
+          [:div [:a {:href (task-controller/document-page-url app doc)} description]]])))]
    [Button {:on-click #(e! (task-controller/->OpenAddDocumentDialog))}
     [icons/content-add-circle]
     (tr [:task :add-document])]])

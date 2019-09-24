@@ -4,7 +4,8 @@
             [tuck.effect]
             [taoensso.timbre :as log]
             [goog.math.Long]
-            tuck.effect))
+            tuck.effect
+            [teet.routes :as routes]))
 
 (defrecord CreateDocument []) ; create empty document and link it to task
 (defrecord CancelDocument []) ; cancel document creation
@@ -12,7 +13,10 @@
 (defrecord UploadFiles [files document-id on-success progress-increment]) ; Upload files (one at a time) to document
 (defrecord UploadFinished []) ; upload completed, can close dialog
 (defrecord UploadFileUrlReceived [file document-id url on-success])
+(defrecord FetchDocument [document-id]) ; fetch document
 
+(defmethod routes/on-navigate-event :task-document [{{:keys [document]} :params}]
+  (->FetchDocument document))
 
 (defn- file-info [^js/File f]
   {:file/name (.-name f)

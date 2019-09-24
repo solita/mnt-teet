@@ -19,7 +19,8 @@
             [teet.ui.icons :as icons]
             [teet.theme.theme-provider :as theme]
             [teet.common.common-controller]
-            [teet.task.task-view :as task-view]))
+            [teet.task.task-view :as task-view]
+            [teet.document.document-view :as document-view]))
 
 (defn page-and-title [e! {:keys [page params] :as app}]
   (case page
@@ -43,6 +44,9 @@
 
     :phase-task
     (task-view/task-page-and-title e! app)
+
+    :task-document
+    (document-view/document-page-and-title e! app)
 
     :components
     {:title "Components" :page [component-demo/demo e!]}
