@@ -6,7 +6,7 @@
 
 
 (def ^:const upload-max-file-size (* 1024 1024 100))
-(def ^:const upload-allowed-file-types #{"image/png" "application/pdf" "application/zip"})
+(def ^:const upload-allowed-file-types #{"image/png" "image/jpeg" "application/pdf" "application/zip"})
 
 (defn validate-file [{:file/keys [type size]}]
   (cond
