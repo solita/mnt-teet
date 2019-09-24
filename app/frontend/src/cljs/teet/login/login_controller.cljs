@@ -6,7 +6,7 @@
             [teet.user.user-info :as user-info]))
 
 (defrecord Login [demo-user])
-(defrecord SetToken [after-login? token])
+(defrecord SetToken [after-login? navigate-data token])
 (defrecord RefreshToken [])
 
 (def ^{:const true
@@ -17,16 +17,17 @@
   Login
   (process-event [{user :demo-user} app]
     (log/info "Log in as: " user)
-    (t/fx (-> app
+    (let [navigate-data (get-in app [:login :navigate-to])]
+      (t/fx (-> app
               (assoc-in [:login :progress?] true)
               (assoc :user user))
-          {::tuck-effect/type :command!
-           :command :login
-           :payload user
-           :result-event (partial ->SetToken true)}))
+        {::tuck-effect/type :command!
+         :command :login
+         :payload user
+         :result-event (partial ->SetToken true navigate-data)})))
 
   SetToken
-  (process-event [{:keys [token after-login?]} app]
+  (process-event [{:keys [token after-login? navigate-data]} app]
     (log/info "TOKEN: " token ", after-login? " after-login?)
     (let [effects [{::tuck-effect/type :set-api-token
                     :token token}
@@ -35,8 +36,9 @@
                     :timeout refresh-token-timeout-ms
                     :event ->RefreshToken}]
           effects (if after-login?
-                    (conj effects {::tuck-effect/type :navigate
-                                   :page :projects})
+                    (conj effects (merge {::tuck-effect/type :navigate
+                                          :page :projects}
+                                    navigate-data))
                     effects)]
       (apply t/fx (assoc-in app login-paths/api-token token)
              effects)))
