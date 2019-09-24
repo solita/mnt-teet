@@ -25,6 +25,15 @@
 
 (extend-protocol t/Event
 
+  FetchDocument
+  (process-event [{document-id :document-id} app]
+    (log/info "fetch doc " document-id)
+    (t/fx app
+          {:tuck.effect/type :query
+           :query :document/fetch-document
+           :args {:document-id (goog.math.Long/fromString document-id)}
+           :result-path [:document document-id]}))
+
   UpdateDocumentForm
   (process-event [{form-data :form-data} app]
     (update-in app [:task (get-in app [:params :task]) :new-document] merge form-data))

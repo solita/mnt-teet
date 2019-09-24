@@ -19,3 +19,11 @@
             :where [?e :thk/id ?project-id] [?e :document/name _]]
    :args [db thk-project-id]
    :result-fn (partial mapv first)})
+
+(defmethod db-api/query :document/fetch-document [{db :db} {document-id :document-id}]
+  {:query '[:find (pull ?e [:document/description :document/status
+                            {:document/files [:file/name :file/size :file/type]}
+                            {:document/comments [:comment/comment :comment/author :comment/timestamp]}])
+            :in $ ?e]
+   :args [db document-id]
+   :result-fn ffirst})
