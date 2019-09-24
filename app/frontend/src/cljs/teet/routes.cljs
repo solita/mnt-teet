@@ -33,6 +33,7 @@
     ["/projects/list" :projects-list]
     ["/projects/:project" :project]
     ["/projects/:project/:phase/:task" :phase-task]
+    ["/projects/:project/:phase/:task/:document" :task-document]
     ["/components" :components]
     ;["/projectgroup/:group" :project-group]
     ;["/projectgroup/:group/project/:project" :project]
