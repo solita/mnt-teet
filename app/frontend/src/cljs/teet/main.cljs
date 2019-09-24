@@ -58,19 +58,20 @@
 (defn main-view [e! {:keys [page page-title params user navigation] :as app}]
   (let [nav-open? (boolean (:open? navigation))]
     [theme/theme-provider
-     (if (= page :login)
-       ;; Show only login dialog
-       [login-view/login-page e! app]
-       (let [{:keys [page title tabs]} (page-and-title e! app)]
-         [:<>
-          [CssBaseline]
-          [navigation-view/header e! {:title title
-                                      :open? nav-open?
-                                      :tabs tabs} user]
-          [navigation-view/main-container
-           nav-open?
-           page]
-          [df/DataFriskShell app]]))]))
+     [:<>
+      (if (= page :login)
+        ;; Show only login dialog
+        [login-view/login-page e! app]
+        (let [{:keys [page title tabs]} (page-and-title e! app)]
+          [:<>
+           [CssBaseline]
+           [navigation-view/header e! {:title title
+                                       :open? nav-open?
+                                       :tabs tabs} user]
+           [navigation-view/main-container
+            nav-open?
+            page]]))
+      [df/DataFriskShell app]]]))
 
 (defn ^:export main []
   (routes/start!)
