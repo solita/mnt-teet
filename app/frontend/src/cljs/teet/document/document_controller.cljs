@@ -5,14 +5,15 @@
             [taoensso.timbre :as log]
             [goog.math.Long]
             tuck.effect
-            [teet.routes :as routes]))
+            [teet.routes :as routes]
+            [teet.common.common-controller :as common-controller]))
 
 (defrecord CreateDocument []) ; create empty document and link it to task
 (defrecord CancelDocument []) ; cancel document creation
 (defrecord UpdateDocumentForm [form-data])
 (defrecord UploadFiles [files document-id on-success progress-increment]) ; Upload files (one at a time) to document
 (defrecord UploadFinished []) ; upload completed, can close dialog
-(defrecord UploadFileUrlReceived [file document-id url on-success])
+(defrecord UploadFileUrlReceived [file-data file document-id url on-success])
 (defrecord FetchDocument [document-id]) ; fetch document
 
 (defrecord UpdateNewCommentForm [form-data]) ; update new comment form data
@@ -90,7 +91,8 @@
                :result-event (fn [result]
                                (map->UploadFileUrlReceived
                                 (merge result
-                                       {:on-success (update event :files rest)})))}))
+                                       {:file-data file
+                                        :on-success (update event :files rest)})))}))
       (do
         (log/info "No more files to upload. Return on-success event: " on-success)
         (t/fx app
@@ -98,11 +100,11 @@
 
 
   UploadFileUrlReceived
-  (process-event [{:keys [file document-id url on-success]} app]
+  (process-event [{:keys [file file-data document-id url on-success]} app]
     (t/fx (assoc-in app [:task (get-in app [:params :task]) :new-document :progress]
                     [:upload file])
           (fn [e!]
-            (-> (js/fetch url #js {:method "PUT" :body file})
+            (-> (js/fetch url #js {:method "PUT" :body file-data})
                 (.then (fn [^js/Response resp]
                          (if (.-ok resp)
                            (do
@@ -119,3 +121,6 @@
            :page :phase-task
            :params (:params app)
            :query {}})))
+
+(defn download-url [file-id]
+  (common-controller/query-url :document/download-file {:file-id file-id}))
