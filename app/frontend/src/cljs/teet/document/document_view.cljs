@@ -25,8 +25,7 @@
                :cancel-event document-controller/->CancelDocument
                :in-progress? in-progress?
                :spec :document/new-document-form}
-    ^{:attribute :document/status}
-    [select/select-enum {:e! e! :attribute :document/status}]
+
 
     ^{:attribute :document/description}
     [TextField {:multiline true :maxrows 4 :rows 4
@@ -34,7 +33,10 @@
                 :required true}]
 
     ^{:attribute :document/files}
-    [file-upload/files-field {}]]
+    [file-upload/files-field {}]
+
+    ^{:attribute :document/status}
+    [select/select-enum {:e! e! :attribute :document/status}]]
 
    (when in-progress?
      [LinearProgress {:variant "determinate"
