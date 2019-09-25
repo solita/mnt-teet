@@ -36,7 +36,7 @@
                                              :document/files (assoc file :db/id "new-file")}]})
             doc-id (or document-id (get-in res [:tempids "new-document"]))
             file-id (get-in res [:tempids "new-file"])
-            key (str doc-id "-" (:file/name file))]
+            key (str file-id "-" (:file/name file))]
 
         {:url (document-storage/upload-url key)
          :document-id doc-id
