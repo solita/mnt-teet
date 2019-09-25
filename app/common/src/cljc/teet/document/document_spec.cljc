@@ -4,5 +4,6 @@
             [clojure.string :as str]))
 
 (s/def :document/status keyword?)
+(s/def :document/name (s/and string? (complement str/blank?)))
 (s/def :document/description (s/and string? (complement str/blank?)))
-(s/def :document/new-document-form (s/keys :req [:document/status :document/description]))
+(s/def :document/new-document-form (s/keys :req [:document/name :document/status :document/description]))

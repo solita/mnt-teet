@@ -5,7 +5,8 @@
             [teet.ui.form :as form]
             [teet.ui.select :as select]
             [teet.document.document-controller :as document-controller]
-            [teet.ui.material-ui :refer [TextField LinearProgress Grid Button]]
+            [teet.ui.material-ui :refer [TextField LinearProgress Grid Button
+                                         List ListItem ListItemText ListItemIcon]]
             [teet.ui.typography :as typography]
             [teet.ui.file-upload :as file-upload]
             [taoensso.timbre :as log]
@@ -13,7 +14,9 @@
             [teet.localization :refer [tr]]
             teet.document.document-spec
             [teet.ui.itemlist :as itemlist]
-            [teet.user.user-info :as user-info]))
+            [teet.user.user-info :as user-info]
+            [teet.ui.format :as format]
+            [teet.ui.icons :as icons]))
 
 
 (defn document-form [e! {:keys [in-progress? progress] :as doc}]
@@ -48,8 +51,22 @@
 (defn document-page [e! {:keys [document]}]
   [Grid {:container true}
    [Grid {:item true :xs 6}
-    [typography/SectionHeading (:document/name document)]
-    [:div "DOC: " (pr-str document)]]
+    [typography/SectionHeading (:document/name document)
+     [typography/DataLabel " " (count (:document/files document)) " " (tr [:common :files])]]
+    [typography/Paragraph (:document/description document)]
+    [List {:dense true}
+     (doall
+      (for [{id :db/id
+             :file/keys [name type size]} (:document/files document)]
+        ^{:key id}
+        [ListItem {:button true :component "a"
+                   :href (document-controller/download-url id)
+                   :target "_blank"}
+         [ListItemIcon [icons/file-attachment]]
+         [ListItemText {:primary name
+                        :secondary (str type " " (format/file-size size))}]
+         ]))]
+    ]
    [Grid {:item true :xs 6 :classes {:item (<class theme-panels/side-panel)}}
     [itemlist/ItemList {:title (tr [:document :comments])}
      (doall

@@ -8,7 +8,8 @@
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.icons :as icons]
             [teet.localization :refer [tr]]
-            [teet.ui.typography :as typography]))
+            [teet.ui.typography :as typography]
+            [teet.ui.format :as format]))
 
 (defn- page-overlay []
   {;; Cover the whole page
@@ -129,13 +130,6 @@
                   :raised "true"}]
          children)])
 
-(defn file-size [b]
-  (let [kb (/ b 1024)]
-    (cond
-      (> kb 1024) (str (.toFixed (/ kb 1024) 1) "mb")
-      (<= kb 1) (str b "b")
-      :else (str (.toFixed kb 0) "kb"))))
-
 (defn- files-field-style []
   {:min-height "300px"
 
@@ -155,7 +149,7 @@
         ^{:key i}
         [ListItem {}
          [ListItemText {:primary (.-name file)
-                        :secondary (str (.-type file) " " (file-size (.-size file)))}]
+                        :secondary (str (.-type file) " " (format/file-size (.-size file)))}]
          [ListItemSecondaryAction
           [IconButton {:edge "end"
                        :on-click #(on-change (into (subvec value 0 i)
