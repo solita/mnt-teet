@@ -138,7 +138,7 @@
 
 (defn files-field [{:keys [value on-change]}]
   [:div ;; FIXME: this should be "outlined" like material UI input components
-   [typography/SectionHeading "Files"]
+   [typography/SectionHeading (tr [:common :files])]
    [List {:dense true}
     (doall
      (map-indexed
