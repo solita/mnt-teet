@@ -2,11 +2,13 @@
   (:require [herb.core :refer [<class]]
             [reagent.core :as r]
             [taoensso.timbre :as log]
-            [teet.ui.material-ui :refer [Button IconButton]]
+            [teet.ui.material-ui :refer [Button IconButton FormControl InputLabel
+                                         List ListItem ListItemText ListItemSecondaryAction]]
             [teet.ui.typography :refer [Heading1]]
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.icons :as icons]
-            [teet.localization :refer [tr]]))
+            [teet.localization :refer [tr]]
+            [teet.ui.typography :as typography]))
 
 (defn- page-overlay []
   {;; Cover the whole page
@@ -127,17 +129,29 @@
                   :raised "true"}]
          children)])
 
+(defn file-size [b]
+  (let [kb (/ b 1024)]
+    (cond
+      (> kb 1024) (str (.toFixed (/ kb 1024) 1) "mb")
+      (<= kb 1) (str b "b")
+      :else (str (.toFixed kb 0) "kb"))))
+
 (defn files-field [{:keys [value on-change]}]
-  (log/info "RENDER")
-  [:div
-   [:ul
+  [:div ;; FIXME: this should be "outlined" like material UI input components
+   [typography/SectionHeading "Files"]
+   [List {:dense true}
     (doall
      (map-indexed
       (fn [i ^js/File file]
         ^{:key i}
-        [:li (.-name file) [IconButton {:on-click #(on-change (into (subvec value 0 i)
-                                                                    (subvec value (inc i))))}
-                            [icons/action-delete]]])
+        [ListItem {}
+         [ListItemText {:primary (.-name file)
+                        :secondary (str (.-type file) " " (file-size (.-size file)))}]
+         [ListItemSecondaryAction
+          [IconButton {:edge "end"
+                       :on-click #(on-change (into (subvec value 0 i)
+                                                   (subvec value (inc i))))}
+           [icons/action-delete]]]])
       value))]
    [FileUploadButton {:id "files-field"
                       :on-drop #(on-change (into (or value []) %))}
