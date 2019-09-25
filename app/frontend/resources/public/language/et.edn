@@ -1,5 +1,7 @@
 {:buttons {:cancel "Tühista", :save "Salvesta", :add "Lisa"},
- :common {:general "Üldine", :select {:empty "Vali"}},
+ :common
+ {:general "Üldine", :select {:empty "Vali"}, :select-files nil},
+ :document {:comments "Märkused", :new-comment "Uus märkus"},
  :enum
  {:phase.name/land-acquisition "Maade omandamine",
   :task.type/other "Muu",
@@ -22,24 +24,25 @@
   :phase.status/valid "Kehtiv",
   :task.type/archeological-study "Argeoloogiline uuring"},
  :fields
- {:phase/status nil,
-  :task/type nil,
-  :task/assignee nil,
-  :phase/estimated-start-date nil,
+ {:phase/status "Olek",
+  :task/type "Ülesandetüüp",
+  :task/assignee "Vastutav isik",
+  :phase/estimated-start-date "Eeldatav alguskuupäev",
   "projectgroup" {"phase" "Etapp"},
-  :phase/estimated-end-date nil,
+  :phase/estimated-end-date "Eeldatav lõppkuupäev",
   :common {"name" "Nimi", "description" "Kirjeldus"},
   :task/description "Kirjeldus",
   :phase/phase-name "Etapp nimi"},
  :login {:login "Sisenen", :password "Salasõna", :username "Kasutaja"},
  :project
  {:add-phase "Lisa etapp",
-  :add-task nil,
+  :add-task "Lisa ülesanne",
   :phases "Projekti etapid",
-  :phase {:no-tasks nil}},
+  :phase {:no-tasks "Ülesandeid pole"}},
  :project-groups {:title "Projektirühmad"},
  :projects
  {:title "Projektid",
   :map-view "Kaart",
   :list-view "Projektide loetelu"},
- :search {:quick-search "Otsi", :clear-filters "Puhasta filtrid"}}
+ :search {:quick-search "Otsi", :clear-filters "Puhasta filtrid"},
+ :task {:add-document "Lisa dokument"}}

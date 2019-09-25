@@ -1,5 +1,9 @@
 {:buttons {:cancel "Cancel", :save "Save", :add "Add"},
- :common {:general "General", :select {:empty "- Select value"}},
+ :common
+ {:general "General",
+  :select {:empty "- Select value"},
+  :select-files "Select files to upload"},
+ :document {:comments "Comments", :new-comment "New comment"},
  :enum
  {:phase.name/land-acquisition "Land acquisition",
   :task.type/other "Other",
@@ -40,4 +44,5 @@
  :project-groups {:title "Project groups"},
  :projects
  {:title "Projects", :map-view "Map", :list-view "Project list"},
- :search {:quick-search "Search", :clear-filters "Clear filters"}}
+ :search {:quick-search "Search", :clear-filters "Clear filters"},
+ :task {:add-document "Add document"}}
