@@ -67,7 +67,7 @@
       (t/fx (update-in app path assoc :in-progress? 0)
             {:tuck.effect/type :command!
              :command :document/new-document
-             :payload {:document (select-keys doc [:document/status :document/description])
+             :payload {:document (select-keys doc [:document/name :document/status :document/description])
                        :task-id (goog.math.Long/fromString task)}
              :result-event (fn [doc-id]
                              (map->UploadFiles {:files files

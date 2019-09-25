@@ -22,7 +22,7 @@
    :result-fn (partial mapv first)})
 
 (defmethod db-api/query :document/fetch-document [{db :db} {document-id :document-id}]
-  {:query '[:find (pull ?e [:document/description :document/status
+  {:query '[:find (pull ?e [:document/name :document/description :document/status
                             {:document/files [:file/name :file/size :file/type]}
                             {:document/comments [:comment/comment :comment/timestamp
                                                  {:comment/author [:user/id]}]}])

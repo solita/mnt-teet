@@ -74,5 +74,5 @@
   (let [doc-id (get-in app [:params :document])
         doc (get-in app [:document doc-id])]
     ;; document should have title?
-    {:title (get-in app [:document doc-id :document/description])
+    {:title (get-in app [:document doc-id :document/name])
      :page [document-page e! {:document doc}]}))

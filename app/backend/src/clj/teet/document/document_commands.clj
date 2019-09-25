@@ -24,7 +24,7 @@
 (defmethod db-api/command! :document/new-document [{conn :conn} {:keys [task-id document]}]
   (-> conn
       (d/transact {:tx-data [(merge {:db/id "new-document"}
-                                    (select-keys document [:document/status :document/description]))
+                                    (select-keys document [:document/name :document/status :document/description]))
                              {:db/id task-id
                               :task/documents [{:db/id "new-document"}]}]})
       (get-in [:tempids "new-document"])))
