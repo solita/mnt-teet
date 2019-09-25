@@ -422,7 +422,10 @@
                                     (map #(-> % .getSource .getExtent)))
                                   geometry-layers)
             combined-extent (reduce (fn [e1 e2]
-                                      (when (and e1 e2)
+                                      (when e1
+                                        (when e2
+                                          (ol-extent/extend e1 e2)))
+                                      #_(when (and e1 e2)
                                         (ol-extent/extend e1 e2)))
                                     zoom-to-extents)
             ;; Center-on-geometry can contain specific fitting options, so it is then a map.
@@ -539,8 +542,9 @@
         ;; kontrollit (ol-control/defaults #js {})
 
         map-options (clj->js {:layers       (mapv background/create-background-layer layers)
-                             :target       (:id mapspec)
-                             :controls [] ;; :controls     kontrollit
+                              :target       (:id mapspec)
+                              ;; :controls     kontrollit
+                              :controls [] ;; :controls     kontrollit
                              :interactions interactions})
         ol3 (ol/Map. map-options)
 
@@ -564,7 +568,7 @@
         extent (:extent mapspec)
         center (:center mapspec)
         unmount-ch (chan)]
-
+    (log/info "ol3-did-mount: layers was" (pr-str layers))
 
     ;; Begin listening to command channel
     (go-loop [[[command & args] ch] (alts! [command-ch unmount-ch])]

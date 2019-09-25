@@ -22,7 +22,6 @@
 
     (vreset! current-tool (get-in app [:map :tool]))
     (vreset! on-zoom (get-in app [:map :on-zoom]))
-
     (let [{:keys [extent]} (:map app)]
       [:<>
        [openlayers/openlayers
@@ -35,8 +34,11 @@
                        (when (#{:bbox-select :position-select} @current-tool)
                          {:cursor "crosshair"}))
          :class class
-         :extent (or extent default-extent)
-         :center default-center
+         ; :extent (or extent default-extent)
+         :extent [20 50 30 60]
+                                        ; 6588116.753472222,541429.6875,6590148.003472222,545266.4930555555
+         :center [6589000 543000] 
+         ; :center default-center
 
          ;:selection          nav/valittu-hallintayksikko
          :on-drag (fn [item event]
@@ -47,6 +49,7 @@
                           (let [old-z @current-zoom
                                 new-z (some->> e openlayers/event-map openlayers/map-zoom js/Math.round)
                                 new-res (some->> e openlayers/event-map openlayers/map-resolution)]
+                            (log/info "current zoom:" @current-zoom)
                             (when (not= old-z new-z)
                               (vreset! current-zoom new-z)
                               (vreset! current-res new-res)
@@ -113,10 +116,16 @@
                      (get-in app [:map :rotation])
                      0)
 
-         :layers [{:type :maa-amet :layer "kaart" :default true}]
+         :layers [{:type :maa-amet :layer "kaart" :default true}
+                  {:type :wms
+                   :url "https://xgis.maaamet.ee/xgis2/service/rcoq/rest/services/public/ps/MapServer/exts/InspireView/service"
+
+                   :layer "PS.ProtectedSitesCultural" :style "" :default true}
+                  ]
          #_(vec
                   (for [layer ["BAASKAART" "MAANTEED" "pohi_vr2"]]
                     {:type :wms :url "http://kaart.maaamet.ee/wms/alus?"
                      :layer layer
                      :style ""
-                     :default true}))}]])))
+                     :default true}))}]]))
+  )

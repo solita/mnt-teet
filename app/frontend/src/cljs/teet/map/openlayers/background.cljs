@@ -2,6 +2,9 @@
   "Background layers.
   Creates background map layer based on :type."
   (:require [ol.source.WMTS]
+            [ol.source.TileArcGISRest]
+            [ol.source.TileWMS]
+            [ol.source.Image]
             [ol.tilegrid.WMTS]
             [ol.tilegrid.TileGrid]
             [ol.layer.Tile]
@@ -25,7 +28,6 @@
         :matrixIds #js ["0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "10" "11" "12" "13"]
         :tileSize 256}))
 
-
 (defmulti create-background-layer :type)
 
 
@@ -48,12 +50,52 @@
                                     :wrapX        true})})
     (.setVisible default)))
 
+#_(defn tile-url-with-swapped-xy [url]
+  (clojure.string/replace url #"\bBBOX=([0-9%C.]*)"
+                          (fn [[a]]
+                            (let [parts (clojure.string/split (second (clojure.string/split a #"=")) "%2C")
+                                  shuffled [(get parts 1) (get parts 0) (get parts 3) (get parts 2)]]
+                              (str "BBOX=" (clojure.string/join "%2C" shuffled))))))
+
 (defmethod create-background-layer :wms [{:keys [url layer style default] :as params}]
   (log/info "Create WMS layer: " params)
-  (doto (ol.layer.Image.
-         #js {:source (ol.source.ImageWMS.
+  (let [my-source (ol.source.ImageWMS.
                        #js {:url url
-                            :params #js {:VERSION "1.1.1" :LAYERS layer :STYLES style :FORMAT "image/png"}})})
+                            :params #js {:VERSION "1.1.1" :LAYERS layer :STYLES style :FORMAT "image/png"
+                                         :CRS "EPSG:3301"}
+                            :serverType 'mapserver'})
+        ]
+    #_(.setImageLoadFunction my-source (fn [image src]
+                                       (log/info "image load fn called" src)
+                                       (ol.source.Image.defaultImageLoadFunction image (tile-url-with-swapped-xy src))))
+    (doto (ol.layer.Image.
+           #js {:source my-source
+                :opacity 0.5})
+      (.setVisible default))))
+
+
+#_(defmethod create-background-layer :arcgis-tiled [{:keys [url layer style default] :as params}]
+  (log/info "Create arcgis-tiled layer: "params)
+  (doto (ol.layer.Tile.
+         #js {
+              :source (ol.source.TileArcGISRest.
+                       #js {:url url
+                            :params #js {:VERSION "1.3.0" :LAYERS layer :STYLES style
+                                         :CRS "EPSG:3301"}
+                            }
+                       )})
+    (.setVisible default)))
+
+(defmethod create-background-layer :wms-tiled [{:keys [url layer style default] :as params}]
+  (log/info "Create WMS tile layer: " params)
+  (doto (ol.layer.Tile.
+         #js {
+              :source (ol.source.TileWMS.
+                       #js {:url url
+                            :params #js {:VERSION "1.3.0" :LAYERS layer :STYLES style
+                                         :CRS "EPSG:3301"}
+                            :serverType "mapserver"}
+                       )})
     (.setVisible default)))
 
 (defmethod create-background-layer :osm [_]

@@ -100,5 +100,11 @@
                                                                "geojson_thk_project"
                                                                {"id" project}
                                                                map-features/project-line-style
+                                                               {:fit-on-load? true})
+                                     :protected-site
+                                     (map-layers/geojson-layer "https://inspire.maaamet.ee/arcgis/rest/services/public/ps/MapServer/exts/InspireView/service"
+                                                               "geojson_protected_site"
+                                                               {"id" project}
+                                                               map-features/project-line-style
                                                                {:fit-on-load? true})}}
       app]]]])

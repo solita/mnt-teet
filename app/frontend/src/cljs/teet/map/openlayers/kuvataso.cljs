@@ -24,6 +24,7 @@
         extent (.getTileCoordExtent tile-grid coord
                                (ol-extent/createEmpty))
         [x1 y1 x2 y2] extent]
+    (log/info "hae-url" source extent)
     (apply karttakuva-url
            (concat  ["x1" x1 "y1" y1 "x2" x2 "y2" y2
                      "r" (.getResolution tile-grid (aget coord 0))
