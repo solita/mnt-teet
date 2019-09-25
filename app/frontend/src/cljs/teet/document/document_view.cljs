@@ -6,7 +6,8 @@
             [teet.ui.select :as select]
             [teet.document.document-controller :as document-controller]
             [teet.ui.material-ui :refer [TextField LinearProgress Grid Button
-                                         List ListItem ListItemText ListItemIcon]]
+                                         List ListItem ListItemText ListItemIcon
+                                         CircularProgress]]
             [teet.ui.typography :as typography]
             [teet.ui.file-upload :as file-upload]
             [taoensso.timbre :as log]
@@ -57,16 +58,27 @@
     [List {:dense true}
      (doall
       (for [{id :db/id
-             :file/keys [name type size]} (:document/files document)]
+             :file/keys [name type size]
+             tx-instant :db/txInstant
+             tx-author :tx/author
+             in-progress? :in-progress?} (:document/files document)]
         ^{:key id}
         [ListItem {:button true :component "a"
                    :href (document-controller/download-url id)
                    :target "_blank"}
-         [ListItemIcon [icons/file-attachment]]
+         (if in-progress?
+           [ListItemIcon [CircularProgress {:size 20}]]
+           [ListItemIcon [icons/file-attachment]])
          [ListItemText {:primary name
-                        :secondary (str type " " (format/file-size size))}]
-         ]))]
-    ]
+                        :secondary (r/as-element
+                                    [:<>
+                                     [:div (format/date-time tx-instant) " "
+                                      (when tx-author
+                                        [user-info/user-name e! tx-author])]
+                                     (str " (" (format/file-size size) " " type ")")])}]]))]
+    [file-upload/FileUploadButton {:id "upload-files-to-document"
+                                   :on-drop (e! document-controller/->UploadFilesToDocument)}
+     (tr [:common :select-files])]]
    [Grid {:item true :xs 6 :classes {:item (<class theme-panels/side-panel)}}
     [itemlist/ItemList {:title (tr [:document :comments])}
      (doall

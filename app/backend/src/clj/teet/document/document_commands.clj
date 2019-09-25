@@ -1,7 +1,8 @@
 (ns teet.document.document-commands
   (:require [teet.db-api.core :as db-api]
             [datomic.client.api :as d]
-            [teet.document.document-storage :as document-storage])
+            [teet.document.document-storage :as document-storage]
+            [taoensso.timbre :as log])
   (:import (java.util Date)))
 
 
@@ -29,11 +30,15 @@
                               :task/documents [{:db/id "new-document"}]}]})
       (get-in [:tempids "new-document"])))
 
-(defmethod db-api/command! :document/upload-file [{conn :conn}
+(defmethod db-api/command! :document/upload-file [{conn :conn
+                                                   user :user}
                                                   {:keys [document-id file]}]
+  (log/info "USER: " user)
   (or (validate-file file)
       (let [res (d/transact conn {:tx-data [{:db/id (or document-id "new-document")
-                                             :document/files (assoc file :db/id "new-file")}]})
+                                             :document/files (assoc file :db/id "new-file")}
+                                            {:db/id "datomic.tx"
+                                             :tx/author (:user/id user)}]})
             doc-id (or document-id (get-in res [:tempids "new-document"]))
             file-id (get-in res [:tempids "new-file"])
             key (str file-id "-" (:file/name file))]

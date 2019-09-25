@@ -21,13 +21,20 @@
    :result-fn (partial mapv first)})
 
 (defmethod db-api/query :document/fetch-document [{db :db} {document-id :document-id}]
-  {:query '[:find (pull ?e [:document/name :document/description :document/status
-                            {:document/files [:db/id :file/name :file/size :file/type]}
-                            {:document/comments [:comment/comment :comment/timestamp
-                                                 {:comment/author [:user/id]}]}])
-            :in $ ?e]
-   :args [db document-id]
-   :result-fn #(-> %
-                   ffirst
-                   (update :document/comments (fn [comments]
-                                                (sort-by :comment/timestamp comments))))})
+  (let [docs (-> (d/q '[:find (pull ?e [:document/name :document/description :document/status
+                                        {:document/comments [:comment/comment :comment/timestamp
+                                                             {:comment/author [:user/id]}]}])
+                        :in $ ?e]
+                      db document-id)
+                 ffirst
+                 (update :document/comments (fn [comments]
+                                              (sort-by :comment/timestamp comments))))
+        files (->> (d/q '{:find [(pull ?e [*])
+                                 (pull ?tx [:db/txInstant :tx/author])]
+                          :in [$ ?doc]
+                          :where [[?doc :document/files ?e ?tx]]}
+                        db document-id)
+                   (mapv (fn [[file tx]]
+                           (merge file tx)))
+                   (sort-by :db/txInstant))]
+    (assoc docs :document/files files)))

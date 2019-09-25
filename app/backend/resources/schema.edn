@@ -235,4 +235,9 @@
            :db/cardinality :db.cardinality/many
            :db/doc "Comments for the document"}]]}
 
+ {:db/ident :migration/tx-author
+  :txes [[{:db/ident :tx/author
+           :db/valueType :db.type/uuid
+           :db/cardinality :db.cardinality/one
+           :db/doc "Id of the user who made this transaction"}]]}
  ]

@@ -6,6 +6,11 @@
   [date]
   (.toLocaleDateString date))
 
+(defn date-time
+  "Format date and time in human readable locale specific format."
+  [date]
+  (.toLocaleString date))
+
 (defn file-size [b]
   (let [kb (/ b 1024)]
     (cond

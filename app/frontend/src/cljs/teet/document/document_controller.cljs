@@ -15,6 +15,7 @@
 (defrecord UploadFinished []) ; upload completed, can close dialog
 (defrecord UploadFileUrlReceived [file-data file document-id url on-success])
 (defrecord FetchDocument [document-id]) ; fetch document
+(defrecord UploadFilesToDocument [files]) ; upload new files to existing document from the document page
 
 (defrecord UpdateNewCommentForm [form-data]) ; update new comment form data
 (defrecord Comment []) ; save new comment to document
@@ -82,8 +83,10 @@
       ;; More files to upload
       (do
         (log/info "More files to upload. Uploading: " file)
-        (t/fx (update-in app [:task (get-in app [:params :task]) :new-document :in-progress?]
-                         + progress-increment)
+        (t/fx (if progress-increment
+                (update-in app [:task (get-in app [:params :task]) :new-document :in-progress?]
+                           + progress-increment)
+                app)
               {:tuck.effect/type :command!
                :command :document/upload-file
                :payload {:document-id document-id
@@ -97,6 +100,20 @@
         (log/info "No more files to upload. Return on-success event: " on-success)
         (t/fx app
               (fn [e!] (e! (on-success)))))))
+
+  UploadFilesToDocument
+  (process-event [{files :files} app]
+    (let [doc-id  (get-in app [:params :document])]
+      (t/fx (update-in app [:document doc-id :document/files]
+                       into (comp (map file-info)
+                                  (map #(assoc %
+                                               :in-progress? true
+                                               :db/id (str (random-uuid))))) files)
+
+            (fn [e!]
+              (e! (map->UploadFiles {:files files
+                                        :document-id (goog.math.Long/fromString doc-id)
+                                        :on-success (partial ->FetchDocument doc-id)}))))))
 
 
   UploadFileUrlReceived
