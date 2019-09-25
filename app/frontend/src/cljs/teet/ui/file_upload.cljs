@@ -136,8 +136,17 @@
       (<= kb 1) (str b "b")
       :else (str (.toFixed kb 0) "kb"))))
 
+(defn- files-field-style []
+  {:min-height "300px"
+
+   ;; FIXME: approximate "outlined" input like material UI
+   ;; should use material ui classes directly?
+   :border "solid 1px #e0e0e0"
+   :border-radius "3px"
+   :padding "1rem"})
+
 (defn files-field [{:keys [value on-change]}]
-  [:div ;; FIXME: this should be "outlined" like material UI input components
+  [:div {:class (<class files-field-style)}
    [typography/SectionHeading (tr [:common :files])]
    [List {:dense true}
     (doall
