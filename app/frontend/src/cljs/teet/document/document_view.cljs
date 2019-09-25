@@ -41,28 +41,28 @@
                       :value in-progress?}])])
 
 (defn document-page [e! {:keys [document]}]
-  (r/with-let [new-comment (r/atom "")]
-    [Grid {:container true}
-     [Grid {:item true :xs 6}
-      [:div "DOC: " (pr-str document)]]
-     [Grid {:item true :xs 6 :classes {:item (<class theme-panels/side-panel)}}
-      [itemlist/ItemList {:title (tr [:document :comments])}
-       (doall
-        (for [{id :db/id
-               :comment/keys [author comment timestamp]} (:document/comments document)]
-          ^{:key id}
-          [:div (.toLocaleString timestamp) " "
-           [user-info/user-name e! (:user/id author)]
-           comment]))]
-      [TextField {:value @new-comment
-                  :on-change #(reset! new-comment (-> % .-target .-value))
-                  :rows 4 :maxrows 4 :multiline true :full-width true
-                  :placeholder (tr [:document :new-comment])}]
+  [Grid {:container true}
+   [Grid {:item true :xs 6}
+    [:div "DOC: " (pr-str document)]]
+   [Grid {:item true :xs 6 :classes {:item (<class theme-panels/side-panel)}}
+    [itemlist/ItemList {:title (tr [:document :comments])}
+     (doall
+      (for [{id :db/id
+             :comment/keys [author comment timestamp]} (:document/comments document)]
+        ^{:key id}
+        [:div
+         [typography/SectionHeading
+          [user-info/user-name e! (:user/id author)]]
+         [:div (.toLocaleString timestamp)]
+         [typography/Paragraph comment]]))]
 
-      [Button {:on-click #(do
-                            (e! (document-controller/->Comment @new-comment))
-                            (reset! new-comment ""))}
-       (tr [:buttons :save])]]]))
+    [form/form {:e! e!
+                :value (:new-comment document)
+                :on-change-event document-controller/->UpdateNewCommentForm
+                :save-event document-controller/->Comment}
+     ^{:attribute :comment/comment}
+     [TextField {:rows 4 :maxrows 4 :multiline true :full-width true
+                 :placeholder (tr [:document :new-comment])}]]]])
 
 (defn document-page-and-title [e! app]
   (let [doc-id (get-in app [:params :document])

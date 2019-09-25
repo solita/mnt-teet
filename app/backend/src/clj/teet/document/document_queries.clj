@@ -2,7 +2,8 @@
   (:require [teet.db-api.core :as db-api]
             [teet.document.document-specs]
             [teet.document.document-storage :as document-storage]
-            [datomic.client.api :as d]))
+            [datomic.client.api :as d]
+            [taoensso.timbre :as log]))
 
 
 (defmethod db-api/query :document/download [{db :db} {doc-id :db/id}]
@@ -29,4 +30,5 @@
    :args [db document-id]
    :result-fn #(-> %
                    ffirst
-                   (update :document/comments (fn [comments] (sort-by :document/timestamp comments))))})
+                   (update :document/comments (fn [comments]
+                                                (sort-by :comment/timestamp comments))))})

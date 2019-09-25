@@ -14,7 +14,9 @@
 (defrecord UploadFinished []) ; upload completed, can close dialog
 (defrecord UploadFileUrlReceived [file document-id url on-success])
 (defrecord FetchDocument [document-id]) ; fetch document
-(defrecord Comment [comment]) ; add comment to document
+
+(defrecord UpdateNewCommentForm [form-data]) ; update new comment form data
+(defrecord Comment []) ; save new comment to document
 
 (defmethod routes/on-navigate-event :task-document [{{:keys [document]} :params}]
   (->FetchDocument document))
@@ -35,14 +37,19 @@
            :args {:document-id (goog.math.Long/fromString document-id)}
            :result-path [:document document-id]}))
 
+  UpdateNewCommentForm
+  (process-event [{form-data :form-data} app]
+    (update-in app [:document (get-in app [:params :document]) :new-comment] merge form-data))
+
   Comment
-  (process-event [{comment :comment} app]
-    (let [doc (get-in app [:params :document])]
-      (t/fx app
+  (process-event [_ app]
+    (let [doc (get-in app [:params :document])
+          new-comment (get-in app [:document doc :new-comment :comment/comment])]
+      (t/fx (update-in app [:document doc] dissoc :new-comment)
             {:tuck.effect/type :command!
              :command :document/comment
              :payload {:document-id (goog.math.Long/fromString doc)
-                       :comment comment}
+                       :comment new-comment}
              :result-event (fn [_] (->FetchDocument doc))})))
 
   UpdateDocumentForm
