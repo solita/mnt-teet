@@ -5,6 +5,7 @@
             [teet.ui.file-upload :as file-upload]
             [teet.localization :refer [tr-fixme tr]]
             [teet.ui.material-ui :refer [CircularProgress IconButton TextField Grid
+                                         List ListItem ListItemText ListItemIcon ListItemSecondaryAction
                                          Button]]
             [reagent.core :as r]
             [teet.ui.icons :as icons]
@@ -92,15 +93,16 @@
     {:title "Documents"}
     (if (empty? documents)
       [:div "No documents"]
-      (doall
-       (for [{id :db/id
-              :document/keys [description status]
-              :as doc} documents]
-         ^{:key id}
-         [:div
-          ;; FIXME: make a nice document UI
-          [:br]
-          [:div [:a {:href (task-controller/document-page-url app doc)} description]]])))]
+      [List {:dense true}
+       (doall
+        (for [{id :db/id
+               :document/keys [name description status]
+               :as doc} documents]
+          ^{:key id}
+          [ListItem {:button true :component "a"
+                     :href (task-controller/document-page-url app doc)}
+           [ListItemIcon [icons/file-folder] ]
+           [ListItemText {:primary (or name description)}]]))])]
    [Button {:on-click #(e! (task-controller/->OpenAddDocumentDialog))}
     [icons/content-add-circle]
     (tr [:task :add-document])]])
