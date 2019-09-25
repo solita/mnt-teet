@@ -26,6 +26,9 @@
                :in-progress? in-progress?
                :spec :document/new-document-form}
 
+    ^{:attribute :document/name}
+    [TextField {:variant "outlined"
+                :full-width true}]
 
     ^{:attribute :document/description}
     [TextField {:multiline true :maxrows 4 :rows 4
@@ -45,6 +48,7 @@
 (defn document-page [e! {:keys [document]}]
   [Grid {:container true}
    [Grid {:item true :xs 6}
+    [typography/SectionHeading (:document/name document)]
     [:div "DOC: " (pr-str document)]]
    [Grid {:item true :xs 6 :classes {:item (<class theme-panels/side-panel)}}
     [itemlist/ItemList {:title (tr [:document :comments])}
