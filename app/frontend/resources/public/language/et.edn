@@ -1,6 +1,11 @@
 {:buttons {:cancel "Tühista", :save "Salvesta", :add "Lisa"},
  :common
- {:general "Üldine", :select {:empty "Vali"}, :select-files nil},
+ {:general "Üldine",
+  :select {:empty "Vali"},
+  :select-files nil,
+  :files nil,
+  :back-to-task nil,
+  :back-to-project nil},
  :document {:comments "Märkused", :new-comment "Uus märkus"},
  :enum
  {:phase.name/land-acquisition "Maade omandamine",
@@ -32,6 +37,7 @@
   :phase/estimated-end-date "Eeldatav lõppkuupäev",
   :common {"name" "Nimi", "description" "Kirjeldus"},
   :task/description "Kirjeldus",
+  :comment/comment "Märkus",
   :phase/phase-name "Etapp nimi"},
  :login {:login "Sisenen", :password "Salasõna", :username "Kasutaja"},
  :project

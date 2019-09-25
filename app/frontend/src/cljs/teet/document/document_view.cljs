@@ -7,7 +7,7 @@
             [teet.document.document-controller :as document-controller]
             [teet.ui.material-ui :refer [TextField LinearProgress Grid Button
                                          List ListItem ListItemText ListItemIcon
-                                         CircularProgress]]
+                                         CircularProgress Link]]
             [teet.ui.typography :as typography]
             [teet.ui.file-upload :as file-upload]
             [taoensso.timbre :as log]
@@ -17,7 +17,8 @@
             [teet.ui.itemlist :as itemlist]
             [teet.user.user-info :as user-info]
             [teet.ui.format :as format]
-            [teet.ui.icons :as icons]))
+            [teet.ui.icons :as icons]
+            [teet.project.project-info :as project-info]))
 
 
 (defn document-form [e! {:keys [in-progress? progress] :as doc}]
@@ -49,16 +50,24 @@
      [LinearProgress {:variant "determinate"
                       :value in-progress?}])])
 
-(defn document-page [e! {:keys [document]}]
+(defn document-page [e! {:keys [document params] :as app}]
   [Grid {:container true}
    [Grid {:item true :xs 6}
+    [Link {:href (str "#/projects/" (:project params))}
+     [icons/navigation-arrow-back]
+     (tr [:common :back-to-project])
+     [project-info/project-name app (:project params)]]
+    [Link {:href (str "#/projects/" (:project params) "/" (:phase params) "/" (:task params))}
+     [icons/navigation-arrow-back]
+     (tr [:common :back-to-task])
+     (tr [:enum (get-in document [:task/_documents 0 :task/type :db/ident])])]
     [typography/SectionHeading (:document/name document)
      [typography/DataLabel " " (count (:document/files document)) " " (tr [:common :files])]]
     [typography/Paragraph (:document/description document)]
     [List {:dense true}
      (doall
       (for [{id :db/id
-             :file/keys [name type size]
+             :file/keys [name size]
              tx-instant :db/txInstant
              tx-author :tx/author
              in-progress? :in-progress?} (:document/files document)]
@@ -75,7 +84,7 @@
                                      [:div (format/date-time tx-instant) " "
                                       (when tx-author
                                         [user-info/user-name e! tx-author])]
-                                     (str " (" (format/file-size size) " " type ")")])}]]))]
+                                     (format/file-size size) ])}]]))]
     [file-upload/FileUploadButton {:id "upload-files-to-document"
                                    :on-drop (e! document-controller/->UploadFilesToDocument)}
      (tr [:common :select-files])]]
@@ -104,4 +113,5 @@
         doc (get-in app [:document doc-id])]
     ;; document should have title?
     {:title (get-in app [:document doc-id :document/name])
-     :page [document-page e! {:document doc}]}))
+     :page [document-page e! (merge (select-keys app [:params :config :user])
+                                    {:document doc})]}))

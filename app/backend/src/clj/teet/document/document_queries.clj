@@ -22,6 +22,8 @@
 
 (defmethod db-api/query :document/fetch-document [{db :db} {document-id :document-id}]
   (let [docs (-> (d/q '[:find (pull ?e [:document/name :document/description :document/status
+                                        {:task/_documents [:db/id :task/description
+                                                           {:task/type [:db/ident]}]}
                                         {:document/comments [:comment/comment :comment/timestamp
                                                              {:comment/author [:user/id]}]}])
                         :in $ ?e]

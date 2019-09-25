@@ -2,7 +2,10 @@
  :common
  {:general "General",
   :select {:empty "- Select value"},
-  :select-files "Select files to upload"},
+  :select-files "Select files to upload",
+  :files "Files",
+  :back-to-task "Back to task",
+  :back-to-project "Back to project"},
  :document {:comments "Comments", :new-comment "New comment"},
  :enum
  {:phase.name/land-acquisition "Land acquisition",
@@ -34,6 +37,7 @@
   :phase/estimated-end-date "Estimated end date",
   :common {"name" "Name", "description" "Description"},
   :task/description "Description",
+  :comment/comment "Comment",
   :phase/phase-name "Phase name"},
  :login {:login "Login", :password "Password", :username "Username"},
  :project
