@@ -10,7 +10,8 @@
             [tuck.core :as t]
             [cljs-bean.core :refer [->clj]]
             [taoensso.timbre :as log]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [teet.ui.date-picker :as datepicker]))
 
 (defrecord TestFileUpload [files])
 (defrecord UploadFiles [files])
@@ -50,6 +51,45 @@
                  (log/warn "Upload failed: " (.-status resp) (.-statusText resp))))))
     app)
   )
+
+(defn input-fields
+  []
+  (let [val (r/atom "")
+        on-change (fn [e]
+                    (reset! val (-> e .-target .-value)))]
+    (fn []
+      [:section
+       [Heading2 "Textfields"]
+       [:div {:style {:display "flex"
+                      :justify-content "space-evenly"
+                      :margin-bottom "2rem"}}
+        [TextField {:label "Tekstiä"
+                    :value @val
+                    :on-change on-change}]
+        [TextField {:label "end adonrmnet"
+                    :value @val
+                    :on-change on-change
+                    :placeholder "Placeholder"
+                    :variant :outlined
+                    :InputProps {:end-adornment
+                                 (r/as-element
+                                   [InputAdornment {:position :end}
+                                    [IconButton {:on-click println
+                                                 :edge "end"}
+                                     [icons/action-calendar-today]]])}}]
+        [TextField {:label "Tekstiä"
+                    :on-change on-change
+                    :value @val
+                    :placeholder "Placeholder"
+                    :error true}]
+        [TextField {:label "Tekstiä"
+                    :on-change on-change
+                    :value @val
+                    :placeholder "Placeholder"
+                    :error true
+                    :variant :filled}]]
+       [Divider]])))
+
 
 (defn demo
   [e!]
@@ -123,24 +163,7 @@
       [Checkbox {:color :secondary}]
       [Checkbox {:color :primary :disabled true}]]
      [Divider]]
-    [:section
-     [Heading2 "Textfields"]
-     [:div {:style {:display "flex"
-                    :justify-content "space-evenly"
-                    :margin-bottom "2rem"}}
-      [TextField {:label "Tekstiä"}]
-      [TextField {:label "end adonrmnet"
-                  :placeholder "Placeholder"
-                  :variant :outlined
-                  :InputProps {:end-adornment
-                               (r/as-element
-                                 [InputAdornment {:position :end}
-                                  [IconButton {:on-click println
-                                               :edge "end"}
-                                   [icons/action-calendar-today]]])}}]
-      [TextField {:label "Tekstiä" :placeholder "Placeholder" :error true}]
-      [TextField {:label "Tekstiä" :placeholder "Placeholder" :error true :variant :filled}]]
-     [Divider]]
+    [input-fields]
     [:section
      [Heading2 "File upload"]
      [:div {:style {:display "flex"
@@ -199,4 +222,5 @@
                               :name "Language"
                               :items
                               [{:value "et" :label "bar"}
-                               {:value "en" :label "baz"}]}]]]])
+                               {:value "en" :label "baz"}]}]]
+    [datepicker/date-input]]])
