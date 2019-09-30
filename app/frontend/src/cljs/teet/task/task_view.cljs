@@ -51,31 +51,6 @@
                                                  task
                                                  {:task/status (task-controller/new-status %)})))}])
 
-(defn comments-view [e! task-id comments]
-  (r/with-let [new-comment-text (r/atom "")]
-    [:<>
-     [itemlist/ItemList
-      {:title "Comments"}
-      (doall
-       (for [{id :db/id :comment/keys [comment timestamp author]} (sort-by :comment/timestamp comments)]
-         ^{:key id}
-         [:div
-          (.toLocaleDateString timestamp) " " (.toLocaleTimeString timestamp) " "
-          [:em comment]
-          [:span " -- " [user-info/user-name e! (:user/id author)]]
-          [:br]]))]
-
-     ;;
-     [TextField {:placeholder "New comment..." ;;:multiline true :rowsMax 5
-                 :value @new-comment-text
-                 :on-change #(reset! new-comment-text (-> % .-target .-value))
-                 :on-key-press #(when (= "Enter" (.-key %))
-                                  (e! (task-controller/->AddCommentToTask task-id @new-comment-text))
-                                  (reset! new-comment-text ""))}]
-
-
-     ]))
-
 (defn task-page [e! {{:task/keys [documents description type assignee] :as task} :task
                      query :query :as app}]
   [:<>
