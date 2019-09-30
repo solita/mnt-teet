@@ -29,6 +29,7 @@
 
 (defn- request [handler-fn]
   (fn [req]
+    (log/info "REQUEST: " (pr-str request))
     (let [user (some->> req jwt-token (login-api-token/verify-token
                                        (environment/config-value :auth :jwt-secret)))]
       (logging/with-context
