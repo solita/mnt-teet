@@ -3,7 +3,6 @@
             [teet.document.document-commands :as document-commands]))
 
 (deftest validate-document
-  (is false "nope")
   (testing "too large files are invalid"
     (is (= (:error (document-commands/validate-file {:file/type "image/png"
                                                      :file/size (* 1024 1024 1024)}))
