@@ -1,4 +1,5 @@
-{:deps {;; UI Libraries
+{:deps {org.clojure/clojurescript {:mvn/version "1.10.520"}
+        ;; UI Libraries
         reagent {:mvn/version "0.8.1" :exclusions [cljsjs/react-dom-server]}
         tatut/postgrest-ui {:git/url "https://github.com/tatut/postgrest-ui"
                             :sha "cbac3f7fb72540bb36f8e4b4ec3b93fecc9ed402"}
@@ -29,8 +30,10 @@
  :aliases {:test {:main-opts ["-m" "figwheel.main"
                               "-co" "tests.cljs.edn"
                               "-m" "teet.runner"]
-                  :extra-deps {webjure/drtest {:mvn/version "20190611"}}
+                  :extra-deps {com.bhauman/figwheel-main {:mvn/version "0.2.3"}
+                               webjure/drtest {:mvn/version "20190611"}}
                   :extra-paths ["test"]}
            :dev {:main-opts ["-m" "figwheel.main" "-b" "dev" "-r"]
-                 :extra-deps {webjure/drtest {:mvn/version "20190611"}}
+                 :extra-deps {com.bhauman/figwheel-main {:mvn/version "0.2.3"}
+                              webjure/drtest {:mvn/version "20190611"}}
                  :extra-paths ["test"]}}}
