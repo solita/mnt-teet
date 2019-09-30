@@ -85,7 +85,7 @@
   [selected? cur-month?]
   (merge {:width "36px"
           :height "36px"
-          :font-size "16px"}
+          :font-size "14px"}
     (when cur-month?
       {:color "rgba(0,0,0, 0.85)"})                         ;;This should be in theme colors when we get right colors
     (when selected?
