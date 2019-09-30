@@ -20,6 +20,9 @@ phases:
       - cd $BACKEND
       - clojure -A:test
       - bash build.sh
+  post_build:
+    commands:
+      - NOTIFY_ON_SUCCESS=0 && bash ../../ci/scripts/slack.bash Backend $COMMIT
 cache:
   paths:
     - '/root/.m2/**/*'

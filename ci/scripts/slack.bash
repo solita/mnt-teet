@@ -1,8 +1,10 @@
 #!/bin/bash
 
-
 if [ "$CODEBUILD_BUILD_SUCCEEDING" -eq "1" ]
 then
+    if [ "$NOTIFY_ON_SUCCESS" -eq "0" ]
+       exit
+    fi
     EMOJI=":success:"
     MSG="SUCCESS $*"
 else
