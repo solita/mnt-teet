@@ -21,22 +21,18 @@
    :result-fn (partial mapv first)})
 
 (defmethod db-api/query :document/fetch-document [{db :db} {document-id :document-id}]
-  (let [docs (-> (d/q '[:find (pull ?e [:document/name :document/description :document/status
-                                        {:task/_documents [:db/id :task/description
-                                                           {:task/type [:db/ident]}]}
-                                        {:document/comments [:comment/comment :comment/timestamp
-                                                             {:comment/author [:user/id]}]}])
-                        :in $ ?e]
-                      db document-id)
-                 ffirst
-                 (update :document/comments (fn [comments]
-                                              (sort-by :comment/timestamp comments))))
-        files (->> (d/q '{:find [(pull ?e [*])
-                                 (pull ?tx [:db/txInstant :tx/author])]
-                          :in [$ ?doc]
-                          :where [[?doc :document/files ?e ?tx]]}
-                        db document-id)
-                   (mapv (fn [[file tx]]
-                           (merge file tx)))
-                   (sort-by :db/txInstant))]
-    (assoc docs :document/files files)))
+  (let [sort-children (fn [doc path by-key]
+                        (update doc path (fn [items] (sort-by by-key items))))
+        doc (-> (d/q '[:find (pull ?e [:document/name :document/description :document/status
+                                       {:task/_documents [:db/id :task/description
+                                                          {:task/type [:db/ident]}]}
+                                       {:document/comments [:db/id :comment/comment :comment/timestamp
+                                                            {:comment/author [:user/id]}]}
+                                       {:document/files [:db/id :file/name :file/type :file/size
+                                                         :file/author :file/timestamp]}])
+                       :in $ ?e]
+                     db document-id)
+                ffirst
+                (sort-children :document/comments :comment/timestamp)
+                (sort-children :document/files :file/timestamp))]
+    doc))

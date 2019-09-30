@@ -33,10 +33,12 @@
 (defmethod db-api/command! :document/upload-file [{conn :conn
                                                    user :user}
                                                   {:keys [document-id file]}]
-  (log/info "USER: " user)
   (or (validate-file file)
       (let [res (d/transact conn {:tx-data [{:db/id (or document-id "new-document")
-                                             :document/files (assoc file :db/id "new-file")}
+                                             :document/files (merge file
+                                                                    {:db/id "new-file"
+                                                                     :file/author (:user/id user)
+                                                                     :file/timestamp (java.util.Date.)})}
                                             {:db/id "datomic.tx"
                                              :tx/author (:user/id user)}]})
             doc-id (or document-id (get-in res [:tempids "new-document"]))

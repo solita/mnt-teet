@@ -67,10 +67,8 @@
     [List {:dense true}
      (doall
       (for [{id :db/id
-             :file/keys [name size]
-             tx-instant :db/txInstant
-             tx-author :tx/author
-             in-progress? :in-progress?} (:document/files document)]
+             :file/keys [name size author timestamp]
+             in-progress? :in-progress? :as doc} (:document/files document)]
         ^{:key id}
         [ListItem {:button true :component "a"
                    :href (document-controller/download-url id)
@@ -81,10 +79,10 @@
          [ListItemText {:primary name
                         :secondary (r/as-element
                                     [:<>
-                                     [:div (some-> tx-instant format/date-time) " "
-                                      (when tx-author
-                                        [user-info/user-name e! tx-author])]
-                                     (format/file-size size) ])}]]))]
+                                     [:div (some-> timestamp format/date-time) " "
+                                      (when author
+                                        [user-info/user-name e! author])]
+                                     (format/file-size size)])}]]))]
     [file-upload/FileUploadButton {:id "upload-files-to-document"
                                    :on-drop (e! document-controller/->UploadFilesToDocument)}
      (tr [:common :select-files])]]

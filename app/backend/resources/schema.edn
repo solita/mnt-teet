@@ -240,4 +240,14 @@
            :db/valueType :db.type/uuid
            :db/cardinality :db.cardinality/one
            :db/doc "Id of the user who made this transaction"}]]}
+
+ {:db/ident :migration/file-author-and-time
+  :txes [[{:db/ident :file/author
+           :db/valueType :db.type/uuid
+           :db/cardinality :db.cardinality/one
+           :db/doc "Id of the user who uploaded this file"}
+          {:db/ident :file/timestamp
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "Timestamp of when this file upload was started"}]]}
  ]
