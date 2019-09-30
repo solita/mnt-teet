@@ -1,7 +1,9 @@
 (ns teet.ui.material-ui
   (:refer-clojure :exclude [List])
   (:require [goog.object :as gobj]
-            [reagent.core])
+            [reagent.core]
+            [reagent.core :as r]
+            [reagent.impl.template :as rtpl])
   (:require-macros [teet.ui.material-ui-macros :refer [define-mui-components]]))
 
 (defonce MaterialUI (delay
@@ -18,7 +20,7 @@
 
 ;; Form
 (define-mui-components
-  Button Fab IconButton Checkbox TextField InputAdornment FormControl
+  Button Fab IconButton Checkbox InputAdornment FormControl
   InputLabel Input
   Select MenuItem Menu ButtonGroup)
 
@@ -47,3 +49,20 @@
 
 ;; Dialogs and modals
 (define-mui-components Dialog DialogTitle DialogContent Popover)
+
+;; monkey patch based on this https://github.com/reagent-project/reagent/blob/master/doc/examples/material-ui.md
+(def ^:private input-component
+  (r/reactify-component
+    (fn [props]
+      [:input (-> props
+                (assoc :ref (:inputRef props))
+                (dissoc :inputRef))])))
+
+(defn TextField
+  [props & children]
+  (let [mui-text (delay
+                   (goog.object/get @MaterialUI "TextField"))
+        props (-> props
+                (assoc-in [:InputProps :inputComponent] input-component)
+                rtpl/convert-prop-value)]
+    (apply r/create-element @mui-text props (map r/as-element children))))
