@@ -3,9 +3,9 @@
  {:clear "Puhasta",
   :general "Üldine",
   :select {:empty "Vali"},
-  :select-files "Vali failid",
+  :select-files "Vali mitu faili",
   :files "Failid",
-  :back-to-task "Tagasi ülesande",
+  :back-to-task "Tagasi ülesandesse",
   :back-to-project "Tagasi projekti"},
  :document {:comments "Märkused", :new-comment "Uus märkus"},
  :enum
