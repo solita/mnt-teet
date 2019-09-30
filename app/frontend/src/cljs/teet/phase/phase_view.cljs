@@ -5,7 +5,8 @@
             [teet.localization :refer [tr]]
             [teet.ui.material-ui :refer [Grid Button]]
             [teet.ui.panels :as panels]
-            [teet.ui.form :as form]))
+            [teet.ui.form :as form]
+            teet.document.document-spec))
 
 (defn phase-form [e! close phase]
   ;; Phase name (drop-down selector, a predefined list of phases: eskiisprojekt, eelprojekt, põhiprojekt, maade omandamine, ehitus)
@@ -15,7 +16,8 @@
               :value phase
               :on-change-event phase-controller/->UpdatePhaseForm
               :save-event phase-controller/->CreatePhase
-              :cancel-event close}
+              :cancel-event close
+              :spec :document/new-phase-form}
    ^{:attribute :phase/phase-name}
    [select/select-enum {:e! e! :attribute :phase/phase-name}]
 
