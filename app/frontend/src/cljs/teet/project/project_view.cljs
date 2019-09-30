@@ -47,12 +47,8 @@
      [panels/modal {:title (tr [:project :add-task])
                     :on-close #(e! (project-controller/->CloseTaskDialog))}
       [task-view/task-form e! project-controller/->CloseTaskDialog add-task (get-in app [:project project :new-task])]])
-   [Grid {:container true
-          :className (<class project-style/project-grid-container)
-          :spacing 10}
-    [Grid {:item true
-           :className (<class project-style/project-data-column)
-           :xs 6}
+   [:div {:class (<class project-style/project-view-container) }
+    [:div {:class (<class project-style/project-tasks-style)}
      [postgrest-item-view/item-view
       {:endpoint (get-in app [:config :api-url])
        :token (get-in app login-paths/api-token)
@@ -73,7 +69,8 @@
                            estimated-start-date estimated-end-date] :as p}
              (get-in app [:project project :phases])]
          ^{:key id}
-         [itemlist/ItemList {:title (tr [:enum (:db/ident phase-name)])
+         [itemlist/ItemList {:class (<class project-style/phase-list-style)
+                             :title (tr [:enum (:db/ident phase-name)])
                              :subtitle (str (.toLocaleDateString estimated-start-date) " - "
                                             (.toLocaleDateString estimated-end-date))
                              :variant :secondary}
@@ -94,8 +91,7 @@
             [icons/content-add-circle]
             (tr [:project :add-task])]]]))]]
 
-    [Grid {:item true :xs 6
-           :className (<class project-style/project-map-column)}
+    [:div {:class (<class project-style/project-map-style)}
      [map-view/map-view e! {:class (<class theme-spacing/fill-content)
                             :layers {:thk-project
                                      (map-layers/geojson-layer (get-in app [:config :api-url])
