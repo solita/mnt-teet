@@ -1,11 +1,12 @@
 {:buttons {:cancel "Tühista", :save "Salvesta", :add "Lisa"},
  :common
- {:general "Üldine",
+ {:clear "Puhasta",
+  :general "Üldine",
   :select {:empty "Vali"},
-  :select-files nil,
-  :files nil,
-  :back-to-task nil,
-  :back-to-project nil},
+  :select-files "Vali failid",
+  :files "Failid",
+  :back-to-task "Tagasi ülesande",
+  :back-to-project "Tagasi projekti"},
  :document {:comments "Märkused", :new-comment "Uus märkus"},
  :enum
  {:phase.name/land-acquisition "Maade omandamine",

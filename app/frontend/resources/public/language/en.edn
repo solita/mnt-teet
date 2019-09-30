@@ -1,6 +1,7 @@
 {:buttons {:cancel "Cancel", :save "Save", :add "Add"},
  :common
- {:general "General",
+ {:clear "Clear",
+  :general "General",
   :select {:empty "- Select value"},
   :select-files "Select files to upload",
   :files "Files",
