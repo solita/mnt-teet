@@ -85,8 +85,8 @@
     (tr [:task :add-document])]])
 
 (defn task-page-and-title [e! {params :params :as app}]
-  (let [{:keys [task phase]} params]
-    {:title task
+  (let [{:keys [task]} params]
+    {:title (tr [:enum (get-in app [:task task :task/type :db/ident])])
      :page [task-page e! {:params params
                           :query (:query app)
                           :task (get-in app [:task task])}]}))
