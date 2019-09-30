@@ -80,10 +80,12 @@
           ;;[:div (pr-str p)]
           (if (seq tasks)
             (for [t tasks]
-              [Button {:element "a"
-                       :href (str "#/projects/" project "/" id "/" (:db/id t))}
-               [icons/file-folder]
-               (tr [:enum (:db/ident (:task/type t))])])
+              ^{:key (:db/id t)}
+              [:div
+               [Button {:element "a"
+                        :href (str "#/projects/" project "/" id "/" (:db/id t))}
+                [icons/file-folder]
+                (tr [:enum (:db/ident (:task/type t))])]])
             [:div [:em (tr [:project :phase :no-tasks])]])
 
           [:div
