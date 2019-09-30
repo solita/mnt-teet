@@ -56,8 +56,10 @@
   [:<>
    (when (:add-document query)
      [panels/modal {:title (tr [:task :new-document])
-                    :on-close (r/partial e! (task-controller/->CloseAddDocumentDialog))}
-      [document-view/document-form e! (:new-document task)]])
+                    :on-close (e! task-controller/->CloseAddDocumentDialog)}
+      [document-view/document-form {:e! e!
+                                    :on-close-event task-controller/->CloseAddDocumentDialog}
+       (:new-document task)]])
    [itemlist/ItemList
     {:title (tr [:enum (:db/ident type)])}
     [itemlist/Item {:label (tr [:fields :task/type])} (tr [:enum (:db/ident type)])]

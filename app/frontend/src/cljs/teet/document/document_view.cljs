@@ -21,13 +21,13 @@
             [teet.project.project-info :as project-info]))
 
 
-(defn document-form [e! {:keys [in-progress? progress] :as doc}]
+(defn document-form [{:keys [e! on-close-event]} {:keys [in-progress?] :as doc}]
   [:<>
    [form/form {:e! e!
                :value doc
                :on-change-event document-controller/->UpdateDocumentForm
                :save-event document-controller/->CreateDocument
-               :cancel-event document-controller/->CancelDocument
+               :cancel-event on-close-event
                :in-progress? in-progress?
                :spec :document/new-document-form}
 
@@ -68,7 +68,7 @@
      (doall
       (for [{id :db/id
              :file/keys [name size author timestamp]
-             in-progress? :in-progress? :as doc} (:document/files document)]
+             in-progress? :in-progress?} (:document/files document)]
         ^{:key id}
         [ListItem {:button true :component "a"
                    :href (document-controller/download-url id)
