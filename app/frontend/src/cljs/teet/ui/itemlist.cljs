@@ -19,18 +19,20 @@
      :primary [Heading2 title]
      :secondary [Heading3 title])
    (when action
-      [:div {:class (<class itemlist-theme/heading-action)}
-       action])
+     [:div {:class (<class itemlist-theme/heading-action)}
+      action])
    (when subtitle
      [DataLabel subtitle])])
 
 (defn ItemList
-  [{:keys [title subtitle variant]
+  [{:keys [title subtitle variant class]
     :or {variant :primary}} & children]
-  [:div
-   [ListHeading {:title title
-                 :subtitle subtitle
-                 :variant variant}]
+  [:div (when class
+          {:class class})
+   [ListHeading (merge
+                  {:title title
+                   :subtitle subtitle
+                   :variant variant})]
    (util/with-keys children)])
 
 (defn ProgressList
@@ -88,19 +90,19 @@
    (if (empty? documents)
      [:div "No documents"]
      (doall
-      (for [{id :db/id
-             :document/keys [name size type]
-             progress :progress
-             :as doc} documents]
-        ^{:key id}
-        [:div
-         ;; FIXME: make a nice document UI
-         [:br]
-         [:div [:a {:href (download-fn doc)} name]
-          " (type: " type ", size: " size ") "
-          (when progress
-            [CircularProgress])
-          ]])))])
+       (for [{id :db/id
+              :document/keys [name size type]
+              progress :progress
+              :as doc} documents]
+         ^{:key id}
+         [:div
+          ;; FIXME: make a nice document UI
+          [:br]
+          [:div [:a {:href (download-fn doc)} name]
+           " (type: " type ", size: " size ") "
+           (when progress
+             [CircularProgress])
+           ]])))])
 
 (defn Item [{:keys [label]} value]
   [:div
