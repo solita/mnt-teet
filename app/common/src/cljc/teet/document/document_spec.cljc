@@ -7,3 +7,9 @@
 (s/def :document/name (s/and string? (complement str/blank?)))
 (s/def :document/description (s/and string? (complement str/blank?)))
 (s/def :document/new-document-form (s/keys :req [:document/name :document/status :document/description]))
+
+(s/def :phase/phase-name keyword?)
+(s/def :phase/status keyword?)
+(s/def :phase/estimated-end-date inst?)
+(s/def :phase/estimated-start-date inst?)
+(s/def :document/new-phase-form (s/keys :req [:phase/phase-name :phase/estimated-start-date :phase/estimated-end-date]))
