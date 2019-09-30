@@ -3,6 +3,7 @@
 if [ "$CODEBUILD_BUILD_SUCCEEDING" -eq "1" ]
 then
     if [ "$NOTIFY_ON_SUCCESS" -eq "0" ]
+    then
        exit
     fi
     EMOJI=":success:"
