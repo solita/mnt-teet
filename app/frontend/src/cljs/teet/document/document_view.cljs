@@ -81,7 +81,7 @@
          [ListItemText {:primary name
                         :secondary (r/as-element
                                     [:<>
-                                     [:div (format/date-time tx-instant) " "
+                                     [:div (some-> tx-instant format/date-time) " "
                                       (when tx-author
                                         [user-info/user-name e! tx-author])]
                                      (format/file-size size) ])}]]))]
