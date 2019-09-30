@@ -55,11 +55,11 @@
    [Grid {:item true :xs 6}
     [Link {:href (str "#/projects/" (:project params))}
      [icons/navigation-arrow-back]
-     (tr [:common :back-to-project])
+     (tr [:common :back-to-project]) " "
      [project-info/project-name app (:project params)]]
     [Link {:href (str "#/projects/" (:project params) "/" (:phase params) "/" (:task params))}
      [icons/navigation-arrow-back]
-     (tr [:common :back-to-task])
+     (tr [:common :back-to-task]) " "
      (tr [:enum (get-in document [:task/_documents 0 :task/type :db/ident])])]
     [typography/SectionHeading (:document/name document)
      [typography/DataLabel " " (count (:document/files document)) " " (tr [:common :files])]]
