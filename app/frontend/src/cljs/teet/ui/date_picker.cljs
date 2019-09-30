@@ -5,9 +5,11 @@
             [teet.ui.icons :as icons]
             [goog.events.EventType :as EventType]
             [cljs-time.format :as tf]
+            [teet.localization :as localization :refer [tr tr-or]]
             [teet.ui.material-ui :refer [TextField IconButton Popover ClickAwayListener InputAdornment Typography Button]]
             [teet.ui.icons :as icons]
             [teet.localization :as localization]
+            [teet.theme.theme-colors :as colors]
             [herb.core :refer [<class]]
             [teet.ui.typography :as typography]))
 
@@ -65,13 +67,30 @@
     (unparse d)
     ""))
 
-(defn date-header
+(defn date-header-class
   []
   {:text-transform :capitalize})
 
-(defn day-header
+(defn day-header-class
   []
   {:text-align :center})
+
+(defn date-footer-class
+  []
+  {:display :flex
+   :justify-content :space-around
+   :padding "1rem 0"})
+
+(defn day-button-class
+  [selected? cur-month?]
+  (merge {:width "36px"
+          :height "36px"
+          :font-size "16px"}
+    (when cur-month?
+      {:color "rgba(0,0,0, 0.85)"})                         ;;This should be in theme colors when we get right colors
+    (when selected?
+      {:background-color colors/primary
+       :color "white"})))
 
 (defn date-picker
   "Date picker component.
@@ -89,7 +108,7 @@
     (let [{:keys [months days today]} (get locale @localization/selected-language)
           [year month] @showing
           show-month (t/date-time year (inc month) 1)
-          show-month-day? #(same-month? show-month %)]
+          date-in-current-month? #(same-month? show-month %)]
 
       [:div
        [:div {:style {:display :flex
@@ -105,7 +124,7 @@
                                [year (dec month)])))
                          nil)}
          [icons/navigation-chevron-left {:color :primary}]]
-        [:span {:class (<class date-header)}
+        [:span {:class (<class date-header-class)}
          [:span (nth months month)] " " [:span.pvm-year year]]
         [IconButton
          {:size :small
@@ -126,7 +145,7 @@
           (for [day days]
             ^{:key day}
             [:td {:width "14%"
-                  :class (<class day-header)} day])]]
+                  :class (<class day-header-class)} day])]]
 
         [:tbody.date-picker-dates
          (for [days (split-into-weeks year month)]
@@ -145,55 +164,57 @@
               [:td.pvm-paiva {:class (str
                                        (if is-selectable?
                                          "klikattava "
-                                         "pvm-disabloitu ")
-                                       (if (show-month-day? day)
-                                         "pvm-show-month-paiva" "pvm-muu-month-paiva"))}
+                                         "pvm-disabloitu "))}
                [IconButton
                 (merge
-                  {:style {:width "36px"
-                           :height "36px"}
+                  {:class (<class day-button-class selected? (date-in-current-month? day))
                    :on-click #(do (.stopPropagation %)
                                   (when is-selectable?
                                     (on-change day))
                                   nil)}
-                  (when selected?
-                    {:style {:width "36px"
-                             :height "36px"
-                             :background-color teet.theme.theme-colors/primary
-                             :color "white"}})
                   (when today?
                     {:color :primary}))
-                [typography/Text
-                 (t/day day)]]])])]
-        [:tfoot.pvm-tanaan-text
-         [:tr [:td {:colSpan 7}
-               [Button {:on-click #(do
-                                     (.stopPropagation %)
-                                     (on-change (t/now)))}
-                today]]]]]])))
+                (t/day day)]])])]]
+       [:div {:class (<class date-footer-class)}
+        [Button {:on-click #(do
+                              (.stopPropagation %)
+                              (on-change (t/now)))
+                 :color :primary
+                 :variant :outlined}
+         today]
+        [Button {:on-click #(do
+                              (.stopPropagation %)
+                              (on-change nil))
+                 :color :secondary
+                 :variant :outlined}
+         (tr [:common :clear])]]])))
 
 (defn date-input
   "Combined text field and date picker input field"
-  [{:keys [label value on-change]}]
+  [{:keys [label error value on-change]}]
   (r/with-let [txt (r/atom (some-> value goog.date.Date. unparse-opt))
                open? (r/atom false)
                ref (atom nil)
-               close-input (fn [_]
+               close-input (fn []
                              (reset! open? false))
                open-input (fn [_]
                             (reset! open? true))
                set-ref (fn [el]
-                         (reset! ref el))]
-    [:<>
+                         (reset! ref el))
+               on-change-text (fn [e]
+                                (let [v (-> e .-target .-value)]
+                                  (reset! txt v)
+                                  (if-let [^goog.date.Date d (parse-opt v)]
+                                    (on-change (.-date d))
+                                    (on-change nil))))]
+    [:div
      [TextField {:label label
                  :value (or @txt "")
                  :ref set-ref
+                 :error error
                  :variant "outlined"
                  :full-width true
-                 :on-change #(let [v (-> % .-target .-value)]
-                               (reset! txt v)
-                               (when-let [^goog.date.Date d (parse-opt v)]
-                                 (on-change (.-date d))))
+                 :on-change on-change-text
                  :InputProps {:end-adornment
                               (r/as-element
                                 [InputAdornment {:position :end}
@@ -209,5 +230,5 @@
                               (goog.date.Date. value))
                      :on-change (fn [^goog.date.Date d]
                                   (reset! txt (unparse-opt d))
-                                  (on-change (.-date d))
+                                  (on-change (some-> d .-date))
                                   (close-input))}]]]]))
