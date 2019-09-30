@@ -15,3 +15,25 @@
 
 (defn project-data-column []
   {})
+
+(defn phase-list-style
+  []
+  {:margin-top "2rem"})
+
+(defn project-view-container
+  []
+  {:display :flex})
+
+(defn project-tasks-style
+  []
+  {:flex 1
+   :padding-right "1rem"})
+
+(defn project-map-style
+  []
+  {:flex 1
+   :margin-right "-24px"                                    ;;This is done to off-set the margin given in body. Should probably be done differently
+   :padding-left "1rem"
+   :position "sticky"
+   :top theme-spacing/appbar-height
+   :align-self :flex-start})
