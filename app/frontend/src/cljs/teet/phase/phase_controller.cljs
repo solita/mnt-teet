@@ -28,4 +28,8 @@
   CreatePhaseResult
   (process-event [{result :result} app]
     (log/info "CREATE PHASE RESULT: " result)
-    (assoc-in app [:project (get-in app [:params :project]) :create-phase-in-progress?] false)))
+    (t/fx (assoc-in app [:project (get-in app [:params :project]) :create-phase-in-progress?] false)
+          {:tuck.effect/type :navigate
+           :page :project
+           :params {:project (get-in app [:params :project])}
+           :query {}})))
