@@ -16,3 +16,6 @@
 
 (s/def :comment/comment (s/and string? (complement str/blank?)))
 (s/def :document/new-comment-form (s/keys :req [:comment/comment]))
+
+(s/def :document/document-id integer?)
+(s/def :document/comment (s/keys :req-un [:comment/comment :document/document-id]))
