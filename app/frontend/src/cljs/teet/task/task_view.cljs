@@ -67,9 +67,9 @@
     [itemlist/Item {:label (tr [:fields :common "description"])} description]]
 
    [itemlist/ItemList
-    {:title "Documents"}
+    {:title (tr [:task :documents])}
     (if (empty? documents)
-      [:div "No documents"]
+      [:div (tr [:task :no-documents])]
       [List {:dense true}
        (doall
         (for [{id :db/id
