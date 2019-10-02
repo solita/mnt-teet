@@ -6,11 +6,37 @@
             [postgrest-ui.impl.fetch :as postgrest-fetch]
             [reagent.core :as r]
             [teet.common.common-controller :as common-controller]
-            [tuck.core :as t])
+            [tuck.core :as t]
+            [teet.localization :as localization]
+            [goog.object :as gobj])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (reset! common-controller/test-mode? true)
 (reset! postgrest-fetch/fetch-impl common-controller/send-fake-postgrest-query!)
+
+(defn- wait-for-materialui [ok]
+  (.log js/console "Waiting for MaterialUI")
+  (if (gobj/containsKey js/window "MaterialUI")
+    (ok)
+    (js/window.setTimeout #(wait-for-materialui ok) 100)))
+
+(defonce test-initialized
+  (.then (js/Promise.
+          (fn [ok err]
+            (localization/load-language! :et ok)))
+         (fn [_]
+           (.appendChild js/document.head
+                         (doto (js/document.createElement "script")
+                           (.setAttribute "src" "https://unpkg.com/@material-ui/core@latest/umd/material-ui.development.js")
+                           (.setAttribute "crossorigin" "anonymous")))
+           (js/Promise.
+            (fn [ok err]
+              (wait-for-materialui ok))))))
+
+(defonce init-step
+  {:drtest.step/label "Wait for test initialization"
+   :drtest.step/type :wait-promise
+   :promise test-initialized})
 
 ;;
 ;; Wait-request step
@@ -52,7 +78,20 @@
                                (assoc ctx as req)
                                ctx)))))))
 
+(defmethod ds/execute :wait-command [{:keys [command payload predicate] :as step-descriptor}
+                                     ctx ok fail]
+  (ds/execute (assoc step-descriptor
+                     :drtest.step/type :wait-request
+                     :predicate (fn [req]
+                                  (and (= :command! (:tuck.effect/type req))
+                                       (or (and predicate (predicate req))
+                                           (and payload (= payload (:payload req)))))))
+              ctx ok fail))
 
+(defmethod ds/execute :no-request [_ ctx ok fail]
+  (if-let [req (common-controller/take-test-request! (constantly true))]
+    (fail (str "Expected no requests, but one was found: " (pr-str req)))
+    (ok ctx)))
 ;;
 ;; Tuck-render and expect-tuck-event steps
 ;;
@@ -75,12 +114,20 @@
                        ::e! e!-atom
                        ::events events) ok fail)))
 
+(defmethod ds/execute :expect-no-tuck-event [_ {events ::events :as ctx} ok fail]
+  (if (seq events)
+    (fail (str "Expected no tuck events, but " (count events) " events were waiting processing."))
+    (ok ctx)))
+
 (defmethod ds/execute :expect-tuck-event [{:keys [predicate as] :as step-descriptor}
                                           {events ::events :as ctx} ok fail]
   (if-let [event (some #(when (predicate % ctx) %) @events)]
-    (ok (if as
-          (assoc ctx as event)
-          ctx))
+    (do
+      (swap! events (fn [events] (filterv (complement #(predicate % ctx)) events)))
+      (.log js/console " after events   =>  " (pr-str @events))
+      (ok (if as
+            (assoc ctx as event)
+            ctx)))
     (fail "Expected tuck event has not been sent")))
 
 ;; Expose useful functions so that only this namespace needs to be

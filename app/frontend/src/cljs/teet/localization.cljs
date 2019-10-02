@@ -33,7 +33,7 @@
   [language on-load]
   (if-let [translations (get @loaded-languages language)]
     (on-load language translations)
-    (-> (str "language/" (name language) ".edn")
+    (-> (str "/language/" (name language) ".edn")
         js/fetch
         (.then #(.text %))
         (.then #(reader/read-string %))

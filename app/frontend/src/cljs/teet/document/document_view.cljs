@@ -50,6 +50,28 @@
      [LinearProgress {:variant "determinate"
                       :value in-progress?}])])
 
+(defn comments [e! document]
+  [:<>
+   [itemlist/ItemList {:title (tr [:document :comments])}
+    (doall
+     (for [{id :db/id
+            :comment/keys [author comment timestamp]} (:document/comments document)]
+       ^{:key id}
+       [:div
+        [typography/SectionHeading
+         [user-info/user-name e! (:user/id author)]]
+        [:div (.toLocaleString timestamp)]
+        [typography/Paragraph comment]]))]
+
+   [form/form {:e! e!
+               :value (:new-comment document)
+               :on-change-event document-controller/->UpdateNewCommentForm
+               :save-event document-controller/->Comment
+               :spec :document/new-comment-form}
+    ^{:attribute :comment/comment}
+    [TextField {:rows 4 :maxrows 4 :multiline true :full-width true
+                :placeholder (tr [:document :new-comment])}]]])
+
 (defn document-page [e! {:keys [document params] :as app}]
   [Grid {:container true}
    [Grid {:item true :xs 6}
@@ -87,24 +109,7 @@
                                    :on-drop (e! document-controller/->UploadFilesToDocument)}
      (tr [:common :select-files])]]
    [Grid {:item true :xs 6 :classes {:item (<class theme-panels/side-panel)}}
-    [itemlist/ItemList {:title (tr [:document :comments])}
-     (doall
-      (for [{id :db/id
-             :comment/keys [author comment timestamp]} (:document/comments document)]
-        ^{:key id}
-        [:div
-         [typography/SectionHeading
-          [user-info/user-name e! (:user/id author)]]
-         [:div (.toLocaleString timestamp)]
-         [typography/Paragraph comment]]))]
-
-    [form/form {:e! e!
-                :value (:new-comment document)
-                :on-change-event document-controller/->UpdateNewCommentForm
-                :save-event document-controller/->Comment}
-     ^{:attribute :comment/comment}
-     [TextField {:rows 4 :maxrows 4 :multiline true :full-width true
-                 :placeholder (tr [:document :new-comment])}]]]])
+    [comments e! document]]])
 
 (defn document-page-and-title [e! app]
   (let [doc-id (get-in app [:params :document])

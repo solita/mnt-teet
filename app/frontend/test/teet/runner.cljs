@@ -1,7 +1,8 @@
 (ns teet.runner
   (:require [figwheel.main.testing :refer-macros [run-tests-async]]
-            [teet.example-tuck-test]
-            [teet.example-test]))
+            teet.example-tuck-test
+            teet.example-test
+            teet.document.document-view-test))
 
 ;; Replace actual backend calls with functions that gather the
 ;; requests to `common-controller/test-requests`.

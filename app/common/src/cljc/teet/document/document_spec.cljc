@@ -13,3 +13,6 @@
 (s/def :phase/estimated-end-date inst?)
 (s/def :phase/estimated-start-date inst?)
 (s/def :document/new-phase-form (s/keys :req [:phase/phase-name :phase/estimated-start-date :phase/estimated-end-date]))
+
+(s/def :comment/comment (s/and string? (complement str/blank?)))
+(s/def :document/new-comment-form (s/keys :req [:comment/comment]))
