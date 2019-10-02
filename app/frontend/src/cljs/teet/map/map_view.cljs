@@ -3,7 +3,8 @@
   (:require [reagent.core :as r]
             [teet.map.openlayers :as openlayers]
             [taoensso.timbre :as log]
-            [teet.routes :as routes]))
+            [teet.routes :as routes]
+            [teet.common.common-controller :as common-controller]))
 
 (def default-extent [20 50 30 60])
 
@@ -72,7 +73,9 @@
                      )
 
          :on-select (fn [[item & rest] event]
-                      (routes/navigate! :project {:project (:map/id item)})
+                      (when-let [event (common-controller/map-item-selected item)]
+                        (e! event))
+                      #_(routes/navigate! :project {:project (:map/id item)})
                       ;; Either on-click or on-select will trigger. We must clear selected feature in both event handlers.
                       ;; Allow clearing selected feature only if not in approach mode
                       ;;(e! (map-controller/->ClearSelectedFeature))

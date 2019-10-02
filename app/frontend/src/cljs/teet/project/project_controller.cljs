@@ -2,7 +2,8 @@
   "Controller for project page"
   (:require [teet.routes :as routes]
             [taoensso.timbre :as log]
-            [tuck.core :as t]))
+            [tuck.core :as t]
+            [teet.common.common-controller :as common-controller]))
 
 (defrecord FetchProjectPhases [project-id])
 (defrecord FetchProjectDocuments [project-id])
@@ -10,8 +11,19 @@
 (defrecord ClosePhaseDialog [])
 (defrecord OpenTaskDialog [phase-id])
 (defrecord CloseTaskDialog [])
+(defrecord SelectProject [project-id])
 
+(defmethod common-controller/map-item-selected
+  "geojson_thk_project_pins" [p]
+  (->SelectProject (:map/id p)))
 
+(defmethod common-controller/map-item-selected
+  "mvt_thk_projects" [p]
+  (->SelectProject (:map/id p)))
+
+(defmethod common-controller/map-item-selected
+  "geojson_thk_project" [p]
+  (->SelectProject (:map/id p)))
 
 (defmethod routes/on-navigate-event :project [{{project :project} :params}]
   (log/info "Navigated to project, fetch workflows for THK project: " project)
@@ -19,6 +31,13 @@
    (->FetchProjectDocuments project)])
 
 (extend-protocol t/Event
+  SelectProject
+  (process-event [{project-id :project-id} app]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page :project
+           :params {:project project-id}}))
+
   FetchProjectPhases
   (process-event [{project-id :project-id} app]
     (log/info "Fetching phases for THK project: " project-id)

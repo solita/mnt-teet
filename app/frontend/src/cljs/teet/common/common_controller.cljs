@@ -221,3 +221,5 @@
 (defmethod tuck-effect/process-effect :set-api-token [_ {token :token}]
   (assert token "Must specify :token to set as new API token")
   (reset! api-token token))
+
+(defmulti map-item-selected :map/type)
