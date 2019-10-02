@@ -108,10 +108,9 @@
               :on-change (fn [_ v]
                            (e! (common-controller/map->Navigate (nth tabs v))))}
         (doall
-         (map-indexed
-          (fn [i {:keys [title] :as tab}]
-            ^{:key i}
-            (Tab {:label title}))
+         (map (fn [{:keys [title page] :as tab}]
+                (Tab {:key page
+                      :label title}))
           tabs))])
 
      [search-view/quick-search e!]]]
