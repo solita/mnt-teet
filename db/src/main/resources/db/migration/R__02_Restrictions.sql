@@ -41,6 +41,49 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION teet.mvt_restrictions(
+   type TEXT, layers TEXT, xmin NUMERIC, ymin NUMERIC, xmax NUMERIC, ymax NUMERIC)
+RETURNS bytea
+AS $$
+DECLARE
+  t RECORD;
+  r RECORD;
+  allowed_tables TEXT[];
+  tbl TEXT;
+  dynsql TEXT;
+  mvt BYTEA;
+BEGIN
+  tbl := 'kitsendus_' || type;
+  FOR t IN SELECT * FROM restrictions.restrictions_tables()
+  LOOP
+    IF t.restrictions_tables != tbl THEN
+      CONTINUE;
+    END IF;
+    dynsql := 'SELECT ST_AsMVT(tile) AS mvt ' ||
+              ' FROM (SELECT ' || --CONCAT(p.name) AS tooltip, ' ||
+              '              p.id, ' ||
+              '              ST_AsMVTGeom(p.geom, ' ||
+              '                           ST_SetSRID(ST_MakeBox2D(ST_MakePoint('||xmin||', '||ymin||'), ' ||
+              '                                      ST_MakePoint('||xmax||', '||ymax||')), 3301), ' ||
+              '                           4096, NULL, false) ' ||
+              '         FROM restrictions.' || tbl || ' p ' ||
+              '        WHERE ST_DWithin(p.geom, ' ||
+              '                         ST_Setsrid(ST_MakeBox2D(ST_MakePoint('||xmin||', '||ymin||'), ' ||
+              '                                    ST_MakePoint('||xmax||', '||ymax||')), 3301), ' ||
+              '                         1000)) AS tile ';
+              --'          AND (q IS NULL OR q = '' OR p.searchable_text LIKE '%'||q||'%')) AS tile; ';
+     RAISE NOTICE 'dynsql: %', dynsql;
+    FOR r in EXECUTE dynsql
+    LOOP
+      RAISE NOTICE 'got result: %', r;
+      RETURN r.mvt;
+    END LOOP;
+  END LOOP;
+  RAISE EXCEPTION 'No restriction type %', type;
+END;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+
+
 CREATE OR REPLACE FUNCTION ensure_restrictions_indexes() RETURNS VOID AS $$
 DECLARE
   r RECORD;
