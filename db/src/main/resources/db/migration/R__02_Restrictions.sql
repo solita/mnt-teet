@@ -48,11 +48,14 @@ AS $$
 DECLARE
   t RECORD;
   r RECORD;
-  allowed_tables TEXT[];
+  voond_values TEXT;
   tbl TEXT;
   dynsql TEXT;
   mvt BYTEA;
 BEGIN
+  -- Layers as an array (formatted as SQL value to avoid injection)
+  voond_values = format('%L', regexp_split_to_array(layers, ','));
+
   tbl := 'kitsendus_' || type;
   FOR t IN SELECT * FROM restrictions.restrictions_tables()
   LOOP
@@ -60,7 +63,8 @@ BEGIN
       CONTINUE;
     END IF;
     dynsql := 'SELECT ST_AsMVT(tile) AS mvt ' ||
-              ' FROM (SELECT ' || --CONCAT(p.name) AS tooltip, ' ||
+              ' FROM (SELECT CONCAT(p.voondi_nimi) AS tooltip, ' ||
+              '              '''||type||''' as rt,' ||
               '              p.id, ' ||
               '              ST_AsMVTGeom(p.geom, ' ||
               '                           ST_SetSRID(ST_MakeBox2D(ST_MakePoint('||xmin||', '||ymin||'), ' ||
@@ -70,8 +74,8 @@ BEGIN
               '        WHERE ST_DWithin(p.geom, ' ||
               '                         ST_Setsrid(ST_MakeBox2D(ST_MakePoint('||xmin||', '||ymin||'), ' ||
               '                                    ST_MakePoint('||xmax||', '||ymax||')), 3301), ' ||
-              '                         1000)) AS tile ';
-              --'          AND (q IS NULL OR q = '' OR p.searchable_text LIKE '%'||q||'%')) AS tile; ';
+              '                         1000)'
+              '          AND '||voond_values||' @> ARRAY[p.voond]) AS tile';
      RAISE NOTICE 'dynsql: %', dynsql;
     FOR r in EXECUTE dynsql
     LOOP
