@@ -1,7 +1,6 @@
 (ns teet.map.openlayers.kuvataso
   "Taso, joka hakee kuvan Teet palvelimelta"
-  (:require [kuvataso.Lahde]
-            [ol.layer.Tile]
+  (:require [ol.layer.Tile]
             [ol.source.TileImage]
             [ol.extent :as ol-extent]
             #_[teet.asiakas.kommunikaatio :refer [karttakuva-url]]
