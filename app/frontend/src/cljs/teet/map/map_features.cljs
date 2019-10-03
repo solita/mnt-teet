@@ -25,6 +25,14 @@
    #js {:fill (ol.style.Fill. #js {:color "#f26060"})
         :zIndex 3}))
 
+(defn project-restriction-style
+  "Show restriction geometrys as area"
+  [^ol.render.Feature feature res]
+  (ol.style.Style.
+    #js {:stroke (ol.style.Stroke. #js {:color "rgba(255,0,0,90)"
+                                        :width 2})
+         :fill (ol.style.Fill. #js {:color "rgba(200,50,50, 0.20)"})}))
+
 (defn project-pin-style
   "Show project centroid as a pin icon."
   [^ol.render.Feature feature res]
