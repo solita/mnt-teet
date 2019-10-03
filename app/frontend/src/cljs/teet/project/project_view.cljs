@@ -35,30 +35,19 @@
    [:div "Procurement number:" procurement_no]])
 
 
+(defn- project-info [endpoint token project]
+  [postgrest-item-view/item-view
+   {:endpoint endpoint
+    :token token
+    :table "thk_project"
+    :select ["name" "estimated_duration"
+             "road_nr" "km_range" "carriageway"
+             "procurement_no"]
+    :view project-data}
+   project])
 
-(defn project-page [e! {{:keys [project]} :params
-                        {:keys [add-phase add-task]} :query :as app}]
+(defn project-phase-listing [e! project phases]
   [:<>
-   (when add-phase
-     [panels/modal {:title (tr [:project :add-phase])
-                    :on-close #(e! (project-controller/->ClosePhaseDialog))}
-      [phase-view/phase-form e! project-controller/->ClosePhaseDialog (get-in app [:project project :new-phase])]])
-   (when add-task
-     [panels/modal {:title (tr [:project :add-task])
-                    :on-close #(e! (project-controller/->CloseTaskDialog))}
-      [task-view/task-form e! project-controller/->CloseTaskDialog add-task (get-in app [:project project :new-task])]])
-   [:div {:class (<class project-style/project-view-container) }
-    [:div {:class (<class project-style/project-tasks-style)}
-     [postgrest-item-view/item-view
-      {:endpoint (get-in app [:config :api-url])
-       :token (get-in app login-paths/api-token)
-       :table "thk_project"
-       :select ["name" "estimated_duration"
-                "road_nr" "km_range" "carriageway"
-                "procurement_no"]
-       :view project-data}
-      project]
-     [:<>
       [itemlist/ListHeading {:title (tr [:project :phases])
                              :action [Button {:on-click (e! project-controller/->OpenPhaseDialog)}
                                       (tr [:project :add-phase])
@@ -67,14 +56,13 @@
        (for [{id :db/id
               :phase/keys [phase-name tasks
                            estimated-start-date estimated-end-date] :as p}
-             (get-in app [:project project :phases])]
+             phases]
          ^{:key id}
          [itemlist/ItemList {:class (<class project-style/phase-list-style)
                              :title (tr [:enum (:db/ident phase-name)])
                              :subtitle (str (.toLocaleDateString estimated-start-date) " - "
                                             (.toLocaleDateString estimated-end-date))
                              :variant :secondary}
-          ;;[:div (pr-str p)]
           (if (seq tasks)
             (for [t tasks]
               ^{:key (:db/id t)}
@@ -89,7 +77,23 @@
            [Button {:on-click (r/partial e! (project-controller/->OpenTaskDialog id))
                     :size "small"}
             [icons/content-add-circle]
-            (tr [:project :add-task])]]]))]]
+            (tr [:project :add-task])]]]))])
+
+(defn project-page [e! {{:keys [project]} :params
+                        {:keys [add-phase add-task]} :query :as app}]
+  [:<>
+   (when add-phase
+     [panels/modal {:title (tr [:project :add-phase])
+                    :on-close #(e! (project-controller/->ClosePhaseDialog))}
+      [phase-view/phase-form e! project-controller/->ClosePhaseDialog (get-in app [:project project :new-phase])]])
+   (when add-task
+     [panels/modal {:title (tr [:project :add-task])
+                    :on-close #(e! (project-controller/->CloseTaskDialog))}
+      [task-view/task-form e! project-controller/->CloseTaskDialog add-task (get-in app [:project project :new-task])]])
+   [:div {:class (<class project-style/project-view-container) }
+    [:div {:class (<class project-style/project-tasks-style)}
+     [project-info (get-in app [:config :api-url]) (get-in app login-paths/api-token) project]
+     [project-phase-listing e! project (get-in app [:project project :phases])]]
 
     [:div {:class (<class project-style/project-map-style)}
      [map-view/map-view e! {:class (<class theme-spacing/fill-content)
