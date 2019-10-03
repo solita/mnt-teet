@@ -98,5 +98,12 @@
                                                                "geojson_thk_project"
                                                                {"id" project}
                                                                map-features/project-line-style
-                                                               {:fit-on-load? true})}}
+                                                               {:fit-on-load? true})
+                                     :related-restrictions
+                                     (map-layers/geojson-layer (get-in app [:config :api-url])
+                                                               "geojson_thk_project_related_restrictions"
+                                                               {"project_id" project
+                                                                "distance" 200}
+                                                               map-features/project-related-restriction-style
+                                                               {:opacity 0.5})}}
       {}]]]])

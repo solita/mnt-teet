@@ -4,8 +4,7 @@ CREATE OR REPLACE FUNCTION restrictions.restrictions_tables() RETURNS SETOF TEXT
 SELECT tablename::text
   FROM pg_catalog.pg_tables
  WHERE schemaname = 'restrictions'
-   AND tablename LIKE 'kitsendus_%'
-   AND tablename != 'kitsendus_';
+   AND tablename LIKE 'kitsendus_%';
 $$ LANGUAGE SQL STABLE;
 
 CREATE OR REPLACE FUNCTION teet.restriction_map_selections() RETURNS JSON AS $$
@@ -105,3 +104,67 @@ $$ LANGUAGE plpgsql;
 
 -- Call fn to create missing indexes
 select * from ensure_restrictions_indexes();
+
+CREATE OR REPLACE FUNCTION teet.thk_project_related_restrictions(project_id TEXT, distance INTEGER)
+RETURNS SETOF teet.restriction_list_item AS $$
+DECLARE
+  t RECORD;
+  r RECORD;
+  dynsql TEXT;
+  type TEXT;
+BEGIN
+  FOR t IN SELECT * FROM restrictions.restrictions_tables()
+  LOOP
+    type := SUBSTRING(t.restrictions_tables, 11);
+    dynsql := 'SELECT r.* FROM restrictions.' || t.restrictions_tables || ' r ' ||
+              '  JOIN teet.thk_project p ON st_dwithin(r.geom, p.geometry, ' || distance || ')' ||
+              ' WHERE p.id = ' || format('%L', project_id);
+    FOR r IN EXECUTE dynsql
+    LOOP
+      --RAISE NOTICE 'project % has restriction of type % => %', project_id, t.restrictions_tables, r;
+      RETURN NEXT ROW(type,
+                      r.id, r.vid, r.kpo_vid,
+                      r.voond, r.voondi_nimi,
+                      r.toiming, r.muudetud, r.seadus)::teet.restriction_list_item;
+    END LOOP;
+  END LOOP;
+  RETURN;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION restrictions.thk_project_related_restrictions_geom(project_id TEXT, distance INTEGER)
+RETURNS SETOF restrictions.restriction_mvt_item AS $$
+DECLARE
+  t RECORD;
+  r RECORD;
+  dynsql TEXT;
+  type TEXT;
+BEGIN
+  FOR t IN SELECT * FROM restrictions.restrictions_tables()
+  LOOP
+    type := SUBSTRING(t.restrictions_tables, 11);
+    dynsql := 'SELECT r.* FROM restrictions.' || t.restrictions_tables || ' r ' ||
+              '  JOIN teet.thk_project p ON st_dwithin(r.geom, p.geometry, ' || distance || ')' ||
+              ' WHERE p.id = ' || format('%L', project_id);
+    FOR r IN EXECUTE dynsql
+    LOOP
+      RETURN NEXT ROW(type,
+                      r.id,
+                      r.voond || ': ' || r.voondi_nimi,
+                      r.geom)::restrictions.restriction_mvt_item;
+    END LOOP;
+  END LOOP;
+  RETURN;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION teet.geojson_thk_project_related_restricions(project_id TEXT, distance INTEGER) RETURNS TEXT
+AS $$
+SELECT row_to_json(fc)::TEXT
+  FROM (SELECT 'FeatureCollection' as type,
+               array_to_json(array_agg(f)) as features
+          FROM (SELECT 'Feature' as type,
+                       ST_AsGeoJSON(r.geom)::json as geometry,
+                       json_build_object('id', r.id, 'tooltip', r.tooltip) as properties
+                  FROM restrictions.thk_project_related_restrictions_geom(project_id,distance) r) f) fc;
+$$ LANGUAGE SQL SECURITY DEFINER;

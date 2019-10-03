@@ -18,6 +18,13 @@
                                          :lineCap "butt"})
           :zIndex 2})))
 
+(defn project-related-restriction-style
+  "Show project related restriction as a filled area."
+  [^ol.render.Feature feature res]
+  (ol.style.Style.
+   #js {:fill (ol.style.Fill. #js {:color "#f26060"})
+        :zIndex 3}))
+
 (defn project-pin-style
   "Show project centroid as a pin icon."
   [^ol.render.Feature feature res]
