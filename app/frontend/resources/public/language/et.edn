@@ -36,7 +36,9 @@
   :phase/status "Olek",
   :task/type "Ülesandetüüp",
   "thk_project_search"
-  {"estimated_duration" nil, "road_nr" nil, "km_range" nil},
+  {"estimated_duration" "Eeldatav kestus",
+   "road_nr" "Tee number",
+   "km_range" "Km ulatus"},
   :task/assignee "Vastutav isik",
   :phase/estimated-start-date "Eeldatav alguskuupäev",
   "projectgroup" {"phase" "Etapp"},
@@ -64,4 +66,4 @@
  :task
  {:add-document "Lisa dokument",
   :documents "Dokumendid",
-  :no-documents nil}}
+  :no-documents "Dokumente ei ole"}}
