@@ -26,3 +26,4 @@ pom.xml contains a template for running the flyway migrations.
 * Dump is loaded from https://geoportaal.maaamet.ee/est/Andmete-tellimine/Avaandmed/Kitsenduste-kaardi-andmed-p615.html
 * Download and unzip "Kitsenduste mõjualad GPKG"
 * run `ogr2ogr -f "PostgreSQL" PG:"host=localhost user=teet dbname=teet" KITSENDUSED.gpkg -lco schema=restrictions -lco spatial_index=yes` to import the restrictions tables (takes a while)
+* run SELECT public.ensure_restrictions_indexes();
