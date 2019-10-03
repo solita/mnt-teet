@@ -7,6 +7,7 @@
   {:margin-top (case variant
                  :primary "1rem"
                  :secondary "0.5rem")
+   :margin-bottom "0.5rem"
    :display :flex
    :justify-content :space-between
    :align-items :flex-end
