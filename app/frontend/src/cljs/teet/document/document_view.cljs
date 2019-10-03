@@ -7,7 +7,7 @@
             [teet.document.document-controller :as document-controller]
             [teet.ui.material-ui :refer [TextField LinearProgress Grid Button
                                          List ListItem ListItemText ListItemIcon
-                                         CircularProgress Link]]
+                                         CircularProgress Link Divider]]
             [teet.ui.typography :as typography]
             [teet.ui.file-upload :as file-upload]
             [taoensso.timbre :as log]
@@ -63,6 +63,8 @@
         [:div (.toLocaleString timestamp)]
         [typography/Paragraph comment]]))]
 
+   [Divider {:variant "middle"}]
+
    [form/form {:e! e!
                :value (:new-comment document)
                :on-change-event document-controller/->UpdateNewCommentForm
@@ -70,7 +72,8 @@
                :spec :document/new-comment-form}
     ^{:attribute :comment/comment}
     [TextField {:rows 4 :maxrows 4 :multiline true :full-width true
-                :placeholder (tr [:document :new-comment])}]]])
+                :placeholder (tr [:document :new-comment])
+                :variant "outlined"}]]])
 
 (defn document-page [e! {:keys [document params] :as app}]
   [Grid {:container true}
