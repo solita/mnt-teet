@@ -35,6 +35,10 @@
  {:document/status "Status",
   :phase/status "Status",
   :task/type "Task type",
+  "thk_project_search"
+  {"estimated_duration" "Estimated duration",
+   "road_nr" "Road number",
+   "km_range" "Km range"},
   :task/assignee "Responsible person",
   :phase/estimated-start-date "Estimated start date",
   "projectgroup" {"phase" "Phase"},

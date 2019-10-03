@@ -35,6 +35,8 @@
  {:document/status "Olek",
   :phase/status "Olek",
   :task/type "Ülesandetüüp",
+  "thk_project_search"
+  {"estimated_duration" nil, "road_nr" nil, "km_range" nil},
   :task/assignee "Vastutav isik",
   :phase/estimated-start-date "Eeldatav alguskuupäev",
   "projectgroup" {"phase" "Etapp"},
