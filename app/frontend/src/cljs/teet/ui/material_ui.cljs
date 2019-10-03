@@ -20,7 +20,7 @@
 
 ;; Form
 (define-mui-components
-  Button Fab IconButton Checkbox InputAdornment FormControl
+  Button Fab IconButton Checkbox InputAdornment FormControl FormControlLabel
   InputLabel Input
   Select MenuItem Menu ButtonGroup)
 
@@ -29,7 +29,7 @@
 ;; Common utility components
 (define-mui-components Collapse Divider CircularProgress LinearProgress Drawer
   AppBar MuiThemeProvider Toolbar CssBaseline Link
-  ClickAwayListener)
+  ClickAwayListener Switch)
 
 ;; Layout
 (define-mui-components Container Grid)
