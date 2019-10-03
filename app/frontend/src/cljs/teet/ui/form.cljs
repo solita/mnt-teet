@@ -85,7 +85,10 @@
                                        (reset! invalid-attributes invalid-attrs)
 
                                        ;; Everything ok, apply save event
-                                       (e! (save-event)))))]
+                                       (e! (save-event)))))
+
+               ;; Determine required fields by getting missing attributes of an empty map
+               required-fields (missing-attributes spec {})]
     [Grid {:container true :spacing 1}
      (util/with-keys
        (map (fn [field]
@@ -97,7 +100,8 @@
                     opts {:value value
                           :on-change (r/partial update-attribute-fn attribute)
                           :label (tr [:fields attribute])
-                          :error (boolean (@invalid-attributes attribute))}]
+                          :error (boolean (@invalid-attributes attribute))
+                          :required (boolean (required-fields attribute))}]
                 [Grid (merge {:item true :xs (or xs 12)}
                              (when lg
                                {:lg lg})
