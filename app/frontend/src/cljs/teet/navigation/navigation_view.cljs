@@ -106,10 +106,11 @@
               :indicatorColor "primary"
               :textColor "primary"
               :on-change (fn [_ v]
+                           (log/info "let's go! " (nth tabs v))
                            (e! (common-controller/map->Navigate (nth tabs v))))}
         (doall
-         (map (fn [{:keys [title page] :as tab}]
-                (Tab {:key page
+         (map (fn [{:keys [title page key] :as tab}]
+                (Tab {:key (or key page)
                       :label title}))
           tabs))])
 

@@ -50,11 +50,16 @@
  {:add-phase "Lisa etapp",
   :add-task "Lisa ülesanne",
   :phases "Projekti etapid",
-  :phase {:no-tasks "Ülesandeid pole"}},
+  :phase {:no-tasks "Ülesandeid pole"},
+  :documents-tab "Dokumendid",
+  :restrictions-tab "Kitsenduste"},
  :project-groups {:title "Projektirühmad"},
  :projects
  {:title "Projektid",
   :map-view "Kaart",
   :list-view "Projektide loetelu"},
  :search {:quick-search "Otsi", :clear-filters "Puhasta filtrid"},
- :task {:add-document "Lisa dokument"}}
+ :task
+ {:add-document "Lisa dokument",
+  :documents "Dokumendid",
+  :no-documents nil}}

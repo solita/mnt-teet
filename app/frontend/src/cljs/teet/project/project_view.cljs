@@ -111,3 +111,17 @@
                                                                map-features/project-related-restriction-style
                                                                {:opacity 0.5})}}
       {}]]]])
+
+(defn project-page-and-title [e! app]
+  (let [project (get-in app [:params :project])
+        current-tab (get-in app [:query :tab] "documents")
+        tab (fn [t title]
+              {:page :project :params {:project project} :query {:tab t}
+               :title title :key title
+               :selected? (= current-tab t)})]
+    {:title ""
+     :tabs [(tab "documents" (tr [:project :documents-tab]))
+            (tab "restrictions" (tr [:project :restrictions-tab]))]
+     :page (case current-tab
+             "documents" [project-page e! app]
+             "restrictions" [:div "hep hep"])}))

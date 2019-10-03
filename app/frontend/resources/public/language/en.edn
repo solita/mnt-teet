@@ -50,9 +50,14 @@
  {:add-phase "Add phase",
   :add-task "Add task",
   :phases "Project phases",
-  :phase {:no-tasks "No tasks defined"}},
+  :phase {:no-tasks "No tasks defined"},
+  :documents-tab "Documents",
+  :restrictions-tab "Restrictions"},
  :project-groups {:title "Project groups"},
  :projects
  {:title "Projects", :map-view "Map", :list-view "Project list"},
  :search {:quick-search "Search", :clear-filters "Clear filters"},
- :task {:add-document "Add document"}}
+ :task
+ {:add-document "Add document",
+  :documents "Documents",
+  :no-documents "No documents"}}

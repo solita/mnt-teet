@@ -37,10 +37,7 @@
      :page [projects-view/projects-list-page e! app]}
 
     :project
-    {:title "TEET"
-     :tabs [{:page :projects :selected? false :title (tr [:projects :map-view])}
-            {:page :projects-list :selected? true :title (tr [:projects :list-view])}]
-     :page [project-view/project-page e! app]}
+    (project-view/project-page-and-title e! app)
 
     :phase-task
     (task-view/task-page-and-title e! app)
