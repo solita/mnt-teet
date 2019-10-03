@@ -1,10 +1,8 @@
 (ns teet.ui.select
   "Selection components"
   (:require [reagent.core :as r]
-            [teet.ui.material-ui :refer [Select MenuItem Menu Button IconButton
-                                         Input InputLabel FormControl ButtonGroup
-                                         CircularProgress]]
-            [taoensso.timbre :as log]
+            [teet.ui.material-ui :refer [Select MenuItem Menu Button
+                                         InputLabel FormControl ButtonGroup]]
             [teet.ui.icons :as icons]
             [teet.common.common-controller :as common-controller]
             [tuck.core :as t]
@@ -48,7 +46,7 @@
             items))]])))
 
 ;; TODO this needs better styles and better dropdown menu
-(defn select-with-action [{:keys [items item-label icon on-select width placeholder
+(defn select-with-action [{:keys [items item-label on-select placeholder
                                   action-icon]
                            :or {action-icon [icons/content-add]}}]
   (r/with-let [anchor (r/atom nil)
