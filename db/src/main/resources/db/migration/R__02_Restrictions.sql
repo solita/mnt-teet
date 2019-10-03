@@ -168,3 +168,10 @@ SELECT row_to_json(fc)::TEXT
                        json_build_object('id', r.id, 'tooltip', r.tooltip) as properties
                   FROM restrictions.thk_project_related_restrictions_geom(project_id,distance) r) f) fc;
 $$ LANGUAGE SQL SECURITY DEFINER;
+
+CREATE OR REPLACE VIEW teet.related_restrictions_by_project AS
+SELECT p.id as project_id, r.*
+  FROM teet.thk_project p
+  JOIN LATERAL (SELECT * FROM teet.thk_project_related_restrictions(p.id, 200)) r ON TRUE;
+
+GRANT SELECT ON teet.related_restrictions_by_project TO teet_user;
