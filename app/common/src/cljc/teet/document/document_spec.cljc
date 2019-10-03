@@ -6,7 +6,8 @@
 (s/def :document/status keyword?)
 (s/def :document/name (s/and string? (complement str/blank?)))
 (s/def :document/description (s/and string? (complement str/blank?)))
-(s/def :document/new-document-form (s/keys :req [:document/name :document/status :document/description]))
+(s/def :document/new-document-form (s/keys :req [:document/name :document/status :document/description
+                                                 :document/status]))
 
 (s/def :phase/phase-name keyword?)
 (s/def :phase/status keyword?)
