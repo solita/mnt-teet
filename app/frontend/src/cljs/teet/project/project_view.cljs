@@ -112,6 +112,7 @@
               [itemlist/ItemList {:title (str voond (when voondi_nimi (str ": " voondi_nimi)))}
                (for [[key val] item
                      :when val]
+                 ^{:key key}
                  [itemlist/Item {:label key} val])])
     :where {"project_id" [:= project]}}])
 
