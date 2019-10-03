@@ -13,7 +13,7 @@
 
 
 (defn outlined-select [{:keys [label name id items on-change value format-item show-empty-selection?
-                               error]
+                               error required]
                         :or {format-item :label}}]
   (r/with-let [reference (r/atom nil)
                set-ref! (fn [el]
@@ -28,7 +28,8 @@
                     :style {:width "100%"}}
        [InputLabel {:html-for id
                     :ref set-ref!
-                    :error (boolean error)} label]
+                    :error (boolean error)
+                    :required (boolean required)} label]
        [Select
         {:value (or (option-idx value) "")
          :name name
@@ -83,7 +84,7 @@
 
 (defn select-enum
   "Select an enum value based on attribute. Automatically fetches enum values from database."
-  [{:keys [e! attribute]}]
+  [{:keys [e! attribute required]}]
   (when-not (contains? @enum-values attribute)
     (e! (common-controller/->Query {:query :enum/values
                                     :args {:attribute attribute}
@@ -99,7 +100,8 @@
                         :on-change on-change
                         :show-empty-selection? true
                         :items (sort-by tr* values)
-                        :format-item tr*}])))
+                        :format-item tr*
+                        :required required}])))
 
 (defn select-user
   "Select user"
