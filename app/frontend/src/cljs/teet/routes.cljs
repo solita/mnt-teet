@@ -137,3 +137,6 @@
      (.setTimeout js/window
                   #(r/navigate! teet-router page params query) 0)
      (log/warn "Cannot find page " page " to navigate"))))
+
+(defn url-for [{:keys [page params query]}]
+  (str "#" (r/resolve teet-router page params query)))

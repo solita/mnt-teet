@@ -59,12 +59,12 @@
       (if (= page :login)
         ;; Show only login dialog
         [login-view/login-page e! app]
-        (let [{:keys [page title tabs]} (page-and-title e! app)]
+        (let [{:keys [page title breadcrumbs]} (page-and-title e! app)]
           [:<>
            [CssBaseline]
            [navigation-view/header e! {:title title
                                        :open? nav-open?
-                                       :tabs tabs} user]
+                                       :breadcrumbs breadcrumbs} user]
            [navigation-view/main-container
             nav-open?
             page]]))

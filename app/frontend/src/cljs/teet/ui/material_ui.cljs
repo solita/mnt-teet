@@ -28,7 +28,7 @@
 
 ;; Common utility components
 (define-mui-components Collapse Divider CircularProgress LinearProgress Drawer
-  AppBar MuiThemeProvider Toolbar CssBaseline Link
+  AppBar MuiThemeProvider Toolbar CssBaseline Link Breadcrumbs
   ClickAwayListener Switch)
 
 ;; Layout

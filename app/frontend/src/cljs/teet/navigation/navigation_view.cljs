@@ -2,9 +2,9 @@
   (:require [reagent.core :as r]
             [teet.routes :as routes]
             [teet.ui.material-ui :refer [AppBar Toolbar Button Chip Avatar IconButton
-                                         Drawer TextField InputAdornment FormControl InputLabel Input
+                                         Drawer Breadcrumbs Link Typography
                                          List ListItem ListItemText ListItemIcon
-                                         Paper Tabs Tab]]
+                                         Divider]]
             [teet.ui.icons :as icons]
             [teet.ui.typography :refer [Heading1]]
             [teet.theme.theme-colors :as theme-colors]
@@ -14,7 +14,9 @@
             [teet.search.search-view :as search-view]
             [herb.core :refer [<class]]
             [taoensso.timbre :as log]
-            [teet.common.common-controller :as common-controller]))
+            [teet.common.common-controller :as common-controller]
+            [teet.ui.util :as util]
+            [teet.ui.typography :as typography]))
 
 (defn drawer-header
   [e! title open?]
@@ -41,25 +43,39 @@
 
 (defn page-listing
   [e! open?]
-  [List
-   [ListItem {:component "a"
-              :href "/#/"
-              :align-items "center"
-              :button true}
-    [ListItemIcon {:style {:display :flex
-                           :justify-content :center}}
-     [icons/action-list]]
-    (when open?
-      [ListItemText {:primary (tr [:projects :title])}])]
-   [ListItem {:component "a"
-              :href "/#/components"
-              :align-items "center"
-              :button true}
-    [ListItemIcon {:style {:display :flex
-                           :justify-content :center}}
-     [icons/content-archive]]
-    (when open?
-      [ListItemText {:primary "Components"}])]])
+  [:<>
+
+   [List
+    [ListItem {}
+     [typography/Heading2 (tr [:projects :title])]]
+    [ListItem {:component "a"
+               :href "/#/projects/list"
+               :align-items "center"
+               :button true}
+     [ListItemIcon {:style {:display :flex
+                            :justify-content :center}}
+      [icons/action-list]]
+     (when open?
+       [ListItemText {:primary (tr [:projects :list-view])}])]
+    [ListItem {:component "a"
+               :href "/#/projects/map"
+               :align-items "center"
+               :button true}
+     [ListItemIcon {:style {:display :flex
+                            :justify-content :center}}
+      [icons/maps-map]]
+     (when open?
+       [ListItemText {:primary (tr [:projects :map-view])}])]
+    [ListItem {} [Divider]]
+    [ListItem {:component "a"
+               :href "/#/components"
+               :align-items "center"
+               :button true}
+     [ListItemIcon {:style {:display :flex
+                            :justify-content :center}}
+      [icons/content-archive]]
+     (when open?
+       [ListItemText {:primary "Components"}])]]])
 
 (defn user-info [e! {:keys [user/given-name user/family-name] :as user} label?]
   (let [handle-click! (fn user-clicked [x]
@@ -87,7 +103,7 @@
    [user-info e! user open?]])
 
 (defn header
-  [e! {:keys [title open? tabs]} user]
+  [e! {:keys [title open? breadcrumbs]} user]
   [:<>
    [AppBar {:position "sticky"
             :className (<class navigation-style/appbar-position open?)
@@ -95,24 +111,30 @@
 
 
     [Toolbar {:className (<class navigation-style/appbar)}
-     (when-not tabs
-       [Heading1 title])
-     (let [selected-tab (first (keep-indexed
-                                (fn [i tab]
-                                  (when (:selected? tab)
-                                    i))
-                                tabs))]
-       [Tabs {:value selected-tab
-              :indicatorColor "primary"
-              :textColor "primary"
-              :on-change (fn [_ v]
-                           (log/info "let's go! " (nth tabs v))
-                           (e! (common-controller/map->Navigate (nth tabs v))))}
-        (doall
-         (map (fn [{:keys [title page key] :as tab}]
-                (Tab {:key (or key page)
-                      :label title}))
-          tabs))])
+     [Breadcrumbs {}
+      (util/with-keys
+        (for [crumb (butlast breadcrumbs)]
+          (do (log/info "CRUMB " crumb)
+            [Link {:href (routes/url-for crumb)}
+             (:title crumb)])))
+      (when-let [{title :title} (last breadcrumbs)]
+        [Typography title])
+      #_(let [selected-tab (first (keep-indexed
+                                 (fn [i tab]
+                                   (when (:selected? tab)
+                                     i))
+                                 tabs))]
+        [Tabs {:value selected-tab
+               :indicatorColor "primary"
+               :textColor "primary"
+               :on-change (fn [_ v]
+                            (log/info "let's go! " (nth tabs v))
+                            (e! (common-controller/map->Navigate (nth tabs v))))}
+         (doall
+          (map (fn [{:keys [title page key] :as tab}]
+                 (Tab {:key (or key page)
+                       :label title}))
+               tabs))])]
 
      [search-view/quick-search e!]]]
 
