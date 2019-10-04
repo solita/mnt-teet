@@ -21,11 +21,8 @@
    ^{:attribute :phase/phase-name}
    [select/select-enum {:e! e! :attribute :phase/phase-name}]
 
-   ^{:xs 6 :attribute :phase/estimated-start-date}
-   [date-picker/date-input {}]
-
-   ^{:xs 6 :attribute :phase/estimated-end-date}
-   [date-picker/date-input {}]
+   ^{:attribute :phase/estimated-date-range}
+   [date-picker/date-range-input {:start-label (tr [:fields :phase/estimated-start-date]) :end-label (tr [:fields :phase/estimated-end-date])}]
 
    ^{:attribute :phase/status}
    [select/select-enum {:e! e! :attribute :phase/status}]])

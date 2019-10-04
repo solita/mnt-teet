@@ -7,3 +7,7 @@
 (defn fill-content []
   {:min-height content-height
    :max-height content-height})
+
+(defn mb
+  [rems]
+  {:margin-bottom (str rems "rem")})

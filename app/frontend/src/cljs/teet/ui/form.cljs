@@ -6,7 +6,9 @@
             [teet.localization :refer [tr]]
             [goog.object :as gobj]
             [clojure.spec.alpha :as s]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [herb.core :refer [<class]]
+            [teet.theme.theme-spacing :as theme-spacing]))
 
 
 (def default-value
@@ -102,7 +104,8 @@
                           :label (tr [:fields attribute])
                           :error (boolean (@invalid-attributes attribute))
                           :required (boolean (required-fields attribute))}]
-                [Grid (merge {:item true :xs (or xs 12)}
+                [Grid (merge {:class (<class theme-spacing/mb 1)
+                              :item true :xs (or xs 12)}
                              (when lg
                                {:lg lg})
                              (when md
