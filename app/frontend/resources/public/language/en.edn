@@ -51,7 +51,13 @@
   :document/description "Description"},
  :login {:login "Login", :password "Password", :username "Username"},
  :project
- {:add-phase "Add phase",
+ {:information
+  {:estimated-duration "Estimated duration",
+   :road-number "Road number",
+   :km-range "Km range",
+   :procurement-number "Procurement number",
+   :carriageway "Carriageway"},
+  :add-phase "Add phase",
   :add-task "Add task",
   :phases "Project phases",
   :phase {:no-tasks "No tasks defined"},

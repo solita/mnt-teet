@@ -2,7 +2,7 @@
  :common
  {:clear "Puhasta",
   :general "Üldine",
-  :select {:empty "Vali"},
+  :select {:empty "- Vali"},
   :select-files "Vali fail(id)",
   :files "Failid",
   :back-to-task "Tagasi ülesandesse",
@@ -17,7 +17,7 @@
   :phase.name/other "Muu",
   :phase.name/preliminary-design "Eelprojekt",
   :phase.status/completed "Valmis",
-  :task.type/animal-study "Loomastikuuring",
+  :task.type/animal-study "Loomastiku uuring",
   :document.status/final "Lõplik",
   :phase.status/canceled "Katkestatud",
   :phase.name/construction "Ehitus",
@@ -30,7 +30,7 @@
   :phase.status/research "Ekspertiisis",
   :task.type/geology "Geoloogia",
   :phase.status/valid "Kehtiv",
-  :task.type/archeological-study "Argeoloogiline uuring"},
+  :task.type/archeological-study "Arheoloogiline uuring"},
  :fields
  {:document/status "Olek",
   :phase/status "Olek",
@@ -49,14 +49,18 @@
   :comment/comment "Märkus",
   :phase/phase-name "Etapp nimi",
   :document/description "Kirjeldus"},
- :login {:login "Sisenen", :password "Salasõna", :username "Kasutaja"},
+ :login {:login "Sisene", :password "Salasõna", :username "Kasutaja"},
  :project
- {:add-phase "Lisa etapp",
+ {:information
+  {:estimated-duration "Eeldatav kestus",
+   :road-number "Tee number",
+   :km-range "Km ulatus"},
+  :add-phase "Lisa etapp",
   :add-task "Lisa ülesanne",
   :phases "Projekti etapid",
   :phase {:no-tasks "Ülesandeid pole"},
   :documents-tab "Dokumendid",
-  :restrictions-tab "Kitsenduste"},
+  :restrictions-tab "Kitsendused"},
  :project-groups {:title "Projektirühmad"},
  :projects
  {:title "Projektid",

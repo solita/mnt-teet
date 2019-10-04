@@ -25,11 +25,13 @@
   [{:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
   [itemlist/ItemList
    {:title name}
-   [:div "Estimated duration: " (format/date-range estimated_duration)]
-   [:div "Road number: " road_nr]
-   [:div "Km range: " km_range]
-   [:div "Procurement number:" procurement_no]
-   [:div "Carriageway: " carriageway]])
+   [:div (tr [:project :information :estimated-duration])
+    ": "
+    (format/date-range estimated_duration)]
+   [:div (tr [:project :information :road-number]) ": " road_nr]
+   [:div (tr [:project :information :km-range]) ": " (format/km-range km_range)]
+   [:div (tr [:project :information :procurement-number]) ": " procurement_no]
+   [:div (tr [:project :information :carriageway]) ": " carriageway]])
 
 
 (defn- project-info [endpoint token project]
