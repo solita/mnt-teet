@@ -10,6 +10,7 @@
             [teet.project.project-controller :as project-controller]
             [teet.project.project-style :as project-style]
             [teet.theme.theme-spacing :as theme-spacing]
+            [teet.ui.format :as format]
             [teet.ui.itemlist :as itemlist]
             [teet.ui.icons :as icons]
             [teet.localization :refer [tr]]
@@ -24,11 +25,11 @@
   [{:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
   [itemlist/ItemList
    {:title name}
-   [:div "Est. duration: " estimated_duration]
+   [:div "Estimated duration: " (format/date-range estimated_duration)]
    [:div "Road number: " road_nr]
    [:div "Km range: " km_range]
-   [:div "Carriageway: " carriageway]
-   [:div "Procurement number:" procurement_no]])
+   [:div "Procurement number:" procurement_no]
+   [:div "Carriageway: " carriageway]])
 
 
 (defn- project-info [endpoint token project]
