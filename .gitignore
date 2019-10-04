@@ -11,3 +11,6 @@
 /app/backend/resources/public/*.js
 .datomic-ions
 .cache
+
+# Large files that we don't want to download too often
+/db/KITSENDUSED.gpkg

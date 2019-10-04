@@ -8,6 +8,27 @@ function check_psql {
     fi
 }
 
+function check_curl {
+    if ! [ -x "$(command -v curl)" ]; then
+        echo "curl not found, make sure it is in PATH" >&2
+        exit 1
+    fi
+}
+
+function check_unzip {
+    if ! [ -x "$(command -v unzip)" ]; then
+        echo "unzip not found, make sure it is in PATH" >&2
+        exit 1
+    fi
+}
+
+function check_ogr2ogr {
+    if ! [ -x "$(command -v ogr2ogr)" ]; then
+        echo "ogr2ogr not found, make sure it is in PATH" >&2
+        exit 1
+    fi
+}
+
 check_psql
 
 ARGS="-h localhost -U postgres"
@@ -39,3 +60,26 @@ $PSQL_TEET "GRANT SELECT, UPDATE, INSERT, DELETE ON ALL TABLES IN SCHEMA teet TO
 
 echo "Importing THK projects with teet.thk.thk-import/run-test-import!"
 aws s3 cp s3://teet-dev-files/db/THK_export.csv - | (cd ../app/backend && clj -m teet.thk.thk-import)
+
+RESTRICTIONS_DUMP_FILE=KITSENDUSED.gpkg
+
+echo "Importing Maa-amet restrictions data dump"
+if [ ! -f "$RESTRICTIONS_DUMP_FILE" ]; then
+    echo "- Downloading the dump"
+    check_curl
+    check_unzip
+    curl "https://geoportaal.maaamet.ee/docs/KPO/KITSENDUSED_GPKG.zip" -o temp.zip
+    unzip temp.zip
+fi
+
+echo "- Running ogr2ogr"
+check_ogr2ogr
+ogr2ogr -f "PostgreSQL" PG:"host=localhost user=teet dbname=teet" KITSENDUSED.gpkg -lco schema=restrictions -lco spatial_index=yes
+
+if [ -f temp.zip ]; then
+    echo "- Removing the temporary zip file"
+    rm temp.zip
+fi
+
+echo "- Ensuring restriction indices exist"
+$PSQL_TEET "SELECT public.ensure_restrictions_indexes();"

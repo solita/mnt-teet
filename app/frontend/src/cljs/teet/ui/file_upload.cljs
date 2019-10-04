@@ -130,17 +130,19 @@
                   :raised "true"}]
          children)])
 
-(defn- files-field-style []
-  {:min-height "300px"
+(defn- files-field-style [error]
+  (merge {:min-height    "300px"
 
-   ;; FIXME: approximate "outlined" input like material UI
-   ;; should use material ui classes directly?
-   :border "solid 1px #e0e0e0"
-   :border-radius "3px"
-   :padding "1rem"})
+          ;; FIXME: approximate "outlined" input like material UI
+          ;; should use material ui classes directly?
+          :border        "solid 1px #e0e0e0"
+          :border-radius "3px"
+          :padding       "1rem"}
+         (when error
+           {:border "solid 1px #91001D"})))                 ;;This should also use material ui theme.error
 
-(defn files-field [{:keys [value on-change]}]
-  [:div {:class (<class files-field-style)}
+(defn files-field [{:keys [value on-change error]}]
+  [:div {:class (<class files-field-style error)}
    [typography/SectionHeading (tr [:common :files])]
    [List {:dense true}
     (doall
