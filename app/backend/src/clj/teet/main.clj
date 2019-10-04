@@ -55,7 +55,7 @@
                 :role "teet_user"
                 :url "http://localhost:3000"}}))
 
-(defn -main [& args]
+(defn -main [& _]
   (start {:mode :prod
           :port 3000
           :api {:shared-secret (System/getenv "API_SHARED_SECRET")

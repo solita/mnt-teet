@@ -1,7 +1,6 @@
 (ns tara.endpoint
   (:require [org.httpkit.client :as client]
-            [tara.json :as json]
-            [clojure.string :as str])
+            [tara.json :as json])
   (:import (com.nimbusds.jose.jwk JWKSet RSAKey)))
 
 (defn- load-openid-configuration [url]

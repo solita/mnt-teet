@@ -6,14 +6,14 @@
   Same arguments as query multimethod.
 
   Default implementation checks that :user is valid in ctx."
-  (fn [ctx args] (:query/name ctx)))
+  (fn [ctx _] (:query/name ctx)))
 
 (defmulti command-authorization
   "Check authorization for command. Should throw exception on authorization failure.
   Same arguments as command! multimethod.
 
   Default implementation checks that :user is valid in ctx."
-  (fn [ctx args] (:command/name ctx)))
+  (fn [ctx _] (:command/name ctx)))
 
 (defmethod query-authorization :default [{user :user query :query/name} _]
   (when (nil? user)
@@ -41,7 +41,7 @@
   :query/name  the name of the query to run
   :db          the current database value
   :user        the current user"
-  (fn [ctx args] (:query/name ctx)))
+  (fn [ctx _] (:query/name ctx)))
 
 (defmulti command!
   "Execute a given named command and return the results.
@@ -60,4 +60,4 @@
   Payload is any data passed to the command.
   The payload is checked against the spec of the command name.
   "
-  (fn [ctx payload] (:command/name ctx)))
+  (fn [ctx _] (:command/name ctx)))

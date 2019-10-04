@@ -1,7 +1,6 @@
 (ns tara.routes
   (:require [compojure.core :refer [GET routes]]
             [org.httpkit.client :as client]
-            [cheshire.core :as cheshire]
             [tara.json :as json]
             [taoensso.timbre :as log]
             [tara.token :as token]
@@ -12,8 +11,8 @@
 (defn- enc [data]
   (URLEncoder/encode data))
 
-(defn auth-request [{:keys [authorization-endpoint] :as tara-endpoint}
-                    {:keys [base-url client-id cookie-name scopes] :as  client-properties}
+(defn auth-request [{:keys [authorization-endpoint]}
+                    {:keys [base-url client-id cookie-name scopes]}
                     {:keys [params] :as req}]
   (println "TARA REQ: " (pr-str req))
   (let [state (str (UUID/randomUUID))
@@ -41,8 +40,8 @@
                    (.getBytes string "UTF-8")))
 
 (defn auth-response [{:keys [token-endpoint] :as tara-endpoint}
-                     {:keys [client-id client-secret base-url on-error on-success cookie-name
-                             scopes] :as client-properties}
+                     {:keys [client-id client-secret base-url on-error on-success cookie-name]
+                      :as client-properties}
                      {params :params :as req}]
   (log/info "TARA RESPONSE:" (pr-str req))
   (log/info "CLIENT PROPERTIES: " (pr-str client-properties))

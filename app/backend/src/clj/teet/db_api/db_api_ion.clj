@@ -5,11 +5,9 @@
             [datomic.ion :as ion]
             [teet.environment :as environment]
             [taoensso.timbre :as log]
-            [taoensso.timbre :as timbre]
             [datomic.ion.cast :as cast]
             [ring.middleware.params :as params]
-            [ring.middleware.cookies :as cookies]
-            [ring.middleware.session :as session]))
+            [ring.middleware.cookies :as cookies]))
 
 (defn- wrap-middleware [handler]
   (-> handler

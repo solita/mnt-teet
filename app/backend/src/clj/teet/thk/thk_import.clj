@@ -54,7 +54,7 @@
 
 
 
-(defn -main [& args]
+(defn -main [& _]
   (import-thk-projects! {:dbtype "postgres"
                          :dbname "teet"
                          :user "teet"}

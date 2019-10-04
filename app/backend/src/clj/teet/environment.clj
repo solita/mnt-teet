@@ -4,7 +4,6 @@
             [clojure.java.io :as io]
             [taoensso.timbre :as log]
             [datomic.client.api :as d]
-            [clojure.java.io :as io]
             [amazonica.aws.simplesystemsmanagement :as ssm]))
 
 (defn- ssm-param [name]

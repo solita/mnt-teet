@@ -6,8 +6,8 @@
 (defn verify
   "Verify JWT token validity. Returns claims on success.
   Throws exception on failure."
-  [{:keys [public-key issuer] :as tara-endpoint}
-   {:keys [id-token] :as token}
+  [{:keys [public-key issuer]} ; tara-endpoint
+   {:keys [id-token]}          ; token
    expected-state expected-audience]
   (let [signed-id-token (SignedJWT/parse id-token)
         claims-set (.getJWTClaimsSet signed-id-token)

@@ -12,7 +12,7 @@
 (defn- numeric-date [dt]
   (int (/ (.getTime dt) 1000)))
 
-(defn create-token [shared-secret role {:keys [given-name family-name id person-id email] :as user}]
+(defn create-token [shared-secret role {:keys [given-name family-name id person-id email]}]
   (-> (JWSObject.
        (JWSHeader. JWSAlgorithm/HS256)
        (Payload. (cheshire/encode {:role role
