@@ -14,7 +14,8 @@
             [teet.user.user-info :as user-info]
             [teet.ui.form :as form]
             [teet.ui.panels :as panels]
-            [teet.document.document-view :as document-view]))
+            [teet.document.document-view :as document-view]
+            [teet.project.project-info :as project-info]))
 
 (defn task-form [e! close phase-id task]
   ;;Task definition (under project phase)
@@ -86,7 +87,12 @@
 
 (defn task-page-and-title [e! {params :params :as app}]
   (let [{:keys [task]} params]
-    {:title (tr [:enum (get-in app [:task task :task/type :db/ident])])
-     :page [task-page e! {:params params
+    {:page [task-page e! {:params params
                           :query (:query app)
-                          :task (get-in app [:task task])}]}))
+                          :task (get-in app [:task task])}]
+     :breadcrumbs [{:page :projects-list
+                    :title (tr [:projects :title])}
+                   {:page :project
+                    :params {:project (:project params)}
+                    :title [project-info/project-name app (:project params)]}
+                   {:title (tr [:enum (get-in app [:task task :task/type :db/ident])])}]}))

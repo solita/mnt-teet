@@ -19,7 +19,8 @@
             [teet.phase.phase-view :as phase-view]
             [teet.task.task-view :as task-view]
             [teet.common.common-controller :as common-controller]
-            [postgrest-ui.components.listing :as postgrest-listing]))
+            [postgrest-ui.components.listing :as postgrest-listing]
+            [teet.project.project-info :as project-info]))
 
 (defn project-data
   [{:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
@@ -162,4 +163,7 @@
 
 (defn project-page-and-title [e! app]
   {:title "TEET"
-   :page [project-page e! app]})
+   :page [project-page e! app]
+   :breadcrumbs [{:page :projects-list
+                  :title (tr [:projects :title])}
+                 {:title [project-info/project-name app (get-in app [:params :project])]}]})

@@ -9,7 +9,8 @@
             [clojure.string :as str]
             [taoensso.timbre :as log]
             [cljs.reader :as reader]
-            [postgrest-ui.display :as postgrest-display]))
+            [postgrest-ui.display :as postgrest-display]
+            [alandipert.storage-atom :refer [local-storage]]))
 
 (defn dev-mode? []
   (when-let [host (-> js/window .-location .-host)]
@@ -24,7 +25,7 @@
 (defonce loaded-languages (atom {}))
 
 ;; FIXME: read language from user cookie
-(defonce selected-language (r/atom :et))
+(defonce selected-language (local-storage (r/atom :et) :selected-language))
 
 (defn load-language!
   "Load the given language translation file, if it has not been loaded yet, and adds the language
