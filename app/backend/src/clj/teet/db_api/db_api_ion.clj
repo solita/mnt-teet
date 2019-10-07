@@ -14,7 +14,9 @@
   (-> handler
       params/wrap-params
       cookies/wrap-cookies
-      (basic-auth/wrap-basic-authentication environment/basic-auth-callback "TEET")
+      ;; basic auth seemed to always return "access denied", maybe apigw strips the header?
+      ;; -> disabled pending investigation
+      ;; (basic-auth/wrap-basic-authentication environment/basic-auth-callback "TEET")
       ;; FIXME: we don't need session yet (with TARA login, add it)
       ))
 
