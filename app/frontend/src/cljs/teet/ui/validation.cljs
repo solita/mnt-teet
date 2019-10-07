@@ -34,9 +34,9 @@
 ;; data = the field value
 ;; row = the whole form/row (so that rules can be relations between fields)
 ;; table = when used in a grid, the whole grid data containing all rows
-(defmulti validate-rule (fn [rule name data row table & options] rule))
+(defmulti validate-rule (fn [rule _name _data _row _table & _options] rule))
 
-(defmethod validate-rule :constant-notice [_ _ data _ _ & [message]]
+(defmethod validate-rule :constant-notice [_ _ _ _ _ & [message]]
   message)
 
 
@@ -150,7 +150,7 @@
 (defn missing-required-fields
   "Returns a sequence of schemas that are marked as required and are missing a value."
   [row schema]
-  (keep (fn [{:keys [required? read name type is-empty?] :as s}]
+  (keep (fn [{:keys [required? read name is-empty?] :as s}]
           (when (and required?
                      ((or is-empty? empty-value?)
                       (if read
