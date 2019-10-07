@@ -43,27 +43,26 @@
     a))
 
 
+(defn- restriction-fill [feature default-color]
+  (let [[type & _] (some-> feature .getProperties (aget "tooltip") (str/split #":"))]
+    (if (= type "Elektripaigaldise kaitsevöönd")
+      @electric-pattern
+      default-color)))
+
 (defn project-related-restriction-style
   "Show project related restriction as a filled area."
   [^ol.render.Feature feature res]
-
-  (let [[type & _] (some-> feature .getProperties (aget "tooltip") (str/split #":"))]
-    (case (-> feature .getGeometry .getType)
-      ("Polygon" "MultiPolygon")
-      (ol.style.Style.
-       #js {:fill (ol.style.Fill. #js {:color (if (= type "Elektripaigaldise kaitsevöönd")
-                                                @electric-pattern
-                                                "#f26060")})
-            :zIndex 3}))))
+  (ol.style.Style.
+   #js {:fill (ol.style.Fill. #js {:color (restriction-fill feature "#f26060")})
+        :zIndex 3}))
 
 (defn project-restriction-style
-  "Show restriction geometrys as area"
+  "Show restriction geometrys as area. Restrictions are all (multi)polygons."
   [^ol.render.Feature feature res]
-
   (ol.style.Style.
-    #js {:stroke (ol.style.Stroke. #js {:color "rgba(255,0,0,90)"
-                                        :width 2})
-         :fill (ol.style.Fill. #js {:color "rgba(200,50,50, 0.20)"})}))
+   #js {:stroke (ol.style.Stroke. #js {:color "rgba(255,0,0,90)"
+                                       :width 2})
+        :fill (ol.style.Fill. #js {:color (restriction-fill feature "rgba(200,50,50, 0.20)")})}))
 
 (defn project-pin-style
   "Show project centroid as a pin icon."
