@@ -7,12 +7,14 @@
             [taoensso.timbre :as log]
             [datomic.ion.cast :as cast]
             [ring.middleware.params :as params]
+            [ring.middleware.basic-authentication :as basic-auth]
             [ring.middleware.cookies :as cookies]))
 
 (defn- wrap-middleware [handler]
   (-> handler
       params/wrap-params
       cookies/wrap-cookies
+      (basic-auth/wrap-basic-authentication environment/basic-auth-callback "TEET")
       ;; FIXME: we don't need session yet (with TARA login, add it)
       ))
 

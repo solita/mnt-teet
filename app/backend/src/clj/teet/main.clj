@@ -18,12 +18,6 @@
 
 (def server nil)
 
-(defn auth-callback [user-name given-password]
-  (let [actual-pw (environment/config-value :auth :basic-auth-password)]
-    (and (some? actual-pw)
-         (= user-name "teet")
-         (= given-password actual-pw))))
-
 (defn start [{:keys [port tara] :as config}]
   (alter-var-root
    #'server
@@ -42,7 +36,7 @@
               (login-fake-routes/fake-login-routes)))
           (db-api-dev/db-api-routes)
           (routes/teet-routes config))
-         (basic-auth/wrap-basic-authentication auth-callback "TEET")
+         (basic-auth/wrap-basic-authentication environment/basic-auth-callback "TEET")
          params/wrap-params
          cookies/wrap-cookies
          (session/wrap-session {:store (session-cookie/cookie-store {:key (.getBytes "FIXME:USE PARAMS")})})
