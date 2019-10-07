@@ -36,7 +36,7 @@
               (login-fake-routes/fake-login-routes)))
           (db-api-dev/db-api-routes)
           (routes/teet-routes config))
-         (basic-auth/wrap-basic-authentication environment/basic-auth-callback "TEET")
+         ;; (basic-auth/wrap-basic-authentication environment/basic-auth-callback "TEET")
          params/wrap-params
          cookies/wrap-cookies
          (session/wrap-session {:store (session-cookie/cookie-store {:key (.getBytes "FIXME:USE PARAMS")})})
