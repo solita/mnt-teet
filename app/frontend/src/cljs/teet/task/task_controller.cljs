@@ -62,7 +62,6 @@
   (process-event [{:keys [task updated-task]} app]
     (let [id (:db/id task)
           task-path  [:task (str id)]
-          old-task (get-in app task-path)
           new-task (merge task updated-task)]
 
       (t/fx (assoc-in app task-path new-task)

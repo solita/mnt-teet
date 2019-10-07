@@ -53,7 +53,7 @@
 (defmethod on-navigate-event :default [_] nil)
 (defmethod on-leave-event :default [_] nil)
 
-(defn requires-authentication? [{:keys [user page] :as app}]
+(defn requires-authentication? [{:keys [user page] :as _app}]
   ;; PENDING: what pages require authentication?
   (and (nil? user)
        (not= :login page)))

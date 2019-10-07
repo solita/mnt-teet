@@ -1,14 +1,12 @@
 (ns teet.ui.file-upload
   (:require [herb.core :refer [<class]]
             [reagent.core :as r]
-            [taoensso.timbre :as log]
-            [teet.ui.material-ui :refer [Button IconButton FormControl InputLabel
-                                         List ListItem ListItemText ListItemSecondaryAction]]
-            [teet.ui.typography :refer [Heading1]]
+            [teet.ui.material-ui :refer [Button IconButton List ListItem
+                                         ListItemText ListItemSecondaryAction]]
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.icons :as icons]
             [teet.localization :refer [tr]]
-            [teet.ui.typography :as typography]
+            [teet.ui.typography :refer [Heading1 SectionHeading]]
             [teet.ui.format :as format]))
 
 (defn- page-overlay []
@@ -47,11 +45,10 @@
   (-> e .-target .-files ->vector))
 
 (defn file-from-drop [e]
-  (let [dt (.-dataTransfer e)]
-    (-> e
-        .-dataTransfer
-        .-files
-        ->vector)))
+  (-> e
+      .-dataTransfer
+      .-files
+      ->vector))
 
 (defn- on-drag-over [event]
   (.stopPropagation event)
@@ -74,14 +71,13 @@
     (.removeEventListener element event f)))
 
 (defn- set-overlay [state shown?]
-  (fn [e]
+  (fn [_]
     (swap! state update :overlay (if shown? inc dec))))
 
 (defn FileUpload
   "Note! Use one of the predefined file upload components, such as
   FileUploadButton instead of using this directly."
-  [{:keys [id on-drop drop-message]}
-   & children]
+  [{:keys [drop-message]} & _]
   (let [state (r/atom {:overlay 0
                        :events-to-remove []
                        :enable-pointer-events nil})]
@@ -102,7 +98,7 @@
                    (remove-event))
                  [])))
       :reagent-render
-      (fn [{:keys [id on-drop message]}
+      (fn [{:keys [id on-drop]}
            & children]
         (into [:label
                {:htmlFor id}
@@ -121,7 +117,7 @@
                         :on-change #(on-drop (file-vector %))}]]
               children))})))
 
-(defn FileUploadButton [{:keys [id on-drop drop-message] :as props} & children]
+(defn FileUploadButton [{:keys [id on-drop drop-message]} & children]
   [FileUpload {:id id
                :on-drop on-drop
                :drop-message drop-message}
@@ -143,7 +139,7 @@
 
 (defn files-field [{:keys [value on-change error]}]
   [:div {:class (<class files-field-style error)}
-   [typography/SectionHeading (tr [:common :files])]
+   [SectionHeading (tr [:common :files])]
    [List {:dense true}
     (doall
      (map-indexed
