@@ -19,7 +19,6 @@
       (.then #(.json %))
       (.then (fn [json]
                (log/info "loaded geojson: " json)
-               (def got-js json)
                (let [features (-> source
                                   .getFormat
                                   (.readFeatures json #js {"dataProjection" "EPSG:3301"}))]

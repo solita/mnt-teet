@@ -5,8 +5,7 @@
                                          Button Typography]]
             [teet.ui.layout :as layout]
             [teet.ui.itemlist]
-            [teet.localization :as localization :refer [tr]]
-            [teet.ui.icons :as icons]
+            [teet.localization :as localization]
             [teet.ui.select :as select]
             [taoensso.timbre :as log]
             [reagent.core :as r]
@@ -14,7 +13,7 @@
 
 
 
-(defn login-page [e! {login :login}]
+(defn login-page [e! {_login :login}]
   [Container {:maxWidth "sm"}
    [typography/Heading1 "Maanteeamet TEET"]
    [layout/column {:content-style {:padding-bottom "2em"}}

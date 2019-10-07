@@ -6,7 +6,6 @@
                                          List ListItem ListItemText ListItemIcon
                                          Divider]]
             [teet.ui.icons :as icons]
-            [teet.ui.typography :refer [Heading1]]
             [teet.theme.theme-colors :as theme-colors]
             [teet.localization :as localization :refer [tr]]
             [teet.navigation.navigation-controller :as navigation-controller]
@@ -14,12 +13,11 @@
             [teet.search.search-view :as search-view]
             [herb.core :refer [<class]]
             [taoensso.timbre :as log]
-            [teet.common.common-controller :as common-controller]
             [teet.ui.util :as util]
             [teet.ui.typography :as typography]))
 
-(defn drawer-header
-  [e! title open?]
+(defn- drawer-header
+  [e! open?]
   [:div {:style {:display "flex"
                  :align-items "center"
                  :justify-content "space-between"
@@ -41,10 +39,9 @@
        [icons/navigation-chevron-left]
        [icons/navigation-chevron-right])]]])
 
-(defn page-listing
-  [e! open?]
+(defn- page-listing
+  [open?]
   [:<>
-
    [List
     (when open?
       [ListItem {}
@@ -79,7 +76,7 @@
        [ListItemText {:primary "Components"}])]]])
 
 (defn user-info [e! {:keys [user/given-name user/family-name] :as user} label?]
-  (let [handle-click! (fn user-clicked [x]
+  (let [handle-click! (fn user-clicked [_]
                         (e! (navigation-controller/->GoToLogin)))]
     (if-not user
       [Button {:color :secondary
@@ -104,7 +101,7 @@
    [user-info e! user open?]])
 
 (defn header
-  [e! {:keys [title open? breadcrumbs]} user]
+  [e! {:keys [open? breadcrumbs]} user]
   [:<>
    [AppBar {:position "sticky"
             :className (<class navigation-style/appbar-position open?)
@@ -143,8 +140,8 @@
             :variant "permanent"
             :anchor "left"
             :open open?}
-    [drawer-header e! title open?]
-    [page-listing e! open?]
+    [drawer-header e! open?]
+    [page-listing open?]
     [drawer-footer e! user open?]]])
 
 (defn main-container [navigation-open? content]

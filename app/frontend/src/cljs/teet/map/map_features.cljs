@@ -4,14 +4,11 @@
             [ol.style.Icon]
             [ol.style.Stroke]
             [ol.style.Fill]
-            [ol.style.Icon]
-            [ol.render.Feature]
-            [taoensso.timbre :as log]
-            [clojure.string :as str]))
+            [ol.render.Feature]))
 
 (defn project-line-style
   "Show project geometry as the road line."
-  [^ol.render.Feature feature res]
+  [^ol.render.Feature _feature res]
   (let [line-width (+ 3 (min 5 (int (/ 200 res))))]
     ;; Show project road geometry line
     (ol.style.Style.
@@ -51,7 +48,7 @@
 
 (defn project-related-restriction-style
   "Show project related restriction as a filled area."
-  [^ol.render.Feature feature res]
+  [^ol.render.Feature _feature _res]
   (ol.style.Style.
    #js {:fill (ol.style.Fill. #js {:color (restriction-fill feature "#f26060")})
         :zIndex 3}))
@@ -66,7 +63,7 @@
 
 (defn project-pin-style
   "Show project centroid as a pin icon."
-  [^ol.render.Feature feature res]
+  [^ol.render.Feature _feature _res]
   (ol.style.Style.
    #js {:image (ol.style.Icon.
                 #js {:src "/img/pin.png"

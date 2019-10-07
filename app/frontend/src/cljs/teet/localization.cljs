@@ -7,7 +7,6 @@
   (:require [reagent.core :as r]
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
-            [taoensso.timbre :as log]
             [cljs.reader :as reader]
             [postgrest-ui.display :as postgrest-display]
             [alandipert.storage-atom :refer [local-storage]]))
@@ -59,7 +58,7 @@
 
 
 (declare message)
-(defmulti evaluate-list (fn [[operator & args] parameters] operator))
+(defmulti evaluate-list (fn [[operator & _] _] operator))
 
 (defmethod evaluate-list :plural [[_ param-name zero one many] parameters]
   (let [count (get parameters param-name)]
@@ -81,7 +80,7 @@
     (list? part)
     (evaluate-list part parameters)
 
-    :default
+    :else
     (str part)))
 
 (defn- message [message-definition parameters]
@@ -92,7 +91,7 @@
     (list? message-definition)
     (evaluate-list message-definition parameters)
 
-    :default
+    :else
     (reduce (fn [acc part]
               (str acc (message-part part parameters)))
             ""

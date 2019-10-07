@@ -5,12 +5,11 @@
             [teet.ui.form :as form]
             [teet.ui.select :as select]
             [teet.document.document-controller :as document-controller]
-            [teet.ui.material-ui :refer [TextField LinearProgress Grid Button
+            [teet.ui.material-ui :refer [TextField LinearProgress Grid
                                          List ListItem ListItemText ListItemIcon
-                                         CircularProgress Link Divider]]
+                                         CircularProgress Divider]]
             [teet.ui.typography :as typography]
             [teet.ui.file-upload :as file-upload]
-            [taoensso.timbre :as log]
             [herb.core :refer [<class]]
             [teet.localization :refer [tr]]
             teet.document.document-spec
@@ -75,7 +74,7 @@
                 :placeholder (tr [:document :new-comment])
                 :variant "outlined"}]]])
 
-(defn document-page [e! {:keys [document params] :as app}]
+(defn document-page [e! {:keys [document] :as _app}]
   [Grid {:container true}
    [Grid {:item true :xs 6}
     [typography/SectionHeading (:document/name document)

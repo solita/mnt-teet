@@ -4,12 +4,10 @@
             [herb.core :refer [<class]]
             [teet.map.openlayers :as openlayers]
             [taoensso.timbre :as log]
-            [teet.routes :as routes]
             [teet.map.map-controller :as map-controller]
             [teet.ui.material-ui :refer [Fab Button Switch FormControlLabel Collapse ClickAwayListener]]
             [teet.ui.typography :as typography]
             [teet.ui.icons :as icons]
-            [teet.routes :as routes]
             [teet.common.common-controller :as common-controller]
             [teet.map.map-styles :as map-styles]))
 
@@ -22,8 +20,8 @@
 (def default-center [516493.16 6513417.97])
 
 (defn restriction-control
-  [e! [category layers] map-controls]
-  (let [toggle-collapse (fn [e]
+  [e! [category layers] _map-controls]
+  (let [toggle-collapse (fn [_]
                           (e! (map-controller/->ToggleCategoryCollapse category)))
         closing? (map-controller/atleast-one-open? layers)]
     (fn [e! [category layers] map-controls]
@@ -59,7 +57,7 @@
                                                                (e! (map-controller/->LayerToggle category layer)))}])}]]))]]])))
 
 (defn map-layer-controls
-  [e! map-layers {:keys [open?] :as map-controls}]
+  [e! _map-layers _map-controls]
   (r/create-class
     {:component-did-mount
      (fn [_]
@@ -85,8 +83,7 @@
   (r/with-let [current-tool (volatile! (get-in map-data [:tool]))
                current-zoom (volatile! nil)
                current-res (volatile! nil)
-               on-zoom (volatile! nil)
-               prev-selected-item (volatile! nil)]
+               on-zoom (volatile! nil)]
 
               (vreset! current-tool (get-in map-data [:tool]))
               (vreset! on-zoom (get-in map-data [:on-zoom]))
@@ -108,7 +105,7 @@
                    :center             default-center
 
                    ;:selection          nav/valittu-hallintayksikko
-                   :on-drag            (fn [item event]
+                   :on-drag            (fn [_item _event]
                                          #_(log/debug "drag" item event)
                                          #_(paivita-extent item event)
                                          #_(t/julkaise! {:aihe :karttaa-vedetty}))
@@ -132,7 +129,7 @@
                                          (log/debug "on-mount" initialextent)
                                          #_(paivita-extent nil initialextent)
                                          #_(e! (map-controller/->UpdateMapLayers)))
-                   :on-click           (fn [event]
+                   :on-click           (fn [_event]
                                          ;; Either on-click or on-select will trigger. We must clear selected feature in both event handlers.
                                          ;; Allow clearing selected feature only if not in approach mode
                                          ;;(e! (map-controller/->ClearSelectedFeature))
@@ -140,7 +137,7 @@
                                          ;;(handle-tool-click e! current-tool event)
                                          )
 
-                   :on-select          (fn [[item & rest] event]
+                   :on-select          (fn [[item & _] _event]
                                          (when-let [event (common-controller/map-item-selected item)]
                                            (e! event))
                                          #_(routes/navigate! :project {:project (:map/id item)})
