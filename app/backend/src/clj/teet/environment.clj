@@ -4,7 +4,6 @@
             [clojure.java.io :as io]
             [taoensso.timbre :as log]
             [datomic.client.api :as d]
-            [datomic.ion.cast :as cast]
             [amazonica.aws.simplesystemsmanagement :as ssm]))
 
 (defn- ssm-param [name]
@@ -24,8 +23,7 @@
                                   (ssm-param (str "/teet-" (name env) "/api/jwt-secret")))
                  bap (ssm-param (str "/teet-" (name env) "/api/basic-auth-password"))
                  config (assoc-in config [:auth :basic-auth-password]
-                                  bap)]
-             (cast/dev "Basic auth pw is set? ->" (some? bap))
+                                  bap)]             
              config))))
 
 (defn load-local-config!
