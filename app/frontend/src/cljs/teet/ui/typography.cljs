@@ -8,23 +8,16 @@
       (into [Typography typography-props] children))))
 
 ;; TODO If first of children is map, merge with {:variant ...}
-(defn Heading1 [& children]
-  (make-typography {:variant "h1"}))
+(def Heading1 (make-typography {:variant "h1"}))
 
-(defn Heading2 [& children]
-  (make-typography {:variant "h2"}))
+(def Heading2 (make-typography {:variant "h2"}))
 
-(defn Heading3 [& children]
-  (make-typography {:variant "h3"}))
+(def Heading3 (make-typography {:variant "h3"}))
 
-(defn Text [& children]
-  (make-typography {:variant "body1"}))
+(def Text (make-typography {:variant "body1"}))
 
-(defn Paragraph [& children]
-  (make-typography {:variant "body1" :paragraph true}))
+(def Paragraph (make-typography {:variant "body1" :paragraph true}))
 
-(defn SectionHeading [& children]
-  (make-typography {:variant "h6"}))
+(def SectionHeading (make-typography {:variant "h6"}))
 
-(defn DataLabel [& children]
-  (make-typography {:variant "subtitle1"}))
+(def DataLabel (make-typography {:variant "subtitle1"}))

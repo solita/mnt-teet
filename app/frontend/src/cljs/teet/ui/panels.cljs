@@ -1,9 +1,8 @@
 (ns teet.ui.panels
   "Different panels for showing content."
   (:require [reagent.core :as r]
-            [teet.ui.material-ui :refer [Card CardHeader CardActionArea CardActions CardContent
-                                         Collapse
-                                         IconButton Button Divider
+            [teet.ui.material-ui :refer [Card CardHeader CardContent
+                                         Collapse IconButton Divider
                                          Dialog DialogTitle DialogContent]]
             [teet.ui.icons :as icons]))
 
