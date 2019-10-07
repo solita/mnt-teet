@@ -10,7 +10,6 @@
             [ol.Overlay] ;; popup
             [ol.View]
             [ol.events.condition :as condition]
-            [ol.extent :as ol-extent]
             [ol.interaction :as ol-interaction]
             [ol.interaction.Select]
             [ol.layer.Layer]
@@ -22,13 +21,10 @@
             ;[teet.geo :as geo]
             ;[teet.style.base :as style-base]
             ;[teet.style.colors :as colors]
-            [teet.map.openlayers.geojson :as geojson]
             [teet.map.openlayers.kuvataso :as kuvataso]
-            [teet.map.openlayers.mvt :as mvt]
-            [teet.map.openlayers.projektiot :refer [projektio estonian-extent]]
+            [teet.map.openlayers.projektiot :refer [estonian-extent]]
             [teet.map.openlayers.layer :as taso]
             [teet.map.openlayers.background :as background]
-            [teet.map.openlayers.tile :as tile]
 
             [taoensso.timbre :as log]
 
@@ -263,7 +259,7 @@
                (aset js/window "EVT" e)
                (when on-click (on-click e))))))))
 
-(defn- set-dblclick-handler [this ol3 on-click on-select]
+(defn- set-dblclick-handler [this ol3 _on-click on-select]
   (.on ol3 "dblclick"
        (fn [e]
          (if-let [handler (peek @click-handler)]
@@ -371,7 +367,7 @@
   (swap! map-interactions dissoc key))
 
 
-(defn enable-bbox-select! [{:keys [box-style]}]
+(defn enable-bbox-select! [_]
   (let [drag-box (create-dragbox-interaction {:condition condition/platformModifierKeyOnly})
         select (create-select-interaction {})]
 
@@ -388,109 +384,6 @@
   (let [target-element (.getTargetElement m)
         size (gstyle/getContentBoxSize target-element)]
     (.setSize m (.-width size) (.-height size))))
-
-(defn- orientate-map [this {:keys [geometries zoom-to-geometries extent-buffer
-                                   center-on-geometry rotation]}]
-
-  (let [{prev-zoom-to-geometries :zoom-to-geometries
-         prev-zoom-target-geoms :zoom-target-geometries
-         ol3 :ol3}
-        (reagent/state this)
-        zoom-target-geoms (when zoom-to-geometries (map
-                                                     (fn [key]
-                                                       (first (key geometries)))
-                                                     (sort (keys zoom-to-geometries))))
-        rotation (or rotation 0)
-        view (.getView ol3)]
-    (reagent/set-state this {:zoom-to-geometries zoom-to-geometries
-                             :zoom-target-geometries zoom-target-geoms})
-
-    (when (and zoom-target-geoms
-               ;; Check if zoom-to target geometries have actually changed
-               (or (not= zoom-target-geoms prev-zoom-target-geoms)
-                   ;; Otherwise, check if zoom-to-geometries key-value pairs have been changed.
-                   ;; This allows programmatically forcing re-zoom by changing zoom-to-geometries map values.
-                   (not= zoom-to-geometries prev-zoom-to-geometries)))
-
-      (let [geometry-layers (:geometry-layers (reagent/state this))
-            zoom-to-extents (into []
-                                  (comp
-                                    (keep (fn [[key [layer geometries]]]
-                                            (when (and (zoom-to-geometries key)
-                                                       (seq geometries))
-                                              layer)))
-                                    (map #(-> % .getSource .getExtent)))
-                                  geometry-layers)
-            combined-extent (reduce (fn [e1 e2]
-                                      (when (and e1 e2)
-                                        (ol-extent/extend e1 e2)))
-                                    zoom-to-extents)
-            ;; Center-on-geometry can contain specific fitting options, so it is then a map.
-            ;;   Otherwise, it is just a key to target geometry.
-            center-on-geom-target (if (map? center-on-geometry)
-                                 (:target-geometry center-on-geometry)
-                                 center-on-geometry)
-            center-geometry (some-> center-on-geom-target
-                                    geometry-layers
-                                    first)
-            center-extent (some-> center-geometry
-                                  .getSource
-                                  .getExtent)]
-        (when (seq zoom-to-extents)
-          (if center-extent
-            (let [[x1 y1 x2 y2] combined-extent
-                  ;; Compute max distance to from center extent to combined extend corners
-                  max-dist-to-corner (apply max
-                                            [:FIXME]
-                                            #_[(geo/distance (ol-extent/getCenter center-extent)
-                                                           [x1 y1])
-                                             (geo/distance (ol-extent/getCenter center-extent)
-                                                           [x1 y2])
-                                             (geo/distance (ol-extent/getCenter center-extent)
-                                                           [x2 y1])
-                                             (geo/distance (ol-extent/getCenter center-extent)
-                                                           [x2 y2])])
-
-                  ;; Add manually some extra buffer from map state if defined
-                  ;; This allows manual fine tuning of center-on-geometry and
-                  ;; zoom-to-extents fitting.
-                  max-dist-to-corner (if (number? (:extent-buffer center-on-geometry))
-                                       (+ max-dist-to-corner(:extent-buffer center-on-geometry))
-                                       max-dist-to-corner)]
-
-              ;; Center extent specified
-              (if (:center-only? center-on-geometry)
-                ;; Center - does not affect zoom level
-                ;; https://openlayers.org/en/v4.6.5/apidoc/ol.View.html#setCenter
-                (.setCenter view (ol-extent/getCenter center-extent))
-
-                ;; Fit - affects zoom level
-                ;; https://openlayers.org/en/v4.6.5/apidoc/ol.View.html#fit
-                (.fit view
-                      (ol-extent/buffer
-                        (ol-extent/boundingExtent #js [(ol-extent/getCenter center-extent)])
-                        ;; Buffer size
-                        max-dist-to-corner)
-                      (clj->js (merge {:size (.getSize ol3)
-                                       ;; Padding top, right, bottom and left
-                                       :padding #js [125 100 125 100] :constrainResolution true}
-                                      ;; Use min-resolution to control min zoom level of center extent fitting.
-                                      (when (number? (:min-resolution center-on-geometry))
-                                        {:minResolution (:min-resolution center-on-geometry)})
-
-                                      ;; Maximum zoom level that we zoom to. If minResolution is given, this property is ignored.
-                                      (when (number? (:max-zoom center-on-geometry))
-                                        {:maxZoom (:max-zoom center-on-geometry)}))))))
-            ;; No center, just fit view to combined extent
-            (.fit view
-                  (ol-extent/buffer combined-extent (or extent-buffer extent-buffer-default))
-                  #js {:size (.getSize ol3)
-                       ;; Padding top, right, bottom and left
-                       :padding #js [125 100 125 100] :constrainResolution true})))))
-
-    ;; Set map rotation (defaults to 0, no rotation) if rotation has changed.
-    (when (not= (.getRotation view) rotation)
-      (.setRotation view rotation))))
 
 (defonce window-resize-listener-atom (atom nil))
 
@@ -521,8 +414,9 @@
   (.addEventListener js/window "resize" @window-resize-listener-atom))
 
 
-(defn- ol3-did-mount [this current-zoom]
+(defn- ol3-did-mount
   "Initialize OpenLayers map for a newly mounted map component."
+  [this current-zoom]
   (let [{layers :layers :as mapspec} (:mapspec (reagent/state this))
         interactions (let [defaults (ol-interaction/defaults
                                      #js {:mouseWheelZoom true
@@ -543,9 +437,6 @@
                              :controls [] ;; :controls     kontrollit
                              :interactions interactions})
         ol3 (ol/Map. map-options)
-
-        ;; NOTE: Currently disabled, because implement our own map control tools
-        ;; _ (.addControl ol3 (tasovalinta/tasovalinta ol3 layers))
 
         _ (reset!
             openlayers-map-width
@@ -624,11 +515,11 @@
 
     ;; If mapspec defines callbacks, bind them to ol3
     (set-click-handler this ol3
-                            (:on-click mapspec)
-                            (:on-select mapspec))
+                       (:on-click mapspec)
+                       (:on-select mapspec))
     (set-dblclick-handler this ol3
-                                (:on-dblclick mapspec)
-                                (:on-dblclick-select mapspec))
+                          (:on-dblclick mapspec)
+                          (:on-dblclick-select mapspec))
     (set-hover-handler this ol3)
     (set-drag-handler this ol3 (:on-drag mapspec))
     (set-zoom-handler this ol3 (:on-zoom mapspec))
@@ -676,8 +567,9 @@
                           :left (+ 20 (:x hover)) :top (+ 10 (:y hover))})}
             (tooltip-content)])))]))
 
-(defn- update-ol3-geometries [component geometries]
+(defn- update-ol3-geometries
   "Update the ol3 layers based on the data, mutates the ol3 map object."
+  [component geometries]
   (let [{:keys [ol3 geometry-layers]} (reagent/state component)]
 
     ;; Remove any layers that are no longer present
@@ -690,10 +582,8 @@
     (loop [new-geometry-layers {}
            [layer & layers] (keys geometries)]
       (if-not layer
-        (do
-          (log/info "NEW-GEOMETRY-LAYERS: " new-geometry-layers)
-          (reagent/set-state component {:geometry-layers new-geometry-layers
-                                        :geometries geometries}))
+        (reagent/set-state component {:geometry-layers new-geometry-layers
+                                      :geometries geometries})
         (if-let [taso (get geometries layer)]
           (recur (assoc new-geometry-layers
                         layer (apply taso/paivita
@@ -703,14 +593,14 @@
           (recur new-geometry-layers layers))))))
 
 (defn- ol3-will-receive-props [this [_ mapspec]]
-  (update-ol3-geometries this (:geometries mapspec))
-  (orientate-map this mapspec))
+  (update-ol3-geometries this (:geometries mapspec)))
 
 ;;;;;;;;;
 ;; The OpenLayers 3 Reagent component.
 
-(defn openlayers [mapspec]
+(defn openlayers
   "A OpenLayers map component."
+  [mapspec]
   (reagent/create-class
     {:display-name "openlayers"
      :get-initial-state (fn [_] {:mapspec mapspec})

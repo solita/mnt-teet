@@ -62,7 +62,7 @@ BEGIN
       CONTINUE;
     END IF;
     dynsql := 'SELECT ST_AsMVT(tile) AS mvt ' ||
-              ' FROM (SELECT CONCAT(p.voondi_nimi) AS tooltip, ' ||
+              ' FROM (SELECT p.voond || '': '' || p.voondi_nimi AS tooltip, ' ||
               '              '''||type||''' as rt,' ||
               '              p.id, ' ||
               '              ST_AsMVTGeom(p.geom, ' ||

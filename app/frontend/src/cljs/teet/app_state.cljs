@@ -1,6 +1,5 @@
 (ns teet.app-state
-  (:require [reagent.core :as r]
-            [taoensso.timbre :as log]))
+  (:require [reagent.core :as r]))
 
 
 (defn- config [key]

@@ -49,7 +49,7 @@
 
 ;; Controller for backend communication
 
-(defn query-param-atom [{:keys [page params query] :as app} param-name read-param write-param]
+(defn query-param-atom [{:keys [page params query] :as _app} param-name read-param write-param]
   (r/wrap (read-param (get query param-name))
           #(routes/navigate! page params (write-param query %))))
 
@@ -75,7 +75,7 @@
 
 (defonce debounce-timeouts (atom {}))
 
-(defmethod tuck-effect/process-effect :debounce [e! {:keys [event effect timeout id] :as foo}]
+(defmethod tuck-effect/process-effect :debounce [e! {:keys [event effect timeout id]}]
   (let [timeout-id (or id event)
         existing-timeout (get @debounce-timeouts timeout-id)]
     (when existing-timeout
@@ -215,7 +215,7 @@
                      (e! (->RPCResponse result-path data))
                      (e! (result-event data)))))))))
 
-(defmethod tuck-effect/process-effect :navigate [e! {:keys [page params query]}]
+(defmethod tuck-effect/process-effect :navigate [_ {:keys [page params query]}]
   (routes/navigate! page params query))
 
 (defmethod tuck-effect/process-effect :set-api-token [_ {token :token}]

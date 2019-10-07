@@ -1,18 +1,7 @@
-(ns teet.map.openlayers.edistymispalkki
-  #_(:require [teet.asiakas.tapahtumat :as tapahtumat]))
+(ns teet.map.openlayers.edistymispalkki)
 
 (def kuvatason-lataus (atom {:ladataan 0 :ladattu 0}))
 (def geometriatason-lataus (atom {:ladataan 0 :ladattu 0}))
-
-(defonce julkaise-kuvatason-lataustapahtuma
-         (add-watch kuvatason-lataus ::kuvatason-paivitys
-                    (fn [_ _ _ tila]
-                      #_(tapahtumat/julkaise! (assoc tila :aihe :edistymispalkki/kuvataso)))))
-
-(defonce julkaise-geometriatason-lataustapahtuma
-         (add-watch geometriatason-lataus ::geometriatason-paivitys
-                    (fn [_ _ _ tila]
-                      #_(tapahtumat/julkaise! (assoc tila :aihe :edistymispalkki/geometriataso)))))
 
 (defn valmis? [{:keys [ladataan ladattu]}]
   (>= ladattu ladataan))
