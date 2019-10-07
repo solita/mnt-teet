@@ -158,7 +158,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION teet.geojson_thk_project_related_restricions(project_id TEXT, distance INTEGER) RETURNS TEXT
+CREATE OR REPLACE FUNCTION teet.geojson_thk_project_related_restrictions(project_id TEXT, distance INTEGER) RETURNS TEXT
 AS $$
 SELECT row_to_json(fc)::TEXT
   FROM (SELECT 'FeatureCollection' as type,
@@ -167,7 +167,7 @@ SELECT row_to_json(fc)::TEXT
                        ST_AsGeoJSON(r.geom)::json as geometry,
                        json_build_object('id', r.id, 'tooltip', r.tooltip) as properties
                   FROM restrictions.thk_project_related_restrictions_geom(project_id,distance) r) f) fc;
-$$ LANGUAGE SQL SECURITY DEFINER;
+$$ LANGUAGE SQL STABLE SECURITY DEFINER;
 
 CREATE OR REPLACE VIEW teet.related_restrictions_by_project AS
 SELECT p.id as project_id, r.*
