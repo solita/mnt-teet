@@ -1,4 +1,5 @@
 {:deps {http-kit {:mvn/version "2.4.0-alpha4"}
+        ring-basic-authentication {:mvn/version "1.0.5"}
         compojure {:mvn/version "1.6.1"}
         hiccup {:mvn/version "1.0.5"}
         com.taoensso/timbre {:mvn/version "4.10.0"}

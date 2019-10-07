@@ -6,6 +6,7 @@
             [compojure.core :refer [routes]]
             [ring.middleware.params :as params]
             [ring.middleware.cookies :as cookies]
+            [ring.middleware.basic-authentication :as basic-auth]
             [ring.middleware.session :as session]
             [ring.middleware.session.cookie :as session-cookie]
             [teet.login.login-tara-token :as login-tara-token]
@@ -16,6 +17,12 @@
   (:gen-class))
 
 (def server nil)
+
+(defn auth-callback [user-name given-password]
+  (let [actual-pw (environment/config-value :auth :basic-auth-password)]
+    (and (some? actual-pw)
+         (= user-name "teet")
+         (= given-password actual-pw))))
 
 (defn start [{:keys [port tara] :as config}]
   (alter-var-root
@@ -35,6 +42,7 @@
               (login-fake-routes/fake-login-routes)))
           (db-api-dev/db-api-routes)
           (routes/teet-routes config))
+         (basic-auth/wrap-basic-authentication auth-callback "TEET")
          params/wrap-params
          cookies/wrap-cookies
          (session/wrap-session {:store (session-cookie/cookie-store {:key (.getBytes "FIXME:USE PARAMS")})})
