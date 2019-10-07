@@ -690,10 +690,8 @@
     (loop [new-geometry-layers {}
            [layer & layers] (keys geometries)]
       (if-not layer
-        (do
-          (log/info "NEW-GEOMETRY-LAYERS: " new-geometry-layers)
-          (reagent/set-state component {:geometry-layers new-geometry-layers
-                                        :geometries geometries}))
+        (reagent/set-state component {:geometry-layers new-geometry-layers
+                                      :geometries geometries})
         (if-let [taso (get geometries layer)]
           (recur (assoc new-geometry-layers
                         layer (apply taso/paivita

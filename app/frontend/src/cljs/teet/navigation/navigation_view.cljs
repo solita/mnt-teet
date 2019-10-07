@@ -115,9 +115,8 @@
      [Breadcrumbs {}
       (util/with-keys
         (for [crumb (butlast breadcrumbs)]
-          (do (log/info "CRUMB " crumb)
-            [Link {:href (routes/url-for crumb)}
-             (:title crumb)])))
+          [Link {:href (routes/url-for crumb)}
+           (:title crumb)]))
       (when-let [{title :title} (last breadcrumbs)]
         [Typography title])
       #_(let [selected-tab (first (keep-indexed
