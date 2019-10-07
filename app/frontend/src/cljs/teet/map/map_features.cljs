@@ -1,6 +1,7 @@
 (ns teet.map.map-features
   "Defines rendering styles for map features "
-  (:require [ol.style.Style]
+  (:require [clojure.string :as str]
+            [ol.style.Style]
             [ol.style.Icon]
             [ol.style.Stroke]
             [ol.style.Fill]
