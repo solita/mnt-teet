@@ -48,14 +48,14 @@
 
 (defn project-related-restriction-style
   "Show project related restriction as a filled area."
-  [^ol.render.Feature _feature _res]
+  [^ol.render.Feature feature _res]
   (ol.style.Style.
    #js {:fill (ol.style.Fill. #js {:color (restriction-fill feature "#f26060")})
         :zIndex 3}))
 
 (defn project-restriction-style
   "Show restriction geometrys as area. Restrictions are all (multi)polygons."
-  [^ol.render.Feature feature res]
+  [^ol.render.Feature feature _res]
   (ol.style.Style.
    #js {:stroke (ol.style.Stroke. #js {:color "rgba(255,0,0,90)"
                                        :width 2})
