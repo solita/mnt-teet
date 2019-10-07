@@ -3,8 +3,6 @@
             [teet.ui.date-picker :as date-picker]
             [teet.phase.phase-controller :as phase-controller]
             [teet.localization :refer [tr]]
-            [teet.ui.material-ui :refer [Grid Button]]
-            [teet.ui.panels :as panels]
             [teet.ui.form :as form]
             teet.document.document-spec))
 

@@ -12,7 +12,6 @@
             [teet.navigation.navigation-style :as navigation-style]
             [teet.search.search-view :as search-view]
             [herb.core :refer [<class]]
-            [taoensso.timbre :as log]
             [teet.ui.util :as util]
             [teet.ui.typography :as typography]))
 

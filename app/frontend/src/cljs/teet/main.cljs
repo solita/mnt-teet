@@ -24,7 +24,7 @@
     (:default-page :root :projects)
     {:title "TEET"
      :breadcrumbs [{:page :projects :title (tr [:projects :map-view])}]
-     :page [projects-view/projects-map-page e! app]}
+     :page [projects-view/projects-map-page app]}
 
     :projects-list
     {:title "TEET"

@@ -3,24 +3,18 @@
   (:require [reagent.core :as r]
             [herb.core :refer [<class]]
             [postgrest-ui.components.listing :as postgrest-listing]
-            [postgrest-ui.components.filters :as postgrest-filters]
             [teet.projects.projects-controller :as projects-controller]
             [teet.search.search-interface :as search-interface]
             [teet.ui.icons :as icons]
             [teet.login.login-paths :as login-paths]
-            [postgrest-ui.components.item-view :as postgrest-item-view]
             [teet.map.map-view :as map-view]
             [teet.map.map-layers :as map-layers]
             [teet.map.map-features :as map-features]
             [teet.theme.theme-spacing :as theme-spacing]
             [teet.ui.material-ui :refer [TextField TableCell TableSortLabel Button Link]]
-            [postgrest-ui.display :as display]
             postgrest-ui.elements
-            [taoensso.timbre :as log]
-            [teet.localization :as localization :refer [tr tr-or]]
-            [clojure.string :as str]
+            [teet.localization :as localization :refer [tr]]
             [teet.ui.panels :as panels]
-            [goog.object :as gobj]
             [clojure.string :as string]))
 
 (defmethod search-interface/format-search-result "project" [{:keys [id label]}]
@@ -37,13 +31,13 @@
               :on-change #(e! (projects-controller/->UpdateProjectsFilter
                                 column
                                 (let [v (-> % .-target .-value)]
-                                  (if (str/blank? v)
+                                  (if (string/blank? v)
                                     nil
                                     (if (= "number" type)
                                       (js/parseInt v)
                                       v)))))}])
 
-(defn- projects-header [e! filters {:keys [column style order on-click]}]
+(defn- projects-header [e! filters {:keys [column order on-click]}]
   [TableCell {:sortDirection (if order (name order) false)}
    [TableSortLabel
     {:active       (or (= order :asc) (= order :desc))
@@ -86,7 +80,7 @@
                    ;; Extract total count from PostgREST range header
                    :on-fetch-response (fn [^js/Response resp]
                                         (when-let [r (.get (.-headers resp) "Content-Range")]
-                                          (let [[_ total] (str/split r "/")]
+                                          (let [[_ total] (string/split r "/")]
                                             (e! (projects-controller/->SetTotalCount total)))))}]])))
 
 (def ^:const project-pin-resolution-threshold 100)
@@ -110,7 +104,7 @@
         restrictions))
 
 
-(defn projects-map-page [e! app]
+(defn projects-map-page [app]
   (let [api-url (get-in app [:config :api-url])]
     (fn [e! app]
       [map-view/map-view e! {:class  (<class theme-spacing/fill-content)

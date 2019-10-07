@@ -1,7 +1,6 @@
 (ns teet.project.project-info
   "UI components to show project info based on THK id."
-  (:require [postgrest-ui.components.item-view :as item-view]
-            [reagent.core :as r]))
+  (:require [postgrest-ui.components.item-view :as item-view]))
 
 (defn- get-name [{name "name"}]
   name)
