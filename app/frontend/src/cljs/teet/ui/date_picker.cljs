@@ -198,7 +198,7 @@
 
 (defn date-input
   "Combined text field and date picker input field"
-  [{:keys [label error value on-change selectable?]}]
+  [{:keys [label error value on-change selectable? required]}]
   (r/with-let [txt (r/atom (some-> value goog.date.Date. unparse-opt))
                open? (r/atom false)
                ref (atom nil)
@@ -219,6 +219,7 @@
                            :value      (or @txt "")
                            :ref        set-ref
                            :error      error
+                           :required   required
                            :variant    "outlined"
                            :full-width true
                            :on-change  on-change-text
@@ -244,11 +245,13 @@
 
 (defn date-range-input
   "combine two date-inputs to provide a consistent date-range-picker"
-  [{:keys [error value on-change start-label end-label]}]
+  [{:keys [error value on-change start-label end-label required]}]
+  (println "required: " required)
   (let [[start end] value]
     [Grid {:container true :spacing 1}
      [Grid {:item true :xs 6}
       [date-input {:value       start
+                   :required    required
                    :error       (and error (nil? start))
                    :label       start-label
                    :on-change   (fn [start]
@@ -259,6 +262,7 @@
                                     true))}]]
      [Grid {:item true :xs 6}
       [date-input {:value       end
+                   :required    required
                    :error       (and error (nil? end))
                    :label       end-label
                    :on-change   (fn [end]
