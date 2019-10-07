@@ -18,9 +18,11 @@
 
 (def server nil)
 
-(defn auth-callback [user-name password]
-  (and (= user-name "teet")
-       (= password (environment/config-value :auth :basic-auth-password))))
+(defn auth-callback [user-name given-password]
+  (let [actual-pw (environment/config-value :auth :basic-auth-password)]
+    (and (some? actual-pw)
+         (= user-name "teet")
+         (= given-password actual-pw))))
 
 (defn start [{:keys [port tara] :as config}]
   (alter-var-root
