@@ -1,7 +1,7 @@
 (ns teet.search.search-view
   "Quick search of projects and project groups"
   (:require [reagent.core :as r]
-            [teet.ui.material-ui :refer [TextField Paper CircularProgress IconButton InputLabel Input
+            [teet.ui.material-ui :refer [Paper CircularProgress IconButton InputLabel Input
                                          List ListItem ListItemIcon ListItemText InputAdornment FormControl]]
             [teet.ui.icons :as icons]
             [teet.ui.common :as common]
@@ -14,7 +14,7 @@
 
 (def sw "200px")
 
-(defn quick-search [e! _]
+(defn quick-search [_e! _]
   (let [show-results? (r/atom false)]
     (common/component
      (hotkeys/hotkey "?" #(.focus (.getElementById js/document "quick-search")))

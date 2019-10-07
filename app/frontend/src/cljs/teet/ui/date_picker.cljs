@@ -3,17 +3,12 @@
   (:require [reagent.core :refer [atom] :as r]
             [cljs-time.core :as t]
             [teet.ui.icons :as icons]
-            [goog.events.EventType :as EventType]
             [cljs-time.format :as tf]
-            [teet.localization :as localization :refer [tr tr-or]]
+            [teet.localization :as localization :refer [tr]]
             [teet.ui.material-ui :refer [TextField IconButton Popover ClickAwayListener
-                                         InputAdornment Typography Button
-                                         Grid]]
-            [teet.ui.icons :as icons]
-            [teet.localization :as localization]
+                                         InputAdornment Button Grid]]
             [teet.theme.theme-colors :as colors]
-            [herb.core :refer [<class]]
-            [teet.ui.typography :as typography]))
+            [herb.core :refer [<class]]))
 
 (defn- date-seq [first-date last-date]
   (when-not (t/after? first-date last-date)
@@ -109,7 +104,7 @@
    :month        month to show (defaults to current) (0 - 11)
    :on-change    callback to set new selected date
    :selectable?  fn to call for each date to check if it should be selectable"
-  [{:keys [value on-change selectable?] :as opts}]
+  [{:keys [value on-change selectable?] :as _opts}]
   (r/with-let [now (or value (t/now))
                showing (atom [(.getYear now) (.getMonth now)])]
               (let [{:keys [months days today]} (get locale @localization/selected-language)

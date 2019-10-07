@@ -1,14 +1,12 @@
 (ns teet.ui.component-demo
   (:require [clojure.string :as str]
-            [teet.ui.material-ui :refer [Paper Button Fab IconButton TextField Chip Avatar MuiThemeProvider CssBaseline Divider Checkbox InputAdornment]]
+            [teet.ui.material-ui :refer [Button Fab IconButton TextField Divider Checkbox InputAdornment]]
             [teet.ui.file-upload :as file-upload]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.progress :as progress]
             [teet.ui.select :as select]
             [teet.ui.typography :refer [DataLabel Heading1 Heading2 Heading3 Paragraph SectionHeading Text]]
             [tuck.core :as t]
-            [cljs-bean.core :refer [->clj]]
             [taoensso.timbre :as log]
             [reagent.core :as r]
             [teet.ui.date-picker :as datepicker]))

@@ -1,6 +1,5 @@
 (ns teet.theme.itemlist-theme
-  (:require [teet.theme.theme-colors :as theme-colors]
-            [taoensso.timbre :as log]))
+  (:require [teet.theme.theme-colors :as theme-colors]))
 
 (defn heading
   [variant]

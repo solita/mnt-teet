@@ -16,5 +16,5 @@
     {:component-did-mount (fn [this]
                             (reset! root (r/dom-node this))
                             (.addEventListener js/document.body "click" handler))
-     :component-will-unmount (fn [this]
+     :component-will-unmount (fn [_]
                                (.removeEventListener js/document.body "click" handler))}))

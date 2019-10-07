@@ -2,22 +2,18 @@
   "View for a workflow task"
   (:require [teet.task.task-controller :as task-controller]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.file-upload :as file-upload]
             [teet.localization :refer [tr-fixme tr]]
-            [teet.ui.material-ui :refer [CircularProgress IconButton TextField Grid
-                                         List ListItem ListItemText ListItemIcon ListItemSecondaryAction
-                                         Button]]
-            [reagent.core :as r]
+            [teet.ui.material-ui :refer [TextField List ListItem ListItemText
+                                         ListItemIcon Button]]
             [teet.ui.icons :as icons]
             [teet.ui.select :as select]
-            [taoensso.timbre :as log]
             [teet.user.user-info :as user-info]
             [teet.ui.form :as form]
             [teet.ui.panels :as panels]
             [teet.document.document-view :as document-view]
             [teet.project.project-info :as project-info]))
 
-(defn task-form [e! close phase-id task]
+(defn task-form [e! close _phase-id task]
   ;;Task definition (under project phase)
   ;; Task type (a predefined list of tasks: topogeodeesia, geoloogia, liiklusuuring, KMH eelhinnang, loomastikuuuring, arheoloogiline uuring, muu)
   ;; Description (short description of the task for clarification, 255char, in case more detailed description is needed, it will be uploaded as a file under the task)
@@ -74,7 +70,7 @@
       [List {:dense true}
        (doall
         (for [{id :db/id
-               :document/keys [name description status]
+               :document/keys [name description]
                :as doc} documents]
           ^{:key id}
           [ListItem {:button true :component "a"
