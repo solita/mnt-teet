@@ -46,8 +46,9 @@
   [:<>
 
    [List
-    [ListItem {}
-     [typography/Heading2 (tr [:projects :title])]]
+    (when open?
+      [ListItem {}
+       [typography/Heading2 (tr [:projects :title])]])
     [ListItem {:component "a"
                :href "/#/projects/list"
                :align-items "center"
