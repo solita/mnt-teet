@@ -26,14 +26,12 @@
   (case page
     (:default-page :root :projects)
     {:title "TEET"
-     :tabs [{:page :projects :selected? true :title (tr [:projects :map-view])}
-            {:page :projects-list :selected? false :title (tr [:projects :list-view])}]
+     :breadcrumbs [{:page :projects :title (tr [:projects :map-view])}]
      :page [projects-view/projects-map-page e! app]}
 
     :projects-list
     {:title "TEET"
-     :tabs [{:page :projects :selected? false :title (tr [:projects :map-view])}
-            {:page :projects-list :selected? true :title (tr [:projects :list-view])}]
+     :breadcrumbs [{:page :projects-list :title (tr [:projects :list-view])}]
      :page [projects-view/projects-list-page e! app]}
 
     :project
