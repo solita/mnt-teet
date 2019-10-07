@@ -46,7 +46,7 @@
                                           comparison-prop (if (some? (:disabled? current-props))
                                                             :disabled?
                                                             :hotkey-refresh-on)]
-                                      (if (not= (comparison-prop current-props) (comparison-prop new-props))
+                                      (when (not= (comparison-prop current-props) (comparison-prop new-props))
                                         (assoc-hotkey-registry this key (:on-click new-props) focus-element-name))))}))
 
 

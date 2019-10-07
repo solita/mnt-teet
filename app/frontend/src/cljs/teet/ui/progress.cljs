@@ -2,8 +2,8 @@
   (:require [teet.theme.theme-colors :as theme-colors]))
 
 (defn circle
-  [{:keys [radius stroke] :as circle}
-   {:keys [total success fail] :as data}]
+  [{:keys [radius stroke] :as _circle}
+   {:keys [total success fail] :as _data}]
   (let [norm-radius (- radius (* stroke 2))
         circumference (* norm-radius Math/PI 2)
         success-offset (- circumference (* (/ success total) circumference))

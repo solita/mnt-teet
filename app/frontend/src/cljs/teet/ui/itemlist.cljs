@@ -1,15 +1,13 @@
 (ns teet.ui.itemlist
-  (:require [teet.ui.material-ui :refer [Paper Button List ListItem ListItemIcon ListItemSecondaryAction Fab
-                                         IconButton TextField Chip Avatar MuiThemeProvider CssBaseline Divider
-                                         Checkbox CircularProgress Link]]
+  (:require [teet.ui.material-ui :refer [List ListItem ListItemIcon
+                                         ListItemSecondaryAction Divider Link]]
             [teet.ui.icons :as icons]
             [teet.ui.progress :as progress]
-            [teet.ui.typography :refer [Heading1 Heading2 Heading3 Paragraph Text SectionHeading DataLabel]]
+            [teet.ui.typography :refer [Heading2 Heading3 SectionHeading DataLabel]]
             [teet.theme.theme-colors :as theme-colors]
             [teet.theme.itemlist-theme :as itemlist-theme]
             [herb.core :refer [<class]]
-            [teet.ui.util :as util]
-            [taoensso.timbre :as log]))
+            [teet.ui.util :as util]))
 
 (defn ListHeading
   [{:keys [title subtitle action variant]

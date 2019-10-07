@@ -6,7 +6,6 @@
             [teet.localization :refer [tr]]
             [goog.object :as gobj]
             [clojure.spec.alpha :as s]
-            [taoensso.timbre :as log]
             [herb.core :refer [<class]]
             [teet.theme.theme-spacing :as theme-spacing]))
 

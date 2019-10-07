@@ -1,7 +1,6 @@
 (ns teet.ui.material-ui
   (:refer-clojure :exclude [List])
   (:require [goog.object :as gobj]
-            [reagent.core]
             [reagent.core :as r]
             [reagent.impl.template :as rtpl])
   (:require-macros [teet.ui.material-ui-macros :refer [define-mui-components]]))
