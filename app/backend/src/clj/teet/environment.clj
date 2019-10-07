@@ -18,9 +18,12 @@
   (swap! config
          (fn [base-config]
            (let [config (merge base-config ion-config)
-                 env (:env config)]
-             (assoc-in config [:auth :jwt-secret]
-                       (ssm-param (str "/teet-" (name env) "/api/jwt-secret")))))))
+                 env (:env config)
+                 config (assoc-in config [:auth :jwt-secret]
+                                  (ssm-param (str "/teet-" (name env) "/api/jwt-secret")))
+                 config (assoc-in config [:auth :basic-auth-password]
+                                  (ssm-param (str "/teet-" (name env) "/api/basic-auth-password")))]
+             config))))
 
 (defn load-local-config!
   "Load local development configuration from outside repository"
