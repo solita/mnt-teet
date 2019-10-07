@@ -16,13 +16,18 @@
 
   CreatePhase
   (process-event [_ app]
-    (let [project (get-in app [:params :project])]
+    (let [project (get-in app [:params :project])
+          [start end] (get-in app [:project project :new-phase :phase/estimated-date-range])
+          payload (-> (get-in app [:project project :new-phase])
+                      (dissoc :phase/estimated-date-range)
+                      (assoc :phase/estimated-start-date start)
+                      (assoc :phase/estimated-end-date end))]
       (t/fx (assoc-in app [:project project :create-phase-in-progress?] true)
             {:tuck.effect/type :command!
              :command :phase/create-phase
              :payload (merge {:db/id "new-phase"
                               :thk/id project}
-                             (get-in app [:project project :new-phase]))
+                             payload) ;;TODO pura date-range
              :result-event ->CreatePhaseResult})))
 
   CreatePhaseResult
