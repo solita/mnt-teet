@@ -30,6 +30,6 @@
 (defn main-container [drawer-open?]
   (let [dw (drawer-width drawer-open?)]
     {:z-index 10
-     :padding "0 24px"
+     ;; :padding "0 24px"
      :width (str "calc(100% - " dw "px)")
      :margin-left (str dw "px")}))

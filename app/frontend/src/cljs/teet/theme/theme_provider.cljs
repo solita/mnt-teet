@@ -38,7 +38,6 @@
                :MuiButton {:contained {:border-radius "2px"}}
                :MuiDrawer {:paper {:background-color theme-colors/secondary
                                    :color theme-colors/white
-                                   :box-shadow "5px 3px 5px #cecece"
                                    "& .MuiListItemIcon-root" {:color :inherit
                                                               :min-width "40px"}}
                            :paperAnchorDockedLeft {:border-right 0}}
@@ -47,7 +46,8 @@
                :MuiTypography {:h1 {:fontFamily "Roboto Condensed"
                                     :fontWeight 700
                                     :fontSize "2rem"
-                                    :lineHeight 1.25}
+                                    :lineHeight 1.25
+                                    :margin-bottom "1rem"}
                                :h2 {:fontFamily "Roboto Condensed"
                                     :fontWeight 700
                                     :fontSize "1.5rem"

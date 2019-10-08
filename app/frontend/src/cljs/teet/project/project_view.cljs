@@ -13,6 +13,7 @@
             [teet.ui.format :as format]
             [teet.ui.itemlist :as itemlist]
             [teet.ui.icons :as icons]
+            [teet.ui.typography :refer [Heading1]]
             [teet.localization :refer [tr]]
             [teet.ui.panels :as panels]
             [taoensso.timbre :as log]
@@ -24,15 +25,17 @@
 
 (defn project-data
   [{:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
-  [itemlist/ItemList
-   {:title name}
-   [:div (tr [:project :information :estimated-duration])
-    ": "
-    (format/date-range estimated_duration)]
-   [:div (tr [:project :information :road-number]) ": " road_nr]
-   [:div (tr [:project :information :km-range]) ": " (format/km-range km_range)]
-   [:div (tr [:project :information :procurement-number]) ": " procurement_no]
-   [:div (tr [:project :information :carriageway]) ": " carriageway]])
+  [:<>
+   [Heading1 name]
+   [itemlist/ItemList
+    {:class (<class project-style/project-data-style)}
+    [:div (tr [:project :information :estimated-duration])
+     ": "
+     (format/date-range estimated_duration)]
+    [:div (tr [:project :information :road-number]) ": " road_nr]
+    [:div (tr [:project :information :km-range]) ": " (format/km-range km_range)]
+    [:div (tr [:project :information :procurement-number]) ": " procurement_no]
+    [:div (tr [:project :information :carriageway]) ": " carriageway]]])
 
 
 (defn- project-info [endpoint token project]
@@ -128,7 +131,8 @@
         [task-view/task-form e! project-controller/->CloseTaskDialog add-task (get-in app [:project project :new-task])]])
      [:div {:class (<class project-style/project-view-container)}
       [Grid {:container true}
-       [Grid {:item true :xs 6}
+       [Grid {:item true
+              :xs 6}
         [:div {:class (herb/join (<class project-style/project-info-style)
                                  (<class project-style/project-tasks-style))}
          [project-info (get-in app [:config :api-url]) (get-in app login-paths/api-token) project]
@@ -149,7 +153,7 @@
                 :label (tr [:project :documents-tab])})
           (Tab {:key "restrictions"
                 :label (tr [:project :restrictions-tab])})]]
-        [:<>
+        [:section {:class (<class project-style/section-spacing)}
          (case tab
            "documents"
            [project-phase-listing e! project (get-in app [:project project :phases])]

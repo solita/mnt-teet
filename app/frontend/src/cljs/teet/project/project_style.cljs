@@ -33,12 +33,20 @@
 (defn project-map-style
   []
   {:flex 1
-   :margin-right "-24px" ;;This is done to off-set the margin given in body. Should probably be done differently
-   :padding-left "1rem"
    :position "sticky"
    :top theme-spacing/appbar-height
    :align-self :flex-start})
 
 (defn project-info-style
   []
-  {:background-color theme-colors/light-gray})
+  {:background-color theme-colors/light-gray
+   :padding "2rem 1.5rem 0 1.5rem"})
+
+(defn section-spacing
+  []
+  {:padding "2rem 1.5rem 0 1.5rem"})
+
+
+(defn project-data-style
+  []
+  {:margin-bottom "1rem"})
