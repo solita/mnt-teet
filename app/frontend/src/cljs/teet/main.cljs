@@ -46,7 +46,7 @@
 
     :road
     {:breadcrumbs [{:title "Road visualization"}]
-     :page [road-visualization-view/road-visualization e! (select-keys app [:road :query])]}
+     :page [road-visualization-view/road-visualization e! (select-keys app [:road :road-address :query])]}
     ;; Fallback
     {:title "Unimplemented page"
      :page [:div "Unimplemented page: " (pr-str page) ", params: " (pr-str params)]}))

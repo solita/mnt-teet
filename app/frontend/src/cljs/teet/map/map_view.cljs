@@ -129,13 +129,9 @@
                                          (log/debug "on-mount" initialextent)
                                          #_(paivita-extent nil initialextent)
                                          #_(e! (map-controller/->UpdateMapLayers)))
-                   :on-click           (fn [_event]
-                                         ;; Either on-click or on-select will trigger. We must clear selected feature in both event handlers.
-                                         ;; Allow clearing selected feature only if not in approach mode
-                                         ;;(e! (map-controller/->ClearSelectedFeature))
-
-                                         ;;(handle-tool-click e! current-tool event)
-                                         )
+                   :on-click           (fn [event]
+                                         (when-let [on-click (:on-click opts)]
+                                           (on-click {:coordinate (js->clj (aget event "coordinate"))})))
 
                    :on-select          (fn [[item & _] _event]
                                          (when-let [event (common-controller/map-item-selected item)]

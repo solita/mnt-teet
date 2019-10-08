@@ -8,32 +8,52 @@
             [teet.map.openlayers :as openlayers]
             [teet.ui.util :as util]))
 
-(defn road-visualization [e! {:keys [query road]}]
+(defn road-visualization [e! {:keys [query]}]
   (e! (road-visualization-controller/map->FetchRoadGeometry query))
   (let [point (r/atom [nil nil])
         set-point! #(do
                       (reset! point %)
                       (openlayers/center-map-on-point! %))]
-    (fn [e! {:keys [query road]}]
+    (fn [e! {:keys [query road road-address]}]
       (let [[x y] @point]
         [:<>
          (when road
-           [map-view/map-view e! {:layers {:road-geometry (map-layers/geojson-data-layer "road_geometry"
-                                                                                         road
-                                                                                         map-features/project-line-style
-                                                                                         {:fit-on-load? true})
-                                           :center-point
-                                           (when (and x y)
-                                             (map-layers/geojson-data-layer
-                                              "center_point"
-                                              #js {:type "FeatureCollection"
-                                                   :features #js [#js {:type "Feature"
-                                                                       :geometry #js {:type "Point"
-                                                                                      :coordinates #js [(js/parseFloat x)
-                                                                                                        (js/parseFloat y)]}}]}
+           [map-view/map-view e!
+            {:on-click (e! road-visualization-controller/map->FetchRoadAddressForCoordinate)
+             :layers {:road-geometry (map-layers/geojson-data-layer "road_geometry"
+                                                                    road
+                                                                    map-features/project-line-style
+                                                                    {:fit-on-load? true})
+                      :center-point
+                      (when (and x y)
+                        (map-layers/geojson-data-layer
+                         "center_point"
+                         #js {:type "FeatureCollection"
+                              :features #js [#js {:type "Feature"
+                                                  :geometry #js {:type "Point"
+                                                                 :coordinates #js [(js/parseFloat x)
+                                                                                   (js/parseFloat y)]}}]}
 
-                                              map-features/crosshair-pin-style
-                                              {}))}}
+                         map-features/crosshair-pin-style
+                         {}))
+
+                      :road-address
+                      (when road-address
+                        (map-layers/geojson-data-layer
+                         "road_address"
+                         #js {:type "FeatureCollection"
+                              :features #js [(aget road-address "road_part_geometry")]}
+                         (partial map-features/road-line-style "magenta")
+                         {}))
+
+                      :road-address-point
+                      (when road-address
+                        (map-layers/geojson-data-layer
+                         "road_address_point"
+                         #js {:type "FeatureCollection"
+                              :features #js [(aget road-address "point")]}
+                         map-features/crosshair-pin-style
+                         {}))}}
             {}])
          [:<>
           [TextField {:value (or x "")
@@ -56,5 +76,4 @@
                 (for [[x y] (aget road "features" 0 "geometry" "coordinates")]
                   [:tr {:on-mouse-enter (r/partial set-point! [x y])}
                    [:td x] [:td y]]))]]])
-         [:div "ROAD" (pr-str )]])))
-  )
+         #_[:div "ROAD" (pr-str )]]))))

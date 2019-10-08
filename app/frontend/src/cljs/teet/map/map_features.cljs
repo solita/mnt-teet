@@ -7,16 +7,18 @@
             [ol.style.Fill]
             [ol.render.Feature]))
 
-(defn project-line-style
-  "Show project geometry as the road line."
-  [^ol.render.Feature _feature res]
+(defn road-line-style [color ^ol.render.Feature _feature res]
   (let [line-width (+ 3 (min 5 (int (/ 200 res))))]
     ;; Show project road geometry line
     (ol.style.Style.
-     #js {:stroke (ol.style.Stroke. #js {:color "blue"
+     #js {:stroke (ol.style.Stroke. #js {:color color
                                          :width line-width
                                          :lineCap "butt"})
           :zIndex 2})))
+
+(def ^{:doc "Show project geometry as the road line."} project-line-style
+  (partial road-line-style "blue"))
+
 
 (def electric-pattern
   (let [a (atom nil)
