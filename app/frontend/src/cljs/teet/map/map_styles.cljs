@@ -28,3 +28,10 @@
    :top      "25px"
    :right    "25px"
    :z-index  9999})
+
+(defn map-overlay
+  []
+  {:position "relative"
+   :left "10px"
+   :padding "0.5rem"
+   :background-color "wheat"})

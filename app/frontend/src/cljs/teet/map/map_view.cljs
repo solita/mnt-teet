@@ -163,6 +163,11 @@
                                               (get-in map-data [:layers])
                                               (:layers opts))
 
+                   :overlays           (mapv (fn [{:keys [coordinate content]}]
+                                               {:coordinate coordinate
+                                                :content [:div {:class (<class map-styles/map-overlay)}
+                                                          content]})
+                                             (:overlays opts))
                    :current-zoom       (get-in map-data [:map-info])
                    ;; map of geometry layer keys to control map zoom. If a key's value changes map is re-zoomed
                    :zoom-to-geometries (get-in map-data [:zoom-to-geometries])
