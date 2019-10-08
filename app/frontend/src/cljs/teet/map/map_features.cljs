@@ -69,3 +69,10 @@
    #js {:image (ol.style.Icon.
                 #js {:src "/img/pin.png"
                      :anchor #js [0.5 1.0]})}))
+
+(defn crosshair-pin-style
+  [^ol.render.Feature _feature _res]
+  (ol.style.Style.
+   #js {:image (ol.style.Icon.
+                #js {:src "/img/crosshair.png"
+                     :anchor #js [0.5 0.5]})}))

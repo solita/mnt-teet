@@ -32,7 +32,7 @@
                                                                                       :coordinates #js [(js/parseFloat x)
                                                                                                         (js/parseFloat y)]}}]}
 
-                                              map-features/project-pin-style
+                                              map-features/crosshair-pin-style
                                               {}))}}
             {}])
          [:<>
