@@ -14,6 +14,7 @@
             [teet.ui.itemlist :as itemlist]
             [teet.ui.icons :as icons]
             [teet.ui.typography :refer [Heading1]]
+            [teet.ui.layout :as layout]
             [teet.localization :refer [tr]]
             [teet.ui.panels :as panels]
             [taoensso.timbre :as log]
@@ -153,7 +154,7 @@
                 :label (tr [:project :documents-tab])})
           (Tab {:key "restrictions"
                 :label (tr [:project :restrictions-tab])})]]
-        [:section {:class (<class project-style/section-spacing)}
+        [layout/section
          (case tab
            "documents"
            [project-phase-listing e! project (get-in app [:project project :phases])]

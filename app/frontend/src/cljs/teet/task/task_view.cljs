@@ -6,6 +6,7 @@
             [teet.ui.material-ui :refer [TextField List ListItem ListItemText
                                          ListItemIcon Button]]
             [teet.ui.icons :as icons]
+            [teet.ui.layout :as layout]
             [teet.ui.select :as select]
             [teet.user.user-info :as user-info]
             [teet.ui.form :as form]
@@ -50,7 +51,7 @@
 
 (defn task-page [e! {{:task/keys [documents description type assignee] :as task} :task
                      query :query :as app}]
-  [:<>
+  [layout/section
    (when (:add-document query)
      [panels/modal {:title (tr [:task :new-document])
                     :on-close (e! task-controller/->CloseAddDocumentDialog)}

@@ -13,3 +13,9 @@
                     (with-meta child
                       {:key i})))
                 children-seq)))
+
+(defn make-component [component props]
+  (fn [& children]
+    (if (map? (first children))
+      (into [component (merge props (first children))] (rest children))
+      (into [component (or props {})] children))))
