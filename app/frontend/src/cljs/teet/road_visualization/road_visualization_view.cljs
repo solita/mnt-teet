@@ -10,10 +10,10 @@
             [teet.ui.itemlist :as itemlist]))
 
 (defn- road-address-overlay [road-address]
-  (let [{:keys [road meters carriageway]}
+  (let [{:keys [road name meters carriageway]}
         (-> road-address (js->clj :keywordize-keys true))]
     [itemlist/ItemList {}
-     [itemlist/Item {:label "Road"} road]
+     [itemlist/Item {:label "Road"} (str road " (" name ")")]
      [itemlist/Item {:label "Carriageway"} carriageway]
      [itemlist/Item {:label "km"} (.toFixed (/ meters 1000) 3)]]))
 
