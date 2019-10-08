@@ -20,7 +20,8 @@
             [teet.theme.theme-provider :as theme]
             [teet.common.common-controller]
             [teet.task.task-view :as task-view]
-            [teet.document.document-view :as document-view]))
+            [teet.document.document-view :as document-view]
+            [teet.road-visualization.road-visualization-view :as road-visualization-view]))
 
 (defn page-and-title [e! {:keys [page params] :as app}]
   (case page
@@ -46,6 +47,9 @@
     :components
     {:title "Components" :page [component-demo/demo e!]}
 
+    :road
+    {:breadcrumbs [{:title "Road visualization"}]
+     :page [road-visualization-view/road-visualization e! (select-keys app [:road :query])]}
     ;; Fallback
     {:title "Unimplemented page"
      :page [:div "Unimplemented page: " (pr-str page) ", params: " (pr-str params)]}))

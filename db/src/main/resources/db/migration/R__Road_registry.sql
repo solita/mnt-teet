@@ -32,6 +32,20 @@ BEGIN
 END
 $$ LANGUAGE plpgsql STABLE;
 
+CREATE OR REPLACE FUNCTION teet.geojson_road_geometry(road INTEGER, carriageway INTEGER, start_m INTEGER, end_m INTEGER) RETURNS JSON
+AS $$
+SELECT row_to_json(fc)
+FROM (SELECT 'FeatureCollection' as type,
+             array_to_json(array_agg(f)) as features
+      FROM (SELECT 'Feature' as type,
+                   ST_AsGeoJSON(teet.road_part_geometry(road,carriageway,numrange(start_m/1000,end_m/1000)))::json as geometry,
+                   json_build_object('road', road,
+                                     'carriageway', carriageway,
+                                     'start', start_m,
+                                     'end', end_m) AS properties) f) fc;
+$$ LANGUAGE SQL STABLE SECURITY DEFINER;
+
+
 -- Trigger to update thk_project geometry
 CREATE OR REPLACE FUNCTION impl.update_project_geometry() RETURNS TRIGGER
 AS $$

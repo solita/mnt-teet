@@ -109,7 +109,9 @@
   (when @api-token
     {"Authorization" (str "Bearer " @api-token)}))
 
-(defmethod tuck-effect/process-effect :rpc [e! {:keys [rpc args result-path result-event endpoint method] :as q}]
+(defmethod tuck-effect/process-effect :rpc [e! {:keys [rpc args result-path result-event
+                                                       endpoint method
+                                                       json?] :as q}]
   (assert rpc "Must specify :rpc function to call")
   (assert (map? args) "Must specify :args map")
   (assert (or result-path result-event) "Must specify result-path or result-event")
@@ -140,7 +142,9 @@
        (.then (fn [json]
                 ;; FIXME: generic error handling
                 (log/info "RESPONSE: " json)
-                (let [data (js->clj json :keywordize-keys true)]
+                (let [data (if json?
+                             json
+                             (js->clj json :keywordize-keys true))]
                   (if result-path
                     (e! (->RPCResponse result-path data))
                     (e! (result-event data)))))))))

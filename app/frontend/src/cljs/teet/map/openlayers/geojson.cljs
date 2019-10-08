@@ -13,22 +13,31 @@
                                      (str name "=" val))
                                    params))))
 
-(defn load-features [^ol.source.Vector source url extent resolution projection]
-  (log/info "LOAD " url ", extent:" extent ", resolution: " resolution ", projection: " projection)
-  (-> (js/fetch url #js {:headers #js {"Accept" "application/octet-stream"}})
-      (.then #(.json %))
-      (.then (fn [json]
-               (log/info "loaded geojson: " json)
-               (def got-js json)
-               (let [features (-> source
-                                  .getFormat
-                                  (.readFeatures json #js {"dataProjection" "EPSG:3301"}))]
-                 (doto source
-                   (.addFeatures features)
-                   .refresh))))))
+(defn load-features [^ol.source.Vector source url-or-data extent resolution projection]
+  ;;(log/info "LOAD " url-or-data ", extent:" extent ", resolution: " resolution ", projection: " projection)
+  (let [add-features! (fn [json]
+                        ;;(js/console.log "loaded geojson: " json)
+                        (def got-js json)
+                        (let [features (-> source
+                                           .getFormat
+                                           (.readFeatures json #js {"dataProjection" "EPSG:3301"}))]
+                          (doto source
+                            (.addFeatures features)
+                            .refresh)))]
+    (-> (cond
+          (object? url-or-data)
+          (add-features! url-or-data)
+
+          (fn? url-or-data)
+          (add-features! (url-or-data))
+
+          :else
+          (-> (js/fetch url-or-data #js {:headers #js {"Accept" "application/octet-stream"}})
+              (.then #(.json %))
+              (.then add-features!))))))
 
 (defrecord GeoJSON [source-name projection extent z-index opacity_ min-resolution max-resolution
-                    url style-fn on-change]
+                    url-or-data style-fn on-change]
   Layer
   (set-z-index [this z-index]
     (assoc this :z-index z-index))
@@ -40,12 +49,12 @@
     [])
   (paivita [this ol3 ol-layer aiempi-paivitystieto]
     (log/info "paivita! aiempi: " aiempi-paivitystieto)
-    (let [sama? (= url aiempi-paivitystieto)
+    (let [sama? (= url-or-data aiempi-paivitystieto)
           luo? (nil? ol-layer)
           source (if (and sama? (not luo?))
                    (.getSource ol-layer)
                    (ol.source.Vector. #js {:projection projection
-                                           :url url
+                                           :url url-or-data
                                            :format (ol.format.GeoJSON.
                                                     #js {:defaultDataProjection projection})}))
 
@@ -59,7 +68,7 @@
         (.on source "change" #(on-change {:extent (.getExtent source)
                                           :source source})))
 
-      (.setLoader source (partial load-features source url))
+      (.setLoader source (partial load-features source url-or-data))
 
       (.setOpacity ol-layer (or opacity_ 1))
 
@@ -79,7 +88,7 @@
         ;; Jos ei luoda ja parametrit eivät ole samat
         ;; asetetaan uusi source ol layeriiin
         (.setSource ol-layer source))
-      [ol-layer url]))
+      [ol-layer url-or-data]))
 
   (hae-asiat-pisteessa [this koordinaatti extent]
     nil))

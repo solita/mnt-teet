@@ -36,7 +36,8 @@
     ["/projects/:project/:phase/:task/:document" :task-document]
     ["/components" :components]
     ;["/projectgroup/:group" :project-group]
-    ;["/projectgroup/:group/project/:project" :project]
+                                        ;["/projectgroup/:group/project/:project" :project]
+    ["/road" :road]
     ]))
 
 (defmulti on-navigate-event

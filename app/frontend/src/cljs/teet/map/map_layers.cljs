@@ -46,3 +46,18 @@
                      style-fn
                      (when fit-on-load?
                        fit-extent)))
+
+(defn geojson-data-layer [name geojson style-fn  {:keys [min-resolution max-resolution
+                                                         z-index opacity fit-on-load?]
+                                                  :or {z-index 99
+                                                       opacity 1}}]
+  (geojson/->GeoJSON name
+                     default-projection
+                     nil
+                     z-index
+                     opacity
+                     min-resolution max-resolution
+                     geojson
+                     style-fn
+                     (when fit-on-load?
+                       fit-extent)))
