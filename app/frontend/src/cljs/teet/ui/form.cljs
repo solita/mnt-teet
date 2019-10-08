@@ -90,41 +90,42 @@
 
                ;; Determine required fields by getting missing attributes of an empty map
                required-fields (missing-attributes spec {})]
-    [Grid {:container true :spacing 1}
-     (util/with-keys
-       (map (fn [field]
-              (assert (vector? field) "Field must be a hiccup vector")
-              (assert (map? (second field)) "First argument to field must be an options map")
-              (let [{:keys [xs lg md attribute]} (meta field)
-                    _ (assert (keyword? attribute) "All form fields must have :attribute meta key!")
-                    value (get value attribute (default-value (first field)))
-                    opts {:value value
-                          :on-change (r/partial update-attribute-fn attribute)
-                          :label (tr [:fields attribute])
-                          :error (boolean (@invalid-attributes attribute))
-                          :required (boolean (required-fields attribute))}]
-                [Grid (merge {:class (<class theme-spacing/mb 1)
-                              :item true :xs (or xs 12)}
-                             (when lg
-                               {:lg lg})
-                             (when md
-                               {:md md}))
-                 (add-validation
-                  (update field 1 merge opts)
-                  validate-attribute-fn attribute value)]))
-            fields))
-     (when (or cancel-event save-event)
-       (let [disabled? (boolean in-progress?)]
-         [Grid {:item true :xs 12 :align "right"}
-          (when cancel-event
-            [Button {:disabled disabled?
-                     :on-click (r/partial e! (cancel-event))
-                     :color "secondary"
-                     :variant "outlined"}
-             (tr [:buttons :cancel])])
-          (when save-event
-            [Button {:disabled disabled?
-                     :on-click (r/partial validate-and-save e! save-event value fields)
-                     :color "primary"
-                     :variant "outlined"}
-             (tr [:buttons :save])])]))]))
+              [:form {:on-submit (r/partial validate-and-save e! save-event value fields)}
+               [Grid {:container true :spacing 1}
+                (util/with-keys
+                  (map (fn [field]
+                         (assert (vector? field) "Field must be a hiccup vector")
+                         (assert (map? (second field)) "First argument to field must be an options map")
+                         (let [{:keys [xs lg md attribute]} (meta field)
+                               _ (assert (keyword? attribute) "All form fields must have :attribute meta key!")
+                               value (get value attribute (default-value (first field)))
+                               opts {:value     value
+                                     :on-change (r/partial update-attribute-fn attribute)
+                                     :label     (tr [:fields attribute])
+                                     :error     (boolean (@invalid-attributes attribute))
+                                     :required  (boolean (required-fields attribute))}]
+                           [Grid (merge {:class (<class theme-spacing/mb 1)
+                                         :item  true :xs (or xs 12)}
+                                        (when lg
+                                          {:lg lg})
+                                        (when md
+                                          {:md md}))
+                            (add-validation
+                              (update field 1 merge opts)
+                              validate-attribute-fn attribute value)]))
+                       fields))
+                (when (or cancel-event save-event)
+                  (let [disabled? (boolean in-progress?)]
+                    [Grid {:item true :xs 12 :align "right"}
+                     (when cancel-event
+                       [Button {:disabled disabled?
+                                :on-click (r/partial e! (cancel-event))
+                                :color    "secondary"
+                                :variant  "outlined"}
+                        (tr [:buttons :cancel])])
+                     (when save-event
+                       [Button {:disabled disabled?
+                                :color    "primary"
+                                :variant  "outlined"
+                                :type     :submit}
+                        (tr [:buttons :save])])]))]]))
