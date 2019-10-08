@@ -55,7 +55,7 @@
    (doall
     (for [{id :db/id
            :phase/keys [phase-name tasks
-                        estimated-start-date estimated-end-date] :as p}
+                        estimated-start-date estimated-end-date]}
           phases]
       ^{:key id}
       [itemlist/ItemList {:class (<class project-style/phase-list-style)
@@ -97,7 +97,7 @@
                                                              {:opacity 0.5})}}
     {}]])
 
-(defn project-related-restrictions [{:keys [endpoint token e! project]}]
+(defn project-related-restrictions [{:keys [endpoint token project]}]
   [postgrest-listing/listing
    {:endpoint endpoint
     :token token

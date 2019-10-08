@@ -28,7 +28,7 @@
 
 (defn user-name
   "Show full user name"
-  [e! user-id]
+  [_e! user-id]
   (->> user-id
        user-by-id
        ((juxt :user/given-name :user/family-name))
@@ -36,7 +36,7 @@
 
 (defn user-name-and-email
   "Show user name and email"
-  [e! user-id]
+  [_e! user-id]
   (let [[gn fn email] (->> user-id
                            user-by-id
                            ((juxt :user/given-name :user/family-name :user/email)))]

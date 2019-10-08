@@ -7,8 +7,7 @@
             [teet.map.openlayers.edistymispalkki :as palkki]
             [teet.map.openlayers.layer :refer [Layer]]
             [cljs.core.async :as async]
-            [clojure.string :as str]
-            [taoensso.timbre :as log])
+            [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn karttakuva-url [& params]
@@ -29,7 +28,7 @@
                      "pr" pixel-ratio]
                     parametrit))))
 
-(defn post! [& args]
+(defn post! [& _]
   ;;FIXME implement
   )
 
@@ -83,6 +82,7 @@
   (hae-asiat-pisteessa [this koordinaatti extent]
     (let [ch (async/chan)]
       (go
+        ;; FIXME post! does nothing at the moment
         (let [asiat (<! (post! :karttakuva-klikkaus
                                  {:parametrit (into {}
                                                     (map vec)

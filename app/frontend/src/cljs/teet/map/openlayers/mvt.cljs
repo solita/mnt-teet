@@ -4,14 +4,11 @@
               [ol.source.VectorTile]
               [ol.format.MVT]
               [ol.extent :as ol-extent]
-              [teet.map.openlayers.edistymispalkki :as palkki]
               [teet.map.openlayers.layer :refer [Layer]]
               [cljs.core.async :as async]
               [clojure.string :as str]
               [ol.style.Style]
-              [ol.style.Text]
-              [taoensso.timbre :as log]
-              [goog.object :as gobj])
+              [ol.style.Text])
     (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn mvt-url [base-url & params]
@@ -20,7 +17,7 @@
                                      (str name "=" val))
                                    params))))
 
-(defn hae-url [url source parameters coord pixel-ratio projection]
+(defn hae-url [url source parameters coord _pixel-ratio projection]
   (let [tile-grid (.getTileGridForProjection source projection)
         extent (.getTileCoordExtent tile-grid coord
                                     (ol-extent/createEmpty))
@@ -51,7 +48,7 @@
                                projection
                                (.getLastExtent format))))))))))
 
-(defn post! [& args]
+(defn post! [& _]
   ;; FIXME
   {})
 
@@ -112,6 +109,7 @@
   (hae-asiat-pisteessa [this koordinaatti extent]
     (let [ch (async/chan)]
       (go
+        ;; FIXME Always returns empty map at the moment
         (let [asiat (<! (post! :karttakuva-klikkaus
                                {:parametrit (into {}
                                                   (map vec)

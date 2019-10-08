@@ -13,11 +13,10 @@
                                      (str name "=" val))
                                    params))))
 
-(defn load-features [^ol.source.Vector source url-or-data extent resolution projection]
+(defn load-features [^ol.source.Vector source url-or-data _extent _resolution _projection]
   ;;(log/info "LOAD " url-or-data ", extent:" extent ", resolution: " resolution ", projection: " projection)
   (let [add-features! (fn [json]
                         ;;(js/console.log "loaded geojson: " json)
-                        (def got-js json)
                         (let [features (-> source
                                            .getFormat
                                            (.readFeatures json #js {"dataProjection" "EPSG:3301"}))]

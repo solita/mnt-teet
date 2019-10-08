@@ -1,18 +1,17 @@
 (ns teet.workflow.workflow-view
-  (:require [teet.workflow.workflow-controller :as workflow-controller]
-            [teet.ui.itemlist :as itemlist]
+  (:require [teet.ui.itemlist :as itemlist]
             [teet.ui.format :as format]))
 
 
 (defn workflow-page
   "Main workflow page"
-  [e! project-id {workflow-id :db/id :workflow/keys [phases] :as workflow}]
+  [_e! project-id {workflow-id :db/id :workflow/keys [phases] :as workflow}]
   [:<>
    (for [phase phases]
      ^{:key (:db/id phase)}
      [itemlist/ProgressList
       {:title (:phase/name phase) :subtitle (some-> phase :phase/due-date format/date)}
-      (for [{task-id :db/id :task/keys [status name] :as task} (:phase/tasks phase)]
+      (for [{task-id :db/id :task/keys [status name] :as _task} (:phase/tasks phase)]
         ^{:key name}
         {:status (case (-> status :task.status/status :db/ident)
                    (:task.status/completed :task.status/accepted) :success

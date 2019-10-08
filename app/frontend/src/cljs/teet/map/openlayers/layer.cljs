@@ -1,6 +1,5 @@
 (ns teet.map.openlayers.layer
-  "Määrittelee karttatason kaltaisen protokollan"
-  (:require [teet.map.openlayers.featuret :as featuret]))
+  "Määrittelee karttatason kaltaisen protokollan")
 
 (defprotocol Layer
   (set-z-index [this z-index]

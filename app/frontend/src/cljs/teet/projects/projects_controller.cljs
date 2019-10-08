@@ -1,6 +1,5 @@
 (ns teet.projects.projects-controller
-  (:require [tuck.core :as t]
-            [taoensso.timbre :as log]))
+  (:require [tuck.core :as t]))
 
 (defrecord UpdateProjectsFilter [column value])
 (defrecord SetProjectsFilter [filter])

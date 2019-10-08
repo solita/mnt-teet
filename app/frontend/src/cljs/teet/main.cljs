@@ -4,19 +4,16 @@
             [postgrest-ui.elements]
             [postgrest-ui.impl.style.material]
             [reagent.core :as r]
-            [taoensso.timbre :as log]
             [teet.app-state :as app-state]
             [teet.localization :as localization :refer [tr]]
             [teet.login.login-view :as login-view]
             [teet.projects.projects-view :as projects-view]
             [teet.project.project-view :as project-view]
-            [teet.workflow.workflow-view :as workflow-view]
             [teet.navigation.navigation-view :as navigation-view]
             [teet.routes :as routes]
-            [teet.ui.material-ui :refer [Paper Button Chip Avatar MuiThemeProvider CssBaseline]]
+            [teet.ui.material-ui :refer [CssBaseline]]
             [teet.ui.component-demo :as component-demo]
             [tuck.core :as t]
-            [teet.ui.icons :as icons]
             [teet.theme.theme-provider :as theme]
             [teet.common.common-controller]
             [teet.task.task-view :as task-view]
@@ -28,7 +25,7 @@
     (:default-page :root :projects)
     {:title "TEET"
      :breadcrumbs [{:page :projects :title (tr [:projects :map-view])}]
-     :page [projects-view/projects-map-page e! app]}
+     :page [projects-view/projects-map-page app]}
 
     :projects-list
     {:title "TEET"
@@ -54,7 +51,7 @@
     {:title "Unimplemented page"
      :page [:div "Unimplemented page: " (pr-str page) ", params: " (pr-str params)]}))
 
-(defn main-view [e! {:keys [page page-title params user navigation] :as app}]
+(defn main-view [e! {:keys [page user navigation quick-search] :as app}]
   (let [nav-open? (boolean (:open? navigation))]
     [theme/theme-provider
      [:<>
@@ -66,7 +63,8 @@
            [CssBaseline]
            [navigation-view/header e! {:title title
                                        :open? nav-open?
-                                       :breadcrumbs breadcrumbs} user]
+                                       :breadcrumbs breadcrumbs
+                                       :quick-search quick-search} user]
            [navigation-view/main-container
             nav-open?
             page]]))

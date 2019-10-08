@@ -21,8 +21,9 @@
                  env (:env config)
                  config (assoc-in config [:auth :jwt-secret]
                                   (ssm-param (str "/teet-" (name env) "/api/jwt-secret")))
+                 bap (ssm-param (str "/teet-" (name env) "/api/basic-auth-password"))
                  config (assoc-in config [:auth :basic-auth-password]
-                                  (ssm-param (str "/teet-" (name env) "/api/basic-auth-password")))]
+                                  bap)]             
              config))))
 
 (defn load-local-config!
@@ -80,3 +81,9 @@
       (migrate conn)
       (reset! db-migrated? true))
     conn))
+
+(defn basic-auth-callback [user-name given-password]
+  (let [actual-pw (config-value :auth :basic-auth-password)]
+    (and (some? actual-pw)
+         (= user-name "teet")
+         (= given-password actual-pw))))
