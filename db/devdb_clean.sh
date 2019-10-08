@@ -74,7 +74,7 @@ fi
 
 echo "- Running ogr2ogr"
 check_ogr2ogr
-ogr2ogr -f "PostgreSQL" PG:"host=localhost user=teet dbname=teet" KITSENDUSED.gpkg -lco schema=restrictions -lco spatial_index=yes
+ogr2ogr -f "PostgreSQL" PG:"host=localhost user=teet dbname=teet" KITSENDUSED.gpkg -lco schema=restrictions
 
 if [ -f temp.zip ]; then
     echo "- Removing the temporary zip file"
