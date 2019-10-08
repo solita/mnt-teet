@@ -1,5 +1,6 @@
 (ns teet.project.project-style
-  (:require [teet.theme.theme-spacing :as theme-spacing]))
+  (:require [teet.theme.theme-spacing :as theme-spacing]
+            [teet.theme.theme-colors :as theme-colors]))
 
 (defn project-grid-container []
   {})
@@ -32,8 +33,12 @@
 (defn project-map-style
   []
   {:flex 1
-   :margin-right "-24px"                                    ;;This is done to off-set the margin given in body. Should probably be done differently
+   :margin-right "-24px" ;;This is done to off-set the margin given in body. Should probably be done differently
    :padding-left "1rem"
    :position "sticky"
    :top theme-spacing/appbar-height
    :align-self :flex-start})
+
+(defn project-info-style
+  []
+  {:background-color theme-colors/light-gray})

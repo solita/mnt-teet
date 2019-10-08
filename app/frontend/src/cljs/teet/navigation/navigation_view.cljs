@@ -11,7 +11,7 @@
             [teet.navigation.navigation-controller :as navigation-controller]
             [teet.navigation.navigation-style :as navigation-style]
             [teet.search.search-view :as search-view]
-            [herb.core :refer [<class]]
+            [herb.core :as herb :refer [<class]]
             [teet.ui.util :as util]
             [teet.ui.typography :as typography]))
 
@@ -103,34 +103,18 @@
   [e! {:keys [open? breadcrumbs quick-search]} user]
   [:<>
    [AppBar {:position "sticky"
-            :className (<class navigation-style/appbar-position open?)
-            :color :default}
+            :className (herb/join (<class navigation-style/appbar)
+                                  (<class navigation-style/appbar-position open?))}
 
 
-    [Toolbar {:className (<class navigation-style/appbar)}
+    [Toolbar {:className (<class navigation-style/toolbar)}
      [Breadcrumbs {}
       (util/with-keys
         (for [crumb (butlast breadcrumbs)]
           [Link {:href (routes/url-for crumb)}
            (:title crumb)]))
       (when-let [{title :title} (last breadcrumbs)]
-        [Typography title])
-      #_(let [selected-tab (first (keep-indexed
-                                 (fn [i tab]
-                                   (when (:selected? tab)
-                                     i))
-                                 tabs))]
-        [Tabs {:value selected-tab
-               :indicatorColor "primary"
-               :textColor "primary"
-               :on-change (fn [_ v]
-                            (log/info "let's go! " (nth tabs v))
-                            (e! (common-controller/map->Navigate (nth tabs v))))}
-         (doall
-          (map (fn [{:keys [title page key] :as tab}]
-                 (Tab {:key (or key page)
-                       :label title}))
-               tabs))])]
+        title)]
 
      [search-view/quick-search e! quick-search]]]
 
