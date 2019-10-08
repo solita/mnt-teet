@@ -48,7 +48,7 @@ $$ LANGUAGE SQL STABLE SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION teet.road_address_for_coordinate(x NUMERIC, y NUMERIC) RETURNS JSON
 AS $$
 WITH road_parts AS (
-  SELECT g.tee, g.stee, g.algus, g.lopp, g.teeosa, g.shap_leng, ST_LineMerge(g.mgeom) as mgeom,
+  SELECT g.nimetus, g.tee, g.stee, g.algus, g.lopp, g.teeosa, g.shap_leng, ST_LineMerge(g.mgeom) as mgeom,
          ST_ClosestPoint(g.mgeom, ST_SetSRID(ST_MakePoint(x,y),3301)) as point
     FROM gis.riigi_teeosa_mgeom g
    WHERE ST_DWithin(g.mgeom, ST_SetSRID(ST_MakePoint(x,y),3301), 200)
@@ -56,6 +56,7 @@ ORDER BY ST_Distance(g.mgeom, ST_SetSRID(ST_MakePoint(x,y),3301)) ASC
 LIMIT 1
 )
 SELECT json_build_object('road', r.tee,
+                         'name', r.nimetus,
                          'carriageway', r.stee,
                          'point', ST_AsGeoJSON(r.point)::JSON,
                          'meters', (r.algus + (ST_LineLocatePoint(r.mgeom, r.point) * (r.lopp-r.algus))),
