@@ -1,5 +1,6 @@
 (ns teet.navigation.navigation-style
-  (:require [teet.theme.theme-spacing :as theme-spacing]))
+  (:require [teet.theme.theme-spacing :as theme-spacing]
+            [teet.theme.theme-colors :as theme-colors]))
 
 (def drawer-width {true 200   ; width when open
                    false 80}) ; width when closed
@@ -10,11 +11,14 @@
     {:min-width (str w "px")
      :width (str w "px")}))
 
-(defn appbar
+(defn toolbar
   []
   {:display :flex
    :justify-content :space-between
    :min-height theme-spacing/appbar-height})
+
+(defn appbar []
+  {:background-color theme-colors/gray})
 
 (defn appbar-position [drawer-open?]
   (let [dw (drawer-width drawer-open?)]

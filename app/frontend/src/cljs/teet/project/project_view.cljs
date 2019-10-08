@@ -1,5 +1,5 @@
 (ns teet.project.project-view
-  (:require [herb.core :refer [<class]]
+  (:require [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
             [teet.map.map-features :as map-features]
             [teet.map.map-layers :as map-layers]
@@ -129,7 +129,8 @@
      [:div {:class (<class project-style/project-view-container)}
       [Grid {:container true}
        [Grid {:item true :xs 6}
-        [:div {:class (<class project-style/project-tasks-style)}
+        [:div {:class (herb/join (<class project-style/project-info-style)
+                                 (<class project-style/project-tasks-style))}
          [project-info (get-in app [:config :api-url]) (get-in app login-paths/api-token) project]
 
          [Tabs {:value (case tab
@@ -147,8 +148,8 @@
           (Tab {:key "documents"
                 :label (tr [:project :documents-tab])})
           (Tab {:key "restrictions"
-                :label (tr [:project :restrictions-tab])})]
-
+                :label (tr [:project :restrictions-tab])})]]
+        [:<>
          (case tab
            "documents"
            [project-phase-listing e! project (get-in app [:project project :phases])]
