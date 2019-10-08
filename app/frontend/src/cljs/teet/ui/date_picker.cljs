@@ -178,11 +178,14 @@
                               {:color :primary}))
                           (t/day day)]])])]]
                  [:div {:class (<class date-footer-class)}
-                  [Button {:on-click #(do
-                                        (.stopPropagation %)
-                                        (on-change (t/now)))
-                           :color    :primary
-                           :variant  :outlined}
+                  [Button (merge {:on-click #(do
+                                               (.stopPropagation %)
+                                               (when (selectable? (t/today))
+                                                 (on-change (t/today))))
+                                  :color    :primary
+                                  :variant  :outlined}
+                                 (when (not (selectable? (t/today)))
+                                   {:disabled true}))
                    today]
                   [Button {:on-click #(do
                                         (.stopPropagation %)
@@ -241,7 +244,6 @@
 (defn date-range-input
   "combine two date-inputs to provide a consistent date-range-picker"
   [{:keys [error value on-change start-label end-label required]}]
-  (println "required: " required)
   (let [[start end] value]
     [Grid {:container true :spacing 1}
      [Grid {:item true :xs 6}
