@@ -47,7 +47,7 @@
     {:title "Unimplemented page"
      :page [:div "Unimplemented page: " (pr-str page) ", params: " (pr-str params)]}))
 
-(defn main-view [e! {:keys [page user navigation] :as app}]
+(defn main-view [e! {:keys [page user navigation quick-search] :as app}]
   (let [nav-open? (boolean (:open? navigation))]
     [theme/theme-provider
      [:<>
@@ -59,7 +59,8 @@
            [CssBaseline]
            [navigation-view/header e! {:title title
                                        :open? nav-open?
-                                       :breadcrumbs breadcrumbs} user]
+                                       :breadcrumbs breadcrumbs
+                                       :quick-search quick-search} user]
            [navigation-view/main-container
             nav-open?
             page]]))

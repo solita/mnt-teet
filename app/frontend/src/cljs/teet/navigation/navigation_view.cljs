@@ -100,7 +100,7 @@
    [user-info e! user open?]])
 
 (defn header
-  [e! {:keys [open? breadcrumbs]} user]
+  [e! {:keys [open? breadcrumbs quick-search]} user]
   [:<>
    [AppBar {:position "sticky"
             :className (<class navigation-style/appbar-position open?)
@@ -132,7 +132,7 @@
                        :label title}))
                tabs))])]
 
-     [search-view/quick-search e!]]]
+     [search-view/quick-search e! quick-search]]]
 
    [Drawer {;:class-name (<class navigation-style/drawer open?)
             :classes {"paperAnchorDockedLeft" (<class navigation-style/drawer open?)}
