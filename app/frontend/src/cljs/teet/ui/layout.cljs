@@ -1,5 +1,7 @@
 (ns teet.ui.layout
-  "Layout helper components")
+  "Layout helper components"
+  (:require [teet.ui.util :as util]
+            [herb.core :refer [<class]]))
 
 (defn- flex [{:keys [content-style direction]} content-children]
   (let [content-opts (merge {}
@@ -21,3 +23,11 @@
   "Layout content items in a row (left to right)"
   [opts & content-children]
   (flex (assoc opts :direction "row") content-children))
+
+(defn section-spacing
+  []
+  {:padding "2rem 1.5rem"})
+
+(def section
+  "Section with basic spacing"
+  (util/make-component :section {:class (<class section-spacing)}))

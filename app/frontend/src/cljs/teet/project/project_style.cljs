@@ -42,11 +42,6 @@
   {:background-color theme-colors/light-gray
    :padding "2rem 1.5rem 0 1.5rem"})
 
-(defn section-spacing
-  []
-  {:padding "2rem 1.5rem 0 1.5rem"})
-
-
 (defn project-data-style
   []
   {:margin-bottom "1rem"})
