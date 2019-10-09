@@ -4,9 +4,9 @@
 
 (def mock-users [{:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"
                   :user/person-id "1234567890"
-                  :user/given-name "Danny"
-                  :user/family-name "Design-Manager"
-                  :user/email "danny.design-manager@example.com"
+                  :user/given-name "Danny D."
+                  :user/family-name "Manager"
+                  :user/email "danny.d.manager@example.com"
                   :user/organization "Maanteeamet"}
 
                  {:user/id #uuid "ccbedb7b-ab30-405c-b389-292cdfe85271"
