@@ -33,6 +33,7 @@
 (extend-protocol t/Event
   SelectProject
   (process-event [{project-id :project-id} app]
+    (log/info "SELECT PROJECT" project-id)
     (t/fx app
           {:tuck.effect/type :navigate
            :page :project

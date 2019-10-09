@@ -6,7 +6,16 @@
             [teet.map.map-features :as map-features]
             [teet.ui.material-ui :refer [TextField Button]]
             [teet.map.openlayers :as openlayers]
-            [teet.ui.util :as util]))
+            [teet.ui.util :as util]
+            [teet.ui.itemlist :as itemlist]))
+
+(defn- road-address-overlay [road-address]
+  (let [{:keys [road name meters carriageway]}
+        (-> road-address (js->clj :keywordize-keys true))]
+    [itemlist/ItemList {}
+     [itemlist/Item {:label "Road"} (str road " (" name ")")]
+     [itemlist/Item {:label "Carriageway"} carriageway]
+     [itemlist/Item {:label "km"} (.toFixed (/ meters 1000) 3)]]))
 
 (defn road-visualization [e! {:keys [query]}]
   (e! (road-visualization-controller/map->FetchRoadGeometry query))
@@ -53,7 +62,10 @@
                          #js {:type "FeatureCollection"
                               :features #js [(aget road-address "point")]}
                          map-features/crosshair-pin-style
-                         {}))}}
+                         {}))}
+             :overlays [(when road-address
+                          {:coordinate (js->clj (aget road-address "point" "coordinates"))
+                           :content [road-address-overlay road-address]})]}
             {}])
          [:<>
           [TextField {:value (or x "")
@@ -62,9 +74,8 @@
           [TextField {:value (or y "")
                       :on-change #(swap! point assoc 1 (-> % .-target .-value))
                       :label "Y"}]
-          [Button {:on-click #(openlayers/center-map-on-point! (mapv js/parseFloat @point))} "center"]
-          [:div (pr-str @point)]
-          ]
+          [Button {:on-click #(openlayers/center-map-on-point! (mapv js/parseFloat @point))}
+           "center"]]
          (when road
            [:div  {:style {:height "350px" :overflow-y "scroll"}}
             [:table
@@ -75,5 +86,4 @@
               (util/with-keys
                 (for [[x y] (aget road "features" 0 "geometry" "coordinates")]
                   [:tr {:on-mouse-enter (r/partial set-point! [x y])}
-                   [:td x] [:td y]]))]]])
-         #_[:div "ROAD" (pr-str )]]))))
+                   [:td x] [:td y]]))]]])]))))

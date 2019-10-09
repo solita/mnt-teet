@@ -44,16 +44,8 @@
    [List
     (when open?
       [ListItem {}
-       [typography/Heading2 (tr [:projects :title])]])
-    [ListItem {:component "a"
-               :href "/#/projects/list"
-               :align-items "center"
-               :button true}
-     [ListItemIcon {:style {:display :flex
-                            :justify-content :center}}
-      [icons/action-list]]
-     (when open?
-       [ListItemText {:primary (tr [:projects :list-view])}])]
+       [typography/Heading2 {:classes {:h2 (<class navigation-style/drawer-projects-style)}}
+        (tr [:projects :title])]])
     [ListItem {:component "a"
                :href "/#/projects/map"
                :align-items "center"
@@ -63,6 +55,15 @@
       [icons/maps-map]]
      (when open?
        [ListItemText {:primary (tr [:projects :map-view])}])]
+    [ListItem {:component "a"
+               :href "/#/projects/list"
+               :align-items "center"
+               :button true}
+     [ListItemIcon {:style {:display :flex
+                            :justify-content :center}}
+      [icons/action-list]]
+     (when open?
+       [ListItemText {:primary (tr [:projects :list-view])}])]
     [ListItem {} [Divider]]
     [ListItem {:component "a"
                :href "/#/components"
@@ -113,8 +114,8 @@
         (for [crumb (butlast breadcrumbs)]
           [Link {:href (routes/url-for crumb)}
            (:title crumb)]))
-      (when-let [{title :title} (last breadcrumbs)]
-        title)]
+       (when-let [{title :title} (last breadcrumbs)]
+         [:span title])]
 
      [search-view/quick-search e! quick-search]]]
 

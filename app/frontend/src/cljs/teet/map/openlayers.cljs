@@ -118,7 +118,7 @@
 ;; Define the React lifecycle callbacks to manage the OpenLayers
 ;; Javascript objects.
 
-(declare update-ol3-geometries)
+(declare update-ol3-geometries update-ol3-overlays)
 
 
 (def ^:export the-map (atom nil))
@@ -526,6 +526,7 @@
     (set-postrender-handler this ol3 (:on-postrender mapspec))
 
     (update-ol3-geometries this (:geometries mapspec))
+    (update-ol3-overlays this (:overlays mapspec))
 
     (when-let [mount (:on-mount mapspec)]
       (mount (get-map-area ol3)))))
@@ -592,8 +593,33 @@
                  layers)
           (recur new-geometry-layers layers))))))
 
+(defn- update-ol3-overlays
+  "Update map overlays based on the data, mutates the ol3 map object."
+  [component overlays]
+  (let [{ol3 :ol3
+         previous-overlays :overlays} (reagent/state component)
+        overlays-set (into #{} overlays)]
+
+    ;; Remove overlays not present in new data
+    (doseq [[ov overlay] previous-overlays
+            :when (not (overlays-set ov))]
+      (.removeOverlay ol3 overlay))
+
+    (reagent/set-state
+     component
+     {:overlays
+      (into {}
+            (for [{:keys [coordinate content] :as ov} overlays
+                  :when (not (contains? previous-overlays ov))
+                  :let [overlay (create-overlay coordinate content)]]
+              (do
+                (log/info "ADD OVERLAY TO " coordinate " with " content)
+                (.addOverlay ol3 overlay)
+                [ov overlay])))})))
+
 (defn- ol3-will-receive-props [this [_ mapspec]]
-  (update-ol3-geometries this (:geometries mapspec)))
+  (update-ol3-geometries this (:geometries mapspec))
+  (update-ol3-overlays this (:overlays mapspec)))
 
 ;;;;;;;;;
 ;; The OpenLayers 3 Reagent component.

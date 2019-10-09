@@ -57,7 +57,7 @@
                                                                (e! (map-controller/->LayerToggle category layer)))}])}]]))]]])))
 
 (defn map-layer-controls
-  [e! _map-layers _map-controls]
+  [e! _map-layers {:keys [_open?] :as _map-controls}]
   (r/create-class
     {:component-did-mount
      (fn [_]
@@ -135,19 +135,7 @@
 
                    :on-select          (fn [[item & _] _event]
                                          (when-let [event (common-controller/map-item-selected item)]
-                                           (e! event))
-                                         #_(routes/navigate! :project {:project (:map/id item)})
-                                         ;; Either on-click or on-select will trigger. We must clear selected feature in both event handlers.
-                                         ;; Allow clearing selected feature only if not in approach mode
-                                         ;;(e! (map-controller/->ClearSelectedFeature))
-
-                                         #_(when-not (handle-tool-click e! current-tool event)
-                                             (doseq [item items]
-                                               (let [item (dissoc item :alue)]
-                                                 (when (seq item)
-                                                   (when-let [event (common-controller/map-item-selected @prev-selected-item item)]
-                                                     (vreset! prev-selected-item item)
-                                                     (e! event)))))))
+                                           (e! event)))
 
                    :on-dblclick        nil
 
@@ -163,6 +151,11 @@
                                               (get-in map-data [:layers])
                                               (:layers opts))
 
+                   :overlays           (mapv (fn [{:keys [coordinate content]}]
+                                               {:coordinate coordinate
+                                                :content [:div {:class (<class map-styles/map-overlay)}
+                                                          content]})
+                                             (:overlays opts))
                    :current-zoom       (get-in map-data [:map-info])
                    ;; map of geometry layer keys to control map zoom. If a key's value changes map is re-zoomed
                    :zoom-to-geometries (get-in map-data [:zoom-to-geometries])
