@@ -38,3 +38,6 @@
        "Content-Type" "application/json"
        :body "{\"ok\": false}"}
       )))
+
+(defmethod db-api/query-authorization :user-session [_ _]
+  true)
