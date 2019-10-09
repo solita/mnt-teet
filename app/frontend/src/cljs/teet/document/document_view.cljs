@@ -109,17 +109,17 @@
   (let [doc-id (get-in app [:params :document])
         doc (get-in app [:document doc-id])]
     ;; document should have title?
-    {:title (get-in app [:document doc-id :document/name])
-     :breadcrumbs [{:page :projects
+    {:title       (get-in app [:document doc-id :document/name])
+     :breadcrumbs [{:page  :projects
                     :title (tr [:projects :title])}
-                   {:page :project
+                   {:page   :project
                     :params {:project (:project params)}
-                    :title [project-info/project-name app (:project params)]}
-                   {:page :phase-task
+                    :title  [project-info/project-name app (:project params)]}
+                   {:page   :phase-task
                     :params {:project (:project params)
-                             :phase (:phase params)
-                             :task (:task params)}
-                    :title (get-in doc [:task/_documents 0 :task/type :db/ident])}
+                             :phase   (:phase params)
+                             :task    (:task params)}
+                    :title  (tr [:enum (get-in doc [:task/_documents 0 :task/type :db/ident])])}
                    {:title (:document/name doc)}]
-     :page [document-page e! (merge (select-keys app [:params :config :user])
-                                    {:document doc})]}))
+     :page        [document-page e! (merge (select-keys app [:params :config :user])
+                                           {:document doc})]}))
