@@ -61,10 +61,13 @@
         (let [{:keys [page title breadcrumbs]} (page-and-title e! app)]
           [:<>
            [CssBaseline]
-           [navigation-view/header e! {:title title
-                                       :open? nav-open?
-                                       :breadcrumbs breadcrumbs
-                                       :quick-search quick-search} user]
+           [navigation-view/header e!
+                                   {:title title
+                                    :open? nav-open?
+                                    :breadcrumbs breadcrumbs
+                                    :page (:page app)
+                                    :quick-search quick-search}
+                                   user]
            [navigation-view/main-container
             nav-open?
             page]]))
