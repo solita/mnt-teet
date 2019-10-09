@@ -44,7 +44,8 @@
    [List
     (when open?
       [ListItem {}
-       [typography/Heading2 (tr [:projects :title])]])
+       [typography/Heading2 {:classes {:h2 (<class navigation-style/drawer-projects-style)}}
+        (tr [:projects :title])]])
     [ListItem {:component "a"
                :href "/#/projects/map"
                :align-items "center"
