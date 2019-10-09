@@ -82,8 +82,7 @@
       (reset! db-migrated? true))
     conn))
 
-(defn basic-auth-callback [user-name given-password]
+(defn check-site-password [given-password]
   (let [actual-pw (config-value :auth :basic-auth-password)]
     (and (some? actual-pw)
-         (= user-name "teet")
          (= given-password actual-pw))))

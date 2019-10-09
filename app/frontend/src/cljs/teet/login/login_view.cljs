@@ -2,7 +2,7 @@
   "Login page"
   (:require [teet.login.login-controller :as login-controller]
             [teet.ui.material-ui :refer [Container Card CardHeader CardContent
-                                         Button Typography]]
+                                         Button Typography TextField]]
             [teet.ui.layout :as layout]
             [teet.ui.itemlist]
             [teet.localization :as localization]
@@ -10,8 +10,6 @@
             [taoensso.timbre :as log]
             [reagent.core :as r]
             [teet.ui.typography :as typography]))
-
-
 
 (defn login-page [e! {_login :login}]
   [Container {:maxWidth "sm"}
@@ -30,11 +28,18 @@
                                      {:value "en" :label (get localization/language-names "en")}]
                              :on-change (fn [val]
                                           (localization/load-language!
-                                            (keyword (:value val))
-                                            (fn [language _]
-                                              (reset! localization/selected-language
-                                                language))))}]
+                                           (keyword (:value val))
+                                           (fn [language _]
+                                             (reset! localization/selected-language
+                                                     language))))}]
     [typography/Heading2 "Login with demo user"]
+    
+    [TextField {:label "Password"
+                :id "password-textfield"
+                :value (get _login :password "")
+                :on-change (fn pw-on-change! [e]
+                              (e! (login-controller/->SetPassword (-> e .-target .-value)))
+                              #_(log/info "password changed"))}]
     (doall
      (for [{:user/keys [given-name family-name organization email] :as user} login-controller/mock-users]
        ^{:key email}
@@ -44,8 +49,8 @@
                       :action (r/as-element
                                [Button {:color "primary"
                                         :on-click #(do
-                                                     (e! (login-controller/->Login user))
-                                                     (log/info "Login: " user))}
+                                                     (e! (login-controller/->StartLoginAttempt user))
+                                                     (log/info "Start login: " user))}
                                 "Login"])}]
          [CardContent
           [Typography
