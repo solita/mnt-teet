@@ -66,7 +66,8 @@
              effects)))
 
   LoginWithValidSession
-  ;; call :login command and :settoken after session is ok
+  ;; This is called after StartLoginAttempt gets a valid session and site password check is ok.
+  ;; Will call :login command, and then fire off SetToken event on success.
   (process-event [{:keys [navigate-data user]} app]
     (log/info "doing login after session estabilished, user" user)
     (t/fx (-> app
