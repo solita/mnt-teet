@@ -57,13 +57,14 @@
                                                                (e! (map-controller/->LayerToggle category layer)))}])}]]))]]])))
 
 (defn map-layer-controls
-  [e! _map-layers {:keys [_open?]} _map-controls]
+  [e! _map-layers {:keys [_open?] :as _map-controls}]
   (r/create-class
     {:component-did-mount
      (fn [_]
        (e! (map-controller/->FetchMapLayers)))
      :reagent-render
-     (fn [e! map-layers {:keys [open?]} map-controls]
+     (fn [e! map-layers {:keys [open?] :as map-controls}]
+       (println "map-layer-controls : " map-controls)
        [:div
         (when open?
           [ClickAwayListener {:on-click-away #(e! (map-controller/->CloseMapControls))}
