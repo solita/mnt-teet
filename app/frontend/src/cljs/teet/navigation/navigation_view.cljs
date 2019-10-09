@@ -46,15 +46,6 @@
       [ListItem {}
        [typography/Heading2 (tr [:projects :title])]])
     [ListItem {:component "a"
-               :href "/#/projects/list"
-               :align-items "center"
-               :button true}
-     [ListItemIcon {:style {:display :flex
-                            :justify-content :center}}
-      [icons/action-list]]
-     (when open?
-       [ListItemText {:primary (tr [:projects :list-view])}])]
-    [ListItem {:component "a"
                :href "/#/projects/map"
                :align-items "center"
                :button true}
@@ -63,6 +54,15 @@
       [icons/maps-map]]
      (when open?
        [ListItemText {:primary (tr [:projects :map-view])}])]
+    [ListItem {:component "a"
+               :href "/#/projects/list"
+               :align-items "center"
+               :button true}
+     [ListItemIcon {:style {:display :flex
+                            :justify-content :center}}
+      [icons/action-list]]
+     (when open?
+       [ListItemText {:primary (tr [:projects :list-view])}])]
     [ListItem {} [Divider]]
     [ListItem {:component "a"
                :href "/#/components"
