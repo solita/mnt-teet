@@ -113,8 +113,8 @@
         (for [crumb (butlast breadcrumbs)]
           [Link {:href (routes/url-for crumb)}
            (:title crumb)]))
-      (when-let [{title :title} (last breadcrumbs)]
-        title)]
+       (when-let [{title :title} (last breadcrumbs)]
+         [:span title])]
 
      [search-view/quick-search e! quick-search]]]
 
