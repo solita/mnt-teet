@@ -45,11 +45,10 @@
              :button true}
    [ListItemIcon {:style {:display :flex
                           :justify-content :center}}
-    icon]
+    [icon {:classes {:root (<class navigation-style/drawer-link-style (= current-page (:page link)))}}]]
    (when open?
-     [ListItemText {(if (= current-page (:page link))
-                      :primary
-                      :secondary)
+     [ListItemText {:classes {:primary (<class navigation-style/drawer-link-style (= current-page (:page link)))}
+                    :primary
                     name}])])
 
 (defn- page-listing
@@ -62,18 +61,18 @@
    [view-link {:open? open?
                :current-page page
                :link {:page :projects}
-               :icon [icons/maps-map]
+               :icon icons/maps-map
                :name (tr [:projects :map-view])}]
    [view-link {:open? open?
                :current-page page
                :link {:page :projects-list}
-               :icon [icons/action-list]
+               :icon icons/action-list
                :name (tr [:projects :list-view])}]
    [ListItem {} [Divider]]
    [view-link {:open? open?
                :current-page page
                :link {:page :components}
-               :icon [icons/content-archive]
+               :icon icons/content-archive
                :name "Components"}]])
 
 (defn user-info [e! {:keys [user/given-name user/family-name] :as user} label?]

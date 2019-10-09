@@ -37,3 +37,9 @@
 (defn drawer-projects-style
   []
   {:text-transform :uppercase})
+
+(defn drawer-link-style
+  [selected?]
+  {:color (if selected?
+            theme-colors/white
+            theme-colors/dark-gray)})
