@@ -6,7 +6,6 @@
             [compojure.core :refer [routes]]
             [ring.middleware.params :as params]
             [ring.middleware.cookies :as cookies]
-            [ring.middleware.basic-authentication :as basic-auth]
             [ring.middleware.session :as session]
             [ring.middleware.session.cookie :as session-cookie]
             [teet.login.login-tara-token :as login-tara-token]
