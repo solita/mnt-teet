@@ -135,19 +135,7 @@
 
                    :on-select          (fn [[item & _] _event]
                                          (when-let [event (common-controller/map-item-selected item)]
-                                           (e! event))
-                                         #_(routes/navigate! :project {:project (:map/id item)})
-                                         ;; Either on-click or on-select will trigger. We must clear selected feature in both event handlers.
-                                         ;; Allow clearing selected feature only if not in approach mode
-                                         ;;(e! (map-controller/->ClearSelectedFeature))
-
-                                         #_(when-not (handle-tool-click e! current-tool event)
-                                             (doseq [item items]
-                                               (let [item (dissoc item :alue)]
-                                                 (when (seq item)
-                                                   (when-let [event (common-controller/map-item-selected @prev-selected-item item)]
-                                                     (vreset! prev-selected-item item)
-                                                     (e! event)))))))
+                                           (e! event)))
 
                    :on-dblclick        nil
 
