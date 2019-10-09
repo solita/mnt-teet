@@ -59,13 +59,13 @@
    (doall
     (for [{id :db/id
            :phase/keys [phase-name tasks
-                        estimated-start-date estimated-end-date]}
+                        _estimated-start-date _estimated-end-date]}
           phases]
       ^{:key id}
       [itemlist/ItemList {:class (<class project-style/phase-list-style)
                           :title (tr [:enum (:db/ident phase-name)])
-                          :subtitle (str (.toLocaleDateString estimated-start-date) " - "
-                                         (.toLocaleDateString estimated-end-date))
+                          ;; :subtitle (str (.toLocaleDateString estimated-start-date) " - "
+                          ;;                (.toLocaleDateString estimated-end-date))
                           :variant :secondary}
        (if (seq tasks)
          (for [t tasks]
