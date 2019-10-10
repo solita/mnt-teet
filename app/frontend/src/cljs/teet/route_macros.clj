@@ -19,25 +19,42 @@
   (let [defs (read-route-defs)]
     `(defn ~fn-name [~'e! {page# :page
                         params# :params
-                        :as ~'app}]
-       (case page#
-         ~@(mapcat
-            (fn [[route-name {:keys [state crumb parent view path]}]]
-              [route-name
-               `(let [{:keys [~@(param-names path)]} (:params ~'app)
-                      ~'state (get-in ~'app [:route ~route-name])
-                      ~'refresh (get-in ~'app [:route ~(keyword (str (name route-name) "-refresh"))])]
-                  {:page ~(if state
-                            `[teet.ui.query/query {:e! ~'e!
-                                                   :app ~'app ;; FIXME: select-keys
-                                                   :query ~(:query state)
-                                                   :args ~(:args state)
-                                                   :view ~view
-                                                   :state ~'state
-                                                   :state-path [:route ~route-name]
-                                                   :refresh ~'refresh}]
-                            `[~view ~'e! ~'app])})
-               ])
-            defs)
+                           :as ~'app}]
+       (let [~'params (:params ~'app)]
+         (case page#
+           ~@(mapcat
+              (fn [[route-name {:keys [state view path] :as route}]]
+                [route-name
+                 `(let [{:keys [~@(param-names path)]} ~'params
+                        ~'state (get-in ~'app [:route ~route-name])
+                        ~'refresh (get-in ~'app [:route ~(keyword (str (name route-name) "-refresh"))])]
+                    {:page ~(if state
+                              `[teet.ui.query/query {:e! ~'e!
+                                                     :app ~'app ;; FIXME: select-keys
+                                                     :query ~(:query state)
+                                                     :args ~(:args state)
+                                                     :view ~view
+                                                     :state ~'state
+                                                     :state-path [:route ~route-name]
+                                                     :refresh ~'refresh}]
+                              `[~view ~'e! ~'app])
+                     :breadcrumbs #_[{:title ~crumb}]
+                     [~@(loop [crumbs (list)
+                               route-name route-name
+                               {crumb :crumb
+                                parent :parent
+                                path :path} route]
+                          (if-not crumb
+                            crumbs
+                            (recur (conj crumbs {:title crumb
+                                                 :page route-name
+                                                 :params (into {}
+                                                               (for [n (param-names path)]
+                                                                 [n `(get ~'params ~n)]))})
+                                   parent
+                                   (get defs parent))))]
+                     })
+                 ])
+              defs)
 
-         [:div "Unrecognized page: " (str page#)]))))
+           [:div "Unrecognized page: " (str page#)])))))
