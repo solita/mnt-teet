@@ -16,9 +16,7 @@
             [teet.ui.itemlist :as itemlist]
             [teet.user.user-info :as user-info]
             [teet.ui.format :as format]
-            [teet.ui.icons :as icons]
-            [teet.project.project-info :as project-info]))
-
+            [teet.ui.icons :as icons]))
 
 (defn document-form [{:keys [e! on-close-event]} {:keys [in-progress?] :as doc}]
   [:<>
@@ -49,7 +47,7 @@
      [LinearProgress {:variant "determinate"
                       :value in-progress?}])])
 
-(defn comments [e! document]
+(defn comments [e! new-comment document]
   [:<>
    [itemlist/ItemList {:title (tr [:document :comments])}
     (doall
@@ -65,7 +63,7 @@
    [Divider {:variant "middle"}]
 
    [form/form {:e! e!
-               :value (:new-comment document)
+               :value new-comment
                :on-change-event document-controller/->UpdateNewCommentForm
                :save-event document-controller/->Comment
                :spec :document/new-comment-form}
@@ -74,7 +72,7 @@
                 :placeholder (tr [:document :new-comment])
                 :variant "outlined"}]]])
 
-(defn document-page [e! {:keys [document] :as _app}]
+(defn document-page [e! {new-comment :new-comment} document]
   [Grid {:container true}
    [Grid {:item true :xs 6}
     [typography/SectionHeading (:document/name document)
@@ -103,23 +101,4 @@
                                    :on-drop (e! document-controller/->UploadFilesToDocument)}
      (tr [:common :select-files])]]
    [Grid {:item true :xs 6 :classes {:item (<class theme-panels/side-panel)}}
-    [comments e! document]]])
-
-(defn document-page-and-title [e! {params :params :as app}]
-  (let [doc-id (get-in app [:params :document])
-        doc (get-in app [:document doc-id])]
-    ;; document should have title?
-    {:title       (get-in app [:document doc-id :document/name])
-     :breadcrumbs [{:page  :projects
-                    :title (tr [:projects :title])}
-                   {:page   :project
-                    :params {:project (:project params)}
-                    :title  [project-info/project-name app (:project params)]}
-                   {:page   :phase-task
-                    :params {:project (:project params)
-                             :phase   (:phase params)
-                             :task    (:task params)}
-                    :title  (tr [:enum (get-in doc [:task/_documents 0 :task/type :db/ident])])}
-                   {:title (:document/name doc)}]
-     :page        [document-page e! (merge (select-keys app [:params :config :user])
-                                           {:document doc})]}))
+    [comments e! new-comment document]]])

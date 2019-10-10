@@ -227,3 +227,11 @@
   (reset! api-token token))
 
 (defmulti map-item-selected :map/type)
+
+;; Refresh the current page query state
+(defrecord Refresh []
+  t/Event
+  (process-event [_ app]
+    ;; Update the refresh indicator value so query component will force a refetch
+    (let [path [:route (keyword (str (name (:page app)) "-refresh"))]]
+      (update-in app path (fnil inc 0)))))

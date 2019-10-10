@@ -3,7 +3,9 @@
   (:require [bide.core :as r]
             [tuck.core :as tuck]
             [teet.app-state :as app-state]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [clojure.string :as str])
+  (:require-macros [teet.route-macros :refer [define-router]]))
 
 (defrecord GoToUrl [url])
 
@@ -25,20 +27,8 @@
                 (.setTimeout js/window #(set! (.-location js/window) url) 0)
                 app))))
 
-(defonce teet-router
-  (r/router
-   [["/" :root]
-    ["/login" :login]
-    ["/projects/map" :projects]
-    ["/projects/list" :projects-list]
-    ["/projects/:project" :project]
-    ["/projects/:project/:phase/:task" :phase-task]
-    ["/projects/:project/:phase/:task/:document" :task-document]
-    ["/components" :components]
-    ;["/projectgroup/:group" :project-group]
-                                        ;["/projectgroup/:group/project/:project" :project]
-    ["/road" :road]
-    ]))
+;; See routes.edn
+(define-router teet-router)
 
 (defmulti on-navigate-event
   "Determine event(s) to be run when user navigates to a given route.
@@ -89,7 +79,8 @@
                      navigation-data {:page route-name
                                       :params params
                                       :query query
-                                      :url js/window.location.href}
+                                      :url js/window.location.href
+                                      :route-key (-> js/window.location.hash (str/split #"\?") first)}
                      navigation-data (assoc navigation-data :current-app app)
 
                      event-leave (on-leave-event {:current-app app

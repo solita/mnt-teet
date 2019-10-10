@@ -90,7 +90,7 @@
 
 
 (defn demo
-  [e!]
+  [e! _app]
   [:div
    [Heading1 "TEET UI Components"]
    [Divider]

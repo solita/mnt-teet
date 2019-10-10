@@ -49,8 +49,8 @@
                                                  task
                                                  {:task/status (task-controller/new-status %)})))}])
 
-(defn task-page [e! {{:task/keys [documents description type assignee] :as task} :task
-                     query :query :as app}]
+(defn task-page [e! {query :query :as app}
+                 {:task/keys [documents description type assignee] :as task}]
   [layout/section
    (when (:add-document query)
      [panels/modal {:title (tr [:task :new-document])
@@ -81,15 +81,3 @@
    [Button {:on-click #(e! (task-controller/->OpenAddDocumentDialog))}
     [icons/content-add-circle]
     (tr [:task :add-document])]])
-
-(defn task-page-and-title [e! {params :params :as app}]
-  (let [{:keys [task]} params]
-    {:page [task-page e! {:params params
-                          :query (:query app)
-                          :task (get-in app [:task task])}]
-     :breadcrumbs [{:page :projects-list
-                    :title (tr [:projects :title])}
-                   {:page :project
-                    :params {:project (:project params)}
-                    :title [project-info/project-name app (:project params)]}
-                   {:title (tr [:enum (get-in app [:task task :task/type :db/ident])])}]}))

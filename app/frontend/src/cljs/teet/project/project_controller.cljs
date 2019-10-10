@@ -1,12 +1,9 @@
 (ns teet.project.project-controller
   "Controller for project page"
-  (:require [teet.routes :as routes]
-            [taoensso.timbre :as log]
-            [tuck.core :as t]
+  (:require [tuck.core :as t]
             [teet.common.common-controller :as common-controller]))
 
-(defrecord FetchProjectPhases [project-id])
-(defrecord FetchProjectDocuments [project-id])
+
 (defrecord RestrictionsResult [result])
 (defrecord OpenPhaseDialog []) ; open add phase modal dialog
 (defrecord ClosePhaseDialog [])
@@ -26,39 +23,15 @@
   "geojson_thk_project" [p]
   (->SelectProject (:map/id p)))
 
-(defmethod routes/on-navigate-event :project [{{project :project} :params}]
-  (log/info "Navigated to project, fetch workflows for THK project: " project)
-  [(->FetchProjectPhases project)
-   (->FetchProjectDocuments project)])
-
 (extend-protocol t/Event
   SelectProject
   (process-event [{project-id :project-id} app]
-    (log/info "SELECT PROJECT" project-id)
     (t/fx app
           {:tuck.effect/type :navigate
            :page :project
            :params {:project project-id}}))
 
-  FetchProjectPhases
-  (process-event [{project-id :project-id} app]
-    (log/info "Fetching phases for THK project: " project-id)
-    (t/fx app
-          {:tuck.effect/type :query
-           :query :workflow/list-project-phases
-           :args {:thk-project-id project-id}
-           :result-path [:project project-id :phases]}))
-
-  FetchProjectDocuments
-  (process-event [{project-id :project-id} app]
-    (log/info "Fetching documents for THK project: " project-id)
-    (t/fx app
-          {:tuck.effect/type :query
-           :query :document/list-project-documents
-           :args {:thk-project-id project-id}
-           :result-path [:project project-id :documents]}))
-
-  RestrictionsResult                                        ;;This is not used because using state in query component resulted in re-render loop should probably be looked into
+  RestrictionsResult ;This is not used because using state in query component resulted in re-render loop should probably be looked into
   (process-event [{results :result} app]
     (let [project (get-in app [:params :project])]
       (assoc-in app [:project project :restrictions] results)))

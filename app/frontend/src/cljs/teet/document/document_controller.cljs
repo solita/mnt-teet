@@ -5,7 +5,6 @@
             [taoensso.timbre :as log]
             [goog.math.Long]
             tuck.effect
-            [teet.routes :as routes]
             [teet.common.common-controller :as common-controller]))
 
 (defrecord CreateDocument []) ; create empty document and link it to task
@@ -19,9 +18,6 @@
 
 (defrecord UpdateNewCommentForm [form-data]) ; update new comment form data
 (defrecord Comment []) ; save new comment to document
-
-(defmethod routes/on-navigate-event :task-document [{{:keys [document]} :params}]
-  (->FetchDocument document))
 
 (defn- file-info [^js/File f]
   {:file/name (.-name f)
@@ -41,18 +37,18 @@
 
   UpdateNewCommentForm
   (process-event [{form-data :form-data} app]
-    (update-in app [:document (get-in app [:params :document]) :new-comment] merge form-data))
+    (update-in app [:new-comment] merge form-data))
 
   Comment
   (process-event [_ app]
     (let [doc (get-in app [:params :document])
-          new-comment (get-in app [:document doc :new-comment :comment/comment])]
-      (t/fx (update-in app [:document doc] dissoc :new-comment)
+          new-comment (get-in app [:new-comment :comment/comment])]
+      (t/fx (dissoc app :new-comment)
             {:tuck.effect/type :command!
              :command :document/comment
              :payload {:document-id (goog.math.Long/fromString doc)
                        :comment new-comment}
-             :result-event (fn [_] (->FetchDocument doc))})))
+             :result-event common-controller/->Refresh})))
 
   UpdateDocumentForm
   (process-event [{form-data :form-data} app]

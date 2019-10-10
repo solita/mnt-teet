@@ -7,49 +7,27 @@
             [teet.app-state :as app-state]
             [teet.localization :as localization :refer [tr]]
             [teet.login.login-view :as login-view]
-            [teet.projects.projects-view :as projects-view]
-            [teet.project.project-view :as project-view]
             [teet.navigation.navigation-view :as navigation-view]
             [teet.routes :as routes]
             [teet.ui.material-ui :refer [CssBaseline]]
-            [teet.ui.component-demo :as component-demo]
             [tuck.core :as t]
             [teet.theme.theme-provider :as theme]
             [teet.common.common-controller]
-            [teet.task.task-view :as task-view]
-            [teet.document.document-view :as document-view]
-            [teet.road-visualization.road-visualization-view :as road-visualization-view]))
 
-(defn page-and-title [e! {:keys [page params] :as app}]
-  (case page
-    (:default-page :root :projects)
-    {:title "TEET"
-     :breadcrumbs [{:page :projects :title (tr [:projects :map-view])}]
-     :page [projects-view/projects-map-page e! app]}
+            ;; Import view namespaces
+            teet.projects.projects-view
+            teet.project.project-view
+            teet.task.task-view
+            teet.document.document-view
+            teet.road-visualization.road-visualization-view
+            teet.ui.component-demo
 
-    :projects-list
-    {:title "TEET"
-     :breadcrumbs [{:page :projects-list :title (tr [:projects :list-view])}]
-     :page [projects-view/projects-list-page e! app]}
+            teet.ui.query
+            goog.math.Long)
+  (:require-macros [teet.route-macros :refer [define-main-page]]))
 
-    :project
-    (project-view/project-page-and-title e! app)
-
-    :phase-task
-    (task-view/task-page-and-title e! app)
-
-    :task-document
-    (document-view/document-page-and-title e! app)
-
-    :components
-    {:title "Components" :page [component-demo/demo e!]}
-
-    :road
-    {:breadcrumbs [{:title "Road visualization"}]
-     :page [road-visualization-view/road-visualization e! (select-keys app [:road :road-address :query])]}
-    ;; Fallback
-    {:title "Unimplemented page"
-     :page [:div "Unimplemented page: " (pr-str page) ", params: " (pr-str params)]}))
+;; See routes.edn
+(define-main-page page-and-title)
 
 (defn main-view [e! {:keys [page user navigation quick-search] :as app}]
   (let [nav-open? (boolean (:open? navigation))]
@@ -70,7 +48,8 @@
                                    user]
            [navigation-view/main-container
             nav-open?
-            page]]))
+            (with-meta page
+              {:key (:route-key app)})]]))
       [df/DataFriskShell app]]]))
 
 (defn ^:export main []

@@ -1,6 +1,5 @@
 (ns teet.task.task-controller
   (:require [tuck.core :as t]
-            [teet.routes :as routes]
             [goog.math.Long]
             [taoensso.timbre :as log]
             [teet.document.document-controller]
@@ -10,16 +9,12 @@
 (defrecord UploadDocuments [files])
 (defrecord UpdateTask [task updated-task]) ; update task info to database
 (defrecord UpdateTaskResponse [response])
-(defrecord AddCommentToTask [task-id comment])
 (defrecord UpdateTaskForm [form-data])
 (defrecord CreateTask [])
 (defrecord CreateTaskResult [result])
 
 (defrecord OpenAddDocumentDialog [])
 (defrecord CloseAddDocumentDialog [])
-
-(defmethod routes/on-navigate-event :phase-task [{{:keys [task]} :params}]
-  (->FetchTask task))
 
 
 (extend-protocol t/Event
@@ -74,16 +69,6 @@
   (process-event [{response :response} app]
     (log/info "GOT RESPONSE: " response)
     app)
-
-  AddCommentToTask
-  (process-event [{:keys [task-id comment]} app]
-    (log/info "comment: " comment " to task " task-id)
-    (t/fx app
-          {:tuck.effect/type :command!
-           :command :workflow/comment-task
-           :payload {:task-id task-id
-                     :comment comment}
-           :result-event #(->FetchTask (str task-id))}))
 
   UpdateTaskForm
   (process-event [{form-data :form-data} app]

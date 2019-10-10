@@ -148,7 +148,8 @@
 
 (defn project-page [e! {{:keys [project]} :params
                         {:keys [tab]} :query
-                        {:keys [add-phase add-task]} :query :as app}]
+                        {:keys [add-phase add-task]} :query :as app}
+                    phases]
   (let [tab (or tab "documents")]
     [:<>
      (when add-phase
@@ -186,7 +187,7 @@
         [layout/section
          (case tab
            "documents"
-           [project-phase-listing e! project (get-in app [:project project :phases])]
+           [project-phase-listing e! project phases]
 
            "restrictions"
            [project-related-restrictions {:endpoint (get-in app [:config :api-url])
@@ -195,10 +196,3 @@
                                           :project project}])]]
        [Grid {:item true :xs 6}
         [project-map e! (get-in app [:config :api-url]) project]]]]]))
-
-(defn project-page-and-title [e! app]
-  {:title "TEET"
-   :page [project-page e! app]
-   :breadcrumbs [{:page :projects-list
-                  :title (tr [:projects :title])}
-                 {:title [project-info/project-name app (get-in app [:params :project])]}]})
