@@ -16,9 +16,7 @@
             [teet.ui.itemlist :as itemlist]
             [teet.user.user-info :as user-info]
             [teet.ui.format :as format]
-            [teet.ui.icons :as icons]
-            [teet.project.project-info :as project-info]))
-
+            [teet.ui.icons :as icons]))
 
 (defn document-form [{:keys [e! on-close-event]} {:keys [in-progress?] :as doc}]
   [:<>
