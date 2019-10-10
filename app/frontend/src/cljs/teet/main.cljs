@@ -23,7 +23,7 @@
             goog.math.Long)
   (:require-macros [teet.route-macros :refer [define-main-page]]))
 
-
+;; See routes.edn
 (define-main-page page-and-title)
 
 (defn main-view [e! {:keys [page user navigation quick-search] :as app}]

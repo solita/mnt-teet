@@ -26,21 +26,8 @@
                 (.setTimeout js/window #(set! (.-location js/window) url) 0)
                 app))))
 
+;; See routes.edn
 (define-router teet-router)
-#_(defonce teet-router
-  (r/router
-   [["/" :root]
-    ["/login" :login]
-    ["/projects/map" :projects]
-    ["/projects/list" :projects-list]
-    ["/projects/:project" :project]
-    ["/projects/:project/:phase/:task" :phase-task]
-    ["/projects/:project/:phase/:task/:document" :task-document]
-    ["/components" :components]
-    ;["/projectgroup/:group" :project-group]
-                                        ;["/projectgroup/:group/project/:project" :project]
-    ["/road" :road]
-    ]))
 
 (defmulti on-navigate-event
   "Determine event(s) to be run when user navigates to a given route.
