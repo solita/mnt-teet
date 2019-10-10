@@ -75,7 +75,6 @@
                 :variant "outlined"}]]])
 
 (defn document-page [e! {new-comment :new-comment} document]
-  (js/console.log "DOC:" (clj->js document))
   [Grid {:container true}
    [Grid {:item true :xs 6}
     [typography/SectionHeading (:document/name document)

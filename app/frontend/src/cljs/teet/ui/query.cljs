@@ -27,7 +27,6 @@
   (let [refresh-value (atom refresh)]
     (e! (->Query query args state-path))
     (fn [{:keys [e! query args state-path skeleton view app state refresh]}]
-      (log/info "REFRESH VALUE " @refresh-value ", new one: " refresh)
       (when (not= @refresh-value refresh)
         (reset! refresh-value refresh)
         (e! (->Query query args state-path)))
