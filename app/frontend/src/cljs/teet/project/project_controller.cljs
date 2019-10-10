@@ -6,7 +6,6 @@
             [teet.common.common-controller :as common-controller]))
 
 (defrecord FetchProjectPhases [project-id])
-(defrecord FetchProjectDocuments [project-id])
 (defrecord OpenPhaseDialog []) ; open add phase modal dialog
 (defrecord ClosePhaseDialog [])
 (defrecord OpenTaskDialog [phase-id])
@@ -25,28 +24,13 @@
   "geojson_thk_project" [p]
   (->SelectProject (:map/id p)))
 
-;; PENDING: use as another state
-#_(defmethod routes/on-navigate-event :project [{{project :project} :params}]
-  (log/info "Navigated to project, fetch workflows for THK project: " project)
-  [(->FetchProjectDocuments project)])
-
 (extend-protocol t/Event
   SelectProject
   (process-event [{project-id :project-id} app]
-    (log/info "SELECT PROJECT" project-id)
     (t/fx app
           {:tuck.effect/type :navigate
            :page :project
            :params {:project project-id}}))
-
-  FetchProjectDocuments
-  (process-event [{project-id :project-id} app]
-    (log/info "Fetching documents for THK project: " project-id)
-    (t/fx app
-          {:tuck.effect/type :query
-           :query :document/list-project-documents
-           :args {:thk-project-id project-id}
-           :result-path [:project project-id :documents]}))
 
   OpenPhaseDialog
   (process-event [_ app]
