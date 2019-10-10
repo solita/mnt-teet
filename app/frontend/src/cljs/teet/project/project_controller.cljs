@@ -7,6 +7,7 @@
 
 (defrecord FetchProjectPhases [project-id])
 (defrecord FetchProjectDocuments [project-id])
+(defrecord RestrictionsResult [result])
 (defrecord OpenPhaseDialog []) ; open add phase modal dialog
 (defrecord ClosePhaseDialog [])
 (defrecord OpenTaskDialog [phase-id])
@@ -56,6 +57,11 @@
            :query :document/list-project-documents
            :args {:thk-project-id project-id}
            :result-path [:project project-id :documents]}))
+
+  RestrictionsResult                                        ;;This is not used because using state in query component resulted in re-render loop should probably be looked into
+  (process-event [{results :result} app]
+    (let [project (get-in app [:params :project])]
+      (assoc-in app [:project project :restrictions] results)))
 
   OpenPhaseDialog
   (process-event [_ app]

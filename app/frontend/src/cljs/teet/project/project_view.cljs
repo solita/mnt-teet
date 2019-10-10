@@ -6,22 +6,23 @@
             [teet.map.map-view :as map-view]
             [teet.login.login-paths :as login-paths]
             [postgrest-ui.components.item-view :as postgrest-item-view]
-            [teet.ui.material-ui :refer [Grid Button Tabs Tab]]
+            [teet.ui.material-ui :refer [Grid Button Tabs Tab ButtonBase Collapse]]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-style :as project-style]
             [teet.theme.theme-spacing :as theme-spacing]
             [teet.ui.format :as format]
             [teet.ui.itemlist :as itemlist]
             [teet.ui.icons :as icons]
-            [teet.ui.typography :refer [Heading1]]
+            [teet.ui.typography :refer [Heading1 Heading2 Heading3]]
             [teet.ui.layout :as layout]
+            [teet.theme.theme-colors :as theme-colors]
             [teet.localization :refer [tr]]
             [teet.ui.panels :as panels]
             [taoensso.timbre :as log]
             [teet.phase.phase-view :as phase-view]
             [teet.task.task-view :as task-view]
             [teet.common.common-controller :as common-controller]
-            [postgrest-ui.components.listing :as postgrest-listing]
+            [postgrest-ui.components.query :as postgrest-query]
             [teet.project.project-info :as project-info]))
 
 (defn project-data
@@ -77,11 +78,11 @@
              (tr [:enum (:db/ident (:task/type t))])]])
          [:div [:em (tr [:project :phase :no-tasks])]])
 
-       [:div
-        [Button {:on-click (r/partial e! (project-controller/->OpenTaskDialog id))
-                 :size "small"}
-         [icons/content-add-circle]
-         (tr [:project :add-task])]]]))])
+        [:div
+         [Button {:on-click (r/partial e! (project-controller/->OpenTaskDialog id))
+                  :size "small"}
+          [icons/content-add-circle]
+          (tr [:project :add-task])]]]))])
 
 (defn project-map [e! endpoint project]
   [:div {:class (<class project-style/project-map-style)}
@@ -101,21 +102,49 @@
                                                              {:opacity 0.5})}}
     {}]])
 
-(defn project-related-restrictions [{:keys [endpoint token project]}]
-  [postgrest-listing/listing
+(defn restriction-component
+  [restriction]
+  (r/with-let [open? (r/atom false)]
+              [:div {:class (<class project-style/restriction-container)}
+               [ButtonBase {:focus-ripple true
+                            :class (<class project-style/restriction-button-style)
+                            :on-click #(swap! open? not)}
+                (if @open?
+                  [icons/navigation-arrow-right]
+                  [icons/navigation-arrow-drop-down])
+                [Heading3 (get restriction "voond")]]
+               [Collapse {:in @open?}
+                [itemlist/ItemList {:class (<class project-style/restriction-list-style)}
+                 [itemlist/Item {:label "Toiming"} (get restriction "toiming")]
+                 [itemlist/Item {:label "Muudetud"} (get restriction "muudetud")]
+                 [itemlist/Item {:label "Seadus"} (get restriction "seadus")]]]]))
+
+(defn restrictions-listing
+  [data]
+  (let [formatted-data (group-by
+                         (fn [restriction]
+                           (get restriction "type"))
+                         data)]
+    [:div
+     (doall
+       (for [group formatted-data]
+         ^{:key (first group)}
+         [:div
+          [Heading2 {:class (<class project-style/restriction-category-style)} (first group)]
+          (doall
+            (for [restriction (second group)]
+              ^{:key (get restriction "id")}
+              [restriction-component restriction]))]))]))
+
+(defn project-related-restrictions [{:keys [endpoint token state project e!]}]
+  [postgrest-query/query
    {:endpoint endpoint
     :token token
-    :batch-size 100 ; increased batch size as query is a little slow
     :table "related_restrictions_by_project"
     :select ["id" "type" "voond" "voondi_nimi" "toiming" "muudetud" "seadus"]
     :columns ["id" "voond" "voondi_nimi"]
-    :drawer (fn [{:strs [voond voondi_nimi] :as item}]
-              [itemlist/ItemList {:title (str voond (when voondi_nimi (str ": " voondi_nimi)))}
-               (for [[key val] item
-                     :when val]
-                 ^{:key key}
-                 [itemlist/Item {:label key} val])])
-    :where {"project_id" [:= project]}}])
+    :where {"project_id" [:= project]}}
+   restrictions-listing])
 
 (defn project-page [e! {{:keys [project]} :params
                         {:keys [tab]} :query

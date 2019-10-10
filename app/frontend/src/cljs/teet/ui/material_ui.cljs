@@ -19,7 +19,7 @@
 
 ;; Form
 (define-mui-components
-  Button Fab IconButton Checkbox InputAdornment FormControl FormControlLabel
+  Button ButtonBase Fab IconButton Checkbox InputAdornment FormControl FormControlLabel
   InputLabel Input
   Select MenuItem Menu ButtonGroup)
 
