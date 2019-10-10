@@ -33,3 +33,13 @@
      ;; :padding "0 24px"
      :width (str "calc(100% - " dw "px)")
      :margin-left (str dw "px")}))
+
+(defn drawer-projects-style
+  []
+  {:text-transform :uppercase})
+
+(defn drawer-link-style
+  [selected?]
+  {:color (if selected?
+            theme-colors/white
+            theme-colors/dark-gray)})

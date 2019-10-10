@@ -24,5 +24,6 @@
 (def gray100 "#d9d9d6")
 (def light-gray "#efefef")
 (def gray "#d9d9d6")
+(def dark-gray "#aaaaaa")
 
 (def side-panel "#f5f5f5")

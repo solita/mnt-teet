@@ -57,7 +57,7 @@
                                                                (e! (map-controller/->LayerToggle category layer)))}])}]]))]]])))
 
 (defn map-layer-controls
-  [e! _map-layers _map-controls]
+  [e! _map-layers {:keys [_open?] :as _map-controls}]
   (r/create-class
     {:component-did-mount
      (fn [_]

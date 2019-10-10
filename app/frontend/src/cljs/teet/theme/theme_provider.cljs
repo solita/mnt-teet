@@ -14,6 +14,7 @@
    :lineHeight 1.375
    :letterSpacing "0.25px"
    :color theme-colors/secondary-text
+   :background-color theme-colors/light-gray
    :textTransform :uppercase})
 
 (def section-heading-style
@@ -65,8 +66,7 @@
                                        :lineHeight 1.5}}
 
                :MuiTableSortLabel {:root {:display "inline-block" :width "100%"}
-                                   :icon {:float "right"}}
-               }})
+                                   :icon {:float "right"}}}})
 
 (defn- create-theme [theme]
   (let [create-mui-theme (-> js/window

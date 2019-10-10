@@ -45,3 +45,27 @@
 (defn project-data-style
   []
   {:margin-bottom "1rem"})
+
+(defn restriction-button-style
+  []
+  {:display :flex
+   :width "100%"
+   :justify-content :start
+   :padding "1rem 0"})
+
+(defn restriction-container
+  []
+  (merge
+    {:border-width "1px 0"
+     :border-style "solid"
+     :border-color theme-colors/gray100
+     :margin-top "-1px"}))
+
+(defn restriction-list-style
+  []
+  {:padding "1rem"})
+
+(defn restriction-category-style
+  []
+  {:padding "1.5rem 0"
+   :text-transform "capitalize"})

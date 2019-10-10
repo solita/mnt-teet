@@ -38,41 +38,42 @@
        [icons/navigation-chevron-left]
        [icons/navigation-chevron-right])]]])
 
+(defn- view-link [{:keys [open? current-page link icon name]} ]
+  [ListItem {:component "a"
+             :href (routes/url-for link)
+             :align-items "center"
+             :button true}
+   [ListItemIcon {:style {:display :flex
+                          :justify-content :center}}
+    [icon {:classes {:root (<class navigation-style/drawer-link-style (= current-page (:page link)))}}]]
+   (when open?
+     [ListItemText {:classes {:primary (<class navigation-style/drawer-link-style (= current-page (:page link)))}
+                    :primary
+                    name}])])
+
 (defn- page-listing
-  [open?]
-  [:<>
-   [List
-    (when open?
-      [ListItem {}
-       [typography/Heading2 (tr [:projects :title])]])
-    [ListItem {:component "a"
-               :href "/#/projects/list"
-               :align-items "center"
-               :button true}
-     [ListItemIcon {:style {:display :flex
-                            :justify-content :center}}
-      [icons/action-list]]
-     (when open?
-       [ListItemText {:primary (tr [:projects :list-view])}])]
-    [ListItem {:component "a"
-               :href "/#/projects/map"
-               :align-items "center"
-               :button true}
-     [ListItemIcon {:style {:display :flex
-                            :justify-content :center}}
-      [icons/maps-map]]
-     (when open?
-       [ListItemText {:primary (tr [:projects :map-view])}])]
-    [ListItem {} [Divider]]
-    [ListItem {:component "a"
-               :href "/#/components"
-               :align-items "center"
-               :button true}
-     [ListItemIcon {:style {:display :flex
-                            :justify-content :center}}
-      [icons/content-archive]]
-     (when open?
-       [ListItemText {:primary "Components"}])]]])
+  [open? page]
+  [List
+   (when open?
+     [ListItem {}
+      [typography/Heading2 {:classes {:h2 (<class navigation-style/drawer-projects-style)}}
+       (tr [:projects :title])]])
+   [view-link {:open? open?
+               :current-page page
+               :link {:page :projects}
+               :icon icons/maps-map
+               :name (tr [:projects :map-view])}]
+   [view-link {:open? open?
+               :current-page page
+               :link {:page :projects-list}
+               :icon icons/action-list
+               :name (tr [:projects :list-view])}]
+   [ListItem {} [Divider]]
+   [view-link {:open? open?
+               :current-page page
+               :link {:page :components}
+               :icon icons/content-archive
+               :name "Components"}]])
 
 (defn user-info [e! {:keys [user/given-name user/family-name] :as user} label?]
   (let [handle-click! (fn user-clicked [_]
@@ -100,7 +101,7 @@
    [user-info e! user open?]])
 
 (defn header
-  [e! {:keys [open? breadcrumbs quick-search]} user]
+  [e! {:keys [open? page breadcrumbs quick-search]} user]
   [:<>
    [AppBar {:position "sticky"
             :className (herb/join (<class navigation-style/appbar)
@@ -124,7 +125,7 @@
             :anchor "left"
             :open open?}
     [drawer-header e! open?]
-    [page-listing open?]
+    [page-listing open? page]
     [drawer-footer e! user open?]]])
 
 (defn main-container [navigation-open? content]
