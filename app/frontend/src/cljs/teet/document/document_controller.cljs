@@ -5,7 +5,6 @@
             [taoensso.timbre :as log]
             [goog.math.Long]
             tuck.effect
-            [teet.routes :as routes]
             [teet.common.common-controller :as common-controller]))
 
 (defrecord CreateDocument []) ; create empty document and link it to task

@@ -1,6 +1,5 @@
 (ns teet.task.task-controller
   (:require [tuck.core :as t]
-            [teet.routes :as routes]
             [goog.math.Long]
             [taoensso.timbre :as log]
             [teet.document.document-controller]

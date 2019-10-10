@@ -1,8 +1,6 @@
 (ns teet.project.project-controller
   "Controller for project page"
-  (:require [teet.routes :as routes]
-            [taoensso.timbre :as log]
-            [tuck.core :as t]
+  (:require [tuck.core :as t]
             [teet.common.common-controller :as common-controller]))
 
 (defrecord FetchProjectPhases [project-id])
