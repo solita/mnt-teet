@@ -11,7 +11,7 @@
             [reagent.core :as r]
             [teet.ui.typography :as typography]))
 
-(defn login-page [e! {_login :login}]
+(defn login-page [e! {login :login}]
   [Container {:maxWidth "sm"}
    [typography/Heading1 "Maanteeamet TEET"]
    [layout/column {:content-style {:padding-bottom "2em"}}
@@ -33,10 +33,10 @@
                                              (reset! localization/selected-language
                                                      language))))}]
     [typography/Heading2 "Login with demo user"]
-    
+
     [TextField {:label "Password"
                 :id "password-textfield"
-                :value (get _login :password "")
+                :value (get login :password "")
                 :on-change (fn pw-on-change! [e]
                               (e! (login-controller/->SetPassword (-> e .-target .-value)))
                               #_(log/info "password changed"))}]

@@ -55,11 +55,10 @@
 
 (defn restriction-container
   []
-  (merge
-    {:border-width "1px 0"
-     :border-style "solid"
-     :border-color theme-colors/gray100
-     :margin-top "-1px"}))
+  {:border-width "1px 0"
+   :border-style "solid"
+   :border-color theme-colors/gray100
+   :margin-top "-1px"})
 
 (defn restriction-list-style
   []
