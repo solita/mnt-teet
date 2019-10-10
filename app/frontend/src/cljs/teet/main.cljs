@@ -26,37 +26,6 @@
 
 (define-main-page page-and-title)
 
-#_(defn page-and-title [e! {:keys [page params] :as app}]
-  (case page
-    (:default-page :root :projects)
-    {:title "TEET"
-     :breadcrumbs [{:page :projects :title (tr [:projects :map-view])}]
-     :page [projects-view/projects-map-page e! app]}
-
-    :projects-list
-    {:title "TEET"
-     :breadcrumbs [{:page :projects-list :title (tr [:projects :list-view])}]
-     :page [projects-view/projects-list-page e! app]}
-
-    :project
-    (project-view/project-page-and-title e! app)
-
-    :phase-task
-    (task-view/task-page-and-title e! app)
-
-    :task-document
-    (document-view/document-page-and-title e! app)
-
-    :components
-    {:title "Components" :page [component-demo/demo e!]}
-
-    :road
-    {:breadcrumbs [{:title "Road visualization"}]
-     :page [road-visualization-view/road-visualization e! (select-keys app [:road :road-address :query])]}
-    ;; Fallback
-    {:title "Unimplemented page"
-     :page [:div "Unimplemented page: " (pr-str page) ", params: " (pr-str params)]}))
-
 (defn main-view [e! {:keys [page user navigation quick-search] :as app}]
   (let [nav-open? (boolean (:open? navigation))]
     [theme/theme-provider
