@@ -14,8 +14,6 @@
 ;; State map has the following keys
 ;; :query    keyword naming the query to run
 ;; :args     arguments map for the query, can refer to params by symbol name
-;; :path     path in app state to set query results to
-
 
 {:root {:path "/"
         :crumb (tr [:projects :map-view])
