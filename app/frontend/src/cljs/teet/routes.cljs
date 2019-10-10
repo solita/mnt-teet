@@ -3,7 +3,8 @@
   (:require [bide.core :as r]
             [tuck.core :as tuck]
             [teet.app-state :as app-state]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [clojure.string :as str])
   (:require-macros [teet.route-macros :refer [define-router]]))
 
 (defrecord GoToUrl [url])
@@ -78,7 +79,8 @@
                      navigation-data {:page route-name
                                       :params params
                                       :query query
-                                      :url js/window.location.href}
+                                      :url js/window.location.href
+                                      :route-key (-> js/window.location.hash (str/split #"\?") first)}
                      navigation-data (assoc navigation-data :current-app app)
 
                      event-leave (on-leave-event {:current-app app

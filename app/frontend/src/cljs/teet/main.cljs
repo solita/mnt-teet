@@ -46,7 +46,7 @@
            [navigation-view/main-container
             nav-open?
             (with-meta page
-              {:key (:url app)})]]))
+              {:key (:route-key app)})]]))
       [df/DataFriskShell app]]]))
 
 (defn ^:export main []
