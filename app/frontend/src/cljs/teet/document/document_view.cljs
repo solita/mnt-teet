@@ -74,7 +74,8 @@
                 :placeholder (tr [:document :new-comment])
                 :variant "outlined"}]]])
 
-(defn document-page [e! {:keys [document] :as _app}]
+(defn document-page [e! _app document]
+  (js/console.log "DOC:" (clj->js document))
   [Grid {:container true}
    [Grid {:item true :xs 6}
     [typography/SectionHeading (:document/name document)
@@ -104,22 +105,3 @@
      (tr [:common :select-files])]]
    [Grid {:item true :xs 6 :classes {:item (<class theme-panels/side-panel)}}
     [comments e! document]]])
-
-(defn document-page-and-title [e! {params :params :as app}]
-  (let [doc-id (get-in app [:params :document])
-        doc (get-in app [:document doc-id])]
-    ;; document should have title?
-    {:title       (get-in app [:document doc-id :document/name])
-     :breadcrumbs [{:page  :projects
-                    :title (tr [:projects :title])}
-                   {:page   :project
-                    :params {:project (:project params)}
-                    :title  [project-info/project-name app (:project params)]}
-                   {:page   :phase-task
-                    :params {:project (:project params)
-                             :phase   (:phase params)
-                             :task    (:task params)}
-                    :title  (tr [:enum (get-in doc [:task/_documents 0 :task/type :db/ident])])}
-                   {:title (:document/name doc)}]
-     :page        [document-page e! (merge (select-keys app [:params :config :user])
-                                           {:document doc})]}))

@@ -227,3 +227,10 @@
   (reset! api-token token))
 
 (defmulti map-item-selected :map/type)
+
+(defrecord SetRouteState [route-name state]
+  t/Event
+  (process-event [_ app]
+    (log/info "SET STATE FOR ROUTE " route-name " => " state)
+    (log/info "APP " app)
+    (assoc app route-name state)))

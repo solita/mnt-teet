@@ -27,7 +27,7 @@
 
 (defmethod routes/on-navigate-event :project [{{project :project} :params}]
   (log/info "Navigated to project, fetch workflows for THK project: " project)
-  [(->FetchProjectPhases project)
+  [#_(->FetchProjectPhases project)
    (->FetchProjectDocuments project)])
 
 (extend-protocol t/Event

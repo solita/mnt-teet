@@ -119,7 +119,8 @@
 
 (defn project-page [e! {{:keys [project]} :params
                         {:keys [tab]} :query
-                        {:keys [add-phase add-task]} :query :as app}]
+                        {:keys [add-phase add-task]} :query :as app}
+                    phases]
   (let [tab (or tab "documents")]
     [:<>
      (when add-phase
@@ -157,7 +158,7 @@
         [layout/section
          (case tab
            "documents"
-           [project-phase-listing e! project (get-in app [:project project :phases])]
+           [project-phase-listing e! project phases]
 
            "restrictions"
            [project-related-restrictions {:endpoint (get-in app [:config :api-url])

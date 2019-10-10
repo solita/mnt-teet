@@ -3,7 +3,8 @@
   (:require [bide.core :as r]
             [tuck.core :as tuck]
             [teet.app-state :as app-state]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log])
+  (:require-macros [teet.route-macros :refer [define-router]]))
 
 (defrecord GoToUrl [url])
 
@@ -25,7 +26,8 @@
                 (.setTimeout js/window #(set! (.-location js/window) url) 0)
                 app))))
 
-(defonce teet-router
+(define-router teet-router)
+#_(defonce teet-router
   (r/router
    [["/" :root]
     ["/login" :login]

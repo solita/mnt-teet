@@ -20,9 +20,6 @@
 (defrecord UpdateNewCommentForm [form-data]) ; update new comment form data
 (defrecord Comment []) ; save new comment to document
 
-(defmethod routes/on-navigate-event :task-document [{{:keys [document]} :params}]
-  (->FetchDocument document))
-
 (defn- file-info [^js/File f]
   {:file/name (.-name f)
    :file/size (.-size f)

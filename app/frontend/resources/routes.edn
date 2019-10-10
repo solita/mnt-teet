@@ -1,0 +1,57 @@
+;; Define all routes of TEET frontend application
+;; Each route is mapping from page name to map of route info
+;;
+;; Route info can have the following keys:
+;; :path     is the URL path of the route
+;; :parent   optional parent path (for constructing breadcrumbs)
+;; :state    map describing what data must be present
+;; :view     symbol defining the view fn for the page
+;;           called with e! and the state
+;; :crumb    code to display breadcrumb for this page
+;;           can refer to params by symbol name and state as state
+;;           can also refer to tr for translations
+;;
+;; State map has the following keys
+;; :query    keyword naming the query to run
+;; :args     arguments map for the query, can refer to params by symbol name
+;; :path     path in app state to set query results to
+
+
+{:root {:path "/"
+        :crumb (tr [:projects :map-view])
+        :view teet.projects.projects-view/projects-map-page}
+ :login {:path "/login"}
+
+ :projects {:path "/projects/map"
+            :crumb (tr [:projects :map-view])
+            :view teet.projects.projects-view/projects-map-page}
+
+ :projects-list {:path "/projects/list"
+                 :crumb (tr [:projects :list-view])
+                 :view teet.projects.projects-view/projects-list-page}
+
+ :project {:path "/projects/:project"
+           :parent :projects-list
+           :crumb (:project/name state)
+           :view teet.project.project-view/project-page
+           :state {:query :workflow/list-project-phases
+                   :args {:thk-project-id project}}
+           }
+
+ :phase-task {:path "/projects/:project/:phase/:task"
+              :parent :project
+              :view teet.task.task-view/task-page
+              :state {:query :task/fetch-task
+                      :args {:task-id (goog.math.Long/fromString task)}}
+              :crumb (tr [:enum (-> state :task/type :db/ident)])}
+
+ :task-document {:path "/projects/:project/:phase/:task/:document"
+                 :parent :phase-task
+                 :view teet.document.document-view/document-page
+                 :state {:query :document/fetch-document
+                         :args {:document-id (goog.math.Long/fromString document)}}
+                 :crumb (:document/name state)}
+
+ :components {:path "/components"}
+ :road {:path "/road"}
+ }

@@ -18,9 +18,15 @@
             [teet.common.common-controller]
             [teet.task.task-view :as task-view]
             [teet.document.document-view :as document-view]
-            [teet.road-visualization.road-visualization-view :as road-visualization-view]))
+            [teet.road-visualization.road-visualization-view :as road-visualization-view]
+            teet.ui.query
+            goog.math.Long)
+  (:require-macros [teet.route-macros :refer [define-main-page]]))
 
-(defn page-and-title [e! {:keys [page params] :as app}]
+
+(define-main-page page-and-title)
+
+#_(defn page-and-title [e! {:keys [page params] :as app}]
   (case page
     (:default-page :root :projects)
     {:title "TEET"

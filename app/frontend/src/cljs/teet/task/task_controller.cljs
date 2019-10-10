@@ -18,7 +18,7 @@
 (defrecord OpenAddDocumentDialog [])
 (defrecord CloseAddDocumentDialog [])
 
-(defmethod routes/on-navigate-event :phase-task [{{:keys [task]} :params}]
+#_(defmethod routes/on-navigate-event :phase-task [{{:keys [task]} :params}]
   (->FetchTask task))
 
 
