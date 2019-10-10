@@ -228,12 +228,10 @@
 
 (defmulti map-item-selected :map/type)
 
-
 ;; Refresh the current page query state
 (defrecord Refresh []
   t/Event
   (process-event [_ app]
-    ;; Dissoc the query state for the current page, will cause refetch
+    ;; Update the refresh indicator value so query component will force a refetch
     (let [path [:route (keyword (str (name (:page app)) "-refresh"))]]
-      (log/info "refreshing " path)
       (update-in app path (fnil inc 0)))))
