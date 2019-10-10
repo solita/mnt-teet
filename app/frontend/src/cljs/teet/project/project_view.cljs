@@ -167,10 +167,3 @@
                                           :project project}])]]
        [Grid {:item true :xs 6}
         [project-map e! (get-in app [:config :api-url]) project]]]]]))
-
-(defn project-page-and-title [e! app]
-  {:title "TEET"
-   :page [project-page e! app]
-   :breadcrumbs [{:page :projects-list
-                  :title (tr [:projects :title])}
-                 {:title [project-info/project-name app (get-in app [:params :project])]}]})

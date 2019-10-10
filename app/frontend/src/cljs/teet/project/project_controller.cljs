@@ -25,10 +25,10 @@
   "geojson_thk_project" [p]
   (->SelectProject (:map/id p)))
 
-(defmethod routes/on-navigate-event :project [{{project :project} :params}]
+;; PENDING: use as another state
+#_(defmethod routes/on-navigate-event :project [{{project :project} :params}]
   (log/info "Navigated to project, fetch workflows for THK project: " project)
-  [#_(->FetchProjectPhases project)
-   (->FetchProjectDocuments project)])
+  [(->FetchProjectDocuments project)])
 
 (extend-protocol t/Event
   SelectProject
@@ -38,15 +38,6 @@
           {:tuck.effect/type :navigate
            :page :project
            :params {:project project-id}}))
-
-  FetchProjectPhases
-  (process-event [{project-id :project-id} app]
-    (log/info "Fetching phases for THK project: " project-id)
-    (t/fx app
-          {:tuck.effect/type :query
-           :query :workflow/list-project-phases
-           :args {:thk-project-id project-id}
-           :result-path [:project project-id :phases]}))
 
   FetchProjectDocuments
   (process-event [{project-id :project-id} app]
