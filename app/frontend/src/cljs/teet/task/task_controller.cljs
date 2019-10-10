@@ -97,7 +97,9 @@
           {:tuck.effect/type :navigate
            :page :project
            :params {:project (get-in app [:params :project])}
-           :query {}})))
+           :query {}}
+          (fn [e!]
+            (e! (common-controller/->Refresh))))))
 
 (defn document-page-url [{{:keys [project phase task]} :params} doc]
   (str "#/projects/" project "/" phase "/" task "/" (:db/id doc)))
