@@ -228,9 +228,12 @@
 
 (defmulti map-item-selected :map/type)
 
-(defrecord SetRouteState [route-name state]
+
+;; Refresh the current page query state
+(defrecord Refresh []
   t/Event
   (process-event [_ app]
-    (log/info "SET STATE FOR ROUTE " route-name " => " state)
-    (log/info "APP " app)
-    (assoc app route-name state)))
+    ;; Dissoc the query state for the current page, will cause refetch
+    (let [path [:route (keyword (str (name (:page app)) "-refresh"))]]
+      (log/info "refreshing " path)
+      (update-in app path (fnil inc 0)))))

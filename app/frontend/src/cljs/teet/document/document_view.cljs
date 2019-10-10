@@ -49,7 +49,7 @@
      [LinearProgress {:variant "determinate"
                       :value in-progress?}])])
 
-(defn comments [e! document]
+(defn comments [e! new-comment document]
   [:<>
    [itemlist/ItemList {:title (tr [:document :comments])}
     (doall
@@ -65,7 +65,7 @@
    [Divider {:variant "middle"}]
 
    [form/form {:e! e!
-               :value (:new-comment document)
+               :value new-comment
                :on-change-event document-controller/->UpdateNewCommentForm
                :save-event document-controller/->Comment
                :spec :document/new-comment-form}
@@ -74,7 +74,7 @@
                 :placeholder (tr [:document :new-comment])
                 :variant "outlined"}]]])
 
-(defn document-page [e! _app document]
+(defn document-page [e! {new-comment :new-comment} document]
   (js/console.log "DOC:" (clj->js document))
   [Grid {:container true}
    [Grid {:item true :xs 6}
@@ -104,4 +104,4 @@
                                    :on-drop (e! document-controller/->UploadFilesToDocument)}
      (tr [:common :select-files])]]
    [Grid {:item true :xs 6 :classes {:item (<class theme-panels/side-panel)}}
-    [comments e! document]]])
+    [comments e! new-comment document]]])

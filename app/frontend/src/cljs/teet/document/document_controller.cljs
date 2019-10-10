@@ -38,18 +38,18 @@
 
   UpdateNewCommentForm
   (process-event [{form-data :form-data} app]
-    (update-in app [:document (get-in app [:params :document]) :new-comment] merge form-data))
+    (update-in app [:new-comment] merge form-data))
 
   Comment
   (process-event [_ app]
     (let [doc (get-in app [:params :document])
-          new-comment (get-in app [:document doc :new-comment :comment/comment])]
-      (t/fx (update-in app [:document doc] dissoc :new-comment)
+          new-comment (get-in app [:new-comment :comment/comment])]
+      (t/fx (dissoc app :new-comment)
             {:tuck.effect/type :command!
              :command :document/comment
              :payload {:document-id (goog.math.Long/fromString doc)
                        :comment new-comment}
-             :result-event (fn [_] (->FetchDocument doc))})))
+             :result-event common-controller/->Refresh})))
 
   UpdateDocumentForm
   (process-event [{form-data :form-data} app]

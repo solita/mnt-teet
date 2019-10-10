@@ -15,18 +15,18 @@
 (defn- param-names [path]
   (map (comp keyword second) (re-seq #":([^/]+)" path)))
 
-(defmacro define-main-page [name]
+(defmacro define-main-page [fn-name]
   (let [defs (read-route-defs)]
-    `(defn ~name [~'e! {page# :page
+    `(defn ~fn-name [~'e! {page# :page
                         params# :params
                         :as ~'app}]
-       (taoensso.timbre/info "PAGE: " page# ", PARAMS: " params#)
        (case page#
          ~@(mapcat
             (fn [[route-name {:keys [state crumb parent view path]}]]
               [route-name
                `(let [{:keys [~@(param-names path)]} (:params ~'app)
-                      ~'state (get-in ~'app [:route ~route-name])]
+                      ~'state (get-in ~'app [:route ~route-name])
+                      ~'refresh (get-in ~'app [:route ~(keyword (str (name route-name) "-refresh"))])]
                   {:page ~(if state
                             `[teet.ui.query/query {:e! ~'e!
                                                    :app ~'app ;; FIXME: select-keys
@@ -34,7 +34,8 @@
                                                    :args ~(:args state)
                                                    :view ~view
                                                    :state ~'state
-                                                   :state-path [:route ~route-name]}]
+                                                   :state-path [:route ~route-name]
+                                                   :refresh ~'refresh}]
                             `[~view ~'e! ~'app])})
                ])
             defs)

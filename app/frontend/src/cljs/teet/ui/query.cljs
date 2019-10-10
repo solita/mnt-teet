@@ -23,14 +23,19 @@
   (process-event [{:keys [state-path result]} app]
     (assoc-in app state-path result)))
 
-(defn query [{:keys [e! query args state-path]}]
-  (e! (->Query query args state-path))
-  (fn [{:keys [skeleton view app state]}]
-    (if state
-      ;; Results loaded, call the view
-      [view e! app state]
+(defn query [{:keys [e! query args state-path refresh]}]
+  (let [refresh-value (atom refresh)]
+    (e! (->Query query args state-path))
+    (fn [{:keys [e! query args state-path skeleton view app state refresh]}]
+      (log/info "REFRESH VALUE " @refresh-value ", new one: " refresh)
+      (when (not= @refresh-value refresh)
+        (reset! refresh-value refresh)
+        (e! (->Query query args state-path)))
+      (if state
+        ;; Results loaded, call the view
+        [view e! app state]
 
-      ;; Results not loaded, show skeleton or loading spinner
-      (if skeleton
-        skeleton
-        [CircularProgress]))))
+        ;; Results not loaded, show skeleton or loading spinner
+        (if skeleton
+          skeleton
+          [CircularProgress])))))
