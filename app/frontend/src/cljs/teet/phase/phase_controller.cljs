@@ -1,6 +1,7 @@
 (ns teet.phase.phase-controller
   (:require [tuck.core :as t]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [teet.common.common-controller :as common-controller]))
 
 (defrecord UpdatePhaseForm [form-data])
 (defrecord CreatePhase [])
@@ -36,4 +37,6 @@
           {:tuck.effect/type :navigate
            :page :project
            :params {:project (get-in app [:params :project])}
-           :query {}})))
+           :query {}}
+          (fn [e!]
+            (e! (common-controller/->Refresh))))))
