@@ -42,7 +42,8 @@
                                        :quick-search quick-search} user]
            [navigation-view/main-container
             nav-open?
-            page]]))
+            (with-meta page
+              {:key (str (:page app))})]]))
       [df/DataFriskShell app]]]))
 
 (defn ^:export main []
