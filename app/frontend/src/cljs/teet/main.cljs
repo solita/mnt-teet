@@ -7,18 +7,21 @@
             [teet.app-state :as app-state]
             [teet.localization :as localization :refer [tr]]
             [teet.login.login-view :as login-view]
-            [teet.projects.projects-view :as projects-view]
-            [teet.project.project-view :as project-view]
             [teet.navigation.navigation-view :as navigation-view]
             [teet.routes :as routes]
             [teet.ui.material-ui :refer [CssBaseline]]
-            [teet.ui.component-demo :as component-demo]
             [tuck.core :as t]
             [teet.theme.theme-provider :as theme]
             [teet.common.common-controller]
-            [teet.task.task-view :as task-view]
-            [teet.document.document-view :as document-view]
-            [teet.road-visualization.road-visualization-view :as road-visualization-view]
+
+            ;; Import view namespaces
+            teet.projects.projects-view
+            teet.project.project-view
+            teet.task.task-view
+            teet.document.document-view
+            teet.road-visualization.road-visualization-view
+            teet.ui.component-demo
+
             teet.ui.query
             goog.math.Long)
   (:require-macros [teet.route-macros :refer [define-main-page]]))
@@ -43,7 +46,7 @@
            [navigation-view/main-container
             nav-open?
             (with-meta page
-              {:key (str (:page app))})]]))
+              {:key (:url app)})]]))
       [df/DataFriskShell app]]]))
 
 (defn ^:export main []

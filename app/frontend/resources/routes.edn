@@ -35,15 +35,19 @@
            :crumb [teet.project.project-info/project-name app project]
            :view teet.project.project-view/project-page
            :state {:query :workflow/list-project-phases
-                   :args {:thk-project-id project}}
-           }
+                   :args {:thk-project-id project}}}
 
  :phase-task {:path "/projects/:project/:phase/:task"
               :parent :project
               :view teet.task.task-view/task-page
               :state {:query :task/fetch-task
                       :args {:task-id (goog.math.Long/fromString task)}}
-              :crumb (tr [:enum (-> state :task/type :db/ident)])}
+              :crumb (tr [:enum (or
+                                 ;; On task page, use task type directly
+                                 (-> state :task/type :db/ident)
+
+                                 ;; On document page, the task type is joined
+                                 (get-in state [:task/_documents 0 :task/type :db/ident]))])}
 
  :task-document {:path "/projects/:project/:phase/:task/:document"
                  :parent :phase-task
@@ -52,6 +56,6 @@
                          :args {:document-id (goog.math.Long/fromString document)}}
                  :crumb (:document/name state)}
 
- :components {:path "/components"}
- :road {:path "/road"}
- }
+ :components {:path "/components" :view teet.ui.component-demo/demo}
+ :road {:path "/road"
+        :view teet.road-visualization.road-visualization-view/road-visualization}}
