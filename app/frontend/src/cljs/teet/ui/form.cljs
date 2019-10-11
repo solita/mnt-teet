@@ -75,7 +75,8 @@
                                                 (if (valid-attribute? field value)
                                                   (disj fields field)
                                                   (conj fields field)))))
-               validate-and-save (fn [e! save-event value fields]
+               validate-and-save (fn [e! save-event value fields e]
+                                   (.preventDefault e)
                                    (let [invalid-attrs (into (missing-attributes spec value)
                                                              (for [{attr :attribute} (map meta fields)
                                                                    :when (not (valid-attribute? attr (get value attr)))]

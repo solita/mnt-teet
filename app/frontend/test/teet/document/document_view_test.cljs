@@ -5,7 +5,7 @@
             [teet.document.document-controller :as document-controller]))
 
 (defn test-view [e! app]
-  [document-view/comments e! (get-in app [:document "666"])])
+  [document-view/comments e! (get-in app [:new-comment]) {}])
 
 (drt/define-drtest comment-form-test
   {:initial-context {:app (drt/atom {:params {:document "666"}
@@ -41,7 +41,7 @@
             :selector "button")
 
   (drt/step :expect-tuck-event "Expect save comment event"
-            :predicate #(= % (document-controller/->Comment))
+            :predicate #(instance? document-controller/Comment %)
             :apply? true
             :as "save-event")
 

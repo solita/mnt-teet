@@ -3,6 +3,7 @@
             [teet.ui.material-ui :refer [Button Fab IconButton TextField Divider Checkbox InputAdornment]]
             [teet.ui.file-upload :as file-upload]
             [teet.ui.icons :as icons]
+            [teet.ui.skeleton :as skeleton]
             [teet.ui.itemlist :as itemlist]
             [teet.ui.select :as select]
             [teet.ui.typography :refer [DataLabel Heading1 Heading2 Heading3 Paragraph SectionHeading Text]]
@@ -210,6 +211,11 @@
         (log/info "on click handler got:" (pr-str x)))]]
 
     [Divider]
+
+    [:div {:style {:width "100%"
+                   :margin-top "5px"}}
+     [skeleton/skeleton {:width "60%"
+                         :height "2rem"}]]
 
     [:div {:style {:width "50%"
                    :margin "2rem 0"}}
