@@ -32,7 +32,7 @@
                     {:page ~(if state
                               ;; If page has needed state, wrap it in the query component to fetch it
                               `[teet.ui.query/query {:e! ~'e!
-                                                     :app ~'app ;; FIXME: select-keys
+                                                     :app (dissoc ~'app :route) ;; FIXME: select-keys
                                                      :query ~(:query state)
                                                      :args ~(:args state)
                                                      :view ~view
