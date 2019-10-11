@@ -23,7 +23,9 @@
             [teet.task.task-view :as task-view]
             [teet.common.common-controller :as common-controller]
             [postgrest-ui.components.query :as postgrest-query]
-            [teet.project.project-info :as project-info]))
+            [teet.project.project-info :as project-info]
+            [teet.ui.util :as util]
+            [clojure.string :as str]))
 
 (defn project-data
   [{:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
@@ -103,21 +105,26 @@
     {}]])
 
 (defn restriction-component
-  [restriction]
+  [{:strs [voond toiming muudetud seadus] :as _restriction}]
   (r/with-let [open? (r/atom false)]
-              [:div {:class (<class project-style/restriction-container)}
-               [ButtonBase {:focus-ripple true
-                            :class (<class project-style/restriction-button-style)
-                            :on-click #(swap! open? not)}
-                (if @open?
-                  [icons/navigation-arrow-right]
-                  [icons/navigation-arrow-drop-down])
-                [Heading3 (get restriction "voond")]]
-               [Collapse {:in @open?}
-                [itemlist/ItemList {:class (<class project-style/restriction-list-style)}
-                 [itemlist/Item {:label "Toiming"} (get restriction "toiming")]
-                 [itemlist/Item {:label "Muudetud"} (get restriction "muudetud")]
-                 [itemlist/Item {:label "Seadus"} (get restriction "seadus")]]]]))
+    [:div {:class (<class project-style/restriction-container)}
+     [ButtonBase {:focus-ripple true
+                  :class (<class project-style/restriction-button-style)
+                  :on-click #(swap! open? not)}
+      (if @open?
+        [icons/navigation-arrow-right]
+        [icons/navigation-arrow-drop-down])
+      [Heading3 voond]]
+     [Collapse {:in @open?}
+      [itemlist/ItemList {:class (<class project-style/restriction-list-style)}
+       [itemlist/Item {:label "Toiming"} toiming]
+       [itemlist/Item {:label "Muudetud"} muudetud]
+       (when-not (str/blank? seadus)
+         [itemlist/Item {:label "Seadus"}
+          [:ul
+           (util/with-keys
+             (for [r (str/split seadus #";")]
+               [:li r]))]])]]]))
 
 (defn restrictions-listing
   [data]
