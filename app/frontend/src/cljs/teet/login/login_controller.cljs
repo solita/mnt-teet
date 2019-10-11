@@ -5,6 +5,7 @@
             [teet.login.login-paths :as login-paths]
             [teet.user.user-info :as user-info]))
 
+(defrecord Login [demo-user])
 (defrecord StartLoginAttempt [demo-user])
 (defrecord SetToken [after-login? navigate-data token])
 (defrecord FailLoginAttempt [demo-user])
@@ -17,6 +18,18 @@
   refresh-token-timeout-ms (* 1000 60 15))
 
 (extend-protocol t/Event
+  Login
+  (process-event [{user :demo-user} app]
+    (log/info "Log in as: " user)
+    (let [navigate-data (get-in app [:login :navigate-to])]
+      (t/fx (-> app
+                (assoc-in [:login :progress?] true)
+                (assoc :user user))
+            {::tuck-effect/type :command!
+             :command :login
+             :payload user
+             :result-event (partial ->SetToken true navigate-data)})))
+
   StartLoginAttempt
   (process-event [{user :demo-user} app]
     (log/info "Log in as: " user)
@@ -26,17 +39,17 @@
               (assoc-in [:login :progress?] true)
               ;; (assoc :user user)
               )
-        {::tuck-effect/type :query
-         :query :user-session
-         :args {:user user :site-password site-password}
-         :result-event (fn session-q-result-event [result]
-                         (log/info "session reply:" result)
-                         (if (get result "ok")
-                           (->LoginWithValidSession navigate-data user)
-                           (->FailLoginAttempt user)))})))
+            {::tuck-effect/type :query
+             :query :user-session
+             :args {:user user :site-password site-password}
+             :result-event (fn session-q-result-event [result]
+                             (log/info "session reply:" result)
+                             (if (get result "ok")
+                               (->LoginWithValidSession navigate-data user)
+                               (->FailLoginAttempt user)))})))
 
   SetPassword
-  (process-event [{:keys [pw]} app]    
+  (process-event [{:keys [pw]} app]
     (t/fx (assoc-in app [:login :password] pw)))
 
   FailLoginAttempt
@@ -44,7 +57,7 @@
     (log/info "login attempt failed for user", user)
     (js/alert "Bad password or other login error")
     (t/fx (assoc-in app [:login :progress?] false)))
-  
+
   SetToken
   (process-event [{:keys [token after-login? navigate-data]} app]
     (log/info "TOKEN: " token ", after-login? " after-login?)

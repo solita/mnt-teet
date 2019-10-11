@@ -49,7 +49,7 @@
                       :action (r/as-element
                                [Button {:color "primary"
                                         :on-click #(do
-                                                     (e! (login-controller/->StartLoginAttempt user))
+                                                     (e! (login-controller/->Login user))
                                                      (log/info "Start login: " user))}
                                 "Login"])}]
          [CardContent
