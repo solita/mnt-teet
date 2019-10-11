@@ -7,7 +7,7 @@
 (defn test-view [e! app]
   [document-view/comments e! (get-in app [:new-comment]) {}])
 
-#_(drt/define-drtest comment-form-test
+(drt/define-drtest comment-form-test
   {:initial-context {:app (drt/atom {:params {:document "666"}
                                      :document {"666" #:document {:comments []}}})}}
 
