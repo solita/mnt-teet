@@ -38,5 +38,4 @@
            :page :project
            :params {:project (get-in app [:params :project])}
            :query {}}
-          (fn [e!]
-            (e! (common-controller/->Refresh))))))
+          common-controller/refresh-fx)))

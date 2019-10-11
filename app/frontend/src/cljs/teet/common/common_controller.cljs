@@ -235,3 +235,14 @@
     ;; Update the refresh indicator value so query component will force a refetch
     (let [path [:route (keyword (str (name (:page app)) "-refresh"))]]
       (update-in app path (fnil inc 0)))))
+
+(def refresh-fx
+  "Tuck effect that refreshes the current page state from database."
+  (fn [e!] (e! (->Refresh))))
+
+(defn update-page-state
+  "Apply update fn to path in current page state."
+  [{page :page :as app} path update-fn & args]
+  (update-in app (into [:route page] path)
+             (fn [page-state]
+               (apply update-fn page-state args))))

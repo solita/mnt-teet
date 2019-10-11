@@ -98,11 +98,12 @@
   UploadFilesToDocument
   (process-event [{files :files} app]
     (let [doc-id  (get-in app [:params :document])]
-      (t/fx (update-in app [:route :task-document :document/files]
-                       into (comp (map file-info)
-                                  (map #(assoc %
-                                               :in-progress? true
-                                               :db/id (str (random-uuid))))) files)
+      (t/fx (common-controller/update-page-state
+             app [:document/files]
+             into (comp (map file-info)
+                        (map #(assoc %
+                                     :in-progress? true
+                                     :db/id (str (random-uuid))))) files)
 
             (fn [e!]
               (e! (map->UploadFiles {:files files
@@ -132,8 +133,7 @@
            :page :phase-task
            :params (:params app)
            :query {}}
-          (fn [e!]
-            (e! (common-controller/->Refresh))))))
+          common-controller/refresh-fx)))
 
 (defn download-url [file-id]
   (common-controller/query-url :document/download-file {:file-id file-id}))
