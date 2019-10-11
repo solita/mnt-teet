@@ -49,15 +49,16 @@
                                                  task
                                                  {:task/status (task-controller/new-status %)})))}])
 
-(defn task-page [e! {query :query :as app}
-                 {:task/keys [documents description type assignee] :as task}]
+(defn task-page [e! {query :query
+                     new-document :new-document :as app}
+                 {:task/keys [documents description type assignee] :as _task}]
   [layout/section
    (when (:add-document query)
      [panels/modal {:title (tr [:task :new-document])
                     :on-close (e! task-controller/->CloseAddDocumentDialog)}
       [document-view/document-form {:e! e!
                                     :on-close-event task-controller/->CloseAddDocumentDialog}
-       (:new-document task)]])
+       new-document]])
    [itemlist/ItemList
     {:title (tr [:enum (:db/ident type)])}
     [itemlist/Item {:label (tr [:fields :task/type])} (tr [:enum (:db/ident type)])]

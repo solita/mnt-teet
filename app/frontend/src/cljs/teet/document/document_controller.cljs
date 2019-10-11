@@ -52,17 +52,15 @@
 
   UpdateDocumentForm
   (process-event [{form-data :form-data} app]
-    (update-in app [:task (get-in app [:params :task]) :new-document] merge form-data))
+    (update app :new-document merge form-data))
 
   CreateDocument
-  (process-event [_ app]
+  (process-event [_ {doc :new-document :as app}]
     (let [task (get-in app [:params :task])
-          path [:task task :new-document]
-          doc (get-in app path)
           files (:document/files doc)
           file-count (count files)]
       (log/info "CREATE DOC " doc " WITH " file-count " files")
-      (t/fx (update-in app path assoc :in-progress? 0)
+      (t/fx (update app :new-document assoc :in-progress? 0)
             {:tuck.effect/type :command!
              :command :document/new-document
              :payload {:document (select-keys doc [:document/name :document/status :document/description])
@@ -80,7 +78,7 @@
       (do
         (log/info "More files to upload. Uploading: " file)
         (t/fx (if progress-increment
-                (update-in app [:task (get-in app [:params :task]) :new-document :in-progress?]
+                (update-in app [:new-document :in-progress?]
                            + progress-increment)
                 app)
               {:tuck.effect/type :command!
@@ -100,7 +98,7 @@
   UploadFilesToDocument
   (process-event [{files :files} app]
     (let [doc-id  (get-in app [:params :document])]
-      (t/fx (update-in app [:document doc-id :document/files]
+      (t/fx (update-in app [:route :task-document :document/files]
                        into (comp (map file-info)
                                   (map #(assoc %
                                                :in-progress? true
@@ -108,8 +106,8 @@
 
             (fn [e!]
               (e! (map->UploadFiles {:files files
-                                        :document-id (goog.math.Long/fromString doc-id)
-                                        :on-success (partial ->FetchDocument doc-id)}))))))
+                                     :document-id (goog.math.Long/fromString doc-id)
+                                     :on-success common-controller/->Refresh}))))))
 
 
   UploadFileUrlReceived
@@ -133,7 +131,9 @@
           {:tuck.effect/type :navigate
            :page :phase-task
            :params (:params app)
-           :query {}})))
+           :query {}}
+          (fn [e!]
+            (e! (common-controller/->Refresh))))))
 
 (defn download-url [file-id]
   (common-controller/query-url :document/download-file {:file-id file-id}))
