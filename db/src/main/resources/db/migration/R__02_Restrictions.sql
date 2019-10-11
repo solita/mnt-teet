@@ -113,6 +113,9 @@ DECLARE
   dynsql TEXT;
   type TEXT;
 BEGIN
+  -- Cache for 3 days
+  SET LOCAL "response.headers" = '[{"Cache-Control": "public"}, {"Cache-Control": "max-age=259200"}]';
+
   FOR t IN SELECT * FROM restrictions.restrictions_tables()
   LOOP
     type := SUBSTRING(t.restrictions_tables, 11);
@@ -140,6 +143,7 @@ DECLARE
   dynsql TEXT;
   type TEXT;
 BEGIN
+  SET LOCAL "response.headers" = '[{"Cache-Control": "public"}, {"Cache-Control": "max-age=259200"}]';
   FOR t IN SELECT * FROM restrictions.restrictions_tables()
   LOOP
     type := SUBSTRING(t.restrictions_tables, 11);
