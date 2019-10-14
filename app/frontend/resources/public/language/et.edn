@@ -54,7 +54,9 @@
  {:information
   {:estimated-duration "Eeldatav kestus",
    :road-number "Tee number",
-   :km-range "Km ulatus"},
+   :km-range "Km ulatus",
+   :procurement-number "Hanke number",
+   :carriageway "Sõidutee"},
   :add-phase "Lisa etapp",
   :add-task "Lisa ülesanne",
   :phases "Projekti etapid",
