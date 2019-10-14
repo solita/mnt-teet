@@ -16,7 +16,8 @@
             [teet.ui.itemlist :as itemlist]
             [teet.user.user-info :as user-info]
             [teet.ui.format :as format]
-            [teet.ui.icons :as icons]))
+            [teet.ui.icons :as icons]
+            [teet.ui.layout :as layout]))
 
 (defn document-form [{:keys [e! on-close-event]} {:keys [in-progress?] :as doc}]
   [:<>
@@ -75,30 +76,31 @@
 (defn document-page [e! {new-comment :new-comment} document]
   [Grid {:container true}
    [Grid {:item true :xs 6}
-    [typography/SectionHeading (:document/name document)
-     [typography/DataLabel " " (count (:document/files document)) " " (tr [:common :files])]]
-    [typography/Paragraph (:document/description document)]
-    [List {:dense true}
-     (doall
-      (for [{id :db/id
-             :file/keys [name size author timestamp]
-             in-progress? :in-progress?} (:document/files document)]
-        ^{:key id}
-        [ListItem {:button true :component "a"
-                   :href (document-controller/download-url id)
-                   :target "_blank"}
-         (if in-progress?
-           [ListItemIcon [CircularProgress {:size 20}]]
-           [ListItemIcon [icons/file-attachment]])
-         [ListItemText {:primary name
-                        :secondary (r/as-element
-                                    [:<>
-                                     [:div (some-> timestamp format/date-time) " "
-                                      (when author
-                                        [user-info/user-name e! author])]
-                                     (format/file-size size)])}]]))]
-    [file-upload/FileUploadButton {:id "upload-files-to-document"
-                                   :on-drop (e! document-controller/->UploadFilesToDocument)}
-     (tr [:common :select-files])]]
+    [layout/section
+     [typography/SectionHeading (:document/name document)
+      [typography/DataLabel " " (count (:document/files document)) " " (tr [:common :files])]]
+     [typography/Paragraph (:document/description document)]
+     [List {:dense true}
+      (doall
+        (for [{id :db/id
+               :file/keys [name size author timestamp]
+               in-progress? :in-progress?} (:document/files document)]
+          ^{:key id}
+          [ListItem {:button true :component "a"
+                     :href (document-controller/download-url id)
+                     :target "_blank"}
+           (if in-progress?
+             [ListItemIcon [CircularProgress {:size 20}]]
+             [ListItemIcon [icons/file-attachment]])
+           [ListItemText {:primary name
+                          :secondary (r/as-element
+                                       [:<>
+                                        [:div (some-> timestamp format/date-time) " "
+                                         (when author
+                                           [user-info/user-name e! author])]
+                                        (format/file-size size)])}]]))]
+     [file-upload/FileUploadButton {:id "upload-files-to-document"
+                                    :on-drop (e! document-controller/->UploadFilesToDocument)}
+      (tr [:common :select-files])]]]
    [Grid {:item true :xs 6 :classes {:item (<class theme-panels/side-panel)}}
     [comments e! new-comment document]]])
