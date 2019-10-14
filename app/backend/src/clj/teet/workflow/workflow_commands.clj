@@ -4,7 +4,8 @@
             [datomic.client.api :as d]
             [clojure.spec.alpha :as s]
             [teet.workflow.workflow-specs]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log])
+  (:import (java.util Date)))
 
 
 (defmethod db-api/command! :phase/create-phase [{conn :conn} phase]
@@ -17,7 +18,7 @@
    [:tempids]))
 
 (defmethod db-api/command! :workflow/update-task [{conn :conn} task]
-  (select-keys (d/transact conn {:tx-data [task]}) [:tempids]))
+  (select-keys (d/transact conn {:tx-data [(assoc task :task/modified (Date.))]}) [:tempids]))
 
 (defmethod db-api/command! :workflow/add-task-to-phase [{conn :conn} {phase-id :phase-id
                                                                       task :task :as payload}]
@@ -34,6 +35,6 @@
    (d/transact conn {:tx-data [{:db/id task-id
                                 :task/comments [{:db/id "comment"
                                                  :comment/comment comment
-                                                 :comment/timestamp (java.util.Date.)
+                                                 :comment/timestamp (Date.)
                                                  :comment/author [:user/id (:user/id user)]}]}]})
    [:tempids]))

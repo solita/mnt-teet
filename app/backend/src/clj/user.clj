@@ -17,7 +17,7 @@
 (def q d/q)
 
 (defn force-migrations!
-  "Forces all migrations to rerun."
+  "Forces all migrations to rerun."                         ;;TODO: reload schema from environment to reload schema.edn
   []
   (environment/load-local-config!)
   (environment/migrate (db-connection) true))

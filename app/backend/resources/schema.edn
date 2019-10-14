@@ -250,4 +250,21 @@
            :db/valueType :db.type/instant
            :db/cardinality :db.cardinality/one
            :db/doc "Timestamp of when this file upload was started"}]]}
- ]
+
+ {:db/ident :migration/task-status-enum
+  :txes [[{:db/ident :task.status/not-started
+           :enum/attribute :task/status}
+          {:db/ident :task.status/in-progress
+           :enum/attribute :task/status}
+          {:db/ident :task.status/completed
+           :enum/attribute :task/status}
+          {:db/ident :task.status/accepted
+           :enum/attribute :task/status}
+          {:db/ident :task.status/rejected
+           :enum/attribute :task/status}]]}
+
+ {:db/ident :migration/task-modified
+  :txes [[{:db/ident :task/modified
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "Last modification timestamp"}]]}]
