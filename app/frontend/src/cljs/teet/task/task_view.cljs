@@ -51,7 +51,7 @@
 
 (defn task-page [e! {query :query
                      new-document :new-document :as app}
-                 {:task/keys [documents description type assignee] :as _task}]
+                 {:task/keys [documents description type assignee status modified] :as _task}]
   [layout/section
    (when (:add-document query)
      [panels/modal {:title (tr [:task :new-document])
@@ -59,11 +59,21 @@
       [document-view/document-form {:e! e!
                                     :on-close-event task-controller/->CloseAddDocumentDialog}
        new-document]])
+
    [itemlist/ItemList
     {:title (tr [:enum (:db/ident type)])}
     [itemlist/Item {:label (tr [:fields :task/type])} (tr [:enum (:db/ident type)])]
     [itemlist/Item {:label (tr [:fields :task/assignee])} [user-info/user-name-and-email e! (:user/id assignee)]]
     [itemlist/Item {:label (tr [:fields :common "description"])} description]]
+   [:div {:style {:display :flex
+                  :align-items :center}}
+    [:div {:style {:width "50%"
+                   :margin "1rem 1rem 1rem 0"}}
+     [teet.ui.select/select-enum {:e! e!
+                                  :on-change (e! task-controller/->UpdateTaskStatus)
+                                  :value (:db/ident status)
+                                  :attribute :task/status}]]
+    [:span (teet.ui.format/date-time modified)]]
 
    [itemlist/ItemList
     {:title (tr [:task :documents])}

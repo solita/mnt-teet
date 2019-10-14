@@ -246,3 +246,8 @@
   (update-in app (into [:route page] path)
              (fn [page-state]
                (apply update-fn page-state args))))
+
+(defn page-state
+  "Get the state of the current page"
+  [{page :page :as app}]
+  (get-in app [:route page]))

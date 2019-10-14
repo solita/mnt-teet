@@ -9,6 +9,7 @@
 (defrecord UploadDocuments [files])
 (defrecord UpdateTask [task updated-task]) ; update task info to database
 (defrecord UpdateTaskResponse [response])
+(defrecord UpdateTaskStatus [status])
 (defrecord UpdateTaskForm [form-data])
 (defrecord CreateTask [])
 (defrecord CreateTaskResult [result])
@@ -52,6 +53,19 @@
              :task-id (goog.math.Long/fromString task)
              :project-id project
              :app-path [:task task :task/documents]})))
+
+  UpdateTaskStatus
+  (process-event [{status :status :as event} app]
+    (log/info "Updatetaskstatus " event)
+    (let [{id :db/id} (common-controller/page-state app)]
+      (t/fx app
+        {:tuck.effect/type :command!
+         :command :workflow/update-task
+         :payload {:db/id id
+                   :task/status status}
+         :result-event common-controller/->Refresh}))
+    ;(common-controller/update-page-state app [:task/status] (constantly status))
+    )
 
   UpdateTask
   (process-event [{:keys [task updated-task]} app]
