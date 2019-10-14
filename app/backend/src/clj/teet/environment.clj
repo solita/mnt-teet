@@ -84,6 +84,5 @@
 
 (defn check-site-password [given-password]                  ;TODO: make this actually work
   (let [actual-pw (config-value :auth :basic-auth-password)]
-    true
-    #_(and (some? actual-pw)
+    (and (some? actual-pw)
          (= given-password actual-pw))))

@@ -6,20 +6,24 @@
             [datomic.client.api :as d]))
 
 
-(defmethod db-api/command! :login [{conn :conn} {:user/keys [id given-name family-name email person-id]}]
+(defmethod db-api/command! :login [{conn :conn}
+                                   {:user/keys [id given-name family-name email person-id]
+                                    site-password :site-password}]
   (d/transact conn {:tx-data [{:user/id id}]})
   #_(when (not= :dev (environment/config-value :env))
     (log/warn "Demo login can only be used in :dev environment")
     (throw (ex-info "Demo login not allowed"
                     {:demo-user user})))
 
-  (let [secret (environment/config-value :auth :jwt-secret)]
-    (login-api-token/create-token secret "teet_user"
-                                  {:given-name given-name
-                                   :family-name family-name
-                                   :person-id person-id
-                                   :email email
-                                   :id id})))
+  (if (environment/check-site-password site-password)
+    (let [secret (environment/config-value :auth :jwt-secret)]
+      (login-api-token/create-token secret "teet_user"
+                                    {:given-name given-name
+                                     :family-name family-name
+                                     :person-id person-id
+                                     :email email
+                                     :id id}))
+    {:error :incorrect-site-password}))
 
 (defmethod db-api/command-authorization :login [_ _]
   ;; Always allow login to be used

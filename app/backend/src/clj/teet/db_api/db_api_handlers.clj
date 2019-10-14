@@ -11,7 +11,6 @@
             teet.workflow.workflow-commands
             teet.document.document-commands
             teet.document.document-queries
-            teet.login.login-queries
             teet.login.login-commands
             teet.enum.enum-queries
 
