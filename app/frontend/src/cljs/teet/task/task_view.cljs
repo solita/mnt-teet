@@ -46,8 +46,8 @@
                               :on-select #(do
                                             (done-fn)
                                             (e! (task-controller/->UpdateTask
-                                                 task
-                                                 {:task/status (task-controller/new-status %)})))}])
+                                                  task
+                                                  {:task/status (task-controller/new-status %)})))}])
 
 (defn task-page [e! {query :query
                      new-document :new-document :as app}
@@ -69,11 +69,12 @@
                   :align-items :center}}
     [:div {:style {:width "50%"
                    :margin "1rem 1rem 1rem 0"}}
-     [teet.ui.select/select-enum {:e! e!
-                                  :on-change (e! task-controller/->UpdateTaskStatus)
-                                  :value (:db/ident status)
-                                  :attribute :task/status}]]
-    [:span (teet.ui.format/date-time modified)]]
+     [select/select-enum {:e! e!
+                          :on-change (e! task-controller/->UpdateTaskStatus)
+                          :value (:db/ident status)
+                          :attribute :task/status}]]
+    (when modified
+      [:span (teet.ui.format/date-time modified)])]
 
    [itemlist/ItemList
     {:title (tr [:task :documents])}
