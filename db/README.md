@@ -23,3 +23,14 @@ pom.xml contains a template for running the flyway migrations.
 * run `ogr2ogr -f "PostgreSQL" PG:"host=localhost user=teet dbname=teet" KITSENDUSED.gpkg -lco schema=restrictions -lco spatial_index=yes` to import the restrictions tables (takes a while)
 * run SELECT public.ensure_restrictions_indexes();
 * NOTE that the restriction data dump is also imported when running `devdb_clean.sh`!
+
+## Cadastral data dump
+
+* Dump is loaded from https://geoportaal.maaamet.ee/docs/katastripiirid/paev/KATASTER_EESTI_GPKG.zip
+* Download and unzip
+* Dump needs to fixed with spatialite:
+** `spatialite KATASTRIYKSUS.gpkg`
+** `update KATASTRIYKSUS SET moodustatud=NULL WHERE moodustatud='0000-00-00';`
+** `.dumpdbf KATASTRIYKSUS KATASTRIYKSUS.dbf UTF-8`
+* Run `ogr2ogr -f "PostgreSQL" PG:"host=localhost user=teet dbname=teet" KATASTRIYKSUS.dbf -lco schema=cadastre`
+* NOTE that cadastral data is imported when running `devdb_clean.sh`!
