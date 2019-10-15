@@ -15,6 +15,7 @@ jobs:
           paths:
             - ~/.m2
           key: teet-clojure-backend-{{ checksum "app/backend/deps.edn" }}
+
       - restore_cache:
           key: teet-clojure-frontend-{{ checksum "app/frontend/deps.edn" }}
       - run: cd app/frontend && timeout 10m clojure -A:test
