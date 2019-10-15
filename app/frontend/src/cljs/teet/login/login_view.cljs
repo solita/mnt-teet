@@ -36,6 +36,7 @@
 
     [TextField {:label "Password"
                 :id "password-textfield"
+                :type "password"
                 :value (get login :password "")
                 :on-change (fn pw-on-change! [e]
                               (e! (login-controller/->SetPassword (-> e .-target .-value)))
