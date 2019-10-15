@@ -77,9 +77,18 @@
   [Grid {:container true}
    [Grid {:item true :xs 6}
     [layout/section
-     [typography/SectionHeading (:document/name document)
-      [typography/DataLabel " " (count (:document/files document)) " " (tr [:common :files])]]
+     [typography/SectionHeading (:document/name document)]
+     [typography/DataLabel " " (count (:document/files document)) " " (tr [:common :files])]
      [typography/Paragraph (:document/description document)]
+     [:div {:style {:display :flex
+                    :align-items :center}}
+      [:div {:style {:width "50%"
+                     :margin "1rem 1rem 1rem 0"}}
+       [select/select-enum {:e! e! :attribute :document/status
+                            :on-change (e! document-controller/->UpdateDocumentStatus)
+                            :value (get-in document [:document/status :db/ident])}]]
+      (when-let [modified (:document/modified document)]
+        [:span (format/date-time modified)])]
      [List {:dense true}
       (doall
         (for [{id :db/id
@@ -95,7 +104,7 @@
            [ListItemText {:primary name
                           :secondary (r/as-element
                                        [:<>
-                                        [:div (some-> timestamp format/date-time) " "
+                                        [:span {:style {:display :block}} (some-> timestamp format/date-time) " "
                                          (when author
                                            [user-info/user-name e! author])]
                                         (format/file-size size)])}]]))]

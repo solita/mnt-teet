@@ -10,6 +10,7 @@
 (defrecord CreateDocument []) ; create empty document and link it to task
 (defrecord CancelDocument []) ; cancel document creation
 (defrecord UpdateDocumentForm [form-data])
+(defrecord UpdateDocumentStatus [status])
 (defrecord UploadFiles [files document-id on-success progress-increment]) ; Upload files (one at a time) to document
 (defrecord UploadFinished []) ; upload completed, can close dialog
 (defrecord UploadFileUrlReceived [file-data file document-id url on-success])
@@ -70,6 +71,17 @@
                                                 :document-id doc-id
                                                 :progress-increment (int (/ 100 file-count))
                                                 :on-success ->UploadFinished}))})))
+
+  UpdateDocumentStatus
+  (process-event [{status :status :as event} app]
+    (log/info "UpdateDocumentStatus" event)
+    (let [{id :db/id} (common-controller/page-state app)]
+      (t/fx app
+        {:tuck.effect/type :command!
+         :command :document/update-document
+         :payload {:db/id id
+                   :document/status status}
+         :result-event common-controller/->Refresh})))
 
   UploadFiles
   (process-event [{:keys [files document-id on-success progress-increment] :as event} app]
