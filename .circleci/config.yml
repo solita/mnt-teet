@@ -4,15 +4,21 @@ jobs:
     docker:
       - image: circleci/clojure:tools-deps-browsers
     environment:
-      CHROME: /usr/bin/google-chrome
+      CHROMIUM_BROWSER: /opt/google/chrome/chrome
       JVM_OPTS: -Xmx3200m
     steps:
       - checkout
       - restore_cache:
-          key: teet-clojure-{{ checksum "app/frontend/deps.edn" }}-{{ checksum "app/backend/deps.edn" }}
+          key: teet-clojure-backend-{{ checksum "app/backend/deps.edn" }}
       - run: cd app/backend && clojure -A:test
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: teet-clojure-backend-{{ checksum "app/backend/deps.edn" }}
+      - restore_cache:
+          key: teet-clojure-frontend-{{ checksum "app/frontend/deps.edn" }}
       - run: cd app/frontend && timeout 10m clojure -A:test
       - save_cache:
           paths:
             - ~/.m2
-          key: teet-clojure-{{ checksum "app/frontend/deps.edn" }}-{{ checksum "app/backend/deps.edn" }}
+          key: teet-clojure-frontend-{{ checksum "app/frontend/deps.edn" }}
