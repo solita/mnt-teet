@@ -82,7 +82,7 @@
       (reset! db-migrated? true))
     conn))
 
-(defn check-site-password [given-password]                  ;TODO: make this actually work
+(defn check-site-password [given-password]
   (let [actual-pw (config-value :auth :basic-auth-password)]
     (and (some? actual-pw)
          (= given-password actual-pw))))

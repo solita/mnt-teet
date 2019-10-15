@@ -106,9 +106,11 @@
 
 (defn select-user
   "Select user"
-  [{:keys [e! value on-change label]}]
+  [{:keys [e! value on-change label required]}]
   [outlined-select {:label       label
                     :value       value
+                    :required    required
                     :on-change   on-change
+                    :show-empty-selection? true
                     :items       (user-info/list-user-ids)
                     :format-item (r/partial user-info/user-name-and-email e!)}])

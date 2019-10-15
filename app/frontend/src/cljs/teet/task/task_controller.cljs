@@ -63,9 +63,7 @@
          :command :workflow/update-task
          :payload {:db/id id
                    :task/status status}
-         :result-event common-controller/->Refresh}))
-    ;(common-controller/update-page-state app [:task/status] (constantly status))
-    )
+         :result-event common-controller/->Refresh})))
 
   UpdateTask
   (process-event [{:keys [task updated-task]} app]

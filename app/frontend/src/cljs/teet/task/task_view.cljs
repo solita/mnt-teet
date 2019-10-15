@@ -12,7 +12,8 @@
             [teet.ui.form :as form]
             [teet.ui.panels :as panels]
             [teet.document.document-view :as document-view]
-            [teet.project.project-info :as project-info]))
+            [teet.project.project-info :as project-info]
+            teet.task.task-spec))
 
 (defn task-form [e! close _phase-id task]
   ;;Task definition (under project phase)
@@ -23,7 +24,8 @@
               :value task
               :on-change-event task-controller/->UpdateTaskForm
               :cancel-event close
-              :save-event task-controller/->CreateTask}
+              :save-event task-controller/->CreateTask
+              :spec :task/new-task-form}
    ^{:xs 12 :attribute :task/type}
    [select/select-enum {:e! e! :attribute :task/type}]
 
