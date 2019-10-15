@@ -14,4 +14,4 @@
 
 # Large files that we don't want to download too often
 /db/KITSENDUSED.gpkg
-/db/KATASTRIYKSUS.dbf
+/db/KATASTRIYKSUS.*

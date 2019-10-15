@@ -85,11 +85,13 @@ echo "- Ensuring restriction indices exist"
 $PSQL_TEET "SELECT public.ensure_restrictions_indexes();"
 
 
-CADASTRE_DUMP_FILE=KATASTRIYKSUS.dbf
+CADASTRE_DUMP_FILE=KATASTRIYKSUS.gpkg
 echo "Import cadastral data dump"
 if [ ! -f "$CADASTRE_DUMP_FILE" ]; then
     echo "- Downloading fixed dump from S3"
-    aws s3 cp s3://teet-dev-files/db/$CADASTRE_DUMP_FILE $CADASTRE_DUMP_FILE
+    aws s3 cp s3://teet-dev-files/db/KATASTRIYKSUS.gpkg .
+    aws s3 cp s3://teet-dev-files/db/KATASTRIYKSUS.gpkg-wal .
+    aws s3 cp s3://teet-dev-files/db/KATASTRIYKSUS.gpkg-shm .
 fi
 
 echo "- Running ogr2ogr"
