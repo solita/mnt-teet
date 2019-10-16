@@ -250,6 +250,7 @@
                (apply update-fn page-state args))))
 
 (defn page-state
-  "Get the state of the current page"
-  [{page :page :as app}]
-  (get-in app [:route page]))
+  "Get the state of the current page.
+  If path components are given, takes that path from page-state."
+  [{page :page :as app} & path]
+  (get-in app (into [:route page] path)))
