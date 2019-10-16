@@ -19,7 +19,7 @@
 ;; Center of estonian coordinate system
 (def default-center [516493.16 6513417.97])
 
-(defn restriction-control
+(defn category-layers-control
   [e! [category layers] _map-controls]
   (let [toggle-collapse (fn [_]
                           (e! (map-controller/->ToggleCategoryCollapse category)))
@@ -71,15 +71,21 @@
             [typography/Heading3 {:class (<class map-styles/map-controls-heading)}
              "Map layers"]
             [:div {:class (<class map-styles/layer-container)}
+             [category-layers-control e!
+              ["Katastri" {"katastriyksus"
+                           (boolean (get-in map-layers ["Katastri" "katastriyksus"]))}]
+              map-controls]
              (doall
-               (for [layer map-layers]
-                 ^{:key [layer]}
-                 [restriction-control e! layer map-controls]))]]])
+              (for [[category _ :as layer] map-layers
+                    :when (not= category "Katastri")]
+                 ^{:key category}
+                 [category-layers-control e! layer map-controls]))]]])
         [:div {:class (<class map-styles/map-controls-button)}
          [Fab {:on-click #(e! (map-controller/->ToggleMapControls))}
           [icons/maps-layers]]]])}))
 
-(defn map-view [e! {:keys [height class] :or {height "100%"} :as opts} {:keys [map-restrictions map-controls] :as map-data}]
+(defn map-view [e! {:keys [height class] :or {height "100%"} :as opts}
+                {:keys [map-restrictions map-controls] :as map-data}]
   (r/with-let [current-tool (volatile! (get-in map-data [:tool]))
                current-zoom (volatile! nil)
                current-res (volatile! nil)

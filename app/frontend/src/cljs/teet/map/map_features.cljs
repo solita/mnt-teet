@@ -78,3 +78,12 @@
    #js {:image (ol.style.Icon.
                 #js {:src "/img/crosshair.png"
                      :anchor #js [0.5 0.5]})}))
+
+(defn cadastral-unit-style
+  "Show cadastral unit."
+  [^ol.render.Feature feature _res]
+  (ol.style.Style.
+   #js {:stroke (ol.style.Stroke. #js {:color "rgba(40,400,255,90)"
+                                       :width 2})
+        :fill (ol.style.Fill. #js {:color "rgba(40,40,255, 0.20)"})
+        }))

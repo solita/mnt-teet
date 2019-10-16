@@ -84,24 +84,25 @@
                                             (e! (projects-controller/->SetTotalCount total)))))}]])))
 
 (def ^:const project-pin-resolution-threshold 100)
-(def ^:const project-restriction-resolution 50)
+(def ^:const project-restriction-resolution 20)
+(def ^:const cadastral-unit-resolution 5)
 
 (defn generate-mvt-layers                                   ;;This should probably be moved somewhere else so we can use it in project view also if needed
   [restrictions api-url]
   (into {}
-        (map
-          (fn [[type restrictions]]
-            (let [selected-restrictions (->> restrictions
-                                             (filter second)
-                                             (map first))]
-              {(keyword type)
-               (map-layers/mvt-layer api-url
-                                     "mvt_restrictions"
-                                     {"type"   type
-                                      "layers" (string/join ", " selected-restrictions)}
-                                     map-features/project-restriction-style
-                                     {:max-resolution project-restriction-resolution})})))
-        restrictions))
+        (for [[type restrictions] restrictions
+              :let [selected-restrictions (->> restrictions
+                                               (filter second)
+                                               (map first))]
+              :when (and (not= type "Katastri")
+                         (seq selected-restrictions))]
+          [(keyword type)
+           (map-layers/mvt-layer api-url
+                                 "mvt_restrictions"
+                                 {"type"   type
+                                  "layers" (string/join ", " selected-restrictions)}
+                                 map-features/project-restriction-style
+                                 {:max-resolution project-restriction-resolution})])))
 
 
 (defn projects-map-page [e! app]
@@ -120,6 +121,14 @@
                                                                      map-features/project-pin-style
                                                                      {:min-resolution project-pin-resolution-threshold
                                                                       :fit-on-load?   true})}
+
+                                          (when (get-in app [:map :map-restrictions "Katastri" "katastriyksus"])
+                                            {:cadastral-units
+                                             (map-layers/mvt-layer api-url
+                                                                   "mvt_cadastral_units"
+                                                                   {}
+                                                                   map-features/cadastral-unit-style
+                                                                   {:max-resolution cadastral-unit-resolution})})
                                           (generate-mvt-layers (get-in app [:map :map-restrictions]) api-url))}
      (:map app)]))
 
