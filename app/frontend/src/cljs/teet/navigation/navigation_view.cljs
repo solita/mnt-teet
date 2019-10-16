@@ -17,26 +17,16 @@
 
 (defn- drawer-header
   [e! open?]
-  [:div {:style {:display "flex"
-                 :align-items "center"
-                 :justify-content "space-between"
-                 :flex-direction "column"
-                 :margin-bottom "50px"
-                 :background-color theme-colors/white}}
-   [:div {:style {:display "flex"
-                  :height "90px"
-                  :align-items "center"
-                  :justify-content "space-between"}}
-    (when open?
-      [:div {:style {:display :flex}}
-       [:a {:href "/#/"}
-        [:img {:style {:max-width "100%"}
-               :src "/img/maanteeametlogo.png"}]]])
-    [IconButton {:color :secondary
-                 :on-click #(e! (navigation-controller/->ToggleDrawer))}
-     (if open?
-       [icons/navigation-chevron-left]
-       [icons/navigation-chevron-right])]]])
+  [:div {:class (<class navigation-style/maanteeamet-logo)}
+   (when open?
+     [:div
+      [:a {:href "/#/"}
+       [:img {:src "/img/maanteeametlogo.png"}]]])
+   [IconButton {:color :secondary
+                :on-click #(e! (navigation-controller/->ToggleDrawer))}
+    (if open?
+      [icons/navigation-chevron-left]
+      [icons/navigation-chevron-right])]])
 
 (defn- view-link [{:keys [open? current-page link icon name]} ]
   [ListItem {:component "a"
@@ -53,7 +43,7 @@
 
 (defn- page-listing
   [open? page]
-  [List
+  [List {:class (<class navigation-style/page-listing)}
    (when open?
      [ListItem {}
       [typography/Heading2 {:classes {:h2 (<class navigation-style/drawer-projects-style)}}
@@ -94,10 +84,7 @@
 
 (defn drawer-footer
   [e! user open?]
-  [:div {:style {:margin-top "auto"
-                 :padding "1rem 0"
-                 :display :flex
-                 :justify-content :center}}
+  [:div {:class (<class navigation-style/drawer-footer) }
    [user-info e! user open?]])
 
 (defn header
@@ -106,8 +93,6 @@
    [AppBar {:position "sticky"
             :className (herb/join (<class navigation-style/appbar)
                                   (<class navigation-style/appbar-position open?))}
-
-
     [Toolbar {:className (<class navigation-style/toolbar)}
      [Breadcrumbs {}
       (util/with-keys
