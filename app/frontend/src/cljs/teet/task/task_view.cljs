@@ -13,7 +13,8 @@
             [teet.ui.panels :as panels]
             [teet.document.document-view :as document-view]
             [teet.project.project-info :as project-info]
-            teet.task.task-spec))
+            teet.task.task-spec
+            [teet.ui.format :as format]))
 
 (defn task-form [e! close _phase-id task]
   ;;Task definition (under project phase)
@@ -76,7 +77,7 @@
                           :value (:db/ident status)
                           :attribute :task/status}]]
     (when modified
-      [:span (teet.ui.format/date-time modified)])]
+      [:span (format/date-time modified)])]
 
    [itemlist/ItemList
     {:title (tr [:task :documents])}

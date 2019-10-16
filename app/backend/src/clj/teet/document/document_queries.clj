@@ -23,7 +23,11 @@
 (defmethod db-api/query :document/fetch-document [{db :db} {document-id :document-id}]
   (let [sort-children (fn [doc path by-key]
                         (update doc path (fn [items] (sort-by by-key items))))
-        doc (-> (d/q '[:find (pull ?e [:document/name :document/description :document/status
+        doc (-> (d/q '[:find (pull ?e [:document/name
+                                       :document/description
+                                       :document/status
+                                       :document/modified
+                                       :db/id
                                        {:task/_documents [:db/id :task/description
                                                           {:task/type [:db/ident]}]}
                                        {:document/comments [:db/id :comment/comment :comment/timestamp

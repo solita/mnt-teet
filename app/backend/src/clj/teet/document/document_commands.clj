@@ -23,13 +23,24 @@
     nil))
 
 ;; Create new document and link it to task. Returns entity id for document.
-(defmethod db-api/command! :document/new-document [{conn :conn} {:keys [task-id document]}]
+(defmethod db-api/command! :document/new-document [{conn :conn} {:keys [task-id document] :as foo}]
+  (println "new document")
+  (clojure.pprint/pprint foo)
   (-> conn
       (d/transact {:tx-data [(merge {:db/id "new-document"}
                                     (select-keys document [:document/name :document/status :document/description]))
                              {:db/id task-id
-                              :task/documents [{:db/id "new-document"}]}]})
+                              :task/documents [{:db/id "new-document"}]}
+                             ]})
       (get-in [:tempids "new-document"])))
+
+(defmethod db-api/command! :document/update-document [{conn :conn
+                                                       user :user} document]
+  (select-keys
+    (d/transact conn {:tx-data [(assoc document :document/modified (Date.))
+                                {:db/id "datomic.tx"
+                                 :tx/author (:user/id user)}]})
+    [:tempids]))
 
 (defmethod db-api/command! :document/upload-file [{conn :conn
                                                    user :user}

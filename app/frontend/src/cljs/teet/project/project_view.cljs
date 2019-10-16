@@ -10,6 +10,7 @@
             [teet.project.project-controller :as project-controller]
             [teet.project.project-style :as project-style]
             [teet.theme.theme-spacing :as theme-spacing]
+            [teet.ui.skeleton :as skeleton]
             [teet.ui.format :as format]
             [teet.ui.itemlist :as itemlist]
             [teet.ui.icons :as icons]
@@ -60,25 +61,25 @@
                                    (tr [:project :add-phase])
                                    [icons/content-add-circle]]}]
    (doall
-    (for [{id :db/id
-           :phase/keys [phase-name tasks
-                        _estimated-start-date _estimated-end-date]}
-          phases]
-      ^{:key id}
-      [itemlist/ItemList {:class (<class project-style/phase-list-style)
-                          :title (tr [:enum (:db/ident phase-name)])
-                          ;; :subtitle (str (.toLocaleDateString estimated-start-date) " - "
-                          ;;                (.toLocaleDateString estimated-end-date))
-                          :variant :secondary}
-       (if (seq tasks)
-         (for [t tasks]
-           ^{:key (:db/id t)}
-           [:div
-            [Button {:element "a"
-                     :href (str "#/projects/" project "/" id "/" (:db/id t))}
-             [icons/file-folder]
-             (tr [:enum (:db/ident (:task/type t))])]])
-         [:div [:em (tr [:project :phase :no-tasks])]])
+     (for [{id :db/id
+            :phase/keys [phase-name tasks
+                         _estimated-start-date _estimated-end-date]}
+           phases]
+       ^{:key id}
+       [itemlist/ItemList {:class (<class project-style/phase-list-style)
+                           :title (tr [:enum (:db/ident phase-name)])
+                           ;; :subtitle (str (.toLocaleDateString estimated-start-date) " - "
+                           ;;                (.toLocaleDateString estimated-end-date))
+                           :variant :secondary}
+        (if (seq tasks)
+          (for [t tasks]
+            ^{:key (:db/id t)}
+            [:div
+             [Button {:element "a"
+                      :href (str "#/projects/" project "/" id "/" (:db/id t))}
+              [icons/file-folder]
+              (tr [:enum (:db/ident (:task/type t))])]])
+          [:div [:em (tr [:project :phase :no-tasks])]])
 
         [:div
          [Button {:on-click (r/partial e! (project-controller/->OpenTaskDialog id))
@@ -91,21 +92,21 @@
    [map-view/map-view e! {:class (<class theme-spacing/fill-content)
                           :layers {:thk-project
                                    (map-layers/geojson-layer endpoint
-                                                             "geojson_thk_project"
-                                                             {"id" project}
-                                                             map-features/project-line-style
-                                                             {:fit-on-load? true})
+                                     "geojson_thk_project"
+                                     {"id" project}
+                                     map-features/project-line-style
+                                     {:fit-on-load? true})
                                    :related-restrictions
                                    (map-layers/geojson-layer endpoint
-                                                             "geojson_thk_project_related_restrictions"
-                                                             {"project_id" project
-                                                              "distance" 200}
-                                                             map-features/project-related-restriction-style
-                                                             {:opacity 0.5})}}
+                                     "geojson_thk_project_related_restrictions"
+                                     {"project_id" project
+                                      "distance" 200}
+                                     map-features/project-related-restriction-style
+                                     {:opacity 0.5})}}
     {}]])
 
 (defn restriction-component
-  [{:strs [voond toiming muudetud seadus] :as _restriction}]
+  [{:keys [voond toiming muudetud seadus] :as _restriction}]
   (r/with-let [open? (r/atom false)]
     [:div {:class (<class project-style/restriction-container)}
      [ButtonBase {:focus-ripple true
@@ -130,7 +131,7 @@
   [data]
   (let [formatted-data (group-by
                          (fn [restriction]
-                           (get restriction "type"))
+                           (get restriction :type))
                          data)]
     [:div
      (doall
@@ -140,18 +141,33 @@
           [Heading2 {:class (<class project-style/restriction-category-style)} (first group)]
           (doall
             (for [restriction (second group)]
-              ^{:key (get restriction "id")}
+              ^{:key (get restriction :id)}
               [restriction-component restriction]))]))]))
 
-(defn project-related-restrictions [{:keys [endpoint token state project e!]}]
-  [postgrest-query/query
-   {:endpoint endpoint
-    :token token
-    :table "related_restrictions_by_project"
-    :select ["id" "type" "voond" "voondi_nimi" "toiming" "muudetud" "seadus"]
-    :columns ["id" "voond" "voondi_nimi"]
-    :where {"project_id" [:= project]}}
-   restrictions-listing])
+(defn restriction-skeletons
+  [n]
+  [:<>
+   [:div {:class (<class project-style/restriction-category-style)}
+    [skeleton/skeleton {:style {:width "40%"}}]]
+   (doall
+     (for [y (range n)]
+       ^{:key y}
+       [skeleton/skeleton {:parent-style (skeleton/restriction-skeleton-style)}]))])
+
+(defn project-related-restrictions
+  [{:keys [endpoint token state project restrictions e!]}]
+  (r/create-class
+    {:component-did-mount
+     (fn []
+       (e! (project-controller/->FetchRestrictions project)))
+     :component-will-unmount
+     (fn []
+       (e! (project-controller/->ClearRestrictions project)))
+     :reagent-render
+     (fn [{:keys [endpoint token state project restrictions e!]}]
+       (if (:loading? restrictions)
+         [restriction-skeletons 10]
+         [restrictions-listing restrictions]))}))
 
 (defn project-page [e! {{:keys [project]} :params
                         {:keys [tab]} :query
@@ -172,7 +188,7 @@
        [Grid {:item true
               :xs 6}
         [:div {:class (herb/join (<class project-style/project-info-style)
-                                 (<class project-style/project-tasks-style))}
+                        (<class project-style/project-tasks-style))}
          [project-info (get-in app [:config :api-url]) (get-in app login-paths/api-token) project]
 
          [Tabs {:value (case tab
@@ -199,6 +215,7 @@
            "restrictions"
            [project-related-restrictions {:endpoint (get-in app [:config :api-url])
                                           :token (get-in app login-paths/api-token)
+                                          :restrictions (get-in app [:project project :restrictions])
                                           :e! e!
                                           :project project}])]]
        [Grid {:item true :xs 6}
