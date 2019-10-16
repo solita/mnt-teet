@@ -85,5 +85,4 @@
   (ol.style.Style.
    #js {:stroke (ol.style.Stroke. #js {:color "rgba(40,400,255,90)"
                                        :width 2})
-        :fill (ol.style.Fill. #js {:color "rgba(40,40,255, 0.20)"})
-        }))
+        :fill (ol.style.Fill. #js {:color "rgba(40,40,255, 0.20)"})}))
