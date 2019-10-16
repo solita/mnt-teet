@@ -164,7 +164,7 @@
        [skeleton/skeleton {:parent-style (skeleton/restriction-skeleton-style)}]))])
 
 (defn project-related-restrictions
-  [{:keys [endpoint token state project restrictions e!]}]
+  [{:keys [project e!]}]
   (r/create-class
     {:component-did-mount
      (fn []
@@ -173,10 +173,19 @@
      (fn []
        (e! (project-controller/->ClearRestrictions project)))
      :reagent-render
-     (fn [{:keys [endpoint token state project restrictions e!]}]
+     (fn [{:keys [restrictions]}]
        (if (:loading? restrictions)
          [restriction-skeletons 10]
          [restrictions-listing restrictions]))}))
+
+(defn project-related-cadastral-units
+  [e! cadastral-units]
+  (when-not cadastral-units
+    (e! (project-controller/->FetchCadastralUnits)))
+  (fn [_e! cadastral-units]
+    (if (:loading? cadastral-units)
+      [restriction-skeletons 5] ;; FIXME: make own skeleton
+      [:div (pr-str cadastral-units)])))
 
 (defn project-page [e! {{:keys [project]} :params
                         {:keys [tab]} :query
@@ -202,7 +211,8 @@
 
          [Tabs {:value (case tab
                          "documents" 0
-                         "restrictions" 1)
+                         "restrictions" 1
+                         "cadastral-units" 2)
                 :indicatorColor "primary"
                 :textColor "primary"
                 :on-change (fn [_ v]
@@ -211,21 +221,26 @@
                                                                    :params {:project project}
                                                                    :query {:tab (case v
                                                                                   0 "documents"
-                                                                                  1 "restrictions")}})))}
+                                                                                  1 "restrictions"
+                                                                                  2 "cadastral-units")}})))}
           (Tab {:key "documents"
                 :label (tr [:project :documents-tab])})
           (Tab {:key "restrictions"
-                :label (tr [:project :restrictions-tab])})]]
+                :label (tr [:project :restrictions-tab])})
+          (Tab {:key "cadastral-units"
+                :label (tr [:project :cadastral-units-tab])})]]
         [layout/section
          (case tab
            "documents"
            [project-phase-listing e! project phases]
 
            "restrictions"
-           [project-related-restrictions {:endpoint (get-in app [:config :api-url])
-                                          :token (get-in app login-paths/api-token)
-                                          :restrictions (get-in app [:project project :restrictions])
+           [project-related-restrictions {:restrictions (get-in app [:project project :restrictions])
                                           :e! e!
-                                          :project project}])]]
+                                          :project project}]
+
+           "cadastral-units"
+           [project-related-cadastral-units e!
+            (get-in app [:project (get-in app [:params :project]) :cadastral-units])])]]
        [Grid {:item true :xs 6}
         [project-map e! (get-in app [:config :api-url]) project]]]]]))
