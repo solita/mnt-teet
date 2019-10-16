@@ -54,3 +54,16 @@ SELECT ST_AsMVT(tile) AS mvt
                           ST_Setsrid(ST_MakeBox2D(ST_MakePoint($1,$2), ST_MakePoint($3,$4)), 3301),
                           1000)) tile;
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION teet.geojson_thk_project_related_cadastral_units(project_id TEXT, distance INTEGER) RETURNS TEXT
+AS $$
+SELECT row_to_json(fc)::TEXT
+  FROM (SELECT 'FeatureCollection' as type,
+               array_to_json(array_agg(f)) as features
+          FROM (SELECT 'Feature' as type,
+                       ST_AsGeoJSON(ky.geom)::json as geometry,
+                       json_build_object('id', ky.id, 'tooltip', ky.tunnus) as properties
+                  FROM cadastre.katastriyksus ky
+                  JOIN teet.thk_project p ON ST_DWithin(ky.geom, p.geometry, distance)
+                 WHERE p.id = project_id) f) fc;
+$$ LANGUAGE SQL STABLE SECURITY DEFINER;
