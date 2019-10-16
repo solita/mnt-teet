@@ -5,7 +5,9 @@
 
 
 (defrecord RestrictionsResult [result])
-(defrecord OpenPhaseDialog []) ; open add phase modal dialog
+(defrecord FetchRestrictions [project-id])
+(defrecord ClearRestrictions [project-id])
+(defrecord OpenPhaseDialog [])                              ; open add phase modal dialog
 (defrecord ClosePhaseDialog [])
 (defrecord OpenTaskDialog [phase-id])
 (defrecord CloseTaskDialog [])
@@ -27,43 +29,61 @@
   SelectProject
   (process-event [{project-id :project-id} app]
     (t/fx app
-          {:tuck.effect/type :navigate
-           :page :project
-           :params {:project project-id}}))
+      {:tuck.effect/type :navigate
+       :page :project
+       :params {:project project-id}}))
 
-  RestrictionsResult ;This is not used because using state in query component resulted in re-render loop should probably be looked into
+  RestrictionsResult                                        ;This is not used because using state in query component resulted in re-render loop should probably be looked into
   (process-event [{results :result} app]
     (let [project (get-in app [:params :project])]
       (assoc-in app [:project project :restrictions] results)))
 
+  FetchRestrictions
+  (process-event [{project-id :project-id} app]
+    (t/fx app
+      {:tuck.effect/type :rpc
+       :endpoint (get-in app [:config :api-url])
+       :rpc "thk_project_related_restrictions"
+       :method :GET
+       :args {:project_id project-id
+              :distance 200}
+       :loading-path [:project project-id :restrictions]
+       :result-event (fn [result]
+                       (->RestrictionsResult result))}))
+
+  ClearRestrictions
+  (process-event [{project-id :project-id} app]
+    (println "Clear restrictions")
+    (update-in app [:project project-id] dissoc :restrictions))
+
   OpenPhaseDialog
   (process-event [_ app]
     (t/fx app
-          {:tuck.effect/type :navigate
-           :page :project
-           :params {:project (get-in app [:params :project])}
-           :query {:add-phase 1}}))
+      {:tuck.effect/type :navigate
+       :page :project
+       :params {:project (get-in app [:params :project])}
+       :query {:add-phase 1}}))
 
   ClosePhaseDialog
   (process-event [_ app]
     (t/fx app
-          {:tuck.effect/type :navigate
-           :page :project
-           :params {:project (get-in app [:params :project])}
-           :query {}}))
+      {:tuck.effect/type :navigate
+       :page :project
+       :params {:project (get-in app [:params :project])}
+       :query {}}))
 
   OpenTaskDialog
   (process-event [{phase-id :phase-id} app]
     (t/fx app
-          {:tuck.effect/type :navigate
-           :page :project
-           :params {:project (get-in app [:params :project])}
-           :query {:add-task phase-id}}))
+      {:tuck.effect/type :navigate
+       :page :project
+       :params {:project (get-in app [:params :project])}
+       :query {:add-task phase-id}}))
 
   CloseTaskDialog
   (process-event [_ app]
     (t/fx app
-          {:tuck.effect/type :navigate
-           :page :project
-           :params {:project (get-in app [:params :project])}
-           :query {}})))
+      {:tuck.effect/type :navigate
+       :page :project
+       :params {:project (get-in app [:params :project])}
+       :query {}})))

@@ -110,13 +110,15 @@
     {"Authorization" (str "Bearer " @api-token)}))
 
 (defmethod tuck-effect/process-effect :rpc [e! {:keys [rpc args result-path result-event
-                                                       endpoint method
+                                                       endpoint method loading-path
                                                        json?] :as q}]
   (assert rpc "Must specify :rpc function to call")
   (assert (map? args) "Must specify :args map")
   (assert (or result-path result-event) "Must specify result-path or result-event")
   (assert endpoint "Must specify :endpoint for PostgREST server")
   (assert #{nil :GET :POST} "Must specify :method :GET or :POST (default) ")
+  (when (some? loading-path)
+    (e! (->RPCResponse loading-path {:loading? true})))
   (if @test-mode?
     (send-fake-postgrest-rpc! q)
     (-> (if (= method :GET)
