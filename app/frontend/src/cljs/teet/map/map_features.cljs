@@ -81,7 +81,7 @@
 
 (defn cadastral-unit-style
   "Show cadastral unit."
-  [^ol.render.Feature feature _res]
+  [^ol.render.Feature _feature _res]
   (ol.style.Style.
    #js {:stroke (ol.style.Stroke. #js {:color "rgba(40,40,255,90)"
                                        :width 2})
