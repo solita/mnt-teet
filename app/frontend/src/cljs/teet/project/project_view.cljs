@@ -116,12 +116,14 @@
                                         {:opacity 0.5})}}
     {}]])
 
-(defn- collapsible-info [heading info]
+(defn- collapsible-info [{:keys [on-show]
+                          :or {on-show identity}} heading info]
   (r/with-let [open? (r/atom false)]
     [:div {:class (<class project-style/restriction-container)}
      [ButtonBase {:focus-ripple true
                   :class (<class project-style/restriction-button-style)
-                  :on-click #(swap! open? not)}
+                  :on-click #(when (swap! open? not)
+                               (on-show))}
       (if @open?
         [icons/navigation-arrow-right]
         [icons/navigation-arrow-drop-down])
@@ -131,7 +133,7 @@
 
 (defn restriction-component
   [{:keys [voond toiming muudetud seadus] :as _restriction}]
-  [collapsible-info
+  [collapsible-info {}
    voond
    [itemlist/ItemList {:class (<class project-style/restriction-list-style)}
     [itemlist/Item {:label "Toiming"} toiming]
@@ -175,10 +177,10 @@
   [e! restrictions]
   [restrictions-listing restrictions])
 
-(defn- cadastral-unit-component [{:keys [lahiaadress tunnus omandivorm pindala
+(defn- cadastral-unit-component [e! {:keys [id lahiaadress tunnus omandivorm pindala
                                          maakonna_nimi omavalitsuse_nimi asustusyksuse_nimi sihtotstarve_1 kinnistu_nr]
                                   :as _unit}]
-  [collapsible-info
+  [collapsible-info {:on-show (e! project-controller/->HighlightCadastralUnit id)}
    (str lahiaadress " " tunnus " " omandivorm " " pindala)
    [itemlist/ItemList {:class (<class project-style/restriction-list-style)}
     [itemlist/Item {:label "Maakonna nimi"} maakonna_nimi]
@@ -193,7 +195,7 @@
    (doall
     (for [{id :id :as unit} cadastral-units]
       ^{:key id}
-      [cadastral-unit-component unit]))])
+      [cadastral-unit-component e! unit]))])
 
 (defn project-page [e! {{:keys [project]} :params
                         {:keys [tab]} :query

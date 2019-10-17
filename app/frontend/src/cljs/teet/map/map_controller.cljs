@@ -1,6 +1,8 @@
 (ns teet.map.map-controller
   "Controller for map components"
-  (:require [tuck.core :as t]))
+  (:require [tuck.core :as t]
+            [teet.map.openlayers :as openlayers]
+            [taoensso.timbre :as log]))
 
 (defn atleast-one-open?
   [layers]
@@ -75,3 +77,16 @@
            :args             {}
            :result-event     (fn [result]
                                (->MapLayersResult result))})))
+
+(defn update-features! [layer-name update-fn & args]
+  (let [^ol.Map m (openlayers/get-the-map)]
+    (-> m
+        .getLayers
+        (.forEach (fn [layer]
+                    (when (= layer-name (.get layer "teet-source"))
+                      (-> layer
+                          .getSource
+                          .getFeatures
+                          (.forEach
+                           (fn [item]
+                             (apply update-fn item args))))))))))
