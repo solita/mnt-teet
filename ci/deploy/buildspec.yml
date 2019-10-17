@@ -24,7 +24,7 @@ phases:
 
   post_build:
     commands:
-      - NOTIFY_ON_SUCCESS=1 && bash ../scripts/slack.bash Deploy $COMMIT
+      - NOTIFY_ON_SUCCESS=1 && bash $CODEBUILD_SRC_DIR/scripts/slack.bash Deploy $COMMIT
 cache:
   paths:
     - '/root/.m2/**/*'
