@@ -5,11 +5,6 @@
             [taoensso.timbre :as log]))
 
 
-(defrecord RestrictionsResult [result])
-(defrecord FetchRestrictions [project-id])
-(defrecord ClearRestrictions [project-id])
-(defrecord FetchCadastralUnits [])
-(defrecord CadastralUnitsResult [project-id result])
 (defrecord OpenPhaseDialog [])                              ; open add phase modal dialog
 (defrecord ClosePhaseDialog [])
 (defrecord OpenTaskDialog [phase-id])
@@ -35,46 +30,6 @@
       {:tuck.effect/type :navigate
        :page :project
        :params {:project project-id}}))
-
-  CadastralUnitsResult
-  (process-event [{:keys [project-id result]} app]
-    (assoc-in app [:project project-id :cadastral-units] result))
-
-  FetchCadastralUnits
-  (process-event [_ app]
-    (let [project (get-in app [:params :project])]
-      (t/fx app
-            {:tuck.effect/type :rpc
-             :endpoint (get-in app [:config :api-url])
-             :rpc "thk_project_related_cadastral_units"
-             :method :GET
-             :args {:project_id project
-                    :distance 200}
-             :loading-path [:project project :cadastral-units]
-             :result-event (partial ->CadastralUnitsResult project)})))
-
-  RestrictionsResult                                        ;This is not used because using state in query component resulted in re-render loop should probably be looked into
-  (process-event [{results :result} app]
-    (let [project (get-in app [:params :project])]
-      (assoc-in app [:project project :restrictions] results)))
-
-  FetchRestrictions
-  (process-event [{project-id :project-id} app]
-    (t/fx app
-      {:tuck.effect/type :rpc
-       :endpoint (get-in app [:config :api-url])
-       :rpc "thk_project_related_restrictions"
-       :method :GET
-       :args {:project_id project-id
-              :distance 200}
-       :loading-path [:project project-id :restrictions]
-       :result-event (fn [result]
-                       (->RestrictionsResult result))}))
-
-  ClearRestrictions
-  (process-event [{project-id :project-id} app]
-    (println "Clear restrictions")
-    (update-in app [:project project-id] dissoc :restrictions))
 
   OpenPhaseDialog
   (process-event [_ app]
@@ -107,3 +62,13 @@
        :page :project
        :params {:project (get-in app [:params :project])}
        :query {}})))
+
+(defn cadastral-units-rpc [project]
+  {:rpc "thk_project_related_cadastral_units"
+   :args {:project_id project
+          :distance 200}})
+
+(defn restrictions-rpc [project]
+  {:rpc "thk_project_related_restrictions"
+   :args {:project_id project
+          :distance 200}})

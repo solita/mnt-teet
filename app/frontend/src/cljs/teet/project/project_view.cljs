@@ -26,7 +26,8 @@
             [postgrest-ui.components.query :as postgrest-query]
             [teet.project.project-info :as project-info]
             [teet.ui.util :as util]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.ui.query :as query]))
 
 (defn project-data
   [{:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
@@ -164,28 +165,13 @@
        [skeleton/skeleton {:parent-style (skeleton/restriction-skeleton-style)}]))])
 
 (defn project-related-restrictions
-  [{:keys [project e!]}]
-  (r/create-class
-    {:component-did-mount
-     (fn []
-       (e! (project-controller/->FetchRestrictions project)))
-     :component-will-unmount
-     (fn []
-       (e! (project-controller/->ClearRestrictions project)))
-     :reagent-render
-     (fn [{:keys [restrictions]}]
-       (if (:loading? restrictions)
-         [restriction-skeletons 10]
-         [restrictions-listing restrictions]))}))
+  [e! restrictions]
+  [restrictions-listing restrictions])
 
 (defn project-related-cadastral-units
   [e! cadastral-units]
-  (when-not cadastral-units
-    (e! (project-controller/->FetchCadastralUnits)))
-  (fn [_e! cadastral-units]
-    (if (:loading? cadastral-units)
-      [restriction-skeletons 5] ;; FIXME: make own skeleton
-      [:div (pr-str cadastral-units)])))
+
+  [:div (pr-str cadastral-units)])
 
 (defn project-page [e! {{:keys [project]} :params
                         {:keys [tab]} :query
@@ -235,12 +221,19 @@
            [project-phase-listing e! project phases]
 
            "restrictions"
-           [project-related-restrictions {:restrictions (get-in app [:project project :restrictions])
-                                          :e! e!
-                                          :project project}]
+           [query/rpc (merge (project-controller/restrictions-rpc project)
+                             {:e! e!
+                              :app app
+                              :state-path [:project project :restrictions]
+                              :skeleton [restriction-skeletons 10]
+                              :view project-related-restrictions})]
 
            "cadastral-units"
-           [project-related-cadastral-units e!
-            (get-in app [:project (get-in app [:params :project]) :cadastral-units])])]]
+           [query/rpc (merge (project-controller/cadastral-units-rpc project)
+                             {:e! e!
+                              :app app
+                              :state-path [:project project :cadastral-units]
+                              :view project-related-cadastral-units
+                              :skeleton [restriction-skeletons 5]})])]]
        [Grid {:item true :xs 6}
         [project-map e! (get-in app [:config :api-url]) project]]]]]))
