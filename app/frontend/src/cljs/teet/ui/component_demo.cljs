@@ -117,10 +117,11 @@
       "Foo bar baz"]
      [Button {:color "secondary"}
       "Foo bar baz"]
-     [Button {:color :primary :variant :contained}
-      [icons/content-add]
+     [Button {:color :primary :variant :contained
+              :start-icon (r/as-element [icons/content-add])}
       "Foo bar baz"]
-     [Button {:color "secondary" :variant "contained"}
+     [Button {:color "secondary" :variant "contained"
+              :end-icon (r/as-element [icons/content-add])}
       "Foo bar baz"]
      [Button {:variant "contained"
               :disabled true}
