@@ -169,10 +169,33 @@
   [e! restrictions]
   [restrictions-listing restrictions])
 
+(defn- cadastral-unit-component [{:keys [lahiaadress tunnus omandivorm pindala
+                                         maakonna_nimi omavalitsuse_nimi asustusyksuse_nimi sihtotstarve_1 kinnistu_nr]
+                                  :as unit}]
+  (r/with-let [open? (r/atom false)]
+    [:div {:class (<class project-style/restriction-container)}
+     [ButtonBase {:focus-ripple true
+                  :class (<class project-style/restriction-button-style)
+                  :on-click #(swap! open? not)}
+      (if @open?
+        [icons/navigation-arrow-right]
+        [icons/navigation-arrow-drop-down])
+      [Heading3 (str lahiaadress " " tunnus " " omandivorm " " pindala)]]
+     [Collapse {:in @open?}
+      [itemlist/ItemList {:class (<class project-style/restriction-list-style)}
+       [itemlist/Item {:label "Maakonna nimi"} maakonna_nimi]
+       [itemlist/Item {:label "Omavalitsuse nimi"} omavalitsuse_nimi]
+       [itemlist/Item {:label "Asustusyksuse nimi"} asustusyksuse_nimi]
+       [itemlist/Item {:label "Sihtotstarve"} sihtotstarve_1]
+       [itemlist/Item {:label "Kinnistu nr"} kinnistu_nr]]]]))
+
 (defn project-related-cadastral-units
   [e! cadastral-units]
-
-  [:div (pr-str cadastral-units)])
+  [:div
+   (doall
+    (for [{id :id :as unit} cadastral-units]
+      ^{:key id}
+      [cadastral-unit-component unit]))])
 
 (defn project-page [e! {{:keys [project]} :params
                         {:keys [tab]} :query
@@ -210,6 +233,7 @@
            [project-phase-listing e! project phases]
 
            "restrictions"
+           ^{:key "restrictions"}
            [query/rpc (merge (project-controller/restrictions-rpc project)
                              {:e! e!
                               :app app
@@ -218,6 +242,7 @@
                               :view project-related-restrictions})]
 
            "cadastral-units"
+           ^{:key "cadastral-units"}
            [query/rpc (merge (project-controller/cadastral-units-rpc project)
                              {:e! e!
                               :app app
