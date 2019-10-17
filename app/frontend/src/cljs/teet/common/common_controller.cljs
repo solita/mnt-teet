@@ -70,6 +70,7 @@
                     #(str/join "," %)))
 
 (defrecord DebounceEffect [effect])
+(defrecord RPC [rpc-effect-params])
 (defrecord RPCResponse [path data])
 (defrecord Navigate [page params query])
 
@@ -92,6 +93,14 @@
   DebounceEffect
   (process-event [{effect :effect} app]
     (t/fx app effect))
+
+  RPC
+  (process-event [{rpc :rpc-effect-params} app]
+    (t/fx app
+          (merge {:tuck.effect/type :rpc
+                  :endpoint (get-in app [:config :api-url])
+                  :method :GET}
+                  rpc)))
 
   RPCResponse
   (process-event [{:keys [path data]} app]
