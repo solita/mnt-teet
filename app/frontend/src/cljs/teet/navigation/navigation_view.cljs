@@ -6,7 +6,6 @@
                                          List ListItem ListItemText ListItemIcon
                                          Divider]]
             [teet.ui.icons :as icons]
-            [teet.theme.theme-colors :as theme-colors]
             [teet.localization :as localization :refer [tr]]
             [teet.navigation.navigation-controller :as navigation-controller]
             [teet.navigation.navigation-style :as navigation-style]
@@ -28,7 +27,7 @@
       [icons/navigation-chevron-left]
       [icons/navigation-chevron-right])]])
 
-(defn- view-link [{:keys [open? current-page link icon name]} ]
+(defn- view-link [{:keys [open? current-page link icon name]}]
   [ListItem {:component "a"
              :href (routes/url-for link)
              :align-items "center"
@@ -58,7 +57,22 @@
                :link {:page :projects-list}
                :icon icons/action-list
                :name (tr [:projects :list-view])}]
+
    [ListItem {} [Divider]]
+   (when open?
+     [ListItem {}
+      [typography/Heading2 {:classes {:h2 (<class navigation-style/drawer-projects-style)}}
+       "Custom links"]])
+   [view-link {:open? open?
+               :current-page page
+               :link {:page :road
+                      :query {:road 1
+                              :carriageway 1
+                              :start-m 100
+                              :end-m 17000}}
+               :icon icons/maps-my-location
+               :name "Road location"}]
+
    [view-link {:open? open?
                :current-page page
                :link {:page :components}
@@ -84,7 +98,7 @@
 
 (defn drawer-footer
   [e! user open?]
-  [:div {:class (<class navigation-style/drawer-footer) }
+  [:div {:class (<class navigation-style/drawer-footer)}
    [user-info e! user open?]])
 
 (defn header
@@ -92,15 +106,15 @@
   [:<>
    [AppBar {:position "sticky"
             :className (herb/join (<class navigation-style/appbar)
-                                  (<class navigation-style/appbar-position open?))}
+                         (<class navigation-style/appbar-position open?))}
     [Toolbar {:className (<class navigation-style/toolbar)}
      [Breadcrumbs {}
       (util/with-keys
         (for [crumb (butlast breadcrumbs)]
           [Link {:href (routes/url-for crumb)}
            (:title crumb)]))
-       (when-let [{title :title} (last breadcrumbs)]
-         [:span title])]
+      (when-let [{title :title} (last breadcrumbs)]
+        [:span title])]
 
      [search-view/quick-search e! quick-search]]]
 
