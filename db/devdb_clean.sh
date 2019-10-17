@@ -95,4 +95,4 @@ if [ ! -f "$CADASTRE_DUMP_FILE" ]; then
 fi
 
 echo "- Running ogr2ogr"
-ogr2ogr -f "PostgreSQL" PG:"host=localhost user=teet dbname=teet" $CADASTRE_DUMP_FILE -lco schema=cadastre
+ogr2ogr -f "PostgreSQL" PG:"host=localhost user=teet dbname=teet" $CADASTRE_DUMP_FILE -lco schema=cadastre -lco overwrite=yes
