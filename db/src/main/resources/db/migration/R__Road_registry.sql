@@ -58,6 +58,8 @@ LIMIT 1
 SELECT json_build_object('road', r.tee,
                          'name', r.nimetus,
                          'carriageway', r.stee,
+                         'start-m', r.algus,
+                         'end-m', r.lopp,
                          'point', ST_AsGeoJSON(r.point)::JSON,
                          'meters', (r.algus + (ST_LineLocatePoint(r.mgeom, r.point) * (r.lopp-r.algus))),
                          'road_part_geometry', ST_AsGeoJSON(r.mgeom)::JSON)

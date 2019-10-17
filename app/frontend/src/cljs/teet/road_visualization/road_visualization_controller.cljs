@@ -5,6 +5,7 @@
 
 (defrecord FetchRoadGeometry [road carriageway start-m end-m])
 (defrecord FetchRoadAddressForCoordinate [coordinate])
+(defrecord QueryFieldChange [e])
 
 (extend-protocol t/Event
   FetchRoadGeometry
@@ -18,8 +19,7 @@
                   :carriageway carriageway
                   :start_m start-m
                   :end_m end-m}
-           :result-path [:road]}))
-
+           :result-path [:road-data :road]}))
 
   FetchRoadAddressForCoordinate
   (process-event [{:keys [coordinate]} app]
@@ -32,5 +32,14 @@
            :method :GET
            :args {:x (first coordinate)
                   :y (second coordinate)}
-           :result-path [:road-address]}
-          )))
+           :result-path [:road-data :road-address]}))
+  QueryFieldChange
+  (process-event [{:keys [e]} app]
+    (let [name (-> e
+                 .-target
+                 .-name
+                 keyword)
+          value (-> e
+                  .-target
+                  .-value)]
+      (assoc-in app [:query name] value))))
