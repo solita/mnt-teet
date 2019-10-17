@@ -27,7 +27,8 @@
             [teet.project.project-info :as project-info]
             [teet.ui.util :as util]
             [clojure.string :as str]
-            [teet.ui.query :as query]))
+            [teet.ui.query :as query]
+            [teet.ui.tabs :as tabs]))
 
 (defn project-data
   [{:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
@@ -195,26 +196,14 @@
                         (<class project-style/project-tasks-style))}
          [project-info (get-in app [:config :api-url]) (get-in app login-paths/api-token) project]
 
-         [Tabs {:value (case tab
-                         "documents" 0
-                         "restrictions" 1
-                         "cadastral-units" 2)
-                :indicatorColor "primary"
-                :textColor "primary"
-                :on-change (fn [_ v]
-                             (log/info "GO: " v)
-                             (e! (common-controller/map->Navigate {:page :project
-                                                                   :params {:project project}
-                                                                   :query {:tab (case v
-                                                                                  0 "documents"
-                                                                                  1 "restrictions"
-                                                                                  2 "cadastral-units")}})))}
-          (Tab {:key "documents"
-                :label (tr [:project :documents-tab])})
-          (Tab {:key "restrictions"
-                :label (tr [:project :restrictions-tab])})
-          (Tab {:key "cadastral-units"
-                :label (tr [:project :cadastral-units-tab])})]]
+         [tabs/tabs {:e! e!
+                     :selected-tab tab}
+          {:value "documents"
+           :label  (tr [:project :documents-tab])}
+          {:value "restrictions"
+           :label (tr [:project :restrictions-tab])}
+          {:value "cadastral-units"
+           :label (tr [:project :cadastral-units-tab])}]]
         [layout/section
          (case tab
            "documents"

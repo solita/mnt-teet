@@ -73,6 +73,7 @@
 (defrecord RPC [rpc-effect-params])
 (defrecord RPCResponse [path data])
 (defrecord Navigate [page params query])
+(defrecord SetQueryParam [param value]) ; navigate to same page but set set single query param
 
 (defonce debounce-timeouts (atom {}))
 
@@ -112,7 +113,15 @@
           {:tuck.effect/type :navigate
            :page page
            :params params
-           :query query})))
+           :query query}))
+
+  SetQueryParam
+  (process-event [{:keys [param value]} {:keys [page params query] :as app}]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page page
+           :params params
+           :query (assoc query param value)})))
 
 (defn api-token-header []
   (when @api-token
