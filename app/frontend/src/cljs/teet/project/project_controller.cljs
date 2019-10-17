@@ -68,21 +68,12 @@
 
   HighlightCadastralUnit
   (process-event [{new-highlighted-id :id} app]
-    (let [previous-highlighted-id (::highlight-cadastral-unit app)]
-      (map-controller/update-features!
-       "geojson_thk_project_related_cadastral_units"
-       (fn [unit]
-         (let [id (.get unit "id")]
-           (cond
-             (= id previous-highlighted-id)
-             (.set unit "selected" false)
-
-             (= id new-highlighted-id)
-             (.set unit "selected" true)
-
-             :else
-             nil))))
-      (assoc app ::highlight-cadastral-unit new-highlighted-id))))
+    (map-controller/update-features!
+     "geojson_thk_project_related_cadastral_units"
+     (fn [unit]
+       (let [id (.get unit "id")]
+         (.set unit "selected" (= id new-highlighted-id)))))
+    app))
 
 (defn cadastral-units-rpc [project]
   {:rpc "thk_project_related_cadastral_units"
