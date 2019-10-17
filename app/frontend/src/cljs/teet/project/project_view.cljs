@@ -116,8 +116,7 @@
                                         {:opacity 0.5})}}
     {}]])
 
-(defn restriction-component
-  [{:keys [voond toiming muudetud seadus] :as _restriction}]
+(defn- collapsible-info [heading info]
   (r/with-let [open? (r/atom false)]
     [:div {:class (<class project-style/restriction-container)}
      [ButtonBase {:focus-ripple true
@@ -126,17 +125,23 @@
       (if @open?
         [icons/navigation-arrow-right]
         [icons/navigation-arrow-drop-down])
-      [Heading3 voond]]
+      [Heading3 heading]]
      [Collapse {:in @open?}
-      [itemlist/ItemList {:class (<class project-style/restriction-list-style)}
-       [itemlist/Item {:label "Toiming"} toiming]
-       [itemlist/Item {:label "Muudetud"} muudetud]
-       (when-not (str/blank? seadus)
-         [itemlist/Item {:label "Seadus"}
-          [:ul
-           (util/with-keys
-             (for [r (str/split seadus #";")]
-               [:li r]))]])]]]))
+      info]]))
+
+(defn restriction-component
+  [{:keys [voond toiming muudetud seadus] :as _restriction}]
+  [collapsible-info
+   voond
+   [itemlist/ItemList {:class (<class project-style/restriction-list-style)}
+    [itemlist/Item {:label "Toiming"} toiming]
+    [itemlist/Item {:label "Muudetud"} muudetud]
+    (when-not (str/blank? seadus)
+      [itemlist/Item {:label "Seadus"}
+       [:ul
+        (util/with-keys
+          (for [r (str/split seadus #";")]
+            [:li r]))]])]])
 
 (defn restrictions-listing
   [data]
@@ -172,23 +177,15 @@
 
 (defn- cadastral-unit-component [{:keys [lahiaadress tunnus omandivorm pindala
                                          maakonna_nimi omavalitsuse_nimi asustusyksuse_nimi sihtotstarve_1 kinnistu_nr]
-                                  :as unit}]
-  (r/with-let [open? (r/atom false)]
-    [:div {:class (<class project-style/restriction-container)}
-     [ButtonBase {:focus-ripple true
-                  :class (<class project-style/restriction-button-style)
-                  :on-click #(swap! open? not)}
-      (if @open?
-        [icons/navigation-arrow-right]
-        [icons/navigation-arrow-drop-down])
-      [Heading3 (str lahiaadress " " tunnus " " omandivorm " " pindala)]]
-     [Collapse {:in @open?}
-      [itemlist/ItemList {:class (<class project-style/restriction-list-style)}
-       [itemlist/Item {:label "Maakonna nimi"} maakonna_nimi]
-       [itemlist/Item {:label "Omavalitsuse nimi"} omavalitsuse_nimi]
-       [itemlist/Item {:label "Asustusyksuse nimi"} asustusyksuse_nimi]
-       [itemlist/Item {:label "Sihtotstarve"} sihtotstarve_1]
-       [itemlist/Item {:label "Kinnistu nr"} kinnistu_nr]]]]))
+                                  :as _unit}]
+  [collapsible-info
+   (str lahiaadress " " tunnus " " omandivorm " " pindala)
+   [itemlist/ItemList {:class (<class project-style/restriction-list-style)}
+    [itemlist/Item {:label "Maakonna nimi"} maakonna_nimi]
+    [itemlist/Item {:label "Omavalitsuse nimi"} omavalitsuse_nimi]
+    [itemlist/Item {:label "Asustusyksuse nimi"} asustusyksuse_nimi]
+    [itemlist/Item {:label "Sihtotstarve"} sihtotstarve_1]
+    [itemlist/Item {:label "Kinnistu nr"} kinnistu_nr]]])
 
 (defn project-related-cadastral-units
   [e! cadastral-units]
