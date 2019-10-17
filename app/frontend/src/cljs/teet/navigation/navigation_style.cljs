@@ -18,7 +18,8 @@
    :min-height theme-spacing/appbar-height})
 
 (defn appbar []
-  {:background-color theme-colors/gray})
+  {:background-color theme-colors/white
+   :box-shadow "0px 2px 4px rgba(0, 0, 0, 0.36)"})
 
 (defn appbar-position [drawer-open?]
   (let [dw (drawer-width drawer-open?)]
@@ -42,4 +43,4 @@
   [selected?]
   {:color (if selected?
             theme-colors/white
-            theme-colors/dark-gray)})
+            theme-colors/gray-light)})
