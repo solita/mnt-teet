@@ -39,7 +39,7 @@
 
 (defn project-info-style
   []
-  {:background-color theme-colors/light-gray
+  {:background-color theme-colors/gray-lightest
    :padding "2rem 1.5rem 0 1.5rem"})
 
 (defn project-data-style
@@ -57,7 +57,7 @@
   []
   {:border-width "1px 0"
    :border-style "solid"
-   :border-color theme-colors/gray100
+   :border-color theme-colors/gray-lighter
    :margin-top "-1px"})
 
 (defn restriction-list-style

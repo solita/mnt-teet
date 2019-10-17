@@ -15,7 +15,7 @@
                :cx radius
                :cy radius
                :fill "none"
-               :stroke theme-colors/gray100
+               :stroke theme-colors/gray-lighter
                :stroke-dasharray (str circumference " " circumference)
                :stroke-dashoffset 0
                :strokeWidth stroke

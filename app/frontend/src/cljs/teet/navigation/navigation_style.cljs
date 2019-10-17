@@ -17,8 +17,28 @@
    :justify-content :space-between
    :min-height theme-spacing/appbar-height})
 
+(defn maanteeamet-logo
+  []
+  {:background-color theme-colors/white
+   :display "flex"
+   :height "90px"
+   :align-items "center"
+   :justify-content "center"})
+
+(defn drawer-footer
+  []
+  {:margin-top "auto"
+   :padding "1rem 0"
+   :display :flex
+   :justify-content :center})
+
+(defn page-listing
+  []
+  {:margin-top "50px"})
+
 (defn appbar []
-  {:background-color theme-colors/gray})
+  {:background-color theme-colors/white
+   :box-shadow "0px 2px 4px rgba(0, 0, 0, 0.36)"})
 
 (defn appbar-position [drawer-open?]
   (let [dw (drawer-width drawer-open?)]
@@ -42,4 +62,4 @@
   [selected?]
   {:color (if selected?
             theme-colors/white
-            theme-colors/dark-gray)})
+            theme-colors/gray-light)})

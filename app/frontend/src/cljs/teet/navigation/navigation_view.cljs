@@ -6,7 +6,6 @@
                                          List ListItem ListItemText ListItemIcon
                                          Divider]]
             [teet.ui.icons :as icons]
-            [teet.theme.theme-colors :as theme-colors]
             [teet.localization :as localization :refer [tr]]
             [teet.navigation.navigation-controller :as navigation-controller]
             [teet.navigation.navigation-style :as navigation-style]
@@ -17,28 +16,18 @@
 
 (defn- drawer-header
   [e! open?]
-  [:div {:style {:display "flex"
-                 :align-items "center"
-                 :justify-content "space-between"
-                 :flex-direction "column"
-                 :margin-bottom "50px"
-                 :background-color theme-colors/white}}
-   [:div {:style {:display "flex"
-                  :height "90px"
-                  :align-items "center"
-                  :justify-content "space-between"}}
-    (when open?
-      [:div {:style {:display :flex}}
-       [:a {:href "/#/"}
-        [:img {:style {:max-width "100%"}
-               :src "/img/maanteeametlogo.png"}]]])
-    [IconButton {:color :secondary
-                 :on-click #(e! (navigation-controller/->ToggleDrawer))}
-     (if open?
-       [icons/navigation-chevron-left]
-       [icons/navigation-chevron-right])]]])
+  [:div {:class (<class navigation-style/maanteeamet-logo)}
+   (when open?
+     [:div
+      [:a {:href "/#/"}
+       [:img {:src "/img/maanteeametlogo.png"}]]])
+   [IconButton {:color :secondary
+                :on-click #(e! (navigation-controller/->ToggleDrawer))}
+    (if open?
+      [icons/navigation-chevron-left]
+      [icons/navigation-chevron-right])]])
 
-(defn- view-link [{:keys [open? current-page link icon name]} ]
+(defn- view-link [{:keys [open? current-page link icon name]}]
   [ListItem {:component "a"
              :href (routes/url-for link)
              :align-items "center"
@@ -53,7 +42,7 @@
 
 (defn- page-listing
   [open? page]
-  [List
+  [List {:class (<class navigation-style/page-listing)}
    (when open?
      [ListItem {}
       [typography/Heading2 {:classes {:h2 (<class navigation-style/drawer-projects-style)}}
@@ -68,7 +57,22 @@
                :link {:page :projects-list}
                :icon icons/action-list
                :name (tr [:projects :list-view])}]
+
    [ListItem {} [Divider]]
+   (when open?
+     [ListItem {}
+      [typography/Heading2 {:classes {:h2 (<class navigation-style/drawer-projects-style)}}
+       "Custom links"]])
+   [view-link {:open? open?
+               :current-page page
+               :link {:page :road
+                      :query {:road 1
+                              :carriageway 1
+                              :start-m 100
+                              :end-m 17000}}
+               :icon icons/maps-my-location
+               :name "Road location"}]
+
    [view-link {:open? open?
                :current-page page
                :link {:page :components}
@@ -94,10 +98,7 @@
 
 (defn drawer-footer
   [e! user open?]
-  [:div {:style {:margin-top "auto"
-                 :padding "1rem 0"
-                 :display :flex
-                 :justify-content :center}}
+  [:div {:class (<class navigation-style/drawer-footer)}
    [user-info e! user open?]])
 
 (defn header
@@ -105,17 +106,15 @@
   [:<>
    [AppBar {:position "sticky"
             :className (herb/join (<class navigation-style/appbar)
-                                  (<class navigation-style/appbar-position open?))}
-
-
+                         (<class navigation-style/appbar-position open?))}
     [Toolbar {:className (<class navigation-style/toolbar)}
      [Breadcrumbs {}
       (util/with-keys
         (for [crumb (butlast breadcrumbs)]
           [Link {:href (routes/url-for crumb)}
            (:title crumb)]))
-       (when-let [{title :title} (last breadcrumbs)]
-         [:span title])]
+      (when-let [{title :title} (last breadcrumbs)]
+        [:span title])]
 
      [search-view/quick-search e! quick-search]]]
 

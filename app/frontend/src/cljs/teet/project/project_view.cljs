@@ -163,7 +163,8 @@
    (doall
      (for [y (range n)]
        ^{:key y}
-       [skeleton/skeleton {:parent-style (skeleton/restriction-skeleton-style)}]))])
+       [skeleton/skeleton {:style {:width "70%"}
+                           :parent-style (skeleton/restriction-skeleton-style)}]))])
 
 (defn project-related-restrictions
   [e! restrictions]
