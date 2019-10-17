@@ -59,9 +59,9 @@
 (defn project-phase-listing [e! project phases]
   [:<>
    [itemlist/ListHeading {:title (tr [:project :phases])
-                          :action [Button {:on-click (e! project-controller/->OpenPhaseDialog)}
-                                   (tr [:project :add-phase])
-                                   [icons/content-add-circle]]}]
+                          :action [Button {:on-click (e! project-controller/->OpenPhaseDialog)
+                                           :end-icon (r/as-element [icons/content-add-circle])}
+                                   (tr [:project :add-phase])]}]
    (doall
      (for [{id :db/id
             :phase/keys [phase-name tasks
@@ -85,8 +85,8 @@
 
         [:div
          [Button {:on-click (r/partial e! (project-controller/->OpenTaskDialog id))
-                  :size "small"}
-          [icons/content-add-circle]
+                  :size "small"
+                  :start-icon (r/as-element [icons/content-add-circle])}
           (tr [:project :add-task])]]]))])
 
 (defn project-map [e! endpoint project]

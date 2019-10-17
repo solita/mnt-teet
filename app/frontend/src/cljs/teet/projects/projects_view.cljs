@@ -61,8 +61,8 @@
                   :action    [Button {:color    "secondary"
                                       :on-click #(e! (projects-controller/->ClearProjectsFilter))
                                       :size     "small"
-                                      :disabled (empty? where)}
-                              [icons/content-clear]
+                                      :disabled (empty? where)
+                                      :start-icon (r/as-element [icons/content-clear])}
                               (tr [:search :clear-filters])]}
                  [postgrest-listing/listing
                   {:endpoint          (get-in app [:config :api-url])
