@@ -16,8 +16,8 @@ phases:
       - bash linux-install-1.10.1.466.sh
   pre_build:
     commands:
-      - cp -a $FRONTEND /tmp/front-test-dir
-      - (cd /tmp/front-test-dir; timeout 5m clojure -A:test)
+      - cp -a . /tmp/front-test-dir
+      - (cd /tmp/front-test-dir/$FRONTEND; timeout 5m clojure -A:test)
   build:
     commands:
       - echo Building frontend ClojureScript app
