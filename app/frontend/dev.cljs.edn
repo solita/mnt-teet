@@ -1,5 +1,4 @@
 ^{:auto-testing true
   :watch-dirs ["src/cljs" "../common/src/cljc" "test"]}
 {:main teet.main
- :open-url false
- :libs ["src/js/kuvataso.js"]}
+ :open-url false}

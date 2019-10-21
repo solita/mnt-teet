@@ -1,3 +1,2 @@
 {:main teet.main
- :libs ["src/js/kuvataso.js"]
  :closure-extra-annotations ["api" "observable"]}
