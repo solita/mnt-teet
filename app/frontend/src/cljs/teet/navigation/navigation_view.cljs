@@ -31,7 +31,8 @@
   [ListItem {:component "a"
              :href (routes/url-for link)
              :align-items "center"
-             :button true}
+             :button true
+             :classes {:root (<class navigation-style/drawer-list-item-style)}}
    [ListItemIcon {:style {:display :flex
                           :justify-content :center}}
     [icon {:classes {:root (<class navigation-style/drawer-link-style (= current-page (:page link)))}}]]
@@ -43,10 +44,6 @@
 (defn- page-listing
   [open? page]
   [List {:class (<class navigation-style/page-listing)}
-   (when open?
-     [ListItem {}
-      [typography/Heading2 {:classes {:h2 (<class navigation-style/drawer-projects-style)}}
-       (tr [:projects :title])]])
    [view-link {:open? open?
                :current-page page
                :link {:page :root}
@@ -57,12 +54,6 @@
                :link {:page :projects-list}
                :icon icons/action-list
                :name (tr [:projects :list-view])}]
-
-   [ListItem {} [Divider]]
-   (when open?
-     [ListItem {}
-      [typography/Heading2 {:classes {:h2 (<class navigation-style/drawer-projects-style)}}
-       "Custom links"]])
    [view-link {:open? open?
                :current-page page
                :link {:page :road
@@ -72,7 +63,6 @@
                               :end-m 17000}}
                :icon icons/maps-my-location
                :name "Road location"}]
-
    [view-link {:open? open?
                :current-page page
                :link {:page :components}

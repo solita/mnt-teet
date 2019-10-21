@@ -34,7 +34,7 @@
 
 (defn page-listing
   []
-  {:margin-top "50px"})
+  {:padding "0"})
 
 (defn appbar []
   {:background-color theme-colors/white
@@ -57,6 +57,17 @@
 (defn drawer-projects-style
   []
   {:text-transform :uppercase})
+
+(defn drawer-list-item-style
+  []
+  ^{:pseudo {:first-child {:border-width "1px" }}}
+  {:border-color theme-colors/blue-dark
+   :border-width "0 1px 1px 1px"
+   :border-style "solid"
+   :padding "1rem"
+   :display :flex
+   :flex-direction :column
+   :align-items :center})
 
 (defn drawer-link-style
   [selected?]
