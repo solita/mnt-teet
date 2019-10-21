@@ -161,7 +161,7 @@
        (.then #(.json %))
        (.then (fn [json]
                 ;; FIXME: generic error handling
-                (log/info "RESPONSE: " json)
+                ;(log/info "RESPONSE: " json)
                 (let [data (if json?
                              json
                              (js->clj json :keywordize-keys true))]

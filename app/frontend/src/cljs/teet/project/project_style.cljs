@@ -50,7 +50,7 @@
   []
   {:display :flex
    :width "100%"
-   :justify-content :start
+   :justify-content :space-between
    :padding "1rem 0"})
 
 (defn restriction-container

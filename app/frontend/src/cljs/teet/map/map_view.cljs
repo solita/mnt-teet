@@ -96,7 +96,8 @@
 
               (let [{:keys [extent]} map-data]
                 [:div {:style {:position :relative}}
-                 [map-layer-controls e! map-restrictions map-controls]
+                 (when map-restrictions
+                   [map-layer-controls e! map-restrictions map-controls])
                  [openlayers/openlayers
                   {:id                 "mapview"
                    :width              "100%"

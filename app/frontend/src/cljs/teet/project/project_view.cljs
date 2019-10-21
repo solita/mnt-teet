@@ -95,45 +95,44 @@
     {:class (<class theme-spacing/fill-content)
      :layers {:thk-project
               (map-layers/geojson-layer endpoint
-                                        "geojson_thk_project"
-                                        {"id" project}
-                                        map-features/project-line-style
-                                        {:fit-on-load? true})
+                "geojson_thk_project"
+                {"id" project}
+                map-features/project-line-style
+                {:fit-on-load? true})
               :related-restrictions
               (map-layers/geojson-layer endpoint
-                                        "geojson_thk_project_related_restrictions"
-                                        {"project_id" project
-                                         "distance" 200}
-                                        map-features/project-related-restriction-style
-                                        {:opacity 0.5})
+                "geojson_thk_project_related_restrictions"
+                {"project_id" project
+                 "distance" 200}
+                map-features/project-related-restriction-style
+                {:opacity 0.5})
 
               :related-cadastral-units
               (map-layers/geojson-layer endpoint
-                                        "geojson_thk_project_related_cadastral_units"
-                                        {"project_id" project
-                                         "distance" 200}
-                                        map-features/cadastral-unit-style
-                                        {:opacity 0.5})}}
+                "geojson_thk_project_related_cadastral_units"
+                {"project_id" project
+                 "distance" 200}
+                map-features/cadastral-unit-style
+                {:opacity 0.5})}}
     {}]])
 
-(defn- collapsible-info [{:keys [on-show]
-                          :or {on-show identity}} heading info]
-  (r/with-let [open? (r/atom false)]
-    [:div {:class (<class project-style/restriction-container)}
-     [ButtonBase {:focus-ripple true
-                  :class (<class project-style/restriction-button-style)
-                  :on-click #(when (swap! open? not)
-                               (on-show))}
-      (if @open?
-        [icons/navigation-arrow-right]
-        [icons/navigation-arrow-drop-down])
-      [Heading3 heading]]
-     [Collapse {:in @open?}
-      info]]))
+(defn- collapsible-info [{:keys [on-toggle open?]
+                          :or {on-toggle identity}} heading info]
+  [:div {:class (<class project-style/restriction-container)}
+   [ButtonBase {:focus-ripple true
+                :class (<class project-style/restriction-button-style)
+                :on-click on-toggle}
+    [Heading3 heading]
+    (if open?
+      [icons/hardware-keyboard-arrow-right {:color :primary}]
+      [icons/hardware-keyboard-arrow-down {:color :primary}])]
+   [Collapse {:in open?}
+    info]])
 
 (defn restriction-component
-  [{:keys [voond toiming muudetud seadus] :as _restriction}]
-  [collapsible-info {}
+  [e! {:keys [voond toiming muudetud seadus id open?] :as _restriction}]
+  [collapsible-info {:open? open?
+                     :on-toggle (e! project-controller/->ToggleRestrictionData id)}
    voond
    [itemlist/ItemList {:class (<class project-style/restriction-list-style)}
     [itemlist/Item {:label "Toiming"} toiming]
@@ -146,7 +145,7 @@
             [:li r]))]])]])
 
 (defn restrictions-listing
-  [data]
+  [e! data]
   (let [formatted-data (group-by
                          (fn [restriction]
                            (get restriction :type))
@@ -160,13 +159,14 @@
           (doall
             (for [restriction (second group)]
               ^{:key (get restriction :id)}
-              [restriction-component restriction]))]))]))
+              [restriction-component e! restriction]))]))]))
 
 (defn restriction-skeletons
-  [n]
+  [title? n]
   [:<>
    [:div {:class (<class project-style/restriction-category-style)}
-    [skeleton/skeleton {:style {:width "40%"}}]]
+    (when title?
+      [skeleton/skeleton {:style {:width "40%"}}])]
    (doall
      (for [y (range n)]
        ^{:key y}
@@ -175,12 +175,13 @@
 
 (defn project-related-restrictions
   [e! restrictions]
-  [restrictions-listing restrictions])
+  [restrictions-listing e! restrictions])
 
-(defn- cadastral-unit-component [e! {:keys [id lahiaadress tunnus omandivorm pindala
-                                         maakonna_nimi omavalitsuse_nimi asustusyksuse_nimi sihtotstarve_1 kinnistu_nr]
-                                  :as _unit}]
-  [collapsible-info {:on-show (e! project-controller/->HighlightCadastralUnit id)}
+(defn- cadastral-unit-component [e! {:keys [id open? lahiaadress tunnus omandivorm pindala
+                                            maakonna_nimi omavalitsuse_nimi asustusyksuse_nimi sihtotstarve_1 kinnistu_nr]
+                                     :as _unit}]
+  [collapsible-info {:open? open?
+                     :on-toggle (e! project-controller/->ToggleCadastralHightlight id)}
    (str lahiaadress " " tunnus " " omandivorm " " pindala)
    [itemlist/ItemList {:class (<class project-style/restriction-list-style)}
     [itemlist/Item {:label "Maakonna nimi"} maakonna_nimi]
@@ -193,9 +194,9 @@
   [e! cadastral-units]
   [:div
    (doall
-    (for [{id :id :as unit} cadastral-units]
-      ^{:key id}
-      [cadastral-unit-component e! unit]))])
+     (for [{id :id :as unit} cadastral-units]
+       ^{:key id}
+       [cadastral-unit-component e! unit]))])
 
 (defn project-page [e! {{:keys [project]} :params
                         {:keys [tab]} :query
@@ -222,7 +223,7 @@
          [tabs/tabs {:e! e!
                      :selected-tab tab}
           {:value "documents"
-           :label  (tr [:project :documents-tab])}
+           :label (tr [:project :documents-tab])}
           {:value "restrictions"
            :label (tr [:project :restrictions-tab])}
           {:value "cadastral-units"
@@ -235,19 +236,19 @@
            "restrictions"
            ^{:key "restrictions"}
            [query/rpc (merge (project-controller/restrictions-rpc project)
-                             {:e! e!
-                              :app app
-                              :state-path [:project project :restrictions]
-                              :skeleton [restriction-skeletons 10]
-                              :view project-related-restrictions})]
+                        {:e! e!
+                         :app app
+                         :state-path [:project project :restrictions]
+                         :skeleton [restriction-skeletons true 5]
+                         :view project-related-restrictions})]
 
            "cadastral-units"
            ^{:key "cadastral-units"}
            [query/rpc (merge (project-controller/cadastral-units-rpc project)
-                             {:e! e!
-                              :app app
-                              :state-path [:project project :cadastral-units]
-                              :view project-related-cadastral-units
-                              :skeleton [restriction-skeletons 5]})])]]
+                        {:e! e!
+                         :app app
+                         :state-path [:project project :cadastral-units]
+                         :view project-related-cadastral-units
+                         :skeleton [restriction-skeletons false 5]})])]]
        [Grid {:item true :xs 6}
         [project-map e! (get-in app [:config :api-url]) project]]]]]))
