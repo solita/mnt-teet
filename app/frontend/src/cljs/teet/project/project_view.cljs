@@ -89,31 +89,32 @@
                   :start-icon (r/as-element [icons/content-add-circle])}
           (tr [:project :add-task])]]]))])
 
-(defn project-map [e! endpoint project]
+(defn project-map [e! endpoint project tab]
   [:div {:class (<class project-style/project-map-style)}
    [map-view/map-view e!
     {:class (<class theme-spacing/fill-content)
-     :layers {:thk-project
-              (map-layers/geojson-layer endpoint
-                "geojson_thk_project"
-                {"id" project}
-                map-features/project-line-style
-                {:fit-on-load? true})
-              :related-restrictions
-              (map-layers/geojson-layer endpoint
-                "geojson_thk_project_related_restrictions"
-                {"project_id" project
-                 "distance" 200}
-                map-features/project-related-restriction-style
-                {:opacity 0.5})
-
-              :related-cadastral-units
-              (map-layers/geojson-layer endpoint
-                "geojson_thk_project_related_cadastral_units"
-                {"project_id" project
-                 "distance" 200}
-                map-features/cadastral-unit-style
-                {:opacity 0.5})}}
+     :layers (merge {:thk-project
+                     (map-layers/geojson-layer endpoint
+                       "geojson_thk_project"
+                       {"id" project}
+                       map-features/project-line-style
+                       {:fit-on-load? true})}
+               (when (= tab "restrictions")
+                 {:related-restrictions
+                  (map-layers/geojson-layer endpoint
+                    "geojson_thk_project_related_restrictions"
+                    {"project_id" project
+                     "distance" 200}
+                    map-features/project-related-restriction-style
+                    {:opacity 0.5})})
+               (when (= tab "cadastral-units")
+                 {:related-cadastral-units
+                  (map-layers/geojson-layer endpoint
+                    "geojson_thk_project_related_cadastral_units"
+                    {"project_id" project
+                     "distance" 200}
+                    map-features/cadastral-unit-style
+                    {:opacity 0.5})}))}
     {}]])
 
 (defn- collapsible-info [{:keys [on-toggle open?]
@@ -149,8 +150,9 @@
   (let [formatted-data (group-by
                          (fn [restriction]
                            (get restriction :type))
-                         data)]
-    [:div
+                         data)                              ;;TODO: this is ran everytime a restriction is opened should be fixed
+        ]
+    [:<>
      (doall
        (for [group formatted-data]
          ^{:key (first group)}
@@ -251,4 +253,4 @@
                          :view project-related-cadastral-units
                          :skeleton [restriction-skeletons false 5]})])]]
        [Grid {:item true :xs 6}
-        [project-map e! (get-in app [:config :api-url]) project]]]]]))
+        [project-map e! (get-in app [:config :api-url]) project (get-in app [:query :tab])]]]]]))
