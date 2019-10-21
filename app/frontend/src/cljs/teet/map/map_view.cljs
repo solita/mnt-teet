@@ -5,7 +5,7 @@
             [teet.map.openlayers :as openlayers]
             [taoensso.timbre :as log]
             [teet.map.map-controller :as map-controller]
-            [teet.ui.material-ui :refer [Fab Button Switch FormControlLabel Collapse ClickAwayListener]]
+            [teet.ui.material-ui :refer [Fab Button Switch FormControlLabel Collapse ClickAwayListener Fade]]
             [teet.ui.typography :as typography]
             [teet.ui.icons :as icons]
             [teet.common.common-controller :as common-controller]
@@ -65,21 +65,20 @@
      :reagent-render
      (fn [e! map-layers {:keys [open?] :as map-controls}]
        [:div
-        (when open?
-          [ClickAwayListener {:on-click-away #(e! (map-controller/->CloseMapControls))}
-           [:div {:class (<class map-styles/map-controls)}
-            [typography/Heading3 {:class (<class map-styles/map-controls-heading)}
-             "Map layers"]
-            [:div {:class (<class map-styles/layer-container)}
-             [category-layers-control e!
-              ["Katastri" {"katastriyksus"
-                           (boolean (get-in map-layers ["Katastri" "katastriyksus"]))}]
-              map-controls]
-             (doall
-              (for [[category _ :as layer] map-layers
-                    :when (not= category "Katastri")]
-                 ^{:key category}
-                 [category-layers-control e! layer map-controls]))]]])
+        [Fade {:in open?}
+         [:div {:class (<class map-styles/map-controls)}
+          [typography/Heading3 {:class (<class map-styles/map-controls-heading)}
+           "Map layers"]
+          [:div {:class (<class map-styles/layer-container)}
+           [category-layers-control e!
+            ["Katastri" {"katastriyksus"
+                         (boolean (get-in map-layers ["Katastri" "katastriyksus"]))}]
+            map-controls]
+           (doall
+             (for [[category _ :as layer] map-layers
+                   :when (not= category "Katastri")]
+               ^{:key category}
+               [category-layers-control e! layer map-controls]))]]]
         [:div {:class (<class map-styles/map-controls-button)}
          [Fab {:on-click #(e! (map-controller/->ToggleMapControls))}
           [icons/maps-layers]]]])}))

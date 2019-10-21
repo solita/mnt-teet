@@ -42,12 +42,15 @@
 ;; Tabs
 (define-mui-components Tabs Tab TabPanel)
 
-
 ;; Table
 (define-mui-components Table TableRow TableHead TableCell TableSortLabel)
 
+;; Transitions
+(define-mui-components Zoom Fade)
+
 ;; Dialogs and modals
 (define-mui-components Dialog DialogTitle DialogContent Popover)
+
 
 ;; monkey patch based on this https://github.com/reagent-project/reagent/blob/master/doc/examples/material-ui.md
 (def ^:private input-component

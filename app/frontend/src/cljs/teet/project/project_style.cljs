@@ -55,10 +55,9 @@
 
 (defn restriction-container
   []
-  {:border-width "1px 0"
+  {:border-width "0 0 1px 0"
    :border-style "solid"
-   :border-color theme-colors/gray-lighter
-   :margin-top "-1px"})
+   :border-color theme-colors/gray-lighter})
 
 (defn restriction-list-style
   []
@@ -67,4 +66,5 @@
 (defn restriction-category-style
   []
   {:padding "1.5rem 0"
-   :text-transform "capitalize"})
+   :text-transform "capitalize"
+   :border-bottom (str "1px solid " theme-colors/gray-light)})
