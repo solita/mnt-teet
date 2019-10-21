@@ -163,12 +163,12 @@
               ^{:key (get restriction :id)}
               [restriction-component e! restriction]))]))]))
 
-(defn restriction-skeletons
+(defn collapse-skeleton
   [title? n]
   [:<>
-   [:div {:class (<class project-style/restriction-category-style)}
-    (when title?
-      [skeleton/skeleton {:style {:width "40%"}}])]
+   (when title?
+     [:div {:class (<class project-style/restriction-category-style)}
+      [skeleton/skeleton {:style {:width "40%"}}]])
    (doall
      (for [y (range n)]
        ^{:key y}
@@ -241,7 +241,7 @@
                         {:e! e!
                          :app app
                          :state-path [:project project :restrictions]
-                         :skeleton [restriction-skeletons true 5]
+                         :skeleton [collapse-skeleton true 5]
                          :view project-related-restrictions})]
 
            "cadastral-units"
@@ -251,6 +251,6 @@
                          :app app
                          :state-path [:project project :cadastral-units]
                          :view project-related-cadastral-units
-                         :skeleton [restriction-skeletons false 5]})])]]
+                         :skeleton [collapse-skeleton false 5]})])]]
        [Grid {:item true :xs 6}
         [project-map e! (get-in app [:config :api-url]) project (get-in app [:query :tab])]]]]]))
