@@ -18,7 +18,7 @@
 (defn restriction-skeleton-style
   [& opts]
   (merge {:border-color "#e6e6e6"
-          :border-width "1px 0"
+          :border-width "0 0 1px 0"
           :border-style "solid"
           :padding "1.5rem 0"}
     opts))

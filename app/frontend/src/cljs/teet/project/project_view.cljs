@@ -167,8 +167,9 @@
   [title? n]
   [:<>
    (when title?
-     [:div {:class (<class project-style/restriction-category-style)}
-      [skeleton/skeleton {:style {:width "40%"}}]])
+     [skeleton/skeleton {:parent-style {:padding "1.5rem 0"
+                                        :text-transform "capitalize"}
+                         :style {:width "40%"}}])
    (doall
      (for [y (range n)]
        ^{:key y}
