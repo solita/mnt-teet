@@ -23,7 +23,7 @@
 (def green "#008936")
 (def red "#D73E3E")
 
-(def primary blue-light)
+(def primary blue)
 (def secondary blue-dark)
 (def success green)
 (def error red)

@@ -4,6 +4,7 @@
             [teet.ui.file-upload :as file-upload]
             [teet.ui.icons :as icons]
             [teet.ui.skeleton :as skeleton]
+            [teet.ui.buttons :as buttons]
             [teet.ui.itemlist :as itemlist]
             [teet.ui.select :as select]
             [teet.ui.typography :refer [DataLabel Heading1 Heading2 Heading3 Paragraph SectionHeading Text]]
@@ -113,8 +114,7 @@
                    :margin-bottom "2rem"
                    :justify-content "space-evenly"
                    :flex-wrap :wrap}}
-     [Button {:color "primary"}
-      "Foo bar baz"]
+     [buttons/button-primary "Button compoenent"]
      [Button {:color "secondary"}
       "Foo bar baz"]
      [Button {:color :primary :variant :contained
