@@ -36,6 +36,7 @@
    :overrides {:MuiAppBar {:colorDefault {:background-color theme-colors/white}
                            :positionSticky {:box-shadow "none"}}
                :MuiToolBar {:root {:min-height "80px"}}     ;This doesn't properly target the toolbar inside appbar
+               :MuiFab {:root {:border-radius "2px"}}
                :MuiButton {:contained {:border-radius "20px"
                                        :&$focusVisible {:box-shadow "0 0 0 2px #007BAF"}}
                            :root {:&$focusVisible {:box-shadow "0 0 0 2pt #007BAF"}}}

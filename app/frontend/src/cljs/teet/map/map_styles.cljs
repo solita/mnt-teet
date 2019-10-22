@@ -3,31 +3,36 @@
 
 (defn map-controls
   []
-  {:position         :absolute
-   :top              "25px"
-   :right            "100px"
-   :z-index          9999})
+  {:position :absolute
+   :top "25px"
+   :right "80px"
+   :z-index 9999})
 
 
 (defn map-controls-heading
   []
   {:background-color "black"
-   :color            "white"
-   :padding          "1rem"
-   :margin           0})
+   :color "white"
+   :padding "1rem"
+   :margin 0})
 
 (defn layer-container
   []
   {:background-color "grey"
-   :color            "white"
-   :padding          "1rem"})
+   :color "white"
+   :padding "1rem"})
 
-(defn map-controls-button
+(defn map-control-buttons
   []
   {:position :absolute
-   :top      "25px"
-   :right    "25px"
-   :z-index  9999})
+   :top "25px"
+   :right "25px"
+   :z-index 9999})
+
+(defn map-control-button
+  []
+  {:opacity "0.8"
+   :transition "all 0.2s ease-in-out"})
 
 (defn map-overlay
   []

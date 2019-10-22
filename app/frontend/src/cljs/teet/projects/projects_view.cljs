@@ -108,6 +108,7 @@
 (defn projects-map-page [e! app]
   (let [api-url (get-in app [:config :api-url])]
     [map-view/map-view e! {:class  (<class theme-spacing/fill-content)
+                           :layer-controls? true
                            :layers (merge {:thk-projects
                                            (map-layers/mvt-layer api-url
                                                                  "mvt_thk_projects"
