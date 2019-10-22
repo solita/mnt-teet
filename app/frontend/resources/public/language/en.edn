@@ -69,7 +69,8 @@
   :phases "Project phases",
   :phase {:no-tasks "No tasks defined"},
   :documents-tab "Documents",
-  :restrictions-tab "Restrictions"},
+  :restrictions-tab "Restrictions",
+  :cadastral-units-tab "Cadastral units"},
  :project-groups {:title "Project groups"},
  :projects
  {:title "Projects", :map-view "Map", :list-view "Project list"},

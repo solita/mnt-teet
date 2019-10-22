@@ -69,7 +69,8 @@
   :phases "Projekti etapid",
   :phase {:no-tasks "Ülesandeid pole"},
   :documents-tab "Dokumendid",
-  :restrictions-tab "Kitsendused"},
+  :restrictions-tab "Kitsendused",
+  :cadastral-units-tab "Katastriyksus"},
  :project-groups {:title "Projektirühmad"},
  :projects
  {:title "Projektid",
