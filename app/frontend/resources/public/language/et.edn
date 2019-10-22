@@ -57,6 +57,10 @@
   :phase/phase-name "Etapp nimi",
   :document/description "Kirjeldus"},
  :login {:login "Sisene", :password "Salasõna", :username "Kasutaja"},
+ :map
+ {:clear-selections "Tühjenda valikud",
+  :select-all "Vali kõik",
+  :map-layers "Kaardikiht"},
  :project
  {:information
   {:estimated-duration "Eeldatav kestus",

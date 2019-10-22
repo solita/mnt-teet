@@ -12,6 +12,7 @@
 (defrecord MapLayersResult [result])
 (defrecord LayerToggle [category layer])
 (defrecord ToggleMapControls [])
+(defrecord CloseMapControls [])
 (defrecord ToggleCategoryCollapse [category])
 (defrecord ToggleCategorySelect [category closing?])
 (defrecord CloseMapControls [])
@@ -32,7 +33,11 @@
 (extend-protocol t/Event
   ToggleMapControls
   (process-event [_ app]
-    (update-in app [:map :map-controls :open?] not)))
+    (update-in app [:map :map-controls :open?] not))
+
+  CloseMapControls
+  (process-event [_ app]
+    (update-in app [:map :map-controls :open?] false)))
 
 (extend-protocol t/Event
   CloseMapControls

@@ -57,6 +57,10 @@
   :phase/phase-name "Phase name",
   :document/description "Description"},
  :login {:login "Login", :password "Password", :username "Username"},
+ :map
+ {:clear-selections "Clear selections",
+  :select-all "Select all",
+  :map-layers "Map layers"},
  :project
  {:information
   {:estimated-duration "Estimated duration",
