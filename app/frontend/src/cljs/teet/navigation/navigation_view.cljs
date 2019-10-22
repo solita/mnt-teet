@@ -16,34 +16,36 @@
 
 (defn- drawer-header
   [e! open?]
-  [:div {:class (<class navigation-style/maanteeamet-logo)}
-   (when open?
-     [:div
-      [:a {:href "/#/"}
-       [:img {:src "/img/maanteeametlogo.png"}]]])
-   [IconButton {:color :secondary
-                :on-click #(e! (navigation-controller/->ToggleDrawer))}
-    (if open?
-      [icons/navigation-chevron-left]
-      [icons/navigation-chevron-right])]])
-
-(defn- view-link [{:keys [open? current-page link icon name]}]
-  [ListItem {:component "a"
-             :href (routes/url-for link)
+  [ListItem {:component "button"
              :align-items "center"
              :button true
-             :classes {:root (<class navigation-style/drawer-list-item-style)}}
+             :on-click #(e! (navigation-controller/->ToggleDrawer))
+             :classes {:root (<class navigation-style/drawer-list-item-style false)}}
    [ListItemIcon {:style {:display :flex
                           :justify-content :center}}
-    [icon {:classes {:root (<class navigation-style/drawer-link-style (= current-page (:page link)))}}]]
+    (if open?
+      [icons/navigation-close]
+      [icons/navigation-menu])]
    (when open?
-     [ListItemText {:classes {:primary (<class navigation-style/drawer-link-style (= current-page (:page link)))}
-                    :primary
-                    name}])])
+     [ListItemText {:primary "Hide menu"}])]) ;; TODO to localizations
+
+(defn- view-link [{:keys [open? current-page link icon name]}]
+  (let [current-page? (= current-page (:page link))]
+    [ListItem {:component "a"
+              :href (routes/url-for link)
+              :align-items "center"
+              :button true
+              :classes {:root (<class navigation-style/drawer-list-item-style current-page?)}}
+    [ListItemIcon {:style {:display :flex
+                           :justify-content :center}}
+     [icon]]
+    (when open?
+      [ListItemText {:primary name}])]))
 
 (defn- page-listing
-  [open? page]
+  [e! open? page]
   [List {:class (<class navigation-style/page-listing)}
+   [drawer-header e! open?]
    [view-link {:open? open?
                :current-page page
                :link {:page :root}
@@ -69,28 +71,6 @@
                :icon icons/content-archive
                :name "Components"}]])
 
-(defn user-info [e! {:keys [user/given-name user/family-name] :as user} label?]
-  (let [handle-click! (fn user-clicked [_]
-                        (e! (navigation-controller/->GoToLogin)))]
-    (if-not user
-      [Button {:color :secondary
-               :href "/#/login"
-               :onClick handle-click!}
-       (tr [:login :login])]
-      (if label?
-        [Chip {:avatar (r/as-element [Avatar [icons/action-face]])
-               :label (str given-name " " family-name)
-               :href "login"
-               :onClick handle-click!}]
-        [Avatar
-         {:onClick handle-click!}
-         [icons/action-face]]))))
-
-(defn drawer-footer
-  [e! user open?]
-  [:div {:class (<class navigation-style/drawer-footer)}
-   [user-info e! user open?]])
-
 (defn header
   [e! {:keys [open? page breadcrumbs quick-search]} user]
   [:<>
@@ -113,9 +93,7 @@
             :variant "permanent"
             :anchor "left"
             :open open?}
-    [drawer-header e! open?]
-    [page-listing open? page]
-    [drawer-footer e! user open?]]])
+    [page-listing e! open? page]]])
 
 (defn main-container [navigation-open? content]
   [:main {:class (<class navigation-style/main-container navigation-open?)}
