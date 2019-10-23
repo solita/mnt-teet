@@ -143,7 +143,7 @@
   [:div {:class (herb/join (<class navigation-style/logout-container-style)
                            (<class navigation-style/divider-style))}
    [:a {:class (<class navigation-style/logout-style)
-        :href "/#/"}
+        :href "/#/login"}
     "Log out"]])
 
 (defn header
