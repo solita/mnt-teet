@@ -85,7 +85,7 @@
       [icons/navigation-close]
       [icons/navigation-menu])]
    (when open?
-     [ListItemText {:primary "Hide menu"}])]) ;; TODO to localizations
+     [ListItemText {:primary (tr [:common :hide-menu])}])])
 
 (defn- view-link [{:keys [open? current-page link icon name]}]
   (let [current-page? (= current-page (:page link))]

@@ -6,7 +6,8 @@
   :select-files "Vali fail(id)",
   :files "Failid",
   :back-to-task "Tagasi ülesandesse",
-  :back-to-project "Tagasi projekti"},
+  :back-to-project "Tagasi projekti",
+  :hide-menu "Peida menü"},
  :document {:comments "Märkused", :new-comment "Uus märkus"},
  :enum
  {:phase.name/land-acquisition "Maade omandamine",

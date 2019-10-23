@@ -6,7 +6,8 @@
   :select-files "Select files to upload",
   :files "Files",
   :back-to-task "Back to task",
-  :back-to-project "Back to project"},
+  :back-to-project "Back to project",
+  :hide-menu "Hide menu"},
  :document {:comments "Comments", :new-comment "New comment"},
  :enum
  {:phase.name/land-acquisition "Land acquisition",
