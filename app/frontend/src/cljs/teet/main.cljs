@@ -37,12 +37,10 @@
       (if (= page :login)
         ;; Show only login dialog
         [login-view/login-page e! app]
-        (let [{:keys [page title breadcrumbs]} (page-and-title e! app)]
+        (let [{:keys [page]} (page-and-title e! app)]
           [:<>
            [navigation-view/header e!
-                                   {:title title
-                                    :open? nav-open?
-                                    :breadcrumbs breadcrumbs
+                                   {:open? nav-open?
                                     :page (:page app)
                                     :quick-search quick-search}
                                    user]

@@ -36,29 +36,27 @@
                                                      :query ~(:query state)
                                                      :args ~(:args state)
                                                      :view ~view
+                                                     :breadcrumbs [~@(loop [crumbs (list) ;; Autogenerate breadcrumbs based on :parent links for route
+                                                                            route-name route-name
+                                                                            {crumb :crumb
+                                                                             parent :parent
+                                                                             path :path} route]
+                                                                       (if-not crumb
+                                                                         crumbs
+                                                                         (recur (conj crumbs {:title crumb
+                                                                                              :page route-name
+                                                                                              :params (into {}
+                                                                                                        (for [n (param-names path)]
+                                                                                                          [n `(get ~'params ~n)]))})
+                                                                           parent
+                                                                           (get defs parent))))]
                                                      :state ~'state
                                                      :state-path [:route ~route-name]
                                                      :refresh ~'refresh}]
 
                               ;; Otherwise just call view with e! and app
                               `[~view ~'e! ~'app])
-
-                     ;; Autogenerate breadcrumbs based on :parent links for route
-                     :breadcrumbs
-                     [~@(loop [crumbs (list)
-                               route-name route-name
-                               {crumb :crumb
-                                parent :parent
-                                path :path} route]
-                          (if-not crumb
-                            crumbs
-                            (recur (conj crumbs {:title crumb
-                                                 :page route-name
-                                                 :params (into {}
-                                                               (for [n (param-names path)]
-                                                                 [n `(get ~'params ~n)]))})
-                                   parent
-                                   (get defs parent))))]})])
+                     })])
               defs)
 
            [:div "Unrecognized page: " (str page#)])))))

@@ -130,7 +130,7 @@
                :name "Components"}]])
 
 (defn header
-  [e! {:keys [open? page breadcrumbs quick-search]} user]
+  [e! {:keys [open? page quick-search]} user]
   [:<>
    [AppBar {:position "sticky"
             :className (herb/join (<class navigation-style/appbar)
