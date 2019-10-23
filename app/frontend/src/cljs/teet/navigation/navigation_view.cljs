@@ -136,7 +136,8 @@
     [typography/Text {:classes {:root (<class navigation-style/user-label-style)}}
      "My role:"]
     [typography/Text {:classes {:root (<class navigation-style/user-role-style)}}
-     "Design manager account"]]])
+     ;; TODO: Show actual role once these are figured out
+     (:user/family-name user)]]])
 
 (defn logout [e!]
   [:div {:class (herb/join (<class navigation-style/logout-container-style)
