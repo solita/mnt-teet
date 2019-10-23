@@ -62,8 +62,7 @@
            :input-props {:id   id
                          :name name}
            :on-change   (fn [e]
-                          (change-value e))
-           :IconComponent {:iconButton icons/action-3d-rotation}}
+                          (change-value e))}
           (when show-empty-selection?
             [:option {:value ""}])
           (doall
