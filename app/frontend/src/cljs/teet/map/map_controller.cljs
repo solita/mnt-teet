@@ -12,7 +12,6 @@
 (defrecord MapLayersResult [result])
 (defrecord LayerToggle [category layer])
 (defrecord ToggleMapControls [])
-(defrecord CloseMapControls [])
 (defrecord ToggleCategoryCollapse [category])
 (defrecord ToggleCategorySelect [category closing?])
 (defrecord CloseMapControls [])
