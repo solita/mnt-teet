@@ -8,7 +8,8 @@
 (def maanteeamet-logo
   [:a {:style {:display :flex
                :justify-content :center
-               :align-items :center}
+               :align-items :center
+               :text-decoration :none}
        :href "/#/"}
    logo-shield
    [:span {:style {:font-family "Roboto Condensed"
@@ -17,7 +18,6 @@
                    :font-size "14px"
                    :line-height "25px"
                    :letter-spacing "0.5px"
-                   :text-decoration :none
                    :margin-left "0.7rem"
                    :color "#006EB5"}}
     "MAANTEEAMET"]])
