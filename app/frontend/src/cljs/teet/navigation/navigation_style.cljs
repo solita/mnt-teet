@@ -15,7 +15,7 @@
 (defn toolbar
   []
   {:display :flex
-   :justify-content :space-between
+   :justify-content :space-around
    :min-height theme-spacing/appbar-height})
 
 (defn maanteeamet-logo
@@ -39,6 +39,7 @@
 
 (defn appbar []
   {:background-color theme-colors/white
+   :color theme-colors/gray-dark
    :box-shadow "0px 2px 4px rgba(0, 0, 0, 0.36)"
    :transition "all 0.2s ease-in-out"})
 
@@ -81,3 +82,86 @@
    :background-color (if current-page?
                        theme-colors/blue-light
                        theme-colors/blue)})
+
+(defn language-select-container-style
+  []
+  {:display :flex
+   :flex-direction :row
+   :justify-content :flex-end
+   :flex-grow 1
+   :flex-basis "10%"})
+
+(defn language-select-style
+  []
+  {:color theme-colors/blue
+   :padding-bottom 0
+   :border "none"})
+
+;; A rather painful way to imitate the Material UI label + input style
+(defn user-info-style
+  []
+  {:border 0
+   :margin 0
+   :display :inline-flex
+   :padding 0
+   :position :relative
+   :min-width 0
+   :flex-direction :column
+   :vertical-align :top})
+
+(defn user-label-style
+  []
+  {:top 0
+   :left 0
+   :position :absolute
+   :padding 0
+   :display :block
+   :color "#5D6071"
+
+   :font-family "Roboto"
+   :font-size "1.0rem"
+   :font-weight 400
+   :line-height 1
+   :transform "translate(0, 1.5px) scale(0.75)"
+   :transform-origin "top left"})
+
+(defn user-role-style
+  []
+  {:margin-top "16px"
+   :padding "6px 24px 0 0"
+   :line-height "19px"
+   :position :relative
+   :color theme-colors/blue})
+
+(defn divider-style
+  []
+  ^{:pseudo {:last-child {:border :none}}}
+  {:border-color theme-colors/gray-lighter
+   :border-width "0 1px 0 0"
+   :border-style "solid"
+   :padding "0 1rem 0 1rem"})
+
+(defn logo-style
+  []
+  {:display :flex
+   :flex-direction :row
+   :justify-content :flex-start
+   :flex-grow 1
+   :flex-basis "15%"})
+
+(defn logout-container-style
+  []
+  {:border 0
+   :margin 0
+   :display :inline-flex
+   :position :relative
+   :flex-direction :column
+   :vertical-align :top})
+
+(defn logout-style
+  []
+  {:padding "22px 0 0 0"
+   :line-height "19px"
+   :position :relative
+   :font-size "16px"
+   :color theme-colors/blue})

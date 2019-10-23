@@ -12,7 +12,7 @@
             [teet.search.search-interface :as search-interface]
             [teet.ui.events :as events]))
 
-(def sw "200px")
+(def sw "100%")
 
 (defn quick-search [e! quick-search]
   (let [show-results? (r/atom false)]
@@ -21,23 +21,25 @@
       (hotkeys/hotkey "Escape" #(reset! show-results? false))
       (events/click-outside #(reset! show-results? false))
       (fn [e! quick-search]
-        [:div {:style {:position :relative}}
+        [:div {:style {:position :relative
+                       :flex-grow 1
+                       :flex-basis "400px"}}
          [TextField
           {:id          "quick-search"
            :style       {:width sw}
            :variant     :outlined
            :value       (:term quick-search)
-           :label       (tr [:search :quick-search])
+           :placeholder (tr [:search :quick-search])
            :on-change   #(do
                            (reset! show-results? true)
                            (e! (search-controller/->UpdateQuickSearchTerm (-> % .-target .-value))))
            ;:placeholder (tr [:search :quick-search])
            :on-focus    #(reset! show-results? true)
-           :InputProps {:end-adornment
+           :InputProps {:start-adornment
                          (r/as-element
                            [InputAdornment {:position :end}
-                            [IconButton {:color :secondary
-                                         :edge :end}
+                            [IconButton {:color :primary
+                                         :edge :start}
                              [icons/action-search]]])}}]
 
          #_[TextField {:id          "quick-search"

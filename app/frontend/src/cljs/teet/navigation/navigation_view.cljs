@@ -2,19 +2,17 @@
   (:require [reagent.core :as r]
 
             [teet.routes :as routes]
-            [teet.ui.material-ui :refer [AppBar Toolbar
-                                         Drawer Breadcrumbs Link
-                                         List ListItem ListItemText ListItemIcon
+            [teet.ui.material-ui :refer [AppBar Toolbar Drawer List ListItem
+                                         ListItemText ListItemIcon
                                          FormControl InputLabel Select]]
             [teet.ui.icons :as icons]
-            [teet.ui.select :as select]
+            [teet.ui.typography :as typography]
             [teet.localization :as localization :refer [tr]]
             [teet.navigation.navigation-controller :as navigation-controller]
             [teet.navigation.navigation-logo :as navigation-logo]
             [teet.navigation.navigation-style :as navigation-style]
             [teet.search.search-view :as search-view]
-            [herb.core :as herb :refer [<class]]
-            [teet.ui.util :as util]))
+            [herb.core :as herb :refer [<class]]))
 
 (defn language-selector
   []
@@ -47,30 +45,33 @@
                              (if (= val "")
                                (on-change nil)
                                (on-change (nth items (int val))))))]
-        [FormControl {:variant  :standard
-                      :required required
-                      :error    error}
-        [InputLabel {:html-for id
-                     :ref      set-ref!}
-         label]
-         [Select
-          {:value       (or (option-idx value) "")
-           :name        name
-           :native      true
-           :required    (boolean required)
-           :label-width (or (some-> @reference .-offsetWidth) 12)
-           :input-props {:id   id
-                         :name name}
-           :on-change   (fn [e]
-                          (change-value e))}
-          (when show-empty-selection?
-            [:option {:value ""}])
-          (doall
-           (map-indexed
-            (fn [i item]
-              [:option {:value i
-                        :key   i} (format-item item)])
-            items))]]))))
+        [:div {:class (herb/join (<class navigation-style/language-select-container-style)
+                                 (<class navigation-style/divider-style))}
+         [FormControl {:variant  :standard
+                       :required required
+                       :error    error}
+          [InputLabel {:html-for id
+                       :ref      set-ref!}
+           (str label ":")]
+          [Select
+           {:value       (or (option-idx value) "")
+            :name        name
+            :native      true
+            :required    (boolean required)
+            :label-width (or (some-> @reference .-offsetWidth) 12)
+            :input-props {:id   id
+                          :name name}
+            :on-change   (fn [e]
+                           (change-value e))
+            :classes {:root (<class navigation-style/language-select-style)}}
+           (when show-empty-selection?
+             [:option {:value ""}])
+           (doall
+            (map-indexed
+             (fn [i item]
+               [:option {:value i
+                         :key   i} (format-item item)])
+             items))]]]))))
 
 (defn- drawer-header
   [e! open?]
@@ -129,16 +130,34 @@
                :icon icons/content-archive
                :name "Components"}]])
 
+(defn user-info [user]
+  [:div {:class (<class navigation-style/divider-style)}
+   [:div {:class (<class navigation-style/user-info-style)}
+    [typography/Text {:classes {:root (<class navigation-style/user-label-style)}}
+     "My role:"]
+    [typography/Text {:classes {:root (<class navigation-style/user-role-style)}}
+     "Design manager account"]]])
+
+(defn logout [e!]
+  [:div {:class (herb/join (<class navigation-style/logout-container-style)
+                           (<class navigation-style/divider-style))}
+   [:a {:class (<class navigation-style/logout-style)
+        :href "/#/"}
+    "Log out"]])
+
 (defn header
   [e! {:keys [open? page quick-search]} user]
   [:<>
    [AppBar {:position "sticky"
             :className (herb/join (<class navigation-style/appbar)
-                         (<class navigation-style/appbar-position open?))}
-    [Toolbar {:className (<class navigation-style/toolbar)}
-     navigation-logo/maanteeamet-logo
+                                  (<class navigation-style/appbar-position open?))}
+    [Toolbar {:className (herb/join (<class navigation-style/toolbar))}
+     [:div {:class (<class navigation-style/logo-style)}
+      navigation-logo/maanteeamet-logo]
      [search-view/quick-search e! quick-search]
-     [language-selector]]]
+     [language-selector]
+     [user-info user]
+     [logout e!]]]
 
    [Drawer {;:class-name (<class navigation-style/drawer open?)
             :classes {"paperAnchorDockedLeft" (<class navigation-style/drawer open?)}
