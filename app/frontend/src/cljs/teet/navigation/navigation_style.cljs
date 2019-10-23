@@ -127,7 +127,9 @@
 
 (defn user-role-style
   []
-  {:margin-top "16px"
+  {:white-space :nowrap
+   :overflow :ellipsis
+   :margin-top "16px"
    :padding "6px 24px 0 0"
    :line-height "19px"
    :position :relative
@@ -143,7 +145,8 @@
 
 (defn logo-style
   []
-  {:display :flex
+  {:margin-right "1rem"
+   :display :flex
    :flex-direction :row
    :justify-content :flex-start
    :flex-grow 1
@@ -160,7 +163,8 @@
 
 (defn logout-style
   []
-  {:padding "22px 0 0 0"
+  {:white-space :nowrap
+   :padding "22px 0 0 0"
    :line-height "19px"
    :position :relative
    :font-size "16px"
