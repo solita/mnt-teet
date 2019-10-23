@@ -33,12 +33,12 @@
   (let [nav-open? (boolean (:open? navigation))]
     [theme/theme-provider
      [:<>
+      [CssBaseline]
       (if (= page :login)
         ;; Show only login dialog
         [login-view/login-page e! app]
         (let [{:keys [page title breadcrumbs]} (page-and-title e! app)]
           [:<>
-           [CssBaseline]
            [navigation-view/header e!
                                    {:title title
                                     :open? nav-open?
