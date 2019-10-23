@@ -27,8 +27,8 @@
                               :required required
                               :error    error}
                  [InputLabel {:html-for id
-                              :ref      set-ref!
-                              } label]
+                              :ref      set-ref!}
+                  label]
                  [Select
                   {:value       (or (option-idx value) "")
                    :name        name

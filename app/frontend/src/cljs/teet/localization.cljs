@@ -18,8 +18,8 @@
 
 (def supported-languages #{"en" "et"})
 
-(def language-names {"en" "English"
-                     "et" "Eesti keel"})
+(def language-names {"en" "ENG"
+                     "et" "ET"})
 
 (defonce loaded-languages (atom {}))
 
