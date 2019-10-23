@@ -14,7 +14,6 @@
                          (map (juxt :value identity))
                          tabs)]
     [Tabs {:value (::index (value->tab selected-tab))
-           :indicatorColor "primary"
            :textColor "primary"
            :on-change (fn [_ v]
                         (let [tab (index->tab v)]

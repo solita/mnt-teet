@@ -37,6 +37,15 @@
                            :positionSticky {:box-shadow "none"}}
                :MuiToolBar {:root {:min-height "80px"}}     ;This doesn't properly target the toolbar inside appbar
                :MuiFab {:root {:border-radius "2px"}}
+               :MuiTabs {:indicator {:display :none}}
+               :MuiTab {:root {:&$textColorPrimary {:text-transform :capitalize
+                                                    :font-size "1rem"
+                                                    :font-weight "400"
+                                                    :color theme-colors/primary}
+                               :&$selected {:background-color theme-colors/white
+                                            :border "none"
+                                            :font-weight :bold
+                                            :border-radius "4px 4px 0 0"}}}
                :MuiIconButton {:root {:border-radius "2px"}}
                :MuiButton {:contained {:border-radius "20px"
                                        :&$focusVisible {:box-shadow "0 0 0 2px #007BAF"}}

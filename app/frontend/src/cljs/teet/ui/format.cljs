@@ -30,7 +30,7 @@
     (when-let [[_ start-date end-date] (re-matches #"\[(\d{4}-\d{2}-\d{2}),(\d{4}-\d{2}-\d{2})\)"
                                                    date-range-string)]
       (str (->> start-date tf/parse (tf/unparse formatter))
-           "—"
+           " — "
            (->> end-date tf/parse (tf/unparse formatter))))))
 
 (defn km-range

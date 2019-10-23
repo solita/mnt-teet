@@ -6,10 +6,11 @@
             [teet.map.map-view :as map-view]
             [teet.login.login-paths :as login-paths]
             [postgrest-ui.components.item-view :as postgrest-item-view]
-            [teet.ui.material-ui :refer [Grid Button Tabs Tab ButtonBase Collapse]]
+            [teet.ui.material-ui :refer [Grid Button Tabs Tab ButtonBase Collapse Breadcrumbs Link]]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-style :as project-style]
             [teet.theme.theme-spacing :as theme-spacing]
+            [teet.ui.breadcrumbs :as breadcrumbs]
             [teet.ui.skeleton :as skeleton]
             [teet.ui.format :as format]
             [teet.ui.itemlist :as itemlist]
@@ -28,14 +29,15 @@
             [teet.ui.util :as util]
             [clojure.string :as str]
             [teet.ui.query :as query]
-            [teet.ui.tabs :as tabs]))
+            [teet.ui.tabs :as tabs]
+            [teet.routes :as routes]))
 
 (defn project-data
   [{:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
-  [:<>
+  [:div {:class (<class project-style/project-info)}
    [Heading1 name]
    [itemlist/ItemList
-    {:class (<class project-style/project-data-style)}
+    {}
     [:div (tr [:project :information :estimated-duration])
      ": "
      (format/date-range estimated_duration)]
@@ -45,19 +47,22 @@
     [:div (tr [:project :information :carriageway]) ": " carriageway]]])
 
 
-(defn- project-info [endpoint token project]
-  [postgrest-item-view/item-view
-   {:endpoint endpoint
-    :token token
-    :table "thk_project"
-    :select ["name" "estimated_duration"
-             "road_nr" "km_range" "carriageway"
-             "procurement_no"]
-    :view project-data}
-   project])
+(defn- project-info [endpoint token project breadcrumbs]
+  [:div
+   [breadcrumbs/breadcrumbs breadcrumbs]
+   [postgrest-item-view/item-view
+    {:endpoint endpoint
+     :token token
+     :table "thk_project"
+     :select ["name" "estimated_duration"
+              "road_nr" "km_range" "carriageway"
+              "procurement_no"]
+     :view project-data}
+    project]])
 
 (defn project-phase-listing [e! project phases]
   [:<>
+
    [itemlist/ListHeading {:title (tr [:project :phases])
                           :action [Button {:on-click (e! project-controller/->OpenPhaseDialog)
                                            :end-icon (r/as-element [icons/content-add-circle])}
@@ -204,7 +209,8 @@
 (defn project-page [e! {{:keys [project]} :params
                         {:keys [tab]} :query
                         {:keys [add-phase add-task]} :query :as app}
-                    phases]
+                    phases
+                    breadcrumbs]
   (let [tab (or tab "documents")]
     [:<>
      (when add-phase
@@ -219,9 +225,8 @@
       [Grid {:container true}
        [Grid {:item true
               :xs 6}
-        [:div {:class (herb/join (<class project-style/project-info-style)
-                        (<class project-style/project-tasks-style))}
-         [project-info (get-in app [:config :api-url]) (get-in app login-paths/api-token) project]
+        [:div {:class (<class project-style/gray-bg-content)}
+         [project-info (get-in app [:config :api-url]) (get-in app login-paths/api-token) project breadcrumbs]
 
          [tabs/tabs {:e! e!
                      :selected-tab tab}

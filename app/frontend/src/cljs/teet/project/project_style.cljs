@@ -25,11 +25,6 @@
   []
   {:display :flex})
 
-(defn project-tasks-style
-  []
-  {:flex 1
-   :padding-right "1rem"})
-
 (defn project-map-style
   []
   {:flex 1
@@ -37,14 +32,14 @@
    :top theme-spacing/appbar-height
    :align-self :flex-start})
 
-(defn project-info-style
+(defn project-info
+  []
+  {:padding "2rem 0"})
+
+(defn gray-bg-content
   []
   {:background-color theme-colors/gray-lightest
-   :padding "2rem 1.5rem 0 1.5rem"})
-
-(defn project-data-style
-  []
-  {:margin-bottom "1rem"})
+   :padding "0.5rem 1.5rem 0 1.5rem"})
 
 (defn restriction-button-style
   []
