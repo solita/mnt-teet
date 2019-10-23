@@ -27,7 +27,8 @@
                                :color :primary}))
 
 (defn white-button-with-icon
-  [{:keys [on-click]} & children]
+  [{:keys [on-click icon]} text]
   [ButtonBase {:on-click on-click
                :class (<class white-button-class)}
-   children])
+   text
+   [icon]])

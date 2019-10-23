@@ -56,8 +56,8 @@
      (doall
        (for [{:user/keys [email family-name] :as user} login-controller/mock-users]
          ^{:key email}
-         [buttons/white-button-with-icon {:on-click #(do
+         [buttons/white-button-with-icon {:icon icons/navigation-arrow-forward
+                                          :on-click #(do
                                                        (e! (login-controller/->Login user))
                                                        (log/info "Start login: " user))}
-          (str "Login as " family-name)
-          [icons/navigation-arrow-forward]]))]]])
+          (str "Login as " family-name)]))]]])
