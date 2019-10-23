@@ -138,14 +138,7 @@
     [Toolbar {:className (<class navigation-style/toolbar)}
      navigation-logo/maanteeamet-logo
      [search-view/quick-search e! quick-search]
-     [language-selector]
-     [Breadcrumbs {}
-      (util/with-keys
-        (for [crumb (butlast breadcrumbs)]
-          [Link {:href (routes/url-for crumb)}
-           (:title crumb)]))
-      (when-let [{title :title} (last breadcrumbs)]
-        [:span title])]]]
+     [language-selector]]]
 
    [Drawer {;:class-name (<class navigation-style/drawer open?)
             :classes {"paperAnchorDockedLeft" (<class navigation-style/drawer open?)}
