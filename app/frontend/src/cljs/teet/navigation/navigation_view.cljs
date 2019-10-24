@@ -16,7 +16,7 @@
 
 (defn language-selector
   []
-  (let [label "Language"
+  (let [label (str (tr [:common :language]))
         id "language-select"
         name "language"
         value (case @localization/selected-language
@@ -134,7 +134,7 @@
   [:div {:class (<class navigation-style/divider-style)}
    [:div {:class (<class navigation-style/user-info-style)}
     [typography/Text {:classes {:root (<class navigation-style/user-label-style)}}
-     "My role:"]
+     (str (tr [:user :role]) ":")]
     [typography/Text {:classes {:root (<class navigation-style/user-role-style)}}
      ;; TODO: Show actual role once these are figured out
      (:user/family-name user)]]])

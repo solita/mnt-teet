@@ -119,10 +119,10 @@
    :color "#5D6071"
 
    :font-family "Roboto"
-   :font-size "1.0rem"
-   :font-weight 400
-   :line-height 1
-   :transform "translate(0, 1.5px) scale(0.75)"
+   :font-weight 300
+   :font-size "14px"
+   :line-height "14px"
+   :transform "translate(0, 2.5px)"
    :transform-origin "top left"})
 
 (defn user-role-style
