@@ -15,6 +15,7 @@
   (d/db (db-connection)))
 
 (def q d/q)
+(def pull d/pull)
 
 (defn force-migrations!
   "Forces all migrations to rerun."                         ;;TODO: reload schema from environment to reload schema.edn

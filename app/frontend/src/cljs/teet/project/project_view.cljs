@@ -62,6 +62,19 @@
    [Heading2 heading]
    button])
 
+;; TODO: Added for pilot demo. Maybe later store in database, make customizable?
+(def phase-sort-priority-vec
+  [:phase.name/pre-design
+   :phase.name/preliminary-design
+   :phase.name/land-acquisition
+   :phase.name/detailed-design
+   :phase.name/construction
+   :phase.name/other])
+
+(defn- phase-sort-priority [phase]
+  (.indexOf phase-sort-priority-vec
+            (-> phase :phase/phase-name :db/ident)))
+
 (defn project-phase-listing [e! project phases]
   [:<>
    [phase-action-heading {:heading (tr [:project :phases])
@@ -72,27 +85,30 @@
      (for [{id :db/id
             :phase/keys [phase-name tasks
                          _estimated-start-date _estimated-end-date]}
-           phases]
-       ^{:key id}
-       [itemlist/ItemList {:title (tr [:enum (:db/ident phase-name)])
-                           ;; :subtitle (str (.toLocaleDateString estimated-start-date) " - "
-                           ;;                (.toLocaleDateString estimated-end-date))
-                           :variant :secondary}
-        (if (seq tasks)
-          (for [t tasks]
-            ^{:key (:db/id t)}
-            [:div
-             [Button {:element "a"
-                      :href (str "#/projects/" project "/" id "/" (:db/id t))}
-              [icons/file-folder]
-              (tr [:enum (:db/ident (:task/type t))])]])
-          [:div [:em (tr [:project :phase :no-tasks])]])
+           (sort-by phase-sort-priority
+                    phases)]
+       (do (println phase-name)
+           ^{:key id}
+        [itemlist/ItemList {:title (tr [:enum (:db/ident phase-name)])
+                            ;; :subtitle (str (.toLocaleDateString estimated-start-date) " - "
+                            ;;                (.toLocaleDateString estimated-end-date))
+                            :variant :secondary}
+         (if (seq tasks)
+           (doall
+            (for [t tasks]
+              ^{:key (:db/id t)}
+              [:div
+               [Button {:element "a"
+                        :href (str "#/projects/" project "/" id "/" (:db/id t))}
+                [icons/file-folder]
+                (tr [:enum (:db/ident (:task/type t))])]]))
+           [:div [:em (tr [:project :phase :no-tasks])]])
 
-        [:div
-         [Button {:on-click (r/partial e! (project-controller/->OpenTaskDialog id))
-                  :size "small"
-                  :start-icon (r/as-element [icons/content-add-circle])}
-          (tr [:project :add-task])]]]))])
+         [:div
+          [Button {:on-click (r/partial e! (project-controller/->OpenTaskDialog id))
+                   :size "small"
+                   :start-icon (r/as-element [icons/content-add-circle])}
+           (tr [:project :add-task])]]])))])
 
 (defn project-map [e! endpoint project tab]
   [:div {:class (<class project-style/project-map-style)}
