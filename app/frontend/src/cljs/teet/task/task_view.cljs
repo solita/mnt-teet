@@ -41,7 +41,7 @@
                  breadcrumbs]
   [:<>
    (when (:add-document query)
-     [panels/modal {:title (tr [:task :new-document])
+     [panels/modal {:title (tr [:task :add-document])
                     :on-close (e! task-controller/->CloseAddDocumentDialog)}
       [document-view/document-form {:e! e!
                                     :on-close-event task-controller/->CloseAddDocumentDialog}
