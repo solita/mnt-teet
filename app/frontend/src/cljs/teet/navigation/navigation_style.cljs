@@ -167,5 +167,4 @@
    :padding "22px 0 0 0"
    :line-height "19px"
    :position :relative
-   :font-size "16px"
-   :color theme-colors/blue})
+   :font-size "16px"})

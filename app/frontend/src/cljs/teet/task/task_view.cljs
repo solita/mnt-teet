@@ -12,35 +12,12 @@
             [teet.project.project-style :as project-style]
             [teet.ui.select :as select]
             [teet.user.user-info :as user-info]
-            [teet.ui.form :as form]
+            [teet.project.project-view :as project-view]
             [teet.ui.panels :as panels]
             [teet.document.document-view :as document-view]
-            [teet.project.project-info :as project-info]
-            teet.task.task-spec
             [teet.ui.format :as format]
             [teet.ui.breadcrumbs :as breadcrumbs]
             [teet.common.common-styles :as common-styles]))
-
-(defn task-form [e! close _phase-id task]
-  ;;Task definition (under project phase)
-  ;; Task type (a predefined list of tasks: topogeodeesia, geoloogia, liiklusuuring, KMH eelhinnang, loomastikuuuring, arheoloogiline uuring, muu)
-  ;; Description (short description of the task for clarification, 255char, in case more detailed description is needed, it will be uploaded as a file under the task)
-  ;; Responsible person (email)
-  [form/form {:e! e!
-              :value task
-              :on-change-event task-controller/->UpdateTaskForm
-              :cancel-event close
-              :save-event task-controller/->CreateTask
-              :spec :task/new-task-form}
-   ^{:xs 12 :attribute :task/type}
-   [select/select-enum {:e! e! :attribute :task/type}]
-
-   ^{:attribute :task/description}
-   [TextField {:full-width true :multiline true :rows 4 :maxrows 4
-               :variant :outlined}]
-
-   ^{:attribute :task/assignee}
-   [select/select-user {:e! e!}]])
 
 (defn change-task-status [e! task done-fn]
   [select/select-with-action {:items [:task.status/not-started
@@ -111,4 +88,4 @@
        [icons/content-add-circle]
        (tr [:task :add-document])]]]
     [Grid {:item true :xs 6}
-     [teet.project.project-view/project-map e! (get-in app [:config :api-url]) project (get-in app [:query :tab])]]]])
+     [project-view/project-map e! (get-in app [:config :api-url]) project (get-in app [:query :tab])]]]])

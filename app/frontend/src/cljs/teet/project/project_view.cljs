@@ -6,10 +6,11 @@
             [teet.map.map-view :as map-view]
             [teet.login.login-paths :as login-paths]
             [postgrest-ui.components.item-view :as postgrest-item-view]
-            [teet.ui.material-ui :refer [Grid Button ButtonBase Collapse]]
+            [teet.ui.material-ui :refer [Grid Button ButtonBase Collapse TextField]]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-style :as project-style]
             [teet.theme.theme-spacing :as theme-spacing]
+            [teet.project.project-info :as project-info]
             [teet.ui.breadcrumbs :as breadcrumbs]
             [teet.ui.skeleton :as skeleton]
             [teet.ui.format :as format]
@@ -20,13 +21,38 @@
             [teet.localization :refer [tr]]
             [teet.ui.panels :as panels]
             [teet.ui.buttons :as buttons]
+            teet.task.task-spec
             [teet.phase.phase-view :as phase-view]
-            [teet.task.task-view :as task-view]
             [teet.ui.util :as util]
             [clojure.string :as str]
             [teet.ui.query :as query]
             [teet.ui.tabs :as tabs]
-            [teet.common.common-styles :as common-styles]))
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.form :as form]
+            [teet.task.task-controller :as task-controller]
+            [teet.ui.select :as select]))
+
+(defn task-form [e! close _phase-id task]
+  ;;Task definition (under project phase)
+  ;; Task type (a predefined list of tasks: topogeodeesia, geoloogia, liiklusuuring, KMH eelhinnang, loomastikuuuring, arheoloogiline uuring, muu)
+  ;; Description (short description of the task for clarification, 255char, in case more detailed description is needed, it will be uploaded as a file under the task)
+  ;; Responsible person (email)
+  [form/form {:e! e!
+              :value task
+              :on-change-event task-controller/->UpdateTaskForm
+              :cancel-event close
+              :save-event task-controller/->CreateTask
+              :spec :task/new-task-form}
+   ^{:xs 12 :attribute :task/type}
+   [select/select-enum {:e! e! :attribute :task/type}]
+
+   ^{:attribute :task/description}
+   [TextField {:full-width true :multiline true :rows 4 :maxrows 4
+               :variant :outlined}]
+
+   ^{:attribute :task/assignee}
+   [select/select-user {:e! e!}]])
+
 
 (defn project-data
   [{:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
@@ -237,7 +263,7 @@
      (when add-task
        [panels/modal {:title (tr [:project :add-task])
                       :on-close #(e! (project-controller/->CloseTaskDialog))}
-        [task-view/task-form e! project-controller/->CloseTaskDialog add-task (get-in app [:project project :new-task])]])
+        [task-form e! project-controller/->CloseTaskDialog add-task (get-in app [:project project :new-task])]])
      [:div {:class (<class project-style/project-view-container)}
       [Grid {:container true}
        [Grid {:item true

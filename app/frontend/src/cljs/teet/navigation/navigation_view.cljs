@@ -4,7 +4,7 @@
             [teet.routes :as routes]
             [teet.ui.material-ui :refer [AppBar Toolbar Drawer List ListItem
                                          ListItemText ListItemIcon
-                                         FormControl InputLabel Select]]
+                                         FormControl InputLabel Select Link]]
             [teet.ui.icons :as icons]
             [teet.ui.typography :as typography]
             [teet.localization :as localization :refer [tr]]
@@ -142,8 +142,9 @@
 (defn logout [e!]
   [:div {:class (herb/join (<class navigation-style/logout-container-style)
                            (<class navigation-style/divider-style))}
-   [:a {:class (<class navigation-style/logout-style)
-        :href "/#/login"}
+   [Link {:underline :always
+          :class (<class navigation-style/logout-style)
+          :href "/#/login"}
     "Log out"]])
 
 (defn header
