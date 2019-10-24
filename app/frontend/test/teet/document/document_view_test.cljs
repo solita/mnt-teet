@@ -17,7 +17,7 @@
             :component test-view)
 
   (drt/step :expect "Expect empty comment form"
-            :selector "input[placeholder=\"Uus märkus\"]"
+            :selector "textarea[placeholder=\"Uus märkus\"]"
             :as :input)
 
   (drt/step :expect "Save button is found"
