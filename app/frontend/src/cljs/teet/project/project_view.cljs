@@ -87,28 +87,27 @@
                          _estimated-start-date _estimated-end-date]}
            (sort-by phase-sort-priority
                     phases)]
-       (do (println phase-name)
-           ^{:key id}
-        [itemlist/ItemList {:title (tr [:enum (:db/ident phase-name)])
-                            ;; :subtitle (str (.toLocaleDateString estimated-start-date) " - "
-                            ;;                (.toLocaleDateString estimated-end-date))
-                            :variant :secondary}
-         (if (seq tasks)
-           (doall
-            (for [t tasks]
-              ^{:key (:db/id t)}
-              [:div
-               [Button {:element "a"
-                        :href (str "#/projects/" project "/" id "/" (:db/id t))}
-                [icons/file-folder]
-                (tr [:enum (:db/ident (:task/type t))])]]))
-           [:div [:em (tr [:project :phase :no-tasks])]])
+       ^{:key id}
+       [itemlist/ItemList {:title (tr [:enum (:db/ident phase-name)])
+                           ;; :subtitle (str (.toLocaleDateString estimated-start-date) " - "
+                           ;;                (.toLocaleDateString estimated-end-date))
+                           :variant :secondary}
+        (if (seq tasks)
+          (doall
+           (for [t tasks]
+             ^{:key (:db/id t)}
+             [:div
+              [Button {:element "a"
+                       :href (str "#/projects/" project "/" id "/" (:db/id t))}
+               [icons/file-folder]
+               (tr [:enum (:db/ident (:task/type t))])]]))
+          [:div [:em (tr [:project :phase :no-tasks])]])
 
-         [:div
-          [Button {:on-click (r/partial e! (project-controller/->OpenTaskDialog id))
-                   :size "small"
-                   :start-icon (r/as-element [icons/content-add-circle])}
-           (tr [:project :add-task])]]])))])
+        [:div
+         [Button {:on-click (r/partial e! (project-controller/->OpenTaskDialog id))
+                  :size "small"
+                  :start-icon (r/as-element [icons/content-add-circle])}
+          (tr [:project :add-task])]]]))])
 
 (defn project-map [e! endpoint project tab]
   [:div {:class (<class project-style/project-map-style)}
@@ -218,7 +217,9 @@
   [e! cadastral-units]
   [:div
    (doall
-     (for [{id :id :as unit} cadastral-units]
+    ;; TODO: Sorted by address etc for Pilot demo
+    (for [{id :id :as unit} (sort-by (juxt :lahiaadress :tunnus :omandivorm :pindala)
+                                     cadastral-units)]
        ^{:key id}
        [cadastral-unit-component e! unit]))])
 
