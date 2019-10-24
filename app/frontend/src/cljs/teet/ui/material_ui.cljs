@@ -60,11 +60,27 @@
                 (assoc :ref (:inputRef props))
                 (dissoc :inputRef))])))
 
+(def ^:private textarea-component
+  (r/reactify-component
+    (fn [props]
+      [:textarea (-> props
+                   (assoc :ref (:inputRef props))
+                   (dissoc :inputRef))])))
+
 (defn TextField
   [props & children]
   (let [mui-text (delay
                    (goog.object/get @MaterialUI "TextField"))
         props (-> props
-                (assoc-in [:InputProps :inputComponent] input-component)
+                (assoc-in [:InputProps :inputComponent] (cond
+                                                          (and (:multiline props) (:rows props) (not (:maxRows props)))
+                                                          textarea-component
+
+                                                          ;; FIXME: autosize multiline field is broken
+                                                          (:multiline props)
+                                                          nil
+
+                                                          :else
+                                                          input-component))
                 rtpl/convert-prop-value)]
     (apply r/create-element @mui-text props (map r/as-element children))))
