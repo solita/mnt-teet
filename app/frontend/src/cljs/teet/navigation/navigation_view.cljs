@@ -142,8 +142,7 @@
 (defn logout [e!]
   [:div {:class (herb/join (<class navigation-style/logout-container-style)
                            (<class navigation-style/divider-style))}
-   [Link {:underline :always
-          :class (<class navigation-style/logout-style)
+   [Link {:class (<class navigation-style/logout-style)
           :href "/#/login"}
     "Log out"]])
 

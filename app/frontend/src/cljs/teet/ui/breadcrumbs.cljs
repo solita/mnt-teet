@@ -8,8 +8,7 @@
   [Breadcrumbs {}
    (util/with-keys
      (for [crumb (butlast breadcrumbs)]
-       [Link {:underline "always"
-              :href (routes/url-for crumb)}
+       [Link {:href (routes/url-for crumb)}
         (:title crumb)]))
    (when-let [{title :title} (last breadcrumbs)]
      [:span title])])
