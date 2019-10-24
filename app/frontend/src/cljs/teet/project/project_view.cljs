@@ -179,9 +179,9 @@
          [:div
           [Heading2 {:class (<class project-style/restriction-category-style)} (first group)]
           (doall
-            (for [restriction (second group)]
-              ^{:key (get restriction :id)}
-              [restriction-component e! restriction]))]))]))
+           (for [restriction (->> group second (sort-by :voond))]
+             ^{:key (get restriction :id)}
+             [restriction-component e! restriction]))]))]))
 
 (defn collapse-skeleton
   [title? n]
