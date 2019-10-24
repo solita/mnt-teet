@@ -37,6 +37,7 @@
                            :positionSticky {:box-shadow "none"}}
                :MuiToolBar {:root {:min-height "80px"}}     ;This doesn't properly target the toolbar inside appbar
                :MuiFab {:root {:border-radius "2px"}}
+               :MuiInput {:underline {"&::before" {:border :none}}}
                :MuiLink {:underlineHover {:text-decoration :underline
                                           "&:hover" {:text-decoration :none}}}
                :MuiTabs {:indicator {:display :none}}
