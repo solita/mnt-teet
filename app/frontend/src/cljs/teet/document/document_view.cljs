@@ -16,6 +16,7 @@
             [teet.ui.itemlist :as itemlist]
             [teet.user.user-info :as user-info]
             [teet.ui.format :as format]
+            [teet.common.common-styles :as common-styles]
             [teet.ui.icons :as icons]
             [teet.ui.layout :as layout]
             [teet.project.project-style :as project-style]
@@ -78,7 +79,7 @@
 (defn document-page [e! {new-comment :new-comment} document breadcrumbs]
   [Grid {:container true}
    [Grid {:item true :xs 6}
-    [:div {:class (<class project-style/gray-bg-content)}
+    [:div {:class (<class common-styles/gray-bg-content)}
      [breadcrumbs/breadcrumbs breadcrumbs]
      [:div {:class (<class project-style/project-info)}
       [typography/Heading1 (:document/name document)]

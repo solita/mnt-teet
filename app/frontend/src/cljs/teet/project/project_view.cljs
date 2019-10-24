@@ -25,7 +25,8 @@
             [teet.ui.util :as util]
             [clojure.string :as str]
             [teet.ui.query :as query]
-            [teet.ui.tabs :as tabs]))
+            [teet.ui.tabs :as tabs]
+            [teet.common.common-styles :as common-styles]))
 
 (defn project-data
   [{:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
@@ -241,7 +242,7 @@
       [Grid {:container true}
        [Grid {:item true
               :xs 6}
-        [:div {:class (<class project-style/gray-bg-content)}
+        [:div {:class (<class common-styles/gray-bg-content)}
          [project-info (get-in app [:config :api-url]) (get-in app login-paths/api-token) project breadcrumbs]
 
          [tabs/tabs {:e! e!

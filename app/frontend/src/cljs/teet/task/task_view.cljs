@@ -18,7 +18,8 @@
             [teet.project.project-info :as project-info]
             teet.task.task-spec
             [teet.ui.format :as format]
-            [teet.ui.breadcrumbs :as breadcrumbs]))
+            [teet.ui.breadcrumbs :as breadcrumbs]
+            [teet.common.common-styles :as common-styles]))
 
 (defn task-form [e! close _phase-id task]
   ;;Task definition (under project phase)
@@ -70,7 +71,7 @@
        new-document]])
    [Grid {:container true}
     [Grid {:item true :xs 6}
-     [:div {:class (<class project-style/gray-bg-content)}
+     [:div {:class (<class common-styles/gray-bg-content)}
       [breadcrumbs/breadcrumbs breadcrumbs]
       [:div {:class (<class project-style/project-info)}
        [Heading1
