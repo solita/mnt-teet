@@ -35,10 +35,11 @@
     (let [project (get-in app [:params :project])]
       (log/info "CREATE PHASE RESULT: " result)
       (t/fx
-        (update-in app [:project project] dissoc :new-phase)
-        (assoc-in app [:project project :create-phase-in-progress?] false)
-        {:tuck.effect/type :navigate
-         :page :project
-         :params {:project (get-in app [:params :project])}
-         :query {}}
-        common-controller/refresh-fx))))
+       (-> app
+           (update-in [:project project] dissoc :new-phase)
+           (assoc-in [:project project :create-phase-in-progress?] false))
+       {:tuck.effect/type :navigate
+        :page :project
+        :params {:project (get-in app [:params :project])}
+        :query {}}
+       common-controller/refresh-fx))))

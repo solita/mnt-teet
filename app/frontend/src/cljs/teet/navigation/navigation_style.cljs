@@ -128,7 +128,7 @@
 (defn user-role-style
   []
   {:white-space :nowrap
-   :overflow :ellipsis
+   :text-overflow :ellipsis
    :margin-top "16px"
    :padding "6px 24px 0 0"
    :line-height "19px"
