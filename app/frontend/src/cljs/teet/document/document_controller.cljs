@@ -140,7 +140,7 @@
 
   UploadFinished
   (process-event [_ app]
-    (t/fx (update-in app [:task (get-in app [:params :task])] dissoc :new-document)
+    (t/fx (dissoc app :new-document)
           {:tuck.effect/type :navigate
            :page :phase-task
            :params (:params app)

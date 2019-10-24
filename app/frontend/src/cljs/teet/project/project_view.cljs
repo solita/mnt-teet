@@ -60,6 +60,10 @@
      :view project-data}
     project]])
 
+(defn project-phases-heading
+  [e! project]
+  )
+
 (defn project-phase-listing [e! project phases]
   [:<>
 
