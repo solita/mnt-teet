@@ -52,8 +52,12 @@
                       :value in-progress?}])])
 
 (defn comments [e! new-comment document]
-  [:<>
-   [itemlist/ItemList {:title (tr [:document :comments])}
+  [layout/section
+   [:div {:class (<class common-styles/gray-light-border)}
+    [typography/Heading3 (tr [:document :comments])]
+    [:span {:style {:margin-left "1rem"}}
+     (str "(" (count (:document/comments document)) ")")]]
+   [itemlist/ItemList {}
     (doall
      (for [{id :db/id
             :comment/keys [author comment timestamp]} (:document/comments document)]
@@ -64,17 +68,30 @@
         [:div (.toLocaleString timestamp)]
         [typography/Paragraph comment]]))]
 
-   [Divider {:variant "middle"}]
-
    [form/form {:e! e!
                :value new-comment
                :on-change-event document-controller/->UpdateNewCommentForm
                :save-event document-controller/->Comment
                :spec :document/new-comment-form}
     ^{:attribute :comment/comment}
-    [TextField {:rows 4 :multiline true :full-width true
+    [TextField {:rows 4
+                :multiline true
+                :InputLabelProps {:shrink true}
+                :full-width true
                 :placeholder (tr [:document :new-comment])
                 :variant "outlined"}]]])
+
+(defn status
+  [e! document]
+  [:div {:style {:display :flex
+                 :align-items :center}}
+   [:div {:style {:width "50%"
+                  :margin "1rem 1rem 1rem 0"}}
+    [select/select-enum {:e! e! :attribute :document/status
+                         :on-change (e! document-controller/->UpdateDocumentStatus)
+                         :value (get-in document [:document/status :db/ident])}]]
+   (when-let [modified (:document/modified document)]
+     [:span (format/date-time modified)])])
 
 (defn document-page [e! {new-comment :new-comment} document breadcrumbs]
   [Grid {:container true}
@@ -84,36 +101,29 @@
      [:div {:class (<class project-style/project-info)}
       [typography/Heading1 (:document/name document)]
       [typography/Paragraph (:document/description document)]]]
-    [:div {:style {:display :flex
-                   :align-items :center}}
-     [:div {:style {:width "50%"
-                    :margin "1rem 1rem 1rem 0"}}
-      [select/select-enum {:e! e! :attribute :document/status
-                           :on-change (e! document-controller/->UpdateDocumentStatus)
-                           :value (get-in document [:document/status :db/ident])}]]
-     (when-let [modified (:document/modified document)]
-       [:span (format/date-time modified)])]
-    [List {:dense true}
-     (doall
-       (for [{id :db/id
-              :file/keys [name size author timestamp]
-              in-progress? :in-progress?} (:document/files document)]
-         ^{:key id}
-         [ListItem {:button true :component "a"
-                    :href (document-controller/download-url id)
-                    :target "_blank"}
-          (if in-progress?
-            [ListItemIcon [CircularProgress {:size 20}]]
-            [ListItemIcon [icons/file-attachment]])
-          [ListItemText {:primary name
-                         :secondary (r/as-element
-                                      [:<>
-                                       [:span {:style {:display :block}} (some-> timestamp format/date-time) " "
-                                        (when author
-                                          [user-info/user-name e! author])]
-                                       (format/file-size size)])}]]))]
-    [file-upload/FileUploadButton {:id "upload-files-to-document"
-                                   :on-drop (e! document-controller/->UploadFilesToDocument)}
-     (tr [:common :select-files])]]
+    [layout/section
+     [status e! document]
+     [List {:dense true}
+      (doall
+        (for [{id :db/id
+               :file/keys [name size author timestamp]
+               in-progress? :in-progress?} (:document/files document)]
+          ^{:key id}
+          [ListItem {:button true :component "a"
+                     :href (document-controller/download-url id)
+                     :target "_blank"}
+           (if in-progress?
+             [ListItemIcon [CircularProgress {:size 20}]]
+             [ListItemIcon [icons/file-attachment]])
+           [ListItemText {:primary name
+                          :secondary (r/as-element
+                                       [:<>
+                                        [:span {:style {:display :block}} (some-> timestamp format/date-time) " "
+                                         (when author
+                                           [user-info/user-name e! author])]
+                                        (format/file-size size)])}]]))]
+     [file-upload/FileUploadButton {:id "upload-files-to-document"
+                                    :on-drop (e! document-controller/->UploadFilesToDocument)}
+      (tr [:common :select-files])]]]
    [Grid {:item true :xs 6 :classes {:item (<class theme-panels/side-panel)}}
     [comments e! new-comment document]]])

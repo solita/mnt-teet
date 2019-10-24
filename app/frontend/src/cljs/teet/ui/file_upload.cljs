@@ -121,8 +121,7 @@
   [FileUpload {:id id
                :on-drop on-drop
                :drop-message drop-message}
-   (into [Button {:component "span"
-                  :variant :outlined
+   (into [Button {:variant :outlined
                   :raised "true"}]
          children)])
 

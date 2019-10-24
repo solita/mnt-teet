@@ -122,11 +122,11 @@
                        [Button {:disabled disabled?
                                 :on-click (r/partial e! (cancel-event))
                                 :color    "secondary"
-                                :variant  "outlined"}
+                                :variant  "contained"}
                         (tr [:buttons :cancel])])
                      (when save-event
                        [Button {:disabled disabled?
                                 :color    "primary"
-                                :variant  "outlined"
+                                :variant  "contained"
                                 :type     :submit}
                         (tr [:buttons :save])])]))]]))
