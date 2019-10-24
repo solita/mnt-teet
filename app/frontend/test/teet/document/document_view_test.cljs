@@ -30,7 +30,7 @@
   (drt/step :no-request "No request should happen")
 
   (drt/step :type "Type comment text"
-            :selector "input[placeholder=\"Uus märkus\"]"
+            :selector "textarea[placeholder=\"Uus märkus\"]"
             :text "this is a comment")
 
   (drt/step :expect-tuck-event "Expect update comment event"
