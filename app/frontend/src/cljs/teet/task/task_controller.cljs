@@ -105,12 +105,13 @@
   CreateTaskResult
   (process-event [{result :result} app]
     (log/info "create task result: " result)
-    (t/fx app
-          {:tuck.effect/type :navigate
-           :page :project
-           :params {:project (get-in app [:params :project])}
-           :query {}}
-          common-controller/refresh-fx)))
+    (let [project (get-in app [:params :project])]
+      (t/fx (update-in app [:project project] dissoc :new-task)
+           {:tuck.effect/type :navigate
+            :page :project
+            :params {:project (get-in app [:params :project])}
+            :query {}}
+           common-controller/refresh-fx))))
 
 (defn document-page-url [{{:keys [project phase task]} :params} doc]
   (str "#/projects/" project "/" phase "/" task "/" (:db/id doc)))
