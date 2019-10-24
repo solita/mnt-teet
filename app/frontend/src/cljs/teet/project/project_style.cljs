@@ -2,9 +2,6 @@
   (:require [teet.theme.theme-spacing :as theme-spacing]
             [teet.theme.theme-colors :as theme-colors]))
 
-(defn project-grid-container []
-  {})
-
 (defn project-map-column []
   {:padding-top "0px!important"
    :padding-right "0px!important"
@@ -14,12 +11,6 @@
    :right "0px"
    :top theme-spacing/appbar-height})
 
-(defn project-data-column []
-  {})
-
-(defn phase-list-style
-  []
-  {:margin-top "2rem"})
 
 (defn project-view-container
   []
@@ -34,7 +25,7 @@
 
 (defn project-info
   []
-  {:padding "2rem 0"})
+  {:padding "1.5rem 0"})
 
 (defn gray-bg-content
   []
@@ -53,6 +44,15 @@
   {:border-width "0 0 1px 0"
    :border-style "solid"
    :border-color theme-colors/gray-lighter})
+
+(defn phase-action-heading
+  []
+  {:display :flex
+   :justify-content :space-between
+   :align-items :center
+   :padding-bottom "0.75rem"
+   :margin-bottom "1rem"
+   :border-bottom (str "1px solid " theme-colors/gray-light)})
 
 (defn restriction-list-style
   []

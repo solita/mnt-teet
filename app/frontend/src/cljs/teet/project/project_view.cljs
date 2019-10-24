@@ -17,20 +17,16 @@
             [teet.ui.icons :as icons]
             [teet.ui.typography :refer [Heading1 Heading2 Heading3]]
             [teet.ui.layout :as layout]
-            [teet.theme.theme-colors :as theme-colors]
             [teet.localization :refer [tr]]
             [teet.ui.panels :as panels]
-            [taoensso.timbre :as log]
+            [teet.ui.buttons :as buttons]
             [teet.phase.phase-view :as phase-view]
             [teet.task.task-view :as task-view]
-            [teet.common.common-controller :as common-controller]
-            [postgrest-ui.components.query :as postgrest-query]
             [teet.project.project-info :as project-info]
             [teet.ui.util :as util]
             [clojure.string :as str]
             [teet.ui.query :as query]
-            [teet.ui.tabs :as tabs]
-            [teet.routes :as routes]))
+            [teet.ui.tabs :as tabs]))
 
 (defn project-data
   [{:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
@@ -60,16 +56,17 @@
      :view project-data}
     project]])
 
-(defn project-phases-heading
-  [e! project]
-  )
+(defn phase-action-heading
+  [{:keys [heading button]}]
+  [:div {:class (<class project-style/phase-action-heading)}
+   [Heading2 heading]
+   button])
 
 (defn project-phase-listing [e! project phases]
   [:<>
-
-   [itemlist/ListHeading {:title (tr [:project :phases])
-                          :action [Button {:on-click (e! project-controller/->OpenPhaseDialog)
-                                           :end-icon (r/as-element [icons/content-add-circle])}
+   [phase-action-heading {:heading (tr [:project :phases])
+                          :button [buttons/button-primary {:on-click (e! project-controller/->OpenPhaseDialog)
+                                                           :start-icon (r/as-element [icons/content-add-circle])}
                                    (tr [:project :add-phase])]}]
    (doall
      (for [{id :db/id
@@ -77,8 +74,7 @@
                          _estimated-start-date _estimated-end-date]}
            phases]
        ^{:key id}
-       [itemlist/ItemList {:class (<class project-style/phase-list-style)
-                           :title (tr [:enum (:db/ident phase-name)])
+       [itemlist/ItemList {:title (tr [:enum (:db/ident phase-name)])
                            ;; :subtitle (str (.toLocaleDateString estimated-start-date) " - "
                            ;;                (.toLocaleDateString estimated-end-date))
                            :variant :secondary}

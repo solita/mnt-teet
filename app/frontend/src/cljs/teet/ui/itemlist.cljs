@@ -28,10 +28,9 @@
   [:div (when class
           {:class class})
    (when title
-     [ListHeading (merge
-                   {:title title
-                    :subtitle subtitle
-                    :variant variant})])
+     [ListHeading {:title title
+                   :subtitle subtitle
+                   :variant variant}])
    (util/with-keys children)])
 
 (defn ProgressList

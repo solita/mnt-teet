@@ -49,7 +49,9 @@
                :MuiIconButton {:root {:border-radius "2px"}}
                :MuiButton {:contained {:border-radius "20px"
                                        :&$focusVisible {:box-shadow "0 0 0 2px #007BAF"}}
-                           :root {:&$focusVisible {:box-shadow "0 0 0 2pt #007BAF"}}}
+                           :root {:text-transform :capitalize
+                                  :font-weight 400
+                                  :&$focusVisible {:box-shadow "0 0 0 2pt #007BAF"}}}
                :MuiDrawer {:paper {:background-color theme-colors/blue
                                    :color theme-colors/white
                                    "& .MuiListItemIcon-root" {:color :inherit
@@ -57,19 +59,19 @@
                            :paperAnchorDockedLeft {:border-right 0}}
                ;:MuiDivider {:root {:margin "1rem 0"}}
                :MuiTableHead {:root data-label-style}
-               :MuiTypography {:h1 {:fontFamily "Roboto Condensed"
-                                    :fontWeight 700
+               :MuiTypography {:h1 {:fontFamily "Roboto"
+                                    :fontWeight 300
                                     :fontSize "2rem"
-                                    :lineHeight 1.25
+                                    :lineHeight "2.125rem"
                                     :margin-bottom "1rem"}
-                               :h2 {:fontFamily "Roboto Condensed"
-                                    :fontWeight 700
-                                    :fontSize "1.5rem"
-                                    :lineHeight 1.25}
+                               :h2 {:fontFamily "Roboto"
+                                    :fontWeight 400
+                                    :fontSize "1.75rem"
+                                    :lineHeight "1.3125rem"}
                                :h3 {:fontFamily "Roboto Condensed"
-                                    :fontWeight 700
-                                    :fontSize "1.125rem"
-                                    :lineHeight 1.25}
+                                    :fontWeight 400
+                                    :fontSize "1.5rem"
+                                    :lineHeight "1.3125rem"}
                                ;; SectionHeading
                                :h6 section-heading-style
                                ;; DataLabel
