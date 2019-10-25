@@ -1,13 +1,14 @@
 (ns teet.task.task-view
   "View for a workflow task"
   (:require [herb.core :as herb :refer [<class]]
+            [reagent.core :as r]
             [teet.task.task-controller :as task-controller]
-            [teet.task.task-style :as task-style]
             [teet.ui.itemlist :as itemlist]
             [teet.localization :refer [tr]]
+            [teet.ui.buttons :as buttons]
             [teet.ui.common :as ui-common]
-            [teet.ui.material-ui :refer [List ListItem ListItemText
-                                         ListItemIcon Button Grid]]
+            [teet.ui.format :as format]
+            [teet.ui.material-ui :refer [List Grid]]
             [teet.ui.icons :as icons]
             [teet.ui.typography :refer [Heading1]]
             [teet.ui.layout :as layout]
@@ -54,21 +55,23 @@
       [task-status e! status modified]
 
       [itemlist/ItemList
-       {:title (tr [:task :documents])}
+       {}
        (if (empty? documents)
          [:div (tr [:task :no-documents])]
          [List {:dense true}
           (doall
             (for [{id :db/id
-                   :document/keys [name description]
+                   :document/keys [name status modified]
                    :as doc} documents]
               ^{:key id}
-              [ListItem {:button true :component "a"
-                         :href (task-controller/document-page-url app doc)}
-               [ListItemIcon [icons/file-folder]]
-               [ListItemText {:primary (or name description)}]]))])]
-      [Button {:on-click #(e! (task-controller/->OpenAddDocumentDialog))}
-       [icons/content-add-circle]
+              [ui-common/list-button-link {:link (task-controller/document-page-url app doc)
+                                           :label name
+                                           ;; TODO: Layout has creator/editor name here, not stored at the moment
+                                           :sub-label (format/date modified)
+                                           :icon icons/action-description
+                                           :end-text (tr [:enum (:db/ident status)])}]))])]
+      [buttons/button-primary {:on-click #(e! (task-controller/->OpenAddDocumentDialog))
+                               :start-icon (r/as-element [icons/content-add-circle])}
        (tr [:task :add-document])]]]
     [Grid {:item true :xs 6}
      [project-view/project-map e! (get-in app [:config :api-url]) project (get-in app [:query :tab])]]]])
