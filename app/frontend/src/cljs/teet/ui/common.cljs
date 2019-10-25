@@ -1,6 +1,9 @@
 (ns teet.ui.common
   "Common UI utilities"
-  (:require [reagent.core :as r]))
+  (:require [reagent.core :as r]
+            [herb.core :as herb :refer [<class]]
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.ui.typography :as typography]))
 
 (def lifecycle-methods
   "Supported lifecycle methods in mixins."
@@ -61,3 +64,53 @@
       (boolean
        (some #(not= (get-in old-argv %) (get-in new-argv %))
              accessor-paths)))))
+
+
+;;
+;; Labeled data
+;;
+(defn- container-style
+  []
+  {:border 0
+   :margin 0
+   :display :inline-flex
+   :padding 0
+   :position :relative
+   :min-width 0
+   :flex-direction :column
+   :vertical-align :top})
+
+(defn- label-style
+  []
+  {:top 0
+   :left 0
+   :position :absolute
+   :padding 0
+   :display :block
+   :color "#5D6071"
+
+   :font-family "Roboto"
+   :font-weight 300
+   :font-size "14px"
+   :line-height "14px"
+   :transform "translate(0, 2.5px)"
+   :transform-origin "top left"})
+
+(defn- data-style
+  []
+  {:white-space :nowrap
+   :text-overflow :ellipsis
+   :margin-top "16px"
+   :padding "6px 24px 0 0"
+   :line-height "19px"
+   :position :relative
+   :color theme-colors/blue})
+
+(defn labeled-data [{:keys [label data class]}]
+  [:div {:class class}
+   [:div {:class (herb/join (<class container-style)
+                            class)}
+    [typography/Text {:classes {:root (<class label-style)}}
+     label]
+    [typography/Text {:classes {:root (<class data-style)}}
+     data]]])

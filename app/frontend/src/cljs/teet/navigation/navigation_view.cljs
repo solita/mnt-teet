@@ -1,13 +1,10 @@
 (ns teet.navigation.navigation-view
-  (:require [reagent.core :as r]
-
-            [teet.routes :as routes]
+  (:require [teet.routes :as routes]
             [teet.ui.select :as select]
             [teet.ui.material-ui :refer [AppBar Toolbar Drawer List ListItem
-                                         ListItemText ListItemIcon
-                                         FormControl InputLabel Select Link]]
+                                         ListItemText ListItemIcon Link]]
             [teet.ui.icons :as icons]
-            [teet.ui.typography :as typography]
+            [teet.ui.common :as ui-common]
             [teet.localization :as localization :refer [tr]]
             [teet.navigation.navigation-controller :as navigation-controller]
             [teet.navigation.navigation-logo :as navigation-logo]
@@ -93,14 +90,12 @@
                :icon icons/content-archive
                :name "Components"}]])
 
+
+
 (defn user-info [user]
-  [:div {:class (<class navigation-style/divider-style)}
-   [:div {:class (<class navigation-style/user-info-style)}
-    [typography/Text {:classes {:root (<class navigation-style/user-label-style)}}
-     (str (tr [:user :role]) ":")]
-    [typography/Text {:classes {:root (<class navigation-style/user-role-style)}}
-     ;; TODO: Show actual role once these are figured out
-     (:user/family-name user)]]])
+  [ui-common/labeled-data {:class (<class navigation-style/divider-style)
+                              :label (str (tr [:user :role]) ":")
+                              :data (:user/family-name user)}])
 
 (defn logout [e!]
   [:div {:class (herb/join (<class navigation-style/logout-container-style)

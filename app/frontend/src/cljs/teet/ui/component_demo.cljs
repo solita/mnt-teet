@@ -5,6 +5,7 @@
             [teet.ui.icons :as icons]
             [teet.ui.skeleton :as skeleton]
             [teet.ui.buttons :as buttons]
+            [teet.ui.common :as ui-common]
             [teet.ui.itemlist :as itemlist]
             [teet.ui.select :as select]
             [teet.ui.typography :refer [DataLabel Heading1 Heading2 Heading3 Paragraph SectionHeading Text]]
@@ -234,4 +235,9 @@
                      :value "foo"
                      :items [{:value "foo" :label "Foo"}
                              {:value "bar" :label "Bar"}]}]]
-    [datepicker/date-input]]])
+    [datepicker/date-input]
+
+    [Divider]
+
+    [:div
+     [ui-common/labeled-data {:label "Label" :data "Some textual data"}]]]])

@@ -97,44 +97,6 @@
    :padding-bottom 0
    :border "none"})
 
-;; A rather painful way to imitate the Material UI label + input style
-(defn user-info-style
-  []
-  {:border 0
-   :margin 0
-   :display :inline-flex
-   :padding 0
-   :position :relative
-   :min-width 0
-   :flex-direction :column
-   :vertical-align :top})
-
-(defn user-label-style
-  []
-  {:top 0
-   :left 0
-   :position :absolute
-   :padding 0
-   :display :block
-   :color "#5D6071"
-
-   :font-family "Roboto"
-   :font-weight 300
-   :font-size "14px"
-   :line-height "14px"
-   :transform "translate(0, 2.5px)"
-   :transform-origin "top left"})
-
-(defn user-role-style
-  []
-  {:white-space :nowrap
-   :text-overflow :ellipsis
-   :margin-top "16px"
-   :padding "6px 24px 0 0"
-   :line-height "19px"
-   :position :relative
-   :color theme-colors/blue})
-
 (defn divider-style
   []
   ^{:pseudo {:last-child {:border :none}}}
