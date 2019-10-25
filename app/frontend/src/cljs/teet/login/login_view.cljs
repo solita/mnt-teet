@@ -48,6 +48,7 @@
      [TextField {:label "Password"
                  :id "password-textfield"
                  :type "password"
+                 :variant :outlined
                  :style {:margin-bottom "2rem"}
                  :value (get login :password "")
                  :on-change (fn pw-on-change! [e]
