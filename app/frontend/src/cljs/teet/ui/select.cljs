@@ -1,6 +1,8 @@
 (ns teet.ui.select
   "Selection components"
   (:require [reagent.core :as r]
+            [herb.core :as herb :refer [<class]]
+            [teet.theme.theme-colors :as theme-colors]
             [teet.ui.material-ui :refer [Select MenuItem Menu Button
                                          InputLabel FormControl ButtonGroup]]
             [teet.ui.icons :as icons]
@@ -10,8 +12,8 @@
             [teet.user.user-info :as user-info]))
 
 
-(defn outlined-select [{:keys [label name id items on-change value format-item show-empty-selection?
-                               error required]
+(defn outlined-select [{:keys [label name id items on-change value format-item
+                               show-empty-selection? error required]
                         :or   {format-item :label}}]
   (r/with-let [reference (r/atom nil)
                set-ref! (fn [el]
@@ -114,3 +116,53 @@
                     :show-empty-selection? true
                     :items       (user-info/list-user-ids)
                     :format-item (r/partial user-info/user-name-and-email e!)}])
+
+(defn select-style
+  []
+  {:color theme-colors/blue
+   :padding-bottom 0
+   :border "none"})
+
+(defn select
+  [{:keys [label id name value items format-item error on-change
+           required? show-empty-selection?
+           class]
+    :or {format-item :label}}]
+  (r/with-let [reference (r/atom nil)
+               set-ref! (fn [el]
+                          (reset! reference el))]
+    (let [option-idx (zipmap items (range))
+          change-value (fn [e]
+                         (let [val (-> e .-target .-value)]
+                           (if (= val "")
+                             (on-change nil)
+                             (on-change (nth items (int val))))))]
+      [:div (merge {}
+                   (when class
+                     {:class class}))
+       [FormControl {:variant  :standard
+                     :required (boolean required?)
+                     :error    error}
+        [InputLabel {:html-for id
+                     :ref      set-ref!}
+         (str label ":")]
+        [Select
+         {:value       (or (option-idx value) "")
+          :name        name
+          :native      true
+          :required    (boolean required?)
+          :label-width (or (some-> @reference .-offsetWidth) 12)
+          :input-props {:id   id
+                        :name name}
+          :on-change   (fn [e]
+                         (change-value e))
+          :classes {:root (<class select-style)}}
+         (when show-empty-selection?
+           [:option {:value ""}])
+         (doall
+          (map-indexed
+           (fn [i item]
+             [:option {:value i
+                       :key   i}
+              (format-item item)])
+           items))]]])))

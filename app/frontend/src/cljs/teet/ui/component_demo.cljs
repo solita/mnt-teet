@@ -228,4 +228,10 @@
                               :items
                               [{:value "et" :label "bar"}
                                {:value "en" :label "baz"}]}]]
+    [:div
+     [select/select {:label "Label"
+                     :id "select-id"
+                     :value "foo"
+                     :items [{:value "foo" :label "Foo"}
+                             {:value "bar" :label "Bar"}]}]]
     [datepicker/date-input]]])

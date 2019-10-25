@@ -2,6 +2,7 @@
   (:require [reagent.core :as r]
 
             [teet.routes :as routes]
+            [teet.ui.select :as select]
             [teet.ui.material-ui :refer [AppBar Toolbar Drawer List ListItem
                                          ListItemText ListItemIcon
                                          FormControl InputLabel Select Link]]
@@ -16,62 +17,24 @@
 
 (defn language-selector
   []
-  (let [label (str (tr [:common :language]))
-        id "language-select"
-        name "language"
-        value (case @localization/selected-language
-                :et
-                {:value "et" :label (get localization/language-names "et")}
-                :en
-                {:value "en" :label (get localization/language-names "en")})
-        required false
-        items [{:value "et" :label (get localization/language-names "et")}
-               {:value "en" :label (get localization/language-names "en")}]
-        show-empty-selection? false
-        format-item :label
-        error nil
-        on-change (fn [val]
-                    (localization/load-language!
-                     (keyword (:value val))
-                     (fn [language _]
-                       (reset! localization/selected-language
-                               language))))]
-    (r/with-let [reference (r/atom nil)
-                 set-ref! (fn [el]
-                            (reset! reference el))]
-      (let [option-idx (zipmap items (range))
-            change-value (fn [e]
-                           (let [val (-> e .-target .-value)]
-                             (if (= val "")
-                               (on-change nil)
-                               (on-change (nth items (int val))))))]
-        [:div {:class (herb/join (<class navigation-style/language-select-container-style)
-                                 (<class navigation-style/divider-style))}
-         [FormControl {:variant  :standard
-                       :required required
-                       :error    error}
-          [InputLabel {:html-for id
-                       :ref      set-ref!}
-           (str label ":")]
-          [Select
-           {:value       (or (option-idx value) "")
-            :name        name
-            :native      true
-            :required    (boolean required)
-            :label-width (or (some-> @reference .-offsetWidth) 12)
-            :input-props {:id   id
-                          :name name}
-            :on-change   (fn [e]
-                           (change-value e))
-            :classes {:root (<class navigation-style/language-select-style)}}
-           (when show-empty-selection?
-             [:option {:value ""}])
-           (doall
-            (map-indexed
-             (fn [i item]
-               [:option {:value i
-                         :key   i} (format-item item)])
-             items))]]]))))
+  [select/select {:class (herb/join (<class navigation-style/language-select-container-style)
+                                    (<class navigation-style/divider-style))
+                  :label (str (tr [:common :language]))
+                  :id "language-select"
+                  :name "language"
+                  :value (case @localization/selected-language
+                           :et
+                           {:value "et" :label (get localization/language-names "et")}
+                           :en
+                           {:value "en" :label (get localization/language-names "en")})
+                  :items [{:value "et" :label (get localization/language-names "et")}
+                          {:value "en" :label (get localization/language-names "en")}]
+                  :on-change (fn [val]
+                               (localization/load-language!
+                                (keyword (:value val))
+                                (fn [language _]
+                                  (reset! localization/selected-language
+                                          language))))}])
 
 (defn- drawer-header
   [e! open?]
