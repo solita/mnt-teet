@@ -6,7 +6,7 @@
             [teet.map.map-view :as map-view]
             [teet.login.login-paths :as login-paths]
             [postgrest-ui.components.item-view :as postgrest-item-view]
-            [teet.ui.material-ui :refer [Grid Button ButtonBase Collapse TextField]]
+            [teet.ui.material-ui :refer [Grid Button ButtonBase Collapse TextField Link]]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-style :as project-style]
             [teet.theme.theme-spacing :as theme-spacing]
@@ -16,7 +16,8 @@
             [teet.ui.format :as format]
             [teet.ui.itemlist :as itemlist]
             [teet.ui.icons :as icons]
-            [teet.ui.typography :refer [Heading1 Heading2 Heading3]]
+            [teet.ui.common :as common]
+            [teet.ui.typography :refer [Heading1 Heading2 Heading3 SmallText]]
             [teet.ui.layout :as layout]
             [teet.localization :refer [tr]]
             [teet.ui.panels :as panels]
@@ -99,7 +100,36 @@
 
 (defn- phase-sort-priority [phase]
   (.indexOf phase-sort-priority-vec
-            (-> phase :phase/phase-name :db/ident)))
+    (-> phase :phase/phase-name :db/ident)))
+
+(defn heading-state
+  [title select]
+  [:div {:class (<class project-style/heading-state-style)}
+   [Heading3 title]
+   select])
+
+(defn project-phase
+  [e! {:keys [project]} {id :db/id
+                         :phase/keys [phase-name tasks status] :as phase}]
+  [:div {:class (<class project-style/project-phase-style)}
+   [heading-state (tr [:enum (:db/ident phase-name)]) (tr [:enum (:db/ident status)])]
+   (if (seq tasks)
+     (doall
+       (for [{:task/keys [status type] :as t} tasks]
+         ^{:key (:db/id t)}
+         [common/list-button-link (merge {:link (str "#/projects/" project "/" id "/" (:db/id t))
+                                          :label (tr [:enum (:db/ident type)])
+                                          :icon icons/file-folder-open}
+                                    (when status
+                                      {:end-text (tr [:enum (:db/ident status)])}))]))
+     [:div {:class (<class project-style/top-margin)}
+      [:em
+       (tr [:project :phase :no-tasks])]])
+   [Link {:class (<class project-style/link-button-style)
+          :on-click (r/partial e! (project-controller/->OpenTaskDialog id))
+          :component :button}
+    "+ "
+    (tr [:project :add-task])]])
 
 (defn project-phase-listing [e! project phases]
   [:<>
@@ -108,32 +138,11 @@
                                                            :start-icon (r/as-element [icons/content-add-circle])}
                                    (tr [:project :add-phase])]}]
    (doall
-     (for [{id :db/id
-            :phase/keys [phase-name tasks
-                         _estimated-start-date _estimated-end-date]}
+     (for [phase
            (sort-by phase-sort-priority
-                    phases)]
-       ^{:key id}
-       [itemlist/ItemList {:title (tr [:enum (:db/ident phase-name)])
-                           ;; :subtitle (str (.toLocaleDateString estimated-start-date) " - "
-                           ;;                (.toLocaleDateString estimated-end-date))
-                           :variant :secondary}
-        (if (seq tasks)
-          (doall
-           (for [t tasks]
-             ^{:key (:db/id t)}
-             [:div
-              [Button {:element "a"
-                       :href (str "#/projects/" project "/" id "/" (:db/id t))}
-               [icons/file-folder]
-               (tr [:enum (:db/ident (:task/type t))])]]))
-          [:div [:em (tr [:project :phase :no-tasks])]])
-
-        [:div
-         [Button {:on-click (r/partial e! (project-controller/->OpenTaskDialog id))
-                  :size "small"
-                  :start-icon (r/as-element [icons/content-add-circle])}
-          (tr [:project :add-task])]]]))])
+             phases)]
+       ^{:key (:db/id phase)}
+       [project-phase e! {:project project} phase]))])
 
 (defn project-map [e! endpoint project tab]
   [:div {:class (<class project-style/project-map-style)}
@@ -205,9 +214,9 @@
          [:div
           [Heading2 {:class (<class project-style/restriction-category-style)} (first group)]
           (doall
-           (for [restriction (->> group second (sort-by :voond))]
-             ^{:key (get restriction :id)}
-             [restriction-component e! restriction]))]))]))
+            (for [restriction (->> group second (sort-by :voond))]
+              ^{:key (get restriction :id)}
+              [restriction-component e! restriction]))]))]))
 
 (defn collapse-skeleton
   [title? n]
@@ -243,9 +252,9 @@
   [e! cadastral-units]
   [:div
    (doall
-    ;; TODO: Sorted by address etc for Pilot demo
-    (for [{id :id :as unit} (sort-by (juxt :lahiaadress :tunnus :omandivorm :pindala)
-                                     cadastral-units)]
+     ;; TODO: Sorted by address etc for Pilot demo
+     (for [{id :id :as unit} (sort-by (juxt :lahiaadress :tunnus :omandivorm :pindala)
+                               cadastral-units)]
        ^{:key id}
        [cadastral-unit-component e! unit]))])
 

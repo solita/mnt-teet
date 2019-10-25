@@ -16,3 +16,5 @@
 (def SectionHeading (util/make-component Typography {:variant "h6"}))
 
 (def DataLabel (util/make-component Typography {:variant "subtitle1"}))
+
+(def SmallText (util/make-component Typography {:variant "subtitle2"}))

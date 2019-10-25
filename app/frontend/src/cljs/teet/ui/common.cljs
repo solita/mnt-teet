@@ -1,9 +1,10 @@
 (ns teet.ui.common
   "Common UI utilities"
-  (:require [reagent.core :as r]
-            [herb.core :as herb :refer [<class]]
+  (:require [herb.core :as herb :refer [<class]]
+            [reagent.core :as r]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.typography :as typography]))
+            [teet.ui.material-ui :refer [ButtonBase Link]]
+            [teet.ui.typography :refer [Text SmallText]]))
 
 (def lifecycle-methods
   "Supported lifecycle methods in mixins."
@@ -87,7 +88,7 @@
    :position :absolute
    :padding 0
    :display :block
-   :color "#5D6071"
+   :color theme-colors/gray
 
    :font-family "Roboto"
    :font-weight 300
@@ -110,9 +111,33 @@
   [:div {:class class}
    [:div {:class (herb/join (<class container-style)
                             class)}
-    [typography/Text {:component :span
+    [Text {:component :span
                       :classes {:root (<class label-style)}}
      label]
-    [typography/Text {:component :span
+    [Text {:component :span
                       :classes {:root (<class data-style)}}
      data]]])
+
+(defn list-button-style
+  []
+  ^{:pseudo {:hover {:background-color teet.theme.theme-colors/gray-lightest}}}
+  {:padding "0.75rem 0.25rem"
+   :display :flex
+   :justify-content :flex-start
+   :transition "background-color 0.2s ease-in-out"
+   :border-bottom (str "1px solid " teet.theme.theme-colors/gray-lighter)})
+
+(defn list-button-link
+  "Listable link with bottom border and big clickable area"
+  [{:keys [link label sub-label icon end-text]}]
+  [ButtonBase {:class (<class list-button-style)
+               :element "a"
+               :href link}
+   [icon {:style {:align-self :flex-start
+                  :margin-right "0.5rem"}}]
+   [:div {:style {:margin-right :auto}}
+    [:span label]
+    (when sub-label
+      [SmallText sub-label])]
+   (when end-text
+     [SmallText end-text])])

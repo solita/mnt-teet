@@ -46,7 +46,6 @@
    :justify-content :space-between
    :align-items :center
    :padding-bottom "0.75rem"
-   :margin-bottom "1rem"
    :border-bottom (str "1px solid " theme-colors/gray-light)})
 
 (defn restriction-list-style
@@ -58,3 +57,23 @@
   {:padding "1.5rem 0"
    :text-transform "capitalize"
    :border-bottom (str "1px solid " theme-colors/gray-light)})
+
+(defn heading-state-style
+  []
+  {:display :flex
+   :justify-content :space-between
+   :padding "1rem 0.25rem"
+   :border-bottom (str "1px solid " theme-colors/gray-lighter)})
+
+(defn project-phase-style
+  []
+  ^{:pseudo {:last-child {:border-bottom 0}}}
+  {:border-bottom (str "1px solid " theme-colors/gray-light)})
+
+(defn top-margin
+  []
+  {:margin-top "1rem"})
+
+(defn link-button-style
+  []
+  {:margin "1rem 0"})
