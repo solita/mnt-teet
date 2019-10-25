@@ -5,7 +5,7 @@
 
 (defn breadcrumbs
   [breadcrumbs]
-  [Breadcrumbs {}
+  [Breadcrumbs {:separator "›"}
    (util/with-keys
      (for [crumb (butlast breadcrumbs)]
        [Link {:href (routes/url-for crumb)}
