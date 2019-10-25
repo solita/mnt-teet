@@ -4,6 +4,7 @@
   :select-files "Vali fail(id)",
   :back-to-project "Tagasi projekti",
   :general "Üldine",
+  :last-modified "Viimati muudetud",
   :language "Keel",
   :files "Failid",
   :back-to-task "Tagasi ülesandesse",

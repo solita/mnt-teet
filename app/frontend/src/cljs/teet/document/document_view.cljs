@@ -1,26 +1,27 @@
 (ns teet.document.document-view
   "Views for document and files"
-  (:require [reagent.core :as r]
-            [teet.theme.theme-panels :as theme-panels]
-            [teet.ui.form :as form]
-            [teet.ui.select :as select]
+  (:require [herb.core :refer [<class]]
+            [reagent.core :as r]
+            [teet.common.common-styles :as common-styles]
             [teet.document.document-controller :as document-controller]
+            teet.document.document-spec
+            [teet.localization :refer [tr]]
+            [teet.project.project-style :as project-style]
+            [teet.theme.theme-panels :as theme-panels]
+            [teet.ui.breadcrumbs :as breadcrumbs]
+            [teet.ui.common :as ui-common]
+            [teet.ui.file-upload :as file-upload]
+            [teet.ui.form :as form]
+            [teet.ui.format :as format]
+            [teet.ui.icons :as icons]
+            [teet.ui.itemlist :as itemlist]
+            [teet.ui.layout :as layout]
             [teet.ui.material-ui :refer [TextField LinearProgress Grid
                                          List ListItem ListItemText ListItemIcon
                                          CircularProgress Divider]]
+            [teet.ui.select :as select]
             [teet.ui.typography :as typography]
-            [teet.ui.file-upload :as file-upload]
-            [herb.core :refer [<class]]
-            [teet.localization :refer [tr]]
-            teet.document.document-spec
-            [teet.ui.itemlist :as itemlist]
-            [teet.user.user-info :as user-info]
-            [teet.ui.format :as format]
-            [teet.common.common-styles :as common-styles]
-            [teet.ui.icons :as icons]
-            [teet.ui.layout :as layout]
-            [teet.project.project-style :as project-style]
-            [teet.ui.breadcrumbs :as breadcrumbs]))
+            [teet.user.user-info :as user-info]))
 
 (defn document-form [{:keys [e! on-close-event]} {:keys [in-progress?] :as doc}]
   [:<>
@@ -83,15 +84,11 @@
 
 (defn status
   [e! document]
-  [:div {:style {:display :flex
-                 :align-items :center}}
-   [:div {:style {:width "50%"
-                  :margin "1rem 1rem 1rem 0"}}
-    [select/select-enum {:e! e! :attribute :document/status
-                         :on-change (e! document-controller/->UpdateDocumentStatus)
-                         :value (get-in document [:document/status :db/ident])}]]
-   (when-let [modified (:document/modified document)]
-     [:span (format/date-time modified)])])
+  [ui-common/status {:e! e!
+                     :on-change (e! document-controller/->UpdateDocumentStatus)
+                     :status (get-in document [:document/status :db/ident])
+                     :attribute :document/status
+                     :modified (:document/modified document)}])
 
 (defn document-page [e! {new-comment :new-comment} document breadcrumbs]
   [Grid {:container true}

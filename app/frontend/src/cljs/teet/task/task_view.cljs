@@ -2,37 +2,29 @@
   "View for a workflow task"
   (:require [herb.core :as herb :refer [<class]]
             [teet.task.task-controller :as task-controller]
+            [teet.task.task-style :as task-style]
             [teet.ui.itemlist :as itemlist]
-            [teet.localization :refer [tr-fixme tr]]
-            [teet.ui.material-ui :refer [TextField List ListItem ListItemText
+            [teet.localization :refer [tr]]
+            [teet.ui.common :as ui-common]
+            [teet.ui.material-ui :refer [List ListItem ListItemText
                                          ListItemIcon Button Grid]]
             [teet.ui.icons :as icons]
-            [teet.ui.typography :refer [Heading1 Heading2 Heading3 SectionHeading DataLabel]]
+            [teet.ui.typography :refer [Heading1]]
             [teet.ui.layout :as layout]
             [teet.project.project-style :as project-style]
-            [teet.ui.select :as select]
             [teet.user.user-info :as user-info]
             [teet.project.project-view :as project-view]
             [teet.ui.panels :as panels]
             [teet.document.document-view :as document-view]
-            [teet.ui.format :as format]
             [teet.ui.breadcrumbs :as breadcrumbs]
             [teet.common.common-styles :as common-styles]))
 
-(defn change-task-status [e! task done-fn]
-  [select/select-with-action {:items [:task.status/not-started
-                                      :task.status/in-progress
-                                      :task.status/completed
-                                      :task.status/accepted
-                                      :task.status/rejected]
-                              :item-label name
-                              :placeholder (tr-fixme "New status")
-                              :action-icon [icons/action-done]
-                              :on-select #(do
-                                            (done-fn)
-                                            (e! (task-controller/->UpdateTask
-                                                  task
-                                                  {:task/status (task-controller/new-status %)})))}])
+(defn task-status [e! status modified]
+  [ui-common/status {:e! e!
+                     :on-change (e! task-controller/->UpdateTaskStatus)
+                     :status (:db/ident status)
+                     :attribute :task/status
+                     :modified modified}])
 
 (defn task-page [e! {{:keys [project]} :params
                      query :query
@@ -59,16 +51,7 @@
         [itemlist/Item {:label (tr [:fields :task/assignee])} [user-info/user-name-and-email e! (:user/id assignee)]]
         [itemlist/Item {:label (tr [:fields :common "description"])} description]]]]
      [layout/section
-      [:div {:style {:display :flex
-                     :align-items :center}}
-       [:div {:style {:width "50%"
-                      :margin "1rem 1rem 1rem 0"}}
-        [select/select-enum {:e! e!
-                             :on-change (e! task-controller/->UpdateTaskStatus)
-                             :value (:db/ident status)
-                             :attribute :task/status}]]
-       (when modified
-         [:span (format/date-time modified)])]
+      [task-status e! status modified]
 
       [itemlist/ItemList
        {:title (tr [:task :documents])}

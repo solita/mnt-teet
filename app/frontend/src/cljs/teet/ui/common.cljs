@@ -2,8 +2,11 @@
   "Common UI utilities"
   (:require [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
+            [teet.localization :refer [tr]]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.material-ui :refer [ButtonBase Link]]
+            [teet.ui.format :as format]
+            [teet.ui.select :as select]
+            [teet.ui.material-ui :refer [ButtonBase]]
             [teet.ui.typography :refer [Text SmallText]]))
 
 (def lifecycle-methods
@@ -95,7 +98,9 @@
    :font-size "14px"
    :line-height "14px"
    :transform "translate(0, 2.5px)"
-   :transform-origin "top left"})
+   :transform-origin "top left"
+
+   :white-space :nowrap})
 
 (defn- data-style
   []
@@ -112,10 +117,11 @@
    [:div {:class (herb/join (<class container-style)
                             class)}
     [Text {:component :span
-                      :classes {:root (<class label-style)}}
-     label]
+           :classes {:root (<class label-style)}}
+
+     (str label ":")]
     [Text {:component :span
-                      :classes {:root (<class data-style)}}
+           :classes {:root (<class data-style)}}
      data]]])
 
 (defn list-button-style
@@ -141,3 +147,32 @@
       [SmallText sub-label])]
    (when end-text
      [SmallText end-text])])
+
+;;
+;; Status
+;;
+(defn status-container-style
+  []
+  {:display :flex
+   :flex-direction :row
+   :align-items :center
+   :border-bottom "solid 1px"
+   :border-color teet.theme.theme-colors/gray-light
+   :padding-bottom "1rem"
+   :margin-bottom "1rem"})
+
+(defn status-style
+  []
+  {:flex-basis "30%"})
+
+(defn status
+  [{:keys [e! status attribute modified on-change]}]
+  [:div {:class (<class status-container-style)}
+   [select/select-enum {:e! e!
+                        :on-change on-change
+                        :value status
+                        :attribute attribute
+                        :class (<class status-style)}]
+   [labeled-data {:label (tr [:common :last-modified])
+                  :data (or (format/date modified)
+                            "-")}]])

@@ -14,24 +14,24 @@
 
 (defn language-selector
   []
-  [select/select {:class (herb/join (<class navigation-style/language-select-container-style)
-                                    (<class navigation-style/divider-style))
-                  :label (str (tr [:common :language]))
-                  :id "language-select"
-                  :name "language"
-                  :value (case @localization/selected-language
-                           :et
-                           {:value "et" :label (get localization/language-names "et")}
-                           :en
-                           {:value "en" :label (get localization/language-names "en")})
-                  :items [{:value "et" :label (get localization/language-names "et")}
-                          {:value "en" :label (get localization/language-names "en")}]
-                  :on-change (fn [val]
-                               (localization/load-language!
-                                (keyword (:value val))
-                                (fn [language _]
-                                  (reset! localization/selected-language
-                                          language))))}])
+  [select/select-with-action {:class (herb/join (<class navigation-style/language-select-container-style)
+                                                (<class navigation-style/divider-style))
+                              :label (str (tr [:common :language]))
+                              :id "language-select"
+                              :name "language"
+                              :value (case @localization/selected-language
+                                       :et
+                                       {:value "et" :label (get localization/language-names "et")}
+                                       :en
+                                       {:value "en" :label (get localization/language-names "en")})
+                              :items [{:value "et" :label (get localization/language-names "et")}
+                                      {:value "en" :label (get localization/language-names "en")}]
+                              :on-change (fn [val]
+                                           (localization/load-language!
+                                            (keyword (:value val))
+                                            (fn [language _]
+                                              (reset! localization/selected-language
+                                                      language))))}])
 
 (defn- drawer-header
   [e! open?]
@@ -94,8 +94,8 @@
 
 (defn user-info [user]
   [ui-common/labeled-data {:class (<class navigation-style/divider-style)
-                              :label (str (tr [:user :role]) ":")
-                              :data (:user/family-name user)}])
+                           :label (tr [:user :role])
+                           :data (:user/family-name user)}])
 
 (defn logout [e!]
   [:div {:class (herb/join (<class navigation-style/logout-container-style)

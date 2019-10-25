@@ -4,6 +4,7 @@
   :select-files "Select files to upload",
   :back-to-project "Back to project",
   :general "General",
+  :last-modified "Last modified",
   :language "Language",
   :files "Files",
   :back-to-task "Back to task",

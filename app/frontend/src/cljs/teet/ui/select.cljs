@@ -51,32 +51,6 @@
                       items))]])))
 
 ;; TODO this needs better styles and better dropdown menu
-(defn select-with-action [{:keys [items item-label on-select placeholder
-                                  action-icon]
-                           :or   {action-icon [icons/content-add]}}]
-  (r/with-let [anchor (r/atom nil)
-               selected (r/atom nil)]
-              [:<>
-               [ButtonGroup {:variant :contained :color :secondary}
-                [Button {:color    :secondary
-                         :variant  :contained
-                         :on-click #(reset! anchor (.-target %))}
-                 (or (some-> @selected item-label) placeholder)]
-                [Button {:color    :secondary
-                         :variant  :contained
-                         :size     "small"
-                         :on-click #(on-select @selected)}
-                 action-icon]]
-               [Menu {:open     (boolean @anchor)
-                      :anchorEl @anchor}
-                (doall
-                  (map-indexed (fn [i item]
-                                 ^{:key i}
-                                 [MenuItem {:on-click (fn [_]
-                                                        (reset! selected item)
-                                                        (reset! anchor nil)) :value (str i)}
-                                  (item-label item)])
-                               items))]]))
 
 (defonce enum-values (r/atom {}))
 (defrecord SetEnumValues [attribute values]
@@ -85,45 +59,13 @@
     (swap! enum-values assoc attribute values)
     app))
 
-(defn select-enum
-  "Select an enum value based on attribute. Automatically fetches enum values from database."
-  [{:keys [e! attribute required]}]
-  (when-not (contains? @enum-values attribute)
-    (e! (common-controller/->Query {:query        :enum/values
-                                    :args         {:attribute attribute}
-                                    :result-event (partial ->SetEnumValues attribute)})))
-  (fn [{:keys [value on-change name id error]}]
-    (let [tr* #(tr [:enum %])
-          values (@enum-values attribute)]
-      [outlined-select {:label                 (tr [:fields attribute])
-                        :name                  name
-                        :id                    id
-                        :error                 (boolean error)
-                        :value                 (or value :none)
-                        :on-change             on-change
-                        :show-empty-selection? true
-                        :items                 (sort-by tr* values)
-                        :format-item           tr*
-                        :required              required}])))
-
-(defn select-user
-  "Select user"
-  [{:keys [e! value on-change label required]}]
-  [outlined-select {:label       label
-                    :value       value
-                    :required    required
-                    :on-change   on-change
-                    :show-empty-selection? true
-                    :items       (user-info/list-user-ids)
-                    :format-item (r/partial user-info/user-name-and-email e!)}])
-
 (defn select-style
   []
   {:color theme-colors/blue
    :padding-bottom 0
    :border "none"})
 
-(defn select
+(defn select-with-action
   [{:keys [label id name value items format-item error on-change
            required? show-empty-selection?
            class]
@@ -144,6 +86,7 @@
                      :required (boolean required?)
                      :error    error}
         [InputLabel {:html-for id
+                     :shrink   true
                      :ref      set-ref!}
          (str label ":")]
         [Select
@@ -166,3 +109,37 @@
                        :key   i}
               (format-item item)])
            items))]]])))
+
+
+(defn select-enum
+  "Select an enum value based on attribute. Automatically fetches enum values from database."
+  [{:keys [e! attribute required]}]
+  (when-not (contains? @enum-values attribute)
+    (e! (common-controller/->Query {:query        :enum/values
+                                    :args         {:attribute attribute}
+                                    :result-event (partial ->SetEnumValues attribute)})))
+  (fn [{:keys [value on-change name id error class]}]
+    (let [tr* #(tr [:enum %])
+          values (@enum-values attribute)]
+      [select-with-action {:label                 (tr [:fields attribute])
+                           :name                  name
+                           :id                    id
+                           :error                 (boolean error)
+                           :value                 (or value :none)
+                           :on-change             on-change
+                           :show-empty-selection? true
+                           :items                 (sort-by tr* values)
+                           :format-item           tr*
+                           :required              required
+                           :class                 class}])))
+
+(defn select-user
+  "Select user"
+  [{:keys [e! value on-change label required]}]
+  [outlined-select {:label       label
+                    :value       value
+                    :required    required
+                    :on-change   on-change
+                    :show-empty-selection? true
+                    :items       (user-info/list-user-ids)
+                    :format-item (r/partial user-info/user-name-and-email e!)}])
