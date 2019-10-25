@@ -71,7 +71,7 @@
                                            :icon icons/action-description
                                            :end-text (tr [:enum (:db/ident status)])}]))])]
       [buttons/button-primary {:on-click #(e! (task-controller/->OpenAddDocumentDialog))
-                               :start-icon (r/as-element [icons/content-add-circle])}
+                               :start-icon (r/as-element [icons/content-add])}
        (tr [:task :add-document])]]]
     [Grid {:item true :xs 6}
      [project-view/project-map e! (get-in app [:config :api-url]) project (get-in app [:query :tab])]]]])

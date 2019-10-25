@@ -106,19 +106,13 @@
                :file/keys [name size author timestamp]
                in-progress? :in-progress?} (:document/files document)]
           ^{:key id}
-          [ListItem {:button true :component "a"
-                     :href (document-controller/download-url id)
-                     :target "_blank"}
-           (if in-progress?
-             [ListItemIcon [CircularProgress {:size 20}]]
-             [ListItemIcon [icons/file-attachment]])
-           [ListItemText {:primary name
-                          :secondary (r/as-element
-                                       [:<>
-                                        [:span {:style {:display :block}} (some-> timestamp format/date-time) " "
-                                         (when author
-                                           [user-info/user-name e! author])]
-                                        (format/file-size size)])}]]))]
+          [ui-common/list-button-link {:link (document-controller/download-url id)
+                                       :label name
+                                       :sub-label [:<> (some-> timestamp format/date-time)
+                                                   " "
+                                                   [user-info/user-name e! author]]
+                                       :icon icons/file-attachment
+                                       :end-text (format/file-size size)}]))]
      [file-upload/FileUploadButton {:id "upload-files-to-document"
                                     :on-drop (e! document-controller/->UploadFilesToDocument)}
       (tr [:common :select-files])]]]

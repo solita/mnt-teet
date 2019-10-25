@@ -134,8 +134,9 @@
 (defn project-phase-listing [e! project phases]
   [:<>
    [phase-action-heading {:heading (tr [:project :phases])
-                          :button [buttons/button-primary {:on-click (e! project-controller/->OpenPhaseDialog)
-                                                           :start-icon (r/as-element [icons/content-add-circle])}
+                          :button [buttons/button-primary
+                                   {:on-click (e! project-controller/->OpenPhaseDialog)
+                                    :start-icon (r/as-element [icons/content-add])}
                                    (tr [:project :add-phase])]}]
    (doall
      (for [phase

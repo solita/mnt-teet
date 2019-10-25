@@ -122,8 +122,10 @@
                :on-drop on-drop
                :drop-message drop-message}
    (into [Button {:component :span
-                  :variant :outlined
-                  :raised "true"}]
+                  :variant :contained
+                  :disable-ripple true
+                  :color :primary
+                  :start-icon (r/as-element [icons/content-add])}]
          children)])
 
 (defn- files-field-style [error]
