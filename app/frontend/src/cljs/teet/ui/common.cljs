@@ -110,7 +110,9 @@
   [:div {:class class}
    [:div {:class (herb/join (<class container-style)
                             class)}
-    [typography/Text {:classes {:root (<class label-style)}}
+    [typography/Text {:component :span
+                      :classes {:root (<class label-style)}}
      label]
-    [typography/Text {:classes {:root (<class data-style)}}
+    [typography/Text {:component :span
+                      :classes {:root (<class data-style)}}
      data]]])
