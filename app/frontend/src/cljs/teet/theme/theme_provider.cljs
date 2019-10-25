@@ -44,6 +44,7 @@
                                         :font-size "14px"
                                         :line-height "14px"}}
                :MuiLink {:underlineHover {:text-decoration :underline
+                                          :font-size "1rem"
                                           "&:hover" {:text-decoration :none}}}
                :MuiTabs {:indicator {:display :none}}
                :MuiTab {:root {:&$textColorPrimary {:text-transform :capitalize
@@ -55,6 +56,7 @@
                                             :font-weight :bold
                                             :border-radius "4px 4px 0 0"}}}
                :MuiIconButton {:root {:border-radius "2px"}}
+               :MuiButtonBase {:root {:font-size "1rem"}}
                :MuiButton {:containedSecondary {:background-color theme-colors/white
                                                 :border (str "2px solid " theme-colors/gray)
                                                 :color theme-colors/gray-dark
@@ -63,6 +65,7 @@
                                        :&$focusVisible {:box-shadow "0 0 0 2px #007BAF"}}
                            :root {:text-transform :capitalize
                                   :font-weight 400
+                                  :font-size "1rem"
                                   :height "40px"
                                   :&$focusVisible {:box-shadow "0 0 0 2pt #007BAF"}}}
                :MuiDrawer {:paper {:background-color theme-colors/blue
@@ -79,16 +82,19 @@
                                     :margin-bottom "1rem"}
                                :h2 {:fontFamily "Roboto"
                                     :fontWeight 400
-                                    :fontSize "1.75rem"
-                                    :lineHeight "1.3125rem"}
-                               :h3 {:fontFamily "Roboto Condensed"
-                                    :fontWeight 400
                                     :fontSize "1.5rem"
-                                    :lineHeight "1.3125rem"}
+                                    :lineHeight "1.75rem"}
+                               :h3 {:fontFamily "Roboto"
+                                    :fontWeight 500
+                                    :fontSize "1.125rem"
+                                    :lineHeight "1.25rem"}
                                ;; SectionHeading
                                :h6 section-heading-style
                                ;; DataLabel
                                :subtitle1 data-label-style
+                               :subtitle2 {:fontSize "0.875rem"
+                                           :font-weight 400
+                                           :color theme-colors/gray}
                                :body1 {:fontWeight 400
                                        :fontSize "1rem"
                                        :lineHeight 1.5}}
