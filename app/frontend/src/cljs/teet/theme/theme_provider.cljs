@@ -54,16 +54,20 @@
                                             :border "none"
                                             :font-weight :bold
                                             :border-radius "4px 4px 0 0"}}}
-               :MuiIconButton {:root {:border-radius "2px"}}
+               :MuiIconButton {:root {:border-radius "2px"
+                                      "&:focus" {:box-shadow (str "0 0 0 1px" theme-colors/white ", "
+                                                                  "0 0 0 3px " theme-colors/blue-light)}}}
                :MuiButtonBase {:root {:font-size "1rem"}}
                :MuiButton {:containedSecondary {:background-color theme-colors/white
                                                 :border (str "2px solid " theme-colors/gray)
                                                 :color theme-colors/gray-dark
                                                 "&:hover" {:background-color theme-colors/gray-lighter}}
                            :contained {:border-radius "20px"
-                                       :&$focusVisible {:box-shadow "0 0 0 2px #007BAF"}}
+                                       "&:focus" {:box-shadow (str "0 0 0 1px" theme-colors/white ", "
+                                                                   "0 0 0 3px " theme-colors/blue-light)}}
                            :root {:text-transform :capitalize
                                   :font-weight 400
+                                  :padding "0 1.875rem"
                                   :font-size "1rem"
                                   :height "40px"
                                   :&$focusVisible {:box-shadow "0 0 0 2pt #007BAF"}}}
@@ -103,11 +107,11 @@
 
 (defn- create-theme [theme]
   (let [create-mui-theme (-> js/window
-                           (gobj/get "MaterialUI")
-                           (gobj/get "createMuiTheme"))]
+                             (gobj/get "MaterialUI")
+                             (gobj/get "createMuiTheme"))]
     (-> theme
-      ->js
-      create-mui-theme)))
+        ->js
+        create-mui-theme)))
 
 (defn theme-provider [content]
   (r/with-let [theme (create-theme teet-theme)]
