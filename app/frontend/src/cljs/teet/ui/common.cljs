@@ -126,12 +126,12 @@
 
 (defn list-button-style
   []
-  ^{:pseudo {:hover {:background-color teet.theme.theme-colors/gray-lightest}}}
+  ^{:pseudo {:hover {:background-color theme-colors/gray-lightest}}}
   {:padding "0.75rem 0.25rem"
    :display :flex
    :justify-content :flex-start
    :transition "background-color 0.2s ease-in-out"
-   :border-bottom (str "1px solid " teet.theme.theme-colors/gray-lighter)})
+   :border-bottom (str "1px solid " theme-colors/gray-lighter)})
 
 (defn list-button-link
   "Listable link with bottom border and big clickable area"
@@ -157,7 +157,7 @@
    :flex-direction :row
    :align-items :center
    :border-bottom "solid 1px"
-   :border-color teet.theme.theme-colors/gray-light
+   :border-color theme-colors/gray-light
    :padding-bottom "1rem"
    :margin-bottom "1rem"})
 
@@ -171,6 +171,7 @@
    [select/select-enum {:e! e!
                         :on-change on-change
                         :value status
+                        :tiny-select? true
                         :attribute attribute
                         :class (<class status-style)}]
    [labeled-data {:label (tr [:common :last-modified])

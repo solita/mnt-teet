@@ -112,7 +112,14 @@
   [e! {:keys [project]} {id :db/id
                          :phase/keys [phase-name tasks status] :as phase}]
   [:div {:class (<class project-style/project-phase-style)}
-   [heading-state (tr [:enum (:db/ident phase-name)]) (tr [:enum (:db/ident status)])]
+   [heading-state
+    (tr [:enum (:db/ident phase-name)])
+    [select/select-enum {:e! e!
+                         :tiny-select? true
+                         :show-label? false
+                         :on-change #(e! (project-controller/->UpdatePhaseState id %))
+                         :value (:db/ident status)
+                         :attribute :phase/status}]]
    (if (seq tasks)
      (doall
        (for [{:task/keys [status type] :as t} tasks]
@@ -262,7 +269,7 @@
 (defn project-page [e! {{:keys [project]} :params
                         {:keys [tab]} :query
                         {:keys [add-phase add-task]} :query :as app}
-                    phases
+                    {:keys [phases]}
                     breadcrumbs]
   (let [tab (or tab "documents")]
     [:<>
