@@ -62,6 +62,7 @@
   []
   {:display :flex
    :justify-content :space-between
+   :align-items :center
    :padding "1rem 0.25rem"
    :border-bottom (str "1px solid " theme-colors/gray-lighter)})
 

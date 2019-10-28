@@ -32,7 +32,7 @@
            :parent :projects-list
            :crumb [teet.project.project-info/project-name app project]
            :view teet.project.project-view/project-page
-           :state {:query :workflow/list-project-phases
+           :state {:query :workflow/project
                    :args {:thk-project-id project}}}
 
  :phase-task {:path "/projects/:project/:phase/:task"

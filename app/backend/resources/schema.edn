@@ -273,4 +273,10 @@
   :txes [[{:db/ident :document/modified
            :db/valueType :db.type/instant
            :db/cardinality :db.cardinality/one
-           :db/doc "Last modification timestamp for document"}]]}]
+           :db/doc "Last modification timestamp for document"}]]}
+
+ {:db/ident :migration/phase-modified
+  :txes [[{:db/ident :phase/modified
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "Last modification timestamp for phase"}]]}]

@@ -17,6 +17,9 @@
                                    :phase/estimated-start-date :phase/estimated-end-date])]})
    [:tempids]))
 
+(defmethod db-api/command! :phase/update-phase [{conn :conn} phase]
+  (select-keys (d/transact conn {:tx-data [(assoc phase :phase/modified (Date.))]}) [:tempids]))
+
 (defmethod db-api/command! :workflow/update-task [{conn :conn} task]
   (select-keys (d/transact conn {:tx-data [(assoc task :task/modified (Date.))]}) [:tempids]))
 

@@ -15,19 +15,20 @@
    :args [db workflow-id project-id]
    :result-fn ffirst})
 
-(defmethod db-api/query :workflow/list-project-phases [{db :db} {:keys [thk-project-id]}]
+(defmethod db-api/query :workflow/project [{db :db} {:keys [thk-project-id]}] ;; TODO: when thk in datomic fetch that also
   {:query '[:find (pull ?e [:db/id :phase/phase-name :phase/status
                             :phase/estimated-start-date :phase/estimated-end-date
                             {:phase/tasks [*]}])
             :in $ ?thk-project-id
             :where [?e :thk/id ?thk-project-id] [?e :phase/phase-name _]]
    :args [db thk-project-id]
-   :result-fn (partial mapv first)})
+   :result-fn #(hash-map :thk-id thk-project-id :phases (mapv first %))})
 
 (defmethod db-api/query :task/fetch-task [{db :db} {:keys [task-id]}]
   {:query '[:find (pull ?e [:db/id
                             :task/description
                             :task/modified
+                            :phase/status
                             {:task/status [:db/ident]}
                             {:task/type [:db/ident]}
                             {:task/assignee [:user/id]}

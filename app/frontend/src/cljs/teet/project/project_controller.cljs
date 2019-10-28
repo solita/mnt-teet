@@ -13,6 +13,7 @@
 (defrecord SelectProject [project-id])
 (defrecord ToggleCadastralHightlight [id])
 (defrecord ToggleRestrictionData [id])
+(defrecord UpdatePhaseState [id status])
 
 (defmethod common-controller/map-item-selected
   "geojson_thk_project_pins" [p]
@@ -57,6 +58,15 @@
        :page :project
        :params {:project (get-in app [:params :project])}
        :query {:add-task phase-id}}))
+
+  UpdatePhaseState
+  (process-event [{phase-id :id status :status} app]
+    (t/fx app
+      {:tuck.effect/type :command!
+       :command :phase/update-phase
+       :payload {:db/id phase-id
+                 :phase/status status}
+       :result-event common-controller/->Refresh}))
 
   CloseTaskDialog
   (process-event [_ app]
