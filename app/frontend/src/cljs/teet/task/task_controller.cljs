@@ -56,7 +56,6 @@
 
   UpdateTaskStatus
   (process-event [{status :status :as event} app]
-    (log/info "Updatetaskstatus " event)
     (let [{id :db/id} (common-controller/page-state app)]
       (t/fx app
         {:tuck.effect/type :command!
