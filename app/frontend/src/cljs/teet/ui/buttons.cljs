@@ -26,6 +26,11 @@
                                :disable-ripple true
                                :color :primary}))
 
+(def button-secondary
+  (util/make-component Button {:variant :contained
+                               :disable-ripple true
+                               :color :secondary}))
+
 (defn white-button-with-icon
   [{:keys [on-click icon]} text]
   [ButtonBase {:on-click on-click
