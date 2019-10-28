@@ -49,7 +49,11 @@
     (do (log/warn "No spec for " spec ", every query and command should have a spec!")
         nil)
     (when-let [problems (s/explain-data spec data)]
-      (merge {:error "Spec validation failed"} problems))))
+      (with-meta
+        (merge
+          {:status 422
+           :body "Spec validation failed"} problems)
+        {:format :raw}))))
 
 (def query-handler
   "Ring handler to invoke a named Datomic query.
@@ -85,18 +89,18 @@
   (request
    (fn [ctx {:keys [command payload]}]
      (or
-      (check-spec command payload)
-      (let [ctx  (assoc ctx :command/name command)
-            auth-ex (try
-                      (db-api/command-authorization ctx payload)
-                      nil
-                      (catch Exception e
-                        (log/warn e "Command authorization failure")
-                        e))]
-        (if auth-ex
-          ^{:format :raw}
-          {:status 403
-           :body "Command authorization failure"}
-          (let [result (db-api/command! ctx payload)]
-            (log/debug "command: " command ", payload: " payload ", result => " result)
-            result)))))))
+       (check-spec command payload)
+       (let [ctx (assoc ctx :command/name command)
+             auth-ex (try
+                       (db-api/command-authorization ctx payload)
+                       nil
+                       (catch Exception e
+                         (log/warn e "Command authorization failure")
+                         e))]
+         (if auth-ex
+           ^{:format :raw}
+           {:status 403
+            :body "Command authorization failure"}
+           (let [result (db-api/command! ctx payload)]
+             (log/debug "command: " command ", payload: " payload ", result => " result)
+             result)))))))

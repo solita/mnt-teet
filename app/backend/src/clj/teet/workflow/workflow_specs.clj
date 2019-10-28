@@ -8,6 +8,8 @@
 
 (s/def :phase/phase (s/keys))
 
+(s/def :phase/update-phase (s/keys :req [:phase/status]))
+
 (s/def :phase/create-phase
   (s/keys :req [:thk/id :phase/phase-name :phase/status
                 :phase/estimated-start-date :phase/estimated-end-date]))
