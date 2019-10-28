@@ -1,10 +1,12 @@
 (ns teet.ui.panels
   "Different panels for showing content."
-  (:require [reagent.core :as r]
+  (:require [herb.core :refer [<class]]
+            [reagent.core :as r]
             [teet.ui.material-ui :refer [Card CardHeader CardContent
                                          Collapse IconButton Divider
                                          Dialog DialogTitle DialogContent]]
-            [teet.ui.icons :as icons]))
+            [teet.ui.icons :as icons]
+            [teet.ui.typography :as typography]))
 
 (defn collapsible-panel
   "Panel that shows content that can be opened/closed with a button.
@@ -41,17 +43,39 @@
    [CardHeader {:title title}]
    [CardContent content]])
 
+(defn dialog-title-style
+  []
+  {:display :flex
+   :justify-content :space-between
+   :align-items :flex-start})
+
+(defn dialog-heading-style
+  []
+  {:margin-bottom 0
+   :margin-top "1rem"})
+
 (defn modal
   "Simple modal container"
   [{:keys [title on-close] :as opts} content]
-  (r/with-let [open-atom (or (:open-atom opts) (r/atom true))]
+  (r/with-let [open-atom (or (:open-atom opts) (r/atom true))
+               close-fn #(do
+                           (reset! open-atom false)
+                           (when on-close
+                             (on-close)))]
     [Dialog {:full-width true
-             :max-width "md"
+             :max-width "sm"
              :open @open-atom
-             :on-close #(do
-                          (reset! open-atom false)
-                          (when on-close
-                            (on-close)))}
-     [DialogTitle {} title]
+             :on-close close-fn}
+     [DialogTitle {:disable-typography true
+                   :class (<class dialog-title-style)}
+      [typography/Heading1
+       {:class (<class dialog-heading-style)}
+       title]
+      [IconButton {:aria-label "close"
+                   :color :primary
+                   :disable-ripple true
+                   :on-click close-fn
+                   :size :small}
+       [icons/navigation-close]]]
      [DialogContent
       content]]))
