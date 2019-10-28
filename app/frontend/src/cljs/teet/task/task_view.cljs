@@ -57,7 +57,7 @@
       [itemlist/ItemList
        {}
        (if (empty? documents)
-         [:div (tr [:task :no-documents])]
+         [:p (tr [:task :no-documents])]
          [List {:dense true}
           (doall
             (for [{id :db/id
