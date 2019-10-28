@@ -7,7 +7,9 @@
             [goog.object :as gobj]
             [clojure.spec.alpha :as s]
             [herb.core :refer [<class]]
-            [teet.theme.theme-spacing :as theme-spacing]))
+            [teet.theme.theme-spacing :as theme-spacing]
+            [teet.ui.buttons :as buttons]
+            [teet.theme.theme-colors :as theme-colors]))
 
 
 (def default-value
@@ -58,6 +60,17 @@
                 :when attribute]
             attribute))))
 
+(defn modal-form-bg
+  []
+  {:background-color theme-colors/gray-lightest
+   :padding "1.5rem"
+   :margin-bottom "1.5rem"})
+
+(defn modal-buttons
+  []
+  {:text-align :right
+   :margin-bottom "1.5rem"})
+
 (defn form
   "Simple grid based form container."
   [{:keys [e! on-change-event cancel-event save-event value in-progress? spec]} & fields]
@@ -92,7 +105,8 @@
                ;; Determine required fields by getting missing attributes of an empty map
                required-fields (missing-attributes spec {})]
               [:form {:on-submit (r/partial validate-and-save e! save-event value fields)}
-               [Grid {:container true :spacing 1}
+               [Grid {:container true :spacing 1
+                      :class (<class modal-form-bg)}
                 (util/with-keys
                   (map (fn [field]
                          (assert (vector? field) "Field must be a hiccup vector")
@@ -100,13 +114,13 @@
                          (let [{:keys [xs lg md attribute]} (meta field)
                                _ (assert (keyword? attribute) "All form fields must have :attribute meta key!")
                                value (get value attribute (default-value (first field)))
-                               opts {:value     value
+                               opts {:value value
                                      :on-change (r/partial update-attribute-fn attribute)
-                                     :label     (tr [:fields attribute])
-                                     :error     (boolean (@invalid-attributes attribute))
-                                     :required  (boolean (required-fields attribute))}]
+                                     :label (tr [:fields attribute])
+                                     :error (boolean (@invalid-attributes attribute))
+                                     :required (boolean (required-fields attribute))}]
                            [Grid (merge {:class (<class theme-spacing/mb 1)
-                                         :item  true :xs (or xs 12)}
+                                         :item true :xs (or xs 12)}
                                         (when lg
                                           {:lg lg})
                                         (when md
@@ -114,19 +128,20 @@
                             (add-validation
                               (update field 1 merge opts)
                               validate-attribute-fn attribute value)]))
-                       fields))
-                (when (or cancel-event save-event)
-                  (let [disabled? (boolean in-progress?)]
-                    [Grid {:item true :xs 12 :align "right"}
-                     (when cancel-event
-                       [Button {:disabled disabled?
-                                :on-click (r/partial e! (cancel-event))
-                                :color    "secondary"
-                                :variant  "contained"}
-                        (tr [:buttons :cancel])])
-                     (when save-event
-                       [Button {:disabled disabled?
-                                :color    "primary"
-                                :variant  "contained"
-                                :type     :submit}
-                        (tr [:buttons :save])])]))]]))
+                       fields))]
+               (when (or cancel-event save-event)
+                 (let [disabled? (boolean in-progress?)]
+                   [:div {:class (<class modal-buttons)}
+                    (when cancel-event
+                      [buttons/button-secondary {:style {:margin-right "1rem"}
+                                                 :disabled disabled?
+                                                 :on-click (r/partial e! (cancel-event))
+                                                 :color :secondary
+                                                 :variant :contained}
+                       (tr [:buttons :cancel])])
+                    (when save-event
+                      [buttons/button-primary {:disabled disabled?
+                                               :color :primary
+                                               :variant :contained
+                                               :type :submit}
+                       (tr [:buttons :save])])]))]))
