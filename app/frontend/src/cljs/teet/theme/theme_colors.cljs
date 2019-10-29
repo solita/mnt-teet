@@ -9,6 +9,7 @@
 (def blue "#005E87")
 (def blue-light "#007BAF")
 (def blue-lighter "#AAE1F8")
+(def orange "#FF8000")
 
 ;; Grayscale
 (def gray-dark "#34394C")
@@ -27,6 +28,7 @@
 (def secondary blue-dark)
 (def success green)
 (def error red)
+(def warning orange)
 
 (def primary-text gray-dark)
 (def secondary-text gray)
