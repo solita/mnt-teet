@@ -12,6 +12,7 @@
             [teet.ui.material-ui :refer [CssBaseline]]
             [tuck.core :as t]
             [teet.theme.theme-provider :as theme]
+            [teet.snackbar.snackbar-view :as snackbar]
             [teet.common.common-controller]
 
             ;; Import view namespaces
@@ -29,10 +30,11 @@
 ;; See routes.edn
 (define-main-page page-and-title)
 
-(defn main-view [e! {:keys [page user navigation quick-search] :as app}]
+(defn main-view [e! {:keys [page user navigation quick-search snackbar] :as app}]
   (let [nav-open? (boolean (:open? navigation))]
     [theme/theme-provider
      [:<>
+      [snackbar/snackbar-container e! snackbar]
       [CssBaseline]
       (if (= page :login)
         ;; Show only login dialog

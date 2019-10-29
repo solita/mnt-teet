@@ -51,6 +51,8 @@
 ;; Dialogs and modals
 (define-mui-components Dialog DialogTitle DialogContent Popover)
 
+;; Snackbar
+(define-mui-components Snackbar SnackbarContent)
 
 ;; monkey patch based on this https://github.com/reagent-project/reagent/blob/master/doc/examples/material-ui.md
 (def ^:private input-component
