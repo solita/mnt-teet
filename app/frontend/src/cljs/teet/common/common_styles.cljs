@@ -12,4 +12,4 @@
 (defn gray-bg-content
   []
   {:background-color theme-colors/gray-lightest
-   :padding "0.5rem 1.5rem 0 1.5rem"})
+   :padding "1rem 1.5rem 0 1.5rem"})
