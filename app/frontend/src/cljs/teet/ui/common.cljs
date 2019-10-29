@@ -127,7 +127,7 @@
 (defn list-button-style
   []
   ^{:pseudo {:hover {:background-color theme-colors/gray-lightest}
-             :focus {:background-color theme-colors/gray-lightest}}}
+             :focus {:box-shadow (str "0 0 0 2px " theme-colors/blue-light)}}}
   {:padding "0.75rem 0.25rem"
    :display :flex
    :justify-content :flex-start
