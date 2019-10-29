@@ -5,6 +5,7 @@
             [reagent.core :as r]
             [taoensso.timbre :as log]
             [teet.routes :as routes]
+            [teet.snackbar.snackbar-controller :as snackbar-controller]
             [tuck.core :as t]
             [tuck.effect :as tuck-effect]
             [teet.transit :as transit]))
@@ -217,7 +218,7 @@
     (t/fx app
           (assoc query-effect-map :tuck.effect/type :query))))
 
-(defmethod tuck-effect/process-effect :command! [e! {:keys [command payload result-path result-event] :as q}]
+(defmethod tuck-effect/process-effect :command! [e! {:keys [command payload result-path result-event success-message] :as q}]
   (assert (keyword? command)
           "Must specify :command keyword that names the command to execute")
   (assert (some? payload)
@@ -235,6 +236,8 @@
         (.then #(.text %))
         (.then (fn [text]
                  (let [data (transit/transit->clj text)]
+                   (when success-message
+                     (e! (snackbar-controller/->OpenSnackBar success-message :success)))
                    (if result-path
                      (e! (->RPCResponse result-path data))
                      (e! (result-event data)))))))))

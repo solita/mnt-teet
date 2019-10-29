@@ -62,11 +62,13 @@
   UpdatePhaseState
   (process-event [{phase-id :id status :status} app]
     (t/fx app
-      {:tuck.effect/type :command!
-       :command :phase/update-phase
-       :payload {:db/id phase-id
-                 :phase/status status}
-       :result-event common-controller/->Refresh}))
+          {:tuck.effect/type :command!
+           :command :phase/update-phase
+           :payload {:db/id phase-id
+                     :phase/status status}
+           :result-event common-controller/->Refresh
+           :success-message "Phase updated successfully"    ;TODO add to localizations
+           }))
 
   CloseTaskDialog
   (process-event [_ app]
