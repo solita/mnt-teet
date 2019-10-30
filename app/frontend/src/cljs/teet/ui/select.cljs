@@ -64,7 +64,7 @@
 
 (defn select-style
   []
-  ^{:pseudo {:hover {:border-bottom (str "2px solid " theme-colors/blue-light)
+  ^{:pseudo {:hover {:border-bottom (str "2px solid " theme-colors/primary)
                      :padding-bottom "5px"}}}               ;;This is done because material ui can't have box sizing border box
   {:color theme-colors/blue
    :font-family "Roboto"
