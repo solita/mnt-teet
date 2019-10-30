@@ -22,7 +22,8 @@
    #'server
    (fn [_]
      ;; Redirecting to :stdout results in StackOverflowError
-     (log/redirect-ion-casts! :stderr)
+     (when (= mode :dev)
+       (log/redirect-ion-casts! :stderr))
      (log/info "Starting TEET service in port " port)
      (-> (routes
           (if tara
