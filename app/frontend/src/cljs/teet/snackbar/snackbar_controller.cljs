@@ -7,7 +7,6 @@
 (extend-protocol t/Event
   OpenSnackBar
   (process-event [{:keys [message variant]} app]
-    (println "opening snackbar" message "variant" variant)
     (assoc-in app [:snackbar]
               {:open? true
                :message message

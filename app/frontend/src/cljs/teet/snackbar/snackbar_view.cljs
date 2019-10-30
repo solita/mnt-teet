@@ -32,7 +32,8 @@
     icons/action-done))
 
 (defn snackbar-container
-  [e! {:keys [open? message variant]}]
+  [e! {:keys [open? message variant]
+       :or {variant :success}}]
   [Snackbar {:anchor-origin {:vertical :bottom
                              :horizontal :right}
              :open open?
