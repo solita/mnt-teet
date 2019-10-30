@@ -13,3 +13,11 @@
   []
   {:background-color theme-colors/gray-lightest
    :padding "1rem 1.5rem 0 1.5rem"})
+
+(defn spinner-style
+  []
+  {:height "100%"
+   :width "100%"
+   :align-items :center
+   :display :flex
+   :justify-content :center})

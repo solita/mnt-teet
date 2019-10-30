@@ -26,13 +26,6 @@
    :align-items "center"
    :justify-content "center"})
 
-(defn drawer-footer
-  []
-  {:margin-top "auto"
-   :padding "1rem 0"
-   :display :flex
-   :justify-content :center})
-
 (defn page-listing
   []
   {:padding "0"})
@@ -56,6 +49,8 @@
   (let [dw (drawer-width drawer-open?)]
     {:z-index 10
      ;; :padding "0 24px"
+     :height "1px"                                          ;;This is a hack to enable children to inherit height
+     :min-height (str "calc(100vh - " appbar-height ")")
      :width (str "calc(100% - " dw "px)")
      :transition "all 0.2s ease-in-out"
      :margin-left (str dw "px")}))
