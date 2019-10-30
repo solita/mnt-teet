@@ -7,8 +7,8 @@
             [teet.theme.theme-colors :as theme-colors]))
 
 (def snack-color {:success theme-colors/success
-            :error theme-colors/error
-            :warning theme-colors/warning})
+                  :error theme-colors/error
+                  :warning theme-colors/warning})
 
 (defn message-style
   []
@@ -32,15 +32,14 @@
     icons/action-done))
 
 (defn snackbar-container
-  [e! {:keys [open? message variant]
-       :or {variant :success}}]
+  [e! {:keys [open? message variant]}]
   [Snackbar {:anchor-origin {:vertical :bottom
                              :horizontal :right}
              :open open?
              :auto-hide-duration 5000
              :on-close (e! snackbar-controller/->CloseSnackbar)}
    [SnackbarContent
-    {:style {:background-color (variant snack-color)}
+    {:style {:background-color (snack-color variant)}
      :message (r/as-component [:span
                                {:class (<class message-style)}
                                [(snack-icon variant) {:class (<class icon-style)}]
