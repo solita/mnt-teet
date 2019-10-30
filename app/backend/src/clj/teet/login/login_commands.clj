@@ -20,14 +20,16 @@
                     {:demo-user user})))
 
   (if (environment/check-site-password site-password)
-    (let [secret (environment/config-value :auth :jwt-secret)]
+    (let [secret (environment/config-value :auth :jwt-secret)
+          roles (user-roles conn id)]
       {:token (login-api-token/create-token secret "teet_user"
                                             {:given-name given-name
                                              :family-name family-name
                                              :person-id person-id
                                              :email email
-                                             :id id})
-       :roles (user-roles conn id)})
+                                             :id id
+                                             :roles roles})
+       :roles roles})
     {:error :incorrect-site-password}))
 
 (defmethod db-api/command-authorization :login [_ _]
@@ -36,13 +38,15 @@
 
 (defmethod db-api/command! :refresh-token [{conn :conn
                                             {:user/keys [id given-name family-name email person-id]} :user} _]
-  {:token (login-api-token/create-token (environment/config-value :auth :jwt-secret) "teet_user"
-                                        {:given-name given-name
-                                         :family-name family-name
-                                         :person-id person-id
-                                         :email email
-                                         :id id})
-   :roles (user-roles conn id)})
+  (let [roles (user-roles conn id)]
+    {:token (login-api-token/create-token (environment/config-value :auth :jwt-secret) "teet_user"
+                                          {:given-name given-name
+                                           :family-name family-name
+                                           :person-id person-id
+                                           :email email
+                                           :id id
+                                           :roles roles})
+     :roles roles}))
 
 (defmethod db-api/command-authorization :refresh-token [{user :user} _]
   (when-not (and user

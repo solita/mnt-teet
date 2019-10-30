@@ -1,8 +1,8 @@
 (ns teet.user.user-controller
   "User info and access rights"
   (:require [reagent.core :as r]
-            tuck.effect))
-
+            tuck.effect
+            [teet.user.user-roles :as user-roles]))
 
 (defonce roles (r/atom #{}))
 
@@ -10,11 +10,12 @@
   (reset! roles new-roles))
 
 (defn has-role?
-  "Returns true if user has the given role.
-  If the input is a single role keyword, checks that the user has that role.
-  If the input is a collection of role keywords, checks that user has at least
-  one of the roles."
+  "Check if current logged in user has given role.
+  See: teet.user.user-roles/has-role?"
   [role-or-roles]
-  (if (keyword? role-or-roles)
-    (boolean (@roles role-or-roles))
-    (some has-role? role-or-roles)))
+  (user-roles/has-role? {:user/roles @roles} role-or-roles))
+
+
+(defn when-role [role component]
+  (when (has-role? role)
+    component))
