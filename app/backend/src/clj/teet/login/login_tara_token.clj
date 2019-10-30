@@ -9,7 +9,7 @@
   profile_attributes.family_name  last name (SMART-ID)
   email                           email address (may not be present)
   "
-  (:require [taoensso.timbre :as log]))
+  (:require [teet.log :as log]))
 
 (defn tara-claims->user-info [claims-set]
   {:given-name (get-in claims-set ["profile_attributes" "given_name"])

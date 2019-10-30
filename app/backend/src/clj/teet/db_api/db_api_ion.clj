@@ -4,8 +4,7 @@
             [datomic.ion.lambda.api-gateway :as apigw]
             [datomic.ion :as ion]
             [teet.environment :as environment]
-            [taoensso.timbre :as log]
-            [datomic.ion.cast :as cast]
+            [teet.log :as log]
             [ring.middleware.params :as params]
             [ring.middleware.cookies :as cookies]))
 
@@ -25,16 +24,4 @@
 
 (environment/init-ion-config! (ion/get-env))
 
-(defn- ion-appender [{:keys [level _output]}]
-  ((case level
-     (:error :warn :fatal) cast/alert
-     cast/dev)
-   {:msg (force _output)}))
-
-(defn enable-timbre-appender! []
-  (log/merge-config!
-   {:appenders {:println {:enabled? false}
-                :ion {:enabled? true
-                      :fn ion-appender}}}))
-
-(enable-timbre-appender!)
+(log/enable-timbre-appender!)

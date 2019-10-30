@@ -11,16 +11,18 @@
             [teet.login.login-tara-token :as login-tara-token]
             [teet.login.login-fake-routes :as login-fake-routes]
             [teet.db-api.db-api-dev :as db-api-dev]
-            [taoensso.timbre :as log]
+            [teet.log :as log]
             [teet.environment :as environment])
   (:gen-class))
 
 (def server nil)
 
-(defn start [{:keys [port tara] :as config}]
+(defn start [{:keys [port tara mode] :as config}]
   (alter-var-root
    #'server
    (fn [_]
+     ;; Redirecting to :stdout results in StackOverflowError
+     (log/redirect-ion-casts! :stderr)
      (log/info "Starting TEET service in port " port)
      (-> (routes
           (if tara

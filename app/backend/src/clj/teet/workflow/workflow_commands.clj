@@ -4,7 +4,7 @@
             [datomic.client.api :as d]
             [clojure.spec.alpha :as s]
             [teet.workflow.workflow-specs]
-            [taoensso.timbre :as log])
+            [teet.log :as log])
   (:import (java.util Date)))
 
 

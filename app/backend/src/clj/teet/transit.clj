@@ -1,7 +1,7 @@
 (ns teet.transit
   "Transit format utilities"
   (:require [cognitect.transit :as t]
-            [taoensso.timbre :as log]))
+            [teet.log :as log]))
 
 (defn transit->clj
   "Parse transit+json `in` to Clojure data."

@@ -2,8 +2,7 @@
   (:require [teet.db-api.core :as db-api]
             [teet.document.document-specs]
             [teet.document.document-storage :as document-storage]
-            [datomic.client.api :as d]
-            [taoensso.timbre :as log]))
+            [datomic.client.api :as d]))
 
 
 (defmethod db-api/query :document/download-file [{db :db} {file-id :file-id}]

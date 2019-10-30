@@ -2,7 +2,6 @@
   (:require [teet.db-api.core :as db-api]
             [datomic.client.api :as d]
             [teet.document.document-storage :as document-storage]
-            [taoensso.timbre :as log]
             teet.document.document-spec)
   (:import (java.util Date)))
 

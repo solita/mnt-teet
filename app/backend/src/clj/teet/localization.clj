@@ -3,7 +3,7 @@
             [clojure.edn :as edn]
             [clojure.pprint :as pp]
             [dk.ative.docjure.spreadsheet :as sheet]
-            [taoensso.timbre :as log]))
+            [teet.log :as log]))
 
 ;;
 ;; Helpers for handling edn <-> Excel

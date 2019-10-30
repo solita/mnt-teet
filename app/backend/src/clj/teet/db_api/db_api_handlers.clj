@@ -14,8 +14,7 @@
             teet.login.login-commands
             teet.enum.enum-queries
 
-            [taoensso.timbre :as log]
-            [teet.logging :as logging]
+            [teet.log :as log]
             [teet.login.login-api-token :as login-api-token]
             [clojure.string :as str]))
 
@@ -28,10 +27,10 @@
 
 (defn- request [handler-fn]
   (fn [req]
-    (log/info "REQUEST: " (pr-str request))
+    (log/info "REQUEST: " (pr-str req))
     (let [user (some->> req jwt-token (login-api-token/verify-token
                                        (environment/config-value :auth :jwt-secret)))]
-      (logging/with-context
+      (log/with-context
         {:user (str (:user/id user))}
         (let [conn (environment/datomic-connection)
               ctx {:conn conn :db (d/db conn) :user user}
@@ -61,6 +60,8 @@
   the result as transit."
   (request
    (fn [ctx {:keys [query args]}]
+     (log/event :query {:request/name query})
+     (log/metric query 1 :count)
      (or
       (check-spec query args)
       (let [ctx (assoc ctx :query/name query)
@@ -88,6 +89,8 @@
   the result as transit."
   (request
    (fn [ctx {:keys [command payload]}]
+     (log/event :command {:request/name command})
+     (log/metric command 1 :count)
      (or
        (check-spec command payload)
        (let [ctx (assoc ctx :command/name command)

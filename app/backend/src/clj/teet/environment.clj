@@ -2,7 +2,7 @@
   "Configuration from environment"
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
-            [taoensso.timbre :as log]
+            [teet.log :as log]
             [datomic.client.api :as d]
             [amazonica.aws.simplesystemsmanagement :as ssm]))
 

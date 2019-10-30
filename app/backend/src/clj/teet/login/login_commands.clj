@@ -1,7 +1,6 @@
 (ns teet.login.login-commands
   (:require [teet.db-api.core :as db-api]
             [teet.environment :as environment]
-            [taoensso.timbre :as log]
             [teet.login.login-api-token :as login-api-token]
             [datomic.client.api :as d]))
 

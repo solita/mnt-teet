@@ -2,7 +2,7 @@
   (:require [compojure.core :refer [GET routes]]
             [org.httpkit.client :as client]
             [tara.json :as json]
-            [taoensso.timbre :as log]
+            [teet.log :as log]
             [tara.token :as token]
             [clojure.string :as str])
   (:import (java.util UUID Base64)
