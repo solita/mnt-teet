@@ -23,7 +23,7 @@
        (let [~'params (:params ~'app)]
          (case page#
            ~@(mapcat
-              (fn [[route-name {:keys [state view path] :as route}]]
+              (fn [[route-name {:keys [state view path skeleton] :as route}]]
                 [route-name
                  `(let [{:keys [~@(param-names path)]} ~'params
                         ~'state (get-in ~'app [:route ~route-name])
@@ -36,6 +36,7 @@
                                                      :query ~(:query state)
                                                      :args ~(:args state)
                                                      :view ~view
+                                                     :skeleton ~skeleton
                                                      :breadcrumbs [~@(loop [crumbs (list) ;; Autogenerate breadcrumbs based on :parent links for route
                                                                             route-name route-name
                                                                             {crumb :crumb
