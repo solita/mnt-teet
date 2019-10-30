@@ -2,7 +2,8 @@
 
 
 (defn has-role?
-  "Returns true if user has the given role.
+  "Returns true if user has the given role or one of the given roles.
+
   If the input is a single role keyword, checks that the user has that role.
   If the input is a collection of role keywords, checks that user has at least
   one of the roles."
