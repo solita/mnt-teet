@@ -49,7 +49,8 @@
           (map-indexed
             (fn [i item]
               [:option {:value i
-                        :key i} (format-item item)])
+                        :key i}
+               (format-item item)])
             items))]])))
 
 ;; TODO this needs better styles and better dropdown menu
@@ -63,9 +64,16 @@
 
 (defn select-style
   []
+  ^{:pseudo {:hover {:border-bottom (str "2px solid " theme-colors/blue-light)
+                     :padding-bottom "5px"}}}               ;;This is done because material ui can't have box sizing border box
   {:color theme-colors/blue
-   :padding-bottom 0
+   :font-family "Roboto"
    :border "none"})
+
+(defn select-opt
+  []
+  {:font-family "Roboto"
+   :color theme-colors/gray-dark})
 
 (defn select-with-action
   [{:keys [label id name value items format-item error on-change
@@ -97,6 +105,7 @@
          {:value (or (option-idx value) "")
           :name name
           :native true
+          :disable-underline true
           :required (boolean required?)
           :label-width (or (some-> @reference .-offsetWidth) 12)
           :input-props {:id id
@@ -110,7 +119,8 @@
            (map-indexed
              (fn [i item]
                [:option {:value i
-                         :key i}
+                         :key i
+                         :class (<class select-opt)}
                 (format-item item)])
              items))]]])))
 
