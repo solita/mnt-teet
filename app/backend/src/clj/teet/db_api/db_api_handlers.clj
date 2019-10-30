@@ -13,6 +13,8 @@
             teet.document.document-queries
             teet.login.login-commands
             teet.enum.enum-queries
+            teet.admin.admin-queries
+            teet.admin.admin-commands
 
             [taoensso.timbre :as log]
             [teet.logging :as logging]

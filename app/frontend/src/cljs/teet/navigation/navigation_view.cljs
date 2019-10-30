@@ -10,7 +10,8 @@
             [teet.navigation.navigation-logo :as navigation-logo]
             [teet.navigation.navigation-style :as navigation-style]
             [teet.search.search-view :as search-view]
-            [herb.core :as herb :refer [<class]]))
+            [herb.core :as herb :refer [<class]]
+            [teet.user.user-controller :as user-controller]))
 
 (defn language-selector
   []
@@ -88,7 +89,14 @@
                :current-page page
                :link {:page :components}
                :icon icons/content-archive
-               :name "Components"}]])
+               :name "Components"}]
+   (user-controller/when-role
+    :admin
+    [view-link {:open? open?
+                :current-page page
+                :link {:page :admin}
+                :icon icons/action-settings
+                :name (tr [:admin :title])}])])
 
 
 

@@ -22,6 +22,7 @@
             teet.document.document-view
             teet.road-visualization.road-visualization-view
             teet.ui.component-demo
+            teet.admin.admin-view
 
             teet.ui.query
             goog.math.Long)
