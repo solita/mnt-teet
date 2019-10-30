@@ -9,7 +9,7 @@
   If you add things here, also add them to index.html in frontend for production env."
   [{:keys [base-url mode api]}]
   (let [dev? (= mode :dev)]
-    [:html
+    [:html {:style "overflow-y: scroll;"}
      [:head
       [:meta {:charset "UTF-8"}]
       ;; Specify base-url if provided (local env needs this)
