@@ -14,7 +14,7 @@
    :lineHeight 1.375
    :letterSpacing "0.25px"
    :color theme-colors/secondary-text
-   :background-color theme-colors/gray-lightest
+   :border-bottom (str "2px solid " theme-colors/gray-light)
    :textTransform :uppercase})
 
 (def section-heading-style
@@ -37,6 +37,9 @@
                            :positionSticky {:box-shadow "none"}}
                :MuiToolBar {:root {:min-height "80px"}}     ;This doesn't properly target the toolbar inside appbar
                :MuiFab {:root {:border-radius "2px"}}
+               :MuiFilledInput {:root {:border-top-left-radius 0
+                                       :border-top-right-radius 0}
+                                :input {:padding "10px"}}
                :MuiInputLabel {:shrink {:transform "translate(0, 2.5px)"
                                         :font-weight 300
                                         :font-size "14px"

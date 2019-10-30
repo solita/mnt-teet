@@ -28,6 +28,7 @@
 (defn- column-filter [e! filters column type]
   [TextField {:value     (or (get filters column) "")
               :type      type
+              :variant   :filled
               :on-change #(e! (projects-controller/->UpdateProjectsFilter
                                 column
                                 (let [v (-> % .-target .-value)]
@@ -38,11 +39,11 @@
                                       v)))))}])
 
 (defn- projects-header [e! filters {:keys [column order on-click]}]
-  [TableCell {:sortDirection (if order (name order) false)}
+  [TableCell {:style {:vertical-align :top}
+              :sortDirection (if order (name order) false)}
    [TableSortLabel
     {:active       (or (= order :asc) (= order :desc))
      :direction    (if (= :asc order) "asc" "desc")
-     :hideSortIcon false
      :onClick      on-click}
     (localization/label-for-field "thk_project_search" column)]
    (case column
