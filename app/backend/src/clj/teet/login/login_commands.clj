@@ -6,6 +6,10 @@
             [datomic.client.api :as d]))
 
 
+(defn user-roles [conn id]
+  ;; FIXME: implement
+  #{:user})
+
 (defmethod db-api/command! :login [{conn :conn}
                                    {:user/keys [id given-name family-name email person-id]
                                     site-password :site-password}]
@@ -17,25 +21,28 @@
 
   (if (environment/check-site-password site-password)
     (let [secret (environment/config-value :auth :jwt-secret)]
-      (login-api-token/create-token secret "teet_user"
-                                    {:given-name given-name
-                                     :family-name family-name
-                                     :person-id person-id
-                                     :email email
-                                     :id id}))
+      {:token (login-api-token/create-token secret "teet_user"
+                                            {:given-name given-name
+                                             :family-name family-name
+                                             :person-id person-id
+                                             :email email
+                                             :id id})
+       :roles (user-roles conn id)})
     {:error :incorrect-site-password}))
 
 (defmethod db-api/command-authorization :login [_ _]
   ;; Always allow login to be used
   nil)
 
-(defmethod db-api/command! :refresh-token [{{:user/keys [id given-name family-name email person-id]} :user} _]
-  (login-api-token/create-token (environment/config-value :auth :jwt-secret) "teet_user"
-                                {:given-name given-name
-                                 :family-name family-name
-                                 :person-id person-id
-                                 :email email
-                                 :id id}))
+(defmethod db-api/command! :refresh-token [{conn :conn
+                                            {:user/keys [id given-name family-name email person-id]} :user} _]
+  {:token (login-api-token/create-token (environment/config-value :auth :jwt-secret) "teet_user"
+                                        {:given-name given-name
+                                         :family-name family-name
+                                         :person-id person-id
+                                         :email email
+                                         :id id})
+   :roles (user-roles conn id)})
 
 (defmethod db-api/command-authorization :refresh-token [{user :user} _]
   (when-not (and user
