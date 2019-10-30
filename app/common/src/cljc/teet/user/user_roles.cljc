@@ -7,8 +7,14 @@
   If the input is a collection of role keywords, checks that user has at least
   one of the roles."
   ([{roles :user/roles :as user} role-or-roles]
-   (if (keyword? role-or-roles)
+   (cond
+     (nil? role-or-roles)
+     true
+
+     (keyword? role-or-roles)
      (contains? roles role-or-roles)
+
+     :else
      (some #(has-role? user %) role-or-roles))))
 
 (defn require-role [user role-or-roles]
