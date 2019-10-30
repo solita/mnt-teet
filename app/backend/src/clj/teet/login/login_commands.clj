@@ -6,9 +6,14 @@
             [datomic.client.api :as d]))
 
 
-(defn user-roles [conn id]
-  ;; FIXME: implement
-  #{:user})
+(defn user-roles
+  "Given a datomic connection and a user uuid, return a set of user's roles."
+  [conn id]
+  (-> conn
+      d/db
+      (d/pull '[:user/roles] [:user/id id])
+      :user/roles
+      set))
 
 (defmethod db-api/command! :login [{conn :conn}
                                    {:user/keys [id given-name family-name email person-id]
