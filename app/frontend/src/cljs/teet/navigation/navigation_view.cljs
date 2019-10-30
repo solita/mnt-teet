@@ -84,7 +84,7 @@
                               :end-m 17000}}
                :icon icons/maps-my-location
                :name "Road location"}]
-   [view-link {:open? open?
+   #_[view-link {:open? open?
                :current-page page
                :link {:page :components}
                :icon icons/content-archive
@@ -113,7 +113,7 @@
     [Toolbar {:className (herb/join (<class navigation-style/toolbar))}
      [:div {:class (<class navigation-style/logo-style)}
       navigation-logo/maanteeamet-logo]
-     [search-view/quick-search e! quick-search]
+     #_[search-view/quick-search e! quick-search]           ;;Removed until implemented properly
      [language-selector]
      [user-info user]
      [logout e!]]]
