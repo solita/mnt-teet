@@ -43,7 +43,7 @@
 (define-mui-components Tabs Tab TabPanel)
 
 ;; Table
-(define-mui-components Table TableRow TableHead TableCell TableSortLabel)
+(define-mui-components Table TableRow TableHead TableCell TableSortLabel TableBody)
 
 ;; Transitions
 (define-mui-components Zoom Fade)
