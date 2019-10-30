@@ -37,14 +37,16 @@
                            :positionSticky {:box-shadow "none"}}
                :MuiToolBar {:root {:min-height "80px"}}     ;This doesn't properly target the toolbar inside appbar
                :MuiFab {:root {:border-radius "2px"}}
-               :MuiInput {:underline {"&::before" {:border :none}}}
                :MuiInputLabel {:shrink {:transform "translate(0, 2.5px)"
                                         :font-weight 300
                                         :font-size "14px"
                                         :line-height "14px"}}
-               :MuiLink {:underlineHover {:text-decoration :underline
+               :MuiLink {:button {:&$focusVisible {:outline "none"}}
+                         :underlineHover {:text-decoration :underline
                                           :font-size "1rem"
-                                          "&:hover" {:text-decoration :none}}}
+                                          "&:hover" {:text-decoration :none}
+                                          "&:focus" {:box-shadow (str "0 0 0 3px" theme-colors/white ", "
+                                                                      "0 0 0 5px " theme-colors/blue-light)}}}
                :MuiTabs {:indicator {:display :none}}
                :MuiTab {:root {:&$textColorPrimary {:text-transform :capitalize
                                                     :font-size "1rem"
@@ -69,8 +71,7 @@
                                   :font-weight 400
                                   :padding "0 1.875rem"
                                   :font-size "1rem"
-                                  :height "40px"
-                                  :&$focusVisible {:box-shadow "0 0 0 2pt #007BAF"}}}
+                                  :height "40px"}}
                :MuiDrawer {:paper {:background-color theme-colors/blue
                                    :color theme-colors/white
                                    "& .MuiListItemIcon-root" {:color :inherit
