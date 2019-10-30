@@ -9,10 +9,9 @@
    :margin-bottom "1rem"
    :border-bottom (str "1px solid " theme-colors/gray-light)})
 
-(defn gray-bg-content
+(defn project-info-spacing
   []
-  {:background-color theme-colors/gray-lightest
-   :padding "1rem 1.5rem 0 1.5rem"})
+  {:padding "1rem 1.5rem 0 1.5rem"})
 
 (defn spinner-style
   []

@@ -93,7 +93,7 @@
 (defn document-page [e! {new-comment :new-comment} document breadcrumbs]
   [Grid {:container true}
    [Grid {:item true :xs 6}
-    [:div {:class (<class common-styles/gray-bg-content)}
+    [:div {:class (<class common-styles/project-info-spacing)}
      [breadcrumbs/breadcrumbs breadcrumbs]
      [:div {:class (<class project-style/project-info)}
       [typography/Heading1 (:document/name document)]

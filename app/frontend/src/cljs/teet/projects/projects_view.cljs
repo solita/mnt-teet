@@ -135,4 +135,5 @@
      (:map app)]))
 
 (defn projects-list-page [e! app]
-  [projects-listing e! app])
+  [:div {:style {:padding "1.5rem"}}
+   [projects-listing e! app]])
