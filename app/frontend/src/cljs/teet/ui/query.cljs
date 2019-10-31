@@ -1,10 +1,12 @@
 (ns teet.ui.query
   "Query view. Component that fetches a named query from the server."
-  (:require [reagent.core :as r]
+  (:require [herb.core :as herb :refer [<class]]
+            [reagent.core :as r]
             [tuck.core :as t]
             [teet.ui.material-ui :refer [CircularProgress]]
             [teet.common.common-controller :as common-controller]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [teet.common.common-styles :as common-styles]))
 
 (defrecord Query [query args state-path])
 (defrecord QueryResult [state-path result])
@@ -35,20 +37,21 @@
   (let [refresh-value (atom refresh)]
     (e! (->Query query args state-path))
     (r/create-class
-     {:component-will-unmount (e! ->Cleanup state-path)
-      :reagent-render
-      (fn [{:keys [e! query args state-path skeleton view app state refresh breadcrumbs]}]
-        (when (not= @refresh-value refresh)
-          (reset! refresh-value refresh)
-          (e! (->Query query args state-path)))
-        (if state
-          ;; Results loaded, call the view
-          [view e! app state breadcrumbs]
+      {:component-will-unmount (e! ->Cleanup state-path)
+       :reagent-render
+       (fn [{:keys [e! query args state-path skeleton view app state refresh breadcrumbs]}]
+         (when (not= @refresh-value refresh)
+           (reset! refresh-value refresh)
+           (e! (->Query query args state-path)))
+         (if state
+           ;; Results loaded, call the view
+           [view e! app state breadcrumbs]
 
-          ;; Results not loaded, show skeleton or loading spinner
-          (if skeleton
-            skeleton
-            [CircularProgress])))})))
+           ;; Results not loaded, show skeleton or loading spinner
+           (if skeleton
+             skeleton
+             [:div {:class (<class common-styles/spinner-style)}
+              [CircularProgress]])))})))
 
 (defn rpc
   "Component that does an PostgREST RPC call and shows view with the resulting data."

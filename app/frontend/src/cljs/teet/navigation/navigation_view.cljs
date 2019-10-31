@@ -10,7 +10,8 @@
             [teet.navigation.navigation-logo :as navigation-logo]
             [teet.navigation.navigation-style :as navigation-style]
             [teet.search.search-view :as search-view]
-            [herb.core :as herb :refer [<class]]))
+            [herb.core :as herb :refer [<class]]
+            [teet.user.user-controller :as user-controller]))
 
 (defn language-selector
   []
@@ -84,11 +85,18 @@
                               :end-m 17000}}
                :icon icons/maps-my-location
                :name "Road location"}]
-   [view-link {:open? open?
+   #_[view-link {:open? open?
                :current-page page
                :link {:page :components}
                :icon icons/content-archive
-               :name "Components"}]])
+               :name "Components"}]
+   (user-controller/when-role
+    :admin
+    [view-link {:open? open?
+                :current-page page
+                :link {:page :admin}
+                :icon icons/action-settings
+                :name (tr [:admin :title])}])])
 
 
 
@@ -113,7 +121,7 @@
     [Toolbar {:className (herb/join (<class navigation-style/toolbar))}
      [:div {:class (<class navigation-style/logo-style)}
       navigation-logo/maanteeamet-logo]
-     [search-view/quick-search e! quick-search]
+     #_[search-view/quick-search e! quick-search]           ;;Removed until implemented properly
      [language-selector]
      [user-info user]
      [logout e!]]]

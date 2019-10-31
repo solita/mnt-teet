@@ -3,7 +3,8 @@
             [tuck.effect :as tuck-effect]
             [taoensso.timbre :as log]
             [teet.login.login-paths :as login-paths]
-            [teet.user.user-info :as user-info]))
+            [teet.user.user-info :as user-info]
+            teet.user.user-controller))
 
 (defrecord Login [demo-user])
 (defrecord SetToken [after-login? navigate-data token])
@@ -34,25 +35,28 @@
   SetToken
   (process-event [{:keys [token after-login? navigate-data]} app]
     (log/info "TOKEN: " token ", after-login? " after-login?)
-    (if-let [error (and (map? token) (:error token))]
-      (do (js/alert (str "Login error: " (str error)))
-          app)
-      (let [effects [{::tuck-effect/type :set-api-token
-                      :token token}
-                     {::tuck-effect/type :debounce
-                      :id :refresh-token
-                      :timeout refresh-token-timeout-ms
-                      :event ->RefreshToken}]
-            effects (if after-login?
-                      (conj effects (merge {::tuck-effect/type :navigate
-                                            :page :projects}
-                                           navigate-data))
-                      effects)]
-        (apply t/fx
-               (-> app
-                   (assoc-in login-paths/api-token token)
-                   (assoc-in [:login :progress?] false))
-               effects))))
+    (let [{:keys [token error roles]} token]
+      (if error
+        (do (js/alert (str "Login error: " (str error)))
+            app)
+        (let [effects [{::tuck-effect/type :set-api-token
+                        :token token}
+                       {::tuck-effect/type :set-user-roles
+                        :roles roles}
+                       {::tuck-effect/type :debounce
+                        :id :refresh-token
+                        :timeout refresh-token-timeout-ms
+                        :event ->RefreshToken}]
+              effects (if after-login?
+                        (conj effects (merge {::tuck-effect/type :navigate
+                                              :page :projects}
+                                             navigate-data))
+                        effects)]
+          (apply t/fx
+                 (-> app
+                     (assoc-in login-paths/api-token token)
+                     (assoc-in [:login :progress?] false))
+                 effects)))))
 
   RefreshToken
   (process-event [_ app]

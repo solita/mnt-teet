@@ -56,4 +56,11 @@
 
  :components {:path "/components" :view teet.ui.component-demo/demo}
  :road {:path "/road"
-        :view teet.road-visualization.road-visualization-view/road-visualization}}
+        :view teet.road-visualization.road-visualization-view/road-visualization}
+
+ :admin {:path "/admin"
+         :role :admin
+         :view teet.admin.admin-view/admin-page
+         :state {:query :admin/list-users
+                 :args {}}
+         :crumb (tr [:admin :title])}}

@@ -12,12 +12,13 @@
 (defn- numeric-date [dt]
   (int (/ (.getTime dt) 1000)))
 
-(defn create-token [shared-secret role {:keys [given-name family-name id person-id email]}]
+(defn create-token [shared-secret role {:keys [given-name family-name id person-id email roles]}]
   (-> (JWSObject.
        (JWSHeader. JWSAlgorithm/HS256)
        (Payload. (cheshire/encode {:role role
                                    :given_name given-name
                                    :family_name family-name
+                                   :roles roles
                                    :id id
                                    :sub person-id
                                    :email email
@@ -41,7 +42,7 @@
       (throw (ex-info "JWT token is expired"
                       {:expiration-time (.getExpirationTime claims-set)})))
 
-    (let [{:strs [sub given_name family_name role email id]} claims]
+    (let [{:strs [sub given_name family_name role email id roles]} claims]
       (when-not (= role "teet_user")
         (throw (ex-info "Unexpected role in JWT token"
                         {:expected-role "teet_user"
@@ -50,4 +51,7 @@
               :family-name family_name
               :email email
               :person-id sub
+              :roles (into #{}
+                           (map keyword)
+                           roles)
               :id (java.util.UUID/fromString id)})))

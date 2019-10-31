@@ -13,6 +13,8 @@
             teet.document.document-queries
             teet.login.login-commands
             teet.enum.enum-queries
+            teet.admin.admin-queries
+            teet.admin.admin-commands
 
             [teet.log :as log]
             [teet.login.login-api-token :as login-api-token]
