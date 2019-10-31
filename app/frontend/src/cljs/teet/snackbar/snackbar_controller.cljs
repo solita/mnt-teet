@@ -4,13 +4,18 @@
 (defrecord CloseSnackbar [])
 (defrecord OpenSnackBar [message variant])
 
+(defn open-snack-bar
+  ([app message] (open-snack-bar app message :success))
+  ([app message variant]
+   (assoc app :snackbar
+          {:open? true
+           :message message
+           :variant variant})))
+
 (extend-protocol t/Event
   OpenSnackBar
   (process-event [{:keys [message variant]} app]
-    (assoc-in app [:snackbar]
-              {:open? true
-               :message message
-               :variant variant}))
+    (open-snack-bar app message variant))
 
   CloseSnackbar
   (process-event [_ app]
