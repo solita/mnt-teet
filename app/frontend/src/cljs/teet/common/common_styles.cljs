@@ -9,7 +9,7 @@
    :margin-bottom "1rem"
    :border-bottom (str "1px solid " theme-colors/gray-light)})
 
-(defn project-info-spacing
+(defn top-info-spacing
   []
   {:padding "1rem 1.5rem 0 1.5rem"})
 

@@ -285,7 +285,7 @@
       [Grid {:container true}
        [Grid {:item true
               :xs 6}
-        [:div {:class (<class common-styles/project-info-spacing)}
+        [:div {:class (<class common-styles/top-info-spacing)}
          [project-info (get-in app [:config :api-url]) (get-in app login-paths/api-token) project breadcrumbs]
 
          [tabs/tabs {:e! e!
