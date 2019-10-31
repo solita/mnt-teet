@@ -285,17 +285,16 @@
       [Grid {:container true}
        [Grid {:item true
               :xs 6}
-        [:div {:class (<class common-styles/project-info-spacing)}
-         [project-info (get-in app [:config :api-url]) (get-in app login-paths/api-token) project breadcrumbs]
-
-         [tabs/tabs {:e! e!
-                     :selected-tab tab}
-          {:value "documents"
-           :label (tr [:project :documents-tab])}
-          {:value "restrictions"
-           :label (tr [:project :restrictions-tab])}
-          {:value "cadastral-units"
-           :label (tr [:project :cadastral-units-tab])}]]
+        [:div {:class (<class common-styles/top-info-spacing)}
+         [project-info (get-in app [:config :api-url]) (get-in app login-paths/api-token) project breadcrumbs]]
+        [tabs/tabs {:e! e!
+                    :selected-tab tab}
+         {:value "documents"
+          :label (tr [:project :documents-tab])}
+         {:value "restrictions"
+          :label (tr [:project :restrictions-tab])}
+         {:value "cadastral-units"
+          :label (tr [:project :cadastral-units-tab])}]
         [layout/section
          (case tab
            "documents"
