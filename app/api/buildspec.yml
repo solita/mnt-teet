@@ -6,7 +6,7 @@ env:
     IMAGE_REPO_NAME: "teet-api"
     IMAGE_TAG: "latest"
     ECS_TASK_NAME: "teet-api"
-    #AWS_ACCOUNT_ID: "512288025010"
+    AWS_ACCOUNT_ID: "512288025010"
     AWS_DEFAULT_REGION: "eu-central-1"
 
 phases:
@@ -19,7 +19,6 @@ phases:
   build:
     commands:
       - cd $WD && bash build.sh
-      - [[ $CODEBUILD_BUILD_ARN =~ [^0-9]+([0-9]+) ]] ; AWS_ACCOUNT_ID="${BASH_REMATCH[1]}"
       - docker tag mnt-teet/teet-api:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/teet-api:latest
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/teet-api:latest
   post_build:
