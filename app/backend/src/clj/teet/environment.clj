@@ -10,9 +10,19 @@
   (->> name (ssm/get-parameter :name) :parameter :value))
 
 (def init-config {:datomic {:db-name "teet"
-                            :client {:server-type :ion}}})
+                            :client {:server-type :ion}}
+
+                  ;; Replaced by parameter store value in actual env, value used for local env only
+                  :session-cookie-key "ABCDEFGHIJKLMNOP"})
 
 (def config (atom init-config))
+
+(defn tara-config [env]
+  (let [p #(ssm-param (str "/teet-" (name env) "/auth/tara/" (name %)))]
+    {:endpoint-url (p :endpoint)
+     :base-url (p :baseurl)
+     :client-id (p :clientid)
+     :client-secret (p :secret)}))
 
 (defn init-ion-config! [ion-config]
   (swap! config
@@ -22,8 +32,12 @@
                  config (assoc-in config [:auth :jwt-secret]
                                   (ssm-param (str "/teet-" (name env) "/api/jwt-secret")))
                  bap (ssm-param (str "/teet-" (name env) "/api/basic-auth-password"))
-                 config (assoc-in config [:auth :basic-auth-password]
-                                  bap)]
+                 tara (tara-config env)
+                 config (-> config
+                            (assoc :tara tara)
+                            (assoc :session-cookie-key
+                                   (ssm-param (str "/teet-" (name env) "/auth/session-key")))
+                            (assoc-in [:auth :basic-auth-password] bap))]
              config))))
 
 (defn load-local-config!
