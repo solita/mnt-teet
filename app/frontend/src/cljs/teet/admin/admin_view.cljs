@@ -7,7 +7,8 @@
             [clojure.string :as str]
             [teet.localization :refer [tr]]
             [teet.ui.form :as form]
-            [teet.ui.typography :as typography]))
+            [teet.ui.typography :as typography]
+            teet.user.user-spec))
 
 (defn- create-user-form [e! form]
   [:div
@@ -16,7 +17,8 @@
                :on-change-event admin-controller/->UpdateUserForm
                :save-event admin-controller/->SaveUser
                :cancel-event admin-controller/->CancelUser
-               :value form}
+               :value form
+               :spec :admin/create-user}
     ^{:attribute :user/person-id}
     [TextField {:variant "outlined"}]]])
 
