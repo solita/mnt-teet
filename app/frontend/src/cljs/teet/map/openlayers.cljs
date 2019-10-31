@@ -268,18 +268,20 @@
              (when-let [g (event-geometry this e false)]
                (on-select g e)))))))
 
-(defn set-hover-handler [this ol3]
+(defn set-hover-handler [this target ol3]
   (.on ol3 "pointermove"
        (fn [e]
          (if-let [handler (peek @hover-handler)]
            (handler (event-description this e))
 
-           (reagent/set-state this
-                              (if-let [g (event-geometry this e)]
-                                {:hover (assoc g
-                                               :x (aget (.-pixel e) 0)
-                                               :y (aget (.-pixel e) 1))}
-                                {:hover nil}))))))
+           (let [g (event-geometry this e)
+                 map-element-style (-> target js/document.getElementById .-style)]
+             (reagent/set-state this (if g
+                                       {:hover (assoc g
+                                                      :x (aget (.-pixel e) 0)
+                                                      :y (aget (.-pixel e) 1))}
+                                       {:hover nil}))
+             (set! (.-cursor map-element-style) (if g "pointer" "")))))))
 
 
 (defn center!
@@ -520,7 +522,7 @@
     (set-dblclick-handler this ol3
                           (:on-dblclick mapspec)
                           (:on-dblclick-select mapspec))
-    (set-hover-handler this ol3)
+    (set-hover-handler this (:id mapspec) ol3)
     (set-drag-handler this ol3 (:on-drag mapspec))
     (set-zoom-handler this ol3 (:on-zoom mapspec))
     (set-postrender-handler this ol3 (:on-postrender mapspec))

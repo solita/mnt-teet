@@ -41,7 +41,7 @@
        new-document]])
    [Grid {:container true}
     [Grid {:item true :xs 6}
-     [:div {:class (<class common-styles/project-info-spacing)}
+     [:div {:class (<class common-styles/top-info-spacing)}
       [breadcrumbs/breadcrumbs breadcrumbs]
       [:div {:class (<class project-style/project-info)}
        [Heading1

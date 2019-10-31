@@ -30,20 +30,36 @@
 (defn- request [handler-fn]
   (fn [req]
     (log/info "REQUEST: " (pr-str req))
-    (let [user (some->> req jwt-token (login-api-token/verify-token
-                                       (environment/config-value :auth :jwt-secret)))]
-      (log/with-context
-        {:user (str (:user/id user))}
-        (let [conn (environment/datomic-connection)
-              ctx {:conn conn :db (d/db conn) :user user}
-              request-payload (transit/transit-request req)
-              response (handler-fn ctx request-payload)]
-          (case (:format (meta response))
-            ;; If :format meta key is :raw, send output as ring response
-            :raw response
+    (try
+      (let [user (some->> req jwt-token (login-api-token/verify-token
+                                         (environment/config-value :auth :jwt-secret)))]
+        (log/with-context
+          {:user (str (:user/id user))}
+          (let [conn (environment/datomic-connection)
+                ctx {:conn conn :db (d/db conn) :user user}
+                request-payload (transit/transit-request req)
+                response (handler-fn ctx request-payload)]
+            (case (:format (meta response))
+              ;; If :format meta key is :raw, send output as ring response
+              :raw response
 
-            ;; Default to sending out transit response
-            (transit/transit-response response)))))))
+              ;; Default to sending out transit response
+              (transit/transit-response response)))))
+      (catch Exception e
+        (let [error (-> e ex-data :error)]
+          (case error
+            ;; Return JWT verification failures (likely expired token) as 401 (same as PostgREST)
+            :jwt-verification-failed
+            (do
+              (log/info "JWT verification failed: " (ex-data e))
+              {:status 401
+               :body "JWT verification failed"})
+
+            ;; Log all other errors, but don't return exception info to client
+            (do
+              (log/error e "Exception in handler")
+              {:status 500
+               :body "Internal server error, see log for details"})))))))
 
 (defn- check-spec [spec data]
   (if (nil? (s/get-spec spec))
