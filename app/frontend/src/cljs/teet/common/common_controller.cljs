@@ -8,8 +8,9 @@
             [teet.snackbar.snackbar-controller :as snackbar-controller]
             [tuck.core :as t]
             [tuck.effect :as tuck-effect]
-            [teet.transit :as transit]))
-
+            [teet.transit :as transit]
+            [teet.localization :refer [tr]]
+            postgrest-ui.impl.fetch))
 
 (defonce api-token (atom nil))
 
@@ -75,6 +76,7 @@
 (defrecord RPCResponse [path data])
 (defrecord Navigate [page params query])
 (defrecord SetQueryParam [param value]) ; navigate to same page but set set single query param
+(defrecord ResponseError [err]) ; handle errors in HTTP response
 
 (defonce debounce-timeouts (atom {}))
 
@@ -122,7 +124,50 @@
           {:tuck.effect/type :navigate
            :page page
            :params params
-           :query (assoc query param value)})))
+           :query (assoc query param value)}))
+
+  ResponseError
+  (process-event [{err :err} app]
+    (case (-> err ex-data :error)
+      :authorization-failure
+      (do
+        (reset! api-token nil)
+        (t/fx (-> app
+                  (dissoc :user)
+                  (snackbar-controller/open-snack-bar (tr [:error :authorization-failure])
+                                                      :warning))
+              {:tuck.effect/type :navigate
+               :page :login}))
+
+      :server-error
+      (snackbar-controller/open-snack-bar app (tr [:error :server-error]) :error)
+
+      (do
+        (log/info "Unrecognized error: " err)
+        app))))
+
+(defn check-response-status [response]
+  (case (.-status response)
+    401 (throw (ex-info "Authorization failure" {:error :authorization-failure}))
+
+    500 (throw (ex-info "Server error" {:error :server-error}))
+
+    ;; Return the response for all other codes
+    response))
+
+(defn catch-response-error [e!]
+  (fn [err]
+    (e! (->ResponseError err))))
+
+(defn- fetch*
+  "Call JS fetch API. Automatically adds response code check and error handling.
+  Returns promise."
+  [e! & fetch-args]
+  (let [[url arg-map] fetch-args
+        p (js/fetch url arg-map)]
+    (-> p
+        (.then check-response-status)
+        (.catch (catch-response-error e!)))))
 
 (defn api-token-header []
   (when @api-token
@@ -142,27 +187,25 @@
     (send-fake-postgrest-rpc! q)
     (-> (if (= method :GET)
           ;; GET request, add parameters to URL
-          (js/fetch (str endpoint "/rpc/" rpc "?"
-                         (str/join "&"
-                                   (map (fn [[arg val]]
-                                          (str (if (keyword? arg)
-                                                 (name arg)
-                                                 arg)
-                                               "=" (js/encodeURIComponent (str val))))
-                                        args))))
+          (fetch* e! (str endpoint "/rpc/" rpc "?"
+                          (str/join "&"
+                                    (map (fn [[arg val]]
+                                           (str (if (keyword? arg)
+                                                  (name arg)
+                                                  arg)
+                                                "=" (js/encodeURIComponent (str val))))
+                                         args))))
 
           ;; POST request, send parameters as JSON body
-         (js/fetch (str endpoint "/rpc/" rpc)
-                   #js {:method "POST"
-                        :headers (clj->js (merge
-                                           (api-token-header)
-                                           {"Content-Type" "application/json"
-                                            "Accept" "application/json"}))
-                        :body (-> args clj->js js/JSON.stringify)}))
-       (.then #(.json %))
-       (.then (fn [json]
-                ;; FIXME: generic error handling
-                ;(log/info "RESPONSE: " json)
+          (fetch* e! (str endpoint "/rpc/" rpc)
+                  #js {:method "POST"
+                       :headers (clj->js (merge
+                                          (api-token-header)
+                                          {"Content-Type" "application/json"
+                                           "Accept" "application/json"}))
+                       :body (-> args clj->js js/JSON.stringify)}))
+
+        (.then (fn [json]
                 (let [data (if json?
                              json
                              (js->clj json :keywordize-keys true))]
@@ -175,6 +218,7 @@
           "Must specify :query keyword that names the query to run")
   (assert (some? args) "Must specify :args for query"))
 
+
 (defmethod tuck-effect/process-effect :query [e! {:keys [query args result-path result-event method]
                                                   :as q
                                                   :or {method "POST"}}]
@@ -184,15 +228,15 @@
     (send-fake-query! q)
     (let [payload  (transit/clj->transit {:query query :args args})]
       (-> (case method
-            "GET" (js/fetch (str "/query/?q=" (js/encodeURIComponent payload))
-                            #js {:method "GET"
-                                 :headers (clj->js (api-token-header))})
-            "POST" (js/fetch "/query/"
-                             #js {:method "POST"
-                                  :headers (clj->js
-                                            (merge (api-token-header)
-                                                   {"Content-Type" "application/json+transit"}))
-                                  :body payload}))
+            "GET" (fetch* e! (str "/query/?q=" (js/encodeURIComponent payload))
+                          #js {:method "GET"
+                               :headers (clj->js (api-token-header))})
+            "POST" (fetch* e! "/query/"
+                           #js {:method "POST"
+                                :headers (clj->js
+                                          (merge (api-token-header)
+                                                 {"Content-Type" "application/json+transit"}))
+                                :body payload}))
           (.then #(.text %))
           (.then (fn [text]
                    (let [data (transit/transit->clj text)]
@@ -207,7 +251,6 @@
   For normal data returning queries, you should use the `:query` effect type."
   [query args]
   (check-query-and-args query args)
-  ;; FIXME: link needs token as well
   (str "/query/"
        "?q=" (js/encodeURIComponent (transit/clj->transit {:query query :args args}))
        "&t=" (js/encodeURIComponent @api-token)))
@@ -226,13 +269,13 @@
   (assert (or result-path result-event) "Must specify :result-path or :result-event")
   (if @test-mode?
     (send-fake-command! q)
-    (-> (js/fetch (str "/command/")
-                  #js {:method "POST"
-                       :headers (clj->js
-                                 (merge (api-token-header)
-                                        {"Content-Type" "application/json+transit"}))
-                       :body (transit/clj->transit {:command command
-                                                    :payload payload})})
+    (-> (fetch* e! (str "/command/")
+                #js {:method "POST"
+                     :headers (clj->js
+                               (merge (api-token-header)
+                                      {"Content-Type" "application/json+transit"}))
+                     :body (transit/clj->transit {:command command
+                                                  :payload payload})})
         (.then #(.text %))
         (.then (fn [text]
                  (let [data (transit/transit->clj text)]
@@ -245,9 +288,10 @@
 (defmethod tuck-effect/process-effect :navigate [_ {:keys [page params query]}]
   (routes/navigate! page params query))
 
-(defmethod tuck-effect/process-effect :set-api-token [_ {token :token}]
+(defmethod tuck-effect/process-effect :set-api-token [e! {token :token}]
   (assert token "Must specify :token to set as new API token")
-  (reset! api-token token))
+  (reset! api-token token)
+  (reset! postgrest-ui.impl.fetch/fetch-impl (partial fetch* e!)))
 
 (defmulti map-item-selected :map/type)
 
