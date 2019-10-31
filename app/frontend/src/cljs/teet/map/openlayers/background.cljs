@@ -9,7 +9,7 @@
             [ol.layer.Image]
             [ol.source.OSM]
             [teet.map.openlayers.projektiot :as p]
-            [taoensso.timbre :as log]
+            [teet.log :as log]
 
             [ol.format.WMTSCapabilities]))
 

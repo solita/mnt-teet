@@ -2,7 +2,7 @@
   (:require [teet.db-api.core :as db-api]
             [datomic.client.api :as d]
             [teet.user.user-roles :as user-roles]
-            [taoensso.timbre :as log]))
+            [teet.log :as log]))
 
 (defn- new-user []
   {:user/id (java.util.UUID/randomUUID)

@@ -5,7 +5,7 @@
             [ol.layer.Vector]
             [teet.map.openlayers.layer :refer [Layer]]
             [clojure.string :as str]
-            [taoensso.timbre :as log]))
+            [teet.log :as log]))
 
 (defn geojson-url [base-url & params]
   (str base-url "?" (str/join "&"

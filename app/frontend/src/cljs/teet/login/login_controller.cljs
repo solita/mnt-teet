@@ -1,7 +1,7 @@
 (ns teet.login.login-controller
   (:require [tuck.core :as t]
             [tuck.effect :as tuck-effect]
-            [taoensso.timbre :as log]
+            [teet.log :as log]
             [teet.login.login-paths :as login-paths]
             [teet.user.user-info :as user-info]
             teet.user.user-controller))
