@@ -206,8 +206,6 @@
                        :body (-> args clj->js js/JSON.stringify)}))
 
         (.then (fn [json]
-                 ;; FIXME: generic error handling
-                                        ;(log/info "RESPONSE: " json)
                 (let [data (if json?
                              json
                              (js->clj json :keywordize-keys true))]
@@ -253,7 +251,6 @@
   For normal data returning queries, you should use the `:query` effect type."
   [query args]
   (check-query-and-args query args)
-  ;; FIXME: link needs token as well
   (str "/query/"
        "?q=" (js/encodeURIComponent (transit/clj->transit {:query query :args args}))
        "&t=" (js/encodeURIComponent @api-token)))
