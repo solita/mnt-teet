@@ -22,9 +22,8 @@
     nil))
 
 ;; Create new document and link it to task. Returns entity id for document.
-(defmethod db-api/command! :document/new-document [{conn :conn} {:keys [task-id document] :as foo}]
+(defmethod db-api/command! :document/new-document [{conn :conn} {:keys [task-id document]}]
   (println "new document")
-  (clojure.pprint/pprint foo)
   (-> conn
       (d/transact {:tx-data [(merge {:db/id "new-document"}
                                     (select-keys document [:document/name :document/status :document/description]))

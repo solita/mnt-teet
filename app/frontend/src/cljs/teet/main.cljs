@@ -6,6 +6,7 @@
             [reagent.core :as r]
             [teet.app-state :as app-state]
             [teet.localization :as localization :refer [tr]]
+            [teet.log :as log]
             [teet.login.login-view :as login-view]
             [teet.navigation.navigation-view :as navigation-view]
             [teet.routes :as routes]
@@ -32,26 +33,28 @@
 (define-main-page page-and-title)
 
 (defn main-view [e! {:keys [page user navigation quick-search snackbar] :as app}]
-  (let [nav-open? (boolean (:open? navigation))]
-    [theme/theme-provider
-     [:<>
-      [snackbar/snackbar-container e! snackbar]
-      [CssBaseline]
-      (if (= page :login)
-        ;; Show only login dialog
-        [login-view/login-page e! app]
-        (let [{:keys [page]} (page-and-title e! app)]
-          [:<>
-           [navigation-view/header e!
-                                   {:open? nav-open?
-                                    :page (:page app)
-                                    :quick-search quick-search}
-                                   user]
-           [navigation-view/main-container
-            nav-open?
-            (with-meta page
-              {:key (:route-key app)})]]))
-      [df/DataFriskShell app]]]))
+  (log/hook-onerror! e!)
+  (fn [e! {:keys [page user navigation quick-search snackbar] :as app}]
+    (let [nav-open? (boolean (:open? navigation))]
+      [theme/theme-provider
+       [:<>
+        [snackbar/snackbar-container e! snackbar]
+        [CssBaseline]
+        (if (= page :login)
+          ;; Show only login dialog
+          [login-view/login-page e! app]
+          (let [{:keys [page]} (page-and-title e! app)]
+            [:<>
+             [navigation-view/header e!
+              {:open? nav-open?
+               :page (:page app)
+               :quick-search quick-search}
+              user]
+             [navigation-view/main-container
+              nav-open?
+              (with-meta page
+                {:key (:route-key app)})]]))
+        [df/DataFriskShell app]]])))
 
 (defn ^:export main []
   (routes/start!)
