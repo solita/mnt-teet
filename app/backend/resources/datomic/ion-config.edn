@@ -7,5 +7,9 @@
            :command
            {:fn teet.db-api.db-api-ion/db-api-command
             :integration :api-gateway/proxy
-            :doc "Execute a command"}}
+            :doc "Execute a command"}
+
+           :thk-import
+           {:fn teet.thk.thk-import/import-s3
+            :doc "Import THK data from S3 file"}}
  :app-name "teet-dev-datomic"}

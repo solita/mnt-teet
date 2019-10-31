@@ -2,7 +2,8 @@
   (:require [clojure.data.csv :as csv]
             [clojure.java.io :as io]
             [teet.thk.thk-db :as thk-db]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [teet.log :as log])
   (:import (org.apache.commons.io.input BOMInputStream)))
 
 (defn parse-thk-export-csv [input]
@@ -60,3 +61,8 @@
                          :dbname "teet"
                          :user "teet"}
                         System/in))
+
+(defn import-s3 [{:keys [input context]}]
+  ;; FIXME: Just echo the input for now
+  (log/info "Import S3, input: " input)
+  input)
