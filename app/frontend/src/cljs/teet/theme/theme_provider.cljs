@@ -50,13 +50,22 @@
                                           "&:hover" {:text-decoration :none}
                                           "&:focus" {:box-shadow (str "0 0 0 3px" theme-colors/white ", "
                                                                       "0 0 0 5px " theme-colors/blue-light)}}}
-               :MuiTabs {:indicator {:display :none}}
+               :MuiTabs {:flexContainer {:border-bottom (str "1px solid " theme-colors/gray-lighter)
+                                         :justify-content :center}
+                         :indicator {:display :none}}
                :MuiTab {:root {:&$textColorPrimary {:text-transform :capitalize
                                                     :font-size "1rem"
                                                     :font-weight "400"
+                                                    :border-width "0 0 1px 0"
+                                                    :border-style "solid"
+                                                    :margin-bottom "-1px" ;;This is done so the selected tab bottom white border overrides the flexcontainer border
+                                                    :border-color theme-colors/gray-lighter
                                                     :color theme-colors/primary}
                                :&$selected {:background-color theme-colors/white
-                                            :border "none"
+                                            :border-width "1px"
+                                            :border-style "solid"
+                                            :border-bottom-color theme-colors/white
+                                            :border-color theme-colors/gray-lighter
                                             :font-weight :bold
                                             :border-radius "4px 4px 0 0"}}}
                :MuiIconButton {:root {:border-radius "2px"
