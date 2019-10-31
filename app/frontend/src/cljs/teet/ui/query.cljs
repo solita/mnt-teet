@@ -5,7 +5,7 @@
             [tuck.core :as t]
             [teet.ui.material-ui :refer [CircularProgress]]
             [teet.common.common-controller :as common-controller]
-            [taoensso.timbre :as log]
+            [teet.log :as log]
             [teet.common.common-styles :as common-styles]))
 
 (defrecord Query [query args state-path])

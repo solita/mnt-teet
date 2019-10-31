@@ -3,7 +3,7 @@
   (:require [clojure.string :as str]
             [cljs-bean.core :refer [->clj]]
             [reagent.core :as r]
-            [taoensso.timbre :as log]
+            [teet.log :as log]
             [teet.routes :as routes]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
             [tuck.core :as t]

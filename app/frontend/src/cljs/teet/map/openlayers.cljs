@@ -26,7 +26,7 @@
             [teet.map.openlayers.layer :as taso]
             [teet.map.openlayers.background :as background]
 
-            [taoensso.timbre :as log]
+            [teet.log :as log]
 
             [tuck.effect])
 

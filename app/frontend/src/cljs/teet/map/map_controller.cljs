@@ -2,7 +2,7 @@
   "Controller for map components"
   (:require [tuck.core :as t]
             [teet.map.openlayers :as openlayers]
-            [taoensso.timbre :as log]))
+            [teet.log :as log]))
 
 (defn atleast-one-open?
   [layers]

@@ -3,7 +3,7 @@
   (:require [reagent.core :as r]
             [herb.core :refer [<class]]
             [teet.map.openlayers :as openlayers]
-            [taoensso.timbre :as log]
+            [teet.log :as log]
             [teet.localization :refer [tr]]
             [teet.map.map-controller :as map-controller]
             [teet.ui.material-ui :refer [Fab Button Switch Checkbox FormControlLabel Collapse ClickAwayListener Fade IconButton]]

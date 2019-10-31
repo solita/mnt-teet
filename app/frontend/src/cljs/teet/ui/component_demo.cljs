@@ -10,7 +10,7 @@
             [teet.ui.select :as select]
             [teet.ui.typography :refer [DataLabel Heading1 Heading2 Heading3 Paragraph SectionHeading Text]]
             [tuck.core :as t]
-            [taoensso.timbre :as log]
+            [teet.log :as log]
             [reagent.core :as r]
             [teet.ui.date-picker :as datepicker]))
 

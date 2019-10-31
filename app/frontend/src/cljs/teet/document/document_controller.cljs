@@ -2,7 +2,7 @@
   "Controller for managing document uploads"
   (:require [tuck.core :as t]
             [tuck.effect]
-            [taoensso.timbre :as log]
+            [teet.log :as log]
             [goog.math.Long]
             tuck.effect
             [teet.common.common-controller :as common-controller]))

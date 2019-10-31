@@ -13,7 +13,7 @@
             [teet.localization :as localization]
             [teet.login.login-styles :as login-styles]
             [teet.ui.select :as select]
-            [taoensso.timbre :as log]
+            [teet.log :as log]
             [reagent.core :as r]
             [teet.ui.typography :as typography]))
 

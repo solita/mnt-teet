@@ -1,7 +1,7 @@
 (ns teet.road-visualization.road-visualization-controller
   (:require [tuck.core :as t]
             teet.common.common-controller
-            [taoensso.timbre :as log]))
+            [teet.log :as log]))
 
 (defrecord FetchRoadGeometry [road carriageway start-m end-m])
 (defrecord FetchRoadAddressForCoordinate [coordinate])

@@ -2,7 +2,7 @@
   "Controller for project page"
   (:require [tuck.core :as t]
             [teet.common.common-controller :as common-controller]
-            [taoensso.timbre :as log]
+            [teet.log :as log]
             [teet.map.map-controller :as map-controller]))
 
 

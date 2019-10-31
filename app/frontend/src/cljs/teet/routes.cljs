@@ -3,9 +3,10 @@
   (:require [bide.core :as r]
             [tuck.core :as tuck]
             [teet.app-state :as app-state]
-            [taoensso.timbre :as log]
+            [teet.log :as log]
             [clojure.string :as str])
-  (:require-macros [teet.route-macros :refer [define-router]]))
+  (:require-macros [teet.route-macros :refer [define-router]]
+                   ))
 
 (defrecord GoToUrl [url])
 
@@ -125,6 +126,7 @@
   ([page] (navigate! page nil nil))
   ([page params] (navigate! page params nil))
   ([page params query]
+   (log/info "Testing log!")
    (if page
      (.setTimeout js/window
                   #(r/navigate! teet-router page params query) 0)

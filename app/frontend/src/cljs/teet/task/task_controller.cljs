@@ -1,7 +1,7 @@
 (ns teet.task.task-controller
   (:require [tuck.core :as t]
             [goog.math.Long]
-            [taoensso.timbre :as log]
+            [teet.log :as log]
             [teet.document.document-controller]
             [teet.common.common-controller :as common-controller]))
 

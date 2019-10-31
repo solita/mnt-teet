@@ -1,6 +1,6 @@
 (ns teet.phase.phase-controller
   (:require [tuck.core :as t]
-            [taoensso.timbre :as log]
+            [teet.log :as log]
             [teet.common.common-controller :as common-controller]))
 
 (defrecord UpdatePhaseForm [form-data])

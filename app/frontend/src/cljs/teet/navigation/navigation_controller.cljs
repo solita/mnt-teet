@@ -1,7 +1,7 @@
 (ns teet.navigation.navigation-controller
   (:require [tuck.core :as t]
             [tuck.effect :as tuck-effect]
-            [taoensso.timbre :as log]))
+            [teet.log :as log]))
 
 (defrecord ToggleDrawer [])
 (defrecord GoToLogin [])
