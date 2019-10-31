@@ -12,12 +12,12 @@
 (defn- output
   ([data] (output {:stacktrace-fonts {}} data))
   ([opts
-    {:keys [level ?err msg_ ?ns-str timestamp_ context]}]
+    {:keys [level ?err msg_ ?ns-str ?line timestamp_ context]}]
    (let [{:keys [user]} context]
      (str (-> level name str/upper-case)
           \space (force timestamp_) \space
           \[ user \] \space
-          (or ?ns-str "unknown-namespace") " - "
+          (or ?ns-str "unknown-namespace") \: ?line " - "
           (force msg_)
           (when ?err (str \n (timbre/stacktrace ?err opts)))))))
 
@@ -48,18 +48,24 @@
 ;;
 ;; Re-export selected timbre functions
 ;;
-(defmacro debug [& args]
-  `(timbre/debug ~@args))
-(defmacro info [& args]
-  `(timbre/info ~@args))
-(defmacro warn [& args]
-  `(timbre/warn ~@args))
-(defmacro error [& args]
-  `(timbre/error ~@args))
-(defmacro fatal [& args]
-  `(timbre/fatal ~@args))
-(defmacro spy [& args]
-  `(timbre/spy ~@args))
+(intern 'teet.log
+        (with-meta 'debug {:macro true})
+        @#'timbre/debug)
+(intern 'teet.log
+        (with-meta 'info {:macro true})
+        @#'timbre/info)
+(intern 'teet.log
+        (with-meta 'warn {:macro true})
+        @#'timbre/warn)
+(intern 'teet.log
+        (with-meta 'error {:macro true})
+        @#'timbre/error)
+(intern 'teet.log
+        (with-meta 'fatal {:macro true})
+        @#'timbre/fatal)
+(intern 'teet.log
+        (with-meta 'spy {:macro true})
+        @#'timbre/spy)
 
 ;;
 ;; Datomic cast event
