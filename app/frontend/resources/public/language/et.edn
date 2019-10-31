@@ -80,7 +80,7 @@
   :add-task "Lisan ülesande",
   :phases "Projekti etapid",
   :phase {:no-tasks "Ülesandeid pole"},
-  :documents-tab "Dokumendid",
+  :phases-tab "Etapid",
   :restrictions-tab "Kitsendused",
   :cadastral-units-tab "Katastriüksus"},
  :project-groups {:title "Projektirühmad"},

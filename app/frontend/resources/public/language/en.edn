@@ -80,7 +80,7 @@
   :add-task "Add task",
   :phases "Project phases",
   :phase {:no-tasks "No tasks defined"},
-  :documents-tab "Documents",
+  :phases-tab "Phases",
   :restrictions-tab "Restrictions",
   :cadastral-units-tab "Cadastral units"},
  :project-groups {:title "Project groups"},

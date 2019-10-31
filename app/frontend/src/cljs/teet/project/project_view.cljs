@@ -271,7 +271,7 @@
                         {:keys [add-phase add-task]} :query :as app}
                     {:keys [phases]}
                     breadcrumbs]
-  (let [tab (or tab "documents")]
+  (let [tab (or tab "phases")]
     [:<>
      (when add-phase
        [panels/modal {:title (tr [:project :add-phase])
@@ -290,15 +290,15 @@
 
          [tabs/tabs {:e! e!
                      :selected-tab tab}
-          {:value "documents"
-           :label (tr [:project :documents-tab])}
+          {:value "phases"
+           :label (tr [:project :phases-tab])}
           {:value "restrictions"
            :label (tr [:project :restrictions-tab])}
           {:value "cadastral-units"
            :label (tr [:project :cadastral-units-tab])}]]
         [layout/section
          (case tab
-           "documents"
+           "phases"
            [project-phase-listing e! project phases]
 
            "restrictions"
