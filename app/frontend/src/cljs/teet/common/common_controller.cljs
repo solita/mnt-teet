@@ -204,7 +204,7 @@
                                           {"Content-Type" "application/json"
                                            "Accept" "application/json"}))
                        :body (-> args clj->js js/JSON.stringify)}))
-
+        (.then #(.json %))
         (.then (fn [json]
                 (let [data (if json?
                              json
