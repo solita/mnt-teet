@@ -6,8 +6,11 @@
             [datomic.client.api :as d]
             [amazonica.aws.simplesystemsmanagement :as ssm]))
 
-(defn- ssm-param [name]
-  (->> name (ssm/get-parameter :name) :parameter :value))
+(defn- ssm-param
+  [env & param-path]
+  (->> (str "/teet-" (name env) "/" (str/join "/" (map name param-path)))
+       (ssm/get-parameter :name)
+       :parameter :value))
 
 (def init-config {:datomic {:db-name "teet"
                             :client {:server-type :ion}}
@@ -18,7 +21,7 @@
 (def config (atom init-config))
 
 (defn tara-config [env]
-  (let [p #(ssm-param (str "/teet-" (name env) "/auth/tara/" (name %)))]
+  (let [p (partial ssm-param env :auth :tara)]
     {:endpoint-url (p :endpoint)
      :base-url (p :baseurl)
      :client-id (p :clientid)
@@ -30,13 +33,13 @@
            (let [config (merge base-config ion-config)
                  env (:env config)
                  config (assoc-in config [:auth :jwt-secret]
-                                  (ssm-param (str "/teet-" (name env) "/api/jwt-secret")))
-                 bap (ssm-param (str "/teet-" (name env) "/api/basic-auth-password"))
+                                  (ssm-param env :api :jwt-secret))
+                 bap (ssm-param env :api :basic-auth-password)
                  tara (tara-config env)
                  config (-> config
                             (assoc :tara tara)
                             (assoc :session-cookie-key
-                                   (ssm-param (str "/teet-" (name env) "/auth/session-key")))
+                                   (ssm-param env :auth :session-key))
                             (assoc-in [:auth :basic-auth-password] bap))]
              config))))
 
