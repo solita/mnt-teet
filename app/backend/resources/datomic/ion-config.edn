@@ -7,5 +7,10 @@
            :command
            {:fn teet.db-api.db-api-ion/db-api-command
             :integration :api-gateway/proxy
-            :doc "Execute a command"}}
+            :doc "Execute a command"}
+
+           :tara
+           {:fn teet.db-api.db-api-ion/tara-login
+            :integration :api-gateway/proxy
+            :doc "TARA login handler"}}
  :app-name "teet-dev-datomic"}
