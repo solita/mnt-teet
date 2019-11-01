@@ -121,7 +121,6 @@
     [Toolbar {:className (herb/join (<class navigation-style/toolbar))}
      [:div {:class (<class navigation-style/logo-style)}
       navigation-logo/maanteeamet-logo]
-     [:button {:on-click #(throw (js/Error. "foo"))} "Push to error"]
      #_[search-view/quick-search e! quick-search]           ;;Removed until implemented properly
      [language-selector]
      [user-info user]

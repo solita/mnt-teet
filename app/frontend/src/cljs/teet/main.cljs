@@ -32,7 +32,7 @@
 ;; See routes.edn
 (define-main-page page-and-title)
 
-(defn main-view [e! {:keys [page user navigation quick-search snackbar] :as app}]
+(defn main-view [e! _]
   (log/hook-onerror! e!)
   (fn [e! {:keys [page user navigation quick-search snackbar] :as app}]
     (let [nav-open? (boolean (:open? navigation))]

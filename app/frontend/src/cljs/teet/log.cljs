@@ -1,6 +1,5 @@
 (ns teet.log
   (:require [clojure.string :as str]
-            [cljs-bean.core :refer [->clj]]
             taoensso.timbre
             [tuck.core :as t])
   (:require-macros teet.log))
