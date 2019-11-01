@@ -4,24 +4,33 @@
             [datomic.ion.lambda.api-gateway :as apigw]
             [datomic.ion :as ion]
             [teet.environment :as environment]
-            [teet.log :as log]
             [ring.middleware.params :as params]
-            [ring.middleware.cookies :as cookies]))
+            [ring.middleware.cookies :as cookies]
+            [ring.middleware.session :as session]
+            [ring.middleware.session.cookie :as session-cookie]
+            [teet.log :as log]
+            [tara.routes :as tara-routes]
+            [tara.endpoint :as tara-endpoint]))
+
+(some-> (ion/get-env) environment/init-ion-config!)
+
+(def cookie-store (session-cookie/cookie-store
+                   {:key (environment/config-value :session-cookie-key)}))
 
 (defn- wrap-middleware [handler]
   (-> handler
       params/wrap-params
       cookies/wrap-cookies
-      ;; FIXME: we don't need session yet (with TARA login, add it)
-      ))
+      (session/wrap-session {:cookie-name "teet-session"
+                             :store cookie-store})))
 
-(def db-api-query (-> db-api-handlers/query-handler
-                      wrap-middleware
-                      apigw/ionize))
-(def db-api-command (-> db-api-handlers/command-handler
-                        wrap-middleware
-                        apigw/ionize))
+(defn ring->ion [handler]
+  (-> handler wrap-middleware apigw/ionize))
 
-(environment/init-ion-config! (ion/get-env))
+(def db-api-query (ring->ion db-api-handlers/query-handler))
+(def db-api-command (ring->ion db-api-handlers/command-handler))
+(def tara-login (ring->ion (tara-routes/tara-routes
+                            (tara-endpoint/discover (environment/config-value :tara :endpoint-url))
+                            (environment/config-value :tara))))
 
-(log/enable-timbre-appender!)
+(log/enable-ion-cast-appender!)
