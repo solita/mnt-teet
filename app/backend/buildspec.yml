@@ -4,8 +4,10 @@ env:
   variables:
     JAVA_HOME: "/usr/lib/jvm/java-8-openjdk-amd64"
     BACKEND: "app/backend"
-    AWS_ACCOUNT_ID: "512288025010"
     AWS_DEFAULT_REGION: "eu-central-1"
+
+  parameter-store:
+    AWS_ACCOUNT_ID: "/teet-dev/aws-account-id"
 
 phases:
   install:
