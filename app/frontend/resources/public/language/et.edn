@@ -40,6 +40,9 @@
   :phase.status/valid "Kehtiv",
   :task.type/archeological-study "Arheoloogiline uuring",
   :task.status/not-started "Alustamata"},
+ :error
+ {:authorization-failure "Sessioon aegus. Palun sisene uuesti.",
+  :server-error "Serveri viga."},
  :fields
  {:document/status "Olek",
   :phase/status "Olek",

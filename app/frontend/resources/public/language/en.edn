@@ -40,6 +40,9 @@
   :phase.status/valid "Valid",
   :task.type/archeological-study "Archeological study",
   :task.status/not-started "Not started"},
+ :error
+ {:authorization-failure "Session expired. Please login again.",
+  :server-error "Server error."},
  :fields
  {:document/status "Status",
   :phase/status "Status",
