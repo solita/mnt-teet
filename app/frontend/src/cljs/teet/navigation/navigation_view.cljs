@@ -15,9 +15,10 @@
 
 (defn language-selector
   []
-  [select/select-with-action {:class (herb/join (<class navigation-style/language-select-container-style)
-                                                (<class navigation-style/divider-style))
+  [select/select-with-action {:container-class (herb/join (<class navigation-style/language-select-container-style)
+                                                          (<class navigation-style/divider-style))
                               :label (str (tr [:common :language]))
+                              :select-class (<class navigation-style/language-select-style)
                               :id "language-select"
                               :name "language"
                               :value (case @localization/selected-language
@@ -29,10 +30,10 @@
                                       {:value "en" :label (get localization/language-names "en")}]
                               :on-change (fn [val]
                                            (localization/load-language!
-                                            (keyword (:value val))
-                                            (fn [language _]
-                                              (reset! localization/selected-language
-                                                      language))))}])
+                                             (keyword (:value val))
+                                             (fn [language _]
+                                               (reset! localization/selected-language
+                                                       language))))}])
 
 (defn- drawer-header
   [e! open?]
