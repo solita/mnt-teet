@@ -43,7 +43,7 @@
     [Grid {:item true :xs 6}
      [:div {:class (<class common-styles/top-info-spacing)}
       [breadcrumbs/breadcrumbs breadcrumbs]
-      [:div {:class (<class project-style/project-info)}
+      [:div
        [Heading1
         (tr [:enum (:db/ident type)])]
        [itemlist/ItemList

@@ -51,7 +51,8 @@
                                           "&:focus" {:box-shadow (str "0 0 0 3px" theme-colors/white ", "
                                                                       "0 0 0 5px " theme-colors/blue-light)}}}
                :MuiTabs {:flexContainer {:border-bottom (str "1px solid " theme-colors/gray-lighter)
-                                         :justify-content :center}
+                                         :justify-content :flex-start
+                                         :padding-left "1.875rem"}
                          :indicator {:display :none}}
                :MuiTab {:root {:&$textColorPrimary {:text-transform :capitalize
                                                     :font-size "1rem"
