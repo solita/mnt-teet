@@ -10,7 +10,8 @@
             [ring.middleware.session.cookie :as session-cookie]
             [teet.log :as log]
             [tara.routes :as tara-routes]
-            [tara.endpoint :as tara-endpoint]))
+            [tara.endpoint :as tara-endpoint]
+            [teet.login.login-commands :as login-commands]))
 
 (some-> (ion/get-env) environment/init-ion-config!)
 
