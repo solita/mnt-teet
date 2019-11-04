@@ -1,10 +1,12 @@
 (ns teet.ui.form
   "Common container for forms"
   (:require [reagent.core :as r]
-            [teet.ui.material-ui :refer [Grid Button TextField]]
+            [teet.ui.material-ui :refer [Grid Button]]
+            [teet.ui.text-field :refer [TextField]]
             [teet.ui.util :as util]
             [teet.localization :refer [tr]]
             [goog.object :as gobj]
+            [teet.log :as log]
             [clojure.spec.alpha :as s]
             [herb.core :refer [<class]]
             [teet.theme.theme-spacing :as theme-spacing]
@@ -31,7 +33,9 @@
     (cond
       ;; For text fields add input props to do on-blur validation
       (= TextField field-component)
-      (update field 1 assoc :inputProps {:on-blur (r/partial validate-attribute-fn attribute value)})
+      (update-in field [1 :on-change] (fn [on-change]
+                                        (fn [value]
+                                          (validate-attribute-fn attribute (on-change value)))))
 
       ;; Other fields just validate after on-change
       :else
@@ -82,29 +86,30 @@
                                        (e! (on-change-event {field v}))
                                        v))
                validate-attribute-fn (fn [field value]
-                                       ;;(log/info "validate " field " = " value " => " (valid-attribute? field value))
+                                       (println "validate " field " = " value " => " (valid-attribute? field value))
                                        (swap! invalid-attributes
                                               (fn [fields]
                                                 (if (valid-attribute? field value)
                                                   (disj fields field)
                                                   (conj fields field)))))
-               validate-and-save (fn [e! save-event value fields e]
-                                   (.preventDefault e)
-                                   (let [invalid-attrs (into (missing-attributes spec value)
-                                                             (for [{attr :attribute} (map meta fields)
-                                                                   :when (not (valid-attribute? attr (get value attr)))]
-                                                               attr))
-                                         valid? (or (nil? spec) (s/valid? spec value))]
-                                     (if-not valid?
-                                       ;; Spec validation failed, show errors for missing or invalid attributes
-                                       (reset! invalid-attributes invalid-attrs)
-
-                                       ;; Everything ok, apply save event
-                                       (e! (save-event)))))
+               validate (fn [value fields]
+                          (let [invalid-attrs (into (missing-attributes spec value)
+                                                    (for [{attr :attribute} (map meta fields)
+                                                          :when (not (valid-attribute? attr (get value attr)))]
+                                                      attr))
+                                valid? (or (nil? spec) (s/valid? spec value))]
+                            (when-not valid?
+                              ;; Spec validation failed, show errors for missing or invalid attributes
+                              (reset! invalid-attributes invalid-attrs))
+                            valid?))
+               submit! (fn [e! save-event value fields e]
+                         (.preventDefault e)
+                         (when (validate value fields)
+                           (e! (save-event))))
 
                ;; Determine required fields by getting missing attributes of an empty map
                required-fields (missing-attributes spec {})]
-              [:form {:on-submit (r/partial validate-and-save e! save-event value fields)}
+              [:form {:on-submit #(submit! e! save-event value fields %)}
                [Grid {:container true :spacing 1
                       :class (<class modal-form-bg)}
                 (util/with-keys
@@ -143,5 +148,6 @@
                       [buttons/button-primary {:disabled disabled?
                                                :color :primary
                                                :variant :contained
-                                               :type :submit}
+                                               :type :submit
+                                               :on-click #(validate value fields)}
                        (tr [:buttons :save])])]))]))

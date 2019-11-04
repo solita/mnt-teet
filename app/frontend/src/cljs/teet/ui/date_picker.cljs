@@ -5,8 +5,9 @@
             [teet.ui.icons :as icons]
             [cljs-time.format :as tf]
             [teet.localization :as localization :refer [tr]]
-            [teet.ui.material-ui :refer [TextField IconButton Popover ClickAwayListener
+            [teet.ui.material-ui :refer [IconButton Popover ClickAwayListener
                                          InputAdornment Button Grid]]
+            [teet.ui.text-field :refer [TextField]]
             [teet.theme.theme-colors :as colors]
             [herb.core :refer [<class]]))
 
@@ -235,12 +236,8 @@
                    :variant "outlined"
                    :full-width true
                    :on-change on-change-text
-                   :InputProps {:end-adornment
-                                (r/as-element
-                                  [InputAdornment {:position :end}
-                                   [IconButton {:on-click open-input
-                                                :edge "end"}
-                                    [icons/action-calendar-today {:color :primary}]]])}}]
+                   :input-icon icons/action-calendar-today
+                   :button-click open-input}]
        [Popover {:open @open?
                  :anchorEl @ref
                  :anchorOrigin {:vertical "bottom"

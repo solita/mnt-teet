@@ -127,7 +127,6 @@
          :class class
          :extent (or extent default-extent)
          :center default-center
-
          ;:selection          nav/valittu-hallintayksikko
          :on-drag (fn [_item _event]
                     #_(log/debug "drag" item event)

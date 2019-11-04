@@ -20,3 +20,9 @@
    :align-items :center
    :display :flex
    :justify-content :center})
+
+(defn input-error-text-style
+  []
+  {:font-size "1rem"
+   :color theme-colors/error
+   :position :absolute})

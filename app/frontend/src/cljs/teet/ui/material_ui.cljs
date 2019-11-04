@@ -2,7 +2,9 @@
   (:refer-clojure :exclude [List])
   (:require [goog.object :as gobj]
             [reagent.core :as r]
-            [reagent.impl.template :as rtpl])
+            [herb.core :as herb :refer [<class]]
+            [reagent.impl.template :as rtpl]
+            [teet.theme.theme-colors :as theme-colors])
   (:require-macros [teet.ui.material-ui-macros :refer [define-mui-components]]))
 
 (defonce MaterialUI (delay
@@ -27,8 +29,8 @@
 
 ;; Common utility components
 (define-mui-components Collapse Divider CircularProgress LinearProgress Drawer
-  AppBar MuiThemeProvider Toolbar CssBaseline Link Breadcrumbs
-  ClickAwayListener Switch)
+                       AppBar MuiThemeProvider Toolbar CssBaseline Link Breadcrumbs
+                       ClickAwayListener Switch)
 
 ;; Layout
 (define-mui-components Container Grid)
@@ -59,30 +61,30 @@
   (r/reactify-component
     (fn [props]
       [:input (-> props
-                (assoc :ref (:inputRef props))
-                (dissoc :inputRef))])))
+                  (assoc :ref (:inputRef props))
+                  (dissoc :inputRef))])))
 
 (def ^:private textarea-component
   (r/reactify-component
     (fn [props]
       [:textarea (-> props
-                   (assoc :ref (:inputRef props))
-                   (dissoc :inputRef))])))
+                     (assoc :ref (:inputRef props))
+                     (dissoc :inputRef))])))
 
-(defn TextField
-  [props & children]
-  (let [mui-text (delay
-                   (goog.object/get @MaterialUI "TextField"))
-        props (-> props
-                (assoc-in [:InputProps :inputComponent] (cond
-                                                          (and (:multiline props) (:rows props) (not (:maxRows props)))
-                                                          textarea-component
+#_(defn TextField
+    [props & children]
+    (let [mui-text (delay
+                     (goog.object/get @MaterialUI "TextField"))
+          props (-> props
+                    (assoc-in [:InputProps :inputComponent] (cond
+                                                              (and (:multiline props) (:rows props) (not (:maxRows props)))
+                                                              textarea-component
 
-                                                          ;; FIXME: autosize multiline field is broken
-                                                          (:multiline props)
-                                                          nil
+                                                              ;; FIXME: autosize multiline field is broken
+                                                              (:multiline props)
+                                                              nil
 
-                                                          :else
-                                                          input-component))
-                rtpl/convert-prop-value)]
-    (apply r/create-element @mui-text props (map r/as-element children))))
+                                                              :else
+                                                              input-component))
+                    rtpl/convert-prop-value)]
+      (apply r/create-element @mui-text props (map r/as-element children))))

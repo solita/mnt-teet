@@ -85,13 +85,13 @@
    :flex-direction :row
    :justify-content :flex-end
    :flex-grow 1
+   :color theme-colors/gray
+   :font-weight 300
    :flex-basis "10%"})
 
 (defn language-select-style
   []
-  {:color theme-colors/blue
-   :padding-bottom 0
-   :border "none"})
+  {:color theme-colors/blue})
 
 (defn divider-style
   []

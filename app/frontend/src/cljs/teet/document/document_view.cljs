@@ -16,9 +16,10 @@
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
             [teet.ui.layout :as layout]
-            [teet.ui.material-ui :refer [TextField LinearProgress Grid
+            [teet.ui.material-ui :refer [LinearProgress Grid
                                          List ListItem ListItemText ListItemIcon
                                          CircularProgress Divider]]
+            [teet.ui.text-field :refer [TextField]]
             [teet.ui.select :as select]
             [teet.ui.typography :as typography]
             [teet.user.user-info :as user-info]))

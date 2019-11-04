@@ -174,7 +174,7 @@
                         :value status
                         :tiny-select? true
                         :attribute attribute
-                        :class (<class status-style)}]
+                        :container-class (<class status-style)}]
    [labeled-data {:label (tr [:common :last-modified])
                   :data (or (format/date modified)
                             "-")}]])
