@@ -2,7 +2,8 @@
   (:require [teet.db-api.core :as db-api]
             [teet.environment :as environment]
             [teet.login.login-api-token :as login-api-token]
-            [datomic.client.api :as d]))
+            [datomic.client.api :as d]
+            [teet.log :as log]))
 
 
 (defn user-roles
@@ -13,6 +14,25 @@
       (d/pull '[:user/roles] [:user/id id])
       :user/roles
       set))
+
+(defn ensure-user!
+  "Make sure that the given user exists in the database.
+  If user does not exist, creates it.
+
+  Returns user id (uuid)."
+
+  [conn person-id given-name family-name]
+  (log/info "Ensure user: " person-id given-name family-name)
+  (if-let [id (-> conn d/db
+                  (d/pull '[:user/id] [:user/person-id person-id])
+                  :user/id)]
+    id
+    (let [new-id (java.util.UUID/randomUUID)]
+      (d/transact conn {:tx-data [{:user/id new-id
+                                   :user/person-id person-id
+                                   :user/given-name given-name
+                                   :user/family-name family-name}]})
+      new-id)))
 
 (defmethod db-api/command! :login [{conn :conn}
                                    {:user/keys [id given-name family-name email person-id]
@@ -38,6 +58,34 @@
 
 (defmethod db-api/command-authorization :login [_ _]
   ;; Always allow login to be used
+  nil)
+
+
+(defn on-tara-login [claims]
+  (let [conn (environment/datomic-connection)
+        secret (environment/config-value :auth :jwt-secret)
+
+        ;; Destructure person info from claims
+        {person-id "sub"
+         {:strs [given_name family_name]} "profile_attributes"} claims
+
+        id (ensure-user! conn person-id given_name family_name)
+        roles (user-roles conn id)]
+
+    {:status 302
+     :headers {"Location" "/"}
+     :session {:jwt-token (login-api-token/create-token
+                           secret "teet_user"
+                           {:given-name given_name
+                            :family-name family_name
+                            :person-id person-id
+                            :id id
+                            :roles roles})}}))
+
+(defmethod db-api/command! :tara-login [{session :session} _]
+  (:jwt-token session))
+
+(defmethod db-api/command-authorization :tara-login [_ _]
   nil)
 
 (defmethod db-api/command! :refresh-token [{conn :conn
