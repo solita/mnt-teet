@@ -10,12 +10,22 @@
 (defrecord SetToken [after-login? navigate-data token])
 (defrecord SetPassword [pw])
 (defrecord RefreshToken [])
+(defrecord CheckSessionToken [])
 
 (def ^{:const true
        :doc "How often to refresh JWT token (15 minutes)"}
   refresh-token-timeout-ms (* 1000 60 15))
 
 (extend-protocol t/Event
+  CheckSessionToken
+  (process-event [_ app]
+    (log/info "Checking existing token in session")
+    (t/fx (assoc-in app [:login :progress?] true)
+          {::tuck-effect/type :command!
+           :command :login/check-session-token
+           :payload {}
+           :result-event (partial ->SetToken true (get-in app [:login :navigate-to]))}))
+
   Login
   (process-event [{user :demo-user} app]
     (log/info "Log in as: " user " site pw: "(get-in app [:login :password]))

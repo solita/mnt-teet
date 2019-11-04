@@ -82,10 +82,10 @@
                             :id id
                             :roles roles})}}))
 
-(defmethod db-api/command! :tara-login [{session :session} _]
+(defmethod db-api/command! :login/check-session-token [{session :session} _]
   (:jwt-token session))
 
-(defmethod db-api/command-authorization :tara-login [_ _]
+(defmethod db-api/command-authorization :login/check-session-token-login [_ _]
   nil)
 
 (defmethod db-api/command! :refresh-token [{conn :conn
