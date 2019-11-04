@@ -85,7 +85,7 @@
 (defmethod db-api/command! :login/check-session-token [{session :session} _]
   (:jwt-token session))
 
-(defmethod db-api/command-authorization :login/check-session-token-login [_ _]
+(defmethod db-api/command-authorization :login/check-session-token [_ _]
   nil)
 
 (defmethod db-api/command! :refresh-token [{conn :conn
