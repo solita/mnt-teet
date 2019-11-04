@@ -3,16 +3,14 @@
   (:require [herb.core :refer [<class]]
             [teet.login.login-controller :as login-controller]
             [teet.ui.material-ui :refer [Container Card CardHeader CardContent
-                                         Button Typography TextField ButtonBase]]
-            [teet.ui.layout :as layout]
+                                         Button Typography ButtonBase IconButton]]
+            [teet.ui.text-field :refer [TextField]]
             [teet.navigation.navigation-logo :as navigation-logo]
-            [teet.ui.itemlist]
             [teet.ui.icons :as icons]
             [teet.ui.buttons :as buttons]
             [teet.localization :refer [tr]]
             [teet.localization :as localization]
             [teet.login.login-styles :as login-styles]
-            [teet.ui.select :as select]
             [teet.log :as log]
             [reagent.core :as r]
             [teet.ui.typography :as typography]))
@@ -29,7 +27,7 @@
    [:section {:class (<class login-styles/login-container)}
     [login-logo]
     [:div {:class (<class login-styles/user-list)}
-     #_[select/outlined-select {:label "Language"
+     #_[select/form-select {:label "Language"
                                 :id "language-select"
                                 :name "Language"
                                 :value (case @localization/selected-language
@@ -44,7 +42,7 @@
                                                (keyword (:value val))
                                                (fn [language _]
                                                  (reset! localization/selected-language
-                                                   language))))}]
+                                                         language))))}]
      [TextField {:label "Password"
                  :id "password-textfield"
                  :type "password"

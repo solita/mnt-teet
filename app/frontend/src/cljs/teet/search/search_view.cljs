@@ -2,7 +2,8 @@
   "Quick search of projects and project groups"
   (:require [reagent.core :as r]
             [teet.ui.material-ui :refer [Paper CircularProgress IconButton InputLabel Input
-                                         List ListItem ListItemIcon ListItemText InputAdornment FormControl TextField]]
+                                         List ListItem ListItemIcon ListItemText InputAdornment FormControl]]
+            [teet.ui.text-field :refer [TextField]]
             [teet.ui.icons :as icons]
             [teet.ui.common :as common]
             [teet.ui.hotkeys :as hotkeys]

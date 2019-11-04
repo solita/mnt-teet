@@ -6,7 +6,8 @@
             [teet.map.map-view :as map-view]
             [teet.login.login-paths :as login-paths]
             [postgrest-ui.components.item-view :as postgrest-item-view]
-            [teet.ui.material-ui :refer [Grid Button ButtonBase Collapse TextField Link]]
+            [teet.ui.material-ui :refer [Grid Button ButtonBase Collapse Link]]
+            [teet.ui.text-field :refer [TextField]]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-style :as project-style]
             [teet.theme.theme-spacing :as theme-spacing]
@@ -286,16 +287,16 @@
        [Grid {:item true
               :xs 6}
         [:div {:class (<class common-styles/top-info-spacing)}
-         [project-info (get-in app [:config :api-url]) (get-in app login-paths/api-token) project breadcrumbs]
+         [project-info (get-in app [:config :api-url]) (get-in app login-paths/api-token) project breadcrumbs]]
 
-         [tabs/tabs {:e! e!
-                     :selected-tab tab}
-          {:value "phases"
-           :label (tr [:project :phases-tab])}
-          {:value "restrictions"
-           :label (tr [:project :restrictions-tab])}
-          {:value "cadastral-units"
-           :label (tr [:project :cadastral-units-tab])}]]
+        [tabs/tabs {:e! e!
+                    :selected-tab tab}
+         {:value "phases"
+          :label (tr [:project :phases-tab])}
+         {:value "restrictions"
+          :label (tr [:project :restrictions-tab])}
+         {:value "cadastral-units"
+          :label (tr [:project :cadastral-units-tab])}]
         [layout/section
          (case tab
            "phases"

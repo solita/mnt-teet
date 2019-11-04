@@ -11,11 +11,13 @@
             [teet.map.map-layers :as map-layers]
             [teet.map.map-features :as map-features]
             [teet.theme.theme-spacing :as theme-spacing]
-            [teet.ui.material-ui :refer [TextField TableCell TableSortLabel Button Link]]
+            [teet.ui.material-ui :refer [TableCell TableSortLabel Button Link]]
+            [teet.ui.text-field :refer [TextField]]
             postgrest-ui.elements
             [teet.localization :as localization :refer [tr]]
             [teet.ui.panels :as panels]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [teet.theme.theme-colors :as theme-colors]))
 
 (defmethod search-interface/format-search-result "project" [{:keys [id label]}]
   {:icon [icons/file-folder-open]
@@ -25,10 +27,17 @@
 (defn link-to-project [{:strs [id name]}]
   [Link {:href (str "#/projects/" id)} name])
 
+(defn table-filter-style
+  []
+  {:background-color theme-colors/gray-lighter
+   :border 0})
+
 (defn- column-filter [e! filters column type]
-  [TextField {:value     (or (get filters column) "")
-              :type      type
-              :variant   :filled
+  [TextField {:value (or (get filters column) "")
+              :type type
+              :variant :filled
+              :start-icon icons/action-search
+              :input-class (<class table-filter-style)
               :on-change #(e! (projects-controller/->UpdateProjectsFilter
                                 column
                                 (let [v (-> % .-target .-value)]

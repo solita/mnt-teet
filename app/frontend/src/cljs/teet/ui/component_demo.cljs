@@ -1,6 +1,7 @@
 (ns teet.ui.component-demo
   (:require [clojure.string :as str]
-            [teet.ui.material-ui :refer [Button Fab IconButton TextField Divider Checkbox InputAdornment]]
+            [teet.ui.material-ui :refer [Button Fab IconButton Divider Checkbox InputAdornment]]
+            [teet.ui.text-field :refer [TextField]]
             [teet.ui.file-upload :as file-upload]
             [teet.ui.icons :as icons]
             [teet.ui.skeleton :as skeleton]
@@ -29,27 +30,27 @@
   TestFileUpload
   (process-event [{files :files} app]
     (js/alert (str "Dropped "
-                (str/join ", "
-                  (map #(str "\"" (pr-str (file-info %)) "\"") files))))
+                   (str/join ", "
+                             (map #(str "\"" (pr-str (file-info %)) "\"") files))))
     app)
 
   UploadFiles
   (process-event [{files :files} app]
     (t/fx app
-      {:tuck.effect/type :command!
-       :command :document/upload
-       :payload (file-info (first files))
-       :result-event #(->UploadFileUrlReceived (first files) %)}))
+          {:tuck.effect/type :command!
+           :command :document/upload
+           :payload (file-info (first files))
+           :result-event #(->UploadFileUrlReceived (first files) %)}))
 
   UploadFileUrlReceived
   (process-event [{:keys [file url]} app]
     (log/info "upload file: " file " to URL: " url)
     (-> (js/fetch (:url url) #js {:method "PUT"
                                   :body file})
-      (.then (fn [^js/Response resp]
-               (if (.-ok resp)
-                 (log/info "Upload ok" (.-status resp))
-                 (log/warn "Upload failed: " (.-status resp) (.-statusText resp))))))
+        (.then (fn [^js/Response resp]
+                 (if (.-ok resp)
+                   (log/info "Upload ok" (.-status resp))
+                   (log/warn "Upload failed: " (.-status resp) (.-statusText resp))))))
     app)
   )
 
@@ -72,12 +73,8 @@
                     :on-change on-change
                     :placeholder "Placeholder"
                     :variant :outlined
-                    :InputProps {:end-adornment
-                                 (r/as-element
-                                   [InputAdornment {:position :end}
-                                    [IconButton {:on-click println
-                                                 :edge "end"}
-                                     [icons/action-calendar-today]]])}}]
+                    :input-icon icons/action-calendar-today
+                    :button-click println}]
         [TextField {:label "Tekstiä"
                     :on-change on-change
                     :value @val
@@ -88,6 +85,7 @@
                     :value @val
                     :placeholder "Placeholder"
                     :error true
+                    :error-text "Form field is required"
                     :variant :filled}]]
        [Divider]])))
 
@@ -221,7 +219,7 @@
 
     [:div {:style {:width "50%"
                    :margin "2rem 0"}}
-     [select/outlined-select {:value "et"
+     [select/form-select {:value "et"
                               :label "Language"
                               :show-empty-selection? true
                               :id "language-select"
@@ -235,7 +233,7 @@
                                  :value "foo"
                                  :items [{:value "foo" :label "Foo"}
                                          {:value "bar" :label "Bar"}]}]]
-    [datepicker/date-input]
+    #_[datepicker/date-input]
 
     [Divider]
 
