@@ -31,6 +31,8 @@
 (def db-api-command (ring->ion db-api-handlers/command-handler))
 (def tara-login (ring->ion (tara-routes/tara-routes
                             (tara-endpoint/discover (environment/config-value :tara :endpoint-url))
-                            (environment/config-value :tara))))
+                            (merge
+                             (environment/config-value :tara)
+                             {:on-success login-commands/on-tara-login}))))
 
 (log/enable-ion-cast-appender!)
