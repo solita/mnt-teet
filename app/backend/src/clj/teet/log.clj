@@ -36,6 +36,7 @@
 (defn- ion-appender [{:keys [level _output]}]
   ((case level
      (:error :warn :fatal) cast/alert
+     :info cast/event
      cast/dev)
    {:msg (force _output)}))
 
