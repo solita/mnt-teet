@@ -29,14 +29,17 @@
 
 (defn- request [handler-fn]
   (fn [req]
-    (log/info "REQUEST: " (pr-str req))
+    (log/debug "REQUEST: " (pr-str req))
     (try
       (let [user (some->> req jwt-token (login-api-token/verify-token
                                          (environment/config-value :auth :jwt-secret)))]
         (log/with-context
           {:user (str (:user/id user))}
           (let [conn (environment/datomic-connection)
-                ctx {:conn conn :db (d/db conn) :user user}
+                ctx {:conn conn
+                     :db (d/db conn)
+                     :user user
+                     :session (:session req)}
                 request-payload (transit/transit-request req)
                 response (handler-fn ctx request-payload)]
             (case (:format (meta response))
