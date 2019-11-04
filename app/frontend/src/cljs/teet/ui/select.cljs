@@ -108,6 +108,8 @@
   {:-moz {:appearance :none}
    :-webkit {:appearance :none}
    :cursor :pointer
+   :background-color :white
+   :border-radius 0
    :display :block
    :min-width "5rem"
    :border :none
