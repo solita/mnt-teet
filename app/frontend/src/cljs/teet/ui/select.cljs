@@ -23,6 +23,7 @@
    :border-radius "2px"
    :appearance "none"
    :display :block
+   :background-color :white
    :border (if error
              (str "1px solid " theme-colors/error)
              (str "1px solid " theme-colors/gray-light))
