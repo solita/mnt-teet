@@ -58,7 +58,7 @@
 
 (defn project-data
   [{:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
-  [:div {:class (<class project-style/project-info)}
+  [:div
    [Heading1 name]
    [itemlist/ItemList
     {}

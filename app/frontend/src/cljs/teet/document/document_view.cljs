@@ -96,7 +96,7 @@
    [Grid {:item true :xs 6}
     [:div {:class (<class common-styles/top-info-spacing)}
      [breadcrumbs/breadcrumbs breadcrumbs]
-     [:div {:class (<class project-style/project-info)}
+     [:div
       [typography/Heading1 (:document/name document)]
       [typography/Paragraph (:document/description document)]]]
     [layout/section
