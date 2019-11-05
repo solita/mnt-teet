@@ -70,18 +70,19 @@
          {:strs [given_name family_name]} "profile_attributes"} claims
 
         id (ensure-user! conn person-id given_name family_name)
-        roles (user-roles conn id)]
-
-    {:status 302
-     :headers {"Location" (environment/config-value :base-url)}
-     :session {:jwt-token (login-api-token/create-token
-                           secret "teet_user"
-                           {:given-name given_name
-                            :family-name family_name
-                            :person-id person-id
-                            :id id
-                            :roles roles})}
-     :body "Redirecting to TEET"}))
+        roles (user-roles conn id)
+        response {:status 302
+                  :headers {"Location" (environment/config-value :base-url)}
+                  :session {:jwt-token (login-api-token/create-token
+                                        secret "teet_user"
+                                        {:given-name given_name
+                                         :family-name family_name
+                                         :person-id person-id
+                                         :id id
+                                         :roles roles})}
+                  :body "Redirecting to TEET"}]
+    (log/info "on-tara-login response: " response)
+    response))
 
 (defmethod db-api/command! :login/check-session-token [{session :session} _]
   (:jwt-token session))
