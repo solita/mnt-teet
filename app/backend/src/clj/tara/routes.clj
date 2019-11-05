@@ -60,8 +60,9 @@
                                       "&code=" (enc code)
                                       "&redirect_uri=" (enc (str base-url "/oauth2/idpresponse")))
                            :as :text}
-            _ (log/info "TOKEN REQUEST: " (pr-str token-request))
+            _ (log/info "TOKEN REQUEST: " (pr-str token-request) ", ENDPOINT: " token-endpoint)
             token-response @(client/post token-endpoint token-request)
+            _ (log/info "TOKEN RESPONSE: " token-response)
             token (-> token-response :body json/parse)]
         (if (contains? token :id-token)
           (try
