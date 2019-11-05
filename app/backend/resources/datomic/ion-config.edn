@@ -2,15 +2,19 @@
  :lambdas {:query
            {:fn teet.db-api.db-api-ion/db-api-query
             :integration :api-gateway/proxy
-            :doc "Run query"}
+            :description "Run query"}
 
            :command
            {:fn teet.db-api.db-api-ion/db-api-command
             :integration :api-gateway/proxy
-            :doc "Execute a command"}
+            :description "Execute a command"}
 
            :tara
            {:fn teet.db-api.db-api-ion/tara-login
             :integration :api-gateway/proxy
-            :doc "TARA login handler"}}
+            :description "TARA login handler"}
+
+           :process-thk-file
+           {:fn teet.thk-integration-ion/process-thk-file
+            :description "Process THK CSV file"}}
  :app-name "teet-dev-datomic"}
