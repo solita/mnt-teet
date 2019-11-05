@@ -80,7 +80,8 @@
                             :family-name family_name
                             :person-id person-id
                             :id id
-                            :roles roles})}}))
+                            :roles roles})}
+     :body "Redirecting to TEET"}))
 
 (defmethod db-api/command! :login/check-session-token [{session :session} _]
   (:jwt-token session))
