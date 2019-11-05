@@ -82,8 +82,9 @@
                                          :roles roles})}
                   :body "Redirecting to TEET"}]
     (log/info "on-tara-login response: " response)
-    {:status 200
-     :headers {"Content-Type" "text/plain"}
+    {:status 302
+     :headers {"Content-Type" "text/plain"
+               "Location" (environment/config-value :base-url)}
      :body "TARA login OK"}
     #_response))
 
