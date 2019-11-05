@@ -18,12 +18,20 @@
 (def cookie-store (session-cookie/cookie-store
                    {:key (environment/config-value :session-cookie-key)}))
 
+(defn- wrap-exception-alert [handler]
+  (fn [req]
+    (try
+      (handler req)
+      (catch Exception e
+        (log/error e "Exception in HTTP request handling")))))
+
 (defn- wrap-middleware [handler]
   (-> handler
       params/wrap-params
       cookies/wrap-cookies
       (session/wrap-session {:cookie-name "teet-session"
-                             :store cookie-store})))
+                             :store cookie-store})
+      wrap-exception-alert))
 
 (defn ring->ion [handler]
   (-> handler wrap-middleware apigw/ionize))
