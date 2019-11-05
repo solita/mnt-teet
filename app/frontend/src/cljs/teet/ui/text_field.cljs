@@ -7,7 +7,8 @@
   [error multiline start-icon?]
   (merge
     ^{:pseudo {:invalid {:box-shadow "inherit"
-                         :outline "inherit"}}}
+                         :outline "inherit"}
+               :focus theme-colors/focus-style}}
     {:border-radius "2px"
      :border (if error
                (str "1px solid " theme-colors/error)

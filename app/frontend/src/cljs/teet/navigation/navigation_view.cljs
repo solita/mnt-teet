@@ -53,15 +53,16 @@
 (defn- view-link [{:keys [open? current-page link icon name]}]
   (let [current-page? (= current-page (:page link))]
     [ListItem {:component "a"
-              :href (routes/url-for link)
-              :align-items "center"
-              :button true
-              :classes {:root (<class navigation-style/drawer-list-item-style current-page?)}}
-    [ListItemIcon {:style {:display :flex
-                           :justify-content :center}}
-     [icon]]
-    (when open?
-      [ListItemText {:primary name}])]))
+               :href (routes/url-for link)
+               :align-items "center"
+               :button true
+               :disable-ripple true
+               :classes {:root (<class navigation-style/drawer-list-item-style current-page?)}}
+     [ListItemIcon {:style {:display :flex
+                            :justify-content :center}}
+      [icon]]
+     (when open?
+       [ListItemText {:primary name}])]))
 
 (defn- page-listing
   [e! open? page]
@@ -87,17 +88,17 @@
                :icon icons/maps-my-location
                :name "Road location"}]
    #_[view-link {:open? open?
-               :current-page page
-               :link {:page :components}
-               :icon icons/content-archive
-               :name "Components"}]
+                 :current-page page
+                 :link {:page :components}
+                 :icon icons/content-archive
+                 :name "Components"}]
    (user-controller/when-role
-    :admin
-    [view-link {:open? open?
-                :current-page page
-                :link {:page :admin}
-                :icon icons/action-settings
-                :name (tr [:admin :title])}])])
+     :admin
+     [view-link {:open? open?
+                 :current-page page
+                 :link {:page :admin}
+                 :icon icons/action-settings
+                 :name (tr [:admin :title])}])])
 
 
 

@@ -32,3 +32,9 @@
 
 (def primary-text gray-dark)
 (def secondary-text gray)
+
+
+(def focus-style
+  {:outline 0
+   :box-shadow (str "0 0 0 1px" white ", "
+                    "0 0 0 3px " blue-light)})

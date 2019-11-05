@@ -122,7 +122,7 @@
 (defn logout-style
   []
   {:white-space :nowrap
-   :padding "22px 0 0 0"
+   :margin "22px 0 0 0"
    :line-height "19px"
    :position :relative
    :font-size "16px"})
