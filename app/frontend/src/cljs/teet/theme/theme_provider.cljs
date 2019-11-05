@@ -48,7 +48,8 @@
                          :underlineHover {:text-decoration :underline
                                           :font-size "1rem"
                                           "&:hover" {:text-decoration :none}
-                                          "&:focus" {:box-shadow (str "0 0 0 3px" theme-colors/white ", "
+                                          "&:focus" {:outline 0
+                                                     :box-shadow (str "0 0 0 3px" theme-colors/white ", "
                                                                       "0 0 0 5px " theme-colors/blue-light)}}}
                :MuiTabs {:flexContainer {:border-bottom (str "1px solid " theme-colors/gray-lighter)
                                          :justify-content :flex-start
@@ -70,16 +71,14 @@
                                             :font-weight :bold
                                             :border-radius "4px 4px 0 0"}}}
                :MuiIconButton {:root {:border-radius "2px"
-                                      "&:focus" {:box-shadow (str "0 0 0 1px" theme-colors/white ", "
-                                                                  "0 0 0 3px " theme-colors/blue-light)}}}
+                                      "&:focus" theme-colors/focus-style}}
                :MuiButtonBase {:root {:font-size "1rem"}}
                :MuiButton {:containedSecondary {:background-color theme-colors/white
                                                 :border (str "2px solid " theme-colors/gray)
                                                 :color theme-colors/gray-dark
                                                 "&:hover" {:background-color theme-colors/gray-lighter}}
                            :contained {:border-radius "20px"
-                                       "&:focus" {:box-shadow (str "0 0 0 1px" theme-colors/white ", "
-                                                                   "0 0 0 3px " theme-colors/blue-light)}}
+                                       "&:focus" theme-colors/focus-style}
                            :root {:text-transform :capitalize
                                   :font-weight 400
                                   :padding "0 1.875rem"

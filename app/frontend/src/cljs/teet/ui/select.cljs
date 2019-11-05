@@ -16,7 +16,8 @@
 
 (defn- primary-select-style
   [error]
-  ^{:pseudo {:invalid {:box-shadow :inherit
+  ^{:pseudo {:focus theme-colors/focus-style
+             :invalid {:box-shadow :inherit
                        :outline :inherit}}}
   {:-moz {:appearance :none}
    :-webkit {:appearance :none}
@@ -104,7 +105,10 @@
 
 (defn select-with-action-styles
   []
-  ^{:pseudo {:hover {:margin-bottom "0"
+  ^{:pseudo {:focus theme-colors/focus-style
+             :invalid {:box-shadow :inherit
+                       :outline :inherit}
+             :hover {:margin-bottom "0"
                      :border-bottom (str "2px solid " theme-colors/primary)}}}
   {:-moz {:appearance :none}
    :-webkit {:appearance :none}

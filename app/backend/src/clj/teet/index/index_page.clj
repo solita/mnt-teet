@@ -12,7 +12,7 @@
     [:html {:style "overflow-y: scroll;"}
      [:head
       [:meta {:charset "UTF-8"}]
-      [:meta {:name "viewport" :content "width=device-width"}]
+      [:meta {:name "viewport" :content "width=device-width, initial-scale=1"}]
       ;; Specify base-url if provided (local env needs this)
       (when base-url
         [:base {:href base-url}])

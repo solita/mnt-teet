@@ -7,7 +7,7 @@
 (defn white-button-class
   []
   ^{:pseudo {:hover {:background-color theme-colors/gray-lightest}
-             :focus {:outline (str "1px solid " theme-colors/blue-lighter)}}}
+             :focus theme-colors/focus-style}}
   {:background-color theme-colors/white
    :display :flex
    :transition "background-color 0.2s ease-in"
