@@ -40,7 +40,8 @@
                             (assoc :tara tara)
                             (assoc :session-cookie-key
                                    (ssm-param env :auth :session-key))
-                            (assoc-in [:auth :basic-auth-password] bap))]
+                            (assoc-in [:auth :basic-auth-password] bap)
+                            (assoc :base-url (ssm-param env :base-url)))]
              config))))
 
 (defn load-local-config!

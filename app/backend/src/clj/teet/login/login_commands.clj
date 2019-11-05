@@ -73,7 +73,7 @@
         roles (user-roles conn id)]
 
     {:status 302
-     :headers {"Location" "/"}
+     :headers {"Location" (environment/config-value :base-url)}
      :session {:jwt-token (login-api-token/create-token
                            secret "teet_user"
                            {:given-name given_name
