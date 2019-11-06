@@ -39,9 +39,9 @@
                                     site-password :site-password}]
   (d/transact conn {:tx-data [{:user/id id}]})
   #_(when (not= :dev (environment/config-value :env))
-    (log/warn "Demo login can only be used in :dev environment")
-    (throw (ex-info "Demo login not allowed"
-                    {:demo-user user})))
+      (log/warn "Demo login can only be used in :dev environment")
+      (throw (ex-info "Demo login not allowed"
+                      {:demo-user user})))
 
   (if (environment/check-site-password site-password)
     (let [secret (environment/config-value :auth :jwt-secret)
@@ -74,14 +74,17 @@
         response {:status 302
                   :headers {"Location"
                             (str (environment/config-value :base-url)
-                                 "#/login?token="
-                                 (login-api-token/create-token
-                                  secret "teet_user"
-                                  {:given-name given_name
-                                   :family-name family_name
-                                   :person-id person-id
-                                   :id id
-                                   :roles roles}))}
+                                 "#/login"
+                                 (if (empty? roles)
+                                   "?error=no-roles"
+                                   (str "?token="
+                                        (login-api-token/create-token
+                                         secret "teet_user"
+                                         {:given-name given_name
+                                          :family-name family_name
+                                          :person-id person-id
+                                          :id id
+                                          :roles roles}))))}
                   :body "Redirecting to TEET"}]
     (log/info "on-tara-login response: " response)
     response))

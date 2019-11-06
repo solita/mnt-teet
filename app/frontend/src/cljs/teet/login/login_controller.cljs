@@ -4,7 +4,8 @@
             [teet.log :as log]
             [teet.login.login-paths :as login-paths]
             [teet.user.user-info :as user-info]
-            teet.user.user-controller))
+            teet.user.user-controller
+            [teet.snackbar.snackbar-controller :as snackbar-controller]))
 
 (defrecord Login [demo-user])
 (defrecord SetToken [after-login? navigate-data token])
@@ -30,7 +31,9 @@
              :command :refresh-token
              :payload {}
              :result-event (partial ->SetToken true (get-in app [:login :navigate-to]))})
-      app))
+      (if-let [error (get-in app [:query :error])]
+        (snackbar-controller/open-snack-bar app (str "Login failed: " error) :error)
+        app)))
 
   Login
   (process-event [{user :demo-user} app]
