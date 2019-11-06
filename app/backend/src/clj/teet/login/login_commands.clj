@@ -72,20 +72,18 @@
         id (ensure-user! conn person-id given_name family_name)
         roles (user-roles conn id)
         response {:status 302
-                  :headers {"Location" (environment/config-value :base-url)}
-                  :session {:jwt-token (login-api-token/create-token
-                                        secret "teet_user"
-                                        {:given-name given_name
-                                         :family-name family_name
-                                         :person-id person-id
-                                         :id id
-                                         :roles roles})}
+                  :headers {"Location"
+                            (str (environment/config-value :base-url)
+                                 "#/login?token="
+                                 (login-api-token/create-token
+                                  secret "teet_user"
+                                  {:given-name given_name
+                                   :family-name family_name
+                                   :person-id person-id
+                                   :id id
+                                   :roles roles}))}
                   :body "Redirecting to TEET"}]
     (log/info "on-tara-login response: " response)
-    #_{:status 302
-     :headers {"Content-Type" "text/plain"
-               "Location" (environment/config-value :base-url)}
-     :body "TARA login OK"}
     response))
 
 (defmethod db-api/command! :login/check-session-token [{session :session} _]
