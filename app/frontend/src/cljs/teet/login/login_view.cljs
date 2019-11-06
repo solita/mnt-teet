@@ -2,8 +2,7 @@
   "Login page"
   (:require [herb.core :refer [<class]]
             [teet.login.login-controller :as login-controller]
-            [teet.ui.material-ui :refer [Container Card CardHeader CardContent
-                                         Button Typography ButtonBase IconButton]]
+            [teet.ui.material-ui :refer [Link Divider]]
             [teet.ui.text-field :refer [TextField]]
             [teet.navigation.navigation-logo :as navigation-logo]
             [teet.ui.icons :as icons]
@@ -28,6 +27,10 @@
     [:main {:class (<class login-styles/login-background)}
      [:section {:class (<class login-styles/login-container)}
       [login-logo]
+      [Link {:href "/oauth2/request"
+             :class (<class login-styles/tara-login)}
+       "TARA login"]
+      [Divider]
       [:div {:class (<class login-styles/user-list)}
        [TextField {:label "Password"
                    :id "password-textfield"

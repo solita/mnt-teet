@@ -45,3 +45,10 @@
    :align-items :center
    :padding "2rem 1rem"
    :border-bottom (str "1px solid " theme-colors/gray-lighter)})
+
+(defn tara-login []
+  {:padding "1rem 2rem"
+   :background-color theme-colors/gray-lightest
+   :width "100%"
+   :display "inline-block"
+   :text-align :center})
