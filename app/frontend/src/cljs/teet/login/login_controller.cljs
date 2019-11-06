@@ -25,8 +25,11 @@
             ;; to get other session info
             {::tuck-effect/type :set-api-token
              :token token}
-            (fn [e!]
-              (e! (->RefreshToken))))
+
+            {::tuck-effect/type :command!
+             :command :refresh-token
+             :payload {}
+             :result-event (partial ->SetToken true (get-in app [:login :navigate-to]))})
       app))
 
   Login
