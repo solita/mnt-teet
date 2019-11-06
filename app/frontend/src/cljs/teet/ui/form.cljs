@@ -86,7 +86,7 @@
                                        (e! (on-change-event {field v}))
                                        v))
                validate-attribute-fn (fn [field value]
-                                       (println "validate " field " = " value " => " (valid-attribute? field value))
+                                       ;;(println "validate " field " = " value " => " (valid-attribute? field value))
                                        (swap! invalid-attributes
                                               (fn [fields]
                                                 (if (valid-attribute? field value)
