@@ -19,12 +19,15 @@
 (extend-protocol t/Event
   CheckSessionToken
   (process-event [_ app]
-    (log/info "Checking existing token in session")
-    (t/fx (assoc-in app [:login :progress?] true)
-          {::tuck-effect/type :command!
-           :command :login/check-session-token
-           :payload {}
-           :result-event (partial ->SetToken true (get-in app [:login :navigate-to]))}))
+    (if-let [token (get-in app [:query :token])]
+      (t/fx app
+            ;; Set the JWT token and immediately refresh
+            ;; to get other session info
+            {::tuck-effect/type :set-api-token
+             :token token}
+            (fn [e!]
+              (e! (->RefreshToken))))
+      app))
 
   Login
   (process-event [{user :demo-user} app]
