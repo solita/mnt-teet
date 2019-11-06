@@ -1,5 +1,6 @@
 (ns teet.user.user-spec
-  (:require [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]
+            [clojure.string :as str]))
 
 (def estonian-person-id-pattern
   "Regular expression pattern for Estonian person id codes.
@@ -17,7 +18,8 @@
   Estonian person ID. Does not validate dates or checksum."
   [s]
   (and (string? s)
-       (re-matches estonian-person-id-pattern s)))
+       (str/starts-with? s "EE")
+       (re-matches estonian-person-id-pattern (subs s 2))))
 
 (s/def :user/person-id estonian-person-id?)
 
