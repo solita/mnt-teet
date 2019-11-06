@@ -1,0 +1,7 @@
+{:deps {http-kit {:mvn/version "2.4.0-alpha4"}
+        clj-gatling {:mvn/version "0.14.0-beta1"}
+        clj-http {:mvn/version "3.10.0"}
+        com.cognitect/transit-clj {:mvn/version "0.8.313"}}
+
+ :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}}
+ :paths ["src/clj" "../common/src/cljc" "resources"]}
