@@ -28,9 +28,9 @@
 (defn- wrap-middleware [handler]
   (-> handler
       params/wrap-params
-      cookies/wrap-cookies
       (session/wrap-session {:cookie-name "teet-session"
                              :store cookie-store})
+      cookies/wrap-cookies
       wrap-exception-alert))
 
 (defn ring->ion [handler]
