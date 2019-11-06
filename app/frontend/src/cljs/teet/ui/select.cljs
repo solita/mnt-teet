@@ -192,13 +192,26 @@
                     :required required
                     :class class}])))
 
+
+(def ^:private selectable-users (r/atom nil))
+
+(defrecord SetSelectableUsers [users]
+  t/Event
+  (process-event [_ app]
+    (reset! selectable-users users)
+    app))
+
 (defn select-user
   "Select user"
   [{:keys [e! value on-change label required]}]
+  (when (nil? @selectable-users)
+    (e! (common-controller/->Query {:query :user/list
+                                    :args {}
+                                    :result-event ->SetSelectableUsers})))
   [form-select {:label label
-                    :value value
-                    :required required
-                    :on-change on-change
-                    :show-empty-selection? true
-                    :items (user-info/list-user-ids)
-                    :format-item (r/partial user-info/user-name-and-email e!)}])
+                :value value
+                :required required
+                :on-change on-change
+                :show-empty-selection? true
+                :items @selectable-users
+                :format-item user-info/user-name-and-email}])
