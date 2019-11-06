@@ -82,11 +82,11 @@
                                          :roles roles})}
                   :body "Redirecting to TEET"}]
     (log/info "on-tara-login response: " response)
-    {:status 302
+    #_{:status 302
      :headers {"Content-Type" "text/plain"
                "Location" (environment/config-value :base-url)}
      :body "TARA login OK"}
-    #_response))
+    response))
 
 (defmethod db-api/command! :login/check-session-token [{session :session} _]
   (:jwt-token session))
