@@ -2,6 +2,7 @@
   "Show user info in the UI, automatically resolved user information"
   (:require [clojure.string :as str]))
 
+
 (def mock-users [{:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"
                   :user/person-id "1234567890"
                   :user/given-name "Danny D."
@@ -23,24 +24,17 @@
                   :user/email "benjamin.boss@example.com"
                   :user/organization "Maanteeamet"}])
 
-(defn- user-by-id [id]
-  (some #(when (= (:user/id %) id) %) mock-users))
-
 (defn user-name
   "Show full user name"
-  [_e! user-id]
-  (->> user-id
-       user-by-id
-       ((juxt :user/given-name :user/family-name))
-       (str/join " ")))
+  [{:user/keys [given-name family-name]}]
+  (str given-name " " family-name))
 
 (defn user-name-and-email
   "Show user name and email"
-  [_e! user-id]
-  (let [[gn fn email] (->> user-id
-                           user-by-id
-                           ((juxt :user/given-name :user/family-name :user/email)))]
-    (str gn " " fn " (" email ")")))
+  [{:user/keys [email] :as user}]
+  (str (user-name user)
+       (when email
+         (str " (" email ")"))))
 
 (defn list-user-ids []
   (map :user/id mock-users))

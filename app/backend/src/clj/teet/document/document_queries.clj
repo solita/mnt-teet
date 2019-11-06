@@ -30,9 +30,10 @@
                                        {:task/_documents [:db/id :task/description
                                                           {:task/type [:db/ident]}]}
                                        {:document/comments [:db/id :comment/comment :comment/timestamp
-                                                            {:comment/author [:user/id]}]}
+                                                            {:comment/author [:user/id :user/given-name :user/family-name]}]}
                                        {:document/files [:db/id :file/name :file/type :file/size
-                                                         :file/author :file/timestamp]}])
+                                                         {:file/author [:user/given-name :user/family-name]}
+                                                         :file/timestamp]}])
                        :in $ ?e]
                      db document-id)
                 ffirst

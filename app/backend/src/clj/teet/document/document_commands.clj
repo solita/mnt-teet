@@ -47,7 +47,7 @@
       (let [res (d/transact conn {:tx-data [{:db/id (or document-id "new-document")
                                              :document/files (merge file
                                                                     {:db/id "new-file"
-                                                                     :file/author (:user/id user)
+                                                                     :file/author [:user/id (:user/id user)]
                                                                      :file/timestamp (java.util.Date.)})}
                                             {:db/id "datomic.tx"
                                              :tx/author (:user/id user)}]})

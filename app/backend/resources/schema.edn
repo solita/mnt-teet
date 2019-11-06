@@ -229,6 +229,7 @@
             :db/valueType :db.type/string
             :db/cardinality :db.cardinality/one
             :db/doc "MIME type of the file"}]]}
+
  {:db/ident :migration/document-comments
   :txes [[{:db/ident :document/comments
            :db/valueType :db.type/ref
@@ -243,9 +244,9 @@
 
  {:db/ident :migration/file-author-and-time
   :txes [[{:db/ident :file/author
-           :db/valueType :db.type/uuid
+           :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
-           :db/doc "Id of the user who uploaded this file"}
+           :db/doc "User who uploaded this file"}
           {:db/ident :file/timestamp
            :db/valueType :db.type/instant
            :db/cardinality :db.cardinality/one

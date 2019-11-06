@@ -31,11 +31,9 @@
                             :phase/status
                             {:task/status [:db/ident]}
                             {:task/type [:db/ident]}
-                            {:task/assignee [:user/id]}
+                            {:task/assignee [:user/id :user/given-name :user/family-name :user/email]}
                             {:phase/_tasks [:db/id {:phase/phase-name [:db/ident]}]}
-                            {:task/documents [*]}
-                            #_{:task/comments [:comment/comment :comment/timestamp
-                                             {:comment/author [:user/id]}]}])
+                            {:task/documents [*]}])
             :in $ ?e]
    :args [db task-id]
    :result-fn ffirst})

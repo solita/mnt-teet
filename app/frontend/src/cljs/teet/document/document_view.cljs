@@ -66,7 +66,7 @@
        ^{:key id}
        [:div
         [typography/SectionHeading
-         [user-info/user-name e! (:user/id author)]]
+         [user-info/user-name author]]
         [:div (.toLocaleString timestamp)]
         [typography/Paragraph comment]]))]
 
@@ -111,7 +111,7 @@
                                        :label name
                                        :sub-label [:<> (some-> timestamp format/date-time)
                                                    " "
-                                                   [user-info/user-name e! author]]
+                                                   [user-info/user-name author]]
                                        :icon icons/file-attachment
                                        :end-text (format/file-size size)}]))]
      [file-upload/FileUploadButton {:id "upload-files-to-document"

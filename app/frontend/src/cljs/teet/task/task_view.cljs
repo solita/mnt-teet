@@ -49,7 +49,7 @@
        [itemlist/ItemList
         {}
         [itemlist/Item {:label (tr [:fields :task/type])} (tr [:enum (:db/ident type)])]
-        [itemlist/Item {:label (tr [:fields :task/assignee])} [user-info/user-name-and-email e! (:user/id assignee)]]
+        [itemlist/Item {:label (tr [:fields :task/assignee])} [user-info/user-name-and-email assignee]]
         [itemlist/Item {:label (tr [:fields :common "description"])} description]]]]
      [layout/section
       [task-status e! status modified]
