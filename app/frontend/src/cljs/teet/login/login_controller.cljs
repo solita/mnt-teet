@@ -54,7 +54,7 @@
   SetToken
   (process-event [{:keys [token after-login? navigate-data]} app]
     (log/info "TOKEN: " token ", after-login? " after-login?)
-    (let [{:keys [token error roles]} token]
+    (let [{:keys [token error roles user]} token]
       (if error
         (do (js/alert (str "Login error: " (str error)))
             app)
@@ -73,6 +73,7 @@
                         effects)]
           (apply t/fx
                  (-> app
+                     (assoc :user user)
                      (assoc-in login-paths/api-token token)
                      (assoc-in [:login :progress?] false))
                  effects)))))

@@ -34,6 +34,11 @@
                                    :user/family-name family-name}]})
       new-id)))
 
+(defn user-info [conn id]
+  (d/pull (d/db conn) '[:user/id :user/given-name :user/family-name :user/email
+                        :user/person-id]
+          [:user/id id]))
+
 (defmethod db-api/command! :login [{conn :conn}
                                    {:user/keys [id given-name family-name email person-id]
                                     site-password :site-password}]
@@ -53,6 +58,7 @@
                                              :email email
                                              :id id
                                              :roles roles})
+       :user (user-info conn id)
        :roles roles})
     {:error :incorrect-site-password}))
 
@@ -105,6 +111,7 @@
                                            :email email
                                            :id id
                                            :roles roles})
+     :user (user-info conn id)
      :roles roles}))
 
 (defmethod db-api/command-authorization :refresh-token [{user :user} _]
