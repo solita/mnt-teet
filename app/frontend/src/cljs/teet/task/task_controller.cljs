@@ -97,7 +97,7 @@
              :command :workflow/add-task-to-phase
              :payload {:phase-id (goog.math.Long/fromString phase-id)
                        :task (-> task
-                                 (update :task/assignee (fn [user-id] [:user/id user-id]))
+                                 (update :task/assignee (fn [{id :user/id}] [:user/id id]))
                                  (merge {:db/id "new-task"}))}
              :result-event ->CreateTaskResult})))
 
