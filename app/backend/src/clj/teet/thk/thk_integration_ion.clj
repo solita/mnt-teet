@@ -1,8 +1,14 @@
 (ns teet.thk.thk-integration-ion
   "THK integration lambdas"
-  (:require [teet.log :as log]))
+  (:require [cheshire.core :as cheshire]
+            [teet.log :as log]))
+
+(def test-input "{\"Records\":[1, 2, 3]}")
+
+(def test-event
+  {:input test-input})
 
 (defn process-thk-file
-  [{:keys [input] :as event}]
+  [{:keys [input]}]
   (log/event :thk-file-processed
-             {:event event}))
+             {:input (cheshire/decode input keyword)}))
