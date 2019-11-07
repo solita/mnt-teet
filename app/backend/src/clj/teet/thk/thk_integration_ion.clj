@@ -1,4 +1,4 @@
-(ns teet.thk-integration-ion
+(ns teet.thk.thk-integration-ion
   "THK integration lambdas"
   (:require [teet.log :as log]))
 
