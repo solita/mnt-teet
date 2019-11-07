@@ -236,8 +236,8 @@
                    :variant "outlined"
                    :full-width true
                    :on-change on-change-text
-                   :input-icon icons/action-calendar-today
-                   :button-click open-input}]
+                   :input-button-icon icons/action-calendar-today
+                   :input-button-click open-input}]
        [Popover {:open @open?
                  :anchorEl @ref
                  :anchorOrigin {:vertical "bottom"
