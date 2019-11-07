@@ -3,6 +3,6 @@
   (:require [teet.log :as log]))
 
 (defn process-thk-file
-  [{:keys [input]}]
+  [{:keys [input] :as event}]
   (log/event :thk-file-processed
-             {:input input}))
+             {:event event}))
