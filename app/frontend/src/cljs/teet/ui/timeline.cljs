@@ -3,11 +3,10 @@
   (:require [goog.date :as dt]
             [reagent.core :as r]
             [teet.ui.material-ui :refer [Popper]]
-            [taoensso.timbre :as log]
             [cljs-time.core :as t]
-            [teet.theme.theme-colors :as theme-colors]
             [teet.theme.theme-panels :as theme-panels]
-            [herb.core :refer [<class]]))
+            [herb.core :refer [<class]]
+            [teet.localization :refer [tr]]))
 
 (defn- ->date [d]
   (if (instance? dt/Date d)
@@ -68,7 +67,7 @@
             num-years (count years)
             num-items (count timeline-items)
             width (or width "100%")
-            height (or height (* num-items 35))
+            height (or height (* (inc num-items) 35))
             x-start (int (* 0.4 (* 12 num-years))) ; 8
             x-of (fn [d]
                    (+ x-start
@@ -76,9 +75,8 @@
 
         [:<>
          [:div {:style {:overflow-x "scroll"
-                        :width (or width "100%")
-                        :height height
-                        }}
+                        :width width
+                        :height height}}
           [:svg {;:width "100%"
                  :height height
 
@@ -94,9 +92,9 @@
                ^{:key y}
                [:g
                 [:line {:x1 x :x2 x
-                        :y1 0 :y2 num-items
+                        :y1 0 :y2 (+ 0.3 num-items)
                         :style {:stroke "black" :stroke-width 0.1}}]
-                [:text {:x x :y (+ num-items 0.5)
+                [:text {:x x :y (+ num-items 0.8)
                         :style {:font-size 0.5}} y]]))]
 
            [:g#items
@@ -129,7 +127,17 @@
                                            :style {:fill fill-style}}])
                              (inc i)
                              (+ x w)
-                             fills))))]))]]]
+                             fills))))]))]
+
+           (let [x (x-of (t/now))]
+             [:g#today
+              [:line {:x1 x :x2 x
+                      :y1 0 :y2 (+ 0.3 num-items)
+                      :style {:stroke "red" :stroke-width 0.1}}]
+              [:text {:x x :y (+ num-items 0.8)
+                      :text-anchor "middle"
+                      :style {:font-size 0.5}}
+               (tr [:common :now])]])]]
          (when-let [{:keys [element content]} @hover]
            [Popper {:open true
                     :anchorEl element
