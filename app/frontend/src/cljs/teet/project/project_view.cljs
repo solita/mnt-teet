@@ -20,7 +20,7 @@
             [teet.ui.common :as common]
             [teet.ui.typography :refer [Heading1 Heading2 Heading3 SmallText]]
             [teet.ui.layout :as layout]
-            [teet.localization :refer [tr]]
+            [teet.localization :refer [tr tr-tree]]
             [teet.ui.panels :as panels]
             [teet.ui.buttons :as buttons]
             teet.task.task-spec
@@ -32,7 +32,11 @@
             [teet.common.common-styles :as common-styles]
             [teet.ui.form :as form]
             [teet.task.task-controller :as task-controller]
-            [teet.ui.select :as select]))
+            [teet.ui.select :as select]
+            [teet.ui.timeline :as timeline]
+            [cljs-time.core :as t]
+            [taoensso.timbre :as log]
+            [teet.ui.progress :as progress]))
 
 (defn task-form [e! close _phase-id task]
   ;;Task definition (under project phase)
@@ -56,8 +60,20 @@
    [select/select-user {:e! e!}]])
 
 
+(defn- phase-info-popup [label start-date end-date num-tasks complete-count incomplete-count]
+  [:div
+   [:div [:b label]]
+   [:div (format/date start-date) " - " (format/date end-date)]
+   (when (pos? num-tasks)
+     [:div
+      [progress/circle {:radius 20 :stroke 5}
+       {:total num-tasks
+        :success complete-count
+        :fail incomplete-count}]
+      (str complete-count " / " num-tasks " tasks complete")])])
+
 (defn project-data
-  [{:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
+  [phases {:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
   [:div
    [Heading1 name]
    [itemlist/ItemList
@@ -68,10 +84,42 @@
     [:div (tr [:project :information :road-number]) ": " road_nr]
     [:div (tr [:project :information :km-range]) ": " (format/km-range km_range)]
     [:div (tr [:project :information :procurement-number]) ": " procurement_no]
-    [:div (tr [:project :information :carriageway]) ": " carriageway]]])
+    [:div (tr [:project :information :carriageway]) ": " carriageway]]
+
+   (when-let [[start-date end-date] (format/parse-date-range estimated_duration)]
+     (let [tr* (tr-tree [:enum])]
+       [:<>
+        [:br]
+        [timeline/timeline {:start-date start-date
+                            :end-date  end-date}
+         (for [{name :phase/phase-name
+                start-date :phase/estimated-start-date
+                end-date :phase/estimated-end-date
+                tasks :phase/tasks
+                :as phase} phases
+               :let [tasks-by-completion (group-by task-controller/completed? tasks)
+                     num-tasks (count tasks)
+                     complete-pct (when (seq tasks)
+                                    (/ (count (tasks-by-completion true)) num-tasks))
+                     incomplete-pct (if complete-pct
+                                      (/ (count (tasks-by-completion false)) num-tasks)
+                                      1)]]
+           {:label (-> name :db/ident tr*)
+            :start-date start-date
+            :end-date end-date
+            :fill (if complete-pct
+                    [[complete-pct "green"]
+                     [incomplete-pct "url(#incomplete)"]]
+                    "url(#incomplete)")
+            :hover [phase-info-popup
+                    (-> name :db/ident tr*)
+                    start-date end-date
+                    num-tasks
+                    (count (tasks-by-completion true))
+                    (count (tasks-by-completion false))]})]]))])
 
 
-(defn- project-info [endpoint token project breadcrumbs]
+(defn- project-info [endpoint token project breadcrumbs phases]
   [:div
    [breadcrumbs/breadcrumbs breadcrumbs]
    [postgrest-item-view/item-view
@@ -81,7 +129,7 @@
      :select ["name" "estimated_duration"
               "road_nr" "km_range" "carriageway"
               "procurement_no"]
-     :view project-data}
+     :view (r/partial project-data phases)}
     project]])
 
 (defn phase-action-heading
@@ -287,7 +335,9 @@
        [Grid {:item true
               :xs 6}
         [:div {:class (<class common-styles/top-info-spacing)}
-         [project-info (get-in app [:config :api-url]) (get-in app login-paths/api-token) project breadcrumbs]]
+         [project-info (get-in app [:config :api-url]) (get-in app login-paths/api-token)
+          project breadcrumbs
+          phases]]
 
         [tabs/tabs {:e! e!
                     :selected-tab tab}

@@ -125,3 +125,9 @@
    ;; user filled in by server
    ;; comment?
    })
+
+
+(def ^:const completed-statuses #{:task.status/completed :task.status/accepted})
+
+(defn completed? [{status :task/status}]
+  (boolean (completed-statuses (:db/ident status))))

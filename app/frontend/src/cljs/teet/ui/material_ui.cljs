@@ -51,7 +51,7 @@
 (define-mui-components Zoom Fade)
 
 ;; Dialogs and modals
-(define-mui-components Dialog DialogTitle DialogContent Popover)
+(define-mui-components Dialog DialogTitle DialogContent Popover Popper)
 
 ;; Snackbar
 (define-mui-components Snackbar SnackbarContent)

@@ -33,6 +33,8 @@
 (def primary-text gray-dark)
 (def secondary-text gray)
 
+(def popup-background gray-lightest)
+(def popup-border gray)
 
 (def focus-style
   {:outline 0

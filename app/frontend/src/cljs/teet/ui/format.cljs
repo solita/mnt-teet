@@ -25,15 +25,21 @@
 (def formatter
   (tf/formatter "dd.MM.yyyy"))
 
+(defn parse-date-range
+  "Parse postgres daterange \"[yyyy-MM-dd,yyyy-MM-dd)\" into a vector of two dates"
+  [date-range-string]
+  (when-let [[_ start-date end-date] (re-matches #"\[(\d{4}-\d{2}-\d{2}),(\d{4}-\d{2}-\d{2})\)"
+                                                 date-range-string)]
+    [(->> start-date tf/parse)
+     (->> end-date tf/parse)]))
+
 (defn date-range
   "Format string of format \"[yyyy-MM-dd,yyyy-MM-dd)\" into \"dd.MM.yyyy - dd.MM.yyyy\""
   [date-range-string]
-  (when date-range-string
-    (when-let [[_ start-date end-date] (re-matches #"\[(\d{4}-\d{2}-\d{2}),(\d{4}-\d{2}-\d{2})\)"
-                                                   date-range-string)]
-      (str (->> start-date tf/parse (tf/unparse formatter))
-           " — "
-           (->> end-date tf/parse (tf/unparse formatter))))))
+  (when-let [[start-date end-date] (parse-date-range date-range-string)]
+    (str (->> start-date (tf/unparse formatter))
+         " — "
+         (->> end-date (tf/unparse formatter)))))
 
 (defn km-range
   [km-range-string]
