@@ -16,6 +16,7 @@
             teet.admin.admin-queries
             teet.admin.admin-commands
             teet.user.user-queries
+            teet.logging.logging-commands
 
             [teet.log :as log]
             [teet.login.login-api-token :as login-api-token]
