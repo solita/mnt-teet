@@ -4,6 +4,7 @@
  {:hide-menu "Hide menu",
   :select-files "Select files to upload",
   :back-to-project "Back to project",
+  :now "Now",
   :general "General",
   :last-modified "Last modified",
   :language "Language",

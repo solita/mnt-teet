@@ -65,7 +65,7 @@
    [:div [:b label]]
    [:div (format/date start-date) " - " (format/date end-date)]
    (when (pos? num-tasks)
-     [:div
+     [:div {:style {:display "flex" :align-items "center"}}
       [progress/circle {:radius 20 :stroke 5}
        {:total num-tasks
         :success complete-count
@@ -95,8 +95,7 @@
          (for [{name :phase/phase-name
                 start-date :phase/estimated-start-date
                 end-date :phase/estimated-end-date
-                tasks :phase/tasks
-                :as phase} phases
+                tasks :phase/tasks} phases
                :let [tasks-by-completion (group-by task-controller/completed? tasks)
                      num-tasks (count tasks)
                      complete-pct (when (seq tasks)

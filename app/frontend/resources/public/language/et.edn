@@ -4,6 +4,7 @@
  {:hide-menu "Peidan menüü",
   :select-files "Valin fail(id)",
   :back-to-project "Tagasi projekti",
+  :now "Nüüd",
   :general "Üldine",
   :last-modified "Viimati muudetud",
   :language "Keel",

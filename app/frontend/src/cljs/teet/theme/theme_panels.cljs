@@ -24,5 +24,5 @@
    :margin-bottom "15px"
    :max-width "20vw"
    :border-radius 5
-   :padding "0.25rem"
+   :padding "0.5rem"
    :box-shadow (str "0px 2px 4px " theme-colors/popup-border)})
