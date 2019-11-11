@@ -7,7 +7,6 @@
             [teet.theme.theme-panels :as theme-panels]
             [herb.core :refer [<class]]
             [teet.localization :refer [tr]]
-            [teet.log :as log]
             [clojure.string :as str]))
 
 (defn- ->date [d]
@@ -156,13 +155,14 @@
                disable-window-scroll #(.addEventListener js/window "wheel" on-scroll
                                                          #js {:passive false})
                enable-window-scroll #(.removeEventListener js/window "wheel" on-scroll
-                                                           #js {:passive false})]
+                                                           #js {:passive false})
+
+               x-start 25
+               y-start 25]
     (if-not (and start-date end-date)
       [:span.timeline-no-start-or-end]
       (let [years (year-range opts)
             num-items (count timeline-items)
-            x-start 25 ;(int (* 0.4 (* 12 num-years)))
-            y-start 25
             x-of (fn [d]
                    (+ x-start
                       (* @month-width
