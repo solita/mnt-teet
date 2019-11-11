@@ -21,7 +21,7 @@
                      :bottom "-20px"}}}
   {:background-color theme-colors/popup-background
    :position "relative"
-   :margin-bottom "15px"
+   :margin-bottom "12px"
    :max-width "20vw"
    :border-radius 5
    :padding "0.5rem"

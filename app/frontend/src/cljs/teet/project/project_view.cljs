@@ -6,19 +6,18 @@
             [teet.map.map-view :as map-view]
             [teet.login.login-paths :as login-paths]
             [postgrest-ui.components.item-view :as postgrest-item-view]
-            [teet.ui.material-ui :refer [Grid Button ButtonBase Collapse Link]]
+            [teet.ui.material-ui :refer [Grid ButtonBase Collapse Link Divider]]
             [teet.ui.text-field :refer [TextField]]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-style :as project-style]
             [teet.theme.theme-spacing :as theme-spacing]
-            [teet.project.project-info :as project-info]
             [teet.ui.breadcrumbs :as breadcrumbs]
             [teet.ui.skeleton :as skeleton]
             [teet.ui.format :as format]
             [teet.ui.itemlist :as itemlist]
             [teet.ui.icons :as icons]
             [teet.ui.common :as common]
-            [teet.ui.typography :refer [Heading1 Heading2 Heading3 SmallText]]
+            [teet.ui.typography :refer [Heading1 Heading2 Heading3]]
             [teet.ui.layout :as layout]
             [teet.localization :refer [tr tr-tree]]
             [teet.ui.panels :as panels]
@@ -34,9 +33,9 @@
             [teet.task.task-controller :as task-controller]
             [teet.ui.select :as select]
             [teet.ui.timeline :as timeline]
-            [cljs-time.core :as t]
-            [taoensso.timbre :as log]
-            [teet.ui.progress :as progress]))
+            [teet.ui.progress :as progress]
+            [teet.util.collection :refer [count-by]]
+            teet.project.project-info))
 
 (defn task-form [e! close _phase-id task]
   ;;Task definition (under project phase)
@@ -63,6 +62,7 @@
 (defn- phase-info-popup [label start-date end-date num-tasks complete-count incomplete-count]
   [:div
    [:div [:b label]]
+   [Divider]
    [:div (format/date start-date) " - " (format/date end-date)]
    (when (pos? num-tasks)
      [:div {:style {:display "flex" :align-items "center"}}
@@ -86,7 +86,8 @@
     [:div (tr [:project :information :procurement-number]) ": " procurement_no]
     [:div (tr [:project :information :carriageway]) ": " carriageway]]
 
-   (when-let [[start-date end-date] (format/parse-date-range estimated_duration)]
+   (when-let [[start-date end-date] (and (seq phases)
+                                         (format/parse-date-range estimated_duration))]
      (let [tr* (tr-tree [:enum])]
        [:<>
         [:br]
@@ -95,13 +96,13 @@
          (for [{name :phase/phase-name
                 start-date :phase/estimated-start-date
                 end-date :phase/estimated-end-date
-                tasks :phase/tasks} phases
-               :let [tasks-by-completion (group-by task-controller/completed? tasks)
+                tasks :phase/tasks} (sort-by :phase/estimated-start-date phases)
+               :let [tasks-by-completion (count-by task-controller/completed? tasks)
                      num-tasks (count tasks)
                      complete-pct (when (seq tasks)
-                                    (/ (count (tasks-by-completion true)) num-tasks))
+                                    (/ (tasks-by-completion true 0) num-tasks))
                      incomplete-pct (if complete-pct
-                                      (/ (count (tasks-by-completion false)) num-tasks)
+                                      (/ (tasks-by-completion false 0) num-tasks)
                                       1)]]
            {:label (-> name :db/ident tr*)
             :start-date start-date
@@ -114,8 +115,8 @@
                     (-> name :db/ident tr*)
                     start-date end-date
                     num-tasks
-                    (count (tasks-by-completion true))
-                    (count (tasks-by-completion false))]})]]))])
+                    (tasks-by-completion true 0)
+                    (tasks-by-completion false 0)]})]]))])
 
 
 (defn- project-info [endpoint token project breadcrumbs phases]
