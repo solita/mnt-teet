@@ -123,7 +123,35 @@
       (let [c (.getAttribute elt "class")]
         (if (and c (str/starts-with? c "timeline-bars"))
           (set! (.-scrollLeft elt) (+ (.-deltaX e) (.-scrollLeft elt)))
+
           (recur (.-parentElement elt)))))))
+
+(defn- year-bars-group [{:keys [x-of y-of line-width years num-items]}]
+  [:g.timeline-year-bars
+   (doall
+    (for [year years
+          :let [x (x-of (t/date-time year 1 1))
+                y (y-of (inc num-items))]]
+      ^{:key year}
+      [:g
+       [:line {:x1 x :x2 x
+               :y1 0 :y2 y
+               :style {:stroke "black" :stroke-width line-width}}]
+       [:text {:x (+ x 5) :y y} year]]))])
+
+(defn- month-labels-group [{:keys [x-of years month-width]}]
+  [:g.timeline-month-labels
+   (when (> month-width 20)
+     (doall
+      (for [year years
+            month (range 1 13)
+            :let [x (+ 5 ;(/ month-width 2)
+                       (x-of (t/date-time year month)))]]
+        ^{:keys (str year "/" month)}
+        [:text {:x x :y 15}
+         (if (> month-width 50)
+           (tr [:calendar :months (dec month)])
+           (str month))])))])
 
 (defn timeline [{:keys [start-date end-date
                         month-width
@@ -194,17 +222,14 @@
             [:svg {:width (x-of (t/plus (t/date-time end-date) (t/years 5)))
                    :height (y-of (+ 3 num-items))}
              [pattern-defs line-height initial-month-width line-width]
-             [:g#year-bars
-              (doall
-               (for [year years
-                     :let [x (x-of (t/date-time year 1 1))
-                           y (y-of (inc num-items))]]
-                 ^{:key year}
-                 [:g
-                  [:line {:x1 x :x2 x
-                          :y1 0 :y2 y
-                          :style {:stroke "black" :stroke-width line-width}}]
-                  [:text {:x (+ x (/ initial-month-width 4)) :y y} year]]))]
+             [year-bars-group {:x-of x-of
+                               :y-of y-of
+                               :num-items num-items
+                               :line-width line-width
+                               :years years}]
+             [month-labels-group {:x-of x-of
+                                  :years years
+                                  :month-width @month-width}]
 
              [timeline-items-group {:x-of x-of
                                     :y-of y-of
