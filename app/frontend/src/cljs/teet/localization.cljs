@@ -26,6 +26,13 @@
 ;; FIXME: read language from user cookie
 (defonce selected-language (local-storage (r/atom :et) :selected-language))
 
+(def calendar-locale {:et {:months ["jaan" "veebr" "märts" "apr" "mai" "juuni" "juuli" "aug" "sept" "okt" "nov" "dets"]
+                           :days ["E" "T" "K" "N" "R" "L" "P"]
+                           :today "Täna"}
+                      :en {:months ["jan" "feb" "mar" "apr" "may" "jun" "jul" "aug" "sep" "oct" "nov" "dec"]
+                           :days ["mon" "tue" "wed" "thu" "fri" "sat" "sun"]
+                           :today "Today"}})
+
 (defn load-language!
   "Load the given language translation file, if it has not been loaded yet, and adds the language
   to the `loaded-languages` atom.
@@ -38,7 +45,8 @@
         (.then #(.text %))
         (.then #(reader/read-string %))
         (.then (fn [translations]
-                 (swap! loaded-languages assoc language translations)
+                 (swap! loaded-languages assoc language
+                        (assoc translations :calendar (calendar-locale language)))
                  (on-load language translations))))))
 
 (defn load-initial-language! [callback]
