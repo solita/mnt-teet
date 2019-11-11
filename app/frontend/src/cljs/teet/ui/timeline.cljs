@@ -155,6 +155,21 @@
            (tr [:calendar :months (dec month)])
            (str month))])))])
 
+(def ^:const animation-duration-ms 160)
+
+(defn- animate! [elt prop-name to]
+  (let [from (aget elt prop-name)
+        animate! (fn animate! [start-ms now]
+                   (let [start-ms (or start-ms now)]
+                     (if (>= now (+ start-ms animation-duration-ms))
+                       (aset elt prop-name to)
+                       (do
+                         (aset elt prop-name
+                               (+ from (* (/ (- now start-ms) animation-duration-ms) (- to from))))
+                         (.requestAnimationFrame js/window (partial animate! start-ms))))))]
+    (.requestAnimationFrame js/window
+                            (partial animate! nil))))
+
 (defn timeline [{:keys [start-date end-date
                         month-width
                         line-width]
@@ -178,9 +193,8 @@
                                                (+ old-width (int (/ (.-deltaY e) 2)))))))
                             (scroll-view e)))
                bars-id (gensym "timeline-bars")
-               scroll-left! (fn [x]
-                              (let [elt (js/document.getElementById bars-id)]
-                                (set! (.-scrollLeft elt) x)))
+               scroll-left! #(animate! (js/document.getElementById bars-id)
+                                       "scrollLeft" %)
 
                disable-window-scroll #(.addEventListener js/window "wheel" on-scroll
                                                          #js {:passive false})
