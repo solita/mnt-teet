@@ -102,8 +102,10 @@
   {:display "flex"
    :flex-direction "row"})
 (defn- labels-style [y-start]
-  {:display "flex" :flex-direction "column"
-   :padding-top (str y-start "px")})
+  {:display "flex"
+   :flex-direction "column"
+   :padding-top (str y-start "px")
+   :padding-right "0.5rem"})
 
 (defn- label-style []
   {:display "inline-block" :white-space "nowrap"})
