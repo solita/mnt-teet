@@ -108,7 +108,9 @@
    :padding-right "0.5rem"})
 
 (defn- label-style []
-  {:display "inline-block" :white-space "nowrap"})
+  {:display "inline-block"
+   :white-space "nowrap"
+   :cursor "pointer"})
 (defn- bars-style []
   {:overflow-x "scroll"})
 
