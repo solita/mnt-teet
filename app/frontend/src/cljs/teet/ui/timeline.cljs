@@ -151,7 +151,7 @@
             month (range 1 13)
             :let [x (+ 5 ;(/ month-width 2)
                        (x-of (t/date-time year month)))]]
-        ^{:keys (str year "/" month)}
+        ^{:key (str year "/" month)}
         [:text {:x x :y 15}
          (if (> month-width 50)
            (tr [:calendar :months (dec month)])
