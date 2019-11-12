@@ -17,7 +17,9 @@
             [teet.localization :as localization :refer [tr]]
             [teet.ui.panels :as panels]
             [clojure.string :as string]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.common.common-controller :as common-controller]
+            [teet.projects.projects-style :as projects-style]))
 
 (defmethod search-interface/format-search-result "project" [{:keys [id label]}]
   {:icon [icons/file-folder-open]
@@ -25,7 +27,7 @@
    :href (str "#/project/" id)})
 
 (defn link-to-project [{:strs [id name]}]
-  [Link {:href (str "#/projects/" id)} name])
+  name)
 
 (defn table-filter-style
   []
@@ -80,6 +82,9 @@
                    :state             (get-in app [:projects :listing])
                    :set-state!        #(e! (projects-controller/->SetListingState %))
                    :table             "thk_project_search"
+                   :row-class         (<class projects-style/row-style)
+                   :on-row-click      (fn [{:strs [id]}]
+                                        (e! (common-controller/->Navigate :project {:project id} {})))
                    :select            ["id" "name" "road_nr" "km_range" "estimated_duration"]
                    :columns           ["name" "road_nr" "km_range" "estimated_duration"]
                    :accessor          {"name" #(select-keys % ["name" "id"])}
@@ -109,7 +114,7 @@
           [(keyword type)
            (map-layers/mvt-layer api-url
                                  "mvt_restrictions"
-                                 {"type"   type
+                                 {"type" type
                                   "layers" (string/join ", " selected-restrictions)}
                                  map-features/project-restriction-style
                                  {:max-resolution project-restriction-resolution})])))
@@ -117,7 +122,7 @@
 
 (defn projects-map-page [e! app]
   (let [api-url (get-in app [:config :api-url])]
-    [map-view/map-view e! {:class  (<class theme-spacing/fill-content)
+    [map-view/map-view e! {:class (<class theme-spacing/fill-content)
                            :layer-controls? true
                            :layers (merge {:thk-projects
                                            (map-layers/mvt-layer api-url
@@ -131,7 +136,7 @@
                                                                      {"q" (get-in app [:projects :filter :text])}
                                                                      map-features/project-pin-style
                                                                      {:min-resolution project-pin-resolution-threshold
-                                                                      :fit-on-load?   true})}
+                                                                      :fit-on-load? true})}
 
                                           (when (get-in app [:map :map-restrictions "Katastri" "katastriyksus"])
                                             {:cadastral-units
