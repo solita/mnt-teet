@@ -29,7 +29,7 @@
   []
   {:background-color theme-colors/white
    :padding "2rem 1.5rem"
-   :min-height "100%"})
+   :flex 1})
 
 (def section
   "Section with basic spacing"

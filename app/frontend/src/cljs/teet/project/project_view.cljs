@@ -332,14 +332,15 @@
         [task-form e! project-controller/->CloseTaskDialog add-task (get-in app [:project project :new-task])]])
      [:div {:class (<class project-style/project-view-container)}
       [Grid {:container true}
-       [Grid {:item true
-              :xs 6}
+       [Grid {:item  true
+              :xs    6
+              :class (<class common-styles/grid-left-item)}
         [:div {:class (<class common-styles/top-info-spacing)}
          [project-info (get-in app [:config :api-url]) (get-in app login-paths/api-token)
           project breadcrumbs
           phases]]
 
-        [tabs/tabs {:e! e!
+        [tabs/tabs {:e!           e!
                     :selected-tab tab}
          {:value "phases"
           :label (tr [:project :phases-tab])}
@@ -355,19 +356,19 @@
            "restrictions"
            ^{:key "restrictions"}
            [query/rpc (merge (project-controller/restrictions-rpc project)
-                        {:e! e!
-                         :app app
-                         :state-path [:project project :restrictions]
-                         :skeleton [collapse-skeleton true 5]
-                         :view project-related-restrictions})]
+                             {:e!         e!
+                              :app        app
+                              :state-path [:project project :restrictions]
+                              :skeleton   [collapse-skeleton true 5]
+                              :view       project-related-restrictions})]
 
            "cadastral-units"
            ^{:key "cadastral-units"}
            [query/rpc (merge (project-controller/cadastral-units-rpc project)
-                        {:e! e!
-                         :app app
-                         :state-path [:project project :cadastral-units]
-                         :view project-related-cadastral-units
-                         :skeleton [collapse-skeleton false 5]})])]]
+                             {:e!         e!
+                              :app        app
+                              :state-path [:project project :cadastral-units]
+                              :view       project-related-cadastral-units
+                              :skeleton   [collapse-skeleton false 5]})])]]
        [Grid {:item true :xs 6}
         [project-map e! (get-in app [:config :api-url]) project (get-in app [:query :tab])]]]]]))

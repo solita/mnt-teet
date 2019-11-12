@@ -47,10 +47,7 @@
 
 (defn main-container [drawer-open?]
   (let [dw (drawer-width drawer-open?)]
-    {:z-index 10
-     ;; :padding "0 24px"
-     :background-color theme-colors/gray-lightest
-     :height "1px"                                          ;;This is a hack to enable children to inherit height
+    {:background-color theme-colors/gray-lightest
      :min-height (str "calc(100vh - " appbar-height ")")
      :width (str "calc(100% - " dw "px)")
      :transition "all 0.2s ease-in-out"

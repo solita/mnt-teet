@@ -40,7 +40,8 @@
                                     :on-close-event task-controller/->CloseAddDocumentDialog}
        new-document]])
    [Grid {:container true}
-    [Grid {:item true :xs 6}
+    [Grid {:item  true :xs 6
+           :class (<class common-styles/grid-left-item)}
      [:div {:class (<class common-styles/top-info-spacing)}
       [breadcrumbs/breadcrumbs breadcrumbs]
       [:div

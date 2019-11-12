@@ -26,3 +26,8 @@
   {:font-size "1rem"
    :color theme-colors/error
    :position :absolute})
+
+(defn grid-left-item
+  []
+  {:display        :flex
+   :flex-direction :column})
