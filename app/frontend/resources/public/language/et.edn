@@ -1,4 +1,4 @@
-{:admin {:create-user "Lisan kasutaja"},
+{:admin {:title "Admin", :create-user "Lisan kasutaja"},
  :buttons {:cancel "Tühistan", :save "Salvestan", :add "Lisan"},
  :common
  {:hide-menu "Peidan menüü",

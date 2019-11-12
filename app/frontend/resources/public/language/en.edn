@@ -1,4 +1,4 @@
-{:admin {:create-user "Add user"},
+{:admin {:title "Admin", :create-user "Add user"},
  :buttons {:cancel "Cancel", :save "Save", :add "Add"},
  :common
  {:hide-menu "Hide menu",
