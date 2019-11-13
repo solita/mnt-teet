@@ -11,7 +11,9 @@
             [teet.map.map-layers :as map-layers]
             [teet.map.map-features :as map-features]
             [teet.theme.theme-spacing :as theme-spacing]
-            [teet.ui.material-ui :refer [TableCell TableSortLabel Button Link]]
+            [teet.ui.material-ui :refer [TableCell TableSortLabel Button Link
+                                         Table TableRow TableHead TableBody
+                                         TableSortLabel]]
             [teet.ui.text-field :refer [TextField]]
             postgrest-ui.elements
             [teet.localization :as localization :refer [tr]]
@@ -20,7 +22,9 @@
             [teet.theme.theme-colors :as theme-colors]
             [teet.common.common-controller :as common-controller]
             [teet.projects.projects-style :as projects-style]
-            [teet.ui.query :as query]))
+            [teet.ui.query :as query]
+            [teet.project.project-model :as project-model]
+            [postgrest-ui.components.scroll-sensor :as scroll-sensor]))
 
 (defmethod search-interface/format-search-result "project" [{:keys [id label]}]
   {:icon [icons/file-folder-open]
@@ -64,21 +68,72 @@
      [:span])])
 
 (defn- projects-listing-table [e! _app projects _breadcrumbs]
-  [:div
-   [:ul
-    (doall
-     (for [{:thk.project/keys [id name]} projects]
-       ^{:key id}
-       [:li name]))]])
+  (r/with-let [sort-column (r/atom [:thk.project/id :asc])
+               show-count (r/atom 20)
+               sort! (fn [col]
+                       (reset! show-count 20)
+                       (swap! sort-column
+                              (fn [[sort-col sort-dir]]
+                                (if (= sort-col col)
+                                  [sort-col (if (= sort-dir :asc)
+                                              :desc
+                                              :asc)]
+                                  [col :asc]))))
+
+               show-more! #(swap! show-count + 20)]
+    (let [[sort-col sort-dir] @sort-column]
+      [:<>
+       [Table {}
+        [TableHead {}
+         [TableRow {}
+          (doall
+           (for [column project-model/project-listing-display-columns]
+             ^{:key (name column)}
+             [TableCell {:style {:vertical-align :top}
+                         :sortDirection (if (= sort-col column)
+                                          (name sort-dir)
+                                          false)}
+              [TableSortLabel
+               {:active (= column sort-col)
+                :direction (if (= sort-dir :asc)
+                             "asc" "desc")
+                :on-click (r/partial sort! column)}
+               (tr [:fields column])]]))]]
+        [TableBody {}
+         (doall
+          (for [project (take @show-count
+                              ((if (= sort-dir :asc) identity reverse)
+                               (sort-by sort-col projects)))]
+            ^{:key (:thk.project/id project)}
+            [TableRow {}
+             (doall
+              (for [column project-model/project-listing-display-columns]
+                ^{:key (name column)}
+                [TableCell {}
+                 (str (project-model/get-column project column))]))]))]]
+       [scroll-sensor/scroll-sensor show-more!]])))
 
 (defn projects-listing [e! app]
-  [query/query {:e! e!
-                :query :thk.project/listing
-                :args {}
-                :state-path [:projects :listing]
-                :state (get-in app [:projects :listing])
-                :view projects-listing-table
-                :app app}]
+  (r/with-let [open? (r/atom true)]
+    (let [where (projects-controller/project-filter-where (get-in app [:projects :filter]))]
+      [panels/collapsible-panel
+       {:title     (str (tr [:projects :title])
+                        (when-let [total (get-in app [:projects :total-count])]
+                          (str " (" total ")")))
+        :open-atom open?
+        :action    [Button {:color    "secondary"
+                            :on-click #(e! (projects-controller/->ClearProjectsFilter))
+                            :size     "small"
+                            :disabled (empty? where)
+                            :start-icon (r/as-element [icons/content-clear])}
+                    (tr [:search :clear-filters])]}
+       [query/query {:e! e!
+                     :query :thk.project/listing
+                     :args {}
+                     :state-path [:projects :listing]
+                     :state (get-in app [:projects :listing])
+                     :view projects-listing-table
+                     :app app}]]))
 
   #_(r/with-let [open? (r/atom true)]
     (let [where (projects-controller/project-filter-where (get-in app [:projects :filter]))]

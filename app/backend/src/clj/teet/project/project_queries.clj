@@ -3,7 +3,7 @@
             [teet.project.project-model :as project-model]))
 
 
-(defmethod db-api/query :thk.project/listing [{db :db} args]
+(defmethod db-api/query :thk.project/listing [{db :db} _]
   {:query '[:find (pull ?e columns)
             :in $ columns
             :where [?e :thk.project/id _]]
