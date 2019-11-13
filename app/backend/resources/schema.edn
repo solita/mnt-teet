@@ -343,7 +343,7 @@
                :db/doc  "Procurement.ID/hanke_id"
                :db/cardinality :db.cardinality/one}]]}
 
- {:db/ident :migration/thk-project-info
+ {:db/ident :migration/integration-source-uri
   :txes     [[{:db/ident :integration/source-uri
                :db/valueType :db.type/string
                :db/cardinality :db.cardinality/one
