@@ -1,6 +1,8 @@
 (ns teet.project.project-model
   "Common project datamodel metadata."
-  #?(:cljs (:require [teet.ui.format :as format])))
+  #?(:cljs (:require [teet.ui.format :as format]
+                     [clojure.string :as str])
+     :clj (:require [clojure.string :as str])))
 
 (def project-listing-columns
   [:thk.project/id
@@ -47,3 +49,19 @@
      (str (format/date start) " \u2013 " (format/date end))))
 #?(:cljs
    (defmethod format-column-value :default [_ v] (str v)))
+
+(defn filtered-projects [projects filters]
+  (filter (fn [project]
+            (every? (fn [[filter-attribute filter-value]]
+                      (let [v (get project filter-attribute)]
+                        (cond
+                          (string? filter-value)
+                          (and v (str/includes? (str/lower-case v)
+                                                (str/lower-case filter-value)))
+
+                          (number? filter-value)
+                          (= v filter-value)
+
+                          :else true)))
+                    filters))
+          projects))

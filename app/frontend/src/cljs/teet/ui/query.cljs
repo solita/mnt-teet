@@ -45,6 +45,7 @@
            (e! (->Query query args state-path)))
          (if state
            ;; Results loaded, call the view
+           ^{:key "query-result-view"}
            [view e! app state breadcrumbs]
 
            ;; Results not loaded, show skeleton or loading spinner
