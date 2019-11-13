@@ -24,7 +24,8 @@
             [teet.projects.projects-style :as projects-style]
             [teet.ui.query :as query]
             [teet.project.project-model :as project-model]
-            [postgrest-ui.components.scroll-sensor :as scroll-sensor]))
+            [postgrest-ui.components.scroll-sensor :as scroll-sensor]
+            [teet.ui.skeleton :as skeleton]))
 
 (defmethod search-interface/format-search-result "project" [{:keys [id label]}]
   {:icon [icons/file-folder-open]
@@ -67,8 +68,27 @@
      "road_nr" [column-filter e! filters "road_nr" "number"]
      [:span])])
 
+(defn- projects-listing-header
+  ([] (projects-listing-header :_ []))
+  ([sort! [sort-col sort-dir]]
+   [TableHead {}
+    [TableRow {}
+     (doall
+      (for [column project-model/project-listing-display-columns]
+        ^{:key (name column)}
+        [TableCell {:style {:vertical-align :top}
+                    :sortDirection (if (= sort-col column)
+                                     (name sort-dir)
+                                     false)}
+         [TableSortLabel
+          {:active (= column sort-col)
+           :direction (if (= sort-dir :asc)
+                        "asc" "desc")
+           :on-click (r/partial sort! column)}
+          (tr [:fields column])]]))]]))
+
 (defn- projects-listing-table [e! _app projects _breadcrumbs]
-  (r/with-let [sort-column (r/atom [:thk.project/id :asc])
+  (r/with-let [sort-column (r/atom [:thk.project/name :asc])
                show-count (r/atom 20)
                sort! (fn [col]
                        (reset! show-count 20)
@@ -81,24 +101,10 @@
                                   [col :asc]))))
 
                show-more! #(swap! show-count + 20)]
-    (let [[sort-col sort-dir] @sort-column]
+    (let [[sort-col sort-dir :as sort-column] @sort-column]
       [:<>
        [Table {}
-        [TableHead {}
-         [TableRow {}
-          (doall
-           (for [column project-model/project-listing-display-columns]
-             ^{:key (name column)}
-             [TableCell {:style {:vertical-align :top}
-                         :sortDirection (if (= sort-col column)
-                                          (name sort-dir)
-                                          false)}
-              [TableSortLabel
-               {:active (= column sort-col)
-                :direction (if (= sort-dir :asc)
-                             "asc" "desc")
-                :on-click (r/partial sort! column)}
-               (tr [:fields column])]]))]]
+        [projects-listing-header sort! sort-column]
         [TableBody {}
          (doall
           (for [project (take @show-count
@@ -110,7 +116,7 @@
               (for [column project-model/project-listing-display-columns]
                 ^{:key (name column)}
                 [TableCell {}
-                 (str (project-model/get-column project column))]))]))]]
+                 (project-model/format-column-value column (project-model/get-column project column))]))]))]]
        [scroll-sensor/scroll-sensor show-more!]])))
 
 (defn projects-listing [e! app]
@@ -133,7 +139,11 @@
                      :state-path [:projects :listing]
                      :state (get-in app [:projects :listing])
                      :view projects-listing-table
-                     :app app}]]))
+                     :app app
+                     :skeleton [:<>
+                                [Table {}
+                                 [projects-listing-header]]
+                                [skeleton/skeleton]]}]]))
 
   #_(r/with-let [open? (r/atom true)]
     (let [where (projects-controller/project-filter-where (get-in app [:projects :filter]))]
