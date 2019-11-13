@@ -22,6 +22,9 @@
   (when-not (str/blank? str)
     (BigDecimal. str)))
 
+;; TODO: Check that more recent CSV has the same columns
+;; TODO: Add project schema to resources/schema.edn
+;; TODO: Change Postgres function below to only add id and geometry
 (defn import-thk-projects! [db input]
   (doseq [prj (parse-thk-export-csv input)]
     (when (not= "TUGI" (prj "PlanObject.PlanGroupFK")) ;; TEET-129

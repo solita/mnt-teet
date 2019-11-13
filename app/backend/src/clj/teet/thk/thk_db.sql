@@ -15,3 +15,14 @@ VALUES (:id, :plan_group_fk, :road_nr, :bridge_nr,
         daterange(to_date(:estimated_start,'DD.MM.YYYY'),
                   to_date(:estimated_end,'DD.MM.YYYY') + 1))
 ON CONFLICT DO NOTHING;
+
+-- TODO: Do we need impl.update_project_geometry() trigger in R__Road_registry.sql
+--       We could just compute the geometry on upsert
+-- name: upsert-thk-project!
+-- INSERT INTO teet.thk_project
+-- (id, geometry)
+-- VALUES(
+--   :id,
+--   teet.road_part_geometry(:road_nr::INTEGER, :carriageway::INTEGER, :km_range)
+-- )
+-- ON CONFLICT DO NOTHING; -- This is actually not upsert, right?
