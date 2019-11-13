@@ -304,13 +304,52 @@
            :db/cardinality :db.cardinality/one
            :db/doc "User's Estonian person ID"
            :db/unique :db.unique/identity}]]}
- ;; TODO: Finish
- #_{:db/ident :project/project-info ; tms
-  :txes [[{:db/ident :project/project-id
-           :db/valueType :db.type/string ; is it?
-           :db/cardinality :db.cardinality/one
-           :db/doc "THK project id"
-           :db/unique :db.unique/identity}]]}]
+ {:db/ident :migration/thk-project-info
+  :txes     [[{:db/ident       :thk.project/id
+               :db/valueType   :db.type/string
+               :db/cardinality :db.cardinality/one
+               :db/doc         "THK project id"
+               :db/unique      :db.unique/identity}
+              {:db/ident :thk.project/name
+               :db/valueType :db.type/string
+               :db/cardinality :db.cardinality/one}
+              {:db/ident :thk.project/road-nr
+               :db/valueType :db.type/long
+               :db/cardinality :db.cardinality/one}
+              {:db/ident :thk.project/bridge-nr
+               :db/valueType :db.type/long
+               :db/cardinality :db.cardinality/one}
+              {:db/ident :thk.project/end-m
+               :db/valueType :db.type/long
+               :db/cardinality :db.cardinality/one}
+              {:db/ident :thk.project/start-m
+               :db/valueType :db.type/long
+               :db/cardinality :db.cardinality/one}
+              {:db/ident :thk.project/carriageway
+               :db/valueType :db.type/long
+               :db/cardinality :db.cardinality/one}
+              {:db/ident :thk.project/estimated-start-date
+               :db/valueType :db.type/instant
+               :db/cardinality :db.cardinality/one}
+              {:db/ident :thk.project/estimated-end-date
+               :db/valueType :db.type/instant
+               :db/cardinality :db.cardinality/one}
+              {:db/ident :thk.project/procurement-nr
+               :db/valueType :db.type/string
+               :db/doc "Procurement.ProcurementNo. Can contain text"
+               :db/cardinality :db.cardinality/one}
+              {:db/ident :thk.project/procurement-id
+               :db/valueType :db.type/long
+               :db/doc  "Procurement.ID/hanke_id"
+               :db/cardinality :db.cardinality/one}]]}
+
+ {:db/ident :migration/thk-project-info
+  :txes     [[{:db/ident :integration/source-uri
+               :db/valueType :db.type/string
+               :db/cardinality :db.cardinality/one
+               :db/doc "URI of data imported by integration transaction"}]]}]
+
+
 ;; Project
 ;; - Lifecycle phase
 ;;   - Activity (formerly known as phase)
