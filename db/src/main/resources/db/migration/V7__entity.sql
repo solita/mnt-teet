@@ -11,14 +11,14 @@ CREATE TABLE teet.entity (
 CREATE INDEX entity_geometry_idx ON teet.entity USING GIST (geometry);
 
 -- Create function that allows backend to upsert entity info
-CREATE FUNCTION teet.store_entity_info(id BIGINT, type entity_type, tooltip TEXT,
+CREATE FUNCTION teet.store_entity_info(id TEXT, type entity_type, tooltip TEXT,
                                        road INTEGER, carriageway INTEGER, start_m INTEGER, end_m INTEGER)
 RETURNS BIGINT
 AS $$
 INSERT
   INTO teet.entity
        (id, type, tooltip, geometry)
-VALUES (id, type, tooltip,
+VALUES (id::TEXT, type, tooltip,
         teet.road_part_geometry(road, carriageway, numrange(start_m/1000,end_m/1000)))
 ON CONFLICT (id) DO
 UPDATE SET tooltip = EXCLUDED.tooltip,
