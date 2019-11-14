@@ -2,11 +2,9 @@
   "Projects view"
   (:require [reagent.core :as r]
             [herb.core :refer [<class]]
-            [postgrest-ui.components.listing :as postgrest-listing]
             [teet.projects.projects-controller :as projects-controller]
             [teet.search.search-interface :as search-interface]
             [teet.ui.icons :as icons]
-            [teet.login.login-paths :as login-paths]
             [teet.map.map-view :as map-view]
             [teet.map.map-layers :as map-layers]
             [teet.map.map-features :as map-features]
@@ -20,13 +18,10 @@
             [teet.ui.panels :as panels]
             [clojure.string :as string]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.common.common-controller :as common-controller]
-            [teet.projects.projects-style :as projects-style]
-            [teet.ui.query :as query]
             [teet.project.project-model :as project-model]
             [postgrest-ui.components.scroll-sensor :as scroll-sensor]
-            [teet.ui.skeleton :as skeleton]
-            [teet.log :as log]))
+            [teet.project.project-controller :as project-controller]
+            [teet.projects.projects-style :as projects-style]))
 
 (defmethod search-interface/format-search-result "project" [{:keys [id label]}]
   {:icon [icons/file-folder-open]
@@ -101,7 +96,7 @@
                                       ;; filters/results have changed
                                       (reset! show-count 20))
       :reagent-render
-      (fn [filters projects]
+      (fn [e! filters projects]
         (let [[sort-col sort-dir] @sort-column]
           [:<>
            [Table {}
@@ -115,7 +110,8 @@
                                   ((if (= sort-dir :asc) identity reverse)
                                    (sort-by sort-col projects)))]
                 ^{:key (:thk.project/id project)}
-                [TableRow {}
+                [TableRow {:on-click (e! project-controller/->SelectProject (:thk.project/id project))
+                           :class (<class projects-style/row-style)}
                  (doall
                   (for [column project-model/project-listing-display-columns]
                     ^{:key (name column)}
@@ -141,7 +137,7 @@
                             :disabled (empty? @filters)
                             :start-icon (r/as-element [icons/content-clear])}
                     (tr [:search :clear-filters])]}
-       [projects-listing-table filters projects]])))
+       [projects-listing-table e! filters projects]])))
 
 
 (def ^:const project-pin-resolution-threshold 100)
