@@ -26,7 +26,9 @@
 
  :projects-list {:path "/projects/list"
                  :crumb (tr [:projects :list-view])
-                 :view teet.projects.projects-view/projects-list-page}
+                 :view teet.projects.projects-view/projects-list-page
+                 :state {:query :thk.project/listing
+                         :args {}}}
 
  :project {:path "/projects/:project"
            :parent :projects-list

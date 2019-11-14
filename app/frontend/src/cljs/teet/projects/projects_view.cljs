@@ -58,30 +58,30 @@
            :direction (if (= sort-direction :asc)
                         "asc" "desc")
            :on-click (r/partial sort! column)}
-          (tr [:fields column])
-          (case column
-            :thk.project/name
-            [TextField {:value (or (get @filters column) "")
-                        :type "text"
-                        :variant :filled
-                        :start-icon icons/action-search
-                        :input-class (<class table-filter-style)
-                        :on-change #(swap! filters assoc column (-> % .-target .-value))}]
+          (tr [:fields column])]
+         (case column
+           :thk.project/name
+           [TextField {:value (or (get @filters column) "")
+                       :type "text"
+                       :variant :filled
+                       :start-icon icons/action-search
+                       :input-class (<class table-filter-style)
+                       :on-change #(swap! filters assoc column (-> % .-target .-value))}]
 
-            :thk.project/road-nr
-            [TextField {:value (or (get @filters column) "")
-                        :type "number"
-                        :variant :filled
-                        :start-icon icons/action-search
-                        :input-class (<class table-filter-style)
-                        :on-change #(swap! filters assoc column
-                                           (let [v (-> % .-target .-value)]
-                                             (if (string/blank? v)
-                                               nil
-                                               (js/parseInt v))))}]
-            [:span])]]))]]))
+           :thk.project/road-nr
+           [TextField {:value (or (get @filters column) "")
+                       :type "number"
+                       :variant :filled
+                       :start-icon icons/action-search
+                       :input-class (<class table-filter-style)
+                       :on-change #(swap! filters assoc column
+                                          (let [v (-> % .-target .-value)]
+                                            (if (string/blank? v)
+                                              nil
+                                              (js/parseInt v))))}]
+           [:span])]))]]))
 
-(defn- projects-listing-table [filters projects]
+(defn- projects-listing-table [_ _]
   (let [sort-column (r/atom [:thk.project/name :asc])
         show-count (r/atom 20)
         sort! (fn [col]
@@ -123,35 +123,25 @@
                      (project-model/format-column-value column (project-model/get-column project column))]))]))]]
            [scroll-sensor/scroll-sensor show-more!]]))})))
 
-(defn projects-listing [e! app]
+(defn projects-listing [e! all-projects]
   (r/with-let [open? (r/atom true)
                filters (r/atom {})
-               clear-filters! #(reset! filters {})
-               view (fn [_e! _app projects _breadcrumbs]
-                      (let [projects (project-model/filtered-projects projects @filters)]
-                        ^{:key "projects-listing-panel"}
-                        [panels/collapsible-panel
-                         {:title (str (tr [:projects :title])
-                                      (when-let [total (and (seq projects)
-                                                            (count projects))]
-                                        (str " (" total ")")))
-                          :open-atom open?
-                          :action    [Button {:color    "secondary"
-                                              :on-click clear-filters!
-                                              :size     "small"
-                                              :disabled (empty? @filters)
-                                              :start-icon (r/as-element [icons/content-clear])}
-                                      (tr [:search :clear-filters])]}
-                         [projects-listing-table filters projects]]))]
-    ^{:key "project-listing-query"}
-    [query/query {:e! e!
-                  :query :thk.project/listing
-                  :args {}
-                  :state-path [:projects :listing]
-                  :state (get-in app [:projects :listing])
-                  :view view
-                  :app app
-                  :skeleton [view nil nil nil nil]}]))
+               clear-filters! #(reset! filters {})]
+    (let [projects (project-model/filtered-projects all-projects @filters)]
+      ^{:key "projects-listing-panel"}
+      [panels/collapsible-panel
+       {:title (str (tr [:projects :title])
+                    (when-let [total (and (seq projects)
+                                          (count projects))]
+                      (str " (" total ")")))
+        :open-atom open?
+        :action    [Button {:color    "secondary"
+                            :on-click clear-filters!
+                            :size     "small"
+                            :disabled (empty? @filters)
+                            :start-icon (r/as-element [icons/content-clear])}
+                    (tr [:search :clear-filters])]}
+       [projects-listing-table filters projects]])))
 
 
 (def ^:const project-pin-resolution-threshold 100)
@@ -204,6 +194,6 @@
                                           (generate-mvt-layers (get-in app [:map :map-restrictions]) api-url))}
      (:map app)]))
 
-(defn projects-list-page [e! app]
+(defn projects-list-page [e! app projects _breadcrumbs]
   [:div {:style {:padding "1.5rem"}}
-   [projects-listing e! app]])
+   [projects-listing e! projects]])
