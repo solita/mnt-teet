@@ -73,39 +73,3 @@
                          :thk.project/procurement-id       (->int (prj "Procurement.ID"))
                          :thk.project/estimated-start-date (->date (prj "Activity.EstStart"))
                          :thk.project/estimated-end-date   (->date (prj "Activity.EstEnd"))})))})))
-
-(defn process-thk-csv-file [connection ])
-#_(thk-db/upsert-thk-project!
-    db
-    {:id               (->int (prj "PlanObject.Id"))
-     :plan_group_fk    (prj "PlanObject.PlanGroupFK")
-     :road_nr          (->int (prj "PlanObject.RoadNr"))
-     :bridge_nr        (->int (prj "PlanObject.BridgeNr"))
-
-     :km_start         (->num (prj "PlanObject.KmStart"))
-     :km_end           (->num (prj "PlanObject.KmEnd"))
-     :carriageway      (->int (prj "PlanObject.Carriageway"))
-
-     :name             (prj "PlanObject.ObjectName")
-     :oper_method      (prj "PlanObject.OperMethod")
-     :object_type_fk   (prj "ObjectType.ObjectTypeFK")
-     :region_fk        (->int (prj "PlanObject.regionfk"))
-     :county_fk        (->int (prj "PlanObject.countyfk"))
-
-     :customer_unit    (prj "PlanObject.CustomerUnit")
-     :updated          (prj "PlanObject.UpdStamp")
-     :procurement_no   (prj "Procurement.ProcurementNo")
-     :procurement_id   (->int (prj "Procurement.ID"))
-
-     :activity_id      (->int (prj "Activity.Id"))
-     :activity_type_fk (prj "Activity.ActivityTypeFK")
-
-     :estimated_start  (prj "Activity.EstStart")
-     :estimated_end    (prj "Activity.EstEnd")})
-
-
-(defn -main [& _]
-  (import-thk-projects! {:dbtype "postgres"
-                         :dbname "teet"
-                         :user   "teet"}
-                        System/in))
