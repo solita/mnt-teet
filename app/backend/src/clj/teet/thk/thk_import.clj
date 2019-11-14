@@ -2,9 +2,7 @@
   (:require [clojure.data.csv :as csv]
             [clojure.java.io :as io]
             [clojure.string :as str]
-            [datomic.client.api :as d]
-            [taoensso.timbre :as log]
-            [teet.util.datomic :as du])
+            [datomic.client.api :as d])
   (:import (org.apache.commons.io.input BOMInputStream)
            (java.text SimpleDateFormat)))
 
@@ -52,7 +50,7 @@
                         %)]
     (d/transact
      connection
-     {:tx-data (into [{:db/id                  "datomic.tx"
+     {:tx-data (into [{:db/id "datomic.tx"
                        :integration/source-uri url}]
                      (for [prj projects
                            :when (and            ;;FIXME: Do we need non road projcets?
