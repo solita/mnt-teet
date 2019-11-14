@@ -51,7 +51,7 @@ AS $$
 INSERT
   INTO teet.entity
        (id, type, tooltip, geometry)
-VALUES (id::TEXT, type, tooltip,
+VALUES (id::BIGINT, type, tooltip,
         teet.road_part_geometry(road, carriageway, numrange(start_m/1000,end_m/1000)))
 ON CONFLICT (id) DO
 UPDATE SET tooltip = EXCLUDED.tooltip,
