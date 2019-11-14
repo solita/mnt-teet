@@ -81,7 +81,7 @@ CREATE OR REPLACE FUNCTION teet.geojson_entity_cluster_pins(type entity_type, cl
 RETURNS TEXT
 AS $$
 WITH clusters AS (
-     SELECT unnest(st_clusterwithin(st_centroid(e.geometry), cluster_distance)) geom
+     SELECT unnest(st_clusterwithin(e.geometry, cluster_distance)) geom
      FROM teet.entity e
      WHERE NOT ST_IsEmpty(e.geometry) AND e.type = type
 )
@@ -90,7 +90,7 @@ FROM (SELECT 'FeatureCollection' as type,
              array_to_json(array_agg(f)) AS features
       FROM (SELECT 'Feature' as type,
                    ST_AsGeoJSON(st_centroid(c.geom))::json AS geometry,
-                   json_build_object('count', ST_NumGeometries(c.geom))
+                   json_build_object('tooltip', ST_NumGeometries(c.geom)::TEXT)
            AS properties
            FROM clusters c) f) fc;
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;
