@@ -47,7 +47,7 @@
     (is (= (thk-import/project-datomic-attributes {"PlanObject.Id" "some-id"
                                                    "PlanObject.ObjectName" nil})
            {:thk.project/id "some-id"})))
-  (testing "all the necessary attributes are obtained"
+  #_(testing "all the necessary attributes are obtained"
     (is (= (thk-import/project-datomic-attributes test-row)
            #:thk.project{:id "1234"
                          :road-nr 580934893
