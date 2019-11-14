@@ -123,7 +123,7 @@
                                 :where [?e :thk.project/road-nr _]]
                               db changed-entity-ids)]
     (log/info "Update entity info for" (count changed-entity-ids) "projects.")
-    @(client/post api-url
+    @(client/post (str api-url "rpc/store_entity_info")
                   {:headers {"Content-Type" "application/json"
                              "Authorization" (str "Bearer " (login-api-token/create-backend-token
                                                              api-shared-secret))}
