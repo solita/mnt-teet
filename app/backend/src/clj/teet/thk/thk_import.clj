@@ -3,7 +3,8 @@
             [clojure.java.io :as io]
             [clojure.string :as str]
             [datomic.client.api :as d]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [teet.util.datomic :as du])
   (:import (org.apache.commons.io.input BOMInputStream)
            (java.text SimpleDateFormat)))
 
@@ -33,10 +34,12 @@
   (when-not (str/blank? str)
     (BigDecimal. str)))
 
+
+
 ;; TODO: Check that more recent CSV has the same columns
 ;; TODO: Add project schema to resources/schema.edn
 ;; TODO: Change Postgres function below to only add id and geometry
-(defn import-thk-projects! [connection input]
+(defn import-thk-projects! [connection url projects]
   (let [date-format (SimpleDateFormat. "yyyy-MM-dd")
         ->date #(some->> %
                          (.parse date-format))
@@ -47,30 +50,31 @@
                             m))
                         {}
                         %)]
-    (d/transact connection
-                {:tx-data (into [{:db/id                  "datomic.tx"
-                                  :integration/source-uri "s3://fixme.csv"}]
-                                (for [prj (parse-thk-export-csv input)
-                                      :when (and            ;;FIXME: Do we need non road projcets?
-                                              (not (str/blank? (prj "PlanObject.KmStart")))
-                                              (not (excluded-project-types (prj "PlanObject.PlanGroupFK"))))]
-                                  (without-nils
-                                    {:thk.project/id                   (prj "PlanObject.Id")
-                                     :thk.project/road-nr              (->int (prj "PlanObject.RoadNr"))
-                                     :thk.project/bridge-nr            (->int (prj "PlanObject.BridgeNr"))
+    (d/transact
+     connection
+     {:tx-data (into [{:db/id                  "datomic.tx"
+                       :integration/source-uri url}]
+                     (for [prj projects
+                           :when (and            ;;FIXME: Do we need non road projcets?
+                                  (not (str/blank? (prj "PlanObject.KmStart")))
+                                  (not (excluded-project-types (prj "PlanObject.PlanGroupFK"))))]
+                       (without-nils
+                        {:thk.project/id                   (prj "PlanObject.Id")
+                         :thk.project/road-nr              (->int (prj "PlanObject.RoadNr"))
+                         :thk.project/bridge-nr            (->int (prj "PlanObject.BridgeNr"))
 
-                                     :thk.project/start-m              (int (* 1000 (->num (prj "PlanObject.KmStart"))))
-                                     :thk.project/end-m                (int (* 1000 (->num (prj "PlanObject.KmEnd"))))
-                                     :thk.project/carriageway          (->int (prj "PlanObject.Carriageway"))
+                         :thk.project/start-m              (int (* 1000 (->num (prj "PlanObject.KmStart"))))
+                         :thk.project/end-m                (int (* 1000 (->num (prj "PlanObject.KmEnd"))))
+                         :thk.project/carriageway          (->int (prj "PlanObject.Carriageway"))
 
-                                     :thk.project/name                 (prj "PlanObject.ObjectName")
+                         :thk.project/name                 (prj "PlanObject.ObjectName")
 
-                                     :thk.project/procurement-nr       (prj "Procurement.ProcurementNo")
-                                     :thk.project/procurement-id       (->int (prj "Procurement.ID"))
-                                     :thk.project/estimated-start-date (->date (prj "Activity.EstStart"))
-                                     :thk.project/estimated-end-date   (->date (prj "Activity.EstEnd"))})))})))
+                         :thk.project/procurement-nr       (prj "Procurement.ProcurementNo")
+                         :thk.project/procurement-id       (->int (prj "Procurement.ID"))
+                         :thk.project/estimated-start-date (->date (prj "Activity.EstStart"))
+                         :thk.project/estimated-end-date   (->date (prj "Activity.EstEnd"))})))})))
 
-
+(defn process-thk-csv-file [connection ])
 #_(thk-db/upsert-thk-project!
     db
     {:id               (->int (prj "PlanObject.Id"))

@@ -2,11 +2,16 @@
   "THK integration lambdas"
   (:require [amazonica.aws.s3 :as s3]
             [cheshire.core :as cheshire]
-            [clojure.data.csv :as csv]
             [clojure.java.io :as io]
             [clojure.stacktrace :as stacktrace]
             [clojure.string :as str]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.thk.thk-import :as thk-import]
+            [teet.util.datomic :as du]
+            [teet.environment :as environment]
+            [datomic.client.api :as d]
+            [org.httpkit.client :as client]
+            [teet.login.login-api-token :as login-api-token]))
 
 (def test-event
   {:input "{\"Records\":[{\"s3\":{\"bucket\":{\"name\":\"teet-dev-csv-import\"},\"object\":{\"key\":\"thk/unprocessed/not_hep.csv\"}}}]}"})
@@ -40,11 +45,11 @@
 (defn- s3-file-data [{:keys [input] :as ctx}]
   (try
     (->> input
-        :Records
-        first
-        :s3
-        bucket-and-key
-        (assoc ctx :s3))
+         :Records
+         first
+         :s3
+         bucket-and-key
+         (assoc ctx :s3))
     (catch Exception e
       (throw (ctx-exception ctx "Failed to get S3 file data" e)))))
 
@@ -59,9 +64,7 @@
 (defn- file->csv [{:keys [file] :as ctx}]
   (try
     (assoc ctx :csv
-           (-> file
-               (io/reader :encoding "UTF-8")
-               (csv/read-csv :separator \;)))
+           (thk-import/parse-thk-export-csv file))
     (catch Exception e
       (throw (ctx-exception ctx "Failed to parse CSV file" e))))) ;; TODO: THK import uses ; as separator
 
@@ -72,9 +75,13 @@
     (throw (ctx-exception ctx "Failed to parse updates from CSV data"))
     ctx))
 
-(defn- run-updates [ctx]
-  ;; TODO: update the projects either in Datomic or Postgres
-  ctx)
+(defn- upsert-projects [{:keys [bucket file-key csv connection] :as ctx}]
+  (let [import-tx-result (thk-import/import-thk-projects! connection
+                                                          (str "s3://" bucket "/" file-key)
+                                                          csv)]
+    (assoc ctx
+           :changed-entity-ids (du/changed-entity-ids import-tx-result)
+           :db (:db-after import-tx-result))))
 
 (defn- move-file [bucket old-key new-key]
   (s3/copy-object bucket old-key bucket new-key)
@@ -113,6 +120,29 @@
                                                                 "\n"
                                                                 stack-trace)))))
 
+(defn- update-entity-info [{:keys [changed-entity-ids db api-url api-shared-secret]}]
+  (let [updated-projects (d/q '[:find (pull ?e [:db/id :thk.project/name :thk.project/road-nr :thk.project/carriageway
+                                                :thk.project/start-m :thk.project/end-m])
+                                :in $ [?e ...]
+                                :where [?e :thk.project/road-nr _]]
+                              db changed-entity-ids)]
+    (log/info "Update entity info for" (count changed-entity-ids) "projects.")
+    (client/post api-url
+                 {:headers {"Content-Type" "application/json"
+                            "Authorization" (str "Bearer " (login-api-token/create-backend-token
+                                                            api-shared-secret))}
+                  :body (cheshire/encode
+                         (for [{id :db/id
+                                :thk.project/keys [name road-nr carriageway start-m end-m]}
+                               (map first updated-projects)]
+                           {:id (str id)
+                            :type "project"
+                            :road road-nr
+                            :carriageway carriageway
+                            :start_m start-m
+                            :end_m end-m
+                            :tooltip name}))})))
+
 (defn- on-error [{:keys [error] :as ctx}]
   ;; TODO: Metrics?
   (log/error error)
@@ -123,13 +153,17 @@
 (defn process-thk-file
   [event]
   (try
-    (let [result (-> {:event event}
+    (let [result (-> {:event event
+                      :connection (environment/datomic-connection)
+                      :api-url (environment/config-value :api-url)
+                      :api-shared-secret (environment/config-value :auth :jwt-secret)}
                      decode-input
                      s3-file-data
                      load-file-from-s3
                      file->csv
                      csv->updates
-                     run-updates
+                     upsert-projects
+                     update-entity-info
                      move-file-to-processed)]
       (log/event :thk-file-processed
                  {:input result}))
