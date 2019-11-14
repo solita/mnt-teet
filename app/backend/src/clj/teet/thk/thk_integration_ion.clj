@@ -164,3 +164,18 @@
                  {:input result}))
     (catch Exception e
       (on-error (ex-data e)))))
+
+(defn import-thk-local-file
+  [filepath]
+  (try
+    (let [result (ctx-> {:file (io/input-stream (io/file filepath))
+                         :connection (environment/datomic-connection)
+                         :api-url (environment/config-value :api-url)
+                         :api-shared-secret (environment/config-value :auth :jwt-secret)}
+                        file->csv
+                        upsert-projects
+                        update-entity-info)]
+      (log/event :thk-file-processed
+                 {:input result}))
+    (catch Exception e
+      (on-error (ex-data e)))))

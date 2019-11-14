@@ -1,7 +1,8 @@
 (ns user
   (:require [datomic.client.api :as d]
             [teet.main :as main]
-            [teet.environment :as environment]))
+            [teet.environment :as environment]
+            [teet.thk.thk-integration-ion :as thk-integration]))
 
 (defn go []
   (main/restart)
@@ -25,3 +26,7 @@
 
 ;; TODO: Add function for importing projects to Datomic
 ;; See teet.thk.thk-import
+
+(defn import-thk-from-local-file
+  [filepath]
+  (thk-integration/import-thk-local-file filepath))
