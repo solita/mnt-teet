@@ -58,9 +58,6 @@ $PSQL_TEET "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA teet TO teet_anon;"
 echo "Adding all privileges in schema teet to teet_anon."
 $PSQL_TEET "GRANT SELECT, UPDATE, INSERT, DELETE ON ALL TABLES IN SCHEMA teet TO teet_user;"
 
-echo "Importing THK projects with teet.thk.thk-import/run-test-import!"
-aws s3 cp s3://teet-dev-files/db/THK_export.csv - | (cd ../app/backend && clj -m teet.thk.thk-import)
-
 RESTRICTIONS_DUMP_FILE=KITSENDUSED.gpkg
 
 echo "Importing Maa-amet restrictions data dump"
