@@ -1,5 +1,5 @@
 -- Entity types, add new ones as need
-CREATE TYPE entity_type AS ENUM ('project', 'activity', 'task');
+CREATE TYPE entity_type AS ENUM ('project', 'activity', 'task', 'document');
 
 CREATE TABLE teet.entity (
   id BIGINT PRIMARY KEY, -- :db/id of the entity
@@ -8,6 +8,7 @@ CREATE TABLE teet.entity (
   geometry geometry(Geometry,3301) -- Geometry of this entity
 );
 
+CREATE INDEX entity_type_idx ON teet.entity (type);
 CREATE INDEX entity_geometry_idx ON teet.entity USING GIST (geometry);
 
 -- Create function that allows backend to upsert entity info
@@ -24,9 +25,10 @@ ON CONFLICT (id) DO
 UPDATE SET tooltip = EXCLUDED.tooltip,
            geometry = teet.road_part_geometry(road, carriageway, numrange(start_m/1000,end_m/1000))
 RETURNING id;
-$$ LANGUAGE SQL;
+$$ LANGUAGE SQL SECURITY DEFINER;
 
 CREATE ROLE teet_backend NOLOGIN;
+GRANT teet_backend TO authenticator;
 GRANT USAGE ON SCHEMA teet TO teet_backend;
 GRANT EXECUTE ON FUNCTION teet.store_entity_info TO teet_backend;
 
