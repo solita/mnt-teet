@@ -11,6 +11,38 @@ CREATE TABLE teet.entity (
 CREATE INDEX entity_type_idx ON teet.entity (type);
 CREATE INDEX entity_geometry_idx ON teet.entity USING GIST (geometry);
 
+CREATE OR REPLACE FUNCTION teet.road_part_geometry (_tee INTEGER, _carriageway INTEGER, _km NUMRANGE)
+RETURNS GEOMETRY
+AS $$
+DECLARE
+  geom geometry;
+  r RECORD;
+  startm INTEGER;
+  endm INTEGER;
+  mrange NUMRANGE;
+  start_point NUMERIC;
+  end_point NUMERIC;
+BEGIN
+  -- Convert km_range to start/end meters
+  startm := (lower(_km)*1000.0)::INTEGER;
+  endm := (upper(_km)*1000.0)::INTEGER;
+  mrange := numrange(startm::NUMERIC, endm::NUMERIC);
+  FOR r IN SELECT g.stee, g.algus, g.lopp, g.teeosa, g.shap_leng, St_LineMerge(g.mgeom) AS line
+             FROM gis.riigi_teeosa_mgeom g
+            WHERE g.tee = _tee and g.stee = _carriageway
+              AND mrange && numrange(g.algus::NUMERIC, g.lopp::NUMERIC)
+            ORDER BY g.teeosa
+  LOOP
+    -- Clamp start/end point for this segment between 0 and 1
+    start_point := GREATEST(0,LEAST((startm-r.algus)/r.shap_leng,1));
+    end_point := GREATEST(0,LEAST((endm-r.algus)/r.shap_leng,1));
+    --RAISE NOTICE 'startm - endmm: % - % , algus: %, len: %, taking part % - %', startm, endm, r.algus, r.shap_leng, start_point, end_point;
+    geom := ST_LineMerge(ST_Collect(geom, ST_LineSubstring(r.line, start_point, end_point)));
+  END LOOP;
+  RETURN geom;
+END
+$$ LANGUAGE plpgsql STABLE;
+
 -- Create function that allows backend to upsert entity info
 CREATE FUNCTION teet.store_entity_info(id TEXT, type entity_type, tooltip TEXT,
                                        road INTEGER, carriageway INTEGER, start_m INTEGER, end_m INTEGER)
