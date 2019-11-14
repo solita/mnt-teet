@@ -172,14 +172,14 @@
                            :layer-controls? true
                            :layers (merge {:thk-projects
                                            (map-layers/mvt-layer api-url
-                                                                 "mvt_thk_projects"
-                                                                 {"q" (get-in app [:projects :filter :text])}
+                                                                 "mvt_entities"
+                                                                 {"type" "project"}
                                                                  map-features/project-line-style
                                                                  {:max-resolution project-pin-resolution-threshold})
                                            :thk-project-pins
                                            (map-layers/geojson-layer api-url
-                                                                     "geojson_thk_project_pins"
-                                                                     {"q" (get-in app [:projects :filter :text])}
+                                                                     "geojson_entity_pins"
+                                                                     {"type" "project"}
                                                                      map-features/project-pin-style
                                                                      {:min-resolution project-pin-resolution-threshold
                                                                       :fit-on-load? true})}
