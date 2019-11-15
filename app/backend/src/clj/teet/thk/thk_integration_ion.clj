@@ -81,7 +81,7 @@
 
 (defn- move-file [bucket old-key new-key]
   (s3/copy-object bucket old-key bucket new-key)
-  (s3/delete-object :bucket-name bucket :key old-key))
+  (s3/delete-object {:bucket-name bucket :key old-key}))
 
 (defn- change-directory [file-key directory]
   (str directory
@@ -107,14 +107,14 @@
 
 (defn- write-error-to-log [{{:keys [bucket file-key]} :s3
                             {:keys [message stack-trace]}  :error}]
-  (s3/put-object :bucket-name bucket
-                 :key (-> file-key
-                          (change-directory log-directory)
-                          (add-suffix (str (System/currentTimeMillis)
-                                           ".error.txt")))
-                 :input-stream (io/input-stream (.getBytes (str message
-                                                                "\n"
-                                                                stack-trace)))))
+  (s3/put-object {:bucket-name  bucket
+                  :key          (-> file-key
+                                    (change-directory log-directory)
+                                    (add-suffix (str (System/currentTimeMillis)
+                                                     ".error.txt")))
+                  :input-stream (io/input-stream (.getBytes (str message
+                                                                 "\n"
+                                                                 stack-trace)))}))
 
 (defn- update-entity-info [{:keys [changed-entity-ids db api-url api-shared-secret]}]
   (let [updated-projects (d/q '[:find (pull ?e [:db/id :thk.project/name :thk.project/road-nr
