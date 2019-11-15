@@ -17,6 +17,14 @@
 (def q d/q)
 (def pull d/pull)
 
+(defn delete-db
+  [db-name]
+  (d/delete-database (environment/datomic-client) {:db-name db-name}))
+
+(defn create-db
+  [db-name]
+  (d/create-database (environment/datomic-client) {:db-name db-name}))
+
 (defn force-migrations!
   "Forces all migrations to rerun." ;; TODO: reload schema from environment to reload schema.edn
   []
