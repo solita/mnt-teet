@@ -16,7 +16,8 @@
 
 (def project-info-columns
   (into project-listing-columns
-        [:thk.project/procurement-nr]))
+        [:db/id
+         :thk.project/procurement-nr]))
 
 (def project-listing-display-columns
   [:thk.project/name
