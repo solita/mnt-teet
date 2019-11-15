@@ -11,7 +11,7 @@
 (defn parse-thk-export-csv [input]
   (with-open [raw-input-stream (io/input-stream input)
               input-stream (BOMInputStream. raw-input-stream)]
-    (let [[headers & rows]
+    (let [[headers _ignore-extra-header & rows]
           (-> input-stream
               (io/reader :encoding "UTF-8")
               (csv/read-csv :separator \;))]
