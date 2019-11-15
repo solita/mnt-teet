@@ -76,7 +76,6 @@
                                                           (str "s3://" bucket "/" file-key)
                                                           csv)]
     (assoc ctx
-           :changed-entity-ids (du/changed-entity-ids import-tx-result)
            :db (:db-after import-tx-result))))
 
 (defn- move-file [bucket old-key new-key]
@@ -116,29 +115,34 @@
                                                                  "\n"
                                                                  stack-trace)))}))
 
-(defn- update-entity-info [{:keys [changed-entity-ids db api-url api-shared-secret]}]
+(defn- update-entity-info [{:keys [db api-url api-shared-secret] :as ctx}]
   (let [updated-projects (d/q '[:find (pull ?e [:db/id :thk.project/name :thk.project/road-nr
                                                 :thk.project/carriageway
                                                 :thk.project/start-m :thk.project/end-m])
-                                :in $ [?e ...]
+                                :in $
                                 :where [?e :thk.project/road-nr _]]
-                              db changed-entity-ids)]
-    (log/info "Update entity info for" (count changed-entity-ids) "projects.")
-    @(client/post (str api-url "rpc/store_entity_info")
-                  {:headers {"Content-Type" "application/json"
-                             "Authorization" (str "Bearer " (login-api-token/create-backend-token
-                                                             api-shared-secret))}
-                   :body (cheshire/encode
-                          (for [{id :db/id
-                                 :thk.project/keys [name road-nr carriageway start-m end-m]}
-                               (map first updated-projects)]
-                            {:id (str id)
-                             :type "project"
-                             :road road-nr
-                             :carriageway carriageway
-                             :start_m start-m
-                             :end_m end-m
-                             :tooltip name}))})))
+                              db)]
+    (log/info "Update entity info for" (count updated-projects) "projects.")
+    (let [response @(client/post (str api-url "rpc/store_entity_info")
+                                 {:headers {"Content-Type" "application/json"
+                                            "Authorization" (str "Bearer " (login-api-token/create-backend-token
+                                                                            api-shared-secret))}
+                                  :body (cheshire/encode
+                                         (for [{id :db/id
+                                                :thk.project/keys [name road-nr carriageway start-m end-m]}
+                                               (map first updated-projects)]
+                                           {:id (str id)
+                                            :type "project"
+                                            :road road-nr
+                                            :carriageway carriageway
+                                            :start_m start-m
+                                            :end_m end-m
+                                            :tooltip name}))})]
+      (when-not (= 200 (:status response))
+        (throw (ex-info "store_entity_info RPC call failed"
+                        {:response response})))
+      (assoc ctx
+             :entity-info-updated? true))))
 
 (defn- on-error [{:keys [error] :as ctx}]
   ;; TODO: Metrics?
@@ -176,7 +180,6 @@
                         file->csv
                         upsert-projects
                         update-entity-info)]
-      (log/event :thk-file-processed
-                 {:input result}))
+      result)
     (catch Exception e
-      (on-error (ex-data e)))))
+      (ex-data e))))
