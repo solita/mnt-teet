@@ -6,14 +6,14 @@
             [teet.map.map-controller :as map-controller]))
 
 
-(defrecord OpenPhaseDialog [])                              ; open add phase modal dialog
-(defrecord ClosePhaseDialog [])
-(defrecord OpenTaskDialog [phase-id])
+(defrecord OpenActivityDialog [])                              ; open add activity modal dialog
+(defrecord CloseActivityDialog [])
+(defrecord OpenTaskDialog [activity-id])
 (defrecord CloseTaskDialog [])
 (defrecord SelectProject [project-id])
 (defrecord ToggleCadastralHightlight [id])
 (defrecord ToggleRestrictionData [id])
-(defrecord UpdatePhaseState [id status])
+(defrecord UpdateActivityState [id status])
 
 (defmethod common-controller/map-item-selected
   "geojson_thk_project_pins" [p]
@@ -35,15 +35,15 @@
        :page :project
        :params {:project project-id}}))
 
-  OpenPhaseDialog
+  OpenActivityDialog
   (process-event [_ app]
     (t/fx app
       {:tuck.effect/type :navigate
        :page :project
        :params {:project (get-in app [:params :project])}
-       :query {:add-phase 1}}))
+       :query {:add-activity 1}}))
 
-  ClosePhaseDialog
+  CloseActivityDialog
   (process-event [_ app]
     (t/fx app
       {:tuck.effect/type :navigate
@@ -52,22 +52,22 @@
        :query {}}))
 
   OpenTaskDialog
-  (process-event [{phase-id :phase-id} app]
+  (process-event [{activity-id :activity-id} app]
     (t/fx app
       {:tuck.effect/type :navigate
        :page :project
        :params {:project (get-in app [:params :project])}
-       :query {:add-task phase-id}}))
+       :query {:add-task activity-id}}))
 
-  UpdatePhaseState
-  (process-event [{phase-id :id status :status} app]
+  UpdateActivityState
+  (process-event [{activity-id :id status :status} app]
     (t/fx app
           {:tuck.effect/type :command!
-           :command :phase/update-phase
-           :payload {:db/id phase-id
-                     :phase/status status}
+           :command :activity/update-activity
+           :payload {:db/id activity-id
+                     :activity/status status}
            :result-event common-controller/->Refresh
-           :success-message "Phase updated successfully"    ;TODO add to localizations
+           :success-message "Activity updated successfully"    ;TODO add to localizations
            }))
 
   CloseTaskDialog
@@ -117,12 +117,12 @@
 
 (defn cadastral-units-rpc [project]
   {:rpc "thk_project_related_cadastral_units"
-   :args {:project_id project
+   :args {:entity_id (:db/id project)
           :distance 200}})
 
 (defn restrictions-rpc [project]
   {:rpc "thk_project_related_restrictions"
-   :args {:project_id project
+   :args {:entity_id (:db/id project)
           :distance 200}})
 
 (defmethod common-controller/map-item-selected

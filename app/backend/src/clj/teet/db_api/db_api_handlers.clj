@@ -7,8 +7,8 @@
             [clojure.spec.alpha :as s]
 
             ;; Require all namespaces that provide queries/commands
-            teet.workflow.workflow-queries
-            teet.workflow.workflow-commands
+            teet.workflow.workflow-queries ;; FIXME: remove
+            teet.workflow.workflow-commands ;; FIXME: remove
             teet.document.document-commands
             teet.document.document-queries
             teet.login.login-commands
@@ -17,6 +17,7 @@
             teet.admin.admin-commands
             teet.user.user-queries
             teet.logging.logging-commands
+            teet.project.project-queries
 
             [teet.log :as log]
             [teet.login.login-api-token :as login-api-token]

@@ -24,8 +24,8 @@ locally, fill in the correct values in the map."
         {:keys [id]} (cheshire/decode input keyword)]
     (cheshire/encode
      (d/pull db '[:workflow/name
-                  {:workflow/phases
+                  {:workflow/activities
                    [:db/id
-                    :phase/name
-                    {:phase/tasks [:db/id :task/status]}]}]
+                    :activity/name
+                    {:activity/tasks [:db/id :task/status]}]}]
              id))))

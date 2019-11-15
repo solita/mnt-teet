@@ -41,7 +41,8 @@
                             (assoc :session-cookie-key
                                    (ssm-param env :auth :session-key))
                             (assoc-in [:auth :basic-auth-password] bap)
-                            (assoc :base-url (ssm-param env :base-url)))]
+                            (assoc :base-url (ssm-param env :base-url))
+                            (assoc :api-url (ssm-param env :api :url)))]
              config))))
 
 (defn load-local-config!

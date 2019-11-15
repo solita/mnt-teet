@@ -27,6 +27,12 @@
       (doto (.sign (MACSigner. shared-secret)))
       .serialize))
 
+(defn create-backend-token
+  "Create token for TEET backend to use PostgREST API."
+  [shared-secret]
+  (create-token shared-secret "teet_backend" {:given-name "TEET" :family-name "TEET"
+                                              :roles ["system"]}))
+
 (defn verify-token
   "Verify JWT token validity. Returns user info on success. Throws exception on failure."
   [shared-secret token]

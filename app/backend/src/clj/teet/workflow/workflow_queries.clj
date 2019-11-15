@@ -3,11 +3,11 @@
 
 (defmethod db-api/query :workflow/fetch-workflow [{db :db} {:keys [project-id workflow-id]}]
   {:query '[:find (pull ?e [:db/id :workflow/name
-                            {:workflow/phases
+                            {:workflow/activities
                              [:db/id
-                              :phase/name
-                              :phase/due-date
-                              {:phase/tasks [:db/id :task/name
+                              :activity/name
+                              :activity/due-date
+                              {:activity/tasks [:db/id :task/name
                                              {:task/status [:task.status/timestamp
                                                             :task.status/status]}]}]}])
             :in $ ?e ?project-id
@@ -16,23 +16,23 @@
    :result-fn ffirst})
 
 (defmethod db-api/query :workflow/project [{db :db} {:keys [thk-project-id]}] ;; TODO: when thk in datomic fetch that also
-  {:query '[:find (pull ?e [:db/id :phase/phase-name :phase/status
-                            :phase/estimated-start-date :phase/estimated-end-date
-                            {:phase/tasks [*]}])
+  {:query '[:find (pull ?e [:db/id :activity/name :activity/status
+                            :activity/estimated-start-date :activity/estimated-end-date
+                            {:activity/tasks [*]}])
             :in $ ?thk-project-id
-            :where [?e :thk/id ?thk-project-id] [?e :phase/phase-name _]]
+            :where [?e :thk/id ?thk-project-id] [?e :activity/name _]]
    :args [db thk-project-id]
-   :result-fn #(hash-map :thk-id thk-project-id :phases (mapv first %))})
+   :result-fn #(hash-map :thk-id thk-project-id :activities (mapv first %))})
 
 (defmethod db-api/query :task/fetch-task [{db :db} {:keys [task-id]}]
   {:query '[:find (pull ?e [:db/id
                             :task/description
                             :task/modified
-                            :phase/status
+                            :activity/status
                             {:task/status [:db/ident]}
                             {:task/type [:db/ident]}
                             {:task/assignee [:user/id :user/given-name :user/family-name :user/email]}
-                            {:phase/_tasks [:db/id {:phase/phase-name [:db/ident]}]}
+                            {:activity/_tasks [:db/id {:activity/name [:db/ident]}]}
                             {:task/documents [*]}])
             :in $ ?e]
    :args [db task-id]

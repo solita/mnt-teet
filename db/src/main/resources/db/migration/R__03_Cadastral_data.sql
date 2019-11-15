@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION teet.thk_project_related_cadastral_units(project_id TEXT, distance INTEGER)
+CREATE OR REPLACE FUNCTION teet.thk_project_related_cadastral_units(entity_id BIGINT, distance INTEGER)
 RETURNS JSON AS
 $$
   SELECT json_agg(units.row)
@@ -36,8 +36,8 @@ $$
                    'marketekst', ky.marketekst,
                    'eksport', ky.eksport) as row
             FROM cadastre.katastriyksus ky
-            JOIN teet.thk_project p ON ST_DWithin(ky.geom, p.geometry, distance)
-           WHERE p.id = project_id) units;
+            JOIN teet.entity e ON ST_DWithin(ky.geom, e.geometry, distance)
+           WHERE e.id = entity_id) units;
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION teet.mvt_cadastral_units(xmin NUMERIC, ymin NUMERIC, xmax NUMERIC, ymax NUMERIC)
@@ -55,7 +55,7 @@ SELECT ST_AsMVT(tile) AS mvt
                           1000)) tile;
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION teet.geojson_thk_project_related_cadastral_units(project_id TEXT, distance INTEGER) RETURNS TEXT
+CREATE OR REPLACE FUNCTION teet.geojson_thk_project_related_cadastral_units(entity_id BIGINT, distance INTEGER) RETURNS TEXT
 AS $$
 SELECT row_to_json(fc)::TEXT
   FROM (SELECT 'FeatureCollection' as type,
@@ -64,6 +64,6 @@ SELECT row_to_json(fc)::TEXT
                        ST_AsGeoJSON(ky.geom)::json as geometry,
                        json_build_object('id', ky.id, 'tooltip', ky.tunnus) as properties
                   FROM cadastre.katastriyksus ky
-                  JOIN teet.thk_project p ON ST_DWithin(ky.geom, p.geometry, distance)
-                 WHERE p.id = project_id) f) fc;
+                  JOIN teet.entity e ON ST_DWithin(ky.geom, e.geometry, distance)
+                 WHERE e.id = entity_id) f) fc;
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;

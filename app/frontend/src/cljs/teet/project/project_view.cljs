@@ -23,7 +23,7 @@
             [teet.ui.panels :as panels]
             [teet.ui.buttons :as buttons]
             teet.task.task-spec
-            [teet.phase.phase-view :as phase-view]
+            [teet.activity.activity-view :as activity-view]
             [teet.ui.util :as util]
             [clojure.string :as str]
             [teet.ui.query :as query]
@@ -37,8 +37,8 @@
             [teet.util.collection :refer [count-by]]
             teet.project.project-info))
 
-(defn task-form [e! close _phase-id task]
-  ;;Task definition (under project phase)
+(defn task-form [e! close _activity-id task]
+  ;;Task definition (under project activity)
   ;; Task type (a predefined list of tasks: topogeodeesia, geoloogia, liiklusuuring, KMH eelhinnang, loomastikuuuring, arheoloogiline uuring, muu)
   ;; Description (short description of the task for clarification, 255char, in case more detailed description is needed, it will be uploaded as a file under the task)
   ;; Responsible person (email)
@@ -59,7 +59,7 @@
    [select/select-user {:e! e!}]])
 
 
-(defn- phase-info-popup [label start-date end-date num-tasks complete-count incomplete-count]
+(defn- activity-info-popup [label start-date end-date num-tasks complete-count incomplete-count]
   [:div
    [:div [:b label]]
    [Divider]
@@ -73,30 +73,34 @@
       (str complete-count " / " num-tasks " tasks complete")])])
 
 (defn project-data
-  [phases {:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
+  [activities {:thk.project/keys [name estimated-start-date estimated-end-date road-nr start-m end-m
+                                  carriageway procurement-nr]}]
   [:div
    [Heading1 name]
    [itemlist/ItemList
     {}
     [:div (tr [:project :information :estimated-duration])
      ": "
-     (format/date-range estimated_duration)]
-    [:div (tr [:project :information :road-number]) ": " road_nr]
-    [:div (tr [:project :information :km-range]) ": " (format/km-range km_range)]
-    [:div (tr [:project :information :procurement-number]) ": " procurement_no]
+     (format/date estimated-start-date) " \u2013 " (format/date estimated-end-date)]
+    [:div (tr [:project :information :road-number]) ": " road-nr]
+    (when (and start-m end-m)
+      [:div (tr [:project :information :km-range]) ": "
+       (.toFixed (/ start-m 1000) 3) " \u2013 "
+       (.toFixed (/ start-m 1000) 3)])
+    [:div (tr [:project :information :procurement-number]) ": " procurement-nr]
     [:div (tr [:project :information :carriageway]) ": " carriageway]]
 
-   (when-let [[start-date end-date] (and (seq phases)
-                                         (format/parse-date-range estimated_duration))]
+   (when (and estimated-start-date estimated-end-date
+              (seq activities))
      (let [tr* (tr-tree [:enum])]
        [:<>
         [:br]
-        [timeline/timeline {:start-date start-date
-                            :end-date  end-date}
-         (for [{name :phase/phase-name
-                start-date :phase/estimated-start-date
-                end-date :phase/estimated-end-date
-                tasks :phase/tasks} (sort-by :phase/estimated-start-date phases)
+        [timeline/timeline {:start-date estimated-start-date
+                            :end-date  estimated-start-date}
+         (for [{name :activity/name
+                start-date :activity/estimated-start-date
+                end-date :activity/estimated-end-date
+                tasks :activity/tasks} (sort-by :activity/estimated-start-date activities)
                :let [tasks-by-completion (count-by task-controller/completed? tasks)
                      num-tasks (count tasks)
                      complete-pct (when (seq tasks)
@@ -111,7 +115,7 @@
                     [[complete-pct "green"]
                      [incomplete-pct "url(#incomplete)"]]
                     "url(#incomplete)")
-            :hover [phase-info-popup
+            :hover [activity-info-popup
                     (-> name :db/ident tr*)
                     start-date end-date
                     num-tasks
@@ -119,37 +123,29 @@
                     (tasks-by-completion false 0)]})]]))])
 
 
-(defn- project-info [endpoint token project breadcrumbs phases]
+(defn- project-info [project breadcrumbs activities]
   [:div
    [breadcrumbs/breadcrumbs breadcrumbs]
-   [postgrest-item-view/item-view
-    {:endpoint endpoint
-     :token token
-     :table "thk_project"
-     :select ["name" "estimated_duration"
-              "road_nr" "km_range" "carriageway"
-              "procurement_no"]
-     :view (r/partial project-data phases)}
-    project]])
+   [project-data activities project]])
 
-(defn phase-action-heading
+(defn activity-action-heading
   [{:keys [heading button]}]
-  [:div {:class (<class project-style/phase-action-heading)}
+  [:div {:class (<class project-style/activity-action-heading)}
    [Heading2 heading]
    button])
 
 ;; TODO: Added for pilot demo. Maybe later store in database, make customizable?
-(def phase-sort-priority-vec
-  [:phase.name/pre-design
-   :phase.name/preliminary-design
-   :phase.name/land-acquisition
-   :phase.name/detailed-design
-   :phase.name/construction
-   :phase.name/other])
+(def activity-sort-priority-vec
+  [:activity.name/pre-design
+   :activity.name/preliminary-design
+   :activity.name/land-acquisition
+   :activity.name/detailed-design
+   :activity.name/construction
+   :activity.name/other])
 
-(defn- phase-sort-priority [phase]
-  (.indexOf phase-sort-priority-vec
-    (-> phase :phase/phase-name :db/ident)))
+(defn- activity-sort-priority [activity]
+  (.indexOf activity-sort-priority-vec
+            (-> activity :activity/name :db/ident)))
 
 (defn heading-state
   [title select]
@@ -157,18 +153,18 @@
    [Heading3 title]
    select])
 
-(defn project-phase
+(defn project-activity
   [e! {:keys [project]} {id :db/id
-                         :phase/keys [phase-name tasks status] :as phase}]
-  [:div {:class (<class project-style/project-phase-style)}
+                         :activity/keys [activity-name tasks status] :as activity}]
+  [:div {:class (<class project-style/project-activity-style)}
    [heading-state
-    (tr [:enum (:db/ident phase-name)])
+    (tr [:enum (:db/ident activity-name)])
     [select/select-enum {:e! e!
                          :tiny-select? true
                          :show-label? false
-                         :on-change #(e! (project-controller/->UpdatePhaseState id %))
+                         :on-change #(e! (project-controller/->UpdateActivityState id %))
                          :value (:db/ident status)
-                         :attribute :phase/status}]]
+                         :attribute :activity/status}]]
    (if (seq tasks)
      (doall
        (for [{:task/keys [status type] :as t} tasks]
@@ -180,26 +176,26 @@
                                       {:end-text (tr [:enum (:db/ident status)])}))]))
      [:div {:class (<class project-style/top-margin)}
       [:em
-       (tr [:project :phase :no-tasks])]])
+       (tr [:project :activity :no-tasks])]])
    [Link {:class (<class project-style/link-button-style)
           :on-click (r/partial e! (project-controller/->OpenTaskDialog id))
           :component :button}
     "+ "
     (tr [:project :add-task])]])
 
-(defn project-phase-listing [e! project phases]
+(defn project-activity-listing [e! project activities]
   [:<>
-   [phase-action-heading {:heading (tr [:project :phases])
+   [activity-action-heading {:heading (tr [:project :activities])
                           :button [buttons/button-primary
-                                   {:on-click (e! project-controller/->OpenPhaseDialog)
+                                   {:on-click (e! project-controller/->OpenActivityDialog)
                                     :start-icon (r/as-element [icons/content-add])}
-                                   (tr [:project :add-phase])]}]
+                                   (tr [:project :add-activity])]}]
    (doall
-     (for [phase
-           (sort-by phase-sort-priority
-             phases)]
-       ^{:key (:db/id phase)}
-       [project-phase e! {:project project} phase]))])
+     (for [activity
+           (sort-by activity-sort-priority
+             activities)]
+       ^{:key (:db/id activity)}
+       [project-activity e! {:project project} activity]))])
 
 (defn project-map [e! endpoint project tab]
   [:div {:class (<class project-style/project-map-style)}
@@ -207,15 +203,15 @@
     {:class (<class theme-spacing/fill-content)
      :layers (merge {:thk-project
                      (map-layers/geojson-layer endpoint
-                       "geojson_thk_project"
-                       {"id" project}
+                       "geojson_entities"
+                       {"ids" (str "{" (:db/id project) "}")}
                        map-features/project-line-style
                        {:fit-on-load? true})}
                (when (= tab "restrictions")
                  {:related-restrictions
                   (map-layers/geojson-layer endpoint
                     "geojson_thk_project_related_restrictions"
-                    {"project_id" project
+                    {"entity_id" (:db/id project)
                      "distance" 200}
                     map-features/project-related-restriction-style
                     {:opacity 0.5})})
@@ -223,7 +219,7 @@
                  {:related-cadastral-units
                   (map-layers/geojson-layer endpoint
                     "geojson_thk_project_related_cadastral_units"
-                    {"project_id" project
+                    {"entity_id" (:db/id project)
                      "distance" 200}
                     map-features/cadastral-unit-style
                     {:opacity 0.5})}))}
@@ -260,20 +256,21 @@
 (defn restrictions-listing
   [e! data]
   (let [formatted-data (group-by
-                         (fn [restriction]
-                           (get restriction :type))
-                         data)                              ;;TODO: this is ran everytime a restriction is opened should be fixed
+                        (fn [restriction]
+                          (get restriction :type))
+                        data)
+        ;;TODO: this is ran everytime a restriction is opened should be fixed
         ]
     [:<>
      (doall
-       (for [group formatted-data]
-         ^{:key (first group)}
-         [:div
-          [Heading2 {:class (<class project-style/restriction-category-style)} (first group)]
-          (doall
-            (for [restriction (->> group second (sort-by :voond))]
-              ^{:key (get restriction :id)}
-              [restriction-component e! restriction]))]))]))
+      (for [group formatted-data]
+        ^{:key (first group)}
+        [:div
+         [Heading2 {:class (<class project-style/restriction-category-style)} (first group)]
+         (doall
+          (for [restriction (->> group second (sort-by :voond))]
+            ^{:key (get restriction :id)}
+            [restriction-component e! restriction]))]))]))
 
 (defn collapse-skeleton
   [title? n]
@@ -317,15 +314,15 @@
 
 (defn project-page [e! {{:keys [project]} :params
                         {:keys [tab]} :query
-                        {:keys [add-phase add-task]} :query :as app}
-                    {:keys [phases]}
+                        {:keys [add-activity add-task]} :query :as app}
+                    {:keys [activities] :as project}
                     breadcrumbs]
-  (let [tab (or tab "phases")]
+  (let [tab (or tab "activities")]
     [:<>
-     (when add-phase
-       [panels/modal {:title (tr [:project :add-phase])
-                      :on-close #(e! (project-controller/->ClosePhaseDialog))}
-        [phase-view/phase-form e! project-controller/->ClosePhaseDialog (get-in app [:project project :new-phase])]])
+     (when add-activity
+       [panels/modal {:title (tr [:project :add-activity])
+                      :on-close #(e! (project-controller/->CloseActivityDialog))}
+        [activity-view/activity-form e! project-controller/->CloseActivityDialog (get-in app [:project project :new-activity])]])
      (when add-task
        [panels/modal {:title (tr [:project :add-task])
                       :on-close #(e! (project-controller/->CloseTaskDialog))}
@@ -336,29 +333,27 @@
               :xs    6
               :class (<class common-styles/grid-left-item)}
         [:div {:class (<class common-styles/top-info-spacing)}
-         [project-info (get-in app [:config :api-url]) (get-in app login-paths/api-token)
-          project breadcrumbs
-          phases]]
+         [project-info project breadcrumbs activities]]
 
         [tabs/tabs {:e!           e!
                     :selected-tab tab}
-         {:value "phases"
-          :label (tr [:project :phases-tab])}
+         {:value "activities"
+          :label (tr [:project :activities-tab])}
          {:value "restrictions"
           :label (tr [:project :restrictions-tab])}
          {:value "cadastral-units"
           :label (tr [:project :cadastral-units-tab])}]
         [layout/section
          (case tab
-           "phases"
-           [project-phase-listing e! project phases]
+           "activities"
+           [project-activity-listing e! project activities]
 
            "restrictions"
            ^{:key "restrictions"}
            [query/rpc (merge (project-controller/restrictions-rpc project)
                              {:e!         e!
                               :app        app
-                              :state-path [:project project :restrictions]
+                              :state-path [:project (:thk.project/id project) :restrictions]
                               :skeleton   [collapse-skeleton true 5]
                               :view       project-related-restrictions})]
 
@@ -367,7 +362,7 @@
            [query/rpc (merge (project-controller/cadastral-units-rpc project)
                              {:e!         e!
                               :app        app
-                              :state-path [:project project :cadastral-units]
+                              :state-path [:project (:thk.project/id project) :cadastral-units]
                               :view       project-related-cadastral-units
                               :skeleton   [collapse-skeleton false 5]})])]]
        [Grid {:item true :xs 6}

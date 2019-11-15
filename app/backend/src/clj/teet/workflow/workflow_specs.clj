@@ -4,12 +4,12 @@
 (s/def :thk/id string?)
 (s/def :workflow/name string?)
 
-(s/def :workflow/phases (s/coll-of :phase/phase))
+(s/def :workflow/activities (s/coll-of :activity/activity))
 
-(s/def :phase/phase (s/keys))
+(s/def :activity/activity (s/keys))
 
-(s/def :phase/update-phase (s/keys :req [:phase/status]))
+(s/def :activity/update-activity (s/keys :req [:activity/status]))
 
-(s/def :phase/create-phase
-  (s/keys :req [:thk/id :phase/phase-name :phase/status
-                :phase/estimated-start-date :phase/estimated-end-date]))
+(s/def :activity/create-activity
+  (s/keys :req [:thk/id :activity/activity-name :activity/status
+                :activity/estimated-start-date :activity/estimated-end-date]))

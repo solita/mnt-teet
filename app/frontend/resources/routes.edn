@@ -26,29 +26,31 @@
 
  :projects-list {:path "/projects/list"
                  :crumb (tr [:projects :list-view])
-                 :view teet.projects.projects-view/projects-list-page}
+                 :view teet.projects.projects-view/projects-list-page
+                 :state {:query :thk.project/listing
+                         :args {}}}
 
  :project {:path "/projects/:project"
            :parent :projects-list
-           :crumb [teet.project.project-info/project-name app project]
+           :crumb (:thk.project/name state)
            :view teet.project.project-view/project-page
-           :state {:query :workflow/project
-                   :args {:thk-project-id project}}}
+           :state {:query :thk.project/fetch-project
+                   :args {:thk.project/id project}}}
 
- :phase-task {:path "/projects/:project/:phase/:task"
-              :parent :project
-              :view teet.task.task-view/task-page
-              :state {:query :task/fetch-task
-                      :args {:task-id (goog.math.Long/fromString task)}}
-              :crumb (tr [:enum (or
-                                 ;; On task page, use task type directly
-                                 (-> state :task/type :db/ident)
+ :activity-task {:path "/projects/:project/:activity/:task"
+                 :parent :project
+                 :view teet.task.task-view/task-page
+                 :state {:query :task/fetch-task
+                         :args {:task-id (goog.math.Long/fromString task)}}
+                 :crumb (tr [:enum (or
+                                    ;; On task page, use task type directly
+                                    (-> state :task/type :db/ident)
 
-                                 ;; On document page, the task type is joined
-                                 (get-in state [:task/_documents 0 :task/type :db/ident]))])}
+                                    ;; On document page, the task type is joined
+                                    (get-in state [:task/_documents 0 :task/type :db/ident]))])}
 
- :task-document {:path "/projects/:project/:phase/:task/:document"
-                 :parent :phase-task
+ :task-document {:path "/projects/:project/:activity/:task/:document"
+                 :parent :activity-task
                  :view teet.document.document-view/document-page
                  :state {:query :document/fetch-document
                          :args {:document-id (goog.math.Long/fromString document)}}

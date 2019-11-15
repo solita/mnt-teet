@@ -1,5 +1,5 @@
 (ns teet.workflow.workflow-commands
-  "Commands for workflows, phases and tasks"
+  "Commands for workflows, activities and tasks"
   (:require [teet.db-api.core :as db-api]
             [datomic.client.api :as d]
             [clojure.spec.alpha :as s]
@@ -8,26 +8,26 @@
   (:import (java.util Date)))
 
 
-(defmethod db-api/command! :phase/create-phase [{conn :conn} phase]
-  (log/info "PHASE: " phase)
+(defmethod db-api/command! :activity/create-activity [{conn :conn} activity]
+  (log/info "ACTIVITY: " activity)
   (select-keys
    (d/transact
     conn
-    {:tx-data [(select-keys phase [:thk/id :phase/phase-name :phase/status
-                                   :phase/estimated-start-date :phase/estimated-end-date])]})
+    {:tx-data [(select-keys activity [:thk/id :activity/name :activity/status
+                                      :activity/estimated-start-date :activity/estimated-end-date])]})
    [:tempids]))
 
-(defmethod db-api/command! :phase/update-phase [{conn :conn} phase]
-  (select-keys (d/transact conn {:tx-data [(assoc phase :phase/modified (Date.))]}) [:tempids]))
+(defmethod db-api/command! :activity/update-activity [{conn :conn} activity]
+  (select-keys (d/transact conn {:tx-data [(assoc activity :activity/modified (Date.))]}) [:tempids]))
 
 (defmethod db-api/command! :workflow/update-task [{conn :conn} task]
   (select-keys (d/transact conn {:tx-data [(assoc task :task/modified (Date.))]}) [:tempids]))
 
-(defmethod db-api/command! :workflow/add-task-to-phase [{conn :conn} {phase-id :phase-id
+(defmethod db-api/command! :workflow/add-task-to-activity [{conn :conn} {activity-id :activity-id
                                                                       task :task :as payload}]
   (log/info "PAYLOAD: " payload)
-  (select-keys (d/transact conn {:tx-data [{:db/id phase-id
-                                            :phase/tasks [task]}]}) [:tempids]))
+  (select-keys (d/transact conn {:tx-data [{:db/id activity-id
+                                            :activity/tasks [task]}]}) [:tempids]))
 
 (defmethod db-api/command! :workflow/comment-task [{conn :conn
                                                     user :user}
