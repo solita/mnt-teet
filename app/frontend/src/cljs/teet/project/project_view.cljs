@@ -256,20 +256,21 @@
 (defn restrictions-listing
   [e! data]
   (let [formatted-data (group-by
-                         (fn [restriction]
-                           (get restriction :type))
-                         data)                              ;;TODO: this is ran everytime a restriction is opened should be fixed
+                        (fn [restriction]
+                          (get restriction :type))
+                        data)
+        ;;TODO: this is ran everytime a restriction is opened should be fixed
         ]
     [:<>
      (doall
-       (for [group formatted-data]
-         ^{:key (first group)}
-         [:div
-          [Heading2 {:class (<class project-style/restriction-category-style)} (first group)]
-          (doall
-            (for [restriction (->> group second (sort-by :voond))]
-              ^{:key (get restriction :id)}
-              [restriction-component e! restriction]))]))]))
+      (for [group formatted-data]
+        ^{:key (first group)}
+        [:div
+         [Heading2 {:class (<class project-style/restriction-category-style)} (first group)]
+         (doall
+          (for [restriction (->> group second (sort-by :voond))]
+            ^{:key (get restriction :id)}
+            [restriction-component e! restriction]))]))]))
 
 (defn collapse-skeleton
   [title? n]
@@ -352,7 +353,7 @@
            [query/rpc (merge (project-controller/restrictions-rpc project)
                              {:e!         e!
                               :app        app
-                              :state-path [:project project :restrictions]
+                              :state-path [:project (:thk.project/id project) :restrictions]
                               :skeleton   [collapse-skeleton true 5]
                               :view       project-related-restrictions})]
 
@@ -361,7 +362,7 @@
            [query/rpc (merge (project-controller/cadastral-units-rpc project)
                              {:e!         e!
                               :app        app
-                              :state-path [:project project :cadastral-units]
+                              :state-path [:project (:thk.project/id project) :cadastral-units]
                               :view       project-related-cadastral-units
                               :skeleton   [collapse-skeleton false 5]})])]]
        [Grid {:item true :xs 6}

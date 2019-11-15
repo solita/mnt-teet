@@ -117,12 +117,12 @@
 
 (defn cadastral-units-rpc [project]
   {:rpc "thk_project_related_cadastral_units"
-   :args {:project_id project
+   :args {:entity_id (:db/id project)
           :distance 200}})
 
 (defn restrictions-rpc [project]
   {:rpc "thk_project_related_restrictions"
-   :args {:project_id project
+   :args {:entity_id (:db/id project)
           :distance 200}})
 
 (defmethod common-controller/map-item-selected

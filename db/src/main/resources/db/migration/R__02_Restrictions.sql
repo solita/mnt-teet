@@ -162,7 +162,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION teet.geojson_thk_project_related_restrictions(entity_id TEXT, distance INTEGER) RETURNS TEXT
+CREATE OR REPLACE FUNCTION teet.geojson_thk_project_related_restrictions(entity_id BIGINT, distance INTEGER) RETURNS TEXT
 AS $$
 SELECT row_to_json(fc)::TEXT
   FROM (SELECT 'FeatureCollection' as type,
