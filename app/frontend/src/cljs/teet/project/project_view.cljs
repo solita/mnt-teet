@@ -93,7 +93,7 @@
         [:br]
         [timeline/timeline {:start-date start-date
                             :end-date  end-date}
-         (for [{name :activity/activity-name
+         (for [{name :activity/name
                 start-date :activity/estimated-start-date
                 end-date :activity/estimated-end-date
                 tasks :activity/tasks} (sort-by :activity/estimated-start-date activities)
@@ -149,7 +149,7 @@
 
 (defn- activity-sort-priority [activity]
   (.indexOf activity-sort-priority-vec
-    (-> activity :activity/activity-name :db/ident)))
+            (-> activity :activity/name :db/ident)))
 
 (defn heading-state
   [title select]

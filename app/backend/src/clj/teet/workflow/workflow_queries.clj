@@ -16,11 +16,11 @@
    :result-fn ffirst})
 
 (defmethod db-api/query :workflow/project [{db :db} {:keys [thk-project-id]}] ;; TODO: when thk in datomic fetch that also
-  {:query '[:find (pull ?e [:db/id :activity/activity-name :activity/status
+  {:query '[:find (pull ?e [:db/id :activity/name :activity/status
                             :activity/estimated-start-date :activity/estimated-end-date
                             {:activity/tasks [*]}])
             :in $ ?thk-project-id
-            :where [?e :thk/id ?thk-project-id] [?e :activity/activity-name _]]
+            :where [?e :thk/id ?thk-project-id] [?e :activity/name _]]
    :args [db thk-project-id]
    :result-fn #(hash-map :thk-id thk-project-id :activities (mapv first %))})
 
@@ -32,7 +32,7 @@
                             {:task/status [:db/ident]}
                             {:task/type [:db/ident]}
                             {:task/assignee [:user/id :user/given-name :user/family-name :user/email]}
-                            {:activity/_tasks [:db/id {:activity/activity-name [:db/ident]}]}
+                            {:activity/_tasks [:db/id {:activity/name [:db/ident]}]}
                             {:task/documents [*]}])
             :in $ ?e]
    :args [db task-id]

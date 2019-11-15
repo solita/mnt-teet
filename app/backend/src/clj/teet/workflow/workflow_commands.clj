@@ -13,8 +13,8 @@
   (select-keys
    (d/transact
     conn
-    {:tx-data [(select-keys activity [:thk/id :activity/activity-name :activity/status
-                                   :activity/estimated-start-date :activity/estimated-end-date])]})
+    {:tx-data [(select-keys activity [:thk/id :activity/name :activity/status
+                                      :activity/estimated-start-date :activity/estimated-end-date])]})
    [:tempids]))
 
 (defmethod db-api/command! :activity/update-activity [{conn :conn} activity]

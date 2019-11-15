@@ -16,8 +16,8 @@
               :save-event activity-controller/->CreateActivity
               :cancel-event close
               :spec :document/new-activity-form}
-   ^{:attribute :activity/activity-name}
-   [select/select-enum {:e! e! :attribute :activity/activity-name}]
+   ^{:attribute :activity/name}
+   [select/select-enum {:e! e! :attribute :activity/name}]
 
    ^{:attribute :activity/estimated-date-range}
    [date-picker/date-range-input {:start-label (tr [:fields :activity/estimated-start-date]) :end-label (tr [:fields :activity/estimated-end-date])}]
