@@ -73,26 +73,30 @@
       (str complete-count " / " num-tasks " tasks complete")])])
 
 (defn project-data
-  [activities {:strs [name estimated_duration road_nr km_range carriageway procurement_no]}]
+  [activities {:thk.project/keys [name estimated-start-date estimated-end-date road-nr start-m end-m
+                                  carriageway procurement-nr]}]
   [:div
    [Heading1 name]
    [itemlist/ItemList
     {}
     [:div (tr [:project :information :estimated-duration])
      ": "
-     (format/date-range estimated_duration)]
-    [:div (tr [:project :information :road-number]) ": " road_nr]
-    [:div (tr [:project :information :km-range]) ": " (format/km-range km_range)]
-    [:div (tr [:project :information :procurement-number]) ": " procurement_no]
+     (format/date estimated-start-date) " \u2013 " (format/date estimated-end-date)]
+    [:div (tr [:project :information :road-number]) ": " road-nr]
+    (when (and start-m end-m)
+      [:div (tr [:project :information :km-range]) ": "
+       (.toFixed (/ start-m 1000) 3) " \u2013 "
+       (.toFixed (/ start-m 1000) 3)])
+    [:div (tr [:project :information :procurement-number]) ": " procurement-nr]
     [:div (tr [:project :information :carriageway]) ": " carriageway]]
 
-   (when-let [[start-date end-date] (and (seq activities)
-                                         (format/parse-date-range estimated_duration))]
+   (when (and estimated-start-date estimated-end-date
+              (seq activities))
      (let [tr* (tr-tree [:enum])]
        [:<>
         [:br]
-        [timeline/timeline {:start-date start-date
-                            :end-date  end-date}
+        [timeline/timeline {:start-date estimated-start-date
+                            :end-date  estimated-start-date}
          (for [{name :activity/name
                 start-date :activity/estimated-start-date
                 end-date :activity/estimated-end-date
@@ -119,18 +123,10 @@
                     (tasks-by-completion false 0)]})]]))])
 
 
-(defn- project-info [endpoint token project breadcrumbs activities]
+(defn- project-info [project breadcrumbs activities]
   [:div
    [breadcrumbs/breadcrumbs breadcrumbs]
-   [postgrest-item-view/item-view
-    {:endpoint endpoint
-     :token token
-     :table "thk_project"
-     :select ["name" "estimated_duration"
-              "road_nr" "km_range" "carriageway"
-              "procurement_no"]
-     :view (r/partial project-data activities)}
-    project]])
+   [project-data activities project]])
 
 (defn activity-action-heading
   [{:keys [heading button]}]
@@ -318,7 +314,7 @@
 (defn project-page [e! {{:keys [project]} :params
                         {:keys [tab]} :query
                         {:keys [add-activity add-task]} :query :as app}
-                    {:keys [activities]}
+                    {:keys [activities] :as project}
                     breadcrumbs]
   (let [tab (or tab "activities")]
     [:<>
@@ -336,9 +332,7 @@
               :xs    6
               :class (<class common-styles/grid-left-item)}
         [:div {:class (<class common-styles/top-info-spacing)}
-         [project-info (get-in app [:config :api-url]) (get-in app login-paths/api-token)
-          project breadcrumbs
-          activities]]
+         [project-info project breadcrumbs activities]]
 
         [tabs/tabs {:e!           e!
                     :selected-tab tab}

@@ -14,6 +14,10 @@
    :thk.project/estimated-start-date
    :thk.project/estimated-end-date])
 
+(def project-info-columns
+  (into project-listing-columns
+        [:thk.project/procurement-nr]))
+
 (def project-listing-display-columns
   [:thk.project/name
    :thk.project/road-nr
