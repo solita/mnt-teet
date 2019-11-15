@@ -32,7 +32,7 @@
   (process-event [_ app]
     (t/fx app
           {:tuck.effect/type :navigate
-           :page :phase-task
+           :page :activity-task
            :params (:params app)
            :query {:add-document 1}}))
 
@@ -40,7 +40,7 @@
   (process-event [_ app]
     (t/fx app
           {:tuck.effect/type :navigate
-           :page :phase-task
+           :page :activity-task
            :params (:params app)
            :query {}}))
 
@@ -90,12 +90,12 @@
   (process-event [_ app]
     (log/info "create task!")
     (let [project-id (get-in app [:params :project])
-          phase-id (get-in app [:query :add-task])
+          activity-id (get-in app [:query :add-task])
           task (get-in app [:project project-id :new-task])]
       (t/fx app
             {:tuck.effect/type :command!
-             :command :workflow/add-task-to-phase
-             :payload {:phase-id (goog.math.Long/fromString phase-id)
+             :command :workflow/add-task-to-activity
+             :payload {:activity-id (goog.math.Long/fromString activity-id)
                        :task (-> task
                                  (update :task/assignee (fn [{id :user/id}] [:user/id id]))
                                  (merge {:db/id "new-task"}))}
@@ -112,8 +112,8 @@
             :query {}}
            common-controller/refresh-fx))))
 
-(defn document-page-url [{{:keys [project phase task]} :params} doc]
-  (str "#/projects/" project "/" phase "/" task "/" (:db/id doc)))
+(defn document-page-url [{{:keys [project activity task]} :params} doc]
+  (str "#/projects/" project "/" activity "/" task "/" (:db/id doc)))
 
 (defn download-document-url [doc]
   (common-controller/query-url :document/download (select-keys doc [:db/id])))

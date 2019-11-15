@@ -183,7 +183,7 @@
     ;; Direct column name
     (string? column) column
 
-    ;; Link to a localized text code, like {:table "phase" :select ["name"]}
+    ;; Link to a localized text code, like {:table "activity" :select ["name"]}
     ;; return table name
     (and (map? column)
          (= ["name"] (:select column))) (:table column)))

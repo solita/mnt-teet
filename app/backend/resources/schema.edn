@@ -19,23 +19,6 @@
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/many}]
 
-         ;; Phase
-         [{:db/ident :phase/name
-           :db/valueType :db.type/string
-           :db/cardinality :db.cardinality/one}
-
-          {:db/ident :phase/ordinality
-           :db/valueType :db.type/long
-           :db/cardinality :db.cardinality/one}
-
-          {:db/ident :phase/due-date
-           :db/valueType :db.type/instant
-           :db/cardinality :db.cardinality/one}
-
-          {:db/ident :phase/tasks
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/many}]
-
          ;; Task
          [{:db/ident :task/name
            :db/valueType :db.type/string
@@ -131,52 +114,13 @@
            :db/unique :db.unique/identity}]]}
 
 
- {:db/ident :phase-names-and-statuses
+ {:db/ident :enum-attribute
   :txes [[{:db/ident :enum/attribute
            :db/doc "Correlates different enum values by keyword"
            :db/valueType :db.type/keyword
-           :db/cardinality :db.cardinality/one}]
+           :db/cardinality :db.cardinality/one}]]}
 
-         [;; Phase names
-          {:db/ident :phase.name/pre-design :enum/attribute :phase/phase-name}
-          {:db/ident :phase.name/preliminary-design  :enum/attribute :phase/phase-name}
-          {:db/ident :phase.name/detailed-design :enum/attribute :phase/phase-name}
-          {:db/ident :phase.name/land-acquisition :enum/attribute :phase/phase-name}
-          {:db/ident :phase.name/construction :enum/attribute :phase/phase-name}
-          {:db/ident :phase.name/other :enum/attribute :phase/phase-name}
-
-          ;; Phase statuses
-          {:db/ident :phase.status/in-progress :enum/attribute :phase/status}
-          {:db/ident :phase.status/research :enum/attribute :phase/status}
-          {:db/ident :phase.status/completed :enum/attribute :phase/status}
-          {:db/ident :phase.status/valid :enum/attribute :phase/status}
-          {:db/ident :phase.status/canceled :enum/attribute :phase/status}
-          {:db/ident :phase.status/expired :enum/attribute :phase/status}
-          {:db/ident :phase.status/other :enum/attribute :phase/status}
-
-          ;; phase name ref
-          {:db/ident :phase/phase-name
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/one
-           :db/doc "Phase name enum ref"}
-
-          ;; phase status ref
-          {:db/ident :phase/status
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/one
-           :db/doc "Phase status enum ref"}]]}
-
- {:db/ident :phase-dates
-  :txes [[{:db/ident :phase/estimated-start-date
-           :db/valueType :db.type/instant
-           :db/cardinality :db.cardinality/one
-           :db/doc "Estimated start date of phase"}
-          {:db/ident :phase/estimated-end-date
-           :db/valueType :db.type/instant
-           :db/cardinality :db.cardinality/one
-           :db/doc "Estimated end date of phase"}]]}
-
- {:db/ident :migration/phase-task-definition
+ {:db/ident :migration/activity-task-definition
   :txes [[;; Task type
           {:db/ident :task.type/topogeodesy :enum/attribute :task/type}
           {:db/ident :task.type/geology :enum/attribute :task/type}
@@ -190,9 +134,7 @@
           {:db/ident :task/type
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
-           :db/doc "Task type enum ref"}
-
-          ]]}
+           :db/doc "Task type enum ref"}]]}
 
 
  {:db/ident :migration/document-files
@@ -276,11 +218,6 @@
            :db/cardinality :db.cardinality/one
            :db/doc "Last modification timestamp for document"}]]}
 
- {:db/ident :migration/phase-modified
-  :txes [[{:db/ident :phase/modified
-           :db/valueType :db.type/instant
-           :db/cardinality :db.cardinality/one
-           :db/doc "Last modification timestamp for phase"}]]}
 
  {:db/ident :migration/user-info
   :txes [[{:db/ident :user/roles
@@ -347,10 +284,74 @@
   :txes     [[{:db/ident :integration/source-uri
                :db/valueType :db.type/string
                :db/cardinality :db.cardinality/one
-               :db/doc "URI of data imported by integration transaction"}]]}]
+               :db/doc "URI of data imported by integration transaction"}]]}
+
+ {:db/ident :migration/project-activities
+  :txes [[{:db/ident :thk.project/activities
+           :db/cardinality :db.cardinality/many
+           :db/valueType :db.type/ref
+           :db/doc "Activities in this project"}]
+
+         {:db/ident :activity/modified
+          :db/valueType :db.type/instant
+          :db/cardinality :db.cardinality/one
+          :db/doc "Last modification timestamp for activity"}
+
+         [{:db/ident :activity/name
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident :activity/estimated-start-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident :activity/estimated-end-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident :activity/actual-start-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident :activity/actual-end-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident :activity/tasks
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many}]
+
+         [;; activity names
+          {:db/ident :activity.name/pre-design :enum/attribute :activity/name}
+          {:db/ident :activity.name/preliminary-design  :enum/attribute :activity/name}
+          {:db/ident :activity.name/detailed-design :enum/attribute :activity/name}
+          {:db/ident :activity.name/land-acquisition :enum/attribute :activity/name}
+          {:db/ident :activity.name/construction :enum/attribute :activity/name}
+          {:db/ident :activity.name/other :enum/attribute :activity/name}
+
+          ;; activity statuses
+          {:db/ident :activity.status/in-progress :enum/attribute :activity/status}
+          {:db/ident :activity.status/research :enum/attribute :activity/status}
+          {:db/ident :activity.status/completed :enum/attribute :activity/status}
+          {:db/ident :activity.status/valid :enum/attribute :activity/status}
+          {:db/ident :activity.status/canceled :enum/attribute :activity/status}
+          {:db/ident :activity.status/expired :enum/attribute :activity/status}
+          {:db/ident :activity.status/other :enum/attribute :activity/status}
+
+          ;; activity name ref
+          {:db/ident :activity/name
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Activity name enum ref"}
+
+          ;; activity status ref
+          {:db/ident :activity/status
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Activity status enum ref"}]]}]
 
 
 ;; Project
-;; - Lifecycle phase
-;;   - Activity (formerly known as phase)
+;; - Lifecycle activity
+;;   - Activity (formerly known as activity)
 ;;     - Task

@@ -37,7 +37,7 @@
            :state {:query :workflow/project
                    :args {:thk-project-id project}}}
 
- :phase-task {:path "/projects/:project/:phase/:task"
+ :activity-task {:path "/projects/:project/:activity/:task"
               :parent :project
               :view teet.task.task-view/task-page
               :state {:query :task/fetch-task
@@ -49,8 +49,8 @@
                                  ;; On document page, the task type is joined
                                  (get-in state [:task/_documents 0 :task/type :db/ident]))])}
 
- :task-document {:path "/projects/:project/:phase/:task/:document"
-                 :parent :phase-task
+ :task-document {:path "/projects/:project/:activity/:task/:document"
+                 :parent :activity-task
                  :view teet.document.document-view/document-page
                  :state {:query :document/fetch-document
                          :args {:document-id (goog.math.Long/fromString document)}}

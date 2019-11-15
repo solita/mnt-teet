@@ -40,7 +40,7 @@
    :border-style "solid"
    :border-color theme-colors/gray-lighter})
 
-(defn phase-action-heading
+(defn activity-action-heading
   []
   {:display :flex
    :justify-content :space-between
@@ -66,7 +66,7 @@
    :padding "1rem 0.25rem"
    :border-bottom (str "1px solid " theme-colors/gray-lighter)})
 
-(defn project-phase-style
+(defn project-activity-style
   []
   ^{:pseudo {:last-child {:border-bottom 0}}}
   {:border-bottom (str "1px solid " theme-colors/gray-light)})

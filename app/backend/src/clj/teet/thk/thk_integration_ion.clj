@@ -117,7 +117,8 @@
                                                                 stack-trace)))))
 
 (defn- update-entity-info [{:keys [changed-entity-ids db api-url api-shared-secret]}]
-  (let [updated-projects (d/q '[:find (pull ?e [:db/id :thk.project/name :thk.project/road-nr :thk.project/carriageway
+  (let [updated-projects (d/q '[:find (pull ?e [:db/id :thk.project/name :thk.project/road-nr
+                                                :thk.project/carriageway
                                                 :thk.project/start-m :thk.project/end-m])
                                 :in $ [?e ...]
                                 :where [?e :thk.project/road-nr _]]

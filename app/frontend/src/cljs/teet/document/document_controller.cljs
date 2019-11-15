@@ -142,7 +142,7 @@
   (process-event [_ app]
     (t/fx (dissoc app :new-document)
           {:tuck.effect/type :navigate
-           :page :phase-task
+           :page :activity-task
            :params (:params app)
            :query {}}
           common-controller/refresh-fx)))
