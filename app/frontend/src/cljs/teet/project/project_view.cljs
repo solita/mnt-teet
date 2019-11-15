@@ -211,7 +211,7 @@
                  {:related-restrictions
                   (map-layers/geojson-layer endpoint
                     "geojson_thk_project_related_restrictions"
-                    {"project_id" project
+                    {"entity_id" (:db/id project)
                      "distance" 200}
                     map-features/project-related-restriction-style
                     {:opacity 0.5})})
@@ -219,7 +219,7 @@
                  {:related-cadastral-units
                   (map-layers/geojson-layer endpoint
                     "geojson_thk_project_related_cadastral_units"
-                    {"project_id" project
+                    {"entity_id" (:db/id project)
                      "distance" 200}
                     map-features/cadastral-unit-style
                     {:opacity 0.5})}))}
