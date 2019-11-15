@@ -203,8 +203,8 @@
     {:class (<class theme-spacing/fill-content)
      :layers (merge {:thk-project
                      (map-layers/geojson-layer endpoint
-                       "geojson_thk_project"
-                       {"id" project}
+                       "geojson_entities"
+                       {"ids" (str "{" (:db/id project) "}")}
                        map-features/project-line-style
                        {:fit-on-load? true})}
                (when (= tab "restrictions")
