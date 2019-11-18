@@ -36,7 +36,8 @@
             [teet.ui.progress :as progress]
             [teet.util.collection :refer [count-by]]
             teet.project.project-info
-            [teet.project.project-model :as project-model]))
+            [teet.project.project-model :as project-model]
+            [teet.theme.theme-colors :as colors]))
 
 (defn task-form [e! close _activity-id task]
   ;;Task definition (under project activity)
@@ -129,11 +130,15 @@
                              (tasks-by-completion true 0)
                              (tasks-by-completion false 0)]}))]]))]))
 
+
+
+
+
 (defn project-tab-selection
   [{:thk.project/keys [id]}]
   [:div
-   [:a {:href (str "#/projects/" id "?tab=details")} [icons/maps-local-bar]]
-   [:a {:href (str "#/projects/" id "?tab=map")} [icons/maps-map]]])
+   [:a {:href (str "#/projects/" id "?tab=details")} [icons/teet-details {:class (<class common-styles/tab-icon)}]]
+   [:a {:href (str "#/projects/" id "?tab=map")} [icons/teet-map {:class (<class common-styles/tab-icon)}]]])
 
 (defn- project-header [{:thk.project/keys [name custom-name] :as project} breadcrumbs activities]
   [:div

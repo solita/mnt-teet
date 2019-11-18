@@ -31,3 +31,7 @@
   []
   {:display        :flex
    :flex-direction :column})
+
+(defn tab-icon []
+  ^{:pseudo {:hover {:fill theme-colors/blue-dark}}}
+  {:fill theme-colors/blue-light})
