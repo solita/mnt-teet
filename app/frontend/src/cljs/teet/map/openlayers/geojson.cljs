@@ -32,7 +32,7 @@
           (add-features! (url-or-data))
 
           :else
-          (-> (postgrest-ui.impl.fetch/fetch-impl
+          (-> (@postgrest-ui.impl.fetch/fetch-impl
                url-or-data #js {:headers #js {"Accept" "application/octet-stream"}})
               (.then #(.json %))
               (.then add-features!))))))

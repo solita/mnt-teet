@@ -15,7 +15,7 @@
 (defn load-wmts-capabilities
   "Load WMTS capabilities document from given URL. Returns a promise"
   [url]
-  (p-> (postgrest-ui.impl.fetch/fetch-impl
+  (p-> (@postgrest-ui.impl.fetch/fetch-impl
         (str url "?request=getcapabilities"))
        #(.text %)
        (fn [text]

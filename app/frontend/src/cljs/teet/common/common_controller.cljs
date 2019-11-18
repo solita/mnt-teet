@@ -163,15 +163,21 @@
   "Call JS fetch API. Automatically adds response code check and error handling.
   Returns promise."
   [e! & fetch-args]
-  (let [[url arg-map] fetch-args
-        p (js/fetch url arg-map)]
+  (let [[url authless-arg-map-js] fetch-args
+        authless-arg-map (js->clj authless-arg-map-js)
+        authless-headers (or (get authless-arg-map "headers")
+                             {})
+        new-headers (assoc authless-headers
+                       "Authorization" (str "Bearer " @api-token))
+        clj-arg-map (assoc authless-arg-map
+                           "headers" new-headers)
+        p (js/fetch url (clj->js clj-arg-map))
+        ; p (js/fetch url authless-arg-map-js)
+        ]
+    (log/info "orig argmap:" authless-arg-map "->" clj-arg-map)
     (-> p
         (.then check-response-status)
         (.catch (catch-response-error e!)))))
-
-(defn api-token-header []
-  (when @api-token
-    {"Authorization" (str "Bearer " @api-token)}))
 
 (defmethod tuck-effect/process-effect :rpc [e! {:keys [rpc args result-path result-event
                                                        endpoint method loading-path
@@ -199,10 +205,8 @@
           ;; POST request, send parameters as JSON body
           (fetch* e! (str endpoint "/rpc/" rpc)
                   #js {:method "POST"
-                       :headers (clj->js (merge
-                                          (api-token-header)
-                                          {"Content-Type" "application/json"
-                                           "Accept" "application/json"}))
+                       :headers (clj->js {"Content-Type" "application/json"
+                                          "Accept" "application/json"})
                        :body (-> args clj->js js/JSON.stringify)}))
         (.then #(.json %))
         (.then (fn [json]
@@ -229,13 +233,11 @@
     (let [payload  (transit/clj->transit {:query query :args args})]
       (-> (case method
             "GET" (fetch* e! (str "/query/?q=" (js/encodeURIComponent payload))
-                          #js {:method "GET"
-                               :headers (clj->js (api-token-header))})
+                          #js {:method "GET"})
             "POST" (fetch* e! "/query/"
                            #js {:method "POST"
                                 :headers (clj->js
-                                          (merge (api-token-header)
-                                                 {"Content-Type" "application/json+transit"}))
+                                          {"Content-Type" "application/json+transit"})
                                 :body payload}))
           (.then #(.text %))
           (.then (fn [text]
@@ -272,8 +274,7 @@
     (-> (fetch* e! (str "/command/")
                 #js {:method "POST"
                      :headers (clj->js
-                               (merge (api-token-header)
-                                      {"Content-Type" "application/json+transit"}))
+                               {"Content-Type" "application/json+transit"})
                      :body (transit/clj->transit {:command command
                                                   :payload payload})})
         (.then #(.text %))

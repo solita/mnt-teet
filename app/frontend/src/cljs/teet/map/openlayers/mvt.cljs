@@ -37,7 +37,7 @@
     (.setLoader
      tile
      (fn []
-       (-> (postgrest-ui.impl.fetch/fetch-impl
+       (-> (@postgrest-ui.impl.fetch/fetch-impl
             url #js {:headers (doto (js/Headers.)
                                 (.append "Accept" "application/octet-stream"))})
            (.then #(.arrayBuffer %))
