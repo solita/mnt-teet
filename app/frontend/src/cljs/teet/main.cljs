@@ -11,6 +11,7 @@
             [teet.navigation.navigation-view :as navigation-view]
             [teet.routes :as routes]
             [teet.ui.material-ui :refer [CssBaseline]]
+            [teet.ui.build-info :as build-info]
             [tuck.core :as t]
             [teet.theme.theme-provider :as theme]
             [teet.snackbar.snackbar-view :as snackbar]
@@ -38,6 +39,7 @@
     (let [nav-open? (boolean (:open? navigation))]
       [theme/theme-provider
        [:<>
+        [build-info/top-banner nav-open? page]
         [snackbar/snackbar-container e! snackbar]
         [CssBaseline]
         (if (= page :login)

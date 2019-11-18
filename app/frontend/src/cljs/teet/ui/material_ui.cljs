@@ -28,7 +28,7 @@
 (define-mui-components Paper Typography)
 
 ;; Common utility components
-(define-mui-components Collapse Divider CircularProgress LinearProgress Drawer
+(define-mui-components Divider CircularProgress LinearProgress Drawer
                        AppBar MuiThemeProvider Toolbar CssBaseline Link Breadcrumbs
                        ClickAwayListener Switch)
 
@@ -48,7 +48,7 @@
 (define-mui-components Table TableRow TableHead TableCell TableSortLabel TableBody TableFooter)
 
 ;; Transitions
-(define-mui-components Zoom Fade)
+(define-mui-components Zoom Fade Collapse)
 
 ;; Dialogs and modals
 (define-mui-components Dialog DialogTitle DialogContent Popover Popper)
