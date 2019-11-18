@@ -8,6 +8,7 @@
   [:db/id
    :thk.project/id
    :thk.project/name
+   :thk.project/custom-name
    :thk.project/road-nr
    :thk.project/start-m
    :thk.project/end-m
@@ -18,8 +19,7 @@
 (def project-info-columns
   (into project-listing-columns
         [:thk.project/procurement-nr
-         :thk.project/owner
-         :thk.project/custom-name]))
+         :thk.project/owner]))
 
 (def project-listing-display-columns
   [:thk.project/name
