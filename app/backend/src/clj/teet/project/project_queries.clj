@@ -12,9 +12,21 @@
 (defmethod db-api/query :thk.project/fetch-project [{db :db} {:thk.project/keys [id]}]
   (d/pull db (into project-model/project-info-columns
                    '[{:thk.project/lifecycles
-                      [:thk.lifecycle/estimated-start-date :thk.lifecycle/estimated-end-date :thk.lifecycle/type
+                      [:db/id :thk.lifecycle/estimated-start-date :thk.lifecycle/estimated-end-date :thk.lifecycle/type
                        {:thk.lifecycle/activities [*]}]}])
           [:thk.project/id id]))
+
+(defmethod db-api/query :thk.project/fetch-project-lifecycle
+  [{db :db} {:keys [project lifecycle]}]
+  (d/q '[:find (pull ?e [* {:thk.project/_lifecycles
+                            [:thk.project/name
+                             :thk.project/custom-name
+                             :thk.project/id]}])
+         :where [?project :thk.project/lifecycles ?e]
+         :in $ ?project ?e]
+       db
+       [:thk.project/id project]
+       lifecycle))
 
 (defmethod db-api/query :thk.project/listing [{db :db} _]
   {:query '[:find (pull ?e columns)

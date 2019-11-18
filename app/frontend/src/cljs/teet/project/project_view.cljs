@@ -110,7 +110,16 @@
                :start-date estimated-start-date
                :end-date   estimated-end-date
                :fill       "magenta"
-               :hover      [:div (tr* (:db/ident type))]}))]]))]))
+               :hover      [:div (tr* (:db/ident type))]}))]]))
+
+     [:div
+      "FIXME: lifecycle navigation"
+      [:ul
+       (for [{id :db/id type :thk.lifecycle/type} lifecycles]
+         ^{:key (str id)}
+         [:li [:a {:href (str "#/projects/" (:thk.project/id project) "/"
+                              (str id))}
+               (tr [:enum (:db/ident type)])]])]]]))
 
 
 
@@ -355,3 +364,6 @@
     (if (initialized? project)
       [project-data project]
       [initialization-form e! project])]])
+
+(defn project-lifecycle-page [e! app lifecycle breadcrumbs]
+  [:div "LIFECYCLE " (pr-str lifecycle)])
