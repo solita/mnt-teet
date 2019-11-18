@@ -28,16 +28,19 @@
   (r/with-let [branch (.-teet_branch js/window)
                git-hash (.-teet_githash js/window)
                build-time (.-teet_buildtime js/window)
-               open? (r/atom (or branch git-hash))          ;;TODO: Add check for production/prelive environment
+               open? (r/atom (boolean (or branch git-hash))) ;;TODO: Add check for production/prelive environment
                close-fn #(swap! open? not)]
+    (println "git-hash: " git-hash)
+    (println "buid-time: " buid-time)
     [Collapse {:in @open?}
      [:div {:class (<class banner-style nav-open? page)}
       [:p {:style {:padding "0 1rem"
                    :margin  0}}
        [:b (tr [:environment :info-text]) " "]
        [:span (tr [:environment :build-time]) ": " [:strong build-time]]
-       [:p {:style {:margin 0}}
-        [:span (tr [:environment :version])
+       [:span {:style {:margin 0
+                       :display :block}}
+        [:span (tr [:environment :version]) ": "
          [:strong branch]]]
        [:span "Git hash: "
         [:strong git-hash]]]
