@@ -75,8 +75,8 @@
       (str complete-count " / " num-tasks " tasks complete")])])
 
 (defn project-data
-  [activities {:thk.project/keys [name estimated-start-date estimated-end-date road-nr start-m end-m
-                                  carriageway procurement-nr] :as project}]
+  [{:thk.project/keys [name estimated-start-date estimated-end-date road-nr start-m end-m
+                       carriageway procurement-nr lifecycles] :as project}]
   (let [project-name (project-model/get-column project :thk.project/project-name)]
     [:div
      [itemlist/ItemList
@@ -92,43 +92,25 @@
       [:div (tr [:project :information :procurement-number]) ": " procurement-nr]
       [:div (tr [:project :information :carriageway]) ": " carriageway]]
 
-     (when (and estimated-start-date estimated-end-date
-                #_(seq activities))
+     (when (and estimated-start-date estimated-end-date)
        (let [tr* (tr-tree [:enum])]
          [:<>
           [:br]
           [timeline/timeline {:start-date estimated-start-date
                               :end-date   estimated-end-date}
            (concat
-             [{:label      project-name
+            [{:label      project-name
+              :start-date estimated-start-date
+              :end-date   estimated-end-date
+              :fill       "cyan"
+              :hover      [:div project-name]}]
+            (for [{:thk.lifecycle/keys [type estimated-start-date estimated-end-date]}
+                  (sort-by :thk.lifecycle/estimated-start-date lifecycles)]
+              {:label      (-> type :db/ident tr*)
                :start-date estimated-start-date
                :end-date   estimated-end-date
-               :fill       "cyan"
-               :hover      [:div "foo"]}]
-             (for [{name       :activity/name
-                    start-date :activity/estimated-start-date
-                    end-date   :activity/estimated-end-date
-                    tasks      :activity/tasks} (sort-by :activity/estimated-start-date activities)
-                   :let [tasks-by-completion (count-by task-controller/completed? tasks)
-                         num-tasks (count tasks)
-                         complete-pct (when (seq tasks)
-                                        (/ (tasks-by-completion true 0) num-tasks))
-                         incomplete-pct (if complete-pct
-                                          (/ (tasks-by-completion false 0) num-tasks)
-                                          1)]]
-               {:label      (-> name :db/ident tr*)
-                :start-date start-date
-                :end-date   end-date
-                :fill       (if complete-pct
-                              [[complete-pct "magenta"]
-                               [incomplete-pct "url(#incomplete)"]]
-                              "url(#incomplete)")
-                :hover      [activity-info-popup
-                             (-> name :db/ident tr*)
-                             start-date end-date
-                             num-tasks
-                             (tasks-by-completion true 0)
-                             (tasks-by-completion false 0)]}))]]))]))
+               :fill       "magenta"
+               :hover      [:div (tr* (:db/ident type))]}))]]))]))
 
 
 
@@ -355,10 +337,9 @@
   [e! project]
   [:h1 "project info component"])
 
-(defn project-page [e! {{:keys [project]} :params
-                        {:keys [tab]} :query
+(defn project-page [e! {{:keys [tab]} :query
                         {:keys [add-activity add-task]} :query :as app}
-                    {:keys [activities] :as project}
+                    project
                     breadcrumbs]
   [:<>
    (when add-activity
@@ -372,5 +353,5 @@
    [:div {:class (<class common-styles/top-info-spacing)}
     [project-header project breadcrumbs]
     (if (initialized? project)
-      [project-data activities project]
+      [project-data project]
       [initialization-form e! project])]])
