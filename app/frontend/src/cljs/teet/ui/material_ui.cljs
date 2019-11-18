@@ -28,7 +28,7 @@
 (define-mui-components Paper Typography)
 
 ;; Common utility components
-(define-mui-components Collapse Divider CircularProgress LinearProgress Drawer
+(define-mui-components Divider CircularProgress LinearProgress Drawer
                        AppBar MuiThemeProvider Toolbar CssBaseline Link Breadcrumbs
                        ClickAwayListener Switch)
 
