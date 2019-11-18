@@ -108,7 +108,7 @@
              (doall
               (for [project (take @show-count
                                   ((if (= sort-dir :asc) identity reverse)
-                                   (sort-by sort-col projects)))]
+                                   (sort-by #(project-model/get-column % sort-col) projects)))]
                 ^{:key (:thk.project/id project)}
                 [TableRow {:on-click (e! project-controller/->NavigateToProject (:thk.project/id project))
                            :class (<class projects-style/row-style)}
