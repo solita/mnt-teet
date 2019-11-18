@@ -287,64 +287,96 @@
                :db/doc "URI of data imported by integration transaction"}]]}
 
  {:db/ident :migration/project-activities
-  :txes [[{:db/ident :thk.project/activities
-           :db/cardinality :db.cardinality/many
-           :db/valueType :db.type/ref
-           :db/doc "Activities in this project"}]
+  :txes     [[{:db/ident       :thk.project/activities
+               :db/cardinality :db.cardinality/many
+               :db/valueType   :db.type/ref
+               :db/doc         "Activities in this project"}]
 
-         [{:db/ident :activity/modified
-          :db/valueType :db.type/instant
-          :db/cardinality :db.cardinality/one
-           :db/doc "Last modification timestamp for activity"}
+             [{:db/ident       :activity/modified
+               :db/valueType   :db.type/instant
+               :db/cardinality :db.cardinality/one
+               :db/doc         "Last modification timestamp for activity"}
 
-          {:db/ident :activity/estimated-start-date
-           :db/valueType :db.type/instant
-           :db/cardinality :db.cardinality/one}
+              {:db/ident       :activity/estimated-start-date
+               :db/valueType   :db.type/instant
+               :db/cardinality :db.cardinality/one}
 
-          {:db/ident :activity/estimated-end-date
-           :db/valueType :db.type/instant
-           :db/cardinality :db.cardinality/one}
+              {:db/ident       :activity/estimated-end-date
+               :db/valueType   :db.type/instant
+               :db/cardinality :db.cardinality/one}
 
-          {:db/ident :activity/actual-start-date
-           :db/valueType :db.type/instant
-           :db/cardinality :db.cardinality/one}
+              {:db/ident       :activity/actual-start-date
+               :db/valueType   :db.type/instant
+               :db/cardinality :db.cardinality/one}
 
-          {:db/ident :activity/actual-end-date
-           :db/valueType :db.type/instant
-           :db/cardinality :db.cardinality/one}
+              {:db/ident       :activity/actual-end-date
+               :db/valueType   :db.type/instant
+               :db/cardinality :db.cardinality/one}
 
-          {:db/ident :activity/tasks
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/many}]
+              {:db/ident       :activity/tasks
+               :db/valueType   :db.type/ref
+               :db/cardinality :db.cardinality/many}]
 
-         [;; activity names
-          {:db/ident :activity.name/pre-design :enum/attribute :activity/name}
-          {:db/ident :activity.name/preliminary-design  :enum/attribute :activity/name}
-          {:db/ident :activity.name/detailed-design :enum/attribute :activity/name}
-          {:db/ident :activity.name/land-acquisition :enum/attribute :activity/name}
-          {:db/ident :activity.name/construction :enum/attribute :activity/name}
-          {:db/ident :activity.name/other :enum/attribute :activity/name}
+             [;; activity names
+              {:db/ident :activity.name/pre-design :enum/attribute :activity/name}
+              {:db/ident :activity.name/preliminary-design :enum/attribute :activity/name}
+              {:db/ident :activity.name/detailed-design :enum/attribute :activity/name}
+              {:db/ident :activity.name/land-acquisition :enum/attribute :activity/name}
+              {:db/ident :activity.name/construction :enum/attribute :activity/name}
+              {:db/ident :activity.name/other :enum/attribute :activity/name}
 
-          ;; activity statuses
-          {:db/ident :activity.status/in-progress :enum/attribute :activity/status}
-          {:db/ident :activity.status/research :enum/attribute :activity/status}
-          {:db/ident :activity.status/completed :enum/attribute :activity/status}
-          {:db/ident :activity.status/valid :enum/attribute :activity/status}
-          {:db/ident :activity.status/canceled :enum/attribute :activity/status}
-          {:db/ident :activity.status/expired :enum/attribute :activity/status}
-          {:db/ident :activity.status/other :enum/attribute :activity/status}
+              ;; activity statuses
+              {:db/ident :activity.status/in-progress :enum/attribute :activity/status}
+              {:db/ident :activity.status/research :enum/attribute :activity/status}
+              {:db/ident :activity.status/completed :enum/attribute :activity/status}
+              {:db/ident :activity.status/valid :enum/attribute :activity/status}
+              {:db/ident :activity.status/canceled :enum/attribute :activity/status}
+              {:db/ident :activity.status/expired :enum/attribute :activity/status}
+              {:db/ident :activity.status/other :enum/attribute :activity/status}
 
-          ;; activity name ref
-          {:db/ident :activity/name
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/one
-           :db/doc "Activity name enum ref"}
+              ;; activity name ref
+              {:db/ident       :activity/name
+               :db/valueType   :db.type/ref
+               :db/cardinality :db.cardinality/one
+               :db/doc         "Activity name enum ref"}
 
-          ;; activity status ref
-          {:db/ident :activity/status
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/one
-           :db/doc "Activity status enum ref"}]]}]
+              ;; activity status ref
+              {:db/ident       :activity/status
+               :db/valueType   :db.type/ref
+               :db/cardinality :db.cardinality/one
+               :db/doc         "Activity status enum ref"}]]}
+
+ {:db/ident :migration/initialize-project
+  :txes     [[{:db/ident       :thk.project/custom-name
+               :db/cardinality :db.cardinality/one
+               :db/valueType   :db.type/string
+               :db/doc         "Custom name given to project in project initialization"}
+
+              {:db/ident       :thk.project/owner
+               :db/cardinality :db.cardinality/one
+               :db/valueType   :db.type/ref
+               :db/doc         "User who owns this project"}]]}
+
+ {:db/ident :migration/project-lifecycle
+  :txes     [[{:db/ident       :thk.lifecycle/estimated-start-date
+               :db/cardinality :db.cardinality/one
+               :db/valueType   :db.type/instant
+               :db/doc         "Estimated start date for lifecycle"}
+              {:db/ident       :thk.lifecycle/estimated-end-date
+               :db/cardinality :db.cardinality/one
+               :db/valueType   :db.type/instant
+               :db/doc         "Estimated end date for lifecycle"}
+              {:db/ident       :thk.lifecycle/activities
+               :db/cardinality :db.cardinality/many
+               :db/valueType   :db.type/ref
+               :db/doc         "Activies performed in this lifecycle"}
+              {:db/ident       :thk.lifecycle/type
+               :db/cardinality :db.cardinality/one
+               :db/valueType   :db.type/ref
+               :db/doc         "Type of the lifecycle. f.ex Construction/Design"}]
+
+             [{:db/ident :thk.lifecycle-type/design :enum/attribute :thk.lifecycle/type}
+              {:db/ident :thk.lifecycle-type/construction :enum/attribute :thk.lifecycle/type}]]}]
 
 
 ;; Project
