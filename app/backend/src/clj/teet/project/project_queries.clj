@@ -11,9 +11,9 @@
 
 (defmethod db-api/query :thk.project/fetch-project [{db :db} {:thk.project/keys [id]}]
   (d/pull db (into project-model/project-info-columns
-                   '[{:thk.project/activities
-                      ;; FIXME: select what to pull
-                      [*]}])
+                   '[{:thk.project/lifecycles
+                      [:thk.lifecycle/estimated-start-date :thk.lifecycle/estimated-end-date :thk.lifecycle/type
+                       {:thk.lifecycle/activities [*]}]}])
           [:thk.project/id id]))
 
 (defmethod db-api/query :thk.project/listing [{db :db} _]
