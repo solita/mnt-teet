@@ -287,12 +287,7 @@
                :db/doc "URI of data imported by integration transaction"}]]}
 
  {:db/ident :migration/project-activities
-  :txes     [[{:db/ident       :thk.project/activities
-               :db/cardinality :db.cardinality/many
-               :db/valueType   :db.type/ref
-               :db/doc         "Activities in this project"}]
-
-             [{:db/ident       :activity/modified
+  :txes     [[{:db/ident       :activity/modified
                :db/valueType   :db.type/instant
                :db/cardinality :db.cardinality/one
                :db/doc         "Last modification timestamp for activity"}
@@ -376,7 +371,13 @@
                :db/doc         "Type of the lifecycle. f.ex Construction/Design"}]
 
              [{:db/ident :thk.lifecycle-type/design :enum/attribute :thk.lifecycle/type}
-              {:db/ident :thk.lifecycle-type/construction :enum/attribute :thk.lifecycle/type}]]}]
+              {:db/ident :thk.lifecycle-type/construction :enum/attribute :thk.lifecycle/type}]]}
+
+ {:db/ident :migration/project-lifecycles
+  :txes [[{:db/ident :thk.project/lifecycles
+           :db/cardinality :db.cardinality/many
+           :db/valueType :db.type/ref
+           :db/doc "Lifecycles in this project"}]]}]
 
 
 ;; Project

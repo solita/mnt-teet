@@ -30,12 +30,25 @@
                  :state {:query :thk.project/listing
                          :args {}}}
 
+ ;; Project overview page
  :project {:path "/projects/:project"
            :parent :projects-list
-           :crumb (teet.project.project-model/get-column state :thk.project/project-name)
+           :crumb (teet.project.project-model/get-column (or (:thk.project/_lifecycles state)
+                                                             state)
+                                                         :thk.project/project-name)
            :view teet.project.project-view/project-page
            :state {:query :thk.project/fetch-project
                    :args {:thk.project/id project}}}
+
+
+ ;; Project lifecycle page
+ :project-lifecycle {:path "/projects/:project/:lifecycle"
+                     :parent :project
+                     :crumb (tr [:enum (-> state :thk.lifecycle/type :db/ident)])
+                     :state {:query :thk.project/fetch-project-lifecycle
+                             :args {:project project
+                                    :lifecycle (goog.math.Long/fromString lifecycle)}}
+                     :view teet.project.project-view/project-lifecycle-page}
 
  :activity-task {:path "/projects/:project/:activity/:task"
                  :parent :project
