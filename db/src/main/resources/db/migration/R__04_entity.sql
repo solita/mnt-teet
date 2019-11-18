@@ -5,7 +5,7 @@ CREATE OR REPLACE FUNCTION teet.mvt_entities(ids BIGINT[],
 AS $$
 SELECT ST_AsMVT(tile) AS mvt
 FROM (SELECT e.tooltip,
-             e.id, e.type,
+             e.id::TEXT, e.type,
              ST_AsMVTGeom(e.geometry,
                           ST_SetSRID(ST_MakeBox2D(ST_MakePoint($2, ymin),
                                                   ST_MakePoint($4, ymax)), 3301),
@@ -20,7 +20,7 @@ CREATE OR REPLACE FUNCTION teet.mvt_entities(type entity_type,
 AS $$
 SELECT ST_AsMVT(tile) AS mvt
 FROM (SELECT e.tooltip,
-             e.id, e.type,
+             e.id::TEXT, e.type,
              ST_AsMVTGeom(e.geometry,
                           ST_SetSRID(ST_MakeBox2D(ST_MakePoint($2, ymin),
                                                   ST_MakePoint($4, ymax)), 3301),
