@@ -32,7 +32,7 @@
 
  :project {:path "/projects/:project"
            :parent :projects-list
-           :crumb (:thk.project/name state)
+           :crumb (teet.project.project-model/get-column state :thk.project/project-name)
            :view teet.project.project-view/project-page
            :state {:query :thk.project/fetch-project
                    :args {:thk.project/id project}}}
