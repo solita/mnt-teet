@@ -5,7 +5,8 @@
             [ol.layer.Vector]
             [teet.map.openlayers.layer :refer [Layer]]
             [clojure.string :as str]
-            [teet.log :as log]))
+            [teet.log :as log]
+            postgrest-ui.impl.fetch))
 
 (defn geojson-url [base-url & params]
   (str base-url "?" (str/join "&"
@@ -31,7 +32,8 @@
           (add-features! (url-or-data))
 
           :else
-          (-> (js/fetch url-or-data #js {:headers #js {"Accept" "application/octet-stream"}})
+          (-> (postgrest-ui.impl.fetch/fetch-impl
+               url-or-data #js {:headers #js {"Accept" "application/octet-stream"}})
               (.then #(.json %))
               (.then add-features!))))))
 

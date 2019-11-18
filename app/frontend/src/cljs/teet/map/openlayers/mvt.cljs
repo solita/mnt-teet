@@ -8,7 +8,8 @@
               [cljs.core.async :as async]
               [clojure.string :as str]
               [ol.style.Style]
-              [ol.style.Text])
+              [ol.style.Text]
+              postgrest-ui.impl.fetch)
     (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn mvt-url [base-url & params]
@@ -36,8 +37,9 @@
     (.setLoader
      tile
      (fn []
-       (-> (js/fetch url #js {:headers (doto (js/Headers.)
-                                         (.append "Accept" "application/octet-stream"))})
+       (-> (postgrest-ui.impl.fetch/fetch-impl
+            url #js {:headers (doto (js/Headers.)
+                                (.append "Accept" "application/octet-stream"))})
            (.then #(.arrayBuffer %))
            (.then (fn [buf]
                     (let [features (.readFeatures format buf #js {:featureProjection "EPSG:3301"})

@@ -6,8 +6,7 @@
             [ol.tilegrid.WMTS]
             [ol.format.WMTSCapabilities]
             [teet.map.openlayers.layer :refer [Layer]]
-            ;[teet.util.promise :refer [promise? p->]]
-            ))
+            postgrest-ui.impl.fetch))
 
 ;;FIXME
 (declare promise?)
@@ -16,7 +15,8 @@
 (defn load-wmts-capabilities
   "Load WMTS capabilities document from given URL. Returns a promise"
   [url]
-  (p-> (js/fetch (str url "?request=getcapabilities"))
+  (p-> (postgrest-ui.impl.fetch/fetch-impl
+        (str url "?request=getcapabilities"))
        #(.text %)
        (fn [text]
          (.read (ol.format.WMTSCapabilities.) text))))
