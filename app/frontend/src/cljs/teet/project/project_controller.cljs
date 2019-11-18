@@ -3,7 +3,8 @@
   (:require [tuck.core :as t]
             [teet.common.common-controller :as common-controller]
             [teet.log :as log]
-            [teet.map.map-controller :as map-controller]))
+            [teet.map.map-controller :as map-controller]
+            goog.math.Long))
 
 
 (defrecord OpenActivityDialog [])                              ; open add activity modal dialog
@@ -14,13 +15,14 @@
 (defrecord ToggleCadastralHightlight [id])
 (defrecord ToggleRestrictionData [id])
 (defrecord UpdateActivityState [id status])
+(defrecord NavigateToProject [thk-project-id])
 
 (defmethod common-controller/map-item-selected
-  "geojson_thk_project_pins" [p]
+  "geojson_entity_pins" [p]
   (->SelectProject (:map/id p)))
 
 (defmethod common-controller/map-item-selected
-  "mvt_thk_projects" [p]
+  "mvt_entities" [p]
   (->SelectProject (:map/id p)))
 
 (defmethod common-controller/map-item-selected
@@ -29,11 +31,25 @@
 
 (extend-protocol t/Event
   SelectProject
-  (process-event [{project-id :project-id} app]
+  (process-event [{id :project-id} app]
+    (def the-id id)
+    (t/fx app
+          {:tuck.effect/type :query
+           :query :thk.project/db-id->thk-id
+           :args {:db/id (cond
+                           (string? id)
+                           (goog.math.Long/fromString id)
+
+                           (number? id)
+                           (goog.math.Long/fromNumber id))}
+           :result-event ->NavigateToProject}))
+
+  NavigateToProject
+  (process-event [{id :thk-project-id} app]
     (t/fx app
       {:tuck.effect/type :navigate
        :page :project
-       :params {:project project-id}}))
+       :params {:project id}}))
 
   OpenActivityDialog
   (process-event [_ app]

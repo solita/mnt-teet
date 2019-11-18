@@ -110,7 +110,7 @@
                                   ((if (= sort-dir :asc) identity reverse)
                                    (sort-by sort-col projects)))]
                 ^{:key (:thk.project/id project)}
-                [TableRow {:on-click (e! project-controller/->SelectProject (:thk.project/id project))
+                [TableRow {:on-click (e! project-controller/->NavigateToProject (:thk.project/id project))
                            :class (<class projects-style/row-style)}
                  (doall
                   (for [column project-model/project-listing-display-columns]

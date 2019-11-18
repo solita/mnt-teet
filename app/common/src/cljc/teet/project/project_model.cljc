@@ -5,7 +5,8 @@
      :clj (:require [clojure.string :as str])))
 
 (def project-listing-columns
-  [:thk.project/id
+  [:db/id
+   :thk.project/id
    :thk.project/name
    :thk.project/road-nr
    :thk.project/start-m
