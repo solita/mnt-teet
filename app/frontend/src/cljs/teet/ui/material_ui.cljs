@@ -48,7 +48,7 @@
 (define-mui-components Table TableRow TableHead TableCell TableSortLabel TableBody TableFooter)
 
 ;; Transitions
-(define-mui-components Zoom Fade)
+(define-mui-components Zoom Fade Collapse)
 
 ;; Dialogs and modals
 (define-mui-components Dialog DialogTitle DialogContent Popover Popper)
