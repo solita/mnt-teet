@@ -34,7 +34,7 @@
      [:div {:class (<class banner-style nav-open? page)}
       [:p {:style {:padding "0 1rem"
                    :margin  0}}
-       [:b (tr [:environment :info-text])]
+       [:b (tr [:environment :info-text]) " "]
        [:span (tr [:environment :build-time]) ": " [:strong build-time]]
        [:p {:style {:margin 0}}
         [:span (tr [:environment :version])
