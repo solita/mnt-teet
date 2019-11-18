@@ -25,13 +25,11 @@
 (defn top-banner
   "Show build information at the top of the page"
   [nav-open? page]
-  (r/with-let [branch (.-teet_branch js/window)
-               git-hash (.-teet_githash js/window)
-               build-time (.-teet_buildtime js/window)
+  (r/with-let [branch (aget js/window "teet_branch")
+               git-hash (aget js/window "teet_githash")
+               build-time (aget js/window "teet_buildtime")
                open? (r/atom (boolean (or branch git-hash))) ;;TODO: Add check for production/prelive environment
                close-fn #(swap! open? not)]
-    (println "git-hash: " git-hash)
-    (println "buid-time: " buid-time)
     [Collapse {:in @open?}
      [:div {:class (<class banner-style nav-open? page)}
       [:p {:style {:padding "0 1rem"
