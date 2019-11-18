@@ -171,6 +171,7 @@
 
 (defn api-token-header []
   (when @api-token
+    (log/info "api-token has:" (pr-str @api-token) (type @api-token))
     {"Authorization" (str "Bearer " @api-token)}))
 
 (defmethod tuck-effect/process-effect :rpc [e! {:keys [rpc args result-path result-event
@@ -290,6 +291,7 @@
 
 (defmethod tuck-effect/process-effect :set-api-token [e! {token :token}]
   (assert token "Must specify :token to set as new API token")
+  (log/info "set-api-token: new value" (pr-str token) (type token))
   (reset! api-token token)
   (reset! postgrest-ui.impl.fetch/fetch-impl (partial fetch* e!)))
 

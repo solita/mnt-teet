@@ -71,6 +71,7 @@
                                               :page :projects}
                                              navigate-data))
                         effects)]
+          (log/info "setting token under app-state & calling set-api-token effect")
           (apply t/fx
                  (-> app
                      (assoc :user user)
