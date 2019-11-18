@@ -35,7 +35,8 @@
             [teet.ui.timeline :as timeline]
             [teet.ui.progress :as progress]
             [teet.util.collection :refer [count-by]]
-            teet.project.project-info))
+            teet.project.project-info
+            [teet.project.project-model :as project-model]))
 
 (defn task-form [e! close _activity-id task]
   ;;Task definition (under project activity)
@@ -74,59 +75,74 @@
 
 (defn project-data
   [activities {:thk.project/keys [name estimated-start-date estimated-end-date road-nr start-m end-m
-                                  carriageway procurement-nr]}]
+                                  carriageway procurement-nr] :as project}]
+  (let [project-name (project-model/get-column project :thk.project/project-name)]
+    [:div
+     [itemlist/ItemList
+      {}
+      [:div (tr [:project :information :estimated-duration])
+       ": "
+       (format/date estimated-start-date) " \u2013 " (format/date estimated-end-date)]
+      [:div (tr [:project :information :road-number]) ": " road-nr]
+      (when (and start-m end-m)
+        [:div (tr [:project :information :km-range]) ": "
+         (.toFixed (/ start-m 1000) 3) " \u2013 "
+         (.toFixed (/ start-m 1000) 3)])
+      [:div (tr [:project :information :procurement-number]) ": " procurement-nr]
+      [:div (tr [:project :information :carriageway]) ": " carriageway]]
+
+     (when (and estimated-start-date estimated-end-date
+                #_(seq activities))
+       (let [tr* (tr-tree [:enum])]
+         [:<>
+          [:br]
+          [timeline/timeline {:start-date estimated-start-date
+                              :end-date   estimated-end-date}
+           (concat
+             [{:label      project-name
+               :start-date estimated-start-date
+               :end-date   estimated-end-date
+               :fill       "cyan"
+               :hover      [:div "foo"]}]
+             (for [{name       :activity/name
+                    start-date :activity/estimated-start-date
+                    end-date   :activity/estimated-end-date
+                    tasks      :activity/tasks} (sort-by :activity/estimated-start-date activities)
+                   :let [tasks-by-completion (count-by task-controller/completed? tasks)
+                         num-tasks (count tasks)
+                         complete-pct (when (seq tasks)
+                                        (/ (tasks-by-completion true 0) num-tasks))
+                         incomplete-pct (if complete-pct
+                                          (/ (tasks-by-completion false 0) num-tasks)
+                                          1)]]
+               {:label      (-> name :db/ident tr*)
+                :start-date start-date
+                :end-date   end-date
+                :fill       (if complete-pct
+                              [[complete-pct "magenta"]
+                               [incomplete-pct "url(#incomplete)"]]
+                              "url(#incomplete)")
+                :hover      [activity-info-popup
+                             (-> name :db/ident tr*)
+                             start-date end-date
+                             num-tasks
+                             (tasks-by-completion true 0)
+                             (tasks-by-completion false 0)]}))]]))]))
+
+(defn project-tab-selection
+  [{:thk.project/keys [id]}]
   [:div
-   [Heading1 name]
-   [itemlist/ItemList
-    {}
-    [:div (tr [:project :information :estimated-duration])
-     ": "
-     (format/date estimated-start-date) " \u2013 " (format/date estimated-end-date)]
-    [:div (tr [:project :information :road-number]) ": " road-nr]
-    (when (and start-m end-m)
-      [:div (tr [:project :information :km-range]) ": "
-       (.toFixed (/ start-m 1000) 3) " \u2013 "
-       (.toFixed (/ start-m 1000) 3)])
-    [:div (tr [:project :information :procurement-number]) ": " procurement-nr]
-    [:div (tr [:project :information :carriageway]) ": " carriageway]]
+   [:a {:href (str "#/projects/" id "?tab=details")} [icons/maps-local-bar]]
+   [:a {:href (str "#/projects/" id "?tab=map")} [icons/maps-map]]])
 
-   (when (and estimated-start-date estimated-end-date
-              (seq activities))
-     (let [tr* (tr-tree [:enum])]
-       [:<>
-        [:br]
-        [timeline/timeline {:start-date estimated-start-date
-                            :end-date  estimated-start-date}
-         (for [{name :activity/name
-                start-date :activity/estimated-start-date
-                end-date :activity/estimated-end-date
-                tasks :activity/tasks} (sort-by :activity/estimated-start-date activities)
-               :let [tasks-by-completion (count-by task-controller/completed? tasks)
-                     num-tasks (count tasks)
-                     complete-pct (when (seq tasks)
-                                    (/ (tasks-by-completion true 0) num-tasks))
-                     incomplete-pct (if complete-pct
-                                      (/ (tasks-by-completion false 0) num-tasks)
-                                      1)]]
-           {:label (-> name :db/ident tr*)
-            :start-date start-date
-            :end-date end-date
-            :fill (if complete-pct
-                    [[complete-pct "green"]
-                     [incomplete-pct "url(#incomplete)"]]
-                    "url(#incomplete)")
-            :hover [activity-info-popup
-                    (-> name :db/ident tr*)
-                    start-date end-date
-                    num-tasks
-                    (tasks-by-completion true 0)
-                    (tasks-by-completion false 0)]})]]))])
-
-
-(defn- project-info [project breadcrumbs activities]
+(defn- project-header [{:thk.project/keys [name custom-name] :as project} breadcrumbs activities]
   [:div
-   [breadcrumbs/breadcrumbs breadcrumbs]
-   [project-data activities project]])
+   [:div {:style {:display :flex
+                  :justify-content :space-between}}
+    [breadcrumbs/breadcrumbs breadcrumbs]
+    [project-tab-selection project]]
+   [Heading1 (project-model/get-column project :thk.project/project-name)]
+   #_[project-data activities project]])
 
 (defn activity-action-heading
   [{:keys [heading button]}]
@@ -312,58 +328,44 @@
        ^{:key id}
        [cadastral-unit-component e! unit]))])
 
+(defn initialized?
+  [project]
+  (contains? project :thk.project/owner))
+
+(defn initialization-form
+  [e! project]
+  (e! (project-controller/->UpdateInitializationForm {:thk.project/custom-name (:thk.project/name project)}))
+  (fn [e! project]
+    [form/form {:e!              e!
+                :value           (:initialization-form project)
+                :on-change-event project-controller/->UpdateInitializationForm
+                :save-event      project-controller/->InitializeProject}
+     ^{:attribute :thk.project/custom-name}
+     [TextField {:full-width true :variant :outlined}]
+
+     ^{:attribute :thk.project/owner}
+     [select/select-user {:e! e!}]]))
+
+(defn project-info
+  [e! project]
+  [:h1 "project info component"])
+
 (defn project-page [e! {{:keys [project]} :params
                         {:keys [tab]} :query
                         {:keys [add-activity add-task]} :query :as app}
                     {:keys [activities] :as project}
                     breadcrumbs]
-  (let [tab (or tab "activities")]
-    [:<>
-     (when add-activity
-       [panels/modal {:title (tr [:project :add-activity])
-                      :on-close #(e! (project-controller/->CloseActivityDialog))}
-        [activity-view/activity-form e! project-controller/->CloseActivityDialog (get-in app [:project project :new-activity])]])
-     (when add-task
-       [panels/modal {:title (tr [:project :add-task])
-                      :on-close #(e! (project-controller/->CloseTaskDialog))}
-        [task-form e! project-controller/->CloseTaskDialog add-task (get-in app [:project project :new-task])]])
-     [:div {:class (<class project-style/project-view-container)}
-      [Grid {:container true}
-       [Grid {:item  true
-              :xs    6
-              :class (<class common-styles/grid-left-item)}
-        [:div {:class (<class common-styles/top-info-spacing)}
-         [project-info project breadcrumbs activities]]
-
-        [tabs/tabs {:e!           e!
-                    :selected-tab tab}
-         {:value "activities"
-          :label (tr [:project :activities-tab])}
-         {:value "restrictions"
-          :label (tr [:project :restrictions-tab])}
-         {:value "cadastral-units"
-          :label (tr [:project :cadastral-units-tab])}]
-        [layout/section
-         (case tab
-           "activities"
-           [project-activity-listing e! project activities]
-
-           "restrictions"
-           ^{:key "restrictions"}
-           [query/rpc (merge (project-controller/restrictions-rpc project)
-                             {:e!         e!
-                              :app        app
-                              :state-path [:project (:thk.project/id project) :restrictions]
-                              :skeleton   [collapse-skeleton true 5]
-                              :view       project-related-restrictions})]
-
-           "cadastral-units"
-           ^{:key "cadastral-units"}
-           [query/rpc (merge (project-controller/cadastral-units-rpc project)
-                             {:e!         e!
-                              :app        app
-                              :state-path [:project (:thk.project/id project) :cadastral-units]
-                              :view       project-related-cadastral-units
-                              :skeleton   [collapse-skeleton false 5]})])]]
-       [Grid {:item true :xs 6}
-        [project-map e! (get-in app [:config :api-url]) project (get-in app [:query :tab])]]]]]))
+  [:<>
+   (when add-activity
+     [panels/modal {:title    (tr [:project :add-activity])
+                    :on-close #(e! (project-controller/->CloseActivityDialog))}
+      [activity-view/activity-form e! project-controller/->CloseActivityDialog (get-in app [:project project :new-activity])]])
+   (when add-task
+     [panels/modal {:title    (tr [:project :add-task])
+                    :on-close #(e! (project-controller/->CloseTaskDialog))}
+      [task-form e! project-controller/->CloseTaskDialog add-task (get-in app [:project project :new-task])]])
+   [:div {:class (<class common-styles/top-info-spacing)}
+    [project-header project breadcrumbs]
+    (if (initialized? project)
+      [project-data activities project]
+      [initialization-form e! project])]])

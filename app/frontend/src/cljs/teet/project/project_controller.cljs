@@ -16,6 +16,9 @@
 (defrecord ToggleRestrictionData [id])
 (defrecord UpdateActivityState [id status])
 (defrecord NavigateToProject [thk-project-id])
+(defrecord InitializeProject [])
+(defrecord UpdateInitializationForm [form-data])
+
 
 (defmethod common-controller/map-item-selected
   "geojson_entity_pins" [p]
@@ -50,6 +53,22 @@
       {:tuck.effect/type :navigate
        :page :project
        :params {:project id}}))
+
+  InitializeProject
+  (process-event [_ app]
+    (let [{:thk.project/keys [id name]} (get-in app [:route :project])
+          {:thk.project/keys [custom-name owner]} (get-in app [:route :project :initialization-form])]
+      (t/fx app {:tuck.effect/type :command!
+                 :command          :thk.project/initialize!
+                 :payload          (merge {:thk.project/id    id
+                                           :thk.project/owner owner}
+                                          (when (not= name custom-name)
+                                            {:thk.project/custom-name custom-name}))
+                 :result-event     common-controller/->Refresh})))
+
+  UpdateInitializationForm
+  (process-event [{:keys [form-data]} app]
+    (update-in app [:route :project :initialization-form] merge form-data))
 
   OpenActivityDialog
   (process-event [_ app]
