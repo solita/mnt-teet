@@ -77,7 +77,7 @@
            [:span])]))]]))
 
 (defn- projects-listing-table [_ _]
-  (let [sort-column (r/atom [:thk.project/name :asc])
+  (let [sort-column (r/atom [:thk.project/project-name :asc])
         show-count (r/atom 20)
         sort! (fn [col]
                 (reset! show-count 20)
