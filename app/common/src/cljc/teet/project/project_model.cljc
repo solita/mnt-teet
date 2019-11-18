@@ -22,7 +22,7 @@
          :thk.project/owner]))
 
 (def project-listing-display-columns
-  [:thk.project/name
+  [:thk.project/project-name
    :thk.project/road-nr
    :thk.project/km-range
    :thk.project/carriageway
@@ -40,6 +40,12 @@
 (defmethod get-column :thk.project/estimated-date-range
   [{:thk.project/keys [estimated-start-date estimated-end-date]} _]
   [estimated-start-date estimated-end-date])
+
+(defmethod get-column :thk.project/project-name
+  [{:thk.project/keys [custom-name name]}]
+  (if-not (str/blank? custom-name)
+    custom-name
+    name))
 
 #?(:cljs
    (defmulti format-column-value (fn [column _value]
@@ -60,7 +66,7 @@
 (defn filtered-projects [projects filters]
   (filter (fn [project]
             (every? (fn [[filter-attribute filter-value]]
-                      (let [v (get project filter-attribute)]
+                      (let [v (get-column project filter-attribute)]
                         (cond
                           (string? filter-value)
                           (and v (str/includes? (str/lower-case v)

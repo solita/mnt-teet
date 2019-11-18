@@ -55,7 +55,7 @@
            :on-click (r/partial sort! column)}
           (tr [:fields column])]
          (case column
-           :thk.project/name
+           :thk.project/project-name
            [TextField {:value (or (get @filters column) "")
                        :type "text"
                        :variant :filled
