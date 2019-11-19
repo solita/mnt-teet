@@ -10,7 +10,7 @@
       :thk.project/id))
 
 (defmethod db-api/query :thk.project/fetch-project [{db :db} {:thk.project/keys [id]}]
-  (d/pull db (into project-model/project-info-columns
+  (d/pull db (into project-model/project-info-attributes
                    '[{:thk.project/lifecycles
                       [:db/id :thk.lifecycle/estimated-start-date :thk.lifecycle/estimated-end-date :thk.lifecycle/type
                        {:thk.lifecycle/activities [*]}]}])
@@ -32,5 +32,5 @@
   {:query '[:find (pull ?e columns)
             :in $ columns
             :where [?e :thk.project/id _]]
-   :args [db project-model/project-listing-columns]
+   :args [db project-model/project-listing-attributes]
    :result-fn (partial mapv first)})

@@ -5,7 +5,7 @@
                        [clojure.string :as str])
                 :clj ([clojure.string :as str]))))
 
-(def project-listing-columns
+(def project-listing-attributes
   [:db/id
    :thk.project/id
    :thk.project/name
@@ -16,10 +16,10 @@
    :thk.project/carriageway
    :thk.project/estimated-start-date
    :thk.project/estimated-end-date
-   {:thk.project/owner [:user/id :user/given-name :user/family-name]}])
+   {:thk.project/owner user-model/user-listing-attributes}])
 
-(def project-info-columns
-  (into project-listing-columns
+(def project-info-attributes
+  (into project-listing-attributes
         [:thk.project/procurement-nr
          :thk.project/owner]))
 
