@@ -6,7 +6,7 @@
             [teet.map.map-view :as map-view]
             [teet.login.login-paths :as login-paths]
             [postgrest-ui.components.item-view :as postgrest-item-view]
-            [teet.ui.material-ui :refer [Grid ButtonBase Collapse Link Divider]]
+            [teet.ui.material-ui :refer [Grid ButtonBase Collapse Link Divider Paper]]
             [teet.ui.text-field :refer [TextField]]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-style :as project-style]
@@ -121,10 +121,6 @@
                               (str id))}
                (tr [:enum (:db/ident type)])]])]]]))
 
-
-
-
-
 (defn project-tab-selection
   [{:thk.project/keys [id]}]
   [:div
@@ -132,13 +128,13 @@
    [:a {:href (str "#/projects/" id "?tab=map")} [icons/teet-map {:class (<class common-styles/tab-icon)}]]])
 
 (defn- project-header [{:thk.project/keys [name custom-name] :as project} breadcrumbs activities]
-  [:div
-   [:div {:style {:display :flex
-                  :justify-content :space-between}}
+  [:div {:style {:display         :flex
+                 :justify-content :space-between}}
+   [:div
     [breadcrumbs/breadcrumbs breadcrumbs]
-    [project-tab-selection project]]
-   [Heading1 (project-model/get-column project :thk.project/project-name)]
-   #_[project-data activities project]])
+    [Heading1 (project-model/get-column project :thk.project/project-name)]]
+   [project-tab-selection project]]
+  #_[project-data activities project])
 
 (defn activity-action-heading
   [{:keys [heading button]}]
@@ -361,9 +357,10 @@
       [task-form e! project-controller/->CloseTaskDialog add-task (get-in app [:project project :new-task])]])
    [:div {:class (<class common-styles/top-info-spacing)}
     [project-header project breadcrumbs]
-    (if (initialized? project)
-      [project-data project]
-      [initialization-form e! project])]])
+    [common/ContentPaper
+     (if (initialized? project)
+       [project-data project]
+       [initialization-form e! project])]]])
 
 (defn project-lifecycle-page [e! app lifecycle breadcrumbs]
   [:div "LIFECYCLE " (pr-str lifecycle)])

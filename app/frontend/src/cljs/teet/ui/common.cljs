@@ -6,8 +6,9 @@
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.format :as format]
             [teet.ui.select :as select]
-            [teet.ui.material-ui :refer [ButtonBase]]
-            [teet.ui.typography :refer [Text SmallText]]))
+            [teet.ui.material-ui :refer [ButtonBase Paper]]
+            [teet.ui.typography :refer [Text SmallText]]
+            [teet.ui.util :as util]))
 
 (def lifecycle-methods
   "Supported lifecycle methods in mixins."
@@ -152,7 +153,7 @@
 ;;
 ;; Status
 ;;
-(defn status-container-style
+(defn- status-container-style
   []
   {:display :flex
    :flex-direction :row
@@ -162,7 +163,14 @@
    :padding-bottom "1rem"
    :margin-bottom "1rem"})
 
-(defn status-style
+(defn- content-paper-style
+  []
+  {:padding "3.5rem 2.5rem"
+   :border-radius "3px"
+   :border (str "1px solid " theme-colors/gray-lighter)
+   :box-shadow "none"})
+
+(defn- status-style
   []
   {:flex-basis "30%"})
 
@@ -178,3 +186,5 @@
    [labeled-data {:label (tr [:common :last-modified])
                   :data (or (format/date modified)
                             "-")}]])
+(def ContentPaper
+  (util/make-component Paper {:class (<class content-paper-style)}))
