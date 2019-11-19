@@ -80,18 +80,20 @@
   :select-all "Valin kõik",
   :map-layers "Kaardikiht"},
  :project
- {:information
+ {:details-view "Detailid",
+  :map-view "Kaart",
+  :restrictions-tab "Kitsendused",
+  :phase {:no-tasks "Ülesandeid pole"},
+  :add-phase "Lisan etapi",
+  :phases "Projekti etapid",
+  :add-task "Lisan ülesande",
+  :phases-tab "Etapid",
+  :information
   {:estimated-duration "Eeldatav kestus",
    :road-number "Tee number",
    :km-range "Km ulatus",
    :procurement-number "Hanke number",
    :carriageway "Sõidutee"},
-  :add-phase "Lisan etapi",
-  :add-task "Lisan ülesande",
-  :phases "Projekti etapid",
-  :phase {:no-tasks "Ülesandeid pole"},
-  :phases-tab "Etapid",
-  :restrictions-tab "Kitsendused",
   :cadastral-units-tab "Katastriüksus"},
  :project-groups {:title "Projektirühmad"},
  :projects

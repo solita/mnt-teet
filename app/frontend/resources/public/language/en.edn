@@ -84,18 +84,20 @@
   :select-all "Select all",
   :map-layers "Map layers"},
  :project
- {:information
+ {:details-view "Details",
+  :map-view "Map",
+  :restrictions-tab "Restrictions",
+  :phase {:no-tasks "No tasks defined"},
+  :add-phase "Add phase",
+  :phases "Project phases",
+  :add-task "Add task",
+  :phases-tab "Phases",
+  :information
   {:estimated-duration "Estimated duration",
    :road-number "Road number",
    :km-range "Km range",
    :procurement-number "Procurement number",
    :carriageway "Carriageway"},
-  :add-phase "Add phase",
-  :add-task "Add task",
-  :phases "Project phases",
-  :phase {:no-tasks "No tasks defined"},
-  :phases-tab "Phases",
-  :restrictions-tab "Restrictions",
   :cadastral-units-tab "Cadastral units"},
  :project-groups {:title "Project groups"},
  :projects

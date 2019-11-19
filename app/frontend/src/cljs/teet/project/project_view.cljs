@@ -118,8 +118,8 @@
   [current-tab {:thk.project/keys [id]}]
   [:div
    (doall
-    (for [[tab label icon-fn] [["map" "Map" icons/teet-map]
-                               ["details" "Details" icons/teet-details]]
+    (for [[tab label icon-fn] [["map" (tr [:project :map-view]) icons/teet-map]
+                               ["details" (tr [:project :details-view]) icons/teet-details]]
           :let [current? (= tab current-tab)]]
       ^{:key tab}
       [:a {:class (<class common-styles/tab-link current?)
