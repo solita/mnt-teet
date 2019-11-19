@@ -20,8 +20,7 @@
 
 (def project-info-attributes
   (into project-listing-attributes
-        [:thk.project/procurement-nr
-         :thk.project/owner]))
+        [:thk.project/procurement-nr]))
 
 (def project-listing-display-columns
   [:thk.project/project-name
