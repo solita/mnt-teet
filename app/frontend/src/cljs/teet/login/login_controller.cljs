@@ -8,7 +8,7 @@
             [teet.snackbar.snackbar-controller :as snackbar-controller]))
 
 (defrecord Login [demo-user])
-(defrecord SetToken [after-login? navigate-data token])
+(defrecord SetSessionInfo [after-login? navigate-data token])
 (defrecord SetPassword [pw])
 (defrecord RefreshToken [])
 (defrecord CheckSessionToken [])
@@ -30,7 +30,7 @@
             {::tuck-effect/type :command!
              :command :refresh-token
              :payload {}
-             :result-event (partial ->SetToken true (get-in app [:login :navigate-to]))})
+             :result-event (partial ->SetSessionInfo true (get-in app [:login :navigate-to]))})
       (if-let [error (get-in app [:query :error])]
         (snackbar-controller/open-snack-bar app (str "Login failed: " error) :error)
         app)))
@@ -45,13 +45,13 @@
             {::tuck-effect/type :command!
              :command :login
              :payload (assoc user :site-password (get-in app [:login :password]))
-             :result-event (partial ->SetToken true navigate-data)})))
+             :result-event (partial ->SetSessionInfo true navigate-data)})))
 
   SetPassword
   (process-event [{:keys [pw]} app]
     (t/fx (assoc-in app [:login :password] pw)))
 
-  SetToken
+  SetSessionInfo
   (process-event [{:keys [token after-login? navigate-data]} app]
     (log/info "TOKEN: " token ", after-login? " after-login?)
     (let [{:keys [token error roles user enabled-features]} token]
@@ -86,6 +86,6 @@
           {::tuck-effect/type :command!
            :command :refresh-token
            :payload {}
-           :result-event (partial ->SetToken false nil)})))
+           :result-event (partial ->SetSessionInfo false nil)})))
 
 (def mock-users user-info/mock-users)
