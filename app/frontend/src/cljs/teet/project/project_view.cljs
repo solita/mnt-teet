@@ -111,7 +111,7 @@
        (for [{id :db/id type :thk.lifecycle/type} lifecycles]
          ^{:key (str id)}
          [:li [:a {:href (str "#/projects/" (:thk.project/id project) "/"
-                              (str id))}
+                              (str id) "?tab=details")}
                (tr [:enum (:db/ident type)])]])]]]))
 
 (defn project-tab-selection
@@ -128,9 +128,14 @@
         [icon-fn {:class (<class common-styles/tab-icon current?)}]]
        [:div {:class (<class common-styles/inline-block)} label]]))])
 
+(defn project-header-style
+  []
+  {:padding "1.5rem 1.875rem"
+   :display :flex
+   :justify-content :space-between})
+
 (defn- project-header [tab {:thk.project/keys [name custom-name] :as project} breadcrumbs activities]
-  [:div {:style {:display         :flex
-                 :justify-content :space-between}}
+  [:div {:class (<class project-header-style)}
    [:div
     [breadcrumbs/breadcrumbs breadcrumbs]
     [Heading1 (project-model/get-column project :thk.project/project-name)]]
@@ -206,32 +211,36 @@
        ^{:key (:db/id activity)}
        [project-activity e! {:project project} activity]))])
 
+(defn map-style
+  []
+  {:flex 1})
+
 (defn project-map [e! endpoint project tab]
-  [:div {:class (<class project-style/project-map-style)}
+  [:div {:style {:flex 1
+                 :display :flex
+                 :flex-direction :column}}
    [map-view/map-view e!
-    {:class (<class theme-spacing/fill-content)
+    {:class (<class map-style)
      :layers (merge {:thk-project
                      (map-layers/geojson-layer endpoint
-                       "geojson_entities"
-                       {"ids" (str "{" (:db/id project) "}")}
-                       map-features/project-line-style
-                       {:fit-on-load? true})}
-               (when (= tab "restrictions")
-                 {:related-restrictions
-                  (map-layers/geojson-layer endpoint
-                    "geojson_thk_project_related_restrictions"
-                    {"entity_id" (:db/id project)
-                     "distance" 200}
-                    map-features/project-related-restriction-style
-                    {:opacity 0.5})})
-               (when (= tab "cadastral-units")
-                 {:related-cadastral-units
-                  (map-layers/geojson-layer endpoint
-                    "geojson_thk_project_related_cadastral_units"
-                    {"entity_id" (:db/id project)
-                     "distance" 200}
-                    map-features/cadastral-unit-style
-                    {:opacity 0.5})}))}
+                                               "geojson_entities"
+                                               {"ids" (str "{" (:db/id project) "}")}
+                                               map-features/project-line-style
+                                               {:fit-on-load? true})}
+                    {:related-restrictions
+                     (map-layers/geojson-layer endpoint
+                                               "geojson_thk_project_related_restrictions"
+                                               {"entity_id" (:db/id project)
+                                                "distance"  200}
+                                               map-features/project-related-restriction-style
+                                               {:opacity 0.5})}
+                    {:related-cadastral-units
+                     (map-layers/geojson-layer endpoint
+                                               "geojson_thk_project_related_cadastral_units"
+                                               {"entity_id" (:db/id project)
+                                                "distance"  200}
+                                               map-features/cadastral-unit-style
+                                               {:opacity 0.5})})}
     {}]])
 
 (defn- collapsible-info [{:keys [on-toggle open?]
@@ -343,6 +352,23 @@
   [e! project]
   [:h1 "project info component"])
 
+(defn project-page-structure
+  [e!
+   {{:keys [tab]} :query
+    {:keys [add-activity add-task]} :query :as app}
+   project
+   breadcrumbs
+   page-view]
+  [:div {:style {:display :flex
+                 :flex-direction :column
+                 :flex 1}}
+   [project-header tab project breadcrumbs]
+   (case tab
+     "details"
+     [common/ContentPaper
+      page-view]
+     [project-map e! (get-in app [:config :api-url]) project (get-in app [:query :tab])])])
+
 (defn project-page [e! {{:keys [tab]} :query
                         {:keys [add-activity add-task]} :query :as app}
                     project
@@ -356,12 +382,19 @@
      [panels/modal {:title    (tr [:project :add-task])
                     :on-close #(e! (project-controller/->CloseTaskDialog))}
       [task-form e! project-controller/->CloseTaskDialog add-task (get-in app [:project project :new-task])]])
-   [:div {:class (<class common-styles/top-info-spacing)}
-    [project-header tab project breadcrumbs]
-    [common/ContentPaper
-     (if (initialized? project)
-       [project-data project]
-       [initialization-form e! project])]]])
+   [project-page-structure e! app project breadcrumbs (if (initialized? project)
+                                                        [project-data project]
+                                                        [initialization-form e! project])]])
+
+(defn project-lifecycle-content
+  [{{id :db/ident} :thk.lifecycle/type :as lifecycle}]
+  (println "foo bar" lifecycle)
+  [:section
+   [:h2 id]
+   [:div "LIFECYCLE " (pr-str lifecycle)]])
 
 (defn project-lifecycle-page [e! app lifecycle breadcrumbs]
-  [:div "LIFECYCLE " (pr-str lifecycle)])
+  [project-page-structure e! app
+   (get-in lifecycle [:thk.project/_lifecycles 0])
+   breadcrumbs
+   [project-lifecycle-content lifecycle]])
