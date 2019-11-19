@@ -23,7 +23,8 @@
             [teet.project.project-controller :as project-controller]
             [teet.projects.projects-style :as projects-style]
             [teet.common.common-styles :as common-styles]
-            [teet.ui.format :as format]))
+            [teet.ui.format :as format]
+            [clojure.string :as str]))
 
 (defmethod search-interface/format-search-result "project" [{:keys [id label]}]
   {:icon [icons/file-folder-open]
@@ -77,13 +78,18 @@
            :on-click (r/partial sort! column)}
           (tr [:fields column])]
          (case column
-           :thk.project/project-name
+           (:thk.project/project-name :thk.project/owner-info)
            [TextField {:value (or (get @filters column) "")
                        :type "text"
                        :variant :filled
                        :start-icon icons/action-search
                        :input-class (<class table-filter-style)
-                       :on-change #(swap! filters assoc column (-> % .-target .-value))}]
+                       :on-change #(swap! filters
+                                          (fn [filters]
+                                            (let [v (-> % .-target .-value)]
+                                              (if (str/blank? v)
+                                                (dissoc filters column)
+                                                (assoc filters column v)))))}]
 
            :thk.project/road-nr
            [TextField {:value (or (get @filters column) "")
