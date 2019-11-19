@@ -4,7 +4,8 @@
             [clojure.java.io :as io]
             [teet.log :as log]
             [datomic.client.api :as d]
-            [amazonica.aws.simplesystemsmanagement :as ssm]))
+            [amazonica.aws.simplesystemsmanagement :as ssm])
+  (:import (com.amazonaws.services.simplesystemsmanagement.model ParameterNotFoundException)))
 
 (defn- ssm-param
   [env & param-path]
@@ -19,6 +20,20 @@
                   :session-cookie-key "ABCDEFGHIJKLMNOP"})
 
 (def config (atom init-config))
+
+;; "road-information-view;component-view"
+(defn parse-enabled-features [ssm-param]
+  (->> (str/split ssm-param #";")
+       (remove empty?)
+       (map str/trim)
+       (map keyword)
+       set))
+
+(defn enabled-features-config [env]
+  (try (parse-enabled-features (ssm-param env :enabled-features))
+       (catch ParameterNotFoundException _e
+         (log/warn "SSM parameter enabled-features not found, treating all as disabled")
+         #{})))
 
 (defn tara-config [env]
   (let [p (partial ssm-param env :auth :tara)]
@@ -36,6 +51,7 @@
                                   (ssm-param env :api :jwt-secret))
                  bap (ssm-param env :api :basic-auth-password)
                  tara (tara-config env)
+                 ;; enabled-features (enabled-features-config env)
                  config (-> config
                             (assoc :tara tara)
                             (assoc :session-cookie-key
