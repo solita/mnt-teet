@@ -21,10 +21,9 @@
             [teet.project.project-model :as project-model]
             [postgrest-ui.components.scroll-sensor :as scroll-sensor]
             [teet.project.project-controller :as project-controller]
-            [teet.projects.projects-style :as projects-style]
             [teet.common.common-styles :as common-styles]
             [teet.ui.format :as format]
-            [clojure.string :as str]))
+            [teet.ui.table :as table]))
 
 (defmethod search-interface/format-search-result "project" [{:keys [id label]}]
   {:icon [icons/file-folder-open]
@@ -34,10 +33,6 @@
 (defn link-to-project [{:strs [id name]}]
   name)
 
-(defn table-filter-style
-  []
-  {:background-color theme-colors/gray-lighter
-   :border 0})
 
 (defn format-column-value [column value]
   (case column
@@ -58,114 +53,18 @@
     ;; Default: stringify
     (str value)))
 
-
-(defn- projects-listing-header
-  ([] (projects-listing-header {:filters (r/wrap {} :_)}))
-  ([{:keys [sort! sort-column sort-direction filters]}]
-   [TableHead {}
-    [TableRow {}
-     (doall
-      (for [column project-model/project-listing-display-columns]
-        ^{:key (name column)}
-        [TableCell {:style {:vertical-align :top}
-                    :sortDirection (if (= sort-column column)
-                                     (name sort-direction)
-                                     false)}
-         [TableSortLabel
-          {:active (= column sort-column)
-           :direction (if (= sort-direction :asc)
-                        "asc" "desc")
-           :on-click (r/partial sort! column)}
-          (tr [:fields column])]
-         (case column
-           (:thk.project/project-name :thk.project/owner-info)
-           [TextField {:value (or (get @filters column) "")
-                       :type "text"
-                       :variant :filled
-                       :start-icon icons/action-search
-                       :input-class (<class table-filter-style)
-                       :on-change #(swap! filters
-                                          (fn [filters]
-                                            (let [v (-> % .-target .-value)]
-                                              (if (str/blank? v)
-                                                (dissoc filters column)
-                                                (assoc filters column v)))))}]
-
-           :thk.project/road-nr
-           [TextField {:value (or (get @filters column) "")
-                       :type "number"
-                       :variant :filled
-                       :start-icon icons/action-search
-                       :input-class (<class table-filter-style)
-                       :on-change #(swap! filters assoc column
-                                          (let [v (-> % .-target .-value)]
-                                            (if (string/blank? v)
-                                              nil
-                                              (js/parseInt v))))}]
-           [:span])]))]]))
-
-(defn- projects-listing-table [_ _]
-  (let [sort-column (r/atom [:thk.project/project-name :asc])
-        show-count (r/atom 20)
-        sort! (fn [col]
-                (reset! show-count 20)
-                (swap! sort-column
-                       (fn [[sort-col sort-dir]]
-                         (if (= sort-col col)
-                           [sort-col (if (= sort-dir :asc)
-                                       :desc
-                                       :asc)]
-                           [col :asc]))))
-
-        show-more! #(swap! show-count + 20)]
-    (r/create-class
-     {:component-will-receive-props (fn [_this _new-props]
-                                      ;; When props change, reset show count
-                                      ;; filters/results have changed
-                                      (reset! show-count 20))
-      :reagent-render
-      (fn [e! filters projects]
-        (let [[sort-col sort-dir] @sort-column]
-          [:<>
-           [Table {}
-            [projects-listing-header {:sort! sort!
-                                      :sort-column sort-col
-                                      :sort-direction sort-dir
-                                      :filters filters}]
-            [TableBody {}
-             (doall
-              (for [project (take @show-count
-                                  ((if (= sort-dir :asc) identity reverse)
-                                   (sort-by #(project-model/get-column % sort-col) projects)))]
-                ^{:key (:thk.project/id project)}
-                [TableRow {:on-click (e! project-controller/->NavigateToProject (:thk.project/id project))
-                           :class (<class projects-style/row-style)}
-                 (doall
-                  (for [column project-model/project-listing-display-columns]
-                    ^{:key (name column)}
-                    [TableCell {}
-                     (format-column-value column (project-model/get-column project column))]))]))]]
-           [scroll-sensor/scroll-sensor show-more!]]))})))
-
 (defn projects-listing [e! all-projects]
-  (r/with-let [open? (r/atom true)
-               filters (r/atom {})
-               clear-filters! #(reset! filters {})]
-    (let [projects (project-model/filtered-projects all-projects @filters)]
-      ^{:key "projects-listing-panel"}
-      [panels/collapsible-panel
-       {:title (str (tr [:projects :title])
-                    (when-let [total (and (seq projects)
-                                          (count projects))]
-                      (str " (" total ")")))
-        :open-atom open?
-        :action    [Button {:color    "secondary"
-                            :on-click clear-filters!
-                            :size     "small"
-                            :disabled (empty? @filters)
-                            :start-icon (r/as-element [icons/content-clear])}
-                    (tr [:search :clear-filters])]}
-       [projects-listing-table e! filters projects]])))
+  [table/table {:on-row-click (e! project-controller/->NavigateToProject)
+                :label (tr [:projects :title])
+                :data all-projects
+                :columns project-model/project-listing-display-columns
+                :get-column project-model/get-column
+                :format-column format-column-value
+                :filter-type {:thk.project/project-name :string
+                              :thk.project/owner-info :string
+                              :thk.project/road-nr :number}
+                :key :thk.project/id
+                :default-sort-column :thk.project/project-name}])
 
 
 (def ^:const project-pin-resolution-threshold 100)
