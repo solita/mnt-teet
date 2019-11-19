@@ -18,15 +18,16 @@
 
 (defmethod db-api/query :thk.project/fetch-project-lifecycle
   [{db :db} {:keys [project lifecycle]}]
-  (d/q '[:find (pull ?e [* {:thk.project/_lifecycles
-                            [:thk.project/name
-                             :thk.project/custom-name
-                             :thk.project/id]}])
-         :where [?project :thk.project/lifecycles ?e]
-         :in $ ?project ?e]
-       db
-       [:thk.project/id project]
-       lifecycle))
+  (ffirst
+   (d/q '[:find (pull ?e [* {:thk.project/_lifecycles
+                             [:thk.project/name
+                              :thk.project/custom-name
+                              :thk.project/id]}])
+          :where [?project :thk.project/lifecycles ?e]
+          :in $ ?project ?e]
+        db
+        [:thk.project/id project]
+        lifecycle)))
 
 (defmethod db-api/query :thk.project/listing [{db :db} _]
   {:query '[:find (pull ?e columns)
