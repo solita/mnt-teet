@@ -71,20 +71,21 @@
     (update-in app [:route :project :initialization-form] merge form-data))
 
   OpenActivityDialog
-  (process-event [_ app]
+  (process-event [_ {:keys [page params] :as app}]
     (t/fx app
       {:tuck.effect/type :navigate
-       :page :project
-       :params {:project (get-in app [:params :project])}
-       :query {:add-activity 1}}))
+       :page page
+       :params params
+       :query {:tab "details"
+               :add-activity 1}}))
 
   CloseActivityDialog
-  (process-event [_ app]
+  (process-event [_ {:keys [page params query] :as app}]
     (t/fx app
-      {:tuck.effect/type :navigate
-       :page :project
-       :params {:project (get-in app [:params :project])}
-       :query {}}))
+          {:tuck.effect/type :navigate
+           :page             page
+           :params           params
+           :query            (dissoc query :add-activity)}))
 
   OpenTaskDialog
   (process-event [{activity-id :activity-id} app]
@@ -171,3 +172,7 @@
   [p]
   ;(log/info "cadastral item selected: " p)
   (->ToggleRestrictionData (:map/id p)))
+
+(defn activity-url
+  [{:keys [project lifecycle]} {id :db/id}]
+  (str "#/projects/" project "/" lifecycle "/" id))
