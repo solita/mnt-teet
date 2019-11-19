@@ -1,8 +1,9 @@
 (ns teet.project.project-model
   "Common project datamodel metadata."
-  #?(:cljs (:require [teet.ui.format :as format]
-                     [clojure.string :as str])
-     :clj (:require [clojure.string :as str])))
+  (:require [teet.user.user-model :as user-model]
+            #?@(:cljs ([teet.ui.format :as format]
+                       [clojure.string :as str])
+                :clj ([clojure.string :as str]))))
 
 (def project-listing-columns
   [:db/id
@@ -14,7 +15,8 @@
    :thk.project/end-m
    :thk.project/carriageway
    :thk.project/estimated-start-date
-   :thk.project/estimated-end-date])
+   :thk.project/estimated-end-date
+   {:thk.project/owner [:user/id :user/given-name :user/family-name]}])
 
 (def project-info-columns
   (into project-listing-columns
@@ -26,7 +28,8 @@
    :thk.project/road-nr
    :thk.project/km-range
    :thk.project/carriageway
-   :thk.project/estimated-date-range])
+   :thk.project/estimated-date-range
+   :thk.project/owner-info])
 
 (defmulti get-column (fn [_project column] column))
 
@@ -47,21 +50,11 @@
     custom-name
     name))
 
-#?(:cljs
-   (defmulti format-column-value (fn [column _value]
-                                   column)))
+(defmethod get-column :thk.project/owner-info [project]
+  (some-> project :thk.project/owner user-model/user-name))
 
-#?(:cljs
-   (defmethod format-column-value :thk.project/km-range [_ [start end]]
-     (str (.toFixed start 3)
-          " \u2013 "
-          (.toFixed end 3))))
 
-#?(:cljs
-   (defmethod format-column-value :thk.project/estimated-date-range [_ [start end]]
-     (str (format/date start) " \u2013 " (format/date end))))
-#?(:cljs
-   (defmethod format-column-value :default [_ v] (str v)))
+
 
 (defn filtered-projects [projects filters]
   (filter (fn [project]

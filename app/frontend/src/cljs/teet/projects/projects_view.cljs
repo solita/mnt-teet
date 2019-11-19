@@ -21,7 +21,9 @@
             [teet.project.project-model :as project-model]
             [postgrest-ui.components.scroll-sensor :as scroll-sensor]
             [teet.project.project-controller :as project-controller]
-            [teet.projects.projects-style :as projects-style]))
+            [teet.projects.projects-style :as projects-style]
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.format :as format]))
 
 (defmethod search-interface/format-search-result "project" [{:keys [id label]}]
   {:icon [icons/file-folder-open]
@@ -35,6 +37,26 @@
   []
   {:background-color theme-colors/gray-lighter
    :border 0})
+
+(defn format-column-value [column value]
+  (case column
+    :thk.project/km-range
+    (let [[start end] value]
+      (str (.toFixed start 3) " \u2013 " (.toFixed end 3)))
+
+    :thk.project/estimated-date-range
+    (let [[start end] value]
+      (str (format/date start) " \u2013 " (format/date end)))
+
+    :thk.project/owner-info
+    (if value
+       value
+       [:span {:class (<class common-styles/gray-text)}
+        (tr [:common :unassigned])])
+
+    ;; Default: stringify
+    (str value)))
+
 
 (defn- projects-listing-header
   ([] (projects-listing-header {:filters (r/wrap {} :_)}))
@@ -116,7 +138,7 @@
                   (for [column project-model/project-listing-display-columns]
                     ^{:key (name column)}
                     [TableCell {}
-                     (project-model/format-column-value column (project-model/get-column project column))]))]))]]
+                     (format-column-value column (project-model/get-column project column))]))]))]]
            [scroll-sensor/scroll-sensor show-more!]]))})))
 
 (defn projects-listing [e! all-projects]

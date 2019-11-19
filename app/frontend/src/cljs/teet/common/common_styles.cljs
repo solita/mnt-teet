@@ -35,3 +35,6 @@
 (defn tab-icon []
   ^{:pseudo {:hover {:fill theme-colors/blue-dark}}}
   {:fill theme-colors/blue-light})
+
+(defn gray-text []
+  {:color theme-colors/gray-light})
