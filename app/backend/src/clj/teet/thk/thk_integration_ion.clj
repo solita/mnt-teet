@@ -182,4 +182,5 @@
                         update-entity-info)]
       result)
     (catch Exception e
+      (println "Got exception in import:" (type e))
       (ex-data e))))
