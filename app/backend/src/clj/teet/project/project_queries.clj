@@ -20,8 +20,12 @@
   [{db :db} {:keys [project lifecycle]}]
   (let [lifecycle
         (ffirst
-         (d/q '[:find (pull ?e [* {:thk.project/_lifecycles
-                                   [:db/id]}])
+         (d/q '[:find (pull ?e [*
+                                {:thk.lifecycle/activities [:db/id
+                                                            :activity/name
+                                                            :activity/estimated-start-date
+                                                            :activity/estimated-end-date]}
+                                {:thk.project/_lifecycles [:db/id]}])
                 :where [?project :thk.project/lifecycles ?e]
                 :in $ ?project ?e]
               db
