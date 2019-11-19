@@ -107,7 +107,7 @@
                               ((if (= sort-dir :asc) identity reverse)
                                (sort-by #(get-column % sort-col) data)))]
                 ^{:key (get row key)}
-                [TableRow {:on-click on-row-click
+                [TableRow {:on-click #(on-row-click row)
                            :class (<class row-style)}
                  (doall
                   (for [column columns]

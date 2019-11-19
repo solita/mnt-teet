@@ -54,7 +54,7 @@
     (str value)))
 
 (defn projects-listing [e! all-projects]
-  [table/table {:on-row-click (e! project-controller/->NavigateToProject)
+  [table/table {:on-row-click (comp (e! project-controller/->NavigateToProject) :thk.project/id)
                 :label (tr [:projects :title])
                 :data all-projects
                 :columns project-model/project-listing-display-columns
