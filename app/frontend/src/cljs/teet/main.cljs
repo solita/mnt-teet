@@ -38,7 +38,10 @@
   (fn [e! {:keys [page user navigation quick-search snackbar] :as app}]
     (let [nav-open? (boolean (:open? navigation))]
       [theme/theme-provider
-       [:<>
+       [:div {:style {:display :flex
+                      :flex-direction :column
+                      :min-height "100vh"
+                      :flex 1}}
         [build-info/top-banner nav-open? page]
         [snackbar/snackbar-container e! snackbar]
         [CssBaseline]

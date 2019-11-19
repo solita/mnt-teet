@@ -165,7 +165,8 @@
 
 (defn- content-paper-style
   []
-  {:padding "3.5rem 2.5rem"
+  {:margin "1.5rem 1.875rem"
+   :padding "3.5rem 2.5rem"
    :border-radius "3px"
    :border (str "1px solid " theme-colors/gray-lighter)
    :box-shadow "none"})
