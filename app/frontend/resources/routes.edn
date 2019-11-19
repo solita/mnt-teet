@@ -33,7 +33,7 @@
  ;; Project overview page
  :project {:path "/projects/:project"
            :parent :projects-list
-           :crumb (teet.project.project-model/get-column (or (:thk.project/_lifecycles state)
+           :crumb (teet.project.project-model/get-column (or (some-> state :thk.project/_lifecycles first)
                                                              state)
                                                          :thk.project/project-name)
            :view teet.project.project-view/project-page
