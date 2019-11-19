@@ -32,9 +32,20 @@
   {:display        :flex
    :flex-direction :column})
 
-(defn tab-icon []
+(defn tab-link [current?]
+  {:font-weight (if current? "bold" "normal")
+   :display "inline-block"
+   :text-align "center"})
+
+(defn tab-icon [current?]
   ^{:pseudo {:hover {:fill theme-colors/blue-dark}}}
-  {:fill theme-colors/blue-light})
+  {:fill (if current? theme-colors/blue-dark theme-colors/blue-light)
+   :width "40px"
+   :height "35px"
+   :margin "1px 5px 1px 5px"})
 
 (defn gray-text []
   {:color theme-colors/gray-light})
+
+(defn inline-block []
+  {:display "inline-block"})

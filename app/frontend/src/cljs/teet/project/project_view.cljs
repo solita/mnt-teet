@@ -4,9 +4,7 @@
             [teet.map.map-features :as map-features]
             [teet.map.map-layers :as map-layers]
             [teet.map.map-view :as map-view]
-            [teet.login.login-paths :as login-paths]
-            [postgrest-ui.components.item-view :as postgrest-item-view]
-            [teet.ui.material-ui :refer [Grid ButtonBase Collapse Link Divider Paper]]
+            [teet.ui.material-ui :refer [ButtonBase Collapse Link Divider]]
             [teet.ui.text-field :refer [TextField]]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-style :as project-style]
@@ -18,7 +16,6 @@
             [teet.ui.icons :as icons]
             [teet.ui.common :as common]
             [teet.ui.typography :refer [Heading1 Heading2 Heading3]]
-            [teet.ui.layout :as layout]
             [teet.localization :refer [tr tr-tree]]
             [teet.ui.panels :as panels]
             [teet.ui.buttons :as buttons]
@@ -26,18 +23,14 @@
             [teet.activity.activity-view :as activity-view]
             [teet.ui.util :as util]
             [clojure.string :as str]
-            [teet.ui.query :as query]
-            [teet.ui.tabs :as tabs]
             [teet.common.common-styles :as common-styles]
             [teet.ui.form :as form]
             [teet.task.task-controller :as task-controller]
             [teet.ui.select :as select]
             [teet.ui.timeline :as timeline]
             [teet.ui.progress :as progress]
-            [teet.util.collection :refer [count-by]]
             teet.project.project-info
-            [teet.project.project-model :as project-model]
-            [teet.theme.theme-colors :as colors]))
+            [teet.project.project-model :as project-model]))
 
 (defn task-form [e! close _activity-id task]
   ;;Task definition (under project activity)
@@ -75,7 +68,7 @@
       (str complete-count " / " num-tasks " tasks complete")])])
 
 (defn project-data
-  [{:thk.project/keys [name estimated-start-date estimated-end-date road-nr start-m end-m
+  [{:thk.project/keys [estimated-start-date estimated-end-date road-nr start-m end-m
                        carriageway procurement-nr lifecycles] :as project}]
   (let [project-name (project-model/get-column project :thk.project/project-name)]
     [:div
@@ -122,18 +115,26 @@
                (tr [:enum (:db/ident type)])]])]]]))
 
 (defn project-tab-selection
-  [{:thk.project/keys [id]}]
+  [current-tab {:thk.project/keys [id]}]
   [:div
-   [:a {:href (str "#/projects/" id "?tab=details")} [icons/teet-details {:class (<class common-styles/tab-icon)}]]
-   [:a {:href (str "#/projects/" id "?tab=map")} [icons/teet-map {:class (<class common-styles/tab-icon)}]]])
+   (doall
+    (for [[tab label icon-fn] [["map" "Map" icons/teet-map]
+                               ["details" "Details" icons/teet-details]]
+          :let [current? (= tab current-tab)]]
+      ^{:key tab}
+      [:a {:class (<class common-styles/tab-link current?)
+           :href (str "#/projects/" id (str "?tab=" tab))}
+       [:div
+        [icon-fn {:class (<class common-styles/tab-icon current?)}]]
+       [:div {:class (<class common-styles/inline-block)} label]]))])
 
-(defn- project-header [{:thk.project/keys [name custom-name] :as project} breadcrumbs activities]
+(defn- project-header [tab {:thk.project/keys [name custom-name] :as project} breadcrumbs activities]
   [:div {:style {:display         :flex
                  :justify-content :space-between}}
    [:div
     [breadcrumbs/breadcrumbs breadcrumbs]
     [Heading1 (project-model/get-column project :thk.project/project-name)]]
-   [project-tab-selection project]]
+   [project-tab-selection tab project]]
   #_[project-data activities project])
 
 (defn activity-action-heading
@@ -356,7 +357,7 @@
                     :on-close #(e! (project-controller/->CloseTaskDialog))}
       [task-form e! project-controller/->CloseTaskDialog add-task (get-in app [:project project :new-task])]])
    [:div {:class (<class common-styles/top-info-spacing)}
-    [project-header project breadcrumbs]
+    [project-header tab project breadcrumbs]
     [common/ContentPaper
      (if (initialized? project)
        [project-data project]
