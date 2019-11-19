@@ -11,5 +11,6 @@
 (s/def :activity/update-activity (s/keys :req [:activity/status]))
 
 (s/def :activity/create-activity
-  (s/keys :req [:thk/id :activity/activity-name :activity/status
-                :activity/estimated-start-date :activity/estimated-end-date]))
+  (s/keys :req [:activity/name :activity/status
+                :activity/estimated-start-date
+                :activity/estimated-end-date]))
