@@ -2,12 +2,10 @@
   "User info and access rights"
   (:require [reagent.core :as r]
             tuck.effect
+            [teet.app-state :as app-state]
             [teet.user.user-roles :as user-roles]))
 
-(defonce roles (r/atom #{}))
-
-(defmethod tuck.effect/process-effect :set-user-roles [e! {new-roles :roles}]
-  (reset! roles new-roles))
+(defonce roles (r/cursor app-state/app [:user :roles]))
 
 (defn has-role?
   "Check if current logged in user has given role.

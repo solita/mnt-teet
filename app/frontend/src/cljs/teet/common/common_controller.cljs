@@ -15,6 +15,7 @@
             postgrest-ui.impl.fetch))
 
 (defonce api-token (r/cursor app-state/app login-paths/api-token))
+(defonce enabled-features (r/cursor app-state/app [:enabled-features]))
 
 ;; Helpers for faking backend requests in unit tests
 (defonce test-mode? (atom false))
@@ -325,3 +326,11 @@
   If path components are given, takes that path from page-state."
   [{page :page :as app} & path]
   (get-in app (into [:route page] path)))
+
+(defn feature-enabled? [feature]
+  {:pre [(keyword? feature)]}
+  (boolean (feature @enabled-features)))
+
+(defn when-feature [feature component]
+  (when (feature-enabled? feature)
+    component))

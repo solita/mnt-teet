@@ -55,14 +55,11 @@
   (process-event [{:keys [token after-login? navigate-data]} app]
     (log/info "TOKEN: " token ", after-login? " after-login?)
     (let [{:keys [token error roles user enabled-features]} token]
-      (log/info "ENABLED FEATURES: " enabled-features)
       (if error
         (do (js/alert (str "Login error: " (str error)))
             app)
         (let [effects [{::tuck-effect/type :set-api-token
                         :token token}
-                       {::tuck-effect/type :set-user-roles
-                        :roles roles}
                        {::tuck-effect/type :debounce
                         :id :refresh-token
                         :timeout refresh-token-timeout-ms
@@ -72,10 +69,10 @@
                                               :page :projects}
                                              navigate-data))
                         effects)]
-          (log/info "setting token under app-state & calling set-api-token effect")
           (apply t/fx
                  (-> app
-                     (assoc :user user)
+                     (assoc :user (assoc user :roles roles))
+                     (assoc :enabled-features enabled-features)
                      (assoc-in login-paths/api-token token)
                      (assoc-in [:login :progress?] false))
                  effects)))))
