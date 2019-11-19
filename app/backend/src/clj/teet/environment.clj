@@ -23,7 +23,7 @@
 
 ;; "road-information-view;component-view"
 (defn parse-enabled-features [ssm-param]
-  (->> (str/split ssm-param #";")
+  (->> (str/split ssm-param #",")
        (remove empty?)
        (map str/trim)
        (map keyword)
