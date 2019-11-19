@@ -10,6 +10,7 @@
             [teet.navigation.navigation-logo :as navigation-logo]
             [teet.navigation.navigation-style :as navigation-style]
             [teet.search.search-view :as search-view]
+            [teet.common.common-controller :refer [when-feature]]
             [herb.core :as herb :refer [<class]]
             [teet.user.user-controller :as user-controller]))
 
@@ -78,20 +79,22 @@
                :link {:page :projects-list}
                :icon icons/action-list
                :name (tr [:projects :list-view])}]
-   [view-link {:open? open?
-               :current-page page
-               :link {:page :road
-                      :query {:road 1
-                              :carriageway 1
-                              :start-m 100
-                              :end-m 17000}}
-               :icon icons/maps-my-location
-               :name "Road location"}]
-   #_[view-link {:open? open?
+   (when-feature :road-information-view
+     [view-link {:open? open?
+                 :current-page page
+                 :link {:page :road
+                        :query {:road 1
+                                :carriageway 1
+                                :start-m 100
+                                :end-m 17000}}
+                 :icon icons/maps-my-location
+                 :name "Road location"}])
+   (when-feature :component-view
+     [view-link {:open? open?
                  :current-page page
                  :link {:page :components}
                  :icon icons/content-archive
-                 :name "Components"}]
+                 :name "Components"}])
    (user-controller/when-role
      :admin
      [view-link {:open? open?
@@ -125,7 +128,8 @@
       navigation-logo/maanteeamet-logo]
      #_[search-view/quick-search e! quick-search]           ;;Removed until implemented properly
      [language-selector]
-     [user-info user]
+     (when-feature :my-role-display
+       [user-info user])
      [logout e!]]]
 
    [Drawer {;:class-name (<class navigation-style/drawer open?)

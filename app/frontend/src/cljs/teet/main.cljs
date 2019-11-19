@@ -15,7 +15,7 @@
             [tuck.core :as t]
             [teet.theme.theme-provider :as theme]
             [teet.snackbar.snackbar-view :as snackbar]
-            [teet.common.common-controller]
+            [teet.common.common-controller :refer [when-feature]]
 
             ;; Import view namespaces
             teet.projects.projects-view
@@ -56,7 +56,8 @@
               nav-open?
               (with-meta page
                 {:key (:route-key app)})]]))
-        [df/DataFriskShell app]]])))
+        (when-feature :data-frisk
+          [df/DataFriskShell app])]])))
 
 (defn ^:export main []
   (routes/start!)
