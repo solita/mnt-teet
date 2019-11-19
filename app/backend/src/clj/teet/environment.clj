@@ -121,3 +121,10 @@
   (let [actual-pw (config-value :auth :basic-auth-password)]
     (or (nil? actual-pw)
         (= given-password actual-pw))))
+
+(defn feature-enabled? [feature]
+  (config-value :enabled-features feature))
+
+(defmacro when-feature [feature & body]
+  `(when (feature-enabled? ~feature)
+     ~@body))
