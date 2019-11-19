@@ -59,7 +59,8 @@
                                              :id id
                                              :roles roles})
        :user (user-info conn id)
-       :roles roles})
+       :roles roles
+       :enabled-features (environment/config-value :enabled-features)})
     {:error :incorrect-site-password}))
 
 (defmethod db-api/command-authorization :login [_ _]

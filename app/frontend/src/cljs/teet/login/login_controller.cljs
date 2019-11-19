@@ -54,7 +54,8 @@
   SetToken
   (process-event [{:keys [token after-login? navigate-data]} app]
     (log/info "TOKEN: " token ", after-login? " after-login?)
-    (let [{:keys [token error roles user]} token]
+    (let [{:keys [token error roles user enabled-features]} token]
+      (log/info "ENABLED FEATURES: " enabled-features)
       (if error
         (do (js/alert (str "Login error: " (str error)))
             app)
