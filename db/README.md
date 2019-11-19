@@ -4,7 +4,10 @@ All TEET database migrations are in the same flyway migrations.
 
 pom.xml contains a template for running the flyway migrations.
 
-## Create local dev db
+Note: Things under db/ are only about the PostgreSQL / PostgREST database, not Datomic.
+Most non-GIS data is in Datomic.
+
+## Create local dev PostgresDB
 
 * Install PostgreSQL with PostGIS extension locally (or run with docker)
 

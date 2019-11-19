@@ -1,35 +1,19 @@
 #!/usr/bin/env bash
 set -eu
 
-function check_psql {
-    if ! [ -x "$(command -v psql)" ]; then
-        echo "psql not found, make sure it is in PATH" >&2
+function ensure-command-exists {
+    if ! [ -x "$(command -v $1)" ]; then
+        echo "$1 not found, make sure it is in PATH" >&2
         exit 1
     fi
 }
 
-function check_curl {
-    if ! [ -x "$(command -v curl)" ]; then
-        echo "curl not found, make sure it is in PATH" >&2
-        exit 1
-    fi
-}
+ensure-command-exists psql
+ensure-command-exists aws
+ensure-command-exists curl
+ensure-command-exists unzip
+ensure-command-exists ogr2ogr
 
-function check_unzip {
-    if ! [ -x "$(command -v unzip)" ]; then
-        echo "unzip not found, make sure it is in PATH" >&2
-        exit 1
-    fi
-}
-
-function check_ogr2ogr {
-    if ! [ -x "$(command -v ogr2ogr)" ]; then
-        echo "ogr2ogr not found, make sure it is in PATH" >&2
-        exit 1
-    fi
-}
-
-check_psql
 
 ARGS="-h localhost -U postgres"
 PSQL="psql $ARGS -c"
@@ -64,14 +48,10 @@ RESTRICTIONS_DUMP_FILE=KITSENDUSED.gpkg
 echo "Importing Maa-amet restrictions data dump"
 if [ ! -f "$RESTRICTIONS_DUMP_FILE" ]; then
     echo "- Downloading the dump"
-    check_curl
-    check_unzip
     curl "https://geoportaal.maaamet.ee/docs/KPO/KITSENDUSED_GPKG.zip" -o temp.zip
-    unzip temp.zip
 fi
 
 echo "- Running ogr2ogr"
-check_ogr2ogr
 ogr2ogr -f "PostgreSQL" PG:"host=localhost user=teet dbname=teet" KITSENDUSED.gpkg -lco schema=restrictions
 
 if [ -f temp.zip ]; then
