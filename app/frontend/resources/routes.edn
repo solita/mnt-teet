@@ -50,17 +50,9 @@
                                     :lifecycle (goog.math.Long/fromString lifecycle)}}
                      :view teet.project.project-view/project-lifecycle-page}
 
- :activity-task {:path "/projects/:project/:activity/:task"
-                 :parent :project
-                 :view teet.task.task-view/task-page
-                 :state {:query :task/fetch-task
-                         :args {:task-id (goog.math.Long/fromString task)}}
-                 :crumb (tr [:enum (or
-                                    ;; On task page, use task type directly
-                                    (-> state :task/type :db/ident)
-
-                                    ;; On document page, the task type is joined
-                                    (get-in state [:task/_documents 0 :task/type :db/ident]))])}
+ :activity-task {:path "/projects/:project/:lifecycle/:activity"
+                 :parent :project-lifecycle
+                 :view teet.project.project-view/project-activity-page} ;;todo: query and proper view
 
  :task-document {:path "/projects/:project/:activity/:task/:document"
                  :parent :activity-task
