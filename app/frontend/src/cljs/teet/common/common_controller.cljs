@@ -8,11 +8,13 @@
             [teet.snackbar.snackbar-controller :as snackbar-controller]
             [tuck.core :as t]
             [tuck.effect :as tuck-effect]
+            [teet.app-state :as app-state]
+            [teet.login.login-paths :as login-paths]
             [teet.transit :as transit]
             [teet.localization :refer [tr]]
             postgrest-ui.impl.fetch))
 
-(defonce api-token (atom nil))
+(defonce api-token (r/cursor app-state/app login-paths/api-token))
 
 ;; Helpers for faking backend requests in unit tests
 (defonce test-mode? (atom false))
