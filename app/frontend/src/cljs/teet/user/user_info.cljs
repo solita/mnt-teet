@@ -1,6 +1,7 @@
 (ns teet.user.user-info
-  "Show user info in the UI, automatically resolved user information"
-  (:require [clojure.string :as str]))
+  "Show user info in the UI, automatically resolved user information.
+  FIXME: remove after dummy users are not needed"
+  (:require [teet.user.user-model :as user-model]))
 
 
 (def mock-users [{:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"
@@ -24,17 +25,9 @@
                   :user/email "benjamin.boss@example.com"
                   :user/organization "Maanteeamet"}])
 
-(defn user-name
-  "Show full user name"
-  [{:user/keys [given-name family-name]}]
-  (str given-name " " family-name))
 
-(defn user-name-and-email
-  "Show user name and email"
-  [{:user/keys [email] :as user}]
-  (str (user-name user)
-       (when email
-         (str " (" email ")"))))
+(def user-name user-model/user-name)
+(def user-name-and-email user-model/user-name-and-email)
 
 (defn list-user-ids []
   (map :user/id mock-users))
