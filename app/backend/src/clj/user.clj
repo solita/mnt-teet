@@ -18,6 +18,11 @@
 (def q d/q)
 (def pull d/pull)
 
+(defn tx
+  "Transact given maps to db"
+  [& maps]
+  (d/transact (environment/datomic-connection)
+              {:tx-data (into [] maps)}))
 (defn delete-db
   [db-name]
   (d/delete-database (environment/datomic-client) {:db-name db-name}))
