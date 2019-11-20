@@ -113,7 +113,8 @@
                                            :id id
                                            :roles roles})
      :user (user-info conn id)
-     :roles roles}))
+     :roles roles
+     :enabled-features (environment/config-value :enabled-features)}))
 
 (defmethod db-api/command-authorization :refresh-token [{user :user} _]
   (when-not (and user
