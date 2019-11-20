@@ -30,7 +30,8 @@
             [teet.ui.timeline :as timeline]
             [teet.ui.progress :as progress]
             teet.project.project-info
-            [teet.project.project-model :as project-model]))
+            [teet.project.project-model :as project-model]
+            [teet.ui.typography :as typography]))
 
 (defn task-form [e! close _activity-id task]
   ;;Task definition (under project activity)
@@ -387,19 +388,23 @@
    {{id :db/ident} :thk.lifecycle/type
     activities     :thk.lifecycle/activities}]
   [:section
-   [:h2 id]
-   [:strong "Activities:"]
+   [typography/Heading2 (tr [:enum id])]
+   [typography/Heading3 (tr [:project :activities])]
 
-   [:button
-    {:on-click (e! project-controller/->OpenActivityDialog)}
-    "foo"]
+
    (for [{:activity/keys [name estimated-end-date estimated-start-date] :as activity} activities]
      ^{:key (:db/id activity)}
      [:div {:style {:margin-bottom "1rem"}}
-      [:a {:href (project-controller/activity-url params activity)}
+      [:a {:href (project-controller/activity-url params activity)
+           :class (<class common-styles/list-item-link)}
        (tr [:enum (:db/ident name)])
        " "
-       (format/date estimated-start-date) " — " (format/date estimated-end-date)]])])
+       (format/date estimated-start-date) " — " (format/date estimated-end-date)]])
+
+   [buttons/button-primary
+    {:on-click (e! project-controller/->OpenActivityDialog)
+     :start-icon (r/as-element [icons/content-add])}
+    (tr [:project :add-activity])]])
 
 (defn project-lifecycle-page [e! {{:keys [project] :as params} :params
                                   {:keys [add-activity]}       :query :as app} lifecycle breadcrumbs]
@@ -417,4 +422,3 @@
 (defn project-activity-page
   [e!]
   [:h1 "haloo"])
-

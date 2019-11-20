@@ -52,3 +52,14 @@
 
 (defn inline-block []
   {:display "inline-block"})
+
+(defn list-item-link []
+  (let [border (str "solid 1px " theme-colors/gray-lighter)]
+    ^{:pseudo {:hover {:background-color theme-colors/gray-lightest}
+               :last-child {:border-bottom border}}}
+    {:border-top border
+     :padding "1rem 0"
+     :display "block"
+     :color theme-colors/primary-text
+     :text-decoration "none"
+     :transition "background-color 0.2s ease-in-out"}))
