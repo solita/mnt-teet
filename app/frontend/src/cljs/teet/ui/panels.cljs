@@ -17,15 +17,15 @@
     (let [open-atom (or (:open-atom opts) open-atom)
           open? @open-atom]
       [Card
-       [CardHeader {:title title
+       [CardHeader {:title  title
                     :action (r/as-element
-                             [:div {:style {:display "inline-block"}}
-                              action
-                              [IconButton {:color "primary"
-                                           :on-click #(swap! open-atom not)}
-                               (if open?
-                                 [icons/navigation-expand-less]
-                                 [icons/navigation-expand-more])]])}]
+                              [:div {:style {:display "inline-block"}}
+                               action
+                               [IconButton {:color    "primary"
+                                            :on-click #(swap! open-atom not)}
+                                (if open?
+                                  [icons/navigation-expand-less]
+                                  [icons/navigation-expand-more])]])}]
        [Collapse {:in open? :unmountOnExit true :timeout "auto"}
         [CardContent
          [Divider]
@@ -45,37 +45,37 @@
 
 (defn dialog-title-style
   []
-  {:display :flex
+  {:display         :flex
    :justify-content :space-between
-   :align-items :flex-start})
+   :align-items     :flex-start})
 
 (defn dialog-heading-style
   []
   {:margin-bottom 0
-   :margin-top "1rem"})
+   :margin-top    "1rem"})
 
 (defn modal
   "Simple modal container"
   [{:keys [title on-close] :as opts} content]
-  (r/with-let [open-atom (or (:open-atom opts) (r/atom true))
-               close-fn #(do
-                           (reset! open-atom false)
-                           (when on-close
-                             (on-close)))]
+  (let [open-atom (or (:open-atom opts) (r/atom true))      ;;creates new atoms unnecessarily
+        close-fn #(do
+                    (reset! open-atom false)
+                    (when on-close
+                      (on-close)))]
     [Dialog {:full-width true
-             :max-width "sm"
-             :open @open-atom
-             :on-close close-fn}
+             :max-width  "sm"
+             :open       @open-atom
+             :on-close   close-fn}
      [DialogTitle {:disable-typography true
-                   :class (<class dialog-title-style)}
+                   :class              (<class dialog-title-style)}
       [typography/Heading1
        {:class (<class dialog-heading-style)}
        title]
-      [IconButton {:aria-label "close"
-                   :color :primary
+      [IconButton {:aria-label     "close"
+                   :color          :primary
                    :disable-ripple true
-                   :on-click close-fn
-                   :size :small}
+                   :on-click       close-fn
+                   :size           :small}
        [icons/navigation-close]]]
      [DialogContent
       content]]))

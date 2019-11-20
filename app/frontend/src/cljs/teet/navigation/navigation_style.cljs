@@ -48,7 +48,9 @@
 (defn main-container [drawer-open?]
   (let [dw (drawer-width drawer-open?)]
     {:background-color theme-colors/gray-lightest
-     :min-height (str "calc(100vh - " appbar-height ")")
+     :flex 1
+     :display :flex
+     :flex-direction :column
      :width (str "calc(100% - " dw "px)")
      :transition "all 0.2s ease-in-out"
      :margin-left (str dw "px")}))

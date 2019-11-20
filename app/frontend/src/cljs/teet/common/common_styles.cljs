@@ -3,11 +3,11 @@
 
 (defn gray-light-border
   []
-  {:display :flex
-   :align-items :center
+  {:display        :flex
+   :align-items    :center
    :padding-bottom "0.75rem"
-   :margin-bottom "1rem"
-   :border-bottom (str "1px solid " theme-colors/gray-light)})
+   :margin-bottom  "1rem"
+   :border-bottom  (str "1px solid " theme-colors/gray-light)})
 
 (defn top-info-spacing
   []
@@ -15,17 +15,17 @@
 
 (defn spinner-style
   []
-  {:height "100%"
-   :width "100%"
-   :align-items :center
-   :display :flex
+  {:height          "100%"
+   :width           "100%"
+   :align-items     :center
+   :display         :flex
    :justify-content :center})
 
 (defn input-error-text-style
   []
   {:font-size "1rem"
-   :color theme-colors/error
-   :position :absolute})
+   :color     theme-colors/error
+   :position  :absolute})
 
 (defn grid-left-item
   []
@@ -33,14 +33,17 @@
    :flex-direction :column})
 
 (defn tab-link [current?]
-  {:font-weight (if current? "bold" "normal")
-   :display "inline-block"
-   :text-align "center"})
+  (let [color (if current? theme-colors/blue-dark theme-colors/blue-light)]
+    ^{:pseudo {:hover {:color theme-colors/blue-dark
+                       :fill theme-colors/blue-dark}}}
+    {:font-weight (if current? "bold" "normal")
+     :display     "inline-block"
+     :color       color
+     :fill        color
+     :text-align  "center"}))
 
 (defn tab-icon [current?]
-  ^{:pseudo {:hover {:fill theme-colors/blue-dark}}}
-  {:fill (if current? theme-colors/blue-dark theme-colors/blue-light)
-   :width "40px"
+  {:width  "40px"
    :height "35px"
    :margin "1px 5px 1px 5px"})
 
