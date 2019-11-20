@@ -24,3 +24,8 @@
       (is (= (environment/when-feature :test-feature
                                        :evaluated)
              :evaluated)))))
+
+(deftest parse-enabled-features
+  (testing "parses a comma separated list of feature names into keyword set, trimming whitespace"
+    (is (= (environment/parse-enabled-features " foo , bar-bar,quux,,,")
+           #{:foo :bar-bar :quux}))))
