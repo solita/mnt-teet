@@ -8,14 +8,13 @@
             [teet.ui.text-field :refer [TextField]]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-style :as project-style]
-            [teet.theme.theme-spacing :as theme-spacing]
             [teet.ui.breadcrumbs :as breadcrumbs]
             [teet.ui.skeleton :as skeleton]
             [teet.ui.format :as format]
             [teet.ui.itemlist :as itemlist]
             [teet.ui.icons :as icons]
             [teet.ui.common :as common]
-            [teet.ui.typography :refer [Heading1 Heading2 Heading3]]
+            [teet.ui.typography :refer [Heading1 Heading2 Heading3] :as typography]
             [teet.localization :refer [tr tr-tree]]
             [teet.ui.panels :as panels]
             [teet.ui.buttons :as buttons]
@@ -29,9 +28,7 @@
             [teet.ui.select :as select]
             [teet.ui.timeline :as timeline]
             [teet.ui.progress :as progress]
-            teet.project.project-info
             [teet.project.project-model :as project-model]
-            [teet.ui.typography :as typography]
             [teet.log :as log]
             [teet.ui.url :as url]
             [teet.ui.tabs :as tabs]))
@@ -337,10 +334,6 @@
 
      ^{:attribute :thk.project/owner}
      [select/select-user {:e! e!}]]))
-
-(defn project-info
-  [e! project]
-  [:h1 "project info component"])
 
 (defn project-page-structure
   [e!
