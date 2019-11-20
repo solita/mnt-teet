@@ -1,6 +1,7 @@
 (ns teet.route-macros
   "Macros for defining the app structure"
-  (:require [clojure.java.io :as io]))
+  (:require [clojure.java.io :as io]
+            [clojure.string :as str]))
 
 (defn read-route-defs []
   (read-string
@@ -69,3 +70,37 @@
               defs)
 
            [:div "Unrecognized page: " (str page#)])))))
+
+(def path-split-pattern #"([^:]+)((:[^/]+)(.*))?")
+(defn split-path [path]
+  (loop [acc []
+         path path]
+    (if (str/blank? path)
+      acc
+      (let [[_ before _ param after] (re-matches path-split-pattern path)]
+        (if param
+          (recur (into acc [before (symbol (subs param 1))])
+                 after)
+          (conj acc path))))))
+
+(defmacro define-url-functions
+  "Define functions to generate URLs for all routes"
+  []
+  (let [defs (read-route-defs)]
+    `(do
+       ~@(for [[route-name {path :path}] defs
+               :let [params (param-names path)
+                     param-syms (map (comp symbol name) params)
+                     fn-name (symbol (name route-name))]]
+           (case (count params)
+             0 `(defn ~fn-name [] ~(str "#" path))
+             1 `(defn ~fn-name [~@param-syms]
+                  (if (map? ~(first param-syms))
+                    (~fn-name (~(first params) ~(first param-syms)))
+                    (str "#" ~@(split-path path))))
+             ;; more than 1 parameter
+             `(defn ~fn-name
+                ([{:keys [~@param-syms]}]
+                 (~fn-name ~@param-syms))
+                ([~@param-syms]
+                 (str "#" ~@(split-path path)))))))))
