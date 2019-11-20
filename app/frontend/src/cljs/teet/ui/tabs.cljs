@@ -2,7 +2,7 @@
   (:require [teet.ui.material-ui :refer [Tabs Tab]]
             [teet.common.common-controller :as common-controller]))
 
-(defn tabs [{:keys [e! selected-tab class]} & tabs]
+(defn tabs [{:keys [e! selected-tab class]} tabs]
   (let [tabs (map-indexed
               (fn [i tab]
                 (assoc tab ::index i))

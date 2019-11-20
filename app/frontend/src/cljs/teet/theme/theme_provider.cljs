@@ -53,9 +53,10 @@
                                                                       "0 0 0 5px " theme-colors/blue-light)}}}
                :MuiTabs {:flexContainer {:border-bottom (str "1px solid " theme-colors/gray-lighter)
                                          :justify-content :flex-start
-                                         :padding-left "1.875rem"}
+                                         :background-color theme-colors/gray-lightest}
                          :indicator {:display :none}}
-               :MuiTab {:root {:&$textColorPrimary {:text-transform :capitalize
+               :MuiTab {:root {:&$textColorPrimary {:min-width "100px"
+                                                    :text-transform :capitalize
                                                     :font-size "1rem"
                                                     :font-weight "400"
                                                     :border-width "0 0 1px 0"

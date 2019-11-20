@@ -1,6 +1,7 @@
 (ns teet.project.project-style
   (:require [teet.theme.theme-spacing :as theme-spacing]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.common.common-styles :as common-styles]))
 
 (defn project-map-column []
   {:padding-top "0px!important"
@@ -78,3 +79,15 @@
 (defn link-button-style
   []
   {:margin "1rem 0"})
+
+(defn project-content-overlay []
+  (merge
+   (common-styles/content-paper-style)
+   {:position "absolute"
+    :left "25px"
+    :top "25px"
+    :width "30vw"
+    :bottom "25px"}))
+
+(defn content-overlay-inner []
+  {:padding "1.5rem"})

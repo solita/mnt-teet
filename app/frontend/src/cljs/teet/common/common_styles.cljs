@@ -63,3 +63,9 @@
      :color theme-colors/primary-text
      :text-decoration "none"
      :transition "background-color 0.2s ease-in-out"}))
+
+(defn content-paper-style
+  []
+  {:border-radius "3px"
+   :border (str "1px solid " theme-colors/gray-lighter)
+   :box-shadow "none"})

@@ -4,7 +4,7 @@
             [teet.map.map-features :as map-features]
             [teet.map.map-layers :as map-layers]
             [teet.map.map-view :as map-view]
-            [teet.ui.material-ui :refer [ButtonBase Collapse Link Divider]]
+            [teet.ui.material-ui :refer [ButtonBase Collapse Link Divider Paper]]
             [teet.ui.text-field :refer [TextField]]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-style :as project-style]
@@ -33,7 +33,8 @@
             [teet.project.project-model :as project-model]
             [teet.ui.typography :as typography]
             [teet.log :as log]
-            [teet.ui.url :as url]))
+            [teet.ui.url :as url]
+            [teet.ui.tabs :as tabs]))
 
 (defn task-form [e! close _activity-id task]
   ;;Task definition (under project activity)
@@ -117,19 +118,6 @@
                            :tab "details")}
                (tr [:enum (:db/ident type)])]])]]]))
 
-(defn project-tab-selection
-  [current-tab {:thk.project/keys [id]}]
-  [:div
-   (doall
-     (for [[tab label icon-fn] [["map" (tr [:project :map-view]) icons/teet-map]
-                                ["details" (tr [:project :details-view]) icons/teet-details]]
-           :let [current? (= tab current-tab)]]
-       ^{:key tab}
-       [:a {:class (<class common-styles/tab-link current?)
-            :href  (str "#/projects/" id (str "?tab=" tab))}
-        [:div
-         [icon-fn {:class (<class common-styles/tab-icon current?)}]]
-        [:div {:class (<class common-styles/inline-block)} label]]))])
 
 (defn project-header-style
   []
@@ -137,12 +125,11 @@
    :display         :flex
    :justify-content :space-between})
 
-(defn- project-header [tab {:thk.project/keys [name custom-name] :as project} breadcrumbs activities]
+(defn- project-header [{:thk.project/keys [name custom-name] :as project} breadcrumbs activities]
   [:div {:class (<class project-header-style)}
    [:div
     [breadcrumbs/breadcrumbs breadcrumbs]
-    [Heading1 (project-model/get-column project :thk.project/project-name)]]
-   [project-tab-selection tab project]]
+    [Heading1 (project-model/get-column project :thk.project/project-name)]]]
   #_[project-data activities project])
 
 (defn activity-action-heading
@@ -357,20 +344,25 @@
 
 (defn project-page-structure
   [e!
-   {{:keys [tab]}                   :query
-    {:keys [add-activity add-task]} :query :as app}
+   {{:keys [tab]} :query :as app}
    project
    breadcrumbs
-   page-view]
+   tabs
+   current-tab-view]
   [:div {:style {:display        :flex
                  :flex-direction :column
                  :flex           1}}
-   [project-header tab project breadcrumbs]
-   (case tab
-     "details"
-     [common/ContentPaper
-      page-view]
-     [project-map e! (get-in app [:config :api-url]) project (get-in app [:query :tab])])])
+   [project-header project breadcrumbs]
+   [:div {:style {:position "relative"
+                  :display "flex" :flex-direction "column" :flex 1}}
+    [project-map e! (get-in app [:config :api-url]) project (get-in app [:query :tab])]
+    [Paper {:class (<class project-style/project-content-overlay)}
+     (when (seq tabs)
+       [tabs/tabs {:e! e!
+                   :selected-tab tab}
+        tabs])
+     [:div {:class (<class project-style/content-overlay-inner)}
+      current-tab-view]]]])
 
 (defn project-page [e! {{:keys [tab]}                   :query
                         {:keys [add-activity add-task]} :query :as app}
@@ -381,9 +373,13 @@
      [panels/modal {:title    (tr [:project :add-task])
                     :on-close #(e! (project-controller/->CloseTaskDialog))}
       [task-form e! project-controller/->CloseTaskDialog add-task (get-in app [:project project :new-task])]])
-   [project-page-structure e! app project breadcrumbs (if (initialized? project)
-                                                        [project-data project]
-                                                        [initialization-form e! project])]])
+   [project-page-structure e! app project breadcrumbs
+    [{:label "Activities" :value "activities"}
+     {:label "People" :value "people"}
+     {:label "Details" :value "details"}] ;; TABS
+    (if (initialized? project)
+      [project-data project]
+      [initialization-form e! project])]])
 
 (defn project-lifecycle-content
   [e! params
@@ -414,10 +410,12 @@
    [panels/modal {:open-atom (r/wrap (boolean add-activity) :_)
                   :title     (tr [:project :add-activity])
                   :on-close  #(e! (project-controller/->CloseActivityDialog))}
-    [activity-view/activity-form e! project-controller/->CloseActivityDialog (get-in app [:project project :new-activity])]]
+    [activity-view/activity-form e! project-controller/->CloseActivityDialog
+     (get-in app [:project project :new-activity])]]
    [project-page-structure e! app
     (:project lifecycle)
     breadcrumbs
+    [] ;; TABS
     [project-lifecycle-content e! params lifecycle]]])
 
 (defn project-activity-content
@@ -441,4 +439,5 @@
    [project-page-structure e! app
     (:project activity)
     breadcrumbs
+    [] ;; TABS
     [project-activity-content e! app activity]]])

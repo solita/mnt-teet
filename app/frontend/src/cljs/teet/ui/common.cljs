@@ -163,13 +163,7 @@
    :padding-bottom "1rem"
    :margin-bottom "1rem"})
 
-(defn- content-paper-style
-  []
-  {:margin "1.5rem 1.875rem"
-   :padding "3.5rem 2.5rem"
-   :border-radius "3px"
-   :border (str "1px solid " theme-colors/gray-lighter)
-   :box-shadow "none"})
+
 
 (defn- status-style
   []
@@ -187,5 +181,3 @@
    [labeled-data {:label (tr [:common :last-modified])
                   :data (or (format/date modified)
                             "-")}]])
-(def ContentPaper
-  (util/make-component Paper {:class (<class content-paper-style)}))
