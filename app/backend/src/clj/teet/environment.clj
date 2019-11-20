@@ -21,10 +21,10 @@
 
 (def config (atom init-config))
 
-;; "road-information-view;component-view"
+;; "road-information-view, component-view"
 (defn parse-enabled-features [ssm-param]
   (->> (str/split ssm-param #",")
-       (remove empty?)
+       (remove str/blank?)
        (map str/trim)
        (map keyword)
        set))
