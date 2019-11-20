@@ -88,12 +88,12 @@
            :query            (dissoc query :add-activity)}))
 
   OpenTaskDialog
-  (process-event [{activity-id :activity-id} app]
+  (process-event [{{activity-id :activity} :activity-id} {:keys [page params query] :as app}]
     (t/fx app
       {:tuck.effect/type :navigate
-       :page :project
-       :params {:project (get-in app [:params :project])}
-       :query {:add-task activity-id}}))
+       :page page
+       :params params
+       :query (assoc query :add-task 1)}))
 
   UpdateActivityState
   (process-event [{activity-id :id status :status} app]
@@ -107,12 +107,12 @@
            }))
 
   CloseTaskDialog
-  (process-event [_ app]
+  (process-event [_ {:keys [page params query] :as app}]
     (t/fx app
       {:tuck.effect/type :navigate
-       :page :project
-       :params {:project (get-in app [:params :project])}
-       :query {}}))
+       :page page
+       :params params
+       :query (dissoc query :add-task)}))
 
   ToggleRestrictionData
   (process-event [{restriction-id :id} app]

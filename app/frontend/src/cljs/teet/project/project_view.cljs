@@ -397,14 +397,14 @@
    (for [{:activity/keys [name estimated-end-date estimated-start-date] :as activity} activities]
      ^{:key (:db/id activity)}
      [:div {:style {:margin-bottom "1rem"}}
-      [:a {:href (project-controller/activity-url params activity)
+      [:a {:href  (project-controller/activity-url params activity)
            :class (<class common-styles/list-item-link)}
        (tr [:enum (:db/ident name)])
        " "
        (format/date estimated-start-date) " — " (format/date estimated-end-date)]])
 
    [buttons/button-primary
-    {:on-click (e! project-controller/->OpenActivityDialog)
+    {:on-click   (e! project-controller/->OpenActivityDialog)
      :start-icon (r/as-element [icons/content-add])}
     (tr [:project :add-activity])]])
 
@@ -420,6 +420,19 @@
     breadcrumbs
     [project-lifecycle-content e! params lifecycle]]])
 
+(defn project-activity-content
+  [e! {{:keys [project]} :params
+       {add-task :add-task} :query :as app} activity]
+  [:div
+   (when add-task
+     [panels/modal {:title    (tr [:project :add-task])
+                    :on-close #(e! (project-controller/->CloseTaskDialog))}
+      [task-form e! project-controller/->CloseTaskDialog add-task project]])
+   [:h1 "haloo: " add-task]
+   [:p (pr-str activity)]
+   [buttons/button-primary
+    {:on-click (e! project-controller/->OpenTaskDialog activity)}
+    "Add task"]])
 
 (defn project-activity-page
   [e! app activity breadcrumbs]
@@ -428,4 +441,4 @@
    [project-page-structure e! app
     (:project activity)
     breadcrumbs
-    [:h1 "haloo" (pr-str activity)]]])
+    [project-activity-content e! app activity]]])
