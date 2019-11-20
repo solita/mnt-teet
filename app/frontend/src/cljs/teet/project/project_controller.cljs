@@ -175,4 +175,4 @@
 
 (defn activity-url
   [{:keys [project lifecycle]} {id :db/id}]
-  (str "#/projects/" project "/" lifecycle "/" id))
+  (str "#/projects/" project "/" lifecycle "/" id "?tab=details"))

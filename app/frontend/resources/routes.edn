@@ -32,8 +32,9 @@
 
  ;; Project overview page
  :project {:path "/projects/:project"
+           :keep-query-params #{:tab}
            :parent :projects-list
-           :crumb (teet.project.project-model/get-column (or (some-> state :thk.project/_lifecycles first)
+           :crumb (teet.project.project-model/get-column (or (some-> state :project)
                                                              state)
                                                          :thk.project/project-name)
            :view teet.project.project-view/project-page
@@ -43,16 +44,24 @@
 
  ;; Project lifecycle page
  :project-lifecycle {:path "/projects/:project/:lifecycle"
+                     :keep-query-params #{:tab}
                      :parent :project
-                     :crumb (tr [:enum (-> state :thk.lifecycle/type :db/ident)])
+                     :crumb (tr [:enum (-> (or (some-> state :lifecycle)
+                                               state)
+                                           :thk.lifecycle/type :db/ident)])
                      :state {:query :thk.project/fetch-project-lifecycle
                              :args {:project project
                                     :lifecycle (goog.math.Long/fromString lifecycle)}}
                      :view teet.project.project-view/project-lifecycle-page}
 
  :activity-task {:path "/projects/:project/:lifecycle/:activity"
+                 :keep-query-params #{:tab}
                  :parent :project-lifecycle
-                 :view teet.project.project-view/project-activity-page} ;;todo: query and proper view
+                 :view teet.project.project-view/project-activity-page
+                 :crumb (tr [:enum (-> state :activity/name :db/ident)])
+                 :state {:query :thk.project/fetch-lifecycle-activity
+                         :args {:lifecycle (goog.math.Long/fromString lifecycle)
+                                :activity (goog.math.Long/fromString activity)}}}
 
  :task-document {:path "/projects/:project/:activity/:task/:document"
                  :parent :activity-task

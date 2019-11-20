@@ -31,7 +31,8 @@
             [teet.ui.progress :as progress]
             teet.project.project-info
             [teet.project.project-model :as project-model]
-            [teet.ui.typography :as typography]))
+            [teet.ui.typography :as typography]
+            [teet.log :as log]))
 
 (defn task-form [e! close _activity-id task]
   ;;Task definition (under project activity)
@@ -414,11 +415,16 @@
                   :on-close  #(e! (project-controller/->CloseActivityDialog))}
     [activity-view/activity-form e! project-controller/->CloseActivityDialog (get-in app [:project project :new-activity])]]
    [project-page-structure e! app
-    (get-in lifecycle [:thk.project/_lifecycles 0])
+    (:project lifecycle)
     breadcrumbs
     [project-lifecycle-content e! params lifecycle]]])
 
 
 (defn project-activity-page
-  [e!]
-  [:h1 "haloo"])
+  [e! app activity breadcrumbs]
+  (log/info "MURUSET: " (pr-str breadcrumbs))
+  [:<>
+   [project-page-structure e! app
+    (:project activity)
+    breadcrumbs
+    [:h1 "haloo" (pr-str activity)]]])

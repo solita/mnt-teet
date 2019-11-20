@@ -16,24 +16,50 @@
                        {:thk.lifecycle/activities [*]}]}])
           [:thk.project/id id]))
 
+(defn- fetch-project [result db path]
+  (let [project (d/pull db
+                        project-model/project-info-attributes
+                        (get-in result (into path [:db/id])))]
+    (assoc result :project project)))
+
+(defn- fetch-lifecycle [result db path]
+  (let [project (d/pull db
+                        [:thk.lifecycle/type]
+                        (get-in result (into path [:db/id])))]
+    (assoc result :lifecycle project)))
+
 (defmethod db-api/query :thk.project/fetch-project-lifecycle
   [{db :db} {:keys [project lifecycle]}]
-  (let [lifecycle
-        (ffirst
-         (d/q '[:find (pull ?e [*
-                                {:thk.lifecycle/activities [:db/id
-                                                            :activity/name
-                                                            :activity/estimated-start-date
-                                                            :activity/estimated-end-date]}
-                                {:thk.project/_lifecycles [:db/id]}])
-                :where [?project :thk.project/lifecycles ?e]
-                :in $ ?project ?e]
-              db
-              [:thk.project/id project]
-              lifecycle))]
-    (update-in lifecycle [:thk.project/_lifecycles 0]
-               (fn [{id :db/id}]
-                 (d/pull db project-model/project-info-attributes id)))))
+  (-> (d/q '[:find (pull ?e [*
+                             {:thk.lifecycle/activities [:db/id
+                                                         :activity/name
+                                                         :activity/estimated-start-date
+                                                         :activity/estimated-end-date]}
+                             {:thk.project/_lifecycles [:db/id]}])
+             :where [?project :thk.project/lifecycles ?e]
+             :in $ ?project ?e]
+           db
+           [:thk.project/id project]
+           lifecycle)
+      ffirst
+      (fetch-project db [:thk.project/_lifecycles 0])))
+
+(defmethod db-api/query :thk.project/fetch-lifecycle-activity [{db :db} {:keys [lifecycle activity]}]
+  (-> (d/q '[:find (pull ?e [:activity/name :activity/estimated-start-date :activity/estimated-end-date
+                             {:activity/tasks [:task/status :task/name :task/assignee :task/description
+                                               {:task/documents [*]}]}
+                             {:thk.lifecycle/_activities
+                              [:db/id
+                               {:thk.project/_lifecycles
+                                [:db/id]}]}])
+             :where [?lifecycle :thk.lifecycle/activities ?e]
+             :in $ ?lifecycle ?e]
+           db
+           lifecycle
+           activity)
+      ffirst
+      (fetch-project db [:thk.lifecycle/_activities 0 :thk.project/_lifecycles 0])
+      (fetch-lifecycle db [:thk.lifecycle/_activities 0])))
 
 (defmethod db-api/query :thk.project/listing [{db :db} _]
   {:query '[:find (pull ?e columns)
