@@ -30,7 +30,6 @@
                  :state {:query :thk.project/listing
                          :args {}}}
 
- ;; Project overview page
  :project {:path "/projects/:project"
            :keep-query-params #{:tab}
            :parent :projects-list
@@ -40,35 +39,6 @@
            :view teet.project.project-view/project-page
            :state {:query :thk.project/fetch-project
                    :args {:thk.project/id project}}}
-
-
- ;; Project lifecycle page
- :project-lifecycle {:path "/projects/:project/:lifecycle"
-                     :keep-query-params #{:tab}
-                     :parent :project
-                     :crumb (tr [:enum (-> (or (some-> state :lifecycle)
-                                               state)
-                                           :thk.lifecycle/type :db/ident)])
-                     :state {:query :thk.project/fetch-project-lifecycle
-                             :args {:project project
-                                    :lifecycle (goog.math.Long/fromString lifecycle)}}
-                     :view teet.project.project-view/project-lifecycle-page}
-
- :activity-task {:path "/projects/:project/:lifecycle/:activity"
-                 :keep-query-params #{:tab}
-                 :parent :project-lifecycle
-                 :view teet.project.project-view/project-activity-page
-                 :crumb (tr [:enum (-> state :activity/name :db/ident)])
-                 :state {:query :thk.project/fetch-lifecycle-activity
-                         :args {:lifecycle (goog.math.Long/fromString lifecycle)
-                                :activity (goog.math.Long/fromString activity)}}}
-
- :task-document {:path "/projects/:project/:activity/:task/:document"
-                 :parent :activity-task
-                 :view teet.document.document-view/document-page
-                 :state {:query :document/fetch-document
-                         :args {:document-id (goog.math.Long/fromString document)}}
-                 :crumb (:document/name state)}
 
  :components {:path "/components" :view teet.ui.component-demo/demo}
  :road {:path "/road"

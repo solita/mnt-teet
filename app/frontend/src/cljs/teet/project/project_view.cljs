@@ -31,9 +31,10 @@
             [teet.project.project-model :as project-model]
             [teet.log :as log]
             [teet.ui.url :as url]
-            [teet.ui.tabs :as tabs]))
+            [teet.ui.tabs :as tabs]
+            [teet.common.common-controller :as common-controller]))
 
-(defn task-form [e! close _activity-id task]
+(defn task-form [e! close task]
   ;;Task definition (under project activity)
   ;; Task type (a predefined list of tasks: topogeodeesia, geoloogia, liiklusuuring, KMH eelhinnang, loomastikuuuring, arheoloogiline uuring, muu)
   ;; Description (short description of the task for clarification, 255char, in case more detailed description is needed, it will be uploaded as a file under the task)
@@ -352,32 +353,14 @@
     [Paper {:class (<class project-style/project-content-overlay)}
      (when (seq tabs)
        [tabs/tabs {:e! e!
-                   :selected-tab tab}
+                   :selected-tab (or tab (:value (first tabs)))}
         tabs])
      [:div {:class (<class project-style/content-overlay-inner)}
       current-tab-view]]]])
 
-(defn project-page [e! {{:keys [tab]}                   :query
-                        {:keys [add-activity add-task]} :query :as app}
-                    project
-                    breadcrumbs]
-  [:<>
-   (when add-task
-     [panels/modal {:title    (tr [:project :add-task])
-                    :on-close #(e! (project-controller/->CloseTaskDialog))}
-      [task-form e! project-controller/->CloseTaskDialog add-task (get-in app [:project project :new-task])]])
-   [project-page-structure e! app project breadcrumbs
-    [{:label "Activities" :value "activities"}
-     {:label "People" :value "people"}
-     {:label "Details" :value "details"}] ;; TABS
-    (if (initialized? project)
-      [project-data project]
-      [initialization-form e! project])]])
-
 (defn project-lifecycle-content
-  [e! params
-   {{id :db/ident} :thk.lifecycle/type
-    activities     :thk.lifecycle/activities}]
+  [e! {{id :db/ident} :thk.lifecycle/type
+       activities     :thk.lifecycle/activities}]
   [:section
    [typography/Heading2 (tr [:enum id])]
    [typography/Heading3 (tr [:project :activities])]
@@ -386,7 +369,7 @@
    (for [{:activity/keys [name estimated-end-date estimated-start-date] :as activity} activities]
      ^{:key (:db/id activity)}
      [:div {:style {:margin-bottom "1rem"}}
-      [:a {:href  (project-controller/activity-url params activity)
+      [:a {:href  "foo";(project-controller/activity-url params activity)
            :class (<class common-styles/list-item-link)}
        (tr [:enum (:db/ident name)])
        " "
@@ -397,40 +380,53 @@
      :start-icon (r/as-element [icons/content-add])}
     (tr [:project :add-activity])]])
 
-(defn project-lifecycle-page [e! {{:keys [project] :as params} :params
-                                  {:keys [add-activity]}       :query :as app} lifecycle breadcrumbs]
-  [:<>
-   [panels/modal {:open-atom (r/wrap (boolean add-activity) :_)
-                  :title     (tr [:project :add-activity])
-                  :on-close  #(e! (project-controller/->CloseActivityDialog))}
-    [activity-view/activity-form e! project-controller/->CloseActivityDialog
-     (get-in app [:project project :new-activity])]]
-   [project-page-structure e! app
-    (:project lifecycle)
-    breadcrumbs
-    [] ;; TABS
-    [project-lifecycle-content e! params lifecycle]]])
 
-(defn project-activity-content
-  [e! {{:keys [project]} :params
-       {add-task :add-task} :query :as app} activity]
-  [:div
-   (when add-task
-     [panels/modal {:title    (tr [:project :add-task])
-                    :on-close #(e! (project-controller/->CloseTaskDialog))}
-      [task-form e! project-controller/->CloseTaskDialog add-task project]])
-   [:h1 "haloo: " add-task]
-   [:p (pr-str activity)]
-   [buttons/button-primary
-    {:on-click (e! project-controller/->OpenTaskDialog activity)}
-    "Add task"]])
+(defn activities-tab [e! {:keys [lifecycle] :as query} project]
+  (if-let [lc (project-model/lifecycle-by-id project lifecycle)]
+    [project-lifecycle-content e! lc]
+    [:ul
+     (for [lc (:thk.project/lifecycles project)]
+       [:li {:on-click #(e! (common-controller/->SetQueryParam :lifecycle (str (:db/id lc))))}
+        (tr [:enum (-> lc :thk.lifecycle/type :db/ident)])])]))
 
-(defn project-activity-page
-  [e! app activity breadcrumbs]
-  (log/info "MURUSET: " (pr-str breadcrumbs))
+(defn people-tab [e! query project]
+  [:div "people"])
+
+(defn details-tab [e! query project]
+  [project-data project])
+
+(defn project-page [e! {{:keys [tab add]} :query
+                        query :query
+                        :as app}
+                    project
+                    breadcrumbs]
   [:<>
-   [project-page-structure e! app
-    (:project activity)
-    breadcrumbs
-    [] ;; TABS
-    [project-activity-content e! app activity]]])
+   [panels/modal {:open-atom (r/wrap (boolean add) :_)
+                  :title     (if-not add
+                               ""
+                               (tr [:project (case add
+                                               "task" :add-task
+                                               "activity" :add-activity)]))
+                  :on-close  (e! project-controller/->CloseAddDialog)}
+    (case add
+      "task"
+      [task-form e! project-controller/->CloseAddDialog
+       (get-in app [:project project :new-task])]
+
+      "activity"
+      [activity-view/activity-form e! project-controller/->CloseAddDialog
+       (get-in app [:project project :new-activity])]
+
+      [:span])]
+   [project-page-structure e! app project breadcrumbs
+    (when (initialized? project)
+      ;; FIXME: localize
+      [{:label "Activities" :value "activities"}
+       {:label "People" :value "people"}
+       {:label "Details" :value "details"}])
+    (if-not (initialized? project)
+      [initialization-form e! project]
+      (case (or tab "activities")
+        "activities" [activities-tab e! query project]
+        "people" [people-tab e! query project]
+        "details" [details-tab e! query project]))]])

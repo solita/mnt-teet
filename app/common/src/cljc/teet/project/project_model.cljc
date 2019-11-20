@@ -2,8 +2,10 @@
   "Common project datamodel metadata."
   (:require [teet.user.user-model :as user-model]
             #?@(:cljs ([teet.ui.format :as format]
-                       [clojure.string :as str])
-                :clj ([clojure.string :as str]))))
+                       [clojure.string :as str]
+                       goog.math.Long)
+                :clj ([clojure.string :as str]))
+            [teet.log :as log]))
 
 (def project-listing-attributes
   [:db/id
@@ -70,3 +72,12 @@
                           :else true)))
                     filters))
           projects))
+
+(defn- id=
+  "Compare ids as strings.
+  Datomic ids in JS may be bigger than can be represented in JS Number."
+  [id1 id2]
+  (= (str id1) (str id2)))
+
+(defn lifecycle-by-id [{lifecycles :thk.project/lifecycles} lifecycle-id]
+  (some #(when (id= lifecycle-id (:db/id %)) %) lifecycles))

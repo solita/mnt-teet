@@ -8,9 +8,8 @@
 
 
 (defrecord OpenActivityDialog [])                              ; open add activity modal dialog
-(defrecord CloseActivityDialog [])
 (defrecord OpenTaskDialog [activity-id])
-(defrecord CloseTaskDialog [])
+(defrecord CloseAddDialog [])
 (defrecord SelectProject [project-id])
 (defrecord ToggleCadastralHightlight [id])
 (defrecord ToggleRestrictionData [id])
@@ -71,21 +70,20 @@
     (update-in app [:route :project :initialization-form] merge form-data))
 
   OpenActivityDialog
-  (process-event [_ {:keys [page params] :as app}]
+  (process-event [_ {:keys [page params query] :as app}]
     (t/fx app
       {:tuck.effect/type :navigate
        :page page
        :params params
-       :query {:tab "details"
-               :add-activity 1}}))
+       :query (assoc query :add "activity")}))
 
-  CloseActivityDialog
+  CloseAddDialog
   (process-event [_ {:keys [page params query] :as app}]
     (t/fx app
           {:tuck.effect/type :navigate
            :page             page
            :params           params
-           :query            (dissoc query :add-activity)}))
+           :query            (dissoc query :add)}))
 
   OpenTaskDialog
   (process-event [{{activity-id :activity} :activity-id} {:keys [page params query] :as app}]
@@ -93,7 +91,7 @@
       {:tuck.effect/type :navigate
        :page page
        :params params
-       :query (assoc query :add-task 1)}))
+       :query (assoc query :add "task")}))
 
   UpdateActivityState
   (process-event [{activity-id :id status :status} app]
@@ -105,14 +103,6 @@
            :result-event common-controller/->Refresh
            :success-message "Activity updated successfully"    ;TODO add to localizations
            }))
-
-  CloseTaskDialog
-  (process-event [_ {:keys [page params query] :as app}]
-    (t/fx app
-      {:tuck.effect/type :navigate
-       :page page
-       :params params
-       :query (dissoc query :add-task)}))
 
   ToggleRestrictionData
   (process-event [{restriction-id :id} app]

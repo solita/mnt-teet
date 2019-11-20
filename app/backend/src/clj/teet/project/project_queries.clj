@@ -12,8 +12,13 @@
 (defmethod db-api/query :thk.project/fetch-project [{db :db} {:thk.project/keys [id]}]
   (d/pull db (into project-model/project-info-attributes
                    '[{:thk.project/lifecycles
-                      [:db/id :thk.lifecycle/estimated-start-date :thk.lifecycle/estimated-end-date :thk.lifecycle/type
-                       {:thk.lifecycle/activities [*]}]}])
+                      [:db/id
+                       :thk.lifecycle/estimated-start-date
+                       :thk.lifecycle/estimated-end-date
+                       :thk.lifecycle/type
+                       {:thk.lifecycle/activities
+                        [*
+                         {:activity/tasks [*]}]}]}])
           [:thk.project/id id]))
 
 (defn- fetch-project [result db path]
