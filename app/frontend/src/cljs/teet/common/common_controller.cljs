@@ -162,25 +162,57 @@
   (fn [err]
     (e! (->ResponseError err))))
 
+(defn headers->map
+  "Turn nil, map, js object and js Headers into Clojure map"
+  [headers]
+  (cond (nil? headers)
+        {}
+
+        (map? headers)
+        headers
+
+        (= (type headers)
+           js/Object)
+        (js->clj headers)
+
+        (= (type headers)
+           js/Headers)
+        (loop [ks (.keys headers)
+               headers-map {}]
+          (let [{:strs [done value] :as n} (js->clj (.next ks))]
+            (if done
+              headers-map
+              (recur ks
+                     (assoc headers-map
+                            (keyword value)
+                            (.get headers value))))))))
+
+(defn map->headers
+  "turn Clojure map into js Headers object"
+  [headers-map]
+  {:pre [(map? headers-map)]}
+  (let [headers (js/Headers.)]
+    (doseq [[k v] headers-map]
+      (.set headers (name k) v))
+    headers))
+
+(defn- add-authorization [headers]
+  (-> headers
+      headers->map
+      (assoc :Authorization (str "Bearer " @api-token))
+      map->headers))
+
 (defn- fetch*
   "Call JS fetch API. Automatically adds response code check and error handling.
   Returns promise."
-  [e! & fetch-args]
-  (let [[url authless-arg-map-js] fetch-args
-        authless-arg-map (js->clj authless-arg-map-js)
-        authless-headers (or (get authless-arg-map "headers")
-                             {})
-        new-headers (assoc authless-headers
-                       "Authorization" (str "Bearer " @api-token))
-        clj-arg-map (assoc authless-arg-map
-                           "headers" new-headers)
-        p (js/fetch url (clj->js clj-arg-map))
-        ; p (js/fetch url authless-arg-map-js)
-        ]
-    (log/info "orig argmap:" authless-arg-map "->" clj-arg-map)
-    (-> p
-        (.then check-response-status)
-        (.catch (catch-response-error e!)))))
+  [e! & [url authless-arg-map-js]]
+  (-> (js/fetch url
+                (-> authless-arg-map-js
+                    js->clj
+                    (update "headers" add-authorization)
+                    clj->js))
+      (.then check-response-status)
+      (.catch (catch-response-error e!))))
 
 (defmethod tuck-effect/process-effect :rpc [e! {:keys [rpc args result-path result-event
                                                        endpoint method loading-path
