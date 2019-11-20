@@ -112,7 +112,10 @@
     (vreset! on-zoom (get-in map-data [:on-zoom]))
 
     (let [{:keys [extent]} map-data]
-      [:div {:style {:position :relative}}
+      [:div {:style {:display :flex
+                     :flex-direction :column
+                     :flex 1
+                     :position :relative}}
        (when layer-controls?
          [map-layer-controls e! map-restrictions map-controls])
        [openlayers/openlayers
@@ -121,7 +124,8 @@
          ;; set width/height as CSS units, must set height as pixels!
          :height height
          :unselectable "on"
-         :style (merge {:user-select "none"}
+         :style (merge {:user-select "none"
+                        :display :flex}
                   (when (#{:bbox-select :position-select} @current-tool)
                     {:cursor "crosshair"}))
          :class class

@@ -544,9 +544,10 @@
 
 (defn- ol3-render [mapspec]
   (let [c (reagent/current-component)]
-    [:div {:style {:position         "relative"
-                   :width            "100%"
-                   :height           "100%"
+    [:div {:style {:display :flex
+                   :flex-direction :column
+                   :flex 1
+                   :position         "relative"
                    :background-color "white";(colors/map-bg)
                    :user-select      "none"}}
      [:div {:id    (:id mapspec)
