@@ -32,7 +32,8 @@
             teet.project.project-info
             [teet.project.project-model :as project-model]
             [teet.ui.typography :as typography]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.ui.url :as url]))
 
 (defn task-form [e! close _activity-id task]
   ;;Task definition (under project activity)
@@ -112,8 +113,8 @@
       [:ul
        (for [{id :db/id type :thk.lifecycle/type} lifecycles]
          ^{:key (str id)}
-         [:li [:a {:href (str "#/projects/" (:thk.project/id project) "/"
-                              (str id) "?tab=details")}
+         [:li [:a {:href (url/with-params (url/project-lifecycle (:thk.project/id project) (str id))
+                           :tab "details")}
                (tr [:enum (:db/ident type)])]])]]]))
 
 (defn project-tab-selection
