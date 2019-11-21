@@ -54,9 +54,6 @@
 (defmethod get-column :thk.project/owner-info [project]
   (some-> project :thk.project/owner user-model/user-name))
 
-
-
-
 (defn filtered-projects [projects filters]
   (filter (fn [project]
             (every? (fn [[filter-attribute filter-value]]
@@ -81,3 +78,9 @@
 
 (defn lifecycle-by-id [{lifecycles :thk.project/lifecycles} lifecycle-id]
   (some #(when (id= lifecycle-id (:db/id %)) %) lifecycles))
+
+(defn activity-by-id [{lifecycles :thk.project/lifecycles} activity-id]
+  (some
+    (fn [{activities :thk.lifecycle/activities}]
+      (some #(when (id= activity-id (:db/id %)) %) activities))
+    lifecycles))
