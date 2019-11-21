@@ -41,6 +41,11 @@
                           [(keyword param-name) param-value]))
                    params)}))
 
+(defn remove-params
+  []
+  (let [[_ path _] (re-matches path-and-params-pattern js/window.location.hash)]
+    path))
+
 (defn set-params
   [& param-names-and-values]
   (let [hash js/window.location.hash
