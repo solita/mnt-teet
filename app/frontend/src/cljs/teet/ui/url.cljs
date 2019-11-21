@@ -11,12 +11,23 @@
                                 (str (name param-name) "=" (js/encodeURIComponent (str param-value))))
                               (partition 2 param-names-and-values)))))
 
-(def path-and-params-pattern
+(defn- format-params
+  [params]
+  (str/join "&"
+            (map (fn [[param-name param-value]]
+                   (str (name param-name) "=" (js/encodeURIComponent (str param-value))))
+                 params)))
+
+(def
+  ^:private
+  path-and-params-pattern
   "Regex pattern to split URL hash into path and parameters."
   #"([^\?]+)(\?.+)?$")
 
 
-(def param-name-and-value-pattern
+(def
+  ^:private
+  param-name-and-value-pattern
   "Regex pattern to extract parameter names and values."
   #"([\w-]+)=([^&]*)")
 
@@ -29,3 +40,10 @@
                    (map (fn [[_ param-name param-value]]
                           [(keyword param-name) param-value]))
                    params)}))
+
+(defn set-params
+  [& param-names-and-values]
+  (let [hash js/window.location.hash
+        {:keys [path params]} (parse-hash hash)
+        params (into params (map vec) (partition 2 param-names-and-values))]
+    (str path "?" (format-params params))))
