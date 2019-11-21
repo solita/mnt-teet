@@ -112,8 +112,7 @@
       [:ul
        (for [{id :db/id type :thk.lifecycle/type} lifecycles]
          ^{:key (str id)}
-         [:li [:a {:href (url/with-params (url/project-lifecycle (:thk.project/id project) (str id))
-                           :tab "details")}
+         [:li [:a {:href "foo"}
                (tr [:enum (:db/ident type)])]])]]]))
 
 
@@ -156,22 +155,23 @@
    select])
 
 (defn project-activity
-  [e! {:keys [project]} {id             :db/id
-                         :activity/keys [activity-name tasks status] :as activity}]
+  [e!
+   {thk-id :thk.project/id}
+   {id             :db/id
+    :activity/keys [name tasks estimated-end-date estimated-start-date] :as activity}]
   [:div {:class (<class project-style/project-activity-style)}
-   [heading-state
-    (tr [:enum (:db/ident activity-name)])
-    [select/select-enum {:e!           e!
-                         :tiny-select? true
-                         :show-label?  false
-                         :on-change    #(e! (project-controller/->UpdateActivityState id %))
-                         :value        (:db/ident status)
-                         :attribute    :activity/status}]]
+   [:div {:style {:display         :flex
+                  :justify-content :space-between
+                  :align-items     :center}}
+    [:h2 (tr [:enum (:db/ident name)])]
+    [buttons/button-secondary {:on-click #(println "foobar")} (tr [:buttons :edit])]]
+   [:span (format/date estimated-start-date) " – " (format/date estimated-end-date)]
+
    (if (seq tasks)
      (doall
        (for [{:task/keys [status type] :as t} tasks]
          ^{:key (:db/id t)}
-         [common/list-button-link (merge {:link  (str "#/projects/" project "/" id "/" (:db/id t))
+         [common/list-button-link (merge {:link  (str "#/projects/" thk-id "/" (:db/id t))
                                           :label (tr [:enum (:db/ident type)])
                                           :icon  icons/file-folder-open}
                                          (when status
@@ -179,25 +179,10 @@
      [:div {:class (<class project-style/top-margin)}
       [:em
        (tr [:project :activity :no-tasks])]])
-   [Link {:class     (<class project-style/link-button-style)
-          :on-click  (r/partial e! (project-controller/->OpenTaskDialog id))
-          :component :button}
-    "+ "
+   [buttons/button-primary
+    {:on-click (e! project-controller/->OpenTaskDialog)}
     (tr [:project :add-task])]])
 
-(defn project-activity-listing [e! project activities]
-  [:<>
-   [activity-action-heading {:heading (tr [:project :activities])
-                             :button  [buttons/button-primary
-                                       {:on-click   (e! project-controller/->OpenActivityDialog)
-                                        :start-icon (r/as-element [icons/content-add])}
-                                       (tr [:project :add-activity])]}]
-   (doall
-     (for [activity
-           (sort-by activity-sort-priority
-                    activities)]
-       ^{:key (:db/id activity)}
-       [project-activity e! {:project project} activity]))])
 
 (defn map-style
   []
@@ -348,11 +333,11 @@
                  :flex           1}}
    [project-header project breadcrumbs]
    [:div {:style {:position "relative"
-                  :display "flex" :flex-direction "column" :flex 1}}
+                  :display  "flex" :flex-direction "column" :flex 1}}
     [project-map e! (get-in app [:config :api-url]) project (get-in app [:query :tab])]
     [Paper {:class (<class project-style/project-content-overlay)}
      (when (seq tabs)
-       [tabs/tabs {:e! e!
+       [tabs/tabs {:e!           e!
                    :selected-tab (or tab (:value (first tabs)))}
         tabs])
      [:div {:class (<class project-style/content-overlay-inner)}
@@ -369,7 +354,7 @@
    (for [{:activity/keys [name estimated-end-date estimated-start-date] :as activity} activities]
      ^{:key (:db/id activity)}
      [:div {:style {:margin-bottom "1rem"}}
-      [:a {:href  "foo";(project-controller/activity-url params activity)
+      [:a {:href  (url/set-params :activity (:db/id activity))
            :class (<class common-styles/list-item-link)}
        (tr [:enum (:db/ident name)])
        " "
@@ -381,9 +366,13 @@
     (tr [:project :add-activity])]])
 
 
-(defn activities-tab [e! {:keys [lifecycle] :as query} project]
-  (if-let [lc (project-model/lifecycle-by-id project lifecycle)]
-    [project-lifecycle-content e! lc]
+(defn activities-tab [e! {:keys [lifecycle activity] :as query} project]
+  (cond
+    activity
+    [project-activity e! project (project-model/activity-by-id project activity)]
+    lifecycle
+    [project-lifecycle-content e! (project-model/lifecycle-by-id project lifecycle)]
+    :else
     [:ul
      (for [lc (:thk.project/lifecycles project)]
        [:li {:on-click #(e! (common-controller/->SetQueryParam :lifecycle (str (:db/id lc))))}
@@ -396,8 +385,8 @@
   [project-data project])
 
 (defn project-page [e! {{:keys [tab add]} :query
-                        query :query
-                        :as app}
+                        query             :query
+                        :as               app}
                     project
                     breadcrumbs]
   [:<>
@@ -411,7 +400,7 @@
     (case add
       "task"
       [task-form e! project-controller/->CloseAddDialog
-       (get-in app [:project project :new-task])]
+       (:new-task project)]
 
       "activity"
       [activity-view/activity-form e! project-controller/->CloseAddDialog
