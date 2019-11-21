@@ -1,5 +1,5 @@
 {:admin {:title "Admin", :create-user "Add user"},
- :buttons {:cancel "Cancel", :save "Save", :add "Add"},
+ :buttons {:cancel "Cancel", :save "Save", :add "Add", :edit "Edit"},
  :common
  {:hide-menu "Hide menu",
   :select-files "Select files to upload",
