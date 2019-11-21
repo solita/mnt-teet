@@ -118,9 +118,7 @@
 
 (defn project-header-style
   []
-  {:padding         "1.5rem 1.875rem"
-   :display         :flex
-   :justify-content :space-between})
+  {:padding         "1.5rem 1.875rem"})
 
 (defn- project-header [{:thk.project/keys [name] :as project} breadcrumbs activities]
   [:div {:class (<class project-header-style)}
