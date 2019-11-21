@@ -315,8 +315,8 @@
     [:<>
      [:div {:class (<class project-style/wizard-header)}
       [:div {:class (<class project-style/wizard-header-step-info)}
-       [typography/Text "Project setup"]
-       [typography/Text "Step 1 of 4"]]
+       [typography/Text {:color :textSecondary} "Project setup"]
+       [typography/Text {:color :textSecondary} "Step 1 of 4"]]
       [typography/Heading2 "Basic information"]]
      [:div {:class (<class project-style/initialization-form-wrapper)}
       [form/form {:e!              e!
