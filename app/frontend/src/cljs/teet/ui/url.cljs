@@ -22,8 +22,7 @@
   ^:private
   path-and-params-pattern
   "Regex pattern to split URL hash into path and parameters."
-  #"([^\?]+)(\?.+)?$")
-
+  #"([^\?]+)(\?.*)?$")
 
 (def
   ^:private
