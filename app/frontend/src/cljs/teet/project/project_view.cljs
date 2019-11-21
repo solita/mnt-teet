@@ -122,7 +122,7 @@
    :display         :flex
    :justify-content :space-between})
 
-(defn- project-header [{:thk.project/keys [name custom-name] :as project} breadcrumbs activities]
+(defn- project-header [{:thk.project/keys [name] :as project} breadcrumbs activities]
   [:div {:class (<class project-header-style)}
    [:div
     [breadcrumbs/breadcrumbs breadcrumbs]
@@ -309,7 +309,8 @@
 
 (defn initialization-form
   [e! project]
-  (e! (project-controller/->UpdateInitializationForm {:thk.project/custom-name (:thk.project/name project)}))
+  (e! (project-controller/->UpdateInitializationForm
+       {:thk.project/project-name (:thk.project/name project)}))
   (fn [e! project]
     [:<>
      [:div {:class (<class project-style/wizard-header)}
@@ -324,7 +325,7 @@
                   ;; :save-event      project-controller/->InitializeProject
                   :class (<class project-style/wizard-form)}
 
-       ^{:attribute :thk.project/custom-name}
+       ^{:attribute :thk.project/project-name}
        [TextField {:full-width true :variant :outlined}]
 
        ^{:attribute :thk.project/owner}

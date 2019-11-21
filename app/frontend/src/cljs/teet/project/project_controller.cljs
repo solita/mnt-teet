@@ -56,13 +56,13 @@
   InitializeProject
   (process-event [_ app]
     (let [{:thk.project/keys [id name]} (get-in app [:route :project])
-          {:thk.project/keys [custom-name owner]} (get-in app [:route :project :initialization-form])]
+          {:thk.project/keys [project-name owner]} (get-in app [:route :project :initialization-form])]
       (t/fx app {:tuck.effect/type :command!
                  :command          :thk.project/initialize!
                  :payload          (merge {:thk.project/id    id
                                            :thk.project/owner owner}
-                                          (when (not= name custom-name)
-                                            {:thk.project/custom-name custom-name}))
+                                          (when (not= name project-name)
+                                            {:thk.project/project-name project-name}))
                  :result-event     common-controller/->Refresh})))
 
   UpdateInitializationForm

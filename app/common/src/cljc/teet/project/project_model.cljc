@@ -11,7 +11,7 @@
   [:db/id
    :thk.project/id
    :thk.project/name
-   :thk.project/custom-name
+   :thk.project/project-name
    :thk.project/road-nr
    :thk.project/start-m
    :thk.project/end-m
@@ -46,9 +46,9 @@
   [estimated-start-date estimated-end-date])
 
 (defmethod get-column :thk.project/project-name
-  [{:thk.project/keys [custom-name name]}]
-  (if-not (str/blank? custom-name)
-    custom-name
+  [{:thk.project/keys [project-name name]}]
+  (if-not (str/blank? project-name)
+    project-name
     name))
 
 (defmethod get-column :thk.project/owner-info [project]
