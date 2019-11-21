@@ -83,15 +83,13 @@
 
   UpdateTaskForm
   (process-event [{form-data :form-data} app]
-    (log/info "form-data" form-data "; path= " [:project (get-in app [:params :project]) :new-task])
-    (update-in app [:project (get-in app [:params :project]) :new-task] merge form-data))
+    (update-in app [:route :project :new-task] merge form-data))
 
   CreateTask
   (process-event [_ app]
     (log/info "create task!")
-    (let [project-id (get-in app [:params :project])
-          activity-id (get-in app [:query :add-task])
-          task (get-in app [:project project-id :new-task])]
+    (let [activity-id (get-in app [:query :activity])
+          task (get-in app [:route :project :new-task])]
       (t/fx app
             {:tuck.effect/type :command!
              :command :workflow/add-task-to-activity
@@ -102,14 +100,14 @@
              :result-event ->CreateTaskResult})))
 
   CreateTaskResult
-  (process-event [{result :result} app]
+  (process-event [{result :result} {:keys [page params query] :as app}]
     (log/info "create task result: " result)
     (let [project (get-in app [:params :project])]
       (t/fx (update-in app [:project project] dissoc :new-task)
            {:tuck.effect/type :navigate
-            :page :project
-            :params {:project (get-in app [:params :project])}
-            :query {}}
+            :page page
+            :params params
+            :query (dissoc query :add)}
            common-controller/refresh-fx))))
 
 (defn document-page-url [{{:keys [project activity task]} :params} doc]
