@@ -84,8 +84,52 @@
    {:position "absolute"
     :left "25px"
     :top "25px"
+    :bottom "25px"
     :width "30vw"
-    :bottom "25px"}))
+    :max-height "calc(100vh-275px)"
+    :overflow-y :auto
+    :display :flex
+    :flex-direction :column}))
 
 (defn content-overlay-inner []
-  {:padding "1.5rem"})
+  {:padding 0
+   :flex 1
+   :display :flex
+   :flex-direction :column})
+
+(defn initialization-form-wrapper
+  []
+  {:flex 1})
+
+(defn initialization-form
+  []
+  {:display :flex
+   :flex-direction :column
+   :justify-content :space-between})
+
+(defn wizard-header
+  []
+  {:padding "0.5rem"
+   :background-color theme-colors/gray-lightest
+   :border-bottom (str "1px solid" theme-colors/gray-lighter)})
+
+(defn wizard-header-step-info
+  []
+  {:display :flex
+   :flex-direction :row
+   :justify-content :space-between})
+
+(defn wizard-form
+  []
+  {:background-color theme-colors/white
+   :padding "1.5rem"})
+
+(defn wizard-footer
+  []
+  {:display :flex
+   :flex-direction :row
+   :justify-content :space-between
+   :padding "0.5rem"
+   :background-color theme-colors/gray-lightest
+   :border-top (str "1px solid" theme-colors/gray-lighter)
+   :align-items :center})

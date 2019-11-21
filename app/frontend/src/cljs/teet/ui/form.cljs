@@ -64,11 +64,10 @@
                 :when attribute]
             attribute))))
 
-(defn modal-form-bg
+(defn form-bg
   []
   {:background-color theme-colors/gray-lightest
-   :padding "1.5rem"
-   :margin-bottom "1.5rem"})
+   :padding "1.5rem"})
 
 (defn modal-buttons
   []
@@ -77,7 +76,9 @@
 
 (defn form
   "Simple grid based form container."
-  [{:keys [e! on-change-event cancel-event save-event value in-progress? spec]} & fields]
+  [{:keys [e! on-change-event cancel-event save-event value in-progress? spec class]
+    :or {class (<class form-bg)}}
+   & fields]
   (r/with-let [invalid-attributes (r/atom #{})
                update-attribute-fn (fn [field value]
                                      (let [v (if (gobj/containsKey value "target")
@@ -110,8 +111,8 @@
                ;; Determine required fields by getting missing attributes of an empty map
                required-fields (missing-attributes spec {})]
               [:form {:on-submit #(submit! e! save-event value fields %)}
-               [Grid {:container true :spacing 1
-                      :class (<class modal-form-bg)}
+               [Grid {:container true
+                      :class class}
                 (util/with-keys
                   (map (fn [field]
                          (assert (vector? field) "Field must be a hiccup vector")
