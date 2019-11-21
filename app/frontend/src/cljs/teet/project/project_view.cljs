@@ -311,15 +311,29 @@
   [e! project]
   (e! (project-controller/->UpdateInitializationForm {:thk.project/custom-name (:thk.project/name project)}))
   (fn [e! project]
-    [form/form {:e!              e!
-                :value           (:initialization-form project)
-                :on-change-event project-controller/->UpdateInitializationForm
-                :save-event      project-controller/->InitializeProject}
-     ^{:attribute :thk.project/custom-name}
-     [TextField {:full-width true :variant :outlined}]
+    [:<>
+     [:div {:class (<class project-style/wizard-header)}
+      [:div {:class (<class project-style/wizard-header-step-info)}
+       [typography/Text "Project setup"]
+       [typography/Text "Step 1 of 4"]]
+      [typography/Heading2 "Basic information"]]
+     [:div {:class (<class project-style/initialization-form-wrapper)}
+      [form/form {:e!              e!
+                  :value           (:initialization-form project)
+                  :on-change-event project-controller/->UpdateInitializationForm
+                  ;; :save-event      project-controller/->InitializeProject
+                  :class (<class project-style/wizard-form)}
 
-     ^{:attribute :thk.project/owner}
-     [select/select-user {:e! e!}]]))
+       ^{:attribute :thk.project/custom-name}
+       [TextField {:full-width true :variant :outlined}]
+
+       ^{:attribute :thk.project/owner}
+       [select/select-user {:e! e!}]]]
+     [:div {:class (<class project-style/wizard-footer)}
+      [typography/Text "Skip setup"]
+      [buttons/button-primary
+       {:on-click (e! project-controller/->InitializeProject)}
+       "Next"]]]))
 
 (defn project-page-structure
   [e!
