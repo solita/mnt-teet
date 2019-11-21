@@ -6,7 +6,7 @@
 
 (defmethod db-api/command! :thk.project/initialize!
   [{conn :conn}
-   {:thk.project/keys [id owner custom-name]}]
+   {:thk.project/keys [id owner project-name]}]
   (let [{:thk.project/keys [estimated-start-date estimated-end-date]}
         (d/pull (d/db conn) [:thk.project/estimated-start-date :thk.project/estimated-end-date]
                 [:thk.project/id id])]
@@ -29,6 +29,6 @@
                             :thk.lifecycle/type [:db/ident :thk.lifecycle-type/construction]
                             :thk.lifecycle/estimated-start-date halfway-date
                             :thk.lifecycle/estimated-end-date estimated-end-date}])}
-                       (when-not (str/blank? custom-name)
-                         {:thk.project/custom-name custom-name}))]}))
+                       (when-not (str/blank? project-name)
+                         {:thk.project/project-name project-name}))]}))
   :ok)

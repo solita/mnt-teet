@@ -377,10 +377,8 @@
   :txes [[{:db/ident :thk.project/lifecycles
            :db/cardinality :db.cardinality/many
            :db/valueType :db.type/ref
-           :db/doc "Lifecycles in this project"}]]}]
+           :db/doc "Lifecycles in this project"}]]}
 
-
-;; Project
-;; - Lifecycle activity
-;;   - Activity (formerly known as activity)
-;;     - Task
+ {:db/ident :migration/project-name
+  :txes [[{:db/id :thk.project/custom-name
+           :db/ident :thk.project/project-name}]]}]
