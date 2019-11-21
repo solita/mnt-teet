@@ -23,22 +23,24 @@
 
 (defmethod db-api/query :thk.project/fetch-task [{db :db} {project-id :thk.project/id
                                                            task-id :task-id}]
-  {:query '[:find (pull ?e [:db/id
-                            :task/description
-                            :task/modified
-                            {:task/status [:db/ident]}
-                            {:task/type [:db/ident]}
-                            {:task/assignee [:user/id :user/given-name :user/family-name :user/email]}
-                            {:activity/_tasks [:db/id {:activity/name [:db/ident]}]}
-                            {:task/documents [*]}])
-            :in $ ?e ?project-id
-            :where
-            [?p :thk.project/id ?project-id]
-            [?p :thk.project/lifecycles ?l]
-            [?l :thk.lifecycle/activities ?a]
-            [?a :activity/tasks ?e]]
-   :args [db task-id project-id]
-   :result-fn ffirst})
+  (let [result (ffirst (d/q '[:find (pull ?e [:db/id
+                                              :task/description
+                                              :task/modified
+                                              {:task/status [:db/ident]}
+                                              {:task/type [:db/ident]}
+                                              {:task/assignee [:user/id :user/given-name :user/family-name :user/email]}
+                                              {:activity/_tasks [:db/id {:activity/name [:db/ident]}]}
+                                              {:task/documents [*]}])
+                              :in $ ?e ?project-id
+                              :where
+                              [?p :thk.project/id ?project-id]
+                              [?p :thk.project/lifecycles ?l]
+                              [?l :thk.lifecycle/activities ?a]
+                              [?a :activity/tasks ?e]]
+                            db task-id project-id))]
+    (assoc result :project (d/pull db
+                                   project-model/project-info-attributes
+                                   [:thk.project/id project-id]))))
 
 
 (defn- fetch-project [result db path]
