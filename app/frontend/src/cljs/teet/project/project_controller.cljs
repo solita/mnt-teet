@@ -8,7 +8,7 @@
 
 
 (defrecord OpenActivityDialog [])                              ; open add activity modal dialog
-(defrecord OpenTaskDialog [activity-id])
+(defrecord OpenTaskDialog [])
 (defrecord CloseAddDialog [])
 (defrecord SelectProject [project-id])
 (defrecord ToggleCadastralHightlight [id])
@@ -86,7 +86,7 @@
            :query            (dissoc query :add)}))
 
   OpenTaskDialog
-  (process-event [{{activity-id :activity} :activity-id} {:keys [page params query] :as app}]
+  (process-event [_ {:keys [page params query] :as app}]
     (t/fx app
       {:tuck.effect/type :navigate
        :page page
