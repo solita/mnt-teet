@@ -8,7 +8,7 @@
             [teet.ui.buttons :as buttons]
             [teet.ui.common :as ui-common]
             [teet.ui.format :as format]
-            [teet.ui.material-ui :refer [List Grid]]
+            [teet.ui.material-ui :refer [List Grid Paper Link]]
             [teet.ui.icons :as icons]
             [teet.ui.typography :refer [Heading1]]
             [teet.ui.layout :as layout]
@@ -16,9 +16,11 @@
             [teet.user.user-info :as user-info]
             [teet.project.project-view :as project-view]
             [teet.ui.panels :as panels]
+            [teet.ui.url :as url]
             [teet.document.document-view :as document-view]
             [teet.ui.breadcrumbs :as breadcrumbs]
-            [teet.common.common-styles :as common-styles]))
+            [teet.common.common-styles :as common-styles]
+            [teet.project.task-model :as task-model]))
 
 (defn task-status [e! status modified]
   [ui-common/status {:e! e!
@@ -27,12 +29,80 @@
                      :attribute :task/status
                      :modified modified}])
 
+(defn task-page-paper-style
+  []
+  (merge (common-styles/content-paper-style)
+         {:display :flex
+          :flex 1}))
+
+(defn task-navigation
+  [{:task/keys [documents] :as task}]
+  [:div {:style {:padding "2rem 0 2rem 2rem"}}
+   [:a {:href (url/remove-params)} "linkki taskin pääsivulle"]
+   [:p "Documents"]
+   (for [{:document/keys [name status] :as document} documents]
+     ^{:key (str (:db/id document))}
+     [:div {:style {:margin-bottom "2rem"}}                                                  ;;TODO iterate files here
+      [Link {:href (url/set-params :document (:db/id document))
+           ;(str "#/projects/" project "/" (:db/id task) "/" (:db/id document))
+           }
+       name]])])
+
+(defn- task-overview
+  [e! {:task/keys [description status modified] :as task}]
+  [:div {:style {:padding "2rem 0"}}
+   [Heading1 "Task overview"]
+   [:p description]
+   [task-status e! status modified]
+   [buttons/button-primary {:on-click #(e! (task-controller/->OpenAddDocumentDialog))
+                            :start-icon (r/as-element [icons/content-add])}
+    (tr [:task :add-document])]])
+
+(defn- task-document-content
+  [e! document]
+  [:h1 (pr-str document)])
+
+(defn task-page-content
+  [e! {:keys [document]} task]
+  (cond
+    document
+    [task-document-content e! (task-model/document-by-id task document)]
+    :else
+    [task-overview e! task]))
+
 (defn task-page [e! {{:keys [project]} :params
-                     query :query
+                     {:keys [add-document] :as query} :query
                      new-document :new-document :as app}
-                 {:task/keys [documents description type assignee status modified] :as _task}
+                 {:task/keys [documents description type assignee status modified] :as task}
                  breadcrumbs]
-  [:<>
+  [:div {:style {:padding "1.5rem 1.875rem"
+                 :display :flex
+                 :flex-direction :column
+                 :flex 1}}
+   [panels/modal {:open-atom (r/wrap (boolean add-document) :_)
+                  :title (tr [:task :add-document])
+                  :on-close (e! task-controller/->CloseAddDocumentDialog)}
+    [document-view/document-form {:e! e!
+                                  :on-close-event task-controller/->CloseAddDocumentDialog}
+     new-document]]
+   [breadcrumbs/breadcrumbs breadcrumbs]
+   [Heading1 (tr [:enum (:db/ident type)])]
+
+   [Paper {:class (<class task-page-paper-style)}
+    [Grid {:container true
+           :spacing 3}
+     [Grid {:item true
+            :xs 2}
+      [task-navigation task]]
+     [Grid {:item true
+            :xs 6}
+      [task-page-content e! query task]]
+     [Grid {:item true
+            :style {:display :flex}
+            :xs   4}
+      [project-view/project-map e! (get-in app [:config :api-url]) project (get-in app [:query :tab])]]]]]
+
+  #_[:<>
    (when (:add-document query)
      [panels/modal {:title (tr [:task :add-document])
                     :on-close (e! task-controller/->CloseAddDocumentDialog)}
