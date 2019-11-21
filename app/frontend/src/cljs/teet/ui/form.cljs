@@ -69,10 +69,28 @@
   {:background-color theme-colors/gray-lightest
    :padding "1.5rem"})
 
-(defn modal-buttons
+(defn form-buttons
   []
   {:text-align :right
    :margin-bottom "1.5rem"})
+
+(defn form-footer [{:keys [cancel validate in-progress? class]}]
+  (let [disabled? (boolean in-progress?)]
+    [:div {:class (<class form-buttons)}
+     (when cancel
+       [buttons/button-secondary {:style {:margin-right "1rem"}
+                                  :disabled disabled?
+                                  :on-click cancel
+                                  :color :secondary
+                                  :variant :contained}
+        (tr [:buttons :cancel])])
+     (when validate
+       [buttons/button-primary {:disabled disabled?
+                                :color :primary
+                                :variant :contained
+                                :type :submit
+                                :on-click validate}
+        (tr [:buttons :save])])]))
 
 (defn form
   "Simple grid based form container."
@@ -136,19 +154,7 @@
                               validate-attribute-fn attribute value)]))
                        fields))]
                (when (or cancel-event save-event)
-                 (let [disabled? (boolean in-progress?)]
-                   [:div {:class (<class modal-buttons)}
-                    (when cancel-event
-                      [buttons/button-secondary {:style {:margin-right "1rem"}
-                                                 :disabled disabled?
-                                                 :on-click (r/partial e! (cancel-event))
-                                                 :color :secondary
-                                                 :variant :contained}
-                       (tr [:buttons :cancel])])
-                    (when save-event
-                      [buttons/button-primary {:disabled disabled?
-                                               :color :primary
-                                               :variant :contained
-                                               :type :submit
-                                               :on-click #(validate value fields)}
-                       (tr [:buttons :save])])]))]))
+                 [form-footer {:cancel (r/partial e! (cancel-event))
+                               :validate (when save-event
+                                           #(validate value fields))
+                               :in-progress? in-progress?}])]))
