@@ -40,6 +40,16 @@
            :state {:query :thk.project/fetch-project
                    :args {:thk.project/id project}}}
 
+ :activity-task {:path "/projects/:project/:lifecycle/:activity/:task"
+                 :parent :project
+                 :crumb (tr [:enum (-> state :task/type :db/ident)])
+                 :view teet.task.task-view/task-page
+                 :state {:query :thk.project/fetch-task
+                         :args {:thk.project/id project
+                                :lifecycle-id (goog.math.Long/fromString lifecycle)
+                                :activity-id (goog.math.Long/fromString activity)
+                                :task-id (goog.math.Long/fromString task)}}}
+
  :components {:path "/components" :view teet.ui.component-demo/demo}
  :road {:path "/road"
         :view teet.road-visualization.road-visualization-view/road-visualization}
