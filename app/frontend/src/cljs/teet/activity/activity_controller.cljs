@@ -17,7 +17,7 @@
   CreateActivity
   (process-event [_ app]
     (let [project (get-in app [:params :project])
-          lifecycle (get-in app [:params :lifecycle])
+          lifecycle (get-in app [:query :lifecycle])
           [start end] (get-in app [:project project :new-activity :activity/estimated-date-range])
           payload (-> (get-in app [:project project :new-activity])
                       (dissoc :activity/estimated-date-range)
@@ -36,5 +36,5 @@
           {:tuck.effect/type :navigate
            :page             page
            :params           params
-           :query            (dissoc query :add-activity)}
+           :query            (dissoc query :add)}
           common-controller/refresh-fx)))

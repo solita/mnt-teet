@@ -404,7 +404,7 @@
 
       "activity"
       [activity-view/activity-form e! project-controller/->CloseAddDialog
-       (get-in app [:project project :new-activity])]
+       (get-in app [:project (:thk.project/id project) :new-activity])]
 
       [:span])]
    [project-page-structure e! app project breadcrumbs
