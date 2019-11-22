@@ -5,7 +5,8 @@
                        [clojure.string :as str]
                        goog.math.Long)
                 :clj ([clojure.string :as str]))
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.util.datomic :refer [id=]]))
 
 (def project-listing-attributes
   [:db/id
@@ -70,11 +71,7 @@
                     filters))
           projects))
 
-(defn- id=
-  "Compare ids as strings.
-  Datomic ids in JS may be bigger than can be represented in JS Number."
-  [id1 id2]
-  (= (str id1) (str id2)))
+
 
 (defn lifecycle-by-id [{lifecycles :thk.project/lifecycles} lifecycle-id]
   (some #(when (id= lifecycle-id (:db/id %)) %) lifecycles))
