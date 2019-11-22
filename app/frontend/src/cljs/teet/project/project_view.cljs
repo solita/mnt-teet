@@ -350,8 +350,10 @@
     [:<>
     [:div {:class (<class project-style/wizard-header)}
      [:div {:class (<class project-style/wizard-header-step-info)}
-      [typography/Text {:color :textSecondary} (tr [:project :wizard :project-setup])]
-      [typography/Text {:color :textSecondary} (str "Step " step " of 4")]] ;; TODO: parameter support for localizations
+      [typography/Text {:color :textSecondary}
+       (tr [:project :wizard :project-setup])]
+      [typography/Text {:color :textSecondary}
+       (tr [:project :wizard :step-of] {:current step :total 4})]]
      [typography/Heading2 (tr [:project :wizard label])]]
      component]))
 
