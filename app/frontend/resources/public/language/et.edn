@@ -21,6 +21,7 @@
   :task.status/rejected "Tagasi lükatud",
   :activity.name/detailed-design "Põhiprojekt",
   :activity.status/expired "Aegunud",
+  :activity.status/not-started "Ei ole alustatud",
   :activity.status/research "Ekspertiisis",
   :activity.name/other "Muu",
   :task.type/animal-study "Loomastiku uuring",
@@ -45,7 +46,11 @@
   :task.type/archeological-study "Arheoloogiline uuring",
   :activity.status/canceled "Katkestatud",
   :task.status/not-started "Alustamata"},
- :environment {:info-text nil, :build-time nil, :version nil},
+ :environment
+ {:info-text
+  "Kasutad TEETu arenduskeskkonda. Siia salvestatud andmed võivad kustuda.",
+  :build-time "Viimane versiooniuuendus toimus",
+  :version "Versioon"},
  :error
  {:authorization-failure "Sessioon aegus. Palun sisene uuesti.",
   :server-error "Serveri viga."},
@@ -86,6 +91,14 @@
   :add-activity "Lisan tegevus",
   :restrictions-tab "Kitsendused",
   :activity {:no-tasks "Ülesandeid pole"},
+  :wizard
+  {:project-setup nil,
+   :basic-information "Põhiandmed",
+   :restrictions "Valin asjakohased piirangud",
+   :cadastral-units "Valin mõjutatud katastriüksused",
+   :activities "Lisan projekteerimine tegevused",
+   :skip-setup "Jätan seadistuse vahele",
+   :step-of "Samm {current} / {total}"},
   :add-task "Lisan ülesande",
   :information
   {:estimated-duration "Eeldatav kestus",
@@ -94,7 +107,7 @@
    :procurement-number "Hanke number",
    :carriageway "Sõidutee"},
   :activities "Projekti tegevused",
-  :cadastral-units-tab "Katastriüksus",
+  :cadastral-units-tab "Katastriüksused",
   :activities-tab "Tegevused"},
  :project-groups {:title "Projektirühmad"},
  :projects

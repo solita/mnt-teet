@@ -20,7 +20,8 @@
   :task.status/rejected "Rejected",
   :activity.name/detailed-design "Detailed design",
   :activity.status/expired "Expired",
-  :activity.status/research "Research",
+  :activity.status/not-started "Not started",
+  :activity.status/research "3rd party checking",
   :activity.name/other "Other",
   :task.type/animal-study "Animal study",
   :activity.name/pre-design "Pre design",
@@ -42,7 +43,7 @@
   :activity.name/preliminary-design "Preliminary design",
   :task.status/in-progress "In progress",
   :task.type/archeological-study "Archeological study",
-  :activity.status/canceled "Canceled",
+  :activity.status/canceled "Cancelled",
   :task.status/not-started "Not started"},
  :environment
  {:info-text
@@ -89,6 +90,14 @@
   :add-activity "Add activity",
   :restrictions-tab "Restrictions",
   :activity {:no-tasks "No tasks defined"},
+  :wizard
+  {:project-setup "Project setup",
+   :basic-information "Basic information",
+   :restrictions "Select relevant restrictions",
+   :cadastral-units "Select affected cadastral units",
+   :activities "Add design activities",
+   :skip-setup "Skip setup",
+   :step-of "Step {current} of {total}"},
   :add-task "Add task",
   :information
   {:estimated-duration "Estimated duration",
