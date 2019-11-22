@@ -99,7 +99,10 @@
 
 (defn initialization-form-wrapper
   []
-  {:flex 1})
+  {:flex 1
+   :display :flex
+   :flex-direction :column
+   :justify-content :space-between})
 
 (defn initialization-form
   []

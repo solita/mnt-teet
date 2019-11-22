@@ -74,28 +74,28 @@
   {:text-align :right
    :margin-bottom "1.5rem"})
 
-(defn form-footer [{:keys [cancel validate in-progress? class]}]
-  (let [disabled? (boolean in-progress?)]
-    [:div {:class (<class form-buttons)}
-     (when cancel
-       [buttons/button-secondary {:style {:margin-right "1rem"}
-                                  :disabled disabled?
-                                  :on-click cancel
-                                  :color :secondary
-                                  :variant :contained}
-        (tr [:buttons :cancel])])
-     (when validate
-       [buttons/button-primary {:disabled disabled?
-                                :color :primary
-                                :variant :contained
-                                :type :submit
-                                :on-click validate}
-        (tr [:buttons :save])])]))
+(defn form-footer [{:keys [cancel validate disabled?]}]
+  [:div {:class (<class form-buttons)}
+   (when cancel
+     [buttons/button-secondary {:style {:margin-right "1rem"}
+                                :disabled disabled?
+                                :on-click cancel
+                                :color :secondary
+                                :variant :contained}
+      (tr [:buttons :cancel])])
+   (when validate
+     [buttons/button-primary {:disabled disabled?
+                              :color :primary
+                              :variant :contained
+                              :type :submit
+                              :on-click validate}
+      (tr [:buttons :save])])])
 
 (defn form
   "Simple grid based form container."
-  [{:keys [e! on-change-event cancel-event save-event value in-progress? spec class]
-    :or {class (<class form-bg)}}
+  [{:keys [e! on-change-event cancel-event save-event value in-progress? spec class footer]
+    :or {class (<class form-bg)
+         footer form-footer}}
    & fields]
   (r/with-let [invalid-attributes (r/atom #{})
                update-attribute-fn (fn [field value]
@@ -128,33 +128,38 @@
 
                ;; Determine required fields by getting missing attributes of an empty map
                required-fields (missing-attributes spec {})]
-              [:form {:on-submit #(submit! e! save-event value fields %)}
-               [Grid {:container true
-                      :class class}
-                (util/with-keys
-                  (map (fn [field]
-                         (assert (vector? field) "Field must be a hiccup vector")
-                         (assert (map? (second field)) "First argument to field must be an options map")
-                         (let [{:keys [xs lg md attribute]} (meta field)
-                               _ (assert (keyword? attribute) "All form fields must have :attribute meta key!")
-                               value (get value attribute (default-value (first field)))
-                               opts {:value value
-                                     :on-change (r/partial update-attribute-fn attribute)
-                                     :label (tr [:fields attribute])
-                                     :error (boolean (@invalid-attributes attribute))
-                                     :required (boolean (required-fields attribute))}]
-                           [Grid (merge {:class (<class theme-spacing/mb 1)
-                                         :item true :xs (or xs 12)}
-                                        (when lg
-                                          {:lg lg})
-                                        (when md
-                                          {:md md}))
-                            (add-validation
-                              (update field 1 merge opts)
-                              validate-attribute-fn attribute value)]))
-                       fields))]
-               (when (or cancel-event save-event)
-                 [form-footer {:cancel (r/partial e! (cancel-event))
-                               :validate (when save-event
-                                           #(validate value fields))
-                               :in-progress? in-progress?}])]))
+    [:form {:on-submit #(submit! e! save-event value fields %)
+            :style {:flex 1
+                    :display :flex
+                    :flex-direction :column
+                    :justify-content :space-between}}
+     [Grid {:container true
+            :class class}
+      (util/with-keys
+        (map (fn [field]
+               (assert (vector? field) "Field must be a hiccup vector")
+               (assert (map? (second field)) "First argument to field must be an options map")
+               (let [{:keys [xs lg md attribute]} (meta field)
+                     _ (assert (keyword? attribute) "All form fields must have :attribute meta key!")
+                     value (get value attribute (default-value (first field)))
+                     opts {:value value
+                           :on-change (r/partial update-attribute-fn attribute)
+                           :label (tr [:fields attribute])
+                           :error (boolean (@invalid-attributes attribute))
+                           :required (boolean (required-fields attribute))}]
+                 [Grid (merge {:class (<class theme-spacing/mb 1)
+                               :item true :xs (or xs 12)}
+                              (when lg
+                                {:lg lg})
+                              (when md
+                                {:md md}))
+                  (add-validation
+                   (update field 1 merge opts)
+                   validate-attribute-fn attribute value)]))
+             fields))]
+     (when (or cancel-event save-event)
+       [footer {:cancel (when cancel-event
+                          (r/partial e! (cancel-event)))
+                :validate (when save-event
+                            #(validate value fields))
+                :disabled? (str (boolean in-progress?))}])]))

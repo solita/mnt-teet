@@ -81,3 +81,7 @@
     (fn [{activities :thk.lifecycle/activities}]
       (some #(when (id= activity-id (:db/id %)) %) activities))
     lifecycles))
+
+(defn initialized?
+  [project]
+  (contains? project :thk.project/owner))

@@ -301,11 +301,16 @@
        ^{:key id}
        [cadastral-unit-component e! unit]))])
 
-(defn initialized?
-  [project]
-  (contains? project :thk.project/owner))
+(defn initialization-form-footer [{:keys [cancel validate disabled?]}]
+  [:div {:class (<class project-style/wizard-footer)}
+   ;; TODO this should be a text button and cancel
+   [typography/Text "Skip setup"]
+   [buttons/button-primary
+    {:on-click validate
+     :disabled? disabled?}
+    "Next"]])
 
-(defn initialization-form
+(defn project-setup-basic-information-form
   [e! project]
   (e! (project-controller/->UpdateInitializationForm
        {:thk.project/project-name (:thk.project/name project)}))
@@ -320,19 +325,15 @@
       [form/form {:e!              e!
                   :value           (:initialization-form project)
                   :on-change-event project-controller/->UpdateInitializationForm
-                  ;; :save-event      project-controller/->InitializeProject
-                  :class (<class project-style/wizard-form)}
+                  :save-event      project-controller/->InitializeProject
+                  :class (<class project-style/wizard-form)
+                  :footer initialization-form-footer}
 
        ^{:attribute :thk.project/project-name}
        [TextField {:full-width true :variant :outlined}]
 
        ^{:attribute :thk.project/owner}
-       [select/select-user {:e! e!}]]]
-     [:div {:class (<class project-style/wizard-footer)}
-      [typography/Text "Skip setup"]
-      [buttons/button-primary
-       {:on-click (e! project-controller/->InitializeProject)}
-       "Next"]]]))
+       [select/select-user {:e! e!}]]]]))
 
 (defn project-page-structure
   [e!
@@ -421,13 +422,13 @@
 
       [:span])]
    [project-page-structure e! app project breadcrumbs
-    (when (initialized? project)
+    (when (project-model/initialized? project)
       ;; FIXME: localize
       [{:label "Activities" :value "activities"}
        {:label "People" :value "people"}
        {:label "Details" :value "details"}])
-    (if-not (initialized? project)
-      [initialization-form e! project]
+    (if-not (project-model/initialized? project)
+      [project-setup-basic-information-form e! project]
       (case (or tab "activities")
         "activities" [activities-tab e! query project]
         "people" [people-tab e! query project]
