@@ -32,12 +32,6 @@
 ;;
 ;; Project setup wizard events
 ;;
-(def project-setup-steps
-  [:basic-information
-   :restrictions
-   :cadastral-units
-   :activities])
-
 (defrecord SaveBasicInformation [])
 (defrecord SaveBasicInformationResponse [])
 (defrecord UpdateBasicInformationForm [form-data])

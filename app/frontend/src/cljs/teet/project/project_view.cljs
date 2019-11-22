@@ -317,11 +317,6 @@
        {:thk.project/project-name (:thk.project/name project)}))
   (fn [e! project]
     [:<>
-     [:div {:class (<class project-style/wizard-header)}
-      [:div {:class (<class project-style/wizard-header-step-info)}
-       [typography/Text {:color :textSecondary} "Project setup"]
-       [typography/Text {:color :textSecondary} "Step 1 of 4"]]
-      [typography/Heading2 "Basic information"]]
      [:div {:class (<class project-style/initialization-form-wrapper)}
       [form/form {:e!              e!
                   :value           (:basic-information-form project)
@@ -346,11 +341,19 @@
   [:div "Tada"])
 
 (defn project-setup-wizard [e! project step]
-  (case step
-    "basic-information" [project-setup-basic-information-form e! project]
-    "restrictions" [project-setup-restrictions-form e! project]
-    "cadastral-units" [project-setup-cadastral-units-form e! project]
-    "activities" [project-setup-activities-form e! project]))
+  (let [[step label component]
+        (case step
+          "basic-information" [1 :basic-information [project-setup-basic-information-form e! project]]
+          "restrictions" [2 :restrictions [project-setup-restrictions-form e! project]]
+          "cadastral-units" [3 :cadastral-units [project-setup-cadastral-units-form e! project]]
+          "activities" [4 :activities [project-setup-activities-form e! project]])]
+    [:<>
+    [:div {:class (<class project-style/wizard-header)}
+     [:div {:class (<class project-style/wizard-header-step-info)}
+      [typography/Text {:color :textSecondary} (tr [:project :wizard :project-setup])]
+      [typography/Text {:color :textSecondary} (str "Step " step " of 4")]] ;; TODO: parameter support for localizations
+     [typography/Heading2 (tr [:project :wizard label])]]
+     component]))
 
 (defn project-page-structure
   [e!
