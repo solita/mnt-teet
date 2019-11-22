@@ -4,7 +4,8 @@
             [teet.map.map-features :as map-features]
             [teet.map.map-layers :as map-layers]
             [teet.map.map-view :as map-view]
-            [teet.ui.material-ui :refer [ButtonBase Collapse Link Divider Paper]]
+            [teet.ui.material-ui :refer [ButtonBase Collapse Link Divider Paper
+                                         Checkbox FormControlLabel]]
             [teet.ui.text-field :refer [TextField]]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-style :as project-style]
@@ -242,24 +243,39 @@
           (for [r (str/split seadus #";")]
             [:li r]))]])]])
 
+(defn- restrictions-check-group [restrictions checked-restrictions toggle-restriction]
+  [:div
+   (doall
+    (for [{:keys [voond id] :as restriction} (sort-by :voond restrictions)
+          :let [checked? (boolean (checked-restrictions id))]]
+      ^{:key id}
+      [FormControlLabel
+       {:control (r/as-element
+                  [Checkbox {:color :primary
+                             :checked checked?
+                             :on-change (r/partial toggle-restriction id)}])
+        :label voond}]))])
+
 (defn restrictions-listing
-  [e! data]
-  (let [formatted-data (group-by
-                         (fn [restriction]
-                           (get restriction :type))
-                         data)
-        ;;TODO: this is ran everytime a restriction is opened should be fixed
-        ]
+  [e! {:keys [restrictions checked-restrictions toggle-restriction]}]
+  (r/with-let [open-types (r/atom #{})
+               restrictions-by-type (group-by :type restrictions)]
     [:<>
      (doall
-       (for [group formatted-data]
-         ^{:key (first group)}
-         [:div
-          [Heading2 {:class (<class project-style/restriction-category-style)} (first group)]
-          (doall
-            (for [restriction (->> group second (sort-by :voond))]
-              ^{:key (get restriction :id)}
-              [restriction-component e! restriction]))]))]))
+      (for [[group restrictions] restrictions-by-type
+            :let [group-checked (into #{}
+                                      (comp
+                                       (map :id)
+                                       (filter checked-restrictions))
+                                      restrictions)]]
+        ^{:key group}
+         [collapsible-info {:on-toggle (fn [_]
+                                         (swap! open-types #(if (% group)
+                                                             (disj % group)
+                                                             (conj % group))))
+                            :open? (@open-types group)}
+          group
+          [restrictions-check-group restrictions group-checked toggle-restriction]]))]))
 
 (defn collapse-skeleton
   [title? n]
@@ -273,10 +289,6 @@
        ^{:key y}
        [skeleton/skeleton {:style        {:width "70%"}
                            :parent-style (skeleton/restriction-skeleton-style)}]))])
-
-(defn project-related-restrictions
-  [e! restrictions]
-  [restrictions-listing e! restrictions])
 
 (defn- cadastral-unit-component [e! {:keys [id open? lahiaadress tunnus omandivorm pindala
                                             maakonna_nimi omavalitsuse_nimi asustusyksuse_nimi sihtotstarve_1 kinnistu_nr]
@@ -331,8 +343,13 @@
        ^{:attribute :thk.project/owner}
        [select/select-user {:e! e!}]]]]))
 
-(defn project-setup-restrictions-form [e! project]
-  [:div "Tada"])
+(defn project-setup-restrictions-form [e! _]
+  (e! (project-controller/->FetchRestrictions))
+  (fn [e! {:keys [restriction-candidates checked-restrictions] :as project}]
+    (when restriction-candidates
+      [restrictions-listing e! {:restrictions restriction-candidates
+                                :checked-restrictions (or checked-restrictions #{})
+                                :toggle-restriction (e! project-controller/->ToggleRestriction)}])))
 
 (defn project-setup-cadastral-units-form [e! project]
   [:div "Tada"])

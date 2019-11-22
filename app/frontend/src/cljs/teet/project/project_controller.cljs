@@ -42,6 +42,9 @@
 (defrecord SaveActivities [])
 (defrecord UpdateActivitiesForm [form-data])
 
+(defrecord FetchRestrictions [])
+(defrecord ToggleRestriction [id])
+
 (extend-protocol t/Event
   SaveBasicInformation
   (process-event [_ app]
@@ -65,7 +68,27 @@
 
   UpdateBasicInformationForm
   (process-event [{:keys [form-data]} app]
-    (update-in app [:route :project :basic-information-form] merge form-data)))
+    (update-in app [:route :project :basic-information-form] merge form-data))
+
+  FetchRestrictions
+  (process-event [_ app]
+    (t/fx app
+          {:tuck.effect/type :rpc
+           :rpc "thk_project_related_restrictions"
+           :endpoint (get-in app [:config :api-url])
+           :args {:entity_id (str (get-in app [:route :project :db/id]))
+                  :distance 200}
+           :result-path [:route :project :restriction-candidates]}))
+
+  ToggleRestriction
+  (process-event [{id :id} app]
+    ;; FIXME: update map feature style for all checkeds
+    (update-in app [:route :project :checked-restrictions]
+               (fn [checked]
+                 (let [checked (or checked #{})]
+                   (if (checked id)
+                     (disj checked id)
+                     (conj checked id)))))))
 
 (extend-protocol t/Event
   SelectProject
