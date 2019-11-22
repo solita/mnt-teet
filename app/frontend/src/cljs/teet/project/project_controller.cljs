@@ -82,13 +82,16 @@
 
   ToggleRestriction
   (process-event [{id :id} app]
-    ;; FIXME: update map feature style for all checkeds
-    (update-in app [:route :project :checked-restrictions]
-               (fn [checked]
-                 (let [checked (or checked #{})]
-                   (if (checked id)
-                     (disj checked id)
-                     (conj checked id)))))))
+    (let [old-restrictions (or (get-in app [:route :project :checked-restrictions]) #{})
+          new-restrictions (if (old-restrictions id)
+                             (disj old-restrictions id)
+                             (conj old-restrictions id))]
+      (map-controller/update-features!
+       "geojson_thk_project_related_restrictions"
+       (fn [unit]
+         (let [id (.get unit "id")]
+           (.set unit "selected" (boolean (new-restrictions id))))))
+      (assoc-in app [:route :project :checked-restrictions] new-restrictions))))
 
 (extend-protocol t/Event
   SelectProject

@@ -225,7 +225,7 @@
     (if open?
       [icons/hardware-keyboard-arrow-right {:color :primary}]
       [icons/hardware-keyboard-arrow-down {:color :primary}])]
-   [Collapse {:in open?}
+   [Collapse {:in (boolean open?)}
     info]])
 
 (defn restriction-component
