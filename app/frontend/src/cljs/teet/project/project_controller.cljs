@@ -15,9 +15,6 @@
 (defrecord ToggleRestrictionData [id])
 (defrecord UpdateActivityState [id status])
 (defrecord NavigateToProject [thk-project-id])
-(defrecord InitializeProject [])
-(defrecord UpdateInitializationForm [form-data])
-
 
 (defmethod common-controller/map-item-selected
   "geojson_entity_pins" [p]
@@ -30,6 +27,51 @@
 (defmethod common-controller/map-item-selected
   "geojson_thk_project" [p]
   (->SelectProject (:map/id p)))
+
+
+;;
+;; Project setup wizard events
+;;
+(def project-setup-steps
+  [:basic-information
+   :restrictions
+   :cadastral-units
+   :activities])
+
+(defrecord SaveBasicInformation [])
+(defrecord SaveBasicInformationResponse [])
+(defrecord UpdateBasicInformationForm [form-data])
+(defrecord SaveRestrictions [])
+(defrecord UpdateRestrictionsForm [form-data])
+(defrecord SaveCadastralUnits [])
+(defrecord UpdateCadastralUnitsForm [form-data])
+(defrecord SaveActivities [])
+(defrecord UpdateActivitiesForm [form-data])
+
+(extend-protocol t/Event
+  SaveBasicInformation
+  (process-event [_ app]
+    (let [{:thk.project/keys [id name]} (get-in app [:route :project])
+          {:thk.project/keys [project-name owner]} (get-in app [:route :project :basic-information-form])]
+      (t/fx app {:tuck.effect/type :command!
+                 :command          :thk.project/initialize!
+                 :payload          (merge {:thk.project/id    id
+                                           :thk.project/owner owner}
+                                          (when (not= name project-name)
+                                            {:thk.project/project-name project-name}))
+                 :result-event     ->SaveBasicInformationResponse})))
+  SaveBasicInformationResponse
+  (process-event [_ {:keys [page params query] :as app}]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page page
+           :params params
+           :query (assoc query :step "restrictions")}
+          common-controller/refresh-fx))
+
+  UpdateBasicInformationForm
+  (process-event [{:keys [form-data]} app]
+    (update-in app [:route :project :basic-information-form] merge form-data)))
 
 (extend-protocol t/Event
   SelectProject
@@ -52,22 +94,6 @@
       {:tuck.effect/type :navigate
        :page :project
        :params {:project id}}))
-
-  InitializeProject
-  (process-event [_ app]
-    (let [{:thk.project/keys [id name]} (get-in app [:route :project])
-          {:thk.project/keys [project-name owner]} (get-in app [:route :project :initialization-form])]
-      (t/fx app {:tuck.effect/type :command!
-                 :command          :thk.project/initialize!
-                 :payload          (merge {:thk.project/id    id
-                                           :thk.project/owner owner}
-                                          (when (not= name project-name)
-                                            {:thk.project/project-name project-name}))
-                 :result-event     common-controller/->Refresh})))
-
-  UpdateInitializationForm
-  (process-event [{:keys [form-data]} app]
-    (update-in app [:route :project :initialization-form] merge form-data))
 
   OpenActivityDialog
   (process-event [_ {:keys [page params query] :as app}]

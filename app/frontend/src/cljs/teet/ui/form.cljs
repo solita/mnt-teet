@@ -162,4 +162,4 @@
                           (r/partial e! (cancel-event)))
                 :validate (when save-event
                             #(validate value fields))
-                :disabled? (str (boolean in-progress?))}])]))
+                :disabled? (boolean in-progress?)}])]))

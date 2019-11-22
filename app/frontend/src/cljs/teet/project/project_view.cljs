@@ -307,12 +307,13 @@
    [typography/Text "Skip setup"]
    [buttons/button-primary
     {:on-click validate
-     :disabled? disabled?}
+     :type     :submit
+     :disabled disabled?}
     "Next"]])
 
 (defn project-setup-basic-information-form
   [e! project]
-  (e! (project-controller/->UpdateInitializationForm
+  (e! (project-controller/->UpdateBasicInformationForm
        {:thk.project/project-name (:thk.project/name project)}))
   (fn [e! project]
     [:<>
@@ -323,9 +324,9 @@
       [typography/Heading2 "Basic information"]]
      [:div {:class (<class project-style/initialization-form-wrapper)}
       [form/form {:e!              e!
-                  :value           (:initialization-form project)
-                  :on-change-event project-controller/->UpdateInitializationForm
-                  :save-event      project-controller/->InitializeProject
+                  :value           (:basic-information-form project)
+                  :on-change-event project-controller/->UpdateBasicInformationForm
+                  :save-event      project-controller/->SaveBasicInformation
                   :class (<class project-style/wizard-form)
                   :footer initialization-form-footer}
 
@@ -334,6 +335,22 @@
 
        ^{:attribute :thk.project/owner}
        [select/select-user {:e! e!}]]]]))
+
+(defn project-setup-restrictions-form [e! project]
+  [:div "Tada"])
+
+(defn project-setup-cadastral-units-form [e! project]
+  [:div "Tada"])
+
+(defn project-setup-activities-form [e! project]
+  [:div "Tada"])
+
+(defn project-setup-wizard [e! project step]
+  (case step
+    "basic-information" [project-setup-basic-information-form e! project]
+    "restrictions" [project-setup-restrictions-form e! project]
+    "cadastral-units" [project-setup-cadastral-units-form e! project]
+    "activities" [project-setup-activities-form e! project]))
 
 (defn project-page-structure
   [e!
@@ -398,38 +415,39 @@
 (defn details-tab [e! query project]
   [project-data project])
 
-(defn project-page [e! {{:keys [tab add]} :query
-                        query             :query
-                        :as               app}
+(defn project-page [e! {{:keys [tab add step] :as query} :query
+                        :as                              app}
                     project
                     breadcrumbs]
-  [:<>
-   [panels/modal {:open-atom (r/wrap (boolean add) :_)
-                  :title     (if-not add
-                               ""
-                               (tr [:project (case add
-                                               "task" :add-task
-                                               "activity" :add-activity)]))
-                  :on-close  (e! project-controller/->CloseAddDialog)}
-    (case add
-      "task"
-      [task-form e! project-controller/->CloseAddDialog
-       (:new-task project)]
+  (let [wizard? (or (not (project-model/initialized? project))
+                    (some? step))]
+    [:<>
+     [panels/modal {:open-atom (r/wrap (boolean add) :_)
+                    :title     (if-not add
+                                 ""
+                                 (tr [:project (case add
+                                                 "task" :add-task
+                                                 "activity" :add-activity)]))
+                    :on-close  (e! project-controller/->CloseAddDialog)}
+      (case add
+        "task"
+        [task-form e! project-controller/->CloseAddDialog
+         (:new-task project)]
 
-      "activity"
-      [activity-view/activity-form e! project-controller/->CloseAddDialog
-       (get-in app [:project (:thk.project/id project) :new-activity])]
+        "activity"
+        [activity-view/activity-form e! project-controller/->CloseAddDialog
+         (get-in app [:project (:thk.project/id project) :new-activity])]
 
-      [:span])]
-   [project-page-structure e! app project breadcrumbs
-    (when (project-model/initialized? project)
-      ;; FIXME: localize
-      [{:label "Activities" :value "activities"}
-       {:label "People" :value "people"}
-       {:label "Details" :value "details"}])
-    (if-not (project-model/initialized? project)
-      [project-setup-basic-information-form e! project]
-      (case (or tab "activities")
-        "activities" [activities-tab e! query project]
-        "people" [people-tab e! query project]
-        "details" [details-tab e! query project]))]])
+        [:span])]
+     [project-page-structure e! app project breadcrumbs
+      (when (not wizard?)
+        ;; FIXME: localize
+        [{:label "Activities" :value "activities"}
+         {:label "People" :value "people"}
+         {:label "Details" :value "details"}])
+      (if wizard?
+        [project-setup-wizard e! project (or step "basic-information")]
+        (case (or tab "activities")
+          "activities" [activities-tab e! query project]
+          "people" [people-tab e! query project]
+          "details" [details-tab e! query project]))]]))
