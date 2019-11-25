@@ -1,5 +1,6 @@
 (ns teet.common.common-styles
-  (:require [teet.theme.theme-colors :as theme-colors]))
+  (:require [teet.theme.theme-colors :as theme-colors]
+            [herb.core :refer [defglobal]]))
 
 (defn gray-light-border
   []
@@ -69,3 +70,7 @@
   {:border-radius "3px"
    :border (str "1px solid " theme-colors/gray-lighter)
    :box-shadow "none"})
+
+(defglobal global
+           [:body :html {:height "100%"}]
+           [:#teet-frontend {:height "100%"}])
