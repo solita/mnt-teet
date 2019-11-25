@@ -172,3 +172,45 @@ SELECT row_to_json(fc)::TEXT
                        json_build_object('id', r.id, 'tooltip', r.tooltip) as properties
                   FROM restrictions.thk_project_related_restrictions_geom(entity_id,distance) r) f) fc;
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;
+
+
+
+CREATE OR REPLACE FUNCTION teet.entity_restrictions(entity_id BIGINT)
+RETURNS SETOF teet.restriction_list_item_geom AS $$
+DECLARE
+  t RECORD;
+  r RECORD;
+  dynsql TEXT;
+  type TEXT;
+BEGIN
+  FOR t IN SELECT * FROM restrictions.restrictions_tables()
+  LOOP
+    type := SUBSTRING(t.restrictions_tables, 11);
+    dynsql := 'SELECT r.* FROM restrictions.' || t.restrictions_tables || ' r ' ||
+              ' WHERE r.kpo_vid IN ' ||
+              ' (SELECT unnest(er.restrictions) FROM teet.entity_restrictions er WHERE er.entity_id = ' ||
+                 entity_id::TEXT ||
+                ')';
+    FOR r IN EXECUTE dynsql
+    LOOP
+      --RAISE NOTICE 'project % has restriction of type % => %', project_id, t.restrictions_tables, r;
+      RETURN NEXT ROW(type,
+                      r.id, r.vid, r.kpo_vid,
+                      r.voond, r.voondi_nimi,
+                      r.toiming, r.muudetud, r.seadus, r.geom)::teet.restriction_list_item_geom;
+    END LOOP;
+  END LOOP;
+  RETURN;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION teet.geojson_entity_restrictions(entity_id BIGINT) RETURNS TEXT
+AS $$
+SELECT row_to_json(fc)::TEXT
+  FROM (SELECT 'FeatureCollection' as type,
+               array_to_json(array_agg(f)) as features
+          FROM (SELECT 'Feature' as type,
+                       ST_AsGeoJSON(r.geometry)::json as geometry,
+                       json_build_object('id', r.id, 'tooltip', r.voond) as properties
+                  FROM teet.entity_restrictions(entity_id) r) f) fc;
+$$ LANGUAGE SQL STABLE SECURITY DEFINER;
