@@ -30,7 +30,10 @@
                                               {:task/type [:db/ident]}
                                               {:task/assignee [:user/id :user/given-name :user/family-name :user/email]}
                                               {:activity/_tasks [:db/id {:activity/name [:db/ident]}]}
-                                              {:task/documents [*]}])
+                                              {:task/documents [*
+                                                                {:document/files [*]}
+                                                                {:document/comments [*
+                                                                                     {:comment/author [*]}]}]}])
                               :in $ ?e ?project-id
                               :where
                               [?p :thk.project/id ?project-id]
