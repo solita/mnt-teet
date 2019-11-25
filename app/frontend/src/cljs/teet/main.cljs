@@ -40,8 +40,8 @@
       [theme/theme-provider
        [:div {:style {:display :flex
                       :flex-direction :column
-                      :min-height "100vh"
-                      :flex 1}}
+                      :height "100%"
+                      :min-height "100%"}}
         [build-info/top-banner nav-open? page]
         [snackbar/snackbar-container e! snackbar]
         [CssBaseline]

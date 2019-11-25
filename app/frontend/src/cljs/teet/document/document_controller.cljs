@@ -37,14 +37,24 @@
            :result-path [:document document-id]}))
 
   UpdateNewCommentForm
-  (process-event [{form-data :form-data} app]
-    (update-in app [:new-comment] merge form-data))
+  (process-event [{form-data :form-data} {:keys [query] :as app}]
+    (update-in app
+               [:route :activity-task :task/documents]
+               (fn [documents]
+                 (mapv #(if (= (str (:db/id %)) (:document query))
+                          (assoc % :new-comment form-data)
+                          %)
+                       documents))))
 
   Comment
   (process-event [_ app]
-    (let [doc (get-in app [:params :document])
-          new-comment (get-in app [:new-comment :comment/comment])]
-      (t/fx (dissoc app :new-comment)
+    (let [doc (get-in app [:query :document])
+          new-comment (->> (get-in app [:route :activity-task :task/documents])
+                           (filter #(= (str (:db/id %)) doc))
+                           first
+                           :new-comment
+                           :comment/comment)]
+      (t/fx app
             {:tuck.effect/type :command!
              :command :document/comment
              :payload {:document-id (goog.math.Long/fromString doc)

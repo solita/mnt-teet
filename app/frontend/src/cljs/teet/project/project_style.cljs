@@ -86,7 +86,7 @@
     :top "25px"
     :bottom "25px"
     :width "30vw"
-    :max-height "calc(100vh-275px)"
+    :max-height "calc(100vh - 275px)"
     :overflow-y :auto
     :display :flex
     :flex-direction :column}))

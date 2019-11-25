@@ -40,18 +40,25 @@
   [:div {:style {:padding "2rem 0 2rem 2rem"}}
    [:a {:href (url/remove-params)} "linkki taskin pääsivulle"]
    [:p "Documents"]
-   (for [{:document/keys [name status] :as document} documents]
+   (for [{:document/keys [name status files] :as document} documents]
      ^{:key (str (:db/id document))}
      [:div {:style {:margin-bottom "2rem"}}                                                  ;;TODO iterate files here
-      [Link {:href (url/set-params :document (:db/id document))
-           ;(str "#/projects/" project "/" (:db/id task) "/" (:db/id document))
-           }
-       name]])])
+      [Link {:href (url/set-params :document (:db/id document))}
+       name]
+      (for [{:file/keys [name size] :as file} files]
+         [Link {:style {:margin-left "2rem"
+                        :display :block}
+               :href (url/set-params :file (:db/id file))}
+         name " - " (format/file-size size)])])])
 
 (defn- task-overview
   [e! {:task/keys [description status modified] :as task}]
   [:div {:style {:padding "2rem 0"}}
-   [Heading1 "Task overview"]
+   [:div {:style {:justify-content :space-between
+                  :display :flex}}
+    [Heading1 "Task overview"]
+    [buttons/button-secondary {:on-click #(println "foo")}
+     "Edit"]]
    [:p description]
    [task-status e! status modified]
    [buttons/button-primary {:on-click #(e! (task-controller/->OpenAddDocumentDialog))
@@ -60,11 +67,19 @@
 
 (defn- task-document-content
   [e! document]
-  [:h1 (pr-str document)])
+  [:div
+   [:h1 (pr-str document)]
+   [document-view/comments e! document]])
+
+(defn document-file-content
+  [e! file]
+  [:h1 "file: " (pr-str file)])
 
 (defn task-page-content
-  [e! {:keys [document]} task]
+  [e! {:keys [file document]} task]
   (cond
+    file
+    [document-file-content e! (task-model/file-by-id task file)]
     document
     [task-document-content e! (task-model/document-by-id task document)]
     :else
@@ -92,15 +107,15 @@
     [Grid {:container true
            :spacing 3}
      [Grid {:item true
-            :xs 2}
+            :xs 3}
       [task-navigation task]]
      [Grid {:item true
             :xs 6}
       [task-page-content e! query task]]
      [Grid {:item true
             :style {:display :flex}
-            :xs   4}
-      [project-view/project-map e! (get-in app [:config :api-url]) project (get-in app [:query :tab])]]]]]
+            :xs   3}
+      [project-view/project-map e! (get-in app [:config :api-url]) (:project task) project]]]]]
 
   #_[:<>
    (when (:add-document query)

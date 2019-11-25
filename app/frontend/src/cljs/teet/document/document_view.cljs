@@ -53,7 +53,7 @@
      [LinearProgress {:variant "determinate"
                       :value in-progress?}])])
 
-(defn comments [e! new-comment document]
+(defn comments [e! {:keys [new-comment] :as document}]
   [layout/section
    [:div {:class (<class common-styles/gray-light-border)}
     [typography/Heading3 (tr [:document :comments])]
