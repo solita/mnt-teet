@@ -36,6 +36,14 @@
                                                (reset! localization/selected-language
                                                        language))))}])
 
+
+(defn feedback-link
+  []
+  [:div {:class (<class navigation-style/feedback-container-style)}
+   [Link {:class (<class navigation-style/feedback-style)
+          :href "mailto:teet-feedback@mnt.ee"}
+    (tr [:common :send-feedback])]])
+
 (defn- drawer-header
   [e! open?]
   [ListItem {:component "button"
@@ -117,6 +125,17 @@
           :href "/#/login"}
     "Log out"]])
 
+(defn navigation-header-links
+  [user e!]
+  [:div {:style {:display :flex
+                 :justify-content :flex-end}}
+   [feedback-link]
+   [language-selector]
+   (when-feature :my-role-display
+     [user-info user])
+   [logout e!]])
+
+
 (defn header
   [e! {:keys [open? page quick-search]} user]
   [:<>
@@ -127,10 +146,7 @@
      [:div {:class (<class navigation-style/logo-style)}
       navigation-logo/maanteeamet-logo]
      #_[search-view/quick-search e! quick-search]           ;;Removed until implemented properly
-     [language-selector]
-     (when-feature :my-role-display
-       [user-info user])
-     [logout e!]]]
+     [navigation-header-links user e!]]]
 
    [Drawer {;:class-name (<class navigation-style/drawer open?)
             :classes {"paperAnchorDockedLeft" (<class navigation-style/drawer open?)}

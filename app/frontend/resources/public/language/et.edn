@@ -13,6 +13,7 @@
   :files "Failid",
   :back-to-task "Tagasi ülesandesse",
   :select {:empty "- Valin"},
+  :send-feedback "Tagasisidet"
   :clear "Puhastan"},
  :document {:comments "Märkused", :new-comment "Uus märkus"},
  :enum

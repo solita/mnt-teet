@@ -12,6 +12,7 @@
   :files "Files",
   :back-to-task "Back to task",
   :select {:empty "- Select value"},
+  :send-feedback "Send feedback"
   :clear "Clear"},
  :document {:comments "Comments", :new-comment "New comment"},
  :enum
