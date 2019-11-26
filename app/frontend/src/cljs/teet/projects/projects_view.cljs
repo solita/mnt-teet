@@ -9,17 +9,11 @@
             [teet.map.map-layers :as map-layers]
             [teet.map.map-features :as map-features]
             [teet.theme.theme-spacing :as theme-spacing]
-            [teet.ui.material-ui :refer [TableCell TableSortLabel Button Link
-                                         Table TableRow TableHead TableBody
-                                         TableSortLabel]]
-            [teet.ui.text-field :refer [TextField]]
+            [teet.ui.material-ui :refer [FormControlLabel Checkbox]]
             postgrest-ui.elements
             [teet.localization :as localization :refer [tr]]
-            [teet.ui.panels :as panels]
             [clojure.string :as string]
-            [teet.theme.theme-colors :as theme-colors]
             [teet.project.project-model :as project-model]
-            [postgrest-ui.components.scroll-sensor :as scroll-sensor]
             [teet.project.project-controller :as project-controller]
             [teet.common.common-styles :as common-styles]
             [teet.ui.format :as format]
@@ -54,17 +48,29 @@
     (str value)))
 
 (defn projects-listing [e! all-projects]
-  [table/table {:on-row-click (comp (e! project-controller/->NavigateToProject) :thk.project/id)
-                :label (tr [:projects :title])
-                :data all-projects
-                :columns project-model/project-listing-display-columns
-                :get-column project-model/get-column
-                :format-column format-column-value
-                :filter-type {:thk.project/project-name :string
-                              :thk.project/owner-info :string
-                              :thk.project/road-nr :number}
-                :key :thk.project/id
-                :default-sort-column :thk.project/project-name}])
+  (r/with-let [unassigned-only? (r/atom false)]
+    [:<>
+
+     [table/table {:after-title [:div {:style {:margin-left "2rem" :display :inline-block}}
+                                 [FormControlLabel
+                                  {:value "unassigned-only"
+                                   :label-placement :end
+                                   :label "Unassigned projects only"
+                                   :control (r/as-element [Checkbox {:checked @unassigned-only?
+                                                                     :on-change #(swap! unassigned-only? not)}])}]]
+                   :on-row-click (comp (e! project-controller/->NavigateToProject) :thk.project/id)
+                   :label (tr [:projects :title])
+                   :data (if @unassigned-only?
+                           (filter (complement :thk.project/owner) all-projects)
+                           all-projects)
+                   :columns project-model/project-listing-display-columns
+                   :get-column project-model/get-column
+                   :format-column format-column-value
+                   :filter-type {:thk.project/project-name :string
+                                 :thk.project/owner-info :string
+                                 :thk.project/road-nr :number}
+                   :key :thk.project/id
+                   :default-sort-column :thk.project/project-name}]]))
 
 
 (def ^:const project-pin-resolution-threshold 100)

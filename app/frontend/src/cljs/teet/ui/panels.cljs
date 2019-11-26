@@ -17,7 +17,9 @@
     (let [open-atom (or (:open-atom opts) open-atom)
           open? @open-atom]
       [Card
-       [CardHeader {:title  title
+       [CardHeader {:title (if (vector? title)
+                             (r/as-element title)
+                             title)
                     :action (r/as-element
                               [:div {:style {:display "inline-block"}}
                                action
