@@ -112,7 +112,10 @@
   :activities-tab "Activities"},
  :project-groups {:title "Project groups"},
  :projects
- {:title "Projects", :map-view "Map", :list-view "Project list"},
+ {:title "Projects",
+  :map-view "Map",
+  :list-view "Project list",
+  :unassigned-only "Unassigned projects only"},
  :search {:quick-search "Search", :clear-filters "Clear filters"},
  :task
  {:add-document "Add document",
