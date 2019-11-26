@@ -55,7 +55,7 @@
                                  [FormControlLabel
                                   {:value "unassigned-only"
                                    :label-placement :end
-                                   :label "Unassigned projects only"
+                                   :label (tr [:projects :unassigned-only])
                                    :control (r/as-element [Checkbox {:checked @unassigned-only?
                                                                      :on-change #(swap! unassigned-only? not)}])}]]
                    :on-row-click (comp (e! project-controller/->NavigateToProject) :thk.project/id)
