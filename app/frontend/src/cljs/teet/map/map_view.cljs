@@ -10,6 +10,7 @@
             [teet.ui.material-ui :refer [Fab Button Switch Checkbox FormControlLabel Collapse ClickAwayListener Fade IconButton]]
             [teet.ui.typography :as typography]
             [teet.ui.icons :as icons]
+            [teet.ui.itemlist :as itemlist]
             [teet.common.common-controller :as common-controller]
             [teet.map.map-styles :as map-styles]))
 
@@ -41,21 +42,13 @@
          (if (empty? category)
            "No category name in data"
            category)
-         (doall
+         [itemlist/checkbox-list
           (for [[layer open?] layers]
-            ^{:key layer}
-            [:div {:style {:margin-left "1rem"}}
-             [FormControlLabel
-              {:label (r/as-component [:span
-                                       {:class (<class map-styles/checkbox-label open?)}
-                                       layer])
-               :control (r/as-component [Checkbox {:checked open?
-                                                   :value layer
-                                                   :class (<class map-styles/layer-checkbox)
-                                                   :color :primary
-                                                   :on-change (fn [e]
-                                                                (.stopPropagation e)
-                                                                (e! (map-controller/->LayerToggle category layer)))}])}]]))]))))
+            {:checked? open?
+             :value layer
+             :on-change (fn [e]
+                          (.stopPropagation e)
+                          (e! (map-controller/->LayerToggle category layer)))})]]))))
 
 (defn map-layer-controls
   [e! _map-layers {:keys [_open?] :as _map-controls}]

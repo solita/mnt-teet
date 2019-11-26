@@ -5,7 +5,7 @@
             [teet.ui.material-ui :refer [Collapse IconButton]]))
 
 (defn collapsible-container [{:keys [on-toggle open? side-component]
-                          :or   {on-toggle identity}} heading info]
+                          :or   {on-toggle identity}} heading contents]
   [:div {:class (<class container-theme/container)}
    [:div  {:class (<class container-theme/container-control)}
     [IconButton {:size :small
@@ -20,5 +20,4 @@
     (when side-component
       side-component)]
    [Collapse {:in (boolean open?)}
-    [:div {:class (<class container-theme/container-contents)}
-     info]]])
+    contents]])

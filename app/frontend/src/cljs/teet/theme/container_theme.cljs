@@ -23,9 +23,3 @@
 (defn collapse-button
   []
   {:margin-right "1rem"})
-
-(defn container-contents
-  []
-  {:padding "0.5rem 1rem"
-   :background-color theme-colors/gray-lightest
-   :border-bottom (str "1px solid " theme-colors/gray-lighter)})

@@ -7,8 +7,8 @@
             [teet.ui.buttons :as buttons]
             [teet.ui.container :as container]
             [teet.ui.form :as form]
-            [teet.ui.icons :as icons]
-            [teet.ui.material-ui :refer [ButtonBase Checkbox Collapse FormControlLabel]]
+            [teet.ui.itemlist :as itemlist]
+            [teet.ui.material-ui :refer [Checkbox FormControlLabel]]
             [teet.ui.select :as select]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.typography :as typography]))
@@ -47,17 +47,7 @@
        [select/select-user {:e! e!}]]]]))
 
 (defn- restrictions-check-group [restrictions checked-restrictions toggle-restriction]
-  [:div
-   (doall
-    (for [{:keys [voond id] :as restriction} (sort-by :voond restrictions)
-          :let [checked? (boolean (checked-restrictions id))]]
-      ^{:key id}
-      [FormControlLabel
-       {:control (r/as-element
-                  [Checkbox {:color :primary
-                             :checked checked?
-                             :on-change (r/partial toggle-restriction id)}])
-        :label voond}]))])
+  )
 
 (defn restrictions-listing
   [e! {:keys [restrictions checked-restrictions toggle-restriction]}]
@@ -78,7 +68,12 @@
                                                                             (conj % group))))
                                           :open? (@open-types group)}
          group
-         [restrictions-check-group restrictions group-checked toggle-restriction]]))]))
+         [itemlist/checkbox-list
+          (for [{:keys [voond id]} (sort-by :voond restrictions)
+                :let [checked? (boolean (group-checked id))]]
+            {:checked? checked?
+             :value voond
+             :on-change (r/partial toggle-restriction id)})]]))]))
 
 (defn project-setup-restrictions-form [e! _]
   (e! (project-controller/->FetchRestrictions))
