@@ -125,3 +125,12 @@
    :line-height "19px"
    :position :relative
    :font-size "16px"})
+
+(defn feedback-container-style []
+  (merge {:display :inline-flex
+          :position :relative
+          :flex-direction :column
+          :vertical-align :top}
+         (divider-style)))
+
+(def feedback-style logout-style)

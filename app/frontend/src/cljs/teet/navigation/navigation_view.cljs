@@ -14,6 +14,10 @@
             [herb.core :as herb :refer [<class]]
             [teet.user.user-controller :as user-controller]))
 
+(def entity-quote (fnil js/escape "(nil)"))
+
+(def uri-quote (fnil js/encodeURIComponent "(nil)"))
+
 (defn language-selector
   []
   [select/select-with-action {:container-class (herb/join (<class navigation-style/language-select-container-style)
@@ -35,6 +39,21 @@
                                              (fn [language _]
                                                (reset! localization/selected-language
                                                        language))))}])
+
+
+(defn feedback-link
+  []
+  (let [ua-string (.-userAgent js/navigator)
+        current-uri (.-URL js/document)
+        body-text (str "Session info:\n"
+                       "Browser type string: " ua-string "\n"
+                       "Address in TEET: " current-uri "\n\n")]
+    [:div {:class (<class navigation-style/feedback-container-style)}
+     [Link {:class (<class navigation-style/feedback-style)
+            :href (str "mailto:teet-feedback@mnt.ee?Subject=TEET Feedback&body="
+                       (-> body-text
+                           entity-quote))}
+      (tr [:common :send-feedback])]]))
 
 (defn- drawer-header
   [e! open?]
@@ -117,6 +136,17 @@
           :href "/#/login"}
     "Log out"]])
 
+(defn navigation-header-links
+  [user e!]
+  [:div {:style {:display :flex
+                 :justify-content :flex-end}}
+   [feedback-link]
+   [language-selector]
+   (when-feature :my-role-display
+     [user-info user])
+   [logout e!]])
+
+
 (defn header
   [e! {:keys [open? page quick-search]} user]
   [:<>
@@ -127,10 +157,7 @@
      [:div {:class (<class navigation-style/logo-style)}
       navigation-logo/maanteeamet-logo]
      #_[search-view/quick-search e! quick-search]           ;;Removed until implemented properly
-     [language-selector]
-     (when-feature :my-role-display
-       [user-info user])
-     [logout e!]]]
+     [navigation-header-links user e!]]]
 
    [Drawer {;:class-name (<class navigation-style/drawer open?)
             :classes {"paperAnchorDockedLeft" (<class navigation-style/drawer open?)}

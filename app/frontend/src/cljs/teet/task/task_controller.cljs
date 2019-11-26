@@ -14,6 +14,12 @@
 (defrecord CreateTask [])
 (defrecord CreateTaskResult [result])
 
+(defrecord OpenEditTask [])
+(defrecord CloseEditDialog [])
+(defrecord UpdateEditTaskForm [form-data])
+(defrecord PostTaskEditForm [])
+(defrecord MoveDataForEdit [])
+
 (defrecord OpenAddDocumentDialog [])
 (defrecord CloseAddDocumentDialog [])
 
@@ -27,6 +33,27 @@
            :args {:task-id (goog.math.Long/fromString task-id)}
            :result-path [:task task-id]}))
 
+  CloseEditDialog
+  (process-event [_ {:keys [params page query] :as app}]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page page
+           :params params
+           :query (dissoc query :edit)}))
+
+  MoveDataForEdit
+  (process-event [_ app]
+    (let [task-data (select-keys (get-in app [:route :activity-task]) [:db/id :task/assignee :task/type :task/description])
+          task-with-type (assoc task-data :task/type (get-in task-data [:task/type :db/ident]))]
+      (assoc app :edit-form task-with-type)))
+
+  OpenEditTask
+  (process-event [_ {:keys [params page query] :as app}]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page             page
+           :params           params
+           :query            (assoc query :edit :task)}))
 
   OpenAddDocumentDialog
   (process-event [_ app]
@@ -63,6 +90,23 @@
          :payload {:db/id id
                    :task/status status}
          :result-event common-controller/->Refresh})))
+
+  UpdateEditTaskForm
+  (process-event [{form-data :form-data} app]
+    (update-in app [:edit-form] merge form-data))
+
+  PostTaskEditForm
+  (process-event [_ {:keys [query params page] :as app}]
+    (let [task (:edit-form app)]
+      (t/fx app
+            {:tuck.effect/type :navigate
+             :page page
+             :query (dissoc query :edit)
+             :params params}
+            {:tuck.effect/type :command!
+             :command          :workflow/update-task
+             :payload          task
+             :result-event     common-controller/->Refresh})))
 
   UpdateTask
   (process-event [{:keys [task updated-task]} app]

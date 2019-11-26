@@ -5,4 +5,4 @@
   {:query '[:find (pull ?e [:user/id :user/given-name :user/family-name :user/email])
             :where [?e :user/id _]]
    :args [db]
-   :result-fn first})
+   :result-fn (partial mapv first)})

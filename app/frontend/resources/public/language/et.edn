@@ -120,5 +120,6 @@
  :task
  {:add-document "Lisan dokumendi",
   :documents "Dokumendid",
+  :task-overview "Ülesande ülevaade",
   :no-documents "Dokumente ei ole"},
  :user {:role "Minu roll"}}
