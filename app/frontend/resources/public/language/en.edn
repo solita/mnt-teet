@@ -2,6 +2,7 @@
  :buttons {:cancel "Cancel", :save "Save", :add "Add", :edit "Edit"},
  :common
  {:hide-menu "Hide menu",
+  :send-feedback "Send feedback",
   :select-files "Select files to upload",
   :back-to-project "Back to project",
   :now "Now",
@@ -12,7 +13,6 @@
   :files "Files",
   :back-to-task "Back to task",
   :select {:empty "- Select value"},
-  :send-feedback "Send feedback"
   :clear "Clear"},
  :document {:comments "Comments", :new-comment "New comment"},
  :enum
@@ -79,7 +79,8 @@
   :thk.project/km-range "Km range",
   :activity/name "Activity name",
   :document/description "Description",
-  :thk.project/estimated-date-range "Estimated duration"},
+  :thk.project/estimated-date-range "Estimated duration",
+  :thk.project/owner "Owner"},
  :login {:login "Login", :password "Password", :username "Username"},
  :map
  {:clear-selections "Clear selections",
