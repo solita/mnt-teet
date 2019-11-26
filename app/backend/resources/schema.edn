@@ -381,4 +381,10 @@
 
  {:db/ident :migration/project-name
   :txes [[{:db/id :thk.project/custom-name
-           :db/ident :thk.project/project-name}]]}]
+           :db/ident :thk.project/project-name}]]}
+
+ {:db/ident :migration/project-manager
+  :txes [[{:db/ident       :thk.project/manager
+           :db/cardinality :db.cardinality/one
+           :db/valueType   :db.type/ref
+           :db/doc         "User who manages this project"}]]}]

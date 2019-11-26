@@ -1,39 +1,41 @@
 (ns teet.project.project-view
-  (:require [herb.core :as herb :refer [<class]]
+  (:require [clojure.string :as str]
+            [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
+            [teet.activity.activity-view :as activity-view]
+            [teet.common.common-controller :as common-controller]
+            [teet.common.common-styles :as common-styles]
+            [teet.localization :refer [tr tr-tree]]
+            [teet.log :as log]
             [teet.map.map-features :as map-features]
             [teet.map.map-layers :as map-layers]
             [teet.map.map-view :as map-view]
+            [teet.project.project-controller :as project-controller]
+            [teet.project.project-model :as project-model]
+            [teet.project.project-style :as project-style]
+            [teet.project.project-setup-view :as project-setup-view]
+            [teet.task.task-controller :as task-controller]
+            teet.task.task-spec
+            [teet.ui.breadcrumbs :as breadcrumbs]
+            [teet.ui.buttons :as buttons]
+            [teet.ui.common :as common]
+            [teet.ui.container :as container]
+            [teet.ui.form :as form]
+            [teet.ui.format :as format]
+            [teet.ui.icons :as icons]
+            [teet.ui.itemlist :as itemlist]
             [teet.ui.material-ui :refer [ButtonBase Collapse Link Divider Paper
                                          Checkbox FormControlLabel]]
-            [teet.ui.text-field :refer [TextField]]
-            [teet.project.project-controller :as project-controller]
-            [teet.project.project-style :as project-style]
-            [teet.ui.breadcrumbs :as breadcrumbs]
-            [teet.ui.skeleton :as skeleton]
-            [teet.ui.format :as format]
-            [teet.ui.itemlist :as itemlist]
-            [teet.ui.icons :as icons]
-            [teet.ui.common :as common]
-            [teet.ui.typography :refer [Heading1 Heading2 Heading3] :as typography]
-            [teet.localization :refer [tr tr-tree]]
             [teet.ui.panels :as panels]
-            [teet.ui.buttons :as buttons]
-            teet.task.task-spec
-            [teet.activity.activity-view :as activity-view]
-            [teet.ui.util :as util]
-            [clojure.string :as str]
-            [teet.common.common-styles :as common-styles]
-            [teet.ui.form :as form]
-            [teet.task.task-controller :as task-controller]
-            [teet.ui.select :as select]
-            [teet.ui.timeline :as timeline]
             [teet.ui.progress :as progress]
-            [teet.project.project-model :as project-model]
-            [teet.log :as log]
-            [teet.ui.url :as url]
+            [teet.ui.select :as select]
+            [teet.ui.skeleton :as skeleton]
             [teet.ui.tabs :as tabs]
-            [teet.common.common-controller :as common-controller]))
+            [teet.ui.text-field :refer [TextField]]
+            [teet.ui.timeline :as timeline]
+            [teet.ui.typography :refer [Heading1 Heading2 Heading3] :as typography]
+            [teet.ui.url :as url]
+            [teet.ui.util :as util]))
 
 (defn task-form [e! {:keys [close task save on-change initialization-fn]}]
   ;;Task definition (under project activity)
@@ -218,23 +220,10 @@
                                                {:opacity 0.5})})}
     {}]])
 
-(defn- collapsible-info [{:keys [on-toggle open?]
-                          :or   {on-toggle identity}} heading info]
-  [:div {:class (<class project-style/restriction-container)}
-   [ButtonBase {:focus-ripple true
-                :class        (<class project-style/restriction-button-style)
-                :on-click     on-toggle}
-    [Heading3 heading]
-    (if open?
-      [icons/hardware-keyboard-arrow-right {:color :primary}]
-      [icons/hardware-keyboard-arrow-down {:color :primary}])]
-   [Collapse {:in (boolean open?)}
-    info]])
-
 (defn restriction-component
   [e! {:keys [voond toiming muudetud seadus id open?] :as _restriction}]
-  [collapsible-info {:open?     open?
-                     :on-toggle (e! project-controller/->ToggleRestrictionData id)}
+  [container/collapsible-container {:open?     open?
+                                    :on-toggle (e! project-controller/->ToggleRestrictionData id)}
    voond
    [itemlist/ItemList {:class (<class project-style/restriction-list-style)}
     [itemlist/Item {:label "Toiming"} toiming]
@@ -245,40 +234,6 @@
         (util/with-keys
           (for [r (str/split seadus #";")]
             [:li r]))]])]])
-
-(defn- restrictions-check-group [restrictions checked-restrictions toggle-restriction]
-  [:div
-   (doall
-    (for [{:keys [voond id] :as restriction} (sort-by :voond restrictions)
-          :let [checked? (boolean (checked-restrictions id))]]
-      ^{:key id}
-      [FormControlLabel
-       {:control (r/as-element
-                  [Checkbox {:color :primary
-                             :checked checked?
-                             :on-change (r/partial toggle-restriction id)}])
-        :label voond}]))])
-
-(defn restrictions-listing
-  [e! {:keys [restrictions checked-restrictions toggle-restriction]}]
-  (r/with-let [open-types (r/atom #{})
-               restrictions-by-type (group-by :type restrictions)]
-    [:<>
-     (doall
-      (for [[group restrictions] restrictions-by-type
-            :let [group-checked (into #{}
-                                      (comp
-                                       (map :id)
-                                       (filter checked-restrictions))
-                                      restrictions)]]
-        ^{:key group}
-         [collapsible-info {:on-toggle (fn [_]
-                                         (swap! open-types #(if (% group)
-                                                             (disj % group)
-                                                             (conj % group))))
-                            :open? (@open-types group)}
-          group
-          [restrictions-check-group restrictions group-checked toggle-restriction]]))]))
 
 (defn collapse-skeleton
   [title? n]
@@ -296,8 +251,8 @@
 (defn- cadastral-unit-component [e! {:keys [id open? lahiaadress tunnus omandivorm pindala
                                             maakonna_nimi omavalitsuse_nimi asustusyksuse_nimi sihtotstarve_1 kinnistu_nr]
                                      :as   _unit}]
-  [collapsible-info {:open?     open?
-                     :on-toggle (e! project-controller/->ToggleCadastralHightlight id)}
+  [container/collapsible-container {:open?     open?
+                                    :on-toggle (e! project-controller/->ToggleCadastralHightlight id)}
    (str lahiaadress " " tunnus " " omandivorm " " pindala)
    [itemlist/ItemList {:class (<class project-style/restriction-list-style)}
     [itemlist/Item {:label "Maakonna nimi"} maakonna_nimi]
@@ -315,67 +270,6 @@
                                       cadastral-units)]
        ^{:key id}
        [cadastral-unit-component e! unit]))])
-
-(defn initialization-form-footer [{:keys [cancel validate disabled?]}]
-  [:div {:class (<class project-style/wizard-footer)}
-   ;; TODO this should be a text button and cancel
-   [typography/Text "Skip setup"]
-   [buttons/button-primary
-    {:on-click validate
-     :type     :submit
-     :disabled disabled?}
-    "Next"]])
-
-(defn project-setup-basic-information-form
-  [e! project]
-  (e! (project-controller/->UpdateBasicInformationForm
-       {:thk.project/project-name (:thk.project/name project)}))
-  (fn [e! project]
-    [:<>
-     [:div {:class (<class project-style/initialization-form-wrapper)}
-      [form/form {:e!              e!
-                  :value           (:basic-information-form project)
-                  :on-change-event project-controller/->UpdateBasicInformationForm
-                  :save-event      project-controller/->SaveBasicInformation
-                  :class (<class project-style/wizard-form)
-                  :footer initialization-form-footer}
-
-       ^{:attribute :thk.project/project-name}
-       [TextField {:full-width true :variant :outlined}]
-
-       ^{:attribute :thk.project/owner}
-       [select/select-user {:e! e!}]]]]))
-
-(defn project-setup-restrictions-form [e! _]
-  (e! (project-controller/->FetchRestrictions))
-  (fn [e! {:keys [restriction-candidates checked-restrictions] :as project}]
-    (when restriction-candidates
-      [restrictions-listing e! {:restrictions restriction-candidates
-                                :checked-restrictions (or checked-restrictions #{})
-                                :toggle-restriction (e! project-controller/->ToggleRestriction)}])))
-
-(defn project-setup-cadastral-units-form [e! project]
-  [:div "Tada"])
-
-(defn project-setup-activities-form [e! project]
-  [:div "Tada"])
-
-(defn project-setup-wizard [e! project step]
-  (let [[step label component]
-        (case step
-          "basic-information" [1 :basic-information [project-setup-basic-information-form e! project]]
-          "restrictions" [2 :restrictions [project-setup-restrictions-form e! project]]
-          "cadastral-units" [3 :cadastral-units [project-setup-cadastral-units-form e! project]]
-          "activities" [4 :activities [project-setup-activities-form e! project]])]
-    [:<>
-    [:div {:class (<class project-style/wizard-header)}
-     [:div {:class (<class project-style/wizard-header-step-info)}
-      [typography/Text {:color :textSecondary}
-       (tr [:project :wizard :project-setup])]
-      [typography/Text {:color :textSecondary}
-       (tr [:project :wizard :step-of] {:current step :total 4})]]
-     [typography/Heading2 (tr [:project :wizard label])]]
-     component]))
 
 (defn project-page-structure
   [e!
@@ -474,7 +368,7 @@
          {:label "People" :value "people"}
          {:label "Details" :value "details"}])
       (if wizard?
-        [project-setup-wizard e! project (or step "basic-information")]
+        [project-setup-view/project-setup-wizard e! project (or step "basic-information")]
         (case (or tab "activities")
           "activities" [activities-tab e! query project]
           "people" [people-tab e! query project]
