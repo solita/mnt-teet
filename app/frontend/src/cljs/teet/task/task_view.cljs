@@ -58,7 +58,7 @@
   [:div {:style {:padding "2rem 0"}}
    [:div {:style {:justify-content :space-between
                   :display :flex}}
-    [Heading1 "Task overview"]
+    [Heading1 (tr [:task :task-overview])]
     [buttons/button-secondary {:on-click (e! task-controller/->OpenEditTask)}
      (tr [:buttons :edit])]]
    [:p description]
