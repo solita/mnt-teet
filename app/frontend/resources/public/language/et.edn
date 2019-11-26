@@ -3,6 +3,7 @@
  {:cancel "Tühistan", :save "Salvestan", :add "Lisan", :edit "Muutma"},
  :common
  {:hide-menu "Peidan menüü",
+  :send-feedback "Saadan tagasisidet",
   :select-files "Valin fail(id)",
   :back-to-project "Tagasi projekti",
   :now "Nüüd",
@@ -79,7 +80,8 @@
   :thk.project/km-range "Km ulatus",
   :activity/name "Tegevuse nimi",
   :document/description "Kirjeldus",
-  :thk.project/estimated-date-range "Eeldatav kestus"},
+  :thk.project/estimated-date-range "Eeldatav kestus",
+  :thk.project/owner "Omanik"},
  :login {:login "Sisenen", :password "Salasõna", :username "Kasutaja"},
  :map
  {:clear-selections "Tühjendan valikud",
