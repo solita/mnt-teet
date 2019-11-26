@@ -14,6 +14,10 @@
             [herb.core :as herb :refer [<class]]
             [teet.user.user-controller :as user-controller]))
 
+(def entity-quote (fnil js/escape "(nil)"))
+
+(def uri-quote (fnil js/encodeURIComponent "(nil)"))
+
 (defn language-selector
   []
   [select/select-with-action {:container-class (herb/join (<class navigation-style/language-select-container-style)
@@ -39,10 +43,17 @@
 
 (defn feedback-link
   []
-  [:div {:class (<class navigation-style/feedback-container-style)}
-   [Link {:class (<class navigation-style/feedback-style)
-          :href "mailto:teet-feedback@mnt.ee"}
-    (tr [:common :send-feedback])]])
+  (let [ua-string (.-userAgent js/navigator)
+        current-uri (.-URL js/document)
+        body-text (str "Session info:\n"
+                       "Browser type string: " ua-string "\n"
+                       "Address in TEET: " current-uri "\n\n")]
+    [:div {:class (<class navigation-style/feedback-container-style)}
+     [Link {:class (<class navigation-style/feedback-style)
+            :href (str "mailto:teet-feedback@mnt.ee?Subject=TEET Feedback&body="
+                       (-> body-text
+                           entity-quote))}
+      (tr [:common :send-feedback])]]))
 
 (defn- drawer-header
   [e! open?]
