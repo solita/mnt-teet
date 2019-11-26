@@ -28,6 +28,9 @@
   "geojson_thk_project" [p]
   (->SelectProject (:map/id p)))
 
+(defmethod common-controller/map-item-selected
+  "geojson_entities" [p]
+  (->SelectProject (:map/id p)))
 
 ;;
 ;; Project setup wizard events

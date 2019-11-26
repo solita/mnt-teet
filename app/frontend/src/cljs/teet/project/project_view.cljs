@@ -73,6 +73,11 @@
         :fail    incomplete-count}]
       (str complete-count " / " num-tasks " tasks complete")])])
 
+(defn project-name-hover
+  [project-name]
+  (log/info "project-name-hover called")
+  [:div project-name])
+
 (defn project-data
   [{:thk.project/keys [estimated-start-date estimated-end-date road-nr start-m end-m
                        carriageway procurement-nr lifecycles] :as project}]
@@ -102,7 +107,7 @@
                :start-date estimated-start-date
                :end-date   estimated-end-date
                :fill       "cyan"
-               :hover      [:div project-name]}]
+               :hover      [project-name-hover project-name]}]
              (for [{:thk.lifecycle/keys [type estimated-start-date estimated-end-date]}
                    (sort-by :thk.lifecycle/estimated-start-date lifecycles)]
                {:label      (-> type :db/ident tr*)
@@ -194,13 +199,20 @@
   [:div {:style {:flex           1
                  :display        :flex
                  :flex-direction :column}}
+
+   ;; TEET-288 "Add start and end meter pointers to map in project page" should be impl here.
+   ;; OL 4.x docs: https://openlayers.org/en/v4.6.5/apidoc/
+   ;; possible starting point for line end/start marker impl: https://stackoverflow.com/questions/39095736/openlayers-3-draw-start-pointcsp-of-a-line-string
+   
+   (log/info "project-map called - making a map-view comonent and passing in km-labeled-line-style as style:" (some? map-features/km-labeled-line-style))
    [map-view/map-view e!
     {:class  (<class map-style)
      :layers (merge {:thk-project
                      (map-layers/geojson-layer endpoint
                                                "geojson_entities"
                                                {"ids" (str "{" (:db/id project) "}")}
-                                               map-features/project-line-style
+                                               map-features/km-labeled-line-style
+                                               ;; map-features/road-line-style
                                                {:fit-on-load? true})}
                     {:related-restrictions
                      (map-layers/geojson-layer endpoint

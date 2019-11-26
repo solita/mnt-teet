@@ -6,7 +6,8 @@
             [ol.style.Stroke]
             [ol.style.Fill]
             [ol.render.Feature]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.log :as log]))
 
 (def ^:const map-pin "M9.96587 0.5C15.221 0.5 19.5 4.78348 19.5 9.96587C19.5 12.7235 17.9724 15.4076 15.9208 18.0187C14.9006 19.3172 13.7685 20.5764 12.6603 21.802C12.611 21.8565 12.5618 21.911 12.5126 21.9653C11.6179 22.9546 10.7407 23.9244 9.9694 24.8638C9.1882 23.8963 8.29237 22.8969 7.37848 21.8774L7.31238 21.8036C6.21334 20.5775 5.08749 19.3183 4.07125 18.0195C2.02771 15.4079 0.5 12.7237 0.5 9.96587C0.5 4.78126 4.78126 0.5 9.96587 0.5Z")
 (def ^:const map-pin-height 26)
@@ -52,6 +53,30 @@
 (def ^{:doc "Show project geometry as the road line."} project-line-style
   (partial road-line-style "blue"))
 
+
+(defn km-labeled-line-style [^ol.render.Feature _feature res]
+  (log/info "km-labeled-line-style called")
+  (let [color "#007baf" ;; turquoisey color used in figma wireframe
+        line-width (+ 3 (min 5 (int (/ 200 res))))
+        geometry (.getGeometry _feature)
+        [start end] [(.getFirstCoordinate geometry) (.getLastCoordinate geometry)]
+        line-style (ol.style.Style.
+                    #js {:stroke (ol.style.Stroke. #js {:color color
+                                                        :width line-width
+                                                        :lineCap "butt"})
+                         :zIndex 2})
+        ;; some kind of image: ol.style.Circle in these + see https://openlayers.org/en/v4.6.5/examples/vector-labels.html for label options
+        start-style (ol.style.Style.
+                    #js {:geometry (ol.geom.Point. start)
+                         :zIndex 2})
+        end-style (ol.style.Style.
+                   #js {:geometry (ol.geom.Point. end)
+                        :zIndex 2})
+        ]
+    #_(.forEachSegment geometry (fn geo-fse-callback [start end]
+                                  (log/info "fse start/end" start end)))
+    ;; Show project road geometry line
+    (clj->js [line-style start end])))
 
 (def electric-pattern
   (let [a (atom nil)
