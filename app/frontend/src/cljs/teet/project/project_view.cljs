@@ -35,26 +35,29 @@
             [teet.ui.tabs :as tabs]
             [teet.common.common-controller :as common-controller]))
 
-(defn task-form [e! close task]
+(defn task-form [e! {:keys [close task save on-change initialization-fn]}]
   ;;Task definition (under project activity)
   ;; Task type (a predefined list of tasks: topogeodeesia, geoloogia, liiklusuuring, KMH eelhinnang, loomastikuuuring, arheoloogiline uuring, muu)
   ;; Description (short description of the task for clarification, 255char, in case more detailed description is needed, it will be uploaded as a file under the task)
   ;; Responsible person (email)
-  [form/form {:e!              e!
-              :value           task
-              :on-change-event task-controller/->UpdateTaskForm
-              :cancel-event    close
-              :save-event      task-controller/->CreateTask
-              :spec            :task/new-task-form}
-   ^{:xs 12 :attribute :task/type}
-   [select/select-enum {:e! e! :attribute :task/type}]
+  (when initialization-fn
+    (initialization-fn))
+  (fn [e! {:keys [close task save on-change]}]
+    [form/form {:e!              e!
+                  :value           task
+                  :on-change-event on-change
+                  :cancel-event    close
+                  :save-event      save
+                  :spec            :task/new-task-form}
+       ^{:xs 12 :attribute :task/type}
+       [select/select-enum {:e! e! :attribute :task/type}]
 
-   ^{:attribute :task/description}
-   [TextField {:full-width true :multiline true :rows 4 :maxrows 4
-               :variant    :outlined}]
+       ^{:attribute :task/description}
+       [TextField {:full-width true :multiline true :rows 4 :maxrows 4
+                   :variant    :outlined}]
 
-   ^{:attribute :task/assignee}
-   [select/select-user {:e! e!}]])
+       ^{:attribute :task/assignee}
+       [select/select-user {:e! e!}]]))
 
 
 (defn- activity-info-popup [label start-date end-date num-tasks complete-count incomplete-count]
@@ -453,8 +456,11 @@
                     :on-close  (e! project-controller/->CloseAddDialog)}
       (case add
         "task"
-        [task-form e! project-controller/->CloseAddDialog
-         (:new-task project)]
+        [task-form e!
+         {:close project-controller/->CloseAddDialog
+          :task (:new-task project)
+          :save task-controller/->CreateTask
+          :on-change task-controller/->UpdateTaskForm}]
 
         "activity"
         [activity-view/activity-form e! project-controller/->CloseAddDialog

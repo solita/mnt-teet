@@ -9,6 +9,7 @@
             [teet.ui.common :as ui-common]
             [teet.ui.format :as format]
             [teet.ui.material-ui :refer [List Grid Paper Link]]
+            [teet.ui.text-field :refer [TextField]]
             [teet.ui.icons :as icons]
             [teet.ui.typography :refer [Heading1]]
             [teet.ui.layout :as layout]
@@ -20,7 +21,8 @@
             [teet.document.document-view :as document-view]
             [teet.ui.breadcrumbs :as breadcrumbs]
             [teet.common.common-styles :as common-styles]
-            [teet.project.task-model :as task-model]))
+            [teet.project.task-model :as task-model]
+            [teet.project.project-controller :as project-controller]))
 
 (defn task-status [e! status modified]
   [ui-common/status {:e! e!
@@ -57,8 +59,8 @@
    [:div {:style {:justify-content :space-between
                   :display :flex}}
     [Heading1 "Task overview"]
-    [buttons/button-secondary {:on-click #(println "foo")}
-     "Edit"]]
+    [buttons/button-secondary {:on-click (e! task-controller/->OpenEditTask)}
+     (tr [:buttons :edit])]]
    [:p description]
    [task-status e! status modified]
    [buttons/button-primary {:on-click #(e! (task-controller/->OpenAddDocumentDialog))
@@ -86,7 +88,7 @@
     [task-overview e! task]))
 
 (defn task-page [e! {{:keys [project]} :params
-                     {:keys [add-document] :as query} :query
+                     {:keys [add-document edit] :as query} :query
                      new-document :new-document :as app}
                  {:task/keys [documents description type assignee status modified] :as task}
                  breadcrumbs]
@@ -94,6 +96,20 @@
                  :display :flex
                  :flex-direction :column
                  :flex 1}}
+   [panels/modal {:open-atom (r/wrap (boolean edit) :_)
+                  :title     (if-not edit
+                               ""
+                               (tr [:project edit]))
+                  :on-close  (e! task-controller/->CloseEditDialog)}
+    (case edit
+      "task"
+      [project-view/task-form e!
+       {:close             task-controller/->CloseEditDialog
+        :task              (:edit-form app)
+        :initialization-fn (e! task-controller/->MoveDataForEdit)
+        :save              task-controller/->PostTaskEditForm
+        :on-change         task-controller/->UpdateEditTaskForm}]
+      [:span])]
    [panels/modal {:open-atom (r/wrap (boolean add-document) :_)
                   :title (tr [:task :add-document])
                   :on-close (e! task-controller/->CloseAddDocumentDialog)}
