@@ -7,11 +7,12 @@
             [clojure.string :as str]
             [teet.log :as log]
             [teet.thk.thk-import :as thk-import]
-            [teet.util.datomic :as du]
+            [teet.thk.thk-export :as thk-export]
             [teet.environment :as environment]
             [datomic.client.api :as d]
             [org.httpkit.client :as client]
-            [teet.login.login-api-token :as login-api-token]))
+            [teet.login.login-api-token :as login-api-token]
+            [clojure.data.csv :as csv]))
 
 (def test-event
   {:input "{\"Records\":[{\"s3\":{\"bucket\":{\"name\":\"teet-dev-csv-import\"},\"object\":{\"key\":\"thk/unprocessed/not_hep.csv\"}}}]}"})
@@ -67,9 +68,24 @@
        :input-stream
        (assoc ctx :file)))
 
+(defn- write-file-to-s3 [{{:keys [bucket file-key file]} :s3 :as ctx}]
+  (let [response
+        (s3/put-object :bucket-name bucket
+                       :key file-key
+                       :file file)]
+    (if-not (contains? response :content-md5)
+      (throw (ex-info "Expected S3 write response to contain :content-md5"
+                      {:s3-response response}))
+      (assoc ctx file-key response))))
+
 (defn- file->csv [{:keys [file] :as ctx}]
   (assoc ctx :csv
          (thk-import/parse-thk-export-csv file)))
+
+(defn- csv->file [{csv :csv :as ctx}]
+  (with-open [writer (java.io.StringWriter.)]
+    (csv/write-csv writer csv :separator \;)
+    (assoc ctx :file (str writer))))
 
 (defn- upsert-projects [{:keys [bucket file-key csv connection] :as ctx}]
   (let [import-tx-result (thk-import/import-thk-projects! connection
@@ -144,7 +160,7 @@
       (assoc ctx
              :entity-info-updated? true))))
 
-(defn- on-error [{:keys [error] :as ctx}]
+(defn- on-import-error [{:keys [error] :as ctx}]
   ;; TODO: Metrics?
   (log/error error)
   (move-file-to-error ctx)
@@ -168,19 +184,32 @@
       (log/event :thk-file-processed
                  {:input result}))
     (catch Exception e
-      (on-error (ex-data e)))))
+      (on-import-error (ex-data e)))))
 
 (defn import-thk-local-file
   [filepath]
   (try
-    (let [result (ctx-> {:file (io/input-stream (io/file filepath))
-                         :connection (environment/datomic-connection)
-                         :api-url (environment/config-value :api-url)
-                         :api-shared-secret (environment/config-value :auth :jwt-secret)}
-                        file->csv
-                        upsert-projects
-                        update-entity-info)]
-      result)
+    (ctx-> {:file (io/input-stream (io/file filepath))
+            :connection (environment/datomic-connection)
+            :api-url (environment/config-value :api-url)
+            :api-shared-secret (environment/config-value :auth :jwt-secret)}
+           file->csv
+           upsert-projects
+           update-entity-info)
     (catch Exception e
       (println "Got exception in import:" (type e))
       (ex-data e))))
+
+(defn export-projects [{conn :connection :as ctx}]
+  (assoc ctx :csv (thk-export/export-thk-projects conn)))
+
+(defn export-projects-to-thk
+  [_event] ; ignore event (cron lambda trigger with no payload)
+  (try
+    (ctx-> {:connection (environment/datomic-connection)}
+           export-projects
+           csv->file
+           )
+    (catch Exception e
+      (log/error e "Error exporting projects CSV to S3"))
+    ))
