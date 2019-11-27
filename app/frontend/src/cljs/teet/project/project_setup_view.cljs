@@ -23,6 +23,13 @@
      :disabled disabled?}
     "Next"]])
 
+(defn original-name-adornment [e! {:thk.project/keys [name] :as project}]
+  [:div {:style {:padding-top "6px"
+                 :display :flex}}
+   [typography/Text {:display :inline} "Road name:"]
+   [buttons/link-button {:on-click #(e! (project-controller/->UpdateBasicInformationForm {:thk.project/project-name name}))}
+    name]])
+
 (defn project-setup-basic-information-form
   [e! project]
   (e! (project-controller/->UpdateBasicInformationForm
@@ -38,8 +45,7 @@
                   :footer initialization-form-footer}
 
        ^{:attribute :thk.project/project-name
-         :adornment [:div {:style {:padding-top "6px"}}
-                     "Road name: " [:a {:href "foo"}"Tallinn - Pärnu - Ikla"]]}
+         :adornment [original-name-adornment e! project]}
        [TextField {:full-width true :variant :outlined}]
 
        ;; ^{:xs 6 :attribute :thk.project/km-range}
