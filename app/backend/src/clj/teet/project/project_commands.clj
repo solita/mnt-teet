@@ -32,3 +32,9 @@
                        (when-not (str/blank? project-name)
                          {:thk.project/project-name project-name}))]}))
   :ok)
+
+(defmethod db-api/command! :task/delete!
+  [{conn :conn}
+   {task-id :db/id}]
+  (println "task-delete: " task-id)
+  :ok)
