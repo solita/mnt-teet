@@ -78,6 +78,14 @@
   (log/info "project-name-hover called")
   [:div project-name])
 
+
+(defn- road-overlay [project]
+  (log/info "road-overlay component called")
+  [itemlist/ItemList {}
+   [itemlist/Item {:label "Start meters"} (:thk-project/start-m project)]
+   [itemlist/Item {:label "End meters"} (:thk-project/end-m project)]])
+
+
 (defn project-data
   [{:thk.project/keys [estimated-start-date estimated-end-date road-nr start-m end-m
                        carriageway procurement-nr lifecycles] :as project}]
@@ -207,6 +215,9 @@
    (log/info "project-map called - making a map-view comonent and passing in km-labeled-line-style as style:" (some? map-features/km-labeled-line-style))
    [map-view/map-view e!
     {:class  (<class map-style)
+     :overlays [(when-let [road-nr (:thk.project/road-nr project)]
+                  {; :coordinate (js->clj (aget road-address "point" "coordinates"))
+                   :content [road-overlay project]})]
      :layers (merge {:thk-project
                      (map-layers/geojson-layer endpoint
                                                "geojson_entities"

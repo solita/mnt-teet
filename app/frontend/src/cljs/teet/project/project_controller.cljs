@@ -52,14 +52,27 @@
   SaveBasicInformation
   (process-event [_ app]
     (let [{:thk.project/keys [id name]} (get-in app [:route :project])
-          {:thk.project/keys [project-name owner]} (get-in app [:route :project :basic-information-form])]
-      (t/fx app {:tuck.effect/type :command!
-                 :command          :thk.project/initialize!
-                 :payload          (merge {:thk.project/id    id
-                                           :thk.project/owner owner}
-                                          (when (not= name project-name)
-                                            {:thk.project/project-name project-name}))
-                 :result-event     ->SaveBasicInformationResponse})))
+          {:thk.project/keys [project-name owner road-nr start-m end-m]} (get-in app [:route :project :basic-information-form])]
+      (log/info "starting json_road_geometry query from SaveBasicInformation event")
+      (t/fx app
+            ; we can't easily get the geometry as the the map component is loading it, so do a little duplicate work here
+            {:tuck.effect/type :rpc
+             :endpoint (get-in app [:config :api-url])
+             :rpc "geojson_road_geometry"
+             :json? true
+             :args {:road road-nr
+                    :carriageway 0
+                    :start_m start-m
+                    :end_m end-m}
+             :result-path [:road-data :road]}          
+            {:tuck.effect/type :command!
+             :command          :thk.project/initialize!
+             :payload          (merge {:thk.project/id    id
+                                       :thk.project/owner owner}
+                                      (when (not= name project-name)
+                                        {:thk.project/project-name project-name}))
+             :result-event     ->SaveBasicInformationResponse})))
+
   SaveBasicInformationResponse
   (process-event [_ {:keys [page params query] :as app}]
     (t/fx app
