@@ -14,6 +14,9 @@
 (defrecord CreateTask [])
 (defrecord CreateTaskResult [result])
 
+(defrecord DeleteTask [])
+(defrecord DeleteTaskResult [response])
+
 (defrecord OpenEditTask [])
 (defrecord CloseEditDialog [])
 (defrecord UpdateEditTaskForm [form-data])
@@ -54,6 +57,21 @@
            :page             page
            :params           params
            :query            (assoc query :edit :task)}))
+
+  DeleteTask
+  (process-event [_ {:keys [params] :as app}]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :task/delete!
+           :payload {:db/id (goog.math.Long/fromString (:task params))}
+           :result-event ->DeleteTaskResult}))
+
+  DeleteTaskResult
+  (process-event [_response {:keys [page params query] :as app}]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page :project
+           :params {:project (:project params)}}))
 
   OpenAddDocumentDialog
   (process-event [_ app]
