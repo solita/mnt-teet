@@ -17,7 +17,8 @@
             [teet.project.project-controller :as project-controller]
             [teet.common.common-styles :as common-styles]
             [teet.ui.format :as format]
-            [teet.ui.table :as table]))
+            [teet.ui.table :as table]
+            [teet.common.common-controller :as common-controller]))
 
 (defmethod search-interface/format-search-result "project" [{:keys [id label]}]
   {:icon [icons/file-folder-open]
@@ -47,8 +48,8 @@
     ;; Default: stringify
     (str value)))
 
-(defn projects-listing [e! all-projects]
-  (r/with-let [unassigned-only? (r/atom false)]
+(defn projects-listing [e! app all-projects]
+  (let [unassigned-only? (common-controller/query-param-boolean-atom app :unassigned)]
     [:<>
 
      [table/table {:after-title [:div {:style {:margin-left "2rem" :display :inline-block}}
@@ -125,4 +126,4 @@
 
 (defn projects-list-page [e! app projects _breadcrumbs]
   [:div {:style {:padding "1.5rem"}}
-   [projects-listing e! projects]])
+   [projects-listing e! app projects]])
