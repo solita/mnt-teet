@@ -10,7 +10,7 @@
 
 (defn- storage-bucket []
   ;; FIXME: get from environment
-  "teet-dev-documents")
+  "teet-test-documents")
 
 (defn- presigned-url [method file-name]
   (str (s3/generate-presigned-url
