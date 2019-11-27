@@ -115,7 +115,6 @@
                                     (.preventDefault e)
                                     (e! (road-visualization-controller/map->FetchRoadGeometry query)))}
                 [TextField {:label "Carriageway"
-                            :style {:margin-bottom "1rem"}
                             :variant :outlined
                             :name "carriageway"
                             :on-change #(e! (road-visualization-controller/->QueryFieldChange %))

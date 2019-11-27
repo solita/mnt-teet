@@ -254,6 +254,7 @@
   [container/collapsible-container {:open?     open?
                                     :on-toggle (e! project-controller/->ToggleCadastralHightlight id)}
    (str lahiaadress " " tunnus " " omandivorm " " pindala)
+   ;; FIXME: labels into localizations
    [itemlist/ItemList {:class (<class project-style/restriction-list-style)}
     [itemlist/Item {:label "Maakonna nimi"} maakonna_nimi]
     [itemlist/Item {:label "Omavalitsuse nimi"} omavalitsuse_nimi]

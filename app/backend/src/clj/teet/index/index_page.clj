@@ -25,10 +25,6 @@
       ;; Custom font
       [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css?family=Roboto+Condensed&display=swap"}]
 
-      ;; Style elements for stylefy
-      [:style {:id "_stylefy-constant-styles_"}]
-      [:style {:id "_stylefy-styles_"}]
-
       [:script {:type "text/javascript"}
        "new Promise((resolve, reject) => {
         window.resolveOnload = resolve;

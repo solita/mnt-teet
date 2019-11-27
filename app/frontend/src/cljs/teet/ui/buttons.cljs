@@ -4,7 +4,7 @@
             [teet.ui.util :as util]
             [teet.theme.theme-colors :as theme-colors]))
 
-(defn white-button-class
+(defn white-button-style
   []
   ^{:pseudo {:hover {:background-color theme-colors/gray-lightest}
              :focus theme-colors/focus-style}}
@@ -20,6 +20,12 @@
    :margin-bottom "1rem"
    :color theme-colors/primary})
 
+(defn warn-button-style
+  []
+  ^{:pseudo {:hover {:background-color theme-colors/orange-light}
+             :focus theme-colors/focus-style}}
+  {:background-color theme-colors/warning})
+
 
 (def button-primary
   (util/make-component Button {:variant :contained
@@ -31,9 +37,15 @@
                                :disable-ripple true
                                :color :secondary}))
 
+(def button-warning
+  (util/make-component Button {:variant :contained
+                               :disable-ripple true
+                               :class (<class warn-button-style)}))
+
+
 (defn white-button-with-icon
   [{:keys [on-click icon]} text]
   [ButtonBase {:on-click on-click
-               :class (<class white-button-class)}
+               :class (<class white-button-style)}
    text
    [icon]])

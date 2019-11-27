@@ -8,7 +8,7 @@
             [teet.ui.container :as container]
             [teet.ui.form :as form]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Checkbox FormControlLabel]]
+            [teet.ui.material-ui :refer [Grid]]
             [teet.ui.select :as select]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.typography :as typography]))
@@ -37,17 +37,22 @@
                   :class (<class project-style/wizard-form)
                   :footer initialization-form-footer}
 
-       ^{:attribute :thk.project/project-name}
+       ^{:attribute :thk.project/project-name
+         :adornment [:div {:style {:padding-top "6px"}}
+                     "Road name: " [:a {:href "foo"}"Tallinn - Pärnu - Ikla"]]}
        [TextField {:full-width true :variant :outlined}]
+
+       ;; ^{:xs 6 :attribute :thk.project/km-range}
+       ;; [TextField {}]
+
+       ;; ^{:xs 6 :attribute :thk.project/km-range}
+       ;; [TextField {}]
 
        ^{:attribute :thk.project/owner}
        [select/select-user {:e! e!}]
 
        ^{:attribute :thk.project/manager}
        [select/select-user {:e! e!}]]]]))
-
-(defn- restrictions-check-group [restrictions checked-restrictions toggle-restriction]
-  )
 
 (defn restrictions-listing
   [e! {:keys [restrictions checked-restrictions toggle-restriction]}]

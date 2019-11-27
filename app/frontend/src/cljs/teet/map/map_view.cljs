@@ -87,6 +87,14 @@
                   {:color :primary}))
           [icons/maps-layers]]]])}))
 
+(defn map-container-style
+  []
+  {:display        :flex
+   :flex-direction :column
+   :flex           1
+   :position       :relative
+   :overflow       :hidden})
+
 (defn map-view [e! {:keys [height class layer-controls?] :or {height "100%"} :as opts}
                 {:keys [map-restrictions map-controls] :as map-data}]
   (r/with-let [current-tool (volatile! (get-in map-data [:tool]))
@@ -98,10 +106,7 @@
     (vreset! on-zoom (get-in map-data [:on-zoom]))
 
     (let [{:keys [extent]} map-data]
-      [:div {:style {:display :flex
-                     :flex-direction :column
-                     :flex 1
-                     :position :relative}}
+      [:div {:class (<class map-container-style)}
        (when layer-controls?
          [map-layer-controls e! map-restrictions map-controls])
        [openlayers/openlayers

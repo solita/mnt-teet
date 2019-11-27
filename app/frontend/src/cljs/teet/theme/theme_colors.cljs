@@ -20,7 +20,7 @@
 (def white "#FFFFFF")
 
 ;; Accent colors
-(def orange-light "#FF8000")
+(def orange-light "#FF6000")
 (def green "#008936")
 (def red "#D73E3E")
 

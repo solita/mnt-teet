@@ -59,8 +59,11 @@
    [:div {:style {:justify-content :space-between
                   :display :flex}}
     [Heading1 (tr [:task :task-overview])]
-    [buttons/button-secondary {:on-click (e! task-controller/->OpenEditTask)}
-     (tr [:buttons :edit])]]
+    [:div {:style {:display :flex}}
+     [buttons/button-secondary {:on-click (e! task-controller/->OpenEditTask)}
+      (tr [:buttons :edit])]
+     #_[buttons/button-warning {:on-click (e! task-controller/->DeleteTask)}
+      "Delete"]]]
    [:p description]
    [task-status e! status modified]
    [buttons/button-primary {:on-click #(e! (task-controller/->OpenAddDocumentDialog))
@@ -87,6 +90,23 @@
     :else
     [task-overview e! task]))
 
+(defn task-page-modal
+  [e! app {:keys [edit] :as query}]
+  [panels/modal {:open-atom (r/wrap (boolean edit) :_)
+                 :title     (if-not edit
+                              ""
+                              (tr [:project edit]))
+                 :on-close  (e! task-controller/->CloseEditDialog)}
+   (case edit
+     "task"
+     [project-view/task-form e!
+      {:close             task-controller/->CloseEditDialog
+       :task              (:edit-form app)
+       :initialization-fn (e! task-controller/->MoveDataForEdit)
+       :save              task-controller/->PostTaskEditForm
+       :on-change         task-controller/->UpdateEditTaskForm}]
+     [:span])])
+
 (defn task-page [e! {{:keys [project]} :params
                      {:keys [add-document edit] :as query} :query
                      new-document :new-document :as app}
@@ -96,20 +116,7 @@
                  :display :flex
                  :flex-direction :column
                  :flex 1}}
-   [panels/modal {:open-atom (r/wrap (boolean edit) :_)
-                  :title     (if-not edit
-                               ""
-                               (tr [:project edit]))
-                  :on-close  (e! task-controller/->CloseEditDialog)}
-    (case edit
-      "task"
-      [project-view/task-form e!
-       {:close             task-controller/->CloseEditDialog
-        :task              (:edit-form app)
-        :initialization-fn (e! task-controller/->MoveDataForEdit)
-        :save              task-controller/->PostTaskEditForm
-        :on-change         task-controller/->UpdateEditTaskForm}]
-      [:span])]
+   [task-page-modal e! app query]
    [panels/modal {:open-atom (r/wrap (boolean add-document) :_)
                   :title (tr [:task :add-document])
                   :on-close (e! task-controller/->CloseAddDocumentDialog)}
