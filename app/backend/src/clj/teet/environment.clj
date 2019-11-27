@@ -58,7 +58,9 @@
                             (assoc-in [:auth :basic-auth-password] bap)
                             (assoc :base-url (ssm-param :base-url))
                             (assoc :api-url (ssm-param :api :url))
-                            (assoc-in [:document-storage :bucket-name] (ssm-param :s3 :document-bucket)))]
+                            (assoc-in [:document-storage :bucket-name] (ssm-param :s3 :document-bucket))
+                            (assoc-in [:thk :export-bucket-name] (ssm-param :thk :teet-to-thk :bucket-name))
+                            (assoc-in [:thk :export-dir] (ssm-param :thk :teet-to-thk :unprocesseddir)))]
              config))))
 
 (defn load-local-config!

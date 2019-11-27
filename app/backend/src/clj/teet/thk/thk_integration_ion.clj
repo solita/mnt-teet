@@ -72,7 +72,7 @@
   (let [response
         (s3/put-object :bucket-name bucket
                        :key file-key
-                       :file file)]
+                       :input-stream (io/input-stream file))]
     (if-not (contains? response :content-md5)
       (throw (ex-info "Expected S3 write response to contain :content-md5"
                       {:s3-response response}))
@@ -83,9 +83,15 @@
          (thk-import/parse-thk-export-csv file)))
 
 (defn- csv->file [{csv :csv :as ctx}]
-  (with-open [writer (java.io.StringWriter.)]
+  (with-open [baos (java.io.ByteArrayOutputStream.)
+              writer (java.io.OutputStreamWriter. baos "UTF-8")]
+    ;; Write UTF-8 byte order mark
+    (.write baos (int 0xEF))
+    (.write baos (int 0xBB))
+    (.write baos (int 0xBF))
     (csv/write-csv writer csv :separator \;)
-    (assoc ctx :file (str writer))))
+    (.flush writer)
+    (assoc ctx :file (.toByteArray baos))))
 
 (defn- upsert-projects [{:keys [bucket file-key csv connection] :as ctx}]
   (let [import-tx-result (thk-import/import-thk-projects! connection
@@ -206,10 +212,14 @@
 (defn export-projects-to-thk
   [_event] ; ignore event (cron lambda trigger with no payload)
   (try
-    (ctx-> {:connection (environment/datomic-connection)}
+    (ctx-> {:connection (environment/datomic-connection)
+            :bucket (environment/config-value :thk :export-bucket-name)
+            :file-key (str (environment/config-value :thk :export-dir)
+                           "/projects-"
+                           (.format (java.text.SimpleDateFormat. "yyyy-MM-dd") (java.util.Date.))
+                           ".csv")}
            export-projects
            csv->file
-           )
+           write-file-to-s3)
     (catch Exception e
-      (log/error e "Error exporting projects CSV to S3"))
-    ))
+      (log/error e "Error exporting projects CSV to S3"))))
