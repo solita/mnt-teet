@@ -6,9 +6,11 @@
             [teet.log :as log]
             [teet.localization :refer [tr]]
             [teet.map.map-controller :as map-controller]
+            [teet.ui.container :as container]
             [teet.ui.material-ui :refer [Fab Button Switch Checkbox FormControlLabel Collapse ClickAwayListener Fade IconButton]]
             [teet.ui.typography :as typography]
             [teet.ui.icons :as icons]
+            [teet.ui.itemlist :as itemlist]
             [teet.common.common-controller :as common-controller]
             [teet.map.map-styles :as map-styles]))
 
@@ -21,48 +23,32 @@
 (def default-center [516493.16 6513417.97])
 
 (defn category-layers-control
-  [e! [category layers] _map-controls]
+  [e! [category _layers] _map-controls]
   (let [toggle-collapse (fn [_]
                           (e! (map-controller/->ToggleCategoryCollapse category)))]
     (fn [e! [category layers] map-controls]
-      (let [closing? (map-controller/atleast-one-open? layers)]
-        [:div {:class (<class map-styles/category-container)}
-         [:div {:class (<class map-styles/category-control)}
-          [IconButton {:size :small
-                       :color :primary
-                       :on-click toggle-collapse
-                       :class (<class map-styles/category-collapse-button)}
-           (if (get-in map-controls [category :collapsed?])
-             [icons/hardware-keyboard-arrow-up]
-             [icons/hardware-keyboard-arrow-down])]
-          [:h3 {:style {:margin 0
-                        :flex 1}}
-           (if (empty? category)
-             "No category name in data"
-             category)]
-          [Button
-           {:variant :text
-            :on-click #(e! (map-controller/->ToggleCategorySelect category true))}
-           (if closing?
-             (tr [:map :clear-selections])
-             (tr [:map :select-all]))]]
-         [Collapse {:in (get-in map-controls [category :collapsed?])}
-          [:div {:class (<class map-styles/category-selections)}
-           (doall
-             (for [[layer open?] layers]
-               ^{:key layer}
-               [:div {:style {:margin-left "1rem"}}
-                [FormControlLabel
-                 {:label (r/as-component [:span
-                                          {:class (<class map-styles/checkbox-label open?)}
-                                          layer])
-                  :control (r/as-component [Checkbox {:checked open?
-                                                      :value layer
-                                                      :class (<class map-styles/layer-checkbox)
-                                                      :color :primary
-                                                      :on-change (fn [e]
-                                                                   (.stopPropagation e)
-                                                                   (e! (map-controller/->LayerToggle category layer)))}])}]]))]]]))))
+      (let [closing? (map-controller/atleast-one-open? layers)
+            on-toggle toggle-collapse
+            open? (get-in map-controls [category :collapsed?])
+            side-component [Button
+                            {:variant :text
+                             :on-click #(e! (map-controller/->ToggleCategorySelect category true))}
+                            (if closing?
+                              (tr [:map :clear-selections])
+                              (tr [:map :select-all]))]]
+        [container/collapsible-container {:on-toggle on-toggle
+                                          :open? open?
+                                          :side-component side-component}
+         (if (empty? category)
+           "No category name in data"
+           category)
+         [itemlist/checkbox-list
+          (for [[layer open?] layers]
+            {:checked? open?
+             :value layer
+             :on-change (fn [e]
+                          (.stopPropagation e)
+                          (e! (map-controller/->LayerToggle category layer)))})]]))))
 
 (defn map-layer-controls
   [e! _map-layers {:keys [_open?] :as _map-controls}]

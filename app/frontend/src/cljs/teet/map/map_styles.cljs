@@ -59,13 +59,3 @@
    :left "10px"
    :padding "0.5rem"
    :background-color "wheat"})
-
-(defn layer-checkbox
-  []
-  {:margin-right "0.5rem"})
-
-(defn checkbox-label
-  [selected?]
-  {:font-weight (if selected?
-                  "bold !important"
-                  "normal")})

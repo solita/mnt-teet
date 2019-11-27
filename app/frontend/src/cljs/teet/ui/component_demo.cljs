@@ -7,6 +7,7 @@
             [teet.ui.skeleton :as skeleton]
             [teet.ui.buttons :as buttons]
             [teet.ui.common :as ui-common]
+            [teet.ui.container :as container]
             [teet.ui.itemlist :as itemlist]
             [teet.ui.select :as select]
             [teet.ui.typography :refer [DataLabel Heading1 Heading2 Heading3 Paragraph SectionHeading Text]]
@@ -89,6 +90,25 @@
                     :variant :filled}]]
        [Divider]])))
 
+(defn- on-toggle [a value]
+  (swap! a #(if (% value)
+              (disj % value)
+              (conj % value))))
+
+(defn container-demo []
+  (r/with-let [container-open? (r/atom false)
+               checkbox-items (r/atom #{})]
+    [container/collapsible-container {:on-toggle #(swap! container-open?
+                                                         (fn [x] (not x)))
+                                      :open? @container-open?}
+     "Collapsible container"
+     [itemlist/checkbox-list
+      [{:checked? (@checkbox-items "One")
+        :value "One"
+        :on-toggle (on-toggle checkbox-items "One")}
+       {:checked? (@checkbox-items "Two")
+        :value "Two"
+        :on-toggle (on-toggle checkbox-items "One")}]]]))
 
 (defn demo
   [e! _app]
@@ -238,4 +258,6 @@
     [Divider]
 
     [:div
-     [ui-common/labeled-data {:label "Label" :data "Some textual data"}]]]])
+     [ui-common/labeled-data {:label "Label" :data "Some textual data"}]]
+
+    [container-demo]]])

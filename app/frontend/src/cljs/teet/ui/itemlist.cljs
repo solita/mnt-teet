@@ -1,6 +1,8 @@
 (ns teet.ui.itemlist
-  (:require [teet.ui.material-ui :refer [List ListItem ListItemIcon
-                                         ListItemSecondaryAction Divider Link]]
+  (:require [reagent.core :as r]
+            [teet.ui.material-ui :refer [List ListItem ListItemIcon
+                                         ListItemSecondaryAction Divider Link
+                                         FormControlLabel Checkbox]]
             [teet.ui.icons :as icons]
             [teet.ui.progress :as progress]
             [teet.ui.typography :refer [Heading2 Heading3 SectionHeading DataLabel]]
@@ -86,3 +88,23 @@
   [:div
    [:b (str label ": ")]
    value])
+
+(defn checkbox-item [{:keys [checked? value on-change]}]
+  [:div {:style {:margin-left "1rem"}}
+   [FormControlLabel
+    {:label (r/as-component [:span
+                             {:class (<class itemlist-theme/checkbox-label checked?)}
+                             value])
+     :control (r/as-component [Checkbox {:checked checked?
+                                         :value value
+                                         :class (<class itemlist-theme/layer-checkbox)
+                                         :color :primary
+                                         :on-change on-change}])}]])
+
+(defn checkbox-list
+  [items]
+  [:div {:class (<class itemlist-theme/checkbox-list-contents)}
+   (doall
+    (for [item items]
+      ^{:key (:value item)}
+      [checkbox-item item]))])
