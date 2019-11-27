@@ -7,8 +7,8 @@
             [amazonica.aws.simplesystemsmanagement :as ssm]))
 
 (defn- ssm-param
-  [env & param-path]
-  (->> (str "/teet-" (name env) "/" (str/join "/" (map name param-path)))
+  [_env & param-path]
+  (->> (str "/teet" "/" (str/join "/" (map name param-path)))
        (ssm/get-parameter :name)
        :parameter :value))
 
