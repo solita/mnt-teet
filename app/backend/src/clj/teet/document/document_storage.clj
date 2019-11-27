@@ -1,6 +1,7 @@
 (ns teet.document.document-storage
   "Access to S3 bucket for storing files. Access must be checked in previous layers."
-  (:require [amazonica.aws.s3 :as s3])
+  (:require [amazonica.aws.s3 :as s3]
+            [teet.environment :as environment])
   (:import (java.util Date)))
 
 (def ^:const url-expiration-ms 300000)
@@ -9,8 +10,7 @@
   (Date. (+ (System/currentTimeMillis) url-expiration-ms)))
 
 (defn- storage-bucket []
-  ;; FIXME: get from environment
-  "teet-dev-documents")
+  (environment/config-value :document-storage :document-bucket))
 
 (defn- presigned-url [method file-name]
   (str (s3/generate-presigned-url

@@ -8,8 +8,8 @@
   (:import (com.amazonaws.services.simplesystemsmanagement.model ParameterNotFoundException)))
 
 (defn- ssm-param
-  [env & param-path]
-  (->> (str "/teet-" (name env) "/" (str/join "/" (map name param-path)))
+  [& param-path]
+  (->> (str "/teet/" (str/join "/" (map name param-path)))
        (ssm/get-parameter :name)
        :parameter :value))
 
@@ -29,14 +29,14 @@
        (map keyword)
        set))
 
-(defn enabled-features-config [env]
-  (try (parse-enabled-features (ssm-param env :enabled-features))
+(defn enabled-features-config []
+  (try (parse-enabled-features (ssm-param :enabled-features))
        (catch ParameterNotFoundException _e
          (log/warn "SSM parameter enabled-features not found, treating all as disabled")
          #{})))
 
-(defn tara-config [env]
-  (let [p (partial ssm-param env :auth :tara)]
+(defn tara-config []
+  (let [p (partial ssm-param :auth :tara)]
     {:endpoint-url (p :endpoint)
      :base-url (p :baseurl)
      :client-id (p :clientid)
@@ -46,19 +46,19 @@
   (swap! config
          (fn [base-config]
            (let [config (merge base-config ion-config)
-                 env (:env config)
                  config (assoc-in config [:auth :jwt-secret]
-                                  (ssm-param env :api :jwt-secret))
-                 bap (ssm-param env :api :basic-auth-password)
-                 tara (tara-config env)
-                 ;; enabled-features (enabled-features-config env)
+                                  (ssm-param :api :jwt-secret))
+                 bap (ssm-param :api :basic-auth-password)
+                 tara (tara-config)
+                 ;; enabled-features (enabled-features-config)
                  config (-> config
                             (assoc :tara tara)
                             (assoc :session-cookie-key
-                                   (ssm-param env :auth :session-key))
+                                   (ssm-param :auth :session-key))
                             (assoc-in [:auth :basic-auth-password] bap)
-                            (assoc :base-url (ssm-param env :base-url))
-                            (assoc :api-url (ssm-param env :api :url)))]
+                            (assoc :base-url (ssm-param :base-url))
+                            (assoc :api-url (ssm-param :api :url))
+                            (assoc-in [:document-storage :bucket-name] (ssm-param :s3 :document-bucket)))]
              config))))
 
 (defn load-local-config!
