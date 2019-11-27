@@ -1,8 +1,7 @@
 (ns teet.project.project-queries
   (:require [teet.db-api.core :as db-api]
             [teet.project.project-model :as project-model]
-            [datomic.client.api :as d]
-            [teet.project.project-model :as project-model]))
+            [datomic.client.api :as d]))
 
 (defmethod db-api/query :thk.project/db-id->thk-id [{db :db} {id :db/id}]
   (-> db
