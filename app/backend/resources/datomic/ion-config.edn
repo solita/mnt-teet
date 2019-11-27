@@ -14,3 +14,4 @@
             :integration :api-gateway/proxy
             :doc "TARA login handler"}}
  :app-name "teet-datomic-live-test"}
+
