@@ -18,13 +18,17 @@
   ;;(log/info "LOAD " url-or-data ", extent:" extent ", resolution: " resolution ", projection: " projection)
   (let [add-features! (fn [json]
                         ;;(js/console.log "loaded geojson: " json)
-                        (let [features (-> source
-                                           .getFormat
-                                           (.readFeatures json #js {"dataProjection" "EPSG:3301"}))]
-                          (doto source
-                            (.addFeatures features)
-                            .refresh)))]
-    (-> (cond
+                        (let [features (try (-> source
+                                                .getFormat
+                                                (.readFeatures json #js {"dataProjection" "EPSG:3301"}))
+                                            (catch js/Error e
+                                              (log/error "add-features: readFeaures failed for json:" (pr-str json))
+                                              (log/error e "exception:")))]
+                          (when features
+                            (doto source
+                              (.addFeatures features)
+                              .refresh))))]
+    (-> (cond         
           (object? url-or-data)
           (add-features! url-or-data)
 
