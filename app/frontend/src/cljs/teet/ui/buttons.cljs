@@ -1,6 +1,6 @@
 (ns teet.ui.buttons
   (:require [herb.core :refer [<class]]
-            [teet.ui.material-ui :refer [Button ButtonBase]]
+            [teet.ui.material-ui :refer [Button ButtonBase Link]]
             [teet.ui.util :as util]
             [teet.theme.theme-colors :as theme-colors]))
 
@@ -49,3 +49,7 @@
                :class (<class white-button-style)}
    text
    [icon]])
+
+(def link-button
+  (util/make-component Link {:component :button
+                             :type :button}))
