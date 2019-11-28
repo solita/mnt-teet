@@ -54,11 +54,14 @@
   SaveBasicInformation
   (process-event [_ app]
     (let [{:thk.project/keys [id name]} (get-in app [:route :project])
-          {:thk.project/keys [project-name owner]} (get-in app [:route :project :basic-information-form])]
+          {:thk.project/keys [project-name owner km-range]} (get-in app [:route :project :basic-information-form])
+          [start-km end-km] km-range]
       (t/fx app {:tuck.effect/type :command!
                  :command          :thk.project/initialize!
                  :payload          (merge {:thk.project/id    id
-                                           :thk.project/owner owner}
+                                           :thk.project/owner owner
+                                           :thk.project/start-m (long (* 1000 start-km))
+                                           :thk.project/end-m (long (* 1000 end-km))}
                                           (when (not= name project-name)
                                             {:thk.project/project-name project-name}))
                  :result-event     ->SaveBasicInformationResponse})))

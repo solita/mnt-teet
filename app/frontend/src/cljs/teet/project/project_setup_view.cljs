@@ -66,7 +66,9 @@
 (defn project-setup-basic-information-form
   [e! project]
   (e! (project-controller/->UpdateBasicInformationForm
-       {:thk.project/project-name (:thk.project/name project)}))
+       {:thk.project/project-name (:thk.project/name project)
+        :thk.project/km-range [(str (/ (:thk.project/start-m project) 1000.0))
+                               (str (/ (:thk.project/end-m project) 1000.0))]}))
   (fn [e! project]
     [:<>
      [:div {:class (<class project-style/initialization-form-wrapper)}
