@@ -80,7 +80,6 @@
         :thk.project/km-range [(gstring/format "%.3f" (/ (:thk.project/start-m project) 1000.0))
                                (gstring/format "%.3f" (/ (:thk.project/end-m project) 1000.0))]}))
   (fn [e! project]
-    (println project)
     [:<>
      [:div {:class (<class project-style/initialization-form-wrapper)}
       [form/form {:e!              e!
