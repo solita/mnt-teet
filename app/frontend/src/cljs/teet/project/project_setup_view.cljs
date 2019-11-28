@@ -30,6 +30,39 @@
    [buttons/link-button {:on-click #(e! (project-controller/->UpdateBasicInformationForm {:thk.project/project-name name}))}
     name]])
 
+(defn- nan? [x]
+  (not (= x x)))
+
+(defn- num-range-error [error [start end] own-value]
+  (or error
+      (and own-value (nan? (js/parseFloat own-value)))
+      (and start end
+           (< (js/parseFloat end)
+              (js/parseFloat start)))))
+
+;; FIXME: This is a generic component, move to another namespace
+(defn num-range [{:keys [error value on-change start-label end-label required spacing]
+                 :or {spacing 3}}]
+  (let [[start end] value]
+    [Grid {:container true
+           :spacing spacing}
+     [Grid {:item true
+            :xs 6}
+      [TextField {:label start-label
+                  :on-change (fn [e]
+                               (on-change [(-> e .-target .-value) end]))
+                  :value start
+                  :error (num-range-error error value start)
+                  :required required}]]
+     [Grid {:item true
+            :xs 6}
+      [TextField {:label end-label
+                  :on-change (fn [e]
+                               (on-change [start (-> e .-target .-value)]))
+                  :value end
+                  :error (num-range-error error value end)
+                  :required required}]]]))
+
 (defn project-setup-basic-information-form
   [e! project]
   (e! (project-controller/->UpdateBasicInformationForm
@@ -48,11 +81,9 @@
          :adornment [original-name-adornment e! project]}
        [TextField {:full-width true :variant :outlined}]
 
-       ;; ^{:xs 6 :attribute :thk.project/km-range}
-       ;; [TextField {}]
-
-       ;; ^{:xs 6 :attribute :thk.project/km-range}
-       ;; [TextField {}]
+       ^{:xs 12 :attribute :thk.project/km-range}
+       [num-range {:start-label "Start km"
+                   :end-label "End km"}]
 
        ^{:attribute :thk.project/owner}
        [select/select-user {:e! e!}]

@@ -133,29 +133,31 @@
             :style {:flex 1
                     :display :flex
                     :flex-direction :column
-                    :justify-content :space-between}}
-     [:div {:class  class}
+                    :justify-content :space-between
+                    :overflow :hidden}}
+     [:div {:class class}
       [Grid {:container true
-             :spacing   spacing}
+             :spacing spacing}
        (util/with-keys
          (map (fn [field]
                 (assert (vector? field) "Field must be a hiccup vector")
                 (assert (map? (second field)) "First argument to field must be an options map")
                 (let [{:keys [xs lg md attribute adornment]} (meta field)
+                      _ (assert (keyword? attribute) "All form fields must have :attribute meta key!")
                       value (get value attribute (default-value (first field)))
-                      opts {:value     value
+                      opts {:value value
                             :on-change (r/partial update-attribute-fn attribute)
-                            :label     (tr [:fields attribute])
-                            :error     (boolean (@invalid-attributes attribute))
-                            :required  (boolean (required-fields attribute))}]
+                            :label (tr [:fields attribute])
+                            :error (boolean (@invalid-attributes attribute))
+                            :required (boolean (required-fields attribute))}]
                   [Grid (merge {:item true :xs (or xs 12)}
                                (when lg
                                  {:lg lg})
                                (when md
                                  {:md md}))
                    (add-validation
-                     (update field 1 merge opts)
-                     validate-attribute-fn attribute value)
+                    (update field 1 merge opts)
+                    validate-attribute-fn attribute value)
                    (when adornment
                      adornment)]))
               fields))]]
