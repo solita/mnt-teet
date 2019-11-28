@@ -60,7 +60,8 @@
                                              :roles roles})
        :user (user-info conn id)
        :roles roles
-       :enabled-features (environment/config-value :enabled-features)})
+       :enabled-features (environment/config-value :enabled-features)
+       :api-url (environment/config-value :api-url)})
     {:error :incorrect-site-password}))
 
 (defmethod db-api/command-authorization :login [_ _]
@@ -114,7 +115,8 @@
                                            :roles roles})
      :user (user-info conn id)
      :roles roles
-     :enabled-features (environment/config-value :enabled-features)}))
+     :enabled-features (environment/config-value :enabled-features)
+     :api-url (environment/config-value :api-url)}))
 
 (defmethod db-api/command-authorization :refresh-token [{user :user} _]
   (when-not (and user

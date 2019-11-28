@@ -8,7 +8,7 @@
             [teet.snackbar.snackbar-controller :as snackbar-controller]))
 
 (defrecord Login [demo-user])
-(defrecord SetSessionInfo [after-login? navigate-data token])
+(defrecord SetSessionInfo [after-login? navigate-data session-info])
 (defrecord SetPassword [pw])
 (defrecord RefreshToken [])
 (defrecord CheckSessionToken [])
@@ -52,9 +52,9 @@
     (t/fx (assoc-in app [:login :password] pw)))
 
   SetSessionInfo
-  (process-event [{:keys [token after-login? navigate-data]} app]
-    (log/info "TOKEN: " token ", after-login? " after-login?)
-    (let [{:keys [token error roles user enabled-features]} token]
+  (process-event [{:keys [session-info after-login? navigate-data]} app]
+    (log/info "TOKEN: " session-info ", after-login? " after-login?)
+    (let [{:keys [token error roles user enabled-features api-url]} session-info]
       (if error
         (do (js/alert (str "Login error: " (str error)))
             app)
@@ -71,6 +71,7 @@
                         effects)]
           (apply t/fx
                  (-> app
+                     (assoc-in [:config :api-url] api-url)
                      (assoc :user (assoc user :roles roles))
                      (assoc :enabled-features enabled-features)
                      (assoc-in login-paths/api-token token)
