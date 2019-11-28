@@ -1,5 +1,7 @@
 (ns teet.project.project-setup-view
-  (:require [herb.core :as herb :refer [<class]]
+  (:require [goog.string :as gstring]
+            [goog.string.format]
+            [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
             [teet.localization :refer [tr tr-tree]]
             [teet.project.project-controller :as project-controller]
@@ -63,13 +65,22 @@
                   :error (num-range-error error value end)
                   :required required}]]]))
 
+(defn km-range-changed? [project]
+  (let [{:thk.project/keys [start-m end-m]} project
+        [start-km end-km] (-> project :basic-information-form :thk.project/km-range)
+        form-start-m (long (* 1000 (js/parseFloat start-km)))
+        form-end-m (long (* 1000 (js/parseFloat end-km)))]
+    (or (not= form-start-m start-m)
+        (not= form-end-m end-m))))
+
 (defn project-setup-basic-information-form
   [e! project]
   (e! (project-controller/->UpdateBasicInformationForm
        {:thk.project/project-name (:thk.project/name project)
-        :thk.project/km-range [(str (/ (:thk.project/start-m project) 1000.0))
-                               (str (/ (:thk.project/end-m project) 1000.0))]}))
+        :thk.project/km-range [(gstring/format "%.3f" (/ (:thk.project/start-m project) 1000.0))
+                               (gstring/format "%.3f" (/ (:thk.project/end-m project) 1000.0))]}))
   (fn [e! project]
+    (println project)
     [:<>
      [:div {:class (<class project-style/initialization-form-wrapper)}
       [form/form {:e!              e!
@@ -86,6 +97,10 @@
        ^{:xs 12 :attribute :thk.project/km-range}
        [num-range {:start-label "Start km"
                    :end-label "End km"}]
+
+       (when (km-range-changed? project)
+         ^{:xs 12 :attribute :thk.project/meter-range-changed-reason}
+         [TextField {}])
 
        ^{:attribute :thk.project/owner}
        [select/select-user {:e! e!}]
