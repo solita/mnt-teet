@@ -35,7 +35,8 @@
             [teet.ui.timeline :as timeline]
             [teet.ui.typography :refer [Heading1 Heading2 Heading3] :as typography]
             [teet.ui.url :as url]
-            [teet.ui.util :as util]))
+            [teet.ui.util :as util]
+            [teet.activity.activity-controller :as activity-controller]))
 
 (defn task-form [e! {:keys [close task save on-change initialization-fn]}]
   ;;Task definition (under project activity)
@@ -168,7 +169,7 @@
                   :justify-content :space-between
                   :align-items     :center}}
     [:h2 (tr [:enum (:db/ident name)])]
-    [buttons/button-secondary {:on-click #(println "foobar")} (tr [:buttons :edit])]]
+    [buttons/button-secondary {:on-click (e! project-controller/->OpenEditActivityDialog)} (tr [:buttons :edit])]]
    [:span (format/date estimated-start-date) " – " (format/date estimated-end-date)]
 
    (if (seq tasks)
@@ -335,31 +336,59 @@
 (defn details-tab [e! query project]
   [project-data project])
 
-(defn project-page [e! {{:keys [tab add step] :as query} :query
+(defn edit-activity-form
+  [_ _ initialization-fn]
+  (initialization-fn)
+  (fn [e! app _]
+    (when (:edit-activity-data app)                         ;;Otherwise the form renderer can't format dates properly
+      [activity-view/activity-form e! {:on-change activity-controller/->UpdateEditActivityForm
+                                       :save      activity-controller/->SaveEditActivityForm
+                                       :close     project-controller/->CloseAddDialog
+                                       :activity  (:edit-activity-data app)}])))
+
+(defn project-page [e! {{:keys [tab add edit step] :as query} :query
                         :as                              app}
                     project
                     breadcrumbs]
   (let [wizard? (or (not (project-model/initialized? project))
-                    (some? step))]
-    [:<>
-     [panels/modal {:open-atom (r/wrap (boolean add) :_)
-                    :title     (if-not add
-                                 ""
-                                 (tr [:project (case add
-                                                 "task" :add-task
-                                                 "activity" :add-activity)]))
-                    :on-close  (e! project-controller/->CloseAddDialog)}
-      (case add
-        "task"
-        [task-form e!
-         {:close project-controller/->CloseAddDialog
-          :task (:new-task project)
-          :save task-controller/->CreateTask
-          :on-change task-controller/->UpdateTaskForm}]
+                    (some? step))
+        [modal modal-label]
+        (cond
+          add
+          (case add
+            "task" [[task-form e!
+                         {:close project-controller/->CloseAddDialog
+                          :task (:new-task project)
+                          :save task-controller/->CreateTask
+                          :on-change task-controller/->UpdateTaskForm}]
+                        (tr [:project :add-task])]
+            "activity" [[activity-view/activity-form e! {:close     project-controller/->CloseAddDialog
+                                                         :activity  (get-in app [:project (:thk.project/id project) :new-activity])
+                                                         :on-change activity-controller/->UpdateActivityForm
+                                                         :save      activity-controller/->CreateActivity}]
+                        (tr [:project :add-activity])])
 
-        "activity"
+          edit
+          (case edit
+            "activity"
+            [[edit-activity-form e! app (e! project-controller/->InitializeActivityEditForm)]
+             (tr [:project :edit-activity])])
+          :else nil)]
+    [:<>
+     [panels/modal {:open-atom (r/wrap (boolean modal) :_)
+                    :title     (or modal-label "")
+                    :on-close  (e! project-controller/->CloseAddDialog)}
+
+      modal
+      #_(case add
+        "add-task"
+
+        "add-activity"
         [activity-view/activity-form e! project-controller/->CloseAddDialog
          (get-in app [:project (:thk.project/id project) :new-activity])]
+
+        "edit-activity"
+        [edit-activity-form e! app project]
 
         [:span])]
      [project-page-structure e! app project breadcrumbs

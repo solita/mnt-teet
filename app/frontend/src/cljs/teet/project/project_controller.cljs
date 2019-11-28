@@ -3,6 +3,7 @@
   (:require [tuck.core :as t]
             [teet.common.common-controller :as common-controller]
             [teet.log :as log]
+            [teet.project.project-model :as project-model]
             [teet.map.map-controller :as map-controller]
             goog.math.Long))
 
@@ -44,6 +45,10 @@
 
 (defrecord FetchRestrictions [])
 (defrecord ToggleRestriction [id])
+
+(defrecord PostActivityEditForm [])
+(defrecord OpenEditActivityDialog [])
+(defrecord InitializeActivityEditForm [])
 
 (extend-protocol t/Event
   SaveBasicInformation
@@ -96,7 +101,6 @@
 (extend-protocol t/Event
   SelectProject
   (process-event [{id :project-id} app]
-    (def the-id id)
     (t/fx app
           {:tuck.effect/type :query
            :query :thk.project/db-id->thk-id
@@ -129,7 +133,7 @@
           {:tuck.effect/type :navigate
            :page             page
            :params           params
-           :query            (dissoc query :add)}))
+           :query            (dissoc query :add :edit)}))
 
   OpenTaskDialog
   (process-event [_ {:keys [page params query] :as app}]
@@ -138,6 +142,37 @@
        :page page
        :params params
        :query (assoc query :add "task")}))
+
+  PostActivityEditForm
+  (process-event [_ {:keys [page params query edit-activity-data] :as app}]
+    (let [activity-data edit-activity-data]
+      (t/fx app
+            {:tuck.effect/type :navigate
+             :page page
+             :query (dissoc query :edit)
+             :params params}
+            {:tuck.effect/type :command!
+             :command          :project/update-activity
+             :payload          activity-data
+             :result-event     common-controller/->Refresh})))
+
+  InitializeActivityEditForm
+  (process-event [_ {:keys [query route] :as app}]
+    (let [activity-data (project-model/activity-by-id (:project route) (:activity query))
+          date-range [(:activity/estimated-start-date activity-data) (:activity/estimated-end-date activity-data)]
+          activity (merge (select-keys activity-data [:activity/name :activity/status :db/id])
+                          {:activity/status (get-in activity-data [:activity/status :db/ident])}
+                          {:activity/name (get-in activity-data [:activity/name :db/ident])}
+                          {:activity/estimated-date-range date-range})]
+      (assoc app :edit-activity-data activity)))
+
+  OpenEditActivityDialog
+  (process-event [_ {:keys [page params query] :as app}]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page page
+           :params params
+           :query (assoc query :edit "activity")}))
 
   UpdateActivityState
   (process-event [{activity-id :id status :status} app]

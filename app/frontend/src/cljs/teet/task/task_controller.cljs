@@ -21,6 +21,7 @@
 (defrecord CloseEditDialog [])
 (defrecord UpdateEditTaskForm [form-data])
 (defrecord PostTaskEditForm [])
+(defrecord TaskEditSuccess [])
 (defrecord MoveDataForEdit [])
 
 (defrecord OpenAddDocumentDialog [])
@@ -48,7 +49,7 @@
   (process-event [_ app]
     (let [task-data (select-keys (get-in app [:route :activity-task]) [:db/id :task/assignee :task/type :task/description])
           task-with-type (assoc task-data :task/type (get-in task-data [:task/type :db/ident]))]
-      (assoc app :edit-form task-with-type)))
+      (assoc app :edit-task-data task-with-type)))
 
   OpenEditTask
   (process-event [_ {:keys [params page query] :as app}]
@@ -63,6 +64,7 @@
     (t/fx app
           {:tuck.effect/type :command!
            :command :project/task-delete
+           :success-message  "Task deleted successfully"    ;;TODO add localization
            :payload {:db/id (goog.math.Long/fromString (:task params))}
            :result-event ->DeleteTaskResult}))
 
@@ -107,24 +109,31 @@
          :command          :project/update-task
          :payload          {:db/id id
                             :task/status status}
+         :success-message  "Task status update successful"
          :result-event     common-controller/->Refresh})))
 
   UpdateEditTaskForm
   (process-event [{form-data :form-data} app]
-    (update-in app [:edit-form] merge form-data))
+    (update-in app [:edit-task-data] merge form-data))
 
   PostTaskEditForm
-  (process-event [_ {:keys [query params page] :as app}]
-    (let [task (:edit-form app)]
+  (process-event [_ app]
+    (let [task (:edit-task-data app)]
       (t/fx app
-            {:tuck.effect/type :navigate
-             :page page
-             :query (dissoc query :edit)
-             :params params}
             {:tuck.effect/type :command!
              :command          :project/update-task
              :payload          task
-             :result-event     common-controller/->Refresh})))
+             :success-message "Task edited succesfully"
+             :result-event     ->TaskEditSuccess})))
+
+  TaskEditSuccess
+  (process-event [_ {:keys [page query params] :as app}]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page             page
+           :query            (dissoc query :edit)
+           :params           params}
+          common-controller/refresh-fx))
 
   UpdateTask
   (process-event [{:keys [task updated-task]} app]

@@ -101,7 +101,7 @@
      "task"
      [project-view/task-form e!
       {:close             task-controller/->CloseEditDialog
-       :task              (:edit-form app)
+       :task              (:edit-task-data app)
        :initialization-fn (e! task-controller/->MoveDataForEdit)
        :save              task-controller/->PostTaskEditForm
        :on-change         task-controller/->UpdateEditTaskForm}]
