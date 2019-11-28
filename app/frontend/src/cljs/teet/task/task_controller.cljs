@@ -32,9 +32,9 @@
   (process-event [{:keys [task-id]} app]
     (t/fx app
           {:tuck.effect/type :query
-           :query :task/fetch-task
-           :args {:task-id (goog.math.Long/fromString task-id)}
-           :result-path [:task task-id]}))
+           :query            :project/fetch-task
+           :args             {:task-id (goog.math.Long/fromString task-id)}
+           :result-path      [:task task-id]}))
 
   CloseEditDialog
   (process-event [_ {:keys [params page query] :as app}]
@@ -62,7 +62,7 @@
   (process-event [_ {:keys [params] :as app}]
     (t/fx app
           {:tuck.effect/type :command!
-           :command :task/delete!
+           :command :project/task-delete
            :payload {:db/id (goog.math.Long/fromString (:task params))}
            :result-event ->DeleteTaskResult}))
 
@@ -104,10 +104,10 @@
     (let [{id :db/id} (common-controller/page-state app)]
       (t/fx app
         {:tuck.effect/type :command!
-         :command :workflow/update-task
-         :payload {:db/id id
-                   :task/status status}
-         :result-event common-controller/->Refresh})))
+         :command          :project/update-task
+         :payload          {:db/id id
+                            :task/status status}
+         :result-event     common-controller/->Refresh})))
 
   UpdateEditTaskForm
   (process-event [{form-data :form-data} app]
@@ -122,7 +122,7 @@
              :query (dissoc query :edit)
              :params params}
             {:tuck.effect/type :command!
-             :command          :workflow/update-task
+             :command          :project/update-task
              :payload          task
              :result-event     common-controller/->Refresh})))
 
@@ -134,9 +134,9 @@
 
       (t/fx (assoc-in app task-path new-task)
             {:tuck.effect/type :command!
-             :command :workflow/update-task
-             :payload (assoc updated-task :db/id id)
-             :result-event ->UpdateTaskResponse})))
+             :command          :project/update-task
+             :payload          (assoc updated-task :db/id id)
+             :result-event     ->UpdateTaskResponse})))
 
   UpdateTaskResponse
   (process-event [{response :response} app]
@@ -154,7 +154,7 @@
           task (get-in app [:route :project :new-task])]
       (t/fx app
             {:tuck.effect/type :command!
-             :command :workflow/add-task-to-activity
+             :command :project/add-task-to-activity
              :payload {:activity-id (goog.math.Long/fromString activity-id)
                        :task (-> task
                                  (update :task/assignee (fn [{id :user/id}] [:user/id id]))

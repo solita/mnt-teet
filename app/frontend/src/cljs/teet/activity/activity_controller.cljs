@@ -25,7 +25,7 @@
                       (assoc :activity/estimated-end-date end))]
       (t/fx (assoc-in app [:project project :create-activity-in-progress?] true)
             {:tuck.effect/type :command!
-             :command          :activity/create-activity
+             :command          :project/create-activity
              :payload          (merge {:lifecycle-id (goog.math.Long/fromString lifecycle)}
                                       payload) ;;TODO pura date-range
              :result-event     ->CreateActivityResult})))

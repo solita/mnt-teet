@@ -96,3 +96,18 @@
             :where [?e :thk.project/id _]]
    :args [db project-model/project-listing-attributes]
    :result-fn (partial mapv first)})
+
+(defmethod db-api/query :project/fetch-task [{db :db} {:keys [task-id]}]
+  {:query '[:find (pull ?e [:db/id
+                            :task/description
+                            :task/modified
+                            :activity/status
+                            {:task/status [:db/ident]}
+                            {:task/type [:db/ident]}
+                            {:task/assignee [:user/id :user/given-name :user/family-name :user/email]}
+                            {:activity/_tasks [:db/id {:activity/name [:db/ident]}]}
+                            {:task/documents [*]}])
+            :in $ ?e]
+   :args [db task-id]
+   :result-fn ffirst})
+

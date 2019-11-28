@@ -143,11 +143,11 @@
   (process-event [{activity-id :id status :status} app]
     (t/fx app
           {:tuck.effect/type :command!
-           :command :activity/update-activity
-           :payload {:db/id activity-id
-                     :activity/status status}
-           :result-event common-controller/->Refresh
-           :success-message "Activity updated successfully"    ;TODO add to localizations
+           :command          :project/update-activity
+           :payload          {:db/id           activity-id
+                              :activity/status status}
+           :result-event     common-controller/->Refresh
+           :success-message  "Activity updated successfully"    ;TODO add to localizations
            }))
 
   ToggleRestrictionData
