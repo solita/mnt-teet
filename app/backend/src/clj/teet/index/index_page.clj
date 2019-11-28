@@ -7,7 +7,7 @@
   "DEV MODE INDEX PAGE.
 
   If you add things here, also add them to index.html in frontend for production env."
-  [{:keys [base-url mode api]}]
+  [{:keys [base-url mode]}]
   (let [dev? (= mode :dev)]
     [:html {:style "overflow-y: scroll;"}
      [:head
@@ -31,8 +31,7 @@
      })
      .then(() => { teet.main.main(); });"]
 
-      [:body {:data-api-url (or (:url api) "/")
-              :data-git-version (build-info/git-commit)
+      [:body {:data-git-version (build-info/git-commit)
               :onload "resolveOnload()"}
        [:div#teet-frontend]
        [:script {:src (if dev? "cljs-out/dev-main.js" "main.js")}]
