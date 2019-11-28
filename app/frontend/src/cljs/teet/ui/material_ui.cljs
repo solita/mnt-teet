@@ -1,10 +1,7 @@
 (ns teet.ui.material-ui
   (:refer-clojure :exclude [List])
   (:require [goog.object :as gobj]
-            [reagent.core :as r]
-            [herb.core :as herb :refer [<class]]
-            [reagent.impl.template :as rtpl]
-            [teet.theme.theme-colors :as theme-colors])
+            [reagent.core :as r])
   (:require-macros [teet.ui.material-ui-macros :refer [define-mui-components]]))
 
 (defonce MaterialUI (delay
@@ -63,28 +60,3 @@
       [:input (-> props
                   (assoc :ref (:inputRef props))
                   (dissoc :inputRef))])))
-
-(def ^:private textarea-component
-  (r/reactify-component
-    (fn [props]
-      [:textarea (-> props
-                     (assoc :ref (:inputRef props))
-                     (dissoc :inputRef))])))
-
-#_(defn TextField
-    [props & children]
-    (let [mui-text (delay
-                     (goog.object/get @MaterialUI "TextField"))
-          props (-> props
-                    (assoc-in [:InputProps :inputComponent] (cond
-                                                              (and (:multiline props) (:rows props) (not (:maxRows props)))
-                                                              textarea-component
-
-                                                              ;; FIXME: autosize multiline field is broken
-                                                              (:multiline props)
-                                                              nil
-
-                                                              :else
-                                                              input-component))
-                    rtpl/convert-prop-value)]
-      (apply r/create-element @mui-text props (map r/as-element children))))
