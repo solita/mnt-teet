@@ -387,4 +387,10 @@
   :txes [[{:db/ident       :thk.project/manager
            :db/cardinality :db.cardinality/one
            :db/valueType   :db.type/ref
-           :db/doc         "User who manages this project"}]]}]
+           :db/doc         "User who manages this project"}]]}
+
+ {:db/ident :migration/deletion-annotation
+  :txes     [[{:db/ident       :deletion/eid
+               :db/cardinality :db.cardinality/many
+               :db/valueType   :db.type/long
+               :db/doc         "IDs of entities retracted in this transaction"}]]}]
