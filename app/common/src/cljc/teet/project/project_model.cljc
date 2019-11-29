@@ -32,7 +32,7 @@
 (def project-listing-display-columns
   [:thk.project/project-name
    :thk.project/road-nr
-   :thk.project/km-range
+   :thk.project/effective-km-range
    :thk.project/carriageway
    :thk.project/estimated-date-range
    :thk.project/owner-info])

@@ -31,7 +31,7 @@
 
 (defn format-column-value [column value]
   (case column
-    :thk.project/km-range
+    :thk.project/effective-km-range
     (let [[start end] value]
       (str (.toFixed start 3) " \u2013 " (.toFixed end 3)))
 
