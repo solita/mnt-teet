@@ -35,10 +35,14 @@
                          {:thk.project/project-name project-name}))]}))
   :ok)
 
-(defmethod db-api/command! :project/task-delete
+(defmethod db-api/command! :project/delete-task
   [{conn :conn}
    {task-id :db/id}]
-  (println "task-delete: " task-id)
+  (d/transact
+    conn
+    {:tx-data [[:db/retractEntity task-id]
+               {:db/id "datomic.tx"
+                :deletion/eid [task-id]}]})
   :ok)
 
 

@@ -5,7 +5,6 @@
             [teet.document.document-controller]
             [teet.common.common-controller :as common-controller]))
 
-(defrecord FetchTask [task-id])
 (defrecord UploadDocuments [files])
 (defrecord UpdateTask [task updated-task]) ; update task info to database
 (defrecord UpdateTaskResponse [response])
@@ -29,13 +28,6 @@
 
 
 (extend-protocol t/Event
-  FetchTask
-  (process-event [{:keys [task-id]} app]
-    (t/fx app
-          {:tuck.effect/type :query
-           :query            :project/fetch-task
-           :args             {:task-id (goog.math.Long/fromString task-id)}
-           :result-path      [:task task-id]}))
 
   CloseEditDialog
   (process-event [_ {:keys [params page query] :as app}]
@@ -63,17 +55,22 @@
   (process-event [_ {:keys [params] :as app}]
     (t/fx app
           {:tuck.effect/type :command!
-           :command :project/task-delete
+           :command          :project/delete-task
            :success-message  "Task deleted successfully"    ;;TODO add localization
-           :payload {:db/id (goog.math.Long/fromString (:task params))}
-           :result-event ->DeleteTaskResult}))
+           :payload          {:db/id (goog.math.Long/fromString (:task params))}
+           :result-event     ->DeleteTaskResult}))
 
   DeleteTaskResult
   (process-event [_response {:keys [page params query] :as app}]
-    (t/fx app
-          {:tuck.effect/type :navigate
-           :page :project
-           :params {:project (:project params)}}))
+    (let [activity-id (get-in app [:route :activity-task :activity/_tasks 0 :db/id])
+          lifecycle-id (get-in app
+                               [:route :activity-task :activity/_tasks 0 :thk.lifecycle/_activities 0 :db/id])]
+      (t/fx app
+            {:tuck.effect/type :navigate
+             :page             :project
+             :params           {:project (:project params)}
+             :query            {:lifecycle lifecycle-id
+                                :activity activity-id}})))
 
   OpenAddDocumentDialog
   (process-event [_ app]
