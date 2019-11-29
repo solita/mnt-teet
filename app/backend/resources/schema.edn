@@ -399,4 +399,10 @@
   :txes     [[{:db/ident       :task/author
                :db/cardinality :db.cardinality/one
                :db/valueType   :db.type/ref
-               :db/doc         "Author of the task"}]]}]
+               :db/doc         "Author of the task"}]]}
+
+ {:db/ident :migration/thk-project-lifecycle-phase-id
+  :txes [[{:db/ident :thk.lifecycle/id
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/unique :db.unique/identity}]]}]
