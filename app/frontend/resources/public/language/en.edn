@@ -71,6 +71,7 @@
   :activity/estimated-end-date "Estimated end date",
   :user/given-name "Given name",
   :user/person-id "Person ID",
+  :thk.project/m-range-change-reason "Reason for start/end change",
   :user/roles "Roles",
   :thk.project/effective-km-range "Km range",
   :task/description "Description",
