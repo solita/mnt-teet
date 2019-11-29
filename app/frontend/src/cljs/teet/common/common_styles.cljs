@@ -73,4 +73,5 @@
 
 (defglobal global
            [:body :html {:height "100%"}]
-           [:#teet-frontend {:height "100%"}])
+           [:#teet-frontend {:height "100%"}]
+           [:input :select :textarea :button {:font-family :inherit}])
