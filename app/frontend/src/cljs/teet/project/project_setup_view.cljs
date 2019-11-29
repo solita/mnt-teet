@@ -78,7 +78,9 @@
   (e! (project-controller/->UpdateBasicInformationForm
        {:thk.project/project-name (:thk.project/name project)
         :thk.project/km-range [(gstring/format "%.3f" (/ (:thk.project/start-m project) 1000.0))
-                               (gstring/format "%.3f" (/ (:thk.project/end-m project) 1000.0))]}))
+                               (gstring/format "%.3f" (/ (:thk.project/end-m project) 1000.0))]
+        :thk.project/owner (:thk.project/owner project)
+        :thk.project/manager (:thk.project/manager project)}))
   (fn [e! project]
     [:<>
      [:div {:class (<class project-style/initialization-form-wrapper)}
@@ -97,9 +99,11 @@
        [num-range {:start-label "Start km"
                    :end-label "End km"}]
 
+       ;; FIXME: The map should also reflect the changed range
        (when (km-range-changed? project)
          ^{:xs 12 :attribute :thk.project/meter-range-changed-reason}
-         [TextField {}])
+         [TextField {:multiline true
+                     :rows 3}])
 
        ^{:attribute :thk.project/owner}
        [select/select-user {:e! e!}]

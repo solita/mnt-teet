@@ -19,7 +19,8 @@
    :thk.project/carriageway
    :thk.project/estimated-start-date
    :thk.project/estimated-end-date
-   {:thk.project/owner user-model/user-listing-attributes}])
+   {:thk.project/owner user-model/user-listing-attributes}
+   {:thk.project/manager user-model/user-listing-attributes}])
 
 (def project-info-attributes
   (into project-listing-attributes
