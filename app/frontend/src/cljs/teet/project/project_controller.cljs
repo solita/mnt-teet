@@ -65,10 +65,10 @@
           [start-km end-km] km-range]
       (t/fx app {:tuck.effect/type :command!
                  :command          :thk.project/initialize!
-                 :payload          (merge {:thk.project/id    id
+                 :payload          (merge {:thk.project/id id
                                            :thk.project/owner owner
-                                           :thk.project/start-m (long (* 1000 start-km))
-                                           :thk.project/end-m (long (* 1000 end-km))}
+                                           :thk.project/custom-start-m (long (* 1000 start-km))
+                                           :thk.project/custom-end-m (long (* 1000 end-km))}
                                           (when (not= name project-name)
                                             {:thk.project/project-name project-name}))
                  :result-event     ->SaveBasicInformationResponse})))

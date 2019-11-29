@@ -8,7 +8,7 @@
 
 (defmethod db-api/command! :thk.project/initialize!
   [{conn :conn}
-   {:thk.project/keys [id owner manager project-name]}]
+   {:thk.project/keys [id owner manager project-name custom-start-m custom-end-m]}]
   (let [project-in-datomic (d/pull (d/db conn)
                                    [:thk.project/owner :thk.project/estimated-start-date :thk.project/estimated-end-date]
                                    [:thk.project/id id])]
@@ -23,7 +23,11 @@
                          (when-not (str/blank? project-name)
                            {:thk.project/project-name project-name})
                          (when manager
-                           {:thk.project/manager [:user/id (:user/id manager)]}))]})))
+                           {:thk.project/manager [:user/id (:user/id manager)]})
+                         (when custom-start-m
+                           {:thk.project/custom-start-m custom-start-m})
+                         (when custom-end-m
+                           {:thk.project/custom-end-m custom-end-m}))]})))
   :ok)
 
 (defmethod db-api/command! :project/delete-task
