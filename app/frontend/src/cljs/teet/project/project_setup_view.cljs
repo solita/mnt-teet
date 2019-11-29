@@ -99,7 +99,8 @@
 
        (when (km-range-changed? project)
          ^{:xs 12 :attribute :thk.project/meter-range-changed-reason}
-         [TextField {}])
+         [TextField {:multiline true
+                     :rows 3}])
 
        ^{:attribute :thk.project/owner}
        [select/select-user {:e! e!}]
