@@ -29,6 +29,13 @@
   "geojson_thk_project" [p]
   (->SelectProject (:map/id p)))
 
+(defmethod common-controller/on-server-error :project-already-initialized [err {:keys [params page] :as app}]
+  (t/fx (common-controller/default-server-error-handler err app)
+        {:tuck.effect/type :navigate
+         :page page
+         :params params
+         :query {}}
+        common-controller/refresh-fx))
 
 ;;
 ;; Project setup wizard events
