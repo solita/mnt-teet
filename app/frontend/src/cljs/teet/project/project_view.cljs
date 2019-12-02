@@ -193,7 +193,7 @@
   []
   {:flex 1})
 
-(defn project-map [e! endpoint project tab]
+(defn project-map [e! endpoint project tab map]
   [:div {:style {:flex           1
                  :display        :flex
                  :flex-direction :column}}
@@ -219,7 +219,7 @@
                                                 "distance"  200}
                                                map-features/cadastral-unit-style
                                                {:opacity 0.5})})}
-    {}]])
+    map]])
 
 (defn restriction-component
   [e! {:keys [voond toiming muudetud seadus id open?] :as _restriction}]
@@ -286,7 +286,7 @@
    [project-header project breadcrumbs]
    [:div {:style {:position "relative"
                   :display  "flex" :flex-direction "column" :flex 1}}
-    [project-map e! (get-in app [:config :api-url]) project (get-in app [:query :tab])]
+    [project-map e! (get-in app [:config :api-url]) project (get-in app [:query :tab]) (:map app)]
     [Paper {:class (<class project-style/project-content-overlay)}
      (when (seq tabs)
        [tabs/tabs {:e!           e!

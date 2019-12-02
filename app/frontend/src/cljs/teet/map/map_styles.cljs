@@ -42,16 +42,18 @@
    :border-bottom (str "1px solid " theme-colors/gray-lighter)})
 
 (defn map-control-buttons
-  ([] (map-control-buttons 0))
-  ([row]
-   {:position :absolute
-    :top (str (+ 25 (* 50 row)) "px")
-    :right "25px"
-    :z-index 9999}))
+  []
+  {:position :absolute
+   :display  :flex
+   :flex-direction :column
+   :top      "20px"
+   :right    "25px"
+   :z-index  9999})
 
 (defn map-control-button
   []
   {:opacity "0.8"
+   :margin-top "5px"
    :transition "all 0.2s ease-in-out"})
 
 (defn map-overlay
