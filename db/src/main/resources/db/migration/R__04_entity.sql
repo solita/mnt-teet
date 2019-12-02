@@ -77,6 +77,23 @@ FROM (SELECT 'FeatureCollection' as type,
             WHERE e.type = type AND e.geometry IS NOT NULL AND NOT ST_isempty(e.geometry)) f) fc;
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION teet.geojson_entity_pins(ids BIGINT[])
+    RETURNS TEXT
+AS $$
+SELECT row_to_json(fc)::TEXT
+FROM (SELECT 'FeatureCollection' as type,
+             array_to_json(array_agg(f)) AS features
+      FROM (SELECT 'Feature' as type,
+                   ST_AsGeoJSON(st_centroid(e.geometry))::json AS geometry,
+                   json_build_object('id', e.id::text,
+                                     'tooltip', e.tooltip) AS properties
+            FROM teet.entity e
+            WHERE e.id = ANY(ids) AND e.geometry IS NOT NULL AND NOT ST_isempty(e.geometry)) f) fc;
+$$ LANGUAGE SQL STABLE SECURITY DEFINER;
+
+
+
+
 CREATE OR REPLACE FUNCTION teet.geojson_entity_cluster_pins(type entity_type, cluster_distance NUMERIC)
 RETURNS TEXT
 AS $$

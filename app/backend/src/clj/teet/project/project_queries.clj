@@ -101,8 +101,7 @@
    :result-fn (partial mapv first)})
 
 (defmethod db-api/query :thk.project/search [{db :db} {:keys [text]}]
-  {:query '[:find (pull ?e [:thk.project/project-name
-                            :thk.project/name :thk.project/id])
+  {:query '[:find (pull ?e [:db/id :thk.project/project-name :thk.project/name :thk.project/id])
             :where
             (or [?e :thk.project/project-name ?name]
                 [?e :thk.project/name ?name])
