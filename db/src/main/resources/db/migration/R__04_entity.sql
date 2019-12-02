@@ -113,10 +113,11 @@ FROM (SELECT 'FeatureCollection' as type,
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;
 
 
-GRANT EXECUTE ON FUNCTION teet.geojson_entity_pins TO teet_user;
+GRANT EXECUTE ON FUNCTION teet.geojson_entity_pins(BIGINT[]) TO teet_user;
+GRANT EXECUTE ON FUNCTION teet.geojson_entity_pins(type entity_type) TO teet_user;
 
 GRANT EXECUTE ON FUNCTION teet.mvt_entities(BIGINT[], NUMERIC, NUMERIC, NUMERIC, NUMERIC) TO teet_user;
 GRANT EXECUTE ON FUNCTION teet.mvt_entities(type entity_type, NUMERIC, NUMERIC, NUMERIC, NUMERIC) TO teet_user;
 GRANT EXECUTE ON FUNCTION teet.geojson_entities(BIGINT[]) TO teet_user;
 GRANT EXECUTE ON FUNCTION teet.geojson_entities(type entity_type) TO teet_user;
-GRANT EXECUTE ON FUNCTION teet.geojson_entity_cluster_pins TO teet_user;
+GRANT EXECUTE ON FUNCTION teet.geojson_entity_cluster_pins(type entity_type, NUMERIC) TO teet_user;
