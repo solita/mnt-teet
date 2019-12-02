@@ -119,4 +119,4 @@
                                     :on-drop (e! document-controller/->UploadFilesToDocument)}
       (tr [:common :select-files])]]]
    [Grid {:item true :xs 6 :classes {:item (<class theme-panels/side-panel)}}
-    [comments e! new-comment document]]])
+    [comments e! new-comment]]])
