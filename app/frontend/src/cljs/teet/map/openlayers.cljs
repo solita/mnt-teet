@@ -434,9 +434,9 @@
         ;; NOTE: Currently disabled, because implement our own map control tools
         ;; kontrollit (ol-control/defaults #js {})
 
-        map-options (clj->js {:layers       (mapv background/create-background-layer layers)
-                             :target       (:id mapspec)
-                             :controls [] ;; :controls     kontrollit
+        map-options (clj->js {:layers (mapv background/create-background-layer layers)
+                             :target (:id mapspec)
+                             :controls []
                              :interactions interactions})
         ol3 (ol/Map. map-options)
 

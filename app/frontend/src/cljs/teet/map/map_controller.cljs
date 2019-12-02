@@ -15,6 +15,7 @@
 (defrecord ToggleCategoryCollapse [category])
 (defrecord ToggleCategorySelect [category closing?])
 (defrecord CloseMapControls [])
+(defrecord SetBackgroundLayer [layer])
 
 (extend-protocol t/Event
   ToggleCategorySelect
@@ -27,51 +28,43 @@
                          (map
                            (fn [[layer-name _]]
                              {layer-name (not closing?)}))
-                         layers))))))
+                         layers)))))
 
-(extend-protocol t/Event
   ToggleMapControls
   (process-event [_ app]
     (update-in app [:map :map-controls :open?] not))
 
   CloseMapControls
   (process-event [_ app]
-    (update-in app [:map :map-controls :open?] false)))
+    (update-in app [:map :map-controls :open?] false))
 
-(extend-protocol t/Event
   CloseMapControls
   (process-event [_ app]
-    (assoc-in app [:map :map-controls :open?] false)))
+    (assoc-in app [:map :map-controls :open?] false))
 
-(extend-protocol t/Event
   ToggleCategoryCollapse
   (process-event [{:keys [category]} app]
-    (update-in app [:map :map-controls category :collapsed?] not)))
+    (update-in app [:map :map-controls category :collapsed?] not))
 
-
-(extend-protocol t/Event
   LayerToggle
   (process-event [{:keys [category layer]} app]
-    (update-in app [:map :map-restrictions category layer] not)))
+    (update-in app [:map :map-restrictions category layer] not))
 
-(extend-protocol t/Event
   MapLayersResult
   (process-event [result app]
     (let [layers (:result result)
           formatted (into {}
                           (map
-                            (fn [{:keys [type layers]}]
-                              (let [layers (into {}
-                                                 (map
-                                                   (fn [layer]
-                                                     [layer false]))
-                                                 (filter some? layers))]
-                                [type layers])))
+                           (fn [{:keys [type layers]}]
+                             (let [layers (into {}
+                                                (map
+                                                 (fn [layer]
+                                                   [layer false]))
+                                                (filter some? layers))]
+                               [type layers])))
                           layers)]
-      (assoc-in app [:map :map-restrictions] formatted))))
+      (assoc-in app [:map :map-restrictions] formatted)))
 
-
-(extend-protocol t/Event
   FetchMapLayers
   (process-event [_ app]
     (t/fx app
@@ -80,7 +73,12 @@
            :rpc              "restriction_map_selections"
            :args             {}
            :result-event     (fn [result]
-                               (->MapLayersResult result))})))
+                               (->MapLayersResult result))}))
+
+  SetBackgroundLayer
+  (process-event [{layer :layer} app]
+    (log/info "ASETA" layer)
+    (assoc-in app [:map :background-layer] layer)))
 
 (defn update-features! [layer-name update-fn & args]
   (let [^ol.Map m (openlayers/get-the-map)]

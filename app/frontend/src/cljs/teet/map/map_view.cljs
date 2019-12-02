@@ -87,6 +87,20 @@
                   {:color :primary}))
           [icons/maps-layers]]]])}))
 
+(defn background-layer-selection-control [e! current-background-layer]
+  [:div {:class (<class map-styles/map-control-buttons 1)}
+   [Fab (merge
+         {:size :small
+          :class (<class map-styles/map-control-button)
+          :on-click (e! map-controller/->SetBackgroundLayer
+                        (case current-background-layer
+                          "kaart" "foto"
+                          "foto" "kaart"))}
+         (if (= current-background-layer "kaart")
+           {:color :default}
+           {:color :primary}))
+    [icons/maps-satellite]]])
+
 (defn map-container-style
   []
   {:display        :flex
@@ -96,7 +110,8 @@
    :overflow       :hidden})
 
 (defn map-view [e! {:keys [height class layer-controls?] :or {height "100%"} :as opts}
-                {:keys [map-restrictions map-controls] :as map-data}]
+                {:keys [map-restrictions map-controls background-layer] :as map-data
+                 :or {background-layer "kaart"}}]
   (r/with-let [current-tool (volatile! (get-in map-data [:tool]))
                current-zoom (volatile! nil)
                current-res (volatile! nil)
@@ -109,6 +124,13 @@
       [:div {:class (<class map-container-style)}
        (when layer-controls?
          [map-layer-controls e! map-restrictions map-controls])
+       [background-layer-selection-control e! background-layer]
+
+       ;; FIXME: background layer type added as key to the openlayers component so that it is forced
+       ;; to rerender when it changes.
+       ;; Proper fix is to update the background layers when they change, currently they are only
+       ;; created once when mounting the component.
+       ^{:key background-layer}
        [openlayers/openlayers
         {:id "mapview"
          :width "100%"
@@ -188,7 +210,8 @@
                      (get-in map-data [:rotation])
                      0)
 
-         :layers [{:type :maa-amet :layer "kaart" :default true}]
+         ;; Show "foto" or "kaart" background layer from Maa-amet
+         :layers [{:type :maa-amet :layer background-layer :default true}]
          #_(vec
              (for [layer ["BAASKAART" "MAANTEED" "pohi_vr2"]]
                {:type :wms :url "http://kaart.maaamet.ee/wms/alus?"

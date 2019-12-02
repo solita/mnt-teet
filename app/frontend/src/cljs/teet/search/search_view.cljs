@@ -43,7 +43,7 @@
                              (reset! show-results? true))
                            (e! (search-controller/->UpdateQuickSearchTerm term)))
            :on-focus    #(reset! show-results? true)
-           :autocomplete "off"
+           :auto-complete "off"
            :InputProps {:start-adornment
                         (r/as-element
                          [InputAdornment {:position :end}
