@@ -68,15 +68,30 @@
         ;; some kind of image: ol.style.Circle in these + see https://openlayers.org/en/v4.6.5/examples/vector-labels.html for label options
         start-style (ol.style.Style.
                     #js {:geometry (ol.geom.Point. start)
-                         :zIndex 2})
+                         :zIndex 2
+                         :label "keke"
+                         :text (ol.style.Text. {:text "cccccccc"
+                                                :font "fixed"})})
         end-style (ol.style.Style.
-                   #js {:geometry (ol.geom.Point. end)
-                        :zIndex 2})
+                   (clj->js {:geometry (ol.geom.Point. end)
+                             ;; :geometry {:type "Point"
+                             ;;                :coordinates [579991.258353803 6445659.0149466]}
+                             :image (ol.style.Circle. #js {:label "sdfdsffdfdsfs"
+                                                           :color "rgb(255, 0, 0)"
+                                                           :radius 100
+                                                           })
+                             ;; :text (ol.style.Text. #js {:text "hepohepohepo"
+                             ;;                            :font "fixed"})
+                             :zIndex 2}))
         ]
     #_(.forEachSegment geometry (fn geo-fse-callback [start end]
                                   (log/info "fse start/end" start end)))
+    (log/info "end point geometry:" start)
     ;; Show project road geometry line
-    (clj->js [line-style start end])))
+    (clj->js [line-style
+              ;start-style
+              end-style
+              ])))
 
 (def electric-pattern
   (let [a (atom nil)

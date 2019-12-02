@@ -53,7 +53,7 @@
   (process-event [_ app]
     (let [{:thk.project/keys [id name]} (get-in app [:route :project])
           {:thk.project/keys [project-name owner road-nr start-m end-m]} (get-in app [:route :project :basic-information-form])]
-      (log/info "starting json_road_geometry query from SaveBasicInformation event")
+      (log/info "starting json_road_geometry query from SaveBasicInformation event") ;; fixme - doesn't trigger?
       (t/fx app
             ; we can't easily get the geometry as the the map component is loading it, so do a little duplicate work here
             {:tuck.effect/type :rpc
