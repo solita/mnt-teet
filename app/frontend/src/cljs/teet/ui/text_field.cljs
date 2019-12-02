@@ -56,7 +56,7 @@
            on-change input-button-icon
            placeholder input-button-click required input-style
            multiline on-blur error-text input-class start-icon
-           maxrows rows autocomplete] :as props
+           maxrows rows auto-complete] :as props
     :or {rows 2}} & children]
   (let [element (if multiline
                   :textarea
@@ -85,7 +85,7 @@
                         {:rows rows
                          :maxrows maxrows})
                       (when autocomplete
-                        {:autocomplete autocomplete}))]
+                        {:auto-complete auto-complete}))]
       (if (and input-button-click input-button-icon)
         [IconButton {:on-click input-button-click
                      :disable-ripple true
