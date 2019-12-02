@@ -128,11 +128,6 @@
          [map-layer-controls e! map-restrictions map-controls])
        [background-layer-selection-control e! background-layer]
 
-       ;; FIXME: background layer type added as key to the openlayers component so that it is forced
-       ;; to rerender when it changes.
-       ;; Proper fix is to update the background layers when they change, currently they are only
-       ;; created once when mounting the component.
-       ^{:key background-layer}
        [openlayers/openlayers
         {:id "mapview"
          :width "100%"

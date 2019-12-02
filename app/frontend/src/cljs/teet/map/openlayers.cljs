@@ -435,9 +435,9 @@
         ;; kontrollit (ol-control/defaults #js {})
 
         map-options (clj->js {:layers (mapv background/create-background-layer layers)
-                             :target (:id mapspec)
-                             :controls []
-                             :interactions interactions})
+                              :target (:id mapspec)
+                              :controls []
+                              :interactions interactions})
         ol3 (ol/Map. map-options)
 
         _ (reset!
@@ -513,7 +513,8 @@
     (reagent/set-state this {:ol3             ol3
                              :geometry-layers {} ; key => vector layer
                              :hover           nil
-                             :unmount-ch      unmount-ch})
+                             :unmount-ch      unmount-ch
+                             :background-layers layers})
 
     ;; If mapspec defines callbacks, bind them to ol3
     (set-click-handler this ol3
@@ -620,7 +621,18 @@
                 (.addOverlay ol3 overlay)
                 [ov overlay])))})))
 
+(defn- update-ol3-background-layers [this new-layers]
+  (let [{:keys [ol3 background-layers]} (reagent/state this)]
+    (when-not (= background-layers new-layers)
+      ;; Remove old background layers and recreate
+      (dotimes [_ (count background-layers)]
+        (.removeAt (.getLayers ol3) 0))
+      (doseq [l new-layers]
+        (.insertAt (.getLayers ol3) 0 (background/create-background-layer l)))
+      (reagent/set-state this {:background-layers new-layers}))))
+
 (defn- ol3-will-receive-props [this [_ mapspec]]
+  (update-ol3-background-layers this (:layers mapspec))
   (update-ol3-geometries this (:geometries mapspec))
   (update-ol3-overlays this (:overlays mapspec)))
 
