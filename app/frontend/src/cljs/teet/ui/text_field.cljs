@@ -84,7 +84,7 @@
                       (when multiline
                         {:rows rows
                          :maxrows maxrows})
-                      (when autocomplete
+                      (when auto-complete
                         {:auto-complete auto-complete}))]
       (if (and input-button-click input-button-icon)
         [IconButton {:on-click input-button-click
