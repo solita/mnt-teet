@@ -1,7 +1,8 @@
 (ns teet.project.project-queries
   (:require [teet.db-api.core :as db-api]
             [teet.project.project-model :as project-model]
-            [datomic.client.api :as d]))
+            [datomic.client.api :as d]
+            [clojure.string :as str]))
 
 (defmethod db-api/query :thk.project/db-id->thk-id [{db :db} {id :db/id}]
   (-> db
@@ -99,3 +100,15 @@
    :args [db project-model/project-listing-attributes]
    :result-fn (partial mapv first)})
 
+(defmethod db-api/query :thk.project/search [{db :db} {:keys [text]}]
+  {:query '[:find (pull ?e [:thk.project/project-name
+                            :thk.project/name :thk.project/id])
+            :where
+            (or [?e :thk.project/project-name ?name]
+                [?e :thk.project/name ?name])
+            [(.toLowerCase ^String ?name) ?lower-name]
+            [(.contains ?lower-name ?text)]
+            :in $ ?text]
+   :args [db (str/lower-case text)]
+   :result-fn (partial mapv
+                       #(-> % first (assoc :type :project)))})

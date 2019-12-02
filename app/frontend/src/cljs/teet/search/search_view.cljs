@@ -11,11 +11,17 @@
             [teet.common.common-controller]
             [teet.search.search-controller :as search-controller]
             [teet.search.search-interface :as search-interface]
-            [teet.ui.events :as events]))
+            [teet.ui.events :as events]
+            [herb.core :refer [<class]]
+            [teet.common.common-styles :as common-styles]))
 
 (def sw "100%")
 
-(defn quick-search [e! quick-search]
+(defn result-container []
+  {:overflow-y "scroll"
+   :max-height "80vh"})
+
+(defn quick-search [_e! _quick-search]
   (let [show-results? (r/atom false)]
     (common/component
       (hotkeys/hotkey "?" #(.focus (.getElementById js/document "quick-search")))
@@ -31,45 +37,39 @@
            :variant     :outlined
            :value       (:term quick-search)
            :placeholder (tr [:search :quick-search])
-           :on-change   #(do
-                           (reset! show-results? true)
-                           (e! (search-controller/->UpdateQuickSearchTerm (-> % .-target .-value))))
-           ;:placeholder (tr [:search :quick-search])
+           :on-change   #(let [term (-> % .-target .-value)]
+                           (when (>= (count term)
+                                     search-controller/min-search-term-length)
+                             (reset! show-results? true))
+                           (e! (search-controller/->UpdateQuickSearchTerm term)))
            :on-focus    #(reset! show-results? true)
+           :autocomplete "off"
            :InputProps {:start-adornment
-                         (r/as-element
-                           [InputAdornment {:position :end}
-                            [IconButton {:color :primary
-                                         :edge :start}
-                             [icons/action-search]]])}}]
-
-         #_[TextField {:id          "quick-search"
-                       :style       {:width "300px"}
-                       :label       (tr [:search :quick-search])
-                       :value       (or (:term quick-search) "")
-                       :on-change   #(do
-                                       (reset! show-results? true)
-                                       (e! (search-controller/->UpdateQuickSearchTerm (-> % .-target .-value))))
-                       :placeholder (tr [:search :quick-search])
-                       :on-focus    #(reset! show-results? true)}]
-         (when (and false                                         ;@show-results? Never show the results as the feature is not completed
+                        (r/as-element
+                         [InputAdornment {:position :end}
+                          [IconButton {:color :primary
+                                       :edge :start}
+                           [icons/action-search]]])}}]
+         (when (and @show-results?
                     (contains? quick-search :results))
            [:div {:style {:position "absolute"
                           :width    sw
                           :z-index  99}}
-            [Paper
+            [Paper {:class (<class result-container)}
              (if-let [results (:results quick-search)]
                [List {}
-                (map-indexed (fn [i result]
-                               (let [{:keys [icon text href]} (search-interface/format-search-result result)]
-                                 ^{:key i}
-                                 [ListItem (merge
-                                             {:on-click #(reset! show-results? false)}
-                                             (when href
-                                               {:component "a"
-                                                :href      href}))
-                                  (when icon
-                                    [ListItemIcon icon])
-                                  [ListItemText text]]))
-                             results)]
+                (map-indexed
+                 (fn [i result]
+                   (let [{:keys [icon text href]} (search-interface/format-search-result result)]
+                     ^{:key i}
+                     [ListItem (merge
+                                {:on-click #(reset! show-results? false)
+                                 :class (<class common-styles/list-item-link)}
+                                (when href
+                                  {:component "a"
+                                   :href      href}))
+                      (when icon
+                        [ListItemIcon icon])
+                      [ListItemText text]]))
+                 results)]
                [CircularProgress])]])]))))

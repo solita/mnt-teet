@@ -2,7 +2,6 @@
   "Projects view"
   (:require [reagent.core :as r]
             [herb.core :refer [<class]]
-            [teet.projects.projects-controller :as projects-controller]
             [teet.search.search-interface :as search-interface]
             [teet.ui.icons :as icons]
             [teet.map.map-view :as map-view]
@@ -20,10 +19,11 @@
             [teet.ui.table :as table]
             [teet.common.common-controller :as common-controller]))
 
-(defmethod search-interface/format-search-result "project" [{:keys [id label]}]
+(defmethod search-interface/format-search-result :project
+  [{:thk.project/keys [id] :as project}]
   {:icon [icons/file-folder-open]
-   :text label
-   :href (str "#/project/" id)})
+   :text (project-model/get-column project :thk.project/project-name)
+   :href (str "#/projects/" id)})
 
 (defn link-to-project [{:strs [id name]}]
   name)

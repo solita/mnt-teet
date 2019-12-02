@@ -59,8 +59,8 @@
     ^{:pseudo {:hover {:background-color theme-colors/gray-lightest}
                :last-child {:border-bottom border}}}
     {:border-top border
-     :padding "1rem 0"
-     :display "block"
+     :padding "1rem"
+     :display "flex"
      :color theme-colors/primary-text
      :text-decoration "none"
      :transition "background-color 0.2s ease-in-out"}))
