@@ -112,8 +112,21 @@
 
 (def ^:private db-migrated? (atom false))
 
+(defn- ensure-database [client db-name]
+  (let [existing-databases
+        (into #{} (d/list-databases client {}))]
+    (if (existing-databases db-name)
+      :already-exists
+      (do
+        (d/create-database client {:db-name db-name})
+        :created))))
+
 (defn datomic-connection []
-  (let [conn (d/connect (datomic-client) {:db-name (db-name)})]
+  (let [db (db-name)
+        client (datomic-client)
+        db-status (ensure-database client db)
+        conn (d/connect client {:db-name db})]
+    (log/info "Using database: " db db-status)
     (when-not @db-migrated?
       (migrate conn)
       (reset! db-migrated? true))
