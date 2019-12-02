@@ -88,6 +88,8 @@
           [icons/maps-layers]]]])}))
 
 (defn background-layer-selection-control [e! current-background-layer]
+  ;; FIXME: all map control buttons should be in the same container and separated from
+  ;; other UI elements they control
   [:div {:class (<class map-styles/map-control-buttons 1)}
    [Fab (merge
          {:size :small
