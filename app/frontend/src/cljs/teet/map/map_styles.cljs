@@ -42,11 +42,12 @@
    :border-bottom (str "1px solid " theme-colors/gray-lighter)})
 
 (defn map-control-buttons
-  []
-  {:position :absolute
-   :top "25px"
-   :right "25px"
-   :z-index 9999})
+  ([] (map-control-buttons 0))
+  ([row]
+   {:position :absolute
+    :top (str (+ 25 (* 50 row)) "px")
+    :right "25px"
+    :z-index 9999}))
 
 (defn map-control-button
   []

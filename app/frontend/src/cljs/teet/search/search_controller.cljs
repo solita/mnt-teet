@@ -4,17 +4,22 @@
 
 (defrecord UpdateQuickSearchTerm [term])
 
+(def min-search-term-length
+  "Minimum number of characters that must be typed for search to automatically start."
+  3)
+
 (extend-protocol t/Event
   UpdateQuickSearchTerm
   (process-event [{term :term} app]
-    (.log js/console "NEW-TERM " term)
-    (t/fx (-> app
-              (assoc-in [:quick-search :results] nil)
-              (assoc-in [:quick-search :term] term))
-          {:tuck.effect/type :debounce
-           :timeout 300
-           :effect {:tuck.effect/type :rpc
-                    :endpoint (get-in app [:config :api-url])
-                    :rpc "quicksearch"
-                    :args {:q term}
-                    :result-path [:quick-search :results]}})))
+    (let [app (-> app
+                  (assoc-in [:quick-search :results] nil)
+                  (assoc-in [:quick-search :term] term))]
+      (if (>= (count term) min-search-term-length)
+        (t/fx app
+              {:tuck.effect/type :debounce
+               :timeout 300
+               :effect {:tuck.effect/type :query
+                        :query :thk.project/search
+                        :args {:text term}
+                        :result-path [:quick-search :results]}})
+        app))))

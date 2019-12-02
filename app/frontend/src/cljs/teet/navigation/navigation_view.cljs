@@ -156,7 +156,7 @@
     [Toolbar {:className (herb/join (<class navigation-style/toolbar))}
      [:div {:class (<class navigation-style/logo-style)}
       navigation-logo/maanteeamet-logo]
-     #_[search-view/quick-search e! quick-search]           ;;Removed until implemented properly
+     [search-view/quick-search e! quick-search]
      [navigation-header-links user e!]]]
 
    [Drawer {;:class-name (<class navigation-style/drawer open?)

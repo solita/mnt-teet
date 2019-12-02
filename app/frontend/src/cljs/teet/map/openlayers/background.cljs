@@ -28,7 +28,7 @@
 
 (defmulti create-background-layer :type)
 
-
+;https://tiles.maaamet.ee/tm/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=foto&STYLE=default&FORMAT=image/jpeg&TILEMATRIXSET=LEST&TILEMATRIX=13&TILEROW=3380&TILECOL=4071
 (defmethod create-background-layer :maa-amet [{:keys [url layer default matrix-set style]
                                                :or {url "https://tiles.maaamet.ee/tm/wmts"
                                                     matrix-set "LEST"
