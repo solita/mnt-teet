@@ -60,17 +60,22 @@
 (extend-protocol t/Event
   SaveBasicInformation
   (process-event [_ app]
-    (let [{:thk.project/keys [id name]} (get-in app [:route :project])
-          {:thk.project/keys [project-name owner km-range]} (get-in app [:route :project :basic-information-form])
-          [start-km end-km] km-range]
+    (let [{:thk.project/keys [id name] :as project} (get-in app [:route :project])
+          {:thk.project/keys [project-name owner km-range meter-range-changed-reason]}
+          (get-in app [:route :project :basic-information-form])
+          [start-km end-km] km-range
+          custom-km-range (mapv #(js/parseFloat %) km-range)]
       (t/fx app {:tuck.effect/type :command!
                  :command          :thk.project/initialize!
                  :payload          (merge {:thk.project/id id
-                                           :thk.project/owner owner
-                                           :thk.project/custom-start-m (long (* 1000 start-km))
-                                           :thk.project/custom-end-m (long (* 1000 end-km))}
+                                           :thk.project/owner owner}
                                           (when (not= name project-name)
-                                            {:thk.project/project-name project-name}))
+                                            {:thk.project/project-name project-name})
+                                          (when (not= custom-km-range
+                                                      (project-model/get-column project :thk.project/effective-km-range))
+                                            {:thk.project/m-range-change-reason meter-range-changed-reason
+                                             :thk.project/custom-start-m (long (* 1000 start-km))
+                                             :thk.project/custom-end-m (long (* 1000 end-km))}))
                  :result-event     ->SaveBasicInformationResponse})))
   SaveBasicInformationResponse
   (process-event [_ {:keys [page params query] :as app}]
