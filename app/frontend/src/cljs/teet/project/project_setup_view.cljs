@@ -5,6 +5,7 @@
             [reagent.core :as r]
             [teet.localization :refer [tr tr-tree]]
             [teet.project.project-controller :as project-controller]
+            [teet.project.project-model :as project-model]
             [teet.project.project-style :as project-style]
             [teet.ui.buttons :as buttons]
             [teet.ui.container :as container]
@@ -73,12 +74,15 @@
     (or (not= form-start-m start-m)
         (not= form-end-m end-m))))
 
+(defn- project-km-range [project]
+  (mapv #(gstring/format "%.3f" %)
+        (project-model/get-column project :thk.project/effective-km-range)))
+
 (defn project-setup-basic-information-form
   [e! project]
   (e! (project-controller/->UpdateBasicInformationForm
        {:thk.project/project-name (:thk.project/name project)
-        :thk.project/km-range [(gstring/format "%.3f" (/ (:thk.project/start-m project) 1000.0))
-                               (gstring/format "%.3f" (/ (:thk.project/end-m project) 1000.0))]
+        :thk.project/km-range (project-km-range project)
         :thk.project/owner (:thk.project/owner project)
         :thk.project/manager (:thk.project/manager project)}))
   (fn [e! project]

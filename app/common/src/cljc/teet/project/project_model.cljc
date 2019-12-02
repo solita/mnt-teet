@@ -16,6 +16,9 @@
    :thk.project/road-nr
    :thk.project/start-m
    :thk.project/end-m
+   ;; FIXME: Also handle in project listing
+   :thk.project/custom-start-m
+   :thk.project/custom-end-m
    :thk.project/carriageway
    :thk.project/estimated-start-date
    :thk.project/estimated-end-date
@@ -29,7 +32,7 @@
 (def project-listing-display-columns
   [:thk.project/project-name
    :thk.project/road-nr
-   :thk.project/km-range
+   :thk.project/effective-km-range
    :thk.project/carriageway
    :thk.project/estimated-date-range
    :thk.project/owner-info])
@@ -42,6 +45,10 @@
 (defmethod get-column :thk.project/km-range [{:thk.project/keys [start-m end-m]} _]
   [(/ start-m 1000)
    (/ end-m 1000)])
+
+(defmethod get-column :thk.project/effective-km-range [{:thk.project/keys [start-m end-m custom-start-m custom-end-m]} _]
+  [(/ (or custom-start-m start-m) 1000)
+   (/ (or custom-end-m end-m) 1000)])
 
 (defmethod get-column :thk.project/estimated-date-range
   [{:thk.project/keys [estimated-start-date estimated-end-date]} _]

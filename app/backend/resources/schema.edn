@@ -405,4 +405,15 @@
   :txes [[{:db/ident :thk.lifecycle/id
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
-           :db/unique :db.unique/identity}]]}]
+           :db/unique :db.unique/identity}]]}
+
+ {:db/ident :migration/thk-project-meter-range-changed
+  :txes [[{:db/ident :thk.project/m-range-change-reason
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :thk.project/custom-end-m
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :thk.project/custom-start-m
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one}]]}]

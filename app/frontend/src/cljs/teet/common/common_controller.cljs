@@ -11,7 +11,7 @@
             [teet.app-state :as app-state]
             [teet.login.login-paths :as login-paths]
             [teet.transit :as transit]
-            [teet.localization :refer [tr]]
+            [teet.localization :refer [tr tr-or]]
             postgrest-ui.impl.fetch))
 
 (defonce api-token (r/cursor app-state/app login-paths/api-token))
@@ -96,6 +96,28 @@
                                        (e! (event))
                                        (e! (->DebounceEffect effect)))) timeout))))
 
+(defmulti on-server-error
+  "Handle server error by dispatching on error type. Must return new app
+  state or effect return, same as tuck.core/process-event"
+  (fn [err _app]
+    (-> err ex-data :error)))
+
+(defn default-server-error-handler [err app]
+  (snackbar-controller/open-snack-bar app (tr-or [:error (-> err ex-data :error)]
+                                                 [:error :server-error]) :error))
+
+(defmethod on-server-error :default [err app]
+  (default-server-error-handler err app))
+
+(defmethod on-server-error :authorization-failure [_ app]
+  (reset! api-token nil)
+  (t/fx (-> app
+            (dissoc :user)
+            (snackbar-controller/open-snack-bar (tr [:error :authorization-failure])
+                                                :warning))
+        {:tuck.effect/type :navigate
+         :page :login}))
+
 (extend-protocol t/Event
   DebounceEffect
   (process-event [{effect :effect} app]
@@ -131,32 +153,24 @@
 
   ResponseError
   (process-event [{err :err} app]
-    (case (-> err ex-data :error)
-      :authorization-failure
-      (do
-        (reset! api-token nil)
-        (t/fx (-> app
-                  (dissoc :user)
-                  (snackbar-controller/open-snack-bar (tr [:error :authorization-failure])
-                                                      :warning))
-              {:tuck.effect/type :navigate
-               :page :login}))
-
-      :server-error
-      (snackbar-controller/open-snack-bar app (tr [:error :server-error]) :error)
-
-      (do
-        (log/info "Unrecognized error: " err)
-        app))))
+    (on-server-error err app)))
 
 (defn check-response-status [response]
-  (case (.-status response)
-    401 (throw (ex-info "Authorization failure" {:error :authorization-failure}))
+  (let [status (.-status response)]
+    (cond
+      (= status 401)
+      (throw (ex-info "Authorization failure" {:error :authorization-failure}))
 
-    500 (throw (ex-info "Server error" {:error :server-error}))
+      (= status 200)
+      response
 
-    ;; Return the response for all other codes
-    response))
+      :else
+      (throw (ex-info "Request failure"
+                      {:error (or (some-> response
+                                          .-headers
+                                          (.get "X-TEET-Error")
+                                          keyword)
+                                  :unknown-server-error)})))))
 
 (defn catch-response-error [e!]
   (fn [err]

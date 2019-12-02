@@ -6,40 +6,28 @@
             [clojure.string :as str])
   (:import (java.util Date)))
 
-;; FIXME: these should be received from THK, now create a design/construction
-;; lifecycle that covers the project date range
-(defn initial-lifecycles [{:thk.project/keys [estimated-start-date estimated-end-date]}]
-  (let [start-ms (.getTime estimated-start-date)
-        end-ms (.getTime estimated-end-date)
-        halfway-date (java.util.Date. (+ start-ms (/ (- end-ms start-ms) 2)))]
-    [{:db/id "design-lifecycle"
-      :thk.lifecycle/type [:db/ident :thk.lifecycle-type/design]
-      :thk.lifecycle/estimated-start-date estimated-start-date
-      :thk.lifecycle/estimated-end-date halfway-date}
-     {:db/id "construction-lifecycle"
-      :thk.lifecycle/type [:db/ident :thk.lifecycle-type/construction]
-      :thk.lifecycle/estimated-start-date halfway-date
-      :thk.lifecycle/estimated-end-date estimated-end-date}]))
-
 (defmethod db-api/command! :thk.project/initialize!
   [{conn :conn}
-   {:thk.project/keys [id owner manager project-name]}]
+   {:thk.project/keys [id owner manager project-name custom-start-m custom-end-m]}]
   (let [project-in-datomic (d/pull (d/db conn)
                                    [:thk.project/owner :thk.project/estimated-start-date :thk.project/estimated-end-date]
                                    [:thk.project/id id])]
     (if (project-model/initialized? project-in-datomic)
-      ;; FIXME: Throw error, already initialized
-      :foo
+      (db-api/fail! {:error :project-already-initialized
+                     :msg (str "Project " id " is already initialized")
+                     :status 409})
       (d/transact
        conn
        {:tx-data [(merge {:thk.project/id id
-                          :thk.project/owner [:user/id (:user/id owner)]
-                          :thk.project/lifecycles
-                          (initial-lifecycles project-in-datomic)}
+                          :thk.project/owner [:user/id (:user/id owner)]}
                          (when-not (str/blank? project-name)
                            {:thk.project/project-name project-name})
                          (when manager
-                           {:thk.project/manager [:user/id (:user/id manager)]}))]})))
+                           {:thk.project/manager [:user/id (:user/id manager)]})
+                         (when custom-start-m
+                           {:thk.project/custom-start-m custom-start-m})
+                         (when custom-end-m
+                           {:thk.project/custom-end-m custom-end-m}))]})))
   :ok)
 
 (defmethod db-api/command! :project/delete-task

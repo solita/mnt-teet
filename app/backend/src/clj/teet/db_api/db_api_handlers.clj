@@ -51,7 +51,7 @@
               ;; Default to sending out transit response
               (transit/transit-response response)))))
       (catch Exception e
-        (let [error (-> e ex-data :error)]
+        (let [{:keys [status error]} (ex-data e)]
           (case error
             ;; Return JWT verification failures (likely expired token) as 401 (same as PostgREST)
             :jwt-verification-failed
@@ -63,8 +63,10 @@
             ;; Log all other errors, but don't return exception info to client
             (do
               (log/error e "Exception in handler")
-              {:status 500
-               :body "Internal server error, see log for details"})))))))
+              (merge {:status (or status 500)
+                      :body "Internal server error, see log for details"}
+                     (when error
+                       {:headers {"X-TEET-Error" (name error)}})))))))))
 
 (defn- check-spec [spec data]
   (if (nil? (s/get-spec spec))
