@@ -61,14 +61,15 @@
   SaveBasicInformation
   (process-event [_ app]
     (let [{:thk.project/keys [id name] :as project} (get-in app [:route :project])
-          {:thk.project/keys [project-name owner km-range meter-range-changed-reason]}
+          {:thk.project/keys [project-name owner manager km-range meter-range-changed-reason]}
           (get-in app [:route :project :basic-information-form])
           [start-km end-km] km-range
           custom-km-range (mapv #(js/parseFloat %) km-range)]
       (t/fx app {:tuck.effect/type :command!
                  :command          :thk.project/initialize!
                  :payload          (merge {:thk.project/id id
-                                           :thk.project/owner owner}
+                                           :thk.project/owner owner
+                                           :thk.project/manager manager}
                                           (when (not= name project-name)
                                             {:thk.project/project-name project-name})
                                           (when (not= custom-km-range
