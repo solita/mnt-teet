@@ -52,8 +52,38 @@ if [ ! -f "$RESTRICTIONS_DUMP_FILE" ]; then
     unzip temp.zip
 fi
 
+function docker-ogr2ogr {
+    local db_container_name=teetdb
+    local teetdb_network_name=$(docker inspect $db_container_name | jq -r '.[].NetworkSettings.Networks | keys[]')
+    if [ -f $RESTRICTIONS_DUMP_FILE ]; then
+	MO1="--mount type=bind,source=$PWD/$RESTRICTIONS_DUMP_FILE,target=/$RESTRICTIONS_DUMP_FILE,readonly"
+    else
+	MO1=""
+    fi
+    if [ -f $CADASTRE_DUMP_FILE ]; then
+	MO2="--mount type=bind,source=$PWD/$CADASTRE_DUMP_FILE,target=/$CADASTRE_DUMP_FILE,readonly"
+    else
+	MO2=""
+    fi
+    
+    docker run -it --rm \
+	   --network $teetdb_network_name --link $db_container_name:db \
+	   $MO1 $MO2 \
+	   osgeo/gdal:alpine-small-latest ogr2ogr "$@"
+}
+
+if ogr2ogr --version 2>/dev/null | egrep -q 'GDAL (2\.[4-9]|[3-9])'; then
+    ogr2ogr=ogr2ogr
+    dbhost=localhost
+else
+    echo opting for dockerized ogr2ogr since no new enough ogr2ogr is locally installed, this will only work if you are using dockerized postgresql & your db container is called teetdb
+    ogr2ogr=docker-ogr2ogr
+    dbhost="db"
+fi
+
+
 echo "- Running ogr2ogr"
-ogr2ogr -f "PostgreSQL" PG:"host=localhost user=teet dbname=teet" KITSENDUSED.gpkg -lco schema=restrictions
+$ogr2ogr -f "PostgreSQL" PG:"host=$dbhost user=teet dbname=teet" KITSENDUSED.gpkg -lco schema=restrictions -lco overwrite=yes
 
 if [ -f temp.zip ]; then
     echo "- Removing the temporary zip file"
@@ -74,4 +104,4 @@ if [ ! -f "$CADASTRE_DUMP_FILE" ]; then
 fi
 
 echo "- Running ogr2ogr"
-ogr2ogr -f "PostgreSQL" PG:"host=localhost user=teet dbname=teet" $CADASTRE_DUMP_FILE -lco schema=cadastre -lco overwrite=yes
+$ogr2ogr -f "PostgreSQL" PG:"host=$dbhost user=teet dbname=teet" $CADASTRE_DUMP_FILE -lco schema=cadastre -lco overwrite=yes

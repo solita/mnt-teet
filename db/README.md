@@ -11,6 +11,8 @@ Most non-GIS data is in Datomic.
 
 * Install PostgreSQL with PostGIS extension locally (or run with docker)
 
+* Install GDAL (with recent enough ogr2ogr; at least GDAL 1.11.3 is too old, 2.4.1 is new enough, the latest is also available dockerized at osgeo/gdal:alpine-small-latest). 
+
 * Run `devdb_clean.sh`
 
 ## GIS data dump
