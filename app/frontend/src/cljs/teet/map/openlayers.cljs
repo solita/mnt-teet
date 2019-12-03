@@ -494,7 +494,10 @@
 
                  ::fit
                  (let [[extent-or-geometry] args]
-                   (.fit (.getView ol3) extent-or-geometry)))
+                   (.fit (.getView ol3) extent-or-geometry
+                         ;; FIXME: pass in padding (based on project panel)
+                         ;; #js {:padding  #js [ 0 0 0 500 ]}
+                         )))
 
                (recur (alts! [command-ch unmount-ch]))))
 

@@ -193,33 +193,50 @@
   []
   {:flex 1})
 
-(defn project-map [e! endpoint project tab map]
-  [:div {:style {:flex           1
-                 :display        :flex
-                 :flex-direction :column}}
-   [map-view/map-view e!
-    {:class  (<class map-style)
-     :layers (merge {:thk-project
-                     (map-layers/geojson-layer endpoint
-                                               "geojson_entities"
-                                               {"ids" (str "{" (:db/id project) "}")}
-                                               map-features/project-line-style
-                                               {:fit-on-load? true})}
-                    {:related-restrictions
-                     (map-layers/geojson-layer endpoint
-                                               "geojson_thk_project_related_restrictions"
-                                               {"entity_id" (:db/id project)
-                                                "distance"  200}
-                                               map-features/project-related-restriction-style
-                                               {:opacity 0.5})}
-                    {:related-cadastral-units
-                     (map-layers/geojson-layer endpoint
-                                               "geojson_thk_project_related_cadastral_units"
-                                               {"entity_id" (:db/id project)
-                                                "distance"  200}
-                                               map-features/cadastral-unit-style
-                                               {:opacity 0.5})})}
-    map]])
+(defn- km-range-label-overlays [start-m end-m callback {source :source}]
+  (let [geom (-> ^ol.source.Vector source
+                 .getFeatures
+                 (aget 0)
+                 .getGeometry)
+        start (.getFirstCoordinate geom)
+        end (.getLastCoordinate geom)]
+    (callback
+     [{:coordinate (js->clj start)
+       :content (str (.toFixed (/ start-m 1000) 3) " km")}
+      {:coordinate (js->clj end)
+       :content (str (.toFixed (/ end-m 1000) 3) " km")}])))
+
+(defn project-map [e! endpoint {:thk.project/keys [start-m end-m] :as project} tab map]
+  (r/with-let [overlays (r/atom [])]
+    [:div {:style {:flex           1
+                   :display        :flex
+                   :flex-direction :column}}
+     [map-view/map-view e!
+      {:class  (<class map-style)
+       :layers (merge {:thk-project
+                       (map-layers/geojson-layer endpoint
+                                                 "geojson_entities"
+                                                 {"ids" (str "{" (:db/id project) "}")}
+                                                 map-features/project-line-style
+                                                 {:fit-on-load? true
+                                                  :on-load (partial km-range-label-overlays
+                                                                    start-m end-m #(reset! overlays %))})}
+                      {:related-restrictions
+                       (map-layers/geojson-layer endpoint
+                                                 "geojson_thk_project_related_restrictions"
+                                                 {"entity_id" (:db/id project)
+                                                  "distance"  200}
+                                                 map-features/project-related-restriction-style
+                                                 {:opacity 0.5})}
+                      {:related-cadastral-units
+                       (map-layers/geojson-layer endpoint
+                                                 "geojson_thk_project_related_cadastral_units"
+                                                 {"entity_id" (:db/id project)
+                                                  "distance"  200}
+                                                 map-features/cadastral-unit-style
+                                                 {:opacity 0.5})})
+       :overlays @overlays}
+      map]]))
 
 (defn restriction-component
   [e! {:keys [voond toiming muudetud seadus id open?] :as _restriction}]
