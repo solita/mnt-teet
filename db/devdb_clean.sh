@@ -49,6 +49,7 @@ echo "Importing Maa-amet restrictions data dump"
 if [ ! -f "$RESTRICTIONS_DUMP_FILE" ]; then
     echo "- Downloading the dump"
     curl "https://geoportaal.maaamet.ee/docs/KPO/KITSENDUSED_GPKG.zip" -o temp.zip
+    unzip temp.zip
 fi
 
 echo "- Running ogr2ogr"
