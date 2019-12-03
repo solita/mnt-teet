@@ -52,7 +52,7 @@
 
 (defn map-control-button
   []
-  {:opacity "0.8"
+  {:opacity "0.9"
    :margin-top "5px"
    :transition "all 0.2s ease-in-out"})
 

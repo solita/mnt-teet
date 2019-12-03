@@ -5,12 +5,11 @@
             [teet.document.document-controller :as document-controller]))
 
 (defn test-view [e! app]
-  [document-view/comments e! (get-in app [:new-comment]) {}])
+  [document-view/comments e! (get-in app [:route :activity-task :task/documents 0])])
 
 (drt/define-drtest comment-form-test
-  {:initial-context {:app (drt/atom {:params {:document "666"}
-                                     :document {"666" #:document {:comments []}}})}}
-
+                   {:initial-context {:app (drt/atom {:query {:document "666"}
+                                                      :route {:activity-task {:task/documents [{:db/id "666"}]}}})}}
   drt/init-step
 
   (drt/step :tuck-render "Render comments view"
