@@ -40,7 +40,6 @@
       [theme/theme-provider
        [:div {:style {:display :flex
                       :flex-direction :column
-                      :height "100%"
                       :min-height "100%"}}
         [build-info/top-banner nav-open? page]
         [snackbar/snackbar-container e! snackbar]

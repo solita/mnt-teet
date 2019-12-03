@@ -20,7 +20,7 @@
             :border-bottom    (str "1px solid " theme-colors/gray-light)}
            (when (= page :login)
              {:padding-left 0
-              :transition   0}))))
+              :transition   "none"}))))
 
 (defn top-banner
   "Show build information at the top of the page"
