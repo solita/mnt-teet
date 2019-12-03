@@ -13,6 +13,12 @@
        (ssm/get-parameter :name)
        :parameter :value))
 
+(defn- ssm-param-default [param-path default-value]
+  (try
+    (apply ssm-param param-path)
+    (catch ParameterNotFoundException _e
+      default-value)))
+
 (def init-config {:datomic {:db-name "teet"
                             :client {:server-type :ion}}
 
@@ -59,8 +65,8 @@
                             (assoc :base-url (ssm-param :base-url))
                             (assoc :api-url (ssm-param :api :url))
                             (assoc-in [:document-storage :bucket-name] (ssm-param :s3 :document-bucket))
-                            (assoc-in [:thk :export-bucket-name] (ssm-param :thk :teet-to-thk :bucket-name))
-                            (assoc-in [:thk :export-dir] (ssm-param :thk :teet-to-thk :unprocesseddir)))]
+                            (assoc-in [:thk :export-bucket-name] (ssm-param-default [:thk :teet-to-thk :bucket-name] nil))
+                            (assoc-in [:thk :export-dir] (ssm-param-default [:thk :teet-to-thk :unprocesseddir] nil)))]
              config))))
 
 (defn load-local-config!
