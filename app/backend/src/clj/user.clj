@@ -48,6 +48,20 @@
                   ; :user/organization "Maanteeamet"
                   }])
 
+
+(defn query-project
+  [project-id]
+  (q '[:find (pull ?e [*])
+       :in $ ?project-id
+       :where [?e :thk.project/id ?project-id]] (db) project-id))
+
+(defn retract-from-project!
+  "use like: (retract-from-project! \"17187\" :thk.project/manager 45264694692282960)"
+  [project-id a v]  
+  (d/transact (environment/datomic-connection)
+              {:tx-data [[:db/retract [:thk.project/id project-id]
+                          a v]]}))
+
 (defn make-mock-users!
   []
   (apply tx mock-users))
