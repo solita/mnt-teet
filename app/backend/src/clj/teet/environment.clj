@@ -9,9 +9,12 @@
 
 (defn- ssm-param
   [& param-path]
-  (->> (str "/teet/" (str/join "/" (map name param-path)))
-       (ssm/get-parameter :name)
-       :parameter :value))
+  (let [value (->> (str "/teet/" (str/join "/" (map name param-path)))
+                   (ssm/get-parameter :name)
+                   :parameter :value)]
+    (if (string? value)
+      (str/trim value)
+      value)))
 
 (defn- ssm-param-default [param-path default-value]
   (try
