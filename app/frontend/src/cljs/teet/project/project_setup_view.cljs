@@ -6,6 +6,7 @@
             [teet.localization :refer [tr tr-tree]]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-model :as project-model]
+            [teet.project.project-specs]
             [teet.project.project-style :as project-style]
             [teet.ui.buttons :as buttons]
             [teet.ui.container :as container]
@@ -55,6 +56,8 @@
                   :on-change (fn [e]
                                (on-change [(-> e .-target .-value) end]))
                   :value start
+                  :type :number
+                  :step "0.001"
                   :error (num-range-error error value start)
                   :required required}]]
      [Grid {:item true
@@ -63,6 +66,8 @@
                   :on-change (fn [e]
                                (on-change [start (-> e .-target .-value)]))
                   :value end
+                  :type :number
+                  :step "0.001"
                   :error (num-range-error error value end)
                   :required required}]]]))
 
@@ -93,6 +98,7 @@
                   :on-change-event project-controller/->UpdateBasicInformationForm
                   :save-event      project-controller/->SaveBasicInformation
                   :class (<class project-style/wizard-form)
+                  :spec :project/initialization-form
                   :footer initialization-form-footer}
 
        ^{:attribute :thk.project/project-name
