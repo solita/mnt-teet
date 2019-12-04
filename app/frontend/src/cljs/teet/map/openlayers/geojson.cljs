@@ -39,7 +39,7 @@
               (.then add-features!))))))
 
 (defrecord GeoJSON [source-name projection extent z-index opacity_ min-resolution max-resolution
-                    url-or-data style-fn on-change]
+                    url-or-data content-type style-fn on-change]
   Layer
   (set-z-index [this z-index]
     (assoc this :z-index z-index))
@@ -70,7 +70,7 @@
         (.on source "change" #(on-change {:extent (.getExtent source)
                                           :source source})))
 
-      (.setLoader source (partial load-features source url-or-data))
+      (.setLoader source (partial load-features source url-or-data content-type))
 
       (.setOpacity ol-layer (or opacity_ 1))
 

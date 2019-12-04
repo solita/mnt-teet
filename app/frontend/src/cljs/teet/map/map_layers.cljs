@@ -33,13 +33,16 @@
   [padding {extent :extent}]
   (openlayers/fit! extent {:padding padding}))
 
-(defn geojson-layer [endpoint rpc-name parameters style-fn {:keys [min-resolution max-resolution
-                                                                   z-index opacity
-                                                                   fit-on-load? fit-padding
-                                                                   on-load]
-                                                            :or {z-index 99
-                                                                 opacity 1
-                                                                 fit-padding [0 0 0 0]}}]
+(defn geojson-layer [endpoint rpc-name parameters style-fn
+                     {:keys [min-resolution max-resolution
+                             z-index opacity
+                             fit-on-load? fit-padding
+                             on-load
+                             content-type]
+                      :or {z-index 99
+                           opacity 1
+                           fit-padding [0 0 0 0]
+                           content-type "application/octet-stream"}}]
   (geojson/->GeoJSON rpc-name
                      default-projection
                      nil
@@ -47,6 +50,7 @@
                      opacity
                      min-resolution max-resolution
                      (url (str endpoint "/rpc/" rpc-name) parameters)
+                     content-type
                      style-fn
                      (fn [layer]
                        (when on-load
@@ -67,6 +71,7 @@
                      opacity
                      min-resolution max-resolution
                      geojson
+                     :no-content-type
                      style-fn
                      (when fit-on-load?
                        (partial fit-extent fit-padding))))

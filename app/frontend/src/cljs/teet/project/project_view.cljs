@@ -238,7 +238,8 @@
           "start_m" (some-> start-km-string road-model/parse-km km->m)
           "end_m" (some-> end-km-string road-model/parse-km km->m)}
          map-features/project-line-style
-         options))
+         (merge options
+                {:content-type "application/json"})))
       (map-layers/geojson-layer
        endpoint
        "geojson_entities"
