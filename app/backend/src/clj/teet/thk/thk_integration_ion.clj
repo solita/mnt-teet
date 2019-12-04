@@ -203,8 +203,7 @@
            upsert-projects
            update-entity-info)
     (catch Exception e
-      (println "Got exception in import:" (type e))
-      (ex-data e))))
+      (println e "Exception in import"))))
 
 (defn export-projects [{conn :connection :as ctx}]
   (assoc ctx :csv (thk-export/export-thk-projects conn)))
