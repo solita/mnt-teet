@@ -194,17 +194,19 @@
   {:flex 1})
 
 (defn- km-range-label-overlays [start-m end-m callback {source :source}]
-  (let [geom (-> ^ol.source.Vector source
-                 .getFeatures
-                 (aget 0)
-                 .getGeometry)
-        start (.getFirstCoordinate geom)
-        end (.getLastCoordinate geom)]
-    (callback
-     [{:coordinate (js->clj start)
-       :content (str (.toFixed (/ start-m 1000) 3) " km")}
-      {:coordinate (js->clj end)
-       :content (str (.toFixed (/ end-m 1000) 3) " km")}])))
+  (when-let [geom (some-> ^ol.source.Vector source
+                          .getFeatures
+                          (aget 0)
+                          .getGeometry)]
+    (let [start (.getFirstCoordinate geom)
+          end (.getLastCoordinate geom)]
+      (callback
+       [{:coordinate (js->clj start)
+         :content [map-view/overlay {:arrow-direction :right :height 30}
+                   (str (.toFixed (/ start-m 1000) 3) " km")]}
+        {:coordinate (js->clj end)
+         :content [map-view/overlay {:arrow-direction :left :height 30}
+                   (str (.toFixed (/ end-m 1000) 3) " km")]}]))))
 
 (defn project-map [e! endpoint {:thk.project/keys [start-m end-m] :as project} tab map]
   (r/with-let [overlays (r/atom [])]
