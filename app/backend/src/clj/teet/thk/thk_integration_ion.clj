@@ -10,9 +10,9 @@
             [teet.thk.thk-export :as thk-export]
             [teet.environment :as environment]
             [datomic.client.api :as d]
-            [org.httpkit.client :as client]
             [teet.login.login-api-token :as login-api-token]
-            [clojure.data.csv :as csv]))
+            [clojure.data.csv :as csv]
+            [teet.project.project-geometry :as project-geometry]))
 
 (def test-event
   {:input "{\"Records\":[{\"s3\":{\"bucket\":{\"name\":\"teet-dev-csv-import\"},\"object\":{\"key\":\"thk/unprocessed/not_hep.csv\"}}}]}"})
@@ -137,34 +137,17 @@
                                                                  "\n"
                                                                  stack-trace)))}))
 
-(defn- update-entity-info [{:keys [db api-url api-shared-secret] :as ctx}]
-  (let [updated-projects (d/q '[:find (pull ?e [:db/id :thk.project/name :thk.project/road-nr
-                                                :thk.project/carriageway
-                                                :thk.project/start-m :thk.project/end-m])
-                                :in $
-                                :where [?e :thk.project/road-nr _]]
-                              db)]
-    (log/info "Update entity info for" (count updated-projects) "projects.")
-    (let [response @(client/post (str api-url "/rpc/store_entity_info")
-                                 {:headers {"Content-Type" "application/json"
-                                            "Authorization" (str "Bearer " (login-api-token/create-backend-token
-                                                                            api-shared-secret))}
-                                  :body (cheshire/encode
-                                         (for [{id :db/id
-                                                :thk.project/keys [name road-nr carriageway start-m end-m]}
-                                               (map first updated-projects)]
-                                           {:id (str id)
-                                            :type "project"
-                                            :road road-nr
-                                            :carriageway carriageway
-                                            :start_m start-m
-                                            :end_m end-m
-                                            :tooltip name}))})]
-      (when-not (= 200 (:status response))
-        (throw (ex-info "store_entity_info RPC call failed"
-                        {:response response})))
-      (assoc ctx
-             :entity-info-updated? true))))
+(defn- update-entity-info [{db :db :as ctx}]
+  (let [projects (d/q '[:find (pull ?e [:db/id :thk.project/name :thk.project/road-nr
+                                        :thk.project/carriageway
+                                        :thk.project/start-m :thk.project/end-m
+                                        :thk.project/custom-start-m :thk.project/custom-end-m])
+                        :in $
+                        :where [?e :thk.project/road-nr _]]
+                      db)]
+    (log/info "Update entity info for all" (count projects) "projects.")
+    (project-geometry/update-project-geometries! (select-keys ctx [:api-url :api-shared-secret])
+                                                 projects)))
 
 (defn- on-import-error [{:keys [error] :as ctx}]
   ;; TODO: Metrics?
