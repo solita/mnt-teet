@@ -14,6 +14,7 @@
             [teet.project.project-model :as project-model]
             [teet.project.project-style :as project-style]
             [teet.project.project-setup-view :as project-setup-view]
+            [teet.road.road-model :as road-model :refer [km->m m->km]]
             [teet.task.task-controller :as task-controller]
             teet.task.task-spec
             [teet.ui.breadcrumbs :as breadcrumbs]
@@ -193,7 +194,7 @@
   []
   {:flex 1})
 
-(defn- km-range-label-overlays [start-m end-m callback {source :source}]
+(defn- km-range-label-overlays [start-label end-label callback {source :source}]
   (when-let [geom (some-> ^ol.source.Vector source
                           .getFeatures
                           (aget 0)
@@ -203,10 +204,47 @@
       (callback
        [{:coordinate (js->clj start)
          :content [map-view/overlay {:arrow-direction :right :height 30}
-                   (str (.toFixed (/ start-m 1000) 3) " km")]}
+                   start-label]}
         {:coordinate (js->clj end)
          :content [map-view/overlay {:arrow-direction :left :height 30}
-                   (str (.toFixed (/ end-m 1000) 3) " km")]}]))))
+                   end-label]}]))))
+
+(defn project-road-geometry-layer
+  "Show project geometry or custom road part in case the start and end
+  km are being edited during initialization"
+  [{:thk.project/keys [start-m end-m road-nr carriageway]
+    :keys [basic-information-form] :as project}
+   endpoint overlays]
+  (let [[start-label end-label] (if basic-information-form
+                                  (mapv (comp road-model/format-distance
+                                              km->m
+                                              road-model/parse-km)
+                                        (:thk.project/km-range basic-information-form))
+                                  (mapv road-model/format-distance
+                                        [start-m end-m]))
+        options {:fit-on-load? true
+                 ;; Use left side padding so that road is not shown under the project panel
+                 :fit-padding [0 0 0 (* 1.05 (project-style/project-panel-width))]
+                 :on-load (partial km-range-label-overlays
+                                   start-label end-label
+                                   #(reset! overlays %))}]
+    (if basic-information-form
+      (let [{[start-km-string end-km-string] :thk.project/km-range} basic-information-form]
+        (map-layers/geojson-layer
+         endpoint
+         "geojson_road_geometry"
+         {"road" road-nr
+          "carriageway" carriageway
+          "start_m" (some-> start-km-string road-model/parse-km km->m)
+          "end_m" (some-> end-km-string road-model/parse-km km->m)}
+         map-features/project-line-style
+         options))
+      (map-layers/geojson-layer
+       endpoint
+       "geojson_entities"
+       {"ids" (str "{" (:db/id project) "}")}
+       map-features/project-line-style
+       options))))
 
 (defn project-map [e! endpoint {:thk.project/keys [start-m end-m] :as project} tab map]
   (r/with-let [overlays (r/atom [])]
@@ -216,16 +254,7 @@
      [map-view/map-view e!
       {:class  (<class map-style)
        :layers (merge {:thk-project
-                       (map-layers/geojson-layer
-                        endpoint
-                        "geojson_entities"
-                        {"ids" (str "{" (:db/id project) "}")}
-                        map-features/project-line-style
-                        {:fit-on-load? true
-                         ;; Use left side padding so that road is not shown under the project panel
-                         :fit-padding [0 0 0 (* 1.05 (project-style/project-panel-width))]
-                         :on-load (partial km-range-label-overlays
-                                           start-m end-m #(reset! overlays %))})}
+                       (project-road-geometry-layer project endpoint overlays)}
                       {:related-restrictions
                        (map-layers/geojson-layer endpoint
                                                  "geojson_thk_project_related_restrictions"

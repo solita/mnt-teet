@@ -14,7 +14,7 @@
                                      (str name "=" val))
                                    params))))
 
-(defn load-features [^ol.source.Vector source url-or-data _extent _resolution _projection]
+(defn load-features [^ol.source.Vector source url-or-data content-type _extent _resolution _projection]
   ;;(log/info "LOAD " url-or-data ", extent:" extent ", resolution: " resolution ", projection: " projection)
   (let [add-features! (fn [json]
                         ;;(js/console.log "loaded geojson: " json)
@@ -33,7 +33,8 @@
 
           :else
           (-> (@postgrest-ui.impl.fetch/fetch-impl
-               url-or-data #js {:headers #js {"Accept" "application/octet-stream"}})
+               url-or-data #js {:headers #js {"Accept" (or content-type
+                                                           "application/octet-stream")}})
               (.then #(.json %))
               (.then add-features!))))))
 
