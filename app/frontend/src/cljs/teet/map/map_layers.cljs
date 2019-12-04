@@ -2,7 +2,8 @@
   (:require [teet.map.openlayers.mvt :as mvt]
             [teet.map.openlayers.geojson :as geojson]
             [teet.map.openlayers :as openlayers]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.log :as log]))
 
 (def ^:const default-projection "EPSG:3301")
 
@@ -29,13 +30,16 @@
              style-fn))
 
 (defn fit-extent
-  [{extent :extent}]
-  (openlayers/fit! extent))
+  [padding {extent :extent}]
+  (openlayers/fit! extent {:padding padding}))
 
 (defn geojson-layer [endpoint rpc-name parameters style-fn {:keys [min-resolution max-resolution
-                                                                   z-index opacity fit-on-load? on-load]
+                                                                   z-index opacity
+                                                                   fit-on-load? fit-padding
+                                                                   on-load]
                                                             :or {z-index 99
-                                                                 opacity 1}}]
+                                                                 opacity 1
+                                                                 fit-padding [0 0 0 0]}}]
   (geojson/->GeoJSON rpc-name
                      default-projection
                      nil
@@ -48,12 +52,14 @@
                        (when on-load
                          (on-load layer))
                        (when fit-on-load?
-                         (fit-extent layer)))))
+                         (fit-extent fit-padding layer)))))
 
 (defn geojson-data-layer [name geojson style-fn  {:keys [min-resolution max-resolution
-                                                         z-index opacity fit-on-load?]
+                                                         z-index opacity fit-on-load?
+                                                         fit-padding]
                                                   :or {z-index 99
-                                                       opacity 1}}]
+                                                       opacity 1
+                                                       fit-padding [0 0 0 0]}}]
   (geojson/->GeoJSON name
                      default-projection
                      nil
@@ -63,4 +69,4 @@
                      geojson
                      style-fn
                      (when fit-on-load?
-                       fit-extent)))
+                       (partial fit-extent fit-padding))))
