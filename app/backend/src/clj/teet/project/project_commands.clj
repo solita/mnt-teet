@@ -3,7 +3,9 @@
             [datomic.client.api :as d]
             [teet.log :as log]
             [teet.project.project-model :as project-model]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [teet.project.project-geometry :as project-geometry]
+            [teet.environment :as environment])
   (:import (java.util Date)))
 
 (defmethod db-api/command! :thk.project/initialize!
@@ -17,20 +19,29 @@
       (db-api/fail! {:error :project-already-initialized
                      :msg (str "Project " id " is already initialized")
                      :status 409})
-      (d/transact
-       conn
-       {:tx-data [(merge {:thk.project/id id
-                          :thk.project/owner [:user/id (:user/id owner)]}
-                         (when-not (str/blank? project-name)
-                           {:thk.project/project-name project-name})
-                         (when manager
-                           {:thk.project/manager [:user/id (:user/id manager)]})
-                         (when custom-start-m
-                           {:thk.project/custom-start-m custom-start-m})
-                         (when custom-end-m
-                           {:thk.project/custom-end-m custom-end-m})
-                         (when m-range-change-reason
-                           {:thk.project/m-range-change-reason m-range-change-reason}))]})))
+      (let [{db :db-after}
+            (d/transact
+             conn
+             {:tx-data [(merge {:thk.project/id id
+                                :thk.project/owner [:user/id (:user/id owner)]}
+                               (when-not (str/blank? project-name)
+                                 {:thk.project/project-name project-name})
+                               (when manager
+                                 {:thk.project/manager [:user/id (:user/id manager)]})
+                               (when custom-start-m
+                                 {:thk.project/custom-start-m custom-start-m})
+                               (when custom-end-m
+                                 {:thk.project/custom-end-m custom-end-m})
+                               (when m-range-change-reason
+                                 {:thk.project/m-range-change-reason m-range-change-reason}))]})]
+        (project-geometry/update-project-geometries!
+         (environment/config-map {:api-url [:api-url]
+                                  :api-shared-secret [:auth :jwt-secret]})
+         [(d/pull db '[:db/id :thk.project/name
+                       :thk.project/road-nr :thk.project/carriageway
+                       :thk.project/start-m :thk.project/end-m
+                       :thk.project/custom-start-m :thk.project/custom-end-m]
+                  [:thk.project/id id])]))))
   :ok)
 
 (defmethod db-api/command! :project/delete-task
