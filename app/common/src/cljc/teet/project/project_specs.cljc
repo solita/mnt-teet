@@ -11,3 +11,9 @@
   (s/keys :req [:activity/name :activity/status
                 :activity/estimated-start-date
                 :activity/estimated-end-date]))
+
+(s/def :project/initialization-form
+  (s/keys :req [:thk.project/project-name
+                :thk.project/km-range
+                :thk.project/owner
+                :thk.project/manager]))
