@@ -180,7 +180,7 @@
                                (when-let [tt (:map/tooltip geom)]
                                  ;; Returns a function for current tooltip value or nil
                                  ;; if item has no tooltip specified.
-                                 (constantly [:div tt])))
+                                 (constantly [:div (pr-str tt)])))
 
          :geometries         (merge (get-in map-data [:geometries])
                                     (get-in map-data [:layers])
@@ -213,3 +213,13 @@
                 :layer   layer
                 :style   ""
                 :default true}))}]])))
+
+(defn overlay
+  "Helper for creating map overlay components"
+  [{:keys [arrow-direction height]
+    :or {height 60}} content]
+  [:div {:class (<class map-styles/map-overlay-container height arrow-direction)}
+   (when arrow-direction
+     [:div {:class (<class map-styles/map-overlay-arrow height arrow-direction)}])
+   [:div {:class (<class map-styles/map-overlay-content)}
+    content]])

@@ -58,7 +58,47 @@
 
 (defn map-overlay
   []
-  {:position "relative"
-   :left "10px"
-   :padding "0.5rem"
-   :background-color "wheat"})
+  {}
+  #_{:right 0
+   :position :absolute})
+
+(def overlay-background-color "#005E87")
+
+(defn map-overlay-container [height arrow-direction]
+  (let [half-height (str (/ height 2) "px")
+        positioning (cond
+                      (= arrow-direction :right)
+                      {:right half-height}
+
+                      (= arrow-direction :left)
+                      {:left half-height}
+
+                      :else
+                      {})]
+    (merge {:height (str height "px")
+            :background-color overlay-background-color
+            :position :absolute
+            :display :flex
+            :align-items :center
+            :top (str "-" half-height)}
+           positioning)))
+
+(defn map-overlay-arrow [height arrow-direction]
+  (let [half-height (str (/ height 2) "px")]
+    (merge
+     {:width 0
+      :height 0
+      :border-top (str half-height " solid transparent")
+      :border-bottom (str half-height " solid transparent")
+      :position :absolute}
+     (case arrow-direction
+       :right {:border-left (str half-height " solid " overlay-background-color)
+               :right (str "-" half-height)}
+       :left {:left (str "-" half-height)
+              :border-right (str half-height " solid " overlay-background-color)}))))
+
+(defn map-overlay-content []
+  {:display :inline-block
+   :margin "0 0.5rem"
+   :white-space :nowrap
+   :color theme-colors/white})

@@ -108,11 +108,12 @@
   "Fit map view to given extent or geometry.
   If argument is a vector it is interpreted to be an extent [xmin ymin xmax ymax].
   Otherwise argument should be OpenLayers JS extent or geometry object."
-  [extent-or-geometry]
-  (let [to (if (vector? extent-or-geometry)
-             (clj->js extent-or-geometry)
-             extent-or-geometry)]
-    (go (>! command-ch [::fit to]))))
+  ([extent-or-geometry] (fit! extent-or-geometry {}))
+  ([extent-or-geometry options]
+   (let [to (if (vector? extent-or-geometry)
+              (clj->js extent-or-geometry)
+              extent-or-geometry)]
+     (go (>! command-ch [::fit to options])))))
 
 ;;;;;;;;;
 ;; Define the React lifecycle callbacks to manage the OpenLayers
@@ -493,11 +494,11 @@
                                       {:hover {:x x :y y :tooltip teksti}}))
 
                  ::fit
-                 (let [[extent-or-geometry] args]
+                 (let [[extent-or-geometry {:keys [padding]
+                                            :or {padding [0 0 0 0]}}] args]
+                   (log/info "PADDING: " padding)
                    (.fit (.getView ol3) extent-or-geometry
-                         ;; FIXME: pass in padding (based on project panel)
-                         ;; #js {:padding  #js [ 0 0 0 500 ]}
-                         )))
+                         (clj->js {:padding (clj->js padding)}))))
 
                (recur (alts! [command-ch unmount-ch]))))
 
@@ -508,8 +509,7 @@
                                     :maxZoom max-zoom
                                     :minZoom min-zoom
                                     :projection default-projection
-                                    :extent (clj->js estonian-extent)
-                                    }
+                                    :extent (clj->js estonian-extent)}
                                    (when current-zoom current-zoom)))))
 
     ;;(.log js/console "L.map = " ol3)

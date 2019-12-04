@@ -78,6 +78,9 @@
   []
   {:margin "1rem 0"})
 
+(defn project-panel-width []
+  (int (* 0.35 js/window.innerWidth)))
+
 (defn project-content-overlay []
   (merge
    (common-styles/content-paper-style)
@@ -85,7 +88,7 @@
     :left "25px"
     :top "25px"
     :bottom "25px"
-    :width "35vw"
+    :width (str (project-panel-width) "px")
     :max-height "calc(100vh - 275px)"
     :overflow-y :auto
     :display :flex
