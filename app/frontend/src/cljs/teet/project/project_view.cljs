@@ -216,13 +216,16 @@
      [map-view/map-view e!
       {:class  (<class map-style)
        :layers (merge {:thk-project
-                       (map-layers/geojson-layer endpoint
-                                                 "geojson_entities"
-                                                 {"ids" (str "{" (:db/id project) "}")}
-                                                 map-features/project-line-style
-                                                 {:fit-on-load? true
-                                                  :on-load (partial km-range-label-overlays
-                                                                    start-m end-m #(reset! overlays %))})}
+                       (map-layers/geojson-layer
+                        endpoint
+                        "geojson_entities"
+                        {"ids" (str "{" (:db/id project) "}")}
+                        map-features/project-line-style
+                        {:fit-on-load? true
+                         ;; Use left side padding so that road is not shown under the project panel
+                         :fit-padding [0 0 0 (* 1.05 (project-style/project-panel-width))]
+                         :on-load (partial km-range-label-overlays
+                                           start-m end-m #(reset! overlays %))})}
                       {:related-restrictions
                        (map-layers/geojson-layer endpoint
                                                  "geojson_thk_project_related_restrictions"
