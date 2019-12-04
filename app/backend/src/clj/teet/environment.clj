@@ -92,6 +92,11 @@
 (defn config-value [& path]
   (get-in @config (vec path)))
 
+(defn config-map [key-path-map]
+  (reduce-kv (fn [acc key path]
+               (assoc acc key (apply config-value path)))
+             {} key-path-map))
+
 (def datomic-client
   (memoize #(d/client (config-value :datomic :client))))
 
