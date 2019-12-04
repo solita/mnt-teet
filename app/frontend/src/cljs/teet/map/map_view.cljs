@@ -180,7 +180,7 @@
                                (when-let [tt (:map/tooltip geom)]
                                  ;; Returns a function for current tooltip value or nil
                                  ;; if item has no tooltip specified.
-                                 (constantly [:div tt])))
+                                 (constantly [:div (pr-str tt)])))
 
          :geometries         (merge (get-in map-data [:geometries])
                                     (get-in map-data [:layers])

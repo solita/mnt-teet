@@ -62,8 +62,8 @@ SELECT row_to_json(fc)::TEXT
                array_to_json(array_agg(f)) as features
           FROM (SELECT 'Feature' as type,
                        ST_AsGeoJSON(ky.geom)::json as geometry,
-                       json_build_object('id', ky.id, 'tooltip', ky.tunnus) as properties
+                       json_build_object('id', ky.id, 'tooltip', json_build_object('tunnus', ky.tunnus, 'haldusyksuse_kood', ky.haldusyksuse_kood, 'maakonna_nimi', ky.maakonna_nimi, 'omavalitsuse_nimi', ky.omavalitsuse_nimi, 'lahiaadress', ky.lahiaadress, 'registreeritud', ky.registreeritud, 'muudetud', ky.muudetud, 'sihtotstarve_1', ky.sihtotstarve_1, 'sihtotstarve_2', ky.sihtotstarve_2, 'sihtotstarve_3', ky.sihtotstarve_3, 'moodustatud', ky.moodustatud , 'moodistaja', ky.moodistaja, 'moodustamisviis', ky.moodustamisviis, 'registreerimisviis', ky.registreerimisviis, 'omandivorm', ky.omandivorm)) as properties
                   FROM cadastre.katastriyksus ky
-                  JOIN teet.entity e ON ST_DWithin(ky.geom, e.geometry, distance)
+                  JOIN teet.entity e ON ST_DWithin(ky.geom::geometry, e.geometry, distance::double precision)
                  WHERE e.id = entity_id) f) fc;
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;
