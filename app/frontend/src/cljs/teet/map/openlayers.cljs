@@ -603,26 +603,19 @@
 (defn- update-ol3-overlays
   "Update map overlays based on the data, mutates the ol3 map object."
   [component overlays]
-  (let [{ol3 :ol3
-         previous-overlays :overlays} (reagent/state component)
-        overlays-set (into #{} overlays)]
+  (let [{ol3 :ol3} (reagent/state component)]
 
-    ;; Remove overlays not present in new data
-    (doseq [[ov overlay] previous-overlays
-            :when (not (overlays-set ov))]
-      (.removeOverlay ol3 overlay))
+    ;; Remove all overlays
+    (let [ol-overlays (.getOverlays ol3)]
+      (dotimes [_ (.getLength ol-overlays)]
+        (.removeAt ol-overlays 0)))
 
-    (reagent/set-state
-     component
-     {:overlays
-      (into {}
-            (for [{:keys [coordinate content] :as ov} overlays
-                  :when (not (contains? previous-overlays ov))
-                  :let [overlay (create-overlay coordinate content)]]
-              (do
-                (log/info "ADD OVERLAY TO " coordinate " with " content)
-                (.addOverlay ol3 overlay)
-                [ov overlay])))})))
+    (dorun
+     (for [{:keys [coordinate content]} overlays
+           :let [overlay (create-overlay coordinate content)]]
+       (do
+         (log/info "ADD OVERLAY TO " coordinate " with " content)
+         (.addOverlay ol3 overlay))))))
 
 (defn- update-ol3-background-layers [this new-layers]
   (let [{:keys [ol3 background-layers]} (reagent/state this)]
