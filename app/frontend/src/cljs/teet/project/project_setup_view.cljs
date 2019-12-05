@@ -15,7 +15,9 @@
             [teet.ui.material-ui :refer [Grid]]
             [teet.ui.select :as select]
             [teet.ui.text-field :refer [TextField]]
-            [teet.ui.typography :as typography]))
+            [teet.ui.typography :as typography]
+            [teet.road.road-model :as road-model]
+            [teet.log :as log]))
 
 (defn initialization-form-footer [{:keys [cancel validate disabled?]}]
   [:div {:class (<class project-style/wizard-footer)}
@@ -37,16 +39,23 @@
 (defn- nan? [x]
   (not (= x x)))
 
-(defn- num-range-error [error [start end] own-value]
-  (or error
-      (and own-value (nan? (js/parseFloat own-value)))
-      (and start end
-           (< (js/parseFloat end)
-              (js/parseFloat start)))))
+(defn- num-range-error [error [start end] own-value min-value max-value]
+  (let [v (when own-value
+            (js/parseFloat own-value))]
+    (or error
+        (nan? v)
+        (and v min-value (< v min-value))
+        (and v max-value (> v max-value))
+        (and start end
+             (< (js/parseFloat end)
+                (js/parseFloat start))))))
 
 ;; FIXME: This is a generic component, move to another namespace
-(defn num-range [{:keys [error value on-change start-label end-label required spacing]
-                 :or {spacing 3}}]
+(defn num-range [{:keys [error value on-change start-label end-label required spacing
+                         min-value max-value]
+                  :or {spacing 3}
+                  :as nr}]
+  (log/info "num-range " nr)
   (let [[start end] value]
     [Grid {:container true
            :spacing spacing}
@@ -58,7 +67,7 @@
                   :value start
                   :type :number
                   :step "0.001"
-                  :error (num-range-error error value start)
+                  :error (num-range-error error value start min-value max-value)
                   :required required}]]
      [Grid {:item true
             :xs 6}
@@ -68,7 +77,7 @@
                   :value end
                   :type :number
                   :step "0.001"
-                  :error (num-range-error error value end)
+                  :error (num-range-error error value end min-value max-value)
                   :required required}]]]))
 
 (defn km-range-changed? [project]
@@ -90,10 +99,10 @@
         :thk.project/km-range (project-km-range project)
         :thk.project/owner (:thk.project/owner project)
         :thk.project/manager (:thk.project/manager project)}))
-  (fn [e! project]
+  (fn [e! {form :basic-information-form :as project}]
     [:div {:class (<class project-style/initialization-form-wrapper)}
      [form/form {:e!              e!
-                 :value           (:basic-information-form project)
+                 :value           form
                  :on-change-event project-controller/->UpdateBasicInformationForm
                  :save-event      project-controller/->SaveBasicInformation
                  :class (<class project-style/wizard-form)
@@ -106,7 +115,9 @@
 
       ^{:xs 12 :attribute :thk.project/km-range}
       [num-range {:start-label "Start km"
-                  :end-label "End km"}]
+                  :end-label "End km"
+                  :min-value (some-> form :road-info :start_m road-model/m->km)
+                  :max-value (some-> form :road-info :end_m road-model/m->km)}]
 
       ;; FIXME: The map should also reflect the changed range
       (when (km-range-changed? project)
