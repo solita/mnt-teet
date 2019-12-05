@@ -9,6 +9,7 @@
             [teet.common.common-controller :as common-controller]))
 
 (defrecord Login [demo-user])
+(defrecord Logout [])
 (defrecord SetSessionInfo [after-login? navigate-data session-info])
 (defrecord SetPassword [pw])
 (defrecord RefreshToken [])
@@ -37,9 +38,11 @@
   CheckSessionError
   (process-event [_ app]
     (reset! common-controller/api-token nil)
-    (-> app
-        (assoc :checking-session? false)
-        (snackbar-controller/open-snack-bar "Login session timed out" :warning)))
+    (t/fx (-> app
+              (assoc :checking-session? false)
+              (snackbar-controller/open-snack-bar "Login session timed out" :warning))
+          {::tuck-effect/type :navigate
+           :page :login}))
 
   CheckSessionToken ; Get token from cookie session when logging in
   (process-event [_ app]
@@ -69,6 +72,12 @@
              :command :login
              :payload (assoc user :site-password (get-in app [:login :password]))
              :result-event (partial ->SetSessionInfo true navigate-data)})))
+
+  Logout
+  (process-event [_ app]
+    (t/fx app
+          {::tuck-effect/type :clear-api-token
+           :token nil}))
 
   SetPassword
   (process-event [{:keys [pw]} app]

@@ -12,7 +12,8 @@
             [teet.search.search-view :as search-view]
             [teet.common.common-controller :refer [when-feature]]
             [herb.core :as herb :refer [<class]]
-            [teet.user.user-controller :as user-controller]))
+            [teet.user.user-controller :as user-controller]
+            [teet.login.login-controller :as login-controller]))
 
 (def entity-quote (fnil js/escape "(nil)"))
 
@@ -133,7 +134,8 @@
   [:div {:class (herb/join (<class navigation-style/logout-container-style)
                            (<class navigation-style/divider-style))}
    [Link {:class (<class navigation-style/logout-style)
-          :href "/#/login"}
+          :href "/#/login"
+          :on-click (e! login-controller/->Logout)}
     "Log out"]])
 
 (defn navigation-header-links

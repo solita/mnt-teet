@@ -19,6 +19,8 @@
         :crumb (tr [:projects :map-view])
         :view teet.projects.projects-view/projects-map-page}
  :login {:path "/login"}
+ :check-session {:path "/check-session"
+                 :view teet.main/checking-session}
 
  :projects {:path "/projects/map"
             :crumb (tr [:projects :map-view])
