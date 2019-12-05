@@ -91,41 +91,40 @@
         :thk.project/owner (:thk.project/owner project)
         :thk.project/manager (:thk.project/manager project)}))
   (fn [e! project]
-    [:<>
-     [:div {:class (<class project-style/initialization-form-wrapper)}
-      [form/form {:e!              e!
-                  :value           (:basic-information-form project)
-                  :on-change-event project-controller/->UpdateBasicInformationForm
-                  :save-event      project-controller/->SaveBasicInformation
-                  :class (<class project-style/wizard-form)
-                  :spec :project/initialization-form
-                  :footer initialization-form-footer}
+    [:div {:class (<class project-style/initialization-form-wrapper)}
+     [form/form {:e!              e!
+                 :value           (:basic-information-form project)
+                 :on-change-event project-controller/->UpdateBasicInformationForm
+                 :save-event      project-controller/->SaveBasicInformation
+                 :class (<class project-style/wizard-form)
+                 :spec :project/initialization-form
+                 :footer initialization-form-footer}
 
-       ^{:attribute :thk.project/project-name
-         :adornment [original-name-adornment e! project]}
-       [TextField {:full-width true :variant :outlined}]
+      ^{:attribute :thk.project/project-name
+        :adornment [original-name-adornment e! project]}
+      [TextField {:full-width true :variant :outlined}]
 
-       ^{:xs 12 :attribute :thk.project/km-range}
-       [num-range {:start-label "Start km"
-                   :end-label "End km"}]
+      ^{:xs 12 :attribute :thk.project/km-range}
+      [num-range {:start-label "Start km"
+                  :end-label "End km"}]
 
-       ;; FIXME: The map should also reflect the changed range
-       (when (km-range-changed? project)
-         ^{:xs 12 :attribute :thk.project/meter-range-changed-reason}
-         [TextField {:multiline true
-                     :rows 3}])
+      ;; FIXME: The map should also reflect the changed range
+      (when (km-range-changed? project)
+        ^{:xs 12 :attribute :thk.project/meter-range-changed-reason}
+        [TextField {:multiline true
+                    :rows 3}])
 
-       ^{:attribute :thk.project/owner}
-       [select/select-user {:e! e!}]
+      ^{:attribute :thk.project/owner}
+      [select/select-user {:e! e!}]
 
-       ^{:attribute :thk.project/manager}
-       [select/select-user {:e! e!}]]]]))
+      ^{:attribute :thk.project/manager}
+      [select/select-user {:e! e!}]]]))
 
 (defn restrictions-listing
   [e! {:keys [restrictions checked-restrictions toggle-restriction]}]
   (r/with-let [open-types (r/atom #{})
                restrictions-by-type (group-by :type restrictions)]
-    [:<>
+    [:div {:class (<class project-style/initialization-form-wrapper)}
      (doall
       (for [[group restrictions] restrictions-by-type
             :let [group-checked (into #{}
@@ -150,10 +149,12 @@
 (defn project-setup-restrictions-form [e! _]
   (e! (project-controller/->FetchRestrictions))
   (fn [e! {:keys [restriction-candidates checked-restrictions] :as project}]
-    (when restriction-candidates
-      [restrictions-listing e! {:restrictions restriction-candidates
-                                :checked-restrictions (or checked-restrictions #{})
-                                :toggle-restriction (e! project-controller/->ToggleRestriction)}])))
+    [:<>
+     (when restriction-candidates
+       [restrictions-listing e! {:restrictions restriction-candidates
+                                 :checked-restrictions (or checked-restrictions #{})
+                                 :toggle-restriction (e! project-controller/->ToggleRestriction)}])
+     [initialization-form-footer {}]]))
 
 (defn project-setup-cadastral-units-form [e! project]
   [:div "Tada"])

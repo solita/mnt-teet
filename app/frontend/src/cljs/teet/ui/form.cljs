@@ -134,7 +134,8 @@
                     :display :flex
                     :flex-direction :column
                     :justify-content :space-between
-                    :overflow :hidden}}
+                    :overflow-x :hidden
+                    :overflow-y :scroll}}
      [:div {:class class}
       [Grid {:container true
              :spacing spacing}

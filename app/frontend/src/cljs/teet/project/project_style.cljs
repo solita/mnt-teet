@@ -98,14 +98,16 @@
   {:padding 0
    :flex 1
    :display :flex
-   :flex-direction :column})
+   :flex-direction :column
+   :overflow-y :auto})
 
 (defn initialization-form-wrapper
   []
   {:flex 1
    :display :flex
    :flex-direction :column
-   :justify-content :space-between})
+   :justify-content :space-between
+   :overflow-y :scroll})
 
 (defn initialization-form
   []
@@ -128,7 +130,8 @@
 (defn wizard-form
   []
   {:background-color theme-colors/white
-   :padding "1.5rem"})
+   :padding "1.5rem"
+   :overflow-y :scroll})
 
 (defn wizard-footer
   []
@@ -138,4 +141,5 @@
    :padding "0.5rem"
    :background-color theme-colors/gray-lightest
    :border-top (str "1px solid" theme-colors/gray-lighter)
-   :align-items :center})
+   :align-items :center
+   :overflow-y :visible})
