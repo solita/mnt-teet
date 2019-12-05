@@ -43,7 +43,6 @@
 (defrecord SaveBasicInformation [])
 (defrecord SaveBasicInformationResponse [])
 (defrecord UpdateBasicInformationForm [form-data])
-(defrecord UpdateRoadInfo [road-info])
 (defrecord SaveRestrictions [])
 (defrecord UpdateRestrictionsForm [form-data])
 (defrecord SaveCadastralUnits [])
@@ -90,21 +89,16 @@
 
   UpdateBasicInformationForm
   (process-event [{:keys [form-data]} app]
-    (let [{:thk.project/keys [road-nr carriageway]}
-          (get-in app [:route :project :basic-information-form])]
+    (let [{:thk.project/keys [road-nr carriageway]} (get-in app [:route :project])]
       (t/fx (update-in app [:route :project :basic-information-form]
                        merge form-data)
             {:tuck.effect/type :rpc
              :endpoint (get-in app [:config :api-url])
+             :method :GET
              :rpc "road_info"
              :args {:road road-nr
                     :carriageway carriageway}
-             :result-event ->UpdateRoadInfo})))
-
-  UpdateRoadInfo
-  (process-event [{road-info :road-info} app]
-    (log/info "ROAD InfO " road-info)
-    app)
+             :result-path [:route :project :basic-information-form :road-info]})))
 
   FetchRestrictions
   (process-event [_ app]
