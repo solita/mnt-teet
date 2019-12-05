@@ -12,9 +12,10 @@
             [teet.login.login-paths :as login-paths]
             [teet.transit :as transit]
             [teet.localization :refer [tr tr-or]]
-            postgrest-ui.impl.fetch))
+            postgrest-ui.impl.fetch
+            [alandipert.storage-atom :refer [local-storage]]))
 
-(defonce api-token (r/cursor app-state/app login-paths/api-token))
+(defonce api-token (local-storage (r/atom nil) "api-token"))
 (defonce enabled-features (r/cursor app-state/app [:enabled-features]))
 
 ;; Helpers for faking backend requests in unit tests
@@ -172,9 +173,11 @@
                                           keyword)
                                   :unknown-server-error)})))))
 
-(defn catch-response-error [e!]
+(defn catch-response-error [e! error-event]
   (fn [err]
-    (e! (->ResponseError err))))
+    (e! (if error-event
+          (error-event err)
+          (->ResponseError err)))))
 
 (defn headers->map
   "Turn nil, map, js object and js Headers into Clojure map"
@@ -219,18 +222,18 @@
 (defn- fetch*
   "Call JS fetch API. Automatically adds response code check and error handling.
   Returns promise."
-  [e! & [url authless-arg-map-js]]
+  [e! error-event & [url authless-arg-map-js]]
   (-> (js/fetch url
                 (-> authless-arg-map-js
                     js->clj
                     (update "headers" add-authorization)
                     clj->js))
       (.then check-response-status)
-      (.catch (catch-response-error e!))))
+      (.catch (catch-response-error e! error-event))))
 
 (defmethod tuck-effect/process-effect :rpc [e! {:keys [rpc args result-path result-event
                                                        endpoint method loading-path
-                                                       json?] :as q}]
+                                                       json? error-event] :as q}]
   (assert rpc "Must specify :rpc function to call")
   (assert (map? args) "Must specify :args map")
   (assert (or result-path result-event) "Must specify result-path or result-event")
@@ -242,17 +245,19 @@
     (send-fake-postgrest-rpc! q)
     (-> (if (= method :GET)
           ;; GET request, add parameters to URL
-          (fetch* e! (str endpoint "/rpc/" rpc "?"
-                          (str/join "&"
-                                    (map (fn [[arg val]]
-                                           (str (if (keyword? arg)
-                                                  (name arg)
-                                                  arg)
-                                                "=" (js/encodeURIComponent (str val))))
-                                         args))))
+          (fetch* e! error-event
+                  (str endpoint "/rpc/" rpc "?"
+                  (str/join "&"
+                            (map (fn [[arg val]]
+                                   (str (if (keyword? arg)
+                                          (name arg)
+                                          arg)
+                                        "=" (js/encodeURIComponent (str val))))
+                                 args))))
 
           ;; POST request, send parameters as JSON body
-          (fetch* e! (str endpoint "/rpc/" rpc)
+          (fetch* e! error-event
+                  (str endpoint "/rpc/" rpc)
                   #js {:method "POST"
                        :headers (clj->js {"Content-Type" "application/json"
                                           "Accept" "application/json"})
@@ -272,7 +277,7 @@
   (assert (some? args) "Must specify :args for query"))
 
 
-(defmethod tuck-effect/process-effect :query [e! {:keys [query args result-path result-event method]
+(defmethod tuck-effect/process-effect :query [e! {:keys [query args result-path result-event method error-event]
                                                   :as q
                                                   :or {method "POST"}}]
   (check-query-and-args query args)
@@ -281,9 +286,11 @@
     (send-fake-query! q)
     (let [payload  (transit/clj->transit {:query query :args args})]
       (-> (case method
-            "GET" (fetch* e! (str "/query/?q=" (js/encodeURIComponent payload))
+            "GET" (fetch* e! error-event
+                          (str "/query/?q=" (js/encodeURIComponent payload))
                           #js {:method "GET"})
-            "POST" (fetch* e! "/query/"
+            "POST" (fetch* e! error-event
+                           "/query/"
                            #js {:method "POST"
                                 :headers (clj->js
                                           {"Content-Type" "application/json+transit"})
@@ -312,7 +319,7 @@
     (t/fx app
           (assoc query-effect-map :tuck.effect/type :query))))
 
-(defmethod tuck-effect/process-effect :command! [e! {:keys [command payload result-path result-event success-message] :as q}]
+(defmethod tuck-effect/process-effect :command! [e! {:keys [command payload result-path result-event success-message error-event] :as q}]
   (assert (keyword? command)
           "Must specify :command keyword that names the command to execute")
   (assert (some? payload)
@@ -320,7 +327,8 @@
   (assert (or result-path result-event) "Must specify :result-path or :result-event")
   (if @test-mode?
     (send-fake-command! q)
-    (-> (fetch* e! (str "/command/")
+    (-> (fetch* e! error-event
+                (str "/command/")
                 #js {:method "POST"
                      :headers (clj->js
                                {"Content-Type" "application/json+transit"})
@@ -341,7 +349,7 @@
 (defmethod tuck-effect/process-effect :set-api-token [e! {token :token}]
   (assert token "Must specify :token to set as new API token")
   (reset! api-token token)
-  (reset! postgrest-ui.impl.fetch/fetch-impl (partial fetch* e!)))
+  (reset! postgrest-ui.impl.fetch/fetch-impl (partial fetch* e! nil)))
 
 (defmulti map-item-selected :map/type)
 
