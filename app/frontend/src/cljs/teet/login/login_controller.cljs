@@ -23,10 +23,10 @@
 (extend-protocol t/Event
   CheckExistingSession ; Check existing token from browser localstorage storage
   (process-event [_ app]
-    (let [app (assoc app :initialized? true :checking-session? true)
+    (let [app (assoc app :initialized? true)
           navigate-data (get-in app [:login :navigate-to])]
       (if @common-controller/api-token
-        (t/fx app
+        (t/fx (assoc app :checking-session? true)
               {::tuck-effect/type :command!
                :command           :refresh-token
                :payload           {}
