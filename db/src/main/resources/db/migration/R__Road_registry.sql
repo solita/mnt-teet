@@ -45,6 +45,17 @@ FROM (SELECT 'FeatureCollection' as type,
                                      'end', end_m) AS properties) f) fc;
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION teet.road_info(road INTEGER, carriageway INTEGER) RETURNS JSON
+AS $$
+SELECT row_to_json(r)
+  FROM (SELECT g.nimetus as name,
+               min(g.algus) as start_m,
+               max(g.lopp) as end_m
+          FROM gis.riigi_teeosa_mgeom g
+         WHERE g.tee = road AND g.stee = carriageway
+         GROUP BY g.nimetus) r
+$$ LANGUAGE SQL STABLE SECURITY DEFINER;
+
 CREATE OR REPLACE FUNCTION teet.road_address_for_coordinate(x NUMERIC, y NUMERIC) RETURNS JSON
 AS $$
 WITH road_parts AS (
