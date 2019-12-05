@@ -247,7 +247,7 @@
        map-features/project-line-style
        options))))
 
-(defn project-map [e! endpoint {:thk.project/keys [start-m end-m] :as project} tab map]
+(defn project-map [e! endpoint project _tab map]
   (r/with-let [overlays (r/atom [])]
     [:div {:style {:flex           1
                    :display        :flex
