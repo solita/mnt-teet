@@ -12,10 +12,9 @@
             [teet.login.login-paths :as login-paths]
             [teet.transit :as transit]
             [teet.localization :refer [tr tr-or]]
-            postgrest-ui.impl.fetch
-            [alandipert.storage-atom :refer [local-storage]]))
+            postgrest-ui.impl.fetch))
 
-(defonce api-token (local-storage (r/atom nil) "api-token"))
+(def api-token routes/api-token)
 (defonce enabled-features (r/cursor app-state/app [:enabled-features]))
 
 ;; Helpers for faking backend requests in unit tests
@@ -350,6 +349,9 @@
   (assert token "Must specify :token to set as new API token")
   (reset! api-token token)
   (reset! postgrest-ui.impl.fetch/fetch-impl (partial fetch* e! nil)))
+
+(defmethod tuck-effect/process-effect :clear-api-token [e! _]
+  (reset! api-token nil))
 
 (defmulti map-item-selected :map/type)
 

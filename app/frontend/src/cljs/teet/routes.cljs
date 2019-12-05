@@ -4,9 +4,9 @@
             [tuck.core :as tuck]
             [teet.app-state :as app-state]
             [teet.log :as log]
-            [clojure.string :as str])
-  (:require-macros [teet.route-macros :refer [define-router]]
-                   ))
+            [clojure.string :as str]
+            [alandipert.storage-atom :refer [local-storage]])
+  (:require-macros [teet.route-macros :refer [define-router]]))
 
 (defrecord GoToUrl [url])
 
@@ -50,7 +50,8 @@
   (and
     (not initialized?)
     (nil? user)
-    (not= :login page)))
+    (not= :login page)
+    (not= :check-session page)))
 
 (defn- send-startup-events [e! event]
   (if (vector? event)
@@ -62,6 +63,8 @@
     (e! event)))
 
 (declare navigate!)
+
+(defonce api-token (local-storage (atom nil) "api-token"))
 
 (defn- on-navigate [go-to-url-event route-name params query]
   (swap! app-state/app
@@ -101,7 +104,9 @@
                    (set! (.-scrollTop page) 0))
 
                  (if (requires-authentication? app)
-                   (do (navigate! :login)
+                   (do (navigate! (if @api-token
+                                    :check-session
+                                    :login))
                        (assoc orig-app
                          :login {:show? true
                                  :navigate-to navigation-data}))

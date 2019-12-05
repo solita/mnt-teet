@@ -31,39 +31,41 @@
             [teet.login.login-controller :as login-controller])
   (:require-macros [teet.route-macros :refer [define-main-page]]))
 
+(defn- checking-session [e! app]
+  ;; PENDING: this could be a spinner
+  [:div.checking-session])
+
 ;; See routes.edn
 (define-main-page page-and-title)
 
 (defn main-view [e! _]
   (log/hook-onerror! e!)
   (e! (login-controller/->CheckExistingSession))
-  (fn [e! {:keys [page user navigation quick-search snackbar initialized? checking-session?] :as app}]
-    (if (or (not initialized?) checking-session?)
-      [:div.not-initialized]                                ;;There could be spinner here if needed
-      (let [nav-open? (boolean (:open? navigation))]
-        [theme/theme-provider
-         [:div {:style {:display        :flex
-                        :flex-direction :column
-                        :min-height     "100%"}}
-          [build-info/top-banner nav-open? page]
-          [snackbar/snackbar-container e! snackbar]
-          [CssBaseline]
-          (if (= page :login)
-            ;; Show only login dialog
-            [login-view/login-page e! app]
-            (let [{:keys [page]} (page-and-title e! app)]
-              [:<>
-               [navigation-view/header e!
-                {:open?        nav-open?
-                 :page         (:page app)
-                 :quick-search quick-search}
-                user]
-               [navigation-view/main-container
-                nav-open?
-                (with-meta page
-                           {:key (:route-key app)})]]))
-          (when-feature :data-frisk
-                        [df/DataFriskShell app])]]))))
+  (fn [e! {:keys [page user navigation quick-search snackbar] :as app}]
+    (let [nav-open? (boolean (:open? navigation))]
+      [theme/theme-provider
+       [:div {:style {:display        :flex
+                      :flex-direction :column
+                      :min-height     "100%"}}
+        [build-info/top-banner nav-open? page]
+        [snackbar/snackbar-container e! snackbar]
+        [CssBaseline]
+        (if (= page :login)
+          ;; Show only login dialog
+          [login-view/login-page e! app]
+          (let [{:keys [page]} (page-and-title e! app)]
+            [:<>
+             [navigation-view/header e!
+              {:open?        nav-open?
+               :page         (:page app)
+               :quick-search quick-search}
+              user]
+             [navigation-view/main-container
+              nav-open?
+              (with-meta page
+                {:key (:route-key app)})]]))
+        (when-feature :data-frisk
+          [df/DataFriskShell app])]])))
 
 (defn ^:export main []
   (routes/start!)
