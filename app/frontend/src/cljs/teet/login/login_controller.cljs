@@ -5,20 +5,43 @@
             [teet.login.login-paths :as login-paths]
             [teet.user.user-info :as user-info]
             teet.user.user-controller
-            [teet.snackbar.snackbar-controller :as snackbar-controller]))
+            [teet.snackbar.snackbar-controller :as snackbar-controller]
+            [teet.common.common-controller :as common-controller]))
 
 (defrecord Login [demo-user])
 (defrecord SetSessionInfo [after-login? navigate-data session-info])
 (defrecord SetPassword [pw])
 (defrecord RefreshToken [])
 (defrecord CheckSessionToken [])
+(defrecord CheckExistingSession [])
+(defrecord CheckSessionError [])
 
 (def ^{:const true
        :doc "How often to refresh JWT token (15 minutes)"}
   refresh-token-timeout-ms (* 1000 60 15))
 
 (extend-protocol t/Event
-  CheckSessionToken
+  CheckExistingSession ; Check existing token from browser localstorage storage
+  (process-event [_ app]
+    (let [app (assoc app :initialized? true :checking-session? true)
+          navigate-data (get-in app [:login :navigate-to])]
+      (if @common-controller/api-token
+        (t/fx app
+              {::tuck-effect/type :command!
+               :command           :refresh-token
+               :payload           {}
+               :error-event       ->CheckSessionError
+               :result-event      (partial ->SetSessionInfo true navigate-data)})
+        app)))
+
+  CheckSessionError
+  (process-event [_ app]
+    (reset! common-controller/api-token nil)
+    (-> app
+        (assoc :checking-session? false)
+        (snackbar-controller/open-snack-bar "Login session timed out" :warning)))
+
+  CheckSessionToken ; Get token from cookie session when logging in
   (process-event [_ app]
     (if-let [token (get-in app [:query :token])]
       (t/fx app
@@ -54,7 +77,8 @@
   SetSessionInfo
   (process-event [{:keys [session-info after-login? navigate-data]} app]
     (log/info "TOKEN: " session-info ", after-login? " after-login?)
-    (let [{:keys [token error roles user enabled-features api-url]} session-info]
+    (let [{:keys [token error roles user enabled-features api-url]} session-info
+          app (assoc app :initialized? true :checking-session? false)]
       (if error
         (do (js/alert (str "Login error: " (str error)))
             app)
