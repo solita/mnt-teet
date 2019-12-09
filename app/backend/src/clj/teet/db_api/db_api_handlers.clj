@@ -59,7 +59,9 @@
             (do
               (log/error e "Exception in handler")
               {:status 500
-               :body "Internal server error, see log for details"})))))))
+               :body (str "Internal server error, see log for details\n"
+                          "Exception: " e "\n"
+                          "Stack: " (str/join "\n" (.getStackTrace e)))})))))))
 
 (defn- check-spec [spec data]
   (if (nil? (s/get-spec spec))
