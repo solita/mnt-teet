@@ -112,6 +112,7 @@
            footer          ;; Form footer component fn
            spacing         ;; Form grid spacing
            step            ;; Current form step
+           id              ;; Id for the form element
            ]
     :or {class (<class form-bg)
          footer form-footer
@@ -148,13 +149,14 @@
 
                ;; Determine required fields by getting missing attributes of an empty map
                required-fields (missing-attributes spec {})]
-    [:form {:on-submit #(submit! e! save-event value fields %)
-            :style {:flex 1
-                    :display :flex
-                    :flex-direction :column
-                    :justify-content :space-between
-                    :overflow-x :hidden
-                    :overflow-y :scroll}}
+    [:form (merge {:on-submit #(submit! e! save-event value fields %)
+                   :style {:flex 1
+                           :display :flex
+                           :flex-direction :column
+                           :justify-content :space-between
+                           :overflow :hidden}}
+                  (when id
+                    {:id id}))
      [:div {:class class}
       [Grid {:container true
              :spacing spacing}
@@ -182,7 +184,8 @@
                          validate-attribute-fn attribute value)
                         (when adornment
                           adornment)])))))]]
-     (when (or cancel-event save-event)
+     (when (and footer
+                (or cancel-event save-event))
        [footer {:cancel (when cancel-event
                           (r/partial e! (cancel-event)))
                 :validate (when save-event

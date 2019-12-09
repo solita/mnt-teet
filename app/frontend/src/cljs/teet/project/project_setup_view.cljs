@@ -29,16 +29,6 @@
      :disabled disabled?}
     "Next"]])
 
-(defn setup-wizard-footer [{:keys [back next]}]
-  [:div {:class (<class project-style/wizard-footer)}
-   ;; TODO this should be a text button and cancel
-   [buttons/button-secondary
-    {:on-click back}
-    "Back"]
-   [buttons/button-primary
-    {:on-click next}
-    "Next"]])
-
 (defn original-name-adornment [e! {:thk.project/keys [name] :as project}]
   [:div {:style {:padding-top "6px"
                  :display :flex}}
@@ -103,7 +93,7 @@
         (project-model/get-column project :thk.project/effective-km-range)))
 
 (defn project-setup-basic-information-form
-  [e! project]
+  [e! project _step step-label]
   (e! (project-controller/->UpdateBasicInformationForm
        {:thk.project/project-name (:thk.project/name project)
         :thk.project/km-range (project-km-range project)
@@ -117,7 +107,8 @@
                  :save-event      project-controller/->SaveBasicInformation
                  :class (<class project-style/wizard-form)
                  :spec :project/initialization-form
-                 :footer initialization-form-footer}
+                 :footer nil
+                 :id step-label}
 
       ^{:attribute :thk.project/project-name
         :adornment [original-name-adornment e! project]}
@@ -145,7 +136,7 @@
   [e! {:keys [restrictions checked-restrictions toggle-restriction]}]
   (r/with-let [open-types (r/atom #{})
                restrictions-by-type (group-by :type restrictions)]
-    [:div {:class (<class project-style/initialization-form-wrapper)}
+    [:<>
      (doall
       (for [[group restrictions] restrictions-by-type
             :let [group-checked (into #{}
@@ -167,15 +158,13 @@
              :value voond
              :on-change (r/partial toggle-restriction id)})]]))]))
 
-(defn project-setup-restrictions-form [e! _]
+(defn project-setup-restrictions-form [e! _  _step _step-label]
   (e! (project-controller/->FetchRestrictions))
-  (fn [e! {:keys [restriction-candidates checked-restrictions] :as project}]
-    [:<>
-     (when restriction-candidates
-       [restrictions-listing e! {:restrictions restriction-candidates
-                                 :checked-restrictions (or checked-restrictions #{})
-                                 :toggle-restriction (e! project-controller/->ToggleRestriction)}])
-     [setup-wizard-footer {:back #(e! (project-controller/->NavigateToStep "basic-information"))}]]))
+  (fn [e! {:keys [restriction-candidates checked-restrictions] :as project} _step _step-label]
+    (when restriction-candidates
+      [restrictions-listing e! {:restrictions restriction-candidates
+                                :checked-restrictions (or checked-restrictions #{})
+                                :toggle-restriction (e! project-controller/->ToggleRestriction)}])))
 
 (defn project-setup-cadastral-units-form [e! project]
   [:div "Tada"])
@@ -183,19 +172,52 @@
 (defn project-setup-activities-form [e! project]
   [:div "Tada"])
 
+(defn setup-wizard-header [step label]
+  [:div {:class (<class project-style/wizard-header)}
+   [:div {:class (<class project-style/wizard-header-step-info)}
+    [typography/Text {:color :textSecondary}
+     (tr [:project :wizard :project-setup])]
+    [typography/Text {:color :textSecondary}
+     (tr [:project :wizard :step-of] {:current step :total 4})]]
+   [typography/Heading2 (tr [:project :wizard label])]])
+
+(defn setup-wizard-footer [step label]
+  [:div {:class (<class project-style/wizard-footer)}
+   ;; TODO this should be a text button and cancel
+   #_[buttons/button-secondary
+    {:on-click back}
+    "Back"]
+   [buttons/button-primary {:type :submit
+                            :form label}
+    "Next"]])
+
 (defn project-setup-wizard [e! project step]
   (let [[step label component]
         (case step
-          "basic-information" [1 :basic-information [project-setup-basic-information-form e! project]]
-          "restrictions" [2 :restrictions [project-setup-restrictions-form e! project]]
-          "cadastral-units" [3 :cadastral-units [project-setup-cadastral-units-form e! project]]
-          "activities" [4 :activities [project-setup-activities-form e! project]])]
-    [:<>
-     [:div {:class (<class project-style/wizard-header)}
-      [:div {:class (<class project-style/wizard-header-step-info)}
-       [typography/Text {:color :textSecondary}
-        (tr [:project :wizard :project-setup])]
-       [typography/Text {:color :textSecondary}
-        (tr [:project :wizard :step-of] {:current step :total 4})]]
-      [typography/Heading2 (tr [:project :wizard label])]]
-     component]))
+          "basic-information" [1 :basic-information project-setup-basic-information-form]
+          "restrictions" [2 :restrictions project-setup-restrictions-form]
+          "cadastral-units" [3 :cadastral-units project-setup-cadastral-units-form]
+          "activities" [4 :activities project-setup-activities-form])]
+    [component e! project step label]))
+
+(def project-setup-steps
+  [{:step-label :basic-information
+    :body project-setup-basic-information-form
+    :step-number 1}
+   {:step-label :restrictions
+    :body project-setup-restrictions-form
+    :step-number 2}])
+
+(defn project-setup [e!
+                     {{:keys [step]
+                       :or {step "basic-information"}}
+                      :query
+                      :as _app}
+                     project]
+  (let [{:keys [step-number step-label]} (some #(when (= (:step-label %)
+                                                         (keyword step))
+                                                  %)
+                                               project-setup-steps)]
+    {:header [setup-wizard-header step-number step-label]
+     :body [project-setup-wizard e! project (name step-label)]
+     :footer [setup-wizard-footer step-number step-label]}))

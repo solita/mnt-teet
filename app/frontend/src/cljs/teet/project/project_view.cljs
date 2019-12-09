@@ -330,8 +330,9 @@
    {{:keys [tab]} :query :as app}
    project
    breadcrumbs
-   tabs
-   current-tab-view]
+   header
+   body
+   footer]
   [:div {:style {:display        :flex
                  :flex-direction :column
                  :flex           1}}
@@ -340,12 +341,11 @@
                   :display  "flex" :flex-direction "column" :flex 1}}
     [project-map e! (get-in app [:config :api-url]) project (get-in app [:query :tab]) (:map app)]
     [Paper {:class (<class project-style/project-content-overlay)}
-     (when (seq tabs)
-       [tabs/tabs {:e!           e!
-                   :selected-tab (or tab (:value (first tabs)))}
-        tabs])
+     header
      [:div {:class (<class project-style/content-overlay-inner)}
-      current-tab-view]]]])
+      body]
+     (when footer
+       footer)]]])
 
 (defn project-lifecycle-content
   [e! {{id :db/ident} :thk.lifecycle/type
@@ -398,12 +398,35 @@
                                        :close     project-controller/->CloseAddDialog
                                        :activity  (:edit-activity-data app)}])))
 
-(defn project-page [e! {{:keys [tab add edit step] :as query} :query
-                        :as                              app}
+(def project-tabs-layout
+  [{:label "Activities" :value "activities"}
+   {:label "People" :value "people"}
+   {:label "Details" :value "details"}])
+
+(defn project-tabs [e! {{:keys [tab]} :query :as _app}]
+  [tabs/tabs {:e! e!
+              :selected-tab (or tab (:value (first project-tabs-layout)))}
+   project-tabs-layout])
+
+(defn project-tab [e! {{:keys [tab] :as query} :query
+                       :as _app}
+                   project]
+  (case (or tab "activities")
+    "activities" [activities-tab e! query project]
+    "people" [people-tab e! query project]
+    "details" [details-tab e! query project]))
+
+(defn project-page-structure-layout [e! app project]
+  (if-not (project-model/initialized? project)
+    (project-setup-view/project-setup e! app project)
+    {:header [project-tabs e! app]
+     :body [project-tab e! app project]}))
+
+(defn project-page [e! {{:keys [add edit] :as query} :query
+                        :as                          app}
                     project
                     breadcrumbs]
-  (let [wizard? (or (not (project-model/initialized? project))
-                    (some? step))
+  (let [{:keys [header body footer]} (project-page-structure-layout e! app project)
         [modal modal-label]
         (cond
           add
@@ -431,27 +454,8 @@
                     :title     (or modal-label "")
                     :on-close  (e! project-controller/->CloseAddDialog)}
 
-      modal
-      #_(case add
-        "add-task"
-
-        "add-activity"
-        [activity-view/activity-form e! project-controller/->CloseAddDialog
-         (get-in app [:project (:thk.project/id project) :new-activity])]
-
-        "edit-activity"
-        [edit-activity-form e! app project]
-
-        [:span])]
+      modal]
      [project-page-structure e! app project breadcrumbs
-      (when (not wizard?)
-        ;; FIXME: localize
-        [{:label "Activities" :value "activities"}
-         {:label "People" :value "people"}
-         {:label "Details" :value "details"}])
-      (if wizard?
-        [project-setup-view/project-setup-wizard e! project (or step "basic-information")]
-        (case (or tab "activities")
-          "activities" [activities-tab e! query project]
-          "people" [people-tab e! query project]
-          "details" [details-tab e! query project]))]]))
+      header
+      body
+      footer]]))

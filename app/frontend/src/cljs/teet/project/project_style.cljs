@@ -89,8 +89,7 @@
     :top "25px"
     :bottom "25px"
     :width (str (project-panel-width) "px")
-    :max-height "calc(100vh - 275px)"
-    :overflow-y :auto
+    :height "calc(100vh - 275px)"
     :display :flex
     :flex-direction :column}))
 
@@ -99,15 +98,14 @@
    :flex 1
    :display :flex
    :flex-direction :column
-   :overflow-y :auto})
+   :overflow-y :scroll})
 
 (defn initialization-form-wrapper
   []
   {:flex 1
    :display :flex
    :flex-direction :column
-   :justify-content :space-between
-   :overflow-y :scroll})
+   :justify-content :space-between})
 
 (defn initialization-form
   []
@@ -130,8 +128,7 @@
 (defn wizard-form
   []
   {:background-color theme-colors/white
-   :padding "1.5rem"
-   :overflow-y :scroll})
+   :padding "1.5rem"})
 
 (defn wizard-footer
   []
@@ -141,5 +138,4 @@
    :padding "0.5rem"
    :background-color theme-colors/gray-lightest
    :border-top (str "1px solid" theme-colors/gray-lighter)
-   :align-items :center
-   :overflow-y :visible})
+   :align-items :center})
