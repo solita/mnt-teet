@@ -40,6 +40,8 @@
 ;;
 ;; Project setup wizard events
 ;;
+(defrecord NavigateToStep [step])
+
 (defrecord SaveBasicInformation [])
 (defrecord SaveBasicInformationResponse [])
 (defrecord UpdateBasicInformationForm [form-data])
@@ -57,7 +59,17 @@
 (defrecord OpenEditActivityDialog [])
 (defrecord InitializeActivityEditForm [])
 
+(defn navigate-to-step-fx [{:keys [page params query] :as _app} step]
+  {:tuck.effect/type :navigate
+   :page page
+   :params params
+   :query (assoc query :step step)})
+
 (extend-protocol t/Event
+  NavigateToStep
+  (process-event [{step :step} app]
+    (t/fx (navigate-to-step-fx app step)))
+
   SaveBasicInformation
   (process-event [_ app]
     (let [{:thk.project/keys [id name] :as project} (get-in app [:route :project])
@@ -81,10 +93,7 @@
   SaveBasicInformationResponse
   (process-event [_ {:keys [page params query] :as app}]
     (t/fx app
-          {:tuck.effect/type :navigate
-           :page page
-           :params params
-           :query (assoc query :step "restrictions")}
+          (navigate-to-step-fx app "restrictions")
           common-controller/refresh-fx))
 
   UpdateBasicInformationForm

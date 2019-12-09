@@ -91,9 +91,28 @@
                               :on-click validate}
       (tr [:buttons :save])])])
 
+(defn- hide-field?
+  "Returns true if field is nil or if it has `:step` in its metadata and
+  it's different from the `current-step`"
+  [current-step field]
+  (or (nil? field)
+      (when-let [step (-> field meta :step)]
+        (not= step current-step))))
+
 (defn form
   "Simple grid based form container."
-  [{:keys [e! on-change-event cancel-event save-event value in-progress? spec class footer spacing]
+  [{:keys [e! ;; Tuck event handle
+           on-change-event ;; Input change callback
+           cancel-event    ;; Form cancel callback
+           save-event      ;; Form submit callback
+           value           ;; Current value of the form
+           in-progress?    ;; Submit in progess?
+           spec            ;; Spec for validating form fields
+           class           ;; CSS class for the form
+           footer          ;; Form footer component fn
+           spacing         ;; Form grid spacing
+           step            ;; Current form step
+           ]
     :or {class (<class form-bg)
          footer form-footer
          spacing 3}}
@@ -141,7 +160,7 @@
              :spacing spacing}
        (util/with-keys
          (->> fields
-              (remove nil?)
+              (remove (partial hide-field? step))
               (map (fn [field]
                      (assert (vector? field) "Field must be a hiccup vector")
                      (assert (map? (second field)) "First argument to field must be an options map")

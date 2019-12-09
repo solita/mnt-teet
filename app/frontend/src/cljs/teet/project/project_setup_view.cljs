@@ -29,6 +29,16 @@
      :disabled disabled?}
     "Next"]])
 
+(defn setup-wizard-footer [{:keys [back next]}]
+  [:div {:class (<class project-style/wizard-footer)}
+   ;; TODO this should be a text button and cancel
+   [buttons/button-secondary
+    {:on-click back}
+    "Back"]
+   [buttons/button-primary
+    {:on-click next}
+    "Next"]])
+
 (defn original-name-adornment [e! {:thk.project/keys [name] :as project}]
   [:div {:style {:padding-top "6px"
                  :display :flex}}
@@ -165,7 +175,7 @@
        [restrictions-listing e! {:restrictions restriction-candidates
                                  :checked-restrictions (or checked-restrictions #{})
                                  :toggle-restriction (e! project-controller/->ToggleRestriction)}])
-     [initialization-form-footer {}]]))
+     [setup-wizard-footer {:back #(e! (project-controller/->NavigateToStep "basic-information"))}]]))
 
 (defn project-setup-cadastral-units-form [e! project]
   [:div "Tada"])
