@@ -93,7 +93,7 @@
         (project-model/get-column project :thk.project/effective-km-range)))
 
 (defn project-setup-basic-information-form
-  [e! project _step step-label]
+  [e! project {:keys [step-label]}]
   (e! (project-controller/->UpdateBasicInformationForm
        {:thk.project/project-name (:thk.project/name project)
         :thk.project/km-range (project-km-range project)
@@ -172,52 +172,49 @@
 (defn project-setup-activities-form [e! project]
   [:div "Tada"])
 
-(defn setup-wizard-header [step label]
+(def project-setup-steps
+  [{:step-label :basic-information
+    :body       project-setup-basic-information-form}
+   {:step-label :restrictions
+    :body       project-setup-restrictions-form}
+   {:step-label :cadastral-units
+    :body       project-setup-cadastral-units-form}])
+
+(defn step-info [step-name]
+  (first (keep-indexed #(when (= (:step-label %2)
+                                 (keyword step-name))
+                          (assoc %2 :step-number (inc %1)))
+                       project-setup-steps)))
+
+(defn setup-wizard-header [{:keys [step-label step-number]}]
   [:div {:class (<class project-style/wizard-header)}
    [:div {:class (<class project-style/wizard-header-step-info)}
     [typography/Text {:color :textSecondary}
      (tr [:project :wizard :project-setup])]
     [typography/Text {:color :textSecondary}
-     (tr [:project :wizard :step-of] {:current step :total 4})]]
-   [typography/Heading2 (tr [:project :wizard label])]])
+     (tr [:project :wizard :step-of] {:current step-number :total 4})]]
+   [typography/Heading2 (tr [:project :wizard step-label])]])
 
-(defn setup-wizard-footer [step label]
+(defn setup-wizard-footer [{:keys [step-label step-number]}]
   [:div {:class (<class project-style/wizard-footer)}
    ;; TODO this should be a text button and cancel
-   #_[buttons/button-secondary
-    {:on-click back}
-    "Back"]
+   (if (> step-number 1)
+     [buttons/button-secondary
+      #_{:on-click back}
+      "Back"]
+     [buttons/link-button
+      "Cancel"])
    [buttons/button-primary {:type :submit
-                            :form label}
+                            :form step-label}
     "Next"]])
 
-(defn project-setup-wizard [e! project step]
-  (let [[step label component]
-        (case step
-          "basic-information" [1 :basic-information project-setup-basic-information-form]
-          "restrictions" [2 :restrictions project-setup-restrictions-form]
-          "cadastral-units" [3 :cadastral-units project-setup-cadastral-units-form]
-          "activities" [4 :activities project-setup-activities-form])]
-    [component e! project step label]))
-
-(def project-setup-steps
-  [{:step-label :basic-information
-    :body project-setup-basic-information-form
-    :step-number 1}
-   {:step-label :restrictions
-    :body project-setup-restrictions-form
-    :step-number 2}])
-
 (defn project-setup [e!
-                     {{:keys [step]
-                       :or {step "basic-information"}}
+                     {{step-name :step
+                       :or {step-name "basic-information"}}
                       :query
                       :as _app}
                      project]
-  (let [{:keys [step-number step-label]} (some #(when (= (:step-label %)
-                                                         (keyword step))
-                                                  %)
-                                               project-setup-steps)]
-    {:header [setup-wizard-header step-number step-label]
-     :body [project-setup-wizard e! project (name step-label)]
-     :footer [setup-wizard-footer step-number step-label]}))
+  (let [step (step-info step-name)]
+    {:header [setup-wizard-header step]
+     :body [(:body step) e! project step]
+     :footer [setup-wizard-footer step]}))
