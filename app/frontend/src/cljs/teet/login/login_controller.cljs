@@ -47,6 +47,7 @@
   CheckSessionToken ; Get token from cookie session when logging in
   (process-event [_ app]
     (if-let [token (get-in app [:query :token])]
+
       (t/fx app
             ;; Set the JWT token and immediately refresh
             ;; to get other session info

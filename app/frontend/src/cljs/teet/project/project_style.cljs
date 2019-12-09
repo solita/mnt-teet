@@ -94,7 +94,7 @@
     :flex-direction :column}))
 
 (defn content-overlay-inner []
-  {:padding 0
+  {:padding "1.5rem"
    :flex 1
    :display :flex
    :flex-direction :column
@@ -127,8 +127,7 @@
 
 (defn wizard-form
   []
-  {:background-color theme-colors/white
-   :padding "1.5rem"})
+  {:background-color theme-colors/white})
 
 (defn wizard-footer
   []

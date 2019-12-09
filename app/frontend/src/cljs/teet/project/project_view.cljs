@@ -37,7 +37,8 @@
             [teet.ui.typography :refer [Heading1 Heading2 Heading3] :as typography]
             [teet.ui.url :as url]
             [teet.ui.util :as util]
-            [teet.activity.activity-controller :as activity-controller]))
+            [teet.activity.activity-controller :as activity-controller]
+            [teet.routes :as routes]))
 
 (defn task-form [e! {:keys [close task save on-change initialization-fn]}]
   ;;Task definition (under project activity)
@@ -369,18 +370,22 @@
      :start-icon (r/as-element [icons/content-add])}
     (tr [:project :add-activity])]])
 
-
-(defn activities-tab [e! {:keys [lifecycle activity] :as query} project]
-  (cond
-    activity
-    [project-activity e! project (project-model/activity-by-id project activity)]
-    lifecycle
-    [project-lifecycle-content e! (project-model/lifecycle-by-id project lifecycle)]
-    :else
-    [:ul
-     (for [lc (:thk.project/lifecycles project)]
-       [:li {:on-click #(e! (common-controller/->SetQueryParam :lifecycle (str (:db/id lc))))}
-        (tr [:enum (-> lc :thk.lifecycle/type :db/ident)])])]))
+(defn activities-tab [e! {:keys [query params page] :as app} project]
+  (let [{:keys [activity lifecycle]} query]
+    (cond
+      activity
+      [project-activity e! project (project-model/activity-by-id project activity)]
+      lifecycle
+      [project-lifecycle-content e! (project-model/lifecycle-by-id project lifecycle)]
+      :else
+      [:div
+       [typography/Heading2 "Lifecycles"]
+       (for [lc (:thk.project/lifecycles project)]
+         [common/list-button-link (merge {:link  (routes/url-for {:page   page
+                                                                  :query  (assoc query :lifecycle (str (:db/id lc)))
+                                                                  :params params})
+                                          :label (tr [:enum (get-in lc [:thk.lifecycle/type :db/ident])])
+                                          :icon  icons/file-folder-open})])])))
 
 (defn people-tab [e! query project]
   [:div "people"])
@@ -409,10 +414,10 @@
    project-tabs-layout])
 
 (defn project-tab [e! {{:keys [tab] :as query} :query
-                       :as _app}
+                       :as app}
                    project]
   (case (or tab "activities")
-    "activities" [activities-tab e! query project]
+    "activities" [activities-tab e! app project]
     "people" [people-tab e! query project]
     "details" [details-tab e! query project]))
 
