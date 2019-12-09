@@ -427,21 +427,18 @@
     {:header [project-tabs e! app]
      :body [project-tab e! app project]}))
 
-(defn project-page [e! {{:keys [add edit] :as query} :query
-                        :as                          app}
-                    project
-                    breadcrumbs]
-  (let [{:keys [header body footer]} (project-page-structure-layout e! app project)
-        [modal modal-label]
+(defn project-page-modals
+  [e! {{:keys [add edit]} :query :as app} app project]
+  (let [[modal modal-label]
         (cond
           add
           (case add
             "task" [[task-form e!
-                         {:close project-controller/->CloseAddDialog
-                          :task (:new-task project)
-                          :save task-controller/->CreateTask
-                          :on-change task-controller/->UpdateTaskForm}]
-                        (tr [:project :add-task])]
+                     {:close     project-controller/->CloseAddDialog
+                      :task      (:new-task project)
+                      :save      task-controller/->CreateTask
+                      :on-change task-controller/->UpdateTaskForm}]
+                    (tr [:project :add-task])]
             "activity" [[activity-view/activity-form e! {:close     project-controller/->CloseAddDialog
                                                          :activity  (get-in app [:project (:thk.project/id project) :new-activity])
                                                          :on-change activity-controller/->UpdateActivityForm
@@ -454,12 +451,16 @@
             [[edit-activity-form e! app (e! project-controller/->InitializeActivityEditForm)]
              (tr [:project :edit-activity])])
           :else nil)]
-    [:<>
-     [panels/modal {:open-atom (r/wrap (boolean modal) :_)
-                    :title     (or modal-label "")
-                    :on-close  (e! project-controller/->CloseAddDialog)}
+    [panels/modal {:open-atom (r/wrap (boolean modal) :_)
+                   :title     (or modal-label "")
+                   :on-close  (e! project-controller/->CloseAddDialog)}
 
-      modal]
+     modal]))
+
+(defn project-page [e! app project breadcrumbs]
+  (let [{:keys [header body footer]} (project-page-structure-layout e! app project)]
+    [:<>
+     [project-page-modals e! app project]
      [project-page-structure e! app project breadcrumbs
       header
       body
