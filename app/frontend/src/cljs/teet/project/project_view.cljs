@@ -210,6 +210,13 @@
          :content [map-view/overlay {:arrow-direction :left :height 30}
                    end-label]}]))))
 
+(defn given-range-in-actual-road?
+  "Check to see if the forms given road range is in the actual road"
+  [{:keys [end_m start_m]} [form-start-m form-end-m]]
+  (and (> form-end-m form-start-m)
+       (>= form-start-m start_m)
+       (>= end_m form-end-m)))
+
 (defn project-road-geometry-layer
   "Show project geometry or custom road part in case the start and end
   km are being edited during initialization"
@@ -223,6 +230,7 @@
                                         (:thk.project/km-range basic-information-form))
                                   (mapv road-model/format-distance
                                         [start-m end-m]))
+        road-information (:road-info basic-information-form)
         options {:fit-on-load? true
                  ;; Use left side padding so that road is not shown under the project panel
                  :fit-padding [0 0 0 (* 1.05 (project-style/project-panel-width))]
@@ -230,17 +238,21 @@
                                    start-label end-label
                                    #(reset! overlays %))}]
     (if basic-information-form
-      (let [{[start-km-string end-km-string] :thk.project/km-range} basic-information-form]
-        (map-layers/geojson-layer
-         endpoint
-         "geojson_road_geometry"
-         {"road" road-nr
-          "carriageway" carriageway
-          "start_m" (some-> start-km-string road-model/parse-km km->m)
-          "end_m" (some-> end-km-string road-model/parse-km km->m)}
-         map-features/project-line-style
-         (merge options
-                {:content-type "application/json"})))
+      (let [{[start-km-string end-km-string] :thk.project/km-range} basic-information-form
+            form-start-m (some-> start-km-string road-model/parse-km km->m)
+            form-end-m (some-> end-km-string road-model/parse-km km->m)]
+        (if (given-range-in-actual-road? road-information [form-start-m form-end-m])
+          (map-layers/geojson-layer
+            endpoint
+            "geojson_road_geometry"
+            {"road"        road-nr
+             "carriageway" carriageway
+             "start_m"     form-start-m
+             "end_m"       form-end-m}
+            map-features/project-line-style
+            (merge options
+                   {:content-type "application/json"}))
+          (reset! overlays nil)))                           ;; Needed to remove road ending markers
       (map-layers/geojson-layer
        endpoint
        "geojson_entities"
