@@ -366,11 +366,15 @@
        footer)]]])
 
 (defn project-lifecycle-content
-  [e! {{id :db/ident} :thk.lifecycle/type
+  [e! {{lifecycle-type :db/ident} :thk.lifecycle/type
        activities     :thk.lifecycle/activities}]
   [:section
-   [typography/Heading2 (tr [:enum id])]
-   [typography/Heading3 (tr [:project :activities])]
+   [typography/Heading2 (tr [:enum lifecycle-type])]
+   [typography/Heading3
+    (if (= lifecycle-type :thk.lifecycle-type/design)
+      (tr [:common :design-stage-activities])
+      ;; else
+      (tr [:common :construction-phase-activities]))]
 
 
    (for [{:activity/keys [name estimated-end-date estimated-start-date] :as activity} activities]
@@ -385,7 +389,11 @@
    [buttons/button-primary
     {:on-click   (e! project-controller/->OpenActivityDialog)
      :start-icon (r/as-element [icons/content-add])}
-    (tr [:project :add-activity])]])
+
+    (if (= lifecycle-type :thk.lifecycle-type/design)
+      (tr [:common :design-stage])
+      ;; else
+      (tr [[:common :construction-phase]]))]])
 
 (defn activities-tab [e! {:keys [query params page] :as app} project]
   (let [{:keys [activity lifecycle]} query]
