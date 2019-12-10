@@ -223,13 +223,16 @@
   [{:thk.project/keys [start-m end-m road-nr carriageway]
     :keys [basic-information-form] :as project}
    endpoint overlays]
-  (let [[start-label end-label] (if basic-information-form
-                                  (mapv (comp road-model/format-distance
-                                              km->m
-                                              road-model/parse-km)
-                                        (:thk.project/km-range basic-information-form))
-                                  (mapv road-model/format-distance
-                                        [start-m end-m]))
+  (let [[start-label end-label]
+        (if basic-information-form
+          (mapv (comp road-model/format-distance
+                      km->m
+                      road-model/parse-km)
+                (:thk.project/km-range basic-information-form))
+          (mapv (comp road-model/format-distance
+                      km->m)
+                (project-model/get-column project
+                                          :thk.project/effective-km-range)))
         road-information (:road-info basic-information-form)
         options {:fit-on-load? true
                  ;; Use left side padding so that road is not shown under the project panel
@@ -252,13 +255,15 @@
             map-features/project-line-style
             (merge options
                    {:content-type "application/json"}))
-          (reset! overlays nil)))                           ;; Needed to remove road ending markers
-      (map-layers/geojson-layer
-       endpoint
-       "geojson_entities"
-       {"ids" (str "{" (:db/id project) "}")}
-       map-features/project-line-style
-       options))))
+          ;; Needed to remove road ending markers
+          (do (reset! overlays nil)
+              nil)))
+
+      (map-layers/geojson-layer endpoint
+                                "geojson_entities"
+                                {"ids" (str "{" (:db/id project) "}")}
+                                map-features/project-line-style
+                                options))))
 
 (defn project-map [e! endpoint project _tab map]
   (r/with-let [overlays (r/atom [])]
