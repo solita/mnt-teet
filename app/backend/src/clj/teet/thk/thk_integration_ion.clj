@@ -138,16 +138,18 @@
                                                                  stack-trace)))}))
 
 (defn- update-entity-info [{db :db :as ctx}]
-  (let [projects (d/q '[:find (pull ?e [:db/id :thk.project/name :thk.project/road-nr
-                                        :thk.project/carriageway
-                                        :thk.project/start-m :thk.project/end-m
-                                        :thk.project/custom-start-m :thk.project/custom-end-m])
-                        :in $
-                        :where [?e :thk.project/road-nr _]]
-                      db)]
+  (let [projects (map first
+                      (d/q '[:find (pull ?e [:db/id :thk.project/name :thk.project/road-nr
+                                             :thk.project/carriageway
+                                             :thk.project/start-m :thk.project/end-m
+                                             :thk.project/custom-start-m :thk.project/custom-end-m])
+                             :in $
+                             :where [?e :thk.project/road-nr _]]
+                           db))]
     (log/info "Update entity info for all" (count projects) "projects.")
     (project-geometry/update-project-geometries! (select-keys ctx [:api-url :api-shared-secret])
-                                                 projects)))
+                                                 projects)
+    ctx))
 
 (defn- on-import-error [{:keys [error] :as ctx}]
   ;; TODO: Metrics?
