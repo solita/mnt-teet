@@ -35,8 +35,9 @@
       (let [response @(client/post
                        (str api-url "/rpc/store_entity_info")
                        {:headers {"Content-Type" "application/json"
-                                  "Authorization" (str "Bearer " (login-api-token/create-backend-token
-                                                                  api-shared-secret))}
+                                  "Authorization"
+                                  (str "Bearer "
+                                       (login-api-token/create-backend-token api-shared-secret))}
                         :body (cheshire/encode request-body)})]
         (when-not (= 200 (:status response))
           (throw (ex-info "Update project geometries failed"
