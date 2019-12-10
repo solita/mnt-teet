@@ -97,11 +97,12 @@
 
 (defn project-setup-basic-information-form
   [e! project {:keys [step-label] :as step}]
-  (e! (project-controller/->UpdateBasicInformationForm
-       (cu/without-nils {:thk.project/project-name (:thk.project/name project)
-                         :thk.project/km-range (project-km-range project)
-                         :thk.project/owner (:thk.project/owner project)
-                         :thk.project/manager (:thk.project/manager project)})))
+  (when-not (:basic-information-form project)
+    (e! (project-controller/->UpdateBasicInformationForm
+         (cu/without-nils {:thk.project/project-name (:thk.project/name project)
+                           :thk.project/km-range (project-km-range project)
+                           :thk.project/owner (:thk.project/owner project)
+                           :thk.project/manager (:thk.project/manager project)}))))
   (fn [e! {form :basic-information-form :as project}]
     [:div {:class (<class project-style/initialization-form-wrapper)}
      [form/form {:e!              e!
@@ -161,24 +162,26 @@
              :value voond
              :on-change (r/partial toggle-restriction id)})]]))]))
 
-(defn project-setup-restrictions-form [e! _ _]
+(defn project-setup-restrictions-form [e! _ {step-label :step-label :as step}]
   (e! (project-controller/->FetchRestrictions))
   (fn [e! {:keys [restriction-candidates checked-restrictions] :as project} step-info]
-    (when restriction-candidates
-      [restrictions-listing e! {:restrictions restriction-candidates
-                                :checked-restrictions (or checked-restrictions #{})
-                                :toggle-restriction (e! project-controller/->ToggleRestriction)}])))
+    [:form {:id step-label
+            :on-submit (e! (project-controller/navigate-to-next-step-event project-setup-steps step))}
+     (when restriction-candidates
+       [restrictions-listing e! {:restrictions restriction-candidates
+                                 :checked-restrictions (or checked-restrictions #{})
+                                 :toggle-restriction (e! project-controller/->ToggleRestriction)}])]))
 
-(defn project-setup-cadastral-units-form [e! project]
-  [:div "Tada"])
+(defn project-setup-cadastral-units-form [e! _project {step-label :step-label :as step}]
+  [:form {:id step-label
+          :on-submit (e! (project-controller/navigate-to-next-step-event project-setup-steps step))}
+   "Cadastral units"])
 
-(defn project-setup-activities-form [e! project]
-  [:div "Tada"])
 
 (def project-setup-steps
   [{:step-label :basic-information
     :body       project-setup-basic-information-form}
-   #_{:step-label :restrictions
+   {:step-label :restrictions
     :body       project-setup-restrictions-form}
    {:step-label :cadastral-units
     :body       project-setup-cadastral-units-form}])
@@ -205,12 +208,14 @@
    (if (> step-number 1)
      [buttons/button-secondary
       {:on-click (e! (project-controller/navigate-to-previous-step-event project-setup-steps step))}
-      "Back"]
+      (tr [:buttons :back])]
      [buttons/link-button
-      "Cancel"])
+      (tr [:buttons :cancel])])
    [buttons/button-primary {:type :submit
                             :form step-label}
-    "Next"]])
+    (if (= step-number (count project-setup-steps))
+      (tr [:buttons :save])
+      "Next")]])
 
 (defn project-setup [e!
                      {{step-name :step

@@ -42,8 +42,8 @@
 ;;
 (defrecord NavigateToStep [step])
 
-(defrecord SaveBasicInformation [])
-(defrecord SaveBasicInformationResponse [])
+(defrecord SaveProjectSetup [])
+(defrecord SaveProjectSetupResponse [])
 (defrecord UpdateBasicInformationForm [form-data])
 (defrecord SaveRestrictions [])
 (defrecord UpdateRestrictionsForm [form-data])
@@ -68,10 +68,15 @@
 (defn navigate-to-next-step-event
   "Given `current-step`, navigates to next step in `steps`"
   [steps {:keys [step-number] :as _current-step}]
-  {:pre [(< step-number (count steps))]}
-  (let [step-label (-> (get steps step-number) :step-label name)]
-    (fn []
-      (->NavigateToStep step-label))))
+  {:pre [(<= step-number (count steps))]}
+  (if (= step-number (count steps))
+    ;; At the last step, return save event
+    ->SaveProjectSetup
+
+    ;; Otherwise navigate to next step
+    (let [step-label (-> (get steps step-number) :step-label name)]
+      (fn []
+        (->NavigateToStep step-label)))))
 
 (defn navigate-to-previous-step-event
   "Given `current-step`, navigatest to next step in `steps`"
@@ -86,7 +91,7 @@
   (process-event [{step :step} app]
     (t/fx app (navigate-to-step-fx app step)))
 
-  SaveBasicInformation
+  SaveProjectSetup
   (process-event [_ app]
     (let [{:thk.project/keys [id name] :as project} (get-in app [:route :project])
           {:thk.project/keys [project-name owner manager km-range meter-range-changed-reason]}
@@ -105,8 +110,8 @@
                                             {:thk.project/m-range-change-reason meter-range-changed-reason
                                              :thk.project/custom-start-m (long (* 1000 start-km))
                                              :thk.project/custom-end-m (long (* 1000 end-km))}))
-                 :result-event     ->SaveBasicInformationResponse})))
-  SaveBasicInformationResponse
+                 :result-event     ->SaveProjectSetupResponse})))
+  SaveProjectSetupResponse
   (process-event [_ {:keys [page params query] :as app}]
     (t/fx app
           (navigate-to-step-fx app "restrictions")
