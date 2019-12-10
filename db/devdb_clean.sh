@@ -106,11 +106,7 @@ fi
 echo "- Running ogr2ogr"
 $ogr2ogr -f "PostgreSQL" PG:"host=$dbhost user=teet dbname=teet" $CADASTRE_DUMP_FILE -lco schema=cadastre -lco overwrite=yes
 
-THK_CSV_FILE=$(find $PWD/.. -name THK_eksport_191108_1541.csv)
-if [ -z "$THK_CSV_FILE" ]; then
-    echo cannot find $THK_CSV_FILE under project root
-    exit 1
-fi
-
+aws s3 cp s3://teet-dev-files/db/THK_TEET_import.csv .
+THK_CSV_FILE=$PWD/THK_TEET_import.csv
 echo "Importing THK projects"
 (cd ../app/backend && clj -m teet.util.thk-import-cli $THK_CSV_FILE)
