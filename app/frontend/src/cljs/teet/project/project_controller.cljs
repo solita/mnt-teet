@@ -98,16 +98,20 @@
 
   UpdateBasicInformationForm
   (process-event [{:keys [form-data]} app]
-    (let [{:thk.project/keys [road-nr carriageway]} (get-in app [:route :project])]
-      (t/fx (update-in app [:route :project :basic-information-form]
-                       merge form-data)
-            {:tuck.effect/type :rpc
-             :endpoint (get-in app [:config :api-url])
-             :method :GET
-             :rpc "road_info"
-             :args {:road road-nr
-                    :carriageway carriageway}
-             :result-path [:route :project :basic-information-form :road-info]})))
+    (let [{:thk.project/keys [road-nr carriageway]} (get-in app [:route :project])
+          actual-road-info (get-in app [:route :project :basic-information-form :road-info])]
+      (if actual-road-info
+        (update-in app [:route :project :basic-information-form]
+                   merge form-data)
+        (t/fx (update-in app [:route :project :basic-information-form]
+                         merge form-data)
+              {:tuck.effect/type :rpc
+               :endpoint         (get-in app [:config :api-url])
+               :method           :GET
+               :rpc              "road_info"
+               :args             {:road        road-nr
+                                  :carriageway carriageway}
+               :result-path      [:route :project :basic-information-form :road-info]}))))
 
   FetchRestrictions
   (process-event [_ app]
