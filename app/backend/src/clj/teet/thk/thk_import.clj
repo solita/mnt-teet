@@ -7,7 +7,7 @@
   (:import (org.apache.commons.io.input BOMInputStream)
            (java.text SimpleDateFormat)))
 
-(def excluded-project-types #{"TUGI"})
+(def excluded-project-types #{"TUGI" "TEEMU"})
 
 (defn parse-thk-export-csv [input]
   (with-open [raw-input-stream (io/input-stream input)
