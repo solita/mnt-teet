@@ -65,10 +65,26 @@
    :params params
    :query (assoc query :step step)})
 
+(defn navigate-to-next-step-event
+  "Given `current-step`, navigates to next step in `steps`"
+  [steps {:keys [step-number] :as _current-step}]
+  {:pre [(< step-number (count steps))]}
+  (let [step-label (-> (get steps step-number) :step-label name)]
+    (fn []
+      (->NavigateToStep step-label))))
+
+(defn navigate-to-previous-step-event
+  "Given `current-step`, navigatest to next step in `steps`"
+  [steps {:keys [step-number] :as _current-step}]
+  {:pre [(> step-number 1)]}
+  (let [step-label (-> (get steps (- step-number 2)) :step-label name)]
+    (fn []
+      (->NavigateToStep step-label))))
+
 (extend-protocol t/Event
   NavigateToStep
   (process-event [{step :step} app]
-    (t/fx (navigate-to-step-fx app step)))
+    (t/fx app (navigate-to-step-fx app step)))
 
   SaveBasicInformation
   (process-event [_ app]
@@ -155,7 +171,8 @@
     (t/fx app
       {:tuck.effect/type :navigate
        :page :project
-       :params {:project id}}))
+       :params {:project id}}
+      ))
 
   OpenActivityDialog
   (process-event [_ {:keys [page params query] :as app}]

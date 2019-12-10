@@ -16,8 +16,11 @@
             [teet.ui.select :as select]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.typography :as typography]
+            [teet.util.collection :as cu]
             [teet.road.road-model :as road-model]
             [teet.log :as log]))
+
+(declare project-setup-steps)
 
 (defn initialization-form-footer [{:keys [cancel validate disabled?]}]
   [:div {:class (<class project-style/wizard-footer)}
@@ -93,18 +96,18 @@
         (project-model/get-column project :thk.project/effective-km-range)))
 
 (defn project-setup-basic-information-form
-  [e! project {:keys [step-label]}]
+  [e! project {:keys [step-label] :as step}]
   (e! (project-controller/->UpdateBasicInformationForm
-       {:thk.project/project-name (:thk.project/name project)
-        :thk.project/km-range (project-km-range project)
-        :thk.project/owner (:thk.project/owner project)
-        :thk.project/manager (:thk.project/manager project)}))
+       (cu/without-nils {:thk.project/project-name (:thk.project/name project)
+                         :thk.project/km-range (project-km-range project)
+                         :thk.project/owner (:thk.project/owner project)
+                         :thk.project/manager (:thk.project/manager project)})))
   (fn [e! {form :basic-information-form :as project}]
     [:div {:class (<class project-style/initialization-form-wrapper)}
      [form/form {:e!              e!
                  :value           form
                  :on-change-event project-controller/->UpdateBasicInformationForm
-                 :save-event      project-controller/->SaveBasicInformation
+                 :save-event      (project-controller/navigate-to-next-step-event project-setup-steps step)
                  :class (<class project-style/wizard-form)
                  :spec :project/initialization-form
                  :footer nil
@@ -158,9 +161,9 @@
              :value voond
              :on-change (r/partial toggle-restriction id)})]]))]))
 
-(defn project-setup-restrictions-form [e! _  _step _step-label]
+(defn project-setup-restrictions-form [e! _ _]
   (e! (project-controller/->FetchRestrictions))
-  (fn [e! {:keys [restriction-candidates checked-restrictions] :as project} _step _step-label]
+  (fn [e! {:keys [restriction-candidates checked-restrictions] :as project} step-info]
     (when restriction-candidates
       [restrictions-listing e! {:restrictions restriction-candidates
                                 :checked-restrictions (or checked-restrictions #{})
@@ -175,7 +178,7 @@
 (def project-setup-steps
   [{:step-label :basic-information
     :body       project-setup-basic-information-form}
-   {:step-label :restrictions
+   #_{:step-label :restrictions
     :body       project-setup-restrictions-form}
    {:step-label :cadastral-units
     :body       project-setup-cadastral-units-form}])
@@ -192,15 +195,16 @@
     [typography/Text {:color :textSecondary}
      (tr [:project :wizard :project-setup])]
     [typography/Text {:color :textSecondary}
-     (tr [:project :wizard :step-of] {:current step-number :total 4})]]
+     (tr [:project :wizard :step-of] {:current step-number
+                                      :total (count project-setup-steps)})]]
    [typography/Heading2 (tr [:project :wizard step-label])]])
 
-(defn setup-wizard-footer [{:keys [step-label step-number]}]
+(defn setup-wizard-footer [e! {:keys [step-label step-number] :as step}]
   [:div {:class (<class project-style/wizard-footer)}
    ;; TODO this should be a text button and cancel
    (if (> step-number 1)
      [buttons/button-secondary
-      #_{:on-click back}
+      {:on-click (e! (project-controller/navigate-to-previous-step-event project-setup-steps step))}
       "Back"]
      [buttons/link-button
       "Cancel"])
@@ -217,4 +221,4 @@
   (let [step (step-info step-name)]
     {:header [setup-wizard-header step]
      :body [(:body step) e! project step]
-     :footer [setup-wizard-footer step]}))
+     :footer [setup-wizard-footer e! step]}))
