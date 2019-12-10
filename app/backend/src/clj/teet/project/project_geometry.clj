@@ -25,7 +25,11 @@
                                   :thk.project/keys [name road-nr carriageway
                                                      start-m end-m
                                                      custom-start-m custom-end-m]}
-                                 projects]
+                                 projects
+                                 :when (and (integer? (or custom-start-m start-m))
+                                            (integer? (or custom-end-m end-m))
+                                            (integer? road-nr)
+                                            (integer? carriageway))]
                              {:id (str id)
                               :type "project"
                               :road road-nr
