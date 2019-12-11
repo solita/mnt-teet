@@ -6,6 +6,7 @@ CREATE TABLE teet.datasource (
   description TEXT,
   url TEXT, -- URL to download features from
   content_type TEXT, --  Datasource content type (like 'SHP')
+  id_pattern TEXT, -- Feature id pattern, may contain mustache refs to properties
   label_pattern TEXT, -- Feature label pattern, may contain mustache references to properties
   last_import_ts TIMESTAMPTZ, -- Timestamp of last import
   last_import_hash TEXT -- SHA-256 content hash of last import
@@ -25,11 +26,11 @@ CREATE TABLE teet.feature (
 
 CREATE INDEX feature_geom_idx ON teet.feature USING GIST (geometry);
 
-INSERT INTO teet.datasource (name, description, url, content_type, label_pattern)
+INSERT INTO teet.datasource (name, description, url, content_type, id_pattern, label_pattern)
 VALUES ('survey',
         'Maa-amet survey data',
         'https://geoportaal.maaamet.ee/docs/geoloogia/andmed/Ehitusgeoloogia_uuringualad_shp.zip',
         'SHP',
-        '{NIMI}');
+        '{ID}', '{NIMI}');
 
 GRANT SELECT ON teet.datasource TO teet_backend;
