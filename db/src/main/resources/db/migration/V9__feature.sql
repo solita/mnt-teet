@@ -34,3 +34,7 @@ VALUES ('survey',
         '{ID}', '{NIMI}');
 
 GRANT SELECT ON teet.datasource TO teet_backend;
+GRANT ALL PRIVILEGES ON teet.feature TO teet_backend;
+
+GRANT SELECT ON teet.datasource TO teet_user;
+GRANT SELECT ON teet.feature TO teet_user;
