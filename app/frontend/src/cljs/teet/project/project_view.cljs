@@ -393,7 +393,7 @@
     (if (= lifecycle-type :thk.lifecycle-type/design)
       (tr [:common :design-stage])
       ;; else
-      (tr [[:common :construction-phase]]))]])
+      (tr [:common :construction-phase]))]])
 
 (defn activities-tab [e! {:keys [query params page] :as app} project]
   (let [{:keys [activity lifecycle]} query]
