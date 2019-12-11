@@ -9,7 +9,8 @@
             [clojure.string :as str]
             [cljs.reader :as reader]
             [postgrest-ui.display :as postgrest-display]
-            [alandipert.storage-atom :refer [local-storage]]))
+            [alandipert.storage-atom :refer [local-storage]]
+            [teet.util.string :as string]))
 
 (defn dev-mode? []
   (when-let [host (-> js/window .-location .-host)]
@@ -91,21 +92,12 @@
     :else
     (str part)))
 
-(defn- string-interpolation
-  "Replace parameter references in curly braces in the input string with values from parameters.
-  Example: \"Hello, {name}!\" would replace \"{name}\" with the :name parameter."
-  [string parameters]
-  (str/replace string
-               #"\{([^\}]+)\}"
-               (fn [[_ param-name]]
-                 (str
-                  (get parameters (keyword param-name)
-                       (str "[MISSING PARAMETER " param-name "]"))))))
+
 
 (defn- message [message-definition parameters]
   (cond
     (string? message-definition)
-    (string-interpolation message-definition parameters)
+    (string/interpolate message-definition parameters)
 
     (list? message-definition)
     (evaluate-list message-definition parameters)
