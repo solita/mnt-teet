@@ -27,7 +27,7 @@
 
 (def ignore-attributes #{"the_geom"})
 
-(let [wkb-writer (WKBWriter.)]
+(let [wkb-writer (WKBWriter. 2 true)]
   (defn ->wkb [geometry]
     (WKBWriter/bytesToHex
      (.write wkb-writer geometry))))
@@ -42,7 +42,7 @@
                         (.setSRID 3301)))
      :attributes (into {}
                        (map (fn [attr-name]
-                              [attr-name
+                              [(keyword attr-name)
                                (->> attr-name
                                     (.getProperty f)
                                     .getValue)]))
