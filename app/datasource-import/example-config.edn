@@ -1,0 +1,3 @@
+{:api-url "http://localhost:3000"
+ :api-secret "secret1234567890secret1234567890"
+ :datasource-id 1}
