@@ -217,6 +217,13 @@
       (tr [:buttons :save])
       "Next")]])
 
+(defn- step->map-layers [{:keys [step-label]}]
+  (get {:basic-information #{:thk-project}
+        :restrictions #{:thk-project :related-restrictions}
+        :cadastral-units #{:thk-project :related-cadastral-units}}
+       step-label
+       #{:thk-project}))
+
 (defn project-setup [e!
                      {{step-name :step
                        :or {step-name "basic-information"}}
@@ -226,4 +233,5 @@
   (let [step (step-info step-name)]
     {:header [setup-wizard-header step]
      :body [(:body step) e! project step]
-     :footer [setup-wizard-footer e! step]}))
+     :footer [setup-wizard-footer e! step]
+     :map-settings {:layers (step->map-layers step)}}))

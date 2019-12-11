@@ -263,29 +263,36 @@
                                 map-features/project-line-style
                                 options))))
 
-(defn project-map [e! endpoint project _tab map]
+(defn project-map [e!
+                   endpoint
+                   project
+                   {:keys [layers]
+                    :or {layers #{:thk-project}}
+                    :as _map-settings}
+                   map]
   (r/with-let [overlays (r/atom [])]
     [:div {:style {:flex           1
                    :display        :flex
                    :flex-direction :column}}
      [map-view/map-view e!
       {:class  (<class map-style)
-       :layers (merge {:thk-project
-                       (project-road-geometry-layer project endpoint overlays)}
-                      {:related-restrictions
-                       (map-layers/geojson-layer endpoint
-                                                 "geojson_thk_project_related_restrictions"
-                                                 {"entity_id" (:db/id project)
-                                                  "distance"  200}
-                                                 map-features/project-related-restriction-style
-                                                 {:opacity 0.5})}
-                      {:related-cadastral-units
-                       (map-layers/geojson-layer endpoint
-                                                 "geojson_thk_project_related_cadastral_units"
-                                                 {"entity_id" (:db/id project)
-                                                  "distance"  200}
-                                                 map-features/cadastral-unit-style
-                                                 {:opacity 0.5})})
+       :layers (select-keys {:thk-project
+                             (project-road-geometry-layer project endpoint overlays)
+                             :related-restrictions
+                             (map-layers/geojson-layer endpoint
+                                                       "geojson_thk_project_related_restrictions"
+                                                       {"entity_id" (:db/id project)
+                                                        "distance"  200}
+                                                       map-features/project-related-restriction-style
+                                                       {:opacity 0.5})
+                             :related-cadastral-units
+                             (map-layers/geojson-layer endpoint
+                                                       "geojson_thk_project_related_cadastral_units"
+                                                       {"entity_id" (:db/id project)
+                                                        "distance"  200}
+                                                       map-features/cadastral-unit-style
+                                                       {:opacity 0.5})}
+                            layers)
        :overlays @overlays}
       map]]))
 
@@ -343,19 +350,17 @@
 
 (defn project-page-structure
   [e!
-   {{:keys [tab]} :query :as app}
+   app
    project
    breadcrumbs
-   header
-   body
-   footer]
+   {:keys [header body footer map-settings]}]
   [:div {:style {:display        :flex
                  :flex-direction :column
                  :flex           1}}
    [project-header project breadcrumbs]
    [:div {:style {:position "relative"
                   :display  "flex" :flex-direction "column" :flex 1}}
-    [project-map e! (get-in app [:config :api-url]) project (get-in app [:query :tab]) (:map app)]
+    [project-map e! (get-in app [:config :api-url] project) project map-settings (:map app)]
     [Paper {:class (<class project-style/project-content-overlay)}
      header
      [:div {:class (<class project-style/content-overlay-inner)}
@@ -430,13 +435,16 @@
   ;; FIXME: Labels with TR paths instead of text
   [{:label "Activities"
     :value "activities"
-    :component activities-tab}
+    :component activities-tab
+    :layers #{:thk-project}}
    {:label "People"
     :value "people"
-    :component people-tab}
+    :component people-tab
+    :layers #{:thk-project}}
    {:label "Details"
     :value "details"
-    :component details-tab}])
+    :component details-tab
+    :layers #{:thk-project}}])
 
 (defn selected-project-tab [{{:keys [tab]} :query :as _app}]
   (if tab
@@ -454,7 +462,7 @@
 (defn- project-view-layout [e! app project]
   {:header [project-tabs e! app]
    :body [project-tab e! app project]
-   :map {:layers #{:thk-project }}})
+   :map-settings {:layers #{:thk-project }}})
 
 (defn project-page-structure-layout [e! app project]
   (if-not (project-model/initialized? project)
@@ -496,6 +504,4 @@
     [:<>
      [project-page-modals e! app project]
      [project-page-structure e! app project breadcrumbs
-      header
-      body
-      footer]]))
+      (project-page-structure-layout e! app project)]]))
