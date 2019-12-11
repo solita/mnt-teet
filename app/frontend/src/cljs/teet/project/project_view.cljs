@@ -3,10 +3,8 @@
             [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
             [teet.activity.activity-view :as activity-view]
-            [teet.common.common-controller :as common-controller]
             [teet.common.common-styles :as common-styles]
             [teet.localization :refer [tr tr-tree]]
-            [teet.log :as log]
             [teet.map.map-features :as map-features]
             [teet.map.map-layers :as map-layers]
             [teet.map.map-view :as map-view]
@@ -14,7 +12,7 @@
             [teet.project.project-model :as project-model]
             [teet.project.project-style :as project-style]
             [teet.project.project-setup-view :as project-setup-view]
-            [teet.road.road-model :as road-model :refer [km->m m->km]]
+            [teet.road.road-model :as road-model :refer [km->m]]
             [teet.task.task-controller :as task-controller]
             teet.task.task-spec
             [teet.ui.breadcrumbs :as breadcrumbs]
@@ -25,8 +23,7 @@
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [ButtonBase Collapse Link Divider Paper
-                                         Checkbox FormControlLabel]]
+            [teet.ui.material-ui :refer [Divider Paper]]
             [teet.ui.panels :as panels]
             [teet.ui.progress :as progress]
             [teet.ui.select :as select]
@@ -37,10 +34,11 @@
             [teet.ui.typography :refer [Heading1 Heading2 Heading3] :as typography]
             [teet.ui.url :as url]
             [teet.ui.util :as util]
+            [teet.util.collection :as cu]
             [teet.activity.activity-controller :as activity-controller]
             [teet.routes :as routes]))
 
-(defn task-form [e! {:keys [close task save on-change initialization-fn]}]
+(defn task-form [_e! {:keys [initialization-fn]}]
   ;;Task definition (under project activity)
   ;; Task type (a predefined list of tasks: topogeodeesia, geoloogia, liiklusuuring, KMH eelhinnang, loomastikuuuring, arheoloogiline uuring, muu)
   ;; Description (short description of the task for clarification, 255char, in case more detailed description is needed, it will be uploaded as a file under the task)
@@ -119,10 +117,10 @@
      [:div
       "FIXME: lifecycle navigation"
       [:ul
-       (for [{id :db/id type :thk.lifecycle/type} lifecycles]
-         ^{:key (str id)}
-         [:li [:a {:href "foo"}
-               (tr [:enum (:db/ident type)])]])]]]))
+       (doall (for [{id :db/id type :thk.lifecycle/type} lifecycles]
+                ^{:key (str id)}
+                [:li [:a {:href "foo"}
+                      (tr [:enum (:db/ident type)])]]))]]]))
 
 
 (defn project-header-style
@@ -412,10 +410,10 @@
                                           :label (tr [:enum (get-in lc [:thk.lifecycle/type :db/ident])])
                                           :icon  icons/file-folder-open})])])))
 
-(defn people-tab [e! query project]
+(defn people-tab [_e! _app _project]
   [:div "people"])
 
-(defn details-tab [e! query project]
+(defn details-tab [_e! _app project]
   [project-data project])
 
 (defn edit-activity-form
@@ -429,28 +427,39 @@
                                        :activity  (:edit-activity-data app)}])))
 
 (def project-tabs-layout
-  [{:label "Activities" :value "activities"}
-   {:label "People" :value "people"}
-   {:label "Details" :value "details"}])
+  ;; FIXME: Labels with TR paths instead of text
+  [{:label "Activities"
+    :value "activities"
+    :component activities-tab}
+   {:label "People"
+    :value "people"
+    :component people-tab}
+   {:label "Details"
+    :value "details"
+    :component details-tab}])
 
-(defn project-tabs [e! {{:keys [tab]} :query :as _app}]
+(defn selected-project-tab [{{:keys [tab]} :query :as _app}]
+  (if tab
+    (cu/find-first #(= tab (:value %)) project-tabs-layout)
+    (first project-tabs-layout)))
+
+(defn- project-tabs [e! app]
   [tabs/tabs {:e! e!
-              :selected-tab (or tab (:value (first project-tabs-layout)))}
+              :selected-tab (:value (selected-project-tab app))}
    project-tabs-layout])
 
-(defn project-tab [e! {{:keys [tab] :as query} :query
-                       :as app}
-                   project]
-  (case (or tab "activities")
-    "activities" [activities-tab e! app project]
-    "people" [people-tab e! query project]
-    "details" [details-tab e! query project]))
+(defn- project-tab [e! app project]
+  [(:component (selected-project-tab app)) e! app project])
+
+(defn- project-view-layout [e! app project]
+  {:header [project-tabs e! app]
+   :body [project-tab e! app project]
+   :map {:layers #{:thk-project }}})
 
 (defn project-page-structure-layout [e! app project]
   (if-not (project-model/initialized? project)
     (project-setup-view/project-setup e! app project)
-    {:header [project-tabs e! app]
-     :body [project-tab e! app project]}))
+    (project-view-layout e! app project)))
 
 (defn project-page-modals
   [e! {{:keys [add edit]} :query :as app} app project]
