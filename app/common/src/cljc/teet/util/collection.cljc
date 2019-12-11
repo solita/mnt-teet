@@ -18,3 +18,11 @@
                  m))
              {}
              m))
+
+(defn find-first
+  "Find first element in `collection` matching `predicate`"
+  [predicate collection]
+  (some (fn [element]
+          (when (predicate element)
+            element))
+        collection))
