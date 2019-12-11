@@ -1,4 +1,5 @@
-{:deps {org.clojure/clojure {:mvn/version "1.10.1"}
+{:paths ["src" "../common/src/cljc"]
+ :deps {org.clojure/clojure {:mvn/version "1.10.1"}
         org.geotools/gt-shapefile {:mvn/version "22.2"
                                    ;; We won't need image manipulation library
                                    :exclusions [javax.media/jai_core]}

@@ -4,7 +4,8 @@
             [clojure.string :as str]
             [clj-http.client :as client]
             [cheshire.core :as cheshire]
-            [teet.datasource-import.shp :as shp])
+            [teet.datasource-import.shp :as shp]
+            [teet.util.string :as string])
   (:import (java.nio.file Files)
            (java.nio.file.attribute FileAttribute)
            (java.util.zip ZipEntry ZipInputStream)))
@@ -59,6 +60,30 @@
    (case (:content_type ds)
      "SHP" (shp/read-features-from-path (:path dds)))))
 
+(defn property-pattern-fn [pattern]
+  (fn [{attrs :attributes}]
+    (string/interpolate pattern attrs)))
+
+(defn upsert-features [{:keys [features api-url api-secret datasource-id datasource] :as ctx}]
+  (let [->label (property-pattern-fn (:label_pattern datasource))
+        ->id (property-pattern-fn (:id_pattern datasource))]
+    (doseq [features (partition-all 100 features)]
+      (client/post
+       (str api-url "/feature")
+       {:headers {"Prefer" "resolution=merge-duplicates"
+                  "Content-Type" "application/json"}
+        :body (let [body (cheshire/encode
+                          (for [{:keys [geometry attributes] :as f} features]
+                            ;; Feature as JSON
+                            {:datasource_id datasource-id
+                             :id (->id f)
+                             :label (->label f)
+                             :geometry geometry
+                             :properties attributes}))]
+                (spit "body.json" body)
+                body)}))
+    ctx))
+
 (defn dump-ctx [ctx]
   (spit "debug-ctx" (pr-str ctx)))
 
@@ -77,4 +102,5 @@
           download-datasource
           extract-datasource
           read-features
+          upsert-features
           dump-ctx))))
