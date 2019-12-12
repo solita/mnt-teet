@@ -5,7 +5,8 @@
             [clj-http.client :as client]
             [cheshire.core :as cheshire]
             [teet.datasource-import.shp :as shp]
-            [teet.util.string :as string])
+            [teet.util.string :as string]
+            [teet.auth.jwt-token :as jwt-token])
   (:import (java.nio.file Files)
            (java.nio.file.attribute FileAttribute)
            (java.util.zip ZipEntry ZipInputStream)))
@@ -17,8 +18,14 @@
 (defn valid-datasource? [{:keys [datasource-id]}]
   (integer? datasource-id))
 
-(defn fetch-datasource-config [{:keys [api-url api-secret datasource-id] :as ctx}]
-  (let [response (client/get (str api-url "/datasource?id=eq." datasource-id) {:as :json})]
+(defn auth-headers [{api-secret :api-secret}]
+  {"Authorization" (str "Bearer "
+                        (jwt-token/create-backend-token api-secret))})
+
+(defn fetch-datasource-config [{:keys [api-url datasource-id] :as ctx}]
+  (let [response (client/get (str api-url "/datasource?id=eq." datasource-id)
+                             {:as :json
+                              :headers (auth-headers ctx)})]
     (assoc ctx :datasource (-> response :body first))))
 
 (defn download-datasource [{{:keys [url]} :datasource :as ctx}]
@@ -64,15 +71,17 @@
   (fn [{attrs :attributes}]
     (string/interpolate pattern attrs)))
 
-(defn upsert-features [{:keys [features api-url api-secret datasource-id datasource] :as ctx}]
+(defn upsert-features [{:keys [features api-url datasource-id datasource] :as ctx}]
   (let [->label (property-pattern-fn (:label_pattern datasource))
         ->id (property-pattern-fn (:id_pattern datasource))]
     (doseq [features (partition-all 100 features)]
       (print ".") (flush)
       (client/post
        (str api-url "/feature")
-       {:headers {"Prefer" "resolution=merge-duplicates"
-                  "Content-Type" "application/json"}
+       {:headers (merge
+                  (auth-headers ctx)
+                  {"Prefer" "resolution=merge-duplicates"
+                   "Content-Type" "application/json"})
         :body (cheshire/encode
                (for [{:keys [geometry attributes] :as f} features]
                  ;; Feature as JSON
