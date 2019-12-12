@@ -47,20 +47,20 @@
     (initialization-fn))
   (fn [e! {:keys [close task save on-change]}]
     [form/form {:e!              e!
-                  :value           task
-                  :on-change-event on-change
-                  :cancel-event    close
-                  :save-event      save
-                  :spec            :task/new-task-form}
-       ^{:xs 12 :attribute :task/type}
-       [select/select-enum {:e! e! :attribute :task/type}]
+                :value           task
+                :on-change-event on-change
+                :cancel-event    close
+                :save-event      save
+                :spec            :task/new-task-form}
+     ^{:xs 12 :attribute :task/type}
+     [select/select-enum {:e! e! :attribute :task/type}]
 
-       ^{:attribute :task/description}
-       [TextField {:full-width true :multiline true :rows 4 :maxrows 4
-                   :variant    :outlined}]
+     ^{:attribute :task/description}
+     [TextField {:full-width true :multiline true :rows 4 :maxrows 4
+                 :variant    :outlined}]
 
-       ^{:attribute :task/assignee}
-       [select/select-user {:e! e!}]]))
+     ^{:attribute :task/assignee}
+     [select/select-user {:e! e!}]]))
 
 
 (defn- activity-info-popup [label start-date end-date num-tasks complete-count incomplete-count]
@@ -125,7 +125,7 @@
 
 (defn project-header-style
   []
-  {:padding         "1.5rem 1.875rem"})
+  {:padding "1.5rem 1.875rem"})
 
 (defn- project-header [{:thk.project/keys [name] :as project} breadcrumbs activities]
   [:div {:class (<class project-header-style)}
@@ -201,12 +201,12 @@
     (let [start (.getFirstCoordinate geom)
           end (.getLastCoordinate geom)]
       (callback
-       [{:coordinate (js->clj start)
-         :content [map-view/overlay {:arrow-direction :right :height 30}
-                   start-label]}
-        {:coordinate (js->clj end)
-         :content [map-view/overlay {:arrow-direction :left :height 30}
-                   end-label]}]))))
+        [{:coordinate (js->clj start)
+          :content    [map-view/overlay {:arrow-direction :right :height 30}
+                       start-label]}
+         {:coordinate (js->clj end)
+          :content    [map-view/overlay {:arrow-direction :left :height 30}
+                       end-label]}]))))
 
 (defn given-range-in-actual-road?
   "Check to see if the forms given road range is in the actual road"
@@ -215,11 +215,34 @@
        (>= form-start-m start_m)
        (>= end_m form-end-m)))
 
+(defn project-road-buffer-layer
+  "Show buffer area for project-geometry"
+  [{:thk.project/keys [road-nr carriageway]
+    :keys             [basic-information-form] :as _project}
+   endpoint
+   road-buffer-meters]
+  (let [road-information (:road-info basic-information-form)]
+    (when (and basic-information-form)
+      (let [{[start-km-string end-km-string] :thk.project/km-range} basic-information-form
+            form-start-m (some-> start-km-string road-model/parse-km km->m)
+            form-end-m (some-> end-km-string road-model/parse-km km->m)]
+        (when (given-range-in-actual-road? road-information [form-start-m form-end-m])
+          (map-layers/geojson-layer
+            endpoint
+            "geojson_road_buffer_geometry"
+            {"road"        road-nr
+             "carriageway" carriageway
+             "start_m"     form-start-m
+             "end_m"       form-end-m
+             "buffer"      road-buffer-meters}
+            map-features/road-buffer-fill-style
+            {:content-type "application/json"}))))))
+
 (defn project-road-geometry-layer
   "Show project geometry or custom road part in case the start and end
   km are being edited during initialization"
   [{:thk.project/keys [start-m end-m road-nr carriageway]
-    :keys [basic-information-form] :as project}
+    :keys             [basic-information-form] :as project}
    endpoint overlays]
   (let [[start-label end-label]
         (if basic-information-form
@@ -234,10 +257,10 @@
         road-information (:road-info basic-information-form)
         options {:fit-on-load? true
                  ;; Use left side padding so that road is not shown under the project panel
-                 :fit-padding [0 0 0 (* 1.05 (project-style/project-panel-width))]
-                 :on-load (partial km-range-label-overlays
-                                   start-label end-label
-                                   #(reset! overlays %))}]
+                 :fit-padding  [0 0 0 (* 1.05 (project-style/project-panel-width))]
+                 :on-load      (partial km-range-label-overlays
+                                        start-label end-label
+                                        #(reset! overlays %))}]
     (if basic-information-form
       (let [{[start-km-string end-km-string] :thk.project/km-range} basic-information-form
             form-start-m (some-> start-km-string road-model/parse-km km->m)
@@ -267,32 +290,35 @@
                    endpoint
                    project
                    {:keys [layers]
-                    :or {layers #{:thk-project}}
-                    :as _map-settings}
-                   map]
+                    :or   {layers #{:thk-project}}
+                    :as   _map-settings}
+                   {:keys [road-buffer-meters] :as map}]
   (r/with-let [overlays (r/atom [])]
     [:div {:style {:flex           1
                    :display        :flex
                    :flex-direction :column}}
      [map-view/map-view e!
-      {:class  (<class map-style)
-       :layers (select-keys {:thk-project
-                             (project-road-geometry-layer project endpoint overlays)
-                             :related-restrictions
-                             (map-layers/geojson-layer endpoint
-                                                       "geojson_thk_project_related_restrictions"
-                                                       {"entity_id" (:db/id project)
-                                                        "distance"  200}
-                                                       map-features/project-related-restriction-style
-                                                       {:opacity 0.5})
-                             :related-cadastral-units
-                             (map-layers/geojson-layer endpoint
-                                                       "geojson_thk_project_related_cadastral_units"
-                                                       {"entity_id" (:db/id project)
-                                                        "distance"  200}
-                                                       map-features/cadastral-unit-style
-                                                       {:opacity 0.5})}
-                            layers)
+      {:class    (<class map-style)
+       :layers   (select-keys (merge {:thk-project
+                                      (project-road-geometry-layer project endpoint overlays)}
+                                     (when (and (not-empty road-buffer-meters) (> road-buffer-meters 0))
+                                       {:related-restrictions
+                                        (map-layers/geojson-layer endpoint
+                                                                  "geojson_thk_project_related_restrictions"
+                                                                  {"entity_id" (:db/id project)
+                                                                   "distance"  road-buffer-meters}
+                                                                  map-features/project-related-restriction-style
+                                                                  {:opacity 0.5})
+                                        :related-cadastral-units
+                                        (map-layers/geojson-layer endpoint
+                                                                  "geojson_thk_project_related_cadastral_units"
+                                                                  {"entity_id" (:db/id project)
+                                                                   "distance"  road-buffer-meters}
+                                                                  map-features/cadastral-unit-style
+                                                                  {:opacity 0.5})
+                                        :thk-project-buffer
+                                        (project-road-buffer-layer project endpoint road-buffer-meters)}))
+                              layers)
        :overlays @overlays}
       map]]))
 
@@ -353,7 +379,7 @@
    app
    project
    breadcrumbs
-   {:keys [header body footer map-settings]}]
+   {:keys [header body footer map-settings map-overlay]}]
   [:div {:style {:display        :flex
                  :flex-direction :column
                  :flex           1}}
@@ -361,6 +387,8 @@
    [:div {:style {:position "relative"
                   :display  "flex" :flex-direction "column" :flex 1}}
     [project-map e! (get-in app [:config :api-url] project) project map-settings (:map app)]
+    (when map-overlay
+      map-overlay)
     [Paper {:class (<class project-style/project-content-overlay)}
      header
      [:div {:class (<class project-style/content-overlay-inner)}
@@ -370,7 +398,7 @@
 
 (defn project-lifecycle-content
   [e! {{lifecycle-type :db/ident} :thk.lifecycle/type
-       activities     :thk.lifecycle/activities}]
+       activities                 :thk.lifecycle/activities}]
   [:section
    [typography/Heading2 (tr [:enum lifecycle-type])]
    [typography/Heading3
@@ -433,18 +461,18 @@
 
 (def project-tabs-layout
   ;; FIXME: Labels with TR paths instead of text
-  [{:label "Activities"
-    :value "activities"
+  [{:label     "Activities"
+    :value     "activities"
     :component activities-tab
-    :layers #{:thk-project}}
-   {:label "People"
-    :value "people"
+    :layers    #{:thk-project :related-cadastral-units :related-restrictions}}
+   {:label     "People"
+    :value     "people"
     :component people-tab
-    :layers #{:thk-project}}
-   {:label "Details"
-    :value "details"
+    :layers    #{:thk-project}}
+   {:label     "Details"
+    :value     "details"
     :component details-tab
-    :layers #{:thk-project}}])
+    :layers    #{:thk-project}}])
 
 (defn selected-project-tab [{{:keys [tab]} :query :as _app}]
   (if tab
@@ -452,7 +480,7 @@
     (first project-tabs-layout)))
 
 (defn- project-tabs [e! app]
-  [tabs/tabs {:e! e!
+  [tabs/tabs {:e!           e!
               :selected-tab (:value (selected-project-tab app))}
    project-tabs-layout])
 
@@ -460,9 +488,9 @@
   [(:component (selected-project-tab app)) e! app project])
 
 (defn- project-view-layout [e! app project]
-  {:header [project-tabs e! app]
-   :body [project-tab e! app project]
-   :map-settings {:layers #{:thk-project }}})
+  {:header       [project-tabs e! app]
+   :body         [project-tab e! app project]
+   :map-settings {:layers #{:thk-project}}})
 
 (defn project-page-structure-layout [e! app project]
   (if-not (project-model/initialized? project)
@@ -500,8 +528,7 @@
      modal]))
 
 (defn project-page [e! app project breadcrumbs]
-  (let [{:keys [header body footer]} (project-page-structure-layout e! app project)]
-    [:<>
-     [project-page-modals e! app project]
-     [project-page-structure e! app project breadcrumbs
-      (project-page-structure-layout e! app project)]]))
+  [:<>
+   [project-page-modals e! app project]
+   [project-page-structure e! app project breadcrumbs
+    (project-page-structure-layout e! app project)]])

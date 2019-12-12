@@ -12,13 +12,14 @@
             [teet.ui.container :as container]
             [teet.ui.form :as form]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Grid]]
+            [teet.ui.material-ui :refer [Paper Grid]]
             [teet.ui.select :as select]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.typography :as typography]
             [teet.util.collection :as cu]
             [teet.road.road-model :as road-model]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.theme.theme-colors :as theme-colors]))
 
 (declare project-setup-steps)
 
@@ -34,7 +35,7 @@
 
 (defn original-name-adornment [e! {:thk.project/keys [name] :as project}]
   [:div {:style {:padding-top "6px"
-                 :display :flex}}
+                 :display     :flex}}
    [typography/Text {:display :inline} "Road name:"]
    [buttons/link-button {:on-click #(e! (project-controller/->UpdateBasicInformationForm {:thk.project/project-name name}))}
     name]])
@@ -56,32 +57,32 @@
 ;; FIXME: This is a generic component, move to another namespace
 (defn num-range [{:keys [error value on-change start-label end-label required spacing
                          min-value max-value]
-                  :or {spacing 3}
-                  :as nr}]
+                  :or   {spacing 3}
+                  :as   nr}]
   (log/info "num-range " nr)
   (let [[start end] value]
     [Grid {:container true
-           :spacing spacing}
+           :spacing   spacing}
      [Grid {:item true
-            :xs 6}
-      [TextField {:label start-label
+            :xs   6}
+      [TextField {:label     start-label
                   :on-change (fn [e]
                                (on-change [(-> e .-target .-value) end]))
-                  :value start
-                  :type :number
-                  :step "0.001"
-                  :error (num-range-error error value start min-value max-value)
-                  :required required}]]
+                  :value     start
+                  :type      :number
+                  :step      "0.001"
+                  :error     (num-range-error error value start min-value max-value)
+                  :required  required}]]
      [Grid {:item true
-            :xs 6}
-      [TextField {:label end-label
+            :xs   6}
+      [TextField {:label     end-label
                   :on-change (fn [e]
                                (on-change [start (-> e .-target .-value)]))
-                  :value end
-                  :type :number
-                  :step "0.001"
-                  :error (num-range-error error value end min-value max-value)
-                  :required required}]]]))
+                  :value     end
+                  :type      :number
+                  :step      "0.001"
+                  :error     (num-range-error error value end min-value max-value)
+                  :required  required}]]]))
 
 (defn km-range-changed? [project]
   (let [{:thk.project/keys [start-m end-m]} project
@@ -99,20 +100,20 @@
   [e! project {:keys [step-label] :as step}]
   (when-not (:basic-information-form project)
     (e! (project-controller/->UpdateBasicInformationForm
-         (cu/without-nils {:thk.project/project-name (:thk.project/name project)
-                           :thk.project/km-range (project-km-range project)
-                           :thk.project/owner (:thk.project/owner project)
-                           :thk.project/manager (:thk.project/manager project)}))))
+          (cu/without-nils {:thk.project/project-name (:thk.project/name project)
+                            :thk.project/km-range     (project-km-range project)
+                            :thk.project/owner        (:thk.project/owner project)
+                            :thk.project/manager      (:thk.project/manager project)}))))
   (fn [e! {form :basic-information-form :as project}]
     [:div {:class (<class project-style/initialization-form-wrapper)}
      [form/form {:e!              e!
                  :value           form
                  :on-change-event project-controller/->UpdateBasicInformationForm
                  :save-event      (project-controller/navigate-to-next-step-event project-setup-steps step)
-                 :class (<class project-style/wizard-form)
-                 :spec :project/initialization-form
-                 :footer nil
-                 :id step-label}
+                 :class           (<class project-style/wizard-form)
+                 :spec            :project/initialization-form
+                 :footer          nil
+                 :id              step-label}
 
       ^{:attribute :thk.project/project-name
         :adornment [original-name-adornment e! project]}
@@ -120,15 +121,15 @@
 
       ^{:xs 12 :attribute :thk.project/km-range}
       [num-range {:start-label "Start km"
-                  :end-label "End km"
-                  :min-value (some-> form :road-info :start_m road-model/m->km)
-                  :max-value (some-> form :road-info :end_m road-model/m->km)}]
+                  :end-label   "End km"
+                  :min-value   (some-> form :road-info :start_m road-model/m->km)
+                  :max-value   (some-> form :road-info :end_m road-model/m->km)}]
 
       ;; FIXME: The map should also reflect the changed range
       (when (km-range-changed? project)
         ^{:xs 12 :attribute :thk.project/meter-range-changed-reason}
         [TextField {:multiline true
-                    :rows 3}])
+                    :rows      3}])
 
       ^{:attribute :thk.project/owner}
       [select/select-user {:e! e!}]
@@ -142,38 +143,38 @@
                restrictions-by-type (group-by :type restrictions)]
     [:<>
      (doall
-      (for [[group restrictions] restrictions-by-type
-            :let [group-checked (into #{}
-                                      (comp
-                                       (map :id)
-                                       (filter checked-restrictions))
-                                      restrictions)]]
-        ^{:key group}
-        [container/collapsible-container {:on-toggle (fn [_]
-                                                       (swap! open-types #(if (% group)
-                                                                            (disj % group)
-                                                                            (conj % group))))
-                                          :open? (@open-types group)}
-         group
-         [itemlist/checkbox-list
-          (for [{:keys [voond id]} (sort-by :voond restrictions)
-                :let [checked? (boolean (group-checked id))]]
-            {:checked? checked?
-             :value voond
-             :on-change (r/partial toggle-restriction id)})]]))]))
+       (for [[group restrictions] restrictions-by-type
+             :let [group-checked (into #{}
+                                       (comp
+                                         (map :id)
+                                         (filter checked-restrictions))
+                                       restrictions)]]
+         ^{:key group}
+         [container/collapsible-container {:on-toggle (fn [_]
+                                                        (swap! open-types #(if (% group)
+                                                                             (disj % group)
+                                                                             (conj % group))))
+                                           :open?     (@open-types group)}
+          group
+          [itemlist/checkbox-list
+           (for [{:keys [voond id]} (sort-by :voond restrictions)
+                 :let [checked? (boolean (group-checked id))]]
+             {:checked?  checked?
+              :value     voond
+              :on-change (r/partial toggle-restriction id)})]]))]))
 
 (defn project-setup-restrictions-form [e! _ {step-label :step-label :as step}]
   (e! (project-controller/->FetchRestrictions))
   (fn [e! {:keys [restriction-candidates checked-restrictions] :as project} step-info]
-    [:form {:id step-label
+    [:form {:id        step-label
             :on-submit (e! (project-controller/navigate-to-next-step-event project-setup-steps step))}
      (when restriction-candidates
-       [restrictions-listing e! {:restrictions restriction-candidates
+       [restrictions-listing e! {:restrictions         restriction-candidates
                                  :checked-restrictions (or checked-restrictions #{})
-                                 :toggle-restriction (e! project-controller/->ToggleRestriction)}])]))
+                                 :toggle-restriction   (e! project-controller/->ToggleRestriction)}])]))
 
 (defn project-setup-cadastral-units-form [e! _project {step-label :step-label :as step}]
-  [:form {:id step-label
+  [:form {:id        step-label
           :on-submit (e! (project-controller/navigate-to-next-step-event project-setup-steps step))}
    "Cadastral units"])
 
@@ -199,7 +200,7 @@
      (tr [:project :wizard :project-setup])]
     [typography/Text {:color :textSecondary}
      (tr [:project :wizard :step-of] {:current step-number
-                                      :total (count project-setup-steps)})]]
+                                      :total   (count project-setup-steps)})]]
    [typography/Heading2 (tr [:project :wizard step-label])]])
 
 (defn setup-wizard-footer [e! {:keys [step-label step-number] :as step}]
@@ -217,21 +218,33 @@
       (tr [:buttons :save])
       "Next")]])
 
+(defn road-geometry-range
+  [e! {road-buffer-meters :road-buffer-meters}]
+  [Paper {:class (<class project-style/road-geometry-range-selector)}
+   [:div {:class (<class project-style/wizard-header)}
+    [typography/Heading3 "Road geometry inclusion"]]
+   [:div {:class (<class project-style/road-geometry-range-body)}
+    [TextField {:label       "Inclusion distance"
+                :type        :number
+                :placeholder "Give value to show related areas"
+                :value road-buffer-meters
+                :on-change #(e! (project-controller/->ChangeRoadObjectAoe (-> % .-target .-value)))}]]])
+
 (defn- step->map-layers [{:keys [step-label]}]
-  (get {:basic-information #{:thk-project}
-        :restrictions #{:thk-project :related-restrictions}
-        :cadastral-units #{:thk-project :related-cadastral-units}}
+  (get {:basic-information #{:thk-project :thk-project-buffer}
+        :restrictions #{:thk-project :related-restrictions :thk-project-buffer}
+        :cadastral-units #{:thk-project :related-cadastral-units :thk-project-buffer}}
        step-label
        #{:thk-project}))
 
 (defn project-setup [e!
                      {{step-name :step
-                       :or {step-name "basic-information"}}
-                      :query
-                      :as _app}
+                       :or       {step-name "basic-information"}} :query
+                      :as app}
                      project]
   (let [step (step-info step-name)]
-    {:header [setup-wizard-header step]
-     :body [(:body step) e! project step]
-     :footer [setup-wizard-footer e! step]
+    {:header      [setup-wizard-header step]
+     :body        [(:body step) e! project step]
+     :footer      [setup-wizard-footer e! step]
+     :map-overlay [road-geometry-range e! (:map app)]
      :map-settings {:layers (step->map-layers step)}}))

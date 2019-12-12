@@ -89,9 +89,23 @@
     :top "25px"
     :bottom "25px"
     :width (str (project-panel-width) "px")
-    :height "calc(100vh - 275px)"
+    :height "calc(100vh - 270px)"
     :display :flex
     :flex-direction :column}))
+
+(defn road-geometry-range-selector
+  []
+  {:position :absolute
+   :bottom   "25px"
+   :right    "25px"})
+
+(defn road-geometry-range-header
+  []
+  {:background-color theme-colors/gray-lightest})
+
+(defn road-geometry-range-body
+  []
+  {:padding "1rem"})
 
 (defn content-overlay-inner []
   {:padding "1rem"
