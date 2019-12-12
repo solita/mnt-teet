@@ -45,6 +45,7 @@
 (defrecord SaveProjectSetup [])
 (defrecord SaveProjectSetupResponse [])
 (defrecord UpdateBasicInformationForm [form-data])
+(defrecord ChangeRoadObjectAoe [val])
 (defrecord SaveRestrictions [])
 (defrecord UpdateRestrictionsForm [form-data])
 (defrecord SaveCadastralUnits [])
@@ -87,6 +88,10 @@
       (->NavigateToStep step-label))))
 
 (extend-protocol t/Event
+  ChangeRoadObjectAoe
+  (process-event [{val :val} app]
+    (assoc-in app [:map :road-buffer-meters] val))
+
   NavigateToStep
   (process-event [{step :step} app]
     (t/fx app (navigate-to-step-fx app step)))
