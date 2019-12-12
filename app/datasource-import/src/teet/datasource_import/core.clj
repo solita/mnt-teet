@@ -68,20 +68,19 @@
   (let [->label (property-pattern-fn (:label_pattern datasource))
         ->id (property-pattern-fn (:id_pattern datasource))]
     (doseq [features (partition-all 100 features)]
+      (print ".") (flush)
       (client/post
        (str api-url "/feature")
        {:headers {"Prefer" "resolution=merge-duplicates"
                   "Content-Type" "application/json"}
-        :body (let [body (cheshire/encode
-                          (for [{:keys [geometry attributes] :as f} features]
-                            ;; Feature as JSON
-                            {:datasource_id datasource-id
-                             :id (->id f)
-                             :label (->label f)
-                             :geometry geometry
-                             :properties attributes}))]
-                (spit "body.json" body)
-                body)}))
+        :body (cheshire/encode
+               (for [{:keys [geometry attributes] :as f} features]
+                 ;; Feature as JSON
+                 {:datasource_id datasource-id
+                  :id (->id f)
+                  :label (->label f)
+                  :geometry geometry
+                  :properties attributes}))}))
     ctx))
 
 (defn dump-ctx [ctx]
