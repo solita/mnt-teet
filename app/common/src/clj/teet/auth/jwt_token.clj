@@ -1,5 +1,5 @@
-(ns teet.login.login-api-token
-  "Create JWT token for PostgREST API"
+(ns teet.auth.jwt-token
+  "Create JWT token for TEET backend and PostgREST API"
   (:import (java.security SecureRandom)
            (com.nimbusds.jose JWSAlgorithm JWSSigner JWSObject JWSHeader JWSVerifier Payload)
            (com.nimbusds.jose.crypto MACSigner MACVerifier)

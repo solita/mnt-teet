@@ -1,7 +1,7 @@
 (ns teet.login.login-commands
   (:require [teet.db-api.core :as db-api]
             [teet.environment :as environment]
-            [teet.login.login-api-token :as login-api-token]
+            [teet.auth.jwt-token :as jwt-token]
             [datomic.client.api :as d]
             [teet.log :as log]))
 
@@ -51,13 +51,13 @@
   (if (environment/check-site-password site-password)
     (let [secret (environment/config-value :auth :jwt-secret)
           roles (user-roles conn id)]
-      {:token (login-api-token/create-token secret "teet_user"
-                                            {:given-name given-name
-                                             :family-name family-name
-                                             :person-id person-id
-                                             :email email
-                                             :id id
-                                             :roles roles})
+      {:token (jwt-token/create-token secret "teet_user"
+                                      {:given-name given-name
+                                       :family-name family-name
+                                       :person-id person-id
+                                       :email email
+                                       :id id
+                                       :roles roles})
        :user (user-info conn id)
        :roles roles
        :enabled-features (environment/config-value :enabled-features)
@@ -86,7 +86,7 @@
                                  (if (empty? roles)
                                    "?error=no-roles"
                                    (str "?token="
-                                        (login-api-token/create-token
+                                        (jwt-token/create-token
                                          secret "teet_user"
                                          {:given-name given_name
                                           :family-name family_name
@@ -106,13 +106,13 @@
 (defmethod db-api/command! :refresh-token [{conn :conn
                                             {:user/keys [id given-name family-name email person-id]} :user} _]
   (let [roles (user-roles conn id)]
-    {:token (login-api-token/create-token (environment/config-value :auth :jwt-secret) "teet_user"
-                                          {:given-name given-name
-                                           :family-name family-name
-                                           :person-id person-id
-                                           :email email
-                                           :id id
-                                           :roles roles})
+    {:token (jwt-token/create-token (environment/config-value :auth :jwt-secret) "teet_user"
+                                    {:given-name given-name
+                                     :family-name family-name
+                                     :person-id person-id
+                                     :email email
+                                     :id id
+                                     :roles roles})
      :user (user-info conn id)
      :roles roles
      :enabled-features (environment/config-value :enabled-features)

@@ -10,7 +10,6 @@
             [teet.thk.thk-export :as thk-export]
             [teet.environment :as environment]
             [datomic.client.api :as d]
-            [teet.login.login-api-token :as login-api-token]
             [clojure.data.csv :as csv]
             [teet.project.project-geometry :as project-geometry]))
 

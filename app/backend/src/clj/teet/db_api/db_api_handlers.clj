@@ -19,7 +19,7 @@
             teet.project.project-commands
 
             [teet.log :as log]
-            [teet.login.login-api-token :as login-api-token]
+            [teet.auth.jwt-token :as jwt-token]
             [clojure.string :as str]))
 
 (defn- jwt-token [req]
@@ -33,7 +33,7 @@
   (fn [req]
     (log/debug "REQUEST: " (pr-str req))
     (try
-      (let [user (some->> req jwt-token (login-api-token/verify-token
+      (let [user (some->> req jwt-token (jwt-token/verify-token
                                          (environment/config-value :auth :jwt-secret)))]
         (log/with-context
           {:user (str (:user/id user))}
