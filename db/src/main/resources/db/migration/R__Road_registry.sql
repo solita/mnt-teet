@@ -45,6 +45,17 @@ FROM (SELECT 'FeatureCollection' as type,
                                      'end', end_m) AS properties) f) fc;
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION teet.geojson_road_buffer_geometry(road INTEGER, carriageway INTEGER, start_m INTEGER, end_m INTEGER, buffer INTEGER) RETURNS JSON
+AS $$
+SELECT row_to_json(fc)
+    FROM (SELECT 'FeatureCollection' as type,
+                 array_to_json(array_agg(f)) as features
+        FROM (SELECT 'Feature' as type,
+                     ST_AsGeoJSON(ST_Buffer(teet.road_part_geometry(road, carriageway, numrange(start_m/1000.0, end_m/1000.0)), buffer))::json as geometry,
+                     json_build_object('road', road,
+                                       'carriageway', carriageway) AS properties) f) fc;
+$$ LANGUAGE SQL STABLE SECURITY DEFINER;
+
 CREATE OR REPLACE FUNCTION teet.road_info(road INTEGER, carriageway INTEGER) RETURNS JSON
 AS $$
 SELECT row_to_json(r)
