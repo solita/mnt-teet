@@ -39,6 +39,11 @@
         canvas))))
 
 
+(def road-buffer-fill-style
+  (ol.style.Style.
+    #js {:stroke (ol.style.Stroke. #js {:color "rgba(0,0,255,0.6)"
+                                       :width 1})
+         :fill (ol.style.Fill. #js {:color "rgba(0,0,255,0.2)"})}))
 
 (defn road-line-style [color ^ol.render.Feature _feature res]
   (let [line-width (+ 3 (min 5 (int (/ 200 res))))]
