@@ -2,7 +2,7 @@
   "Code for working with project geometries stored in PostgreSQL.
   Provides functions for calling the PostgREST API."
   (:require [org.httpkit.client :as client]
-            [teet.login.login-api-token :as login-api-token]
+            [teet.auth.jwt-token :as jwt-token]
             [clojure.string :as str]
             [cheshire.core :as cheshire]))
 
@@ -37,7 +37,7 @@
                        {:headers {"Content-Type" "application/json"
                                   "Authorization"
                                   (str "Bearer "
-                                       (login-api-token/create-backend-token api-shared-secret))}
+                                       (jwt-token/create-backend-token api-shared-secret))}
                         :body (cheshire/encode request-body)})]
         (when-not (= 200 (:status response))
           (throw (ex-info "Update project geometries failed"

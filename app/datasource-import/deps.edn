@@ -1,0 +1,17 @@
+{:paths ["src" "../common/src/cljc" "../common/src/clj"]
+ :deps {org.clojure/clojure {:mvn/version "1.10.1"}
+        org.geotools/gt-shapefile {:mvn/version "22.2"
+                                   ;; We won't need image manipulation library
+                                   :exclusions [javax.media/jai_core]}
+
+        clj-http {:mvn/version "3.10.0"}
+        cheshire {:mvn/version "5.9.0"}
+
+        com.nimbusds/nimbus-jose-jwt {:mvn/version "7.8"
+                                      :exclusions [net.minidev/json-smart]}
+        net.minidev/json-smart {:mvn/version "2.3"}
+        }
+ :mvn/repos {;; geotools in boundless
+             "boundless" {:url "https://repo.boundlessgeo.com/main/"}
+             ;; jgridshift library in osgeo
+             "osgeo" {:url "https://download.osgeo.org/webdav/geotools/"}}}
