@@ -13,9 +13,6 @@
   (-> file io/as-url
       ShapefileDataStore.))
 
-
-(def ds (shp-ds (io/file "/Users/tatuta/projects/mnt-teet/app/backend/Ehitusgeoloogia_uuringualad_shp/Ehitusgeoloogia_uuringualad_shp.shp")))
-
 (defn- to-iterator [^SimpleFeatureIterator it]
   (reify
     java.util.Iterator
