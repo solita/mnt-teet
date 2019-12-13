@@ -157,14 +157,13 @@
 
 (defn check-response-status [response]
   (let [status (.-status response)]
-    (cond
-      (= status 401)
+    (case status
+      (401 403)
       (throw (ex-info "Authorization failure" {:error :authorization-failure}))
 
-      (= status 200)
+      200
       response
 
-      :else
       (throw (ex-info "Request failure"
                       {:error (or (some-> response
                                           .-headers
