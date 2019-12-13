@@ -53,12 +53,31 @@
 (defrecord SaveActivities [])
 (defrecord UpdateActivitiesForm [form-data])
 
-(defrecord FetchRestrictions [])
+(defrecord FetchRestrictions [road-buffer-meters])
 (defrecord ToggleRestriction [id])
 
 (defrecord PostActivityEditForm [])
 (defrecord OpenEditActivityDialog [])
 (defrecord InitializeActivityEditForm [])
+
+(defn fetch-related-info
+  [{:keys [page params query] :as app} road-buffer-meters]
+  (case (:step query)
+    "restrictions"
+    {:tuck.effect/type :rpc
+     :rpc              "thk_project_related_restrictions"
+     :endpoint         (get-in app [:config :api-url])
+     :args             {:entity_id (str (get-in app [:route :project :db/id]))
+                        :distance  road-buffer-meters}
+     :result-path      [:route :project :restriction-candidates]}
+    "cadastral-units"
+    {:tuck.effect/type :rpc
+     :rpc              "thk_project_related_cadastral_units"
+     :endpoint         (get-in app [:config :api-url])
+     :args             {:entity_id (str (get-in app [:route :project :db/id]))
+                        :distance  road-buffer-meters}
+     :result-path      [:route :project :restriction-candidates]}
+    {}))
 
 (defn navigate-to-step-fx [{:keys [page params query] :as _app} step]
   {:tuck.effect/type :navigate
@@ -89,8 +108,14 @@
 
 (extend-protocol t/Event
   ChangeRoadObjectAoe
-  (process-event [{val :val} app]
-    (assoc-in app [:map :road-buffer-meters] val))
+  (process-event [{val :val} {:keys [page params query] :as app}]
+    (let [app (assoc-in app [:map :road-buffer-meters] val)]
+      (if (and (:step query) (not-empty val))
+        (t/fx app
+              {:tuck.effect/type :debounce
+               :timeout          300
+               :effect           (fetch-related-info app val)})
+        app)))
 
   NavigateToStep
   (process-event [{step :step} app]
@@ -140,14 +165,9 @@
                :result-path      [:route :project :basic-information-form :road-info]}))))
 
   FetchRestrictions
-  (process-event [_ app]
+  (process-event [{road-buffer-meters :road-buffer-meters} app]
     (t/fx app
-          {:tuck.effect/type :rpc
-           :rpc "thk_project_related_restrictions"
-           :endpoint (get-in app [:config :api-url])
-           :args {:entity_id (str (get-in app [:route :project :db/id]))
-                  :distance 200}
-           :result-path [:route :project :restriction-candidates]}))
+          (fetch-related-info app road-buffer-meters)))
 
   ToggleRestriction
   (process-event [{id :id} app]

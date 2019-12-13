@@ -301,7 +301,7 @@
       {:class    (<class map-style)
        :layers   (select-keys (merge {:thk-project
                                       (project-road-geometry-layer project endpoint overlays)}
-                                     (when (and (not-empty road-buffer-meters) (> road-buffer-meters 0))
+                                     (when (and (not-empty road-buffer-meters) (>= road-buffer-meters 0))
                                        {:related-restrictions
                                         (map-layers/geojson-layer endpoint
                                                                   "geojson_thk_project_related_restrictions"
@@ -387,8 +387,8 @@
    [:div {:style {:position "relative"
                   :display  "flex" :flex-direction "column" :flex 1}}
     [project-map e! (get-in app [:config :api-url] project) project map-settings (:map app)]
-    (when map-overlay
-      map-overlay)
+    (when (:geometry-range? map-settings)
+      [project-setup-view/road-geometry-range-input e! (:map app)])
     [Paper {:class (<class project-style/project-content-overlay)}
      header
      [:div {:class (<class project-style/content-overlay-inner)}

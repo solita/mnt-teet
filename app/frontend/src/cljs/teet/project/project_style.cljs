@@ -96,7 +96,7 @@
 (defn road-geometry-range-selector
   []
   {:position :absolute
-   :bottom   "25px"
+   :top      "calc(100vh - 380px)"
    :right    "25px"})
 
 (defn road-geometry-range-header

@@ -106,5 +106,5 @@
   [:div {:class (<class itemlist-theme/checkbox-list-contents)}
    (doall
     (for [item items]
-      ^{:key (:value item)}
+      ^{:key (:id item)}
       [checkbox-item item]))])

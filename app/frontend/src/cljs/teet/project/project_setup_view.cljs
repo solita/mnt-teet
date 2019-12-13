@@ -97,7 +97,7 @@
         (project-model/get-column project :thk.project/effective-km-range)))
 
 (defn project-setup-basic-information-form
-  [e! project {:keys [step-label] :as step}]
+  [e! project {:keys [step-label] :as step} _map]
   (when-not (:basic-information-form project)
     (e! (project-controller/->UpdateBasicInformationForm
           (cu/without-nils {:thk.project/project-name (:thk.project/name project)
@@ -139,33 +139,33 @@
 
 (defn restrictions-listing
   [e! {:keys [restrictions checked-restrictions toggle-restriction]}]
-  (r/with-let [open-types (r/atom #{})
-               restrictions-by-type (group-by :type restrictions)]
-    [:<>
-     (doall
-       (for [[group restrictions] restrictions-by-type
-             :let [group-checked (into #{}
-                                       (comp
-                                         (map :id)
-                                         (filter checked-restrictions))
-                                       restrictions)]]
-         ^{:key group}
-         [container/collapsible-container {:on-toggle (fn [_]
-                                                        (swap! open-types #(if (% group)
-                                                                             (disj % group)
-                                                                             (conj % group))))
-                                           :open?     (@open-types group)}
-          group
-          [itemlist/checkbox-list
-           (for [{:keys [voond id]} (sort-by :voond restrictions)
-                 :let [checked? (boolean (group-checked id))]]
-             {:checked?  checked?
-              :value     voond
-              :on-change (r/partial toggle-restriction id)})]]))]))
+  (let [restrictions-by-type (group-by :type restrictions)]
+    (r/with-let [open-types (r/atom #{})]
+      [:<>
+       (doall
+         (for [[group restrictions] restrictions-by-type
+               :let [group-checked (into #{}
+                                         (comp
+                                           (map :id)
+                                           (filter checked-restrictions))
+                                         restrictions)]]
+           ^{:key group}
+           [container/collapsible-container {:on-toggle (fn [_]
+                                                          (swap! open-types #(if (% group)
+                                                                               (disj % group)
+                                                                               (conj % group))))
+                                             :open?     (@open-types group)}
+            group
+            [itemlist/checkbox-list
+             (for [{:keys [voond id]} (sort-by :voond restrictions)
+                   :let [checked? (boolean (group-checked id))]]
+               {:checked?  checked?
+                :value     voond
+                :on-change (r/partial toggle-restriction id)})]]))])))
 
-(defn project-setup-restrictions-form [e! _ {step-label :step-label :as step}]
-  (e! (project-controller/->FetchRestrictions))
-  (fn [e! {:keys [restriction-candidates checked-restrictions] :as project} step-info]
+(defn project-setup-restrictions-form [e! _project _step {:keys [road-buffer-meters] :as _map}]
+  (e! (project-controller/->FetchRestrictions road-buffer-meters))
+  (fn [e! {:keys [restriction-candidates checked-restrictions] :as _project} {step-label :step-label :as step} _map]
     [:form {:id        step-label
             :on-submit (e! (project-controller/navigate-to-next-step-event project-setup-steps step))}
      (when restriction-candidates
@@ -173,7 +173,7 @@
                                  :checked-restrictions (or checked-restrictions #{})
                                  :toggle-restriction   (e! project-controller/->ToggleRestriction)}])]))
 
-(defn project-setup-cadastral-units-form [e! _project {step-label :step-label :as step}]
+(defn project-setup-cadastral-units-form [e! _project {step-label :step-label :as step} map]
   [:form {:id        step-label
           :on-submit (e! (project-controller/navigate-to-next-step-event project-setup-steps step))}
    "Cadastral units"])
@@ -218,7 +218,7 @@
       (tr [:buttons :save])
       "Next")]])
 
-(defn road-geometry-range
+(defn road-geometry-range-input
   [e! {road-buffer-meters :road-buffer-meters}]
   [Paper {:class (<class project-style/road-geometry-range-selector)}
    [:div {:class (<class project-style/wizard-header)}
@@ -232,7 +232,7 @@
 
 (defn- step->map-layers [{:keys [step-label]}]
   (get {:basic-information #{:thk-project :thk-project-buffer}
-        :restrictions #{:thk-project :related-restrictions :thk-project-buffer}
+        :restrictions #{:thk-project :thk-project-buffer :related-restrictions}
         :cadastral-units #{:thk-project :related-cadastral-units :thk-project-buffer}}
        step-label
        #{:thk-project}))
@@ -244,7 +244,7 @@
                      project]
   (let [step (step-info step-name)]
     {:header      [setup-wizard-header step]
-     :body        [(:body step) e! project step]
+     :body        [(:body step) e! project step (:map app)]
      :footer      [setup-wizard-footer e! step]
-     :map-overlay [road-geometry-range e! (:map app)]
-     :map-settings {:layers (step->map-layers step)}}))
+     :map-settings {:geometry-range? true
+                    :layers (step->map-layers step)}}))
