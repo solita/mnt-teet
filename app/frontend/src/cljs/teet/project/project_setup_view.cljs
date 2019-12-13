@@ -218,31 +218,15 @@
       (tr [:buttons :save])
       "Next")]])
 
-(defn road-geometry-range-input
-  [e! {road-buffer-meters :road-buffer-meters}]
-  [Paper {:class (<class project-style/road-geometry-range-selector)}
-   [:div {:class (<class project-style/wizard-header)}
-    [typography/Heading3 "Road geometry inclusion"]]
-   [:div {:class (<class project-style/road-geometry-range-body)}
-    [TextField {:label       "Inclusion distance"
-                :type        :number
-                :placeholder "Give value to show related areas"
-                :value road-buffer-meters
-                :on-change #(e! (project-controller/->ChangeRoadObjectAoe (-> % .-target .-value)))}]]])
-
 (defn- step->map-layers [{:keys [step-label]}]
   (get {:basic-information #{:thk-project :thk-project-buffer}
         :restrictions #{:thk-project :thk-project-buffer :related-restrictions}
         :cadastral-units #{:thk-project :related-cadastral-units :thk-project-buffer}}
-       step-label
-       #{:thk-project}))
+       step-label))
 
-(defn project-setup [e!
-                     {{step-name :step
-                       :or       {step-name "basic-information"}} :query
-                      :as app}
-                     project]
-  (let [step (step-info step-name)]
+(defn view-settings [e! app project]
+  (let [step (step-info (or (-> app :query :step)
+                            "basic-information"))]
     {:header      [setup-wizard-header step]
      :body        [(:body step) e! project step (:map app)]
      :footer      [setup-wizard-footer e! step]

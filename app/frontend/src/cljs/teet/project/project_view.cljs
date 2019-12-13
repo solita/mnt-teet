@@ -374,6 +374,18 @@
        ^{:key id}
        [cadastral-unit-component e! unit]))])
 
+(defn road-geometry-range-input
+  [e! {road-buffer-meters :road-buffer-meters}]
+  [Paper {:class (<class project-style/road-geometry-range-selector)}
+   [:div {:class (<class project-style/wizard-header)}
+    [typography/Heading3 "Road geometry inclusion"]]
+   [:div {:class (<class project-style/road-geometry-range-body)}
+    [TextField {:label       "Inclusion distance"
+                :type        :number
+                :placeholder "Give value to show related areas"
+                :value road-buffer-meters
+                :on-change #(e! (project-controller/->ChangeRoadObjectAoe (-> % .-target .-value)))}]]])
+
 (defn project-page-structure
   [e!
    app
@@ -388,7 +400,7 @@
                   :display  "flex" :flex-direction "column" :flex 1}}
     [project-map e! (get-in app [:config :api-url] project) project map-settings (:map app)]
     (when (:geometry-range? map-settings)
-      [project-setup-view/road-geometry-range-input e! (:map app)])
+      [road-geometry-range-input e! (:map app)])
     [Paper {:class (<class project-style/project-content-overlay)}
      header
      [:div {:class (<class project-style/content-overlay-inner)}
@@ -487,16 +499,6 @@
 (defn- project-tab [e! app project]
   [(:component (selected-project-tab app)) e! app project])
 
-(defn- project-view-layout [e! app project]
-  {:header       [project-tabs e! app]
-   :body         [project-tab e! app project]
-   :map-settings {:layers #{:thk-project}}})
-
-(defn project-page-structure-layout [e! app project]
-  (if-not (project-model/initialized? project)
-    (project-setup-view/project-setup e! app project)
-    (project-view-layout e! app project)))
-
 (defn project-page-modals
   [e! {{:keys [add edit]} :query :as app} app project]
   (let [[modal modal-label]
@@ -527,8 +529,25 @@
 
      modal]))
 
-(defn project-page [e! app project breadcrumbs]
+(defn- initialized-project-view
+  "The project view shown for initialized projects."
+  [e! app project breadcrumbs]
+  [project-page-structure e! app project breadcrumbs
+   {:header       [project-tabs e! app]
+    :body         [project-tab e! app project]
+    :map-settings {:layers #{:thk-project}}}])
+
+(defn- project-setup-view
+  "The project setup wizard that is shown for uninitialized projects."
+  [e! app project breadcrumbs]
+  [project-page-structure e! app project breadcrumbs
+   (project-setup-view/view-settings e! app project)])
+
+(defn project-page
+  "Shows the normal project view for initialized projects, setup wizard otherwise."
+  [e! app project breadcrumbs]
   [:<>
    [project-page-modals e! app project]
-   [project-page-structure e! app project breadcrumbs
-    (project-page-structure-layout e! app project)]])
+   (if (project-model/initialized? project)
+     [initialized-project-view e! app project breadcrumbs]
+     [project-setup-view e! app project breadcrumbs])])
