@@ -109,7 +109,7 @@
 (defmethod on-server-error :default [err app]
   (default-server-error-handler err app))
 
-(defmethod on-server-error :authorization-failure [_ {:keys [page params query] :as _app}]
+(defmethod on-server-error :authorization-failure [_ {:keys [page params query] :as app}]
   (reset! api-token nil)
   (t/fx (-> app
             (assoc-in [:login :navigate-to] {:page page
