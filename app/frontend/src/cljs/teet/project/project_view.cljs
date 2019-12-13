@@ -399,14 +399,14 @@
    [:div {:style {:position "relative"
                   :display  "flex" :flex-direction "column" :flex 1}}
     [project-map e! (get-in app [:config :api-url] project) project map-settings (:map app)]
-    (when (:geometry-range? map-settings)
-      [road-geometry-range-input e! (:map app)])
     [Paper {:class (<class project-style/project-content-overlay)}
      header
      [:div {:class (<class project-style/content-overlay-inner)}
       body]
      (when footer
-       footer)]]])
+       footer)]
+    (when (:geometry-range? map-settings)
+      [road-geometry-range-input e! (:map app)])]])
 
 (defn project-lifecycle-content
   [e! {{lifecycle-type :db/ident} :thk.lifecycle/type
