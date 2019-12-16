@@ -20,4 +20,24 @@ FROM (SELECT f.label AS tooltip,
         AND f.type = ANY(types)) tile;
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION teet.geojson_entity_related_features(
+  entity_id BIGINT,
+  datasource_ids INT[],
+  distance INTEGER)
+RETURNS TEXT
+AS $$
+SELECT row_to_json(fc)::TEXT
+  FROM (SELECT 'FeatureCollection' as type,
+               array_to_json(array_agg(f)) as features
+          FROM (SELECT 'Feature' as type,
+                       ST_AsGeoJSON(f.geometry)::json as geometry,
+                       f.properties
+                  FROM teet.feature f
+                  JOIN teet.entity e ON ST_DWithin(f.geometry, e.geometry, distance)
+                 WHERE e.id = entity_id
+                   AND f.datasource_id = ANY(datasource_ids)) f) fc;
+$$ LANGUAGE SQL STABLE SECURITY DEFINER;
+
+
 GRANT EXECUTE ON FUNCTION teet.mvt_features(INT,TEXT[],NUMERIC,NUMERIC,NUMERIC,NUMERIC) TO teet_user;
+GRANT EXECUTE ON FUNCTION teet.geojson_entity_related_features(BIGINT,INT[],INTEGER) TO teet_user;
