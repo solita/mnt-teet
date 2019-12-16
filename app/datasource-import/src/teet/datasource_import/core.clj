@@ -59,13 +59,16 @@
           (recur)))))
   ctx)
 
-(defn read-features [{dds :downloaded-datasource
-                      ds :datasource
-                      :as ctx}]
+(defn read-features
+  "Read features from downloaded source. Assocs :features
+  function to context to avoid retaining the head."
+  [{dds :downloaded-datasource
+    ds :datasource
+    :as ctx}]
   (assoc
    ctx :features
    (case (:content_type ds)
-     "SHP" (shp/read-features-from-path (:path dds)))))
+     "SHP" #(shp/read-features-from-path (:path dds)))))
 
 (defn property-pattern-fn [pattern]
   (fn [{attrs :attributes}]
@@ -74,7 +77,13 @@
 (defn upsert-features [{:keys [features api-url datasource-id datasource] :as ctx}]
   (let [->label (property-pattern-fn (:label_pattern datasource))
         ->id (property-pattern-fn (:id_pattern datasource))]
-    (doseq [features (partition-all 100 features)]
+    (doseq [features (partition-all 100
+                                    ;; Add :i attribute that can be used as fallback id
+                                    (map-indexed
+                                     (fn [i feature]
+                                       (update feature :attributes
+                                               assoc :i i))
+                                     (features)))]
       (print ".") (flush)
       (client/post
        (str api-url "/feature")
@@ -96,16 +105,18 @@
   (spit "debug-ctx" (pr-str ctx)))
 
 (defn -main [& args]
-  (let [[config-file] args]
+  (let [[config-file datasource-id] args
+        datasource (some-> datasource-id
+                           Long/parseLong)]
     (assert (and config-file
                  (.canRead (io/file config-file)))
             "Specify config file to read")
     (let [config (-> config-file slurp read-string)]
       (assert (valid-api? config)
               "Specify :api-url and :api-secret")
-      (assert (valid-datasource? config)
+      (assert (some? datasource)
               "Specify :datasource-id")
-      (-> config
+      (-> (assoc config :datasource-id datasource)
           fetch-datasource-config
           download-datasource
           extract-datasource
