@@ -9,7 +9,8 @@
             [teet.auth.jwt-token :as jwt-token])
   (:import (java.nio.file Files)
            (java.nio.file.attribute FileAttribute)
-           (java.util.zip ZipEntry ZipInputStream)))
+           (java.util.zip ZipEntry ZipInputStream)
+           (org.apache.commons.io FileUtils)))
 
 (defn valid-api? [{:keys [api-url api-secret]}]
   (and (not (str/blank? api-url))
@@ -101,6 +102,11 @@
                   :properties attributes}))}))
     ctx))
 
+(defn delete-working-files [{{path :path} :downloaded-datasource :as ctx}]
+  (println "Delete path:" path)
+  (FileUtils/deleteDirectory (.toFile path))
+  ctx)
+
 (defn dump-ctx [ctx]
   (spit "debug-ctx" (pr-str ctx)))
 
@@ -122,4 +128,4 @@
           extract-datasource
           read-features
           upsert-features
-          dump-ctx))))
+          delete-working-files))))
