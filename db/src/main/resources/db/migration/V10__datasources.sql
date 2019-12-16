@@ -5,7 +5,7 @@ VALUES ('cadastral-units',
         'Maa-amet cadastral units data',
         'https://geoportaal.maaamet.ee/docs/katastripiirid/paev/KATASTER_EESTI_SHP.zip',
         'SHP',
-        '{ID}', '{NIMI}');
+        '{TUNNUS}', '{TUNNUS}');
 
 INSERT INTO teet.datasource (name,description,url,content_type,id_pattern,label_pattern)
 VALUES ('restrictions:admin',
