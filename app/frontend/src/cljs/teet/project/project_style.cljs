@@ -17,7 +17,8 @@
   {:display        :flex
    :flex-direction :column
    :flex           1
-   :max-height    theme-spacing/content-height})
+   :max-height     theme-spacing/content-height
+   :overflow       :hidden})
 
 (defn project-view-container
   []
