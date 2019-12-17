@@ -378,9 +378,7 @@
    project
    breadcrumbs
    {:keys [header body footer map-settings map-overlay]}]
-  [:div {:style {:display        :flex
-                 :flex-direction :column
-                 :flex           1}}
+  [:div {:class (<class project-style/project-page-structure)}
    [project-header project breadcrumbs]
    [:div {:style {:position "relative"
                   :display  "flex" :flex-direction "column" :flex 1}}
