@@ -2,7 +2,8 @@
   "Controller for map components"
   (:require [tuck.core :as t]
             [teet.map.openlayers :as openlayers]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.common.common-controller :as common-controller]))
 
 (defn atleast-one-open?
   [layers]
@@ -16,6 +17,7 @@
 (defrecord ToggleCategorySelect [category closing?])
 (defrecord CloseMapControls [])
 (defrecord SetBackgroundLayer [layer])
+(defrecord FetchDatasources [])
 
 (extend-protocol t/Event
   ToggleCategorySelect
@@ -78,7 +80,16 @@
   SetBackgroundLayer
   (process-event [{layer :layer} app]
     (log/info "ASETA" layer)
-    (assoc-in app [:map :background-layer] layer)))
+    (assoc-in app [:map :background-layer] layer))
+
+  FetchDatasources
+  (process-event [_ app]
+    (t/fx app
+          {:tuck.effect/type :rpc
+           :endpoint (get-in app [:config :api-url])
+           :rpc "datasources"
+           :args {}
+           :result-path [:map :datasources]})))
 
 (defn update-features! [layer-name update-fn & args]
   (let [^ol.Map m (openlayers/get-the-map)]
@@ -92,3 +103,5 @@
                           (.forEach
                            (fn [item]
                              (apply update-fn item args))))))))))
+
+(common-controller/register-init-event! :fetch-datasources ->FetchDatasources)
