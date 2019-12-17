@@ -96,11 +96,14 @@
                        {::tuck-effect/type :debounce
                         :id :refresh-token
                         :timeout refresh-token-timeout-ms
-                        :event ->RefreshToken}]
+                        :event ->RefreshToken}
+                       (fn [e!]
+                         (common-controller/run-init-events! e!))]
               effects (if after-login?
                         (conj effects (merge {::tuck-effect/type :navigate
                                               :page :projects}
-                                             navigate-data))
+                                             (when-not (= :login (:page navigate-data))
+                                               navigate-data)))
                         effects)]
           (apply t/fx
                  (-> app
