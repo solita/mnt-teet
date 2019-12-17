@@ -75,13 +75,16 @@
        "restrictions"
        {:args (assoc args
                      ;; FIXME: dataosource ids from map datasources info
-                     :datasource_ids (str "{" (str/join "," #{3,4,5,6}) "}"))
+                     :datasource_ids (map-controller/select-rpc-datasources
+                                      app map-controller/restriction-datasource?))
         :result-event (partial ->FetchRelatedFeaturesResponse
                                [:route :project :restriction-candidates]
                                [:route :project :restriction-candidates-geojson])}
 
        "cadastral-units"
-       {:args (assoc args :datasource_ids "{2}")
+       {:args (assoc args
+                     :datasource_ids (map-controller/select-rpc-datasources
+                                      app map-controller/restriction-datasource?))
         :result-event (partial ->FetchRelatedFeaturesResponse
                                [:route :project :restriction-candidates]
                                [:route :project :restriction-candidates-geojson])}
