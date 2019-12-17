@@ -65,7 +65,7 @@ function docker-ogr2ogr {
     else
 	MO2=""
     fi
-    
+
     docker run -it --rm \
 	   --network $teetdb_network_name --link $db_container_name:db \
 	   $MO1 $MO2 \

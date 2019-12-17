@@ -312,9 +312,7 @@
                                            {:opacity 0.5})
             :related-cadastral-units
             (map-layers/geojson-data-layer "related-cadastral-units"
-                                           {"entity_id" (:db/id project)
-                                            "datasource_ids" "{2}"
-                                            "distance"  road-buffer-meters}
+                                           (:cadastral-candidates-geojson project)
                                            map-features/cadastral-unit-style
                                            {:opacity 0.5})
             :thk-project-buffer
@@ -378,9 +376,7 @@
    project
    breadcrumbs
    {:keys [header body footer map-settings map-overlay]}]
-  [:div {:style {:display        :flex
-                 :flex-direction :column
-                 :flex           1}}
+  [:div {:class (<class project-style/project-page-structure)}
    [project-header project breadcrumbs]
    [:div {:style {:position "relative"
                   :display  "flex" :flex-direction "column" :flex 1}}
@@ -486,7 +482,7 @@
   [(:component (selected-project-tab app)) e! app project])
 
 (defn project-page-modals
-  [e! {{:keys [add edit]} :query :as app} app project]
+  [e! {{:keys [add edit]} :query :as app} project]
   (let [[modal modal-label]
         (cond
           add

@@ -12,6 +12,12 @@
    :right "0px"
    :top theme-spacing/appbar-height})
 
+(defn project-page-structure
+  []
+  {:display        :flex
+   :flex-direction :column
+   :flex           1
+   :max-height    theme-spacing/content-height})
 
 (defn project-view-container
   []
