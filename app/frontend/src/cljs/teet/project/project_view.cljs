@@ -304,15 +304,17 @@
                                      (when (and (not-empty road-buffer-meters) (>= road-buffer-meters 0))
                                        {:related-restrictions
                                         (map-layers/geojson-layer endpoint
-                                                                  "geojson_thk_project_related_restrictions"
+                                                                  "geojson_entity_related_features"
                                                                   {"entity_id" (:db/id project)
+                                                                   "datasource_ids" "{3,4,5,6}" ;; FIXME: we need to fetch datasource ids
                                                                    "distance"  road-buffer-meters}
                                                                   map-features/project-related-restriction-style
                                                                   {:opacity 0.5})
                                         :related-cadastral-units
                                         (map-layers/geojson-layer endpoint
-                                                                  "geojson_thk_project_related_cadastral_units"
+                                                                  "geojson_entity_related_features"
                                                                   {"entity_id" (:db/id project)
+                                                                   "datasource_ids" "{2}"
                                                                    "distance"  road-buffer-meters}
                                                                   map-features/cadastral-unit-style
                                                                   {:opacity 0.5})
