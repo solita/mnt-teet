@@ -38,6 +38,13 @@ SELECT row_to_json(fc)::TEXT
                    AND f.datasource_id = ANY(datasource_ids)) f) fc;
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION teet.datasources () RETURNS JSON
+AS $$
+SELECT json_agg(row_to_json(r))
+  FROM (SELECT id,name,description,id_pattern,label_pattern
+          FROM teet.datasource) r;
+$$ LANGUAGE SQL STABLE SECURITY DEFINER;
 
 GRANT EXECUTE ON FUNCTION teet.mvt_features(INT,TEXT[],NUMERIC,NUMERIC,NUMERIC,NUMERIC) TO teet_user;
 GRANT EXECUTE ON FUNCTION teet.geojson_entity_related_features(BIGINT,INT[],INTEGER) TO teet_user;
+GRANT EXECUTE ON FUNCTION teet.datasources() TO teet_user;
