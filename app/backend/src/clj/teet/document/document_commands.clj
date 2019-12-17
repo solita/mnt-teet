@@ -2,12 +2,26 @@
   (:require [teet.db-api.core :as db-api]
             [datomic.client.api :as d]
             [teet.document.document-storage :as document-storage]
-            teet.document.document-spec)
+            teet.document.document-spec
+            [clojure.string :as str])
   (:import (java.util Date)))
 
 
 (def ^:const upload-max-file-size (* 1024 1024 100))
-(def ^:const upload-allowed-file-types #{"image/png" "image/jpeg" "application/pdf" "application/zip"})
+(def ^:const upload-allowed-file-types #{"image/png"
+                                         "image/jpeg"
+                                         "application/pdf"
+                                         "application/zip"
+                                         "text/ags"})
+
+(def ^:const upload-file-suffix-type {"ags" "text/ags"})
+
+(defn- type-by-suffix [{:file/keys [name type] :as file}]
+  (if-not (str/blank? type)
+    file
+    (if-let [type-by-suffix (-> name (str/split #"\.") last upload-file-suffix-type)]
+      (assoc file :file/type type-by-suffix)
+      file)))
 
 (defn validate-file [{:file/keys [type size]}]
   (cond
@@ -43,21 +57,22 @@
 (defmethod db-api/command! :document/upload-file [{conn :conn
                                                    user :user}
                                                   {:keys [document-id file]}]
-  (or (validate-file file)
-      (let [res (d/transact conn {:tx-data [{:db/id (or document-id "new-document")
-                                             :document/files (merge file
-                                                                    {:db/id "new-file"
-                                                                     :file/author [:user/id (:user/id user)]
-                                                                     :file/timestamp (java.util.Date.)})}
-                                            {:db/id "datomic.tx"
-                                             :tx/author (:user/id user)}]})
-            doc-id (or document-id (get-in res [:tempids "new-document"]))
-            file-id (get-in res [:tempids "new-file"])
-            key (str file-id "-" (:file/name file))]
+  (let [file (type-by-suffix file)]
+    (or (validate-file file)
+        (let [res (d/transact conn {:tx-data [{:db/id (or document-id "new-document")
+                                               :document/files (merge file
+                                                                      {:db/id "new-file"
+                                                                       :file/author [:user/id (:user/id user)]
+                                                                       :file/timestamp (java.util.Date.)})}
+                                              {:db/id "datomic.tx"
+                                               :tx/author (:user/id user)}]})
+              doc-id (or document-id (get-in res [:tempids "new-document"]))
+              file-id (get-in res [:tempids "new-file"])
+              key (str file-id "-" (:file/name file))]
 
-        {:url (document-storage/upload-url key)
-         :document-id doc-id
-         :file (d/pull (:db-after res) '[*] file-id)})))
+          {:url (document-storage/upload-url key)
+           :document-id doc-id
+           :file (d/pull (:db-after res) '[*] file-id)}))))
 
 (defmethod db-api/command! :document/comment [{conn :conn
                                                user :user} {:keys [document-id comment]}]
