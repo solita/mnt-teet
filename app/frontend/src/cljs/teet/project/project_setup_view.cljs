@@ -174,10 +174,12 @@
                                  :checked-restrictions (or checked-restrictions #{})
                                  :toggle-restriction   (e! project-controller/->ToggleRestriction)}])]))
 
-(defn project-setup-cadastral-units-form [e! _project {step-label :step-label :as step} map]
-  [:form {:id        step-label
-          :on-submit (e! (project-controller/navigate-to-next-step-event project-setup-steps step))}
-   "Cadastral units"])
+(defn project-setup-cadastral-units-form [e! _project _step {:keys [road-buffer-meters] :as _map}]
+  (e! (project-controller/->FetchRestrictions road-buffer-meters))
+  (fn [e! project {step-label :step-label :as step} map]
+    [:form {:id        step-label
+            :on-submit (e! (project-controller/navigate-to-next-step-event project-setup-steps step))}
+     "Cadastral units"]))
 
 
 (def project-setup-steps

@@ -83,8 +83,8 @@
        "cadastral-units"
        {:args (assoc args :datasource_ids "{2}")
         :result-event (partial ->FetchRelatedFeaturesResponse
-                               [:route :project :restriction-candidates]
-                               [:route :project :restriction-candidates-geojson])}
+                               [:route :project :cadastral-candidates]
+                               [:route :project :cadastral-candidates-geojson])}
        {}))))
 
 (defn navigate-to-step-fx [{:keys [page params query] :as app} step]

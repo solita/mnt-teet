@@ -312,9 +312,7 @@
                                            {:opacity 0.5})
             :related-cadastral-units
             (map-layers/geojson-data-layer "related-cadastral-units"
-                                           {"entity_id" (:db/id project)
-                                            "datasource_ids" "{2}"
-                                            "distance"  road-buffer-meters}
+                                           (:cadastral-candidates-geojson project)
                                            map-features/cadastral-unit-style
                                            {:opacity 0.5})
             :thk-project-buffer
