@@ -139,7 +139,7 @@
 
 (defn restrictions-listing
   [e! {:keys [restrictions checked-restrictions toggle-restriction]}]
-  (let [restrictions-by-type (group-by :type restrictions)]
+  (let [restrictions-by-type (group-by :VOOND restrictions)]
     (r/with-let [open-types (r/atom #{})]
       [:<>
        (doall
@@ -157,11 +157,12 @@
                                              :open?     (@open-types group)}
             group
             [itemlist/checkbox-list
-             (for [{:keys [voond id]} (sort-by :voond restrictions)
-                   :let [checked? (boolean (group-checked id))]]
+             {:key :ID}
+             (for [{:keys [VOOND ID]} (sort-by :voond restrictions)
+                   :let [checked? (boolean (group-checked ID))]]
                {:checked?  checked?
-                :value     voond
-                :on-change (r/partial toggle-restriction id)})]]))])))
+                :value     VOOND
+                :on-change (r/partial toggle-restriction ID)})]]))])))
 
 (defn project-setup-restrictions-form [e! _project _step {:keys [road-buffer-meters] :as _map}]
   (e! (project-controller/->FetchRestrictions road-buffer-meters))

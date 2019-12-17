@@ -5,7 +5,8 @@
             [teet.log :as log]
             [teet.project.project-model :as project-model]
             [teet.map.map-controller :as map-controller]
-            goog.math.Long))
+            goog.math.Long
+            [clojure.string :as str]))
 
 
 (defrecord OpenActivityDialog [])                              ; open add activity modal dialog
@@ -60,30 +61,37 @@
 (defrecord OpenEditActivityDialog [])
 (defrecord InitializeActivityEditForm [])
 
+(defrecord FetchRelatedFeaturesResponse [result-path geojson-path response])
+
 (defn fetch-related-info
   [{:keys [page params query] :as app} road-buffer-meters]
-  (case (:step query)
-    "restrictions"
-    {:tuck.effect/type :rpc
-     :rpc              "thk_project_related_restrictions"
-     :endpoint         (get-in app [:config :api-url])
-     :args             {:entity_id (str (get-in app [:route :project :db/id]))
-                        :distance  road-buffer-meters}
-     :result-path      [:route :project :restriction-candidates]}
-    "cadastral-units"
-    {:tuck.effect/type :rpc
-     :rpc              "thk_project_related_cadastral_units"
-     :endpoint         (get-in app [:config :api-url])
-     :args             {:entity_id (str (get-in app [:route :project :db/id]))
-                        :distance  road-buffer-meters}
-     :result-path      [:route :project :restriction-candidates]}
-    {}))
+  (let [args {:entity_id (str (get-in app [:route :project :db/id]))
+              :distance road-buffer-meters}]
+    (merge
+     {:tuck.effect/type :rpc
+      :rpc "geojson_entity_related_features"
+      :endpoint (get-in app [:config :api-url])}
+     (case (:step query)
+       "restrictions"
+       {:args (assoc args
+                     ;; FIXME: dataosource ids from map datasources info
+                     :datasource_ids (str "{" (str/join "," #{3,4,5,6}) "}"))
+        :result-event (partial ->FetchRelatedFeaturesResponse
+                               [:route :project :restriction-candidates]
+                               [:route :project :restriction-candidates-geojson])}
 
-(defn navigate-to-step-fx [{:keys [page params query] :as _app} step]
-  {:tuck.effect/type :navigate
-   :page page
-   :params params
-   :query (assoc query :step step)})
+       "cadastral-units"
+       {:args (assoc args :datasource_ids "{2}")
+        :result-event (partial ->FetchRelatedFeaturesResponse
+                               [:route :project :restriction-candidates]
+                               [:route :project :restriction-candidates-geojson])}
+       {}))))
+
+(defn navigate-to-step-fx [{:keys [page params query] :as app} step]
+  [{:tuck.effect/type :navigate
+    :page page
+    :params params
+    :query (assoc query :step step)}])
 
 (defn navigate-to-next-step-event
   "Given `current-step`, navigates to next step in `steps`"
@@ -107,6 +115,18 @@
       (->NavigateToStep step-label))))
 
 (extend-protocol t/Event
+  FetchRelatedFeaturesResponse
+  (process-event [{:keys [result-path geojson-path response]} app]
+    (let [geojson (js/JSON.parse response)
+          features (-> geojson
+                       (js->clj :keywordize-keys true)
+                       :features
+                       (as-> fs
+                           (map :properties fs)))]
+      (-> app
+          (assoc-in result-path features)
+          (assoc-in geojson-path geojson))))
+
   ChangeRoadObjectAoe
   (process-event [{val :val} {:keys [page params query] :as app}]
     (let [app (assoc-in app [:map :road-buffer-meters] val)]
@@ -119,7 +139,7 @@
 
   NavigateToStep
   (process-event [{step :step} app]
-    (t/fx app (navigate-to-step-fx app step)))
+    (apply t/fx app (remove nil? (navigate-to-step-fx app step))))
 
   SaveProjectSetup
   (process-event [_ app]

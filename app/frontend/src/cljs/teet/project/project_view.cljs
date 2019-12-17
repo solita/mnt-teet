@@ -299,45 +299,29 @@
                    :flex-direction :column}}
      [map-view/map-view e!
       {:class    (<class map-style)
-       :layers   (select-keys (merge {:thk-project
-                                      (project-road-geometry-layer project endpoint overlays)}
-                                     (when (and (not-empty road-buffer-meters) (>= road-buffer-meters 0))
-                                       {:related-restrictions
-                                        (map-layers/geojson-layer endpoint
-                                                                  "geojson_entity_related_features"
-                                                                  {"entity_id" (:db/id project)
-                                                                   "datasource_ids" "{3,4,5,6}" ;; FIXME: we need to fetch datasource ids
-                                                                   "distance"  road-buffer-meters}
-                                                                  map-features/project-related-restriction-style
-                                                                  {:opacity 0.5})
-                                        :related-cadastral-units
-                                        (map-layers/geojson-layer endpoint
-                                                                  "geojson_entity_related_features"
-                                                                  {"entity_id" (:db/id project)
-                                                                   "datasource_ids" "{2}"
-                                                                   "distance"  road-buffer-meters}
-                                                                  map-features/cadastral-unit-style
-                                                                  {:opacity 0.5})
-                                        :thk-project-buffer
-                                        (project-road-buffer-layer project endpoint road-buffer-meters)}))
-                              layers)
+       :layers
+       (select-keys
+        (merge
+         {:thk-project
+          (project-road-geometry-layer project endpoint overlays)}
+         (when (and (not-empty road-buffer-meters) (>= road-buffer-meters 0))
+           {:related-restrictions
+            (map-layers/geojson-data-layer "related-restrictions"
+                                           (:restriction-candidates-geojson project)
+                                           map-features/project-related-restriction-style
+                                           {:opacity 0.5})
+            :related-cadastral-units
+            (map-layers/geojson-data-layer "related-cadastral-units"
+                                           {"entity_id" (:db/id project)
+                                            "datasource_ids" "{2}"
+                                            "distance"  road-buffer-meters}
+                                           map-features/cadastral-unit-style
+                                           {:opacity 0.5})
+            :thk-project-buffer
+            (project-road-buffer-layer project endpoint road-buffer-meters)}))
+        layers)
        :overlays @overlays}
       map]]))
-
-(defn restriction-component
-  [e! {:keys [voond toiming muudetud seadus id open?] :as _restriction}]
-  [container/collapsible-container {:open?     open?
-                                    :on-toggle (e! project-controller/->ToggleRestrictionData id)}
-   voond
-   [itemlist/ItemList {:class (<class project-style/restriction-list-style)}
-    [itemlist/Item {:label "Toiming"} toiming]
-    [itemlist/Item {:label "Muudetud"} muudetud]
-    (when-not (str/blank? seadus)
-      [itemlist/Item {:label "Seadus"}
-       [:ul
-        (util/with-keys
-          (for [r (str/split seadus #";")]
-            [:li r]))]])]])
 
 (defn collapse-skeleton
   [title? n]

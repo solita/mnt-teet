@@ -102,9 +102,12 @@
                                          :on-change on-change}])}]])
 
 (defn checkbox-list
-  [items]
-  [:div {:class (<class itemlist-theme/checkbox-list-contents)}
-   (doall
-    (for [item items]
-      ^{:key (:id item)}
-      [checkbox-item item]))])
+  ([items] (checkbox-list {} items))
+  ([{:keys [key]
+     :or {key :id}}
+    items]
+   [:div {:class (<class itemlist-theme/checkbox-list-contents)}
+    (doall
+     (for [item items]
+       ^{:key (key item)}
+       [checkbox-item item]))]))
