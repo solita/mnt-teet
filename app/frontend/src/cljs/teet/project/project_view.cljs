@@ -486,7 +486,7 @@
   [(:component (selected-project-tab app)) e! app project])
 
 (defn project-page-modals
-  [e! {{:keys [add edit]} :query :as app} app project]
+  [e! {{:keys [add edit]} :query :as app} project]
   (let [[modal modal-label]
         (cond
           add
