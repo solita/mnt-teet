@@ -21,6 +21,21 @@
 (defonce test-mode? (atom false))
 (defonce test-requests (atom []))
 
+(defonce init-events (atom {}))
+(defn register-init-event!
+  "Register an init event to be run when user has logged in."
+  [name constructor]
+  (swap! init-events assoc name constructor))
+
+(defn run-init-events!
+  "Run all registered init events."
+  [e!]
+  (doseq [[name constructor] @init-events]
+    (log/info "Run init event: " name)
+    (e! (constructor)))
+  ;; Clear init events
+  (reset! init-events nil))
+
 (defn take-test-request!
   "Return test request matching predicate and remove it from the list.
   If no matching request is found, returns nil."
