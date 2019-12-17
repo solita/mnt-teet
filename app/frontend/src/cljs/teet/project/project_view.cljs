@@ -3,10 +3,8 @@
             [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
             [teet.activity.activity-view :as activity-view]
-            [teet.common.common-controller :as common-controller]
             [teet.common.common-styles :as common-styles]
             [teet.localization :refer [tr tr-tree]]
-            [teet.log :as log]
             [teet.map.map-features :as map-features]
             [teet.map.map-layers :as map-layers]
             [teet.map.map-view :as map-view]
@@ -14,7 +12,7 @@
             [teet.project.project-model :as project-model]
             [teet.project.project-style :as project-style]
             [teet.project.project-setup-view :as project-setup-view]
-            [teet.road.road-model :as road-model :refer [km->m m->km]]
+            [teet.road.road-model :as road-model :refer [km->m]]
             [teet.task.task-controller :as task-controller]
             teet.task.task-spec
             [teet.ui.breadcrumbs :as breadcrumbs]
@@ -25,8 +23,7 @@
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [ButtonBase Collapse Link Divider Paper
-                                         Checkbox FormControlLabel]]
+            [teet.ui.material-ui :refer [Divider Paper]]
             [teet.ui.panels :as panels]
             [teet.ui.progress :as progress]
             [teet.ui.select :as select]
@@ -37,9 +34,11 @@
             [teet.ui.typography :refer [Heading1 Heading2 Heading3] :as typography]
             [teet.ui.url :as url]
             [teet.ui.util :as util]
-            [teet.activity.activity-controller :as activity-controller]))
+            [teet.util.collection :as cu]
+            [teet.activity.activity-controller :as activity-controller]
+            [teet.routes :as routes]))
 
-(defn task-form [e! {:keys [close task save on-change initialization-fn]}]
+(defn task-form [_e! {:keys [initialization-fn]}]
   ;;Task definition (under project activity)
   ;; Task type (a predefined list of tasks: topogeodeesia, geoloogia, liiklusuuring, KMH eelhinnang, loomastikuuuring, arheoloogiline uuring, muu)
   ;; Description (short description of the task for clarification, 255char, in case more detailed description is needed, it will be uploaded as a file under the task)
@@ -48,20 +47,20 @@
     (initialization-fn))
   (fn [e! {:keys [close task save on-change]}]
     [form/form {:e!              e!
-                  :value           task
-                  :on-change-event on-change
-                  :cancel-event    close
-                  :save-event      save
-                  :spec            :task/new-task-form}
-       ^{:xs 12 :attribute :task/type}
-       [select/select-enum {:e! e! :attribute :task/type}]
+                :value           task
+                :on-change-event on-change
+                :cancel-event    close
+                :save-event      save
+                :spec            :task/new-task-form}
+     ^{:xs 12 :attribute :task/type}
+     [select/select-enum {:e! e! :attribute :task/type}]
 
-       ^{:attribute :task/description}
-       [TextField {:full-width true :multiline true :rows 4 :maxrows 4
-                   :variant    :outlined}]
+     ^{:attribute :task/description}
+     [TextField {:full-width true :multiline true :rows 4 :maxrows 4
+                 :variant    :outlined}]
 
-       ^{:attribute :task/assignee}
-       [select/select-user {:e! e!}]]))
+     ^{:attribute :task/assignee}
+     [select/select-user {:e! e!}]]))
 
 
 (defn- activity-info-popup [label start-date end-date num-tasks complete-count incomplete-count]
@@ -118,15 +117,15 @@
      [:div
       "FIXME: lifecycle navigation"
       [:ul
-       (for [{id :db/id type :thk.lifecycle/type} lifecycles]
-         ^{:key (str id)}
-         [:li [:a {:href "foo"}
-               (tr [:enum (:db/ident type)])]])]]]))
+       (doall (for [{id :db/id type :thk.lifecycle/type} lifecycles]
+                ^{:key (str id)}
+                [:li [:a {:href "foo"}
+                      (tr [:enum (:db/ident type)])]]))]]]))
 
 
 (defn project-header-style
   []
-  {:padding         "1.5rem 1.875rem"})
+  {:padding "1.5rem 1.875rem"})
 
 (defn- project-header [{:thk.project/keys [name] :as project} breadcrumbs activities]
   [:div {:class (<class project-header-style)}
@@ -202,91 +201,125 @@
     (let [start (.getFirstCoordinate geom)
           end (.getLastCoordinate geom)]
       (callback
-       [{:coordinate (js->clj start)
-         :content [map-view/overlay {:arrow-direction :right :height 30}
-                   start-label]}
-        {:coordinate (js->clj end)
-         :content [map-view/overlay {:arrow-direction :left :height 30}
-                   end-label]}]))))
+        [{:coordinate (js->clj start)
+          :content    [map-view/overlay {:arrow-direction :right :height 30}
+                       start-label]}
+         {:coordinate (js->clj end)
+          :content    [map-view/overlay {:arrow-direction :left :height 30}
+                       end-label]}]))))
+
+(defn given-range-in-actual-road?
+  "Check to see if the forms given road range is in the actual road"
+  [{:keys [end_m start_m]} [form-start-m form-end-m]]
+  (and (> form-end-m form-start-m)
+       (>= form-start-m start_m)
+       (>= end_m form-end-m)))
+
+(defn project-road-buffer-layer
+  "Show buffer area for project-geometry"
+  [{:thk.project/keys [road-nr carriageway]
+    :keys             [basic-information-form] :as _project}
+   endpoint
+   road-buffer-meters]
+  (let [road-information (:road-info basic-information-form)]
+    (when (and basic-information-form)
+      (let [{[start-km-string end-km-string] :thk.project/km-range} basic-information-form
+            form-start-m (some-> start-km-string road-model/parse-km km->m)
+            form-end-m (some-> end-km-string road-model/parse-km km->m)]
+        (when (given-range-in-actual-road? road-information [form-start-m form-end-m])
+          (map-layers/geojson-layer
+            endpoint
+            "geojson_road_buffer_geometry"
+            {"road"        road-nr
+             "carriageway" carriageway
+             "start_m"     form-start-m
+             "end_m"       form-end-m
+             "buffer"      road-buffer-meters}
+            map-features/road-buffer-fill-style
+            {:content-type "application/json"}))))))
 
 (defn project-road-geometry-layer
   "Show project geometry or custom road part in case the start and end
   km are being edited during initialization"
   [{:thk.project/keys [start-m end-m road-nr carriageway]
-    :keys [basic-information-form] :as project}
+    :keys             [basic-information-form] :as project}
    endpoint overlays]
-  (let [[start-label end-label] (if basic-information-form
-                                  (mapv (comp road-model/format-distance
-                                              km->m
-                                              road-model/parse-km)
-                                        (:thk.project/km-range basic-information-form))
-                                  (mapv road-model/format-distance
-                                        [start-m end-m]))
+  (let [[start-label end-label]
+        (if basic-information-form
+          (mapv (comp road-model/format-distance
+                      km->m
+                      road-model/parse-km)
+                (:thk.project/km-range basic-information-form))
+          (mapv (comp road-model/format-distance
+                      km->m)
+                (project-model/get-column project
+                                          :thk.project/effective-km-range)))
+        road-information (:road-info basic-information-form)
         options {:fit-on-load? true
                  ;; Use left side padding so that road is not shown under the project panel
-                 :fit-padding [0 0 0 (* 1.05 (project-style/project-panel-width))]
-                 :on-load (partial km-range-label-overlays
-                                   start-label end-label
-                                   #(reset! overlays %))}]
+                 :fit-padding  [0 0 0 (* 1.05 (project-style/project-panel-width))]
+                 :on-load      (partial km-range-label-overlays
+                                        start-label end-label
+                                        #(reset! overlays %))}]
     (if basic-information-form
-      (let [{[start-km-string end-km-string] :thk.project/km-range} basic-information-form]
-        (map-layers/geojson-layer
-         endpoint
-         "geojson_road_geometry"
-         {"road" road-nr
-          "carriageway" carriageway
-          "start_m" (some-> start-km-string road-model/parse-km km->m)
-          "end_m" (some-> end-km-string road-model/parse-km km->m)}
-         map-features/project-line-style
-         (merge options
-                {:content-type "application/json"})))
-      (map-layers/geojson-layer
-       endpoint
-       "geojson_entities"
-       {"ids" (str "{" (:db/id project) "}")}
-       map-features/project-line-style
-       options))))
+      (let [{[start-km-string end-km-string] :thk.project/km-range} basic-information-form
+            form-start-m (some-> start-km-string road-model/parse-km km->m)
+            form-end-m (some-> end-km-string road-model/parse-km km->m)]
+        (if (given-range-in-actual-road? road-information [form-start-m form-end-m])
+          (map-layers/geojson-layer
+            endpoint
+            "geojson_road_geometry"
+            {"road"        road-nr
+             "carriageway" carriageway
+             "start_m"     form-start-m
+             "end_m"       form-end-m}
+            map-features/project-line-style
+            (merge options
+                   {:content-type "application/json"}))
+          ;; Needed to remove road ending markers
+          (do (reset! overlays nil)
+              nil)))
 
-(defn project-map [e! endpoint project _tab map]
+      (map-layers/geojson-layer endpoint
+                                "geojson_entities"
+                                {"ids" (str "{" (:db/id project) "}")}
+                                map-features/project-line-style
+                                options))))
+
+(defn project-map [e!
+                   endpoint
+                   project
+                   {:keys [layers]
+                    :or   {layers #{:thk-project}}
+                    :as   _map-settings}
+                   {:keys [road-buffer-meters] :as map}]
   (r/with-let [overlays (r/atom [])]
     [:div {:style {:flex           1
                    :display        :flex
                    :flex-direction :column}}
      [map-view/map-view e!
-      {:class  (<class map-style)
-       :layers (merge {:thk-project
-                       (project-road-geometry-layer project endpoint overlays)}
-                      {:related-restrictions
-                       (map-layers/geojson-layer endpoint
-                                                 "geojson_thk_project_related_restrictions"
-                                                 {"entity_id" (:db/id project)
-                                                  "distance"  200}
-                                                 map-features/project-related-restriction-style
-                                                 {:opacity 0.5})}
-                      {:related-cadastral-units
-                       (map-layers/geojson-layer endpoint
-                                                 "geojson_thk_project_related_cadastral_units"
-                                                 {"entity_id" (:db/id project)
-                                                  "distance"  200}
-                                                 map-features/cadastral-unit-style
-                                                 {:opacity 0.5})})
+      {:class    (<class map-style)
+       :layers
+       (select-keys
+        (merge
+         {:thk-project
+          (project-road-geometry-layer project endpoint overlays)}
+         (when (and (not-empty road-buffer-meters) (>= road-buffer-meters 0))
+           {:related-restrictions
+            (map-layers/geojson-data-layer "related-restrictions"
+                                           (:restriction-candidates-geojson project)
+                                           map-features/project-related-restriction-style
+                                           {:opacity 0.5})
+            :related-cadastral-units
+            (map-layers/geojson-data-layer "related-cadastral-units"
+                                           (:cadastral-candidates-geojson project)
+                                           map-features/cadastral-unit-style
+                                           {:opacity 0.5})
+            :thk-project-buffer
+            (project-road-buffer-layer project endpoint road-buffer-meters)}))
+        layers)
        :overlays @overlays}
       map]]))
-
-(defn restriction-component
-  [e! {:keys [voond toiming muudetud seadus id open?] :as _restriction}]
-  [container/collapsible-container {:open?     open?
-                                    :on-toggle (e! project-controller/->ToggleRestrictionData id)}
-   voond
-   [itemlist/ItemList {:class (<class project-style/restriction-list-style)}
-    [itemlist/Item {:label "Toiming"} toiming]
-    [itemlist/Item {:label "Muudetud"} muudetud]
-    (when-not (str/blank? seadus)
-      [itemlist/Item {:label "Seadus"}
-       [:ul
-        (util/with-keys
-          (for [r (str/split seadus #";")]
-            [:li r]))]])]])
 
 (defn collapse-skeleton
   [title? n]
@@ -325,34 +358,48 @@
        ^{:key id}
        [cadastral-unit-component e! unit]))])
 
+(defn road-geometry-range-input
+  [e! {road-buffer-meters :road-buffer-meters}]
+  [Paper {:class (<class project-style/road-geometry-range-selector)}
+   [:div {:class (<class project-style/wizard-header)}
+    [typography/Heading3 "Road geometry inclusion"]]
+   [:div {:class (<class project-style/road-geometry-range-body)}
+    [TextField {:label       "Inclusion distance"
+                :type        :number
+                :placeholder "Give value to show related areas"
+                :value road-buffer-meters
+                :on-change #(e! (project-controller/->ChangeRoadObjectAoe (-> % .-target .-value)))}]]])
+
 (defn project-page-structure
   [e!
-   {{:keys [tab]} :query :as app}
+   app
    project
    breadcrumbs
-   header
-   body
-   footer]
-  [:div {:style {:display        :flex
-                 :flex-direction :column
-                 :flex           1}}
+   {:keys [header body footer map-settings map-overlay]}]
+  [:div {:class (<class project-style/project-page-structure)}
    [project-header project breadcrumbs]
    [:div {:style {:position "relative"
                   :display  "flex" :flex-direction "column" :flex 1}}
-    [project-map e! (get-in app [:config :api-url]) project (get-in app [:query :tab]) (:map app)]
+    [project-map e! (get-in app [:config :api-url] project) project map-settings (:map app)]
     [Paper {:class (<class project-style/project-content-overlay)}
      header
      [:div {:class (<class project-style/content-overlay-inner)}
       body]
      (when footer
-       footer)]]])
+       footer)]
+    (when (:geometry-range? map-settings)
+      [road-geometry-range-input e! (:map app)])]])
 
 (defn project-lifecycle-content
-  [e! {{id :db/ident} :thk.lifecycle/type
-       activities     :thk.lifecycle/activities}]
+  [e! {{lifecycle-type :db/ident} :thk.lifecycle/type
+       activities                 :thk.lifecycle/activities}]
   [:section
-   [typography/Heading2 (tr [:enum id])]
-   [typography/Heading3 (tr [:project :activities])]
+   [typography/Heading2 (tr [:enum lifecycle-type])]
+   [typography/Heading3
+    (if (= lifecycle-type :thk.lifecycle-type/design)
+      (tr [:common :design-stage-activities])
+      ;; else
+      (tr [:common :construction-phase-activities]))]
 
 
    (for [{:activity/keys [name estimated-end-date estimated-start-date] :as activity} activities]
@@ -367,25 +414,33 @@
    [buttons/button-primary
     {:on-click   (e! project-controller/->OpenActivityDialog)
      :start-icon (r/as-element [icons/content-add])}
-    (tr [:project :add-activity])]])
 
+    (if (= lifecycle-type :thk.lifecycle-type/design)
+      (tr [:common :design-stage])
+      ;; else
+      (tr [:common :construction-phase]))]])
 
-(defn activities-tab [e! {:keys [lifecycle activity] :as query} project]
-  (cond
-    activity
-    [project-activity e! project (project-model/activity-by-id project activity)]
-    lifecycle
-    [project-lifecycle-content e! (project-model/lifecycle-by-id project lifecycle)]
-    :else
-    [:ul
-     (for [lc (:thk.project/lifecycles project)]
-       [:li {:on-click #(e! (common-controller/->SetQueryParam :lifecycle (str (:db/id lc))))}
-        (tr [:enum (-> lc :thk.lifecycle/type :db/ident)])])]))
+(defn activities-tab [e! {:keys [query params page] :as app} project]
+  (let [{:keys [activity lifecycle]} query]
+    (cond
+      activity
+      [project-activity e! project (project-model/activity-by-id project activity)]
+      lifecycle
+      [project-lifecycle-content e! (project-model/lifecycle-by-id project lifecycle)]
+      :else
+      [:div
+       [typography/Heading2 "Lifecycles"]
+       (for [lc (:thk.project/lifecycles project)]
+         [common/list-button-link (merge {:link  (routes/url-for {:page   page
+                                                                  :query  (assoc query :lifecycle (str (:db/id lc)))
+                                                                  :params params})
+                                          :label (tr [:enum (get-in lc [:thk.lifecycle/type :db/ident])])
+                                          :icon  icons/file-folder-open})])])))
 
-(defn people-tab [e! query project]
+(defn people-tab [_e! _app _project]
   [:div "people"])
 
-(defn details-tab [e! query project]
+(defn details-tab [_e! _app project]
   [project-data project])
 
 (defn edit-activity-form
@@ -399,44 +454,45 @@
                                        :activity  (:edit-activity-data app)}])))
 
 (def project-tabs-layout
-  [{:label "Activities" :value "activities"}
-   {:label "People" :value "people"}
-   {:label "Details" :value "details"}])
+  ;; FIXME: Labels with TR paths instead of text
+  [{:label     "Activities"
+    :value     "activities"
+    :component activities-tab
+    :layers    #{:thk-project :related-cadastral-units :related-restrictions}}
+   {:label     "People"
+    :value     "people"
+    :component people-tab
+    :layers    #{:thk-project}}
+   {:label     "Details"
+    :value     "details"
+    :component details-tab
+    :layers    #{:thk-project}}])
 
-(defn project-tabs [e! {{:keys [tab]} :query :as _app}]
-  [tabs/tabs {:e! e!
-              :selected-tab (or tab (:value (first project-tabs-layout)))}
+(defn selected-project-tab [{{:keys [tab]} :query :as _app}]
+  (if tab
+    (cu/find-first #(= tab (:value %)) project-tabs-layout)
+    (first project-tabs-layout)))
+
+(defn- project-tabs [e! app]
+  [tabs/tabs {:e!           e!
+              :selected-tab (:value (selected-project-tab app))}
    project-tabs-layout])
 
-(defn project-tab [e! {{:keys [tab] :as query} :query
-                       :as _app}
-                   project]
-  (case (or tab "activities")
-    "activities" [activities-tab e! query project]
-    "people" [people-tab e! query project]
-    "details" [details-tab e! query project]))
+(defn- project-tab [e! app project]
+  [(:component (selected-project-tab app)) e! app project])
 
-(defn project-page-structure-layout [e! app project]
-  (if-not (project-model/initialized? project)
-    (project-setup-view/project-setup e! app project)
-    {:header [project-tabs e! app]
-     :body [project-tab e! app project]}))
-
-(defn project-page [e! {{:keys [add edit] :as query} :query
-                        :as                          app}
-                    project
-                    breadcrumbs]
-  (let [{:keys [header body footer]} (project-page-structure-layout e! app project)
-        [modal modal-label]
+(defn project-page-modals
+  [e! {{:keys [add edit]} :query :as app} project]
+  (let [[modal modal-label]
         (cond
           add
           (case add
             "task" [[task-form e!
-                         {:close project-controller/->CloseAddDialog
-                          :task (:new-task project)
-                          :save task-controller/->CreateTask
-                          :on-change task-controller/->UpdateTaskForm}]
-                        (tr [:project :add-task])]
+                     {:close     project-controller/->CloseAddDialog
+                      :task      (:new-task project)
+                      :save      task-controller/->CreateTask
+                      :on-change task-controller/->UpdateTaskForm}]
+                    (tr [:project :add-task])]
             "activity" [[activity-view/activity-form e! {:close     project-controller/->CloseAddDialog
                                                          :activity  (get-in app [:project (:thk.project/id project) :new-activity])
                                                          :on-change activity-controller/->UpdateActivityForm
@@ -449,13 +505,31 @@
             [[edit-activity-form e! app (e! project-controller/->InitializeActivityEditForm)]
              (tr [:project :edit-activity])])
           :else nil)]
-    [:<>
-     [panels/modal {:open-atom (r/wrap (boolean modal) :_)
-                    :title     (or modal-label "")
-                    :on-close  (e! project-controller/->CloseAddDialog)}
+    [panels/modal {:open-atom (r/wrap (boolean modal) :_)
+                   :title     (or modal-label "")
+                   :on-close  (e! project-controller/->CloseAddDialog)}
 
-      modal]
-     [project-page-structure e! app project breadcrumbs
-      header
-      body
-      footer]]))
+     modal]))
+
+(defn- initialized-project-view
+  "The project view shown for initialized projects."
+  [e! app project breadcrumbs]
+  [project-page-structure e! app project breadcrumbs
+   {:header       [project-tabs e! app]
+    :body         [project-tab e! app project]
+    :map-settings {:layers #{:thk-project}}}])
+
+(defn- project-setup-view
+  "The project setup wizard that is shown for uninitialized projects."
+  [e! app project breadcrumbs]
+  [project-page-structure e! app project breadcrumbs
+   (project-setup-view/view-settings e! app project)])
+
+(defn project-page
+  "Shows the normal project view for initialized projects, setup wizard otherwise."
+  [e! app project breadcrumbs]
+  [:<>
+   [project-page-modals e! app project]
+   (if (project-model/initialized? project)
+     [initialized-project-view e! app project breadcrumbs]
+     [project-setup-view e! app project breadcrumbs])])

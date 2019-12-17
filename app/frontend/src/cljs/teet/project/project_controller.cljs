@@ -5,7 +5,8 @@
             [teet.log :as log]
             [teet.project.project-model :as project-model]
             [teet.map.map-controller :as map-controller]
-            goog.math.Long))
+            goog.math.Long
+            [clojure.string :as str]))
 
 
 (defrecord OpenActivityDialog [])                              ; open add activity modal dialog
@@ -42,9 +43,10 @@
 ;;
 (defrecord NavigateToStep [step])
 
-(defrecord SaveBasicInformation [])
-(defrecord SaveBasicInformationResponse [])
+(defrecord SaveProjectSetup [])
+(defrecord SaveProjectSetupResponse [])
 (defrecord UpdateBasicInformationForm [form-data])
+(defrecord ChangeRoadObjectAoe [val])
 (defrecord SaveRestrictions [])
 (defrecord UpdateRestrictionsForm [form-data])
 (defrecord SaveCadastralUnits [])
@@ -52,25 +54,97 @@
 (defrecord SaveActivities [])
 (defrecord UpdateActivitiesForm [form-data])
 
-(defrecord FetchRestrictions [])
+(defrecord FetchRestrictions [road-buffer-meters])
 (defrecord ToggleRestriction [id])
 
 (defrecord PostActivityEditForm [])
 (defrecord OpenEditActivityDialog [])
 (defrecord InitializeActivityEditForm [])
 
-(defn navigate-to-step-fx [{:keys [page params query] :as _app} step]
-  {:tuck.effect/type :navigate
-   :page page
-   :params params
-   :query (assoc query :step step)})
+(defrecord FetchRelatedFeaturesResponse [result-path geojson-path response])
+
+(defn fetch-related-info
+  [{:keys [page params query] :as app} road-buffer-meters]
+  (let [args {:entity_id (str (get-in app [:route :project :db/id]))
+              :distance road-buffer-meters}]
+    (merge
+     {:tuck.effect/type :rpc
+      :rpc "geojson_entity_related_features"
+      :endpoint (get-in app [:config :api-url])}
+     (case (:step query)
+       "restrictions"
+       {:args (assoc args
+                     ;; FIXME: dataosource ids from map datasources info
+                     :datasource_ids (map-controller/select-rpc-datasources
+                                      app map-controller/restriction-datasource?))
+        :result-event (partial ->FetchRelatedFeaturesResponse
+                               [:route :project :restriction-candidates]
+                               [:route :project :restriction-candidates-geojson])}
+
+       "cadastral-units"
+       {:args (assoc args
+                     :datasource_ids (map-controller/select-rpc-datasources
+                                      app map-controller/restriction-datasource?))
+        :result-event (partial ->FetchRelatedFeaturesResponse
+                               [:route :project :cadastral-candidates]
+                               [:route :project :cadastral-candidates-geojson])}
+       {}))))
+
+(defn navigate-to-step-fx [{:keys [page params query] :as app} step]
+  [{:tuck.effect/type :navigate
+    :page page
+    :params params
+    :query (assoc query :step step)}])
+
+(defn navigate-to-next-step-event
+  "Given `current-step`, navigates to next step in `steps`"
+  [steps {:keys [step-number] :as _current-step}]
+  {:pre [(<= step-number (count steps))]}
+  (if (= step-number (count steps))
+    ;; At the last step, return save event
+    ->SaveProjectSetup
+
+    ;; Otherwise navigate to next step
+    (let [step-label (-> (get steps step-number) :step-label name)]
+      (fn []
+        (->NavigateToStep step-label)))))
+
+(defn navigate-to-previous-step-event
+  "Given `current-step`, navigatest to next step in `steps`"
+  [steps {:keys [step-number] :as _current-step}]
+  {:pre [(> step-number 1)]}
+  (let [step-label (-> (get steps (- step-number 2)) :step-label name)]
+    (fn []
+      (->NavigateToStep step-label))))
 
 (extend-protocol t/Event
+  FetchRelatedFeaturesResponse
+  (process-event [{:keys [result-path geojson-path response]} app]
+    (let [geojson (js/JSON.parse response)
+          features (-> geojson
+                       (js->clj :keywordize-keys true)
+                       :features
+                       (as-> fs
+                           (map :properties fs)))]
+      (-> app
+          (assoc-in result-path features)
+          (assoc-in geojson-path geojson))))
+
+  ChangeRoadObjectAoe
+  (process-event [{val :val} {:keys [page params query] :as app}]
+    (let [app (assoc-in app [:map :road-buffer-meters] val)]
+      (if (and (:step query) (not-empty val))
+        (t/fx app
+              {:tuck.effect/type :debounce
+               :timeout          300
+               :effect           (fetch-related-info app val)})
+        app)))
+
   NavigateToStep
   (process-event [{step :step} app]
-    (t/fx (navigate-to-step-fx app step)))
+    (apply t/fx app (remove nil? (navigate-to-step-fx app step))))
 
-  SaveBasicInformation
+  SaveProjectSetup
   (process-event [_ app]
     (let [{:thk.project/keys [id name] :as project} (get-in app [:route :project])
           {:thk.project/keys [project-name owner manager km-range meter-range-changed-reason]}
@@ -89,8 +163,8 @@
                                             {:thk.project/m-range-change-reason meter-range-changed-reason
                                              :thk.project/custom-start-m (long (* 1000 start-km))
                                              :thk.project/custom-end-m (long (* 1000 end-km))}))
-                 :result-event     ->SaveBasicInformationResponse})))
-  SaveBasicInformationResponse
+                 :result-event     ->SaveProjectSetupResponse})))
+  SaveProjectSetupResponse
   (process-event [_ {:keys [page params query] :as app}]
     (t/fx app
           (navigate-to-step-fx app "restrictions")
@@ -98,26 +172,25 @@
 
   UpdateBasicInformationForm
   (process-event [{:keys [form-data]} app]
-    (let [{:thk.project/keys [road-nr carriageway]} (get-in app [:route :project])]
-      (t/fx (update-in app [:route :project :basic-information-form]
-                       merge form-data)
-            {:tuck.effect/type :rpc
-             :endpoint (get-in app [:config :api-url])
-             :method :GET
-             :rpc "road_info"
-             :args {:road road-nr
-                    :carriageway carriageway}
-             :result-path [:route :project :basic-information-form :road-info]})))
+    (let [{:thk.project/keys [road-nr carriageway]} (get-in app [:route :project])
+          actual-road-info (get-in app [:route :project :basic-information-form :road-info])]
+      (if actual-road-info
+        (update-in app [:route :project :basic-information-form]
+                   merge form-data)
+        (t/fx (update-in app [:route :project :basic-information-form]
+                         merge form-data)
+              {:tuck.effect/type :rpc
+               :endpoint         (get-in app [:config :api-url])
+               :method           :GET
+               :rpc              "road_info"
+               :args             {:road        road-nr
+                                  :carriageway carriageway}
+               :result-path      [:route :project :basic-information-form :road-info]}))))
 
   FetchRestrictions
-  (process-event [_ app]
+  (process-event [{road-buffer-meters :road-buffer-meters} app]
     (t/fx app
-          {:tuck.effect/type :rpc
-           :rpc "thk_project_related_restrictions"
-           :endpoint (get-in app [:config :api-url])
-           :args {:entity_id (str (get-in app [:route :project :db/id]))
-                  :distance 200}
-           :result-path [:route :project :restriction-candidates]}))
+          (fetch-related-info app road-buffer-meters)))
 
   ToggleRestriction
   (process-event [{id :id} app]
@@ -151,7 +224,8 @@
     (t/fx app
       {:tuck.effect/type :navigate
        :page :project
-       :params {:project id}}))
+       :params {:project id}}
+      ))
 
   OpenActivityDialog
   (process-event [_ {:keys [page params query] :as app}]

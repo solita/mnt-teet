@@ -3,7 +3,7 @@
             [compojure.route :refer [resources files]]
             [teet.index.index-page :as index-page]
             [cheshire.core :as cheshire]
-            [teet.login.login-api-token :as login-api-token]))
+            [teet.auth.jwt-token :as jwt-token]))
 
 (defn teet-routes [config]
   (routes
@@ -17,7 +17,7 @@
                  (if-let [user (get-in req [:session :user])]
                    (merge user
                           {:authenticated? true
-                           :api-token (login-api-token/create-token
+                           :api-token (jwt-token/create-token
                                        (get-in config [:api :shared-secret])
                                        (get-in config [:api :role])
                                        user)})

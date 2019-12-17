@@ -21,6 +21,21 @@
 (defonce test-mode? (atom false))
 (defonce test-requests (atom []))
 
+(defonce init-events (atom {}))
+(defn register-init-event!
+  "Register an init event to be run when user has logged in."
+  [name constructor]
+  (swap! init-events assoc name constructor))
+
+(defn run-init-events!
+  "Run all registered init events."
+  [e!]
+  (doseq [[name constructor] @init-events]
+    (log/info "Run init event: " name)
+    (e! (constructor)))
+  ;; Clear init events
+  (reset! init-events nil))
+
 (defn take-test-request!
   "Return test request matching predicate and remove it from the list.
   If no matching request is found, returns nil."
@@ -109,9 +124,12 @@
 (defmethod on-server-error :default [err app]
   (default-server-error-handler err app))
 
-(defmethod on-server-error :authorization-failure [_ app]
+(defmethod on-server-error :authorization-failure [_ {:keys [page params query] :as app}]
   (reset! api-token nil)
   (t/fx (-> app
+            (assoc-in [:login :navigate-to] {:page page
+                                             :params params
+                                             :query query})
             (dissoc :user)
             (snackbar-controller/open-snack-bar (tr [:error :authorization-failure])
                                                 :warning))
@@ -157,14 +175,13 @@
 
 (defn check-response-status [response]
   (let [status (.-status response)]
-    (cond
-      (= status 401)
+    (case status
+      (401 403)
       (throw (ex-info "Authorization failure" {:error :authorization-failure}))
 
-      (= status 200)
+      200
       response
 
-      :else
       (throw (ex-info "Request failure"
                       {:error (or (some-> response
                                           .-headers

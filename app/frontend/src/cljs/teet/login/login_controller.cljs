@@ -24,15 +24,14 @@
 (extend-protocol t/Event
   CheckExistingSession ; Check existing token from browser localstorage storage
   (process-event [_ app]
-    (let [app (assoc app :initialized? true)
-          navigate-data (get-in app [:login :navigate-to])]
+    (let [app (assoc app :initialized? true)]
       (if @common-controller/api-token
         (t/fx (assoc app :checking-session? true)
               {::tuck-effect/type :command!
                :command           :refresh-token
                :payload           {}
                :error-event       ->CheckSessionError
-               :result-event      (partial ->SetSessionInfo true navigate-data)})
+               :result-event      (partial ->SetSessionInfo false nil)})
         app)))
 
   CheckSessionError
@@ -47,6 +46,7 @@
   CheckSessionToken ; Get token from cookie session when logging in
   (process-event [_ app]
     (if-let [token (get-in app [:query :token])]
+
       (t/fx app
             ;; Set the JWT token and immediately refresh
             ;; to get other session info
@@ -96,11 +96,14 @@
                        {::tuck-effect/type :debounce
                         :id :refresh-token
                         :timeout refresh-token-timeout-ms
-                        :event ->RefreshToken}]
+                        :event ->RefreshToken}
+                       (fn [e!]
+                         (common-controller/run-init-events! e!))]
               effects (if after-login?
                         (conj effects (merge {::tuck-effect/type :navigate
                                               :page :projects}
-                                             navigate-data))
+                                             (when-not (= :login (:page navigate-data))
+                                               navigate-data)))
                         effects)]
           (apply t/fx
                  (-> app

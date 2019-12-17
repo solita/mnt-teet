@@ -12,6 +12,13 @@
    :right "0px"
    :top theme-spacing/appbar-height})
 
+(defn project-page-structure
+  []
+  {:display        :flex
+   :flex-direction :column
+   :flex           1
+   :max-height     theme-spacing/content-height
+   :overflow       :hidden})
 
 (defn project-view-container
   []
@@ -89,16 +96,30 @@
     :top "25px"
     :bottom "25px"
     :width (str (project-panel-width) "px")
-    :height "calc(100vh - 275px)"
+    :height "calc(100vh - 270px)"
     :display :flex
     :flex-direction :column}))
 
+(defn road-geometry-range-selector
+  []
+  {:position :absolute
+   :top      "calc(100vh - 380px)"
+   :right    "25px"})
+
+(defn road-geometry-range-header
+  []
+  {:background-color theme-colors/gray-lightest})
+
+(defn road-geometry-range-body
+  []
+  {:padding "1rem"})
+
 (defn content-overlay-inner []
-  {:padding 0
+  {:padding "1rem"
    :flex 1
    :display :flex
    :flex-direction :column
-   :overflow-y :scroll})
+   :overflow-y :auto})
 
 (defn initialization-form-wrapper
   []
@@ -128,7 +149,7 @@
 (defn wizard-form
   []
   {:background-color theme-colors/white
-   :padding "1.5rem"})
+   :padding "0.5rem"})
 
 (defn wizard-footer
   []

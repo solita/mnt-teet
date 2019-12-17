@@ -2,7 +2,9 @@
   "Controller for map components"
   (:require [tuck.core :as t]
             [teet.map.openlayers :as openlayers]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.common.common-controller :as common-controller]
+            [clojure.string :as str]))
 
 (defn atleast-one-open?
   [layers]
@@ -16,6 +18,7 @@
 (defrecord ToggleCategorySelect [category closing?])
 (defrecord CloseMapControls [])
 (defrecord SetBackgroundLayer [layer])
+(defrecord FetchDatasources [])
 
 (extend-protocol t/Event
   ToggleCategorySelect
@@ -78,7 +81,16 @@
   SetBackgroundLayer
   (process-event [{layer :layer} app]
     (log/info "ASETA" layer)
-    (assoc-in app [:map :background-layer] layer)))
+    (assoc-in app [:map :background-layer] layer))
+
+  FetchDatasources
+  (process-event [_ app]
+    (t/fx app
+          {:tuck.effect/type :rpc
+           :endpoint (get-in app [:config :api-url])
+           :rpc "datasources"
+           :args {}
+           :result-path [:map :datasources]})))
 
 (defn update-features! [layer-name update-fn & args]
   (let [^ol.Map m (openlayers/get-the-map)]
@@ -92,3 +104,25 @@
                           (.forEach
                            (fn [item]
                              (apply update-fn item args))))))))))
+
+(common-controller/register-init-event! :fetch-datasources ->FetchDatasources)
+
+(defn datasources
+  "Return datasource definitions from the given app state."
+  [app]
+  (get-in app [:map :datasources]))
+
+(defn select-rpc-datasources
+  "Returns selected datasources as a parameter for RPC calls.
+  Returns the id of all datasources that match given predicate."
+  [app pred]
+  (let [ds (->> app datasources
+                (filter pred)
+                (map :id))]
+    (str "{" (str/join "," ds) "}")))
+
+(defn cadastral-unit-datasource? [{name :name}]
+  (= name "cadastral-units"))
+
+(defn restriction-datasource? [{name :name}]
+  (str/starts-with? name "restrictions:"))

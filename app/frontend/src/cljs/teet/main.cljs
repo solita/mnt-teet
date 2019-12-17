@@ -31,10 +31,6 @@
             [teet.login.login-controller :as login-controller])
   (:require-macros [teet.route-macros :refer [define-main-page]]))
 
-(defn- checking-session [e! app]
-  ;; PENDING: this could be a spinner
-  [:div.checking-session])
-
 ;; See routes.edn
 (define-main-page page-and-title)
 

@@ -2,11 +2,12 @@
   (:require [clojure.data.csv :as csv]
             [clojure.java.io :as io]
             [clojure.string :as str]
-            [datomic.client.api :as d])
+            [datomic.client.api :as d]
+            [teet.util.collection :as cu])
   (:import (org.apache.commons.io.input BOMInputStream)
            (java.text SimpleDateFormat)))
 
-(def excluded-project-types #{"TUGI"})
+(def excluded-project-types #{"TUGI" "TEEMU"})
 
 (defn parse-thk-export-csv [input]
   (with-open [raw-input-stream (io/input-stream input)
@@ -31,15 +32,6 @@
   (when-not (blank? str)
     (BigDecimal. str)))
 
-;; TODO: Move to some util namespace
-(defn without-nils [m]
-  (reduce-kv (fn [m k v]
-               (if (some? v)
-                 (assoc m k v)
-                 m))
-             {}
-             m))
-
 (defn- ->date [date-str]
   (when-not (blank? date-str)
     (.parse (SimpleDateFormat. "yyyy-MM-dd")
@@ -56,7 +48,7 @@
 
         project-est-start (first (sort phase-est-starts))
         project-est-end (last (sort phase-est-ends))]
-    (without-nils
+    (cu/without-nils
      {:db/id project-id
       :thk.project/id project-id
       :thk.project/road-nr              (->int (prj "roadnr"))

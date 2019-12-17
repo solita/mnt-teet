@@ -45,14 +45,6 @@
 (defmethod on-navigate-event :default [_] nil)
 (defmethod on-leave-event :default [_] nil)
 
-(defn requires-authentication? [{:keys [initialized? user page] :as _app}]
-  ;; PENDING: what pages require authentication?
-  (and
-    (not initialized?)
-    (nil? user)
-    (not= :login page)
-    (not= :check-session page)))
-
 (defn- send-startup-events [e! event]
   (if (vector? event)
     ;; Received multiple events, apply them all
@@ -96,29 +88,20 @@
                      event-leave (if (vector? event-leave) event-leave [event-leave])
                      event-to (on-navigate-event navigation-data)
                      event-to (if (vector? event-to) event-to [event-to])
-                     orig-app app
                      app (merge app (dissoc navigation-data :current-app))]
 
                  ;; scroll to top of page
                  (when-let [page (.querySelector js/document ".page")]
                    (set! (.-scrollTop page) 0))
 
-                 (if (requires-authentication? app)
-                   (do (navigate! (if @api-token
-                                    :check-session
-                                    :login))
-                       (assoc orig-app
-                         :login {:show? true
-                                 :navigate-to navigation-data}))
-                   (do
-                     ;; Send startup events (if any) immediately after returning from this swap
-                     (when (or event-leave event-to)
-                       (.setTimeout
-                         js/window
-                         (fn []
-                           (send-startup-events e! (vec (concat event-leave event-to))))
-                         0))
-                     app)))
+                 ;; Send startup events (if any) immediately after returning from this swap
+                 (when (or event-leave event-to)
+                   (.setTimeout
+                    js/window
+                    (fn []
+                      (send-startup-events e! (vec (concat event-leave event-to))))
+                    0))
+                 app)
                app)))))
 
 (defn start! []
@@ -133,7 +116,6 @@
   ([page] (navigate! page nil nil))
   ([page params] (navigate! page params nil))
   ([page params query]
-   (log/info "Testing log!")
    (if page
      (.setTimeout js/window
                   #(r/navigate! teet-router page params query) 0)
