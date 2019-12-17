@@ -8,7 +8,7 @@ env:
     ECS_TASK_NAME: "teet-db-migrate"
 
   parameter-store:
-    AWS_ACCOUNT_ID: "/teet-dev/aws-account-id"
+    AWS_ACCOUNT_ID: "/teet/aws-account-id"
 
 phases:
   install:
