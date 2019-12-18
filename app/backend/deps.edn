@@ -48,7 +48,7 @@
            :localizations {:main-opts ["-m" "teet.localization"]
                            :extra-paths ["src/build"]
                            :extra-deps {dk.ative/docjure {:mvn/version "1.12.0"}}}
-           :authorizations {;:main-opts ["-m" "teet.authorization"]
+           :authorizations {:main-opts ["-m" "teet.authorization"]
                             :extra-paths ["src/build"]
                             :extra-deps {:dk.ative/docjure {:mvn/version "1.12.0"}}}}
 
