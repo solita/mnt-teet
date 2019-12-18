@@ -1,0 +1,49 @@
+(ns teet.integration.integration-s3
+  "Integration steps for S3"
+  (:require [amazonica.aws.s3 :as s3]
+            [clojure.spec.alpha :as s]
+            [teet.integration.integration-context :refer [defstep]]
+            [cheshire.core :as cheshire]))
+
+(defn- decode-input [{:keys [event] :as ctx}]
+  (assoc ctx :input (cheshire/decode (:input event) keyword)))
+
+(defn- bucket-and-key [s3-data]
+  {:bucket   (get-in s3-data [:bucket :name])
+   :file-key (get-in s3-data [:object :key])})
+
+(defn- s3-file-data [input]
+  (-> input :Records first :s3 bucket-and-key))
+
+(defn- valid-file-descriptor? [{:keys [bucket file-key]}]
+  (and (string? bucket)
+       (string? file-key)))
+
+(s/def ::file-descriptor valid-file-descriptor?)
+(s/def ::file-contents #(instance? java.io.InputStream %))
+
+(s/def ::s3-trigger-event (s/keys :req-un [:s3-trigger-event/input]))
+(s/def :s3-trigger-event/input string?)
+
+(defstep read-trigger-event
+  {:doc "Read file information from an S3 lambda trigger event"
+   :in {:spec ::s3-trigger-event
+        :as lambda-event
+        :default-path [:event]}
+   :out {:spec ::file-descriptor
+         :default-path [:s3]}}
+  (-> lambda-event :input
+      (cheshire/decode keyword)
+      s3-file-data))
+
+(defstep load-file-from-s3
+  {:ctx ctx
+   :doc "Load file from S3. Result is an input stream."
+   :in {:as fd
+        :spec ::file-descriptor
+        :default-path [:s3]}
+   :out {:spec ::file-contents
+         :default-path [:file]}}
+  (let [{:keys [bucket file-key]} fd]
+    (:input-stream
+     (s3/get-object bucket file-key))))

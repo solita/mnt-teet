@@ -3,12 +3,13 @@
   (:require [amazonica.aws.s3 :as s3]
             [cheshire.core :as cheshire]
             [clojure.java.io :as io]
-            [clojure.stacktrace :as stacktrace]
             [clojure.string :as str]
             [teet.log :as log]
             [teet.thk.thk-import :as thk-import]
             [teet.thk.thk-export :as thk-export]
             [teet.environment :as environment]
+            [teet.integration.integration-context :as integration-context :refer [ctx->]]
+            [teet.integration.integration-s3 :as integration-s3]
             [datomic.client.api :as d]
             [clojure.data.csv :as csv]
             [teet.project.project-geometry :as project-geometry]))
@@ -20,52 +21,6 @@
 (def error-directory "thk/error/")
 (def log-directory "thk/log/")
 
-(defn- stack-trace [e]
-  (with-out-str (stacktrace/print-stack-trace e 10)))
-
-(defn ctx-exception [ctx message & [e]]
-  (ex-info message
-           (assoc ctx :error {:message (str message
-                                            (when e
-                                              (str ": "
-                                                   (.getMessage e))))
-                              :stack-trace (when e
-                                             (stack-trace e))})))
-(defmacro ctx->
-  "Pipe ctx through steps, wrapping all steps in exception handling"
-  [ctx & steps]
-  `(-> ~ctx
-       ~@(for [step steps]
-           `((fn [~'ctx]
-                (try
-                  ~(if (list? step)
-                     (concat (take 1 step)
-                             (list 'ctx)
-                             (drop 1 step))
-                     (list step 'ctx))
-                  (catch Exception e#
-                    (throw (ctx-exception ~'ctx ~(or (:doc (meta step))
-                                                     (str step)) e#)))))))))
-
-(defn- decode-input [{:keys [event] :as ctx}]
-  (assoc ctx :input (cheshire/decode (:input event) keyword)))
-
-(defn bucket-and-key [s3-data]
-  {:bucket   (get-in s3-data [:bucket :name])
-   :file-key (get-in s3-data [:object :key])})
-
-(defn- s3-file-data [{:keys [input] :as ctx}]
-  (->> input
-       :Records
-       first
-       :s3
-       bucket-and-key
-       (assoc ctx :s3)))
-
-(defn- load-file-from-s3 [{{:keys [bucket file-key]} :s3 :as ctx}]
-  (->> (s3/get-object bucket file-key)
-       :input-stream
-       (assoc ctx :file)))
 
 (defn- write-file-to-s3 [{{:keys [bucket file-key file]} :s3 :as ctx}]
   (let [response
@@ -117,7 +72,7 @@
                                  (add-suffix (str "." (System/currentTimeMillis))))]
       (move-file bucket file-key processed-file-key))
     (catch Exception e
-      (throw (ctx-exception ctx "Failed to move file to processed directory" e)))))
+      (throw (integration-context/ctx-exception ctx "Failed to move file to processed directory" e)))))
 
 (defn- move-file-to-error [{{:keys [bucket file-key]} :s3 :as ctx}]
   (let [processed-file-key (-> file-key
@@ -164,9 +119,8 @@
                          :connection (environment/datomic-connection)
                          :api-url (environment/config-value :api-url)
                          :api-shared-secret (environment/config-value :auth :jwt-secret)}
-                        decode-input
-                        s3-file-data
-                        load-file-from-s3
+                        integration-s3/read-trigger-event
+                        integration-s3/load-file-from-s3
                         file->csv
                         upsert-projects
                         update-entity-info
