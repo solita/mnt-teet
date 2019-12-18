@@ -4,6 +4,7 @@
             [teet.common.common-controller :as common-controller]
             [teet.log :as log]
             [teet.project.project-model :as project-model]
+            [teet.road.road-model :as road-model]
             [teet.map.map-controller :as map-controller]
             goog.math.Long
             [clojure.string :as str]))
@@ -149,8 +150,7 @@
     (let [{:thk.project/keys [id name] :as project} (get-in app [:route :project])
           {:thk.project/keys [project-name owner manager km-range meter-range-changed-reason]}
           (get-in app [:route :project :basic-information-form])
-          [start-km end-km] km-range
-          custom-km-range (mapv #(js/parseFloat %) km-range)]
+          [start-km end-km :as custom-km-range] (mapv road-model/parse-km km-range)]
       (t/fx app {:tuck.effect/type :command!
                  :command          :thk.project/initialize!
                  :payload          (merge {:thk.project/id id
@@ -161,8 +161,8 @@
                                           (when (not= custom-km-range
                                                       (project-model/get-column project :thk.project/effective-km-range))
                                             {:thk.project/m-range-change-reason meter-range-changed-reason
-                                             :thk.project/custom-start-m (long (* 1000 start-km))
-                                             :thk.project/custom-end-m (long (* 1000 end-km))}))
+                                             :thk.project/custom-start-m (road-model/km->m start-km)
+                                             :thk.project/custom-end-m (road-model/km->m end-km)}))
                  :result-event     ->SaveProjectSetupResponse})))
   SaveProjectSetupResponse
   (process-event [_ {:keys [page params query] :as app}]
