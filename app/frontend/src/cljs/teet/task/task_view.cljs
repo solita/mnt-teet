@@ -22,7 +22,8 @@
             [teet.ui.breadcrumbs :as breadcrumbs]
             [teet.common.common-styles :as common-styles]
             [teet.project.task-model :as task-model]
-            [teet.project.project-controller :as project-controller]))
+            [teet.project.project-controller :as project-controller]
+            [teet.authorization.authorization-check :refer [when-authorized]]))
 
 (defn task-status [e! status modified]
   [ui-common/status {:e! e!
@@ -62,8 +63,11 @@
     [:div {:style {:display :flex}}
      [buttons/button-secondary {:on-click (e! task-controller/->OpenEditTask)}
       (tr [:buttons :edit])]
-     #_[buttons/button-warning {:on-click (e! task-controller/->DeleteTask)}
-      "Delete"]]]
+
+     (when-authorized
+       :task/delete-task
+       [buttons/button-warning {:on-click (e! task-controller/->DeleteTask)}
+        "Delete"])]]
    [:p description]
    [task-status e! status modified]
    [buttons/button-primary {:on-click #(e! (task-controller/->OpenAddDocumentDialog))

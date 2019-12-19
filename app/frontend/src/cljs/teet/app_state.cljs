@@ -5,3 +5,5 @@
 (defonce app (r/atom {:config     {}
                       :navigation {:open? true}
                       :map        {:road-buffer-meters road-model/default-road-buffer-meters}}))
+
+(defonce user (r/cursor app [:user]))
