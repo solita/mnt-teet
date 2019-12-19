@@ -62,12 +62,7 @@
     [Heading1 (tr [:task :task-overview])]
     [:div {:style {:display :flex}}
      [buttons/button-secondary {:on-click (e! task-controller/->OpenEditTask)}
-      (tr [:buttons :edit])]
-
-     (when-authorized
-       :task/delete-task
-       [buttons/button-warning {:on-click (e! task-controller/->DeleteTask)}
-        "Delete"])]]
+      (tr [:buttons :edit])]]]
    [:p description]
    [task-status e! status modified]
    [buttons/button-primary {:on-click #(e! (task-controller/->OpenAddDocumentDialog))
@@ -95,7 +90,7 @@
     [task-overview e! task]))
 
 (defn task-page-modal
-  [e! app {:keys [edit] :as query}]
+  [e! {:keys [params] :as app} {:keys [edit] :as query}]
   [panels/modal {:open-atom (r/wrap (boolean edit) :_)
                  :title     (if-not edit
                               ""
@@ -104,11 +99,14 @@
    (case edit
      "task"
      [project-view/task-form e!
-      {:close             task-controller/->CloseEditDialog
-       :task              (:edit-task-data app)
-       :initialization-fn (e! task-controller/->MoveDataForEdit)
-       :save              task-controller/->PostTaskEditForm
-       :on-change         task-controller/->UpdateEditTaskForm}]
+      (merge
+        {:close             task-controller/->CloseEditDialog
+         :task              (:edit-task-data app)
+         :initialization-fn (e! task-controller/->MoveDataForEdit)
+         :save              task-controller/->PostTaskEditForm
+         :on-change         task-controller/->UpdateEditTaskForm}
+        (when-authorized :task/delete-task                  ;;TODO: ADD CONFIRMATION DIALOG
+                         {:delete (task-controller/->DeleteTask (:task params))}))]
      [:span])])
 
 (defn task-page [e! {{:keys [project]} :params
