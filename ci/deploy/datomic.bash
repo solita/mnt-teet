@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "Deploying Datomic Ions"
 
-GROUP="teet-dev-datomic-Compute-13NV9SDSNGAR3"
+GROUP=`aws ssm get-parameters --names "/teet/datomic/group" --query "Parameters[0].Value" | tr -d '"'`
 REGION="eu-central-1"
 
 cd ../../app/backend
