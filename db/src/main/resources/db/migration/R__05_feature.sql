@@ -17,7 +17,7 @@ FROM (SELECT f.label AS tooltip,
                        ST_SetSRID(ST_MakeBox2D(ST_MakePoint($3, ymin),
                                                ST_MakePoint($5, ymax)), 3301),
                        1000)
-        AND f.type = ANY(types)) tile;
+        AND (array_length(types,1) IS NULL OR f.type = ANY(types))) tile;
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION teet.geojson_entity_related_features(

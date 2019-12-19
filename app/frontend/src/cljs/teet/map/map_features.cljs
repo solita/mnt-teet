@@ -138,3 +138,12 @@
                                       :color (if selected?
                                                "rgba(0,0,255,1)"
                                                "rgba(40,40,255, 0.20)")})})))
+
+(defn survey-style
+  "Show survey area."
+  [^ol.render.Feature feature _res]
+  (ol.style.Style.
+   #js {:stroke (ol.style.Stroke. #js {:color "#830891"
+                                       :width 2})
+        :fill (ol.style.Fill. #js {:cursor :pointer
+                                   :color "#af38bc"})}))

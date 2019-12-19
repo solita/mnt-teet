@@ -126,3 +126,9 @@
 
 (defn restriction-datasource? [{name :name}]
   (str/starts-with? name "restrictions:"))
+
+(defn datasource-id-by-name [app name]
+  (->> app datasources
+       (filter #(= (:name %) name))
+       first
+       :id))

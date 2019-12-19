@@ -36,7 +36,8 @@
             [teet.ui.util :as util]
             [teet.util.collection :as cu]
             [teet.activity.activity-controller :as activity-controller]
-            [teet.routes :as routes]))
+            [teet.routes :as routes]
+            [teet.map.map-controller :as map-controller]))
 
 (defn task-form [_e! {:keys [initialization-fn]}]
   ;;Task definition (under project activity)
@@ -287,6 +288,7 @@
                                 options))))
 
 (defn project-map [e!
+                   app
                    endpoint
                    project
                    {:keys [layers]
@@ -302,7 +304,13 @@
        :layers
        (select-keys
         (merge
-         {:thk-project
+         {:surveys (map-layers/mvt-layer endpoint
+                                         "mvt_features"
+                                         {"datasource" (map-controller/datasource-id-by-name app "survey")
+                                          "types" "{}"}
+                                         map-features/survey-style
+                                         {:opacity 0.5})
+          :thk-project
           (project-road-geometry-layer project endpoint overlays)}
          (when (and (not-empty road-buffer-meters) (>= road-buffer-meters 0))
            {:related-restrictions
@@ -380,7 +388,7 @@
    [project-header project breadcrumbs]
    [:div {:style {:position "relative"
                   :display  "flex" :flex-direction "column" :flex 1}}
-    [project-map e! (get-in app [:config :api-url] project) project map-settings (:map app)]
+    [project-map e! app (get-in app [:config :api-url] project) project map-settings (:map app)]
     [Paper {:class (<class project-style/project-content-overlay)}
      header
      [:div {:class (<class project-style/content-overlay-inner)}
@@ -517,7 +525,7 @@
   [project-page-structure e! app project breadcrumbs
    {:header       [project-tabs e! app]
     :body         [project-tab e! app project]
-    :map-settings {:layers #{:thk-project}}}])
+    :map-settings {:layers #{:thk-project :surveys}}}])
 
 (defn- project-setup-view
   "The project setup wizard that is shown for uninitialized projects."
