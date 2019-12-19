@@ -2,7 +2,8 @@
   "Index page for TEET"
   (:require [hiccup.core :as hiccup]
             [teet.util.build-info :as build-info]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [clojure.string :as str]))
 
 (defn index-page
   "DEV MODE INDEX PAGE.
@@ -29,7 +30,7 @@
       [:script {:type "text/javascript"}
        (str
         "window.teet_authz = \""
-        (-> "authorization.edn" io/resource slurp)
+        (-> "authorization.edn" io/resource slurp (str/replace #"\n" " "))
         "\";\n"
 
         "new Promise((resolve, reject) => {
