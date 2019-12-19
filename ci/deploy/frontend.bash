@@ -1,8 +1,17 @@
 #!/usr/bin/env bash
 set -eu
 
+BUILDDIR=`aws ssm get-parameters --names "/teet/s3/builddir" --query "Parameters[0].Value" | tr -d '"'`
+PUBLICDIR=`aws ssm get-parameters --names "/teet/s3/publicdir" --query "Parameters[0].Value" | tr -d '"'`
+
+if [ -z "$PUBLICDIR" ]
+then
+    echo "Empty public dir variable value"
+    exit 1;
+fi
+
 echo "Fetching frontend build: $COMMIT"
-aws s3 cp s3://teet-build/teet-frontend/frontend-$COMMIT.zip frontend.zip
+aws s3 cp s3://$BUILDDIR/teet-frontend/frontend-$COMMIT.zip frontend.zip
 mkdir frontend
 cd frontend
 unzip ../frontend.zip
@@ -12,5 +21,5 @@ mv js/main.js js/main-$COMMIT.js
 sed -i -e "s/main.js/main-$COMMIT.js/g" index.html
 
 cd ..
-aws s3 rm s3://teet-dev-public --recursive
-aws s3 sync frontend s3://teet-dev-public --acl public-read
+aws s3 rm s3://$PUBLICDIR --recursive
+aws s3 sync frontend s3://$PUBLICDIR --acl public-read
