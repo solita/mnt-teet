@@ -253,7 +253,7 @@
        step-label))
 
 (defn view-settings [e! app project]
-  (let [step (step-info (or (-> app :query :step)
+  (let [step (step-info (or (:setup-step project)
                             "basic-information"))]
     {:header      [setup-wizard-header step]
      :body        [(:body step) e! project step (:map app)]
