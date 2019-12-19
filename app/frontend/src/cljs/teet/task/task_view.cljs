@@ -41,7 +41,7 @@
 (defn task-navigation
   [{:task/keys [documents] :as task}]
   [:div {:style {:padding "2rem 0 2rem 2rem"}}
-   [:a {:href (url/remove-params)} "linkki taskin pääsivulle"]
+   [Link {:href (url/remove-params)} "linkki taskin pääsivulle"]
    [:p "Documents"]
    (for [{:document/keys [name status files] :as document} documents]
      ^{:key (str (:db/id document))}
@@ -142,4 +142,4 @@
      [Grid {:item true
             :style {:display :flex}
             :xs   3}
-      [project-view/project-map e! (get-in app [:config :api-url]) (:project task) project (:map app)]]]]])
+      [project-view/project-map e! app (get-in app [:config :api-url]) (:project task) project (:map app)]]]]])
