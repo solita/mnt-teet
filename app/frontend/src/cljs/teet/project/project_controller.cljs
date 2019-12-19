@@ -62,6 +62,8 @@
 (defrecord OpenEditActivityDialog [])
 (defrecord InitializeActivityEditForm [])
 
+(defrecord DeleteActivity [activity-id])
+
 (defrecord FetchRelatedFeaturesResponse [result-path geojson-path response])
 
 (defn fetch-related-info
@@ -140,6 +142,11 @@
                :timeout          300
                :effect           (fetch-related-info app val)})
         app)))
+
+  DeleteActivity
+  (process-event [{activity-id :activity-id} app]
+    (println "Delete activity:_ " activity-id)              ;;fixme: implement activity deletion
+    app)
 
   NavigateToStep
   (process-event [{step :step} app]
