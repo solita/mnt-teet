@@ -1,7 +1,8 @@
 (ns teet.index.index-page
   "Index page for TEET"
   (:require [hiccup.core :as hiccup]
-            [teet.util.build-info :as build-info]))
+            [teet.util.build-info :as build-info]
+            [clojure.java.io :as io]))
 
 (defn index-page
   "DEV MODE INDEX PAGE.
@@ -26,20 +27,25 @@
       [:link {:rel "stylesheet" :href "https://fonts.googleapis.com/css?family=Roboto+Condensed&display=swap"}]
 
       [:script {:type "text/javascript"}
-       "new Promise((resolve, reject) => {
+       (str
+        "window.teet_authz = \""
+        (-> "authorization.edn" io/resource slurp)
+        "\";\n"
+
+        "new Promise((resolve, reject) => {
         window.resolveOnload = resolve;
      })
-     .then(() => { teet.main.main(); });"]
+     .then(() => { teet.main.main(); });")]]
 
-      [:body {:data-git-version (build-info/git-commit)
-              :onload "resolveOnload()"}
-       [:div#teet-frontend]
-       [:script {:src (if dev? "cljs-out/dev-main.js" "main.js")}]
+     [:body {:data-git-version (build-info/git-commit)
+             :onload "resolveOnload()"}
+      [:div#teet-frontend]
+      [:script {:src (if dev? "cljs-out/dev-main.js" "main.js")}]
 
-       [:script (if dev?
-                  {:src "https://unpkg.com/@material-ui/core@latest/umd/material-ui.development.js"
-                   :crossorigin "anonymous"}
-                  {:src "material-ui.production.min.js"})]]]]))
+      [:script (if dev?
+                 {:src "https://unpkg.com/@material-ui/core@latest/umd/material-ui.development.js"
+                  :crossorigin "anonymous"}
+                 {:src "material-ui.production.min.js"})]]]))
 
 (defn index-route [config]
   {:status 200
