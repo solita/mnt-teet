@@ -416,4 +416,35 @@
            :db/cardinality :db.cardinality/one}
           {:db/ident :thk.project/custom-start-m
            :db/valueType :db.type/long
-           :db/cardinality :db.cardinality/one}]]}]
+           :db/cardinality :db.cardinality/one}]]}
+
+ {:db/ident :migration/permission-entity
+  :txes [[{:db/ident :permission/role
+           :db/valueType :db.type/keyword
+           :db/cardinality :db.cardinality/one
+           :db/doc "The role of this permission, like. :admin"}
+
+          {:db/ident :permission/scopes
+           :db/valueType :db.type/keyword
+           :db/cardinality :db.cardinality/many
+           :db/doc "Scopes (sections of functionality) this permission is applicable in (empty for all)"}
+
+          {:db/ident :permission/projects
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "Projects this permission is applies to (empty for global)"}
+
+          {:db/ident :permission/valid-from
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "Earliest time when this permission is valid"}
+
+          {:db/ident :permission/valid-until
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "Last time this permission is valid, indefinite if not specified."}
+
+          {:db/ident :user/permissions
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "Permissions that have been granted to this user"}]]}]
