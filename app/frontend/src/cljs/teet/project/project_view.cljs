@@ -302,30 +302,33 @@
      [map-view/map-view e!
       {:class    (<class map-style)
        :layers
-       (select-keys
-        (merge
-         {:surveys (map-layers/mvt-layer endpoint
-                                         "mvt_features"
-                                         {"datasource" (map-controller/datasource-id-by-name app "survey")
-                                          "types" "{}"}
-                                         map-features/survey-style
-                                         {:opacity 0.5})
-          :thk-project
-          (project-road-geometry-layer project endpoint overlays)}
-         (when (and (not-empty road-buffer-meters) (>= road-buffer-meters 0))
-           {:related-restrictions
-            (map-layers/geojson-data-layer "related-restrictions"
-                                           (:restriction-candidates-geojson project)
-                                           map-features/project-related-restriction-style
-                                           {:opacity 0.5})
-            :related-cadastral-units
-            (map-layers/geojson-data-layer "related-cadastral-units"
-                                           (:cadastral-candidates-geojson project)
-                                           map-features/cadastral-unit-style
-                                           {:opacity 0.5})
-            :thk-project-buffer
-            (project-road-buffer-layer project endpoint road-buffer-meters)}))
-        layers)
+                 (select-keys
+                   (merge
+                     {:surveys (map-layers/mvt-layer endpoint
+                                                     "mvt_features"
+                                                     {"datasource" (map-controller/datasource-id-by-name app "survey")
+                                                      "types"      "{}"}
+                                                     map-features/survey-style
+                                                     {:opacity 0.5})
+                      :thk-project
+                               (project-road-geometry-layer project endpoint overlays)}
+                     (when-let [candidates (:restriction-candidates-geojson project)]
+                       {:related-restrictions
+                        (map-layers/geojson-data-layer "related-restrictions"
+                                                       candidates
+                                                       map-features/project-related-restriction-style
+                                                       {:opacity 0.5})})
+                     (when-let [candidates (:cadastral-candidates-geojson project)]
+                       {:related-cadastral-units
+                        (map-layers/geojson-data-layer "related-cadastral-units"
+                                                       candidates
+                                                       map-features/cadastral-unit-style
+                                                       {:opacity 0.5})})
+                     (when (and (not-empty road-buffer-meters)
+                                (>= road-buffer-meters 0))
+                       {:thk-project-buffer
+                        (project-road-buffer-layer project endpoint road-buffer-meters)}))
+                   layers)
        :overlays @overlays}
       map]]))
 
