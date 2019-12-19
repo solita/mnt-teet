@@ -26,7 +26,10 @@
    "*" :full
 
    ;; Plus means access to projects that you have the linked role in
-   "+" :link})
+   "+" :link
+
+   ;; Slash means read-only access
+   "/" :read})
 
 (defn get-authorizations-from-sheet [sheet-path]
   (let [sheet (->> (sheet/load-workbook sheet-path)
