@@ -1,6 +1,7 @@
 (ns teet.authorization
   (:require [dk.ative.docjure.spreadsheet :as sheet]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clojure.pprint :as pp]))
 
 (defn- keywordize [s]
   (-> s
@@ -57,9 +58,13 @@
          {}
          role->column)]))))
 
+(defn pretty-print [x]
+  (with-out-str (pp/pprint x)))
+
 (defn- write-authorization-edn-from-sheet! [sheet-path]
   (->> sheet-path
        get-authorizations-from-sheet
+       pretty-print
        (spit "resources/authorization.edn")))
 
 (defn -main [& [sheet-path]]
