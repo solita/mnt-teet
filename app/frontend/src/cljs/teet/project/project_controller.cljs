@@ -85,7 +85,7 @@
        "cadastral-units"
        {:args (assoc args
                      :datasource_ids (map-controller/select-rpc-datasources
-                                      app map-controller/restriction-datasource?))
+                                      app map-controller/cadastral-unit-datasource?))
         :result-event (partial ->FetchRelatedFeaturesResponse
                                [:route :project :cadastral-candidates]
                                [:route :project :cadastral-candidates-geojson])}
