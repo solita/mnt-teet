@@ -23,6 +23,7 @@
 (def orange-light "#FF6000")
 (def green "#008936")
 (def red "#D73E3E")
+(def red-dark "#BE2525")
 
 (def primary blue)
 (def secondary blue-dark)

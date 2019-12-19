@@ -21,10 +21,12 @@
    :color theme-colors/primary})
 
 (defn warn-button-style
+  "The styles are with !important because material ui css loading order makes it hard to override them normally"
   []
-  ^{:pseudo {:hover {:background-color theme-colors/orange-light}
-             :focus theme-colors/focus-style}}
-  {:background-color theme-colors/warning})
+  ^{:pseudo {:hover {:background-color (str theme-colors/red-dark " !important")}
+             :focus (str theme-colors/focus-style " !important")}}
+  {:background-color (str theme-colors/error " !important")
+   :color            (str theme-colors/white " !important")})
 
 
 (def button-primary
@@ -38,9 +40,9 @@
                                :color :secondary}))
 
 (def button-warning
-  (util/make-component Button {:variant :contained
+  (util/make-component Button {:variant        :contained
                                :disable-ripple true
-                               :class (<class warn-button-style)}))
+                               :class        [:btn-warn (<class warn-button-style)]}))
 
 
 (defn white-button-with-icon
