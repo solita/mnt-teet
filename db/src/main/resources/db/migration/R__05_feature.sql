@@ -8,6 +8,7 @@ SELECT ST_AsMVT(tile) AS mvt
 FROM (SELECT f.label AS tooltip,
              f.id, f.type,
              datasource AS datasource,
+             CONCAT(f.datasource_id,':',f.id) AS "teet-id",
              ST_AsMVTGeom(f.geometry,
                           ST_SetSRID(ST_MakeBox2D(ST_MakePoint($3, ymin),
                                                   ST_MakePoint($5, ymax)), 3301),
@@ -17,6 +18,7 @@ FROM (SELECT f.label AS tooltip,
                        ST_SetSRID(ST_MakeBox2D(ST_MakePoint($3, ymin),
                                                ST_MakePoint($5, ymax)), 3301),
                        1000)
+        AND f.datasource_id = datasource
         AND (array_length(types,1) IS NULL OR f.type = ANY(types))) tile;
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;
 
@@ -31,11 +33,30 @@ SELECT row_to_json(fc)::TEXT
                array_to_json(array_agg(f)) as features
           FROM (SELECT 'Feature' as type,
                        ST_AsGeoJSON(f.geometry)::json as geometry,
-                       f.properties
+                       (jsonb_build_object('teet-id', CONCAT(f.datasource_id,':',f.id)) || f.properties) AS properties
                   FROM teet.feature f
                   JOIN teet.entity e ON ST_DWithin(f.geometry, e.geometry, distance)
                  WHERE e.id = entity_id
                    AND f.datasource_id = ANY(datasource_ids)) f) fc;
+$$ LANGUAGE SQL STABLE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION teet.geojson_features_by_id(
+  ids TEXT[])
+RETURNS TEXT
+AS $$
+WITH features AS (
+  SELECT left(x.id, position(':' in x.id) - 1)::integer as datasource,
+         right(x.id, -position(':' in x.id)) as id
+    FROM unnest(ids) x (id)
+)
+SELECT row_to_json(fc)::TEXT
+  FROM (SELECT 'FeatureCollection' as type,
+               array_to_json(array_agg(f)) as features
+          FROM (SELECT 'Feature' as type,
+                       ST_AsGeoJSON(f.geometry)::json as geometry,
+                       (jsonb_build_object('teet-id', CONCAT(f.datasource_id,':',f.id)) || f.properties) AS properties
+                  FROM teet.feature f
+                  JOIN features fs ON (f.datasource_id = fs.datasource AND f.id = fs.id)) f) fc;
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION teet.datasources () RETURNS JSON
