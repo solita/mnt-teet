@@ -2,7 +2,8 @@
   (:require [teet.db-api.core :as db-api]
             [teet.project.project-model :as project-model]
             [datomic.client.api :as d]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.meta.meta-query :as meta-query]))
 
 (defmethod db-api/query :thk.project/db-id->thk-id [{db :db} {id :db/id}]
   (-> db
@@ -10,16 +11,18 @@
       :thk.project/id))
 
 (defmethod db-api/query :thk.project/fetch-project [{db :db} {:thk.project/keys [id]}]
-  (d/pull db (into project-model/project-info-attributes
-                   '[{:thk.project/lifecycles
-                      [:db/id
-                       :thk.lifecycle/estimated-start-date
-                       :thk.lifecycle/estimated-end-date
-                       :thk.lifecycle/type
-                       {:thk.lifecycle/activities
-                        [*
-                         {:activity/tasks [*]}]}]}])
-          [:thk.project/id id]))
+  (meta-query/without-deleted
+    db
+    (d/pull db (into project-model/project-info-attributes
+                     '[{:thk.project/lifecycles
+                        [:db/id
+                         :thk.lifecycle/estimated-start-date
+                         :thk.lifecycle/estimated-end-date
+                         :thk.lifecycle/type
+                         {:thk.lifecycle/activities
+                          [*
+                           {:activity/tasks [*]}]}]}])
+            [:thk.project/id id])))
 
 (defmethod db-api/query :thk.project/fetch-task [{db :db} {project-id :thk.project/id
                                                            task-id :task-id}]

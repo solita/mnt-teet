@@ -5,11 +5,13 @@
             [teet.project.project-model :as project-model]
             [clojure.string :as str]
             [teet.project.project-geometry :as project-geometry]
-            [teet.environment :as environment])
+            [teet.environment :as environment]
+            [teet.meta.meta-model :refer [modification-meta creation-meta deletion-tx]])
   (:import (java.util Date)))
 
 (defmethod db-api/command! :thk.project/initialize!
-  [{conn :conn}
+  [{conn :conn
+    user :user}
    {:thk.project/keys [id owner manager project-name custom-start-m custom-end-m
                        m-range-change-reason related-restrictions]}]
   (let [project-in-datomic (d/pull (d/db conn)
@@ -35,7 +37,8 @@
                                (when m-range-change-reason
                                  {:thk.project/m-range-change-reason m-range-change-reason})
                                (when related-restrictions
-                                 {:thk.project/related-restrictions related-restrictions}))]})]
+                                 {:thk.project/related-restrictions related-restrictions})
+                               (modification-meta user))]})]
         (project-geometry/update-project-geometries!
          (environment/config-map {:api-url [:api-url]
                                   :api-shared-secret [:auth :jwt-secret]})
@@ -47,13 +50,20 @@
   :ok)
 
 (defmethod db-api/command! :project/delete-task
-  [{conn :conn}
+  [{conn :conn
+    user :user}
    {task-id :db/id}]
   (d/transact
     conn
-    {:tx-data [[:db/retractEntity task-id]
-               {:db/id "datomic.tx"
-                :deletion/eid [task-id]}]})
+    {:tx-data [(deletion-tx user task-id)]})
+  :ok)
+
+(defmethod db-api/command! :project/delete-activity
+  [{conn :conn}
+   {activity-id :db/id}]
+  (d/transact
+    conn
+    {:tx-data [(deletion-tx user activity-id)]})
   :ok)
 
 
