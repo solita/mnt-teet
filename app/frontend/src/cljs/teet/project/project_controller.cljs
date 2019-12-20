@@ -70,6 +70,7 @@
 (defrecord InitializeActivityEditForm [])
 
 (defrecord DeleteActivity [activity-id])
+(defrecord DeleteActivityResult [response])
 
 (defrecord FetchRelatedFeaturesResponse [result-path geojson-path response])
 
@@ -146,7 +147,16 @@
 
   DeleteActivity
   (process-event [{activity-id :activity-id} app]
-    (println "Delete activity:_ " activity-id)              ;;fixme: implement activity deletion
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command          :project/delete-activity
+           :success-message  "Activity deletion success"    ;;TODO add localization
+           :payload          {:db/id (goog.math.Long/fromString activity-id)}
+           :result-event     ->DeleteActivityResult}))
+
+  DeleteActivityResult
+  (process-event [{response :response} app]
+    ;;TODO: add redirection to activity deletion success
     app)
 
   NavigateToStep
