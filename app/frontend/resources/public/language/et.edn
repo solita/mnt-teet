@@ -4,6 +4,7 @@
   :save "Salvestan",
   :add "Lisan",
   :back "Tagasi",
+  :delete "Kustutama",
   :edit "Muutma"},
  :common
  {:hide-menu "Peidan menüü",

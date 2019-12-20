@@ -4,6 +4,7 @@
   :save "Save",
   :add "Add",
   :back "Back",
+  :delete "Delete",
   :edit "Edit"},
  :common
  {:hide-menu "Hide menu",
