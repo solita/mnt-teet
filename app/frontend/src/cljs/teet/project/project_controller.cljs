@@ -15,7 +15,7 @@
 (defrecord CloseAddDialog [])
 (defrecord SelectProject [project-id])
 (defrecord ToggleCadastralHightlight [id])
-(defrecord ToggleRestrictionData [restriction])
+(defrecord ToggleRestrictionData [id])
 (defrecord UpdateActivityState [id status])
 (defrecord NavigateToProject [thk-project-id])
 
@@ -63,7 +63,7 @@
 (defrecord UpdateActivitiesForm [form-data])
 
 (defrecord FetchRestrictions [road-buffer-meters])
-(defrecord ToggleRestriction [id])
+(defrecord ToggleRestriction [restriction])
 
 (defrecord PostActivityEditForm [])
 (defrecord OpenEditActivityDialog [])
