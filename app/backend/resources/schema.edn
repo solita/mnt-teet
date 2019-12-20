@@ -453,4 +453,26 @@
   :txes     [[{:db/ident       :thk.project/related-restrictions
                :db/valueType   :db.type/string
                :db/cardinality :db.cardinality/many
-               :db/doc         "Restrictions related to the THK project"}]]}]
+               :db/doc         "Restrictions related to the THK project"}]]}
+
+{:db/ident :migration/meta-data
+  :txes [[{:db/ident :meta/creator
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Original creator of entity"}
+          {:db/ident :meta/created-at
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "Timestamp of creation"}
+          {:db/ident :meta/modified-at
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "Timestamp of last modification"}
+          {:db/ident :meta/modifier
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Ref to user entity who last modified"}
+          {:db/ident :meta/deleted?
+           :db/valueType :db.type/boolean
+           :db/cardinality :db.cardinality/one
+           :db/doc "If true this entity will not be shown in UI except for special admin functionality."}]]}]
