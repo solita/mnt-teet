@@ -23,6 +23,7 @@
             [teet.common.common-styles :as common-styles]
             [teet.project.task-model :as task-model]
             [teet.project.project-controller :as project-controller]
+            [teet.document.document-controller :as document-controller]
             [teet.authorization.authorization-check :refer [when-authorized]]))
 
 (defn task-status [e! status modified]
@@ -72,7 +73,15 @@
 (defn- task-document-content
   [e! document]
   [:div
-   [:h1 (pr-str document)]
+   [:div {:style {:display :flex
+                  :justify-content :flex-end}}
+    [buttons/button-warning
+     {:on-click (e! document-controller/->DeleteDocument (:db/id document))}
+     (tr [:buttons :delete])]]
+   [:div {:style {:padding "2rem"}}
+    [Heading1
+     (:document/name document)]
+    [teet.ui.typography/Paragraph (:document/description document)]]
    [document-view/comments e! document]])
 
 (defn document-file-content

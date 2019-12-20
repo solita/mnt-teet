@@ -155,9 +155,13 @@
            :result-event     ->DeleteActivityResult}))
 
   DeleteActivityResult
-  (process-event [{response :response} app]
-    ;;TODO: add redirection to activity deletion success
-    app)
+  (process-event [{response :response} {:keys [params query page] :as app}]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page page
+           :params params
+           :query (dissoc query :activity :edit)}
+          common-controller/refresh-fx))
 
   NavigateToStep
   (process-event [{step :step} app]

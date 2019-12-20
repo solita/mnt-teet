@@ -3,7 +3,8 @@
             [datomic.client.api :as d]
             [teet.document.document-storage :as document-storage]
             teet.document.document-spec
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [teet.meta.meta-model :refer [modification-meta creation-meta deletion-tx]])
   (:import (java.util Date)))
 
 
@@ -75,7 +76,8 @@
            :file (d/pull (:db-after res) '[*] file-id)}))))
 
 (defmethod db-api/command! :document/comment [{conn :conn
-                                               user :user} {:keys [document-id comment]}]
+                                               user :user}
+                                              {:keys [document-id comment]}]
   (-> conn
       (d/transact {:tx-data [{:db/id document-id
                               :document/comments [{:db/id "new-comment"
@@ -83,3 +85,12 @@
                                                    :comment/comment comment
                                                    :comment/timestamp (java.util.Date.)}]}]})
       (get-in [:tempids "new-comment"])))
+
+
+(defmethod db-api/command! :document/delete [{conn :conn
+                                              user :user}
+                                             {:keys [document-id]}]
+  (d/transact
+    conn
+    {:tx-data [(deletion-tx user document-id)]})
+  :ok)

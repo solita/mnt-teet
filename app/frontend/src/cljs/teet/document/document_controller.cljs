@@ -20,6 +20,9 @@
 (defrecord UpdateNewCommentForm [form-data]) ; update new comment form data
 (defrecord Comment []) ; save new comment to document
 
+(defrecord DeleteDocument [document-id])
+(defrecord DeleteDocumentResult [])
+
 (defn- file-info [^js/File f]
   {:file/name (.-name f)
    :file/size (.-size f)
@@ -60,6 +63,24 @@
              :payload {:document-id (goog.math.Long/fromString doc)
                        :comment new-comment}
              :result-event common-controller/->Refresh})))
+
+  DeleteDocument
+  (process-event [{document-id :document-id} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :document/delete
+           :success-message  "Document deleted successfully"
+           :payload {:document-id document-id}
+           :result-event ->DeleteDocumentResult}))
+
+  DeleteDocumentResult
+  (process-event [_ {:keys [page params query] :as app}]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page page
+           :params params
+           :query (dissoc query :document)}
+          common-controller/refresh-fx))
 
   UpdateDocumentForm
   (process-event [{form-data :form-data} app]
