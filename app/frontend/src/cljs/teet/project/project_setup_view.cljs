@@ -171,7 +171,7 @@
          (for [[group restrictions] restrictions-by-type
                :let [group-checked (into #{}
                                          (comp
-                                           (map :id)
+                                           (map :teet-id)
                                            (filter checked-restrictions))
                                          restrictions)]]
            ^{:key group}
@@ -182,12 +182,12 @@
                                              :open?     (@open-types group)}
             group
             [itemlist/checkbox-list
-             {:key :ID}
-             (for [{:keys [VOOND ID]} (sort-by :voond restrictions)
-                   :let [checked? (boolean (group-checked ID))]]
+             {:key :teet-id}
+             (for [{:keys [VOOND teet-id]} (sort-by :voond restrictions)
+                   :let [checked? (boolean (group-checked teet-id))]]
                {:checked?  checked?
                 :value     VOOND
-                :on-change (r/partial toggle-restriction ID)})]]))])))
+                :on-change (r/partial toggle-restriction teet-id)})]]))])))
 
 (defn project-setup-restrictions-form [e! _project _step {:keys [road-buffer-meters] :as _map}]
   (e! (project-controller/->FetchRestrictions road-buffer-meters))
