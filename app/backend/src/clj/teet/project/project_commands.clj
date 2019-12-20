@@ -11,7 +11,7 @@
 (defmethod db-api/command! :thk.project/initialize!
   [{conn :conn}
    {:thk.project/keys [id owner manager project-name custom-start-m custom-end-m
-                       m-range-change-reason]}]
+                       m-range-change-reason related-restrictions]}]
   (let [project-in-datomic (d/pull (d/db conn)
                                    [:thk.project/owner :thk.project/estimated-start-date :thk.project/estimated-end-date]
                                    [:thk.project/id id])]
@@ -33,7 +33,9 @@
                                (when custom-end-m
                                  {:thk.project/custom-end-m custom-end-m})
                                (when m-range-change-reason
-                                 {:thk.project/m-range-change-reason m-range-change-reason}))]})]
+                                 {:thk.project/m-range-change-reason m-range-change-reason})
+                               (when related-restrictions
+                                 {:thk.project/related-restrictions related-restrictions}))]})]
         (project-geometry/update-project-geometries!
          (environment/config-map {:api-url [:api-url]
                                   :api-shared-secret [:auth :jwt-secret]})

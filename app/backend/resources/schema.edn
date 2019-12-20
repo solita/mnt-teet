@@ -447,4 +447,10 @@
           {:db/ident :user/permissions
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/many
-           :db/doc "Permissions that have been granted to this user"}]]}]
+           :db/doc "Permissions that have been granted to this user"}]]}
+
+ {:db/ident :migration/thk-project-related-restrictions
+  :txes     [[{:db/ident       :thk.project/related-restrictions
+               :db/valueType   :db.type/string
+               :db/cardinality :db.cardinality/many
+               :db/doc         "Restrictions related to the THK project"}]]}]

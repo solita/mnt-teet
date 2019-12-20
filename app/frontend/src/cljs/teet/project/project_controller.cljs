@@ -158,7 +158,8 @@
     (let [{:thk.project/keys [id name] :as project} (get-in app [:route :project])
           {:thk.project/keys [project-name owner manager km-range meter-range-changed-reason]}
           (get-in app [:route :project :basic-information-form])
-          [start-km end-km :as custom-km-range] (mapv road-model/parse-km km-range)]
+          [start-km end-km :as custom-km-range] (mapv road-model/parse-km km-range)
+          checked-restrictions (not-empty (get-in app [:route :project :checked-restrictions]))]
       (t/fx app {:tuck.effect/type :command!
                  :command          :thk.project/initialize!
                  :payload          (merge {:thk.project/id id
@@ -170,7 +171,9 @@
                                                       (project-model/get-column project :thk.project/effective-km-range))
                                             {:thk.project/m-range-change-reason meter-range-changed-reason
                                              :thk.project/custom-start-m (road-model/km->m start-km)
-                                             :thk.project/custom-end-m (road-model/km->m end-km)}))
+                                             :thk.project/custom-end-m (road-model/km->m end-km)})
+                                          (when checked-restrictions
+                                            {:thk.project/related-restrictions checked-restrictions}))
                  :result-event     ->SaveProjectSetupResponse})))
   SaveProjectSetupResponse
   (process-event [_ app]
