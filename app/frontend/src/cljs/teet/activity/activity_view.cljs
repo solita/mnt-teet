@@ -6,7 +6,7 @@
             [teet.ui.form :as form]
             teet.document.document-spec))
 
-(defn activity-form [e! {:keys [close activity save on-change]}]
+(defn activity-form [e! {:keys [close activity save on-change delete]}]
   ;; Activity name (drop-down selector, a predefined list of activities: eskiisprojekt, eelprojekt, põhiprojekt, maade omandamine, ehitus)
   ;; Timeline (EstStart, EstEnd, assumptions entered only)
   ;; Status (drop-down selector, a predefined list of statuses)
@@ -15,6 +15,7 @@
               :on-change-event on-change
               :save-event save
               :cancel-event close
+              :delete delete
               :spec :document/new-activity-form}
    ^{:attribute :activity/name}
    [select/select-enum {:e! e! :attribute :activity/name}]

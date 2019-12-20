@@ -1,5 +1,10 @@
 {:admin {:title "Admin", :create-user "Add user"},
- :buttons {:cancel "Cancel", :save "Save", :add "Add", :edit "Edit"},
+ :buttons
+ {:cancel "Cancel",
+  :save "Save",
+  :add "Add",
+  :back "Back",
+  :edit "Edit"},
  :common
  {:hide-menu "Hide menu",
   :send-feedback "Send feedback",
@@ -60,6 +65,7 @@
   :server-error "Server error."},
  :fields
  {:document/status "Status",
+  :thk.project/manager "Manager",
   :thk.project/project-name "Name",
   :task/type "Task type",
   :task/assignee "Responsible person",

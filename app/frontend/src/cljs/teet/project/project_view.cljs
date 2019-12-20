@@ -46,12 +46,13 @@
   ;; Responsible person (email)
   (when initialization-fn
     (initialization-fn))
-  (fn [e! {:keys [close task save on-change]}]
+  (fn [e! {:keys [close task save on-change delete]}]
     [form/form {:e!              e!
                 :value           task
                 :on-change-event on-change
                 :cancel-event    close
                 :save-event      save
+                :delete          delete
                 :spec            :task/new-task-form}
      ^{:xs 12 :attribute :task/type}
      [select/select-enum {:e! e! :attribute :task/type}]
@@ -458,11 +459,13 @@
   [_ _ initialization-fn]
   (initialization-fn)
   (fn [e! app _]
-    (when (:edit-activity-data app)                         ;;Otherwise the form renderer can't format dates properly
-      [activity-view/activity-form e! {:on-change activity-controller/->UpdateEditActivityForm
-                                       :save      activity-controller/->SaveEditActivityForm
-                                       :close     project-controller/->CloseAddDialog
-                                       :activity  (:edit-activity-data app)}])))
+    (when-let [activity-data (:edit-activity-data app)]                   ;;Otherwise the form renderer can't format dates properly
+      [:div
+       [activity-view/activity-form e! {:on-change activity-controller/->UpdateEditActivityForm
+                                        :save      activity-controller/->SaveEditActivityForm
+                                        :close     project-controller/->CloseAddDialog
+                                        :delete    (project-controller/->DeleteActivity (str (:db/id activity-data)))
+                                        :activity  (:edit-activity-data app)}]])))
 
 (def project-tabs-layout
   ;; FIXME: Labels with TR paths instead of text

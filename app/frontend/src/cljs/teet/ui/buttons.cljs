@@ -4,7 +4,7 @@
             [teet.ui.util :as util]
             [teet.theme.theme-colors :as theme-colors]))
 
-(defn white-button-style
+(defn- white-button-style
   []
   ^{:pseudo {:hover {:background-color theme-colors/gray-lightest}
              :focus theme-colors/focus-style}}
@@ -20,7 +20,7 @@
    :margin-bottom "1rem"
    :color theme-colors/primary})
 
-(defn warn-button-style
+(defn- warn-button-style
   "The styles are with !important because material ui css loading order makes it hard to override them normally"
   []
   ^{:pseudo {:hover {:background-color (str theme-colors/red-dark " !important")}

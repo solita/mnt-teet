@@ -1,6 +1,10 @@
 {:admin {:title "Admin", :create-user "Lisan kasutaja"},
  :buttons
- {:cancel "Tühistan", :save "Salvestan", :add "Lisan", :edit "Muutma"},
+ {:cancel "Tühistan",
+  :save "Salvestan",
+  :add "Lisan",
+  :back "Tagasi",
+  :edit "Muutma"},
  :common
  {:hide-menu "Peidan menüü",
   :send-feedback "Saadan tagasisidet",
@@ -61,6 +65,7 @@
   :server-error "Serveri viga."},
  :fields
  {:document/status "Olek",
+  :thk.project/manager "Juhataja",
   :thk.project/project-name "Nimi",
   :task/type "Ülesandetüüp",
   :task/assignee "Vastutav isik",

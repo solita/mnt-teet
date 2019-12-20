@@ -42,6 +42,13 @@
 ;;
 ;; Project setup wizard events
 ;;
+
+(defn project-setup-step [app]
+  (-> app :route :project :setup-step))
+
+(defn- navigate-to-step [app step]
+  (assoc-in app [:route :project :setup-step] step))
+
 (defrecord NavigateToStep [step])
 
 (defrecord SaveProjectSetup [])
@@ -62,17 +69,19 @@
 (defrecord OpenEditActivityDialog [])
 (defrecord InitializeActivityEditForm [])
 
+(defrecord DeleteActivity [activity-id])
+
 (defrecord FetchRelatedFeaturesResponse [result-path geojson-path response])
 
 (defn fetch-related-info
-  [{:keys [page params query] :as app} road-buffer-meters]
+  [app road-buffer-meters]
   (let [args {:entity_id (str (get-in app [:route :project :db/id]))
               :distance road-buffer-meters}]
     (merge
      {:tuck.effect/type :rpc
       :rpc "geojson_entity_related_features"
       :endpoint (get-in app [:config :api-url])}
-     (case (:step query)
+     (case (project-setup-step app)
        "restrictions"
        {:args (assoc args
                      ;; FIXME: dataosource ids from map datasources info
@@ -90,12 +99,6 @@
                                [:route :project :cadastral-candidates]
                                [:route :project :cadastral-candidates-geojson])}
        {}))))
-
-(defn navigate-to-step-fx [{:keys [page params query] :as app} step]
-  [{:tuck.effect/type :navigate
-    :page page
-    :params params
-    :query (assoc query :step step)}])
 
 (defn navigate-to-next-step-event
   "Given `current-step`, navigates to next step in `steps`"
@@ -132,18 +135,23 @@
           (assoc-in geojson-path geojson))))
 
   ChangeRoadObjectAoe
-  (process-event [{val :val} {:keys [page params query] :as app}]
+  (process-event [{val :val} {:keys [page params] :as app}]
     (let [app (assoc-in app [:map :road-buffer-meters] val)]
-      (if (and (:step query) (not-empty val))
+      (if (and (project-setup-step app) (not-empty val))
         (t/fx app
               {:tuck.effect/type :debounce
                :timeout          300
                :effect           (fetch-related-info app val)})
         app)))
 
+  DeleteActivity
+  (process-event [{activity-id :activity-id} app]
+    (println "Delete activity:_ " activity-id)              ;;fixme: implement activity deletion
+    app)
+
   NavigateToStep
   (process-event [{step :step} app]
-    (apply t/fx app (remove nil? (navigate-to-step-fx app step))))
+    (navigate-to-step app step))
 
   SaveProjectSetup
   (process-event [_ app]
@@ -165,10 +173,8 @@
                                              :thk.project/custom-end-m (road-model/km->m end-km)}))
                  :result-event     ->SaveProjectSetupResponse})))
   SaveProjectSetupResponse
-  (process-event [_ {:keys [page params query] :as app}]
-    (t/fx app
-          (navigate-to-step-fx app "restrictions")
-          common-controller/refresh-fx))
+  (process-event [_ app]
+    (navigate-to-step app "restrictions"))
 
   UpdateBasicInformationForm
   (process-event [{:keys [form-data]} app]

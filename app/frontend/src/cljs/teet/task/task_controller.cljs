@@ -13,7 +13,7 @@
 (defrecord CreateTask [])
 (defrecord CreateTaskResult [result])
 
-(defrecord DeleteTask [])
+(defrecord DeleteTask [task-id])
 (defrecord DeleteTaskResult [response])
 
 (defrecord OpenEditTask [])
@@ -52,12 +52,12 @@
            :query            (assoc query :edit :task)}))
 
   DeleteTask
-  (process-event [_ {:keys [params] :as app}]
+  (process-event [{task-id :task-id} app]
     (t/fx app
           {:tuck.effect/type :command!
            :command          :project/delete-task
            :success-message  "Task deleted successfully"    ;;TODO add localization
-           :payload          {:db/id (goog.math.Long/fromString (:task params))}
+           :payload          {:db/id (goog.math.Long/fromString task-id)}
            :result-event     ->DeleteTaskResult}))
 
   DeleteTaskResult

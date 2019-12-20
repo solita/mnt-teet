@@ -71,22 +71,22 @@
 
 (defn form-buttons
   []
-  {:text-align :right
-   :margin-bottom "1.5rem"})
+  {:display :flex
+   :margin "1.5rem 0"})
 
-(defn form-footer [{:keys [cancel validate disabled?]}]
+(defn form-footer [{:keys [delete cancel validate disabled?]}]
   [:div {:class (<class form-buttons)}
-   (when cancel
-     [buttons/button-secondary {:style {:margin-right "1rem"}
-                                :disabled disabled?
-                                :on-click cancel
-                                :color :secondary
-                                :variant :contained}
-      (tr [:buttons :cancel])])
+   (when delete
+     [buttons/button-warning {:on-click delete}
+      (tr [:buttons :delete])])
+   [:div {:style {:margin-left :auto}}
+    (when cancel
+      [buttons/button-secondary {:style    {:margin-right "1rem"}
+                                 :disabled disabled?
+                                 :on-click cancel}
+       (tr [:buttons :cancel])])]
    (when validate
      [buttons/button-primary {:disabled disabled?
-                              :color :primary
-                              :variant :contained
                               :type :submit
                               :on-click validate}
       (tr [:buttons :save])])])
@@ -113,7 +113,7 @@
            spacing         ;; Form grid spacing
            step            ;; Current form step
            id              ;; Id for the form element
-           ]
+           delete]
     :or {class (<class form-bg)
          footer form-footer
          spacing 3}}
@@ -186,8 +186,11 @@
                           adornment)])))))]]
      (when (and footer
                 (or cancel-event save-event))
-       [footer {:cancel (when cancel-event
-                          (r/partial e! (cancel-event)))
-                :validate (when save-event
-                            #(validate value fields))
-                :disabled? (boolean in-progress?)}])]))
+       [footer (merge
+                 {:cancel    (when cancel-event
+                               (r/partial e! (cancel-event)))
+                  :validate  (when save-event
+                               #(validate value fields))
+                  :disabled? (boolean in-progress?)}
+                 (when delete
+                   {:delete #(e! delete)}))])]))
