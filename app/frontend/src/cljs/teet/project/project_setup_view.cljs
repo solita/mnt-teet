@@ -167,13 +167,23 @@
   (let [restrictions-by-type (group-by :VOOND restrictions)]
     (r/with-let [open-types (r/atom #{})]
       [:<>
+       (when (not-empty checked-restrictions)
+         [container/collapsible-container {:on-toggle (fn [_]
+                                                        (swap! open-types #(if (% :selected)
+                                                                             (disj % :selected)
+                                                                             (conj % :selected))))
+                                           :open?     (@open-types :selected)}
+          (str (count checked-restrictions) " selected")
+          [itemlist/checkbox-list
+           {:key :teet-id}
+           (for [restriction checked-restrictions]
+             {:checked?  true
+              :value (:VOOND restriction)
+              :on-change (r/partial toggle-restriction restriction)})]])
        (doall
          (for [[group restrictions] restrictions-by-type
                :let [group-checked (into #{}
-                                         (comp
-                                           (map :teet-id)
-                                           (filter checked-restrictions))
-                                         restrictions)]]
+                                         (filter checked-restrictions restrictions))]]
            ^{:key group}
            [container/collapsible-container {:on-toggle (fn [_]
                                                           (swap! open-types #(if (% group)
@@ -182,12 +192,12 @@
                                              :open?     (@open-types group)}
             group
             [itemlist/checkbox-list
-             {:key :teet-id}
-             (for [{:keys [VOOND teet-id]} (sort-by :voond restrictions)
-                   :let [checked? (boolean (group-checked teet-id))]]
-               {:checked?  checked?
-                :value     VOOND
-                :on-change (r/partial toggle-restriction teet-id)})]]))])))
+             (for [restriction (sort-by :voond restrictions)
+                   :let [checked? (boolean (group-checked restriction))]]
+               {:id        (:teet-id restriction)
+                :checked?  checked?
+                :value     (:VOOND restriction)
+                :on-change (r/partial toggle-restriction restriction)})]]))])))
 
 (defn project-setup-restrictions-form [e! _project _step {:keys [road-buffer-meters] :as _map}]
   (e! (project-controller/->FetchRestrictions road-buffer-meters))

@@ -15,7 +15,7 @@
 (defrecord CloseAddDialog [])
 (defrecord SelectProject [project-id])
 (defrecord ToggleCadastralHightlight [id])
-(defrecord ToggleRestrictionData [id])
+(defrecord ToggleRestrictionData [restriction])
 (defrecord UpdateActivityState [id status])
 (defrecord NavigateToProject [thk-project-id])
 
@@ -187,7 +187,8 @@
                                              :thk.project/custom-start-m (road-model/km->m start-km)
                                              :thk.project/custom-end-m (road-model/km->m end-km)})
                                           (when checked-restrictions
-                                            {:thk.project/related-restrictions checked-restrictions}))
+                                            {:thk.project/related-restrictions (map :teet-id
+                                                                                    checked-restrictions)}))
                  :result-event     common-controller/->Refresh})))
 
   UpdateBasicInformationForm
@@ -213,11 +214,11 @@
           (fetch-related-info app road-buffer-meters)))
 
   ToggleRestriction
-  (process-event [{id :id} app]
+  (process-event [{restriction :restriction} app]
     (let [old-restrictions (or (get-in app [:route :project :checked-restrictions]) #{})
-          new-restrictions (if (old-restrictions id)
-                             (disj old-restrictions id)
-                             (conj old-restrictions id))]
+          new-restrictions (if (old-restrictions restriction)
+                             (disj old-restrictions restriction)
+                             (conj old-restrictions restriction))]
       (map-controller/update-features!
        "geojson_thk_project_related_restrictions"
        (fn [unit]
