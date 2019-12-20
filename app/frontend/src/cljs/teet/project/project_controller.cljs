@@ -174,10 +174,7 @@
                                              :thk.project/custom-end-m (road-model/km->m end-km)})
                                           (when checked-restrictions
                                             {:thk.project/related-restrictions checked-restrictions}))
-                 :result-event     ->SaveProjectSetupResponse})))
-  SaveProjectSetupResponse
-  (process-event [_ app]
-    (navigate-to-step app "restrictions"))
+                 :result-event     common-controller/->Refresh})))
 
   UpdateBasicInformationForm
   (process-event [{:keys [form-data]} app]
