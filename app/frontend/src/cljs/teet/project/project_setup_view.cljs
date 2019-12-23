@@ -189,7 +189,10 @@
                                                                                (disj % group)
                                                                                (conj % group))))
                                              :open?     (@open-types group)}
-            group
+            [:div  group
+             [typography/SmallText (tr [:project :wizard :selected-count]
+                                       {:selected (count group-checked)
+                                        :total (count restrictions)})]]
             [itemlist/checkbox-list
              (for [restriction (sort-by (juxt :VOOND :teet-id) restrictions)
                    :let [checked? (boolean (group-checked restriction))]]
