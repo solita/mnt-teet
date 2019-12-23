@@ -1,9 +1,18 @@
 (ns migrate
   (:require [clojure.string :as str])
-  (:import (org.flywaydb.core Flyway))
+  (:import (org.flywaydb.core Flyway)
+           (java.sql DriverManager Statement ResultSet Connection))
   (:gen-class))
 
 (Class/forName "org.postgresql.Driver")
+
+(defn ensure-db [uri user pass]
+  (try
+    (with-open [conn (DriverManager/getConnection (str/replace uri "/teet" "/postgres") user pass)
+                stmt (.createStatement conn)]
+      (.execute stmt "CREATE DATABASE teet"))
+    (catch Throwable e
+      (println "Unable to create teet database, let's hope it already exists!"))))
 
 (defn migrate [uri user pass]
   (println "Migrate DB: " uri)
@@ -23,5 +32,6 @@
     (when (some str/blank? [uri user pass])
       (println "Specify DB_URI, DB_USER and DB_PASSWORD environment variables!")
       (System/exit 1))
+    (ensure-db uri user pass)
     (migrate uri user pass)
     (System/exit 0)))
