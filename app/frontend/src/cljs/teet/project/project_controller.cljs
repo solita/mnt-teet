@@ -14,7 +14,7 @@
 (defrecord OpenTaskDialog [])
 (defrecord CloseAddDialog [])
 (defrecord SelectProject [project-id])
-(defrecord ToggleCadastralHightlight [id])
+
 (defrecord ToggleRestrictionData [id])
 (defrecord UpdateActivityState [id status])
 (defrecord NavigateToProject [thk-project-id])
@@ -64,6 +64,7 @@
 
 (defrecord FetchRestrictions [road-buffer-meters])
 (defrecord ToggleRestriction [restriction])
+(defrecord ToggleCadastralUnit [cadastral-unit])
 
 (defrecord PostActivityEditForm [])
 (defrecord OpenEditActivityDialog [])
@@ -218,13 +219,29 @@
     (let [old-restrictions (or (get-in app [:route :project :checked-restrictions]) #{})
           new-restrictions (if (old-restrictions restriction)
                              (disj old-restrictions restriction)
-                             (conj old-restrictions restriction))]
+                             (conj old-restrictions restriction))
+
+          checked-ids (into #{} (map :teet-id) new-restrictions)]
       (map-controller/update-features!
-       "geojson_thk_project_related_restrictions"
+       "related-restriction-candidates"
        (fn [unit]
-         (let [id (.get unit "id")]
-           (.set unit "selected" (boolean (new-restrictions id))))))
-      (assoc-in app [:route :project :checked-restrictions] new-restrictions))))
+         (let [id (.get unit "teet-id")]
+           (.set unit "selected" (boolean (checked-ids id))))))
+      (assoc-in app [:route :project :checked-restrictions] new-restrictions)))
+
+  ToggleCadastralUnit
+  (process-event [{cadastral-unit :cadastral-unit} app]
+    (let [old-cadastral-units (or (get-in app [:route :project :checked-cadastral-units])
+                                  #{})
+          new-cadastral-units (if (old-cadastral-units cadastral-unit)
+                                (disj old-cadastral-units cadastral-unit)
+                                (conj old-cadastral-units cadastral-unit))]
+      (map-controller/update-features!
+       "cadastral-unit-candidates"
+       (fn [unit]
+         (let [id (.get unit "teet-id")]
+           (.set unit "selected" (boolean (new-cadastral-units id))))))
+      (assoc-in app [:route :project :checked-cadastral-units] new-cadastral-units))))
 
 (extend-protocol t/Event
   SelectProject
@@ -331,47 +348,8 @@
              (if (= (:id e) restriction-id)
                (assoc e :open? (not (:open? e)))
                e))
-           %))))
-
-  ToggleCadastralHightlight
-  (process-event [{new-highlighted-id :id} app]
-    (map-controller/update-features!
-     "geojson_thk_project_related_cadastral_units"
-     (fn [unit]
-       (let [id (.get unit "id")
-             open? (.get unit "selected")]
-         (when (= id new-highlighted-id)
-           (.set unit "selected" (not open?))))))
-    (let [project-id (get-in app [:params :project])]
-      (update-in app [:project project-id :cadastral-units]
-        #(map
-           (fn [e]
-             (if (= (:id e) new-highlighted-id)
-               (assoc e :open? (not (:open? e)))
-               e))
            %)))))
 
-(defn cadastral-units-rpc [project]
-  {:rpc "thk_project_related_cadastral_units"
-   :args {:entity_id (:db/id project)
-          :distance 200}})
-
-(defn restrictions-rpc [project]
-  {:rpc "thk_project_related_restrictions"
-   :args {:entity_id (:db/id project)
-          :distance 200}})
-
-(defmethod common-controller/map-item-selected
-  "geojson_thk_project_related_cadastral_units"
-  [p]
-  ;(log/info "cadastral item selected: " p)
-  (->ToggleCadastralHightlight (:map/id p)))
-
-(defmethod common-controller/map-item-selected
-  "geojson_thk_project_related_restrictions"
-  [p]
-  ;(log/info "cadastral item selected: " p)
-  (->ToggleRestrictionData (:map/id p)))
 
 (defn activity-url
   [{:keys [project lifecycle]} {id :db/id}]

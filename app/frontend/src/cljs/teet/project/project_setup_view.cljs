@@ -208,12 +208,18 @@
                                  :checked-restrictions (or checked-restrictions #{})
                                  :toggle-restriction   (e! project-controller/->ToggleRestriction)}])]))
 
+(defn cadastral-units-listing [e! {:keys [cadastral-units checked-cadastral-units toggle-cadastral-unit]}]
+  [:div (pr-str cadastral-units)])
+
 (defn project-setup-cadastral-units-form [e! _project _step {:keys [road-buffer-meters] :as _map}]
   (e! (project-controller/->FetchRestrictions road-buffer-meters))
-  (fn [e! project {step-label :step-label :as step} map]
+  (fn [e! {:keys [cadastral-unit-candidates checked-cadastral-units]} {step-label :step-label :as step} map]
     [:form {:id        step-label
             :on-submit (e! (project-controller/navigate-to-next-step-event project-setup-steps step))}
-     "Cadastral units"]))
+     (when cadastral-unit-candidates
+       [cadastral-units-listing e! {:cadastral-units cadastral-unit-candidates
+                                    :checked-cadastral-units (or checked-cadastral-units #{})
+                                    :toggle-cadastral-unit (e! project-controller/->ToggleCadastralUnit)}])]))
 
 
 (def project-setup-steps
