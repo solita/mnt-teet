@@ -12,6 +12,7 @@
             [teet.project.project-model :as project-model]
             [teet.project.project-style :as project-style]
             [teet.project.project-setup-view :as project-setup-view]
+            [teet.project.project-layers :as project-layers]
             [teet.road.road-model :as road-model :refer [km->m]]
             [teet.task.task-controller :as task-controller]
             teet.task.task-spec
@@ -38,7 +39,8 @@
             [teet.activity.activity-controller :as activity-controller]
             [teet.routes :as routes]
             [teet.map.map-controller :as map-controller]
-            [teet.authorization.authorization-check :refer [when-authorized]]))
+            [teet.authorization.authorization-check :refer [when-authorized]]
+            [teet.log :as log]))
 
 (defn task-form [_e! {:keys [initialization-fn]}]
   ;;Task definition (under project activity)
@@ -196,141 +198,23 @@
   []
   {:flex 1})
 
-(defn- km-range-label-overlays [start-label end-label callback {source :source}]
-  (when-let [geom (some-> ^ol.source.Vector source
-                          .getFeatures
-                          (aget 0)
-                          .getGeometry)]
-    (let [start (.getFirstCoordinate geom)
-          end (.getLastCoordinate geom)]
-      (callback
-        [{:coordinate (js->clj start)
-          :content    [map-view/overlay {:arrow-direction :right :height 30}
-                       start-label]}
-         {:coordinate (js->clj end)
-          :content    [map-view/overlay {:arrow-direction :left :height 30}
-                       end-label]}]))))
-
-(defn given-range-in-actual-road?
-  "Check to see if the forms given road range is in the actual road"
-  [{:keys [end_m start_m]} [form-start-m form-end-m]]
-  (and (> form-end-m form-start-m)
-       (>= form-start-m start_m)
-       (>= end_m form-end-m)))
-
-(defn project-road-buffer-layer
-  "Show buffer area for project-geometry"
-  [{:thk.project/keys [road-nr carriageway]
-    :keys             [basic-information-form] :as _project}
-   endpoint
-   road-buffer-meters]
-  (let [road-information (:road-info basic-information-form)]
-    (when (and basic-information-form)
-      (let [{[start-km-string end-km-string] :thk.project/km-range} basic-information-form
-            form-start-m (some-> start-km-string road-model/parse-km km->m)
-            form-end-m (some-> end-km-string road-model/parse-km km->m)]
-        (when (given-range-in-actual-road? road-information [form-start-m form-end-m])
-          (map-layers/geojson-layer
-            endpoint
-            "geojson_road_buffer_geometry"
-            {"road"        road-nr
-             "carriageway" carriageway
-             "start_m"     form-start-m
-             "end_m"       form-end-m
-             "buffer"      road-buffer-meters}
-            map-features/road-buffer-fill-style
-            {:content-type "application/json"}))))))
-
-(defn project-road-geometry-layer
-  "Show project geometry or custom road part in case the start and end
-  km are being edited during initialization"
-  [{:thk.project/keys [start-m end-m road-nr carriageway]
-    :keys             [basic-information-form] :as project}
-   endpoint overlays]
-  (let [[start-label end-label]
-        (if basic-information-form
-          (mapv (comp road-model/format-distance
-                      km->m
-                      road-model/parse-km)
-                (:thk.project/km-range basic-information-form))
-          (mapv (comp road-model/format-distance
-                      km->m)
-                (project-model/get-column project
-                                          :thk.project/effective-km-range)))
-        road-information (:road-info basic-information-form)
-        options {:fit-on-load? true
-                 ;; Use left side padding so that road is not shown under the project panel
-                 :fit-padding  [0 0 0 (* 1.05 (project-style/project-panel-width))]
-                 :on-load      (partial km-range-label-overlays
-                                        start-label end-label
-                                        #(reset! overlays %))}]
-    (if basic-information-form
-      (let [{[start-km-string end-km-string] :thk.project/km-range} basic-information-form
-            form-start-m (some-> start-km-string road-model/parse-km km->m)
-            form-end-m (some-> end-km-string road-model/parse-km km->m)]
-        (if (given-range-in-actual-road? road-information [form-start-m form-end-m])
-          (map-layers/geojson-layer
-            endpoint
-            "geojson_road_geometry"
-            {"road"        road-nr
-             "carriageway" carriageway
-             "start_m"     form-start-m
-             "end_m"       form-end-m}
-            map-features/project-line-style
-            (merge options
-                   {:content-type "application/json"}))
-          ;; Needed to remove road ending markers
-          (do (reset! overlays nil)
-              nil)))
-
-      (map-layers/geojson-layer endpoint
-                                "geojson_entities"
-                                {"ids" (str "{" (:db/id project) "}")}
-                                map-features/project-line-style
-                                options))))
-
 (defn project-map [e!
                    app
-                   endpoint
-                   project
-                   {:keys [layers]
-                    :or   {layers #{:thk-project}}
-                    :as   _map-settings}
-                   {:keys [road-buffer-meters] :as map}]
+                   project]
   (r/with-let [overlays (r/atom [])]
     [:div {:style {:flex           1
                    :display        :flex
                    :flex-direction :column}}
      [map-view/map-view e!
       {:class    (<class map-style)
-       :layers
-                 (select-keys
-                   (merge
-                     {:surveys (map-layers/mvt-layer endpoint
-                                                     "mvt_features"
-                                                     {"datasource" (map-controller/datasource-id-by-name app "survey")
-                                                      "types"      "{}"}
-                                                     map-features/survey-style
-                                                     {:opacity 0.5})
-                      :thk-project
-                               (project-road-geometry-layer project endpoint overlays)}
-                     (when-let [candidates (:restriction-candidates-geojson project)]
-                       {:related-restrictions
-                        (map-layers/geojson-data-layer "related-restrictions"
-                                                       candidates
-                                                       map-features/project-related-restriction-style
-                                                       {:opacity 0.5})})
-                     (when-let [candidates (:cadastral-candidates-geojson project)]
-                       {:related-cadastral-units
-                        (map-layers/geojson-data-layer "related-cadastral-units"
-                                                       candidates
-                                                       map-features/cadastral-unit-style
-                                                       {:opacity 0.5})})
-                     (when (and (not-empty road-buffer-meters)
-                                (>= road-buffer-meters 0))
-                       {:thk-project-buffer
-                        (project-road-buffer-layer project endpoint road-buffer-meters)}))
-                   layers)
+       :layers (reduce (fn [layers layer-fn]
+                         (merge layers (layer-fn app project overlays)))
+                       {}
+                       [project-layers/surveys-layer
+                        project-layers/project-road-geometry-layer
+                        project-layers/setup-restriction-candidates
+                        project-layers/setup-cadastral-unit-candidates
+                        project-layers/road-buffer])
        :overlays @overlays}
       map]]))
 
@@ -388,12 +272,12 @@
    app
    project
    breadcrumbs
-   {:keys [header body footer map-settings map-overlay]}]
+   {:keys [header body footer map-settings]}]
   [:div {:class (<class project-style/project-page-structure)}
    [project-header project breadcrumbs]
    [:div {:style {:position "relative"
                   :display  "flex" :flex-direction "column" :flex 1}}
-    [project-map e! app (get-in app [:config :api-url] project) project map-settings (:map app)]
+    [project-map e! app project]
     [Paper {:class (<class project-style/project-content-overlay)}
      header
      [:div {:class (<class project-style/content-overlay-inner)}
