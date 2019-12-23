@@ -142,7 +142,7 @@
       (if (and (project-setup-step app) (not-empty val))
         (t/fx app
               {:tuck.effect/type :debounce
-               :timeout          300
+               :timeout          600
                :effect           (fetch-related-info app val)})
         app)))
 
