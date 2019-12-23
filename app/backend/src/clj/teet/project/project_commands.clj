@@ -13,7 +13,9 @@
   [{conn :conn
     user :user}
    {:thk.project/keys [id owner manager project-name custom-start-m custom-end-m
-                       m-range-change-reason related-restrictions]}]
+                       m-range-change-reason
+                       related-restrictions
+                       related-cadastral-units]}]
   (let [project-in-datomic (d/pull (d/db conn)
                                    [:thk.project/owner :thk.project/estimated-start-date :thk.project/estimated-end-date]
                                    [:thk.project/id id])]
@@ -38,6 +40,8 @@
                                  {:thk.project/m-range-change-reason m-range-change-reason})
                                (when related-restrictions
                                  {:thk.project/related-restrictions related-restrictions})
+                               (when related-cadastral-units
+                                 {:thk.project/related-cadastral-units related-cadastral-units})
                                (modification-meta user))]})]
         (project-geometry/update-project-geometries!
          (environment/config-map {:api-url [:api-url]
