@@ -12,7 +12,10 @@
                 stmt (.createStatement conn)]
       (.execute stmt "CREATE DATABASE teet"))
     (catch Throwable e
-      (println "Unable to create teet database, let's hope it already exists!"))))
+      (let [msg (.getMessage e)]
+        (when (not= msg "ERROR: database \"teet\" already exists")
+          (println "Unable to create teet database: " e)
+          (System/exit 1))))))
 
 (defn migrate [uri user pass]
   (println "Migrate DB: " uri)
