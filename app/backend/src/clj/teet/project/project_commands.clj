@@ -59,7 +59,8 @@
   :ok)
 
 (defmethod db-api/command! :project/delete-activity
-  [{conn :conn}
+  [{conn :conn
+    user :user}
    {activity-id :db/id}]
   (d/transact
     conn
