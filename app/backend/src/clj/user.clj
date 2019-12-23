@@ -57,7 +57,7 @@
 
 (defn retract-from-project!
   "use like: (retract-from-project! \"17187\" :thk.project/manager 45264694692282960)"
-  [project-id a v]  
+  [project-id a v]
   (d/transact (environment/datomic-connection)
               {:tx-data [[:db/retract [:thk.project/id project-id]
                           a v]]}))

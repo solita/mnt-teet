@@ -13,8 +13,8 @@
                  :on-click on-toggle
                  :class (<class container-theme/collapse-button)}
      (if open?
-       [icons/hardware-keyboard-arrow-down {:color :primary}]
-       [icons/hardware-keyboard-arrow-up {:color :primary}])]
+       [icons/hardware-keyboard-arrow-up {:color :primary}]
+       [icons/hardware-keyboard-arrow-down {:color :primary}])]
     [:h3 {:style {:margin 0 :flex 1}}
      heading]
     (when side-component
