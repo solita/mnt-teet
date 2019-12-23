@@ -158,9 +158,9 @@
 
 (defn related-cadastral-units [app {cadastral-units :thk.project/related-cadastral-units} _overlays]
   (when cadastral-units
-    {:related-restrictions
+    {:related-cadastral-units
      (map-layers/geojson-layer (endpoint app)
                                "geojson_features_by_id"
                                {"ids" (str "{" (str/join "," cadastral-units) "}")}
-                               map-features/project-restriction-style
+                               map-features/cadastral-unit-style
                                {})}))
