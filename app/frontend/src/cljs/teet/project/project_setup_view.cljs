@@ -174,11 +174,12 @@
                                                                              (conj % :selected))))
                                            :open?     (@open-types :selected)}
           (str (count checked-restrictions) " selected")
-          (for [restriction (sort-by (juxt :VOOND :teet-id) checked-restrictions)]
-            {:id (:teet-id restriction)
-             :checked?  true
-             :value (:VOOND restriction)
-             :on-change (r/partial toggle-restriction restriction)})])
+          [itemlist/checkbox-list
+           (for [restriction (sort-by (juxt :VOOND :teet-id) checked-restrictions)]
+             {:id (:teet-id restriction)
+              :checked?  true
+              :value (:VOOND restriction)
+              :on-change (r/partial toggle-restriction restriction)})]])
        (doall
          (for [[group restrictions] restrictions-by-type
                :let [group-checked (into #{}
