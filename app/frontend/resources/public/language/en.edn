@@ -111,7 +111,8 @@
    :cadastral-units "Select affected cadastral units",
    :activities "Add design activities",
    :skip-setup "Skip setup",
-   :step-of "Step {current} of {total}"},
+   :step-of "Step {current} of {total}",
+   :selected-count "{selected} of {total} selected"},
   :add-task "Add task",
   :information
   {:estimated-duration "Estimated duration",

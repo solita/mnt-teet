@@ -82,7 +82,7 @@
   :activity/estimated-end-date "Eeldatav lõppkuupäev",
   :user/given-name "Eesnimi",
   :user/person-id "Isikukood",
-  :thk.project/m-range-change-reason nil,
+  :thk.project/m-range-change-reason "Muudatuse alguse / lõpu põhjus",
   :user/roles "Rollid",
   :thk.project/effective-km-range "Km ulatus",
   :task/description "Kirjeldus",
@@ -111,7 +111,8 @@
    :cadastral-units "Valin mõjutatud katastriüksused",
    :activities "Lisan projekteerimine tegevused",
    :skip-setup "Jätan seadistuse vahele",
-   :step-of "Samm {current} / {total}"},
+   :step-of "Samm {current} / {total}",
+   :selected-count "{selected} / {total} valitud"},
   :add-task "Lisan ülesande",
   :information
   {:estimated-duration "Eeldatav kestus",
