@@ -39,6 +39,13 @@
             (catch Exception _ nil))
           (str "Expected valid :spec in " validate-for)))
 
+(defn validate [spec message value ctx]
+  (when-not (s/valid? spec value)
+    (throw (ex-info message
+                    {:explain-data (s/explain-data spec value)
+                     :ctx ctx})))
+  value)
+
 (defmacro defstep
   "Define an integration step. Yields a function that takes the
   context as the first argument and an optional customization map.
@@ -67,31 +74,32 @@
   [step-name {:keys [doc ctx in out]
               :or {ctx 'ctx}}
    & body]
-  (let [{as :as
-         in-path :default-path
-         in-spec :spec} in
-
-        {out-path :default-path
+  (let [{out-path :default-path
          out-spec :spec} out]
-    (assert (symbol? as) "Expected symbol value for :as key in :in map")
     (assert (string? doc) "Provide documentation for this step in :doc key")
-    (validate-spec-and-path in ":in map")
+    (assert (every? symbol? (keys in))
+            "Expected :in map to be a mapping from symbols to definitions")
+    (doseq [[in-sym in-def] in]
+      (assert (keyword? (:path-kw in-def))
+              (str "Specify :path-kw keyword for " (name in-sym) " to override default path."))
+      (validate-spec-and-path in-def (str (name in-sym) " input definition")))
     (validate-spec-and-path out ":out map")
+
     `(defn ~step-name ~doc
        ([~ctx] (~step-name ~ctx {}))
-       ([~ctx overrides#]
-        (let [~as (get-in ~ctx (or (:in-path overrides#)
-                                   ~in-path))]
-          (when-not (s/valid? ~in-spec ~as)
-            (throw (ex-info ~(str (name step-name) ": input validation failed.")
-                            {:explain-data (s/explain-data ~in-spec ~as)
-                             :ctx ~ctx})))
+       ([~ctx ~'overrides]
+        (let [~@(mapcat
+                 (fn [[in-sym {:keys [path-kw default-path spec]}]]
+                   [in-sym `(validate ~spec ~(str "input validation for " (name in-sym))
+                                      (get-in ~ctx (or (~path-kw ~'overrides)
+                                                       ~default-path)))])
+                 in)]
           (let [out# (do ~@body)]
             (when-not (s/valid? ~out-spec out#)
               (throw (ex-info ~(str (name step-name) ": output validation failed.")
                               {:explain-data (s/explain-data ~out-spec out#)
                                :ctx ~ctx})))
             (assoc-in ~ctx
-                      (or (:out-path overrides#)
+                      (or (:out-path ~'overrides)
                           ~out-path)
                       out#)))))))

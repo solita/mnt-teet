@@ -27,9 +27,9 @@
 
 (defstep read-trigger-event
   {:doc "Read file information from an S3 lambda trigger event"
-   :in {:spec ::s3-trigger-event
-        :as lambda-event
-        :default-path [:event]}
+   :in {lambda-event {:spec ::s3-trigger-event
+                      :path-kw :event
+                      :default-path [:event]}}
    :out {:spec ::file-descriptor
          :default-path [:s3]}}
   (-> lambda-event :input
@@ -39,9 +39,9 @@
 (defstep load-file-from-s3
   {:ctx ctx
    :doc "Load file from S3. Result is an input stream."
-   :in {:as fd
-        :spec ::file-descriptor
-        :default-path [:s3]}
+   :in {fd {:spec ::file-descriptor
+            :path-kw :s3
+            :default-path [:s3]}}
    :out {:spec ::file-contents
          :default-path [:file]}}
   (let [{:keys [bucket file-key]} fd]
