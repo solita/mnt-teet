@@ -95,16 +95,20 @@
                                  map-features/project-line-style
                                  options))}))
 
-(defn setup-restriction-candidates [_app project _overlays]
-  (when-let [candidates (:restriction-candidates-geojson project)]
+(defn setup-restriction-candidates [_app {:keys [setup-step
+                                                 restriction-candidates-geojson]} _overlays]
+  (when-let [candidates (and (= setup-step "restrictions")
+                             restriction-candidates-geojson)]
     {:related-restriction-candidates
      (map-layers/geojson-data-layer "related-restriction-candidates"
                                     candidates
                                     map-features/project-related-restriction-style
                                     {:opacity 0.5})}))
 
-(defn setup-cadastral-unit-candidates [_app project _overlays]
-  (when-let [candidates (:cadastral-candidates-geojson project)]
+(defn setup-cadastral-unit-candidates [_app {:keys [setup-step
+                                                    cadastral-candidates-geojson]} _overlays]
+  (when-let [candidates (and (= setup-step "cadastral-units")
+                             cadastral-candidates-geojson)]
     {:related-cadastral-unit-candidates
      (map-layers/geojson-data-layer "related-cadastral-unit-candidates"
                                     candidates
