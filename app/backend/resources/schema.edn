@@ -475,4 +475,10 @@
           {:db/ident :meta/deleted?
            :db/valueType :db.type/boolean
            :db/cardinality :db.cardinality/one
-           :db/doc "If true this entity will not be shown in UI except for special admin functionality."}]]}]
+           :db/doc "If true this entity will not be shown in UI except for special admin functionality."}]]}
+
+ {:db/ident :migration/thk-project-related-cadastral-units
+  :txes     [[{:db/ident       :thk.project/related-cadastral-units
+               :db/valueType   :db.type/string
+               :db/cardinality :db.cardinality/many
+               :db/doc         "Cadastral units related to the THK project"}]]}]

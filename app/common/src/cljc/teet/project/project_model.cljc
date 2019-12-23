@@ -27,7 +27,9 @@
 
 (def project-info-attributes
   (into project-listing-attributes
-        [:thk.project/procurement-nr]))
+        [:thk.project/procurement-nr
+         :thk.project/related-restrictions
+         :thk.project/related-cadastral-units]))
 
 (def project-listing-display-columns
   [:thk.project/project-name
