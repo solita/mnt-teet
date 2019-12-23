@@ -6,7 +6,9 @@
             [teet.road.road-model :as road-model :refer [km->m]]
             [teet.map.map-view :as map-view]
             [teet.project.project-model :as project-model]
-            [teet.project.project-style :as project-style]))
+            [teet.project.project-style :as project-style]
+            [clojure.string :as str]
+            [teet.log :as log]))
 
 (defn- endpoint [app]
   (get-in app [:config :api-url]))
@@ -139,3 +141,22 @@
                (>= road-buffer-meters 0))
       {:thk-project-buffer
        (project-road-buffer-layer project (endpoint app) road-buffer-meters)})))
+
+
+(defn related-restrictions [app {restrictions :thk.project/related-restrictions} _overlays]
+  (when restrictions
+    {:related-restrictions
+     (map-layers/geojson-layer (endpoint app)
+                               "geojson_features_by_id"
+                               {"ids" (str "{" (str/join "," restrictions) "}")}
+                               map-features/project-restriction-style
+                               {})}))
+
+(defn related-cadastral-units [app {cadastral-units :thk.project/related-cadastral-units} _overlays]
+  (when cadastral-units
+    {:related-restrictions
+     (map-layers/geojson-layer (endpoint app)
+                               "geojson_features_by_id"
+                               {"ids" (str "{" (str/join "," cadastral-units) "}")}
+                               map-features/project-restriction-style
+                               {})}))

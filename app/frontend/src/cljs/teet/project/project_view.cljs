@@ -214,7 +214,9 @@
                         project-layers/project-road-geometry-layer
                         project-layers/setup-restriction-candidates
                         project-layers/setup-cadastral-unit-candidates
-                        project-layers/road-buffer])
+                        project-layers/road-buffer
+                        project-layers/related-restrictions
+                        project-layers/related-cadastral-units])
        :overlays @overlays}
       map]]))
 
