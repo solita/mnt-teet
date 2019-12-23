@@ -174,7 +174,8 @@
           {:thk.project/keys [project-name owner manager km-range meter-range-changed-reason]}
           (get-in app [:route :project :basic-information-form])
           [start-km end-km :as custom-km-range] (mapv road-model/parse-km km-range)
-          checked-restrictions (not-empty (get-in app [:route :project :checked-restrictions]))]
+          checked-restrictions (not-empty (get-in app [:route :project :checked-restrictions]))
+          checked-cadastral-units (not-empty (get-in app [:route :project :checked-cadastral-units]))]
       (t/fx app {:tuck.effect/type :command!
                  :command          :thk.project/initialize!
                  :payload          (merge {:thk.project/id id
@@ -189,7 +190,10 @@
                                              :thk.project/custom-end-m (road-model/km->m end-km)})
                                           (when checked-restrictions
                                             {:thk.project/related-restrictions (map :teet-id
-                                                                                    checked-restrictions)}))
+                                                                                    checked-restrictions)})
+                                          (when checked-cadastral-units
+                                            {:thk.project/related-cadastral-units (map :teet-id
+                                                                                    checked-cadastral-units)}))
                  :result-event     common-controller/->Refresh})))
 
   UpdateBasicInformationForm
