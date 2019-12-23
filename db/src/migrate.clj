@@ -8,14 +8,13 @@
 
 (defn ensure-db [uri user pass]
   (try
-    (with-open [conn (DriverManager/getConnection (str/replace uri "/teet" "/postgres") user pass)
+    (with-open [conn (DriverManager/getConnection (str/replace uri #"/teet$" "/postgres") user pass)
                 stmt (.createStatement conn)]
       (.execute stmt "CREATE DATABASE teet"))
     (catch Throwable e
       (let [msg (.getMessage e)]
         (when (not= msg "ERROR: database \"teet\" already exists")
-          (println "Unable to create teet database: " e)
-          (System/exit 1))))))
+          (println "Unable to create teet database: " e))))))
 
 (defn migrate [uri user pass]
   (println "Migrate DB: " uri)
