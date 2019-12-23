@@ -215,15 +215,32 @@
 
 (defn cadastral-units-listing
   [e! {:keys [cadastral-units checked-cadastral-units toggle-cadastral-unit]}]
-  [itemlist/checkbox-list
-   (doall
-     (for [cadastral-unit (sort-by (juxt :VOOND :teet-id) cadastral-units)
-           :let [checked? (checked-cadastral-units cadastral-unit)]]
-       (do (println "cadastral unit" cadastral-unit)
+  (r/with-let [open-types (r/atom #{})]
+    [:<>
+     (when (not-empty checked-cadastral-units)
+       [container/collapsible-container {:on-toggle (fn [_]
+                                                      (swap! open-types #(if (% :selected)
+                                                                           (disj % :selected)
+                                                                           (conj % :selected))))
+                                         :open?     (@open-types :selected)}
+        (str (count checked-cadastral-units) " selected")
+        [itemlist/checkbox-list
+         (for [cadastral-unit (sort-by (juxt :VOOND :teet-id) checked-cadastral-units)]
            {:id        (:teet-id cadastral-unit)
-            :checked?  checked?
+            :checked?  true
             :value     (str (:L_AADRESS cadastral-unit) " " (:TUNNUS cadastral-unit))
-            :on-change (r/partial toggle-cadastral-unit cadastral-unit)})))])
+            :on-change (r/partial toggle-cadastral-unit cadastral-unit)})]])
+
+     [:div {:style {:margin-top "1rem"}}
+      [itemlist/checkbox-list
+       (doall
+         (for [cadastral-unit (sort-by (juxt :VOOND :teet-id) cadastral-units)
+               :let [checked? (checked-cadastral-units cadastral-unit)]]
+           (do (println "cadastral unit" cadastral-unit)
+               {:id        (:teet-id cadastral-unit)
+                :checked?  checked?
+                :value     (str (:L_AADRESS cadastral-unit) " " (:TUNNUS cadastral-unit))
+                :on-change (r/partial toggle-cadastral-unit cadastral-unit)})))]]]))
 
 (defn project-setup-cadastral-units-form [e! _project _step {:keys [road-buffer-meters] :as _map}]
   (e! (project-controller/->FetchRestrictions road-buffer-meters))
