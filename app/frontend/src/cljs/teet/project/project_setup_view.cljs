@@ -189,11 +189,11 @@
                                                           (swap! open-types #(if (% group)
                                                                                (disj % group)
                                                                                (conj % group))))
-                                             :open?     (@open-types group)}
-            [:div  group
-             [typography/SmallText (tr [:project :wizard :selected-count]
-                                       {:selected (count group-checked)
-                                        :total (count restrictions)})]]
+                                             :open?     (@open-types group)
+                                             :side-component [typography/SmallText (tr [:project :wizard :selected-count]
+                                                                                       {:selected (count group-checked)
+                                                                                        :total (count restrictions)})]}
+            group
             [itemlist/checkbox-list
              (for [restriction (sort-by (juxt :VOOND :teet-id) restrictions)
                    :let [checked? (boolean (group-checked restriction))]]
@@ -212,16 +212,26 @@
                                  :checked-restrictions (or checked-restrictions #{})
                                  :toggle-restriction   (e! project-controller/->ToggleRestriction)}])]))
 
-(defn cadastral-units-listing [e! {:keys [cadastral-units checked-cadastral-units toggle-cadastral-unit]}]
-  [:div (pr-str cadastral-units)])
+
+(defn cadastral-units-listing
+  [e! {:keys [cadastral-units checked-cadastral-units toggle-cadastral-unit]}]
+  [itemlist/checkbox-list
+   (doall
+     (for [cadastral-unit (sort-by (juxt :VOOND :teet-id) cadastral-units)
+           :let [checked? (checked-cadastral-units cadastral-unit)]]
+       (do (println "cadastral unit" cadastral-unit)
+           {:id        (:teet-id cadastral-unit)
+            :checked?  checked?
+            :value     (str (:L_AADRESS cadastral-unit) " " (:TUNNUS cadastral-unit))
+            :on-change (r/partial toggle-cadastral-unit cadastral-unit)})))])
 
 (defn project-setup-cadastral-units-form [e! _project _step {:keys [road-buffer-meters] :as _map}]
   (e! (project-controller/->FetchRestrictions road-buffer-meters))
-  (fn [e! {:keys [cadastral-unit-candidates checked-cadastral-units]} {step-label :step-label :as step} map]
+  (fn [e! {:keys [cadastral-candidates checked-cadastral-units]} {step-label :step-label :as step} map]
     [:form {:id        step-label
             :on-submit (e! (project-controller/navigate-to-next-step-event project-setup-steps step))}
-     (when cadastral-unit-candidates
-       [cadastral-units-listing e! {:cadastral-units cadastral-unit-candidates
+     (when cadastral-candidates
+       [cadastral-units-listing e! {:cadastral-units cadastral-candidates
                                     :checked-cadastral-units (or checked-cadastral-units #{})
                                     :toggle-cadastral-unit (e! project-controller/->ToggleCadastralUnit)}])]))
 

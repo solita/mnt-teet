@@ -235,12 +235,13 @@
                                   #{})
           new-cadastral-units (if (old-cadastral-units cadastral-unit)
                                 (disj old-cadastral-units cadastral-unit)
-                                (conj old-cadastral-units cadastral-unit))]
+                                (conj old-cadastral-units cadastral-unit))
+          checked-ids (into #{} (map :teet-id) new-cadastral-units)]
       (map-controller/update-features!
-       "cadastral-unit-candidates"
+       "related-cadastral-unit-candidates"
        (fn [unit]
          (let [id (.get unit "teet-id")]
-           (.set unit "selected" (boolean (new-cadastral-units id))))))
+           (.set unit "selected" (boolean (checked-ids id))))))
       (assoc-in app [:route :project :checked-cadastral-units] new-cadastral-units))))
 
 (extend-protocol t/Event
