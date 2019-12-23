@@ -233,30 +233,6 @@
        [skeleton/skeleton {:style        {:width "70%"}
                            :parent-style (skeleton/restriction-skeleton-style)}]))])
 
-(defn- cadastral-unit-component [e! {:keys [id open? lahiaadress tunnus omandivorm pindala
-                                            maakonna_nimi omavalitsuse_nimi asustusyksuse_nimi sihtotstarve_1 kinnistu_nr]
-                                     :as   _unit}]
-  [container/collapsible-container {:open?     open?
-                                    :on-toggle (e! project-controller/->ToggleCadastralHightlight id)}
-   (str lahiaadress " " tunnus " " omandivorm " " pindala)
-   ;; FIXME: labels into localizations
-   [itemlist/ItemList {:class (<class project-style/restriction-list-style)}
-    [itemlist/Item {:label "Maakonna nimi"} maakonna_nimi]
-    [itemlist/Item {:label "Omavalitsuse nimi"} omavalitsuse_nimi]
-    [itemlist/Item {:label "Asustusyksuse nimi"} asustusyksuse_nimi]
-    [itemlist/Item {:label "Sihtotstarve"} sihtotstarve_1]
-    [itemlist/Item {:label "Kinnistu nr"} kinnistu_nr]]])
-
-(defn project-related-cadastral-units
-  [e! cadastral-units]
-  [:div
-   (doall
-     ;; TODO: Sorted by address etc for Pilot demo
-     (for [{id :id :as unit} (sort-by (juxt :lahiaadress :tunnus :omandivorm :pindala)
-                                      cadastral-units)]
-       ^{:key id}
-       [cadastral-unit-component e! unit]))])
-
 (defn road-geometry-range-input
   [e! {road-buffer-meters :road-buffer-meters}]
   [Paper {:class (<class project-style/road-geometry-range-selector)}
