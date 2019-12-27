@@ -14,6 +14,8 @@
 (defrecord OpenTaskDialog [])
 (defrecord CloseAddDialog [])
 (defrecord SelectProject [project-id])
+(defrecord SelectCadastralUnit [p])
+(defrecord SelectRestriction [p])
 
 (defrecord ToggleRestrictionData [id])
 (defrecord UpdateActivityState [id status])
@@ -30,6 +32,14 @@
 (defmethod common-controller/map-item-selected
   "geojson_thk_project" [p]
   (->SelectProject (:map/id p)))
+
+(defmethod common-controller/map-item-selected
+  "related-cadastral-unit-candidates" [p]
+  (->SelectCadastralUnit p))
+
+(defmethod common-controller/map-item-selected
+  "related-restriction-candidates" [p]
+  (->SelectRestriction p))
 
 (defmethod common-controller/on-server-error :project-already-initialized [err {:keys [params page] :as app}]
   (t/fx (common-controller/default-server-error-handler err app)
@@ -115,6 +125,36 @@
       (fn []
         (->NavigateToStep step-label)))))
 
+(defn toggle-cadastral-unit
+  [app cadastral-unit]
+  (let [old-cadastral-units (or (get-in app [:route :project :checked-cadastral-units])
+                                #{})
+        new-cadastral-units (if (old-cadastral-units cadastral-unit)
+                              (disj old-cadastral-units cadastral-unit)
+                              (conj old-cadastral-units cadastral-unit))
+        checked-ids (into #{} (map :teet-id) new-cadastral-units)]
+    (map-controller/update-features!
+      "related-cadastral-unit-candidates"
+      (fn [unit]
+        (let [id (.get unit "teet-id")]
+          (.set unit "selected" (boolean (checked-ids id))))))
+    (assoc-in app [:route :project :checked-cadastral-units] new-cadastral-units)))
+
+(defn toggle-restriction
+  [app restriction]
+  (let [old-restrictions (or (get-in app [:route :project :checked-restrictions]) #{})
+        new-restrictions (if (old-restrictions restriction)
+                           (disj old-restrictions restriction)
+                           (conj old-restrictions restriction))
+
+        checked-ids (into #{} (map :teet-id) new-restrictions)]
+    (map-controller/update-features!
+      "related-restriction-candidates"
+      (fn [unit]
+        (let [id (.get unit "teet-id")]
+          (.set unit "selected" (boolean (checked-ids id))))))
+    (assoc-in app [:route :project :checked-restrictions] new-restrictions)))
+
 (defn navigate-to-previous-step-event
   "Given `current-step`, navigatest to next step in `steps`"
   [steps {:keys [step-number] :as _current-step}]
@@ -135,6 +175,18 @@
       (-> app
           (assoc-in result-path features)
           (assoc-in geojson-path geojson))))
+
+  SelectCadastralUnit
+  (process-event [{p :p} app]
+    (let [cadastal-candidates (get-in app [:route :project :cadastral-candidates])
+          cadastral-unit (first (filter #(= (:teet-id %) (:map/teet-id p)) cadastal-candidates))]
+      (toggle-cadastral-unit app cadastral-unit)))
+
+  SelectRestriction
+  (process-event [{p :p} app]
+    (let [restriction-candidates (get-in app [:route :project :restriction-candidates])
+          restriction (first (filter #(= (:teet-id %) (:map/teet-id p)) restriction-candidates))]
+      (toggle-restriction app restriction)))
 
   ChangeRoadObjectAoe
   (process-event [{val :val} {:keys [page params] :as app}]
@@ -220,33 +272,11 @@
 
   ToggleRestriction
   (process-event [{restriction :restriction} app]
-    (let [old-restrictions (or (get-in app [:route :project :checked-restrictions]) #{})
-          new-restrictions (if (old-restrictions restriction)
-                             (disj old-restrictions restriction)
-                             (conj old-restrictions restriction))
-
-          checked-ids (into #{} (map :teet-id) new-restrictions)]
-      (map-controller/update-features!
-       "related-restriction-candidates"
-       (fn [unit]
-         (let [id (.get unit "teet-id")]
-           (.set unit "selected" (boolean (checked-ids id))))))
-      (assoc-in app [:route :project :checked-restrictions] new-restrictions)))
+    (toggle-restriction restriction app))
 
   ToggleCadastralUnit
   (process-event [{cadastral-unit :cadastral-unit} app]
-    (let [old-cadastral-units (or (get-in app [:route :project :checked-cadastral-units])
-                                  #{})
-          new-cadastral-units (if (old-cadastral-units cadastral-unit)
-                                (disj old-cadastral-units cadastral-unit)
-                                (conj old-cadastral-units cadastral-unit))
-          checked-ids (into #{} (map :teet-id) new-cadastral-units)]
-      (map-controller/update-features!
-       "related-cadastral-unit-candidates"
-       (fn [unit]
-         (let [id (.get unit "teet-id")]
-           (.set unit "selected" (boolean (checked-ids id))))))
-      (assoc-in app [:route :project :checked-cadastral-units] new-cadastral-units))))
+    (toggle-cadastral-unit app cadastral-unit)))
 
 (extend-protocol t/Event
   SelectProject

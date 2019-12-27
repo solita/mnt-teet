@@ -212,10 +212,10 @@
                         project-layers/project-road-geometry-layer
                         project-layers/setup-restriction-candidates
                         project-layers/setup-cadastral-unit-candidates
-                        project-layers/road-buffer
                         project-layers/related-restrictions
                         project-layers/related-cadastral-units
-                        project-layers/ags-surveys])
+                        project-layers/ags-surveys
+                        project-layers/road-buffer])
        :overlays @overlays}
       map]]))
 

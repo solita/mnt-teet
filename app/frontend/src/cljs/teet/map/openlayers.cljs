@@ -179,14 +179,11 @@
      (+ y1 (/ (- y2 y1) 2))]))
 
 (defn feature-geometry [feature layer]
-  (or
-   ;; Normal geometry layer item
-   (.get feature "teet-geometria")
-
-   ;; Background layer item (from vector tile)
-   {:map/tooltip (.get feature "tooltip")
-    :map/type (.get layer "teet-source")
-    :map/id (.get feature "id")}))
+  ;; Background layer item (from vector tile)
+  {:map/tooltip (.get feature "tooltip")
+   :map/type    (.get layer "teet-source")
+   :map/id      (.get feature "id")
+   :map/teet-id (.get feature "teet-id")})
 
 (defn- event-geometry
   "Obtains geometry for the given ol3 event. Returns the first geometry found."
