@@ -6,7 +6,16 @@
                        goog.math.Long)
                 :clj ([clojure.string :as str]))
             [teet.log :as log]
-            [teet.util.datomic :refer [id=]]))
+            [teet.util.datomic :refer [id=]]
+            [clojure.spec.alpha :as s]))
+
+;; A valid project id is either the :db/id in datomic or
+;; a lookup ref specifying the project id in THK
+(s/def ::id
+  (s/or :db-id integer?
+        :thk-lookup-ref (s/and vector?
+                               (s/cat :ref-kw #(= :thk.project/id %)
+                                      :ref-id string?))))
 
 (def project-listing-attributes
   [:db/id
@@ -95,3 +104,14 @@
 (defn initialized?
   [project]
   (contains? project :thk.project/owner))
+
+(def project-files-xf
+  (comp
+   (mapcat :thk.project/lifecycles)
+   (mapcat :thk.lifecycle/activities)
+   (mapcat :activity/tasks)
+   (mapcat :task/documents)
+   (mapcat :document/files)))
+
+(defn project-files [project]
+  (into [] project-files-xf [project]))
