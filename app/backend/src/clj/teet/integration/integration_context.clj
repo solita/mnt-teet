@@ -92,7 +92,8 @@
                  (fn [[in-sym {:keys [path-kw default-path spec]}]]
                    [in-sym `(validate ~spec ~(str "input validation for " (name in-sym))
                                       (get-in ~ctx (or (~path-kw ~'overrides)
-                                                       ~default-path)))])
+                                                       ~default-path))
+                                      ~ctx)])
                  in)]
           (let [out# (do ~@body)]
             (when-not (s/valid? ~out-spec out#)
