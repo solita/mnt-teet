@@ -172,7 +172,7 @@
   (e! (map-controller/->FetchOverlayForEntityFeature [:route :project :overlays] teet-id)))
 
 (defn ags-surveys [{:keys [e! app project]}]
-  (log/info "ags-surveys called")
+  ;; Create a separate MVT layer for each .ags file in the project
   (reduce
    (fn [layers file]
      (if (str/ends-with? (:file/name file) ".ags")
