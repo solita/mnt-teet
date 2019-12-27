@@ -173,7 +173,7 @@
   [:div "Tässäpä on " teet-id " survey item"])
 
 (defn- ags-on-select [e! {:map/keys [teet-id]}]
-  (e! (map-controller/->FetchOverlayForEntityFeature teet-id)))
+  (e! (map-controller/->FetchOverlayForEntityFeature [:route :project :overlays] teet-id)))
 
 (defn ags-surveys [{:keys [e! app project]}]
   (log/info "ags-surveys called")

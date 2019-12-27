@@ -21,8 +21,8 @@
 (defrecord SetBackgroundLayer [layer])
 (defrecord FetchDatasources [])
 
-(defrecord FetchOverlayForEntityFeature [teet-id])
-(defrecord FetchOverlayForEntityFeatureResponse [teet-id response])
+(defrecord FetchOverlayForEntityFeature [result-path teet-id])
+(defrecord FetchOverlayForEntityFeatureResponse [result-path teet-id response])
 
 (extend-protocol t/Event
   ToggleCategorySelect
@@ -97,21 +97,21 @@
            :result-path [:map :datasources]}))
 
   FetchOverlayForEntityFeature
-  (process-event [{:keys [teet-id]} app]
+  (process-event [{:keys [result-path teet-id]} app]
     (t/fx app
           {:tuck.effect/type :rpc
            :endpoint (get-in app [:config :api-url])
            :rpc "geojson_entity_features_by_id"
            :json? true
            :args {:ids [teet-id]}
-           :result-event (partial ->FetchOverlayForEntityFeatureResponse teet-id)}))
+           :result-event (partial ->FetchOverlayForEntityFeatureResponse result-path teet-id)}))
 
   FetchOverlayForEntityFeatureResponse
-  (process-event [{:keys [teet-id response]} app]
+  (process-event [{:keys [result-path teet-id response]} app]
     (let [geojson (-> response js/JSON.parse ->clj)
           feature (-> geojson :features first)]
       (assoc-in app
-                [:map :overlays]
+                result-path
                 {teet-id
                  {:coordinate (-> feature :geometry :coordinates)
                   :content-data (-> feature :properties)}}))))

@@ -297,8 +297,7 @@
     (t/fx app
       {:tuck.effect/type :navigate
        :page :project
-       :params {:project id}}
-      ))
+       :params {:project id}}))
 
   OpenActivityDialog
   (process-event [_ {:keys [page params query] :as app}]

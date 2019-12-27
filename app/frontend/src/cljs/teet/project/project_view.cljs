@@ -223,7 +223,7 @@
                           project-layers/road-buffer]))
        :overlays (into []
                        (concat
-                        (for [[_ {:keys [coordinate content-data]}] (get-in app [:map :overlays])]
+                        (for [[_ {:keys [coordinate content-data]}] (:overlays project)]
                           {:coordinate coordinate
                            :content [map-view/overlay {:single-line? false
                                                        :width 200
