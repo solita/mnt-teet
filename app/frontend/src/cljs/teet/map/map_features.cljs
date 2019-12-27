@@ -6,6 +6,7 @@
             [ol.style.Stroke]
             [ol.style.Fill]
             [ol.render.Feature]
+            [ol.style.Circle]
             [teet.theme.theme-colors :as theme-colors]))
 
 (def ^:const map-pin "M9.96587 0.5C15.221 0.5 19.5 4.78348 19.5 9.96587C19.5 12.7235 17.9724 15.4076 15.9208 18.0187C14.9006 19.3172 13.7685 20.5764 12.6603 21.802C12.611 21.8565 12.5618 21.911 12.5126 21.9653C11.6179 22.9546 10.7407 23.9244 9.9694 24.8638C9.1882 23.8963 8.29237 22.8969 7.37848 21.8774L7.31238 21.8036C6.21334 20.5775 5.08749 19.3183 4.07125 18.0195C2.02771 15.4079 0.5 12.7237 0.5 9.96587C0.5 4.78126 4.78126 0.5 9.96587 0.5Z")
@@ -147,3 +148,12 @@
                                        :width 2})
         :fill (ol.style.Fill. #js {:cursor :pointer
                                    :color "#af38bc"})}))
+
+(defn ags-survey-style
+  "Show AGS survey feature (point)"
+  [^ol.render.Feature feature _res]
+  (ol.style.Style.
+   #js {:image (ol.style.Circle.
+                #js {:fill (ol.style.Fill. #js {:color "red"})
+                     :stroke (ol.style.Stroke. #js {:color "black"})
+                     :radius 5})}))

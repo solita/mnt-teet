@@ -164,3 +164,19 @@
                                {"ids" (str "{" (str/join "," cadastral-units) "}")}
                                map-features/cadastral-unit-style
                                {})}))
+
+(defn ags-surveys [app project _overlays]
+  (reduce
+   (fn [layers file]
+     (if (str/ends-with? (:file/name file) ".ags")
+       (assoc layers
+              (str "ags-survey-" (:db/id file))
+              (map-layers/mvt-layer (endpoint app)
+                                    "mvt_entity_features"
+                                    {"entity" (str (:db/id file))
+                                     "types" "{}"}
+                                    map-features/ags-survey-style
+                                    {}))
+       layers))
+   {}
+   (project-model/project-files project)))

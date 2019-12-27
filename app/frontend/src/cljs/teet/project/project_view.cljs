@@ -198,9 +198,7 @@
   []
   {:flex 1})
 
-(defn project-map [e!
-                   app
-                   project]
+(defn project-map [e! app project]
   (r/with-let [overlays (r/atom [])]
     [:div {:style {:flex           1
                    :display        :flex
@@ -210,13 +208,14 @@
        :layers (reduce (fn [layers layer-fn]
                          (merge layers (layer-fn app project overlays)))
                        {}
-                       [project-layers/surveys-layer
+                       [#_project-layers/surveys-layer
                         project-layers/project-road-geometry-layer
                         project-layers/setup-restriction-candidates
                         project-layers/setup-cadastral-unit-candidates
                         project-layers/road-buffer
                         project-layers/related-restrictions
-                        project-layers/related-cadastral-units])
+                        project-layers/related-cadastral-units
+                        project-layers/ags-surveys])
        :overlays @overlays}
       map]]))
 
