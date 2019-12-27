@@ -183,15 +183,17 @@
   {:map/tooltip (.get feature "tooltip")
    :map/type    (.get layer "teet-source")
    :map/id      (.get feature "id")
-   :map/teet-id (.get feature "teet-id")})
+   :map/teet-id (.get feature "teet-id")
+   :on-select (.get layer "teet-on-select")})
 
 (defn- event-geometry
   "Obtains geometry for the given ol3 event. Returns the first geometry found."
   ([this e] (event-geometry this e true))
   ([this e return-first?]
    (let [geom (volatile! [])
-         {:keys [ol3]} (reagent/state this)]
-     (.forEachFeatureAtPixel ol3 (.-pixel e)
+         {:keys [ol3]} (reagent/state this)
+         pixel (.-pixel e)]
+     (.forEachFeatureAtPixel ol3 pixel
                              (fn [feature layer]
                                (vswap! geom conj (feature-geometry feature layer))
                                return-first?)
@@ -249,8 +251,8 @@
            (kasittelija (event-description this e))
 
            (if-let [g (event-geometry this e true)]
-             (do
-               (log/info "on-select" g)
+             (if-let [source-on-select (:on-select g)]
+               (source-on-select g)
                (when on-select (on-select [g] e)))
              (do
                (log/info "on-click" e)

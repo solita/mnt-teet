@@ -4,7 +4,8 @@
             [teet.map.openlayers :as openlayers]
             [teet.log :as log]
             [teet.common.common-controller :as common-controller]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [cljs-bean.core :refer [->clj]]))
 
 (defn atleast-one-open?
   [layers]
@@ -19,6 +20,9 @@
 (defrecord CloseMapControls [])
 (defrecord SetBackgroundLayer [layer])
 (defrecord FetchDatasources [])
+
+(defrecord FetchOverlayForEntityFeature [teet-id])
+(defrecord FetchOverlayForEntityFeatureResponse [teet-id response])
 
 (extend-protocol t/Event
   ToggleCategorySelect
@@ -90,7 +94,27 @@
            :endpoint (get-in app [:config :api-url])
            :rpc "datasources"
            :args {}
-           :result-path [:map :datasources]})))
+           :result-path [:map :datasources]}))
+
+  FetchOverlayForEntityFeature
+  (process-event [{:keys [teet-id]} app]
+    (t/fx app
+          {:tuck.effect/type :rpc
+           :endpoint (get-in app [:config :api-url])
+           :rpc "geojson_entity_features_by_id"
+           :json? true
+           :args {:ids [teet-id]}
+           :result-event (partial ->FetchOverlayForEntityFeatureResponse teet-id)}))
+
+  FetchOverlayForEntityFeatureResponse
+  (process-event [{:keys [teet-id response]} app]
+    (let [geojson (-> response js/JSON.parse ->clj)
+          feature (-> geojson :features first)]
+      (assoc-in app
+                [:map :overlays]
+                {teet-id
+                 {:coordinate (-> feature :geometry :coordinates)
+                  :content-data (-> feature :properties)}}))))
 
 (defn update-features! [layer-name update-fn & args]
   (let [^ol.Map m (openlayers/get-the-map)]

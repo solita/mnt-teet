@@ -216,10 +216,11 @@
 
 (defn overlay
   "Helper for creating map overlay components"
-  [{:keys [arrow-direction height]
-    :or {height 60}} content]
-  [:div {:class (<class map-styles/map-overlay-container height arrow-direction)}
+  [{:keys [arrow-direction width height single-line?]
+    :or {height 60
+         single-line? true}} content]
+  [:div {:class (<class map-styles/map-overlay-container width height arrow-direction)}
    (when arrow-direction
-     [:div {:class (<class map-styles/map-overlay-arrow height arrow-direction)}])
-   [:div {:class (<class map-styles/map-overlay-content)}
+     [:div {:class (<class map-styles/map-overlay-arrow width height arrow-direction)}])
+   [:div {:class (<class map-styles/map-overlay-content single-line?)}
     content]])

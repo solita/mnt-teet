@@ -8,12 +8,13 @@
             [teet.project.project-model :as project-model]
             [teet.project.project-style :as project-style]
             [clojure.string :as str]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [reagent.core :as r]))
 
 (defn- endpoint [app]
   (get-in app [:config :api-url]))
 
-(defn surveys-layer [app _project _overlays]
+(defn surveys-layer [{app :app}]
   {:surveys (map-layers/mvt-layer (endpoint app)
                                   "mvt_features"
                                   {"datasource" (map-controller/datasource-id-by-name app "survey")
@@ -46,10 +47,10 @@
 (defn project-road-geometry-layer
   "Show project geometry or custom road part in case the start and end
   km are being edited during initialization"
-  [app
-   {:thk.project/keys [start-m end-m road-nr carriageway]
-    :keys             [basic-information-form] :as project}
-   overlays]
+  [{app :app
+    {:thk.project/keys [start-m end-m road-nr carriageway]
+     :keys             [basic-information-form] :as project} :project
+    set-overlays! :set-overlays!}]
   (let [endpoint (endpoint app)
         [start-label end-label]
         (if basic-information-form
@@ -67,7 +68,7 @@
                  :fit-padding  [0 0 0 (* 1.05 (project-style/project-panel-width))]
                  :on-load      (partial km-range-label-overlays
                                         start-label end-label
-                                        #(reset! overlays %))}]
+                                        set-overlays!)}]
 
     {:thk-project
      (if basic-information-form
@@ -86,7 +87,7 @@
             (merge options
                    {:content-type "application/json"}))
            ;; Needed to remove road ending markers
-           (do (reset! overlays nil)
+           (do (set-overlays! nil)
                nil)))
 
        (map-layers/geojson-layer endpoint
@@ -95,8 +96,8 @@
                                  map-features/project-line-style
                                  options))}))
 
-(defn setup-restriction-candidates [_app {:keys [setup-step
-                                                 restriction-candidates-geojson]} _overlays]
+(defn setup-restriction-candidates [{{:keys [setup-step
+                                              restriction-candidates-geojson]} :project}]
   (when-let [candidates (and (= setup-step "restrictions")
                              restriction-candidates-geojson)]
     {:related-restriction-candidates
@@ -105,8 +106,8 @@
                                     map-features/project-related-restriction-style
                                     {:opacity 0.5})}))
 
-(defn setup-cadastral-unit-candidates [_app {:keys [setup-step
-                                                    cadastral-candidates-geojson]} _overlays]
+(defn setup-cadastral-unit-candidates [{{:keys [setup-step
+                                                 cadastral-candidates-geojson]} :project}]
   (when-let [candidates (and (= setup-step "cadastral-units")
                              cadastral-candidates-geojson)]
     {:related-cadastral-unit-candidates
@@ -139,7 +140,7 @@
             map-features/road-buffer-fill-style
             {:content-type "application/json"}))))))
 
-(defn road-buffer [app project _overlays]
+(defn road-buffer [{:keys [app project]}]
   (let [road-buffer-meters (get-in app [:map :road-buffer-meters])]
     (when (and (not-empty road-buffer-meters)
                (>= road-buffer-meters 0))
@@ -147,7 +148,8 @@
        (project-road-buffer-layer project (endpoint app) road-buffer-meters)})))
 
 
-(defn related-restrictions [app {restrictions :thk.project/related-restrictions} _overlays]
+(defn related-restrictions [{app :app
+                             {restrictions :thk.project/related-restrictions} :project}]
   (when restrictions
     {:related-restrictions
      (map-layers/geojson-layer (endpoint app)
@@ -156,7 +158,8 @@
                                map-features/project-restriction-style
                                {})}))
 
-(defn related-cadastral-units [app {cadastral-units :thk.project/related-cadastral-units} _overlays]
+(defn related-cadastral-units [{app :app
+                                {cadastral-units :thk.project/related-cadastral-units} :project}]
   (when cadastral-units
     {:related-cadastral-units
      (map-layers/geojson-layer (endpoint app)
@@ -165,18 +168,26 @@
                                map-features/cadastral-unit-style
                                {})}))
 
-(defn ags-surveys [app project _overlays]
+(defn- ags-overlay [e! teet-id]
+
+  [:div "Tässäpä on " teet-id " survey item"])
+
+(defn- ags-on-select [e! {:map/keys [teet-id]}]
+  (e! (map-controller/->FetchOverlayForEntityFeature teet-id)))
+
+(defn ags-surveys [{:keys [e! app project]}]
+  (log/info "ags-surveys called")
   (reduce
    (fn [layers file]
      (if (str/ends-with? (:file/name file) ".ags")
        (assoc layers
-              (str "ags-survey-" (:db/id file))
+              (str "ags-survey-" (str (:db/id file)))
               (map-layers/mvt-layer (endpoint app)
                                     "mvt_entity_features"
                                     {"entity" (str (:db/id file))
                                      "types" "{}"}
                                     map-features/ags-survey-style
-                                    {}))
+                                    {:on-select (r/partial ags-on-select e!)}))
        layers))
    {}
    (project-model/project-files project)))

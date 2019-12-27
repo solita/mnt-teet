@@ -54,7 +54,9 @@
   ;; FIXME
   {})
 
-(defrecord MVT [url source-name projection extent z-index selitteet opacity_ min-resolution max-resolution parametrit style-fn]
+(defrecord MVT [url source-name projection extent z-index selitteet opacity_
+                min-resolution max-resolution
+                parametrit style-fn on-select]
   Layer
   (set-z-index [this z-index]
     (assoc this :z-index z-index))
@@ -84,6 +86,9 @@
                              }))]
 
       (.set ol-layer "teet-layer-name" (name source-name))
+      (when on-select
+        (.set ol-layer "teet-on-select" on-select))
+
       (.setStyle ol-layer style-fn)
 
       (when (number? min-resolution)
@@ -124,4 +129,4 @@
       ch)))
 
 (defn luo-mvt-taso [source-name projection extent selitteet opacity min-resolution max-resolution parametrit style-fn]
-  (->MVT "maprender/mvt" source-name projection extent 99 selitteet opacity min-resolution max-resolution parametrit style-fn))
+  (->MVT "maprender/mvt" source-name projection extent 99 selitteet opacity min-resolution max-resolution parametrit style-fn nil))

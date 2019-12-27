@@ -86,7 +86,7 @@ CREATE OR REPLACE FUNCTION teet.geojson_entity_features_by_id(
 RETURNS TEXT
 AS $$
 WITH features AS (
-  SELECT left(x.id, position(':' in x.id) - 1)::integer as entity,
+  SELECT left(x.id, position(':' in x.id) - 1)::bigint as entity,
          right(x.id, -position(':' in x.id)) as id
     FROM unnest(ids) x (id)
 )
@@ -127,3 +127,4 @@ GRANT EXECUTE ON FUNCTION teet.geojson_entity_related_features(BIGINT,INT[],INTE
 GRANT EXECUTE ON FUNCTION teet.geojson_features_by_id(TEXT[]) TO teet_user;
 GRANT EXECUTE ON FUNCTION teet.datasources() TO teet_user;
 GRANT EXECUTE ON FUNCTION teet.upsert_entity_feature(TEXT,TEXT,TEXT,TEXT,TEXT,JSONB) TO teet_backend;
+GRANT EXECUTE ON FUNCTION teet.geojson_entity_features_by_id(TEXT[]) TO teet_user;

@@ -199,24 +199,40 @@
   {:flex 1})
 
 (defn project-map [e! app project]
-  (r/with-let [overlays (r/atom [])]
+  (r/with-let [overlays (r/atom [])
+               set-overlays! #(reset! overlays %)]
     [:div {:style {:flex           1
                    :display        :flex
                    :flex-direction :column}}
      [map-view/map-view e!
       {:class    (<class map-style)
-       :layers (reduce (fn [layers layer-fn]
-                         (merge layers (layer-fn app project overlays)))
-                       {}
-                       [project-layers/surveys-layer
-                        project-layers/project-road-geometry-layer
-                        project-layers/setup-restriction-candidates
-                        project-layers/setup-cadastral-unit-candidates
-                        project-layers/related-restrictions
-                        project-layers/related-cadastral-units
-                        project-layers/ags-surveys
-                        project-layers/road-buffer])
-       :overlays @overlays}
+       :layers (let [opts {:e! e!
+                           :app app
+                           :project project
+                           :set-overlays! set-overlays!}]
+                 (reduce (fn [layers layer-fn]
+                           (merge layers (layer-fn opts)))
+                         {}
+                         [#_project-layers/surveys-layer
+                          project-layers/project-road-geometry-layer
+                          project-layers/setup-restriction-candidates
+                          project-layers/setup-cadastral-unit-candidates
+                          project-layers/related-restrictions
+                          project-layers/related-cadastral-units
+                          project-layers/ags-surveys
+                          project-layers/road-buffer]))
+       :overlays (into []
+                       (concat
+                        (for [[_ {:keys [coordinate content-data]}] (get-in app [:map :overlays])]
+                          {:coordinate coordinate
+                           :content [map-view/overlay {:single-line? false
+                                                       :width 200
+                                                       :height nil
+                                                       :arrow-direction :top}
+                                     [itemlist/ItemList {}
+                                      (for [[k v] content-data]
+                                        [itemlist/Item {:label k} v])]]})
+                        @overlays))}
       map]]))
 
 (defn collapse-skeleton

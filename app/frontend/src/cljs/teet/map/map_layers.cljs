@@ -15,9 +15,10 @@
                                         (js/encodeURIComponent val))))
                       params))))
 
-(defn mvt-layer [endpoint rpc-name parameters style-fn {:keys [min-resolution max-resolution z-index opacity]
-                                                        :or {z-index 99
-                                                             opacity 1}}]
+(defn mvt-layer [endpoint rpc-name parameters style-fn
+                 {:keys [min-resolution max-resolution z-index opacity on-select]
+                  :or {z-index 99
+                       opacity 1}}]
   (mvt/->MVT (str endpoint "/rpc/" rpc-name) ; base url
              rpc-name ; source-name
              default-projection
@@ -27,7 +28,8 @@
              opacity
              min-resolution max-resolution
              parameters
-             style-fn))
+             style-fn
+             on-select))
 
 (defn fit-extent
   [padding {extent :extent}]
