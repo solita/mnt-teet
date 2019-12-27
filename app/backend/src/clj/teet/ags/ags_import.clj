@@ -112,13 +112,17 @@
                     :geometry geometry
                     :properties properties}))})))))
 
+(defn import-project-ags-files [ctx]
+  (-> ctx
+      fetch-project-ags-files
+      load-ags-files
+      prepare-features
+      upsert-features))
+
 (comment
   (->> {:conn (teet.environment/datomic-connection)
         :project [:thk.project/id "14612"]
         :api-url "http://localhost:3000"
         :api-secret "secret1234567890secret1234567890"}
-       fetch-project-ags-files
-       load-ags-files
-       prepare-features
-       upsert-features
+       import-project-ags-files
        (spit "debug")))
