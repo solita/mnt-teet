@@ -68,7 +68,7 @@
   Caller is responsible for keeping the input open until all output
   has been consumed."
   [input]
-  (groups-seq (line-seq (io/reader input))))
+  (groups-seq (line-seq (io/reader input :encoding "ISO-8859-1"))))
 
 (defn t1 []
   (def g1 (with-open [in (io/reader f)] (doall (parse in)))))

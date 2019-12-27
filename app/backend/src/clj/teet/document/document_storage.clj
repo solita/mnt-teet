@@ -21,3 +21,10 @@
 
 (def download-url (partial presigned-url "GET"))
 (def upload-url (partial presigned-url "PUT"))
+
+(defn document-s3-ref
+  "Returns an integration S3 file descriptor for a document."
+  [{id :db/id
+    name :file/name}]
+  {:bucket (storage-bucket)
+   :file-key (str id "-" name)})
