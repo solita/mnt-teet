@@ -168,10 +168,6 @@
                                map-features/cadastral-unit-style
                                {})}))
 
-(defn- ags-overlay [e! teet-id]
-
-  [:div "Tässäpä on " teet-id " survey item"])
-
 (defn- ags-on-select [e! {:map/keys [teet-id]}]
   (e! (map-controller/->FetchOverlayForEntityFeature [:route :project :overlays] teet-id)))
 
