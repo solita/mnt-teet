@@ -208,7 +208,7 @@
        :layers (reduce (fn [layers layer-fn]
                          (merge layers (layer-fn app project overlays)))
                        {}
-                       [#_project-layers/surveys-layer
+                       [project-layers/surveys-layer
                         project-layers/project-road-geometry-layer
                         project-layers/setup-restriction-candidates
                         project-layers/setup-cadastral-unit-candidates
