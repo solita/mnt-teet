@@ -21,7 +21,8 @@
                          :thk.lifecycle/type
                          {:thk.lifecycle/activities
                           [*
-                           {:activity/tasks [*]}]}]}])
+                           {:activity/tasks [*
+                                             {:task/documents [{:document/files [*]}]}]}]}]}])
             [:thk.project/id id])))
 
 (defmethod db-api/query :thk.project/fetch-task [{db :db} {project-id :thk.project/id
