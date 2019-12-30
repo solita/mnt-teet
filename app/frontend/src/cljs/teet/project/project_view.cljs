@@ -217,10 +217,12 @@
                           project-layers/project-road-geometry-layer
                           project-layers/setup-restriction-candidates
                           project-layers/setup-cadastral-unit-candidates
+                          project-layers/ags-surveys
+                          project-layers/road-buffer
                           project-layers/related-restrictions
                           project-layers/related-cadastral-units
-                          project-layers/ags-surveys
-                          project-layers/road-buffer]))
+                          project-layers/selected-cadastral-units
+                          project-layers/selected-restrictions]))
        :overlays (into []
                        (concat
                         (for [[_ {:keys [coordinate content-data]}] (:overlays project)]
