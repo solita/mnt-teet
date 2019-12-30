@@ -153,8 +153,8 @@
   "Show project related restriction as a filled area."
   [^ol.render.Feature _feature _res]
   (ol.style.Style.
-    #js {:stroke (ol.style.Stroke. #js {:color "rgba(255,0,0,1)"
-                                        :width 1})
+    #js {:stroke (ol.style.Stroke. #js {:color "rgba(0,255,0,1)"
+                                        :width 2})
          :fill   (ol.style.Fill. #js {:color "rgba(0,255,0,1)"})
          :zIndex 3}))
 
