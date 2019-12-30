@@ -172,7 +172,7 @@
 (defn- ags-on-select [e! {:map/keys [teet-id]}]
   (e! (map-controller/->FetchOverlayForEntityFeature [:route :project :overlays] teet-id)))
 
-(defn selected-cadastral-units [app {:keys [checked-cadastral-geojson] :as project} _overlays]
+(defn selected-cadastral-units [{{:keys [checked-cadastral-geojson]} :project}]
   (when checked-cadastral-geojson
     {:checked-cadastral-geojson
      (map-layers/geojson-data-layer "selected-cadastral-units"
@@ -180,7 +180,7 @@
                                     map-features/selected-cadastral-unit-style
                                     {:opacity 0.5})}))
 
-(defn selected-restrictions [app {:keys [checked-restrictions-geojson] :as project} _overlays]
+(defn selected-restrictions [{{:keys [checked-restrictions-geojson]} :project}]
   (when checked-restrictions-geojson
     {:checked-restrictions-geojson
      (map-layers/geojson-data-layer "selected-restrictions"
@@ -188,7 +188,7 @@
                                     map-features/selected-restrictions-style
                                     {:opacity 0.5})}))
 
-(defn ags-surveys [app project _overlays]
+(defn ags-surveys [{{:keys [e! app] :as project} :project}]
   (reduce
    (fn [layers file]
      (if (str/ends-with? (:file/name file) ".ags")
