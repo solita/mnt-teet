@@ -3,6 +3,7 @@
   (:require [tuck.core :as t]
             [teet.common.common-controller :as common-controller]
             [teet.log :as log]
+            [cljs-bean.core :refer [->clj ->js]]
             [teet.project.project-model :as project-model]
             [teet.road.road-model :as road-model]
             [teet.map.map-controller :as map-controller]
@@ -36,6 +37,14 @@
 (defmethod common-controller/map-item-selected
   "related-cadastral-unit-candidates" [p]
   (->SelectCadastralUnit p))
+
+(defmethod common-controller/map-item-selected
+  "selected-cadastral-units" [p]
+  (->SelectCadastralUnit p))
+
+(defmethod common-controller/map-item-selected
+  "selected-restrictions" [p]
+  (->SelectRestriction p))
 
 (defmethod common-controller/map-item-selected
   "related-restriction-candidates" [p]
@@ -132,28 +141,54 @@
         new-cadastral-units (if (old-cadastral-units cadastral-unit)
                               (disj old-cadastral-units cadastral-unit)
                               (conj old-cadastral-units cadastral-unit))
-        checked-ids (into #{} (map :teet-id) new-cadastral-units)]
-    (map-controller/update-features!
-      "related-cadastral-unit-candidates"
-      (fn [unit]
-        (let [id (.get unit "teet-id")]
-          (.set unit "selected" (boolean (checked-ids id))))))
-    (assoc-in app [:route :project :checked-cadastral-units] new-cadastral-units)))
+        cadastral-candidates-geojson (get-in app [:route :project :cadastral-candidates-geojson])
+        candidates-match (->> cadastral-candidates-geojson
+                              ->clj
+                              :features
+                              (filter #(= (get-in % [:properties :teet-id]) (:teet-id cadastral-unit)))
+                               first)
+        checked-match (first
+                        (filter
+                          #(= (get-in % [:properties :teet-id]) (:teet-id cadastral-unit))
+                          (get-in app [:route :project :checked-cadastral-geojson])))
+        cadastral-geojson (or checked-match candidates-match)
+        old-cadastral-geojson (or (get-in app [:route :project :checked-cadastral-geojson])
+                                  #{})
+        new-cadastral-geojson (if (old-cadastral-geojson cadastral-geojson)
+                                (disj old-cadastral-geojson cadastral-geojson)
+                                (conj old-cadastral-geojson cadastral-geojson))]
+    (-> app
+        (assoc-in [:route :project :checked-cadastral-geojson] new-cadastral-geojson)
+        (assoc-in [:route :project :checked-cadastral-units] new-cadastral-units))))
 
 (defn toggle-restriction
   [app restriction]
-  (let [old-restrictions (or (get-in app [:route :project :checked-restrictions]) #{})
+  (let [old-restrictions (or (get-in app [:route :project :checked-restrictions])
+                             #{})
         new-restrictions (if (old-restrictions restriction)
                            (disj old-restrictions restriction)
                            (conj old-restrictions restriction))
+        restriction-candidates-geojson (get-in app [:route :project :restriction-candidates-geojson])
+        candidates-match (->> restriction-candidates-geojson
+                              ->clj
+                              :features
+                              (filter #(= (get-in % [:properties :teet-id]) (:teet-id restriction)))
+                              first)
+        checked-match (first
+                        (filter
+                          #(= (get-in % [:properties :teet-id]) (:teet-id restriction))
+                          (get-in app [:route :project :checked-restrictions-geojson])))
 
-        checked-ids (into #{} (map :teet-id) new-restrictions)]
-    (map-controller/update-features!
-      "related-restriction-candidates"
-      (fn [unit]
-        (let [id (.get unit "teet-id")]
-          (.set unit "selected" (boolean (checked-ids id))))))
-    (assoc-in app [:route :project :checked-restrictions] new-restrictions)))
+        restriction-geojson (or checked-match candidates-match)
+        old-restrictions-geojson (or (get-in app [:route :project :checked-restrictions-geojson])
+                                     #{})
+        new-restrictions-geojson (if (old-restrictions-geojson restriction-geojson)
+                                   (disj old-restrictions-geojson restriction-geojson)
+                                   (conj old-restrictions-geojson restriction-geojson))]
+
+    (-> app
+      (assoc-in [:route :project :checked-restrictions] new-restrictions)
+      (assoc-in [:route :project :checked-restrictions-geojson] new-restrictions-geojson))))
 
 (defn navigate-to-previous-step-event
   "Given `current-step`, navigatest to next step in `steps`"
@@ -178,14 +213,20 @@
 
   SelectCadastralUnit
   (process-event [{p :p} app]
-    (let [cadastal-candidates (get-in app [:route :project :cadastral-candidates])
-          cadastral-unit (first (filter #(= (:teet-id %) (:map/teet-id p)) cadastal-candidates))]
+    (let [cadastral-candidates (get-in app [:route :project :cadastral-candidates])
+          cadastral-selections (get-in app [:route :project :checked-cadastral-units])
+          cadastral-unit (or
+                           (first (filter #(= (:teet-id %) (:map/teet-id p)) cadastral-selections))
+                           (first (filter #(= (:teet-id %) (:map/teet-id p)) cadastral-candidates)))]
       (toggle-cadastral-unit app cadastral-unit)))
 
   SelectRestriction
   (process-event [{p :p} app]
     (let [restriction-candidates (get-in app [:route :project :restriction-candidates])
-          restriction (first (filter #(= (:teet-id %) (:map/teet-id p)) restriction-candidates))]
+          restriction-selections (get-in app [:route :project :checked-restrictions])
+          restriction (or
+                        (first (filter #(= (:teet-id %) (:map/teet-id p)) restriction-selections))
+                        (first (filter #(= (:teet-id %) (:map/teet-id p)) restriction-candidates)))]
       (toggle-restriction app restriction)))
 
   ChangeRoadObjectAoe
@@ -272,7 +313,7 @@
 
   ToggleRestriction
   (process-event [{restriction :restriction} app]
-    (toggle-restriction restriction app))
+    (toggle-restriction app restriction))
 
   ToggleCadastralUnit
   (process-event [{cadastral-unit :cadastral-unit} app]

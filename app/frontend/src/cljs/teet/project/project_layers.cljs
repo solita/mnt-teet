@@ -4,6 +4,7 @@
             [teet.map.map-controller :as map-controller]
             [teet.map.map-features :as map-features]
             [teet.road.road-model :as road-model :refer [km->m]]
+            [cljs-bean.core :refer [->clj ->js]]
             [teet.map.map-view :as map-view]
             [teet.project.project-model :as project-model]
             [teet.project.project-style :as project-style]
@@ -171,8 +172,23 @@
 (defn- ags-on-select [e! {:map/keys [teet-id]}]
   (e! (map-controller/->FetchOverlayForEntityFeature [:route :project :overlays] teet-id)))
 
-(defn ags-surveys [{:keys [e! app project]}]
-  ;; Create a separate MVT layer for each .ags file in the project
+(defn selected-cadastral-units [app {:keys [checked-cadastral-geojson] :as project} _overlays]
+  (when checked-cadastral-geojson
+    {:checked-cadastral-geojson
+     (map-layers/geojson-data-layer "selected-cadastral-units"
+                                    (->js (assoc {"type" "FeatureCollection"} "features" (into [] checked-cadastral-geojson)))
+                                    map-features/selected-cadastral-unit-style
+                                    {:opacity 0.5})}))
+
+(defn selected-restrictions [app {:keys [checked-restrictions-geojson] :as project} _overlays]
+  (when checked-restrictions-geojson
+    {:checked-restrictions-geojson
+     (map-layers/geojson-data-layer "selected-restrictions"
+                                    (->js (assoc {"type" "FeatureCollection"} "features" (into [] checked-restrictions-geojson)))
+                                    map-features/selected-restrictions-style
+                                    {:opacity 0.5})}))
+
+(defn ags-surveys [app project _overlays]
   (reduce
    (fn [layers file]
      (if (str/ends-with? (:file/name file) ".ags")
