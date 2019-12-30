@@ -140,6 +140,25 @@
                                                "rgba(0,0,255,1)"
                                                "rgba(40,40,255, 0.20)")})})))
 
+(defn selected-cadastral-unit-style
+  "style for selected cadastral units"
+  [^ol.render.Feature _feature _res]
+  (ol.style.Style.
+    #js {:stroke (ol.style.Stroke. #js {:color "rgba(40,40,255,0.90)"
+                                        :width 2})
+         :fill   (ol.style.Fill. #js {:cursor :pointer
+                                      :color  "rgba(0,0,255,1)"})}))
+
+(defn selected-restrictions-style
+  "Show project related restriction as a filled area."
+  [^ol.render.Feature _feature _res]
+  (ol.style.Style.
+    #js {:stroke (ol.style.Stroke. #js {:color "rgba(255,0,0,1)"
+                                        :width 1})
+         :fill   (ol.style.Fill. #js {:color "rgba(0,255,0,1)"})
+         :zIndex 3}))
+
+
 (defn survey-style
   "Show survey area."
   [^ol.render.Feature feature _res]
