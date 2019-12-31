@@ -9,7 +9,9 @@
             [teet.theme.theme-colors :as theme-colors]
             [teet.theme.itemlist-theme :as itemlist-theme]
             [herb.core :refer [<class]]
-            [teet.ui.util :as util]))
+            [teet.ui.util :as util]
+            [teet.util.collection :as uc]
+            [teet.map.map-controller :as map-controller]))
 
 (defn ListHeading
   [{:keys [title subtitle action variant]
@@ -89,17 +91,20 @@
    [:b (str label ": ")]
    value])
 
-(defn checkbox-item [{:keys [checked? value on-change]}]
-  [:div {:style {:margin-left "1rem"}}
-   [FormControlLabel
-    {:label (r/as-component [:span
-                             {:class (<class itemlist-theme/checkbox-label checked?)}
-                             value])
-     :control (r/as-component [Checkbox {:checked checked?
-                                         :value value
-                                         :class (<class itemlist-theme/layer-checkbox)
-                                         :color :primary
-                                         :on-change on-change}])}]])
+(defn checkbox-item [{:keys [checked? value on-change on-mouse-enter on-mouse-leave] :as item}]
+  [FormControlLabel
+   (uc/without-nils {:style          {:padding-left "45px"
+                                      :width        "100%"}
+                     :on-mouse-enter on-mouse-enter
+                     :on-mouse-leave on-mouse-leave
+                     :label          (r/as-component [:span
+                                                      {:class (<class itemlist-theme/checkbox-label checked?)}
+                                                      value])
+                     :control        (r/as-component [Checkbox {:checked   checked?
+                                                                :value     value
+                                                                :class     (<class itemlist-theme/layer-checkbox)
+                                                                :color     :primary
+                                                                :on-change on-change}])})])
 
 (defn checkbox-list
   ([items] (checkbox-list {} items))

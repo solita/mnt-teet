@@ -163,23 +163,28 @@
       [select/select-user {:e! e!}]]]))
 
 (defn restrictions-listing
-  [e! {:keys [restrictions checked-restrictions toggle-restriction]}]
+  [e! road-buffer-meters {:keys [restrictions checked-restrictions toggle-restriction on-mouse-enter on-mouse-leave]}]
   (let [restrictions-by-type (group-by :VOOND restrictions)]
     (r/with-let [open-types (r/atom #{})]
       [:<>
-       (when (not-empty checked-restrictions)
-         [container/collapsible-container {:on-toggle (fn [_]
-                                                        (swap! open-types #(if (% :selected)
-                                                                             (disj % :selected)
-                                                                             (conj % :selected))))
-                                           :open?     (@open-types :selected)}
-          (str (count checked-restrictions) " selected")
+       [container/collapsible-container {:on-toggle (fn [_]
+                                                      (swap! open-types #(if (% :selected)
+                                                                           (disj % :selected)
+                                                                           (conj % :selected))))
+                                         :open?     (@open-types :selected)}
+        (str (count checked-restrictions) " selected")
+        (when (not-empty checked-restrictions)
           [itemlist/checkbox-list
            (for [restriction (sort-by (juxt :VOOND :teet-id) checked-restrictions)]
-             {:id (:teet-id restriction)
-              :checked?  true
-              :value (:VOOND restriction)
-              :on-change (r/partial toggle-restriction restriction)})]])
+             (merge {:id        (:teet-id restriction)
+                     :checked?  true
+                     :value     (:VOOND restriction)
+                     :on-change (r/partial toggle-restriction restriction)}
+                    (when on-mouse-enter
+                      {:on-mouse-enter (r/partial on-mouse-enter restriction)})
+                    (when on-mouse-leave
+                      {:on-mouse-leave (r/partial on-mouse-leave restriction)})))])]
+       [:h2 {:style {:padding-left "1rem"}} (str "Inclusion distance: " road-buffer-meters)] ;;TODO add localization
        (doall
          (for [[group restrictions] restrictions-by-type
                :let [group-checked (into #{}
@@ -200,7 +205,9 @@
                {:id        (:teet-id restriction)
                 :checked?  checked?
                 :value     (:VOOND restriction)
-                :on-change (r/partial toggle-restriction restriction)})]]))])))
+                :on-change (r/partial toggle-restriction restriction)
+                :on-mouse-enter (r/partial on-mouse-enter restriction)
+                :on-mouse-leave (r/partial on-mouse-leave restriction)})]]))])))
 
 (defn project-setup-restrictions-form [e! _project _step {:keys [road-buffer-meters] :as _map}]
   (e! (project-controller/->FetchRestrictions road-buffer-meters))
@@ -208,38 +215,48 @@
     [:form {:id        step-label
             :on-submit (e! (project-controller/navigate-to-next-step-event project-setup-steps step))}
      (when restriction-candidates
-       [restrictions-listing e! {:restrictions         restriction-candidates
-                                 :checked-restrictions (or checked-restrictions #{})
-                                 :toggle-restriction   (e! project-controller/->ToggleRestriction)}])]))
+       [restrictions-listing e!
+        road-buffer-meters
+        {:restrictions         restriction-candidates
+         :checked-restrictions (or checked-restrictions #{})
+         :toggle-restriction   (e! project-controller/->ToggleRestriction)
+         :on-mouse-enter       (e! project-controller/->FeatureMouseOvers "related-restriction-candidates" true)
+         :on-mouse-leave       (e! project-controller/->FeatureMouseOvers "related-restriction-candidates" false)}])]))
 
 
 (defn cadastral-units-listing
-  [e! {:keys [cadastral-units checked-cadastral-units toggle-cadastral-unit]}]
+  [e! road-buffer-meters {:keys [cadastral-units checked-cadastral-units toggle-cadastral-unit on-mouse-enter on-mouse-leave]}]
   (r/with-let [open-types (r/atom #{})]
     [:<>
-     (when (not-empty checked-cadastral-units)
-       [container/collapsible-container {:on-toggle (fn [_]
-                                                      (swap! open-types #(if (% :selected)
-                                                                           (disj % :selected)
-                                                                           (conj % :selected))))
-                                         :open?     (@open-types :selected)}
-        (str (count checked-cadastral-units) " selected")
+     [container/collapsible-container {:on-toggle (fn [_]
+                                                    (swap! open-types #(if (% :selected)
+                                                                         (disj % :selected)
+                                                                         (conj % :selected))))
+                                       :open?     (@open-types :selected)}
+      (str (count checked-cadastral-units) " selected")
+      (when (not-empty checked-cadastral-units)
         [itemlist/checkbox-list
          (for [cadastral-unit (sort-by (juxt :VOOND :teet-id) checked-cadastral-units)]
-           {:id        (:teet-id cadastral-unit)
-            :checked?  true
-            :value     (str (:L_AADRESS cadastral-unit) " " (:TUNNUS cadastral-unit))
-            :on-change (r/partial toggle-cadastral-unit cadastral-unit)})]])
+           {:id             (:teet-id cadastral-unit)
+            :checked?       true
+            :value          (str (:L_AADRESS cadastral-unit) " " (:TUNNUS cadastral-unit))
+            :on-change      (r/partial toggle-cadastral-unit cadastral-unit)
+            :on-mouse-enter (r/partial on-mouse-enter cadastral-unit)
+            :on-mouse-leave (r/partial on-mouse-leave cadastral-unit)})])]
+
+     [:h2 {:style {:padding-left "1rem"}} (str "Inclusion distance: " road-buffer-meters)] ;;todo add localization
 
      [:div {:style {:margin-top "1rem"}}
       [itemlist/checkbox-list
        (doall
          (for [cadastral-unit (sort-by (juxt :VOOND :teet-id) cadastral-units)
                :let [checked? (checked-cadastral-units cadastral-unit)]]
-           {:id        (:teet-id cadastral-unit)
-            :checked?  checked?
-            :value     (str (:L_AADRESS cadastral-unit) " " (:TUNNUS cadastral-unit))
-            :on-change (r/partial toggle-cadastral-unit cadastral-unit)}))]]]))
+           {:id             (:teet-id cadastral-unit)
+            :checked?       checked?
+            :value          (str (:L_AADRESS cadastral-unit) " " (:TUNNUS cadastral-unit))
+            :on-change      (r/partial toggle-cadastral-unit cadastral-unit)
+            :on-mouse-enter (r/partial on-mouse-enter cadastral-unit)
+            :on-mouse-leave (r/partial on-mouse-leave cadastral-unit)}))]]]))
 
 (defn project-setup-cadastral-units-form [e! _project _step {:keys [road-buffer-meters] :as _map}]
   (e! (project-controller/->FetchRestrictions road-buffer-meters))
@@ -247,9 +264,13 @@
     [:form {:id        step-label
             :on-submit (e! (project-controller/navigate-to-next-step-event project-setup-steps step))}
      (when cadastral-candidates
-       [cadastral-units-listing e! {:cadastral-units cadastral-candidates
-                                    :checked-cadastral-units (or checked-cadastral-units #{})
-                                    :toggle-cadastral-unit (e! project-controller/->ToggleCadastralUnit)}])]))
+       [cadastral-units-listing e!
+        road-buffer-meters
+        {:cadastral-units         cadastral-candidates
+         :checked-cadastral-units (or checked-cadastral-units #{})
+         :toggle-cadastral-unit   (e! project-controller/->ToggleCadastralUnit)
+         :on-mouse-enter          (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" true)
+         :on-mouse-leave          (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" false)}])]))
 
 
 (def project-setup-steps

@@ -84,6 +84,7 @@
 (defrecord FetchRestrictions [road-buffer-meters])
 (defrecord ToggleRestriction [restriction])
 (defrecord ToggleCadastralUnit [cadastral-unit])
+(defrecord FeatureMouseOvers [layer enter? feature])
 
 (defrecord PostActivityEditForm [])
 (defrecord OpenEditActivityDialog [])
@@ -311,13 +312,28 @@
     (t/fx app
           (fetch-related-info app road-buffer-meters)))
 
+
   ToggleRestriction
   (process-event [{restriction :restriction} app]
     (toggle-restriction app restriction))
 
   ToggleCadastralUnit
   (process-event [{cadastral-unit :cadastral-unit} app]
-    (toggle-cadastral-unit app cadastral-unit)))
+    (toggle-cadastral-unit app cadastral-unit))
+
+  FeatureMouseOvers
+  (process-event [{layer :layer
+                   enter? :enter?
+                   feature :feature}
+                  app]
+    (map-controller/update-features!
+      layer
+      (fn [unit]
+        (let [id (.get unit "teet-id")]
+          (when (= id (:teet-id feature))
+            (.set unit "hover" enter?)))))
+    app))
+
 
 (extend-protocol t/Event
   SelectProject
