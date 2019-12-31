@@ -7,7 +7,7 @@
             [teet.ui.progress :as progress]
             [teet.ui.typography :refer [Heading2 Heading3 SectionHeading DataLabel]]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.theme.itemlist-theme :as itemlist-theme]
+            [teet.theme.itemlist-styles :as itemlist-styles]
             [herb.core :refer [<class]]
             [teet.ui.util :as util]
             [teet.util.collection :as uc]
@@ -16,12 +16,12 @@
 (defn ListHeading
   [{:keys [title subtitle action variant]
     :or {variant :primary}}]
-  [:div {:class (<class itemlist-theme/heading variant)}
+  [:div {:class (<class itemlist-styles/heading variant)}
    (case variant
      :primary [Heading2 title]
      :secondary [Heading3 title])
    (when action
-     [:div {:class (<class itemlist-theme/heading-action)}
+     [:div {:class (<class itemlist-styles/heading-action)}
       action])
    (when subtitle
      [DataLabel subtitle])])
@@ -93,16 +93,15 @@
 
 (defn checkbox-item [{:keys [checked? value on-change on-mouse-enter on-mouse-leave] :as item}]
   [FormControlLabel
-   (uc/without-nils {:style          {:padding-left "45px"
-                                      :width        "100%"}
+   (uc/without-nils {:class (<class itemlist-styles/checkbox-container)
                      :on-mouse-enter on-mouse-enter
                      :on-mouse-leave on-mouse-leave
                      :label          (r/as-component [:span
-                                                      {:class (<class itemlist-theme/checkbox-label checked?)}
+                                                      {:class (<class itemlist-styles/checkbox-label checked?)}
                                                       value])
                      :control        (r/as-component [Checkbox {:checked   checked?
                                                                 :value     value
-                                                                :class     (<class itemlist-theme/layer-checkbox)
+                                                                :class     (<class itemlist-styles/layer-checkbox)
                                                                 :color     :primary
                                                                 :on-change on-change}])})])
 
@@ -111,7 +110,7 @@
   ([{:keys [key]
      :or {key :id}}
     items]
-   [:div {:class (<class itemlist-theme/checkbox-list-contents)}
+   [:div {:class (<class itemlist-styles/checkbox-list-contents)}
     (doall
      (for [item items]
        ^{:key (key item)}
