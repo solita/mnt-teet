@@ -190,24 +190,30 @@
                :let [group-checked (into #{}
                                          (filter checked-restrictions restrictions))]]
            ^{:key group}
-           [container/collapsible-container {:on-toggle (fn [_]
-                                                          (swap! open-types #(if (% group)
-                                                                               (disj % group)
-                                                                               (conj % group))))
-                                             :open?     (@open-types group)
+           [container/collapsible-container {:on-toggle      (fn [_]
+                                                               (swap! open-types #(if (% group)
+                                                                                    (disj % group)
+                                                                                    (conj % group)))
+                                                               (e! (project-controller/->ToggleRestrictionCategory
+                                                                     (into #{}
+                                                                           (mapv :teet-id restrictions))
+                                                                     (@open-types group))))
+                                             :open?          (@open-types group)
                                              :side-component [typography/SmallText (tr [:project :wizard :selected-count]
                                                                                        {:selected (count group-checked)
-                                                                                        :total (count restrictions)})]}
+                                                                                        :total    (count restrictions)})]}
             group
             [itemlist/checkbox-list
              (for [restriction (sort-by (juxt :VOOND :teet-id) restrictions)
                    :let [checked? (boolean (group-checked restriction))]]
-               {:id        (:teet-id restriction)
-                :checked?  checked?
-                :value     (:VOOND restriction)
-                :on-change (r/partial toggle-restriction restriction)
-                :on-mouse-enter (r/partial on-mouse-enter restriction)
-                :on-mouse-leave (r/partial on-mouse-leave restriction)})]]))])))
+               (merge {:id        (:teet-id restriction)
+                       :checked?  checked?
+                       :value     (:VOOND restriction)
+                       :on-change (r/partial toggle-restriction restriction)}
+                      (when on-mouse-enter
+                        {:on-mouse-enter (r/partial on-mouse-enter restriction)})
+                      (when on-mouse-leave
+                        {:on-mouse-leave (r/partial on-mouse-leave restriction)})))]]))])))
 
 (defn project-setup-restrictions-form [e! _project _step {:keys [road-buffer-meters] :as _map}]
   (e! (project-controller/->FetchRestrictions road-buffer-meters))

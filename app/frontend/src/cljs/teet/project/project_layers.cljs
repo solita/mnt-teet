@@ -98,9 +98,9 @@
                                  options))}))
 
 (defn setup-restriction-candidates [{{:keys [setup-step
-                                              restriction-candidates-geojson]} :project}]
+                                            open-restrictions-geojsons]} :project}]
   (when-let [candidates (and (= setup-step "restrictions")
-                             restriction-candidates-geojson)]
+                             open-restrictions-geojsons)]
     {:related-restriction-candidates
      (map-layers/geojson-data-layer "related-restriction-candidates"
                                     candidates
