@@ -94,10 +94,12 @@
   (let [hover? (.get feature "hover")]
     (ol.style.Style.
       #js {:stroke (ol.style.Stroke. #js {:color "rgba(143,0,255,0.8)"
-                                          :width 1})
-           :fill (ol.style.Fill. #js {:color (if hover?
-                                               "rgba(143,0,255,0.5)"
-                                               (restriction-fill feature "rgba(143,0,255,0.2)"))})
+                                          :width (if hover?
+                                                   3
+                                                   1)})
+           :fill   (ol.style.Fill. #js {:color (if hover?
+                                                 "rgba(143,0,255,0.5)"
+                                                 (restriction-fill feature "rgba(143,0,255,0.2)"))})
            :zIndex 3})))
 
 (defn project-restriction-style
