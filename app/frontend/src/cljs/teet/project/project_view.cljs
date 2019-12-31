@@ -214,11 +214,11 @@
                            (merge layers (layer-fn opts)))
                          {}
                          [#_project-layers/surveys-layer
+                          project-layers/road-buffer
                           project-layers/project-road-geometry-layer
                           project-layers/setup-restriction-candidates
                           project-layers/setup-cadastral-unit-candidates
                           project-layers/ags-surveys
-                          project-layers/road-buffer
                           project-layers/related-restrictions
                           project-layers/related-cadastral-units
                           project-layers/selected-cadastral-units

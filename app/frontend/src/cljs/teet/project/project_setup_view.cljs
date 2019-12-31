@@ -163,15 +163,12 @@
       [select/select-user {:e! e!}]]]))
 
 (defn restrictions-listing
-  [e! road-buffer-meters {:keys [restrictions checked-restrictions toggle-restriction on-mouse-enter on-mouse-leave]}]
+  [e! open-types road-buffer-meters {:keys [restrictions checked-restrictions toggle-restriction on-mouse-enter on-mouse-leave]}]
   (let [restrictions-by-type (group-by :VOOND restrictions)]
-    (r/with-let [open-types (r/atom #{})]
+    (r/with-let []
       [:<>
-       [container/collapsible-container {:on-toggle (fn [_]
-                                                      (swap! open-types #(if (% :selected)
-                                                                           (disj % :selected)
-                                                                           (conj % :selected))))
-                                         :open?     (@open-types :selected)}
+       [container/collapsible-container {:on-toggle (e! project-controller/->ToggleSelectedCategory)
+                                         :open?     (open-types :selected)}
         (str (count checked-restrictions) " selected")
         (when (not-empty checked-restrictions)
           [itemlist/checkbox-list
@@ -191,14 +188,11 @@
                                          (filter checked-restrictions restrictions))]]
            ^{:key group}
            [container/collapsible-container {:on-toggle      (fn [_]
-                                                               (swap! open-types #(if (% group)
-                                                                                    (disj % group)
-                                                                                    (conj % group)))
                                                                (e! (project-controller/->ToggleRestrictionCategory
                                                                      (into #{}
                                                                            (mapv :teet-id restrictions))
-                                                                     (@open-types group))))
-                                             :open?          (@open-types group)
+                                                                     group)))
+                                             :open?          (open-types group)
                                              :side-component [typography/SmallText (tr [:project :wizard :selected-count]
                                                                                        {:selected (count group-checked)
                                                                                         :total    (count restrictions)})]}
@@ -217,11 +211,12 @@
 
 (defn project-setup-restrictions-form [e! _project _step {:keys [road-buffer-meters] :as _map}]
   (e! (project-controller/->FetchRestrictions road-buffer-meters))
-  (fn [e! {:keys [restriction-candidates checked-restrictions] :as _project} {step-label :step-label :as step} _map]
+  (fn [e! {:keys [restriction-candidates checked-restrictions open-types] :or {open-types #{}} :as _project} {step-label :step-label :as step} _map]
     [:form {:id        step-label
             :on-submit (e! (project-controller/navigate-to-next-step-event project-setup-steps step))}
      (when restriction-candidates
        [restrictions-listing e!
+        open-types
         road-buffer-meters
         {:restrictions         restriction-candidates
          :checked-restrictions (or checked-restrictions #{})

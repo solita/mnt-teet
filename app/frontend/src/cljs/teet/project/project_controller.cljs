@@ -85,7 +85,8 @@
 (defrecord ToggleRestriction [restriction])
 (defrecord ToggleCadastralUnit [cadastral-unit])
 (defrecord FeatureMouseOvers [layer enter? feature])
-(defrecord ToggleRestrictionCategory [restrictions opening?])
+(defrecord ToggleRestrictionCategory [restrictions group])
+(defrecord ToggleSelectedCategory [])
 
 (defrecord PostActivityEditForm [])
 (defrecord OpenEditActivityDialog [])
@@ -322,11 +323,26 @@
   (process-event [{cadastral-unit :cadastral-unit} app]
     (toggle-cadastral-unit app cadastral-unit))
 
+  ToggleSelectedCategory
+  (process-event [{} app]
+    (let [open-types (or (get-in app [:route :project :open-types])
+                        #{})
+          new-open-types (if (open-types :selected)
+                          (disj open-types :selected)
+                          (conj open-types :selected))]
+      (assoc-in app [:route :project :open-types] new-open-types)))
+
   ToggleRestrictionCategory
   (process-event [{restrictictions :restrictions
-                   opening?        :opening?} app]
+                   group           :group} app]
     ;;Given a set of restriction ids and whether they are being opened, select a set of geojsons to show on map.
-    (let [restriction-geojsons (get-in app [:route :project :restriction-candidates-geojson])
+    (let [open-types (or (get-in app [:route :project :open-types])
+                         #{})
+          opening? (not (open-types group))
+          new-open-types (if (open-types group)
+                           (disj open-types group)
+                           (conj open-types group))
+          restriction-geojsons (get-in app [:route :project :restriction-candidates-geojson])
           previously-open-geojsons (-> (get-in app [:route :project :open-restrictions-geojsons])
                                        ->clj
                                        :features)
@@ -343,7 +359,9 @@
                             (into [])
                             (assoc {"type" "FeatureCollection"} "features")
                             ->js)]
-      (assoc-in app [:route :project :open-restrictions-geojsons] new-geojsons)))
+      (-> app
+          (assoc-in [:route :project :open-types] new-open-types)
+          (assoc-in [:route :project :open-restrictions-geojsons] new-geojsons))))
 
   FeatureMouseOvers
   (process-event [{layer   :layer
