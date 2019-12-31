@@ -105,7 +105,7 @@
      (map-layers/geojson-data-layer "related-restriction-candidates"
                                     candidates
                                     map-features/project-related-restriction-style
-                                    {:opacity 0.5})}))
+                                    {:opacity 1})}))
 
 (defn setup-cadastral-unit-candidates [{{:keys [setup-step
                                                  cadastral-candidates-geojson]} :project}]
@@ -115,7 +115,7 @@
      (map-layers/geojson-data-layer "related-cadastral-unit-candidates"
                                     candidates
                                     map-features/cadastral-unit-style
-                                    {:opacity 0.5})}))
+                                    {:opacity 1})}))
 
 
 (defn project-road-buffer-layer
@@ -172,21 +172,25 @@
 (defn- ags-on-select [e! {:map/keys [teet-id]}]
   (e! (map-controller/->FetchOverlayForEntityFeature [:route :project :overlays] teet-id)))
 
-(defn selected-cadastral-units [{{:keys [checked-cadastral-geojson]} :project}]
-  (when checked-cadastral-geojson
+(defn selected-cadastral-units [{{checked-cadastral-geojson :checked-cadastral-geojson
+                                  setup-step :setup-step} :project}]
+  (when (and checked-cadastral-geojson
+             (= setup-step "cadastral-units"))
     {:checked-cadastral-geojson
      (map-layers/geojson-data-layer "selected-cadastral-units"
                                     (->js (assoc {"type" "FeatureCollection"} "features" (into [] checked-cadastral-geojson)))
                                     map-features/selected-cadastral-unit-style
-                                    {:opacity 0.5})}))
+                                    {:opacity 1})}))
 
-(defn selected-restrictions [{{:keys [checked-restrictions-geojson]} :project}]
-  (when checked-restrictions-geojson
+(defn selected-restrictions [{{checked-restrictions-geojson :checked-restrictions-geojson
+                               setup-step :setup-step} :project}]
+  (when (and checked-restrictions-geojson
+             (= setup-step "restrictions"))
     {:checked-restrictions-geojson
      (map-layers/geojson-data-layer "selected-restrictions"
                                     (->js (assoc {"type" "FeatureCollection"} "features" (into [] checked-restrictions-geojson)))
                                     map-features/selected-restrictions-style
-                                    {:opacity 0.5})}))
+                                    {:opacity 1})}))
 
 (defn ags-surveys [{{:keys [e! app] :as project} :project}]
   (reduce
