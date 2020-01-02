@@ -16,8 +16,7 @@
 
 (defn spinner-style
   []
-  {:height          "100%"
-   :width           "100%"
+  {:flex            1
    :align-items     :center
    :display         :flex
    :justify-content :center})

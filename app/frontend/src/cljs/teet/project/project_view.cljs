@@ -198,7 +198,7 @@
   []
   {:flex 1})
 
-(defn project-map [e! app project]
+(defn project-map [e! {:keys [map] :as app} project]
   (r/with-let [overlays (r/atom [])
                set-overlays! #(reset! overlays %)]
     [:div {:style {:flex           1
@@ -214,11 +214,11 @@
                            (merge layers (layer-fn opts)))
                          {}
                          [#_project-layers/surveys-layer
+                          project-layers/road-buffer
                           project-layers/project-road-geometry-layer
                           project-layers/setup-restriction-candidates
                           project-layers/setup-cadastral-unit-candidates
                           project-layers/ags-surveys
-                          project-layers/road-buffer
                           project-layers/related-restrictions
                           project-layers/related-cadastral-units
                           project-layers/selected-cadastral-units

@@ -91,22 +91,25 @@
 (defn project-related-restriction-style
   "Show project related restriction as a filled area."
   [^ol.render.Feature feature _res]
-  (let [selected? (.get feature "selected")]
+  (let [hover? (.get feature "hover")]
     (ol.style.Style.
-      #js {:stroke (ol.style.Stroke. #js {:color "rgba(255,0,0,1)"
-                                          :width 1})
-           :fill (ol.style.Fill. #js {:color (if selected?
-                                               "rgba(0,255,0,1)"
-                                               (restriction-fill feature "#f26060"))})
+      #js {:stroke (ol.style.Stroke. #js {:color "rgba(143,0,255,0.8)"
+                                          :width (if hover?
+                                                   3
+                                                   1)})
+           :fill   (ol.style.Fill. #js {:color (if hover?
+                                                 "rgba(143,0,255,0.5)"
+                                                 (restriction-fill feature "rgba(143,0,255,0.2)"))})
            :zIndex 3})))
 
 (defn project-restriction-style
   "Show restriction geometrys as area. Restrictions are all (multi)polygons."
   [^ol.render.Feature feature _res]
   (ol.style.Style.
-    #js {:stroke (ol.style.Stroke. #js {:color "rgba(255,0,0,90)"
-                                        :width 2})
-         :fill (ol.style.Fill. #js {:color (restriction-fill feature "rgba(200,50,50, 0.20)")})}))
+    #js {:stroke (ol.style.Stroke. #js {:color "rgba(143,0,255,0.8)"
+                                        :width 1})
+         :fill   (ol.style.Fill. #js {:color "rgba(143,0,255,0.2)"})
+         :zIndex 3}))
 
 (defn project-pin-style
   "Show project centroid as a pin icon."
@@ -130,33 +133,34 @@
 
 (defn cadastral-unit-style
   "Show cadastral unit."
-  [^ol.render.Feature feature _res]
-  (let [selected? (.get feature "selected")]
+  [^ol.render.Feature feature res]
+  (let [hover? (.get feature "hover")]
     (ol.style.Style.
-      #js {:stroke (ol.style.Stroke. #js {:color "rgba(40,40,255,0.90)"
-                                          :width 2})
-           :fill (ol.style.Fill. #js {:cursor :pointer
-                                      :color (if selected?
-                                               "rgba(0,0,255,1)"
-                                               "rgba(40,40,255, 0.20)")})})))
+      #js {:stroke (ol.style.Stroke. #js {:color    "rgba(0,0,0,0.6)"
+                                          :lineDash #js [(/ 15 res), (/ 30 res)] ;;TOdo fix issues with zooming
+                                          :width    2})
+           :fill   (ol.style.Fill. #js {:cursor :pointer
+                                        :color  (if hover?
+                                                  "rgba(100,110,105,0.6)"
+                                                  "rgba(186,187,171,0.6)")})})))
 
 (defn selected-cadastral-unit-style
   "style for selected cadastral units"
   [^ol.render.Feature _feature _res]
   (ol.style.Style.
-    #js {:stroke (ol.style.Stroke. #js {:color "rgba(40,40,255,0.90)"
+    #js {:stroke (ol.style.Stroke. #js {:color "rgba(0,94,135,0.8)"
                                         :width 2})
          :fill   (ol.style.Fill. #js {:cursor :pointer
-                                      :color  "rgba(0,0,255,1)"})}))
+                                      :color  "rgba(0,94,135,0.5)"})}))
 
 (defn selected-restrictions-style
   "Show project related restriction as a filled area."
   [^ol.render.Feature _feature _res]
   (ol.style.Style.
-    #js {:stroke (ol.style.Stroke. #js {:color "rgba(0,255,0,1)"
+    #js {:stroke (ol.style.Stroke. #js {:color "rgba(0,94,135,0.8)"
                                         :width 2})
-         :fill   (ol.style.Fill. #js {:color "rgba(0,255,0,1)"})
-         :zIndex 3}))
+         :fill   (ol.style.Fill. #js {:cursor :pointer
+                                      :color  "rgba(0,94,135,0.5)"})}))
 
 
 (defn survey-style

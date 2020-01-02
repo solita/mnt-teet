@@ -118,10 +118,10 @@
                          {:delete (task-controller/->DeleteTask (:task params))}))]
      [:span])])
 
-(defn task-page [e! {{:keys [project]} :params
-                     {:keys [add-document edit] :as query} :query
+(defn task-page [e! {{:keys [add-document edit] :as query} :query
                      new-document :new-document :as app}
-                 {:task/keys [documents description type assignee status modified] :as task}
+                 {type :task/type
+                  project :project :as task}
                  breadcrumbs]
   [:div {:style {:padding "1.5rem 1.875rem"
                  :display :flex
@@ -149,4 +149,4 @@
      [Grid {:item true
             :style {:display :flex}
             :xs   3}
-      [project-view/project-map e! app (get-in app [:config :api-url]) (:project task) project (:map app)]]]]])
+      [project-view/project-map e! app project]]]]])
