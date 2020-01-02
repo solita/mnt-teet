@@ -33,14 +33,19 @@
 ;;
 ;; Ion appender
 ;;
-(defn- ion-appender [{:keys [level msg_ ?ns-str ?line] :as l1}]
+(defn- ion-appender [{:keys [level msg_ ?ns-str ?line ?err] :as l1}]
   (def l l1)
   ((case level
      (:error :warn :fatal) cast/alert
      :info cast/event
      cast/dev)
-   {:msg (force msg_)
-    :source/location (str ?ns-str ":" ?line)}))
+   (merge
+    {:msg (force msg_)
+     :source/location (str ?ns-str ":" ?line)}
+    (when ?err
+      {:exception/trace (str/join "\n" (.getStackTrace ?err))
+       :exception/type (-> ?err .getClass .getName)
+       :exception/message (.getMessage ?err)}))))
 
 (defn enable-ion-cast-appender! []
   (timbre/merge-config!
