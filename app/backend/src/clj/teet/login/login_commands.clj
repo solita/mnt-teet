@@ -43,10 +43,12 @@
                                    {:user/keys [id given-name family-name email person-id]
                                     site-password :site-password}]
   (d/transact conn {:tx-data [{:user/id id}]})
-  #_(when (not= :dev (environment/config-value :env))
-      (log/warn "Demo login can only be used in :dev environment")
-      (throw (ex-info "Demo login not allowed"
-                      {:demo-user user})))
+
+
+  (when-not (environment/feature-enabled? :dummy-login)
+    (log/warn "Demo login can only be used in dev environment")
+    (throw (ex-info "Demo login not allowed"
+                    {:demo-user id})))
 
   (if (environment/check-site-password site-password)
     (let [secret (environment/config-value :auth :jwt-secret)

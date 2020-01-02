@@ -59,8 +59,9 @@
                                   (ssm-param :api :jwt-secret))
                  bap (ssm-param :api :basic-auth-password)
                  tara (tara-config)
-                 ;; enabled-features (enabled-features-config)
+                 ;;
                  config (-> config
+                            (assoc :enabled-features (enabled-features-config))
                             (assoc :tara tara)
                             (assoc :session-cookie-key
                                    (ssm-param :auth :session-key))
