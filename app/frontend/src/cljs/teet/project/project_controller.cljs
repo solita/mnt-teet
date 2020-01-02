@@ -334,14 +334,15 @@
 
   ToggleRestrictionCategory
   (process-event [{restrictictions :restrictions
-                   group           :group} app]
+                   group           :group}
+                  app]
     ;;Given a set of restriction ids and whether they are being opened, select a set of geojsons to show on map.
     (let [open-types (or (get-in app [:route :project :open-types])
                          #{})
           opening? (not (open-types group))
-          new-open-types (if (open-types group)
-                           (disj open-types group)
-                           (conj open-types group))
+          new-open-types (if opening?
+                           (conj open-types group)
+                           (disj open-types group))
           restriction-geojsons (get-in app [:route :project :restriction-candidates-geojson])
           previously-open-geojsons (-> (get-in app [:route :project :open-restrictions-geojsons])
                                        ->clj
