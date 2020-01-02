@@ -192,7 +192,7 @@
                                     map-features/selected-restrictions-style
                                     {:opacity 1})}))
 
-(defn ags-surveys [{{:keys [e! app] :as project} :project}]
+(defn ags-surveys [{:keys [e! app project]}]
   (reduce
    (fn [layers file]
      (if (str/ends-with? (:file/name file) ".ags")
