@@ -251,7 +251,7 @@
       [itemlist/checkbox-list
        (doall
          (for [cadastral-unit (sort-by (juxt :VOOND :teet-id) cadastral-units)
-               :let [checked? (checked-cadastral-units cadastral-unit)]]
+               :let [checked? (boolean (checked-cadastral-units cadastral-unit))]]
            {:id             (:teet-id cadastral-unit)
             :checked?       checked?
             :value          (str (:L_AADRESS cadastral-unit) " " (:TUNNUS cadastral-unit))
