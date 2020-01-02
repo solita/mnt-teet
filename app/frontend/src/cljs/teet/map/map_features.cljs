@@ -133,12 +133,12 @@
 
 (defn cadastral-unit-style
   "Show cadastral unit."
-  [^ol.render.Feature feature _res]
+  [^ol.render.Feature feature res]
   (let [hover? (.get feature "hover")]
     (ol.style.Style.
       #js {:stroke (ol.style.Stroke. #js {:color    "rgba(0,0,0,0.6)"
-                                          :lineDash #js [15, 15] ;;TOdo fix issues with zooming
-                                          :width 2})
+                                          :lineDash #js [(/ 15 res), (/ 15 res)] ;;TOdo fix issues with zooming
+                                          :width    2})
            :fill   (ol.style.Fill. #js {:cursor :pointer
                                         :color  (if hover?
                                                   "rgba(100,110,105,0.6)"
