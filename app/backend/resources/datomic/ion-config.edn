@@ -18,7 +18,7 @@
            {:fn teet.thk.thk-integration-ion/process-thk-file
             :description "Process THK CSV file"}
 
-           :post-upload
+           :process-upload
            {:fn teet.document.document-import/import-uploaded-file
             :description "Import uploaded file"}
 
