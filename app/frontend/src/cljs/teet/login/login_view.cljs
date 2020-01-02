@@ -21,6 +21,11 @@
    [:span {:class (<class login-styles/logo-text)}
     "MAANTEEAMET"]])
 
+(defn- dummy-login? []
+  (let [host js/window.location.hostname]
+    (or (= host "localhost")
+        (= host "dev-teet.solitacloud.fi"))))
+
 (defn login-page [e! _]
   (e! (login-controller/->CheckSessionToken))
   (fn [e! {login :login}]
@@ -30,22 +35,24 @@
       [Link {:href "/oauth2/request"
              :class (<class login-styles/tara-login)}
        "TARA login"]
-      [Divider]
-      [:div {:class (<class login-styles/user-list)}
-       [TextField {:label "Password"
-                   :id "password-textfield"
-                   :type "password"
-                   :variant :outlined
-                   :style {:margin-bottom "2rem"}
-                   :value (get login :password "")
-                   :on-change (fn pw-on-change! [e]
-                                (e! (login-controller/->SetPassword (-> e .-target .-value)))
-                                #_(log/info "password changed"))}]
-       (doall
-        (for [{:user/keys [email family-name] :as user} login-controller/mock-users]
-          ^{:key email}
-          [buttons/white-button-with-icon {:icon icons/navigation-arrow-forward
-                                           :on-click #(do
-                                                        (e! (login-controller/->Login user))
-                                                        (log/info "Start login: " user))}
-           (str "Login as " family-name)]))]]]))
+      (when (dummy-login?)
+        [:<>
+         [Divider]
+         [:div {:class (<class login-styles/user-list)}
+          [TextField {:label "Password"
+                      :id "password-textfield"
+                      :type "password"
+                      :variant :outlined
+                      :style {:margin-bottom "2rem"}
+                      :value (get login :password "")
+                      :on-change (fn pw-on-change! [e]
+                                   (e! (login-controller/->SetPassword (-> e .-target .-value)))
+                                   #_(log/info "password changed"))}]
+          (doall
+           (for [{:user/keys [email family-name] :as user} login-controller/mock-users]
+             ^{:key email}
+             [buttons/white-button-with-icon {:icon icons/navigation-arrow-forward
+                                              :on-click #(do
+                                                           (e! (login-controller/->Login user))
+                                                           (log/info "Start login: " user))}
+              (str "Login as " family-name)]))]])]]))
