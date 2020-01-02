@@ -46,6 +46,7 @@
           (for [[layer open?] layers]
             {:checked? open?
              :value layer
+             :id layer
              :on-change (fn [e]
                           (.stopPropagation e)
                           (e! (map-controller/->LayerToggle category layer)))})]]))))
@@ -68,7 +69,8 @@
                         :size :small
                         :on-click #(e! (map-controller/->CloseMapControls))}
             [icons/navigation-close]]]
-          [:div
+          [:div {:style {:max-height "40vh"
+                         :overflow-y :scroll}}
            [category-layers-control e!
             ["Katastri" {"katastriyksus"
                          (boolean (get-in map-layers ["Katastri" "katastriyksus"]))}]
