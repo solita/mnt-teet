@@ -10,7 +10,7 @@
   (Date. (+ (System/currentTimeMillis) url-expiration-ms)))
 
 (defn- storage-bucket []
-  (environment/config-value :document-storage :document-bucket))
+  (environment/config-value :document-storage :bucket-name))
 
 (defn- presigned-url [method file-name]
   (str (s3/generate-presigned-url
