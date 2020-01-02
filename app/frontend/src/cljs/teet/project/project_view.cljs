@@ -198,7 +198,7 @@
   []
   {:flex 1})
 
-(defn project-map [e! app project]
+(defn project-map [e! {:keys [map] :as app} project]
   (r/with-let [overlays (r/atom [])
                set-overlays! #(reset! overlays %)]
     [:div {:style {:flex           1
