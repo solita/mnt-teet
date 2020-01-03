@@ -6,7 +6,8 @@
             [clojure.string :as str]
             [teet.project.project-geometry :as project-geometry]
             [teet.environment :as environment]
-            [teet.meta.meta-model :refer [modification-meta creation-meta deletion-tx]])
+            [teet.meta.meta-model :refer [modification-meta creation-meta deletion-tx]]
+            [teet.project.project-specs])
   (:import (java.util Date)))
 
 (defmethod db-api/command! :thk.project/initialize!
@@ -51,6 +52,28 @@
                        :thk.project/start-m :thk.project/end-m
                        :thk.project/custom-start-m :thk.project/custom-end-m]
                   [:thk.project/id id])]))))
+  :ok)
+
+(defmethod db-api/command! :project/skip-project-setup
+  [{conn :conn
+    user :user}
+   {project-id :thk.project/id}]
+  (d/transact
+    conn
+    {:tx-data [(merge {:thk.project/id project-id
+                       :thk.project/setup-skipped? true}
+                      (modification-meta user))]})
+  :ok)
+
+(defmethod db-api/command! :project/continue-project-setup
+  [{conn :conn
+    user :user}
+   {project-id :thk.project/id}]
+  (d/transact
+    conn
+    {:tx-data [(merge {:thk.project/id project-id
+                       :thk.project/setup-skipped? false}
+                      (modification-meta user))]})
   :ok)
 
 (defmethod db-api/command! :project/delete-task

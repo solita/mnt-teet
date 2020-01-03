@@ -4,6 +4,7 @@
 (defn map-controls
   []
   {:background-color "white"
+   :max-width "40vw"
    :position :absolute
    :top "25px"
    :right "80px"

@@ -91,6 +91,8 @@
 (defrecord PostActivityEditForm [])
 (defrecord OpenEditActivityDialog [])
 (defrecord InitializeActivityEditForm [])
+(defrecord ContinueProjectSetup [project-id])
+(defrecord SkipProjectSetup [project-id])
 
 (defrecord DeleteActivity [activity-id])
 (defrecord DeleteActivityResult [response])
@@ -231,6 +233,22 @@
                         (first (filter #(= (:teet-id %) (:map/teet-id p)) restriction-selections))
                         (first (filter #(= (:teet-id %) (:map/teet-id p)) restriction-candidates)))]
       (toggle-restriction app restriction)))
+
+  ContinueProjectSetup
+  (process-event [{project-id :project-id} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :project/continue-project-setup
+           :payload {:thk.project/id project-id}
+           :result-event common-controller/->Refresh}))
+
+  SkipProjectSetup
+  (process-event [{project-id :project-id} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :project/skip-project-setup
+           :payload {:thk.project/id project-id}
+           :result-event common-controller/->Refresh}))
 
   ChangeRoadObjectAoe
   (process-event [{val :val} {:keys [page params] :as app}]

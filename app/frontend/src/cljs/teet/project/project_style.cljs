@@ -128,11 +128,6 @@
    :flex-direction :column
    :justify-content :space-between})
 
-(defn initialization-form
-  []
-  {:display :flex
-   :flex-direction :column
-   :justify-content :space-between})
 
 (defn wizard-header
   []
@@ -156,7 +151,7 @@
   {:display :flex
    :flex-direction :row
    :justify-content :space-between
-   :padding "0.5rem"
+   :padding "1rem"
    :background-color theme-colors/gray-lightest
    :border-top (str "1px solid" theme-colors/gray-lighter)
    :align-items :center})
