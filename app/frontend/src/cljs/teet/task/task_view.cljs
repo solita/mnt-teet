@@ -45,7 +45,8 @@
   [:div {:style {:padding "2rem 0 2rem 2rem"}}
    [Link {:href (url/remove-params)}
     (tr [:enum (-> task :task/type :db/ident)])]
-   [:p "Documents"]
+   [:p
+    [:b (tr [:task :results])]]
    (for [{:document/keys [name status files] :as document} documents]
      ^{:key (str (:db/id document))}
      [:div {:style {:margin-bottom "2rem"}}                                                  ;;TODO iterate files here
