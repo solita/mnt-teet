@@ -99,6 +99,16 @@
       (when-let [step (-> field meta :step)]
         (not= step current-step))))
 
+(defn update-atom-event
+  "Returns a tuck event that updates the given atom when processed.
+  Leaves app state unaffected."
+  ([the-atom] (update-atom-event the-atom (fn [_old new] new)))
+  ([the-atom update-fn]
+   #(reify tuck.core/Event
+      (process-event [_ app]
+        (swap! the-atom update-fn %)
+        app))))
+
 (defn form
   "Simple grid based form container."
   [{:keys [e! ;; Tuck event handle

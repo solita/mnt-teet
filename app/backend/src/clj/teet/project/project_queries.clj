@@ -28,30 +28,32 @@
 (defmethod db-api/query :thk.project/fetch-task [{db :db} {project-id :thk.project/id
                                                            task-id :task-id}]
   (let [result (meta-query/without-deleted
-                 db
-                 (ffirst (d/q '[:find (pull ?e [:db/id
-                                                :task/description
-                                                :task/modified
-                                                {:task/status [:db/ident]}
-                                                {:task/type [:db/ident]}
-                                                {:task/assignee [:user/id :user/given-name :user/family-name :user/email]}
-                                                {:activity/_tasks [:db/id
-                                                                   {:activity/name [:db/ident]}
-                                                                   {:thk.lifecycle/_activities [:db/id]}]}
-                                                {:task/documents [*
-                                                                  {:document/files
-                                                                   [*
-                                                                    {:file/comments [*
-                                                                                     {:comment/author [*]}]}]}
-                                                                  {:document/comments [*
-                                                                                       {:comment/author [*]}]}]}])
-                                :in $ ?e ?project-id
-                                :where
-                                [?p :thk.project/id ?project-id]
-                                [?p :thk.project/lifecycles ?l]
-                                [?l :thk.lifecycle/activities ?a]
-                                [?a :activity/tasks ?e]]
-                              db task-id project-id)))]
+                db
+                (ffirst
+                 (d/q '[:find
+                        (pull ?e [:db/id
+                                  :task/description
+                                  :task/modified
+                                  {:task/status [:db/ident]}
+                                  {:task/type [:db/ident]}
+                                  {:task/assignee [:user/id :user/given-name :user/family-name :user/email]}
+                                  {:activity/_tasks [:db/id
+                                                     {:activity/name [:db/ident]}
+                                                     {:thk.lifecycle/_activities [:db/id]}]}
+                                  {:task/documents [*
+                                                    {:document/files
+                                                     [*
+                                                      {:file/comments [*
+                                                                       {:comment/author [*]}]}]}
+                                                    {:document/comments [*
+                                                                         {:comment/author [*]}]}]}])
+                        :in $ ?e ?project-id
+                        :where
+                        [?p :thk.project/id ?project-id]
+                        [?p :thk.project/lifecycles ?l]
+                        [?l :thk.lifecycle/activities ?a]
+                        [?a :activity/tasks ?e]]
+                      db task-id project-id)))]
     (assoc result :project (d/pull db
                                    project-model/project-info-attributes
                                    [:thk.project/id project-id]))))

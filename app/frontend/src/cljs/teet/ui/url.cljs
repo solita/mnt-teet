@@ -14,9 +14,10 @@
 (defn- format-params
   [params]
   (str/join "&"
-            (map (fn [[param-name param-value]]
-                   (str (name param-name) "=" (js/encodeURIComponent (str param-value))))
-                 params)))
+            (keep (fn [[param-name param-value]]
+                    (when param-value
+                      (str (name param-name) "=" (js/encodeURIComponent (str param-value)))))
+                  params)))
 
 (def
   ^:private

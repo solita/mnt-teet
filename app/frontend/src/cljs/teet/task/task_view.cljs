@@ -8,7 +8,7 @@
             [teet.ui.buttons :as buttons]
             [teet.ui.common :as ui-common]
             [teet.ui.format :as format]
-            [teet.ui.material-ui :refer [List Grid Paper Link]]
+            [teet.ui.material-ui :refer [List Grid Paper Link LinearProgress]]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.icons :as icons]
             [teet.ui.typography :refer [Heading1]]
@@ -26,7 +26,10 @@
             [teet.document.document-controller :as document-controller]
             [teet.authorization.authorization-check :refer [when-authorized]]
             [teet.ui.typography :as typography]
-            [teet.comments.comments-view :as comments-view]))
+            [teet.comments.comments-view :as comments-view]
+            [teet.ui.form :as form]
+            [teet.common.common-controller :as common-controller]
+            [teet.ui.file-upload :as file-upload]))
 
 (defn task-status [e! status modified]
   [ui-common/status {:e! e!
@@ -44,19 +47,22 @@
 (defn task-navigation
   [{:task/keys [documents] :as task}]
   [:div {:style {:padding "2rem 0 2rem 2rem"}}
-   [Link {:href (url/remove-params)}
+   [Link {:href (url/set-params :document nil
+                                :file nil)}
     (tr [:enum (-> task :task/type :db/ident)])]
    [:p
     [:b (tr [:task :results])]]
    (for [{:document/keys [name status files] :as document} documents]
      ^{:key (str (:db/id document))}
      [:div {:style {:margin-bottom "2rem"}}                                                  ;;TODO iterate files here
-      [Link {:href (url/set-params :document (:db/id document))}
+      [Link {:href (url/set-params :document (:db/id document)
+                                   :file nil)}
        name]
       (for [{:file/keys [name size] :as file} files]
          [Link {:style {:margin-left "2rem"
                         :display :block}
-               :href (url/set-params :file (:db/id file))}
+                :href (url/set-params :document (:db/id document)
+                                      :file (:db/id file))}
          name " - " (format/file-size size)])])])
 
 (defn- task-overview
@@ -76,16 +82,23 @@
 
 (defn- task-document-content
   [e! document]
-  [:div
-   [:div {:style {:display :flex
-                  :justify-content :flex-end}}
-    [buttons/button-warning
-     {:on-click (e! document-controller/->DeleteDocument (:db/id document))}
-     (tr [:buttons :delete])]]
-   [:div {:style {:padding "2rem"}}
+
+  [:div {:style {:padding "2rem"}}
+   [:div {:style {:justify-content :space-between
+                  :display :flex}}
     [Heading1
      (:document/name document)]
-    [typography/Paragraph (:document/description document)]]
+    [:div
+     [buttons/button-secondary
+      {:element "a"
+       :href (url/set-params "add-files" "1")
+       :start-icon (r/as-element
+                    [icons/content-add])}
+      (tr [:document :add-files])]
+     [buttons/button-warning
+      {:on-click (e! document-controller/->DeleteDocument (:db/id document))}
+      (tr [:buttons :delete])]]]
+   [typography/Paragraph (:document/description document)]
    [document-view/comments e! document]])
 
 (defn document-file-content
@@ -119,25 +132,45 @@
     :else
     [task-overview e! task]))
 
+(defn- add-files-form [e! upload-progress]
+  (r/with-let [form (r/atom {})]
+    [:<>
+     [form/form {:e! e!
+                     :value @form
+                     :on-change-event (form/update-atom-event form merge)
+                     :save-event (partial document-controller/->AddFilesToDocument (:files @form))
+                     :cancel-event #(common-controller/->SetQueryParam :add-files nil)
+                     :in-progress? upload-progress}
+          ^{:attribute :files}
+      [file-upload/files-field {}]]
+     (when upload-progress
+       [LinearProgress {:variant "determinate"
+                        :value upload-progress}])]))
+
 (defn task-page-modal
-  [e! {:keys [params] :as app} {:keys [edit] :as query}]
-  [panels/modal {:open-atom (r/wrap (boolean edit) :_)
-                 :title     (if-not edit
-                              ""
-                              (tr [:project edit]))
-                 :on-close  (e! task-controller/->CloseEditDialog)}
-   (case edit
-     "task"
-     [project-view/task-form e!
-      (merge
+  [e! {:keys [params] :as app} {:keys [edit add-files] :as query}]
+  [:<>
+   [panels/modal {:open-atom (r/wrap (boolean add-files) :_)
+                  :title (tr [:document :add-files])
+                  :on-close #(e! :FIXME)}
+    [add-files-form e! (get-in app [:new-document :in-progress?])]]
+   [panels/modal {:open-atom (r/wrap (boolean edit) :_)
+                  :title     (if-not edit
+                               ""
+                               (tr [:project edit]))
+                  :on-close  (e! task-controller/->CloseEditDialog)}
+    (case edit
+      "task"
+      [project-view/task-form e!
+       (merge
         {:close             task-controller/->CloseEditDialog
          :task              (:edit-task-data app)
          :initialization-fn (e! task-controller/->MoveDataForEdit)
          :save              task-controller/->PostTaskEditForm
          :on-change         task-controller/->UpdateEditTaskForm}
         (when-authorized :task/delete-task                  ;;TODO: ADD CONFIRMATION DIALOG
-                         {:delete (task-controller/->DeleteTask (:task params))}))]
-     [:span])])
+          {:delete (task-controller/->DeleteTask (:task params))}))]
+      [:span])]])
 
 (defn task-page [e! {{:keys [add-document edit] :as query} :query
                      new-document :new-document :as app}

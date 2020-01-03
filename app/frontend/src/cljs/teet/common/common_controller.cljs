@@ -167,7 +167,9 @@
           {:tuck.effect/type :navigate
            :page page
            :params params
-           :query (assoc query param value)}))
+           :query (if (nil? value)
+                    (dissoc query param)
+                    (assoc query param value))}))
 
   ResponseError
   (process-event [{err :err} app]
