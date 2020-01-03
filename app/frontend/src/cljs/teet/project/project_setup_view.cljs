@@ -298,15 +298,15 @@
                                       :total   (count project-setup-steps)})]]
    [typography/Heading2 (tr [:project :wizard step-label])]])
 
-(defn setup-wizard-footer [e! {:keys [step-label step-number] :as step}]
+(defn setup-wizard-footer [e! {:keys [step-label step-number] :as step} project-id]
   [:div {:class (<class project-style/wizard-footer)}
-   ;; TODO this should be a text button and cancel
    (if (> step-number 1)
      [buttons/button-secondary
       {:on-click (e! (project-controller/navigate-to-previous-step-event project-setup-steps step))}
       (tr [:buttons :back])]
-     [buttons/link-button
-      (tr [:buttons :cancel])])
+     [buttons/button-warning
+      {:on-click #(e! (project-controller/->SkipProjectSetup project-id))}
+      (tr [:project :wizard :skip-setup])])
    [buttons/button-primary {:type :submit
                             :form step-label}
     (if (= step-number (count project-setup-steps))
@@ -324,6 +324,6 @@
                             "basic-information"))]
     {:header      [setup-wizard-header step]
      :body        [(:body step) e! project step (:map app)]
-     :footer      [setup-wizard-footer e! step]
+     :footer      [setup-wizard-footer e! step (:thk.project/id project)]
      :map-settings {:geometry-range? true
                     :layers (step->map-layers step)}}))

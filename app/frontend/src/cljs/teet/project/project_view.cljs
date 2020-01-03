@@ -40,7 +40,8 @@
             [teet.routes :as routes]
             [teet.map.map-controller :as map-controller]
             [teet.authorization.authorization-check :refer [when-authorized]]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.theme.theme-colors :as theme-colors]))
 
 (defn task-form [_e! {:keys [initialization-fn]}]
   ;;Task definition (under project activity)
@@ -406,13 +407,28 @@
 
      modal]))
 
+(defn- setup-incomplete-footer
+  [e! project]
+  [:div {:class (<class project-style/wizard-footer)}
+   [:div
+    [:p {:style {:color theme-colors/gray}}
+     (tr [:project :wizard :project-setup])]
+    [:span {:class (<class common-styles/warning-text)}
+     (tr [:project :wizard :setup-incomplete])]]
+
+   [buttons/button-primary {:type :submit
+                            :on-click #(e! (project-controller/->ContinueProjectSetup (:thk.project/id project)))}
+    (tr [:buttons :continue])]])
+
 (defn- initialized-project-view
   "The project view shown for initialized projects."
   [e! app project breadcrumbs]
   [project-page-structure e! app project breadcrumbs
-   {:header       [project-tabs e! app]
-    :body         [project-tab e! app project]
-    :map-settings {:layers #{:thk-project :surveys}}}])
+   (merge {:header       [project-tabs e! app]
+           :body         [project-tab e! app project]
+           :map-settings {:layers #{:thk-project :surveys}}}
+          (when (:thk.project/setup-skipped? project)
+            {:footer [setup-incomplete-footer e! project]}))])
 
 (defn- project-setup-view
   "The project setup wizard that is shown for uninitialized projects."
@@ -425,6 +441,6 @@
   [e! app project breadcrumbs]
   [:<>
    [project-page-modals e! app project]
-   (if (project-model/initialized? project)
+   (if (or (:thk.project/setup-skipped? project) (project-model/initialized? project))
      [initialized-project-view e! app project breadcrumbs]
      [project-setup-view e! app project breadcrumbs])])
