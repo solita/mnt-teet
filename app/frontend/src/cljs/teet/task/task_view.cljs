@@ -24,7 +24,8 @@
             [teet.project.task-model :as task-model]
             [teet.project.project-controller :as project-controller]
             [teet.document.document-controller :as document-controller]
-            [teet.authorization.authorization-check :refer [when-authorized]]))
+            [teet.authorization.authorization-check :refer [when-authorized]]
+            [teet.ui.typography :as typography]))
 
 (defn task-status [e! status modified]
   [ui-common/status {:e! e!
@@ -56,11 +57,11 @@
          name " - " (format/file-size size)])])])
 
 (defn- task-overview
-  [e! {:task/keys [description status modified] :as task}]
+  [e! {:task/keys [description status modified type] :as _task}]
   [:div {:style {:padding "2rem 0"}}
    [:div {:style {:justify-content :space-between
                   :display :flex}}
-    [Heading1 (tr [:task :task-overview])]
+    [Heading1 (tr [:enum (:db/ident type)])]
     [:div {:style {:display :flex}}
      [buttons/button-secondary {:on-click (e! task-controller/->OpenEditTask)}
       (tr [:buttons :edit])]]]
@@ -81,7 +82,7 @@
    [:div {:style {:padding "2rem"}}
     [Heading1
      (:document/name document)]
-    [teet.ui.typography/Paragraph (:document/description document)]]
+    [typography/Paragraph (:document/description document)]]
    [document-view/comments e! document]])
 
 (defn document-file-content
@@ -135,7 +136,7 @@
                                   :on-close-event task-controller/->CloseAddDocumentDialog}
      new-document]]
    [breadcrumbs/breadcrumbs breadcrumbs]
-   [Heading1 (tr [:enum (:db/ident type)])]
+   [Heading1 (:thk.project/name project)]
 
    [Paper {:class (<class task-page-paper-style)}
     [Grid {:container true
