@@ -483,9 +483,14 @@
                :db/cardinality :db.cardinality/many
                :db/doc         "Cadastral units related to the THK project"}]]}
 
-
  {:db/ident :migration/file-comments
   :txes [[{:db/ident :file/comments
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/many
-           :db/doc "Comments for the file"}]]}]
+           :db/doc "Comments for the file"}]]}
+
+ {:db/ident :migration/skip-project-setup
+  :txes [[{:db/ident :thk.project/setup-skipped?
+           :db/valueType :db.type/boolean
+           :db/cardinality :db.cardinality/one
+           :db/doc "This value is set to the project when someone skips project initialization."}]]}]
