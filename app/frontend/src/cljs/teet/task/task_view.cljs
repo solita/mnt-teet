@@ -43,7 +43,8 @@
 (defn task-navigation
   [{:task/keys [documents] :as task}]
   [:div {:style {:padding "2rem 0 2rem 2rem"}}
-   [Link {:href (url/remove-params)} "linkki taskin pääsivulle"]
+   [Link {:href (url/remove-params)}
+    (tr [:enum (-> task :task/type :db/ident)])]
    [:p "Documents"]
    (for [{:document/keys [name status files] :as document} documents]
      ^{:key (str (:db/id document))}
