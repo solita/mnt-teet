@@ -37,7 +37,7 @@
    :top 0
    :right 0})
 
-(defn- error-span-style
+(defn- input-error-text-style
   []
   {:font-size "1rem"
    :color theme-colors/error
@@ -95,5 +95,5 @@
                      :class (<class input-button-style)}
          [input-button-icon]])]
      (when (and error error-text)
-       [:span {:class (<class error-span-style)}
+       [:span {:class (<class input-error-text-style)}
         error-text])]))
