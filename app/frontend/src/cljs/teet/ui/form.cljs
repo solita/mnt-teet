@@ -70,9 +70,13 @@
    :padding "1.5rem"})
 
 (defn form-buttons
-  []
-  {:display :flex
-   :margin "1.5rem 0"})
+  ([] (form-buttons nil))
+  ([justify]
+   (merge
+    (when justify
+      {:justify-content justify})
+    {:display :flex
+     :margin "1.5rem 0"})))
 
 (defn form-footer [{:keys [delete cancel validate disabled?]}]
   [:div {:class (<class form-buttons)}

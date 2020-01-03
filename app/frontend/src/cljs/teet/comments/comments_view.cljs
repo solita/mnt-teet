@@ -7,7 +7,17 @@
             [teet.ui.itemlist :as itemlist]
             [teet.ui.typography :as typography]
             [teet.user.user-info :as user-info]
-            [teet.ui.text-field :refer [TextField]]))
+            [teet.ui.text-field :refer [TextField]]
+            [teet.ui.buttons :as buttons]))
+
+(defn- new-comment-footer [{:keys [validate disabled?]}]
+  [:div {:class (<class form/form-buttons :space-between)}
+   (tr [:comment :comment-as] {:name (user-info/me)})
+
+   [buttons/button-primary {:disabled disabled?
+                            :type :submit
+                            :on-click validate}
+    (tr [:comment :save])]])
 
 (defn comments [{:keys [e!
                         new-comment
@@ -34,6 +44,7 @@
                :value new-comment
                :on-change-event update-comment-event
                :save-event save-comment-event
+               :footer new-comment-footer
                :spec :document/new-comment-form}
     ^{:attribute :comment/comment}
     [TextField {:rows 4

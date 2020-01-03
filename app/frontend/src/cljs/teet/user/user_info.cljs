@@ -1,7 +1,8 @@
 (ns teet.user.user-info
   "Show user info in the UI, automatically resolved user information.
   FIXME: remove after dummy users are not needed"
-  (:require [teet.user.user-model :as user-model]))
+  (:require [teet.user.user-model :as user-model]
+            [teet.app-state :as app-state]))
 
 
 (def mock-users [{:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"
@@ -31,3 +32,6 @@
 
 (defn list-user-ids []
   (map :user/id mock-users))
+
+(defn me []
+  (user-name @app-state/user))
