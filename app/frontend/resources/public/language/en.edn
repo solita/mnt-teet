@@ -7,6 +7,7 @@
   :delete "Delete",
   :continue "Continue",
   :edit "Edit"},
+ :comment {:save "Save comment", :comment-as "Commenting as {name}"},
  :common
  {:hide-menu "Hide menu",
   :send-feedback "Send feedback",
@@ -29,7 +30,10 @@
  {:download-file "Download file",
   :comments "Comments",
   :new-comment "New comment",
-  :updated "Updated"},
+  :updated "Updated",
+  :add-files "Add files",
+  :file-deleted-notification "File deleted successfully",
+  :deleted-notification "Document deleted successfully"},
  :enum
  {:activity.name/construction "Construction",
   :task.type/other "Other",

@@ -7,6 +7,8 @@
   :delete "Kustutama",
   :continue "Jätkä",
   :edit "Muutma"},
+ :comment
+ {:save "Salvesta märkus", :comment-as "Kommenteerimine kui {name}"},
  :common
  {:hide-menu "Peidan menüü",
   :send-feedback "Saadan tagasisidet",
@@ -29,7 +31,10 @@
  {:download-file "Faili allalaadimine",
   :comments "Märkused",
   :new-comment "Uus märkus",
-  :updated "Uuendatud"},
+  :updated "Uuendatud",
+  :add-files "Lisan failid",
+  :file-deleted-notification "Fail kustutatud edukalt",
+  :deleted-notification "Dokumenti kustutatud edukalt"},
  :enum
  {:activity.name/construction "Ehitus",
   :task.type/other "Muu",
