@@ -26,3 +26,13 @@
           (when (predicate element)
             element))
         collection))
+
+(defn find-idx
+  "Find index of first element in `collection` matching `predicate`."
+  [predicate collection]
+  (first
+   (keep-indexed
+    (fn [i element]
+      (when (predicate element)
+        i))
+    collection)))

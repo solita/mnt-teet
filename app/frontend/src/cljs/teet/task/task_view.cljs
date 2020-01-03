@@ -25,7 +25,8 @@
             [teet.project.project-controller :as project-controller]
             [teet.document.document-controller :as document-controller]
             [teet.authorization.authorization-check :refer [when-authorized]]
-            [teet.ui.typography :as typography]))
+            [teet.ui.typography :as typography]
+            [teet.comments.comments-view :as comments-view]))
 
 (defn task-status [e! status modified]
   [ui-common/status {:e! e!
@@ -89,7 +90,7 @@
 
 (defn document-file-content
   [e! {:file/keys [name timestamp]
-       id :db/id :as _file}]
+       id :db/id :as file}]
   [:<>
    [typography/Heading1 name]
    [typography/SmallText
@@ -100,7 +101,13 @@
                             :target "_blank"
                             :start-icon (r/as-element
                                          [icons/file-cloud-download])}
-    (tr [:document :download-file])]])
+    (tr [:document :download-file])]
+
+   [comments-view/comments {:e! e!
+                            :update-comment-event document-controller/->UpdateFileNewCommentForm
+                            :save-comment-event document-controller/->CommentOnFile
+                            :new-comment (:new-comment file)
+                            :comments (:file/comments file)}]])
 
 (defn task-page-content
   [e! {:keys [file document]} task]

@@ -39,7 +39,10 @@
                                                                    {:activity/name [:db/ident]}
                                                                    {:thk.lifecycle/_activities [:db/id]}]}
                                                 {:task/documents [*
-                                                                  {:document/files [*]}
+                                                                  {:document/files
+                                                                   [*
+                                                                    {:file/comments [*
+                                                                                     {:comment/author [*]}]}]}
                                                                   {:document/comments [*
                                                                                        {:comment/author [*]}]}]}])
                                 :in $ ?e ?project-id

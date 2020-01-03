@@ -22,7 +22,8 @@
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.select :as select]
             [teet.ui.typography :as typography]
-            [teet.user.user-info :as user-info]))
+            [teet.user.user-info :as user-info]
+            [teet.comments.comments-view :as comments-view]))
 
 (defn document-form [{:keys [e! on-close-event]} {:keys [in-progress?] :as doc}]
   [:<>
@@ -54,34 +55,11 @@
                       :value in-progress?}])])
 
 (defn comments [e! {:keys [new-comment] :as document}]
-  [layout/section
-   [:div {:class (<class common-styles/gray-light-border)}
-    [typography/Heading3 (tr [:document :comments])]
-    [:span {:style {:margin-left "1rem"}}
-     (str "(" (count (:document/comments document)) ")")]]
-   [itemlist/ItemList {}
-    (doall
-     (for [{id :db/id
-            :comment/keys [author comment timestamp]} (:document/comments document)]
-       ^{:key id}
-       [:div
-        [typography/SectionHeading
-         [user-info/user-name author]]
-        [:div (.toLocaleString timestamp)]
-        [typography/Paragraph comment]]))]
-
-   [form/form {:e! e!
-               :value new-comment
-               :on-change-event document-controller/->UpdateNewCommentForm
-               :save-event document-controller/->Comment
-               :spec :document/new-comment-form}
-    ^{:attribute :comment/comment}
-    [TextField {:rows 4
-                :multiline true
-                :InputLabelProps {:shrink true}
-                :full-width true
-                :placeholder (tr [:document :new-comment])
-                :variant "outlined"}]]])
+  [comments-view/comments {:e! e!
+                           :new-comment new-comment
+                           :comments (:document/comments document)
+                           :update-comment-event document-controller/->UpdateNewCommentForm
+                           :save-comment-event document-controller/->Comment}])
 
 (defn status
   [e! document]

@@ -86,6 +86,17 @@
                                                    :comment/timestamp (java.util.Date.)}]}]})
       (get-in [:tempids "new-comment"])))
 
+(defmethod db-api/command! :document/comment-on-file [{conn :conn
+                                                       user :user}
+                                                      {:keys [file-id comment]}]
+  (-> conn
+      (d/transact {:tx-data [{:db/id file-id
+                              :file/comments [{:db/id "new-comment"
+                                               :comment/author [:user/id (:user/id user)]
+                                               :comment/comment comment
+                                               :comment/timestamp (java.util.Date.)}]}]})
+      (get-in [:tempids "new-comment"])))
+
 
 (defmethod db-api/command! :document/delete [{conn :conn
                                               user :user}

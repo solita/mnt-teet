@@ -481,4 +481,11 @@
   :txes     [[{:db/ident       :thk.project/related-cadastral-units
                :db/valueType   :db.type/string
                :db/cardinality :db.cardinality/many
-               :db/doc         "Cadastral units related to the THK project"}]]}]
+               :db/doc         "Cadastral units related to the THK project"}]]}
+
+
+ {:db/ident :migration/file-comments
+  :txes [[{:db/ident :file/comments
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "Comments for the file"}]]}]

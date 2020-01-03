@@ -5,7 +5,8 @@
             [teet.log :as log]
             [goog.math.Long]
             tuck.effect
-            [teet.common.common-controller :as common-controller]))
+            [teet.common.common-controller :as common-controller]
+            [teet.project.task-model :as task-model]))
 
 (defrecord CreateDocument []) ; create empty document and link it to task
 (defrecord CancelDocument []) ; cancel document creation
@@ -19,6 +20,8 @@
 
 (defrecord UpdateNewCommentForm [form-data]) ; update new comment form data
 (defrecord Comment []) ; save new comment to document
+(defrecord UpdateFileNewCommentForm [form-data]) ; update new comment on selected file
+(defrecord CommentOnFile []) ; save new comment to file
 
 (defrecord DeleteDocument [document-id])
 (defrecord DeleteDocumentResult [])
@@ -61,6 +64,30 @@
             {:tuck.effect/type :command!
              :command :document/comment
              :payload {:document-id (goog.math.Long/fromString doc)
+                       :comment new-comment}
+             :result-event common-controller/->Refresh})))
+
+  UpdateFileNewCommentForm
+  (process-event [{form-data :form-data} {:keys [query] :as app}]
+    (let [file-id (:file query)]
+      (update-in app
+                 [:route :activity-task]
+                 (fn [task]
+                   (update-in task (conj (task-model/file-by-id-path task file-id) :new-comment)
+                              merge form-data)))))
+
+  CommentOnFile
+  (process-event [_ {:keys [query] :as app}]
+    (let [file-id (:file query)
+          task (get-in app [:route :activity-task])
+          new-comment (-> task
+                          (get-in (task-model/file-by-id-path task file-id))
+                          :new-comment
+                          :comment/comment)]
+      (t/fx app
+            {:tuck.effect/type :command!
+             :command :document/comment-on-file
+             :payload {:file-id (goog.math.Long/fromString file-id)
                        :comment new-comment}
              :result-event common-controller/->Refresh})))
 
