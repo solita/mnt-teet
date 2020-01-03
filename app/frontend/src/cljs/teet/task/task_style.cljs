@@ -13,3 +13,11 @@
 (defn task-status-style
   []
   {:flex-basis "30%"})
+
+(defn document-file-name []
+  ^{:pseudo {:hover {:overflow :visible
+                     :text-decoration :underline}}}
+  {:text-overflow :ellipsis
+   :white-space :nowrap
+   :overflow :hidden
+   :display :block})

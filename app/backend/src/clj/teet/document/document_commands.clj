@@ -105,3 +105,11 @@
     conn
     {:tx-data [(deletion-tx user document-id)]})
   :ok)
+
+(defmethod db-api/command! :document/delete-file [{conn :conn
+                                                   user :user}
+                                                  {:keys [file-id]}]
+  (d/transact
+   conn
+    {:tx-data [(deletion-tx user file-id)]})
+  :ok)

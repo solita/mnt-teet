@@ -7,8 +7,9 @@
             [teet.ui.format :as format]
             [teet.ui.select :as select]
             [teet.ui.material-ui :refer [ButtonBase Paper]]
-            [teet.ui.typography :refer [Text SmallText]]
-            [teet.ui.util :as util]))
+            [teet.ui.typography :refer [Text SmallText] :as typography]
+            [teet.ui.util :as util]
+            [teet.common.common-styles :as common-styles]))
 
 (def lifecycle-methods
   "Supported lifecycle methods in mixins."
@@ -181,3 +182,8 @@
    [labeled-data {:label (tr [:common :last-modified])
                   :data (or (format/date modified)
                             "-")}]])
+
+(defn header-with-actions [header-text & actions]
+  [:div {:class (<class common-styles/header-with-actions)}
+   [typography/Heading1 header-text]
+   (into [:div] actions)])

@@ -6,7 +6,8 @@
             [goog.math.Long]
             tuck.effect
             [teet.common.common-controller :as common-controller]
-            [teet.project.task-model :as task-model]))
+            [teet.project.task-model :as task-model]
+            [teet.localization :refer [tr]]))
 
 (defrecord CreateDocument []) ; create empty document and link it to task
 (defrecord CancelDocument []) ; cancel document creation
@@ -25,6 +26,8 @@
 
 (defrecord DeleteDocument [document-id])
 (defrecord DeleteDocumentResult [])
+(defrecord DeleteFile [file-id])
+(defrecord DeleteFileResult [])
 
 (defrecord AddFilesToDocument [files]) ;; upload more files to existing document
 
@@ -98,7 +101,7 @@
     (t/fx app
           {:tuck.effect/type :command!
            :command :document/delete
-           :success-message  "Document deleted successfully"
+           :success-message  (tr [:document :deleted-notification])
            :payload {:document-id document-id}
            :result-event ->DeleteDocumentResult}))
 
@@ -109,6 +112,24 @@
            :page page
            :params params
            :query (dissoc query :document)}
+          common-controller/refresh-fx))
+
+  DeleteFile
+  (process-event [{file-id :file-id} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :document/delete-file
+           :payload {:file-id file-id}
+           :success-message (tr [:document :file-deleted-notification])
+           :result-event ->DeleteFileResult}))
+
+  DeleteFileResult
+  (process-event [_ {:keys [page params query] :as app}]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page page
+           :params params
+           :query (dissoc query :file)}
           common-controller/refresh-fx))
 
   UpdateDocumentForm

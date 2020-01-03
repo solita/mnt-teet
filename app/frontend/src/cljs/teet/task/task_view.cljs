@@ -3,6 +3,7 @@
   (:require [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
             [teet.task.task-controller :as task-controller]
+            [teet.task.task-style :as task-style]
             [teet.ui.itemlist :as itemlist]
             [teet.localization :refer [tr]]
             [teet.ui.buttons :as buttons]
@@ -29,7 +30,8 @@
             [teet.comments.comments-view :as comments-view]
             [teet.ui.form :as form]
             [teet.common.common-controller :as common-controller]
-            [teet.ui.file-upload :as file-upload]))
+            [teet.ui.file-upload :as file-upload]
+            [teet.ui.common :as common]))
 
 (defn task-status [e! status modified]
   [ui-common/status {:e! e!
@@ -54,16 +56,21 @@
     [:b (tr [:task :results])]]
    (for [{:document/keys [name status files] :as document} documents]
      ^{:key (str (:db/id document))}
-     [:div {:style {:margin-bottom "2rem"}}                                                  ;;TODO iterate files here
-      [Link {:href (url/set-params :document (:db/id document)
-                                   :file nil)}
-       name]
+     [:div {:style {:margin-bottom "1rem"}}
+      [:div
+       [Link {:href (url/set-params :document (:db/id document)
+                                    :file nil)
+              :underline "none"}
+        name]
+       [typography/SmallText (tr [:enum (:db/ident status)])]]
       (for [{:file/keys [name size] :as file} files]
-         [Link {:style {:margin-left "2rem"
-                        :display :block}
+        [:div {:style {:margin-left "2rem" :padding-bottom "1rem"}}
+         [Link {:class (<class task-style/document-file-name)
+                :underline "none"
                 :href (url/set-params :document (:db/id document)
                                       :file (:db/id file))}
-         name " - " (format/file-size size)])])])
+          name]
+         [typography/SmallText (format/file-size size)]])])])
 
 (defn- task-overview
   [e! {:task/keys [description status modified type] :as _task}]
@@ -84,20 +91,19 @@
   [e! document]
 
   [:div {:style {:padding "2rem"}}
-   [:div {:style {:justify-content :space-between
-                  :display :flex}}
-    [Heading1
-     (:document/name document)]
-    [:div
-     [buttons/button-secondary
-      {:element "a"
-       :href (url/set-params "add-files" "1")
-       :start-icon (r/as-element
-                    [icons/content-add])}
-      (tr [:document :add-files])]
-     [buttons/button-warning
-      {:on-click (e! document-controller/->DeleteDocument (:db/id document))}
-      (tr [:buttons :delete])]]]
+   [common/header-with-actions
+    (:document/name document)
+
+    [buttons/button-secondary
+     {:element "a"
+      :href (url/set-params "add-files" "1")
+      :start-icon (r/as-element
+                   [icons/content-add])}
+     (tr [:document :add-files])]
+
+    [buttons/button-warning
+     {:on-click (e! document-controller/->DeleteDocument (:db/id document))}
+     (tr [:buttons :delete])]]
    [typography/Paragraph (:document/description document)]
    [document-view/comments e! document]])
 
@@ -105,7 +111,11 @@
   [e! {:file/keys [name timestamp]
        id :db/id :as file}]
   [:<>
-   [typography/Heading1 name]
+   [common/header-with-actions
+    name
+    [buttons/button-warning {:on-click (e! document-controller/->DeleteFile id)}
+     (tr [:buttons :delete])]
+    ]
    [typography/SmallText
     (tr [:document :updated]) " "
     (format/date-time timestamp)]

@@ -74,3 +74,7 @@
            [:body :html {:height "100%"}]
            [:#teet-frontend {:height "100%"}]
            [:input :select :textarea :button {:font-family :inherit}])
+
+(defn header-with-actions []
+  {:justify-content :space-between
+   :display :flex})
