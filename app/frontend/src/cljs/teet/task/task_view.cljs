@@ -47,7 +47,7 @@
           :flex 1}))
 
 (defn task-navigation
-  [{:task/keys [documents] :as task}]
+  [{:task/keys [documents] :as task} selected-file-id]
   [:div {:style {:padding "2rem 0 2rem 2rem"}}
    [Link {:href (url/set-params :document nil
                                 :file nil)}
@@ -63,13 +63,15 @@
               :underline "none"}
         name]
        [typography/SmallText (tr [:enum (:db/ident status)])]]
-      (for [{:file/keys [name size] :as file} files]
+      (for [{:file/keys [name size] :as file
+             file-id :db/id} files]
         [:div {:style {:margin-left "2rem" :padding-bottom "1rem"}}
-         [Link {:class (<class task-style/document-file-name)
-                :underline "none"
-                :href (url/set-params :document (:db/id document)
-                                      :file (:db/id file))}
-          name]
+         (if (= (str file-id) selected-file-id)
+           [:b {:class (<class task-style/document-file-name)} name]
+           [Link {:class (<class task-style/document-file-name)
+                  :href (url/set-params :document (:db/id document)
+                                        :file (:db/id file))}
+            name])
          [typography/SmallText (format/file-size size)]])])])
 
 (defn- task-overview
@@ -90,7 +92,7 @@
 (defn- task-document-content
   [e! document]
 
-  [:div {:style {:padding "2rem"}}
+  [:<>
    [common/header-with-actions
     (:document/name document)
 
@@ -206,7 +208,7 @@
            :spacing 3}
      [Grid {:item true
             :xs 3}
-      [task-navigation task]]
+      [task-navigation task (:file query)]]
      [Grid {:item true
             :xs 6}
       [task-page-content e! query task]]

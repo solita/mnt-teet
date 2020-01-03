@@ -81,5 +81,6 @@
            [:input :select :textarea :button {:font-family :inherit}])
 
 (defn header-with-actions []
-  {:justify-content :space-between
+  {:margin-top "2rem"
+   :justify-content :space-between
    :display :flex})
