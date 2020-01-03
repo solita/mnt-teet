@@ -26,7 +26,8 @@
    :textTransform :uppercase})
 
 (def teet-theme
-  {:typography {:fontFamily "Roboto"}
+  {:typography {:body2 {:fontSize "1rem"}
+                :fontFamily "Roboto"}
    :palette {:primary {:main theme-colors/primary}
              :secondary {:main theme-colors/secondary}
              :error {:main theme-colors/error}
