@@ -88,8 +88,19 @@
    [document-view/comments e! document]])
 
 (defn document-file-content
-  [e! file]
-  [:h1 "file: " (pr-str file)])
+  [e! {:file/keys [name timestamp]
+       id :db/id :as _file}]
+  [:<>
+   [typography/Heading1 name]
+   [typography/SmallText
+    (tr [:document :updated]) " "
+    (format/date-time timestamp)]
+   [buttons/button-primary {:href (document-controller/download-url id)
+                            :element "a"
+                            :target "_blank"
+                            :start-icon (r/as-element
+                                         [icons/file-cloud-download])}
+    (tr [:document :download-file])]])
 
 (defn task-page-content
   [e! {:keys [file document]} task]
