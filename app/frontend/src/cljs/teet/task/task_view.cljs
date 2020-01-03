@@ -152,7 +152,7 @@
   [:<>
    [panels/modal {:open-atom (r/wrap (boolean add-files) :_)
                   :title (tr [:document :add-files])
-                  :on-close #(e! :FIXME)}
+                  :on-close #(e! (common-controller/->SetQueryParam :add-files nil))}
     [add-files-form e! (get-in app [:new-document :in-progress?])]]
    [panels/modal {:open-atom (r/wrap (boolean edit) :_)
                   :title     (if-not edit
