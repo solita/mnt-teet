@@ -2,7 +2,6 @@
   (:require [teet.ui.material-ui :refer [Typography]]
             [teet.ui.util :as util]))
 
-;; TODO If first of children is map, merge with {:variant ...}
 (def Heading1 (util/make-component Typography {:variant "h1"}))
 
 (def Heading2 (util/make-component Typography {:variant "h2"}))
