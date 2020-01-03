@@ -50,6 +50,10 @@
 (defn gray-text []
   {:color theme-colors/gray-light})
 
+(defn warning-text []
+  {:color theme-colors/error
+   :font-size "1.125rem"})
+
 (defn inline-block []
   {:display "inline-block"})
 
@@ -72,5 +76,6 @@
 
 (defglobal global
            [:body :html {:height "100%"}]
+           [:p {:margin 0}]
            [:#teet-frontend {:height "100%"}]
            [:input :select :textarea :button {:font-family :inherit}])
