@@ -24,7 +24,11 @@
   :design-stage-activities "Ülesanded",
   :select {:empty "- Valin"},
   :clear "Puhastan"},
- :document {:comments "Märkused", :new-comment "Uus märkus"},
+ :document
+ {:download-file "Faili allalaadimine",
+  :comments "Märkused",
+  :new-comment "Uus märkus",
+  :updated "Uuendatud"},
  :enum
  {:activity.name/construction "Ehitus",
   :task.type/other "Muu",
@@ -134,5 +138,6 @@
  {:add-document "Lisan dokumendi",
   :documents "Dokumendid",
   :task-overview "Ülesande ülevaade",
-  :no-documents "Dokumente ei ole"},
+  :no-documents "Dokumente ei ole",
+  :results "Tulemused"},
  :user {:role "Minu roll"}}

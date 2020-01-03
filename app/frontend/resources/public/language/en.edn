@@ -24,7 +24,11 @@
   :design-stage-activities "Project stages",
   :select {:empty "- Select value"},
   :clear "Clear"},
- :document {:comments "Comments", :new-comment "New comment"},
+ :document
+ {:download-file "Download file",
+  :comments "Comments",
+  :new-comment "New comment",
+  :updated "Updated"},
  :enum
  {:activity.name/construction "Construction",
   :task.type/other "Other",
@@ -134,5 +138,6 @@
  {:add-document "Add document",
   :documents "Documents",
   :task-overview "Task overview",
-  :no-documents "No documents"},
+  :no-documents "No documents",
+  :results "Results"},
  :user {:role "My role"}}
