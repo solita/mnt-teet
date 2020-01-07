@@ -23,3 +23,12 @@ clj -A:localizations <path-to-downloaded-sheet>
 
 in `app/backend`. This will update the localization `.edn` files in
 `app/frontend/resources/public/language`.
+
+## Version numbering
+
+Version numbering for TEET is `v43.yy.mm.N` where
+`yy` is the last 2 digits of the release year,
+`mm` is the release month and
+`N` is a sequence number (always starts at 1 for a new year/month pair).
+
+So the first version of january 2020 would be `v43.20.01.1`.
