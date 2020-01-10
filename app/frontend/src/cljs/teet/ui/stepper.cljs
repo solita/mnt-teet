@@ -7,45 +7,14 @@
             [teet.routes :as routes]
             [teet.localization :refer [tr tr-tree]]))
 
-(def foo [{:name      "Design"
-           :start     (js/Date. "2019-01-01")
-           :end       (js/Date. "2019-05-01")
-           :status    :done
-           :sub-steps [{:name      "Pre-design"
-                        :start     (js/Date. "2019-01-01")
-                        :status    :done
-                        :end       (js/Date. "2019-05-01")
-                        :sub-steps [{:name "foobar"}
-                                    {:name "barfoo"}
-                                    {:name "fobar"}]}
-                       {:name      "Design"
-                        :start     (js/Date. "2019-01-01")
-                        :status    :started
-                        :sub-steps [{:name "foobar"}
-                                    {:name "barfoo"}
-                                    {:name "fobar"}]
-                        :end       (js/Date. "2019-05-01")}]}
-          {:name      "Construction"
-           :start     (js/Date. "2019-01-01")
-           :end       (js/Date. "2019-05-01")
-           :status    :started
-           :sub-steps [{:name   "Pre-design"
-                        :start  (js/Date. "2019-01-01")
-                        :status :started
-                        :end    (js/Date. "2019-05-01")}
-                       {:name   "Design"
-                        :start  (js/Date. "2019-01-01")
-                        :status :not-started
-                        :end    (js/Date. "2019-05-01")}]}])
-
-
-
 (defn circle-svg
-  [{:keys [status size]}]
-  [:svg {:style   {:position  :absolute
-                   :left      "-1px"
-                   :top       "-1px"
-                   :transform "translateX(-50%)"}
+  [{:keys [status size bottom?]}]
+  [:svg {:style   (merge {:position  :absolute
+                          :left      "-1px"
+                          :transform "translateX(-50%)"}
+                         (if bottom?
+                           {:bottom "0px"}
+                           {:top "-1px"}))
          :version "1.1" :width size :height size :fill "none" :xmlns "http://www.w3.org/2000/svg"}
    [:circle {:cx "50%" :cy "50%" :r (Math/floor (/ size 2)) :fill "#34394C"}]
    (cond
@@ -63,11 +32,13 @@
    :list-style   :none})
 
 (defn item-class
-  [done?]
+  [done? last?]
   {:padding-left "1.5rem"
    :margin-left  "1rem"
-   :border-left  "2px solid black"
-   :position     :relative})
+   :position     :relative
+   :border-left  (if done?
+                   "2px solid black"
+                   (str "2px solid " theme-colors/gray-lighter))})
 
 (defn goal-style
   []
@@ -77,7 +48,8 @@
 
 (defn step-info
   [{:keys [offset background-color padding-top]}]
-  {:display          :block
+  {:display          :flex
+   :justify-content  :space-between
    :position         :relative
    :padding-top      (str padding-top "px")
    :padding-bottom   "2rem"
@@ -108,49 +80,79 @@
    :cursor      :pointer
    :padding     0})
 
+(defn lifecycle-style
+  [open? last? done?]
+  (merge
+    {:padding-left "1.5rem"
+     :margin-left  "1rem"
+     :position     :relative
+     :border-left  "2px solid transparent"}
+    (when (or open? (not last?))
+      {:border-left (if done?
+                      "2px solid black"
+                      (str "2px solid " theme-colors/gray-lighter))})))
+
 (defn vertical-stepper
-  [e! {:thk.project/keys [lifecycles] :as _project} stepper]
+  [e! {:thk.project/keys [lifecycles id] :as _project} stepper]
   [:div
    [:ol {:class (<class ol-class)}
     (doall
-      (for [{lc-id  :db/id
-             status :status :as lifecycle} lifecycles]
-        ^{:key (str lc-id)}
-        [:li
-         [:div {:class (<class item-class (= :done status))}
-          [circle-svg {:status :started :size 35}]
-          [:div {:class (<class step-info {:offset 2})}
-           [:button
-            {:class    (<class stepper-button-style {:size "24px" :open? (= (str lc-id) (str (:lifecycle stepper)))})
-             :on-click #(e! (project-controller/->ToggleStepperLifecycle lc-id))}
-            (tr [:enum (get-in lifecycle [:thk.lifecycle/type :db/ident])])]]]
-         [:div
-          [Collapse {:in (= (str lc-id) (str (:lifecycle stepper)))}
-           (for [{status :status :as activity} (:thk.lifecycle/activities lifecycle)]
-             ^{:key (str (:db/id activity))}
-             [:ol {:class (<class ol-class)}
-              [:li
-               [:div {:class (<class item-class (= :done status))}
-                [circle-svg {:status status :size 24}]
-                [:div {:class (<class step-info {:offset 0})}
-                 [:button {:class (<class stepper-button-style {:size "20px" :open? false})}
-                  (tr [:enum (:db/ident (:activity/name activity))])]]]
-               [:div
-                (if (:activity/tasks activity)
-                  [:ol {:class (<class ol-class)}
-                   (for [{:task/keys [status type] :as task} (:activity/tasks activity)]
-                     ^{:key (str (:db/id task))}
-                     [:li
-                      [:div {:class (<class item-class (= :done status))}
+      (map-indexed
+        (fn [i {lc-id  :db/id
+                status :status :as lifecycle}]
+          (let [last? (= (+ i 1) (count lifecycles))]
+            ^{:key (str lc-id)}
+            [:li
+             [:div {:class (<class lifecycle-style (= (str lc-id) (str (:lifecycle stepper))) last? (= :done status))}
+              [circle-svg {:status :started :size 35}]
+              [:div {:class (<class step-info {:offset 2})}
+               [:button
+                {:class    (<class stepper-button-style {:size "24px" :open? (= (str lc-id) (str (:lifecycle stepper)))})
+                 :on-click #(e! (project-controller/->ToggleStepperLifecycle lc-id))}
+                (tr [:enum (get-in lifecycle [:thk.lifecycle/type :db/ident])])]]]
+             [:div
+              [Collapse {:in (= (str lc-id) (str (:lifecycle stepper)))}
+               (for [{status      :status
+                      activity-id :db/id :as activity} (:thk.lifecycle/activities lifecycle)]
+                 ^{:key (str (:db/id activity))}
+                 [:ol {:class (<class ol-class)}
+                  [:li
+                   [:div {:class (<class item-class (= :done status) last?)}
+                    [circle-svg {:status :started :size 24}]
+                    [:div {:class (<class step-info {:offset 0})}
+                     [:button {:on-click #(e! (project-controller/->ToggleStepperActivity activity-id))
+                               :class    (<class stepper-button-style {:size "20px" :open? false})}
+                      (tr [:enum (:db/ident (:activity/name activity))])]
+                     (when (= (str activity-id) (str (:activity stepper)))
+                       [:button {:on-click (e! #(project-controller/->OpenEditActivityDialog (str activity-id)))}
+                        "Edit"])]]
+                   (when (= (str activity-id) (str (:activity stepper)))
+                     [:<>
+                      (if (:activity/tasks activity)
+                        [:ol {:class (<class ol-class)}
+                         (for [{:task/keys [status type] :as task} (:activity/tasks activity)]
+                           ^{:key (str (:db/id task))}
+                           [:li
+                            [:div {:class (<class item-class (= :done status) last?)}
+                             [circle-svg {:status :foo :size 12}]
+                             [:div {:class (<class task-info)}
+                              [Link {:href  (str "#/projects/" id "/" (:db/id task))
+                                     :class (<class stepper-button-style {:size "18px" :open? false})}
+                               (tr [:enum (:db/ident type)])]]]])]
+                        [:div {:class (<class item-class (= :done status) last?)}
+                         [:div {:class (<class task-info)}
+                          [:span "no tasks"]]])
+                      [:div {:class (<class item-class (= :done status) last?)}
                        [circle-svg {:status :foo :size 12}]
                        [:div {:class (<class task-info)}
-                        [:button {:class (<class stepper-button-style {:size "18px" :open? false})}
-                         (tr [:enum (:db/ident type)])]]]])]
-                  [:div {:class (<class item-class (= :done status))}
-                   [:div {:class (<class task-info)}
-                    [:span "no tasks"]]])
-                [:div {:class (<class item-class (= :done status))}
-                 [:div {:class (<class task-info)}
-                  [:button "add task"]]]]]])
-           [:div {:class (<class item-class (= :done status))}
-            [:button "Add stage"]]]]]))]])
+                        [:button {:on-click (e! project-controller/->OpenTaskDialog (str activity-id))}
+                         "add task"]]]])]])
+               [:div {:class (<class item-class (= :done status) last?)}
+                [circle-svg {:status :default :size 24 :bottom? last?}]
+                [:div (when-not last?
+                        {:style {:position       :relative
+                                 :top            "-3px"
+                                 :padding-bottom "2rem"}})
+                 [:button {:on-click (e! project-controller/->OpenActivityDialog (str lc-id))}
+                  "Add stage"]]]]]]))
+        lifecycles))]])
