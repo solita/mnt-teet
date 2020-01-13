@@ -41,38 +41,87 @@
   (when km
     (int (* 1000 km))))
 
-(defn project-datomic-attributes [[project-id lifecycle-phases]]
-  (let [prj (first lifecycle-phases)
-        phase-est-starts (map (comp ->date #(get % "est_start")) lifecycle-phases)
-        phase-est-ends (map (comp ->date #(get % "est_end")) lifecycle-phases)
+(defn thk-activity-type->activity-name [act_typefk]
+  (case act_typefk
+    ;; THK has activities without mapping in TEET,
+    ;; we skip those as they should be removed in
+    ;; the future.
+    ;;
+    ;; 4000 Planeering
+    ;; 4001 Uuring/Anal
+    ;; 4002 KMH
+    "4003" :activity.name/detailed-design ;; Pöhiprojekt
+    "4004" :activity.name/land-acquisition ;; Maaost
+    ;; 4005 Teostus
+    ;; 4010 ekspertiis
+    ;; 4011 LOA proj
+    "4012" :activity.name/pre-design ;; Eskiisproj
+    "4013" :activity.name/preliminary-design ;; Eelproj
+
+    ;; Default to other
+    nil))
+
+(defn thk-activity-status->status [act_statusfk]
+  (case act_statusfk
+    ;;  4100 Ettevalmistamisel
+    ;;  4101 Hankemenetluses
+    "4102" :activity.status/in-progress ;; Töös
+    ;;  4103 Garantiiaeg
+    "4104" :activity.status/completed ;; Lõpetatud
+    ;;  4106 Hankeplaanis
+    ;; Unmapped status
+    :activity.status/other))
+
+(defn project-datomic-attributes [[project-id rows]]
+  (let [prj (first rows)
+        phases (group-by #(get % "ph_id") rows)
+        phase-est-starts (map (comp ->date #(get % "ph_estStart")) rows)
+        phase-est-ends (map (comp ->date #(get % "ph_estEnd")) rows)
 
         project-est-start (first (sort phase-est-starts))
         project-est-end (last (sort phase-est-ends))]
-    (cu/without-nils
-     {:db/id project-id
-      :thk.project/id project-id
-      :thk.project/road-nr              (->int (prj "roadnr"))
-      :thk.project/bridge-nr            (->int (prj "bridgenr"))
-      :thk.project/start-m              (km->m (->num (prj "kmstart")))
-      :thk.project/end-m                (km->m (->num (prj "kmend")))
-      :thk.project/carriageway          (->int (prj "carriageway"))
-      :thk.project/name                 (prj "objectname")
-      :thk.project/estimated-start-date project-est-start
-      :thk.project/estimated-end-date   project-est-end
+    (when-not (excluded-project-types (prj "shortname"))
+      (cu/without-nils
+       {:db/id project-id
+        :thk.project/id project-id
+        :thk.project/road-nr              (->int (prj "roadnr"))
+        :thk.project/bridge-nr            (->int (prj "bridgenr"))
+        :thk.project/start-m              (km->m (->num (prj "kmstart")))
+        :thk.project/end-m                (km->m (->num (prj "kmend")))
+        :thk.project/carriageway          (->int (prj "carriageway"))
+        :thk.project/name                 (prj "objectname")
+        :thk.project/estimated-start-date project-est-start
+        :thk.project/estimated-end-date   project-est-end
 
-      :thk.project/lifecycles
-      (into []
-            (for [{:strs [est_start est_end phase]} lifecycle-phases
-                  ;; PENDING: should come from CSV field
-                  :let [id (str project-id "-" phase)]]
-              {:db/id id
-               :thk.lifecycle/id id
-               :thk.lifecycle/type
-               (case phase
-                 "ehitus" :thk.lifecycle-type/design
-                 "projekteerimine" :thk.lifecycle-type/construction)
-               :thk.lifecycle/estimated-start-date (->date est_start)
-               :thk.lifecycle/estimated-end-date (->date est_end)}))})))
+        :thk.project/lifecycles
+        (into []
+              (for [[id activities] phases
+                    :let [{:strs [ph_shname ; phase type
+                                  ph_estStart ph_estEnd]}  ; estimated start/end dates
+                          (first activities)]]
+                (merge
+                 {:db/id id
+                  :thk.lifecycle/id id
+                  :thk.lifecycle/type
+                  (case ph_shname
+                    "projetapp" :thk.lifecycle-type/design
+                    "ehitetapp" :thk.lifecycle-type/construction)
+                  :thk.lifecycle/estimated-start-date (->date ph_estStart)
+                  :thk.lifecycle/estimated-end-date (->date ph_estEnd)
+                  :thk.lifecycle/activities
+                  (for [{:strs [act_id ; THK id
+                                act_teetid ; TEET id (if known by THK)
+                                act_typefk act_shname ; activity type
+                                act_statusfk act_statname ; status
+                                act_estStart act_estEnd]} activities
+                        :let [activity-name (thk-activity-type->activity-name act_typefk)]
+                        :when (and act_id activity-name)]
+                    {:thk.activity/id act_id
+                     :db/id act_id
+                     :activity/estimated-start-date (->date act_estStart)
+                     :activity/estimated-end-date (->date act_estEnd)
+                     :activity/name activity-name
+                     :activity/status (thk-activity-status->status act_statusfk) })})))}))))
 
 (defn teet-project? [[_ [p1 & _]]]
   (and p1
