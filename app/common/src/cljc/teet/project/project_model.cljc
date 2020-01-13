@@ -116,3 +116,10 @@
 
 (defn project-files [project]
   (into [] project-files-xf [project]))
+
+(def lifecycle-order
+  {:thk.lifecycle-type/design 1
+   :thk.lifecycle-type/construction 2})
+
+(def sort-lifecycles
+  (partial sort-by (comp lifecycle-order #(get-in % [:thk.lifecycle/type :db/ident]))))
