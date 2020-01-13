@@ -493,4 +493,11 @@
   :txes [[{:db/ident :thk.project/setup-skipped?
            :db/valueType :db.type/boolean
            :db/cardinality :db.cardinality/one
-           :db/doc "This value is set to the project when someone skips project initialization."}]]}]
+           :db/doc "This value is set to the project when someone skips project initialization."}]]}
+
+ {:db/ident :migration/thk-activity-id
+  :txes [[{:db/ident :thk.activity/id
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/unique :db.unique/identity
+           :db/doc "Unique activity id in THK"}]]}]
