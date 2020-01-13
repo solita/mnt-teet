@@ -56,4 +56,4 @@
                               :estimated-start-date #inst "2022-02-28T22:00:00.000-00:00"
                               :estimated-end-date #inst "2022-12-30T22:00:00.000-00:00"}))
 
-      (is (zero? (count (:thk.lifecycle/activities construction-phase)))))))
+      (is (= 1 (count (:thk.lifecycle/activities construction-phase)))))))

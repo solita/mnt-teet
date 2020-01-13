@@ -52,7 +52,7 @@
     ;; 4002 KMH
     "4003" :activity.name/detailed-design ;; Pöhiprojekt
     "4004" :activity.name/land-acquisition ;; Maaost
-    ;; 4005 Teostus
+    "4005" :activity.name/construction ;; Teostus
     ;; 4010 ekspertiis
     ;; 4011 LOA proj
     "4012" :activity.name/pre-design ;; Eskiisproj
