@@ -1,7 +1,6 @@
 (ns teet.thk.thk-integration-ion
   "THK integration lambdas"
   (:require [amazonica.aws.s3 :as s3]
-            [cheshire.core :as cheshire]
             [clojure.java.io :as io]
             [clojure.string :as str]
             [teet.log :as log]
@@ -74,7 +73,7 @@
     (catch Exception e
       (throw (integration-context/ctx-exception ctx "Failed to move file to processed directory" e)))))
 
-(defn- move-file-to-error [{{:keys [bucket file-key]} :s3 :as ctx}]
+(defn- move-file-to-error [{{:keys [bucket file-key]} :s3 :as _ctx}]
   (let [processed-file-key (-> file-key
                                (change-directory error-directory)
                                (add-suffix (str "." (System/currentTimeMillis))))]
