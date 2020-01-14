@@ -98,19 +98,6 @@
                       "2px solid black"
                       (str "2px solid " theme-colors/gray-lighter))})))
 
-;; TODO: Added for pilot demo. Maybe later store in database, make customizable?
-(def activity-sort-priority-vec
-  [:activity.name/pre-design
-   :activity.name/preliminary-design
-   :activity.name/land-acquisition
-   :activity.name/detailed-design
-   :activity.name/construction
-   :activity.name/other])
-
-(defn- activity-sort-priority [activity]
-  (.indexOf activity-sort-priority-vec
-            (-> activity :activity/name :db/ident)))
-
 (defn- flex-column
   []
   {:display        :flex
