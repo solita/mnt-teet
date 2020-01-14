@@ -110,7 +110,8 @@
   :map-layers "Kaardikiht"},
  :notifications
  {:activity-deleted "Tegevus kustutati edukalt",
-  :activity-updated "Tegevust värskendati edukalt"},
+  :activity-updated "Tegevust värskendati edukalt",
+  :task-deleted "Ülesanne on edukalt kustutatud"},
  :project
  {:details-view "Detailid",
   :map-view "Kaart",

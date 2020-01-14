@@ -2,6 +2,7 @@
   (:require [tuck.core :as t]
             [goog.math.Long]
             [teet.log :as log]
+            [teet.localization :refer [tr]]
             [teet.document.document-controller]
             [teet.common.common-controller :as common-controller]))
 
@@ -56,7 +57,7 @@
     (t/fx app
           {:tuck.effect/type :command!
            :command          :project/delete-task
-           :success-message  "Task deleted successfully"    ;;TODO add localization
+           :success-message  (tr [:notifications :task-deleted])
            :payload          {:db/id (goog.math.Long/fromString task-id)}
            :result-event     ->DeleteTaskResult}))
 

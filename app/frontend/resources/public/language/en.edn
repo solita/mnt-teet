@@ -109,7 +109,8 @@
   :map-layers "Map layers"},
  :notifications
  {:activity-deleted "Activity deleted successfully",
-  :activity-updated "Activity updated successfully"},
+  :activity-updated "Activity updated successfully",
+  :task-deleted "Task deleted successfully"},
  :project
  {:details-view "Details",
   :map-view "Map",
