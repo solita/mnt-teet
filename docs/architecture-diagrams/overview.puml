@@ -28,9 +28,14 @@ package "External systems" {
 	(Cadastral data) as cadastraldbAlias
 }
 
+(cadastral import automation TBD) as tbdImportProcess1
+(restrictions import automation TBD) as tbdImportProcess2
+
 mapsAlias --> personAlias
-cadastraldbAlias --> pgAlias
-restrictionsAlias --> pgAlias
+cadastraldbAlias --> tbdImportProcess1
+tbdImportProcess1 --> pgAlias
+restrictionsAlias --> tbdImportProcess2
+tbdImportProcess2 --> pgAlias
 
 Fargate(pgRestAlias, "PostgREST API", "HTTP access to Aurora data")
 SimpleStorageServiceS3(storageAlias, "Stored docs", "Project-related uploaded files")
@@ -43,6 +48,15 @@ package "Datomic" {
   Lambda(commandIonAlias, "Command ion", "Alter system state")
   Lambda(thkIntegrationIonAlias, "THK Integration ion", "Processes CSV files")
   
+  note bottom of thkIntegrationIonAlias
+	Datomic ions run on a set of Datomic compute nodes,
+	each is coupled with a Lambda
+  end note
+
+  note right of datomicAlias
+	Datomic DB data is backed by AWS DynamoDB, S3 & EBS services
+  end note
+
 }
 
 
@@ -67,10 +81,6 @@ pgRestAlias <-> pgAlias
 
 note right of documentsAlias
 	Associated to specific project tasks
-end note
-
-note bottom of datomicAlias
-	Datomic DB data is backed by AWS DynamoDB, S3 & EBS services
 end note
 
 @enduml
