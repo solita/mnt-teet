@@ -127,6 +127,7 @@
       (log/event :thk-file-processed
                  {:input result}))
     (catch Exception e
+      (log/error (.getCause e) "Exception in THK import")
       (on-import-error (ex-data e)))))
 
 (defn import-thk-local-file

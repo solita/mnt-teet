@@ -13,7 +13,8 @@
                                               (str ": "
                                                    (.getMessage e))))
                               :stack-trace (when e
-                                             (stack-trace e))})))
+                                             (stack-trace e))})
+           e))
 (defmacro ctx->
   "Pipe ctx through steps, wrapping all steps in exception handling"
   [ctx & steps]
