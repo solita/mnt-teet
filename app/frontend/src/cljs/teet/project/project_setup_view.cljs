@@ -213,7 +213,10 @@
   (e! (project-controller/->FetchRestrictions road-buffer-meters))
   (fn [e! {:keys [restriction-candidates checked-restrictions open-types] :or {open-types #{}} :as _project} {step-label :step-label :as step} _map]
     [:form {:id        step-label
-            :on-submit (e! (project-controller/navigate-to-next-step-event project-setup-steps step))}
+            :on-submit (let [step-constructor (project-controller/navigate-to-next-step-event project-setup-steps step)]
+                         #(let [event (step-constructor)]
+                            (e! event)
+                            (.preventDefault %)))}
      (when restriction-candidates
        [restrictions-listing e!
         open-types
