@@ -3,7 +3,9 @@ set -eu
 
 clojure -m figwheel.main -O advanced -bo prod
 
-branch=`git branch | grep "*" | cut -f2 -d' '`
+branch="$CODEBUILD_SOURCE_VERSION"
+#`git branch | grep "*" | cut -f2 -d' '`
+
 githash=`git rev-parse HEAD`
 buildtime=`date "+%d.%m.%Y %H:%M:%S"`
 
