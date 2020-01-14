@@ -14,16 +14,6 @@ end title
 !includeurl AWSPuml/Database/Aurora.puml
 !includeurl AWSPuml/Storage/SimpleStorageServiceS3.puml
 
-database "DatomicDB" {
-  frame "Projects" {
-	[Location, owner, timeframe etc info]
-  }
-  frame "Phases" {
-	[Type, timeframe, phase etc info]
-  }
-}
-
-
 
 actor "Browser frontend" as personAlias
 (User prepared documents) as documentsAlias
