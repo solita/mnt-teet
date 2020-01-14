@@ -1,0 +1,73 @@
+@startuml TEET overview
+
+title
+	TEET system architecture overview
+end title
+	
+
+!define AWSPuml https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/master/dist
+!includeurl AWSPuml/AWSCommon.puml
+!includeurl AWSPuml/EndUserComputing/all.puml
+!includeurl AWSPuml/Mobile/APIGateway.puml
+!includeurl AWSPuml/Compute/Lambda.puml
+!includeurl AWSPuml/Compute/Fargate.puml
+!includeurl AWSPuml/Database/Aurora.puml
+!includeurl AWSPuml/Storage/SimpleStorageServiceS3.puml
+
+database "DatomicDB" {
+  frame "Projects" {
+	[Location, owner, timeframe etc info]
+  }
+  frame "Phases" {
+	[Type, timeframe, phase etc info]
+  }
+}
+
+
+
+actor "Browser frontend" as personAlias
+(User prepared documents) as documentsAlias
+(THK system) as thkAlias
+Aurora(pgAlias, "Aurora DB", "Geo data")
+
+Fargate(pgRestAlias, "PostgREST API", "HTTP access to Aurora data")
+SimpleStorageServiceS3(storageAlias, "Stored docs", "Project-related uploaded files")
+SimpleStorageServiceS3(integrationS3Alias, "THK integration data", "CSV files")
+APIGateway(apigwAlias, "Frontend APIGW", "Web UI actions")
+
+package "Datomic" {
+  (Datomic DB) as datomicAlias
+  Lambda(queryIonAlias, "Query ion", "Read back information")
+  Lambda(commandIonAlias, "Command ion", "Alter system state")
+  Lambda(thkIntegrationIonAlias, "THK Integration ion", "Processes CSV files")
+}
+
+
+personAlias --> apigwAlias
+apigwAlias --> storageAlias
+apigwAlias --> queryIonAlias
+apigwAlias --> commandIonAlias
+personAlias --> documentsAlias
+documentsAlias --> storageAlias
+integrationS3Alias <--> thkIntegrationIonAlias
+thkAlias --> integrationS3Alias
+
+thkIntegrationIonAlias <--> datomicAlias
+queryIonAlias <--> datomicAlias
+commandIonAlias <--> datomicAlias
+
+thkIntegrationIonAlias <--> pgRestAlias
+queryIonAlias <--> pgRestAlias
+commandIonAlias <--> pgRestAlias
+
+pgRestAlias <-> pgAlias
+
+note right of documentsAlias
+	Associated to specific project tasks
+end note
+
+note bottom of datomicAlias
+	Datomic DB data is backed by AWS DynamoDB, S3 & EBS services
+end note
+
+@enduml
