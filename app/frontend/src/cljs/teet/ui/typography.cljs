@@ -1,6 +1,13 @@
 (ns teet.ui.typography
-  (:require [teet.ui.material-ui :refer [Typography]]
-            [teet.ui.util :as util]))
+  (:require [herb.core :as herb :refer [<class]]
+            [teet.ui.material-ui :refer [Typography]]
+            [teet.ui.util :as util]
+            [teet.theme.theme-colors :as theme-colors]))
+
+(defn- small-text-style
+  []
+  {:color theme-colors/gray-light
+   :font-size "0.75rem"})
 
 (def Heading1 (util/make-component Typography {:variant "h1"}))
 
@@ -16,4 +23,5 @@
 
 (def DataLabel (util/make-component Typography {:variant "subtitle1"}))
 
-(def SmallText (util/make-component Typography {:variant "subtitle2"}))
+(def SmallText (util/make-component :span {:class (<class small-text-style)}))
+
