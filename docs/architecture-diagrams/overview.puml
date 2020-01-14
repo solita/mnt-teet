@@ -15,10 +15,22 @@ end title
 !includeurl AWSPuml/Storage/SimpleStorageServiceS3.puml
 
 
-actor "Browser frontend" as personAlias
+actor "TEET Browser app (frontend)" as personAlias
 (User prepared documents) as documentsAlias
-(THK system) as thkAlias
 Aurora(pgAlias, "Aurora DB", "Geo data")
+
+
+package "External systems" {
+	(THK system) as thkAlias
+	(Maa-amet maps) as mapsAlias
+	(Delta) as deltaAlias
+	(Maa-amet restrictions) as restrictionsAlias
+	(Cadastral data) as cadastraldbAlias
+}
+
+mapsAlias --> personAlias
+cadastraldbAlias --> pgAlias
+restrictionsAlias --> pgAlias
 
 Fargate(pgRestAlias, "PostgREST API", "HTTP access to Aurora data")
 SimpleStorageServiceS3(storageAlias, "Stored docs", "Project-related uploaded files")
@@ -30,6 +42,7 @@ package "Datomic" {
   Lambda(queryIonAlias, "Query ion", "Read back information")
   Lambda(commandIonAlias, "Command ion", "Alter system state")
   Lambda(thkIntegrationIonAlias, "THK Integration ion", "Processes CSV files")
+  
 }
 
 
