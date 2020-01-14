@@ -107,6 +107,9 @@
  {:clear-selections "Clear selections",
   :select-all "Select all",
   :map-layers "Map layers"},
+ :notifications
+ {:activity-deleted "Activity deleted successfully",
+  :activity-updated "Activity updated successfully"},
  :project
  {:details-view "Details",
   :map-view "Map",

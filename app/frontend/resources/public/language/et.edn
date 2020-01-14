@@ -108,6 +108,9 @@
  {:clear-selections "Tühjendan valikud",
   :select-all "Valin kõik",
   :map-layers "Kaardikiht"},
+ :notifications
+ {:activity-deleted "Tegevus kustutati edukalt",
+  :activity-updated "Tegevust värskendati edukalt"},
  :project
  {:details-view "Detailid",
   :map-view "Kaart",
