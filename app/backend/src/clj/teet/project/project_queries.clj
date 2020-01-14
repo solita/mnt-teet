@@ -24,7 +24,11 @@
                                           {:activity/tasks [*
                                                             {:task/documents [{:document/files [*]}]}]}]}]}])
                            [:thk.project/id id]))]
-    (update project :thk.project/lifecycles project-model/sort-lifecycles)))
+    (-> project
+        (update :thk.project/lifecycles project-model/sort-lifecycles)
+        (update :thk.project/lifecycles
+                (fn [lifecycle]
+                  (map #(update % :thk.lifecycle/activities project-model/sort-activities) lifecycle))))))
 
 (defmethod db-api/query :thk.project/fetch-task [{db :db} {project-id :thk.project/id
                                                            task-id :task-id}]
