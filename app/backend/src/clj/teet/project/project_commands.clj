@@ -94,7 +94,6 @@
     {:tx-data [(deletion-tx user activity-id)]})
   :ok)
 
-
 (defmethod db-api/command! :project/create-activity [{conn :conn} activity]
   (log/info "ACTIVITY: " activity)
   (select-keys

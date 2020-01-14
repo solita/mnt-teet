@@ -164,8 +164,6 @@
    :padding-bottom "1rem"
    :margin-bottom "1rem"})
 
-
-
 (defn- status-style
   []
   {:flex-basis "30%"})

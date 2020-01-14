@@ -79,8 +79,7 @@
            :endpoint         (get-in app [:config :api-url])
            :rpc              "restriction_map_selections"
            :args             {}
-           :result-event     (fn [result]
-                               (->MapLayersResult result))}))
+           :result-event     ->MapLayersResult}))
 
   SetBackgroundLayer
   (process-event [{layer :layer} app]

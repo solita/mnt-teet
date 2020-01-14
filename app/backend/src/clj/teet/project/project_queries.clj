@@ -11,19 +11,24 @@
       :thk.project/id))
 
 (defmethod db-api/query :thk.project/fetch-project [{db :db} {:thk.project/keys [id]}]
-  (meta-query/without-deleted
-    db
-    (d/pull db (into project-model/project-info-attributes
-                     '[{:thk.project/lifecycles
-                        [:db/id
-                         :thk.lifecycle/estimated-start-date
-                         :thk.lifecycle/estimated-end-date
-                         :thk.lifecycle/type
-                         {:thk.lifecycle/activities
-                          [*
-                           {:activity/tasks [*
-                                             {:task/documents [{:document/files [*]}]}]}]}]}])
-            [:thk.project/id id])))
+  (let [project (meta-query/without-deleted
+                   db
+                   (d/pull db (into project-model/project-info-attributes
+                                    '[{:thk.project/lifecycles
+                                       [:db/id
+                                        :thk.lifecycle/estimated-start-date
+                                        :thk.lifecycle/estimated-end-date
+                                        :thk.lifecycle/type
+                                        {:thk.lifecycle/activities
+                                         [*
+                                          {:activity/tasks [*
+                                                            {:task/documents [{:document/files [*]}]}]}]}]}])
+                           [:thk.project/id id]))]
+    (-> project
+        (update :thk.project/lifecycles project-model/sort-lifecycles)
+        (update :thk.project/lifecycles
+                (fn [lifecycle]
+                  (map #(update % :thk.lifecycle/activities project-model/sort-activities) lifecycle))))))
 
 (defmethod db-api/query :thk.project/fetch-task [{db :db} {project-id :thk.project/id
                                                            task-id :task-id}]

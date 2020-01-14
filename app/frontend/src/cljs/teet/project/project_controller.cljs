@@ -11,8 +11,8 @@
             [clojure.string :as str]))
 
 
-(defrecord OpenActivityDialog [])                           ; open add activity modal dialog
-(defrecord OpenTaskDialog [])
+(defrecord OpenActivityDialog [lifecycle])                           ; open add activity modal dialog
+(defrecord OpenTaskDialog [activity])
 (defrecord CloseAddDialog [])
 (defrecord SelectProject [project-id])
 (defrecord SelectCadastralUnit [p])
@@ -87,9 +87,11 @@
 (defrecord FeatureMouseOvers [layer enter? feature])
 (defrecord ToggleRestrictionCategory [restrictions group])
 (defrecord ToggleSelectedCategory [])
+(defrecord ToggleStepperLifecycle [lifecycle])
+(defrecord ToggleStepperActivity [activity])
 
 (defrecord PostActivityEditForm [])
-(defrecord OpenEditActivityDialog [])
+(defrecord OpenEditActivityDialog [activity-id])
 (defrecord InitializeActivityEditForm [])
 (defrecord ContinueProjectSetup [project-id])
 (defrecord SkipProjectSetup [project-id])
@@ -419,12 +421,13 @@
            :params           {:project id}}))
 
   OpenActivityDialog
-  (process-event [_ {:keys [page params query] :as app}]
+  (process-event [{lifecycle :lifecycle} {:keys [page params query] :as app}]
     (t/fx app
           {:tuck.effect/type :navigate
            :page             page
            :params           params
-           :query            (assoc query :add "activity")}))
+           :query            (assoc query :add "activity"
+                                          :lifecycle lifecycle)}))
 
   CloseAddDialog
   (process-event [_ {:keys [page params query] :as app}]
@@ -432,15 +435,16 @@
           {:tuck.effect/type :navigate
            :page             page
            :params           params
-           :query            (dissoc query :add :edit)}))
+           :query            (dissoc query :add :edit :activity :lifecycle)}))
 
   OpenTaskDialog
-  (process-event [_ {:keys [page params query] :as app}]
+  (process-event [{activity :activity} {:keys [page params query] :as app}]
     (t/fx app
           {:tuck.effect/type :navigate
            :page             page
            :params           params
-           :query            (assoc query :add "task")}))
+           :query            (assoc query :add "task"
+                                          :activity activity)}))
 
   PostActivityEditForm
   (process-event [_ {:keys [page params query edit-activity-data] :as app}]
@@ -466,12 +470,13 @@
       (assoc app :edit-activity-data activity)))
 
   OpenEditActivityDialog
-  (process-event [_ {:keys [page params query] :as app}]
+  (process-event [{activity-id :activity-id} {:keys [page params query] :as app}]
     (t/fx app
           {:tuck.effect/type :navigate
            :page             page
            :params           params
-           :query            (assoc query :edit "activity")}))
+           :query            (assoc query :edit "activity"
+                                          :activity activity-id)}))
 
   UpdateActivityState
   (process-event [{activity-id :id status :status} app]
@@ -483,6 +488,19 @@
            :result-event     common-controller/->Refresh
            :success-message  "Activity updated successfully" ;TODO add to localizations
            }))
+
+
+  ToggleStepperLifecycle
+  (process-event [{lifecycle :lifecycle} app]
+    (if (= (str lifecycle) (str (get-in app [:stepper :lifecycle])))
+      (assoc-in app [:stepper :lifecycle] nil)
+      (assoc-in app [:stepper :lifecycle] lifecycle)))
+
+  ToggleStepperActivity
+  (process-event [{activity :activity} app]
+    (if (= (str activity) (str (get-in app [:stepper :activity])))
+      (assoc-in app [:stepper :activity] nil)
+      (assoc-in app [:stepper :activity] activity)))
 
   ToggleRestrictionData
   (process-event [{restriction-id :id} app]

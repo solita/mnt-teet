@@ -42,8 +42,12 @@
 (def button-warning
   (util/make-component Button {:variant        :contained
                                :disable-ripple true
-                               :class        [:btn-warn (<class warn-button-style)]}))
+                               :class          (<class warn-button-style)}))
 
+(def rect-primary
+  (util/make-component Button {:variant :outlined
+                               :color :primary
+                               :disable-ripple true}))
 
 (defn white-button-with-icon
   [{:keys [on-click icon]} text]

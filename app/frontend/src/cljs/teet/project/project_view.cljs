@@ -1,28 +1,24 @@
 (ns teet.project.project-view
-  (:require [clojure.string :as str]
-            [herb.core :as herb :refer [<class]]
+  (:require [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
             [teet.activity.activity-view :as activity-view]
             [teet.common.common-styles :as common-styles]
             [teet.localization :refer [tr tr-tree]]
-            [teet.map.map-features :as map-features]
-            [teet.map.map-layers :as map-layers]
             [teet.map.map-view :as map-view]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-model :as project-model]
             [teet.project.project-style :as project-style]
             [teet.project.project-setup-view :as project-setup-view]
             [teet.project.project-layers :as project-layers]
-            [teet.road.road-model :as road-model :refer [km->m]]
             [teet.task.task-controller :as task-controller]
             teet.task.task-spec
             [teet.ui.breadcrumbs :as breadcrumbs]
             [teet.ui.buttons :as buttons]
             [teet.ui.common :as common]
-            [teet.ui.container :as container]
             [teet.ui.form :as form]
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
+            [teet.ui.stepper :as stepper]
             [teet.ui.itemlist :as itemlist]
             [teet.ui.material-ui :refer [Divider Paper]]
             [teet.ui.panels :as panels]
@@ -34,13 +30,10 @@
             [teet.ui.timeline :as timeline]
             [teet.ui.typography :refer [Heading1 Heading2 Heading3] :as typography]
             [teet.ui.url :as url]
-            [teet.ui.util :as util]
             [teet.util.collection :as cu]
             [teet.activity.activity-controller :as activity-controller]
             [teet.routes :as routes]
-            [teet.map.map-controller :as map-controller]
             [teet.authorization.authorization-check :refer [when-authorized]]
-            [teet.log :as log]
             [teet.theme.theme-colors :as theme-colors]))
 
 (defn task-form [_e! {:keys [initialization-fn]}]
@@ -137,27 +130,10 @@
   [:div {:class (<class project-header-style)}
    [:div
     [breadcrumbs/breadcrumbs breadcrumbs]
-    [Heading1 (project-model/get-column project :thk.project/project-name)]]]
+    [Heading1 {:style {:margin-bottom 0}}
+     (project-model/get-column project :thk.project/project-name)]]]
   #_[project-data activities project])
 
-(defn activity-action-heading
-  [{:keys [heading button]}]
-  [:div {:class (<class project-style/activity-action-heading)}
-   [Heading2 heading]
-   button])
-
-;; TODO: Added for pilot demo. Maybe later store in database, make customizable?
-(def activity-sort-priority-vec
-  [:activity.name/pre-design
-   :activity.name/preliminary-design
-   :activity.name/land-acquisition
-   :activity.name/detailed-design
-   :activity.name/construction
-   :activity.name/other])
-
-(defn- activity-sort-priority [activity]
-  (.indexOf activity-sort-priority-vec
-            (-> activity :activity/name :db/ident)))
 
 (defn heading-state
   [title select]
@@ -207,35 +183,35 @@
                    :flex-direction :column}}
      [map-view/map-view e!
       {:class    (<class map-style)
-       :layers (let [opts {:e! e!
-                           :app app
-                           :project project
-                           :set-overlays! set-overlays!}]
-                 (reduce (fn [layers layer-fn]
-                           (merge layers (layer-fn opts)))
-                         {}
-                         [#_project-layers/surveys-layer
-                          project-layers/road-buffer
-                          project-layers/project-road-geometry-layer
-                          project-layers/setup-restriction-candidates
-                          project-layers/setup-cadastral-unit-candidates
-                          project-layers/ags-surveys
-                          project-layers/related-restrictions
-                          project-layers/related-cadastral-units
-                          project-layers/selected-cadastral-units
-                          project-layers/selected-restrictions]))
+       :layers   (let [opts {:e!            e!
+                             :app           app
+                             :project       project
+                             :set-overlays! set-overlays!}]
+                   (reduce (fn [layers layer-fn]
+                             (merge layers (layer-fn opts)))
+                           {}
+                           [#_project-layers/surveys-layer
+                            project-layers/road-buffer
+                            project-layers/project-road-geometry-layer
+                            project-layers/setup-restriction-candidates
+                            project-layers/setup-cadastral-unit-candidates
+                            project-layers/ags-surveys
+                            project-layers/related-restrictions
+                            project-layers/related-cadastral-units
+                            project-layers/selected-cadastral-units
+                            project-layers/selected-restrictions]))
        :overlays (into []
                        (concat
-                        (for [[_ {:keys [coordinate content-data]}] (:overlays project)]
-                          {:coordinate coordinate
-                           :content [map-view/overlay {:single-line? false
-                                                       :width 200
-                                                       :height nil
-                                                       :arrow-direction :top}
-                                     [itemlist/ItemList {}
-                                      (for [[k v] content-data]
-                                        [itemlist/Item {:label k} v])]]})
-                        @overlays))}
+                         (for [[_ {:keys [coordinate content-data]}] (:overlays project)]
+                           {:coordinate coordinate
+                            :content    [map-view/overlay {:single-line?    false
+                                                           :width           200
+                                                           :height          nil
+                                                           :arrow-direction :top}
+                                         [itemlist/ItemList {}
+                                          (for [[k v] content-data]
+                                            [itemlist/Item {:label k} v])]]})
+                         @overlays))}
       map]]))
 
 (defn collapse-skeleton
@@ -260,8 +236,8 @@
     [TextField {:label       "Inclusion distance"
                 :type        :number
                 :placeholder "Give value to show related areas"
-                :value road-buffer-meters
-                :on-change #(e! (project-controller/->ChangeRoadObjectAoe (-> % .-target .-value)))}]]])
+                :value       road-buffer-meters
+                :on-change   #(e! (project-controller/->ChangeRoadObjectAoe (-> % .-target .-value)))}]]])
 
 (defn project-page-structure
   [e!
@@ -313,22 +289,9 @@
       ;; else
       (tr [:common :construction-phase]))]])
 
-(defn activities-tab [e! {:keys [query params page] :as app} project]
-  (let [{:keys [activity lifecycle]} query]
-    (cond
-      activity
-      [project-activity e! project (project-model/activity-by-id project activity)]
-      lifecycle
-      [project-lifecycle-content e! (project-model/lifecycle-by-id project lifecycle)]
-      :else
-      [:div
-       [typography/Heading2 "Lifecycles"]
-       (for [lc (:thk.project/lifecycles project)]
-         [common/list-button-link (merge {:link  (routes/url-for {:page   page
-                                                                  :query  (assoc query :lifecycle (str (:db/id lc)))
-                                                                  :params params})
-                                          :label (tr [:enum (get-in lc [:thk.lifecycle/type :db/ident])])
-                                          :icon  icons/file-folder-open})])])))
+(defn activities-tab
+  [e! {:keys [stepper] :as _app} project]
+  [stepper/vertical-stepper e! project stepper])
 
 (defn people-tab [_e! _app _project]
   [:div "people"])
@@ -340,14 +303,14 @@
   [_ _ initialization-fn]
   (initialization-fn)
   (fn [e! app _]
-    (when-let [activity-data (:edit-activity-data app)]                   ;;Otherwise the form renderer can't format dates properly
+    (when-let [activity-data (:edit-activity-data app)]     ;;Otherwise the form renderer can't format dates properly
       [:div
        [activity-view/activity-form e! (merge {:on-change activity-controller/->UpdateEditActivityForm
                                                :save      activity-controller/->SaveEditActivityForm
                                                :close     project-controller/->CloseAddDialog
                                                :activity  (:edit-activity-data app)}
                                               (when-authorized :activity/delete-activity
-                                                {:delete (project-controller/->DeleteActivity (str (:db/id activity-data)))}))]])))
+                                                               {:delete (project-controller/->DeleteActivity (str (:db/id activity-data)))}))]])))
 
 (def project-tabs-layout
   ;; FIXME: Labels with TR paths instead of text
@@ -378,8 +341,16 @@
   [(:component (selected-project-tab app)) e! app project])
 
 (defn project-page-modals
-  [e! {{:keys [add edit]} :query :as app} project]
-  (let [[modal modal-label]
+  [e! {{:keys [add edit lifecycle]} :query :as app} project]
+  (let [lifecycle-type (some->> project
+                                :thk.project/lifecycles
+                                (filter #(= lifecycle (str (:db/id %))))
+                                first
+                                :thk.lifecycle/type
+                                :db/ident
+                                name
+                                keyword)
+        [modal modal-label]
         (cond
           add
           (case add
@@ -393,7 +364,7 @@
                                                          :activity  (get-in app [:project (:thk.project/id project) :new-activity])
                                                          :on-change activity-controller/->UpdateActivityForm
                                                          :save      activity-controller/->CreateActivity}]
-                        (tr [:project :add-activity])])
+                        (tr [:project :add-activity lifecycle-type])])
 
           edit
           (case edit
@@ -416,7 +387,7 @@
     [:span {:class (<class common-styles/warning-text)}
      (tr [:project :wizard :setup-incomplete])]]
 
-   [buttons/button-primary {:type :submit
+   [buttons/button-primary {:type     :submit
                             :on-click #(e! (project-controller/->ContinueProjectSetup (:thk.project/id project)))}
     (tr [:buttons :continue])]])
 
