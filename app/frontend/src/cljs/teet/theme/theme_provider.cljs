@@ -76,17 +76,25 @@
                :MuiIconButton {:root {:border-radius "2px"
                                       "&:focus" theme-colors/focus-style}}
                :MuiButtonBase {:root {:font-size "1rem"}}
-               :MuiButton {:containedSecondary {:background-color theme-colors/white
+               :MuiButton {:sizeSmall {:padding "0 10px"
+                                       :font-size "0.875rem"}
+                           :containedSecondary {:background-color theme-colors/white
                                                 :border (str "2px solid " theme-colors/gray)
                                                 :color theme-colors/gray-dark
-                                                "&:hover" {:background-color theme-colors/gray-lighter}}
+                                                "&:hover" {:background-color theme-colors/gray-lighter
+                                                           :box-shadow "none"}}
                            :contained {:border-radius "20px"
-                                       "&:focus" theme-colors/focus-style}
+                                       "&:focus" theme-colors/focus-style
+                                       :box-shadow "none"
+                                       "&:hover" {:box-shadow "none"}}
                            :root {:text-transform :capitalize
                                   :font-weight 400
-                                  :padding "0 1.875rem"
+                                  :padding "4px 1.875rem"
                                   :font-size "1rem"
-                                  :height "40px"}}
+                                  :white-space :nowrap
+                                  :max-height "40px"
+                                  :box-shadow "none"
+                                  "&:hover" {:box-shadow "none"}}}
                :MuiDrawer {:paper {:background-color theme-colors/blue
                                    :color theme-colors/white
                                    "& .MuiListItemIcon-root" {:color :inherit
