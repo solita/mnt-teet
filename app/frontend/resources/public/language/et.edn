@@ -18,7 +18,7 @@
   :construction-phase "Ehitusetapp",
   :general "Üldine",
   :design-stage "Staadium",
-  :construction-phase-activities nil,
+  :construction-phase-activities "Faasid",
   :last-modified "Viimati muudetud",
   :language "Keel",
   :unassigned "Määramata",
@@ -111,7 +111,8 @@
  :project
  {:details-view "Detailid",
   :map-view "Kaart",
-  :add-activity "Lisan tegevus",
+  :add-activity
+  {:design "Lisama ülesanded", :construction "Lisama faasid"},
   :restrictions-tab "Kitsendused",
   :activity {:no-tasks "Ülesandeid pole"},
   :wizard
@@ -124,7 +125,7 @@
    :activities "Lisan projekteerimine tegevused",
    :cadastral-units "Valin mõjutatud katastriüksused",
    :skip-setup "Jätan seadistuse vahele"},
-  :add-task "Lisan ülesande",
+  :add-task "Lisage ülesanne",
   :information
   {:estimated-duration "Eeldatav kestus",
    :road-number "Tee number",

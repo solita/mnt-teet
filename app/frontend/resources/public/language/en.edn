@@ -110,7 +110,7 @@
  :project
  {:details-view "Details",
   :map-view "Map",
-  :add-activity "Add activity",
+  :add-activity {:design "Add phase", :construction "Add stage"},
   :restrictions-tab "Restrictions",
   :activity {:no-tasks "No tasks defined"},
   :wizard
