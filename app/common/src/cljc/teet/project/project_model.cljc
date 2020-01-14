@@ -123,3 +123,18 @@
 
 (def sort-lifecycles
   (partial sort-by (comp lifecycle-order #(get-in % [:thk.lifecycle/type :db/ident]))))
+
+(def activity-sort-priority-vec
+  [:activity.name/pre-design
+   :activity.name/preliminary-design
+   :activity.name/land-acquisition
+   :activity.name/detailed-design
+   :activity.name/construction
+   :activity.name/other])
+
+(defn- activity-sort-priority [activity]
+  (.indexOf activity-sort-priority-vec
+            (-> activity :activity/name :db/ident)))
+
+(def sort-activities
+  (partial sort-by activity-sort-priority))
