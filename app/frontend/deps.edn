@@ -1,6 +1,6 @@
 {:deps {org.clojure/clojurescript {:mvn/version "1.10.520"}
         ;; UI Libraries
-        reagent {:mvn/version "0.8.1" :exclusions [cljsjs/react-dom-server]}
+        reagent {:mvn/version "0.9.0" :exclusions [cljsjs/react-dom-server]}
         tatut/postgrest-ui {:git/url "https://github.com/tatut/postgrest-ui"
                             :sha "ee9047b6c6cadd5dd1df395c30d162f4aeea1e1f"}
         webjure/tuck {:git/url "https://github.com/tatut/tuck"

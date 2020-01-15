@@ -119,7 +119,9 @@
 
 (defn default-server-error-handler [err app]
   (snackbar-controller/open-snack-bar app (tr-or [:error (-> err ex-data :error)]
-                                                 [:error :server-error]) :error))
+                                                 [:error :server-error]
+                                                 "error")
+                                      :error))
 
 (defmethod on-server-error :default [err app]
   (default-server-error-handler err app))

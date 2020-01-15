@@ -5,11 +5,10 @@
             [teet.log :as log]
             [cljs-bean.core :refer [->clj ->js]]
             [teet.project.project-model :as project-model]
+            [teet.localization :refer [tr]]
             [teet.road.road-model :as road-model]
             [teet.map.map-controller :as map-controller]
-            goog.math.Long
-            [clojure.string :as str]))
-
+            goog.math.Long))
 
 (defrecord OpenActivityDialog [lifecycle])                           ; open add activity modal dialog
 (defrecord OpenTaskDialog [activity])
@@ -267,7 +266,7 @@
     (t/fx app
           {:tuck.effect/type :command!
            :command          :project/delete-activity
-           :success-message  "Activity deletion success"    ;;TODO add localization
+           :success-message  (tr [:notifications :activity-deleted])
            :payload          {:db/id (goog.math.Long/fromString activity-id)}
            :result-event     ->DeleteActivityResult}))
 
@@ -486,8 +485,7 @@
            :payload          {:db/id           activity-id
                               :activity/status status}
            :result-event     common-controller/->Refresh
-           :success-message  "Activity updated successfully" ;TODO add to localizations
-           }))
+           :success-message  (tr [:notifications :activity-updated])}))
 
 
   ToggleStepperLifecycle

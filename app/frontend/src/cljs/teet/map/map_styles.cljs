@@ -8,7 +8,7 @@
    :position :absolute
    :top "25px"
    :right "80px"
-   :z-index 9999
+   :z-index 999
    :box-shadow "0px 2px 8px rgba(0, 0, 0, 0.25)"})
 
 (defn category-collapse-button
@@ -49,7 +49,7 @@
    :flex-direction :column
    :top      "20px"
    :right    "25px"
-   :z-index  9999})
+   :z-index  999})
 
 (defn map-control-button
   []

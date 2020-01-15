@@ -63,7 +63,7 @@
 
   CreateActivityResult
   (process-event [_ {:keys [page params query] :as app}]
-    (t/fx app
+    (t/fx (update-in app [:project (:project params)] dissoc :new-activity)
           {:tuck.effect/type :navigate
            :page             page
            :params           params
