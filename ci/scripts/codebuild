@@ -16,6 +16,15 @@
       json-out
       (get-in [:build :id])))
 
+(defn get-log-info
+  "Returns cloudwatch group and stream name for build logs"
+  [build-id]
+  (-> (sh "aws" "codebuild" "batch-get-builds"
+          "--ids" build-id)
+      json-out
+      (get-in [:builds 0 :logs])
+      ((juxt :groupName :streamName))))
+
 (defn get-build-info [build-id]
   (-> (sh "aws" "codebuild" "batch-get-builds" "--ids" build-id)
       json-out
@@ -24,38 +33,47 @@
 (defn sleep [seconds]
   (sh "sleep" (str seconds)))
 
-(def show-log-lines 20)
-
-(defn tail-build-logs [project-name]
-  (->> (sh "saw" "get" (str "/aws/codebuild/" project-name) "--start" "-2m")
-       :out str/split-lines
-       (remove str/blank?)
-       reverse (take show-log-lines) reverse vec))
+(defn tail-build-logs
+  ([log-info]
+   (tail-build-logs log-info nil))
+  ([[group stream] since-timestamp]
+   (let [logs
+         (->> (sh "aws" "logs" "get-log-events"
+                  "--log-group-name" group
+                  "--log-stream-name" stream
+                  "--start-time" (str (inc (or since-timestamp 0))))
+              json-out
+              :events
+              (mapv (juxt :timestamp :message)))]
+     (with-meta (mapv second logs)
+       {:last-timestamp (reduce max (map first logs))}))))
 
 (defn print-logs [lines]
-  (println (str "\u001b[2J\u001b[" show-log-lines "A")) ; clear screen and move up
-  (dotimes [i show-log-lines]
-    (let [line (get lines i)]
-      (println "\u001b[0K" (or line "")))))
+  (doseq [line lines]
+    ;; Move to beginning of line and clear the line... then print the message
+    (print "\u001b[1000D\u001b[2K" line)))
 
 (defn wait-for-completion [project-name version build-id]
   (let [start-time (.getTime (js/Date.))
         elapsed #(.toFixed (/ (- (.getTime (js/Date.)) start-time) 1000) 0)
-        poll #(do
-                (sleep 2)
-                (let [logs (tail-build-logs project-name)
-                      info (get-build-info build-id)]
-                  (print-logs logs)
-                  info))]
-    (loop [{:keys [currentPhase] :as build-info} (poll)
+        log-info (get-log-info build-id)
+        poll (fn [last-timestamp]
+               (sleep 2)
+               (let [logs (tail-build-logs log-info last-timestamp)
+                     info (get-build-info build-id)]
+                 (when (seq logs)
+                   (print-logs logs))
+                 (assoc info :last-log-timestamp (or (-> logs meta :last-timestamp)
+                                                     last-timestamp))))]
+    (loop [{:keys [currentPhase last-log-timestamp] :as build-info} (poll nil)
            [s & spinner] (cycle ["|" "/" "-" "\\"])]
       (if (= "COMPLETED" currentPhase)
         build-info
         (do
-          (print "\u001b[0K\u001b[7m"
+          (print "\u001b[1000D\u001b[2K\u001b[7m"
                  (str "[" project-name "@" version "] (" (elapsed) "s) ")
                  s " " currentPhase "\u001b[0m")
-          (recur (poll) spinner))))))
+          (recur (poll last-log-timestamp) spinner))))))
 
 (defn notify [project status]
   (sh "osascript" "-e" (str "display notification \"" status "\" with title \"" project "\"")))
