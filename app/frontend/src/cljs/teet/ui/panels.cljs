@@ -4,6 +4,7 @@
             [reagent.core :as r]
             [teet.ui.material-ui :refer [Card CardHeader CardContent
                                          Collapse IconButton Divider
+                                         DialogActions
                                          Dialog DialogTitle DialogContent]]
             [teet.ui.icons :as icons]
             [teet.ui.typography :as typography]))
@@ -58,8 +59,8 @@
 
 (defn modal
   "Simple modal container"
-  [{:keys [title on-close] :as opts} content]
-  (let [open-atom (or (:open-atom opts) (r/atom true))      ;;creates new atoms unnecessarily
+  [{:keys [title on-close open-atom actions] :as opts} content]
+  (let [open-atom (or open-atom (r/atom true))      ;;creates new atoms unnecessarily
         close-fn #(do
                     (reset! open-atom false)
                     (when on-close
@@ -80,4 +81,6 @@
                    :size           :small}
        [icons/navigation-close]]]
      [DialogContent
-      content]]))
+      content]
+     (when actions
+       actions)]))
