@@ -16,7 +16,7 @@
 (s/def :activity/estimated-end-date inst?)
 (s/def :activity/estimated-start-date inst?)
 (s/def :activity/estimated-date-range (s/coll-of inst? :count 2))
-(s/def :document/new-activity-form (s/keys :req [:activity/name :activity/estimated-date-range]))
+(s/def :document/new-activity-form (s/keys :req [:activity/name :activity/estimated-date-range :activity/status]))
 
 (s/def :comment/comment (s/and string? (complement str/blank?)))
 (s/def :document/new-comment-form (s/keys :req [:comment/comment]))
