@@ -2,7 +2,7 @@
   "Common container for forms"
   (:require [reagent.core :as r]
             [teet.ui.material-ui :refer [Grid Button]]
-            [teet.ui.text-field :refer [TextField]]
+            [teet.ui.text-field :refer [TextField ]]
             [teet.ui.util :as util]
             [teet.localization :refer [tr]]
             [goog.object :as gobj]
@@ -76,12 +76,12 @@
     (when justify
       {:justify-content justify})
     {:display :flex
-     :margin "1.5rem 0"})))
+     :margin-top "1.5rem"})))
 
 (defn form-footer [{:keys [delete cancel validate disabled?]}]
   [:div {:class (<class form-buttons)}
    (when delete
-     [buttons/button-warning {:on-click delete}
+     [buttons/button-with-confirm {:action delete}
       (tr [:buttons :delete])])
    [:div {:style {:margin-left :auto}}
     (when cancel
@@ -127,7 +127,8 @@
            spacing         ;; Form grid spacing
            step            ;; Current form step
            id              ;; Id for the form element
-           delete]
+           delete          ;; Delete function
+           ]
     :or {class (<class form-bg)
          footer form-footer
          spacing 3}}
