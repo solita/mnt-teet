@@ -13,7 +13,6 @@
             [teet.ui.buttons :as buttons]
             [teet.theme.theme-colors :as theme-colors]))
 
-
 (def default-value
   "Mapping of component to default value. Some components don't want nil as the value (like text area)."
   {TextField ""})

@@ -33,7 +33,7 @@
             {:tuck.effect/type :command!
              :command          :project/update-activity
              :payload          payload
-             :success-message  "Activity updated successfully"
+             :success-message  "Activity updated successfully" ;; TODO  add localization
              :result-event     ->SaveEditResult})))
 
   SaveEditResult

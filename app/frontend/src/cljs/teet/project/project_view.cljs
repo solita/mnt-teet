@@ -28,11 +28,10 @@
             [teet.ui.tabs :as tabs]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.timeline :as timeline]
-            [teet.ui.typography :refer [Heading1 Heading2 Heading3] :as typography]
+            [teet.ui.typography :refer [Heading1 Heading3] :as typography]
             [teet.ui.url :as url]
             [teet.util.collection :as cu]
             [teet.activity.activity-controller :as activity-controller]
-            [teet.routes :as routes]
             [teet.authorization.authorization-check :refer [when-authorized]]
             [teet.theme.theme-colors :as theme-colors]))
 
@@ -55,11 +54,10 @@
      [select/select-enum {:e! e! :attribute :task/type}]
 
      ^{:attribute :task/description}
-     [TextField {:full-width true :multiline true :rows 4 :maxrows 4
-                 :variant    :outlined}]
+     [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
 
      ^{:attribute :task/assignee}
-     [select/select-user {:e! e!}]]))
+     [select/select-user {:e! e! :attribute :task/assignee}]]))
 
 
 (defn- activity-info-popup [label start-date end-date num-tasks complete-count incomplete-count]
@@ -304,13 +302,12 @@
   (initialization-fn)
   (fn [e! app _]
     (when-let [activity-data (:edit-activity-data app)]     ;;Otherwise the form renderer can't format dates properly
-      [:div
-       [activity-view/activity-form e! (merge {:on-change activity-controller/->UpdateEditActivityForm
-                                               :save      activity-controller/->SaveEditActivityForm
-                                               :close     project-controller/->CloseAddDialog
-                                               :activity  (:edit-activity-data app)}
-                                              (when-authorized :activity/delete-activity
-                                                               {:delete (project-controller/->DeleteActivity (str (:db/id activity-data)))}))]])))
+      [activity-view/activity-form e! (merge {:on-change activity-controller/->UpdateEditActivityForm
+                                              :save      activity-controller/->SaveEditActivityForm
+                                              :close     project-controller/->CloseAddDialog
+                                              :activity  (:edit-activity-data app)}
+                                             (when-authorized :activity/delete-activity
+                                                              {:delete (project-controller/->DeleteActivity (str (:db/id activity-data)))}))])))
 
 (def project-tabs-layout
   ;; FIXME: Labels with TR paths instead of text
@@ -318,7 +315,7 @@
     :value     "activities"
     :component activities-tab
     :layers    #{:thk-project :related-cadastral-units :related-restrictions}}
-   {:label     "People"
+   #_{:label     "People"                                   ;; HIDDEN UNTIL something is built for this tab
     :value     "people"
     :component people-tab
     :layers    #{:thk-project}}
