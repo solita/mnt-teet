@@ -9,15 +9,12 @@
             [teet.ui.buttons :as buttons]
             [teet.ui.common :as ui-common]
             [teet.ui.format :as format]
-            [teet.ui.material-ui :refer [List Grid Paper Link LinearProgress]]
-            [teet.ui.text-field :refer [TextField]]
+            [teet.ui.material-ui :refer [Grid Paper Link LinearProgress]]
             [teet.ui.icons :as icons]
-            [teet.ui.typography :refer [Heading1]]
-            [teet.ui.layout :as layout]
-            [teet.project.project-style :as project-style]
-            [teet.user.user-info :as user-info]
+            [teet.ui.typography :as typography :refer [Heading1]]
             [teet.project.project-view :as project-view]
             [teet.ui.panels :as panels]
+            [teet.ui.text-field :refer [TextField]]
             [teet.ui.url :as url]
             [teet.document.document-view :as document-view]
             [teet.ui.breadcrumbs :as breadcrumbs]
@@ -31,14 +28,15 @@
             [teet.ui.form :as form]
             [teet.common.common-controller :as common-controller]
             [teet.ui.file-upload :as file-upload]
+            [teet.ui.select :as select]
             [teet.ui.common :as common]))
 
 (defn task-status [e! status modified]
-  [ui-common/status {:e! e!
-                     :on-change (e! task-controller/->UpdateTaskStatus)
-                     :status (:db/ident status)
-                     :attribute :task/status
-                     :modified modified}])
+  [select/status {:e!        e!
+                  :on-change (e! task-controller/->UpdateTaskStatus)
+                  :status    (:db/ident status)
+                  :attribute :task/status
+                  :modified  modified}])
 
 (defn task-page-paper-style
   []
@@ -116,8 +114,7 @@
    [common/header-with-actions
     name
     [buttons/button-warning {:on-click (e! document-controller/->DeleteFile id)}
-     (tr [:buttons :delete])]
-    ]
+     (tr [:buttons :delete])]]
    [typography/SmallText
     (tr [:document :updated]) " "
     (format/date-time timestamp)]
