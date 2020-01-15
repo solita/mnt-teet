@@ -11,7 +11,7 @@
             [teet.ui.format :as format]
             [teet.ui.typography :as typography]))
 
-(defn svg-style
+(defn- svg-style
   [bottom?]
   (merge {:position  :absolute
           :left      "-1px"
@@ -20,7 +20,7 @@
            {:bottom "0px"}
            {:top "-1px"})))
 
-(defn circle-svg
+(defn- circle-svg
   [{:keys [status size bottom?]}]
   (let [stroke-width 2
         r (- (/ size 2) (/ stroke-width 2))
@@ -36,12 +36,12 @@
        [:circle {:cx "50%" :cy "50%" :r (- r 4) :fill theme-colors/gray-dark}])]))
 
 
-(defn ol-class
+(defn- ol-class
   []
   {:padding-left 0
    :list-style   :none})
 
-(defn item-class
+(defn- item-class
   [done? last?]
   {:padding-left "1.5rem"
    :margin-left  "1rem"
@@ -50,7 +50,7 @@
                    "2px solid black"
                    (str "2px solid " theme-colors/gray-lighter))})
 
-(defn step-container-style
+(defn- step-container-style
   [{:keys [offset background-color padding-top]}]
   {:display          :flex
    :justify-content  :space-between
@@ -63,7 +63,7 @@
                        background-color
                        :none)})
 
-(defn task-info
+(defn- task-info
   []
   {:color            theme-colors/gray-light
    :background-color theme-colors/gray-lightest
@@ -74,7 +74,7 @@
    :display          :block
    :position         :relative})
 
-(defn stepper-button-style
+(defn- stepper-button-style
   [{:keys [size open?]}]
   {:border      :none
    :background  :none
@@ -86,7 +86,7 @@
    :cursor      :pointer
    :padding     0})
 
-(defn lifecycle-style
+(defn- lifecycle-style
   [open? last? done?]
   (merge
     {:padding-left "1.5rem"
@@ -209,16 +209,17 @@
                          [:<>
                           (if (:activity/tasks activity)
                             [:ol {:class (<class ol-class)}
-                             (for [{:task/keys [type] :as task} (:activity/tasks activity)]
-                               (let [status (task-step-state task)]
-                                 ^{:key (str (:db/id task))}
-                                 [:li
-                                  [:div {:class (<class item-class (= :done activity-state) last?)}
-                                   [circle-svg {:status status :size 14}]
-                                   [:div {:class (<class task-info)}
-                                    [Link {:href  (str "#/projects/" id "/" (:db/id task))
-                                           :class (<class stepper-button-style {:size "16px" :open? false})}
-                                     (tr [:enum (:db/ident type)])]]]]))]
+                             (doall
+                               (for [{:task/keys [type] :as task} (:activity/tasks activity)]
+                                 (let [status (task-step-state task)]
+                                   ^{:key (str (:db/id task))}
+                                   [:li
+                                    [:div {:class (<class item-class (= :done activity-state) last?)}
+                                     [circle-svg {:status status :size 14}]
+                                     [:div {:class (<class task-info)}
+                                      [Link {:href  (str "#/projects/" id "/" (:db/id task))
+                                             :class (<class stepper-button-style {:size "16px" :open? false})}
+                                       (tr [:enum (:db/ident type)])]]]])))]
                             [:div {:class (<class item-class (= :done activity-state) last?)}
                              [:div {:class (<class task-info)}
                               [:span (tr [:project :activity :no-tasks])]]])
