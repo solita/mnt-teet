@@ -28,29 +28,34 @@ package "External systems" {
 	(Cadastral data) as cadastraldbAlias
 }
 
-(cadastral import automation TBD) as tbdImportProcess1
-(restrictions import automation TBD) as tbdImportProcess2
 
-mapsAlias --> personAlias
-cadastraldbAlias --> tbdImportProcess1
-tbdImportProcess1 --> pgAlias
-restrictionsAlias --> tbdImportProcess2
-tbdImportProcess2 --> pgAlias
+mapsAlias <-- personAlias
+
+note bottom of mapsAlias
+	Front end requests map tiles from Maa-amet tile server
+end note
 
 Fargate(pgRestAlias, "PostgREST API", "HTTP access to Aurora data")
 SimpleStorageServiceS3(storageAlias, "Stored docs", "Project-related uploaded files")
 SimpleStorageServiceS3(integrationS3Alias, "THK integration data", "CSV files")
 APIGateway(apigwAlias, "Frontend APIGW", "Web UI actions")
 
+(TEET Geo data import tool) as importToolAlias
+importToolAlias -up-> restrictionsAlias
+importToolAlias -up-> cadastraldbAlias
+importToolAlias --> pgRestAlias
+
+
 package "Datomic" {
   (Datomic DB) as datomicAlias
   Lambda(queryIonAlias, "Query ion", "Read back information")
   Lambda(commandIonAlias, "Command ion", "Alter system state")
   Lambda(thkIntegrationIonAlias, "THK Integration ion", "Processes CSV files")
+  Lambda(uploadProcessingIonAlias, "Upload processing ion", "uploaded files")
   
   note bottom of thkIntegrationIonAlias
-	Datomic ions run on a set of Datomic compute nodes,
-	each is coupled with a Lambda
+	Datomic Cloud runs a set of compute nodes,
+	each Datomic Ion has an associated Lambda which proxies requests to the compute nodes
   end note
 
   note right of datomicAlias
@@ -72,15 +77,16 @@ thkAlias --> integrationS3Alias
 thkIntegrationIonAlias <--> datomicAlias
 queryIonAlias <--> datomicAlias
 commandIonAlias <--> datomicAlias
+uploadProcessingIonAlias <--> datomicAlias
 
-thkIntegrationIonAlias <--> pgRestAlias
-queryIonAlias <--> pgRestAlias
-commandIonAlias <--> pgRestAlias
+Datomic -up-> pgRestAlias
+uploadProcessingIonAlias <--> storageAlias
 
-pgRestAlias <-> pgAlias
+pgRestAlias --> pgAlias
+personAlias --> pgRestAlias
 
-note right of documentsAlias
-	Associated to specific project tasks
+note left of integrationS3Alias
+	THK system periodically uploads CSV file to S3 integration bucket
 end note
 
 @enduml
