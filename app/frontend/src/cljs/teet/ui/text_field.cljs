@@ -1,7 +1,8 @@
 (ns teet.ui.text-field
   (:require [herb.core :as herb :refer [<class]]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.material-ui :refer [IconButton]]))
+            [teet.ui.material-ui :refer [IconButton]]
+            [teet.ui.common :as common]))
 
 (defn- input-field-style
   [error multiline start-icon?]
@@ -66,7 +67,7 @@
              :class (<class label-style)}
      [:span {:class (<class label-text-style)}
       label (when required
-              " *")]
+              [common/required-astrix])]
      [:div {:style {:position :relative}}
       (when start-icon
         [start-icon {:color :primary

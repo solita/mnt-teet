@@ -10,7 +10,9 @@
             [teet.common.common-styles :as common-styles]
             [tuck.core :as t]
             [teet.localization :refer [tr]]
-            [teet.user.user-info :as user-info]))
+            [teet.user.user-info :as user-info]
+            [teet.ui.common :as common]
+            [teet.ui.format :as format]))
 
 (def select-bg-caret-down "url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23005E87%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')")
 
@@ -57,7 +59,7 @@
       [:label {:for id
                :class (<class select-label-style)}
        [:span label (when required
-                      " *")]
+                      [common/required-astrix])]
        [:div {:style {:position :relative}}
         [:select
          {:value (or (option-idx value) "")
@@ -203,15 +205,45 @@
 
 (defn select-user
   "Select user"
-  [{:keys [e! value on-change label required]}]
+  [{:keys [e! value on-change label required error]}]
   (when (nil? @selectable-users)
     (e! (common-controller/->Query {:query :user/list
                                     :args {}
                                     :result-event ->SetSelectableUsers})))
   [form-select {:label label
                 :value value
+                :error error
                 :required required
                 :on-change on-change
                 :show-empty-selection? true
                 :items @selectable-users
                 :format-item user-info/user-name-and-email}])
+;;
+;; Status
+;;
+(defn- status-container-style
+  []
+  {:display :flex
+   :flex-direction :row
+   :align-items :center
+   :border-bottom "solid 1px"
+   :border-color theme-colors/gray-light
+   :padding-bottom "1rem"
+   :margin-bottom "1rem"})
+
+(defn- status-style
+  []
+  {:flex-basis "30%"})
+
+(defn status
+  [{:keys [e! status attribute modified on-change]}]
+  [:div {:class (<class status-container-style)}
+   [select-enum {:e!                     e!
+                        :on-change       on-change
+                        :value           status
+                        :tiny-select?    true
+                        :attribute       attribute
+                        :container-class (<class status-style)}]
+   [common/labeled-data {:label (tr [:common :last-modified])
+                         :data  (or (format/date modified)
+                                    "-")}]])

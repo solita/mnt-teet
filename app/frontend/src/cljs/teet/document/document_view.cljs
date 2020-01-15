@@ -63,7 +63,7 @@
 
 (defn status
   [e! document]
-  [ui-common/status {:e! e!
+  [select/status {:e! e!
                      :on-change (e! document-controller/->UpdateDocumentStatus)
                      :status (get-in document [:document/status :db/ident])
                      :attribute :document/status

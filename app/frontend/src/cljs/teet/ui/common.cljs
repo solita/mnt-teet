@@ -2,13 +2,9 @@
   "Common UI utilities"
   (:require [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
-            [teet.localization :refer [tr]]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.format :as format]
-            [teet.ui.select :as select]
             [teet.ui.material-ui :refer [ButtonBase Paper]]
             [teet.ui.typography :refer [Text SmallText] :as typography]
-            [teet.ui.util :as util]
             [teet.common.common-styles :as common-styles]))
 
 (def lifecycle-methods
@@ -71,7 +67,6 @@
        (some #(not= (get-in old-argv %) (get-in new-argv %))
              accessor-paths)))))
 
-
 ;;
 ;; Labeled data
 ;;
@@ -114,6 +109,15 @@
    :position :relative
    :color theme-colors/blue})
 
+(defn- required-astrix-style
+  []
+  {:color theme-colors/error})
+
+(defn required-astrix
+  []
+  [:span {:class (<class required-astrix-style)}
+   " *"])
+
 (defn labeled-data [{:keys [label data class]}]
   [:div {:class class}
    [:div {:class (herb/join (<class container-style)
@@ -150,36 +154,6 @@
       [SmallText sub-label])]
    (when end-text
      [SmallText end-text])])
-
-;;
-;; Status
-;;
-(defn- status-container-style
-  []
-  {:display :flex
-   :flex-direction :row
-   :align-items :center
-   :border-bottom "solid 1px"
-   :border-color theme-colors/gray-light
-   :padding-bottom "1rem"
-   :margin-bottom "1rem"})
-
-(defn- status-style
-  []
-  {:flex-basis "30%"})
-
-(defn status
-  [{:keys [e! status attribute modified on-change]}]
-  [:div {:class (<class status-container-style)}
-   [select/select-enum {:e! e!
-                        :on-change on-change
-                        :value status
-                        :tiny-select? true
-                        :attribute attribute
-                        :container-class (<class status-style)}]
-   [labeled-data {:label (tr [:common :last-modified])
-                  :data (or (format/date modified)
-                            "-")}]])
 
 (defn header-with-actions [header-text & actions]
   [:div {:class (<class common-styles/header-with-actions)}
