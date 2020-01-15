@@ -27,9 +27,7 @@
 (defrecord OpenAddDocumentDialog [])
 (defrecord CloseAddDocumentDialog [])
 
-
 (extend-protocol t/Event
-
   CloseEditDialog
   (process-event [_ {:keys [params page query] :as app}]
     (t/fx app
