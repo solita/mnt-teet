@@ -1,24 +1,27 @@
 (ns teet.ui.buttons
   (:require [herb.core :refer [<class]]
-            [teet.ui.material-ui :refer [Button ButtonBase Link]]
+            [teet.ui.material-ui :refer [Button ButtonBase Link DialogActions DialogContentText]]
             [teet.ui.util :as util]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.localization :refer [tr]]
+            [teet.theme.theme-colors :as theme-colors]
+            [reagent.core :as r]
+            [teet.ui.panels :as panels]))
 
 (defn- white-button-style
   []
   ^{:pseudo {:hover {:background-color theme-colors/gray-lightest}
              :focus theme-colors/focus-style}}
   {:background-color theme-colors/white
-   :display :flex
-   :transition "background-color 0.2s ease-in"
-   :justify-content :space-between
-   :border (str "1px solid " theme-colors/gray-lighter)
-   :border-radius "4px"
-   :font-size "1.125rem"
-   :font-weight :bold
-   :padding "1rem 0.5rem"
-   :margin-bottom "1rem"
-   :color theme-colors/primary})
+   :display          :flex
+   :transition       "background-color 0.2s ease-in"
+   :justify-content  :space-between
+   :border           (str "1px solid " theme-colors/gray-lighter)
+   :border-radius    "4px"
+   :font-size        "1.125rem"
+   :font-weight      :bold
+   :padding          "1rem 0.5rem"
+   :margin-bottom    "1rem"
+   :color            theme-colors/primary})
 
 (defn- warn-button-style
   "The styles are with !important because material ui css loading order makes it hard to override them normally"
@@ -30,14 +33,14 @@
 
 
 (def button-primary
-  (util/make-component Button {:variant :contained
+  (util/make-component Button {:variant        :contained
                                :disable-ripple true
-                               :color :primary}))
+                               :color          :primary}))
 
 (def button-secondary
-  (util/make-component Button {:variant :contained
+  (util/make-component Button {:variant        :contained
                                :disable-ripple true
-                               :color :secondary}))
+                               :color          :secondary}))
 
 (def button-warning
   (util/make-component Button {:variant        :contained
@@ -45,17 +48,41 @@
                                :class          (<class warn-button-style)}))
 
 (def rect-primary
-  (util/make-component Button {:variant :outlined
-                               :color :primary
+  (util/make-component Button {:variant        :outlined
+                               :color          :primary
                                :disable-ripple true}))
 
 (defn white-button-with-icon
   [{:keys [on-click icon]} text]
   [ButtonBase {:on-click on-click
-               :class (<class white-button-style)}
+               :class    (<class white-button-style)}
    text
    [icon]])
 
 (def link-button
   (util/make-component Link {:component :button
-                             :type :button}))
+                             :type      :button}))
+
+(defn button-with-confirm
+  [{:keys [action modal-title modal-text]} button-content]
+  (let [open-atom (r/atom false)
+        open #(reset! open-atom true)
+        close #(reset! open-atom false)]
+    [:<>
+     [panels/modal {:title     (if modal-title
+                                 modal-title
+                                 (tr [:common :confirm-deletion]))
+                    :open-atom open-atom
+                    :actions   [DialogActions
+                                [button-secondary
+                                 {:on-click close}
+                                 (tr [:buttons :cancel])]
+                                [button-primary
+                                 {:on-click action}
+                                 (tr [:buttons :delete])]]}
+      [DialogContentText
+       (if modal-text
+         modal-text
+         (tr [:common :deletion-modal-text]))]]
+     [button-warning {:on-click open}
+      button-content]]))
