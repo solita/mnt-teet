@@ -36,6 +36,8 @@
                     :secondary theme-colors/secondary-text}}
    :overrides {:MuiAppBar {:colorDefault {:background-color theme-colors/white}
                            :positionSticky {:box-shadow "none"}}
+               :MuiDialogContentText {:root {:padding "2rem 1rem"
+                                             :background-color theme-colors/gray-lightest}}
                :MuiToolBar {:root {:min-height "80px"}}     ;This doesn't properly target the toolbar inside appbar
                :MuiFab {:root {:border-radius "2px"}}
                :MuiFilledInput {:root {:border-top-left-radius 0
