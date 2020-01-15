@@ -1,0 +1,69 @@
+#!/usr/bin/env planck
+
+(require '[planck.shell :refer [sh]])
+(require '[clojure.string :as str])
+(require '[planck.core :as core])
+
+(defn json-out [shell-result]
+  (-> shell-result
+      :out js/JSON.parse (js->clj :keywordize-keys true)))
+
+(defn start-build [project version]
+  (println "Starting CodeBuild for" project "with source version" version)
+  (-> (sh "aws" "codebuild" "start-build"
+          "--project-name" project
+          "--source-version" version)
+      json-out
+      (get-in [:build :id])))
+
+(defn get-build-info [build-id]
+  (-> (sh "aws" "codebuild" "batch-get-builds" "--ids" build-id)
+      json-out
+      (get-in [:builds 0])))
+
+(defn sleep [seconds]
+  (sh "sleep" (str seconds)))
+
+(def show-log-lines 20)
+
+(defn tail-build-logs [project-name]
+  (->> (sh "saw" "get" (str "/aws/codebuild/" project-name) "--start" "-2m")
+       :out str/split-lines
+       (remove str/blank?)
+       reverse (take show-log-lines) reverse vec))
+
+(defn print-logs [lines]
+  (println (str "\u001b[2J\u001b[" show-log-lines "A")) ; clear screen and move up
+  (dotimes [i show-log-lines]
+    (let [line (get lines i)]
+      (println "\u001b[0K" (or line "")))))
+
+(defn wait-for-completion [project-name version build-id]
+  (let [start-time (.getTime (js/Date.))
+        elapsed #(.toFixed (/ (- (.getTime (js/Date.)) start-time) 1000) 0)
+        poll #(do
+                (sleep 2)
+                (let [logs (tail-build-logs project-name)
+                      info (get-build-info build-id)]
+                  (print-logs logs)
+                  info))]
+    (loop [{:keys [currentPhase] :as build-info} (poll)
+           [s & spinner] (cycle ["|" "/" "-" "\\"])]
+      (if (= "COMPLETED" currentPhase)
+        build-info
+        (do
+          (print "\u001b[0K\u001b[7m"
+                 (str "[" project-name "@" version "] (" (elapsed) "s) ")
+                 s " " currentPhase "\u001b[0m")
+          (recur (poll) spinner))))))
+
+(defn notify [project status]
+  (sh "osascript" "-e" (str "display notification \"" status "\" with title \"" project "\"")))
+
+(let [[project version & _] *command-line-args*
+      version (or version "master")
+      build-id (start-build project version)]
+  (let [{status :buildStatus} (wait-for-completion project version build-id)]
+    (println "Finished build: " build-id " => " status)
+    (notify project status)
+    (core/exit (if (= "SUCCEEDED" status) 0 1))))
