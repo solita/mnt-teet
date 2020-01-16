@@ -1,6 +1,7 @@
 (ns teet.activity.activity-controller
   (:require [tuck.core :as t]
             [teet.log :as log]
+            [teet.localization :refer [tr]]
             [teet.common.common-controller :as common-controller]
             goog.math.Long))
 
@@ -33,7 +34,7 @@
             {:tuck.effect/type :command!
              :command          :project/update-activity
              :payload          payload
-             :success-message  "Activity updated successfully" ;; TODO  add localization
+             :success-message  (tr [:notifications :activity-updated])
              :result-event     ->SaveEditResult})))
 
   SaveEditResult
