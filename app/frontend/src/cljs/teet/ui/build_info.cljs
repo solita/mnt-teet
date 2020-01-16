@@ -5,7 +5,8 @@
             [teet.ui.icons :as icons]
             [reagent.core :as r]
             [teet.localization :refer [tr]]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.theme.theme-colors :as theme-colors]
+            [clojure.string :as str]))
 
 (defn banner-style
   [nav-open? page]
@@ -28,7 +29,11 @@
   (r/with-let [branch (aget js/window "teet_branch")
                git-hash (aget js/window "teet_githash")
                build-time (aget js/window "teet_buildtime")
-               open? (r/atom (boolean (or branch git-hash))) ;;TODO: Add check for production/prelive environment
+               hostname (-> js/window
+                            .-location
+                            .-hostname)
+               test-or-dev? (or (str/includes? hostname "test-teet") (str/includes? hostname "dev-teet"))
+               open? (r/atom (and test-or-dev? (boolean (or branch git-hash))))
                close-fn #(swap! open? not)]
     [Collapse {:in @open?}
      [:div {:class (<class banner-style nav-open? page)}
