@@ -134,7 +134,10 @@
 (defn cadastral-unit-style
   "Show cadastral unit."
   [^ol.render.Feature feature res]
-  (let [hover? (.get feature "hover")]
+  (let [hover? (.get feature "hover")
+        res (if (> 1 res)
+              1
+              res)]
     (ol.style.Style.
       #js {:stroke (ol.style.Stroke. #js {:color    "rgba(0,0,0,0.6)"
                                           :lineDash #js [(/ 15 res), (/ 30 res)] ;;TOdo fix issues with zooming
