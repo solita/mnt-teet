@@ -63,7 +63,7 @@
   (util/make-component Link {:component :button
                              :type      :button}))
 
-(defn button-with-confirm
+(defn delete-button-with-confirm
   [{:keys [action modal-title modal-text]} button-content]
   (let [open-atom (r/atom false)
         open #(reset! open-atom true)
@@ -77,7 +77,7 @@
                                 [button-secondary
                                  {:on-click close}
                                  (tr [:buttons :cancel])]
-                                [button-primary
+                                [button-warning
                                  {:on-click action}
                                  (tr [:buttons :delete])]]}
       [DialogContentText

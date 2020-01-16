@@ -80,7 +80,7 @@
 (defn form-footer [{:keys [delete cancel validate disabled?]}]
   [:div {:class (<class form-buttons)}
    (when delete
-     [buttons/button-with-confirm {:action delete}
+     [buttons/delete-button-with-confirm {:action delete}
       (tr [:buttons :delete])])
    [:div {:style {:margin-left :auto}}
     (when cancel
