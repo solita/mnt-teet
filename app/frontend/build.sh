@@ -9,7 +9,10 @@ branch="$CODEBUILD_SOURCE_VERSION"
 githash=`git rev-parse HEAD`
 buildtime=`date "+%d.%m.%Y %H:%M:%S"`
 
-echo "window.teet_branch = \"${branch}\"; window.teet_githash = \"${githash}\"; window.teet_buildtime = \"${buildtime}\";" > target/public/cljs-out/version-info.js
+MAIN=target/public/cljs-out/prod-main.js
+
+echo "" >> $MAIN
+echo "window.teet_branch = \"${branch}\"; window.teet_githash = \"${githash}\"; window.teet_buildtime = \"${buildtime}\";" >> $MAIN
 
 AUTHZ=`cat ../backend/resources/authorization.edn | tr -d '\n'`
-echo "window.teet_authz = \"${AUTHZ}\";" > target/public/cljs-out/authorization-info.js
+echo "window.teet_authz = \"${AUTHZ}\";" >> $MAIN
