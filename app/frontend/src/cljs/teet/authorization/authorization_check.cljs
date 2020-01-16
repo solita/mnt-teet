@@ -11,7 +11,10 @@
 (defn when-authorized
   [functionality component]
   ;;FIXME: IMPLEMENT CHECK FUNCTIONALITY
-  (log/info "Authorization-check functionality: " functionality
-            "App-state/User" @app-state/user
-            "rules for functionality: " (@authorization-rules functionality))
-  component)
+  (if authorization-rules
+    (do
+      (log/info "Authorization-check functionality: " functionality
+                "App-state/User" @app-state/user
+                "rules for functionality: " (@authorization-rules functionality))
+      component)
+    (.alert js/window "No authorization matrix loaded")))   ;;This should not happen if build.sh is ran properly
