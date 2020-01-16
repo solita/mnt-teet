@@ -65,9 +65,10 @@
                    (print-logs logs))
                  (assoc info :last-log-timestamp (or (-> logs meta :last-timestamp)
                                                      last-timestamp))))]
-    (loop [{:keys [currentPhase last-log-timestamp] :as build-info} (poll nil)
+    (loop [{:keys [buildComplete currentPhase last-log-timestamp] :as build-info}
+           (poll nil)
            [s & spinner] (cycle ["|" "/" "-" "\\"])]
-      (if (= "COMPLETED" currentPhase)
+      (if buildComplete
         build-info
         (do
           (print "\u001b[1000D\u001b[2K\u001b[7m"
@@ -81,6 +82,7 @@
 (let [[project version & _] *command-line-args*
       version (or version "master")
       build-id (start-build project version)]
+  (println "Build ID: " build-id)
   (let [{status :buildStatus} (wait-for-completion project version build-id)]
     (println "Finished build: " build-id " => " status)
     (notify project status)
