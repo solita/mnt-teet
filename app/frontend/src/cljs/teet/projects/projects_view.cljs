@@ -34,7 +34,7 @@
   (case column
     :thk.project/effective-km-range
     (let [[start end] value]
-      (str (.toFixed start 3) " \u2013 " (.toFixed end 3)))
+      [:span {:style {:white-space :nowrap}} (str (.toFixed start 3) " \u2013 " (.toFixed end 3))])
 
     :thk.project/estimated-date-range
     (let [[start end] value]
