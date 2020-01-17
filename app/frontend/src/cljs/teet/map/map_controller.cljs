@@ -70,7 +70,8 @@
                                                 (filter some? layers))]
                                [type layers])))
                           layers)]
-      (assoc-in app [:map :map-restrictions] formatted)))
+      (assoc-in app [:map :map-restrictions] (assoc formatted "Katastri" {"katastriyksus" false}) ;;Added because cadastral units are not in fetched data
+                )))
 
   FetchMapLayers
   (process-event [_ app]
