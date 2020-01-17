@@ -1,4 +1,5 @@
-(ns teet.task.task-style)
+(ns teet.task.task-style
+  (:require [teet.common.common-styles :as common-styles]))
 
 (defn task-status-container-style
   []
@@ -19,3 +20,19 @@
    :white-space :nowrap
    :overflow :hidden
    :display :block})
+
+(defn task-page-paper-style
+  []
+  (merge (common-styles/content-paper-style)
+         {:display :flex
+          :flex    1}))
+
+(defn result-style
+  []
+  {:font-size "1.5rem"})
+
+(defn study-link-style
+  []
+  {:display :block
+   :font-size "1.5rem"
+   :margin    "1.5rem 0"})
