@@ -13,7 +13,7 @@ end title
 !includeurl AWSPuml/Compute/Fargate.puml
 !includeurl AWSPuml/Database/Aurora.puml
 !includeurl AWSPuml/Storage/SimpleStorageServiceS3.puml
-
+!includeurl AWSPuml/Compute/EC2.puml
 
 actor "TEET Browser app (frontend)" as personAlias
 (User prepared documents) as documentsAlias
@@ -21,11 +21,12 @@ Aurora(pgAlias, "PostgreSQL DB", "Geo data")
 
 
 package "External systems" {
-	(THK system) as thkAlias
-	(Maa-amet maps) as mapsAlias
-	(Delta) as deltaAlias
-	(Maa-amet restrictions) as restrictionsAlias
-	(Cadastral data) as cadastraldbAlias
+        (THK system) as thkAlias
+        (Maa-amet maps) as mapsAlias
+        (Delta) as deltaAlias
+        (Maa-amet restrictions) as restrictionsAlias
+        (Cadastral data) as cadastraldbAlias
+        (TARA login) as taraAlias
 }
 
 
@@ -52,33 +53,39 @@ package "Datomic" {
   Lambda(commandIonAlias, "Command ion", "Alter system state")
   Lambda(thkIntegrationIonAlias, "THK Integration ion", "Processes CSV files")
   Lambda(uploadProcessingIonAlias, "Upload processing ion", "uploaded files")
+  Lambda(taraLoginIon, "TARA login", "OpenID Connect")
+  EC2(datomicComputeNode, "Compute node", "Handles actual lambda logic")
 
-  note bottom of thkIntegrationIonAlias
+  note right of datomicComputeNode
 	Datomic Cloud runs a set of compute nodes,
 	each Datomic Ion has an associated Lambda which proxies requests to the compute nodes
   end note
 
-  note right of datomicAlias
+  note left of datomicAlias
 	Datomic DB data is backed by AWS DynamoDB, S3 & EBS services
   end note
 
 }
 
-
+datomicComputeNode <-l-> datomicAlias
+personAlias --> taraAlias
 personAlias --> apigwAlias
 apigwAlias --> storageAlias
 apigwAlias --> queryIonAlias
 apigwAlias --> commandIonAlias
+apigwAlias --> taraLoginIon
 personAlias --> documentsAlias
 documentsAlias --> storageAlias
 integrationS3Alias <--> thkIntegrationIonAlias
 thkAlias --> integrationS3Alias
 
-thkIntegrationIonAlias <--> datomicAlias
-queryIonAlias <--> datomicAlias
-commandIonAlias <--> datomicAlias
-uploadProcessingIonAlias <--> datomicAlias
+thkIntegrationIonAlias <--> datomicComputeNode
+queryIonAlias <--> datomicComputeNode
+commandIonAlias <--> datomicComputeNode
+uploadProcessingIonAlias <--> datomicComputeNode
+taraLoginIon <--> datomicComputeNode
 
+taraLoginIon -up-> taraAlias
 Datomic -up-> pgRestAlias
 uploadProcessingIonAlias <--> storageAlias
 
