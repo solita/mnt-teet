@@ -66,7 +66,7 @@
         road-information (:road-info basic-information-form)
         options {:fit-on-load? true
                  ;; Use left side padding so that road is not shown under the project panel
-                 :fit-padding  [0 0 0 (* 1.05 (project-style/project-panel-width))]
+                 :fit-padding  [25 25 25 (+ 100 (* 1.05 (project-style/project-panel-width)))]
                  :on-load      (partial km-range-label-overlays
                                         start-label end-label
                                         set-overlays!)}]
