@@ -9,9 +9,26 @@
             [ol.style.Circle]
             [teet.theme.theme-colors :as theme-colors]))
 
-(def ^:const map-pin "M9.96587 0.5C15.221 0.5 19.5 4.78348 19.5 9.96587C19.5 12.7235 17.9724 15.4076 15.9208 18.0187C14.9006 19.3172 13.7685 20.5764 12.6603 21.802C12.611 21.8565 12.5618 21.911 12.5126 21.9653C11.6179 22.9546 10.7407 23.9244 9.9694 24.8638C9.1882 23.8963 8.29237 22.8969 7.37848 21.8774L7.31238 21.8036C6.21334 20.5775 5.08749 19.3183 4.07125 18.0195C2.02771 15.4079 0.5 12.7237 0.5 9.96587C0.5 4.78126 4.78126 0.5 9.96587 0.5Z")
+
 (def ^:const map-pin-height 26)
 (def ^:const map-pin-width 20)
+
+(defn- draw-map-pin-path [ctx]
+  ;; "M9.96587 0.5C15.221 0.5 19.5 4.78348 19.5 9.96587C19.5 12.7235 17.9724 15.4076 15.9208 18.0187C14.9006 19.3172 13.7685 20.5764 12.6603 21.802C12.611 21.8565 12.5618 21.911 12.5126 21.9653C11.6179 22.9546 10.7407 23.9244 9.9694 24.8638C9.1882 23.8963 8.29237 22.8969 7.37848 21.8774L7.31238 21.8036C6.21334 20.5775 5.08749 19.3183 4.07125 18.0195C2.02771 15.4079 0.5 12.7237 0.5 9.96587C0.5 4.78126 4.78126 0.5 9.96587 0.5Z"
+  (doto ctx
+    .beginPath
+    (.moveTo 9.96587 0.5)
+    (.bezierCurveTo 15.221 0.5 19.5 4.78348 19.5 9.96587)
+    (.bezierCurveTo 19.5 12.7235 17.9724 15.4076 15.9208 18.0187)
+    (.bezierCurveTo 14.9006 19.3172 13.7685 20.5764 12.6603 21.802)
+    (.bezierCurveTo 12.611 21.8565 12.5618 21.911 12.5126 21.9653)
+    (.bezierCurveTo 11.6179 22.9546 10.7407 23.9244 9.9694 24.8638)
+    (.bezierCurveTo 9.1882 23.8963 8.29237 22.8969 7.37848 21.8774)
+    (.lineTo 7.31238 21.8036)
+    (.bezierCurveTo 6.21334 20.5775 5.08749 19.3183 4.07125 18.0195)
+    (.bezierCurveTo 2.02771 15.4079 0.5 12.7237 0.5 9.96587)
+    (.bezierCurveTo 0.5 4.78126 4.78126 0.5 9.96587 0.5)
+    .closePath))
 
 (def project-pin-icon
   (memoize
@@ -25,18 +42,21 @@
           (.scale ctx scaled-w scaled-h)
           (when fill
             (set! (.-strokeStyle ctx) stroke)
+            ;(set! (.-lineWidth ctx) 5)
             (set! (.-fillStyle ctx) fill)
             ;; draw the map pin
-            (let [p (js/Path2D. map-pin)]
-              (.stroke ctx p)
-              (.fill ctx p)))
+            (draw-map-pin-path ctx)
+            (.stroke ctx)
+            (.fill ctx))
           ;; draw the center white circle in the pin
           (when center-fill
             (set! (.-strokeStyle ctx) stroke)
             (set! (.-fillStyle ctx) center-fill)
-            (.arc ctx 10 10 4 0 (* 2 js/Math.PI))
-            (.stroke ctx)
-            (.fill ctx)))
+            (doto ctx
+              .beginPath
+              (.arc 10 10 4 0 (* 2 js/Math.PI))
+              .stroke
+              .fill)))
         canvas))))
 
 
