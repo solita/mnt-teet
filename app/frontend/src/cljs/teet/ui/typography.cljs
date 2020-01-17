@@ -6,7 +6,8 @@
 
 (defn- small-text-style
   []
-  {:color theme-colors/gray-light
+  {:display :block
+   :color theme-colors/gray-light
    :font-size "0.75rem"})
 
 (def Heading1 (util/make-component Typography {:variant "h1"}))
