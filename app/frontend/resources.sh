@@ -10,8 +10,6 @@ curl -o resources/public/js/material-ui.production.min.js https://unpkg.com/@mat
 # FIXME: do a shasum check here
 
 cp target/public/cljs-out/prod-main.js resources/public/js/main.js
-cp target/public/cljs-out/version-info.js resources/public/js/version-info.js
-cp target/public/cljs-out/authorization-info.js resources/public/js/authorization-info.js
 echo "Package artifact"
 
 COMMIT=`git rev-parse HEAD`

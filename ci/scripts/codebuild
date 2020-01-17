@@ -83,6 +83,7 @@
       version (or version "master")
       build-id (start-build project version)]
   (println "Build ID: " build-id)
+  (sleep 2)
   (let [{status :buildStatus} (wait-for-completion project version build-id)]
     (println "Finished build: " build-id " => " status)
     (notify project status)

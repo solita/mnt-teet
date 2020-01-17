@@ -204,12 +204,15 @@
     [Grid {:container true
            :spacing 3}
      [Grid {:item true
-            :xs 3}
+            :xs 3
+            :style {:max-width "300px"}}
       [task-navigation task (:file query)]]
      [Grid {:item true
-            :xs 6}
+            :xs 6
+            :style {:max-width "800px"}}
       [task-page-content e! query task]]
      [Grid {:item true
-            :style {:display :flex}
-            :xs   3}
+            :xs :auto
+            :style {:display :flex
+                    :flex 1}}
       [project-view/project-map e! app project]]]]])
