@@ -38,37 +38,40 @@
                   :attribute :task/status
                   :modified  modified}])
 
-(defn task-page-paper-style
-  []
-  (merge (common-styles/content-paper-style)
-         {:display :flex
-          :flex 1}))
 
 (defn task-navigation
-  [{:task/keys [documents] :as task} selected-file-id]
+  [{:task/keys [documents] :as task} {selected-file-id     :file
+                                      selected-document-id :document}]
   [:div {:style {:padding "2rem 0 2rem 2rem"}}
-   [Link {:href (url/set-params :document nil
-                                :file nil)}
-    (tr [:enum (-> task :task/type :db/ident)])]
+   (if (and (nil? selected-file-id) (nil? selected-document-id))
+     [:b {:class (<class task-style/study-link-style)}
+      (tr [:enum (-> task :task/type :db/ident)])]
+     [Link {:class (<class task-style/study-link-style)
+            :href  (url/set-params :document nil
+                                   :file nil)}
+      (tr [:enum (-> task :task/type :db/ident)])])
    [:p
     [:b (tr [:task :results])]]
    (for [{:document/keys [name status files] :as document} documents]
      ^{:key (str (:db/id document))}
-     [:div {:style {:margin-bottom "1rem"}}
+     [:div
       [:div
-       [Link {:href (url/set-params :document (:db/id document)
-                                    :file nil)
-              :underline "none"}
-        name]
+       (if (and (= (str (:db/id document)) selected-document-id) (nil? selected-file-id))
+         [:b {:class (<class task-style/result-style)}
+          name]
+         [Link {:class (<class task-style/result-style)
+                :href  (url/set-params :document (:db/id document)
+                                       :file nil)}
+          name])
        [typography/SmallText (tr [:enum (:db/ident status)])]]
       (for [{:file/keys [name size] :as file
-             file-id :db/id} files]
-        [:div {:style {:margin-left "2rem" :padding-bottom "1rem"}}
+             file-id    :db/id} files]
+        [:div {:style {:margin-left "1.5rem" :padding-bottom "1rem"}}
          (if (= (str file-id) selected-file-id)
            [:b {:class (<class task-style/document-file-name)} name]
            [Link {:class (<class task-style/document-file-name)
-                  :href (url/set-params :document (:db/id document)
-                                        :file (:db/id file))}
+                  :href  (url/set-params :document (:db/id document)
+                                         :file (:db/id file))}
             name])
          [typography/SmallText (format/file-size size)]])])])
 
@@ -76,14 +79,14 @@
   [e! {:task/keys [description status modified type] :as _task}]
   [:div {:style {:padding "2rem 0"}}
    [:div {:style {:justify-content :space-between
-                  :display :flex}}
+                  :display         :flex}}
     [Heading1 (tr [:enum (:db/ident type)])]
     [:div {:style {:display :flex}}
      [buttons/button-secondary {:on-click (e! task-controller/->OpenEditTask)}
       (tr [:buttons :edit])]]]
    [:p description]
    [task-status e! status modified]
-   [buttons/button-primary {:on-click #(e! (task-controller/->OpenAddDocumentDialog))
+   [buttons/button-primary {:on-click   #(e! (task-controller/->OpenAddDocumentDialog))
                             :start-icon (r/as-element [icons/content-add])}
     (tr [:task :add-document])]])
 
@@ -95,21 +98,22 @@
     (:document/name document)
 
     [buttons/button-secondary
-     {:element "a"
-      :href (url/set-params "add-files" "1")
+     {:element    "a"
+      :href       (url/set-params "add-files" "1")
       :start-icon (r/as-element
-                   [icons/content-add])}
+                    [icons/content-add])}
      (tr [:document :add-files])]
 
     [buttons/button-warning
-     {:on-click (e! document-controller/->DeleteDocument (:db/id document))}
+     {:style {:margin-left "1rem"}
+      :on-click (e! document-controller/->DeleteDocument (:db/id document))}
      (tr [:buttons :delete])]]
    [typography/Paragraph (:document/description document)]
    [document-view/comments e! document]])
 
 (defn document-file-content
   [e! {:file/keys [name timestamp]
-       id :db/id :as file}]
+       id         :db/id :as file}]
   [:<>
    [common/header-with-actions
     name
@@ -118,18 +122,18 @@
    [typography/SmallText
     (tr [:document :updated]) " "
     (format/date-time timestamp)]
-   [buttons/button-primary {:href (document-controller/download-url id)
-                            :element "a"
-                            :target "_blank"
+   [buttons/button-primary {:href       (document-controller/download-url id)
+                            :element    "a"
+                            :target     "_blank"
                             :start-icon (r/as-element
-                                         [icons/file-cloud-download])}
+                                          [icons/file-cloud-download])}
     (tr [:document :download-file])]
 
-   [comments-view/comments {:e! e!
+   [comments-view/comments {:e!                   e!
                             :update-comment-event document-controller/->UpdateFileNewCommentForm
-                            :save-comment-event document-controller/->CommentOnFile
-                            :new-comment (:new-comment file)
-                            :comments (:file/comments file)}]])
+                            :save-comment-event   document-controller/->CommentOnFile
+                            :new-comment          (:new-comment file)
+                            :comments             (:file/comments file)}]])
 
 (defn task-page-content
   [e! {:keys [file document]} task]
@@ -144,24 +148,24 @@
 (defn- add-files-form [e! upload-progress]
   (r/with-let [form (r/atom {})]
     [:<>
-     [form/form {:e! e!
-                     :value @form
-                     :on-change-event (form/update-atom-event form merge)
-                     :save-event (partial document-controller/->AddFilesToDocument (:files @form))
-                     :cancel-event #(common-controller/->SetQueryParam :add-files nil)
-                     :in-progress? upload-progress}
-          ^{:attribute :files}
+     [form/form {:e!              e!
+                 :value           @form
+                 :on-change-event (form/update-atom-event form merge)
+                 :save-event      (partial document-controller/->AddFilesToDocument (:files @form))
+                 :cancel-event    #(common-controller/->SetQueryParam :add-files nil)
+                 :in-progress?    upload-progress}
+      ^{:attribute :files}
       [file-upload/files-field {}]]
      (when upload-progress
        [LinearProgress {:variant "determinate"
-                        :value upload-progress}])]))
+                        :value   upload-progress}])]))
 
 (defn task-page-modal
   [e! {:keys [params] :as app} {:keys [edit add-files] :as query}]
   [:<>
    [panels/modal {:open-atom (r/wrap (boolean add-files) :_)
-                  :title (tr [:document :add-files])
-                  :on-close #(e! (common-controller/->SetQueryParam :add-files nil))}
+                  :title     (tr [:document :add-files])
+                  :on-close  #(e! (common-controller/->SetQueryParam :add-files nil))}
     [add-files-form e! (get-in app [:new-document :in-progress?])]]
    [panels/modal {:open-atom (r/wrap (boolean edit) :_)
                   :title     (if-not edit
@@ -172,47 +176,47 @@
       "task"
       [project-view/task-form e!
        (merge
-        {:close             task-controller/->CloseEditDialog
-         :task              (:edit-task-data app)
-         :initialization-fn (e! task-controller/->MoveDataForEdit)
-         :save              task-controller/->PostTaskEditForm
-         :on-change         task-controller/->UpdateEditTaskForm}
-        (when-authorized :task/delete-task                  ;;TODO: ADD CONFIRMATION DIALOG
-          {:delete (task-controller/->DeleteTask (:task params))}))]
+         {:close             task-controller/->CloseEditDialog
+          :task              (:edit-task-data app)
+          :initialization-fn (e! task-controller/->MoveDataForEdit)
+          :save              task-controller/->PostTaskEditForm
+          :on-change         task-controller/->UpdateEditTaskForm}
+         (when-authorized :task/delete-task                 ;;TODO: ADD CONFIRMATION DIALOG
+                          {:delete (task-controller/->DeleteTask (:task params))}))]
       [:span])]])
 
 (defn task-page [e! {{:keys [add-document edit] :as query} :query
-                     new-document :new-document :as app}
-                 {type :task/type
+                     new-document                          :new-document :as app}
+                 {type    :task/type
                   project :project :as task}
                  breadcrumbs]
-  [:div {:style {:padding "1.5rem 1.875rem"
-                 :display :flex
+  [:div {:style {:padding        "1.5rem 1.875rem"
+                 :display        :flex
                  :flex-direction :column
-                 :flex 1}}
+                 :flex           1}}
    [task-page-modal e! app query]
    [panels/modal {:open-atom (r/wrap (boolean add-document) :_)
-                  :title (tr [:task :add-document])
-                  :on-close (e! task-controller/->CloseAddDocumentDialog)}
-    [document-view/document-form {:e! e!
+                  :title     (tr [:task :add-document])
+                  :on-close  (e! task-controller/->CloseAddDocumentDialog)}
+    [document-view/document-form {:e!             e!
                                   :on-close-event task-controller/->CloseAddDocumentDialog}
      new-document]]
    [breadcrumbs/breadcrumbs breadcrumbs]
    [Heading1 (:thk.project/name project)]
 
-   [Paper {:class (<class task-page-paper-style)}
+   [Paper {:class (<class task-style/task-page-paper-style)}
     [Grid {:container true
-           :spacing 3}
-     [Grid {:item true
-            :xs 3
+           :spacing   3}
+     [Grid {:item  true
+            :xs    3
             :style {:max-width "300px"}}
-      [task-navigation task (:file query)]]
-     [Grid {:item true
-            :xs 6
+      [task-navigation task query]]
+     [Grid {:item  true
+            :xs    6
             :style {:max-width "800px"}}
       [task-page-content e! query task]]
-     [Grid {:item true
-            :xs :auto
+     [Grid {:item  true
+            :xs    :auto
             :style {:display :flex
-                    :flex 1}}
+                    :flex    1}}
       [project-view/project-map e! app project]]]]])
