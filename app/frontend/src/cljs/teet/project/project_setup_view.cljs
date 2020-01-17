@@ -307,7 +307,7 @@
      [buttons/button-secondary
       {:on-click (e! (project-controller/navigate-to-previous-step-event project-setup-steps step))}
       (tr [:buttons :back])]
-     [buttons/button-warning
+     [buttons/button-text
       {:on-click #(e! (project-controller/->SkipProjectSetup project-id))}
       (tr [:project :wizard :skip-setup])])
    [buttons/button-primary {:type :submit

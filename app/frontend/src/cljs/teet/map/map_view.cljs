@@ -52,34 +52,25 @@
                           (e! (map-controller/->LayerToggle category layer)))})]]))))
 
 (defn map-layer-controls
-  [e! _map-layers {:keys [_open?] :as _map-controls}]
-  (r/create-class
-    {:component-did-mount
-     (fn [_]
-       (e! (map-controller/->FetchMapLayers)))
-     :reagent-render
-     (fn [e! map-layers {:keys [open?] :as map-controls}]
-       [:div
-        [Fade {:in open?}
-         [:div {:class (<class map-styles/map-controls)}
-          [:div {:class (<class map-styles/map-controls-heading)}
-           [typography/Heading3
-            (tr [:map :map-layers])]
-           [IconButton {:color :primary
-                        :size :small
-                        :on-click #(e! (map-controller/->CloseMapControls))}
-            [icons/navigation-close]]]
-          [:div {:style {:max-height "40vh"
-                         :overflow-y :scroll}}
-           [category-layers-control e!
-            ["Katastri" {"katastriyksus"
-                         (boolean (get-in map-layers ["Katastri" "katastriyksus"]))}]
-            map-controls]
-           (doall
-             (for [[category _ :as layer] map-layers
-                   :when (not= category "Katastri")]
-               ^{:key category}
-               [category-layers-control e! layer map-controls]))]]]])}))
+  [e! _ _]
+  (e! (map-controller/->FetchMapLayers))
+  (fn [e! map-layers {:keys [open?] :as map-controls}]
+    [:div
+     [Fade {:in open?}
+      [:div {:class (<class map-styles/map-controls)}
+       [:div {:class (<class map-styles/map-controls-heading)}
+        [typography/Heading3
+         (tr [:map :map-layers])]
+        [IconButton {:color    :primary
+                     :size     :small
+                     :on-click #(e! (map-controller/->CloseMapControls))}
+         [icons/navigation-close]]]
+       [:div {:style {:max-height "40vh"
+                      :overflow-y :scroll}}
+        (doall
+          (for [[category _ :as layer] map-layers]
+            ^{:key category}
+            [category-layers-control e! layer map-controls]))]]]]))
 
 (defn map-control-buttons [e! {:keys [background-layer map-controls map-restrictions] :as map-data
                                :or   {background-layer "kaart"}}

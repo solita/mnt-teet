@@ -32,6 +32,10 @@
    :color            (str theme-colors/white " !important")})
 
 
+(def button-text
+  (util/make-component Button {:variant :text
+                               :disable-ripple true}))
+
 (def button-primary
   (util/make-component Button {:variant        :contained
                                :disable-ripple true

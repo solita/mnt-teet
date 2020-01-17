@@ -48,7 +48,8 @@
 (defn project-road-geometry-layer
   "Show project geometry or custom road part in case the start and end
   km are being edited during initialization"
-  [{app :app
+  [map-obj-padding
+   {app :app
     {:thk.project/keys [start-m end-m road-nr carriageway]
      :keys             [basic-information-form] :as project} :project
     set-overlays! :set-overlays!}]
@@ -66,7 +67,7 @@
         road-information (:road-info basic-information-form)
         options {:fit-on-load? true
                  ;; Use left side padding so that road is not shown under the project panel
-                 :fit-padding  [0 0 0 (* 1.05 (project-style/project-panel-width))]
+                 :fit-padding  map-obj-padding
                  :on-load      (partial km-range-label-overlays
                                         start-label end-label
                                         set-overlays!)}]

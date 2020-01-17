@@ -26,4 +26,4 @@
            ;; {:fn teet.thk.thk-integration-ion/export-projects-to-thk
            ;;  :description "Export projects as CSV for THK"}
            }
- :app-name "teet-datomic"}
+ :app-name "teet-datomic-live-test"}

@@ -1,6 +1,7 @@
 (ns ^:figwheel-hooks teet.main
   "TEET frontend app."
-  (:require [datafrisk.core :as df]
+  (:require [herb.core :as herb :refer [<class]]
+            [datafrisk.core :as df]
             [postgrest-ui.elements]
             [postgrest-ui.impl.style.material]
             [reagent.core :as r]
@@ -10,7 +11,7 @@
             [teet.login.login-view :as login-view]
             [teet.navigation.navigation-view :as navigation-view]
             [teet.routes :as routes]
-            [teet.ui.material-ui :refer [CssBaseline]]
+            [teet.ui.material-ui :refer [CssBaseline CircularProgress]]
             [teet.ui.build-info :as build-info]
             [tuck.core :as t]
             [teet.theme.theme-provider :as theme]
@@ -28,7 +29,8 @@
 
             teet.ui.query
             goog.math.Long
-            [teet.login.login-controller :as login-controller])
+            [teet.login.login-controller :as login-controller]
+            [teet.common.common-styles :as common-styles])
   (:require-macros [teet.route-macros :refer [define-main-page]]))
 
 ;; See routes.edn
@@ -49,17 +51,20 @@
         (if (= page :login)
           ;; Show only login dialog
           [login-view/login-page e! app]
-          (let [{:keys [page]} (page-and-title e! app)]
-            [:<>
-             [navigation-view/header e!
-              {:open?        nav-open?
-               :page         (:page app)
-               :quick-search quick-search}
-              user]
-             [navigation-view/main-container
-              nav-open?
-              (with-meta page
-                {:key (:route-key app)})]]))
+          (if (get-in app [:config :api-url])               ;;config gets loaded when session is checked
+            (let [{:keys [page]} (page-and-title e! app)]
+              [:<>
+               [navigation-view/header e!
+                {:open?        nav-open?
+                 :page         (:page app)
+                 :quick-search quick-search}
+                user]
+               [navigation-view/main-container
+                nav-open?
+                (with-meta page
+                           {:key (:route-key app)})]])
+            [:div {:class (<class common-styles/spinner-style)}
+                [CircularProgress]]))
         (when-feature :data-frisk
           [df/DataFriskShell app])]])))
 
