@@ -104,9 +104,9 @@
                     [icons/content-add])}
      (tr [:document :add-files])]
 
-    [buttons/button-warning
+    [buttons/delete-button-with-confirm
      {:style {:margin-left "1rem"}
-      :on-click (e! document-controller/->DeleteDocument (:db/id document))}
+      :action (e! document-controller/->DeleteDocument (:db/id document))}
      (tr [:buttons :delete])]]
    [typography/Paragraph (:document/description document)]
    [document-view/comments e! document]])
@@ -117,7 +117,7 @@
   [:<>
    [common/header-with-actions
     name
-    [buttons/button-warning {:on-click (e! document-controller/->DeleteFile id)}
+    [buttons/delete-button-with-confirm {:action (e! document-controller/->DeleteFile id)}
      (tr [:buttons :delete])]]
    [typography/SmallText
     (tr [:document :updated]) " "
