@@ -6,7 +6,11 @@
 (s/def :document/status keyword?)
 (s/def :document/name (s/and string? (complement str/blank?)))
 (s/def :document/description (s/and string? (complement str/blank?)))
-(s/def :document/new-document-form (s/keys :req [:document/name
+(s/def :document/category keyword?)
+(s/def :document/sub-category keyword?)
+(s/def :document/new-document-form (s/keys :req [:document/category
+                                                 :document/sub-category
+                                                 :document/name
                                                  :document/status
                                                  :document/description
                                                  :document/status]))
