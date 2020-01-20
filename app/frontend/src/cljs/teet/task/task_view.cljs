@@ -38,7 +38,6 @@
                   :attribute :task/status
                   :modified  modified}])
 
-
 (defn task-navigation
   [{:task/keys [documents] :as task} {selected-file-id     :file
                                       selected-document-id :document}]
@@ -108,6 +107,8 @@
      {:style {:margin-left "1rem"}
       :action (e! document-controller/->DeleteDocument (:db/id document))}
      (tr [:buttons :delete])]]
+   [typography/SmallText (tr [:fields :document/category]) ": " (tr [:enum (get-in document [:document/category :db/ident])])]
+   [typography/SmallText (tr [:fields :document/sub-category]) ": " (tr [:enum (get-in document [:document/sub-category :db/ident])])]
    [typography/Paragraph (:document/description document)]
    [document-view/comments e! document]])
 
@@ -181,8 +182,18 @@
           :initialization-fn (e! task-controller/->MoveDataForEdit)
           :save              task-controller/->PostTaskEditForm
           :on-change         task-controller/->UpdateEditTaskForm}
-         (when-authorized :task/delete-task                 ;;TODO: ADD CONFIRMATION DIALOG
+         (when-authorized :task/delete-task
                           {:delete (task-controller/->DeleteTask (:task params))}))]
+      #_"result"
+      #_[document-view/document-form e!
+       (merge
+         {:close             task-controller/->CloseEditDialog
+          :task              (:edit-document-data app)
+          :initialization-fn (e! document-controller/->MoveDocumentDataForEdit)
+          :save              document-controller/->PostDocumentEdit
+          :on-change         document-controller/->UpdateDocumentEditForm}
+         (when-authorized :document/delete-document
+                          {:delete (document-controller/->DeleteDocument (:document params))}))]
       [:span])]])
 
 (defn task-page [e! {{:keys [add-document edit] :as query} :query
