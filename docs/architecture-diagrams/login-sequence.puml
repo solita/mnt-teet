@@ -1,0 +1,33 @@
+@startuml
+
+actor "User" as user
+participant "TEET backend" as teet
+participant "TARA system" as tara
+database Datomic as db
+
+user->teet: Login
+note left: User accesses TEET login URL
+teet->user: Redirect to TARA
+note left: TEET calculates TARA login URL\nbased on TARA configuration\nand forwards user
+
+group TARA login
+        user->tara: Load login page
+        note left: Login sequence between\nuser and TARA varies based\non authentication method
+        tara->user: Redirect to TEET
+end
+
+user->teet: Load after login page
+note left: User comes back to TEET with\nTARA authentication information in\nURL parameters
+
+teet->tara: Request token
+note right: TEET calls TARA to request token\nfor user's authentication info
+tara->teet: Authentication token
+teet->teet: verify token and\nextract user info
+teet->db: Ensure user exists
+note right: User information is stored\nand roles checked
+db->teet: User id and roles
+
+teet->user: Redirect to main page
+note left: User information is stored\nin session and user is\ntaken to main page
+
+@enduml

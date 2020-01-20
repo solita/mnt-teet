@@ -24,7 +24,7 @@
                     :action (r/as-element
                               [:div {:style {:display "inline-block"}}
                                action
-                               [IconButton {:color    "primary"
+                               #_[IconButton {:color    "primary"
                                             :on-click #(swap! open-atom not)}
                                 (if open?
                                   [icons/navigation-expand-less]
