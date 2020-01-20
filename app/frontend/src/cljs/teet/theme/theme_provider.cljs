@@ -92,7 +92,7 @@
                                                             "&:focus"      theme-colors/focus-style
                                                             :box-shadow    "none"
                                                             "&:hover"      {:box-shadow "none"}}
-                                       :root               {:text-transform :capitalize
+                                       :root               {:text-transform :none
                                                             :font-weight    400
                                                             :padding        "4px 1.875rem"
                                                             :font-size      "1rem"
