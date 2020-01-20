@@ -1,5 +1,6 @@
 (ns teet.util.datomic
- "Datomic query/transaction utility functions.")
+  "Datomic query/transaction utility functions."
+  #?(:clj (:require [datomic.client.api :as d])))
 
 (defn id=
   "Compare two :db/id values.
@@ -20,3 +21,16 @@
                     (when (not= id tx-id)
                       id))))
           (:tx-data tx-result))))
+
+#?(:clj
+   (defn retractions
+     "Return transaction data that retracts the current values of
+  given keys in the entity."
+     [db eid keys-to-retract]
+     (let [{id :db/id :as values}
+           (d/pull db (into [:db/id] keys-to-retract) eid)]
+       (vec
+        (for [[k v] values
+              :when (and (not= k :db/id)
+                         (contains? keys-to-retract k))]
+          [:db/retract id k v])))))

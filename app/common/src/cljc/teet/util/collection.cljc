@@ -19,6 +19,15 @@
              {}
              m))
 
+(defn nil-keys
+  "Returns set of keys that are nil in map"
+  [m]
+  (into #{}
+        (keep (fn [[k v]]
+                (when (nil? v)
+                  k)))
+        m))
+
 (defn find-first
   "Find first element in `collection` matching `predicate`"
   [predicate collection]
