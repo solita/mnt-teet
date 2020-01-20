@@ -32,7 +32,9 @@
                :payload           {}
                :error-event       ->CheckSessionError
                :result-event      (partial ->SetSessionInfo false nil)})
-        app)))
+        (t/fx app
+              {::tuck-effect/type :navigate
+               :page :login}))))
 
   CheckSessionError
   (process-event [_ app]
