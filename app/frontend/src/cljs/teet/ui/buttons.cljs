@@ -68,7 +68,7 @@
                              :type      :button}))
 
 (defn delete-button-with-confirm
-  [{:keys [action modal-title modal-text]} button-content]
+  [{:keys [action modal-title modal-text style class]} button-content]
   (let [open-atom (r/atom false)
         open #(reset! open-atom true)
         close #(reset! open-atom false)]
@@ -88,5 +88,7 @@
        (if modal-text
          modal-text
          (tr [:common :deletion-modal-text]))]]
-     [button-warning {:on-click open}
+     [button-warning {:on-click open
+                      :style style
+                      :class class}
       button-content]]))
