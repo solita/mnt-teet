@@ -4,7 +4,9 @@
             [teet.document.document-storage :as document-storage]
             teet.document.document-spec
             [clojure.string :as str]
-            [teet.meta.meta-model :refer [modification-meta creation-meta deletion-tx]])
+            [teet.meta.meta-model :refer [modification-meta creation-meta deletion-tx]]
+            [teet.util.collection :as cu]
+            [teet.util.datomic :as du])
   (:import (java.util Date)))
 
 
@@ -50,9 +52,14 @@
 (defmethod db-api/command! :document/update-document [{conn :conn
                                                        user :user} document]
   (select-keys
-    (d/transact conn {:tx-data [(assoc document :document/modified (Date.))
-                                {:db/id "datomic.tx"
-                                 :tx/author (:user/id user)}]})
+   (d/transact conn {:tx-data
+                     (into [(assoc (cu/without-nils document)
+                                   :document/modified (Date.))
+                            {:db/id "datomic.tx"
+                             :tx/author (:user/id user)}]
+                           (du/retractions (d/db conn)
+                                           (:db/id document)
+                                           (cu/nil-keys document)))})
     [:tempids]))
 
 (defmethod db-api/command! :document/upload-file [{conn :conn

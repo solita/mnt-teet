@@ -27,6 +27,7 @@
      "Return transaction data that retracts the current values of
   given keys in the entity."
      [db eid keys-to-retract]
+     (assert (some? eid) "Must specify entity id")
      (let [{id :db/id :as values}
            (d/pull db (into [:db/id] keys-to-retract) eid)]
        (vec
