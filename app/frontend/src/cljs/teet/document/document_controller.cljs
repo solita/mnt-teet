@@ -134,7 +134,12 @@
 
   UpdateDocumentForm
   (process-event [{form-data :form-data} app]
-    (update app :new-document merge form-data))
+    (update app :new-document
+            (fn [old-form]
+              (let [new-form-data (merge old-form form-data)]
+                (if (contains? form-data :document/category)
+                  (dissoc new-form-data :document/sub-category)
+                  new-form-data)))))
 
   CreateDocument
   (process-event [_ {doc :new-document :as app}]
@@ -145,7 +150,8 @@
       (t/fx (update app :new-document assoc :in-progress? 0)
             {:tuck.effect/type :command!
              :command :document/new-document
-             :payload {:document (select-keys doc [:document/name :document/status :document/description])
+             :payload {:document (select-keys doc
+                                              [:document/name :document/status :document/description :document/category :document/sub-category :document/author])
                        :task-id (goog.math.Long/fromString task)}
              :result-event (fn [doc-id]
                              (map->UploadFiles {:files files
