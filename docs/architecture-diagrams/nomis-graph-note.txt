@@ -1,0 +1,10 @@
+How to generate Nomis graphs from Clojure/ClojureScript code in teet:
+
+1. install nomis-ns-graph in your lein user profile
+2. create a dummy project.clj file in app/frontend or app/backend directory containing just "(defproject teet "0.0.0-SNAPSHOT")"
+3. invoke the lein command to generate your graph, eg:
+  lein nomis-ns-graph :platform cljs :inclusions "teet.map teet.document teet.project teet.activity teet.routes teet.localization teet.app-state"
+or just lein-nomis-ns-graph (works for backend)
+
+
+you can include the :write-gv-file? option if you want to inspect or edit the graphviz file, can be useful eg for tweaking layout options.
