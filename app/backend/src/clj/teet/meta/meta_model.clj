@@ -3,8 +3,8 @@
   (:import (java.util Date)))
 
 (defn creation-meta
-  [{id :db/id :as _user}]
-  {:meta/creator    id
+  [{id :user/id :as _user}]
+  {:meta/creator    [:user/id id]
    :meta/created-at (Date.)})
 
 (defn modification-meta
