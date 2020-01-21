@@ -108,21 +108,22 @@
    (migrate conn false))
   ([conn force?]
    (log/info "Migrate, db: " (:db-name conn))
-   (doseq [{ident :db/ident txes :txes} @schema
-           :let [db (d/db conn)
-                 already-applied? (if force?
-                                    false
-                                    (ffirst
-                                     (d/q '[:find ?m :where [?m :db/ident ?ident]
-                                            :in $ ?ident]
-                                          db ident)))]]
-     (if already-applied?
-       (log/info "Migration " ident " is already applied.")
-       (do
-         (log/info "Applying migration " ident)
-         (doseq [tx txes]
-           (d/transact conn {:tx-data tx}))
-         (d/transact conn {:tx-data [{:db/ident ident}]}))))
+   (let [schema @schema
+         applied-migrations (into #{}
+                                  (map first)
+                                  (d/q '[:find ?ident
+                                         :where [_ :db/ident ?ident]
+                                         :in $ [?ident ...]]
+                                       (d/db conn)
+                                       (map :db/ident schema)))]
+     (log/info (count applied-migrations) "/" (count schema) "migrations already applied.")
+     (doseq [{ident :db/ident txes :txes} schema
+             :when (or force?
+                       (not (applied-migrations ident)))]
+       (log/info "Applying migration " ident)
+       (doseq [tx txes]
+         (d/transact conn {:tx-data tx}))
+       (d/transact conn {:tx-data [{:db/ident ident}]})))
    (log/info "Migrations finished.")))
 
 (def ^:private db-migrated? (atom false))
