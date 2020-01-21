@@ -500,4 +500,18 @@
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
            :db/unique :db.unique/identity
-           :db/doc "Unique activity id in THK"}]]}]
+           :db/doc "Unique activity id in THK"}]]}
+
+ {:db/ident :migration/thk-integration-info-fields
+  :txes [[{:db/ident :thk.project/integration-info
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "EDN key/value map of THK information in CSV that TEET does not use. Needed for passing back to THK."}
+          {:db/ident :thk.lifecycle/integration-info
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "EDN key/value map of THK information in CSV that TEET does not use. Needed for passing back to THK."}
+          {:db/ident :activity/integration-info
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "EDN key/value map of THK information in CSV that TEET does not use. Needed for passing back to THK."}]]}]
