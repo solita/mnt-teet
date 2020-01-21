@@ -1,12 +1,18 @@
 (ns teet.thk.thk-import
+  "Import projects (object), lifecycles (phase) and activities from THK.
+  THK provides a CSV file that is flat and contains information on the
+  project, lifecycle and activity on the same row.
+
+  Rows are parsed and grouped by the project id (\"object_id\" field).
+  Project rows are further grouped by lifecycle id (\"phase_id\" field) to
+  yield activity rows."
   (:require [clojure.data.csv :as csv]
             [clojure.java.io :as io]
             [clojure.string :as str]
             [datomic.client.api :as d]
             [teet.util.collection :as cu]
             [teet.thk.thk-mapping :as thk-mapping])
-  (:import (org.apache.commons.io.input BOMInputStream)
-           (java.text SimpleDateFormat)))
+  (:import (org.apache.commons.io.input BOMInputStream)))
 
 (def excluded-project-types #{"TUGI" "TEEMU"})
 
