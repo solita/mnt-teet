@@ -516,7 +516,6 @@
            :db/cardinality :db.cardinality/one
            :db/doc "EDN key/value map of THK information in CSV that TEET does not use. Needed for passing back to THK."}]]}
 
-
  {:db/ident :migration/sub-category-valid-for
   :txes [[{:db/ident :enum/valid-for
            :db/valueType :db.type/keyword
@@ -571,4 +570,10 @@
           {:db/ident :document.sub-category/rsa-exception-report :enum/attribute :document/sub-category
            :enum/valid-for :document.category/project-doc}
           {:db/ident :document.sub-category/presentation :enum/attribute :document/sub-category
-           :enum/valid-for :document.category/project-doc}]]}]
+           :enum/valid-for :document.category/project-doc}]]}
+
+ {:db/ident :migration/document-author
+  :txes [[{:db/ident :document/author
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "References document author"}]]}]
