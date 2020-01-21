@@ -514,4 +514,61 @@
           {:db/ident :activity/integration-info
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
-           :db/doc "EDN key/value map of THK information in CSV that TEET does not use. Needed for passing back to THK."}]]}]
+           :db/doc "EDN key/value map of THK information in CSV that TEET does not use. Needed for passing back to THK."}]]}
+
+
+ {:db/ident :migration/sub-category-valid-for
+  :txes [[{:db/ident :enum/valid-for
+           :db/valueType :db.type/keyword
+           :db/cardinality :db.cardinality/one
+           :db/doc "Indicates for which parent value this selection is valid for"}]]}
+
+ {:db/ident :migration/document-extra-fields
+  :txes [[{:db/ident :document/category
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Ref of the document/result category. This is refered to in metadatamodel as type f.ex: Source documentation"}
+          {:db/ident :document.category/source-doc :enum/attribute :document/category}
+          {:db/ident :document.category/project-doc :enum/attribute :document/category}
+          {:db/ident :document.category/as-built-doc :enum/attribute :document/category}
+          {:db/ident :document.category/maintenance-doc :enum/attribute :document/category}
+
+          {:db/ident :document/sub-category
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Ref to the subcategory for a document/result"}
+
+          ;; Source documentation sub categories
+          {:db/ident :document.sub-category/design-requirements :enum/attribute :document/sub-category
+           :enum/valid-for :document.category/source-doc}
+          {:db/ident :document.sub-category/terms-of-reference :enum/attribute :document/sub-category
+           :enum/valid-for :document.category/source-doc}
+          {:db/ident :document.sub-category/procurement-specification :enum/attribute :document/sub-category
+           :enum/valid-for :document.category/source-doc}
+          ;; Project documentation sub categories
+          {:db/ident :document.sub-category/report :enum/attribute :document/sub-category
+           :enum/valid-for :document.category/project-doc}
+          {:db/ident :document.sub-category/drawing :enum/attribute :document/sub-category
+           :enum/valid-for :document.category/project-doc}
+          {:db/ident :document.sub-category/explanatory-letter :enum/attribute :document/sub-category
+           :enum/valid-for :document.category/project-doc}
+          {:db/ident :document.sub-category/geological-basis :enum/attribute :document/sub-category
+           :enum/valid-for :document.category/project-doc}
+          {:db/ident :document.sub-category/no-objection-letters :enum/attribute :document/sub-category
+           :enum/valid-for :document.category/project-doc}
+          {:db/ident :document.sub-category/drill-posts :enum/attribute :document/sub-category
+           :enum/valid-for :document.category/project-doc}
+          {:db/ident :document.sub-category/laboratory-certificate :enum/attribute :document/sub-category
+           :enum/valid-for :document.category/project-doc}
+          {:db/ident :document.sub-category/study-plan :enum/attribute :document/sub-category
+           :enum/valid-for :document.category/project-doc}
+          {:db/ident :document.sub-category/table-of-content :enum/attribute :document/sub-category
+           :enum/valid-for :document.category/project-doc}
+          {:db/ident :document.sub-category/calculation-report :enum/attribute :document/sub-category
+           :enum/valid-for :document.category/project-doc}
+          {:db/ident :document.sub-category/photo :enum/attribute :document/sub-category
+           :enum/valid-for :document.category/project-doc}
+          {:db/ident :document.sub-category/rsa-exception-report :enum/attribute :document/sub-category
+           :enum/valid-for :document.category/project-doc}
+          {:db/ident :document.sub-category/presentation :enum/attribute :document/sub-category
+           :enum/valid-for :document.category/project-doc}]]}]

@@ -165,7 +165,6 @@
               (format-item item)])
            items))]]]))
 
-
 (defn select-enum
   "Select an enum value based on attribute. Automatically fetches enum values from database."
   [{:keys [e! attribute required tiny-select? show-label? container-class class]
@@ -174,12 +173,18 @@
     (e! (common-controller/->Query {:query :enum/values
                                     :args {:attribute attribute}
                                     :result-event (partial ->SetEnumValues attribute)})))
-  (fn [{:keys [value on-change name id error container-class class]}]
+  (fn [{:keys [value on-change name id error container-class class]
+        :enum/keys [valid-for]}]
     (let [tr* #(tr [:enum %])
           select-comp (if tiny-select?
                         select-with-action
                         form-select)
-          values (@enum-values attribute)]
+          values (into []
+                       (comp (if valid-for
+                               (filter #(= valid-for (:enum/valid-for %)))
+                               identity)
+                             (map :db/ident))
+                       (@enum-values attribute))]
       [select-comp {:label (tr [:fields attribute])
                     :name name
                     :id id
@@ -193,7 +198,6 @@
                     :format-item tr*
                     :required required
                     :class class}])))
-
 
 (def ^:private selectable-users (r/atom nil))
 

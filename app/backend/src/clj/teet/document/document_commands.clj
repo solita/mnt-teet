@@ -43,10 +43,10 @@
   (println "new document")
   (-> conn
       (d/transact {:tx-data [(merge {:db/id "new-document"}
-                                    (select-keys document [:document/name :document/status :document/description]))
-                             {:db/id task-id
-                              :task/documents [{:db/id "new-document"}]}
-                             ]})
+                                    (cu/without-nils (select-keys document
+                                                                  [:document/name :document/status :document/description :document/category :document/sub-category :document/author])))
+                             {:db/id          task-id
+                              :task/documents [{:db/id "new-document"}]}]})
       (get-in [:tempids "new-document"])))
 
 (defmethod db-api/command! :document/update-document [{conn :conn

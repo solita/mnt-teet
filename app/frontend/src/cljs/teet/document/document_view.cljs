@@ -35,20 +35,29 @@
                :in-progress? in-progress?
                :spec :document/new-document-form}
 
+    ^{:attribute :document/category :xs 6}
+    [select/select-enum {:e! e! :attribute :document/category}]
+
+    (when-let [category (:document/category doc)]
+      ^{:attribute :document/sub-category :xs 6}
+      [select/select-enum {:e! e! :attribute :document/sub-category :enum/valid-for category}])
+
     ^{:attribute :document/name}
-    [TextField {:variant "outlined"
-                :full-width true}]
+    [TextField {:full-width true}]
 
     ^{:attribute :document/description}
     [TextField {:multiline true :maxrows 4 :rows 4
-                :variant "outlined" :full-width true
+                :full-width true
                 :required true}]
 
     ^{:attribute :document/files}
     [file-upload/files-field {}]
 
     ^{:attribute :document/status}
-    [select/select-enum {:e! e! :attribute :document/status}]]
+    [select/select-enum {:e! e! :attribute :document/status}]
+
+    ^{:attribute :document/author}
+    [select/select-user {:e! e!}]]
 
    (when in-progress?
      [LinearProgress {:variant "determinate"
@@ -69,32 +78,3 @@
                      :attribute :document/status
                      :modified (:document/modified document)}])
 
-(defn document-page [e! {new-comment :new-comment} document breadcrumbs]
-  [Grid {:container true}
-   [Grid {:item true :xs 6
-          :class (<class common-styles/grid-left-item)}
-    [:div {:class (<class common-styles/top-info-spacing)}
-     [breadcrumbs/breadcrumbs breadcrumbs]
-     [:div
-      [typography/Heading1 (:document/name document)]
-      [typography/Paragraph (:document/description document)]]]
-    [layout/section
-     [status e! document]
-     [List {:dense true}
-      (doall
-        (for [{id :db/id
-               :file/keys [name size author timestamp]
-               in-progress? :in-progress?} (:document/files document)]
-          ^{:key id}
-          [ui-common/list-button-link {:link (document-controller/download-url id)
-                                       :label name
-                                       :sub-label [:<> (some-> timestamp format/date-time)
-                                                   " "
-                                                   [user-info/user-name author]]
-                                       :icon icons/file-attachment
-                                       :end-text (format/file-size size)}]))]
-     [file-upload/FileUploadButton {:id "upload-files-to-document"
-                                    :on-drop (e! document-controller/->UploadFilesToDocument)}
-      (tr [:common :select-files])]]]
-   [Grid {:item true :xs 6 :classes {:item (<class theme-panels/side-panel)}}
-    [comments e! new-comment]]])

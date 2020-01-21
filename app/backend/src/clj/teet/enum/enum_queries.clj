@@ -4,9 +4,8 @@
 
 
 (defmethod db-api/query :enum/values [{db :db} {:keys [attribute]}]
-  {:query '{:find [?kw]
+  {:query '{:find [(pull ?e [*])]
             :in [$ ?attr]
-            :where [[?e :enum/attribute ?attr]
-                    [?e :db/ident ?kw]]}
+            :where [[?e :enum/attribute ?attr]]}
    :args [db attribute]
-   :result-fn #(into #{} (map first) %)})
+   :result-fn (partial mapv first)})

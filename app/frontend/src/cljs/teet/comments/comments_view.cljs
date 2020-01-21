@@ -12,7 +12,7 @@
 
 (defn- new-comment-footer [{:keys [validate disabled?]}]
   [:div {:class (<class form/form-buttons :space-between)}
-   (tr [:comment :comment-as] {:name (user-info/me)})
+   [:span (tr [:comment :comment-as] {:name (user-info/me)})]
 
    [buttons/button-primary {:disabled disabled?
                             :type :submit
