@@ -91,7 +91,7 @@
       [:div (tr [:project :information :procurement-number]) ": " procurement-nr]
       [:div (tr [:project :information :carriageway]) ": " carriageway]]
 
-     (when (and estimated-start-date estimated-end-date)
+     #_(when (and estimated-start-date estimated-end-date)
        (let [tr* (tr-tree [:enum])]
          [:<>
           [:br]
@@ -109,15 +109,7 @@
                 :start-date estimated-start-date
                 :end-date   estimated-end-date
                 :fill       "magenta"
-                :hover      [:div (tr* (:db/ident type))]}))]]))
-
-     [:div
-      "FIXME: lifecycle navigation"
-      [:ul
-       (doall (for [{id :db/id type :thk.lifecycle/type} lifecycles]
-                ^{:key (str id)}
-                [:li [:a {:href "foo"}
-                      (tr [:enum (:db/ident type)])]]))]]]))
+                :hover      [:div (tr* (:db/ident type))]}))]]))]))
 
 
 (defn project-header-style
