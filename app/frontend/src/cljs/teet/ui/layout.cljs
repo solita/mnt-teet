@@ -28,7 +28,6 @@
 (defn white-section-spacing
   []
   {:background-color theme-colors/white
-   :padding "2rem 1.5rem"
    :flex 1})
 
 (def section
