@@ -46,6 +46,7 @@
                                                      {:activity/name [:db/ident]}
                                                      {:thk.lifecycle/_activities [:db/id]}]}
                                   {:task/documents [*
+                                                    {:document/author [:user/id :user/given-name :user/family-name :user/email]}
                                                     {:document/files
                                                      [*
                                                       {:file/comments [*
