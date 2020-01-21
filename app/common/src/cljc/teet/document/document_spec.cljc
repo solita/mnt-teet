@@ -8,12 +8,14 @@
 (s/def :document/description (s/and string? (complement str/blank?)))
 (s/def :document/category keyword?)
 (s/def :document/sub-category keyword?)
+(s/def :document/author (s/keys :req [:user/id] :optn [:user/email :user/family-name :user/given-name]))
 (s/def :document/new-document-form (s/keys :req [:document/category
                                                  :document/sub-category
                                                  :document/name
                                                  :document/status
                                                  :document/description
-                                                 :document/status]))
+                                                 :document/status
+                                                 :document/author]))
 
 (s/def :activity/name keyword?)
 (s/def :activity/status keyword?)
