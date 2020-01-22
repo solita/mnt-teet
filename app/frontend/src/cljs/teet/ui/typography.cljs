@@ -10,6 +10,11 @@
    :color theme-colors/gray-light
    :font-size "0.75rem"})
 
+(defn- grey-text
+  []
+  {:display :block
+   :color theme-colors/gray-light})
+
 (def Heading1 (util/make-component Typography {:variant "h1"}))
 
 (def Heading2 (util/make-component Typography {:variant "h2"}))
@@ -25,4 +30,6 @@
 (def DataLabel (util/make-component Typography {:variant "subtitle1"}))
 
 (def SmallText (util/make-component :span {:class (<class small-text-style)}))
+
+(def GreyText (util/make-component :span {:class (<class grey-text)}))
 
