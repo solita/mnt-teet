@@ -12,12 +12,16 @@
 (defrecord CreateDocument []) ; create empty document and link it to task
 (defrecord CancelDocument []) ; cancel document creation
 (defrecord UpdateDocumentForm [form-data])
-(defrecord UpdateDocumentStatus [status])
+(defrecord UpdateDocumentEditForm [form-data])
 (defrecord UploadFiles [files document-id on-success progress-increment]) ; Upload files (one at a time) to document
 (defrecord UploadFinished []) ; upload completed, can close dialog
 (defrecord UploadFileUrlReceived [file-data file document-id url on-success])
 (defrecord FetchDocument [document-id]) ; fetch document
 (defrecord UploadFilesToDocument [files]) ; upload new files to existing document from the document page
+
+(defrecord MoveDocumentDataForEdit [document-id])
+(defrecord PostDocumentEdit [])
+(defrecord PostDocumentEditSuccess [])
 
 (defrecord UpdateNewCommentForm [form-data]) ; update new comment form data
 (defrecord Comment []) ; save new comment to document
@@ -100,10 +104,10 @@
   (process-event [{document-id :document-id} app]
     (t/fx app
           {:tuck.effect/type :command!
-           :command :document/delete
+           :command          :document/delete
            :success-message  (tr [:document :deleted-notification])
-           :payload {:document-id document-id}
-           :result-event ->DeleteDocumentResult}))
+           :payload          {:document-id (goog.math.Long/fromString document-id)}
+           :result-event     ->DeleteDocumentResult}))
 
   DeleteDocumentResult
   (process-event [_ {:keys [page params query] :as app}]
@@ -111,7 +115,7 @@
           {:tuck.effect/type :navigate
            :page page
            :params params
-           :query (dissoc query :document)}
+           :query (dissoc query :document :edit)}
           common-controller/refresh-fx))
 
   DeleteFile
@@ -141,6 +145,45 @@
                   (dissoc new-form-data :document/sub-category)
                   new-form-data)))))
 
+  UpdateDocumentEditForm
+  (process-event [{form-data :form-data} app]
+    (update app :edit-document-data
+            (fn [old-form]
+              (let [new-form-data (merge old-form form-data)]
+                (if (contains? form-data :document/category)
+                  (dissoc new-form-data :document/sub-category)
+                  new-form-data)))))
+
+  MoveDocumentDataForEdit
+  (process-event [{document-id :document-id} app]
+    (let [documents (get-in app [:route :activity-task :task/documents])
+          document (-> (first (filter #(= ((comp str :db/id) %) document-id) documents))
+                       (update :document/category :db/ident)
+                       (update :document/sub-category :db/ident)
+                       (update :document/status :db/ident))]
+      (assoc app :edit-document-data document)))
+
+  PostDocumentEditSuccess
+  (process-event [_ {:keys [page params query] :as app}]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page page
+           :params params
+           :query (dissoc query :edit)}
+          common-controller/refresh-fx))
+
+  PostDocumentEdit
+  (process-event [_ {doc :edit-document-data :as app}]
+    (let [task (get-in app [:params :task])]
+      (log/info "UPDATE DOC " doc)
+      (t/fx app
+            {:tuck.effect/type :command!
+             :command :document/edit-document
+             :payload {:document (select-keys doc
+                                              [:db/id :document/name :document/status :document/description :document/category :document/sub-category :document/author])
+                       :task-id (goog.math.Long/fromString task)}
+             :result-event ->PostDocumentEditSuccess})))
+
   CreateDocument
   (process-event [_ {doc :new-document :as app}]
     (let [task (get-in app [:params :task])
@@ -168,17 +211,6 @@
                                      :document-id doc-id
                                      :progress-increment (int (/ 100 (count files)))
                                      :on-success ->UploadFinished}))))))
-
-  UpdateDocumentStatus
-  (process-event [{status :status :as event} app]
-    (log/info "UpdateDocumentStatus" event)
-    (let [{id :db/id} (common-controller/page-state app)]
-      (t/fx app
-        {:tuck.effect/type :command!
-         :command :document/update-document
-         :payload {:db/id id
-                   :document/status status}
-         :result-event common-controller/->Refresh})))
 
   UploadFiles
   (process-event [{:keys [files document-id on-success progress-increment] :as event} app]

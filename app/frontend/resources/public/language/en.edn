@@ -173,6 +173,8 @@
  :search {:quick-search "Search", :clear-filters "Clear filters"},
  :task
  {:add-document "Add document",
+  :edit-document "Edit document",
+  :edit-task "Edit task",
   :documents "Documents",
   :task-overview "Task overview",
   :no-documents "No documents",

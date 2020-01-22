@@ -94,7 +94,8 @@
     {:tx-data [(deletion-tx user activity-id)]})
   :ok)
 
-(defmethod db-api/command! :project/create-activity [{conn :conn} activity]
+(defmethod db-api/command! :project/create-activity [{conn :conn
+                                                      user :user} activity]
   (log/info "ACTIVITY: " activity)
   (select-keys
     (d/transact
@@ -103,16 +104,21 @@
                    {:db/id "new-activity"}
                    (select-keys activity [:activity/name :activity/status
                                           :activity/estimated-start-date
-                                          :activity/estimated-end-date]))
+                                          :activity/estimated-end-date])
+                   (creation-meta user))
                  {:db/id (:lifecycle-id activity)
                   :thk.lifecycle/activities ["new-activity"]}]})
     [:tempids]))
 
-(defmethod db-api/command! :project/update-activity [{conn :conn} activity]
-  (select-keys (d/transact conn {:tx-data [(assoc activity :activity/modified (Date.))]}) [:tempids]))
+(defmethod db-api/command! :project/update-activity [{conn :conn
+                                                      user :user} activity]
+  (select-keys (d/transact conn {:tx-data [(merge (assoc activity :activity/modified (Date.))
+                                                  (modification-meta user))]}) [:tempids]))
 
-(defmethod db-api/command! :project/update-task [{conn :conn} task]
-  (select-keys (d/transact conn {:tx-data [(assoc task :task/modified (Date.))]}) [:tempids]))
+(defmethod db-api/command! :project/update-task [{conn :conn
+                                                  user :user} task]
+  (select-keys (d/transact conn {:tx-data [(merge (assoc task :task/modified (Date.))
+                                                  (modification-meta user))]}) [:tempids]))
 
 (defmethod db-api/command! :project/add-task-to-activity [{conn :conn} {activity-id :activity-id
                                                                          task :task :as payload}]

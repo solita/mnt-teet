@@ -17,7 +17,7 @@
 (defrecord DeleteTask [task-id])
 (defrecord DeleteTaskResult [response])
 
-(defrecord OpenEditTask [])
+(defrecord OpenEditModal [entity])
 (defrecord CloseEditDialog [])
 (defrecord UpdateEditTaskForm [form-data])
 (defrecord PostTaskEditForm [])
@@ -42,13 +42,13 @@
           task-with-type (assoc task-data :task/type (get-in task-data [:task/type :db/ident]))]
       (assoc app :edit-task-data task-with-type)))
 
-  OpenEditTask
-  (process-event [_ {:keys [params page query] :as app}]
+  OpenEditModal
+  (process-event [{entity :entity} {:keys [params page query] :as app}]
     (t/fx app
           {:tuck.effect/type :navigate
            :page             page
            :params           params
-           :query            (assoc query :edit :task)}))
+           :query            (assoc query :edit entity)}))
 
   DeleteTask
   (process-event [{task-id :task-id} app]

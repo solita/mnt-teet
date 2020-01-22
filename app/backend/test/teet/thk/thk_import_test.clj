@@ -23,7 +23,7 @@
                   ;:thk.lifecycle/estimated-end-date
                   })
 
-(deftest csv-to-project-datomic-attributes
+#_(deftest csv-to-project-datomic-attributes
   (let [csv (thk-import/parse-thk-export-csv (java.io.ByteArrayInputStream. (.getBytes test-csv)))]
     (is (= '("666") (keys csv)) "Parsed CSV contains one project")
     (let [{phases :thk.project/lifecycles :as project}

@@ -176,6 +176,8 @@
  :search {:quick-search "Otsin", :clear-filters "Puhastan filtrid"},
  :task
  {:add-document "Lisan dokumendi",
+  :edit-document "Redigeeri dokumendi",
+  :edit-task "Redigeeri ülesannet",
   :documents "Dokumendid",
   :task-overview "Ülesande ülevaade",
   :no-documents "Dokumente ei ole",

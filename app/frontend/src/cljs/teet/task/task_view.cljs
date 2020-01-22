@@ -81,7 +81,7 @@
                   :display         :flex}}
     [Heading1 (tr [:enum (:db/ident type)])]
     [:div {:style {:display :flex}}
-     [buttons/button-secondary {:on-click (e! task-controller/->OpenEditTask)}
+     [buttons/button-secondary {:on-click (e! task-controller/->OpenEditModal :task)}
       (tr [:buttons :edit])]]]
    [:p description]
    [task-status e! status modified]
@@ -91,7 +91,6 @@
 
 (defn- task-document-content
   [e! document]
-
   [:<>
    [common/header-with-actions
     (:document/name document)
@@ -103,13 +102,12 @@
                     [icons/content-add])}
      (tr [:document :add-files])]
 
-    [buttons/delete-button-with-confirm
-     {:style {:margin-left "1rem"}
-      :action (e! document-controller/->DeleteDocument (:db/id document))}
-     (tr [:buttons :delete])]]
-   [typography/SmallText (tr [:fields :document/category]) ": " (tr [:enum (get-in document [:document/category :db/ident])])]
-   [typography/SmallText (tr [:fields :document/sub-category]) ": " (tr [:enum (get-in document [:document/sub-category :db/ident])])]
-   [typography/Paragraph (:document/description document)]
+    [buttons/button-secondary
+     {:style  {:margin-left "1rem"}
+      :on-click (e! task-controller/->OpenEditModal :document)}
+     (tr [:buttons :edit])]]
+   [typography/Paragraph {:style {:margin-bottom "2rem"}}
+    (:document/description document)]
    [document-view/comments e! document]])
 
 (defn document-file-content
@@ -120,10 +118,11 @@
     name
     [buttons/delete-button-with-confirm {:action (e! document-controller/->DeleteFile id)}
      (tr [:buttons :delete])]]
-   [typography/SmallText
+   [typography/SmallText {:style {:margin-bottom "1rem"}}
     (tr [:document :updated]) " "
     (format/date-time timestamp)]
    [buttons/button-primary {:href       (document-controller/download-url id)
+                            :style {:margin-bottom "2rem"}
                             :element    "a"
                             :target     "_blank"
                             :start-icon (r/as-element
@@ -171,7 +170,7 @@
    [panels/modal {:open-atom (r/wrap (boolean edit) :_)
                   :title     (if-not edit
                                ""
-                               (tr [:project edit]))
+                               (tr [:task (keyword (str "edit-" edit))]))
                   :on-close  (e! task-controller/->CloseEditDialog)}
     (case edit
       "task"
@@ -184,16 +183,17 @@
           :on-change         task-controller/->UpdateEditTaskForm}
          (when-authorized :task/delete-task
                           {:delete (task-controller/->DeleteTask (:task params))}))]
-      #_"result"
-      #_[document-view/document-form e!
+      "document"
+      [document-view/document-form e!
        (merge
-         {:close             task-controller/->CloseEditDialog
-          :task              (:edit-document-data app)
-          :initialization-fn (e! document-controller/->MoveDocumentDataForEdit)
+          {:on-close-event   task-controller/->CloseEditDialog
+          :initialization-fn (e! document-controller/->MoveDocumentDataForEdit (:document query))
           :save              document-controller/->PostDocumentEdit
-          :on-change         document-controller/->UpdateDocumentEditForm}
+          :on-change         document-controller/->UpdateDocumentEditForm
+          :editing? true}
          (when-authorized :document/delete-document
-                          {:delete (document-controller/->DeleteDocument (:document params))}))]
+                          {:delete (document-controller/->DeleteDocument (:document query))}))
+       (:edit-document-data app)]
       [:span])]])
 
 (defn task-page [e! {{:keys [add-document edit] :as query} :query
@@ -209,8 +209,9 @@
    [panels/modal {:open-atom (r/wrap (boolean add-document) :_)
                   :title     (tr [:task :add-document])
                   :on-close  (e! task-controller/->CloseAddDocumentDialog)}
-    [document-view/document-form {:e!             e!
-                                  :on-close-event task-controller/->CloseAddDocumentDialog}
+    [document-view/document-form e! {:on-close-event task-controller/->CloseAddDocumentDialog
+                                     :save           document-controller/->CreateDocument
+                                     :on-change      document-controller/->UpdateDocumentForm}
      new-document]]
    [breadcrumbs/breadcrumbs breadcrumbs]
    [Heading1 (:thk.project/name project)]

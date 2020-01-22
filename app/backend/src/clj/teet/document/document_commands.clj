@@ -39,28 +39,31 @@
     nil))
 
 ;; Create new document and link it to task. Returns entity id for document.
-(defmethod db-api/command! :document/new-document [{conn :conn} {:keys [task-id document]}]
-  (println "new document")
-  (-> conn
-      (d/transact {:tx-data [(merge {:db/id "new-document"}
-                                    (cu/without-nils (select-keys document
-                                                                  [:document/name :document/status :document/description :document/category :document/sub-category :document/author])))
-                             {:db/id          task-id
-                              :task/documents [{:db/id "new-document"}]}]})
-      (get-in [:tempids "new-document"])))
+(defmethod db-api/command! :document/new-document [{conn :conn
+                                                    user :user} {:keys [task-id document]}]
+  (let [author-id (get-in document [:document/author :user/id])]
+    (-> conn
+        (d/transact {:tx-data [(merge {:db/id "new-document"}
+                                      (cu/without-nils (select-keys document
+                                                                    [:document/name :document/status :document/description :document/category :document/sub-category]))
+                                      (when author-id
+                                        {:document/author [:user/id author-id]})
+                                      (creation-meta user))
+                               {:db/id          task-id
+                                :task/documents [{:db/id "new-document"}]}]})
+        (get-in [:tempids "new-document"]))))
 
-(defmethod db-api/command! :document/update-document [{conn :conn
-                                                       user :user} document]
-  (select-keys
-   (d/transact conn {:tx-data
-                     (into [(assoc (cu/without-nils document)
-                                   :document/modified (Date.))
-                            {:db/id "datomic.tx"
-                             :tx/author (:user/id user)}]
-                           (du/retractions (d/db conn)
-                                           (:db/id document)
-                                           (cu/nil-keys document)))})
-    [:tempids]))
+(defmethod db-api/command! :document/edit-document [{conn :conn
+                                                     user :user}
+                                                    {:keys [document]}]
+  (let [author-id (get-in document [:document/author :user/id])]
+    (d/transact conn {:tx-data
+                      [(merge (cu/without-nils (select-keys document
+                                                            [:db/id :document/name :document/status :document/description :document/category :document/sub-category]))
+                              (modification-meta user)
+                              (when author-id
+                                {:document/author [:user/id author-id]}))]}))
+  :ok)
 
 (defmethod db-api/command! :document/upload-file [{conn :conn
                                                    user :user}
