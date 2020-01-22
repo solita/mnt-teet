@@ -45,9 +45,8 @@
            (format/date timestamp) " – " [user-info/user-name author]]
           (when-authorized :comment-delete
                            entity
-                           [buttons/button-text-warning {:size     :small
-                                                         :on-click (e! comment-controller/->DeleteComment id)
-                                                         :end-icon (r/as-element [icons/action-delete-outline])}
+                           [buttons/delete-button-with-confirm {:small? true
+                                                                :action (e! comment-controller/->DeleteComment id)}
                             (tr [:buttons :delete])])]
          [typography/Paragraph comment]]))]
 
