@@ -3,6 +3,7 @@
             [teet.ui.material-ui :refer [Button ButtonBase Link DialogActions DialogContentText]]
             [teet.ui.util :as util]
             [teet.localization :refer [tr]]
+            [teet.ui.icons :as icons]
             [teet.theme.theme-colors :as theme-colors]
             [reagent.core :as r]
             [teet.ui.panels :as panels]))
@@ -31,10 +32,20 @@
   {:background-color (str theme-colors/error " !important")
    :color            (str theme-colors/white " !important")})
 
+(defn- button-text-warning-style
+  []
+  ^{:pseudo {:focus (str theme-colors/focus-style " !important")}}
+  {:color (str theme-colors/red " !important")})
+
 
 (def button-text
-  (util/make-component Button {:variant :text
+  (util/make-component Button {:variant        :text
                                :disable-ripple true}))
+
+(def button-text-warning
+  (util/make-component Button {:variant        :text
+                               :disable-ripple true
+                               :class          (<class button-text-warning-style)}))
 
 (def button-primary
   (util/make-component Button {:variant        :contained
@@ -68,7 +79,7 @@
                              :type      :button}))
 
 (defn delete-button-with-confirm
-  [{:keys [action modal-title modal-text style]} button-content]
+  [{:keys [action modal-title modal-text style small?]} button-content]
   (let [open-atom (r/atom false)
         open #(reset! open-atom true)
         close #(reset! open-atom false)]
@@ -88,6 +99,11 @@
        (if modal-text
          modal-text
          (tr [:common :deletion-modal-text]))]]
-     [button-warning {:on-click open
-                      :style style}
-      button-content]]))
+     (if small?
+       [button-text-warning {:on-click open
+                             :size :small
+                             :end-icon (r/as-element [icons/action-delete-outline])}
+        button-content]
+       [button-warning {:on-click open
+                        :style    style}
+        button-content])]))
