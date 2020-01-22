@@ -24,44 +24,53 @@
   (when km
     (int (* 1000 km))))
 
-(defn- phase-name->lifecycle-type [phase_shortname]
-  (case phase_shortname
-    "projetapp" :thk.lifecycle-type/design
-    "ehitetapp" :thk.lifecycle-type/construction
+(defn- reverse-mapping [m]
+  (into {}
+        (map (fn [[k v]]
+               [v k]))
+        m))
 
-    ;; FIXME: how to map "Eelproj"?
-    nil))
+(def phase-name->lifecycle-type
+  ;; FIXME: how to map "Eelproj"?
+  {"projetapp" :thk.lifecycle-type/design
+   "ehitetapp" :thk.lifecycle-type/construction})
 
-(defn thk-activity-type->activity-name [act_typefk]
-  (case act_typefk
-    ;; THK has activities without mapping in TEET,
-    ;; we skip those as they should be removed in
-    ;; the future.
-    ;;
-    ;; 4000 Planeering
-    ;; 4001 Uuring/Anal
-    ;; 4002 KMH
-    "4003" :activity.name/detailed-design ;; Pöhiprojekt
-    "4004" :activity.name/land-acquisition ;; Maaost
-    "4005" :activity.name/construction ;; Teostus
-    ;; 4010 ekspertiis
-    ;; 4011 LOA proj
-    "4012" :activity.name/pre-design ;; Eskiisproj
-    "4013" :activity.name/preliminary-design ;; Eelproj
+(def lifecycle-type->phase-name
+  (reverse-mapping phase-name->lifecycle-type))
 
-    ;; Default to other
-    nil))
+(def thk-activity-type->activity-name
+  {;; THK has activities without mapping in TEET,
+   ;; we skip those as they should be removed in
+   ;; the future.
+   ;;
+   ;; 4000 Planeering
+   ;; 4001 Uuring/Anal
+   ;; 4002 KMH
+   "4003" :activity.name/detailed-design ;; Pöhiprojekt
+   "4004" :activity.name/land-acquisition ;; Maaost
+   "4005" :activity.name/construction ;; Teostus
+   ;; 4010 ekspertiis
+   ;; 4011 LOA proj
+   "4012" :activity.name/pre-design ;; Eskiisproj
+   "4013" :activity.name/preliminary-design  ;; Eelproj
+   })
 
-(defn thk-activity-status->status [act_statusfk]
-  (case act_statusfk
-    ;;  4100 Ettevalmistamisel
-    ;;  4101 Hankemenetluses
-    "4102" :activity.status/in-progress ;; Töös
-    ;;  4103 Garantiiaeg
-    "4104" :activity.status/completed ;; Lõpetatud
-    ;;  4106 Hankeplaanis
-    ;; Unmapped status
-    :activity.status/other))
+(def activity-name->thk-activity-type
+  (reverse-mapping thk-activity-type->activity-name))
+
+(def thk-activity-status->status
+  {;;  4100 Ettevalmistamisel
+   ;;  4101 Hankemenetluses
+   "4102" :activity.status/in-progress  ;; Töös
+   ;;  4103 Garantiiaeg
+   "4104" :activity.status/completed ;; Lõpetatud
+   ;;  4106 Hankeplaanis
+   ;; Unmapped status
+   ;;:activity.status/other
+   })
+
+(def status->thk-activity-status
+  (reverse-mapping thk-activity-status->status))
 
 
 (def object-integration-info-fields
@@ -77,6 +86,53 @@
     :activity/contract :activity/actualstart :activity/actualend
     :activity/guaranteeexpired :activity/thkupdstamp :activity/cost
     :activity/procurementno :activity/procurementid})
+
+(def csv-column-names
+  ["object_id"
+   "object_groupfk"
+   "object_groupshortname"
+   "object_groupname"
+   "object_roadnr"
+   "object_carriageway"
+   "object_kmstart"
+   "object_kmend"
+   "object_bridgenr"
+   "object_name"
+   "object_projectname"
+   "object_owner"
+   "object_regionfk"
+   "object_regionname"
+   "object_thkupdstamp"
+   "object_teetupdstamp"
+   "object_statusfk"
+   "object_statusname"
+   "phase_id"
+   "phase_teetid"
+   "phase_typefk"
+   "phase_shortname"
+   "phase_eststart"
+   "phase_estend"
+   "phase_thkupdstamp"
+   "phase_teetupdstamp"
+   "phase_cost"
+   "activity_id"
+   "activity_teetid"
+   "activity_typefk"
+   "activity_shortname"
+   "activity_statusfk"
+   "activity_statusname"
+   "activity_contract"
+   "activity_eststart"
+   "activity_estend"
+   "activity_actualstart"
+   "activity_actualend"
+   "activity_guaranteeexpired"
+   "activity_thkupdstamp"
+   "activity_teetupdstamp"
+   "activity_teetdelstamp"
+   "activity_cost"
+   "activity_procurementno"
+   "activity_procurementid"])
 
 (def thk->teet
   {;; Object/project fields
