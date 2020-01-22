@@ -1,7 +1,6 @@
 (ns teet.document.document-controller
   "Controller for managing document uploads"
   (:require [tuck.core :as t]
-            [tuck.effect]
             [teet.log :as log]
             [goog.math.Long]
             tuck.effect
@@ -22,11 +21,6 @@
 (defrecord MoveDocumentDataForEdit [document-id])
 (defrecord PostDocumentEdit [])
 (defrecord PostDocumentEditSuccess [])
-
-(defrecord UpdateNewCommentForm [form-data]) ; update new comment form data
-(defrecord Comment []) ; save new comment to document
-(defrecord UpdateFileNewCommentForm [form-data]) ; update new comment on selected file
-(defrecord CommentOnFile []) ; save new comment to file
 
 (defrecord DeleteDocument [document-id])
 (defrecord DeleteDocumentResult [])
@@ -50,55 +44,6 @@
            :query :document/fetch-document
            :args {:document-id (goog.math.Long/fromString document-id)}
            :result-path [:document document-id]}))
-
-  UpdateNewCommentForm
-  (process-event [{form-data :form-data} {:keys [query] :as app}]
-    (update-in app
-               [:route :activity-task :task/documents]
-               (fn [documents]
-                 (mapv #(if (= (str (:db/id %)) (:document query))
-                          (assoc % :new-comment form-data)
-                          %)
-                       documents))))
-
-  Comment
-  (process-event [_ app]
-    (let [doc (get-in app [:query :document])
-          new-comment (->> (get-in app [:route :activity-task :task/documents])
-                           (filter #(= (str (:db/id %)) doc))
-                           first
-                           :new-comment
-                           :comment/comment)]
-      (t/fx app
-            {:tuck.effect/type :command!
-             :command :document/comment
-             :payload {:document-id (goog.math.Long/fromString doc)
-                       :comment new-comment}
-             :result-event common-controller/->Refresh})))
-
-  UpdateFileNewCommentForm
-  (process-event [{form-data :form-data} {:keys [query] :as app}]
-    (let [file-id (:file query)]
-      (update-in app
-                 [:route :activity-task]
-                 (fn [task]
-                   (update-in task (conj (task-model/file-by-id-path task file-id) :new-comment)
-                              merge form-data)))))
-
-  CommentOnFile
-  (process-event [_ {:keys [query] :as app}]
-    (let [file-id (:file query)
-          task (get-in app [:route :activity-task])
-          new-comment (-> task
-                          (get-in (task-model/file-by-id-path task file-id))
-                          :new-comment
-                          :comment/comment)]
-      (t/fx app
-            {:tuck.effect/type :command!
-             :command :document/comment-on-file
-             :payload {:file-id (goog.math.Long/fromString file-id)
-                       :comment new-comment}
-             :result-event common-controller/->Refresh})))
 
   DeleteDocument
   (process-event [{document-id :document-id} app]

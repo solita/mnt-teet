@@ -1,19 +1,19 @@
 (ns teet.document.document-view
   "Views for document and files"
-  (:require [herb.core :refer [<class]]
-            [teet.document.document-controller :as document-controller]
-            teet.document.document-spec
+  (:require teet.document.document-spec
             [teet.ui.file-upload :as file-upload]
             [teet.ui.form :as form]
             [teet.ui.material-ui :refer [LinearProgress]]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.select :as select]
-            [teet.comments.comments-view :as comments-view]))
+            [teet.comments.comments-view :as comments-view]
+            [teet.comments.comments-controller :as comments-controller]))
 
-(defn document-form [_ {:keys [initialization-fn]} _]
+(defn document-form [_ {:keys [initialization-fn]}]
   (when initialization-fn
     (initialization-fn))
-  (fn [e! {:keys [on-close-event delete on-change save editing?]} {:keys [in-progress?] :as doc}]
+  (fn [e! {:keys [on-close-event delete on-change save editing?]
+           {:keys [in-progress?] :as doc} :document}]
     [:<>
      [form/form {:e!              e!
                  :value           doc
@@ -53,10 +53,10 @@
                         :value   in-progress?}])]))
 
 (defn comments [e! {:keys [new-comment] :as document}]
-  [comments-view/comments {:e! e!
-                           :new-comment new-comment
-                           :comments (:document/comments document)
-                           :update-comment-event document-controller/->UpdateNewCommentForm
-                           :save-comment-event document-controller/->Comment}])
+  [comments-view/comments {:e!                   e!
+                           :new-comment          new-comment
+                           :comments             (:document/comments document)
+                           :update-comment-event comments-controller/->UpdateNewCommentForm
+                           :save-comment-event   comments-controller/->Comment}])
 
 
