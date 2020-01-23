@@ -88,7 +88,7 @@
     :object/thkupdstamp :object/statusfk :object/statusname})
 
 (def phase-integration-info-fields
-  #{:phase/thkupdstamp :phase/cost})
+  #{:phase/thkupdstamp :phase/cost :phase/typefk})
 
 (def activity-integration-info-fields
   #{:activity/typefk :activity/shortname :activity/statusname
