@@ -9,9 +9,13 @@
              reader/read-string)))
 
 (defn when-authorized
-  [functionality component]
-  ;;FIXME: IMPLEMENT CHECK FUNCTIONALITY
+  [functionality entity component]
+  ;;FIXME: IMPLEMENT CHECK FUNCTIONALITY || NOW ONLY CHECKS THAT THE USE IS CREATOR OF GIVEN ENTITY
   (log/info "Authorization-check functionality: " functionality
+            "entity : " entity
             "App-state/User" @app-state/user
             "rules for functionality: " (@authorization-rules functionality))
-  component)
+  (let [creator-id (get-in entity [:meta/creator :db/id])
+        user-id (:db/id @app-state/user)]
+    (when (= creator-id user-id)
+      component)))
