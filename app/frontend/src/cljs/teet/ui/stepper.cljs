@@ -76,8 +76,10 @@
 
 (defn- stepper-button-style
   [{:keys [size open?]}]
+  ^{:pseudo {:hover {:color theme-colors/blue-dark}}}
   {:border      :none
    :background  :none
+   :transition "color 0.2s ease-in-out"
    :font-size   size
    :font-weight (if open?
                   :bold
