@@ -218,7 +218,7 @@
           {:tuck.effect/type :navigate
            :page page
            :params params
-           :query (dissoc query :add-files)}
+           :query (dissoc query :add-files :add-document)}
           common-controller/refresh-fx)))
 
 (defn download-url [file-id]
