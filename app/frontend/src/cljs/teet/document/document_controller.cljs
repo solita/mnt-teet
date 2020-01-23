@@ -213,12 +213,12 @@
 
 
   UploadFinished
-  (process-event [_ app]
+  (process-event [_ {:keys [query page params] :as app}]
     (t/fx (dissoc app :new-document)
           {:tuck.effect/type :navigate
-           :page :activity-task
-           :params (:params app)
-           :query {}}
+           :page page
+           :params params
+           :query (dissoc query :add-files)}
           common-controller/refresh-fx)))
 
 (defn download-url [file-id]
