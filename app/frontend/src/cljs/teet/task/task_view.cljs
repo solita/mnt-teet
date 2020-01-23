@@ -32,6 +32,19 @@
                   :attribute :task/status
                   :modified  modified}])
 
+(defn get-latest-modification
+  "Takes the document and returns the latest modification time from either files or the doc it self"
+  [{:meta/keys     [created-at modified-at]
+    :document/keys [files]}]
+  (let [latest-change
+        (reduce (fn [latest-time {:meta/keys [created-at]}]
+                  (if (> latest-time created-at)
+                    latest-time
+                    created-at))
+                (or modified-at created-at)
+                files)]
+    latest-change))
+
 (defn task-navigation
   [{:task/keys [documents] :as task} {selected-file-id     :file
                                       selected-document-id :document}]
@@ -47,7 +60,7 @@
     [:b (tr [:task :results])]]
    (doall
      (for [{:document/keys [name status files]
-            :meta/keys [modified-at] :as document} documents]
+            :meta/keys     [modified-at] :as document} documents]
        ^{:key (str (:db/id document))}
        [:div
         [:div
@@ -59,12 +72,11 @@
                                          :file nil)}
             name])
          [typography/SmallText {:style {:margin-bottom "0.5rem"}}
-          [:span {:style {:font-weight :bold
+          [:span {:style {:font-weight    :bold
                           :text-transform :uppercase}}
            (tr [:enum (:db/ident status)])]
-          (when modified-at
-            [:span
-             " " (tr [:common :last-modified]) ": " (format/date modified-at)])]]
+          [:span
+           " " (tr [:common :last-modified]) ": " (format/date (get-latest-modification document))]]]
         (for [{:file/keys [name size] :as file
                file-id    :db/id} files]
           ^{:key (str file-id)}
@@ -188,7 +200,7 @@
           :initialization-fn (e! task-controller/->MoveDataForEdit)
           :save              task-controller/->PostTaskEditForm
           :on-change         task-controller/->UpdateEditTaskForm
-          :delete             (task-controller/->DeleteTask (:task params))})]
+          :delete            (task-controller/->DeleteTask (:task params))})]
       "document"
       [document-view/document-form e!
        (merge
@@ -198,7 +210,7 @@
           :on-change         document-controller/->UpdateDocumentEditForm
           :document          (:edit-document-data app)
           :editing?          true
-          :delete (document-controller/->DeleteDocument (:document query))})]
+          :delete            (document-controller/->DeleteDocument (:document query))})]
       [:span])]])
 
 (defn task-page [e! {{:keys [add-document edit] :as query} :query
