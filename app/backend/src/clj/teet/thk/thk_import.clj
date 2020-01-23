@@ -66,29 +66,31 @@
        (into []
              (for [[id activities] phases
                    :let [phase (first activities)]]
-               (merge
-                (select-keys phase #{:thk.lifecycle/type
-                                     :thk.lifecycle/estimated-start-date
-                                     :thk.lifecycle/estimated-end-date
-                                     :thk.lifecycle/id})
-                {:db/id id
-                 :thk.lifecycle/integration-info (integration-info phase
-                                                                   thk-mapping/phase-integration-info-fields)
-                 :thk.lifecycle/activities
-                 (for [{id :thk.activity/id
-                        name :activity/name
-                        :as activity} activities
-                       :when (and id name)]
-                   (merge
-                    (select-keys activity #{:thk.activity/id
-                                            :activity/estimated-start-date
-                                            :activity/estimated-end-date
-                                            :activity/name
-                                            :activity/status})
-                    {:db/id id
-                     :activity/integration-info (integration-info
-                                                 activity
-                                                 thk-mapping/activity-integration-info-fields)}))})))}))))
+               (cu/without-nils
+                (merge
+                 (select-keys phase #{:thk.lifecycle/type
+                                      :thk.lifecycle/estimated-start-date
+                                      :thk.lifecycle/estimated-end-date
+                                      :thk.lifecycle/id})
+                 {:db/id id
+                  :thk.lifecycle/integration-info (integration-info phase
+                                                                    thk-mapping/phase-integration-info-fields)
+                  :thk.lifecycle/activities
+                  (for [{id :thk.activity/id
+                         name :activity/name
+                         :as activity} activities
+                        :when (and id name)]
+                    (merge
+                     (cu/without-nils
+                      (select-keys activity #{:thk.activity/id
+                                              :activity/estimated-start-date
+                                              :activity/estimated-end-date
+                                              :activity/name
+                                              :activity/status}))
+                     {:db/id id
+                      :activity/integration-info (integration-info
+                                                  activity
+                                                  thk-mapping/activity-integration-info-fields)}))}))))}))))
 
 (defn teet-project? [[_ [p1 & _]]]
   (and p1

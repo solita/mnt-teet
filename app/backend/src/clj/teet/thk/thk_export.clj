@@ -11,21 +11,11 @@
              (.format date-format))))
 
 (defn- all-projects [db]
-  (d/q '[:find (pull ?e [:thk.project/id
-                         :thk.project/estimated-start-date
-                         :thk.project/estimated-end-date
-                         :thk.project/integration-info
+  (d/q '[:find (pull ?e [*
                          {:thk.project/lifecycles
-                          [:thk.lifecycle/estimated-start-date
-                           :thk.lifecycle/estimated-end-date
-                           :thk.lifecycle/type
-                           :thk.lifecycle/integration-info
+                          [*
                            {:thk.lifecycle/activities
-                            [:thk.activity/id
-                             :activity/name
-                             :activity/estimated-start-date
-                             :activity/estimated-end-date
-                             :activity/integration-info]}]}])
+                            [*]}]}])
          :where [?e :thk.project/id _]]
        db))
 
@@ -48,8 +38,12 @@
                              (read-integration-info (:activity/integration-info activity)))]]
        (do
          (def the-data data)
+
          (mapv (fn [csv-column]
-                 (let [[teet-kw] (thk-mapping/thk->teet csv-column)
+                 (let [[teet-kw _ fmt] (thk-mapping/thk->teet csv-column)
+                       fmt (or fmt str)
                        value (get data teet-kw)]
-                   (str value)))
+                   (if value
+                     (fmt value)
+                     "")))
                thk-mapping/csv-column-names))))))
