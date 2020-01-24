@@ -148,12 +148,6 @@
 (defn export-projects [{conn :connection :as ctx}]
   (assoc ctx :csv (thk-export/export-thk-projects conn)))
 
-(defn- check-export-ctx [{:keys [bucket] :as ctx}]
-  (if (str/blank? bucket)
-    (throw (ex-info "No export S3 bucket defined, can't export"
-                    {:bucket bucket}))
-    ctx))
-
 (defn export-projects-to-thk
   [_event] ; ignore event (cron lambda trigger with no payload)
   (try
@@ -163,7 +157,6 @@
                                 "/TEET_THK_"
                                 (.format (java.text.SimpleDateFormat. "yyyyMMdd_HHmm") (java.util.Date.))
                                 ".csv")}}
-           check-export-ctx
            export-projects
            csv->file
            write-file-to-s3)
