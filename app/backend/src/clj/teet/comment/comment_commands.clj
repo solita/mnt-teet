@@ -22,8 +22,6 @@
 (defmethod db-api/command! :comment/post-comment [{conn :conn
                                                    user :user}
                                                   {:keys [comment-target-id comment]}]
-  ;; TODO CHeck that we can comment on this entity
-  ;; check that we have either document/name or file/name keyword in place
   (let [comment-key (comment-key-for-entity (d/db conn) comment-target-id)]
     (-> conn
         (d/transact {:tx-data [(merge {:db/id      comment-target-id
@@ -37,7 +35,6 @@
 (defmethod db-api/command! :comment/delete-comment [{conn :conn
                                                      user :user}
                                                     {:keys [comment-id]}]
-  (def user* user)
   (d/transact
     conn
     {:tx-data [(deletion-tx user comment-id)]})
