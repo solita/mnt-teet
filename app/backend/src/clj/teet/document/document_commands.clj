@@ -60,9 +60,9 @@
     (d/transact conn {:tx-data
                       [(merge (cu/without-nils (select-keys document
                                                             [:db/id :document/name :document/status :document/description :document/category :document/sub-category]))
-                              (modification-meta user)
                               (when author-id
-                                {:document/author [:user/id author-id]}))]}))
+                                {:document/author [:user/id author-id]})
+                              (modification-meta user))]}))
   :ok)
 
 (defmethod db-api/command! :document/upload-file [{conn :conn
@@ -72,9 +72,8 @@
     (or (validate-file file)
         (let [res (d/transact conn {:tx-data [{:db/id (or document-id "new-document")
                                                :document/files (merge file
-                                                                      {:db/id "new-file"
-                                                                       :file/author [:user/id (:user/id user)]
-                                                                       :file/timestamp (java.util.Date.)})}
+                                                                      {:db/id "new-file"}
+                                                                      (creation-meta user))}
                                               {:db/id "datomic.tx"
                                                :tx/author (:user/id user)}]})
               doc-id (or document-id (get-in res [:tempids "new-document"]))
@@ -84,28 +83,6 @@
           {:url (document-storage/upload-url key)
            :document-id doc-id
            :file (d/pull (:db-after res) '[*] file-id)}))))
-
-(defmethod db-api/command! :document/comment [{conn :conn
-                                               user :user}
-                                              {:keys [document-id comment]}]
-  (-> conn
-      (d/transact {:tx-data [{:db/id document-id
-                              :document/comments [{:db/id "new-comment"
-                                                   :comment/author [:user/id (:user/id user)]
-                                                   :comment/comment comment
-                                                   :comment/timestamp (java.util.Date.)}]}]})
-      (get-in [:tempids "new-comment"])))
-
-(defmethod db-api/command! :document/comment-on-file [{conn :conn
-                                                       user :user}
-                                                      {:keys [file-id comment]}]
-  (-> conn
-      (d/transact {:tx-data [{:db/id file-id
-                              :file/comments [{:db/id "new-comment"
-                                               :comment/author [:user/id (:user/id user)]
-                                               :comment/comment comment
-                                               :comment/timestamp (java.util.Date.)}]}]})
-      (get-in [:tempids "new-comment"])))
 
 
 (defmethod db-api/command! :document/delete [{conn :conn

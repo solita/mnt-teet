@@ -300,9 +300,8 @@
       [activity-view/activity-form e! (merge {:on-change activity-controller/->UpdateEditActivityForm
                                               :save      activity-controller/->SaveEditActivityForm
                                               :close     project-controller/->CloseAddDialog
-                                              :activity  (:edit-activity-data app)}
-                                             (when-authorized :activity/delete-activity
-                                                              {:delete (project-controller/->DeleteActivity (str (:db/id activity-data)))}))])))
+                                              :activity  (:edit-activity-data app)
+                                              :delete (project-controller/->DeleteActivity (str (:db/id activity-data)))})])))
 
 (def project-tabs-layout
   ;; FIXME: Labels with TR paths instead of text

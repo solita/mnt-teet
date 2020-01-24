@@ -2,10 +2,16 @@
   (:require [teet.document.document-view :as document-view]
             [teet.drtest :as drt :include-macros true]
             [tuck.core :as t]
-            [teet.document.document-controller :as document-controller]))
+            [teet.comments.comments-controller :as comments-controller]
+            [teet.comments.comments-view :as comments-view]))
 
 (defn test-view [e! app]
-  [document-view/comments e! (get-in app [:route :activity-task :task/documents 0])])
+  (let [document (get-in app [:route :activity-task :task/documents 0])]
+    [comments-view/comments {:e!                   e!
+                             :new-comment          (:new-comment document)
+                             :comments             (:document/comments document)
+                             :update-comment-event comments-controller/->UpdateNewCommentForm
+                             :save-comment-event   comments-controller/->Comment}]))
 
 (drt/define-drtest comment-form-test
                    {:initial-context {:app (drt/atom {:query {:document "666"}
@@ -33,14 +39,14 @@
             :text "this is a comment")
 
   (drt/step :expect-tuck-event "Expect update comment event"
-            :predicate #(instance? document-controller/UpdateNewCommentForm %)
+            :predicate #(instance? comments-controller/UpdateNewCommentForm %)
             :apply? true)
 
   (drt/step :click "Click the button"
             :selector "button")
 
   (drt/step :expect-tuck-event "Expect save comment event"
-            :predicate #(instance? document-controller/Comment %)
+            :predicate #(instance? comments-controller/Comment %)
             :apply? true
             :as "save-event")
 

@@ -7,7 +7,7 @@
   {:display        :flex
    :align-items    :center
    :padding-bottom "0.75rem"
-   :margin-bottom  "1rem"
+   :margin-bottom  "0.5rem"
    :border-bottom  (str "1px solid " theme-colors/gray-light)})
 
 (defn top-info-spacing
@@ -84,3 +84,9 @@
   {:margin-top "2rem"
    :justify-content :space-between
    :display :flex})
+
+(defn space-between-center
+  []
+  {:display :flex
+   :justify-content :space-between
+   :align-items :center})

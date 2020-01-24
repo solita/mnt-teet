@@ -4,32 +4,26 @@
             [reagent.core :as r]
             [teet.task.task-controller :as task-controller]
             [teet.task.task-style :as task-style]
-            [teet.ui.itemlist :as itemlist]
             [teet.localization :refer [tr]]
             [teet.ui.buttons :as buttons]
-            [teet.ui.common :as ui-common]
             [teet.ui.format :as format]
             [teet.ui.material-ui :refer [Grid Paper Link LinearProgress]]
             [teet.ui.icons :as icons]
             [teet.ui.typography :as typography :refer [Heading1]]
             [teet.project.project-view :as project-view]
             [teet.ui.panels :as panels]
-            [teet.ui.text-field :refer [TextField]]
             [teet.ui.url :as url]
             [teet.document.document-view :as document-view]
             [teet.ui.breadcrumbs :as breadcrumbs]
-            [teet.common.common-styles :as common-styles]
             [teet.project.task-model :as task-model]
-            [teet.project.project-controller :as project-controller]
             [teet.document.document-controller :as document-controller]
-            [teet.authorization.authorization-check :refer [when-authorized]]
-            [teet.ui.typography :as typography]
             [teet.comments.comments-view :as comments-view]
             [teet.ui.form :as form]
             [teet.common.common-controller :as common-controller]
             [teet.ui.file-upload :as file-upload]
             [teet.ui.select :as select]
-            [teet.ui.common :as common]))
+            [teet.ui.common :as common]
+            [teet.comments.comments-controller :as comments-controller]))
 
 (defn task-status [e! status modified]
   [select/status {:e!        e!
@@ -51,28 +45,37 @@
       (tr [:enum (-> task :task/type :db/ident)])])
    [:p
     [:b (tr [:task :results])]]
-   (for [{:document/keys [name status files] :as document} documents]
-     ^{:key (str (:db/id document))}
-     [:div
-      [:div
-       (if (and (= (str (:db/id document)) selected-document-id) (nil? selected-file-id))
-         [:b {:class (<class task-style/result-style)}
-          name]
-         [Link {:class (<class task-style/result-style)
-                :href  (url/set-params :document (:db/id document)
-                                       :file nil)}
-          name])
-       [typography/SmallText (tr [:enum (:db/ident status)])]]
-      (for [{:file/keys [name size] :as file
-             file-id    :db/id} files]
-        [:div {:style {:margin-left "1.5rem" :padding-bottom "1rem"}}
-         (if (= (str file-id) selected-file-id)
-           [:b {:class (<class task-style/document-file-name)} name]
-           [Link {:class (<class task-style/document-file-name)
+   (doall
+     (for [{:document/keys [name status files]
+            :meta/keys [modified-at] :as document} documents]
+       ^{:key (str (:db/id document))}
+       [:div
+        [:div
+         (if (and (= (str (:db/id document)) selected-document-id) (nil? selected-file-id))
+           [:b {:class (<class task-style/result-style)}
+            name]
+           [Link {:class (<class task-style/result-style)
                   :href  (url/set-params :document (:db/id document)
-                                         :file (:db/id file))}
+                                         :file nil)}
             name])
-         [typography/SmallText (format/file-size size)]])])])
+         [typography/SmallText {:style {:margin-bottom "0.5rem"}}
+          [:span {:style {:font-weight :bold
+                          :text-transform :uppercase}}
+           (tr [:enum (:db/ident status)])]
+          (when modified-at
+            [:span
+             " " (tr [:common :last-modified]) ": " (format/date modified-at)])]]
+        (for [{:file/keys [name size] :as file
+               file-id    :db/id} files]
+          ^{:key (str file-id)}
+          [:div {:class (<class task-style/file-container-style)}
+           (if (= (str file-id) selected-file-id)
+             [:b {:class (<class task-style/document-file-name)} name]
+             [Link {:class (<class task-style/document-file-name)
+                    :href  (url/set-params :document (:db/id document)
+                                           :file (:db/id file))}
+              name])
+           [typography/SmallText (format/file-size size)]])]))])
 
 (defn- task-overview
   [e! {:task/keys [description status modified type] :as _task}]
@@ -103,12 +106,16 @@
      (tr [:document :add-files])]
 
     [buttons/button-secondary
-     {:style  {:margin-left "1rem"}
+     {:style    {:margin-left "1rem"}
       :on-click (e! task-controller/->OpenEditModal :document)}
      (tr [:buttons :edit])]]
    [typography/Paragraph {:style {:margin-bottom "2rem"}}
     (:document/description document)]
-   [document-view/comments e! document]])
+   [comments-view/comments {:e!                   e!
+                            :new-comment          (:new-comment document)
+                            :comments             (:document/comments document)
+                            :update-comment-event comments-controller/->UpdateNewCommentForm
+                            :save-comment-event   comments-controller/->Comment}]])
 
 (defn document-file-content
   [e! {:file/keys [name timestamp]
@@ -122,7 +129,7 @@
     (tr [:document :updated]) " "
     (format/date-time timestamp)]
    [buttons/button-primary {:href       (document-controller/download-url id)
-                            :style {:margin-bottom "2rem"}
+                            :style      {:margin-bottom "2rem"}
                             :element    "a"
                             :target     "_blank"
                             :start-icon (r/as-element
@@ -130,8 +137,8 @@
     (tr [:document :download-file])]
 
    [comments-view/comments {:e!                   e!
-                            :update-comment-event document-controller/->UpdateFileNewCommentForm
-                            :save-comment-event   document-controller/->CommentOnFile
+                            :update-comment-event comments-controller/->UpdateFileNewCommentForm
+                            :save-comment-event   comments-controller/->CommentOnFile
                             :new-comment          (:new-comment file)
                             :comments             (:file/comments file)}]])
 
@@ -180,20 +187,18 @@
           :task              (:edit-task-data app)
           :initialization-fn (e! task-controller/->MoveDataForEdit)
           :save              task-controller/->PostTaskEditForm
-          :on-change         task-controller/->UpdateEditTaskForm}
-         (when-authorized :task/delete-task
-                          {:delete (task-controller/->DeleteTask (:task params))}))]
+          :on-change         task-controller/->UpdateEditTaskForm
+          :delete             (task-controller/->DeleteTask (:task params))})]
       "document"
       [document-view/document-form e!
        (merge
-          {:on-close-event   task-controller/->CloseEditDialog
+         {:on-close-event    task-controller/->CloseEditDialog
           :initialization-fn (e! document-controller/->MoveDocumentDataForEdit (:document query))
           :save              document-controller/->PostDocumentEdit
           :on-change         document-controller/->UpdateDocumentEditForm
-          :editing? true}
-         (when-authorized :document/delete-document
-                          {:delete (document-controller/->DeleteDocument (:document query))}))
-       (:edit-document-data app)]
+          :document          (:edit-document-data app)
+          :editing?          true
+          :delete (document-controller/->DeleteDocument (:document query))})]
       [:span])]])
 
 (defn task-page [e! {{:keys [add-document edit] :as query} :query
@@ -211,8 +216,8 @@
                   :on-close  (e! task-controller/->CloseAddDocumentDialog)}
     [document-view/document-form e! {:on-close-event task-controller/->CloseAddDocumentDialog
                                      :save           document-controller/->CreateDocument
-                                     :on-change      document-controller/->UpdateDocumentForm}
-     new-document]]
+                                     :on-change      document-controller/->UpdateDocumentForm
+                                     :document       new-document}]]
    [breadcrumbs/breadcrumbs breadcrumbs]
    [Heading1 (:thk.project/name project)]
 

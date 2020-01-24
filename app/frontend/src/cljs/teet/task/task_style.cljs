@@ -36,3 +36,8 @@
   {:display :block
    :font-size "1.5rem"
    :margin    "1.5rem 0"})
+
+(defn file-container-style
+  []
+  {:margin-left "1.5rem"
+   :padding-bottom "1rem"})

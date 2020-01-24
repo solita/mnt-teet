@@ -36,7 +36,7 @@
 
 (defn user-info [conn id]
   (d/pull (d/db conn) '[:user/id :user/given-name :user/family-name :user/email
-                        :user/person-id]
+                        :user/person-id :db/id]
           [:user/id id]))
 
 (defmethod db-api/command! :login [{conn :conn}

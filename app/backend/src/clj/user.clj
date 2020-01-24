@@ -2,7 +2,8 @@
   (:require [datomic.client.api :as d]
             [teet.main :as main]
             [teet.environment :as environment]
-            [teet.thk.thk-integration-ion :as thk-integration]))
+            [teet.thk.thk-integration-ion :as thk-integration]
+            [clojure.string :as str]))
 
 (defn go []
   (main/restart)
@@ -86,3 +87,99 @@
 (defn import-thk-from-local-file
   [filepath]
   (thk-integration/import-thk-local-file filepath))
+
+(defn attrs->plantuml-entity [[entity-name attrs] types]
+  (let [sorted-attrs
+        ;; Sort unique fields first, then alphabetically by name
+        (sort-by (juxt (complement :db/unique)
+                       (comp name :db/ident)) attrs)
+        id-attrs (take-while :db/unique sorted-attrs)
+        attrs (drop-while :db/unique sorted-attrs)
+
+        format-attr (fn [{:db/keys [ident valueType cardinality unique doc]}]
+                      (let [many? (= :db.cardinality/many (:db/ident cardinality))]
+                        (str  "  "
+                              (when unique "* ")
+                              (name ident)
+                              " : " (or (types ident)
+                                        (str
+                                         (when many? "List<")
+                                         (-> valueType :db/ident name)
+                                         (when many? ">"))))))]
+    (str "entity " entity-name " {\n"
+
+         (str/join "\n" (map format-attr id-attrs))
+         (when (seq id-attrs)
+           "\n  --\n")
+         (str/join "\n" (map format-attr attrs))
+         "\n}\n")))
+
+(defn output-datomic-entity-diagram []
+  (let [links { } ;; map from ref attr kw to refered "entity type"
+        include-entities #{"thk.project" "thk.lifecycle" "activity"
+                           "task" "document" "file" "comment" "permission"
+                           "user" "meta"}
+        types {:permission/projects "List<thk.project>"
+               :thk.project/lifecycles "List<thk.lifecycle>"
+               :thk.lifecycle/activities "List<activity>"
+               :activity/tasks "List<task>"
+               :task/documents "List<document>"
+               :document/files "List<file>"
+               :document/comments "List<comment>"
+               :file/comments "List<comment>"
+               :thk.project/manager "user"
+               :thk.project/owner "user"
+               :file/author "user"
+               :task/assignee "user"
+               :task/author "user"
+               :task/comments "List<comment>"
+               :task/status "enum status"
+               :task/type "enum type"
+               :activity/name "enum activity name"
+               :activity/status "enum activity status"
+               :thk.lifecycle/type "enum lifecycle type"
+               :user/permissions "List<permission>"
+               :meta/creator "user"
+               :meta/modifier "user"
+               :document/category "enum category"
+               :document/sub-category "enum sub-category"
+               :document/status "enum status"
+               :comment/author "user"}
+        entities (->>
+                  (q '[:find (pull ?e [*])
+                       :where [?e :db/valueType _]]
+                     (db))
+                  (map first)
+                  (group-by (comp namespace :db/ident)))]
+    (str "@startuml\n"
+         (str/join "\n"
+                   (for [[entity-name _ :as entity] entities
+                         :when (include-entities entity-name)]
+                     (attrs->plantuml-entity entity types)))
+         "thk.project ||-d-o{ thk.lifecycle\n"
+         "thk.lifecycle ||-d-o{ activity\n"
+         "activity ||-r-o{ task\n"
+         "task ||-r-o{ document\n"
+         "document ||--o{ comment\n"
+         "file ||--o{ comment\n"
+         "document ||-r-o{ file\n"
+         "permission ||--o{ thk.project\n"
+         "meta --> user\n"
+         "thk.project -r-> user\n"
+         "user ||--o{ permission\n"
+
+         "note left of meta \n  meta fields are part of all entities but\n  modeled separately for convenience\nend note\n"
+         "\n@enduml")))
+
+(comment
+  (spit "entity-diagram.puml" (output-datomic-entity-diagram)))
+
+(defn delete-all-imported-thk-projects! []
+  (let [projects (into #{}
+                       (map first)
+                       (q '[:find ?e :where [?e :thk.project/id _]] (db)))]
+    (println "Deleting " (count projects) "THK projects. Press enter to continue")
+    (read-line)
+    (apply tx
+           (for [id projects]
+             [:db/retractEntity id]))))
