@@ -161,4 +161,4 @@
            csv->file
            write-file-to-s3)
     (catch Exception e
-      (log/error e "Error exporting projects CSV to S3"))))
+      (log/error "Error exporting projects CSV to S3: " (pr-str (ex-data e))))))
