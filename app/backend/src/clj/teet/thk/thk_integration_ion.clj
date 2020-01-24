@@ -25,9 +25,9 @@
                           file :file
                           :as ctx}]
   (let [response
-        (s3/put-object :bucket-name bucket-name
-                       :key file-key
-                       :input-stream (io/input-stream file))]
+        (s3/put-object {:bucket-name bucket-name
+                        :key file-key
+                        :input-stream (io/input-stream file)})]
     (if-not (contains? response :content-md5)
       (throw (ex-info "Expected S3 write response to contain :content-md5"
                       {:s3-response response}))
