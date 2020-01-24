@@ -21,7 +21,9 @@
 (def log-directory "thk/log/")
 
 
-(defn- write-file-to-s3 [{{:keys [bucket file-key file]} :s3 :as ctx}]
+(defn- write-file-to-s3 [{{:keys [bucket file-key]} :s3
+                          file :file
+                          :as ctx}]
   (let [response
         (s3/put-object :bucket-name bucket
                        :key file-key
@@ -156,11 +158,11 @@
   [_event] ; ignore event (cron lambda trigger with no payload)
   (try
     (ctx-> {:connection (environment/datomic-connection)
-            :bucket (environment/config-value :thk :export-bucket-name)
-            :file-key (str (environment/config-value :thk :export-dir)
-                           "/TEET_THK_"
-                           (.format (java.text.SimpleDateFormat. "yyyyMMdd_HHmm") (java.util.Date.))
-                           ".csv")}
+            :s3 {:bucket-name (environment/config-value :thk :export-bucket-name)
+                 :file-key (str (environment/config-value :thk :export-dir)
+                                "/TEET_THK_"
+                                (.format (java.text.SimpleDateFormat. "yyyyMMdd_HHmm") (java.util.Date.))
+                                ".csv")}}
            check-export-ctx
            export-projects
            csv->file
