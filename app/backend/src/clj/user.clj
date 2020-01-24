@@ -173,3 +173,13 @@
 
 (comment
   (spit "entity-diagram.puml" (output-datomic-entity-diagram)))
+
+(defn delete-all-imported-thk-projects! []
+  (let [projects (into #{}
+                       (map first)
+                       (q '[:find ?e :where [?e :thk.project/id _]] (db)))]
+    (println "Deleting " (count projects) "THK projects. Press enter to continue")
+    (read-line)
+    (apply tx
+           (for [id projects]
+             [:db/retractEntity id]))))

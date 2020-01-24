@@ -57,7 +57,7 @@
                          :thk.project/end-m
                          :thk.project/carriageway
                          :thk.project/name})
-      {:db/id project-id
+      {:db/id (str "prj-" project-id)
        :thk.project/estimated-start-date project-est-start
        :thk.project/estimated-end-date project-est-end
        :thk.project/integration-info (integration-info
@@ -72,7 +72,7 @@
                                       :thk.lifecycle/estimated-start-date
                                       :thk.lifecycle/estimated-end-date
                                       :thk.lifecycle/id})
-                 {:db/id id
+                 {:db/id (str "lfc-" id)
                   :thk.lifecycle/integration-info (integration-info phase
                                                                     thk-mapping/phase-integration-info-fields)
                   :thk.lifecycle/activities
@@ -87,7 +87,7 @@
                                               :activity/estimated-end-date
                                               :activity/name
                                               :activity/status}))
-                     {:db/id id
+                     {:db/id (str "act-" id)
                       :activity/integration-info (integration-info
                                                   activity
                                                   thk-mapping/activity-integration-info-fields)}))}))))}))))
@@ -104,6 +104,24 @@
               :when (teet-project? prj)]
           (project-datomic-attributes prj))))
 
+(defn- check-unique-activity-ids [projects]
+  (into {}
+        (keep (fn [project]
+                (let [activity-ids (map :thk.activity/id (-> project first second))
+                      unique-activity-ids (into #{} activity-ids)]
+                  (when (not= (count activity-ids) (count unique-activity-ids))
+                    [;; project id as the key
+                     (-> project first second first :thk.project/id)
+
+                     ;; activity ids as the value
+                     activity-ids]))))
+        (partition 1 projects)))
+
 (defn import-thk-projects! [connection url projects]
+  (let [duplicate-activity-id-projects
+        (check-unique-activity-ids projects)]
+    (when (seq duplicate-activity-id-projects)
+      (throw (ex-info "Duplicate activity ids exist"
+                      {:projects-with-duplicate-activity-ids duplicate-activity-id-projects}))))
   (d/transact connection
               {:tx-data (thk-project-tx url projects)}))
