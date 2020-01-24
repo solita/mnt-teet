@@ -21,11 +21,11 @@
 (def log-directory "thk/log/")
 
 
-(defn- write-file-to-s3 [{{:keys [bucket file-key]} :s3
+(defn- write-file-to-s3 [{{:keys [bucket-name file-key]} :s3
                           file :file
                           :as ctx}]
   (let [response
-        (s3/put-object :bucket-name bucket
+        (s3/put-object :bucket-name bucket-name
                        :key file-key
                        :input-stream (io/input-stream file))]
     (if-not (contains? response :content-md5)
