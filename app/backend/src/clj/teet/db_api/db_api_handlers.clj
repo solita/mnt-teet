@@ -9,6 +9,7 @@
             ;; Require all namespaces that provide queries/commands
             teet.document.document-commands
             teet.document.document-queries
+            teet.comment.comment-commands
             teet.login.login-commands
             teet.enum.enum-queries
             teet.admin.admin-queries
