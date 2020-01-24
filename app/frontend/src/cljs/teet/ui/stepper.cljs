@@ -185,7 +185,10 @@
              [:div
               [Collapse {:in (= (str lc-id) (str (:lifecycle stepper)))}
                (doall
-                 (for [{activity-id :db/id :as activity} (:thk.lifecycle/activities lifecycle)]
+                 (for [{activity-id :db/id
+                        activity-est-end :activity/estimated-end-date
+                        activity-est-start :activity/estimated-start-date
+                        :as activity} (:thk.lifecycle/activities lifecycle)]
                    (let [activity-state (activity-step-state activity)
                          activity-status (get-in activity [:activity/status :db/ident])
                          activity-open? (= (str activity-id) (str (:activity stepper)))]
@@ -202,7 +205,7 @@
                           [typography/SmallText
                            [:strong
                             (tr [:enum activity-status]) " "]
-                           (format/date estimated-start-date) " – " (format/date estimated-end-date)]]
+                           (format/date activity-est-start) " – " (format/date activity-est-end)]]
                          (when (= (str activity-id) (str (:activity stepper)))
                            [buttons/button-secondary {:size     :small
                                                       :on-click (e! #(project-controller/->OpenEditActivityDialog (str activity-id)))}
