@@ -21,11 +21,13 @@
 (def log-directory "thk/log/")
 
 
-(defn- write-file-to-s3 [{{:keys [bucket file-key file]} :s3 :as ctx}]
+(defn- write-file-to-s3 [{{:keys [bucket-name file-key]} :s3
+                          file :file
+                          :as ctx}]
   (let [response
-        (s3/put-object :bucket-name bucket
-                       :key file-key
-                       :input-stream (io/input-stream file))]
+        (s3/put-object {:bucket-name bucket-name
+                        :key file-key
+                        :input-stream (io/input-stream file)})]
     (if-not (contains? response :content-md5)
       (throw (ex-info "Expected S3 write response to contain :content-md5"
                       {:s3-response response}))
@@ -146,24 +148,17 @@
 (defn export-projects [{conn :connection :as ctx}]
   (assoc ctx :csv (thk-export/export-thk-projects conn)))
 
-(defn- check-export-ctx [{:keys [bucket] :as ctx}]
-  (if (str/blank? bucket)
-    (throw (ex-info "No export S3 bucket defined, can't export"
-                    {:bucket bucket}))
-    ctx))
-
 (defn export-projects-to-thk
   [_event] ; ignore event (cron lambda trigger with no payload)
   (try
     (ctx-> {:connection (environment/datomic-connection)
-            :bucket (environment/config-value :thk :export-bucket-name)
-            :file-key (str (environment/config-value :thk :export-dir)
-                           "/TEET_THK_"
-                           (.format (java.text.SimpleDateFormat. "yyyyMMdd_HHmm") (java.util.Date.))
-                           ".csv")}
-           check-export-ctx
+            :s3 {:bucket-name (environment/config-value :thk :export-bucket-name)
+                 :file-key (str (environment/config-value :thk :export-dir)
+                                "/TEET_THK_"
+                                (.format (java.text.SimpleDateFormat. "yyyyMMdd_HHmm") (java.util.Date.))
+                                ".csv")}}
            export-projects
            csv->file
            write-file-to-s3)
     (catch Exception e
-      (log/error e "Error exporting projects CSV to S3"))))
+      (log/error "Error exporting projects CSV to S3: " (pr-str (ex-data e))))))
