@@ -59,7 +59,3 @@
     ;Walk result tree removing all deleted entities
     (remove-entities-by-ids entities deleted-entity-ids)))
 
-;[{:db/id 1
-;  :task/documents [{:db/id 2}]}] -> #{1 2} -> '[:find ?e
-;                                                :where [?e :meta/deleted? true]
-;                                                :in $ ?e ...]

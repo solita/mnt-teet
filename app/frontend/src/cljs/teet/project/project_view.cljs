@@ -73,43 +73,26 @@
         :fail    incomplete-count}]
       (str complete-count " / " num-tasks " tasks complete")])])
 
-(defn project-data
+(defn project-details
   [{:thk.project/keys [estimated-start-date estimated-end-date road-nr start-m end-m
                        carriageway procurement-nr lifecycles] :as project}]
   (let [project-name (project-model/get-column project :thk.project/project-name)]
     [:div
-     [itemlist/ItemList
-      {}
-      [:div (tr [:project :information :estimated-duration])
-       ": "
-       (format/date estimated-start-date) " \u2013 " (format/date estimated-end-date)]
-      [:div (tr [:project :information :road-number]) ": " road-nr]
-      (when (and start-m end-m)
-        [:div (tr [:project :information :km-range]) ": "
-         (.toFixed (/ start-m 1000) 3) " \u2013 "
-         (.toFixed (/ start-m 1000) 3)])
-      [:div (tr [:project :information :procurement-number]) ": " procurement-nr]
-      [:div (tr [:project :information :carriageway]) ": " carriageway]]
-
-     #_(when (and estimated-start-date estimated-end-date)
-       (let [tr* (tr-tree [:enum])]
-         [:<>
-          [:br]
-          [timeline/timeline {:start-date estimated-start-date
-                              :end-date   estimated-end-date}
-           (concat
-             [{:label      project-name
-               :start-date estimated-start-date
-               :end-date   estimated-end-date
-               :fill       "cyan"
-               :hover      [:div project-name]}]
-             (for [{:thk.lifecycle/keys [type estimated-start-date estimated-end-date]}
-                   (sort-by :thk.lifecycle/estimated-start-date lifecycles)]
-               {:label      (-> type :db/ident tr*)
-                :start-date estimated-start-date
-                :end-date   estimated-end-date
-                :fill       "magenta"
-                :hover      [:div (tr* (:db/ident type))]}))]]))]))
+     [:div {:style {:display :flex
+                    :justify-content :space-between
+                    :margin-bottom "1rem"}}
+      [typography/Heading2 "Project info"]
+      [buttons/button-secondary {:size :small} "Edit"]]
+     [:div (tr [:project :information :estimated-duration])
+      ": "
+      (format/date estimated-start-date) " \u2013 " (format/date estimated-end-date)]
+     [:div (tr [:project :information :road-number]) ": " road-nr]
+     (when (and start-m end-m)
+       [:div (tr [:project :information :km-range]) ": "
+        (.toFixed (/ start-m 1000) 3) " \u2013 "
+        (.toFixed (/ start-m 1000) 3)])
+     [:div (tr [:project :information :procurement-number]) ": " procurement-nr]
+     [:div (tr [:project :information :carriageway]) ": " carriageway]]))
 
 
 (defn project-header-style
@@ -122,7 +105,7 @@
     [breadcrumbs/breadcrumbs breadcrumbs]
     [Heading1 {:style {:margin-bottom 0}}
      (project-model/get-column project :thk.project/project-name)]]]
-  #_[project-data activities project])
+  #_[project-details activities project])
 
 
 (defn heading-state
@@ -290,7 +273,7 @@
   [:div "people"])
 
 (defn details-tab [_e! _app project]
-  [project-data project])
+  [project-details project])
 
 (defn edit-activity-form
   [_ _ initialization-fn]
