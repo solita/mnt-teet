@@ -112,13 +112,13 @@
 
 (defmethod db-api/command! :project/update-activity [{conn :conn
                                                       user :user} activity]
-  (select-keys (d/transact conn {:tx-data [(merge (assoc activity :activity/modified (Date.))
-                                                  (modification-meta user))]}) [:tempids]))
+
+  (select-keys (d/transact conn {:tx-data [(merge activity (modification-meta user))]})
+               [:tempids]))
 
 (defmethod db-api/command! :project/update-task [{conn :conn
                                                   user :user} task]
-  (select-keys (d/transact conn {:tx-data [(merge (assoc task :task/modified (Date.))
-                                                  (modification-meta user))]}) [:tempids]))
+  (select-keys (d/transact conn {:tx-data [(merge task (modification-meta user))]}) [:tempids]))
 
 (defmethod db-api/command! :project/add-task-to-activity [{conn :conn} {activity-id :activity-id
                                                                          task :task :as payload}]
