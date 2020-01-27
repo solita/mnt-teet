@@ -1,0 +1,50 @@
+@startuml
+entity datasource {
+ * id : integer
+ --
+ name : text
+ description : text
+ url : text
+ content_type : text
+ id_pattern : text
+ label_pattern : text
+ last_import_ts : timestamp with time zone
+ last_import_hash : text
+}
+
+note right of datasource
+        Datasource contains a description
+        of the external GIS data source and
+        how to import features from it.
+        Last import time and content hash
+        is also stored.
+end note
+
+entity feature {
+    id : text
+    datasource_id : integer
+    type : text
+    label : text
+    geometry : geometry
+    properties : jsonb
+}
+
+datasource ||--o{ feature
+
+entity entity {
+        * id : bigint
+        --
+        type : entity_type
+        tooltip : text
+        geometry : geometry
+}
+
+note right of entity
+        Entity stores the geometry
+        information for an item stored
+        in Datomic. A map tooltip is
+        also stored for showing on the
+        map UI.
+end note
+
+@enduml
