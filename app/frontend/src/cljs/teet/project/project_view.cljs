@@ -78,11 +78,6 @@
                        carriageway procurement-nr lifecycles] :as project}]
   (let [project-name (project-model/get-column project :thk.project/project-name)]
     [:div
-     [:div {:style {:display :flex
-                    :justify-content :space-between
-                    :margin-bottom "1rem"}}
-      [typography/Heading2 "Project info"]
-      [buttons/button-secondary {:size :small} "Edit"]]
      [:div (tr [:project :information :estimated-duration])
       ": "
       (format/date estimated-start-date) " \u2013 " (format/date estimated-end-date)]
