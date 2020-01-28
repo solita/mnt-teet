@@ -1,7 +1,8 @@
 (ns teet.thk.thk-export
   "Export project lifecycle and activity data to THK"
   (:require [datomic.client.api :as d]
-            [teet.thk.thk-mapping :as thk-mapping]))
+            [teet.thk.thk-mapping :as thk-mapping]
+            [clojure.string :as str]))
 
 (def ^:private date-format (java.text.SimpleDateFormat. "yyyy-MM-dd"))
 
@@ -24,6 +25,15 @@
     (binding [*read-eval* false]
       (read-string info-str))))
 
+(defn find-last-tx-of [db id]
+  (ffirst
+   (d/q '[:find (max ?txi)
+          :where
+          [?e _ _ ?tx]
+          [?tx :db/txInstant ?txi]
+          :in $ ?e]
+        db id)))
+
 (defn export-thk-projects [connection]
   (let [db (d/db connection)
         projects (map first (all-projects db))]
@@ -40,10 +50,20 @@
          (def the-data data)
 
          (mapv (fn [csv-column]
-                 (let [[teet-kw _ fmt] (thk-mapping/thk->teet csv-column)
-                       fmt (or fmt str)
-                       value (get data teet-kw)]
-                   (if value
-                     (fmt value)
-                     "")))
+                 (case csv-column
+                   ;; Fetch TEET update timestamps from tx info
+                   "object_teetupdstamp"
+                   (thk-mapping/datetime-str (find-last-tx-of db (:db/id project)))
+                   "phase_teetupdstamp"
+                   (thk-mapping/datetime-str (find-last-tx-of db (:db/id lifecycle)))
+                   "activity_teetupdstamp"
+                   (thk-mapping/datetime-str (find-last-tx-of db (:db/id activity)))
+
+                   ;; Regular columns
+                   (let [[teet-kw _ fmt] (thk-mapping/thk->teet csv-column)
+                         fmt (or fmt str)
+                         value (get data teet-kw)]
+                     (if value
+                       (fmt value)
+                       ""))))
                thk-mapping/csv-column-names))))))

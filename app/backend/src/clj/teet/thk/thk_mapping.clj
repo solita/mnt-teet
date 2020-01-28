@@ -20,8 +20,11 @@
     (.parse (SimpleDateFormat. "yyyy-MM-dd")
             date-str)))
 
-(defn- date-str [date]
+(defn date-str [date]
   (.format (SimpleDateFormat. "yyyy-MM-dd") date))
+
+(defn datetime-str [date]
+  (.format (SimpleDateFormat. "yyyy-MM-dd HH:mm:ss.SSS") date))
 
 (defn- km->m [km]
   (when km
