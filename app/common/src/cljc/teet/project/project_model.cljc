@@ -32,8 +32,8 @@
    :thk.project/estimated-start-date
    :thk.project/estimated-end-date
    :thk.project/region-name
-   {:thk.project/owner user-model/user-listing-attributes}
-   {:thk.project/manager user-model/user-listing-attributes}])
+   {:thk.project/owner user-model/user-info-attributes}
+   {:thk.project/manager user-model/user-info-attributes}])
 
 (def project-info-attributes
   (into project-listing-attributes
@@ -92,8 +92,6 @@
                           :else true)))
                     filters))
           projects))
-
-
 
 (defn lifecycle-by-id [{lifecycles :thk.project/lifecycles} lifecycle-id]
   (some #(when (id= lifecycle-id (:db/id %)) %) lifecycles))
