@@ -8,3 +8,18 @@ or just lein-nomis-ns-graph (works for backend)
 
 
 you can include the :write-gv-file? option if you want to inspect or edit the graphviz file, can be useful eg for tweaking layout options.
+
+
+Latest commands used to generate docs:
+frontend:
+  lein nomis-ns-graph :platform clj :inclusions "teet.map teet.document teet.project teet.activity" ':write-gv-file?'
+  - followed by hand-editing .gv file, change to dpi=100 rankdir=LR, remove label
+
+
+backend:
+ lein nomis-ns-graph :platform clj :inclusions "tara teet.integration teet.environment teet.user teet.admin teet.document teet.login teet.project teet.meta teet.thk teet.db-api teet.db_api teet.comment teet.enum teet.ags" ':write-gv-file?' :source-paths "../common/src/cljc ../common/src/clj src/clj"
+  - followed by hand-editing .gv file to change graph dpi=100 rankdir=LR, and remove bottom label (same as frontend)
+
+
+
+todo: use https://github.com/alexander-yakushev/ns-graph as a library?
