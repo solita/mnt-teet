@@ -50,16 +50,16 @@
   km are being edited during initialization"
   [map-obj-padding
    {app :app
-    {:thk.project/keys [start-m end-m road-nr carriageway]
+    {:thk.project/keys [road-nr carriageway]
      :keys             [basic-information-form] :as project} :project
     set-overlays! :set-overlays!}]
   (let [endpoint (endpoint app)
         [start-label end-label]
-        (if basic-information-form
+        (if-let [km-range (:thk.project/km-range basic-information-form)]
           (mapv (comp road-model/format-distance
                       km->m
                       road-model/parse-km)
-                (:thk.project/km-range basic-information-form))
+                km-range)
           (mapv (comp road-model/format-distance
                       km->m)
                 (project-model/get-column project
@@ -73,21 +73,21 @@
                                         set-overlays!)}]
 
     {:thk-project
-     (if basic-information-form
+     (if (:thk.project/km-range basic-information-form)
        (let [{[start-km-string end-km-string] :thk.project/km-range} basic-information-form
              form-start-m (some-> start-km-string road-model/parse-km km->m)
              form-end-m (some-> end-km-string road-model/parse-km km->m)]
          (if (given-range-in-actual-road? road-information [form-start-m form-end-m])
            (map-layers/geojson-layer
-            endpoint
-            "geojson_road_geometry"
-            {"road"        road-nr
-             "carriageway" carriageway
-             "start_m"     form-start-m
-             "end_m"       form-end-m}
-            map-features/project-line-style
-            (merge options
-                   {:content-type "application/json"}))
+             endpoint
+             "geojson_road_geometry"
+             {"road"        road-nr
+              "carriageway" carriageway
+              "start_m"     form-start-m
+              "end_m"       form-end-m}
+             map-features/project-line-style
+             (merge options
+                    {:content-type "application/json"}))
            ;; Needed to remove road ending markers
            (do (set-overlays! nil)
                nil)))

@@ -12,6 +12,9 @@
 
 (defrecord OpenActivityDialog [lifecycle])                           ; open add activity modal dialog
 (defrecord OpenTaskDialog [activity])
+(defrecord OpenEditProjectDialog [])
+(defrecord PostProjectEdit [])
+(defrecord PostProjectEditResult [])
 (defrecord CloseAddDialog [])
 (defrecord SelectProject [project-id])
 (defrecord SelectCadastralUnit [p])
@@ -283,6 +286,28 @@
   (process-event [{step :step} app]
     (navigate-to-step app step))
 
+  PostProjectEdit
+  (process-event [_ app]
+    (let [{:thk.project/keys [id]} (get-in app [:route :project])
+          {:thk.project/keys [project-name owner manager]}
+          (get-in app [:route :project :basic-information-form])]
+      (t/fx app {:tuck.effect/type :command!
+                 :command          :thk.project/edit-project
+                 :payload          (merge {:thk.project/id      id
+                                           :thk.project/owner   owner
+                                           :thk.project/manager manager
+                                           :thk.project/project-name project-name})
+                 :result-event     ->PostProjectEditResult})))
+
+  PostProjectEditResult
+  (process-event [_ {:keys [params query page] :as app}]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page page
+           :params params
+           :query (dissoc query :edit)}
+          common-controller/refresh-fx))
+
   SaveProjectSetup
   (process-event [_ app]
     (let [{:thk.project/keys [id name] :as project} (get-in app [:route :project])
@@ -467,6 +492,14 @@
                           {:activity/name (get-in activity-data [:activity/name :db/ident])}
                           {:activity/estimated-date-range date-range})]
       (assoc app :edit-activity-data activity)))
+
+  OpenEditProjectDialog
+  (process-event [_ {:keys [page params query] :as app}]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page             page
+           :params           params
+           :query            (assoc query :edit "project")}))
 
   OpenEditActivityDialog
   (process-event [{activity-id :activity-id} {:keys [page params query] :as app}]

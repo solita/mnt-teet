@@ -24,20 +24,10 @@
 
 (declare project-setup-steps)
 
-(defn initialization-form-footer [{:keys [cancel validate disabled?]}]
-  [:div {:class (<class project-style/wizard-footer)}
-   ;; TODO this should be a text button and cancel
-   [typography/Text "Skip setup"]
-   [buttons/button-primary
-    {:on-click validate
-     :type     :submit
-     :disabled disabled?}
-    "Next"]])
-
 (defn original-name-adornment [e! {:thk.project/keys [name] :as _project}]
   [:div {:style {:padding-top "6px"
                  :display     :flex}}
-   [typography/Text {:display :inline} "Road name:"]
+   [typography/Text {:style {:margin-right "6px"}} "Road name:"]
    [buttons/link-button {:on-click #(e! (project-controller/->UpdateBasicInformationForm {:thk.project/project-name name}))}
     name]])
 
@@ -127,7 +117,7 @@
                                                           format-range)
                             :thk.project/owner        (:thk.project/owner project)
                             :thk.project/manager      (:thk.project/manager project)}))))
-  (fn [e! {form :basic-information-form :as project}]
+  (fn [e! {form :basic-information-form :as project} _]
     [:div {:class (<class project-style/initialization-form-wrapper)}
      [form/form {:e!              e!
                  :value           form

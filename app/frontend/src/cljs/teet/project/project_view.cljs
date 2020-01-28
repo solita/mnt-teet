@@ -32,8 +32,9 @@
             [teet.ui.url :as url]
             [teet.util.collection :as cu]
             [teet.activity.activity-controller :as activity-controller]
-            [teet.authorization.authorization-check :refer [when-authorized]]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.authorization.authorization-check :refer [when-authorized when-pm-or-owner]]
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.road.road-model :as road-model]))
 
 (defn task-form [_e! {:keys [initialization-fn]}]
   ;;Task definition (under project activity)
@@ -74,10 +75,11 @@
       (str complete-count " / " num-tasks " tasks complete")])])
 
 (defn project-details
-  [{:thk.project/keys [estimated-start-date estimated-end-date road-nr start-m end-m
-                       carriageway procurement-nr lifecycles] :as project}]
+  [_e! {:thk.project/keys [estimated-start-date estimated-end-date road-nr start-m end-m
+                          carriageway procurement-nr] :as project}]
   (let [project-name (project-model/get-column project :thk.project/project-name)]
     [:div
+     [typography/Heading2 project-name]
      [:div (tr [:project :information :estimated-duration])
       ": "
       (format/date estimated-start-date) " \u2013 " (format/date estimated-end-date)]
@@ -99,9 +101,7 @@
    [:div
     [breadcrumbs/breadcrumbs breadcrumbs]
     [Heading1 {:style {:margin-bottom 0}}
-     (project-model/get-column project :thk.project/project-name)]]]
-  #_[project-details activities project])
-
+     (project-model/get-column project :thk.project/project-name)]]])
 
 (defn heading-state
   [title select]
@@ -264,11 +264,26 @@
   [e! {:keys [stepper] :as _app} project]
   [stepper/vertical-stepper e! project stepper])
 
-(defn people-tab [_e! _app _project]
-  [:div "people"])
+#_(defn people-tab [e! {{:keys [edit]} :query :as app} project]
+  [:div
+   [panels/modal {:open-atom (r/wrap (boolean modal) :_)
+                  :title     ""
+                  :on-close  (e! project-controller/->CloseAddDialog)}
 
-(defn details-tab [_e! _app project]
-  [project-details project])
+    modal]
+   [:div
+    [:div {:style {:display         :flex
+                   :justify-content :space-between
+                   :margin-bottom   "1rem"}}
+     [typography/Heading2 "Project info"]
+     (when-pm-or-owner
+       project
+       [buttons/button-secondary {:on-click (e! project-controller/->OpenEditProjectDialog)
+                                  :size     :small}
+        "Edit"])]]])
+
+(defn details-tab [e! _app project]
+  [project-details e! project])
 
 (defn edit-activity-form
   [_ _ initialization-fn]
@@ -279,7 +294,7 @@
                                               :save      activity-controller/->SaveEditActivityForm
                                               :close     project-controller/->CloseAddDialog
                                               :activity  (:edit-activity-data app)
-                                              :delete (project-controller/->DeleteActivity (str (:db/id activity-data)))})])))
+                                              :delete    (project-controller/->DeleteActivity (str (:db/id activity-data)))})])))
 
 (def project-tabs-layout
   ;; FIXME: Labels with TR paths instead of text
@@ -287,10 +302,10 @@
     :value     "activities"
     :component activities-tab
     :layers    #{:thk-project :related-cadastral-units :related-restrictions}}
-   #_{:label     "People"                                   ;; HIDDEN UNTIL something is built for this tab
-      :value     "people"
-      :component people-tab
-      :layers    #{:thk-project}}
+   #_{:label     "People"                                     ;; HIDDEN UNTIL something is built for this tab
+    :value     "people"
+    :component people-tab
+    :layers    #{:thk-project}}
    {:label     "Details"
     :value     "details"
     :component details-tab
@@ -309,6 +324,30 @@
 (defn- project-tab [e! app project]
   [(:component (selected-project-tab app)) e! app project])
 
+(defn edit-project-basic-information
+  [e! project]
+  (when-not (:basic-information-form project)
+    (e! (project-controller/->UpdateBasicInformationForm
+          (cu/without-nils {:thk.project/project-name (or (:thk.project/project-name project) (:thk.project/name project))
+                            :thk.project/owner        (:thk.project/owner project)
+                            :thk.project/manager      (:thk.project/manager project)}))))
+  (fn [e! {form :basic-information-form :as project}]
+    [form/form {:e!              e!
+                :value           form
+                :on-change-event project-controller/->UpdateBasicInformationForm
+                :save-event      project-controller/->PostProjectEdit
+                :spec            :project/edit-form}
+
+     ^{:attribute :thk.project/project-name
+       :adornment [project-setup-view/original-name-adornment e! project]}
+     [TextField {:full-width true :variant :outlined}]
+
+     ^{:attribute :thk.project/owner}
+     [select/select-user {:e! e! :attribute :thk.project/owner}]
+
+     ^{:attribute :thk.project/manager}
+     [select/select-user {:e! e! :attribute :thk.project/manager}]]))
+
 (defn project-page-modals
   [e! {{:keys [add edit lifecycle]} :query :as app} project]
   (let [lifecycle-type (some->> project
@@ -323,23 +362,27 @@
         (cond
           add
           (case add
-            "task" [[task-form e!
-                     {:close     project-controller/->CloseAddDialog
-                      :task      (:new-task project)
-                      :save      task-controller/->CreateTask
-                      :on-change task-controller/->UpdateTaskForm}]
-                    (tr [:project :add-task])]
-            "activity" [[activity-view/activity-form e! {:close     project-controller/->CloseAddDialog
-                                                         :activity  (get-in app [:project (:thk.project/id project) :new-activity])
-                                                         :on-change activity-controller/->UpdateActivityForm
-                                                         :save      activity-controller/->CreateActivity}]
-                        (tr [:project :add-activity lifecycle-type])])
-
+            "task"
+            [[task-form e!
+              {:close     project-controller/->CloseAddDialog
+               :task      (:new-task project)
+               :save      task-controller/->CreateTask
+               :on-change task-controller/->UpdateTaskForm}]
+             (tr [:project :add-task])]
+            "activity"
+            [[activity-view/activity-form e! {:close     project-controller/->CloseAddDialog
+                                              :activity  (get-in app [:project (:thk.project/id project) :new-activity])
+                                              :on-change activity-controller/->UpdateActivityForm
+                                              :save      activity-controller/->CreateActivity}]
+             (tr [:project :add-activity lifecycle-type])])
           edit
           (case edit
             "activity"
             [[edit-activity-form e! app (e! project-controller/->InitializeActivityEditForm)]
-             (tr [:project :edit-activity])])
+             (tr [:project :edit-activity])]
+            "project"
+            [[edit-project-basic-information e! project]
+             (tr [:project :edit-project])])
           :else nil)]
     [panels/modal {:open-atom (r/wrap (boolean modal) :_)
                    :title     (or modal-label "")
