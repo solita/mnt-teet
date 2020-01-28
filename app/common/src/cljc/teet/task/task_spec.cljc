@@ -4,7 +4,7 @@
 
 (s/def :task/type keyword?)
 (s/def :task/description string?)
-(s/def :task/assignee (s/keys :req [:user/id] :optn [:user/email :user/family-name :user/given-name]))
+(s/def :task/assignee (s/keys :req [:user/id]))
 
 (s/def :task/new-task-form (s/keys :req [:task/type
                                          :task/description
