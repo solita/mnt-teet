@@ -8,7 +8,7 @@
 (s/def :document/description (s/and string? (complement str/blank?)))
 (s/def :document/category keyword?)
 (s/def :document/sub-category keyword?)
-(s/def :document/author (s/keys :req [:user/id] :optn [:user/email :user/family-name :user/given-name]))
+(s/def :document/author (s/keys :req [:user/id]))
 (s/def :document/new-document-form (s/keys :req [:document/category
                                                  :document/sub-category
                                                  :document/name
