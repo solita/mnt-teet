@@ -6,6 +6,7 @@
             [clojure.string :as str]
             [teet.project.project-geometry :as project-geometry]
             [teet.environment :as environment]
+            [teet.util.collection :as cu]
             [teet.meta.meta-model :refer [modification-meta creation-meta deletion-tx]]
             [teet.project.project-specs])
   (:import (java.util Date)))
@@ -64,6 +65,18 @@
                        :thk.project/setup-skipped? true}
                       (modification-meta user))]})
   :ok)
+
+
+(defmethod db-api/command! :thk.project/edit-project
+  [{conn :conn
+    user :user}
+   project-form]
+  (d/transact
+    conn
+    {:tx-data [(merge (cu/without-nils project-form)
+                      (modification-meta user))]})
+  :ok)
+
 
 (defmethod db-api/command! :project/continue-project-setup
   [{conn :conn
