@@ -20,19 +20,33 @@
         rule (@authorization-rules functionality)]
     (= creator-id user-id)))
 
+(defn user-pm-or-manager?
+  [user {:thk.project/keys [manager owner] :as project}]
+  (let [owner-id (:user/id owner)
+        manager-id (:user/id manager)
+        cur-user-id (:user/id user)]
+    (or (= cur-user-id owner-id) (= cur-user-id manager-id))))
+
 #?(:clj
    (defn check-authorized
      [user functionality entity]
      (when-not (authorized? user functionality entity)
-       (throw (ex-info "Unauthorized" {:user user
+       (throw (ex-info "Unauthorized" {:user          user
                                        :functionality functionality
-                                       :entity entity})))))
+                                       :entity        entity})))))
 
 #?(:clj
    (defmacro when-authorized
      [user functionality entity & body]
      `(when (authorized? ~user ~functionality ~entity)
         ~@body)))
+
+#?(:cljs
+   (defn when-pm-or-owner
+         [project component]
+         (log/info "Authorizing for project edit")
+         (when (user-pm-or-manager? @app-state/user project)
+               component)))
 
 #?(:cljs
    (defn when-authorized
