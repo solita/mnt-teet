@@ -59,6 +59,12 @@
                    "activity_teetupdstamp"
                    (thk-mapping/datetime-str (find-last-tx-of db (:db/id activity)))
 
+                   ;; TEET id for phase and activity
+                   "phase_teetid"
+                   (str (:db/id lifecycle))
+                   "activity_teetid"
+                   (str (:db/id activity))
+
                    ;; Regular columns
                    (let [[teet-kw _ fmt] (thk-mapping/thk->teet csv-column)
                          fmt (or fmt str)
