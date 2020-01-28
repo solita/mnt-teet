@@ -17,3 +17,8 @@
                 :thk.project/km-range
                 :thk.project/owner
                 :thk.project/manager]))
+
+(s/def :project/edit-form
+  (s/keys :req [:thk.project/project-name
+                :thk.project/owner
+                :thk.project/manager]))
