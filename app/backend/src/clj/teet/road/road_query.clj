@@ -152,7 +152,10 @@
       (-> body xml/parse zip/xml-zip
           read-feature-collection))))
 
-(defn fetch-road-geometry [{:keys [wfs-url]} road-nr carriageway-nr start-m end-m]
-  ;; PENDING: do we need an internal cache of results? Is WFS fast enough
-  (-> (fetch-road-parts wfs-url road-nr carriageway-nr)
-      (extract-road-geometry start-m end-m)))
+(defn fetch-road-geometry [{:keys [wfs-url cache-atom]} road-nr carriageway-nr start-m end-m]
+  (let [parts (or (and cache-atom
+                       (get @cache-atom [road-nr carriageway-nr]))
+                  (fetch-road-parts wfs-url road-nr carriageway-nr))]
+    (when cache-atom
+      (swap! cache-atom assoc [road-nr carriageway-nr] parts))
+    (extract-road-geometry parts start-m end-m)))
