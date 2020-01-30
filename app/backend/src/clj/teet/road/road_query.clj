@@ -8,16 +8,38 @@
             [hiccup.core :as hiccup]
             [teet.util.geo :as geo]))
 
-(defn- query-by-road-and-carriageway [road carriageway]
+(defn- ogc-filter [content]
   (hiccup/html
    [:Filter {:xmlns "http://www.opengis.net/ogc"}
-    [:And
-     [:PropertyIsEqualTo
-      [:PropertyName "tee_number"]
-      [:Literal road]]
-     [:PropertyIsEqualTo
-      [:PropertyName "soidutee_nr"]
-      [:Literal carriageway]]]]))
+    content]))
+
+(defn- query-by-road-and-carriageway [road carriageway]
+  (ogc-filter
+   [:And
+    [:PropertyIsEqualTo
+     [:PropertyName "tee_number"]
+     [:Literal road]]
+    [:PropertyIsEqualTo
+     [:PropertyName "soidutee_nr"]
+     [:Literal carriageway]]]))
+
+;; <ogc:DWithin>
+;;     <ogc:PropertyName>shape</ogc:PropertyName>
+;;     <gml:Point srsName="http://www.opengis.net/gml/srs/epsg.xml#26986"
+;;         xmlns:gml="http://www.opengis.net/gml">
+;;                 <gml:coordinates decimal="." cs="," ts=" ">236331,901825</gml:coordinates>
+;;     </gml:Point>
+;;     <ogc:Distance units="meter">7000</ogc:Distance>
+;; </ogc:DWithin>
+
+(defn- query-by-coordinate [[x y] distance-m]
+  (ogc-filter
+   [:DWithin
+    [:PropertyName "msGeometry"]
+    [:Point {:xmlns "http://www.opengis.net/gml"}
+     [:coordinates {:decimal "." :cs "," :ts " "}
+      (str y "," x)]]
+    [:Distance {:units "meter"} distance-m]]))
 
 (defn- ->int [txt]
   (Long/parseLong txt))
@@ -133,25 +155,32 @@
   (println "part " (:start-m road-part) (:end-m road-part)))
 
 
-(defn fetch-road-parts [wfs-url road-nr carriageway-nr]
-  (let [filter (query-by-road-and-carriageway road-nr carriageway-nr)
-        {:keys [error body]}
+(defn- wfs-request [wfs-url query-params]
+  (let [{:keys [error body]}
         @(client/get wfs-url
-                     {:query-params {:SERVICE "WFS"
-                                     :REQUEST "GetFeature"
-                                     :VERSION "1.1.0"
-                                     :TYPENAME "ms:teeosa"
-                                     :SRSNAME "urn:ogc:def:crs:EPSG::3301"
-                                     :FILTER filter}
+                     {:query-params (merge
+                                     {:SERVICE "WFS"
+                                      :REQUEST "GetFeature"
+                                      :VERSION "1.1.0"
+                                      :TYPENAME "ms:teeosa"
+                                      :SRSNAME "urn:ogc:def:crs:EPSG::3301"}
+                                     query-params)
                       :as :stream})]
     (if error
       (throw (ex-info "Unable to fetch road parts from WFS"
-                      {:wfs-url wfs-url
-                       :road-nr road-nr
-                       :carriageway-nr carriageway-nr}
+                      {:status 500
+                       :error :wfs-request-failed
+                       :wfs-url wfs-url
+                       :query-params query-params}
                       error))
       (-> body xml/parse zip/xml-zip
           read-feature-collection))))
+
+(defn fetch-road-parts [{wfs-url :wfs-url} road-nr carriageway-nr]
+  (wfs-request wfs-url {:FILTER (query-by-road-and-carriageway road-nr carriageway-nr)}))
+
+(defn fetch-road-parts-by-coordinate [{wfs-url :wfs-url} coordinate distance-m]
+  (wfs-request wfs-url {:FILTER (query-by-coordinate coordinate distance-m)}))
 
 (defn fetch-road-geometry
   "Fetch road geometry for the given road, carriageway and start/end range.
@@ -165,7 +194,7 @@
   [{:keys [wfs-url cache-atom]} road-nr carriageway-nr start-m end-m]
   (let [parts (or (and cache-atom
                        (get @cache-atom [road-nr carriageway-nr]))
-                  (fetch-road-parts wfs-url road-nr carriageway-nr))]
+                  (fetch-road-parts {:wfs-url wfs-url} road-nr carriageway-nr))]
     (when cache-atom
       (swap! cache-atom assoc [road-nr carriageway-nr] parts))
     (extract-road-geometry parts start-m end-m)))
