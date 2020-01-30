@@ -133,4 +133,8 @@
             :body "Command authorization failure"}
            (let [result (db-api/command! ctx payload)]
              (log/debug "command: " command ", payload: " payload ", result => " result)
-             result)))))))
+             (if-let [error (:error result)]
+               (with-meta
+                      error
+                      {:format :raw})
+               result))))))))
