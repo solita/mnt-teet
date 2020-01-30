@@ -158,7 +158,8 @@
 (defn- wfs-request [wfs-url query-params]
   (let [{:keys [error body]}
         @(client/get wfs-url
-                     {:query-params (merge
+                     {:connect-timeout 10000
+                      :query-params (merge
                                      {:SERVICE "WFS"
                                       :REQUEST "GetFeature"
                                       :VERSION "1.1.0"
