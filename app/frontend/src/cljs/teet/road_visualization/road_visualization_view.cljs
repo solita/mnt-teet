@@ -29,9 +29,8 @@
                              (reset! point %)
                              (openlayers/center-map-on-point! %))]
     (let [[x y] @point
-          road-line-string (:road-line-string road-data)
-          form (:form road-data)
-          road-parts (:road-parts-for-coordinate road-data)]
+          {:keys [road-line-string form road-parts-for-coordinate
+                  clicked-coordinate]} road-data]
       [:<>
        [map-view/map-view e!
         {:on-click (e! road-visualization-controller/map->FetchRoadAddressForCoordinate)
@@ -49,13 +48,13 @@
                      {:fit-on-load? true}))
 
                   :road-parts
-                  (when (seq road-parts)
+                  (when (seq road-parts-for-coordinate)
                     (map-layers/geojson-data-layer
                      "road_parts"
                      #js {:type "FeatureCollection"
                           :features (into-array
                                      (for [{:keys [name road carriageway start-m end-m geometry]}
-                                           road-parts]
+                                           road-parts-for-coordinate]
                                        #js {:type "Feature"
                                             :properties #js {:tooltip (str road " / " carriageway
                                                                            "  " start-m " -> " end-m
@@ -64,23 +63,22 @@
                                                            :coordinates
                                                            (into-array
                                                             (map into-array geometry))}}))}
-                     map-features/project-line-style
+                     (partial map-features/road-line-style "magenta")
                      {:fit-on-load? true}))
 
                   :center-point
-                  (when (and x y)
+                  (when clicked-coordinate
                     (map-layers/geojson-data-layer
                      "center_point"
                      #js {:type "FeatureCollection"
                           :features #js [#js {:type "Feature"
                                               :geometry #js {:type "Point"
-                                                             :coordinates #js [(js/parseFloat x)
-                                                                               (js/parseFloat y)]}}]}
+                                                             :coordinates (clj->js clicked-coordinate)}}]}
 
                      map-features/crosshair-pin-style
                      {}))}
          :overlays (vec
-                    (for [rp road-parts]
+                    (for [rp road-parts-for-coordinate]
                       (do
                         (log/info "RP: " (pr-str rp))
                         [{:coordinate (vec (first (:geometry rp)))
