@@ -29,7 +29,8 @@
       (as->
           pos
           (map #(Double/parseDouble %) pos)
-        (partition 2 pos))))
+        (partition 2 pos)
+        (map reverse pos))))
 
 (defn- read-feature-collection [feature-collection]
   (sort-by
@@ -152,7 +153,16 @@
       (-> body xml/parse zip/xml-zip
           read-feature-collection))))
 
-(defn fetch-road-geometry [{:keys [wfs-url cache-atom]} road-nr carriageway-nr start-m end-m]
+(defn fetch-road-geometry
+  "Fetch road geometry for the given road, carriageway and start/end range.
+  Returns a line-string (sequence of coordinates).
+
+  Queries Maanteeamet WFS service specified in `wfs-url` option.
+
+  If `cache-atom` is given, it is used to cache fetched road parts
+  and used in subsequent calls for the same road/carriagway. This will
+  reduce query load for the WFS server when fetching multiple road geometries."
+  [{:keys [wfs-url cache-atom]} road-nr carriageway-nr start-m end-m]
   (let [parts (or (and cache-atom
                        (get @cache-atom [road-nr carriageway-nr]))
                   (fetch-road-parts wfs-url road-nr carriageway-nr))]

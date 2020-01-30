@@ -21,7 +21,7 @@
   [line-string]
   (str "LINESTRING ("
        (str/join ", "
-                 (map (fn [[y x]]
+                 (map (fn [[x y]]
                         (str x " " y)) line-string))
        ")"))
 

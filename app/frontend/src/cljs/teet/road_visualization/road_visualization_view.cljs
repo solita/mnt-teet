@@ -34,46 +34,36 @@
        :reagent-render
        (fn [e! {:keys [query road-data]}]
          (let [[x y] @point
-               {road :road
-                road-address :road-address} road-data]
+               road-line-string (:road-line-string road-data)]
            [:<>
             [map-view/map-view e!
              {:on-click (e! road-visualization-controller/map->FetchRoadAddressForCoordinate)
-              :layers {:road-geometry (map-layers/geojson-data-layer "road_geometry"
-                                        road
-                                        map-features/project-line-style
-                                        {:fit-on-load? true})
+              :layers {:road-geometry
+                       (when road-line-string
+                         (map-layers/geojson-data-layer
+                          "road_geometry"
+                          #js {:type "FeatureCollection"
+                               :features #js [#js {:type "Feature"
+                                                   :properties #js {}
+                                                   :geometry #js {:type "LineString"
+                                                                  :coordinates (into-array
+                                                                                (map into-array road-line-string))}}]}
+                          map-features/project-line-style
+                          {:fit-on-load? true}))
+
                        :center-point
                        (when (and x y)
                          (map-layers/geojson-data-layer
-                           "center_point"
-                           #js {:type "FeatureCollection"
-                                :features #js [#js {:type "Feature"
-                                                    :geometry #js {:type "Point"
-                                                                   :coordinates #js [(js/parseFloat x)
-                                                                                     (js/parseFloat y)]}}]}
+                          "center_point"
+                          #js {:type "FeatureCollection"
+                               :features #js [#js {:type "Feature"
+                                                   :geometry #js {:type "Point"
+                                                                  :coordinates #js [(js/parseFloat x)
+                                                                                    (js/parseFloat y)]}}]}
 
-                           map-features/crosshair-pin-style
-                           {}))
-
-                       :road-address
-                       (when (and road-address road)
-                         (map-layers/geojson-data-layer
-                           "road_address"
-                           #js {:type "FeatureCollection"
-                                :features #js [(aget road-address "road_part_geometry")]}
-                           (partial map-features/road-line-style "magenta")
-                           {}))
-
-                       :road-address-point
-                       (when road-address
-                         (map-layers/geojson-data-layer
-                           "road_address_point"
-                           #js {:type "FeatureCollection"
-                                :features #js [(aget road-address "point")]}
-                           map-features/crosshair-pin-style
-                           {}))}
-              :overlays [(when road-address
+                          map-features/crosshair-pin-style
+                          {}))}
+              :overlays [#_(when road-address
                            {:coordinate (js->clj (aget road-address "point" "coordinates"))
                             :content [road-address-overlay road-address]})]}
              {}]
@@ -89,7 +79,7 @@
                             :label "Y"}]
                 [Button {:on-click #(openlayers/center-map-on-point! (mapv js/parseFloat @point))}
                  "center"]]
-               (if (and road (aget road "features" 0 "geometry"))
+               #_(if (and road (aget road "features" 0 "geometry"))
                  [:div {:style {:height "350px" :overflow-y "scroll"}}
                   [:table
                    [:thead
@@ -117,24 +107,24 @@
                 [TextField {:label "Carriageway"
                             :variant :outlined
                             :name "carriageway"
-                            :on-change #(e! (road-visualization-controller/->QueryFieldChange %))
+                            :on-change #(e! (road-visualization-controller/->QueryFieldChange :carriageway %))
                             :value (or (:carriageway query) "")}]
                 [TextField {:label "Road number"
                             :style {:margin-bottom "1rem"}
                             :variant :outlined
                             :name "road"
-                            :on-change #(e! (road-visualization-controller/->QueryFieldChange %))
+                            :on-change #(e! (road-visualization-controller/->QueryFieldChange :road %))
                             :value (or (:road query) "")}]
                 [TextField {:label "Start meters"
                             :style {:margin-bottom "1rem"}
                             :variant :outlined
-                            :on-change #(e! (road-visualization-controller/->QueryFieldChange %))
+                            :on-change #(e! (road-visualization-controller/->QueryFieldChange :start-m %))
                             :name "start-m"
                             :value (or (:start-m query) "")}]
                 [TextField {:label "End meters"
                             :style {:margin-bottom "1rem"}
                             :variant :outlined
-                            :on-change #(e! (road-visualization-controller/->QueryFieldChange %))
+                            :on-change #(e! (road-visualization-controller/->QueryFieldChange :end-m %))
                             :name "end-m"
                             :value (or (:end-m query) "")}]
                 [Button

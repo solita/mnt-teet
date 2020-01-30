@@ -70,7 +70,8 @@
                             (assoc :api-url (ssm-param :api :url))
                             (assoc-in [:document-storage :bucket-name] (ssm-param :s3 :document-bucket))
                             (assoc-in [:thk :export-bucket-name] (ssm-param-default [:thk :teet-to-thk :bucket-name] nil))
-                            (assoc-in [:thk :export-dir] (ssm-param-default [:thk :teet-to-thk :unprocesseddir] nil)))]
+                            (assoc-in [:thk :export-dir] (ssm-param-default [:thk :teet-to-thk :unprocesseddir] nil))
+                            (assoc-in [:road-registry :wfs-url] (ssm-param-default [:road-registry :wfs-url] nil)))]
              config))))
 
 (defn load-local-config!
