@@ -67,6 +67,11 @@
                                :color          :primary
                                :disable-ripple true}))
 
+(def rect-white
+  (util/make-component Button {:variant        :outlined
+                               :color          :default
+                               :disable-ripple true}))
+
 (defn white-button-with-icon
   [{:keys [on-click icon]} text]
   [ButtonBase {:on-click on-click
