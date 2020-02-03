@@ -20,6 +20,7 @@
   :design-stage "Stage",
   :construction-phase-activities "Project phases",
   :last-modified "Last modified",
+  :added-on "Added on",
   :language "Language",
   :unassigned "Unassigned",
   :confirm-deletion "Confirm delete",
@@ -95,7 +96,9 @@
   :build-time "Last build happened at",
   :version "Version"},
  :error
- {:authorization-failure "Session expired. Please login again.",
+ {:permission-already-granted
+  "Permission for this user is already granted",
+  :authorization-failure "Session expired. Please login again.",
   :server-error "Server error."},
  :fields
  {:document/status "Status",
@@ -136,11 +139,15 @@
   :select-all "Select all",
   :map-layers "Map layers"},
  :notifications
- {:activity-deleted "Activity deleted successfully",
+ {:permission-revoked "Permission revoked successfully",
+  :activity-deleted "Activity deleted successfully",
   :activity-updated "Activity updated successfully",
+  :permission-added-successfully "Permission added successfully",
   :task-deleted "Task deleted successfully"},
+ :proejct {:add-users "Add users"},
  :project
- {:details-view "Details",
+ {:remove-from-project "Remove from project",
+  :details-view "Details",
   :map-view "Map",
   :add-activity {:design "Add phase", :construction "Add stage"},
   :restrictions-tab "Restrictions",
@@ -172,6 +179,10 @@
   :map-view "Map",
   :list-view "Project list",
   :unassigned-only "Unassigned projects only"},
+ :roles
+ {:internal-consultant "Internal consultant",
+  :owner "Owner",
+  :manager "Manager"},
  :search {:quick-search "Search", :clear-filters "Clear filters"},
  :task
  {:add-document "Add document",
@@ -181,4 +192,4 @@
   :task-overview "Task overview",
   :no-documents "No documents",
   :results "Results"},
- :user {:role "My role"}}
+ :user {:role "Role"}}

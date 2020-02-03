@@ -21,6 +21,7 @@
   :design-stage "Staadium",
   :construction-phase-activities "Faasid",
   :last-modified "Viimati muudetud",
+  :added-on "Lisatud",
   :language "Keel",
   :unassigned "Määramata",
   :confirm-deletion "Kinnitan kustutamise",
@@ -89,7 +90,7 @@
   :document.sub-category/study-plan "Uuringu plaan (UP plaan)",
   :document.sub-category/calculation-report "Arvutus/Katendiarvutus",
   :activity.status/canceled "Katkestatud",
-  :document.sub-category/table-of-content "Kooseis",
+  :document.sub-category/table-of-content "Sisukord",
   :task.status/not-started "Alustamata"},
  :environment
  {:info-text
@@ -97,7 +98,8 @@
   :build-time "Viimane versiooniuuendus toimus",
   :version "Versioon"},
  :error
- {:authorization-failure "Sessioon aegus. Palun sisene uuesti.",
+ {:permission-already-granted "Selle kasutaja luba on juba antud",
+  :authorization-failure "Sessioon aegus. Palun sisene uuesti.",
   :server-error "Serveri viga."},
  :fields
  {:document/status "Olek",
@@ -138,11 +140,15 @@
   :select-all "Valin kõik",
   :map-layers "Kaardikihid"},
  :notifications
- {:activity-deleted "Tegevus edukalt kustutatud",
+ {:permission-revoked "Luba tühistati edukalt",
+  :activity-deleted "Tegevus edukalt kustutatud",
   :activity-updated "Tegevus edukalt värskendatud",
+  :permission-added-successfully "Luba on edukalt lisatud",
   :task-deleted "Ülesanne edukalt kustutatud"},
+ :proejct {:add-users "Lisan kasutajaid"},
  :project
- {:details-view "Detailid",
+ {:remove-from-project "Eemalda projektist",
+  :details-view "Detailid",
   :map-view "Kaart",
   :add-activity
   {:design "Lisan faasi", :construction "Lisan staadiumi"},
@@ -175,6 +181,10 @@
   :map-view "Kaart",
   :list-view "Projektide loetelu",
   :unassigned-only "Määramata projektid"},
+ :roles
+ {:internal-consultant "Sisekonsultant",
+  :owner "Projektijuht",
+  :manager "Vastutav isik"},
  :search {:quick-search "Otsin", :clear-filters "Puhastan filtrid"},
  :task
  {:add-document "Lisan dokumendi",
@@ -184,4 +194,4 @@
   :task-overview "Ülesande ülevaade",
   :no-documents "Dokumente ei ole",
   :results "Tulemused"},
- :user {:role "Minu roll"}}
+ :user {:role "Roll"}}
