@@ -23,15 +23,6 @@
      [:PropertyName "soidutee_nr"]
      [:Literal carriageway]]]))
 
-;; <ogc:DWithin>
-;;     <ogc:PropertyName>shape</ogc:PropertyName>
-;;     <gml:Point srsName="http://www.opengis.net/gml/srs/epsg.xml#26986"
-;;         xmlns:gml="http://www.opengis.net/gml">
-;;                 <gml:coordinates decimal="." cs="," ts=" ">236331,901825</gml:coordinates>
-;;     </gml:Point>
-;;     <ogc:Distance units="meter">7000</ogc:Distance>
-;; </ogc:DWithin>
-
 (defn- query-by-coordinate [[x y] distance-m]
   (ogc-filter
    [:DWithin
