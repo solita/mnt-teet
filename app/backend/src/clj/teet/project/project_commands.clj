@@ -123,7 +123,7 @@
   [{conn :conn
     user :user}
    {project-id        :project-id
-    {:user/keys [id]} :participant}]
+    {:user/keys [id]} :user}]
   (let [user-already-added? ((comp boolean seq)
                              (permission-db/user-permission-for-project (d/db conn) [:user/id id] project-id))]
     (if-not user-already-added?
