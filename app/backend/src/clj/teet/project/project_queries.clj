@@ -1,6 +1,7 @@
 (ns teet.project.project-queries
   (:require [teet.db-api.core :as db-api]
             [teet.project.project-model :as project-model]
+            [teet.permission.permission-db :as permission-db]
             [datomic.client.api :as d]
             [clojure.string :as str]
             [teet.meta.meta-query :as meta-query]))
@@ -12,54 +13,56 @@
 
 (defmethod db-api/query :thk.project/fetch-project [{db :db} {:thk.project/keys [id]}]
   (let [project (meta-query/without-deleted
-                   db
-                   (d/pull db (into project-model/project-info-attributes
-                                    '[{:thk.project/lifecycles
-                                       [:db/id
-                                        :thk.lifecycle/estimated-start-date
-                                        :thk.lifecycle/estimated-end-date
-                                        :thk.lifecycle/type
-                                        {:thk.lifecycle/activities
-                                         [*
-                                          {:activity/tasks [*
-                                                            {:task/documents [{:document/files [*]}]}]}]}]}])
-                           [:thk.project/id id]))]
+                  db
+                  (d/pull db (into project-model/project-info-attributes
+                                   '[{:thk.project/lifecycles
+                                      [:db/id
+                                       :thk.lifecycle/estimated-start-date
+                                       :thk.lifecycle/estimated-end-date
+                                       :thk.lifecycle/type
+                                       {:thk.lifecycle/activities
+                                        [*
+                                         {:activity/tasks [*
+                                                           {:task/documents [{:document/files [*]}]}]}]}]}])
+                          [:thk.project/id id]))]
     (-> project
+        (assoc :thk.project/permitted-users (project-model/users-with-permission
+                                              (permission-db/valid-project-permissions db (:db/id project))))
         (update :thk.project/lifecycles project-model/sort-lifecycles)
         (update :thk.project/lifecycles
                 (fn [lifecycle]
                   (map #(update % :thk.lifecycle/activities project-model/sort-activities) lifecycle))))))
 
 (defmethod db-api/query :thk.project/fetch-task [{db :db} {project-id :thk.project/id
-                                                           task-id :task-id}]
+                                                           task-id    :task-id}]
   (let [result (meta-query/without-deleted
-                db
-                (ffirst
-                 (d/q '[:find
-                        (pull ?e [:db/id
-                                  :task/description
-                                  :task/modified
-                                  {:task/status [:db/ident]}
-                                  {:task/type [:db/ident]}
-                                  {:task/assignee [:user/id :user/given-name :user/family-name :user/email]}
-                                  {:activity/_tasks [:db/id
-                                                     {:activity/name [:db/ident]}
-                                                     {:thk.lifecycle/_activities [:db/id]}]}
-                                  {:task/documents [*
-                                                    {:document/author [:user/id :user/given-name :user/family-name :user/email]}
-                                                    {:document/files
-                                                     [*
-                                                      {:file/comments [*
-                                                                       {:comment/author [*]}]}]}
-                                                    {:document/comments [*
-                                                                         {:comment/author [*]}]}]}])
-                        :in $ ?e ?project-id
-                        :where
-                        [?p :thk.project/id ?project-id]
-                        [?p :thk.project/lifecycles ?l]
-                        [?l :thk.lifecycle/activities ?a]
-                        [?a :activity/tasks ?e]]
-                      db task-id project-id)))]
+                 db
+                 (ffirst
+                   (d/q '[:find
+                          (pull ?e [:db/id
+                                    :task/description
+                                    :task/modified
+                                    {:task/status [:db/ident]}
+                                    {:task/type [:db/ident]}
+                                    {:task/assignee [:user/id :user/given-name :user/family-name :user/email]}
+                                    {:activity/_tasks [:db/id
+                                                       {:activity/name [:db/ident]}
+                                                       {:thk.lifecycle/_activities [:db/id]}]}
+                                    {:task/documents [*
+                                                      {:document/author [:user/id :user/given-name :user/family-name :user/email]}
+                                                      {:document/files
+                                                       [*
+                                                        {:file/comments [*
+                                                                         {:comment/author [*]}]}]}
+                                                      {:document/comments [*
+                                                                           {:comment/author [*]}]}]}])
+                          :in $ ?e ?project-id
+                          :where
+                          [?p :thk.project/id ?project-id]
+                          [?p :thk.project/lifecycles ?l]
+                          [?l :thk.lifecycle/activities ?a]
+                          [?a :activity/tasks ?e]]
+                        db task-id project-id)))]
     (assoc result :project (d/pull db
                                    project-model/project-info-attributes
                                    [:thk.project/id project-id]))))
@@ -111,20 +114,20 @@
       (fetch-lifecycle db [:thk.lifecycle/_activities 0])))
 
 (defmethod db-api/query :thk.project/listing [{db :db} _]
-  {:query '[:find (pull ?e columns)
-            :in $ columns
-            :where [?e :thk.project/id _]]
-   :args [db project-model/project-listing-attributes]
+  {:query     '[:find (pull ?e columns)
+                :in $ columns
+                :where [?e :thk.project/id _]]
+   :args      [db project-model/project-listing-attributes]
    :result-fn (partial mapv first)})
 
 (defmethod db-api/query :thk.project/search [{db :db} {:keys [text]}]
-  {:query '[:find (pull ?e [:db/id :thk.project/project-name :thk.project/name :thk.project/id])
-            :where
-            (or [?e :thk.project/project-name ?name]
-                [?e :thk.project/name ?name])
-            [(.toLowerCase ^String ?name) ?lower-name]
-            [(.contains ?lower-name ?text)]
-            :in $ ?text]
-   :args [db (str/lower-case text)]
+  {:query     '[:find (pull ?e [:db/id :thk.project/project-name :thk.project/name :thk.project/id])
+                :where
+                (or [?e :thk.project/project-name ?name]
+                    [?e :thk.project/name ?name])
+                [(.toLowerCase ^String ?name) ?lower-name]
+                [(.contains ?lower-name ?text)]
+                :in $ ?text]
+   :args      [db (str/lower-case text)]
    :result-fn (partial mapv
                        #(-> % first (assoc :type :project)))})
