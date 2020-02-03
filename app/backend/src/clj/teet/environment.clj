@@ -123,7 +123,11 @@
                        (not (applied-migrations ident)))]
        (log/info "Applying migration " ident)
        (doseq [tx txes]
-         (d/transact conn {:tx-data tx}))
+         (if (symbol? tx)
+           (do
+             (require (symbol (namespace tx)))
+             ((resolve tx) conn))
+           (d/transact conn {:tx-data tx})))
        (d/transact conn {:tx-data [{:db/ident ident}]})))
    (log/info "Migrations finished.")))
 
