@@ -8,14 +8,21 @@
             [teet.localization :refer [tr]]
             [teet.road.road-model :as road-model]
             [teet.map.map-controller :as map-controller]
-            goog.math.Long))
+            goog.math.Long
+            [teet.snackbar.snackbar-controller :as snackbar-controller]))
 
-(defrecord OpenActivityDialog [lifecycle])                           ; open add activity modal dialog
+(defrecord OpenActivityDialog [lifecycle])                  ; open add activity modal dialog
 (defrecord OpenTaskDialog [activity])
 (defrecord OpenEditProjectDialog [])
 (defrecord PostProjectEdit [])
 (defrecord PostProjectEditResult [])
-(defrecord CloseAddDialog [])
+(defrecord OpenPeopleModal [])
+(defrecord UpdateProjectPermissionForm [form-data])
+(defrecord SaveProjectPermission [project-id form-data])
+(defrecord RevokeProjectPermission [permission-id])
+(defrecord RevokeProjectPermissionSuccess [result])
+
+(defrecord CloseDialog [])
 (defrecord SelectProject [project-id])
 (defrecord SelectCadastralUnit [p])
 (defrecord SelectRestriction [p])
@@ -23,6 +30,11 @@
 (defrecord ToggleRestrictionData [id])
 (defrecord UpdateActivityState [id status])
 (defrecord NavigateToProject [thk-project-id])
+
+(defmethod common-controller/on-server-error :permission-already-granted [err app]
+  (let [error (-> err ex-data :error)]
+    (t/fx (snackbar-controller/open-snack-bar app (tr [:error error]) :warning)
+          common-controller/refresh-fx)))
 
 (defmethod common-controller/map-item-selected
   "geojson_entity_pins" [p]
@@ -242,17 +254,17 @@
   (process-event [{project-id :project-id} app]
     (t/fx app
           {:tuck.effect/type :command!
-           :command :project/continue-project-setup
-           :payload {:thk.project/id project-id}
-           :result-event common-controller/->Refresh}))
+           :command          :project/continue-project-setup
+           :payload          {:thk.project/id project-id}
+           :result-event     common-controller/->Refresh}))
 
   SkipProjectSetup
   (process-event [{project-id :project-id} app]
     (t/fx app
           {:tuck.effect/type :command!
-           :command :project/skip-project-setup
-           :payload {:thk.project/id project-id}
-           :result-event common-controller/->Refresh}))
+           :command          :project/skip-project-setup
+           :payload          {:thk.project/id project-id}
+           :result-event     common-controller/->Refresh}))
 
   ChangeRoadObjectAoe
   (process-event [{val :val} {:keys [page params] :as app}]
@@ -293,9 +305,9 @@
           (get-in app [:route :project :basic-information-form])]
       (t/fx app {:tuck.effect/type :command!
                  :command          :thk.project/edit-project
-                 :payload          (merge {:thk.project/id      id
-                                           :thk.project/owner   owner
-                                           :thk.project/manager manager
+                 :payload          (merge {:thk.project/id           id
+                                           :thk.project/owner        owner
+                                           :thk.project/manager      manager
                                            :thk.project/project-name project-name})
                  :result-event     ->PostProjectEditResult})))
 
@@ -303,9 +315,9 @@
   (process-event [_ {:keys [params query page] :as app}]
     (t/fx app
           {:tuck.effect/type :navigate
-           :page page
-           :params params
-           :query (dissoc query :edit)}
+           :page             page
+           :params           params
+           :query            (dissoc query :edit)}
           common-controller/refresh-fx))
 
   SaveProjectSetup
@@ -370,10 +382,10 @@
   ToggleSelectedCategory
   (process-event [{} app]
     (let [open-types (or (get-in app [:route :project :open-types])
-                        #{})
+                         #{})
           new-open-types (if (open-types :selected)
-                          (disj open-types :selected)
-                          (conj open-types :selected))]
+                           (disj open-types :selected)
+                           (conj open-types :selected))]
       (assoc-in app [:route :project :open-types] new-open-types)))
 
   ToggleRestrictionCategory
@@ -453,13 +465,55 @@
            :query            (assoc query :add "activity"
                                           :lifecycle lifecycle)}))
 
-  CloseAddDialog
+  OpenPeopleModal
   (process-event [_ {:keys [page params query] :as app}]
     (t/fx app
           {:tuck.effect/type :navigate
            :page             page
            :params           params
-           :query            (dissoc query :add :edit :activity :lifecycle)}))
+           :query            (assoc query :modal "people")}))
+
+  SaveProjectPermission
+  (process-event [{project-id :project-id form-data :form-data} app]
+    (let [participant (:project/participant form-data)]
+      (t/fx app
+            {:tuck.effect/type :command!
+             :command          :project/add-permission
+             :payload          {:project-id  project-id
+                                :user participant}
+             :success-message  (tr [:notifications :permission-added-successfully])
+             :result-event     common-controller/->Refresh})))
+
+  RevokeProjectPermission
+  (process-event [{permission-id :permission-id} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command          :project/revoke-permission
+           :payload          {:permission-id permission-id}
+           :success-message  (tr [:notifications :permission-revoked])
+           :result-event     ->RevokeProjectPermissionSuccess}))
+
+  RevokeProjectPermissionSuccess
+  (process-event [_ {:keys [page params query] :as app}]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page             page
+           :params           params
+           :query            (dissoc query :person)}
+          common-controller/refresh-fx))
+
+  UpdateProjectPermissionForm
+  (process-event [{form-data :form-data} app]
+    (assoc-in app [:route :project :add-participant] form-data))
+
+
+  CloseDialog
+  (process-event [_ {:keys [page params query] :as app}]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page             page
+           :params           params
+           :query            (dissoc query :modal :add :edit :activity :lifecycle)}))
 
   OpenTaskDialog
   (process-event [{activity :activity} {:keys [page params query] :as app}]
