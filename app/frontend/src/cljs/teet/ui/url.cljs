@@ -46,6 +46,13 @@
   (let [[_ path _] (re-matches path-and-params-pattern js/window.location.hash)]
     path))
 
+(defn remove-param
+  [param-key]
+  (let [hash js/window.location.hash
+        {:keys [path params]} (parse-hash hash)
+        params (dissoc params param-key)]
+    (str path "?" (format-params params))))
+
 (defn set-params
   [& param-names-and-values]
   (let [hash js/window.location.hash
