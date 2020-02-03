@@ -3,6 +3,7 @@
             [datomic.client.api :as d]
             [teet.log :as log]
             [teet.project.project-model :as project-model]
+            [teet.permission.permission-db :as permission-db]
             [clojure.string :as str]
             [teet.project.project-geometry :as project-geometry]
             [teet.environment :as environment]
@@ -61,7 +62,7 @@
    {project-id :thk.project/id}]
   (d/transact
     conn
-    {:tx-data [(merge {:thk.project/id project-id
+    {:tx-data [(merge {:thk.project/id             project-id
                        :thk.project/setup-skipped? true}
                       (modification-meta user))]})
   :ok)
@@ -84,7 +85,7 @@
    {project-id :thk.project/id}]
   (d/transact
     conn
-    {:tx-data [(merge {:thk.project/id project-id
+    {:tx-data [(merge {:thk.project/id             project-id
                        :thk.project/setup-skipped? false}
                       (modification-meta user))]})
   :ok)
@@ -107,6 +108,40 @@
     {:tx-data [(deletion-tx user activity-id)]})
   :ok)
 
+
+(defmethod db-api/command! :project/revoke-permission
+  [{conn :conn
+    user :user}
+   {permission-id :permission-id}]
+  (d/transact conn
+              {:tx-data [(merge {:db/id               permission-id
+                                 :permission/valid-until (Date.)}
+                                (modification-meta user))]})
+  :ok)
+
+(defmethod db-api/command! :project/add-permission
+  [{conn :conn
+    user :user}
+   {project-id        :project-id
+    {:user/keys [id]} :participant}]
+  (let [user-already-added? ((comp boolean seq)
+                             (permission-db/user-permission-for-project (d/db conn) [:user/id id] project-id))]
+    (if-not user-already-added?
+      (do
+        (d/transact
+          conn
+          {:tx-data [{:db/id [:user/id id]
+                      :user/permissions
+                             [(merge {:db/id               "new-permission"
+                                      :permission/role     :internal-consultant
+                                      :permission/projects project-id
+                                      :permission/valid-from (Date.)}
+                                     (creation-meta user))]}]})
+        {:success "User added successfully"})
+      (throw (ex-info "User is already added"
+                      {:status 400
+                       :error :permission-already-granted})))))
+
 (defmethod db-api/command! :project/create-activity [{conn :conn
                                                       user :user} activity]
   (log/info "ACTIVITY: " activity)
@@ -119,7 +154,7 @@
                                           :activity/estimated-start-date
                                           :activity/estimated-end-date])
                    (creation-meta user))
-                 {:db/id (:lifecycle-id activity)
+                 {:db/id                    (:lifecycle-id activity)
                   :thk.lifecycle/activities ["new-activity"]}]})
     [:tempids]))
 
@@ -134,20 +169,20 @@
   (select-keys (d/transact conn {:tx-data [(merge task (modification-meta user))]}) [:tempids]))
 
 (defmethod db-api/command! :project/add-task-to-activity [{conn :conn} {activity-id :activity-id
-                                                                         task :task :as payload}]
+                                                                        task        :task :as payload}]
   (log/info "PAYLOAD: " payload)
-  (select-keys (d/transact conn {:tx-data [{:db/id activity-id
+  (select-keys (d/transact conn {:tx-data [{:db/id          activity-id
                                             :activity/tasks [task]}]}) [:tempids]))
 
-(defmethod db-api/command! :project/comment-task [{conn  :conn
-                                                    user :user}
-                                                   {task-id :task-id
-                                                    comment :comment}]
+(defmethod db-api/command! :project/comment-task [{conn :conn
+                                                   user :user}
+                                                  {task-id :task-id
+                                                   comment :comment}]
   (log/info "USER: " user)
   (select-keys
-    (d/transact conn {:tx-data [{:db/id task-id
-                                 :task/comments [{:db/id "comment"
-                                                  :comment/comment comment
+    (d/transact conn {:tx-data [{:db/id         task-id
+                                 :task/comments [{:db/id             "comment"
+                                                  :comment/comment   comment
                                                   :comment/timestamp (Date.)
-                                                  :comment/author [:user/id (:user/id user)]}]}]})
+                                                  :comment/author    [:user/id (:user/id user)]}]}]})
     [:tempids]))
