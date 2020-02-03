@@ -20,6 +20,12 @@
    :max-height     theme-spacing/content-height
    :overflow       :hidden})
 
+(defn permission-container
+  []
+  {:background-color theme-colors/gray-lightest
+   :padding "1rem"
+   :margin-bottom "2rem"})
+
 (defn project-view-container
   []
   {:display :flex})
