@@ -305,10 +305,10 @@
           (get-in app [:route :project :basic-information-form])]
       (t/fx app {:tuck.effect/type :command!
                  :command          :thk.project/edit-project
-                 :payload          (merge {:thk.project/id           id
-                                           :thk.project/owner        owner
-                                           :thk.project/manager      manager
-                                           :thk.project/project-name project-name})
+                 :payload          {:thk.project/id           id
+                                    :thk.project/owner        owner
+                                    :thk.project/manager      manager
+                                    :thk.project/project-name project-name}
                  :result-event     ->PostProjectEditResult})))
 
   PostProjectEditResult
