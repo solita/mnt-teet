@@ -144,6 +144,10 @@
   :activity-updated "Activity updated successfully",
   :permission-added-successfully "Permission added successfully",
   :task-deleted "Task deleted successfully"},
+ :people-tab
+ {:managers "Managers",
+  :other-users "Other users",
+  :no-other-users "No other users"},
  :proejct {:add-users "Add users"},
  :project
  {:remove-from-project "Remove from project",

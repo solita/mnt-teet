@@ -145,6 +145,10 @@
   :activity-updated "Tegevus edukalt värskendatud",
   :permission-added-successfully "Luba on edukalt lisatud",
   :task-deleted "Ülesanne edukalt kustutatud"},
+ :people-tab
+ {:managers "Juhid",
+  :other-users "Muud kasutajad",
+  :no-other-users "Teisi kasutajaid pole"},
  :proejct {:add-users "Lisan kasutajaid"},
  :project
  {:remove-from-project "Eemalda projektist",
