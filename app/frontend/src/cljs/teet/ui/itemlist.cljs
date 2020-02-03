@@ -5,17 +5,19 @@
                                          FormControlLabel Checkbox]]
             [teet.ui.icons :as icons]
             [teet.ui.progress :as progress]
+            [teet.localization :refer [tr tr-tree]]
             [teet.ui.typography :refer [Heading2 Heading3 SectionHeading DataLabel]]
             [teet.theme.theme-colors :as theme-colors]
             [teet.theme.itemlist-styles :as itemlist-styles]
             [herb.core :refer [<class]]
             [teet.ui.util :as util]
             [teet.util.collection :as uc]
-            [teet.map.map-controller :as map-controller]))
+            [teet.map.map-controller :as map-controller]
+            [teet.ui.typography :as typography]))
 
 (defn ListHeading
   [{:keys [title subtitle action variant]
-    :or {variant :primary}}]
+    :or   {variant :primary}}]
   [:div {:class (<class itemlist-styles/heading variant)}
    (case variant
      :primary [Heading2 title]
@@ -28,13 +30,13 @@
 
 (defn ItemList
   [{:keys [title subtitle variant class]
-    :or {variant :primary}} & children]
+    :or   {variant :primary}} & children]
   [:div (when class
           {:class class})
    (when title
-     [ListHeading {:title title
+     [ListHeading {:title    title
                    :subtitle subtitle
-                   :variant variant}])
+                   :variant  variant}])
    (util/with-keys children)])
 
 (defn ProgressList
@@ -50,9 +52,9 @@
         (for [item items]
           ^{:key (:name item)}
           [:<>
-           [ListItem {:button true
+           [ListItem {:button    true
                       :component "a"
-                      :href (:link item)}
+                      :href      (:link item)}
             [ListItemIcon
              (case (:status item)
                :success
@@ -66,7 +68,7 @@
               [icons/navigation-chevron-right {:color :secondary}]]]]
            [Divider]])]]
       [:div {:style {:text-align :center
-                     :margin "0 0.5rem"}}
+                     :margin     "0 0.5rem"}}
        [progress/circle
         {:radius 70 :stroke 9}
         {:success success :fail fails :total (count items)}]]]]))
@@ -77,12 +79,12 @@
    titles
    [:div {:style {:margin-top "1rem"}}
     [:ul {:style {:list-style "none"
-                  :margin 0
-                  :padding 0}}
+                  :margin     0
+                  :padding    0}}
      (for [item items]
        ^{:key (:name item)}
        [:li
-        [Link {:href (:link item)
+        [Link {:href    (:link item)
                :onClick #(on-click-fn item)}
          (:name item)]])]]])
 
@@ -93,7 +95,7 @@
 
 (defn checkbox-item [{:keys [checked? value on-change on-mouse-enter on-mouse-leave] :as item}]
   [FormControlLabel
-   (uc/without-nils {:class (<class itemlist-styles/checkbox-container)
+   (uc/without-nils {:class          (<class itemlist-styles/checkbox-container)
                      :on-mouse-enter on-mouse-enter
                      :on-mouse-leave on-mouse-leave
                      :label          (r/as-component [:span
@@ -108,10 +110,30 @@
 (defn checkbox-list
   ([items] (checkbox-list {} items))
   ([{:keys [key]
-     :or {key :id}}
+     :or   {key :id}}
     items]
    [:div {:class (<class itemlist-styles/checkbox-list-contents)}
     (doall
-     (for [item items]
-       ^{:key (key item)}
-       [checkbox-item item]))]))
+      (for [item items]
+        ^{:key (key item)}
+        [checkbox-item item]))]))
+
+(defn white-link-list
+  [items]
+  [:ul {:style {:padding-left 0}}
+   (doall
+     (for [{:keys [key href title selected?]} items]
+       ^{:key key}
+       [:li {:class (<class itemlist-styles/white-link-item-style)}
+        [:a {:class (<class itemlist-styles/white-link-style selected?)
+             :href  href} title]]))])
+
+(defn permission-list
+  [permissions]
+  [:ul {:style {:padding 0}}
+   (for [{:keys [user] :as permission} permissions]
+     ^{:key (:db/id user)}
+     [:li {:class (<class itemlist-styles/user-list-element-style)}
+      [typography/Heading3
+       (:user/given-name user) " " (:user/family-name user)]
+      [typography/Text (tr [:roles (:permission/role permission)])]])])
