@@ -8,20 +8,20 @@
 ;;To target disabled buttons :MuiButton {:root {:&$disabled {//css here//}}
 
 (def data-label-style
-  {:fontFamily "Roboto Condensed"
-   :fontWeight 400
-   :fontSize "0.875rem"
-   :lineHeight 1.375
+  {:fontFamily    "Roboto Condensed"
+   :fontWeight    400
+   :fontSize      "0.875rem"
+   :lineHeight    1.375
    :letterSpacing "0.25px"
-   :color theme-colors/secondary-text
+   :color         theme-colors/secondary-text
    :border-bottom (str "2px solid " theme-colors/gray-light)
    :textTransform :uppercase})
 
 (def section-heading-style
-  {:fontFamily "Roboto Condensed"
-   :fontWeight 700
-   :fontSize "1rem"
-   :lineHeight 1.375
+  {:fontFamily    "Roboto Condensed"
+   :fontWeight    700
+   :fontSize      "1rem"
+   :lineHeight    1.375
    :letterSpacing "0.25px"
    :textTransform :uppercase})
 
@@ -41,7 +41,7 @@
                                                 :margin-right 0}}
                 :MuiDialogContentText {:root {:padding          "2rem 1rem"
                                               :background-color theme-colors/gray-lightest}}
-                :MuiToolBar           {:root {:min-height "80px"}}     ;This doesn't properly target the toolbar inside appbar
+                :MuiToolBar           {:root {:min-height "80px"}} ;This doesn't properly target the toolbar inside appbar
                 :MuiFab               {:root {:border-radius "2px"}}
                 :MuiFilledInput       {:root  {:border-top-left-radius  0
                                                :border-top-right-radius 0}
@@ -83,6 +83,12 @@
                 :MuiButtonBase        {:root {:font-size "1rem"}}
                 :MuiButton            {:sizeSmall          {:padding   "0 10px"
                                                             :font-size "0.875rem"}
+
+                                       :outlined           {:border   (str "1px solid " theme-colors/white)
+                                                            :color    theme-colors/white
+                                                            "&:hover" {:background-color theme-colors/gray-dark}
+                                                            "&:active" {:background-color "#000"}
+                                                            "&:focus" theme-colors/focus-style}
                                        :containedSecondary {:background-color theme-colors/white
                                                             :border           (str "2px solid " theme-colors/gray)
                                                             :color            theme-colors/gray-dark
