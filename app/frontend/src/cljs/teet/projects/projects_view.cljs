@@ -70,7 +70,8 @@
                    :format-column format-column-value
                    :filter-type {:thk.project/project-name :string
                                  :thk.project/owner-info :string
-                                 :thk.project/road-nr :number}
+                                 :thk.project/road-nr :number
+                                 :thk.project/region-name :string}
                    :key :thk.project/id
                    :default-sort-column :thk.project/project-name}]]))
 

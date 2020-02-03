@@ -121,6 +121,7 @@
   :document/author "Author",
   :thk.project/effective-km-range "Km range",
   :task/description "Description",
+  :thk.project/region-name "Region",
   :document/name "Name",
   :comment/comment "Comment",
   :thk.project/road-nr "Road number",
@@ -144,6 +145,7 @@
   :add-activity {:design "Add phase", :construction "Add stage"},
   :restrictions-tab "Restrictions",
   :activity {:no-tasks "No tasks defined"},
+  :edit-project "Edit project",
   :wizard
   {:restrictions "Select relevant restrictions",
    :setup-incomplete "Project setup incomplete",

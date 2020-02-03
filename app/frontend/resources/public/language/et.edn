@@ -123,6 +123,7 @@
   :document/author "Autor",
   :thk.project/effective-km-range "Km ulatus",
   :task/description "Kirjeldus",
+  :thk.project/region-name "Regioon",
   :document/name "Nimi",
   :comment/comment "Märkus",
   :thk.project/road-nr "Tee number",
@@ -147,6 +148,7 @@
   {:design "Lisan faasi", :construction "Lisan staadiumi"},
   :restrictions-tab "Kitsendused",
   :activity {:no-tasks "Ülesandeid pole"},
+  :edit-project "Redigeeri projekti",
   :wizard
   {:restrictions "Valin asjakohased piirangud",
    :setup-incomplete "Projekti seadistamine lõpetamata",

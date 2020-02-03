@@ -31,6 +31,7 @@
    :thk.project/carriageway
    :thk.project/estimated-start-date
    :thk.project/estimated-end-date
+   :thk.project/region-name
    {:thk.project/owner user-model/user-listing-attributes}
    {:thk.project/manager user-model/user-listing-attributes}])
 
@@ -44,6 +45,7 @@
 (def project-listing-display-columns
   [:thk.project/project-name
    :thk.project/road-nr
+   :thk.project/region-name
    :thk.project/effective-km-range
    :thk.project/carriageway
    :thk.project/estimated-date-range
