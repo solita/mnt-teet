@@ -148,9 +148,9 @@
  {:managers "Managers",
   :other-users "Other users",
   :no-other-users "No other users"},
- :proejct {:add-users "Add users"},
  :project
- {:remove-from-project "Remove from project",
+ {:add-users "Add users",
+  :remove-from-project "Remove from project",
   :details-view "Details",
   :map-view "Map",
   :add-activity {:design "Add phase", :construction "Add stage"},

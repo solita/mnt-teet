@@ -149,9 +149,9 @@
  {:managers "Juhid",
   :other-users "Muud kasutajad",
   :no-other-users "Teisi kasutajaid pole"},
- :proejct {:add-users "Lisan kasutajaid"},
  :project
- {:remove-from-project "Eemalda projektist",
+ {:add-users "Lisan kasutajaid",
+  :remove-from-project "Eemalda projektist",
   :details-view "Detailid",
   :map-view "Kaart",
   :add-activity
