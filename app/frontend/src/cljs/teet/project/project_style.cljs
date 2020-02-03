@@ -162,3 +162,9 @@
    :background-color theme-colors/gray-lightest
    :border-top (str "1px solid" theme-colors/gray-lighter)
    :align-items :center})
+
+(defn people-tab-heading-style
+  []
+  {:display         :flex
+   :justify-content :space-between
+   :margin-bottom   "1rem"})
