@@ -32,3 +32,25 @@
 (defn layer-checkbox
   []
   {:margin-right "0.5rem"})
+
+(defn user-list-element-style
+  []
+  (let [border-style (str "1px solid " theme-colors/gray-lighter)]
+    ^{:pseudo {:first-of-type {:border-top border-style}}}
+    {:list-style       :none
+     :border-bottom    border-style
+     :padding          "0.5rem"
+     :background-color theme-colors/gray-lightest}))
+
+(defn white-link-style
+  [selected?]
+  ^{:pseudo {:hover {:text-decoration :underline}}}
+  {:color theme-colors/white
+   :text-decoration :none
+   :font-weight (if selected?
+                  :bold
+                  :normal)})
+
+(defn white-link-item-style
+  []
+  {:list-style :none})
