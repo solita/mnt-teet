@@ -27,14 +27,12 @@
             [teet.ui.skeleton :as skeleton]
             [teet.ui.tabs :as tabs]
             [teet.ui.text-field :refer [TextField]]
-            [teet.ui.timeline :as timeline]
             [teet.ui.typography :refer [Heading1 Heading3] :as typography]
             [teet.ui.url :as url]
             [teet.util.collection :as cu]
             [teet.activity.activity-controller :as activity-controller]
             [teet.authorization.authorization-check :refer [when-authorized when-pm-or-owner]]
-            [teet.theme.theme-colors :as theme-colors]
-            [teet.road.road-model :as road-model]))
+            [teet.theme.theme-colors :as theme-colors]))
 
 (defn task-form [_e! {:keys [initialization-fn]}]
   ;;Task definition (under project activity)
@@ -76,20 +74,21 @@
 
 (defn project-details
   [_e! {:thk.project/keys [estimated-start-date estimated-end-date road-nr start-m end-m
-                          carriageway procurement-nr] :as project}]
+                           carriageway procurement-nr id] :as project}]
   (let [project-name (project-model/get-column project :thk.project/project-name)]
     [:div
-     [typography/Heading2 project-name]
-     [:div (tr [:project :information :estimated-duration])
-      ": "
-      (format/date estimated-start-date) " \u2013 " (format/date estimated-end-date)]
-     [:div (tr [:project :information :road-number]) ": " road-nr]
+     [typography/Heading2 {:style {:margin-bottom "2rem"}} project-name]
+     [:div [:span "THK id: " id]]
+     [:div [:span (tr [:project :information :estimated-duration])
+            ": "
+            (format/date estimated-start-date)] " \u2013 " (format/date estimated-end-date)]
+     [:div [:span (tr [:project :information :road-number]) ": " road-nr]]
      (when (and start-m end-m)
-       [:div (tr [:project :information :km-range]) ": "
-        (.toFixed (/ start-m 1000) 3) " \u2013 "
-        (.toFixed (/ start-m 1000) 3)])
-     [:div (tr [:project :information :procurement-number]) ": " procurement-nr]
-     [:div (tr [:project :information :carriageway]) ": " carriageway]]))
+       [:div [:span (tr [:project :information :km-range]) ": "
+              (.toFixed (/ start-m 1000) 3) " \u2013 "
+              (.toFixed (/ start-m 1000) 3)]])
+     [:div [:span (tr [:project :information :procurement-number]) ": " procurement-nr]]
+     [:div [:span (tr [:project :information :carriageway]) ": " carriageway]]]))
 
 
 (defn project-header-style
@@ -264,23 +263,89 @@
   [e! {:keys [stepper] :as _app} project]
   [stepper/vertical-stepper e! project stepper])
 
-#_(defn people-tab [e! {{:keys [edit]} :query :as app} project]
+(defn add-user-form
+  [e! user project-id]
   [:div
-   [panels/modal {:open-atom (r/wrap (boolean modal) :_)
-                  :title     ""
-                  :on-close  (e! project-controller/->CloseAddDialog)}
+   [form/form {:e!              e!
+               :value           user
+               :on-change-event #(e! (project-controller/->UpdateProjectPermissionForm %))
+               :save-event      #(e! (project-controller/->SaveProjectPermission project-id user))
+               :spec            :project/add-permission-form}
+    ^{:attribute :project/participant}
+    [select/select-user {:e! e! :attribute :project/participant}]]])
 
-    modal]
+(defn permission-information
+  [e! permission]
+  [:div
+   [:div {:class (<class project-style/permission-container)}
+    [:p (tr [:user :role]) ": " (tr [:roles (:permission/role permission)])]
+    [:p (tr [:common :added-on]) ": " (format/date-time (:meta/created-at permission))]]
+   [:div {:style {:display         :flex
+                  :justify-content :flex-end}}
+    [buttons/delete-button-with-confirm {:action #(e! (project-controller/->RevokeProjectPermission (:db/id permission)))}
+     (tr [:project :remove-from-project])]]])
+
+(defn people-panel-user-list
+  [permissions selected-person]
+  [:div
+   (when permissions
+     (let [permission-links (map (fn [{:keys [user] :as _}]
+                                   (let [user-id (:db/id user)]
+                                     {:key       user-id
+                                      :href      (url/set-params :person user-id)
+                                      :title     (str (:user/given-name user) " " (:user/family-name user))
+                                      :selected? (= (str user-id) selected-person)}))
+                                 permissions)]
+       [itemlist/white-link-list permission-links]))
+   [buttons/rect-white {:href (url/remove-param :person)}
+    (tr [:project :add-users])]])
+
+(defn people-modal
+  [e! {:keys           [add-participant]
+       permitted-users :thk.project/permitted-users :as project} {:keys [modal person] :as query}]
+  (let [open? (= modal "people")
+        selected-person (when person
+                          (->> permitted-users
+                               (filter (fn [{user :user}]
+                                         (= (str (:db/id user)) person)))
+                               first))]
+    [panels/modal+ {:open-atom   (r/wrap open? :_)
+                    :title       (if person
+                                   (str (get-in selected-person [:user :user/given-name]) " " (get-in selected-person [:user :user/family-name]))
+                                   (tr [:projects :add-users]))
+                    :on-close    (e! project-controller/->CloseDialog)
+                    :left-panel  [people-panel-user-list permitted-users person]
+                    :right-panel (if selected-person
+                                   [permission-information e! selected-person]
+                                   [add-user-form e! add-participant (:db/id project)])}]))
+
+
+(defn people-tab [e! {{:keys [modal] :as query} :query :as app} {:thk.project/keys [manager owner permitted-users] :as project}]
+  [:div
+   [people-modal e! project query]
    [:div
-    [:div {:style {:display         :flex
-                   :justify-content :space-between
-                   :margin-bottom   "1rem"}}
-     [typography/Heading2 "Project info"]
+    [:div {:class (<class project-style/people-tab-heading-style)}
+     [typography/Heading2 (tr [:people-tab :managers])]
      (when-pm-or-owner
        project
        [buttons/button-secondary {:on-click (e! project-controller/->OpenEditProjectDialog)
                                   :size     :small}
-        "Edit"])]]])
+        (tr [:buttons :edit])])]
+    [itemlist/permission-list [{:permission/role :manager
+                                :user            manager}
+                               {:permission/role :owner
+                                :user            owner}]]]
+   [:div
+    [:div {:class (<class project-style/people-tab-heading-style)}
+     [typography/Heading2 (tr [:people-tab :other-users])]
+     (when-pm-or-owner
+       project
+       [buttons/button-secondary {:on-click (e! project-controller/->OpenPeopleModal)
+                                  :size     :small}
+        (tr [:buttons :edit])])]
+    (if (empty? permitted-users)
+      [typography/GreyText (tr [:people-tab :no-other-users])]
+      [itemlist/permission-list permitted-users])]])
 
 (defn details-tab [e! _app project]
   [project-details e! project])
@@ -292,7 +357,7 @@
     (when-let [activity-data (:edit-activity-data app)]     ;;Otherwise the form renderer can't format dates properly
       [activity-view/activity-form e! (merge {:on-change activity-controller/->UpdateEditActivityForm
                                               :save      activity-controller/->SaveEditActivityForm
-                                              :close     project-controller/->CloseAddDialog
+                                              :close     project-controller/->CloseDialog
                                               :activity  (:edit-activity-data app)
                                               :delete    (project-controller/->DeleteActivity (str (:db/id activity-data)))})])))
 
@@ -302,7 +367,7 @@
     :value     "activities"
     :component activities-tab
     :layers    #{:thk-project :related-cadastral-units :related-restrictions}}
-   #_{:label     "People"                                     ;; HIDDEN UNTIL something is built for this tab
+   {:label     "People"                                     ;; HIDDEN UNTIL something is built for this tab
     :value     "people"
     :component people-tab
     :layers    #{:thk-project}}
@@ -364,13 +429,13 @@
           (case add
             "task"
             [[task-form e!
-              {:close     project-controller/->CloseAddDialog
+              {:close     project-controller/->CloseDialog
                :task      (:new-task project)
                :save      task-controller/->CreateTask
                :on-change task-controller/->UpdateTaskForm}]
              (tr [:project :add-task])]
             "activity"
-            [[activity-view/activity-form e! {:close     project-controller/->CloseAddDialog
+            [[activity-view/activity-form e! {:close     project-controller/->CloseDialog
                                               :activity  (get-in app [:project (:thk.project/id project) :new-activity])
                                               :on-change activity-controller/->UpdateActivityForm
                                               :save      activity-controller/->CreateActivity}]
@@ -386,7 +451,7 @@
           :else nil)]
     [panels/modal {:open-atom (r/wrap (boolean modal) :_)
                    :title     (or modal-label "")
-                   :on-close  (e! project-controller/->CloseAddDialog)}
+                   :on-close  (e! project-controller/->CloseDialog)}
 
      modal]))
 
