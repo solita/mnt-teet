@@ -121,6 +121,16 @@
   {:thk.lifecycle-type/design 1
    :thk.lifecycle-type/construction 2})
 
+(defn users-with-permission
+  [permissions]
+  (mapv
+    (fn [perm]
+      (merge
+        {:permission/role (:permission/role perm)
+         :user            (first (:user/_permissions perm))}
+        (select-keys perm [:meta/creator :meta/created-at :db/id])))
+    permissions))
+
 (def sort-lifecycles
   (partial sort-by (comp lifecycle-order #(get-in % [:thk.lifecycle/type :db/ident]))))
 
