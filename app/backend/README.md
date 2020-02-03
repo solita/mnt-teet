@@ -56,6 +56,6 @@ TEET uses Datiomic Ion as a database.
 - Eval `(load-local-config!)`.
 - Eval only when setting up `(user/create-db "yourname-dev")`.
 - Eval `(datomic-connection) => {:db-name "yourname-dev", :database-id "foo", ...}`
-- import THK data: Find the latest THK_*.csv file from Sharepoint and call (user/import-thk-from-localfile <path>)
+- import THK data: Find the latest thk->teet .csv file from the dev S3 bucket and call (user/import-thk-from-localfile <path>)
 - When creating your dev datomic db for the first time, run (make-mock-users!)
 
