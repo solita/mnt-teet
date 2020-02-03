@@ -4,10 +4,12 @@
             [reagent.core :as r]
             [teet.ui.material-ui :refer [Card CardHeader CardContent
                                          Collapse IconButton Divider
-                                         DialogActions
+                                         DialogActions Modal Fade Paper
+                                         Backdrop
                                          Dialog DialogTitle DialogContent]]
             [teet.ui.icons :as icons]
-            [teet.ui.typography :as typography]))
+            [teet.ui.typography :as typography]
+            [teet.theme.theme-colors :as theme-colors]))
 
 (defn collapsible-panel
   "Panel that shows content that can be opened/closed with a button.
@@ -56,6 +58,69 @@
   []
   {:margin-bottom 0
    :margin-top    "1rem"})
+
+(defn modal-style
+  []
+  {:display :flex
+   :align-items :center
+   :justify-content :center})
+
+(defn modal-container-style
+  []
+  {:display :flex
+   :width "90%"
+   :max-width "900px"
+   :background-color :white
+   :border-radius "3px"
+   :height "50vh"})
+
+(defn modal-left-panel-container
+  []
+  {:background-color theme-colors/gray
+   :width            "300px"
+   :padding          "1rem"})
+
+(defn modal-right-panel-container
+  []
+  {:flex    1
+   :padding "1rem"})
+
+(defn right-panel-heading-style
+  []
+  {:margin-bottom   "2rem"
+   :display         :flex
+   :justify-content :space-between
+   :align-items     :center})
+
+(defn modal+
+  "Advanced modal container"
+  [{:keys [title on-close open-atom left-panel right-panel] :as opts} content]
+  (let [open-atom (or open-atom (r/atom true))
+        close-fn #(do
+                    (reset! open-atom false)
+                    (when on-close
+                      (on-close)))]
+    [:<>
+     [Modal {:open                   @open-atom
+             :class                  (<class modal-style)
+             :close-after-transition true
+             :on-close               close-fn}
+      [:div {:class (<class modal-container-style)}
+       [Fade {:in @open-atom}
+        [:<>
+         [:div {:class (<class modal-left-panel-container)}
+          left-panel]
+         [:div {:class (<class modal-right-panel-container)}
+          [:div {:class (<class right-panel-heading-style)}
+           [typography/Heading2 title]
+           [IconButton {:aria-label     "close"
+                        :color          :primary
+                        :disable-ripple true
+                        :on-click       close-fn
+                        :size           :small}
+            [icons/navigation-close]]]
+          right-panel]]]]]]))
+
 
 (defn modal
   "Simple modal container"
