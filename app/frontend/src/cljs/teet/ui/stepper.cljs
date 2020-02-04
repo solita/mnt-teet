@@ -167,6 +167,7 @@
                 :thk.lifecycle/keys [activities estimated-end-date estimated-start-date type] :as lifecycle}]
           (let [last? (= (+ i 1) (count lifecycles))
                 lc-type (keyword (name (:db/ident type)))
+                disable-buttons? (= :construction lc-type) ;; Disable buttons related to adding stages or tasks in construction until that part is more planned out
                 first-activity-status (activity-step-state (first activities))
                 lc-status (lifecycle-status lifecycle)]
             ^{:key (str lc-id)}
@@ -208,6 +209,7 @@
                            (format/date activity-est-start) " – " (format/date activity-est-end)]]
                          (when (= (str activity-id) (str (:activity stepper)))
                            [buttons/button-secondary {:size     :small
+                                                      :disabled disable-buttons?
                                                       :on-click (e! #(project-controller/->OpenEditActivityDialog (str activity-id)))}
                             (tr [:buttons :edit])])]]
                        (when activity-open?
@@ -232,6 +234,7 @@
                            [circle-svg {:status :not-started :size 14}]
                            [:div {:class (<class task-info)}
                             [buttons/rect-primary {:size       :small
+                                                   :disabled disable-buttons?
                                                    :on-click   (e! project-controller/->OpenTaskDialog (str activity-id))
                                                    :start-icon (r/as-element
                                                                  [icons/content-add])}
@@ -244,6 +247,7 @@
                                        {:top            "-3px"
                                         :padding-bottom "1.5rem"}))}
                  [buttons/rect-primary {:size       :small
+                                        :disabled   disable-buttons?
                                         :on-click   (e! project-controller/->OpenActivityDialog (str lc-id))
                                         :start-icon (r/as-element
                                                       [icons/content-add])}

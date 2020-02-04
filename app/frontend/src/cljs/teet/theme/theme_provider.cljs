@@ -84,16 +84,18 @@
                 :MuiButton            {:sizeSmall          {:padding   "0 10px"
                                                             :font-size "0.875rem"}
 
-                                       :outlined           {:border   (str "1px solid " theme-colors/white)
-                                                            :color    theme-colors/white
-                                                            "&:hover" {:background-color theme-colors/gray-dark}
+                                       :outlined           {:border    (str "1px solid " theme-colors/white)
+                                                            :color     theme-colors/white
+                                                            "&:hover"  {:background-color theme-colors/gray-dark}
                                                             "&:active" {:background-color "#000"}
-                                                            "&:focus" theme-colors/focus-style}
+                                                            "&:focus"  theme-colors/focus-style}
                                        :containedSecondary {:background-color theme-colors/white
                                                             :border           (str "2px solid " theme-colors/gray)
                                                             :color            theme-colors/gray-dark
                                                             "&:hover"         {:background-color theme-colors/gray-lighter
-                                                                               :box-shadow       "none"}}
+                                                                               :box-shadow       "none"}
+                                                            "&:disabled"      {:background-color theme-colors/gray-lightest
+                                                                               :border-color     theme-colors/gray-lighter}}
                                        :contained          {:border-radius "20px"
                                                             "&:focus"      theme-colors/focus-style
                                                             :box-shadow    "none"
