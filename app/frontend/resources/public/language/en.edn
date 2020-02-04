@@ -109,6 +109,7 @@
   :thk.project/owner-info "Owner",
   :activity/status "Status",
   :user/family-name "Family name",
+  :project/participant "Participant",
   :activity/estimated-start-date "Estimated start date",
   :task/modified "Modified",
   :task/status "Status",
