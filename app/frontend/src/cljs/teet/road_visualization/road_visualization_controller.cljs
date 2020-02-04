@@ -26,7 +26,7 @@
     (log/info "COORD" coordinate)
     (t/fx (assoc-in app [:road-data :clicked-coordinate] coordinate)
           {:tuck.effect/type :query
-           :query :road/road-parts-for-coordinate
+           :query :road/closest-road-part-for-coordinate
            :args {:coordinate (vec coordinate)
                   :distance 200}
            :result-path [:road-data :road-parts-for-coordinate]}))
