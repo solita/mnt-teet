@@ -147,4 +147,4 @@
             (-> activity :activity/name :db/ident)))
 
 (def sort-activities
-  (partial sort-by activity-sort-priority))
+  (partial sort-by :activity/estimated-start-date))
