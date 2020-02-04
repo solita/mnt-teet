@@ -312,7 +312,7 @@
     [panels/modal+ {:open-atom   (r/wrap open? :_)
                     :title       (if person
                                    (str (get-in selected-person [:user :user/given-name]) " " (get-in selected-person [:user :user/family-name]))
-                                   (tr [:projects :add-users]))
+                                   (tr [:project :add-users]))
                     :on-close    (e! project-controller/->CloseDialog)
                     :left-panel  [people-panel-user-list permitted-users person]
                     :right-panel (if selected-person
