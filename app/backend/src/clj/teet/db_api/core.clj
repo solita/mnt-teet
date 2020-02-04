@@ -1,5 +1,9 @@
 (ns teet.db-api.core
-  "TEET database API multimethods")
+  "TEET database API multimethods"
+  (:require [teet.authorization.authorization-check :as authorization-check]
+            [teet.permission.permission-db :as permission-db]
+            [datomic.client.api :as d]
+            [teet.util.collection :as cu]))
 
 (defmulti query-authorization
   "Check authorization for query. Should throw exception on authorization failure.
@@ -72,3 +76,54 @@
                      :status 500}
                     ~error-map)]
      (throw (ex-info (:msg em#) (dissoc em# :msg)))))
+
+
+(defmacro defcommand [command-name
+                      {:keys [payload context authorization project-id] :as options}
+                      & body]
+  (assert (and (keyword? command-name)
+               (some? (namespace command-name)))
+          "Command name must be a namespaced keyword")
+  (assert (map? options) "Options must be a map")
+  (assert (map? authorization) "Authorization option must be a map")
+  (let [authz-rule-names (authorization-check/authorization-rule-names)]
+    (doseq [[k _] authorization]
+      (assert (authz-rule-names k)
+              (str "Unknown authorization rule: " k))))
+  (assert project-id "Specify project id. Use nil to skip project specific roles.")
+
+  (let [-ctx (gensym "CTX")
+        -payload (gensym "PAYLOAD")
+        -perms (gensym "PERMISSIONS")
+        -db (gensym "DB")
+        -proj-id (gensym "PID")]
+    `(defmethod teet.db-api.core/command! ~command-name [~-ctx ~-payload]
+       (let [~(or context -ctx) ~-ctx
+             ~(or payload -payload) ~-payload
+             ~-db (d/db (:conn ~-ctx))
+             ~-perms (when (:user ~-ctx)
+                       (permission-db/user-permissions ~-db [:user/id (:user/id (:user ~-ctx))]))
+             ~-proj-id ~project-id]
+
+         ;; Go through the declared authorization requirements
+         ;; and try to find user permissions that satisfy them
+         (some (fn [[permission# options#]]
+                 (some (fn [{pid# :db/id :permission/keys [role# projects#]}]
+                         (let [access#
+                               (and (if (seq projects#)
+                                      ;; Project specific permission: check it is for this project
+                                      (and ~-proj-id
+                                           (cu/contains-value? projects# {:db/id ~-proj-id}))
+
+                                      ;; Global permission
+                                      true)
+
+                                    ;; Get access defined for authorization rule and role
+                                    (authorization-check/access-for permission# role#))]
+                           (println "debug, got access: " access#)
+                           ;; PENDING: if access is :link we need to check ownership
+                           ;; does this require full or read
+                           access#))
+                       ~-perms))
+               ~authorization)
+         ~@body))))

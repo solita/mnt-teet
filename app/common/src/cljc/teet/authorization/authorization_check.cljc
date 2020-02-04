@@ -20,6 +20,11 @@
         rule (@authorization-rules functionality)]
     (= creator-id user-id)))
 
+(defn access-for
+  "Returns the description of access given in the `rule` for `role`."
+  [rule role]
+  (-> @authorization-rules (get rule) (get role)))
+
 (defn user-pm-or-manager?
   [user {:thk.project/keys [manager owner] :as project}]
   (let [owner-id (:user/id owner)
@@ -57,3 +62,6 @@
                    "rules for functionality: " (@authorization-rules functionality))
          (when (authorized? @app-state/user functionality entity)
                component)))
+
+(defn authorization-rule-names []
+  (into #{} (keys @authorization-rules)))

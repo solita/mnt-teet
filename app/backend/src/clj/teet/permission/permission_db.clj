@@ -41,3 +41,18 @@
         project
         time)))
 
+(defn user-permissions
+  "All valid permissions for user."
+  ([db user]
+   (user-permissions db user (Date.)))
+  ([db user time]
+   (mapv first
+         (d/q '[:find (pull ?p [*])
+                :in $ ?user ?time
+                :where
+                [?user :user/permissions ?p]
+                [?p :permission/valid-from ?time-from]
+                [(get-else $ ?p :permission/valid-until ?time) ?time-until]
+                [(<= ?time-from ?time)]
+                [(<= ?time ?time-until)]]
+              db user time))))

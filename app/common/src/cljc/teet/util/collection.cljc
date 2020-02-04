@@ -1,6 +1,9 @@
 (ns teet.util.collection
   "Collection utilities")
 
+(defn contains-value? [coll v]
+  (some #(when (= % v) true) coll))
+
 (defn count-by
   "Group by and count.
   Returns map from each return value of group-fn to number of occurances."

@@ -1,5 +1,5 @@
 (ns teet.project.project-commands
-  (:require [teet.db-api.core :as db-api]
+  (:require [teet.db-api.core :as db-api :refer [defcommand]]
             [datomic.client.api :as d]
             [teet.log :as log]
             [teet.project.project-model :as project-model]
@@ -113,11 +113,19 @@
   [{conn :conn
     user :user}
    {permission-id :permission-id}]
-  (d/transact conn
-              {:tx-data [(merge {:db/id               permission-id
-                                 :permission/valid-until (Date.)}
-                                (modification-meta user))]})
+
   :ok)
+
+#_(defcommand :project/revoke-permission
+  ;; Options
+  {:context {:keys [user conn]} ; bindings from ctx map
+   :payload {:keys [permission-id project-id]} ; bindings from payload
+   :project-id project-id
+   :authorization {:project/edit-permissions {:project-id project-id}}}
+  (d/transact conn
+              {:tx-data [(merge {:db/id permission-id
+                                 :permission/valid-until (Date.)}
+                                (modification-meta user))]}))
 
 (defmethod db-api/command! :project/add-permission
   [{conn :conn
@@ -164,9 +172,26 @@
   (select-keys (d/transact conn {:tx-data [(merge activity (modification-meta user))]})
                [:tempids]))
 
-(defmethod db-api/command! :project/update-task [{conn :conn
-                                                  user :user} task]
-  (select-keys (d/transact conn {:tx-data [(merge task (modification-meta user))]}) [:tempids]))
+(defn- task-project-id [db task-id]
+  (ffirst
+   (d/q '[:find ?project
+          :in $ ?t
+          :where
+          [?activity :activity/tasks ?t]
+          [?lifecycle :thk.lifecycle/activities ?activity]
+          [?project :thk.project/lifecycles ?lifecycle]]
+        db task-id)))
+
+(defcommand :project/update-task
+  {:context {:keys [conn user db]} ; bindings from context
+   :payload {id :db/id :as task} ; bindings from payload
+   :project-id (task-project-id db id)
+   :authorization {:task/edit-task {:task-id id}}} ; auth checks
+  ;; body
+  (select-keys
+   (d/transact conn {:tx-data [(merge task (modification-meta user))]})
+   [:tempids]))
+
 
 (defmethod db-api/command! :project/add-task-to-activity [{conn :conn} {activity-id :activity-id
                                                                         task        :task :as payload}]
