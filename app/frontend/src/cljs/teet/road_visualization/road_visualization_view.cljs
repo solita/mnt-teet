@@ -13,15 +13,13 @@
             [teet.ui.layout :as layout]
             [teet.log :as log]))
 
-(defn- road-address-overlay [road-address]
-  (let [{:keys [road name meters carriageway start-m end-m]}
-        (-> road-address (js->clj :keywordize-keys true))]
-    [itemlist/ItemList {}
-     [itemlist/Item {:label "Road"} (str road " (" name ")")]
-     [itemlist/Item {:label "Carriageway"} carriageway]
-     [itemlist/Item {:label "km"} (.toFixed (/ meters 1000) 3)]
-     [itemlist/Item {:label "Start meters"} start-m]
-     [itemlist/Item {:label "End meters"} end-m]]))
+(defn- road-part-overlay [{:keys [road name carriageway start-m end-m]}]
+  [:div {:style {:background-color :wheat}}
+   [itemlist/ItemList {}
+    [itemlist/Item {:label "Road"} (str road "  " name)]
+    [itemlist/Item {:label "Carriageway"} carriageway]
+    [itemlist/Item {:label "Km range"} (str (.toFixed (/ start-m 1000) 3) "km - "
+                                            (.toFixed (/ end-m 1000) 3) "km")]]])
 
 (defn road-visualization [e! {:keys [road-data]}]
   (r/with-let [point (r/atom [nil nil])
@@ -30,7 +28,9 @@
                              (openlayers/center-map-on-point! %))]
     (let [[x y] @point
           {:keys [road-line-string form road-parts-for-coordinate
-                  clicked-coordinate]} road-data]
+                  clicked-coordinate]} road-data
+          road-parts-for-coordinate (when road-parts-for-coordinate
+                                      [road-parts-for-coordinate])]
       [:<>
        [map-view/map-view e!
         {:on-click (e! road-visualization-controller/map->FetchRoadAddressForCoordinate)
@@ -66,6 +66,18 @@
                      (partial map-features/road-line-style "magenta")
                      {:fit-on-load? true}))
 
+                  :point
+                  (when (and x y)
+                    (map-layers/geojson-data-layer
+                     "point"
+                     #js {:type "FeatureCollection"
+                          :features #js [#js {:type "Feature"
+                                              :geometry #js {:type "Point"
+                                                             :coordinates #js [x y]}}]}
+
+                     map-features/crosshair-pin-style
+                     {}))
+
                   :center-point
                   (when clicked-coordinate
                     (map-layers/geojson-data-layer
@@ -77,13 +89,12 @@
 
                      map-features/crosshair-pin-style
                      {}))}
-         :overlays (vec
-                    (for [rp road-parts-for-coordinate]
-                      (do
-                        (log/info "RP: " (pr-str rp))
-                        [{:coordinate (vec (first (:geometry rp)))
-                          :content [:div (pr-str rp); road-address-overlay road-address
-                                    ]}])))}
+         :overlays  (vec
+                     (for [rp road-parts-for-coordinate]
+                       (do
+                         (log/info "RP: " (pr-str rp))
+                         {:coordinate (vec (first (:geometry rp)))
+                          :content [road-part-overlay rp]})))}
         {}]
        [layout/section
         [:div {:style {:display :flex}}
@@ -97,20 +108,20 @@
                        :label "Y"}]
            [Button {:on-click #(openlayers/center-map-on-point! (mapv js/parseFloat @point))}
             "center"]]
-          #_(if (and road (aget road "features" 0 "geometry"))
-              [:div {:style {:height "350px" :overflow-y "scroll"}}
-               [:table
-                [:thead
-                 [:tr
-                  [:td "X"] [:td "Y"]]]
-                [:tbody
-                 (util/with-keys
-                   (for [[x y] (aget road "features" 0 "geometry" "coordinates")]
-                     [:tr {:tab-index 1
-                           :on-focus (r/partial set-point! [x y])
-                           :on-mouse-over (r/partial set-point! [x y])}
-                      [:td x] [:td y]]))]]]
-              [typography/Heading3 "No road information found"])]
+          (if (seq road-line-string)
+            [:div {:style {:height "350px" :overflow-y "scroll"}}
+             [:table
+              [:thead
+               [:tr
+                [:td "X"] [:td "Y"]]]
+              [:tbody
+               (util/with-keys
+                 (for [[x y] road-line-string]
+                   [:tr {:tab-index 1
+                         :on-focus (r/partial set-point! [x y])
+                         :on-mouse-over (r/partial set-point! [x y])}
+                    [:td x] [:td y]]))]]]
+            [typography/Heading3 "No road information found"])]
          [:div {:style {:flex 1
                         :padding "1rem"}}
           [typography/Heading3 {:style {:margin-bottom "1rem"}}

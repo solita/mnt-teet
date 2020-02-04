@@ -34,3 +34,31 @@
         dy (- y2 y1)]
     [(+ x1 (* fraction dx))
      (+ y1 (* fraction dy))]))
+
+(defn line-string? [x]
+  (boolean (seq (rest x))))
+
+(defn point? [x]
+  (= (count x) 2))
+
+(defn line-string-interpolate-point
+  "Calculate a point in line string between 0 (start point) and 1 (end point)."
+  [line-string fraction]
+  {:pre [(line-string? line-string)
+         (<= 0 fraction 1)]}
+  (cond
+    (zero? fraction) (first line-string)
+    (== 1.0 fraction) (last line-string)
+    :else
+    (let [length (line-string-length line-string)
+          wanted (* fraction length)]
+      (reduce
+       (fn [[traveled last-point] point]
+         (let [dist-to-point (distance last-point point)
+               new-traveled (+ traveled dist-to-point)]
+           (if (> new-traveled wanted)
+             (reduced (interpolate-point last-point point
+                                         (/ (- wanted traveled) dist-to-point)))
+             [new-traveled point])))
+       [0 (first line-string)]
+       (rest line-string)))))
