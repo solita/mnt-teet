@@ -86,9 +86,9 @@
 
 
 (def object-integration-info-fields
-  #{:object/groupfk :object/groupshortname :object/groupname
-    :object/owner :object/regionfk :object/regionname
-    :object/thkupdstamp :object/statusfk :object/statusname})
+  #{:object/groupfk :object/groupshortname
+    :object/owner :object/regionfk :object/thkupdstamp
+    :object/statusfk :object/statusname})
 
 (def phase-integration-info-fields
   #{:phase/thkupdstamp :phase/cost :phase/typefk})
@@ -151,7 +151,7 @@
    "object_id" [:thk.project/id]
    "object_groupfk" [:object/groupfk]
    "object_groupshortname" [:object/groupshortname]
-   "object_groupname" [:object/groupname]
+   "object_groupname" [:thk.project/repair-method]
    "object_roadnr" [:thk.project/road-nr ->int]
    "object_carriageway" [:thk.project/carriageway ->int]
    "object_kmstart" [:thk.project/start-m (comp km->m ->num) m->km-str]
@@ -161,7 +161,7 @@
    "object_projectname" [:thk.project/project-name]
    "object_owner" [:object/owner]
    "object_regionfk" [:object/regionfk]
-   "object_regionname" [:object/regionname]
+   "object_regionname" [:thk.project/region-name]
    "object_thkupdstamp" [:object/thkupdstamp]
    ;;"object_teetupdstamp"
    "object_statusfk" [:object/statusfk]
