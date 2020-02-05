@@ -55,6 +55,8 @@
                          :thk.project/bridge-nr
                          :thk.project/start-m
                          :thk.project/end-m
+                         :thk.project/repair-method
+                         :thk.project/region-name
                          :thk.project/carriageway
                          :thk.project/name})
       {:db/id (str "prj-" project-id)
