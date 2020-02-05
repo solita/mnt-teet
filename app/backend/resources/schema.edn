@@ -583,4 +583,10 @@
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
            :db/doc "Name of the region this project is located in"}]
-         teet.migration.project-region/extract-region-from-integration-info]}]
+         teet.migration.project-region/extract-region-from-integration-info]}
+
+ {:db/ident :migration/project-repair-method
+  :txes [[{:db/ident :thk.project/repair-method
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Project repair method as shown in THK csv."}]]}]
