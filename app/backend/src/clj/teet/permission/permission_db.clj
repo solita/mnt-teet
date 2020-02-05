@@ -47,7 +47,8 @@
    (user-permissions db user (Date.)))
   ([db user time]
    (mapv first
-         (d/q '[:find (pull ?p [*])
+         (d/q '[:find (pull ?p [:permission/role :permission/projects :permission/scopes
+                                :permission/valid-from :permission/valid-until])
                 :in $ ?user ?time
                 :where
                 [?user :user/permissions ?p]

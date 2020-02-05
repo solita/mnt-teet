@@ -3,14 +3,14 @@
             [teet.environment :as environment]
             [teet.auth.jwt-token :as jwt-token]
             [datomic.client.api :as d]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.permission.permission-db :as permission-db]))
 
 
 (defn user-roles
   "Given a datomic connection and a user uuid, return a set of user's roles."
-  [conn id]
-  (-> conn
-      d/db
+  [db id]
+  (-> db
       (d/pull '[:user/roles] [:user/id id])
       :user/roles
       set))
@@ -34,16 +34,17 @@
                                    :user/family-name family-name}]})
       new-id)))
 
-(defn user-info [conn id]
-  (d/pull (d/db conn) '[:user/id :user/given-name :user/family-name :user/email
-                        :user/person-id :db/id]
-          [:user/id id]))
+(defn user-info [db id]
+  (let [{id :db/id :as user} (d/pull db '[:user/id :user/given-name :user/family-name :user/email
+                                          :user/person-id :db/id]
+                                     [:user/id id])]
+    (assoc user :user/permissions
+           (permission-db/user-permissions db id))))
 
 (defmethod db-api/command! :login [{conn :conn}
                                    {:user/keys [id given-name family-name email person-id]
                                     site-password :site-password}]
   (d/transact conn {:tx-data [{:user/id id}]})
-
 
   (when-not (environment/feature-enabled? :dummy-login)
     (log/warn "Demo login can only be used in dev environment")
@@ -52,7 +53,8 @@
 
   (if (environment/check-site-password site-password)
     (let [secret (environment/config-value :auth :jwt-secret)
-          roles (user-roles conn id)]
+          db (d/db conn)
+          roles (user-roles db id)]
       {:token (jwt-token/create-token secret "teet_user"
                                       {:given-name given-name
                                        :family-name family-name
@@ -60,7 +62,7 @@
                                        :email email
                                        :id id
                                        :roles roles})
-       :user (user-info conn id)
+       :user (user-info db id)
        :roles roles
        :enabled-features (environment/config-value :enabled-features)
        :api-url (environment/config-value :api-url)})
@@ -80,7 +82,8 @@
          {:strs [given_name family_name]} "profile_attributes"} claims
 
         id (ensure-user! conn person-id given_name family_name)
-        roles (user-roles conn id)
+        db (d/db conn)
+        roles (user-roles db id)
         response {:status 302
                   :headers {"Location"
                             (str (environment/config-value :base-url)
@@ -105,9 +108,9 @@
 (defmethod db-api/command-authorization :login/check-session-token [_ _]
   nil)
 
-(defmethod db-api/command! :refresh-token [{conn :conn
+(defmethod db-api/command! :refresh-token [{db :db
                                             {:user/keys [id given-name family-name email person-id]} :user} _]
-  (let [roles (user-roles conn id)]
+  (let [roles (user-roles db id)]
     {:token (jwt-token/create-token (environment/config-value :auth :jwt-secret) "teet_user"
                                     {:given-name given-name
                                      :family-name family-name
@@ -115,7 +118,7 @@
                                      :email email
                                      :id id
                                      :roles roles})
-     :user (user-info conn id)
+     :user (user-info db id)
      :roles roles
      :enabled-features (environment/config-value :enabled-features)
      :api-url (environment/config-value :api-url)}))
