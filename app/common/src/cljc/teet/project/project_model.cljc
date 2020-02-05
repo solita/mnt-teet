@@ -38,6 +38,7 @@
 (def project-info-attributes
   (into project-listing-attributes
         [:thk.project/procurement-nr
+         :thk.project/repair-method
          :thk.project/setup-skipped?
          :thk.project/related-restrictions
          :thk.project/related-cadastral-units]))
