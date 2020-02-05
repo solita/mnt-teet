@@ -19,6 +19,7 @@
             teet.project.project-queries
             teet.project.project-commands
             teet.road.road-query-queries
+            teet.system.system-queries
 
             [teet.log :as log]
             [teet.auth.jwt-token :as jwt-token]
