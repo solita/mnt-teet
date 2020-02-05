@@ -59,3 +59,10 @@
     ;Walk result tree removing all deleted entities
     (remove-entities-by-ids entities deleted-entity-ids)))
 
+(defn is-creator? [db entity user]
+  (boolean
+   (seq
+    (d/q '[:find ?e
+           :in $ ?e ?user
+           :where [?e :meta/creator ?user]]
+         db entity user))))

@@ -183,14 +183,14 @@
         db task-id)))
 
 (defcommand :project/update-task
-  {:context {:keys [conn user db]} ; bindings from context
+  {:context {:keys [user db]} ; bindings from context
    :payload {id :db/id :as task} ; bindings from payload
    :project-id (task-project-id db id)
-   :authorization {:task/edit-task {:task-id id}}} ; auth checks
-  ;; body
-  (select-keys
-   (d/transact conn {:tx-data [(merge task (modification-meta user))]})
-   [:tempids]))
+   :authorization {:task/edit-task {:permission :full
+                                    :db/id id}}  ; auth checks
+   :transact [(merge (select-keys task
+                                  [:task/name :task/description :task/status :task/assignee])
+                     (modification-meta user))]})  ; tx data
 
 
 (defmethod db-api/command! :project/add-task-to-activity [{conn :conn} {activity-id :activity-id
