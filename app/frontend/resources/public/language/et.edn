@@ -176,6 +176,7 @@
    :road-number "Tee number",
    :km-range "Km ulatus",
    :procurement-number "Hanke number",
+   :repair-method "Remondimeetod",
    :carriageway "Sõidutee"},
   :activities "Projekti tegevused",
   :cadastral-units-tab "Katastriüksused",
