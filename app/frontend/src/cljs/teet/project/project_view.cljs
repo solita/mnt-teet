@@ -74,7 +74,7 @@
 
 (defn project-details
   [_e! {:thk.project/keys [estimated-start-date estimated-end-date road-nr start-m end-m
-                           carriageway procurement-nr id] :as project}]
+                           carriageway repair-method procurement-nr id] :as project}]
   (let [project-name (project-model/get-column project :thk.project/project-name)]
     [:div
      [typography/Heading2 {:style {:margin-bottom "2rem"}} project-name]
@@ -88,7 +88,9 @@
               (.toFixed (/ start-m 1000) 3) " \u2013 "
               (.toFixed (/ start-m 1000) 3)]])
      [:div [:span (tr [:project :information :procurement-number]) ": " procurement-nr]]
-     [:div [:span (tr [:project :information :carriageway]) ": " carriageway]]]))
+     [:div [:span (tr [:project :information :carriageway]) ": " carriageway]]
+     (when repair-method
+       [:div [:span (tr [:project :information :repair-method]) ": " repair-method]])]))
 
 
 (defn project-header-style
