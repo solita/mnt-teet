@@ -151,9 +151,9 @@
          ;; Go through the declared authorization requirements
          ;; and try to find user permissions that satisfy them
          (when-not (some (fn [[functionality# {entity-id# :db/id
-                                               access :access :as options#}]]
+                                               access# :access :as options#}]]
                            (authorization-check/authorized? ~-user functionality#
-                                                            {:access access
+                                                            {:access access#
                                                              :project-id ~-proj-id
                                                              :entity (meta-query/entity-meta ~-db entity-id#)}))
                          ~authorization)
