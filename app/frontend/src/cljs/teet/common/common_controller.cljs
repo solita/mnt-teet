@@ -79,16 +79,6 @@
                     (fn [query value]
                       (assoc query param-name (if value "1" "0")))))
 
-#_(defn query-param-ids-atom
-  "Returns atom that reads/writes list of ids to the given query parameter"
-  [app param-name]
-  (query-param-atom app param-name
-                    #(when %
-                       (into []
-                             (map js/parseInt)
-                             (str/split #"," %)))
-                    #(str/join "," %)))
-
 (defrecord DebounceEffect [effect])
 (defrecord RPC [rpc-effect-params])
 (defrecord RPCResponse [path data])
@@ -118,6 +108,7 @@
     (-> err ex-data :error)))
 
 (defn default-server-error-handler [err app]
+  (log/debug "snack-bar open called -> :snackbar :open? should go true in appdb")
   (snackbar-controller/open-snack-bar app (tr-or [:error (-> err ex-data :error)]
                                                  [:error :server-error]
                                                  "error")
@@ -241,8 +232,9 @@
 
 (defn- fetch*
   "Call JS fetch API. Automatically adds response code check and error handling.
-  Returns promise."
+  Returns a Promise yielding a response data or app-state map."
   [e! error-event & [url authless-arg-map-js]]
+  {:post [(instance? js/Promise %)]}
   (-> (js/fetch url
                 (-> authless-arg-map-js
                     js->clj
@@ -282,7 +274,7 @@
                        :headers (clj->js {"Content-Type" "application/json"
                                           "Accept" "application/json"})
                        :body (-> args clj->js js/JSON.stringify)}))
-        (.then #(.json %))
+        (.then #(when % (.json %)))
         (.then (fn [json]
                 (let [data (if json?
                              json
@@ -315,12 +307,17 @@
                                 :headers (clj->js
                                           {"Content-Type" "application/json+transit"})
                                 :body payload}))
-          (.then #(.text %))
-          (.then (fn [text]
-                   (let [data (transit/transit->clj text)]
-                     (if result-path
-                       (e! (->RPCResponse result-path data))
-                       (e! (result-event data))))))))))
+          (.then #(if (instance? js/Response %)
+                    (.text %)
+                    ;; can also be appstate map in case of error
+                    %))
+          (.then (fn [text-or-appstate]
+                   (if (map? text-or-appstate)
+                     text-or-appstate                     
+                     (let [data (transit/transit->clj text-or-appstate)]
+                       (if result-path
+                         (e! (->RPCResponse result-path data))
+                         (e! (result-event data)))))))))))
 
 (defn query-url
   "Generate an URL to a query with the given args. This is useful for queries
@@ -339,6 +336,7 @@
     (t/fx app
           (assoc query-effect-map :tuck.effect/type :query))))
 
+
 (defmethod tuck-effect/process-effect :command! [e! {:keys [command payload result-path result-event success-message error-event] :as q}]
   (assert (keyword? command)
           "Must specify :command keyword that names the command to execute")
@@ -354,14 +352,19 @@
                                {"Content-Type" "application/json+transit"})
                      :body (transit/clj->transit {:command command
                                                   :payload payload})})
-        (.then #(.text %))
-        (.then (fn [text]
-                 (let [data (transit/transit->clj text)]
-                   (when success-message
-                     (e! (snackbar-controller/->OpenSnackBar success-message :success)))
-                   (if result-path
-                     (e! (->RPCResponse result-path data))
-                     (e! (result-event data)))))))))
+        (.then #(if (instance? js/Response %)
+                  (.text %)
+                  ;; can also be appstate map in case of error
+                  %))
+        (.then (fn [transit-data-or-appstate]
+                 (if (map? transit-data-or-appstate)
+                   transit-data-or-appstate
+                   (let [data (transit/transit->clj transit-data-or-appstate)]
+                     (when success-message
+                       (e! (snackbar-controller/->OpenSnackBar success-message :success)))
+                     (if result-path
+                       (e! (->RPCResponse result-path data))
+                       (e! (result-event data))))))))))
 
 (defmethod tuck-effect/process-effect :navigate [_ {:keys [page params query]}]
   (routes/navigate! page params query))

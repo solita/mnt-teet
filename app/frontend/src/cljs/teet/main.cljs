@@ -63,6 +63,7 @@
                 nav-open?
                 (with-meta page
                            {:key (:route-key app)})]])
+            ;; else - show spinner while config is loaded
             [:div {:class (<class common-styles/spinner-style)}
                 [CircularProgress]]))
         (when-feature :data-frisk

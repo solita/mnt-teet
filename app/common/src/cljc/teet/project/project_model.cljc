@@ -38,6 +38,7 @@
 (def project-info-attributes
   (into project-listing-attributes
         [:thk.project/procurement-nr
+         :thk.project/repair-method
          :thk.project/setup-skipped?
          :thk.project/related-restrictions
          :thk.project/related-cadastral-units]))
@@ -147,4 +148,4 @@
             (-> activity :activity/name :db/ident)))
 
 (def sort-activities
-  (partial sort-by activity-sort-priority))
+  (partial sort-by :activity/estimated-start-date))
