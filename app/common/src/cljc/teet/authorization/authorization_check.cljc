@@ -23,13 +23,13 @@
   ([user functionality]
    (authorized? user functionality nil))
   ([user functionality {:keys [access entity project-id]}]
-   (some (fn [{pid :db/id :permission/keys [role projects]}]
+   (some (fn [{:permission/keys [role projects]}]
            (let [required-access (or access :full)
                  access-for-role
                  (and (if (seq projects)
                         ;; Project specific permission: check project id is included
                         (and project-id
-                             (cu/contains-value? projects project-id))
+                             (cu/contains-value? projects {:db/id project-id}))
 
                         ;; Global permission
                         true)
