@@ -89,22 +89,22 @@
   body           Code that implements the command.
 
   Options:
-  payload        Required binding form for command payload data
-  context        Optional binding form for the execution context
-                 that always includes: db, user and conn.
-  authorization  Required map of authorization rules to check (see below)
-  project-id     Required form to determine the project for which
-                 user permissions are checked. May use the bindings
-                 from payload or context.
-  transact       Optional form that generates data to transact to
-                 Datomic. If specified, body must be omitted.
-                 The command will automatically return the tempids
-                 as the result when transact is used.
+  :payload        Required binding form for command payload data
+  :context        Optional binding form for the execution context
+                  that always includes: db, user and conn.
+  :authorization  Required map of authorization rules to check (see below)
+  :project-id     Required form to determine the project for which
+                  user permissions are checked. May use the bindings
+                  from payload or context.
+  :transact       Optional form that generates data to transact to
+                  Datomic. If specified, body must be omitted.
+                  The command will automatically return the tempids
+                  as the result when transact is used.
 
 
   Authorization rules:
   Each authorization rule key defines a rule that is in the authorization matrix.
-  The value of the rule is an options map that defines the ids of items that
+  The value of the rule is an options map that defines the :db/id of entity that
   will be checked of ownership if the authorization matrix requires it.
 
   By default the permission requires :full access. To override use :permission
