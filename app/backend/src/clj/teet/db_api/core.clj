@@ -4,7 +4,8 @@
             [teet.permission.permission-db :as permission-db]
             [datomic.client.api :as d]
             [teet.util.collection :as cu]
-            [teet.meta.meta-query :as meta-query]))
+            [teet.meta.meta-query :as meta-query]
+            [teet.log :as log]))
 
 (defmulti query-authorization
   "Check authorization for query. Should throw exception on authorization failure.
@@ -149,36 +150,17 @@
 
          ;; Go through the declared authorization requirements
          ;; and try to find user permissions that satisfy them
-         (some (fn [[permission# {entity-id# :db/id :as options#}]]
-                 (some (fn [{pid# :db/id :permission/keys [role# projects#]}]
-                         (let [require# (get options# :permission :full)
-                               access#
-                               (and (if (seq projects#)
-                                      ;; Project specific permission: check it is for this project
-                                      (and ~-proj-id
-                                           (cu/contains-value? projects# {:db/id ~-proj-id}))
-
-                                      ;; Global permission
-                                      true)
-
-                                    ;; Get access defined for authorization rule and role
-                                    (authorization-check/access-for permission# role#))]
-                           (println "debug, got access: " access#)
-                           (or
-                            ;; full access is required and this permission gives it
-                            (= require# access# :full)
-
-                            ;; read access required and permission gives full or read
-                            (and (= require# :read)
-                                 (or (= access# :read)
-                                     (= access# :full)))
-
-                            ;; link access required check ownership
-                            (and (= access# :link)
-                                 entity-id#
-                                 (meta-query/is-creator? ~-db entity-id# [:user/id (:user/id ~-user)])))))
-                       ~-perms))
-               ~authorization)
+         (when-not (some (fn [[functionality# {entity-id# :db/id
+                                               access :access :as options#}]]
+                           (authorization-check/authorized? ~-user functionality#
+                                                            {:access access
+                                                             :project-id ~-proj-id
+                                                             :entity (meta-query/entity-meta ~-db entity-id#)}))
+                         ~authorization)
+           (log/warn "Failed to authorize command " ~command-name " for user " ~-user)
+           (throw (ex-info "Command authorization failed"
+                           {:status 403
+                            :error :command-authorization-failed})))
 
          ~(if transact
             `(select-keys (datomic.client.api/transact (:conn ~-ctx) {:tx-data ~transact})

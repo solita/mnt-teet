@@ -66,3 +66,9 @@
            :in $ ?e ?user
            :where [?e :meta/creator ?user]]
          db entity user))))
+
+(defn entity-meta [db entity]
+  (d/pull db '[:meta/creator :meta/created-at
+               :meta/modifier :meta/modified-at
+               :meta/deleted?]
+          entity))
