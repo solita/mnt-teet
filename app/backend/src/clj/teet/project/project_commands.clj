@@ -189,7 +189,7 @@
    :authorization {:task/edit-task {:permission :full
                                     :db/id id}}  ; auth checks
    :transact [(merge (select-keys task
-                                  [:task/name :task/description :task/status :task/assignee])
+                                  [:db/id :task/name :task/description :task/status :task/assignee])
                      (modification-meta user))]})  ; tx data
 
 
