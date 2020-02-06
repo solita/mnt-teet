@@ -4,16 +4,8 @@
             [teet.auth.jwt-token :as jwt-token]
             [datomic.client.api :as d]
             [teet.log :as log]
-            [teet.permission.permission-db :as permission-db]))
+            [teet.user.user-db :as user-db]))
 
-
-(defn user-roles
-  "Given a datomic connection and a user uuid, return a set of user's roles."
-  [db id]
-  (-> db
-      (d/pull '[:user/roles] [:user/id id])
-      :user/roles
-      set))
 
 (defn ensure-user!
   "Make sure that the given user exists in the database.
@@ -34,12 +26,7 @@
                                    :user/family-name family-name}]})
       new-id)))
 
-(defn user-info [db id]
-  (let [{id :db/id :as user} (d/pull db '[:user/id :user/given-name :user/family-name :user/email
-                                          :user/person-id :db/id]
-                                     [:user/id id])]
-    (assoc user :user/permissions
-           (permission-db/user-permissions db id))))
+
 
 (defmethod db-api/command! :login [{conn :conn}
                                    {:user/keys [id given-name family-name email person-id]
@@ -54,7 +41,7 @@
   (if (environment/check-site-password site-password)
     (let [secret (environment/config-value :auth :jwt-secret)
           db (d/db conn)
-          roles (user-roles db id)]
+          roles (user-db/user-roles db id)]
       {:token (jwt-token/create-token secret "teet_user"
                                       {:given-name given-name
                                        :family-name family-name
@@ -62,7 +49,7 @@
                                        :email email
                                        :id id
                                        :roles roles})
-       :user (user-info db id)
+       :user (user-db/user-info db id)
        :roles roles
        :enabled-features (environment/config-value :enabled-features)
        :api-url (environment/config-value :api-url)})
@@ -83,7 +70,7 @@
 
         id (ensure-user! conn person-id given_name family_name)
         db (d/db conn)
-        roles (user-roles db id)
+        roles (user-db/user-roles db id)
         response {:status 302
                   :headers {"Location"
                             (str (environment/config-value :base-url)
@@ -110,7 +97,7 @@
 
 (defmethod db-api/command! :refresh-token [{db :db
                                             {:user/keys [id given-name family-name email person-id]} :user} _]
-  (let [roles (user-roles db id)]
+  (let [roles (user-db/user-roles db id)]
     {:token (jwt-token/create-token (environment/config-value :auth :jwt-secret) "teet_user"
                                     {:given-name given-name
                                      :family-name family-name
@@ -118,7 +105,7 @@
                                      :email email
                                      :id id
                                      :roles roles})
-     :user (user-info db id)
+     :user (user-db/user-info db id)
      :roles roles
      :enabled-features (environment/config-value :enabled-features)
      :api-url (environment/config-value :api-url)}))
