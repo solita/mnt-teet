@@ -155,7 +155,7 @@
    (when end-text
      [SmallText end-text])])
 
-(defn heading-buttons
+(defn heading-buttons-style
   []
   {:display :flex
    :flex-wrap :nowrap})
@@ -163,4 +163,4 @@
 (defn header-with-actions [header-text & actions]
   [:div {:class (<class common-styles/header-with-actions)}
    [typography/Heading1 header-text]
-   (into [:div {:class (<class heading-buttons)}] actions)])
+   (into [:div {:class (<class heading-buttons-style)}] actions)])
