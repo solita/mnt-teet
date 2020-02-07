@@ -48,18 +48,18 @@
 
   CreateActivity
   (process-event [_ app]
-    (let [project (get-in app [:params :project])
-          lifecycle (get-in app [:query :lifecycle])
-          [start end] (get-in app [:project project :new-activity :activity/estimated-date-range])
-          payload (-> (get-in app [:project project :new-activity])
+    (let [project-id (get-in app [:params :project])
+          lifecycle-id (get-in app [:query :lifecycle])
+          [start end] (get-in app [:project project-id :new-activity :activity/estimated-date-range])
+          activity (-> (get-in app [:project project-id :new-activity])
                       (dissoc :activity/estimated-date-range)
                       (assoc :activity/estimated-start-date start)
                       (assoc :activity/estimated-end-date end))]
       (t/fx app
             {:tuck.effect/type :command!
              :command          :project/create-activity
-             :payload          (merge {:lifecycle-id (goog.math.Long/fromString lifecycle)}
-                                      payload) ;;TODO pura date-range
+             :payload          {:lifecycle-id (goog.math.Long/fromString lifecycle-id)
+                                :activity activity}
              :result-event     ->CreateActivityResult})))
 
   CreateActivityResult

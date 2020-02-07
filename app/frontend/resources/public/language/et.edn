@@ -70,6 +70,7 @@
   :task.type/eia-pre-assessment "KMH eelhinnang",
   :activity.status/valid "Kehtiv",
   :task.type/topogeodesy "Topogeodeesia",
+  :activity.name/design-requirements "Projekteerimistingimused",
   :document.sub-category/photo "Foto",
   :thk.lifecycle-type/construction "Teostamine",
   :document.sub-category/drawing "Joonis",
@@ -100,6 +101,8 @@
  :error
  {:permission-already-granted "Selle kasutaja luba on juba antud",
   :authorization-failure "Sessioon aegus. Palun sisene uuesti.",
+  :request-timeout nil,
+  :bad-request "Halb taotlus",
   :server-error "Serveri viga."},
  :fields
  {:document/status "Olek",
@@ -156,7 +159,8 @@
   :details-view "Detailid",
   :map-view "Kaart",
   :add-activity
-  {:design "Lisan faasi", :construction "Lisan staadiumi"},
+  #:thk.lifecycle-type{:design "Lisan faasi",
+                       :construction "Lisan staadiumi"},
   :restrictions-tab "Kitsendused",
   :activity {:no-tasks "Ülesandeid pole"},
   :edit-project "Redigeeri projekti",
