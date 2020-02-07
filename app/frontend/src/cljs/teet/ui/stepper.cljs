@@ -210,7 +210,7 @@
                          (when (= (str activity-id) (str (:activity stepper)))
                            [buttons/button-secondary {:size     :small
                                                       :disabled disable-buttons?
-                                                      :on-click (e! #(project-controller/->OpenEditActivityDialog (str activity-id)))}
+                                                      :on-click (e! #(project-controller/->OpenEditActivityDialog (str activity-id) (str lc-id)))}
                             (tr [:buttons :edit])])]]
                        (when activity-open?
                          [:<>
