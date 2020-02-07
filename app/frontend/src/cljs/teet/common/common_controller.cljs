@@ -230,16 +230,30 @@
       (assoc :Authorization (str "Bearer " @api-token))
       map->headers))
 
+(defn- fetch-or-timeout
+  "Fetch request or timeout if response doesn't arrive in `timeout-ms`"
+  [url options timeout-ms]
+  (js/Promise.race #js
+   [(js/fetch url options)
+    (js/Promise. (fn [_ reject]
+                   (js/setTimeout (fn []
+                                    (reject (ex-info "Server timeout"
+                                                     {:error :timeout})))
+                                  timeout-ms)))]))
+
+(def ^:private fetch-timeout-ms 30000)
+
 (defn- fetch*
   "Call JS fetch API. Automatically adds response code check and error handling.
   Returns a Promise yielding a response data or app-state map."
   [e! error-event & [url authless-arg-map-js]]
   {:post [(instance? js/Promise %)]}
-  (-> (js/fetch url
-                (-> authless-arg-map-js
-                    js->clj
-                    (update "headers" add-authorization)
-                    clj->js))
+  (-> (fetch-or-timeout url
+                        (-> authless-arg-map-js
+                            js->clj
+                            (update "headers" add-authorization)
+                            clj->js)
+                        fetch-timeout-ms)
       (.then check-response-status)
       (.catch (catch-response-error e! error-event))))
 
