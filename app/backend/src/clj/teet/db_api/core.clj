@@ -153,18 +153,18 @@
 
          ;; Go through the declared authorization requirements
          ;; and try to find user permissions that satisfy them
-         (when-not (some (fn [[functionality# {entity-id# :db/id
-                                               access# :access
-                                               link# :link
-                                               :as options#}]]
-                           (authorization-check/authorized?
-                            ~-user functionality#
-                            {:access access#
-                             :project-id ~-proj-id
-                             :entity (apply meta-query/entity-meta ~-db entity-id#
-                                            (when link#
-                                              [link#]))}))
-                         ~authorization)
+         (when-not (every? (fn [[functionality# {entity-id# :db/id
+                                                 access# :access
+                                                 link# :link
+                                                 :as options#}]]
+                             (authorization-check/authorized?
+                              ~-user functionality#
+                              {:access access#
+                               :project-id ~-proj-id
+                               :entity (apply meta-query/entity-meta ~-db entity-id#
+                                              (when link#
+                                                [link#]))}))
+                           ~authorization)
            (log/warn "Failed to authorize command " ~command-name " for user " ~-user)
            (throw (ex-info "Command authorization failed"
                            {:status 403
