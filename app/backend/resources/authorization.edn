@@ -50,6 +50,7 @@
   :guest :read},
  :project/edit-project-info {:admin :full, :manager :full},
  :asset/edit-asset {:admin :full, :manager :full},
+ :project/edit-permissions {:manager :full},
  :project/project-setup {:admin :full, :manager :full},
  :task/comment-task
  {:admin :full,
@@ -131,7 +132,6 @@
   :authenticated-guest :read,
   :guest :read},
  :activity/edit-activity {:admin :full, :manager :full},
- :projects/edit-permissions {:admin :full, :manager :full},
  :task/change-task-status
  {:admin :full,
   :manager :full,
