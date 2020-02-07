@@ -1,0 +1,4 @@
+{:deps  {dk.ative/docjure {:mvn/version "1.12.0"}}
+ :paths ["src"]
+ :aliases {:localizations {:main-opts ["-m" "teet.localization"]}
+           :authorizations {:main-opts ["-m" "teet.authorization"]}}}
