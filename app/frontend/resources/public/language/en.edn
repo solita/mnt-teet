@@ -159,6 +159,7 @@
   :map-view "Map",
   :add-activity
   #:thk.lifecycle-type{:design "Add phase", :construction "Add stage"},
+  :edit-activity "Edit activity",
   :restrictions-tab "Restrictions",
   :activity {:no-tasks "No tasks defined"},
   :edit-project "Edit project",

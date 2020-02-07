@@ -161,6 +161,7 @@
   :add-activity
   #:thk.lifecycle-type{:design "Lisan faasi",
                        :construction "Lisan staadiumi"},
+  :edit-activity "Redigeeri tegevust",
   :restrictions-tab "Kitsendused",
   :activity {:no-tasks "Ülesandeid pole"},
   :edit-project "Redigeeri projekti",
