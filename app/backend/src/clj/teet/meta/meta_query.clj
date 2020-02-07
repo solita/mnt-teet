@@ -67,8 +67,12 @@
            :where [?e :meta/creator ?user]]
          db entity user))))
 
-(defn entity-meta [db entity]
-  (d/pull db '[:meta/creator :meta/created-at
-               :meta/modifier :meta/modified-at
-               :meta/deleted?]
+(defn entity-meta
+  "Fetch meta fields about creation and modification. Also fetches
+  specified extra attributes."
+  [db entity & extra-attrs]
+  (d/pull db (into [:meta/creator :meta/created-at
+                    :meta/modifier :meta/modified-at
+                    :meta/deleted?]
+                   extra-attrs)
           entity))

@@ -22,7 +22,8 @@
 (defn authorized?
   ([user functionality]
    (authorized? user functionality nil))
-  ([user functionality {:keys [access entity project-id]}]
+  ([user functionality {:keys [access entity project-id link]
+                        :or {link :meta/creator}}]
    (some (fn [{:permission/keys [role projects]}]
            (let [required-access (or access :full)
                  access-for-role
@@ -48,7 +49,7 @@
 
                ;; link access required check ownership
                (and (= access-for-role :link) user entity
-                    (= (get-in entity [:meta/creator :db/id])
+                    (= (get-in entity [link :db/id])
                        (:db/id user)))))))
          (:user/permissions user))))
 

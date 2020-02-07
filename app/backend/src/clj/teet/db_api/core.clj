@@ -89,6 +89,7 @@
   body           Code that implements the command.
 
   Options:
+  :doc            Docstring for the command
   :payload        Required binding form for command payload data
   :context        Optional binding form for the execution context
                   that always includes: db, user and conn.
@@ -117,6 +118,7 @@
   [command-name
    {:keys [payload context authorization project-id transact] :as options}
    & body]
+  (assert (string? (:doc options)) "Specify :doc for command!")
   (assert (and (keyword? command-name)
                (some? (namespace command-name)))
           "Command name must be a namespaced keyword")
@@ -151,11 +153,16 @@
          ;; Go through the declared authorization requirements
          ;; and try to find user permissions that satisfy them
          (when-not (some (fn [[functionality# {entity-id# :db/id
-                                               access# :access :as options#}]]
-                           (authorization-check/authorized? ~-user functionality#
-                                                            {:access access#
-                                                             :project-id ~-proj-id
-                                                             :entity (meta-query/entity-meta ~-db entity-id#)}))
+                                               access# :access
+                                               link# :link
+                                               :as options#}]]
+                           (authorization-check/authorized?
+                            ~-user functionality#
+                            {:access access#
+                             :project-id ~-proj-id
+                             :entity (apply meta-query/entity-meta ~-db entity-id#
+                                            (when link#
+                                              [link#]))}))
                          ~authorization)
            (log/warn "Failed to authorize command " ~command-name " for user " ~-user)
            (throw (ex-info "Command authorization failed"
