@@ -167,9 +167,10 @@
                               ~-user functionality#
                               {:access access#
                                :project-id ~-proj-id
-                               :entity (apply meta-query/entity-meta ~-db entity-id#
-                                              (when link#
-                                                [link#]))}))
+                               :entity (when entity-id#
+                                         (apply meta-query/entity-meta ~-db entity-id#
+                                                (when link#
+                                                  [link#])))}))
                            ~authorization)
            (log/warn "Failed to authorize command " ~command-name " for user " ~-user)
            (throw (ex-info "Command authorization failed"
