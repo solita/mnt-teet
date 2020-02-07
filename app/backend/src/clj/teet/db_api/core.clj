@@ -68,16 +68,22 @@
   "
   (fn [ctx _] (:command/name ctx)))
 
-(defmacro fail!
+(defn fail!
   "Throws ex-info of failed request. `error-map` may contain
   `:msg` exception message, default \"Request failed\"
   `:error` exception error keyword
   `:status` response status code, default 500"
   [error-map]
-  `(let [em# (merge {:msg "Request failed"
-                     :status 500}
-                    ~error-map)]
-     (throw (ex-info (:msg em#) (dissoc em# :msg)))))
+  (let [em (merge {:msg "Request failed"
+                   :status 500}
+                  error-map)]
+    (throw (ex-info (:msg em) (dissoc em :msg)))))
+
+(defn bad-request! [msg]
+  (fail! {:status 400
+          :error :bad-request
+          :msg msg}))
+
 
 (defmacro defcommand
   "Define a command.
