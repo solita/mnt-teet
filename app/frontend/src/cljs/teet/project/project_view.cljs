@@ -353,14 +353,15 @@
   [project-details e! project])
 
 (defn edit-activity-form
-  [_ _ initialization-fn]
+  [_ _ lifecycle-type initialization-fn]
   (initialization-fn)
-  (fn [e! app _]
+  (fn [e! app lifecycle-type _]
     (when-let [activity-data (:edit-activity-data app)]     ;;Otherwise the form renderer can't format dates properly
       [activity-view/activity-form e! (merge {:on-change activity-controller/->UpdateEditActivityForm
                                               :save      activity-controller/->SaveEditActivityForm
                                               :close     project-controller/->CloseDialog
                                               :activity  (:edit-activity-data app)
+                                              :lifecycle-type lifecycle-type
                                               :delete    (project-controller/->DeleteActivity (str (:db/id activity-data)))})])))
 
 (def project-tabs-layout
@@ -422,9 +423,7 @@
                                 (filter #(= lifecycle (str (:db/id %))))
                                 first
                                 :thk.lifecycle/type
-                                :db/ident
-                                name
-                                keyword)
+                                :db/ident)
         [modal modal-label]
         (cond
           add
@@ -440,12 +439,13 @@
             [[activity-view/activity-form e! {:close     project-controller/->CloseDialog
                                               :activity  (get-in app [:project (:thk.project/id project) :new-activity])
                                               :on-change activity-controller/->UpdateActivityForm
-                                              :save      activity-controller/->CreateActivity}]
+                                              :save      activity-controller/->CreateActivity
+                                              :lifecycle-type lifecycle-type}]
              (tr [:project :add-activity lifecycle-type])])
           edit
           (case edit
             "activity"
-            [[edit-activity-form e! app (e! project-controller/->InitializeActivityEditForm)]
+            [[edit-activity-form e! app lifecycle-type (e! project-controller/->InitializeActivityEditForm)]
              (tr [:project :edit-activity])]
             "project"
             [[edit-project-basic-information e! project]
