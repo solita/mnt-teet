@@ -9,7 +9,8 @@
             [teet.environment :as environment]
             [teet.util.collection :as cu]
             [teet.meta.meta-model :refer [modification-meta creation-meta deletion-tx]]
-            [teet.project.project-specs])
+            [teet.project.project-specs]
+            [clojure.spec.alpha :as s])
   (:import (java.util Date)))
 
 (defcommand :thk.project/initialize!
@@ -72,54 +73,80 @@ and cadastral units"
                      (modification-meta user))]})
 
 
-(defmethod db-api/command! :thk.project/edit-project
-  [{conn :conn
-    user :user}
-   project-form]
-  (d/transact
-    conn
-    {:tx-data [(merge (cu/without-nils project-form)
-                      (modification-meta user))]})
-  :ok)
+(defcommand :thk.project/edit-project
+  {:doc "Edit project basic info"
+   :context {conn :conn
+             user :user}
+   :payload {id :thk.project/id :as project-form}
+   :project-id [:thk.project/id id]
+   :authorization {:project/edit-project-info {:link :thk.project/owner}}
+   :transact [(merge (cu/without-nils (select-keys project-form
+                                                   [:thk.project/id
+                                                    :thk.project/owner
+                                                    :thk.project/manager
+                                                    :thk.project/project-name]))
+                     (modification-meta user))]})
 
 
-(defmethod db-api/command! :project/continue-project-setup
-  [{conn :conn
-    user :user}
-   {project-id :thk.project/id}]
-  (d/transact
-    conn
-    {:tx-data [(merge {:thk.project/id             project-id
-                       :thk.project/setup-skipped? false}
-                      (modification-meta user))]})
-  :ok)
+(defcommand :project/continue-project-setup
+  {:doc "Undo project setup skip"
+   :context {conn :conn
+             user :user}
+   :payload {project-id :thk.project/id}
+   :project-id [:thk.project/id project-id]
+   :authorization {:project/project-setup {:link :thk.project/owner}}
+   :transact [(merge {:thk.project/id             project-id
+                      :thk.project/setup-skipped? false}
+                     (modification-meta user))]})
 
-(defmethod db-api/command! :project/delete-task
-  [{conn :conn
-    user :user}
-   {task-id :db/id}]
-  (d/transact
-    conn
-    {:tx-data [(deletion-tx user task-id)]})
-  :ok)
+(defn- task-project-id [db task-id]
+  (or (ffirst
+       (d/q '[:find ?project
+              :in $ ?t
+              :where
+              [?activity :activity/tasks ?t]
+              [?lifecycle :thk.lifecycle/activities ?activity]
+              [?project :thk.project/lifecycles ?lifecycle]]
+            db task-id))
+      (db-api/bad-request! "No such task")))
 
-(defmethod db-api/command! :project/delete-activity
-  [{conn :conn
-    user :user}
-   {activity-id :db/id}]
-  (d/transact
-    conn
-    {:tx-data [(deletion-tx user activity-id)]})
-  :ok)
+(defcommand :project/delete-task
+  {:doc "Mark a task as deleted"
+   :context {db :db
+             user :user}
+   :payload {task-id :db/id}
+   :project-id (task-project-id db task-id)
+   :authorization {}
+   :transact [(deletion-tx user task-id)]})
+
+(defn activity-project-id [db activity-id]
+  (or (ffirst
+       (d/q '[:find ?project
+              :in $ ?activity
+              :where
+              [?lifecycle :thk.lifecycle/activities ?activity]
+              [?project :thk.project/lifecycles ?lifecycle]]
+            db activity-id))
+      (db-api/bad-request! "No such activity")))
+
+(defcommand :project/delete-activity
+  {:doc "Mark an activity as deleted"
+   :context {db :db
+             user :user}
+   :payload {activity-id :db/id}
+   :project-id (activity-project-id db activity-id)
+   :authorization {:activity/delete-activity {}}
+   :transact [(deletion-tx user activity-id)]})
 
 
 (defn permission-project-id [db permission-id]
   ;; PENDING: currently permissions have one project
-  (ffirst
-   (d/q '[:find ?project
-          :in $ ?permission
-          :where [?permission :permission/projects ?project]]
-        db permission-id)))
+  (or (ffirst
+       (d/q '[:find ?project
+              :in $ ?permission
+              :where [?permission :permission/projects ?project]]
+            db permission-id))
+      (db-api/bad-request! "No such permission")))
 
 (defcommand :project/revoke-permission
   ;; Options
@@ -132,24 +159,29 @@ and cadastral units"
                       :permission/valid-until (Date.)}
                      (modification-meta user))]})
 
-(defmethod db-api/command! :project/add-permission
-  [{conn :conn
-    user :user}
-   {project-id        :project-id
-    {:user/keys [id]} :user}]
-  (let [user-already-added? ((comp boolean seq)
-                             (permission-db/user-permission-for-project (d/db conn) [:user/id id] project-id))]
+(defcommand :project/add-permission
+  {:doc "Add permission to project"
+   :context {:keys [conn user db]}
+   :payload {project-id :project-id
+             {user-id :user/id} :user}
+   :spec (s/keys :req-un [::project-id ])
+   :project-id project-id
+   :authorization {:project/edit-permissions {:link :thk.project/owner}}}
+  (let [user-already-added?
+        (boolean
+         (seq
+          (permission-db/user-permission-for-project db [:user/id user-id] project-id)))]
     (if-not user-already-added?
       (do
         (d/transact
-          conn
-          {:tx-data [{:db/id [:user/id id]
-                      :user/permissions
-                             [(merge {:db/id                 "new-permission"
-                                      :permission/role       :internal-consultant
-                                      :permission/projects   project-id
-                                      :permission/valid-from (Date.)}
-                                     (creation-meta user))]}]})
+         conn
+         {:tx-data [{:db/id [:user/id user-id]
+                     :user/permissions
+                     [(merge {:db/id                 "new-permission"
+                              :permission/role       :internal-consultant
+                              :permission/projects   project-id
+                              :permission/valid-from (Date.)}
+                             (creation-meta user))]}]})
         {:success "User added successfully"})
       (db-api/fail!
         {:status 400
@@ -170,32 +202,47 @@ and cadastral units"
            lifecycle-id
            activity-name))))
 
-(defmethod db-api/command! :project/create-activity [{conn :conn
-                                                      user :user}
-                                                     {activity :activity
-                                                      lifecycle-id :lifecycle-id}]
-  (log/info "ACTIVITY: " activity)
-  (if (valid-activity-name? (d/db conn) activity lifecycle-id)
-    (select-keys
-      (d/transact
-        conn
-        {:tx-data [(merge
-                     {:db/id "new-activity"}
-                     (select-keys activity [:activity/name :activity/status
-                                            :activity/estimated-start-date
-                                            :activity/estimated-end-date])
-                     (creation-meta user))
-                   {:db/id                    lifecycle-id
-                    :thk.lifecycle/activities ["new-activity"]}]})
-      [:tempids])
-    (db-api/fail! {:status 400
-                   :error  :bad-request})))
+(defn lifecycle-project-id [db lifecycle-id]
+  (or (ffirst
+       (d/q '[:find ?project
+              :in $ ?lifecycle
+              :where
+              [?project :thk.project/lifecycles ?lifecycle]]
+            db lifecycle-id))
+      (db-api/bad-request! "No such lifecycle")))
 
-(defmethod db-api/command! :project/update-activity [{conn :conn
-                                                      user :user}
-                                                     activity]
-  (let [db (d/db conn)
-        lifecycle-id (ffirst (d/q '[:find ?lc
+(defcommand :project/create-activity
+  {:doc "Create new activity to lifecycle"
+   :context {:keys [db user conn]}
+   :payload {activity :activity
+             lifecycle-id :lifecycle-id}
+   :project-id (lifecycle-project-id db lifecycle-id)
+   :authorization {:activity/create-activity {}}
+   ;;:pre [(valid-activity-name? db activity lifecycle-id)]
+   }
+  (log/info "ACTIVITY: " activity)
+  (if (valid-activity-name? db activity lifecycle-id)
+    (select-keys
+     (d/transact
+      conn
+      {:tx-data [(merge
+                  {:db/id "new-activity"}
+                  (select-keys activity [:activity/name :activity/status
+                                         :activity/estimated-start-date
+                                         :activity/estimated-end-date])
+                  (creation-meta user))
+                 {:db/id                    lifecycle-id
+                  :thk.lifecycle/activities ["new-activity"]}]})
+     [:tempids])
+    (db-api/bad-request! "Not a valid activity")))
+
+(defcommand :project/update-activity
+  {:doc "Update activity basic info"
+   :context {:keys [conn user db]}
+   :payload activity
+   :project-id (activity-project-id db (:db/id activity))
+   :authorization {:activity/edit-activity {:db/id (:db/id activity)}}}
+  (let [lifecycle-id (ffirst (d/q '[:find ?lc
                                     :in $ ?act
                                     :where [?lc :thk.lifecycle/activities ?act]]
                                   db
@@ -208,18 +255,9 @@ and cadastral units"
                                                                     :db/id])
                                                       (modification-meta user))]})
                    [:tempids])
-      (db-api/fail! {:status 400
-                     :error  :bad-request}))))
+      (db-api/bad-request! "Not a valid activity"))))
 
-(defn- task-project-id [db task-id]
-  (ffirst
-   (d/q '[:find ?project
-          :in $ ?t
-          :where
-          [?activity :activity/tasks ?t]
-          [?lifecycle :thk.lifecycle/activities ?activity]
-          [?project :thk.project/lifecycles ?lifecycle]]
-        db task-id)))
+
 
 (defcommand :project/update-task
   {:doc "Update basic task information for existing task."
@@ -233,24 +271,28 @@ and cadastral units"
                      (modification-meta user))]})  ; tx data
 
 
-(defmethod db-api/command! :project/add-task-to-activity [{conn :conn
-                                                           user :user} {activity-id :activity-id
-                                                                        task        :task :as payload}]
-  (log/info "PAYLOAD: " payload)
-  (select-keys (d/transact conn {:tx-data [(merge {:db/id          activity-id
-                                                   :activity/tasks [task]}
-                                                  (creation-meta user))]}) [:tempids]))
+(defcommand :project/add-task-to-activity
+  {:doc "Add task to activity"
+   :context {:keys [db conn user]}
+   :payload {activity-id :activity-id
+             task        :task :as payload}
+   :project-id (activity-project-id db activity-id)
+   :authorization {:task/create-task {}
+                   :activity/edit-activity {:db/id activity-id}}
+   :transact [(merge {:db/id          activity-id
+                      :activity/tasks [task]}
+                     (creation-meta user))]})
 
-(defmethod db-api/command! :project/comment-task [{conn :conn
-                                                   user :user}
-                                                  {task-id :task-id
-                                                   comment :comment}]
-  (log/info "USER: " user)
-  (select-keys
-    (d/transact conn {:tx-data [{:db/id         task-id
-                                 :task/comments [(merge {:db/id             "comment"
-                                                         :comment/comment   comment
-                                                         :comment/timestamp (Date.)
-                                                         :comment/author    [:user/id (:user/id user)]}
-                                                        (creation-meta user))]}]})
-    [:tempids]))
+(defcommand :project/comment-task
+  {:doc "Comment on a task"
+   :context {:keys [db user]}
+   :payload {task-id :task-id
+             comment :comment}
+   :authorization {:task/comment-task {:db/id task-id}}
+   :project-id (task-project-id db task-id)
+   :transact [{:db/id         task-id
+               :task/comments [(merge {:db/id             "comment"
+                                       :comment/comment   comment
+                                       :comment/timestamp (Date.)
+                                       :comment/author    [:user/id (:user/id user)]}
+                                      (creation-meta user))]}]})
