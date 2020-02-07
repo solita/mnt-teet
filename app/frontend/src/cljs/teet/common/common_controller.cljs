@@ -313,7 +313,7 @@
                     %))
           (.then (fn [text-or-appstate]
                    (if (map? text-or-appstate)
-                     text-or-appstate                     
+                     text-or-appstate
                      (let [data (transit/transit->clj text-or-appstate)]
                        (if result-path
                          (e! (->RPCResponse result-path data))
@@ -414,3 +414,9 @@
 (defn when-feature [feature component]
   (when (feature-enabled? feature)
     component))
+
+(defmethod on-server-error :bad-request [err app]
+  (let [error (-> err ex-data :error)]
+    ;; General error handler for when the client sends faulty data.
+    ;; Commands can fail requests with :error :bad-request to trigger this
+    (t/fx (snackbar-controller/open-snack-bar app (tr [:error error]) :warning))))
