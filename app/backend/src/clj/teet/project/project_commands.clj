@@ -108,24 +108,24 @@
     {:tx-data [(deletion-tx user activity-id)]})
   :ok)
 
+(defn permission-project-id [db permission-id]
+  ;; PENDING: currently permissions have one project
+  (ffirst
+   (d/q '[:find ?project
+          :in $ ?permission
+          :where [?permission :permission/projects ?project]]
+        db permission-id)))
 
-(defmethod db-api/command! :project/revoke-permission
-  [{conn :conn
-    user :user}
-   {permission-id :permission-id}]
-
-  :ok)
-
-#_(defcommand :project/revoke-permission
+(defcommand :project/revoke-permission
   ;; Options
-  {:context {:keys [user conn]} ; bindings from ctx map
-   :payload {:keys [permission-id project-id]} ; bindings from payload
-   :project-id project-id
-   :authorization {:project/edit-permissions {:project-id project-id}}}
-  (d/transact conn
-              {:tx-data [(merge {:db/id permission-id
-                                 :permission/valid-until (Date.)}
-                                (modification-meta user))]}))
+  {:doc "Revoke a permission by setting its validity to end now."
+   :context {:keys [user db]} ; bindings from ctx map
+   :payload {:keys [permission-id]} ; bindings from payload
+   :project-id (permission-project-id db permission-id)
+   :authorization {:project/edit-permissions {:link :thk.project/owner}}
+   :transact [(merge {:db/id permission-id
+                      :permission/valid-until (Date.)}
+                     (modification-meta user))]})
 
 (defmethod db-api/command! :project/add-permission
   [{conn :conn
@@ -183,11 +183,12 @@
         db task-id)))
 
 (defcommand :project/update-task
-  {:context {:keys [user db]} ; bindings from context
+  {:doc "Update basic task information for existing task."
+   :context {:keys [user db]} ; bindings from context
    :payload {id :db/id :as task} ; bindings from payload
    :project-id (task-project-id db id)
-   :authorization {:task/edit-task {:permission :full
-                                    :db/id id}}  ; auth checks
+   :authorization {:task/edit-task {:db/id id
+                                    :link :task/assignee}}  ; auth checks
    :transact [(merge (select-keys task
                                   [:db/id :task/name :task/description :task/status :task/assignee])
                      (modification-meta user))]})  ; tx data
