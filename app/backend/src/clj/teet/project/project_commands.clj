@@ -145,8 +145,7 @@
 
 (defn valid-activity-name?
   "Check if the activity name is valid for the lifecycle it's being added to"
-  [db {lifecycle-id  :lifecycle-id
-       activity-name :activity/name}]
+  [db {activity-name :activity/name} lifecycle-id]
   (boolean
     (seq
       (d/q '[:find ?lc
@@ -160,32 +159,44 @@
 
 (defmethod db-api/command! :project/create-activity [{conn :conn
                                                       user :user}
-                                                     activity]
+                                                     {activity :activity
+                                                      lifecycle-id :lifecycle-id}]
   (log/info "ACTIVITY: " activity)
-  (let [lifecycle-dbid (:lifecycle-id activity)]
-    (if (valid-activity-name? (d/db conn) activity)
-      (select-keys
-        (d/transact
-          conn
-          {:tx-data [(merge
-                       {:db/id "new-activity"}
-                       (select-keys activity [:activity/name :activity/status
-                                              :activity/estimated-start-date
-                                              :activity/estimated-end-date])
-                       (creation-meta user))
-                     {:db/id                    lifecycle-dbid
-                      :thk.lifecycle/activities ["new-activity"]}]})
-        [:tempids])
-      (db-api/fail! {:status 400
-                     :error  :bad-request}))))
-
-(defmethod db-api/command! :project/update-activity [{conn :conn
-                                                      user :user} activity]
-  (if (valid-activity-name? (d/db conn) activity)
-    (select-keys (d/transact conn {:tx-data [(merge activity (modification-meta user))]})
-                 [:tempids])
+  (if (valid-activity-name? (d/db conn) activity lifecycle-id)
+    (select-keys
+      (d/transact
+        conn
+        {:tx-data [(merge
+                     {:db/id "new-activity"}
+                     (select-keys activity [:activity/name :activity/status
+                                            :activity/estimated-start-date
+                                            :activity/estimated-end-date])
+                     (creation-meta user))
+                   {:db/id                    lifecycle-id
+                    :thk.lifecycle/activities ["new-activity"]}]})
+      [:tempids])
     (db-api/fail! {:status 400
                    :error  :bad-request})))
+
+(defmethod db-api/command! :project/update-activity [{conn :conn
+                                                      user :user}
+                                                     activity]
+  (let [db (d/db conn)
+        lifecycle-id (ffirst (d/q '[:find ?lc
+                                    :in $ ?act
+                                    :where [?lc :thk.lifecycle/activities ?act]]
+                                  db
+                                  (:db/id activity)))]
+    (if (valid-activity-name? db activity lifecycle-id)
+      (select-keys (d/transact conn {:tx-data [(merge (select-keys activity
+                                                                   [:activity/name :activity/status
+                                                                    :activity/estimated-start-date
+                                                                    :activity/estimated-end-date
+                                                                    :db/id])
+                                                      (modification-meta user))]})
+                   [:tempids])
+      (db-api/fail! {:status 400
+                     :error  :bad-request}))))
 
 (defmethod db-api/command! :project/update-task [{conn :conn
                                                   user :user} task]
