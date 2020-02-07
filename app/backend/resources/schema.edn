@@ -589,4 +589,21 @@
   :txes [[{:db/ident :thk.project/repair-method
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
-           :db/doc "Project repair method as shown in THK csv."}]]}]
+           :db/doc "Project repair method as shown in THK csv."}]]}
+
+ {:db/ident :migration/activity-name-addition
+  :txes [[{:db/ident :activity.name/design-requirements
+           :enum/attribute :activity/name
+           :enum/valid-for :thk.lifecycle-type/design}
+          {:db/ident :activity.name/pre-design
+           :enum/attribute :activity/name
+           :enum/valid-for :thk.lifecycle-type/design}
+          {:db/ident :activity.name/preliminary-design
+           :enum/attribute :activity/name
+           :enum/valid-for :thk.lifecycle-type/design}
+          {:db/ident :activity.name/detailed-design
+           :enum/attribute :activity/name
+           :enum/valid-for :thk.lifecycle-type/design}
+          {:db/ident :activity.name/land-acquisition
+           :enum/attribute :activity/name
+           :enum/valid-for :thk.lifecycle-type/design}]]}]

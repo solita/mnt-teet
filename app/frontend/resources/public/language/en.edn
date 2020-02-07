@@ -68,6 +68,7 @@
   :task.type/eia-pre-assessment "EIA pre-assessment",
   :activity.status/valid "Valid",
   :task.type/topogeodesy "Topogeodesy",
+  :activity.name/design-requirements "Design requirements",
   :document.sub-category/photo "Photo",
   :thk.lifecycle-type/construction "Construction",
   :document.sub-category/drawing "Drawing",
@@ -99,6 +100,8 @@
  {:permission-already-granted
   "Permission for this user is already granted",
   :authorization-failure "Session expired. Please login again.",
+  :request-timeout "The server did not respond.",
+  :bad-request "Bad request",
   :server-error "Server error."},
  :fields
  {:document/status "Status",
@@ -154,7 +157,9 @@
   :remove-from-project "Remove from project",
   :details-view "Details",
   :map-view "Map",
-  :add-activity {:design "Add phase", :construction "Add stage"},
+  :add-activity
+  #:thk.lifecycle-type{:design "Add phase", :construction "Add stage"},
+  :edit-activity "Edit activity",
   :restrictions-tab "Restrictions",
   :activity {:no-tasks "No tasks defined"},
   :edit-project "Edit project",

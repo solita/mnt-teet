@@ -105,7 +105,7 @@
 (defrecord ToggleStepperActivity [activity])
 
 (defrecord PostActivityEditForm [])
-(defrecord OpenEditActivityDialog [activity-id])
+(defrecord OpenEditActivityDialog [activity-id lifecycle-id])
 (defrecord InitializeActivityEditForm [])
 (defrecord ContinueProjectSetup [project-id])
 (defrecord SkipProjectSetup [project-id])
@@ -556,13 +556,15 @@
            :query            (assoc query :edit "project")}))
 
   OpenEditActivityDialog
-  (process-event [{activity-id :activity-id} {:keys [page params query] :as app}]
+  (process-event [{activity-id :activity-id
+                   lifecycle-id :lifecycle-id} {:keys [page params query] :as app}]
     (t/fx app
           {:tuck.effect/type :navigate
            :page             page
            :params           params
            :query            (assoc query :edit "activity"
-                                          :activity activity-id)}))
+                                          :activity activity-id
+                                          :lifecycle lifecycle-id)}))
 
   UpdateActivityState
   (process-event [{activity-id :id status :status} app]
