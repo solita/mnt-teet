@@ -168,11 +168,13 @@
                                                   user :user} task]
   (select-keys (d/transact conn {:tx-data [(merge task (modification-meta user))]}) [:tempids]))
 
-(defmethod db-api/command! :project/add-task-to-activity [{conn :conn} {activity-id :activity-id
+(defmethod db-api/command! :project/add-task-to-activity [{conn :conn
+                                                           user :user} {activity-id :activity-id
                                                                         task        :task :as payload}]
   (log/info "PAYLOAD: " payload)
-  (select-keys (d/transact conn {:tx-data [{:db/id          activity-id
-                                            :activity/tasks [task]}]}) [:tempids]))
+  (select-keys (d/transact conn {:tx-data [(merge {:db/id          activity-id
+                                                   :activity/tasks [task]}
+                                                  (creation-meta user))]}) [:tempids]))
 
 (defmethod db-api/command! :project/comment-task [{conn :conn
                                                    user :user}
@@ -181,8 +183,9 @@
   (log/info "USER: " user)
   (select-keys
     (d/transact conn {:tx-data [{:db/id         task-id
-                                 :task/comments [{:db/id             "comment"
-                                                  :comment/comment   comment
-                                                  :comment/timestamp (Date.)
-                                                  :comment/author    [:user/id (:user/id user)]}]}]})
+                                 :task/comments [(merge {:db/id             "comment"
+                                                         :comment/comment   comment
+                                                         :comment/timestamp (Date.)
+                                                         :comment/author    [:user/id (:user/id user)]}
+                                                        (creation-meta user))]}]})
     [:tempids]))
