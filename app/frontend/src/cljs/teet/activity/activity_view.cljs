@@ -6,7 +6,7 @@
             [teet.ui.form :as form]
             teet.document.document-spec))
 
-(defn activity-form [e! {:keys [close activity save on-change delete]}]
+(defn activity-form [e! {:keys [close activity save on-change delete lifecycle-type]}]
   ;; Activity name (drop-down selector, a predefined list of activities: eskiisprojekt, eelprojekt, põhiprojekt, maade omandamine, ehitus)
   ;; Timeline (EstStart, EstEnd, assumptions entered only)
   ;; Status (drop-down selector, a predefined list of statuses)
@@ -18,7 +18,7 @@
               :delete delete
               :spec :document/new-activity-form}
    ^{:attribute :activity/name}
-   [select/select-enum {:e! e! :attribute :activity/name}]
+   [select/select-enum {:e! e! :attribute :activity/name :enum/valid-for lifecycle-type}]
 
    ^{:attribute :activity/estimated-date-range}
    [date-picker/date-range-input {:start-label (tr [:fields :activity/estimated-start-date]) :end-label (tr [:fields :activity/estimated-end-date])}]
