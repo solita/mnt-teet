@@ -112,8 +112,9 @@
   key to specify the access (eg. :read for read-only).
 
   If command can have access to own items (with :link access type). The :db/id
-  must be specified for the entity. The :meta/creator is checked and compared
-  to the user id.
+  must be specified for the entity. The map may contain :link keyword which
+  specifies which ref attribute is checked against the current user. The link
+  attribute defaults to :meta/creator if omitted.
   "
   [command-name
    {:keys [payload context authorization project-id transact] :as options}
