@@ -12,13 +12,17 @@
             [teet.project.project-specs])
   (:import (java.util Date)))
 
-(defmethod db-api/command! :thk.project/initialize!
-  [{conn :conn
-    user :user}
-   {:thk.project/keys [id owner manager project-name custom-start-m custom-end-m
-                       m-range-change-reason
-                       related-restrictions
-                       related-cadastral-units]}]
+(defcommand :thk.project/initialize!
+  {:doc "Initialize project state. Sets project basic information and linked restrictions
+and cadastral units"
+   :context {conn :conn
+             user :user}
+   :payload {:thk.project/keys [id owner manager project-name custom-start-m custom-end-m
+                                m-range-change-reason
+                                related-restrictions
+                                related-cadastral-units]}
+   :project-id [:thk.project/id id]
+   :authorization {:project/project-setup {:link :thk.project/owner}}}
   (let [project-in-datomic (d/pull (d/db conn)
                                    [:thk.project/owner :thk.project/estimated-start-date :thk.project/estimated-end-date]
                                    [:thk.project/id id])]
@@ -56,16 +60,16 @@
                   [:thk.project/id id])]))))
   :ok)
 
-(defmethod db-api/command! :project/skip-project-setup
-  [{conn :conn
-    user :user}
-   {project-id :thk.project/id}]
-  (d/transact
-    conn
-    {:tx-data [(merge {:thk.project/id             project-id
-                       :thk.project/setup-skipped? true}
-                      (modification-meta user))]})
-  :ok)
+(defcommand :project/skip-project-setup
+  {:doc "Mark project setup as skipped"
+   :context {conn :conn
+             user :user}
+   :payload {project-id :thk.project/id}
+   :project-id [:thk.project/id project-id]
+   :authorization {:project/project-setup {:link :thk.project/owner}}
+   :transact [(merge {:thk.project/id project-id
+                      :thk.project/setup-skipped? true}
+                     (modification-meta user))]})
 
 
 (defmethod db-api/command! :thk.project/edit-project
