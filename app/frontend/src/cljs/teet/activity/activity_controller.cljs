@@ -32,7 +32,7 @@
                       (assoc :activity/estimated-end-date end))]
       (t/fx app
             {:tuck.effect/type :command!
-             :command          :project/update-activity
+             :command          :activity/update
              :payload          payload
              :success-message  (tr [:notifications :activity-updated])
              :result-event     ->SaveEditResult})))
@@ -57,7 +57,7 @@
                       (assoc :activity/estimated-end-date end))]
       (t/fx app
             {:tuck.effect/type :command!
-             :command          :project/create-activity
+             :command          :activity/create
              :payload          {:lifecycle-id (goog.math.Long/fromString lifecycle-id)
                                 :activity activity}
              :result-event     ->CreateActivityResult})))

@@ -5,9 +5,9 @@
 
 (s/def :activity/activity (s/keys))
 
-(s/def :project/update-activity (s/keys :req [:activity/status]))
+(s/def :activity/update (s/keys :req [:activity/status]))
 
-(s/def :project/create-activity
+(s/def :activity/create
   (s/keys :req [:activity/name :activity/status
                 :activity/estimated-start-date
                 :activity/estimated-end-date]))

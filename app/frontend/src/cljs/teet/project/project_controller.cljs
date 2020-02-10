@@ -280,7 +280,7 @@
   (process-event [{activity-id :activity-id} app]
     (t/fx app
           {:tuck.effect/type :command!
-           :command          :project/delete-activity
+           :command          :activity/delete
            :success-message  (tr [:notifications :activity-deleted])
            :payload          {:db/id (goog.math.Long/fromString activity-id)}
            :result-event     ->DeleteActivityResult}))
@@ -533,7 +533,7 @@
              :query            (dissoc query :edit)
              :params           params}
             {:tuck.effect/type :command!
-             :command          :project/update-activity
+             :command          :activity/update
              :payload          activity-data
              :result-event     common-controller/->Refresh})))
 
@@ -570,7 +570,7 @@
   (process-event [{activity-id :id status :status} app]
     (t/fx app
           {:tuck.effect/type :command!
-           :command          :project/update-activity
+           :command          :activity/update
            :payload          {:db/id           activity-id
                               :activity/status status}
            :result-event     common-controller/->Refresh
