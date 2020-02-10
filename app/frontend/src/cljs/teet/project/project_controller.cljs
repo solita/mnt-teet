@@ -304,7 +304,7 @@
           {:thk.project/keys [project-name owner manager]}
           (get-in app [:route :project :basic-information-form])]
       (t/fx app {:tuck.effect/type :command!
-                 :command          :thk.project/edit-project
+                 :command          :thk.project/edit
                  :payload          {:thk.project/id           id
                                     :thk.project/owner        owner
                                     :thk.project/manager      manager
@@ -478,7 +478,7 @@
     (let [participant (:project/participant form-data)]
       (t/fx app
             {:tuck.effect/type :command!
-             :command          :project/add-permission
+             :command          :thk.project/add-permission
              :payload          {:project-id  project-id
                                 :user participant}
              :success-message  (tr [:notifications :permission-added-successfully])
@@ -488,7 +488,7 @@
   (process-event [{permission-id :permission-id} app]
     (t/fx app
           {:tuck.effect/type :command!
-           :command          :project/revoke-permission
+           :command          :thk.project/revoke-permission
            :payload          {:permission-id permission-id}
            :success-message  (tr [:notifications :permission-revoked])
            :result-event     ->RevokeProjectPermissionSuccess}))

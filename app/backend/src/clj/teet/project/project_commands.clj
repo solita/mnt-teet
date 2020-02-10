@@ -73,7 +73,7 @@ and cadastral units"
                       :thk.project/setup-skipped? true}
                      (modification-meta user))]})
 
-(defcommand :thk.project/edit-project
+(defcommand :thk.project/edit
   {:doc "Edit project basic info"
    :context {conn :conn
              user :user}
@@ -98,7 +98,7 @@ and cadastral units"
                       :thk.project/setup-skipped? false}
                      (modification-meta user))]})
 
-(defcommand :project/revoke-permission
+(defcommand :thk.project/revoke-permission
   ;; Options
   {:doc "Revoke a permission by setting its validity to end now."
    :context {:keys [user db]} ; bindings from ctx map
@@ -109,7 +109,7 @@ and cadastral units"
                       :permission/valid-until (Date.)}
                      (modification-meta user))]})
 
-(defcommand :project/add-permission
+(defcommand :thk.project/add-permission
   {:doc "Add permission to project"
    :context {:keys [conn user db]}
    :payload {project-id :project-id
