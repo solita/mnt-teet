@@ -304,7 +304,7 @@
           {:thk.project/keys [project-name owner manager]}
           (get-in app [:route :project :basic-information-form])]
       (t/fx app {:tuck.effect/type :command!
-                 :command          :thk.project/edit
+                 :command          :thk.project/update
                  :payload          {:thk.project/id           id
                                     :thk.project/owner        owner
                                     :thk.project/manager      manager

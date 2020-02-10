@@ -73,7 +73,7 @@ and cadastral units"
                       :thk.project/setup-skipped? true}
                      (modification-meta user))]})
 
-(defcommand :thk.project/edit
+(defcommand :thk.project/update
   {:doc "Edit project basic info"
    :context {conn :conn
              user :user}
