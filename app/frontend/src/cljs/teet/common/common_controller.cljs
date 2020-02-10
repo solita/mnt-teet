@@ -238,7 +238,7 @@
     (js/Promise. (fn [_ reject]
                    (js/setTimeout (fn []
                                     (reject (ex-info "Server timeout"
-                                                     {:error :timeout})))
+                                                     {:error :request-timeout})))
                                   timeout-ms)))]))
 
 (def ^:private fetch-timeout-ms 30000)
