@@ -16,5 +16,5 @@ then
 fi
 
 echo "{\"commit\":\"$COMMIT\",\"status\":\"$1\",\"timestamp\":\"`date`\"}" > deploy.json
-aws s3 cp deploy.json s3://$PUBLICDIR
+aws s3 cp deploy.json s3://$PUBLICDIR/js/deploy.json
 rm deploy.json
