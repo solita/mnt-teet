@@ -254,7 +254,7 @@
   (process-event [{project-id :project-id} app]
     (t/fx app
           {:tuck.effect/type :command!
-           :command          :project/continue-project-setup
+           :command          :thk.project/continue-setup
            :payload          {:thk.project/id project-id}
            :result-event     common-controller/->Refresh}))
 

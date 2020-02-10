@@ -5,4 +5,4 @@
 
 (s/def :project/skip-project-setup (s/keys :req [:thk.project/id]))
 
-(s/def :project/continue-project-setup (s/keys :req [:thk.project/id]))
+(s/def :thk.project/continue-setup (s/keys :req [:thk.project/id]))

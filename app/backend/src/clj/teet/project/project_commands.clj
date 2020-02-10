@@ -88,7 +88,7 @@ and cadastral units"
                      (modification-meta user))]})
 
 
-(defcommand :project/continue-project-setup
+(defcommand :thk.project/continue-setup
   {:doc "Undo project setup skip"
    :context {conn :conn
              user :user}
