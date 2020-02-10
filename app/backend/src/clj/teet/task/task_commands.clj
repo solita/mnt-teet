@@ -22,3 +22,15 @@
    :transact [(merge (select-keys task
                                   [:db/id :task/name :task/description :task/status :task/assignee])
                      (meta-model/modification-meta user))]})
+
+(defcommand :task/create
+  {:doc "Add task to activity"
+   :context {:keys [db conn user]}
+   :payload {activity-id :activity-id
+             task        :task :as payload}
+   :project-id (project-db/activity-project-id db activity-id)
+   :authorization {:task/create-task {}
+                   :activity/edit-activity {:db/id activity-id}}
+   :transact [(merge {:db/id          activity-id
+                      :activity/tasks [task]}
+                     (meta-model/creation-meta user))]})

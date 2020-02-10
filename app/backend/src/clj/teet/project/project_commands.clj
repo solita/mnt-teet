@@ -208,16 +208,3 @@ and cadastral units"
                                                       (modification-meta user))]})
                    [:tempids])
       (db-api/bad-request! "Not a valid activity"))))
-
-
-(defcommand :project/add-task-to-activity ;; :task/create
-  {:doc "Add task to activity"
-   :context {:keys [db conn user]}
-   :payload {activity-id :activity-id
-             task        :task :as payload}
-   :project-id (project-db/activity-project-id db activity-id)
-   :authorization {:task/create-task {}
-                   :activity/edit-activity {:db/id activity-id}}
-   :transact [(merge {:db/id          activity-id
-                      :activity/tasks [task]}
-                     (creation-meta user))]})
