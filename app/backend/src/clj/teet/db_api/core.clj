@@ -1,5 +1,11 @@
 (ns teet.db-api.core
-  "TEET database API multimethods")
+  "TEET database API multimethods"
+  (:require [teet.authorization.authorization-check :as authorization-check]
+            [teet.permission.permission-db :as permission-db]
+            [datomic.client.api :as d]
+            [teet.util.collection :as cu]
+            [teet.meta.meta-query :as meta-query]
+            [teet.log :as log]))
 
 (defmulti query-authorization
   "Check authorization for query. Should throw exception on authorization failure.
@@ -62,13 +68,116 @@
   "
   (fn [ctx _] (:command/name ctx)))
 
-(defmacro fail!
+(defn fail!
   "Throws ex-info of failed request. `error-map` may contain
   `:msg` exception message, default \"Request failed\"
   `:error` exception error keyword
   `:status` response status code, default 500"
   [error-map]
-  `(let [em# (merge {:msg "Request failed"
-                     :status 500}
-                    ~error-map)]
-     (throw (ex-info (:msg em#) (dissoc em# :msg)))))
+  (let [em (merge {:msg "Request failed"
+                   :status 500}
+                  error-map)]
+    (throw (ex-info (:msg em) (dissoc em :msg)))))
+
+(defn bad-request! [msg]
+  (fail! {:status 400
+          :error :bad-request
+          :msg msg}))
+
+
+(defmacro defcommand
+  "Define a command.
+
+
+  Arguments:
+  command-name   The namespaced keyword name of the command.
+  options        Map of options (see below).
+  body           Code that implements the command.
+
+  Options:
+  :doc            Docstring for the command
+  :payload        Required binding form for command payload data
+  :context        Optional binding form for the execution context
+                  that always includes: db, user and conn.
+  :authorization  Required map of authorization rules to check (see below)
+  :project-id     Required form to determine the project for which
+                  user permissions are checked. May use the bindings
+                  from payload or context.
+  :transact       Optional form that generates data to transact to
+                  Datomic. If specified, body must be omitted.
+                  The command will automatically return the tempids
+                  as the result when transact is used.
+
+
+  Authorization rules:
+  Each authorization rule key defines a rule that is in the authorization matrix.
+  The value of the rule is an options map that defines the :db/id of entity that
+  will be checked of ownership if the authorization matrix requires it.
+
+  By default the permission requires :full access. To override use :permission
+  key to specify the access (eg. :read for read-only).
+
+  If command can have access to own items (with :link access type). The :db/id
+  must be specified for the entity. The map may contain :link keyword which
+  specifies which ref attribute is checked against the current user. The link
+  attribute defaults to :meta/creator if omitted.
+  "
+  [command-name
+   {:keys [payload context authorization project-id transact] :as options}
+   & body]
+  (assert (string? (:doc options)) "Specify :doc for command!")
+  (assert (and (keyword? command-name)
+               (some? (namespace command-name)))
+          "Command name must be a namespaced keyword")
+  (assert (map? options) "Options must be a map")
+  (assert (map? authorization) "Authorization option must be a map")
+  (let [authz-rule-names (authorization-check/authorization-rule-names)]
+    (doseq [[k _] authorization]
+      (assert (authz-rule-names k)
+              (str "Unknown authorization rule: " k))))
+  (assert (contains? options :project-id) "Specify project id. Use nil to skip project specific roles.")
+  (assert (or (and (seq body)
+                   (nil? transact))
+              (and (some? transact)
+                   (empty? body)))
+          "Specify :transact that yields tx data or body, not both.")
+
+  (let [-ctx (gensym "CTX")
+        -payload (gensym "PAYLOAD")
+        -perms (gensym "PERMISSIONS")
+        -db (gensym "DB")
+        -user (gensym "USER")
+        -proj-id (gensym "PID")]
+    `(defmethod teet.db-api.core/command! ~command-name [~-ctx ~-payload]
+       (let [~(or context -ctx) ~-ctx
+             ~(or payload -payload) ~-payload
+             ~-db (d/db (:conn ~-ctx))
+             ~-user (:user ~-ctx)
+             ~-perms (when (:user ~-ctx)
+                       (permission-db/user-permissions ~-db [:user/id (:user/id (:user ~-ctx))]))
+             ~-proj-id ~project-id]
+
+         ;; Go through the declared authorization requirements
+         ;; and try to find user permissions that satisfy them
+         (when-not (every? (fn [[functionality# {entity-id# :db/id
+                                                 access# :access
+                                                 link# :link
+                                                 :as options#}]]
+                             (authorization-check/authorized?
+                              ~-user functionality#
+                              {:access access#
+                               :project-id ~-proj-id
+                               :entity (when entity-id#
+                                         (apply meta-query/entity-meta ~-db entity-id#
+                                                (when link#
+                                                  [link#])))}))
+                           ~authorization)
+           (log/warn "Failed to authorize command " ~command-name " for user " ~-user)
+           (throw (ex-info "Command authorization failed"
+                           {:status 403
+                            :error :command-authorization-failed})))
+
+         ~(if transact
+            `(select-keys (datomic.client.api/transact (:conn ~-ctx) {:tx-data ~transact})
+                          [:tempids])
+            `(do ~@body))))))

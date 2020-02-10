@@ -59,3 +59,20 @@
     ;Walk result tree removing all deleted entities
     (remove-entities-by-ids entities deleted-entity-ids)))
 
+(defn is-creator? [db entity user]
+  (boolean
+   (seq
+    (d/q '[:find ?e
+           :in $ ?e ?user
+           :where [?e :meta/creator ?user]]
+         db entity user))))
+
+(defn entity-meta
+  "Fetch meta fields about creation and modification. Also fetches
+  specified extra attributes."
+  [db entity & extra-attrs]
+  (d/pull db (into [:meta/creator :meta/created-at
+                    :meta/modifier :meta/modified-at
+                    :meta/deleted?]
+                   extra-attrs)
+          entity))

@@ -68,7 +68,7 @@
   (->> sheet-path
        get-authorizations-from-sheet
        pretty-print
-       (spit "resources/authorization.edn")))
+       (spit "../backend/resources/authorization.edn")))
 
 (defn -main [& [sheet-path]]
   (if sheet-path

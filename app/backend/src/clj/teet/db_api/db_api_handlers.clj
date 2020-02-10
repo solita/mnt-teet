@@ -23,7 +23,8 @@
 
             [teet.log :as log]
             [teet.auth.jwt-token :as jwt-token]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.user.user-db :as user-db]))
 
 (defn- jwt-token [req]
   (or
@@ -41,9 +42,12 @@
         (log/with-context
           {:user (str (:user/id user))}
           (let [conn (environment/datomic-connection)
+                db (d/db conn)
                 ctx {:conn conn
-                     :db (d/db conn)
-                     :user user
+                     :db db
+                     :user (merge user
+                                  (when-let [user-id (:user/id user)]
+                                    (user-db/user-info db user-id)))
                      :session (:session req)}
                 request-payload (transit/transit-request req)
                 response (handler-fn ctx request-payload)]

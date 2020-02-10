@@ -50,6 +50,7 @@
   :guest :read},
  :project/edit-project-info {:admin :full, :manager :full},
  :asset/edit-asset {:admin :full, :manager :full},
+ :project/edit-permissions {:manager :full},
  :project/project-setup {:admin :full, :manager :full},
  :task/comment-task
  {:admin :full,
@@ -61,9 +62,9 @@
  {:admin :full,
   :manager :full,
   :internal-consultant :full,
-  :external-consultant :link,
-  :authenticated-guest :read,
-  :guest :read},
+  :external-consultant :full,
+  :authenticated-guest :full,
+  :guest :full},
  :task/create-task {:admin :full, :manager :full},
  :activity/activity-budget
  {:admin :full,
@@ -96,7 +97,11 @@
   :manager :full,
   :internal-consultant :read,
   :external-consultant :read},
- :task/edit-task {:admin :full, :manager :full},
+ :task/edit-task
+ {:admin :full,
+  :manager :full,
+  :internal-consultant :link,
+  :external-consultant :link},
  :land/write-comments
  {:admin :full,
   :manager :full,
@@ -130,8 +135,8 @@
  :task/change-task-status
  {:admin :full,
   :manager :full,
-  :internal-consultant :read,
-  :external-consultant :read},
+  :internal-consultant :link,
+  :external-consultant :link},
  :asset/read-asset
  {:admin :full,
   :manager :full,
