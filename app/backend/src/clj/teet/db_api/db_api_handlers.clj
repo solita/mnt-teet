@@ -20,6 +20,7 @@
             teet.project.project-commands
             teet.road.road-query-queries
             teet.system.system-queries
+            teet.task.task-commands
 
             [teet.log :as log]
             [teet.auth.jwt-token :as jwt-token]

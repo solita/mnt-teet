@@ -98,14 +98,6 @@ and cadastral units"
                       :thk.project/setup-skipped? false}
                      (modification-meta user))]})
 
-(defcommand :project/delete-task
-  {:doc "Mark a task as deleted"
-   :context {db :db
-             user :user}
-   :payload {task-id :db/id}
-   :project-id (project-db/task-project-id db task-id)
-   :authorization {} ;; FIXME: :task/delete
-   :transact [(deletion-tx user task-id)]})
 
 (defcommand :project/delete-activity ;; FIXME: :activity/delete
   {:doc "Mark an activity as deleted"
@@ -216,19 +208,6 @@ and cadastral units"
                                                       (modification-meta user))]})
                    [:tempids])
       (db-api/bad-request! "Not a valid activity"))))
-
-
-
-(defcommand :project/update-task ;; FIXME: :task/update
-  {:doc "Update basic task information for existing task."
-   :context {:keys [user db]} ; bindings from context
-   :payload {id :db/id :as task} ; bindings from payload
-   :project-id (project-db/task-project-id db id)
-   :authorization {:task/edit-task {:db/id id
-                                    :link :task/assignee}}  ; auth checks
-   :transact [(merge (select-keys task
-                                  [:db/id :task/name :task/description :task/status :task/assignee])
-                     (modification-meta user))]})  ; tx data
 
 
 (defcommand :project/add-task-to-activity ;; :task/create
