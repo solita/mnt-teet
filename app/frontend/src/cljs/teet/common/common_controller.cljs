@@ -329,6 +329,37 @@
                        (e! (->RPCResponse result-path data))
                        (e! (result-event data))))))))))
 
+(defn- check-if-deploying
+  "Checks if a new version of the app is currently being deployed by
+  requesting the `js/deploy.json` file and checking the `status` of
+  the JSON response. Returns a boolean promise."
+  []
+  (-> (fetch-or-timeout "js/deploy.json"
+                        (clj->js {"Content-Type" "application/json"
+                                  "Accept" "application/json"})
+                        10000)
+      (.then #(.json %))
+      (.then (fn [json-response]
+               (let [{:strs [status]} (js->clj json-response)]
+                 (js/Promise.resolve (= status "deploying")))))))
+
+;; Check deploy status, show corresponding snackbar message
+(defmethod tuck-effect/process-effect :deploy-status [e! {:keys [result-event]}]
+  (-> (check-if-deploying)
+      (.then #(e! (result-event %)))))
+
+(defrecord DeployStatusResponse [deploying?]
+  t/Event
+  (process-event [{:keys [deploying?]} app]
+    (if deploying?
+      ;; TODO: meaningful message
+      (snackbar-controller/open-snack-bar app "It's-a me, deploy!" #_(tr [:error error]) :warning)
+      (snackbar-controller/open-snack-bar app (tr [:error :request-timeout]) :error))))
+
+(defmethod on-server-error :request-timeout [_ app]
+  (t/fx app {:tuck.effect/type :deploy-status
+             :result-event ->DeployStatusResponse}))
+
 (defn query-url
   "Generate an URL to a query with the given args. This is useful for queries
   that return raw ring responses that the browser can load directly (eg. link href).

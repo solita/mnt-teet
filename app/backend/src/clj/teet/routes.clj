@@ -34,6 +34,13 @@
             {:status 500
              :headers {"Content-Type" "application/json"}
              :body (cheshire/encode {:success "not"})})
+      ;; Simulates the JSON file written by the deploy script
+      (GET "/js/deploy.json" req
+           {:status 200
+            :headers {"Content-Type" "application/json"}
+            :body (cheshire/encode {:commit "the-commit-sha"
+                                    :status "deploying"
+                                    :timestamp "Mon Feb 10 13:51:35 UTC 2020"})})
       (files "/" {:root "../frontend/target/public"})
       (files "/" {:root "../frontend/resources/public"}))
 
