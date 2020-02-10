@@ -81,8 +81,15 @@
     part-geometry :geometry
     :as road-part} start-m end-m]
 
-  (when (or (<= part-start-m start-m part-end-m)
-            (<= part-start-m end-m part-end-m))
+  (cond
+    ;; The whole part is included, return geometry as is
+    (and (<= start-m part-start-m)
+         (>= end-m part-end-m))
+    part-geometry
+
+    ;; The wanted range starts or ends in this part
+    (or (<= part-start-m start-m part-end-m)
+        (<= part-start-m end-m part-end-m))
     (let [length-factor (/ (geo/line-string-length part-geometry)
                            (- part-end-m part-start-m))
           start-m (+ part-start-m

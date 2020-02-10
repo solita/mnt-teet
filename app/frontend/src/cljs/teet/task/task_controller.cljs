@@ -54,7 +54,7 @@
   (process-event [{task-id :task-id} app]
     (t/fx app
           {:tuck.effect/type :command!
-           :command          :project/delete-task
+           :command          :task/delete
            :success-message  (tr [:notifications :task-deleted])
            :payload          {:db/id (goog.math.Long/fromString task-id)}
            :result-event     ->DeleteTaskResult}))
@@ -102,7 +102,7 @@
     (let [{id :db/id} (common-controller/page-state app)]
       (t/fx app
         {:tuck.effect/type :command!
-         :command          :project/update-task
+         :command          :task/update
          :payload          {:db/id id
                             :task/status status}
          :success-message  "Task status update successful"
@@ -117,7 +117,7 @@
     (let [task (:edit-task-data app)]
       (t/fx app
             {:tuck.effect/type :command!
-             :command          :project/update-task
+             :command          :task/update
              :payload          task
              :success-message "Task edited succesfully"
              :result-event     ->TaskEditSuccess})))
@@ -139,7 +139,7 @@
 
       (t/fx (assoc-in app task-path new-task)
             {:tuck.effect/type :command!
-             :command          :project/update-task
+             :command          :task/update
              :payload          (assoc updated-task :db/id id)
              :result-event     ->UpdateTaskResponse})))
 
@@ -159,7 +159,7 @@
           task (get-in app [:route :project :new-task])]
       (t/fx app
             {:tuck.effect/type :command!
-             :command :project/add-task-to-activity
+             :command :task/create
              :payload {:activity-id (goog.math.Long/fromString activity-id)
                        :task (-> task
                                  (update :task/assignee (fn [{id :user/id}] [:user/id id]))

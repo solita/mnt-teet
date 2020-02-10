@@ -1,5 +1,5 @@
 (ns teet.comment.comment-commands
-  (:require [teet.db-api.core :as db-api]
+  (:require [teet.db-api.core :as db-api :refer [defcommand]]
             [datomic.client.api :as d]
             [teet.document.document-storage :as document-storage]
             teet.document.document-spec

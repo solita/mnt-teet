@@ -15,11 +15,13 @@ phases:
   build:
     commands:
       - export COMMIT=`git rev-parse HEAD`
+      - (cd ci/deploy; bash deploy_json.bash deploying)
       - cd db && bash migrate.bash && cd ..
       - cd ci/deploy
       - bash api.bash
       - bash frontend.bash
       - bash datomic.bash
+      - bash deploy_json.bash deployed
 
 
   post_build:

@@ -10,12 +10,14 @@
       (str/replace #" +" "-")
       keyword))
 
+(def role-count 6)
 (defn- role->column-mapping [sheet]
   (into {}
-        (for [cell (drop 2 ; discard A and B columns
-                         (sheet/cell-seq
-                          ;; Take the 4th row
-                          (nth (sheet/row-seq sheet) 3)))
+        (for [cell (take role-count
+                         (drop 2           ; discard A and B columns
+                               (sheet/cell-seq
+                                ;; Take the 4th row
+                                (nth (sheet/row-seq sheet) 3))))
               :let [role (-> cell sheet/read-cell keywordize)
                     cell-ref (sheet/cell-reference cell)
                     column (subs cell-ref 0 (dec (count cell-ref)))]]

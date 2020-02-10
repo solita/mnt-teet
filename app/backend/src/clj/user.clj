@@ -3,7 +3,8 @@
             [teet.main :as main]
             [teet.environment :as environment]
             [teet.thk.thk-integration-ion :as thk-integration]
-            [clojure.string :as str]))
+            [clojure.string :as str])
+  (:import (java.util Date)))
 
 (defn go []
   (main/restart)
@@ -49,6 +50,24 @@
                   ; :user/organization "Maanteeamet"
                   }])
 
+
+(defn give-admin-permission
+  [user-eid]
+  (tx {:db/id            user-eid
+       :user/permissions [{:db/id                 "new-permission"
+                           :permission/role       :admin
+                           :permission/valid-from (Date.)}]}))
+
+(defn all-permissions
+  []
+  (q '[:find (pull ?e [*])
+       :where [?e :permission/role _]]
+     (db)))
+
+(defn revoke-permission
+  [permission-eid]
+  (tx {:db/id                  permission-eid
+       :permission/valid-until (Date.)}))
 
 (defn query-project
   [project-id]

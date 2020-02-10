@@ -21,5 +21,5 @@ mv js/main.js js/main-$COMMIT.js
 sed -i -e "s/main.js/main-$COMMIT.js/g" index.html
 
 cd ..
-aws s3 rm s3://$PUBLICDIR --recursive
+aws s3 rm s3://$PUBLICDIR --exclude "js/deploy.json" --recursive
 aws s3 sync frontend s3://$PUBLICDIR --acl public-read
