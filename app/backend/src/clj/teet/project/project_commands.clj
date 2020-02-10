@@ -10,7 +10,8 @@
             [teet.util.collection :as cu]
             [teet.meta.meta-model :refer [modification-meta creation-meta deletion-tx]]
             [teet.project.project-specs]
-            [clojure.spec.alpha :as s])
+            [clojure.spec.alpha :as s]
+            [teet.project.project-db :as project-db])
   (:import (java.util Date)))
 
 (defcommand :thk.project/initialize!
@@ -61,7 +62,7 @@ and cadastral units"
                    [:thk.project/id id])]))))
   :ok)
 
-(defcommand :project/skip-project-setup
+(defcommand :thk.project/skip-setup
   {:doc "Mark project setup as skipped"
    :context {conn :conn
              user :user}
@@ -71,7 +72,6 @@ and cadastral units"
    :transact [(merge {:thk.project/id project-id
                       :thk.project/setup-skipped? true}
                      (modification-meta user))]})
-
 
 (defcommand :thk.project/edit-project
   {:doc "Edit project basic info"
@@ -87,7 +87,6 @@ and cadastral units"
                                                     :thk.project/project-name]))
                      (modification-meta user))]})
 
-
 (defcommand :thk.project/continue-setup
   {:doc "Undo project setup skip"
    :context {conn :conn
@@ -99,61 +98,30 @@ and cadastral units"
                       :thk.project/setup-skipped? false}
                      (modification-meta user))]})
 
-(defn- task-project-id [db task-id]
-  (or (ffirst
-       (d/q '[:find ?project
-              :in $ ?t
-              :where
-              [?activity :activity/tasks ?t]
-              [?lifecycle :thk.lifecycle/activities ?activity]
-              [?project :thk.project/lifecycles ?lifecycle]]
-            db task-id))
-      (db-api/bad-request! "No such task")))
-
 (defcommand :project/delete-task
   {:doc "Mark a task as deleted"
    :context {db :db
              user :user}
    :payload {task-id :db/id}
-   :project-id (task-project-id db task-id)
-   :authorization {}
+   :project-id (project-db/task-project-id db task-id)
+   :authorization {} ;; FIXME: :task/delete
    :transact [(deletion-tx user task-id)]})
 
-(defn activity-project-id [db activity-id]
-  (or (ffirst
-       (d/q '[:find ?project
-              :in $ ?activity
-              :where
-              [?lifecycle :thk.lifecycle/activities ?activity]
-              [?project :thk.project/lifecycles ?lifecycle]]
-            db activity-id))
-      (db-api/bad-request! "No such activity")))
-
-(defcommand :project/delete-activity
+(defcommand :project/delete-activity ;; FIXME: :activity/delete
   {:doc "Mark an activity as deleted"
    :context {db :db
              user :user}
    :payload {activity-id :db/id}
-   :project-id (activity-project-id db activity-id)
+   :project-id (project-db/activity-project-id db activity-id)
    :authorization {:activity/delete-activity {}}
    :transact [(deletion-tx user activity-id)]})
-
-
-(defn permission-project-id [db permission-id]
-  ;; PENDING: currently permissions have one project
-  (or (ffirst
-       (d/q '[:find ?project
-              :in $ ?permission
-              :where [?permission :permission/projects ?project]]
-            db permission-id))
-      (db-api/bad-request! "No such permission")))
 
 (defcommand :project/revoke-permission
   ;; Options
   {:doc "Revoke a permission by setting its validity to end now."
    :context {:keys [user db]} ; bindings from ctx map
    :payload {:keys [permission-id]} ; bindings from payload
-   :project-id (permission-project-id db permission-id)
+   :project-id (project-db/permission-project-id db permission-id)
    :authorization {:project/edit-permissions {:link :thk.project/owner}}
    :transact [(merge {:db/id permission-id
                       :permission/valid-until (Date.)}
@@ -202,21 +170,13 @@ and cadastral units"
            lifecycle-id
            activity-name))))
 
-(defn lifecycle-project-id [db lifecycle-id]
-  (or (ffirst
-       (d/q '[:find ?project
-              :in $ ?lifecycle
-              :where
-              [?project :thk.project/lifecycles ?lifecycle]]
-            db lifecycle-id))
-      (db-api/bad-request! "No such lifecycle")))
 
-(defcommand :project/create-activity
+(defcommand :project/create-activity ;; FIXME: :activity/create
   {:doc "Create new activity to lifecycle"
    :context {:keys [db user conn]}
    :payload {activity :activity
              lifecycle-id :lifecycle-id}
-   :project-id (lifecycle-project-id db lifecycle-id)
+   :project-id (project-db/lifecycle-project-id db lifecycle-id)
    :authorization {:activity/create-activity {}}
    ;;:pre [(valid-activity-name? db activity lifecycle-id)]
    }
@@ -236,11 +196,11 @@ and cadastral units"
      [:tempids])
     (db-api/bad-request! "Not a valid activity")))
 
-(defcommand :project/update-activity
+(defcommand :project/update-activity ;; FIXME: :activity/update
   {:doc "Update activity basic info"
    :context {:keys [conn user db]}
    :payload activity
-   :project-id (activity-project-id db (:db/id activity))
+   :project-id (project-db/activity-project-id db (:db/id activity))
    :authorization {:activity/edit-activity {:db/id (:db/id activity)}}}
   (let [lifecycle-id (ffirst (d/q '[:find ?lc
                                     :in $ ?act
@@ -259,11 +219,11 @@ and cadastral units"
 
 
 
-(defcommand :project/update-task
+(defcommand :project/update-task ;; FIXME: :task/update
   {:doc "Update basic task information for existing task."
    :context {:keys [user db]} ; bindings from context
    :payload {id :db/id :as task} ; bindings from payload
-   :project-id (task-project-id db id)
+   :project-id (project-db/task-project-id db id)
    :authorization {:task/edit-task {:db/id id
                                     :link :task/assignee}}  ; auth checks
    :transact [(merge (select-keys task
@@ -271,28 +231,14 @@ and cadastral units"
                      (modification-meta user))]})  ; tx data
 
 
-(defcommand :project/add-task-to-activity
+(defcommand :project/add-task-to-activity ;; :task/create
   {:doc "Add task to activity"
    :context {:keys [db conn user]}
    :payload {activity-id :activity-id
              task        :task :as payload}
-   :project-id (activity-project-id db activity-id)
+   :project-id (project-db/activity-project-id db activity-id)
    :authorization {:task/create-task {}
                    :activity/edit-activity {:db/id activity-id}}
    :transact [(merge {:db/id          activity-id
                       :activity/tasks [task]}
                      (creation-meta user))]})
-
-(defcommand :project/comment-task
-  {:doc "Comment on a task"
-   :context {:keys [db user]}
-   :payload {task-id :task-id
-             comment :comment}
-   :authorization {:task/comment-task {:db/id task-id}}
-   :project-id (task-project-id db task-id)
-   :transact [{:db/id         task-id
-               :task/comments [(merge {:db/id             "comment"
-                                       :comment/comment   comment
-                                       :comment/timestamp (Date.)
-                                       :comment/author    [:user/id (:user/id user)]}
-                                      (creation-meta user))]}]})
