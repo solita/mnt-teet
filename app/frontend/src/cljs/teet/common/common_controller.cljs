@@ -188,7 +188,8 @@
   (fn [err]
     (e! (if error-event
           (error-event err)
-          (->ResponseError err)))))
+          (->ResponseError err)))
+    (.reject js/Promise (new js/Error (str err)))))
 
 (defn headers->map
   "Turn nil, map, js object and js Headers into Clojure map"
@@ -321,17 +322,12 @@
                                 :headers (clj->js
                                           {"Content-Type" "application/json+transit"})
                                 :body payload}))
-          (.then #(if (instance? js/Response %)
-                    (.text %)
-                    ;; can also be appstate map in case of error
-                    %))
-          (.then (fn [text-or-appstate]
-                   (if (map? text-or-appstate)
-                     text-or-appstate
-                     (let [data (transit/transit->clj text-or-appstate)]
-                       (if result-path
-                         (e! (->RPCResponse result-path data))
-                         (e! (result-event data)))))))))))
+          (.then #(.text %))
+          (.then (fn [text]
+                   (let [data (transit/transit->clj text)]
+                     (if result-path
+                       (e! (->RPCResponse result-path data))
+                       (e! (result-event data))))))))))
 
 (defn query-url
   "Generate an URL to a query with the given args. This is useful for queries
@@ -366,19 +362,14 @@
                                {"Content-Type" "application/json+transit"})
                      :body (transit/clj->transit {:command command
                                                   :payload payload})})
-        (.then #(if (instance? js/Response %)
-                  (.text %)
-                  ;; can also be appstate map in case of error
-                  %))
-        (.then (fn [transit-data-or-appstate]
-                 (if (map? transit-data-or-appstate)
-                   transit-data-or-appstate
-                   (let [data (transit/transit->clj transit-data-or-appstate)]
-                     (when success-message
-                       (e! (snackbar-controller/->OpenSnackBar success-message :success)))
-                     (if result-path
-                       (e! (->RPCResponse result-path data))
-                       (e! (result-event data))))))))))
+        (.then #(.text %))
+        (.then (fn [text]
+                 (let [data (transit/transit->clj text)]
+                   (when success-message
+                     (e! (snackbar-controller/->OpenSnackBar success-message :success)))
+                   (if result-path
+                     (e! (->RPCResponse result-path data))
+                     (e! (result-event data)))))))))
 
 (defmethod tuck-effect/process-effect :navigate [_ {:keys [page params query]}]
   (routes/navigate! page params query))
