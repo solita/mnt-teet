@@ -3,7 +3,8 @@
             [teet.meta.meta-model :as meta-model]
             [teet.project.project-db :as project-db]
             [datomic.client.api :as d]
-            [teet.log :as log]))
+            [teet.log :as log])
+  (:import (java.util Date)))
 
 (defn valid-activity-name?
   "Check if the activity name is valid for the lifecycle it's being added to"
@@ -19,6 +20,22 @@
            lifecycle-id
            activity-name))))
 
+(defn conflicting-activites?
+  "Check if the lifecycle contains any activities withe the same name that have not ended yet"
+  [db {activity-name :activity/name :as activity} lifecycle-id]
+  (boolean
+    (seq
+      (mapv first (d/q '[:find (pull ?a [*])
+                         :in $ ?name ?lc ?time
+                         :where
+                         [?a :activity/name ?name]
+                         [?lc :thk.lifecycle/activities ?a]
+                         [(get-else $ ?a :activity/actual-end-date ?time) ?end-date]
+                         [(<= ?end-date ?time)]]
+                    db
+                    activity-name
+                    lifecycle-id
+                    (Date.))))))
 
 (defcommand :activity/create
   {:doc "Create new activity to lifecycle"
@@ -27,14 +44,14 @@
              lifecycle-id :lifecycle-id}
    :project-id (project-db/lifecycle-project-id db lifecycle-id)
    :authorization {:activity/create-activity {}}
-   :pre [(valid-activity-name? db activity lifecycle-id)]
+   :pre [(valid-activity-name? db activity lifecycle-id) (not (conflicting-activites? db activity lifecycle-id))]
    :transact [(merge
-               {:db/id "new-activity"}
-               (select-keys activity [:activity/name :activity/status
-                                      :activity/estimated-start-date
-                                      :activity/estimated-end-date])
-               (meta-model/creation-meta user))
-              {:db/id                    lifecycle-id
+                {:db/id "new-activity"}
+                (select-keys activity [:activity/name :activity/status
+                                       :activity/estimated-start-date
+                                       :activity/estimated-end-date])
+                (meta-model/creation-meta user))
+              {:db/id lifecycle-id
                :thk.lifecycle/activities ["new-activity"]}]})
 
 (defcommand :activity/update
