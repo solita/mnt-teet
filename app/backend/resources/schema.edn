@@ -196,27 +196,29 @@
 
  
  {:db/ident :migration/task-status-enum
-  :txes [[{:db/ident :task.status/not-started ;; obsolete
+  :txes [[{:db/ident :task.status/not-started
            :enum/attribute :task/status}
-          {:db/ident :task.status/in-progress ;; obsolete
+          {:db/ident :task.status/in-progress
            :enum/attribute :task/status}
-          {:db/ident :task.status/completed   ;; obsolete
+          {:db/ident :task.status/completed
            :enum/attribute :task/status}
-          {:db/ident :task.status/accepted    ;; in use as of 2020-02-11
+          {:db/ident :task.status/accepted
            :enum/attribute :task/status}
-          {:db/ident :task.status/rejected    ;; obsolete
+          {:db/ident :task.status/rejected
+           :enum/attribute :task/status}]]}
+
+  {:db/ident :migration/task-status-enum-2
+  :txes [[{:db/ident :task.status/in-preparation
            :enum/attribute :task/status}
-          {:db/ident :task.status/in-preparation ;; in use as of 2020-02-11
+          {:db/ident :task.status/assigned
            :enum/attribute :task/status}
-          {:db/ident :task.status/assigned    ;; in use as of 2020-02-11
+          {:db/ident :task.status/submitted
            :enum/attribute :task/status}
-          {:db/ident :task.status/submitted   ;; in use as of 2020-02-11
+          {:db/ident :task.status/reviewing
            :enum/attribute :task/status}
-          {:db/ident :task.status/reviewing   ;; in use as of 2020-02-11
+          {:db/ident :task.status/adjustment
            :enum/attribute :task/status}
-          {:db/ident :task.status/adjustment  ;; in use as of 2020-02-11
-           :enum/attribute :task/status}
-          {:db/ident :task.status/canceled    ;; in use as of 2020-02-11
+          {:db/ident :task.status/canceled
            :enum/attribute :task/status}]]}
 
  {:db/ident :migration/task-modified
