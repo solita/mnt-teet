@@ -2,8 +2,7 @@
   (:require [clojure.java.io :as io]
             [clojure.edn :as edn]
             [clojure.pprint :as pp]
-            [dk.ative.docjure.spreadsheet :as sheet]
-            [teet.log :as log]))
+            [dk.ative.docjure.spreadsheet :as sheet]))
 
 ;;
 ;; Helpers for handling edn <-> Excel
@@ -27,9 +26,9 @@
       (with-open [r (io/reader file-path)]
        (edn/read (java.io.PushbackReader. r)))
      (catch java.io.IOException e
-       (log/error (str "Couldn't open '" file-path "': " (.getMessage e))))
+       (println (str "Couldn't open '" file-path "': " (.getMessage e))))
      (catch RuntimeException e
-       (log/error (str "Error parsing edn file '" file-path "': " (.getMessage e)))))))
+       (println (str "Error parsing edn file '" file-path "': " (.getMessage e)))))))
 
 (defn merge-translation-maps [translation-maps]
   (apply merge-with

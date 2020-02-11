@@ -194,16 +194,29 @@
            :db/cardinality :db.cardinality/one
            :db/doc "Timestamp of when this file upload was started"}]]}
 
+ 
  {:db/ident :migration/task-status-enum
-  :txes [[{:db/ident :task.status/not-started
+  :txes [[{:db/ident :task.status/not-started ;; obsolete
            :enum/attribute :task/status}
-          {:db/ident :task.status/in-progress
+          {:db/ident :task.status/in-progress ;; obsolete
            :enum/attribute :task/status}
-          {:db/ident :task.status/completed
+          {:db/ident :task.status/completed   ;; obsolete
            :enum/attribute :task/status}
-          {:db/ident :task.status/accepted
+          {:db/ident :task.status/accepted    ;; in use as of 2020-02-11
            :enum/attribute :task/status}
-          {:db/ident :task.status/rejected
+          {:db/ident :task.status/rejected    ;; obsolete
+           :enum/attribute :task/status}
+          {:db/ident :task.status/in-preparation ;; in use as of 2020-02-11
+           :enum/attribute :task/status}
+          {:db/ident :task.status/assigned    ;; in use as of 2020-02-11
+           :enum/attribute :task/status}
+          {:db/ident :task.status/submitted   ;; in use as of 2020-02-11
+           :enum/attribute :task/status}
+          {:db/ident :task.status/reviewing   ;; in use as of 2020-02-11
+           :enum/attribute :task/status}
+          {:db/ident :task.status/adjustment  ;; in use as of 2020-02-11
+           :enum/attribute :task/status}
+          {:db/ident :task.status/canceled    ;; in use as of 2020-02-11
            :enum/attribute :task/status}]]}
 
  {:db/ident :migration/task-modified
