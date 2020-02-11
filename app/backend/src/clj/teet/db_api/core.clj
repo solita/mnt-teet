@@ -87,7 +87,7 @@
 (defmacro defrequest*
   "Do not call directly. Use defcommand and defquery."
   [request-type request-name
-   {:keys [payload context authorization project-id transact] :as options}
+   {:keys [payload args context authorization project-id transact] :as options}
    & body]
   (assert (string? (:doc options)) "Specify :doc for request")
   (assert (and (keyword? request-name)
@@ -107,11 +107,15 @@
         -perms (gensym "PERMISSIONS")
         -db (gensym "DB")
         -user (gensym "USER")
-        -proj-id (gensym "PID")
-        -result (gensym "RESULT")]
-    `(defmethod teet.db-api.core/command! ~request-name [~-ctx ~-payload]
+        -proj-id (gensym "PID")]
+    `(defmethod ~(case request-type
+                   :command 'teet.db-api.core/command!
+                   :query 'teet.db-api.core/query)
+       ~request-name [~-ctx ~-payload]
        (let [~(or context -ctx) ~-ctx
-             ~(or payload -payload) ~-payload
+             ~(or (case request-type
+                    :command payload
+                    :query args) -payload) ~-payload
              ~-db (d/db (:conn ~-ctx))
              ~-user (:user ~-ctx)
              ~-perms (when (:user ~-ctx)
@@ -219,5 +223,19 @@
                    (empty? body)))
           "Specify :transact that yields tx data or body, not both.")
 
-  `(defrequest* :command ~command-name ~options ~@body)
-  )
+  `(defrequest* :command ~command-name ~options ~@body))
+
+(defmacro defquery
+  "Define a query handler.
+
+  Similar to defcommand, except :transact is not supported and
+  instead of payload, the query arguments are bound with :args."
+
+  [query-name {:keys [query args] :as options} & body]
+  (assert (or (and (seq body)
+                   (nil? query))
+              (and (some? query)
+                   (empty? body)))
+          "Specify :query that defines query or body, not both.")
+  (assert (some? args) "Must specify :args binding")
+  `(defrequest* :query ~query-name ~options ~@body))

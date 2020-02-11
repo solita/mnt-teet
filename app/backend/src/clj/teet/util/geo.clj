@@ -39,7 +39,9 @@
   (boolean (seq (rest x))))
 
 (defn point? [x]
-  (= (count x) 2))
+  (and (coll? x)
+       (= (count x) 2)
+       (every? number? x)))
 
 (defn line-string-interpolate-point
   "Calculate a point in line string between 0 (start point) and 1 (end point)."
