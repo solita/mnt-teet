@@ -99,23 +99,13 @@
      (or
       (check-spec query args)
       (let [ctx (assoc ctx :query/name query)
-            auth-ex (try
-                      (db-api/query-authorization ctx args)
-                      nil
-                      (catch Exception e
-                        (log/warn e "Query authorization failure")
-                        e))]
-        (if auth-ex
-          ^{:format :raw}
-          {:status 403
-           :body "Query authorization failed"}
-          (let [query-result (db-api/query ctx args)]
-            (if (and (map? query-result)
-                     (contains? query-result :query)
-                     (contains? query-result :args))
-              (let [result-fn (or (:result-fn query-result) identity)]
-                (result-fn (d/q (select-keys query-result [:query :args]))))
-              query-result))))))))
+            query-result (db-api/query ctx args)]
+        (if (and (map? query-result)
+                 (contains? query-result :query)
+                 (contains? query-result :args))
+          (let [result-fn (or (:result-fn query-result) identity)]
+            (result-fn (d/q (select-keys query-result [:query :args]))))
+          query-result))))))
 
 (def command-handler
   "Ring handler to invoke a named Datomic query.
@@ -128,20 +118,10 @@
      (or
        (check-spec command payload)
        (let [ctx (assoc ctx :command/name command)
-             auth-ex (try
-                       (db-api/command-authorization ctx payload)
-                       nil
-                       (catch Exception e
-                         (log/warn e "Command authorization failure")
-                         e))]
-         (if auth-ex
-           ^{:format :raw}
-           {:status 403
-            :body "Command authorization failure"}
-           (let [result (db-api/command! ctx payload)]
-             (log/debug "command: " command ", payload: " payload ", result => " result)
-             (if-let [error (:error result)]
-               (with-meta
-                      error
-                      {:format :raw})
-               result))))))))
+             result (db-api/command! ctx payload)]
+         (log/debug "command: " command ", payload: " payload ", result => " result)
+         (if-let [error (:error result)]
+           (with-meta
+             error
+             {:format :raw})
+           result))))))

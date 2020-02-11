@@ -7,31 +7,6 @@
             [teet.meta.meta-query :as meta-query]
             [teet.log :as log]))
 
-(defmulti query-authorization
-  "Check authorization for query. Should throw exception on authorization failure.
-  Same arguments as query multimethod.
-
-  Default implementation checks that :user is valid in ctx."
-  (fn [ctx _] (:query/name ctx)))
-
-(defmulti command-authorization
-  "Check authorization for command. Should throw exception on authorization failure.
-  Same arguments as command! multimethod.
-
-  Default implementation checks that :user is valid in ctx."
-  (fn [ctx _] (:command/name ctx)))
-
-(defmethod query-authorization :default [{user :user query :query/name} _]
-  (when (nil? user)
-    (throw (ex-info "Unauthenticated access not allowed"
-                    {:query query}))))
-
-(defmethod command-authorization :default [{user :user command :command/name} _]
-  (when (nil? user)
-    (throw (ex-info "Unauthenticated access not allowed"
-                    {:command command}))))
-
-
 (defmulti query
   "Execute a given named query.
 
@@ -87,20 +62,29 @@
 (defmacro defrequest*
   "Do not call directly. Use defcommand and defquery."
   [request-type request-name
-   {:keys [payload args context authorization project-id transact] :as options}
+   {:keys [payload args context unauthenticated? authorization project-id transact] :as options}
    & body]
+
+  (assert (or (and unauthenticated?
+                   (not (contains? options :authorization))
+                   (not (contains? options :project-id)))
+              (and (not unauthenticated?)
+                   (contains? options :authorization)
+                   (contains? options :project-id)))
+          "Specify :unauthenticated? true for unauthenticated access, or :project-id and :authorization")
+
   (assert (string? (:doc options)) "Specify :doc for request")
   (assert (and (keyword? request-name)
                (some? (namespace request-name)))
           "Request name must be a namespaced keyword")
   (assert (map? options) "Options must be a map")
-  (assert (map? authorization) "Authorization option must be a map")
+  (assert (or (not (contains? options :authorization))
+              (map? authorization)) "Authorization option must be a map")
   (let [authz-rule-names (authorization-check/authorization-rule-names)]
     (doseq [[k _] authorization]
       (assert (authz-rule-names k)
               (str "Unknown authorization rule: " k))))
-  (assert (contains? options :project-id)
-          "Specify project id. Use nil to skip project specific roles.")
+
 
   (let [-ctx (gensym "CTX")
         -payload (gensym "PAYLOAD")
@@ -122,26 +106,32 @@
                        (permission-db/user-permissions ~-db [:user/id (:user/id (:user ~-ctx))]))
              ~-proj-id ~project-id]
 
-         ;; Go through the declared authorization requirements
-         ;; and try to find user permissions that satisfy them
-         (when-not (every? (fn [[functionality# {entity-id# :db/id
-                                                 eid# :eid
-                                                 access# :access
-                                                 link# :link
-                                                 :as options#}]]
-                             (authorization-check/authorized?
-                              ~-user functionality#
-                              {:access access#
-                               :project-id ~-proj-id
-                               :entity (when (or entity-id# eid#)
-                                         (apply meta-query/entity-meta ~-db (or entity-id# eid#)
-                                                (when link#
-                                                  [link#])))}))
-                           ~authorization)
-           (log/warn "Failed to authorize command " ~request-name " for user " ~-user)
-           (throw (ex-info "Request authorization failed"
-                           {:status 403
-                            :error :request-authorization-failed})))
+         ;; Check user is logged in
+         ~@(when-not unauthenticated?
+             [`(when (nil? ~-user)
+                 (throw (ex-info "Unauthenticated access not allowed"
+                                 {~request-type ~request-name})))
+
+              ;; Go through the declared authorization requirements
+              ;; and try to find user permissions that satisfy them
+              `(when-not (every? (fn [[functionality# {entity-id# :db/id
+                                                       eid# :eid
+                                                       access# :access
+                                                       link# :link
+                                                       :as options#}]]
+                                   (authorization-check/authorized?
+                                    ~-user functionality#
+                                    {:access access#
+                                     :project-id ~-proj-id
+                                     :entity (when (or entity-id# eid#)
+                                               (apply meta-query/entity-meta ~-db (or entity-id# eid#)
+                                                      (when link#
+                                                        [link#])))}))
+                                 ~authorization)
+                 (log/warn "Failed to authorize command " ~request-name " for user " ~-user)
+                 (throw (ex-info "Request authorization failed"
+                                 {:status 403
+                                  :error :request-authorization-failed})))])
 
          ;; Go through pre checks
          ~@(for [pre (:pre options)]
@@ -182,6 +172,10 @@
   :payload        Required binding form for command payload data
   :context        Optional binding form for the execution context
                   that always includes: db, user and conn.
+
+  :unauthenticated?
+                  If true, allow unauthenticated requests. Skips authorization
+                  and project id checks completely.
   :authorization  Required map of authorization rules to check (see below)
   :project-id     Required form to determine the project for which
                   user permissions are checked. May use the bindings

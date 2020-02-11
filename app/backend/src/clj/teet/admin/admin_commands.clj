@@ -1,5 +1,5 @@
 (ns teet.admin.admin-commands
-  (:require [teet.db-api.core :as db-api]
+  (:require [teet.db-api.core :as db-api :refer [defcommand]]
             [datomic.client.api :as d]
             [teet.user.user-roles :as user-roles]
             [teet.log :as log]
@@ -9,13 +9,12 @@
   {:user/id (java.util.UUID/randomUUID)
    :user/roles [:user]})
 
-(defmethod db-api/command! :admin/create-user [{conn :conn} user-data]
-  (let [user (merge (new-user)
-                    (select-keys user-data [:user/id :user/person-id :user/roles]))]
-    (log/info "CREATE USER: " user)
-    (d/transact conn
-                {:tx-data [user]})
-    :ok))
-
-(defmethod db-api/command-authorization :admin/create-user [{user :user} _]
-  (user-roles/require-role user :admin))
+(defcommand :admin/create-user
+  {:doc "Create user"
+   :context {:keys [conn user]}
+   :payload user-data
+   :pre [(user-roles/require-role user :admin)]
+   :project-id nil
+   :authorization {:admin/add-user {}}
+   :transact [(merge (new-user)
+                     (select-keys user-data [:user/id :user/person-id :user/roles]))]})

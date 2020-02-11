@@ -48,13 +48,14 @@
                 :root "tmp"                                 ;; Saves the resulting report in /tmp/*
                 :requests 200}))
 
-(def login-post-data {:command :login :payload {:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"
-                                                :user/person-id "123456790"
-                                                :user/given-name "Danny D."
-                                                :user/family-name "Manager"
-                                                :user/email "danny.d.manager@example.com"
-                                                :user/organization "Maanteeamet"
-                                                :site-password "haloo"}})
+(def login-post-data {:command :login/login
+                      :payload {:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"
+                                :user/person-id "123456790"
+                                :user/given-name "Danny D."
+                                :user/family-name "Manager"
+                                :user/email "danny.d.manager@example.com"
+                                :user/organization "Maanteeamet"
+                                :site-password "haloo"}})
 
 (defn- http-post [url _]
   (let [response (chan)
