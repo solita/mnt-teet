@@ -99,49 +99,6 @@
                         (get-in result (into path [:db/id])))]
     (assoc result :lifecycle project)))
 
-(defquery :thk.project/fetch-project-lifecycle
-  {:doc "Fetch project lifecycle"
-   :context {db :db}
-   :args {:keys [project lifecycle]}
-   :project-id [:thk.project/id project]
-   :authorization {:project/project-info {:eid [:thk.project/id project]
-                                          :link :thk.project/owner}}}
-  (-> (d/q '[:find (pull ?e [*
-                             {:thk.lifecycle/activities [:db/id
-                                                         :activity/name
-                                                         :activity/estimated-start-date
-                                                         :activity/estimated-end-date]}
-                             {:thk.project/_lifecycles [:db/id]}])
-             :where [?project :thk.project/lifecycles ?e]
-             :in $ ?project ?e]
-           db
-           [:thk.project/id project]
-           lifecycle)
-      ffirst
-      (fetch-project db [:thk.project/_lifecycles 0])))
-
-(defquery :thk.project/fetch-lifecycle-activity
-  {:doc "Fetch lifecycle activity"
-   :context {db :db}
-   :args {:keys [lifecycle activity]}
-   :project-id (project-db/lifecycle-project-id db lifecycle)
-   :authorization {:activity/activity-info {:eid activity}}}
-  (-> (d/q '[:find (pull ?e [:activity/name :activity/estimated-start-date :activity/estimated-end-date
-                             {:activity/tasks [:task/status :task/name :task/assignee :task/description
-                                               {:task/documents [*]}]}
-                             {:thk.lifecycle/_activities
-                              [:db/id
-                               {:thk.project/_lifecycles
-                                [:db/id]}]}])
-             :where [?lifecycle :thk.lifecycle/activities ?e]
-             :in $ ?lifecycle ?e]
-           db
-           lifecycle
-           activity)
-      ffirst
-      (fetch-project db [:thk.lifecycle/_activities 0 :thk.project/_lifecycles 0])
-      (fetch-lifecycle db [:thk.lifecycle/_activities 0])))
-
 (defquery :thk.project/listing
   {:doc "List all project basic info"
    :context {db :db}
