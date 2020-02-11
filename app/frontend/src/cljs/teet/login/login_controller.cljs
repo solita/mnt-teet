@@ -28,7 +28,7 @@
       (if @common-controller/api-token
         (t/fx (assoc app :checking-session? true)
               {::tuck-effect/type :command!
-               :command           :refresh-token
+               :command           :login/refresh-token
                :payload           {}
                :error-event       ->CheckSessionError
                :result-event      (partial ->SetSessionInfo false nil)})
@@ -56,7 +56,7 @@
              :token token}
 
             {::tuck-effect/type :command!
-             :command :refresh-token
+             :command :login/refresh-token
              :payload {}
              :result-event (partial ->SetSessionInfo true (get-in app [:login :navigate-to]))})
       (if-let [error (get-in app [:query :error])]
@@ -71,7 +71,7 @@
                 (assoc-in [:login :progress?] true)
                 (assoc :user user))
             {::tuck-effect/type :command!
-             :command :login
+             :command :login/login
              :payload (assoc user :site-password (get-in app [:login :password]))
              :result-event (partial ->SetSessionInfo true navigate-data)})))
 
@@ -96,7 +96,7 @@
         (let [effects [{::tuck-effect/type :set-api-token
                         :token token}
                        {::tuck-effect/type :debounce
-                        :id :refresh-token
+                        :id :login/refresh-token
                         :timeout refresh-token-timeout-ms
                         :event ->RefreshToken}
                        (fn [e!]
@@ -120,7 +120,7 @@
   (process-event [_ app]
     (t/fx app
           {::tuck-effect/type :command!
-           :command :refresh-token
+           :command :login/refresh-token
            :payload {}
            :result-event (partial ->SetSessionInfo false nil)})))
 

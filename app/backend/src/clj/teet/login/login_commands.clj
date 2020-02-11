@@ -1,5 +1,5 @@
 (ns teet.login.login-commands
-  (:require [teet.db-api.core :as db-api]
+  (:require [teet.db-api.core :as db-api :refer [defcommand]]
             [teet.environment :as environment]
             [teet.auth.jwt-token :as jwt-token]
             [datomic.client.api :as d]
@@ -28,9 +28,12 @@
 
 
 
-(defmethod db-api/command! :login [{conn :conn}
-                                   {:user/keys [id given-name family-name email person-id]
-                                    site-password :site-password}]
+(defcommand :login/login
+  {:doc "Login to the system"
+   :context {conn :conn}
+   :payload {:user/keys [id given-name family-name email person-id]
+             site-password :site-password}
+   :unauthenticated? true}
   (d/transact conn {:tx-data [{:user/id id}]})
 
   (when-not (environment/feature-enabled? :dummy-login)
@@ -54,10 +57,6 @@
        :enabled-features (environment/config-value :enabled-features)
        :api-url (environment/config-value :api-url)})
     {:error :incorrect-site-password}))
-
-(defmethod db-api/command-authorization :login [_ _]
-  ;; Always allow login to be used
-  nil)
 
 
 (defn on-tara-login [claims]
@@ -89,14 +88,23 @@
     (log/info "on-tara-login response: " response)
     response))
 
-(defmethod db-api/command! :login/check-session-token [{session :session} _]
+(defcommand :login/check-session-token
+  {:doc "Check for JWT token in cookie session"
+   :context {session :session}
+   :payload _
+   :unauthenticated? true}
   (:jwt-token session))
 
-(defmethod db-api/command-authorization :login/check-session-token [_ _]
-  nil)
-
-(defmethod db-api/command! :refresh-token [{db :db
-                                            {:user/keys [id given-name family-name email person-id]} :user} _]
+(defcommand :login/refresh-token
+  {:doc "Refresh JWT token for existing session"
+   :context {db :db
+             {:user/keys [id given-name family-name email person-id] :as user} :user}
+   :pre [(and user
+              (every? #(contains? user %)
+                      [:user/id :user/given-name :user/family-name :user/person-id]))]
+   :payload _
+   :project-id nil
+   :authorization {}}
   (let [roles (user-db/user-roles db id)]
     {:token (jwt-token/create-token (environment/config-value :auth :jwt-secret) "teet_user"
                                     {:given-name given-name
@@ -109,10 +117,3 @@
      :roles roles
      :enabled-features (environment/config-value :enabled-features)
      :api-url (environment/config-value :api-url)}))
-
-(defmethod db-api/command-authorization :refresh-token [{user :user} _]
-  (when-not (and user
-                 (every? #(contains? user %)
-                         [:user/id :user/given-name :user/family-name :user/person-id]))
-    (throw (ex-info "Can't refresh token, user information missing"
-                   {:user user}))))
