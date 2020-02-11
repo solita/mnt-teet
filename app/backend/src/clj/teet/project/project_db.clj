@@ -14,6 +14,19 @@
             db task-id))
       (db-api/bad-request! "No such task")))
 
+(defn file-project-id [db file-id]
+  (or (ffirst
+       (d/q '[:find ?project
+              :in $ ?f
+              :where
+              [?doc :document/files ?f]
+              [?task :task/documents ?doc]
+              [?activity :activity/tasks ?task]
+              [?lifecycle :thk.lifecycle/activities ?activity]
+              [?project :thk.project/lifecycles ?lifecycle]]
+            db file-id))
+      (db-api/bad-request! "No such file")))
+
 (defn activity-project-id [db activity-id]
   (or (ffirst
        (d/q '[:find ?project

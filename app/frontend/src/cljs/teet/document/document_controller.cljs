@@ -15,7 +15,6 @@
 (defrecord UploadFiles [files document-id on-success progress-increment]) ; Upload files (one at a time) to document
 (defrecord UploadFinished []) ; upload completed, can close dialog
 (defrecord UploadFileUrlReceived [file-data file document-id url on-success])
-(defrecord FetchDocument [document-id]) ; fetch document
 (defrecord UploadFilesToDocument [files]) ; upload new files to existing document from the document page
 
 (defrecord MoveDocumentDataForEdit [document-id])
@@ -35,15 +34,6 @@
    :file/type (.-type f)})
 
 (extend-protocol t/Event
-
-  FetchDocument
-  (process-event [{document-id :document-id} app]
-    (log/info "fetch doc " document-id)
-    (t/fx app
-          {:tuck.effect/type :query
-           :query :document/fetch-document
-           :args {:document-id (goog.math.Long/fromString document-id)}
-           :result-path [:document document-id]}))
 
   DeleteDocument
   (process-event [{document-id :document-id} app]
