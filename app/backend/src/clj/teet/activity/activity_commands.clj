@@ -27,44 +27,34 @@
              lifecycle-id :lifecycle-id}
    :project-id (project-db/lifecycle-project-id db lifecycle-id)
    :authorization {:activity/create-activity {}}
-   ;;:pre [(valid-activity-name? db activity lifecycle-id)]
-   }
-  (log/info "ACTIVITY: " activity)
-  (if (valid-activity-name? db activity lifecycle-id)
-    (select-keys
-     (d/transact
-      conn
-      {:tx-data [(merge
-                  {:db/id "new-activity"}
-                  (select-keys activity [:activity/name :activity/status
-                                         :activity/estimated-start-date
-                                         :activity/estimated-end-date])
-                  (meta-model/creation-meta user))
-                 {:db/id                    lifecycle-id
-                  :thk.lifecycle/activities ["new-activity"]}]})
-     [:tempids])
-    (db-api/bad-request! "Not a valid activity")))
+   :pre [(valid-activity-name? db activity lifecycle-id)]
+   :transact [(merge
+               {:db/id "new-activity"}
+               (select-keys activity [:activity/name :activity/status
+                                      :activity/estimated-start-date
+                                      :activity/estimated-end-date])
+               (meta-model/creation-meta user))
+              {:db/id                    lifecycle-id
+               :thk.lifecycle/activities ["new-activity"]}]})
 
 (defcommand :activity/update
   {:doc "Update activity basic info"
    :context {:keys [conn user db]}
    :payload activity
    :project-id (project-db/activity-project-id db (:db/id activity))
-   :authorization {:activity/edit-activity {:db/id (:db/id activity)}}}
-  (let [lifecycle-id (ffirst (d/q '[:find ?lc
-                                    :in $ ?act
-                                    :where [?lc :thk.lifecycle/activities ?act]]
-                                  db
-                                  (:db/id activity)))]
-    (if (valid-activity-name? db activity lifecycle-id)
-      (select-keys (d/transact conn {:tx-data [(merge (select-keys activity
-                                                                   [:activity/name :activity/status
-                                                                    :activity/estimated-start-date
-                                                                    :activity/estimated-end-date
-                                                                    :db/id])
-                                                      (meta-model/modification-meta user))]})
-                   [:tempids])
-      (db-api/bad-request! "Not a valid activity"))))
+   :authorization {:activity/edit-activity {:db/id (:db/id activity)}}
+   :pre [(valid-activity-name? db activity
+                               (ffirst (d/q '[:find ?lc
+                                              :in $ ?act
+                                              :where [?lc :thk.lifecycle/activities ?act]]
+                                            db
+                                            (:db/id activity))))]
+   :transact [(merge (select-keys activity
+                                  [:activity/name :activity/status
+                                   :activity/estimated-start-date
+                                   :activity/estimated-end-date
+                                   :db/id])
+                     (meta-model/modification-meta user))]})
 
 (defcommand :activity/delete
   {:doc "Mark an activity as deleted"

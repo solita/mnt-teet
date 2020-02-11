@@ -84,6 +84,89 @@
           :error :bad-request
           :msg msg}))
 
+(defmacro defrequest*
+  "Do not call directly. Use defcommand and defquery."
+  [request-type request-name
+   {:keys [payload args context authorization project-id transact] :as options}
+   & body]
+  (assert (string? (:doc options)) "Specify :doc for request")
+  (assert (and (keyword? request-name)
+               (some? (namespace request-name)))
+          "Request name must be a namespaced keyword")
+  (assert (map? options) "Options must be a map")
+  (assert (map? authorization) "Authorization option must be a map")
+  (let [authz-rule-names (authorization-check/authorization-rule-names)]
+    (doseq [[k _] authorization]
+      (assert (authz-rule-names k)
+              (str "Unknown authorization rule: " k))))
+  (assert (contains? options :project-id)
+          "Specify project id. Use nil to skip project specific roles.")
+
+  (let [-ctx (gensym "CTX")
+        -payload (gensym "PAYLOAD")
+        -perms (gensym "PERMISSIONS")
+        -db (gensym "DB")
+        -user (gensym "USER")
+        -proj-id (gensym "PID")]
+    `(defmethod ~(case request-type
+                   :command 'teet.db-api.core/command!
+                   :query 'teet.db-api.core/query)
+       ~request-name [~-ctx ~-payload]
+       (let [~(or context -ctx) ~-ctx
+             ~(or (case request-type
+                    :command payload
+                    :query args) -payload) ~-payload
+             ~-db (d/db (:conn ~-ctx))
+             ~-user (:user ~-ctx)
+             ~-perms (when (:user ~-ctx)
+                       (permission-db/user-permissions ~-db [:user/id (:user/id (:user ~-ctx))]))
+             ~-proj-id ~project-id]
+
+         ;; Go through the declared authorization requirements
+         ;; and try to find user permissions that satisfy them
+         (when-not (every? (fn [[functionality# {entity-id# :db/id
+                                                 eid# :eid
+                                                 access# :access
+                                                 link# :link
+                                                 :as options#}]]
+                             (authorization-check/authorized?
+                              ~-user functionality#
+                              {:access access#
+                               :project-id ~-proj-id
+                               :entity (when (or entity-id# eid#)
+                                         (apply meta-query/entity-meta ~-db (or entity-id# eid#)
+                                                (when link#
+                                                  [link#])))}))
+                           ~authorization)
+           (log/warn "Failed to authorize command " ~request-name " for user " ~-user)
+           (throw (ex-info "Request authorization failed"
+                           {:status 403
+                            :error :request-authorization-failed})))
+
+         ;; Go through pre checks
+         ~@(for [pre (:pre options)]
+             `(when-not ~pre
+                (throw (ex-info "Pre check failed"
+                                {:status 400
+                                 :msg "Pre check failed"
+                                 :error :request-pre-check-failed
+                                 :pre-check ~(str pre)}))))
+
+         (let [~'%
+               ~(if (and (= :command request-type) transact)
+                  `(select-keys (datomic.client.api/transact (:conn ~-ctx) {:tx-data ~transact})
+                                [:tempids])
+                  `(do ~@body))]
+
+           ~@(for [post (:post options)]
+               `(when-not ~post
+                  (throw (ex-info "Post check failed"
+                                  {:status 500
+                                   :msg "Internal server error"
+                                   :error :request-post-check-failed
+                                   :post-check ~(str post)}))))
+           ;; Return result
+           ~'%)))))
 
 (defmacro defcommand
   "Define a command.
@@ -103,6 +186,15 @@
   :project-id     Required form to determine the project for which
                   user permissions are checked. May use the bindings
                   from payload or context.
+  :pre            Optional vector of pre check forms. Can use bindings
+                  from context and payload. If pre checks fail, the request
+                  will return a bad request reponse without invoking the
+                  body (or transact).
+  :post           Optional vector of post check forms. In addition to pre
+                  check bindings, forms can also use % to refer to the
+                  command result value. If post checks fail, the request
+                  will return an internal server error response and log
+                  an error.
   :transact       Optional form that generates data to transact to
                   Datomic. If specified, body must be omitted.
                   The command will automatically return the tempids
@@ -118,66 +210,33 @@
   key to specify the access (eg. :read for read-only).
 
   If command can have access to own items (with :link access type). The :db/id
-  must be specified for the entity. The map may contain :link keyword which
+  (or :eid) must be specified for the entity. The map may contain :link keyword which
   specifies which ref attribute is checked against the current user. The link
   attribute defaults to :meta/creator if omitted.
   "
   [command-name
    {:keys [payload context authorization project-id transact] :as options}
    & body]
-  (assert (string? (:doc options)) "Specify :doc for command!")
-  (assert (and (keyword? command-name)
-               (some? (namespace command-name)))
-          "Command name must be a namespaced keyword")
-  (assert (map? options) "Options must be a map")
-  (assert (map? authorization) "Authorization option must be a map")
-  (let [authz-rule-names (authorization-check/authorization-rule-names)]
-    (doseq [[k _] authorization]
-      (assert (authz-rule-names k)
-              (str "Unknown authorization rule: " k))))
-  (assert (contains? options :project-id) "Specify project id. Use nil to skip project specific roles.")
+
   (assert (or (and (seq body)
                    (nil? transact))
               (and (some? transact)
                    (empty? body)))
           "Specify :transact that yields tx data or body, not both.")
 
-  (let [-ctx (gensym "CTX")
-        -payload (gensym "PAYLOAD")
-        -perms (gensym "PERMISSIONS")
-        -db (gensym "DB")
-        -user (gensym "USER")
-        -proj-id (gensym "PID")]
-    `(defmethod teet.db-api.core/command! ~command-name [~-ctx ~-payload]
-       (let [~(or context -ctx) ~-ctx
-             ~(or payload -payload) ~-payload
-             ~-db (d/db (:conn ~-ctx))
-             ~-user (:user ~-ctx)
-             ~-perms (when (:user ~-ctx)
-                       (permission-db/user-permissions ~-db [:user/id (:user/id (:user ~-ctx))]))
-             ~-proj-id ~project-id]
+  `(defrequest* :command ~command-name ~options ~@body))
 
-         ;; Go through the declared authorization requirements
-         ;; and try to find user permissions that satisfy them
-         (when-not (every? (fn [[functionality# {entity-id# :db/id
-                                                 access# :access
-                                                 link# :link
-                                                 :as options#}]]
-                             (authorization-check/authorized?
-                              ~-user functionality#
-                              {:access access#
-                               :project-id ~-proj-id
-                               :entity (when entity-id#
-                                         (apply meta-query/entity-meta ~-db entity-id#
-                                                (when link#
-                                                  [link#])))}))
-                           ~authorization)
-           (log/warn "Failed to authorize command " ~command-name " for user " ~-user)
-           (throw (ex-info "Command authorization failed"
-                           {:status 403
-                            :error :command-authorization-failed})))
+(defmacro defquery
+  "Define a query handler.
 
-         ~(if transact
-            `(select-keys (datomic.client.api/transact (:conn ~-ctx) {:tx-data ~transact})
-                          [:tempids])
-            `(do ~@body))))))
+  Similar to defcommand, except :transact is not supported and
+  instead of payload, the query arguments are bound with :args."
+
+  [query-name {:keys [query args] :as options} & body]
+  (assert (or (and (seq body)
+                   (nil? query))
+              (and (some? query)
+                   (empty? body)))
+          "Specify :query that defines query or body, not both.")
+  (assert (some? args) "Must specify :args binding")
+  `(defrequest* :query ~query-name ~options ~@body))
