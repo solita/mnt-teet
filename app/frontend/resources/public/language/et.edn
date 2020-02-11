@@ -43,7 +43,9 @@
   :task.type/other "Muu",
   :document.category/maintenance-doc "Hooldedokumentatsioon",
   :document.category/source-doc "Lähtedokumentatsioon",
+  :task.status/canceled "Tühistatud",
   :task.status/rejected "Tagasi lükatud",
+  :task.status/reviewing "Ülevaatamisel",
   :document.category/project-doc "Projektdokumentatsioon",
   :document.sub-category/design-requirements
   "Projekteerimistingimused",
@@ -53,8 +55,10 @@
   :document.sub-category/report "Aruanne",
   :document.sub-category/procurement-specification
   "Hanke tehnilised tingimused",
+  :task.status/adjustment "Täiendamisel",
   :activity.status/not-started "Ei ole alustatud",
   :activity.status/research "Ekspertiisis",
+  :task.status/submitted "Esitatud",
   :activity.name/other "Muu",
   :task.type/animal-study "Loomastiku uuring",
   :activity.name/pre-design "Eskiisprojekt",
@@ -79,7 +83,9 @@
   :task.status/completed "Valmis",
   :document.sub-category/drill-posts "Puurtulbad",
   :activity.status/in-progress "Tegemisel",
+  :task.status/assigned "Töösse antud",
   :task.type/geology "Geoloogia",
+  :task.status/in-preparation "Ettevalmistamisel",
   :document.category/as-built-doc "Täitedokumentatsioon",
   :activity.status/other "Muu",
   :document.sub-category/explanatory-letter "Seletuskiri",
@@ -205,4 +211,5 @@
   :task-overview "Ülesande ülevaade",
   :no-documents "Dokumente ei ole",
   :results "Tulemused"},
- :user {:role "Roll"}}
+ :user {:role "Roll"},
+ :warning {:version-mismatch nil, :deploying nil}}

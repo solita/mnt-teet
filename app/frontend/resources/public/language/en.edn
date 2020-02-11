@@ -42,7 +42,9 @@
   :task.type/other "Other",
   :document.category/maintenance-doc "Maintenance documentation",
   :document.category/source-doc "Source documentation",
+  :task.status/canceled "Canceled",
   :task.status/rejected "Rejected",
+  :task.status/reviewing "Reviewing",
   :document.category/project-doc "Project documentation",
   :document.sub-category/design-requirements "Design requirements",
   :activity.name/detailed-design "Detailed design",
@@ -51,8 +53,10 @@
   :document.sub-category/report "Report",
   :document.sub-category/procurement-specification
   "Specifications of the procurement",
+  :task.status/adjustment "Adjustment",
   :activity.status/not-started "Not started",
   :activity.status/research "3rd party checking",
+  :task.status/submitted "Submitted",
   :activity.name/other "Other",
   :task.type/animal-study "Animal study",
   :activity.name/pre-design "Pre design",
@@ -77,7 +81,9 @@
   :task.status/completed "Completed",
   :document.sub-category/drill-posts "Drill posts",
   :activity.status/in-progress "In progress",
+  :task.status/assigned "Assigned",
   :task.type/geology "Geology",
+  :task.status/in-preparation "In preparation",
   :document.category/as-built-doc "Contruction documentation",
   :activity.status/other "Other",
   :document.sub-category/explanatory-letter "Explanatory letter ",
@@ -203,4 +209,9 @@
   :task-overview "Task overview",
   :no-documents "No documents",
   :results "Results"},
- :user {:role "Role"}}
+ :user {:role "Role"},
+ :warning
+ {:version-mismatch
+  "A new version of the application has been deployed. Please refresh the page.",
+  :deploying
+  "A new version of the application is being deployed. Please wait for a few minutes and refresh the page."}}
