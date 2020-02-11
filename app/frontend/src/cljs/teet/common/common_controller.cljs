@@ -329,7 +329,7 @@
                        (e! (->RPCResponse result-path data))
                        (e! (result-event data))))))))))
 
-(defn- check-if-deploying
+(defn- fetch-deploy-status
   "Checks if a new version of the app is currently being deployed by
   requesting the `js/deploy.json` file and checking the `status` of
   the JSON response. Returns a boolean promise."
@@ -340,25 +340,41 @@
                         10000)
       (.then #(.json %))
       (.then (fn [json-response]
-               (let [{:strs [status]} (js->clj json-response)]
-                 (js/Promise.resolve (= status "deploying")))))))
+               (js/Promise.resolve (js->clj json-response))))))
 
 ;; Check deploy status, show corresponding snackbar message
 (defmethod tuck-effect/process-effect :deploy-status [e! {:keys [result-event]}]
-  (-> (check-if-deploying)
-      (.then #(e! (result-event %)))))
+  (-> (fetch-deploy-status)
+      (.then #(e! (result-event (= "deploying" (get % "status")))))))
 
 (defrecord DeployStatusResponse [deploying?]
   t/Event
   (process-event [{:keys [deploying?]} app]
     (if deploying?
-      ;; TODO: meaningful message
-      (snackbar-controller/open-snack-bar app "It's-a me, deploy!" #_(tr [:error error]) :warning)
+      (snackbar-controller/open-snack-bar app (tr [:warning :deploying]) :warning)
       (snackbar-controller/open-snack-bar app (tr [:error :request-timeout]) :error))))
 
 (defmethod on-server-error :request-timeout [_ app]
   (t/fx app {:tuck.effect/type :deploy-status
              :result-event ->DeployStatusResponse}))
+
+(def ^:private poll-timeout-ms 30000)
+
+(defn poll-version
+  "Polls whether the client's version of the app is the same as the one
+  currently deployed. If not, shows a warning that a new version is
+  being, or has been, deployed."
+  [e!]
+  (-> (fetch-deploy-status)
+      (.then (fn [{:strs [commit status]}]
+               (js/setTimeout #(poll-version e!) poll-timeout-ms)
+               (if (= status "deploying")
+                 (e! (snackbar-controller/->OpenSnackBar (tr [:warning :deploying]) :warning))
+                 (let [current-version-commit (aget js/window "teet_githash")]
+                   (when-not  (and current-version-commit
+                                   (= commit
+                                     (aget js/window "teet_githash")))
+                    (e! (snackbar-controller/->OpenSnackBar (tr [:warning :version-mismatch]) :warning)))))))))
 
 (defn query-url
   "Generate an URL to a query with the given args. This is useful for queries

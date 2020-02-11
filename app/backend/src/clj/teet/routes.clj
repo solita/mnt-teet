@@ -39,7 +39,7 @@
            {:status 200
             :headers {"Content-Type" "application/json"}
             :body (cheshire/encode {:commit "the-commit-sha"
-                                    :status "deploying"
+                                    :status "deployed"
                                     :timestamp "Mon Feb 10 13:51:35 UTC 2020"})})
       (files "/" {:root "../frontend/target/public"})
       (files "/" {:root "../frontend/resources/public"}))
