@@ -125,6 +125,7 @@
          ;; Go through the declared authorization requirements
          ;; and try to find user permissions that satisfy them
          (when-not (every? (fn [[functionality# {entity-id# :db/id
+                                                 eid# :eid
                                                  access# :access
                                                  link# :link
                                                  :as options#}]]
@@ -132,8 +133,8 @@
                               ~-user functionality#
                               {:access access#
                                :project-id ~-proj-id
-                               :entity (when entity-id#
-                                         (apply meta-query/entity-meta ~-db entity-id#
+                               :entity (when (or entity-id# eid#)
+                                         (apply meta-query/entity-meta ~-db (or entity-id# eid#)
                                                 (when link#
                                                   [link#])))}))
                            ~authorization)
@@ -209,7 +210,7 @@
   key to specify the access (eg. :read for read-only).
 
   If command can have access to own items (with :link access type). The :db/id
-  must be specified for the entity. The map may contain :link keyword which
+  (or :eid) must be specified for the entity. The map may contain :link keyword which
   specifies which ref attribute is checked against the current user. The link
   attribute defaults to :meta/creator if omitted.
   "

@@ -79,7 +79,8 @@ and cadastral units"
              user :user}
    :payload {id :thk.project/id :as project-form}
    :project-id [:thk.project/id id]
-   :authorization {:project/edit-project-info {:link :thk.project/owner}}
+   :authorization {:project/project-info {:eid [:thk.project/id id]
+                                          :link :thk.project/owner}}
    :transact [(merge (cu/without-nils (select-keys project-form
                                                    [:thk.project/id
                                                     :thk.project/owner

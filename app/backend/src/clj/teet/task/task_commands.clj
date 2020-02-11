@@ -17,8 +17,8 @@
    :context {:keys [user db]} ; bindings from context
    :payload {id :db/id :as task} ; bindings from payload
    :project-id (project-db/task-project-id db id)
-   :authorization {:task/edit-task {:db/id id
-                                    :link :task/assignee}}  ; auth checks
+   :authorization {:task/task-information {:db/id id
+                                           :link :task/assignee}}  ; auth checks
    :transact [(merge (select-keys task
                                   [:db/id :task/name :task/description :task/status :task/assignee])
                      (meta-model/modification-meta user))]})
