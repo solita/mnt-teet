@@ -188,7 +188,8 @@
   (fn [err]
     (e! (if error-event
           (error-event err)
-          (->ResponseError err)))))
+          (->ResponseError err)))
+    (.reject js/Promise (new js/Error (str err)))))
 
 (defn headers->map
   "Turn nil, map, js object and js Headers into Clojure map"
@@ -321,17 +322,43 @@
                                 :headers (clj->js
                                           {"Content-Type" "application/json+transit"})
                                 :body payload}))
-          (.then #(if (instance? js/Response %)
-                    (.text %)
-                    ;; can also be appstate map in case of error
-                    %))
-          (.then (fn [text-or-appstate]
-                   (if (map? text-or-appstate)
-                     text-or-appstate
-                     (let [data (transit/transit->clj text-or-appstate)]
-                       (if result-path
-                         (e! (->RPCResponse result-path data))
-                         (e! (result-event data)))))))))))
+          (.then #(.text %))
+          (.then (fn [text]
+                   (let [data (transit/transit->clj text)]
+                     (if result-path
+                       (e! (->RPCResponse result-path data))
+                       (e! (result-event data))))))))))
+
+(defn- check-if-deploying
+  "Checks if a new version of the app is currently being deployed by
+  requesting the `js/deploy.json` file and checking the `status` of
+  the JSON response. Returns a boolean promise."
+  []
+  (-> (fetch-or-timeout "js/deploy.json"
+                        (clj->js {"Content-Type" "application/json"
+                                  "Accept" "application/json"})
+                        10000)
+      (.then #(.json %))
+      (.then (fn [json-response]
+               (let [{:strs [status]} (js->clj json-response)]
+                 (js/Promise.resolve (= status "deploying")))))))
+
+;; Check deploy status, show corresponding snackbar message
+(defmethod tuck-effect/process-effect :deploy-status [e! {:keys [result-event]}]
+  (-> (check-if-deploying)
+      (.then #(e! (result-event %)))))
+
+(defrecord DeployStatusResponse [deploying?]
+  t/Event
+  (process-event [{:keys [deploying?]} app]
+    (if deploying?
+      ;; TODO: meaningful message
+      (snackbar-controller/open-snack-bar app "It's-a me, deploy!" #_(tr [:error error]) :warning)
+      (snackbar-controller/open-snack-bar app (tr [:error :request-timeout]) :error))))
+
+(defmethod on-server-error :request-timeout [_ app]
+  (t/fx app {:tuck.effect/type :deploy-status
+             :result-event ->DeployStatusResponse}))
 
 (defn query-url
   "Generate an URL to a query with the given args. This is useful for queries
@@ -366,19 +393,14 @@
                                {"Content-Type" "application/json+transit"})
                      :body (transit/clj->transit {:command command
                                                   :payload payload})})
-        (.then #(if (instance? js/Response %)
-                  (.text %)
-                  ;; can also be appstate map in case of error
-                  %))
-        (.then (fn [transit-data-or-appstate]
-                 (if (map? transit-data-or-appstate)
-                   transit-data-or-appstate
-                   (let [data (transit/transit->clj transit-data-or-appstate)]
-                     (when success-message
-                       (e! (snackbar-controller/->OpenSnackBar success-message :success)))
-                     (if result-path
-                       (e! (->RPCResponse result-path data))
-                       (e! (result-event data))))))))))
+        (.then #(.text %))
+        (.then (fn [text]
+                 (let [data (transit/transit->clj text)]
+                   (when success-message
+                     (e! (snackbar-controller/->OpenSnackBar success-message :success)))
+                   (if result-path
+                     (e! (->RPCResponse result-path data))
+                     (e! (result-event data)))))))))
 
 (defmethod tuck-effect/process-effect :navigate [_ {:keys [page params query]}]
   (routes/navigate! page params query))
