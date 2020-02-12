@@ -373,7 +373,7 @@
                  (let [current-version-commit (aget js/window "teet_githash")]
                    (when (and current-version-commit
                               (not= commit
-                                    (aget js/window "teet_githash")))
+                                    current-version-commit))
                      (e! (snackbar-controller/->OpenSnackBar (tr [:warning :version-mismatch]) :warning)))))))))
 
 (defn query-url
