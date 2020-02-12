@@ -20,6 +20,11 @@
         :view teet.projects.projects-view/projects-map-page}
  :login {:path "/login"}
 
+ :dashboard {:path "/dashboard"
+             :crumb "Dashboard" ;(tr [:dashboard :title])
+             :view teet.dashboard.dashboard-view/dashboard-page
+             :state {:query :dashboard/user-dashboard
+                     :args {}}}
  :projects {:path "/projects/map"
             :crumb (tr [:projects :map-view])
             :view teet.projects.projects-view/projects-map-page}

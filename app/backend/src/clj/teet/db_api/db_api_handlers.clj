@@ -22,6 +22,7 @@
             teet.system.system-queries
             teet.task.task-commands
             teet.activity.activity-commands
+            teet.dashboard.dashboard-queries
 
             [teet.log :as log]
             [teet.auth.jwt-token :as jwt-token]
