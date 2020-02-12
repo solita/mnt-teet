@@ -351,8 +351,14 @@
   t/Event
   (process-event [{:keys [deploying?]} app]
     (if deploying?
-      (snackbar-controller/open-snack-bar app (tr [:warning :deploying]) :warning)
-      (snackbar-controller/open-snack-bar app (tr [:error :request-timeout]) :error))))
+      (snackbar-controller/open-snack-bar {:app app
+                                           :message (tr [:warning :deploying])
+                                           :variant :warning
+                                           :hide-duration nil})
+      (snackbar-controller/open-snack-bar {:app app
+                                           :message (tr [:error :request-timeout])
+                                           :variant :error
+                                           :hide-duration nil}))))
 
 (defmethod on-server-error :request-timeout [_ app]
   (t/fx app {:tuck.effect/type :deploy-status
@@ -369,12 +375,16 @@
       (.then (fn [{:strs [commit status]}]
                (js/setTimeout #(poll-version e!) poll-timeout-ms)
                (if (= status "deploying")
-                 (e! (snackbar-controller/->OpenSnackBar (tr [:warning :deploying]) :warning))
+                 (e! (snackbar-controller/->OpenSnackBarWithOptions {:message (tr [:warning :deploying])
+                                                                     :variant :warning
+                                                                     :hide-duration nil}))
                  (let [current-version-commit (aget js/window "teet_githash")]
                    (when (and current-version-commit
                               (not= commit
                                     current-version-commit))
-                     (e! (snackbar-controller/->OpenSnackBar (tr [:warning :version-mismatch]) :warning)))))))))
+                     (e! (snackbar-controller/->OpenSnackBarWithOptions {:message (tr [:warning :version-mismatch])
+                                                                         :variant :warning
+                                                                         :hide-duration nil})))))))))
 
 (defn query-url
   "Generate an URL to a query with the given args. This is useful for queries
