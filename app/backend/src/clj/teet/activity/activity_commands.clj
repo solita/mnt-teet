@@ -44,7 +44,11 @@
              lifecycle-id :lifecycle-id}
    :project-id (project-db/lifecycle-project-id db lifecycle-id)
    :authorization {:activity/create-activity {}}
-   :pre [(valid-activity-name? db activity lifecycle-id) (not (conflicting-activites? db activity lifecycle-id))]
+   :pre [^{:error :invalid-activity-name}
+         (valid-activity-name? db activity lifecycle-id)
+
+         ^{:error :conflicting-activities}
+         (not (conflicting-activites? db activity lifecycle-id))]
    :transact [(merge
                 {:db/id "new-activity"}
                 (select-keys activity [:activity/name :activity/status

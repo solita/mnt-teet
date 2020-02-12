@@ -134,12 +134,13 @@
                                   :error :request-authorization-failed})))])
 
          ;; Go through pre checks
-         ~@(for [pre (:pre options)]
+         ~@(for [pre (:pre options)
+                 :let [error (or (:error (meta pre)) :request-pre-check-failed)]]
              `(when-not ~pre
                 (throw (ex-info "Pre check failed"
                                 {:status 400
                                  :msg "Pre check failed"
-                                 :error :request-pre-check-failed
+                                 :error ~error
                                  :pre-check ~(str pre)}))))
 
          (let [~'%
