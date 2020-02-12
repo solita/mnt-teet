@@ -32,11 +32,11 @@
     icons/action-done))
 
 (defn snackbar-container
-  [e! {:keys [open? message variant]}]
+  [e! {:keys [open? message variant hide-duration]}]
   [Snackbar {:anchor-origin {:vertical :bottom
                              :horizontal :right}
              :open open?
-             :auto-hide-duration 5000
+             :auto-hide-duration hide-duration
              :on-close (e! snackbar-controller/->CloseSnackbar)}
    [SnackbarContent
     {:style {:background-color (snack-color variant)}
