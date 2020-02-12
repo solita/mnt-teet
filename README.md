@@ -21,7 +21,7 @@ source code by downloading the sheet and running
 clj -A:localizations <path-to-downloaded-sheet>
 ```
 
-in `app/backend`. This will update the localization `.edn` files in
+in `app/build-tools`. This will update the localization `.edn` files in
 `app/frontend/resources/public/language`.
 
 ## Version numbering
