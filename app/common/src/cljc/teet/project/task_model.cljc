@@ -18,3 +18,15 @@
 
 (defn document-by-id [{documents :task/documents} document-id]
   (some #(when (id= document-id (:db/id %)) %) documents))
+
+(def ^:const completed-statuses #{:task.status/completed :task.status/accepted})
+(def ^:const in-progress-statuses #{:task.status/in-preparation :task.status/in-progress})
+
+(defn completed? [{status :task/status}]
+  (boolean (completed-statuses (:db/ident status))))
+
+(defn rejected? [{status :task/status}]
+  (-> status :db/ident (= :task.status/rejected)))
+
+(defn in-progress? [{status :task/status}]
+  (boolean (in-progress-statuses (:db/ident status))))
