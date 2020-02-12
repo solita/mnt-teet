@@ -108,6 +108,8 @@
   :authorization-failure "Session expired. Please login again.",
   :request-timeout "The server did not respond.",
   :bad-request "Bad request",
+  :conflicting-activities
+  "Only one activity of a type can be active at the same time.",
   :server-error "Server error."},
  :fields
  {:document/status "Status",
