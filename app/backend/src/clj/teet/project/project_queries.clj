@@ -50,7 +50,7 @@
    :context {db :db}
    :args {project-id :thk.project/id
           task-id    :task-id}
-   :pre [(= project-id (project-db/task-project-id db task-id))]
+   :pre [(project-db/task-belongs-to-project db [:thk.project/id project-id] task-id)]
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/task-information {:db/id task-id
                                            :link :task/assignee}}}
