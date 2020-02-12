@@ -59,19 +59,6 @@
      [select/select-user {:e! e! :attribute :task/assignee}]]))
 
 
-(defn- activity-info-popup [label start-date end-date num-tasks complete-count incomplete-count]
-  [:div
-   [:div [:b label]]
-   [Divider]
-   [:div (format/date start-date) " - " (format/date end-date)]
-   (when (pos? num-tasks)
-     [:div {:style {:display "flex" :align-items "center"}}
-      [progress/circle {:radius 20 :stroke 5}
-       {:total   num-tasks
-        :success complete-count
-        :fail    incomplete-count}]
-      (str complete-count " / " num-tasks " tasks complete")])])
-
 (defn project-details
   [_e! {:thk.project/keys [estimated-start-date estimated-end-date road-nr start-m end-m
                            carriageway repair-method procurement-nr id] :as project}]
