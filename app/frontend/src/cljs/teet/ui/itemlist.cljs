@@ -42,7 +42,8 @@
 (defn ProgressList
   [titles items]
   (let [success (count (filterv #(= (:status %) :success) items))
-        fails (count (filterv #(= (:status %) :fail) items))]
+        fails (count (filterv #(= (:status %) :fail) items))
+        in-progress (count (filterv #(= (:status %) :in-progress) items))]
     [ItemList
      titles
      [:div {:style {:display :flex}}
@@ -70,8 +71,20 @@
       [:div {:style {:text-align :center
                      :margin     "0 0.5rem"}}
        [progress/circle
-        {:radius 70 :stroke 9}
-        {:success success :fail fails :total (count items)}]]]]))
+        {:radius 70 :stroke 9
+         :defs [[:pattern {:id "progress"
+                           :x 0 :y 0
+                           :width 9
+                           :height 9
+                           :patternUnits "userSpaceOnUse"
+                           :patternTransform "rotate(-45 0 0)"}
+                 [:rect {:x 0 :y 0 :width 9 :height 9 :fill theme-colors/success}]
+                 [:line {:x1 4 :y1 0
+                         :x2 4 :y2 9
+                         :style {:stroke "lightgray" :stroke-width 4}}]]]
+         :slices [[success theme-colors/success]
+                  [fails "red"]
+                  [in-progress "url(#progress)"]]}]]]]))
 
 (defn LinkList
   [titles items on-click-fn]
