@@ -31,7 +31,7 @@
                          [?a :activity/name ?name]
                          [?lc :thk.lifecycle/activities ?a]
                          [(get-else $ ?a :activity/actual-end-date ?time) ?end-date]
-                         [(<= ?end-date ?time)]]
+                         [(>= ?end-date ?time)]]
                     db
                     activity-name
                     lifecycle-id

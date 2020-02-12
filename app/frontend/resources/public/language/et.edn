@@ -109,6 +109,8 @@
   :authorization-failure "Sessioon aegus. Palun sisene uuesti.",
   :request-timeout nil,
   :bad-request "Halb taotlus",
+  :conflicting-activities
+  "Korraga võib olla aktiivne ainult üks tüüpi tegevus.",
   :server-error "Serveri viga."},
  :fields
  {:document/status "Olek",

@@ -371,10 +371,10 @@
                (if (= status "deploying")
                  (e! (snackbar-controller/->OpenSnackBar (tr [:warning :deploying]) :warning))
                  (let [current-version-commit (aget js/window "teet_githash")]
-                   (when-not  (and current-version-commit
-                                   (= commit
-                                     (aget js/window "teet_githash")))
-                    (e! (snackbar-controller/->OpenSnackBar (tr [:warning :version-mismatch]) :warning)))))))))
+                   (when (and current-version-commit
+                              (not= commit
+                                    current-version-commit))
+                     (e! (snackbar-controller/->OpenSnackBar (tr [:warning :version-mismatch]) :warning)))))))))
 
 (defn query-url
   "Generate an URL to a query with the given args. This is useful for queries

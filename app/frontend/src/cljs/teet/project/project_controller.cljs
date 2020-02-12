@@ -607,8 +607,3 @@
                         (assoc e :open? (not (:open? e)))
                         e))
                     %)))))
-
-
-(defn activity-url
-  [{:keys [project lifecycle]} {id :db/id}]
-  (str "#/projects/" project "/" lifecycle "/" id "?tab=details"))
