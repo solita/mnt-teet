@@ -3,7 +3,14 @@
             [teet.log :as log]
             [teet.localization :refer [tr]]
             [teet.common.common-controller :as common-controller]
-            goog.math.Long))
+            goog.math.Long
+            [teet.snackbar.snackbar-controller :as snackbar-controller]))
+
+(defmethod common-controller/on-server-error :conflicting-activities [err app]
+  (let [error (-> err ex-data :error)]
+    ;; General error handler for when the client sends faulty data.
+    ;; Commands can fail requests with :error :bad-request to trigger this
+    (t/fx (snackbar-controller/open-snack-bar app (tr [:error error]) :warning))))
 
 (defrecord UpdateActivityForm [form-data])
 (defrecord CreateActivity [])
