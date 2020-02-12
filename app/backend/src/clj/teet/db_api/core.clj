@@ -170,26 +170,35 @@
 
   Options:
   :doc            Docstring for the command
+
   :payload        Required binding form for command payload data
+
   :context        Optional binding form for the execution context
                   that always includes: db, user and conn.
 
   :unauthenticated?
                   If true, allow unauthenticated requests. Skips authorization
                   and project id checks completely.
+
   :authorization  Required map of authorization rules to check (see below)
+
   :project-id     Required form to determine the project for which
                   user permissions are checked. May use the bindings
                   from payload or context.
+
   :pre            Optional vector of pre check forms. Can use bindings
                   from context and payload. If pre checks fail, the request
                   will return a bad request reponse without invoking the
-                  body (or transact).
+                  body (or transact). If the check form has metadata key
+                  :error, then that will be sent to the client, otherwise
+                  a generic error code is sent.
+
   :post           Optional vector of post check forms. In addition to pre
                   check bindings, forms can also use % to refer to the
                   command result value. If post checks fail, the request
                   will return an internal server error response and log
                   an error.
+
   :transact       Optional form that generates data to transact to
                   Datomic. If specified, body must be omitted.
                   The command will automatically return the tempids
