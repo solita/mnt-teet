@@ -4,6 +4,7 @@
             [teet.road-visualization.road-visualization-controller :as road-visualization-controller]
             [teet.map.map-view :as map-view]
             [teet.map.map-features :as map-features]
+            [teet.map.map-utils :as map-utils]
             [teet.ui.material-ui :refer [Button]]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.typography :as typography]
@@ -64,7 +65,8 @@
                                                            (into-array
                                                             (map into-array geometry))}}))}
                      (partial map-features/road-line-style "magenta")
-                     {:fit-on-load? true}))
+                     {:fit-on-load? true
+                      :on-select #(.log js/console "WKT: " (map-utils/feature->wkt (:map/feature %)))}))
 
                   :point
                   (when (and x y)
