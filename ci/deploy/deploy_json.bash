@@ -18,7 +18,7 @@ then
 fi
 
 # If setting status to deployed, make sure db is up and running
-if [ $1 == "deployed"]
+if [ $1 == "deployed" ]
 then
     echo "Waiting for DB"
     until $(curl --output /dev/null --silent --head --fail "$BASEURL$ENDPOINT"); do
