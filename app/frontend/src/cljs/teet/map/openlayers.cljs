@@ -184,7 +184,8 @@
    :map/type    (.get layer "teet-source")
    :map/id      (.get feature "id")
    :map/teet-id (.get feature "teet-id")
-   :on-select (.get layer "teet-on-select")})
+   :on-select (.get layer "teet-on-select")
+   :map/feature feature})
 
 (defn- event-geometry
   "Obtains geometry for the given ol3 event. Returns the first geometry found."
