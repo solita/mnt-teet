@@ -20,11 +20,7 @@ fi
 # If setting status to deployed, make sure db is up and running
 if [ $1 == "deployed" ]
 then
-    echo "Waiting for DB"
-    until $(curl --output /dev/null --silent --head --fail "$BASEURL$ENDPOINT"); do
-        printf '.'
-        sleep 5
-    done
+    timeout 5m ./wait_for_db.bash || exit 1;
 fi
 
 echo "{\"commit\":\"$COMMIT\",\"status\":\"$1\",\"timestamp\":\"`date`\"}" > deploy.json
