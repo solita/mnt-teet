@@ -39,7 +39,7 @@
                      {:keys [min-resolution max-resolution
                              z-index opacity
                              fit-on-load? fit-padding
-                             on-load
+                             on-load on-select
                              content-type]
                       :or {z-index 99
                            opacity 1
@@ -58,11 +58,12 @@
                        (when on-load
                          (on-load layer))
                        (when fit-on-load?
-                         (fit-extent fit-padding layer)))))
+                         (fit-extent fit-padding layer)))
+                     on-select))
 
 (defn geojson-data-layer [name geojson style-fn  {:keys [min-resolution max-resolution
                                                          z-index opacity fit-on-load?
-                                                         fit-padding]
+                                                         fit-padding on-select]
                                                   :or {z-index 99
                                                        opacity 1
                                                        fit-padding [0 0 0 0]}}]
@@ -76,4 +77,5 @@
                      :no-content-type
                      style-fn
                      (when fit-on-load?
-                       (partial fit-extent fit-padding))))
+                       (partial fit-extent fit-padding))
+                     on-select))
