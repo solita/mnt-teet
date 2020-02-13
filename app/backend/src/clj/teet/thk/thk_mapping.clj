@@ -65,6 +65,7 @@
    ;; 4011 LOA proj
    "4012" :activity.name/pre-design ;; Eskiisproj
    "4013" :activity.name/preliminary-design  ;; Eelproj
+   "4014" :activity.name/design-requirements ;; Proj. tingimused
    })
 
 (def activity-name->thk-activity-type
