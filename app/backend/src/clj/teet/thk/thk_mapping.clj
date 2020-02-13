@@ -88,7 +88,7 @@
 
 (def object-integration-info-fields
   #{:object/groupfk :object/groupshortname
-    :object/owner :object/regionfk :object/thkupdstamp
+    :object/regionfk :object/thkupdstamp
     :object/statusfk :object/statusname})
 
 (def phase-integration-info-fields
@@ -147,6 +147,11 @@
    "activity_procurementno"
    "activity_procurementid"])
 
+(defn estonian-person-id->user [id]
+  (when-not (str/blank? id)
+    {:db/id (str "new-user-" id)
+     :user/person-id id}))
+
 (def thk->teet
   {;; Object/project fields
    "object_id" [:thk.project/id]
@@ -160,7 +165,7 @@
    "object_bridgenr" [:thk.project/bridge-nr ->int]
    "object_name" [:thk.project/name]
    "object_projectname" [:thk.project/project-name]
-   "object_owner" [:object/owner]
+   "object_owner" [:thk.project/owner estonian-person-id->user :user/person-id]
    "object_regionfk" [:object/regionfk]
    "object_regionname" [:thk.project/region-name]
    "object_thkupdstamp" [:object/thkupdstamp]

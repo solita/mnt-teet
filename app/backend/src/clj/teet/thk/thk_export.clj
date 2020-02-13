@@ -13,6 +13,7 @@
 
 (defn- all-projects [db]
   (d/q '[:find (pull ?e [*
+                         {:thk.project/owner [:user/person-id]}
                          {:thk.project/lifecycles
                           [*
                            {:thk.lifecycle/activities
