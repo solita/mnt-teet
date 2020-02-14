@@ -1,8 +1,12 @@
 (ns teet.system.system-queries
-  (:require [teet.db-api.core :as db-api :refer [defquery]]))
+  (:require [teet.db-api.core :as db-api :refer [defquery]]
+            [teet.util.build-info :as build-info]))
 
 (defn db-state-response [_db-result]
-  (str (System/currentTimeMillis)))
+  (with-meta
+    {:status 200
+     :body (build-info/git-commit)}
+    {:format :raw}))
 
 ;; The actual query here is irrelevant. This provides an endpoint for
 ;; checking whether the db is alive.

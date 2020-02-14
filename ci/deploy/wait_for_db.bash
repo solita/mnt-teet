@@ -7,9 +7,17 @@ ENDPOINT="query/?q=%5B%22%5E%20%22%2C%22~%3Aquery%22%2C%22~%3Ateet.system%2Fdb%2
 echo "Waiting for DB"''
 while true
 do
-    STATUS=$(curl -s -o /dev/null -L -w '%{http_code}' "$BASEURL$ENDPOINT")
-    if [ $STATUS -eq 200 ]; then
-        break
+    curl -s -L -w '\n%{http_code}' "$BASEURL$ENDPOINT" | {
+        read CURRENT_COMMIT
+        read STATUS
+    }
+    # TODO: Remove after testing
+    echo $COMMIT
+    echo $CURRENT_COMMIT
+    echo $STATUS
+    if [ $STATUS -eq 200 ] && [ "$COMMIT" == "$CURRENT_COMMIT" ]; then
+        echo "AWWYISS";
+        break;
     else
         echo -n .
     fi
