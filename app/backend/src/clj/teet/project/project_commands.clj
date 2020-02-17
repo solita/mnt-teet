@@ -133,7 +133,7 @@ and cadastral units"
 
 (defcommand :thk.project/update-restrictions
   {:doc "Update project related restrictions"
-   :context {:keys [user db conn]}
+   :context {:keys [user db]}
    :payload {:keys [restrictions project-id]}
    :project-id [:thk.project/id project-id]
    :authorization {:project/project-info {:eid [:thk.project/id project-id]
@@ -142,7 +142,7 @@ and cadastral units"
 
 (defcommand :thk.project/update-cadastral-units
   {:doc "Update project related cadastral-units"
-   :context {:keys [user db conn]}
+   :context {:keys [user db]}
    :payload {:keys [cadastral-units project-id]}
    :project-id [:thk.project/id project-id]
    :authorization {:project/project-info {:eid [:thk.project/id project-id]
