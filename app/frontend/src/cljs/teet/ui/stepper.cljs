@@ -9,7 +9,8 @@
             [teet.localization :refer [tr tr-tree]]
             [reagent.core :as r]
             [teet.ui.format :as format]
-            [teet.ui.typography :as typography]))
+            [teet.ui.typography :as typography]
+            [teet.project.task-model :as task-model]))
 
 (defn- svg-style
   [bottom?]
@@ -126,12 +127,12 @@
 (defn- task-step-state
   [task]
   (let [status (get-in task [:task/status :db/ident])
-        task-ready-statuses #{:task.status/accepted :task.status/completed :task.status/rejected}
-        task-inprogress #{:task.status/in-progress}]
+        task-done-statuses #{:task.status/accepted :task.status/completed
+                              :task.status/rejected :task.status/canceled}]
     (cond
-      (task-ready-statuses status)
+      (task-done-statuses status)
       :done
-      (task-inprogress status)
+      (task-model/in-progress? status)
       :started
       :else
       :not-started)))
@@ -218,11 +219,11 @@
                             [:ol {:class (<class ol-class)}
                              (doall
                                (for [{:task/keys [type] :as task} (:activity/tasks activity)]
-                                 (let [status (task-step-state task)]
+                                 (let [task-status (task-step-state task)]
                                    ^{:key (str (:db/id task))}
                                    [:li
                                     [:div {:class (<class item-class (= :done activity-state) last?)}
-                                     [circle-svg {:status status :size 14}]
+                                     [circle-svg {:status task-status :size 14}]
                                      [:div {:class (<class task-info)}
                                       [Link {:href  (str "#/projects/" id "/" (:db/id task))
                                              :class (<class stepper-button-style {:size "16px" :open? false})}
