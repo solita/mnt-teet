@@ -94,23 +94,26 @@
   (doall
    (for [{entity-id :db/id
           features :features} files]
-     (do
-       (log/info "Upserting" (count features) "features for entity" entity-id)
-       @(client/post
-         (str api-url "/rpc/upsert_entity_feature")
-         {:headers {"Authorization" (jwt-token/create-backend-token api-secret)
-                    "Content-Type" "application/json"}
-          :body (cheshire/encode
-                 (for [{:keys [geometry properties id] :as f} features]
-                   {:entity (str entity-id)
-                    :id id
+     (let [url (str api-url "/rpc/upsert_entity_feature")]
+       (log/info "Upserting" (count features) "features for entity" entity-id ". URL: " api-url)
+       (let [response
+             @(client/post
+               url
+               {:headers {"Authorization" (str "Bearer " (jwt-token/create-backend-token api-secret))
+                          "Content-Type" "application/json"}
+                :body (cheshire/encode
+                       (for [{:keys [geometry properties id] :as f} features]
+                         {:entity (str entity-id)
+                          :id id
 
-                    ;; PENDING: what should we take from AGS for these?
-                    :label ""
-                    :type "ags"
+                          ;; PENDING: what should we take from AGS for these?
+                          :label ""
+                          :type "ags"
 
-                    :geometry geometry
-                    :properties properties}))})))))
+                          :geometry geometry
+                          :properties properties}))})]
+         (log/info "Upsert features: " (:status response))
+         response)))))
 
 (defn import-project-ags-files [ctx]
   (-> ctx
