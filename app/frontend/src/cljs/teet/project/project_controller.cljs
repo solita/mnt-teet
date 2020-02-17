@@ -219,24 +219,22 @@
     (fn []
       (->NavigateToStep step-label))))
 
+(def candidate-paths
+  {:restrictions {:result-path [:route :project :restriction-candidates]
+                  :geojson-path [:route :project :restriction-candidates-geojson]
+                  :selected-feature-path [:route :project :thk.project/related-restrictions]
+                  :checked-feature-path [:route :project :checked-restrictions]
+                  :checked-feature-geojson-path [:route :project :checked-restrictions-geojson]}
+   :cadastral-units {:result-path [:route :project :cadastral-candidates]
+                     :geojson-path [:route :project :cadastral-candidates-geojson]
+                     :selected-feature-path [:route :project :thk.project/related-cadastral-units]
+                     :checked-feature-path [:route :project :checked-cadastral-units]
+                     :checked-feature-geojson-path [:route :project :checked-cadastral-geojson]}})
+
 (extend-protocol t/Event
   FetchFeatureCandidatesResponse
   (process-event [{:keys [candidate-type response]} app]
-    (let [result-path (if (= candidate-type :restrictions)
-                        [:route :project :restriction-candidates]
-                        [:route :project :cadastral-candidates])
-          geojson-path (if (= candidate-type :restrictions)
-                         [:route :project :restriction-candidates-geojson]
-                         [:route :project :cadastral-candidates-geojson])
-          selected-feature-path (if (= candidate-type :restrictions)
-                                 [:route :project :thk.project/related-restrictions]
-                                 [:route :project :thk.project/related-cadastral-units])
-          checked-feature-path (if (= candidate-type :restrictions)
-                                     [:route :project :checked-restrictions]
-                                     [:route :project :checked-cadastral-units])
-          checked-feature-geojson-path (if (= candidate-type :restrictions)
-                                        [:route :project :checked-restrictions-geojson]
-                                        [:route :project :checked-cadastral-geojson])
+    (let [{:keys [result-path geojson-path selected-feature-path checked-feature-path checked-feature-geojson-path]} (candidate-paths candidate-type)
           geojson (js/JSON.parse response)
           features (-> geojson
                        (js->clj :keywordize-keys true)
