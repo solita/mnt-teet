@@ -87,7 +87,11 @@
 (defrecord SaveProjectSetup [])
 (defrecord SaveProjectSetupResponse [])
 (defrecord UpdateBasicInformationForm [form-data])
-(defrecord ChangeRoadObjectAoe [val])
+(defrecord UpdateProjectRestrictions [restrictions project-id])
+(defrecord UpdateProjectCadastralUnits [cadastral-units project-id])
+(defrecord FeaturesUpdatedSuccessfully [result])
+(defrecord FetchRoadInformation [form-data])
+(defrecord ChangeRoadObjectAoe [val entity-type])
 (defrecord SaveRestrictions [])
 (defrecord UpdateRestrictionsForm [form-data])
 (defrecord SaveCadastralUnits [])
@@ -95,7 +99,7 @@
 (defrecord SaveActivities [])
 (defrecord UpdateActivitiesForm [form-data])
 
-(defrecord FetchRestrictions [road-buffer-meters])
+(defrecord FetchRelatedInfo [road-buffer-meters entity-type])
 (defrecord ToggleRestriction [restriction])
 (defrecord ToggleCadastralUnit [cadastral-unit])
 (defrecord FeatureMouseOvers [layer enter? feature])
@@ -113,33 +117,29 @@
 (defrecord DeleteActivity [activity-id])
 (defrecord DeleteActivityResult [response])
 
-(defrecord FetchRelatedFeaturesResponse [result-path geojson-path response])
+(defrecord FetchFeatureCandidatesResponse [candidate-type response])
 
 (defn fetch-related-info
-  [app road-buffer-meters]
+  [app road-buffer-meters info-type]
   (let [args {:entity_id (str (get-in app [:route :project :db/id]))
               :distance  road-buffer-meters}]
     (merge
       {:tuck.effect/type :rpc
        :rpc              "geojson_entity_related_features"
        :endpoint         (get-in app [:config :api-url])}
-      (case (project-setup-step app)
+      (case info-type
         "restrictions"
         {:args         (assoc args
                          ;; FIXME: dataosource ids from map datasources info
                          :datasource_ids (map-controller/select-rpc-datasources
                                            app map-controller/restriction-datasource?))
-         :result-event (partial ->FetchRelatedFeaturesResponse
-                                [:route :project :restriction-candidates]
-                                [:route :project :restriction-candidates-geojson])}
+         :result-event (partial ->FetchFeatureCandidatesResponse :restrictions)}
 
         "cadastral-units"
         {:args         (assoc args
                          :datasource_ids (map-controller/select-rpc-datasources
                                            app map-controller/cadastral-unit-datasource?))
-         :result-event (partial ->FetchRelatedFeaturesResponse
-                                [:route :project :cadastral-candidates]
-                                [:route :project :cadastral-candidates-geojson])}
+         :result-event (partial ->FetchFeatureCandidatesResponse :cadastral-units)}
         {}))))
 
 (defn navigate-to-next-step-event
@@ -220,17 +220,44 @@
       (->NavigateToStep step-label))))
 
 (extend-protocol t/Event
-  FetchRelatedFeaturesResponse
-  (process-event [{:keys [result-path geojson-path response]} app]
-    (let [geojson (js/JSON.parse response)
+  FetchFeatureCandidatesResponse
+  (process-event [{:keys [candidate-type response]} app]
+    (let [result-path (if (= candidate-type :restrictions)
+                        [:route :project :restriction-candidates]
+                        [:route :project :cadastral-candidates])
+          geojson-path (if (= candidate-type :restrictions)
+                         [:route :project :restriction-candidates-geojson]
+                         [:route :project :cadastral-candidates-geojson])
+          selected-feature-path (if (= candidate-type :restrictions)
+                                 [:route :project :thk.project/related-restrictions]
+                                 [:route :project :thk.project/related-cadastral-units])
+          checked-feature-path (if (= candidate-type :restrictions)
+                                     [:route :project :checked-restrictions]
+                                     [:route :project :checked-cadastral-units])
+          checked-feature-geojson-path (if (= candidate-type :restrictions)
+                                        [:route :project :checked-restrictions-geojson]
+                                        [:route :project :checked-cadastral-geojson])
+          geojson (js/JSON.parse response)
           features (-> geojson
                        (js->clj :keywordize-keys true)
                        :features
                        (as-> fs
-                             (map :properties fs)))]
+                             (map :properties fs)))
+          related-features (into #{} (get-in app selected-feature-path))
+          selected-candidates (set
+                                (filter
+                                     #(related-features (:teet-id %))
+                                     features))
+          selected-geojsons (->> geojson
+                                 ->clj
+                                 :features
+                                 (filter #(related-features (get-in % [:properties :teet-id])))
+                                 set)]
       (-> app
           (assoc-in result-path features)
-          (assoc-in geojson-path geojson))))
+          (assoc-in geojson-path geojson)
+          (assoc-in checked-feature-path selected-candidates)
+          (assoc-in checked-feature-geojson-path selected-geojsons))))
 
   SelectCadastralUnit
   (process-event [{p :p} app]
@@ -267,13 +294,14 @@
            :result-event     common-controller/->Refresh}))
 
   ChangeRoadObjectAoe
-  (process-event [{val :val} {:keys [page params] :as app}]
+  (process-event [{val :val
+                   entity-type :entity-type} {:keys [page params] :as app}]
     (let [app (assoc-in app [:map :road-buffer-meters] val)]
-      (if (and (project-setup-step app) (not-empty val))
+      (if (and entity-type (not-empty val))
         (t/fx app
               {:tuck.effect/type :debounce
                :timeout          600
-               :effect           (fetch-related-info app val)})
+               :effect           (fetch-related-info app val entity-type)})
         app)))
 
   DeleteActivity
@@ -348,28 +376,64 @@
                                                                                        checked-cadastral-units)}))
                  :result-event     common-controller/->Refresh})))
 
+  UpdateProjectRestrictions
+  (process-event [{restrictions :restrictions
+                   project-id :project-id} app]
+    (let [restriction-ids (set (map :teet-id restrictions))]
+      (t/fx app {:tuck.effect/type :command!
+                 :command :thk.project/update-restrictions
+                 :payload {:restrictions restriction-ids
+                           :project-id project-id}
+                 :success-message (tr [:notifications :restrictions-updated])
+                 :result-event ->FeaturesUpdatedSuccessfully})))
+
+  FeaturesUpdatedSuccessfully
+  (process-event [{result :result} {:keys [page params query] :as app}]
+    (t/fx app {:tuck.effect/type :navigate
+               :page             page
+               :params           params
+               :query            (dissoc query :configure)}
+          common-controller/refresh-fx))
+
+  UpdateProjectCadastralUnits
+  (process-event [{cadastral-units :cadastral-units
+                   project-id :project-id} app]
+    (let [cadastral-ids (set (map :teet-id cadastral-units))]
+      (t/fx app {:tuck.effect/type :command!
+                 :command :thk.project/update-cadastral-units
+                 :payload {:cadastral-units cadastral-ids
+                           :project-id project-id}
+                 :success-message (tr [:notifications :cadastral-units-updated])
+                 :result-event ->FeaturesUpdatedSuccessfully})))
+
   UpdateBasicInformationForm
   (process-event [{:keys [form-data]} app]
-    (let [{:thk.project/keys [road-nr carriageway]} (get-in app [:route :project])
-          actual-road-info (get-in app [:route :project :basic-information-form :road-info])]
-      (if actual-road-info
-        (update-in app [:route :project :basic-information-form]
-                   merge form-data)
-        (t/fx (update-in app [:route :project :basic-information-form]
-                         merge form-data)
-              {:tuck.effect/type :rpc
-               :endpoint         (get-in app [:config :api-url])
-               :method           :GET
-               :rpc              "road_info"
-               :args             {:road        road-nr
-                                  :carriageway carriageway}
-               :result-path      [:route :project :basic-information-form :road-info]}))))
+    (if (get-in app [:route :project :basic-information-form :road-info])
+      (update-in app [:route :project :basic-information-form]
+                 merge form-data)
+      (t/fx app
+            (fn [e!]
+              (e! (->FetchRoadInformation form-data))))))
 
-  FetchRestrictions
-  (process-event [{road-buffer-meters :road-buffer-meters} app]
+  FetchRoadInformation
+  (process-event [{form-data :form-data} app]
+    (let [{:thk.project/keys [road-nr carriageway]} (get-in app [:route :project])]
+      (t/fx (update-in app [:route :project :basic-information-form]
+                       merge form-data)
+            {:tuck.effect/type :rpc
+             :endpoint (get-in app [:config :api-url])
+             :method :GET
+             :rpc "road_info"
+             :args {:road road-nr
+                    :carriageway carriageway}
+             :result-path [:route :project :basic-information-form :road-info]})))
+
+  FetchRelatedInfo
+  (process-event [{road-buffer-meters :road-buffer-meters
+                   entity-type :entity-type} app]
     (t/fx app
-          (fetch-related-info app road-buffer-meters)))
-
+          (fetch-related-info app road-buffer-meters (or (project-setup-step app)
+                                                         entity-type))))
 
   ToggleRestriction
   (process-event [{restriction :restriction} app]

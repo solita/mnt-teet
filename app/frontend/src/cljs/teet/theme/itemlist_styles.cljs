@@ -33,7 +33,7 @@
   []
   {:margin-right "0.5rem"})
 
-(defn user-list-element-style
+(defn gray-bg-list-element
   []
   (let [border-style (str "1px solid " theme-colors/gray-lighter)]
     ^{:pseudo {:first-of-type {:border-top border-style}}}
