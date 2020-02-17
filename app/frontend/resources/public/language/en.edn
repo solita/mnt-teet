@@ -29,6 +29,9 @@
   :design-stage-activities "Project stages",
   :select {:empty "- Select value"},
   :clear "Clear"},
+ :data-tab
+ {:restriction-count "Currently showing {count} restrictions",
+  :cadastral-unit-count "Currently showing {count} cadastral units"},
  :document
  {:download-file "Download file",
   :comments "Comments",
@@ -155,6 +158,8 @@
   :activity-deleted "Activity deleted successfully",
   :activity-updated "Activity updated successfully",
   :permission-added-successfully "Permission added successfully",
+  :cadastral-units-updated "Cadastral units updated successfully",
+  :restrictions-updated "Restrictions updated succesfully",
   :task-deleted "Task deleted successfully"},
  :people-tab
  {:managers "Managers",
