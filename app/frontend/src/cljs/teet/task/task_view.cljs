@@ -26,11 +26,13 @@
             [teet.comments.comments-controller :as comments-controller]))
 
 (defn task-status [e! status modified]
+  
   [select/status {:e!        e!
                   :on-change (e! task-controller/->UpdateTaskStatus)
                   :status    (:db/ident status)
                   :attribute :task/status
-                  :modified  modified}])
+                  :modified  modified
+                  :values-filter task-model/current-statuses}])
 
 (defn get-latest-modification
   "Takes the document and returns the latest modification time from either files or the doc it self"

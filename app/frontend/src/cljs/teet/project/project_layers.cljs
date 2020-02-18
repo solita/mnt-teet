@@ -19,7 +19,7 @@
   {:surveys (map-layers/mvt-layer (endpoint app)
                                   "mvt_features"
                                   {"datasource" (map-controller/datasource-id-by-name app "survey")
-                                   "types"      "{}"}
+                                   "types" "{}"}
                                   map-features/survey-style
                                   {:opacity 0.5})})
 
@@ -32,11 +32,11 @@
           end (.getLastCoordinate geom)]
       (callback
         [{:coordinate (js->clj start)
-          :content    [map-view/overlay {:arrow-direction :right :height 30}
-                       start-label]}
+          :content [map-view/overlay {:arrow-direction :right :height 30}
+                    start-label]}
          {:coordinate (js->clj end)
-          :content    [map-view/overlay {:arrow-direction :left :height 30}
-                       end-label]}]))))
+          :content [map-view/overlay {:arrow-direction :left :height 30}
+                    end-label]}]))))
 
 (defn given-range-in-actual-road?
   "Check to see if the forms given road range is in the actual road"
@@ -51,7 +51,7 @@
   [map-obj-padding
    {app :app
     {:thk.project/keys [road-nr carriageway]
-     :keys             [basic-information-form] :as project} :project
+     :keys [basic-information-form] :as project} :project
     set-overlays! :set-overlays!}]
   (let [endpoint (endpoint app)
         [start-label end-label]
@@ -67,10 +67,10 @@
         road-information (:road-info basic-information-form)
         options {:fit-on-load? true
                  ;; Use left side padding so that road is not shown under the project panel
-                 :fit-padding  map-obj-padding
-                 :on-load      (partial km-range-label-overlays
-                                        start-label end-label
-                                        set-overlays!)}]
+                 :fit-padding map-obj-padding
+                 :on-load (partial km-range-label-overlays
+                                   start-label end-label
+                                   set-overlays!)}]
 
     {:thk-project
      (if (:thk.project/km-range basic-information-form)
@@ -81,10 +81,10 @@
            (map-layers/geojson-layer
              endpoint
              "geojson_road_geometry"
-             {"road"        road-nr
+             {"road" road-nr
               "carriageway" carriageway
-              "start_m"     form-start-m
-              "end_m"       form-end-m}
+              "start_m" form-start-m
+              "end_m" form-end-m}
              map-features/project-line-style
              (merge options
                     {:content-type "application/json"}))
@@ -98,9 +98,12 @@
                                  map-features/project-line-style
                                  options))}))
 
-(defn setup-restriction-candidates [{{:keys [setup-step
-                                            open-restrictions-geojsons]} :project}]
-  (when-let [candidates (and (= setup-step "restrictions")
+(defn setup-restriction-candidates [{{:keys [query]} :app
+                                     {:keys [setup-step
+                                             open-restrictions-geojsons]} :project}]
+  (when-let [candidates (and (or
+                               (= setup-step "restrictions")
+                               (= (:configure query) "restrictions"))
                              open-restrictions-geojsons)]
     {:related-restriction-candidates
      (map-layers/geojson-data-layer "related-restriction-candidates"
@@ -108,9 +111,12 @@
                                     map-features/project-related-restriction-style
                                     {:opacity 1})}))
 
-(defn setup-cadastral-unit-candidates [{{:keys [setup-step
-                                                 cadastral-candidates-geojson]} :project}]
-  (when-let [candidates (and (= setup-step "cadastral-units")
+(defn setup-cadastral-unit-candidates [{{:keys [query]} :app
+                                        {:keys [setup-step
+                                                cadastral-candidates-geojson]} :project}]
+  (when-let [candidates (and (or
+                               (= setup-step "cadastral-units")
+                               (= (:configure query) "cadastral-units"))
                              cadastral-candidates-geojson)]
     {:related-cadastral-unit-candidates
      (map-layers/geojson-data-layer "related-cadastral-unit-candidates"
@@ -121,38 +127,46 @@
 
 (defn project-road-buffer-layer
   "Show buffer area for project-geometry"
-  [{:thk.project/keys [road-nr carriageway]
-    :keys             [basic-information-form] :as _project}
+  [{:keys [start-m end-m road-nr carriageway] :as settings}
    endpoint
    road-buffer-meters]
-  (let [road-information (:road-info basic-information-form)]
-    (when (and basic-information-form)
-      (let [{[start-km-string end-km-string] :thk.project/km-range} basic-information-form
-            form-start-m (some-> start-km-string road-model/parse-km km->m)
-            form-end-m (some-> end-km-string road-model/parse-km km->m)]
-        (when (given-range-in-actual-road? road-information [form-start-m form-end-m])
-          (map-layers/geojson-layer
-           endpoint
-            "geojson_road_buffer_geometry"
-            {"road"        road-nr
-             "carriageway" carriageway
-             "start_m"     form-start-m
-             "end_m"       form-end-m
-             "buffer"      road-buffer-meters}
-            map-features/road-buffer-fill-style
-            {:content-type "application/json"}))))))
+  (map-layers/geojson-layer
+    endpoint
+    "geojson_road_buffer_geometry"
+    {"road" road-nr
+     "carriageway" carriageway
+     "start_m" start-m
+     "end_m" end-m
+     "buffer" road-buffer-meters}
+    map-features/road-buffer-fill-style
+    {:content-type "application/json"}))
 
-(defn road-buffer [{:keys [app project]}]
-  (let [road-buffer-meters (get-in app [:map :road-buffer-meters])]
+(defn road-buffer [{{:keys [query] :as app} :app {:keys [basic-information-form]
+                                                  :thk.project/keys [start-m end-m road-nr carriageway] :as project} :project}]
+  (let [road-information (:road-info basic-information-form)
+        configure (:configure query)
+        {[start-km-string end-km-string] :thk.project/km-range} basic-information-form
+        road-start-m (or (some-> start-km-string road-model/parse-km km->m) start-m)
+        road-end-m (or (some-> end-km-string road-model/parse-km km->m) end-m)
+        road-buffer-meters (get-in app [:map :road-buffer-meters])
+        road-info {:start-m road-start-m
+                   :end-m road-end-m
+                   :road-nr road-nr
+                   :carriageway carriageway}]
     (when (and (not-empty road-buffer-meters)
-               (>= road-buffer-meters 0))
+               (>= road-buffer-meters 0)
+               (or
+                 configure
+                 (and
+                   basic-information-form
+                   (given-range-in-actual-road? road-information [road-start-m road-end-m]))))
       {:thk-project-buffer
-       (project-road-buffer-layer project (endpoint app) road-buffer-meters)})))
+       (project-road-buffer-layer road-info (endpoint app) road-buffer-meters)})))
 
 
-(defn related-restrictions [{app :app
+(defn related-restrictions [{{query :query :as app} :app
                              {restrictions :thk.project/related-restrictions} :project}]
-  (when restrictions
+  (when (and restrictions (not (:configure query)))
     {:related-restrictions
      (map-layers/geojson-layer (endpoint app)
                                "geojson_features_by_id"
@@ -160,9 +174,9 @@
                                map-features/project-restriction-style
                                {})}))
 
-(defn related-cadastral-units [{app :app
+(defn related-cadastral-units [{{query :query :as app} :app
                                 {cadastral-units :thk.project/related-cadastral-units} :project}]
-  (when cadastral-units
+  (when (and cadastral-units (not (:configure query)))
     {:related-cadastral-units
      (map-layers/geojson-layer (endpoint app)
                                "geojson_features_by_id"
@@ -173,20 +187,26 @@
 (defn- ags-on-select [e! {:map/keys [teet-id]}]
   (e! (map-controller/->FetchOverlayForEntityFeature [:route :project :overlays] teet-id)))
 
-(defn selected-cadastral-units [{{checked-cadastral-geojson :checked-cadastral-geojson
+(defn selected-cadastral-units [{{:keys [query]} :app
+                                 {checked-cadastral-geojson :checked-cadastral-geojson
                                   setup-step :setup-step} :project}]
   (when (and checked-cadastral-geojson
-             (= setup-step "cadastral-units"))
+             (or
+               (= (:configure query) "cadastral-units")
+               (= setup-step "cadastral-units")))
     {:checked-cadastral-geojson
      (map-layers/geojson-data-layer "selected-cadastral-units"
                                     (->js (assoc {"type" "FeatureCollection"} "features" (into [] checked-cadastral-geojson)))
                                     map-features/selected-cadastral-unit-style
                                     {:opacity 1})}))
 
-(defn selected-restrictions [{{checked-restrictions-geojson :checked-restrictions-geojson
+(defn selected-restrictions [{{:keys [query]} :app
+                              {checked-restrictions-geojson :checked-restrictions-geojson
                                setup-step :setup-step} :project}]
   (when (and checked-restrictions-geojson
-             (= setup-step "restrictions"))
+             (or
+               (= (:configure query) "restrictions")
+               (= setup-step "restrictions")))
     {:checked-restrictions-geojson
      (map-layers/geojson-data-layer "selected-restrictions"
                                     (->js (assoc {"type" "FeatureCollection"} "features" (into [] checked-restrictions-geojson)))
@@ -195,16 +215,16 @@
 
 (defn ags-surveys [{:keys [e! app project]}]
   (reduce
-   (fn [layers file]
-     (if (str/ends-with? (:file/name file) ".ags")
-       (assoc layers
-              (str "ags-survey-" (str (:db/id file)))
-              (map-layers/mvt-layer (endpoint app)
-                                    "mvt_entity_features"
-                                    {"entity" (str (:db/id file))
-                                     "types" "{}"}
-                                    map-features/ags-survey-style
-                                    {:on-select (r/partial ags-on-select e!)}))
-       layers))
-   {}
-   (project-model/project-files project)))
+    (fn [layers file]
+      (if (str/ends-with? (:file/name file) ".ags")
+        (assoc layers
+          (str "ags-survey-" (str (:db/id file)))
+          (map-layers/mvt-layer (endpoint app)
+                                "mvt_entity_features"
+                                {"entity" (str (:db/id file))
+                                 "types" "{}"}
+                                map-features/ags-survey-style
+                                {:on-select (r/partial ags-on-select e!)}))
+        layers))
+    {}
+    (project-model/project-files project)))

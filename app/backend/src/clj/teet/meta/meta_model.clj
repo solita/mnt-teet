@@ -18,3 +18,7 @@
     :meta/deleted? true
     :db/id id))
 
+(defn tx-meta
+  [user]
+  {:db/id "datomic.tx"
+   :tx/author (:user/id user)})

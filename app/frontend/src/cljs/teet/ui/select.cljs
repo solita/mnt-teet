@@ -3,6 +3,7 @@
   (:require [reagent.core :as r]
             [herb.core :as herb :refer [<class]]
             [teet.theme.theme-colors :as theme-colors]
+            [taoensso.timbre :as log]
             [teet.ui.material-ui :refer [Select MenuItem Menu Button
                                          InputLabel FormControl ButtonGroup]]
             [teet.ui.icons :as icons]
@@ -167,13 +168,13 @@
 
 (defn select-enum
   "Select an enum value based on attribute. Automatically fetches enum values from database."
-  [{:keys [e! attribute required tiny-select? show-label? container-class class]
+  [{:keys [e! attribute required tiny-select? show-label? container-class class values-filter seppo]
     :or {show-label? true}}]
   (when-not (contains? @enum-values attribute)
     (e! (common-controller/->Query {:query :enum/values
                                     :args {:attribute attribute}
                                     :result-event (partial ->SetEnumValues attribute)})))
-  (fn [{:keys [value on-change name id error container-class class]
+  (fn [{:keys [value on-change name id error container-class class values-filter]
         :enum/keys [valid-for]}]
     (let [tr* #(tr [:enum %])
           select-comp (if tiny-select?
@@ -184,7 +185,11 @@
                                (filter #(= valid-for (:enum/valid-for %)))
                                identity)
                              (map :db/ident))
-                       (@enum-values attribute))]
+                       (@enum-values attribute))
+          values (if values-filter
+                   (filterv values-filter values)
+                   ;; else
+                   values)]
       [select-comp {:label (tr [:fields attribute])
                     :name name
                     :id id
@@ -240,14 +245,16 @@
   {:flex-basis "30%"})
 
 (defn status
-  [{:keys [e! status attribute modified on-change]}]
+  [{:keys [e! status attribute modified on-change values-filter]}]
   [:div {:class (<class status-container-style)}
    [select-enum {:e!                     e!
                         :on-change       on-change
                         :value           status
                         :tiny-select?    true
                         :attribute       attribute
-                        :container-class (<class status-style)}]
+                        :seppo      (some? values-filter)
+                        :container-class (<class status-style)
+                        :values-filter   values-filter}]
    [common/labeled-data {:label (tr [:common :last-modified])
                          :data  (or (format/date modified)
                                     "-")}]])

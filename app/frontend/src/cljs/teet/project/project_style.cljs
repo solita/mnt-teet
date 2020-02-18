@@ -136,7 +136,7 @@
    :justify-content :space-between})
 
 
-(defn wizard-header
+(defn project-view-header
   []
   {:padding "0.5rem"
    :background-color theme-colors/gray-lightest
@@ -163,7 +163,7 @@
    :border-top (str "1px solid" theme-colors/gray-lighter)
    :align-items :center})
 
-(defn people-tab-heading-style
+(defn heading-and-button-style
   []
   {:display         :flex
    :justify-content :space-between

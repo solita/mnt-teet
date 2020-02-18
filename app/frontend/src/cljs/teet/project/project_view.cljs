@@ -42,13 +42,13 @@
   (when initialization-fn
     (initialization-fn))
   (fn [e! {:keys [close task save on-change delete]}]
-    [form/form {:e!              e!
-                :value           task
+    [form/form {:e! e!
+                :value task
                 :on-change-event on-change
-                :cancel-event    close
-                :save-event      save
-                :delete          delete
-                :spec            :task/new-task-form}
+                :cancel-event close
+                :save-event save
+                :delete delete
+                :spec :task/new-task-form}
      ^{:xs 12 :attribute :task/type}
      [select/select-enum {:e! e! :attribute :task/type}]
 
@@ -100,12 +100,12 @@
 (defn project-activity
   [e!
    {thk-id :thk.project/id}
-   {id             :db/id
+   {id :db/id
     :activity/keys [name tasks estimated-end-date estimated-start-date] :as activity}]
   [:div {:class (<class project-style/project-activity-style)}
-   [:div {:style {:display         :flex
+   [:div {:style {:display :flex
                   :justify-content :space-between
-                  :align-items     :center}}
+                  :align-items :center}}
     [:h2 (tr [:enum (:db/ident name)])]
     [buttons/button-secondary {:on-click (e! project-controller/->OpenEditActivityDialog)} (tr [:buttons :edit])]]
    [:span (format/date estimated-start-date) " – " (format/date estimated-end-date)]
@@ -114,9 +114,9 @@
      (doall
        (for [{:task/keys [status type] :as t} tasks]
          ^{:key (:db/id t)}
-         [common/list-button-link (merge {:link  (str "#/projects/" thk-id "/" (:db/id t))
+         [common/list-button-link (merge {:link (str "#/projects/" thk-id "/" (:db/id t))
                                           :label (tr [:enum (:db/ident type)])
-                                          :icon  icons/file-folder-open}
+                                          :icon icons/file-folder-open}
                                          (when status
                                            {:end-text (tr [:enum (:db/ident status)])}))]))
      [:div {:class (<class project-style/top-margin)}
@@ -137,39 +137,39 @@
                map-object-padding (if (= page :project)
                                     [25 25 25 (+ 100 (* 1.05 (project-style/project-panel-width)))]
                                     [25 25 25 25])]
-    [:div {:style {:flex           1
-                   :display        :flex
+    [:div {:style {:flex 1
+                   :display :flex
                    :flex-direction :column}}
      [map-view/map-view e!
-      {:class    (<class map-style)
-       :layers   (let [opts {:e!            e!
-                             :app           app
-                             :project       project
-                             :set-overlays! set-overlays!}]
-                   (reduce (fn [layers layer-fn]
-                             (merge layers (layer-fn opts)))
-                           {}
-                           [#_project-layers/surveys-layer
-                            project-layers/road-buffer
-                            (partial project-layers/project-road-geometry-layer map-object-padding)
-                            project-layers/setup-restriction-candidates
-                            project-layers/setup-cadastral-unit-candidates
-                            project-layers/ags-surveys
-                            project-layers/related-restrictions
-                            project-layers/related-cadastral-units
-                            project-layers/selected-cadastral-units
-                            project-layers/selected-restrictions]))
+      {:class (<class map-style)
+       :layers (let [opts {:e! e!
+                           :app app
+                           :project project
+                           :set-overlays! set-overlays!}]
+                 (reduce (fn [layers layer-fn]
+                           (merge layers (layer-fn opts)))
+                         {}
+                         [#_project-layers/surveys-layer
+                          project-layers/road-buffer
+                          (partial project-layers/project-road-geometry-layer map-object-padding)
+                          project-layers/setup-restriction-candidates
+                          project-layers/setup-cadastral-unit-candidates
+                          project-layers/ags-surveys
+                          project-layers/related-restrictions
+                          project-layers/related-cadastral-units
+                          project-layers/selected-cadastral-units
+                          project-layers/selected-restrictions]))
        :overlays (into []
                        (concat
                          (for [[_ {:keys [coordinate content-data]}] (:overlays project)]
                            {:coordinate coordinate
-                            :content    [map-view/overlay {:single-line?    false
-                                                           :width           200
-                                                           :height          nil
-                                                           :arrow-direction :top}
-                                         [itemlist/ItemList {}
-                                          (for [[k v] content-data]
-                                            [itemlist/Item {:label k} v])]]})
+                            :content [map-view/overlay {:single-line? false
+                                                        :width 200
+                                                        :height nil
+                                                        :arrow-direction :top}
+                                      [itemlist/ItemList {}
+                                       (for [[k v] content-data]
+                                         [itemlist/Item {:label k} v])]]})
                          @overlays))}
       map]]))
 
@@ -177,26 +177,26 @@
   [title? n]
   [:<>
    (when title?
-     [skeleton/skeleton {:parent-style {:padding        "1.5rem 0"
+     [skeleton/skeleton {:parent-style {:padding "1.5rem 0"
                                         :text-transform "capitalize"}
-                         :style        {:width "40%"}}])
+                         :style {:width "40%"}}])
    (doall
      (for [y (range n)]
        ^{:key y}
-       [skeleton/skeleton {:style        {:width "70%"}
+       [skeleton/skeleton {:style {:width "70%"}
                            :parent-style (skeleton/restriction-skeleton-style)}]))])
 
 (defn road-geometry-range-input
-  [e! {road-buffer-meters :road-buffer-meters}]
+  [e! {road-buffer-meters :road-buffer-meters} entity-type]
   [Paper {:class (<class project-style/road-geometry-range-selector)}
-   [:div {:class (<class project-style/wizard-header)}
+   [:div {:class (<class project-style/project-view-header)}
     [typography/Heading3 "Road geometry inclusion"]]
    [:div {:class (<class project-style/road-geometry-range-body)}
-    [TextField {:label       "Inclusion distance"
-                :type        :number
+    [TextField {:label "Inclusion distance"
+                :type :number
                 :placeholder "Give value to show related areas"
-                :value       road-buffer-meters
-                :on-change   #(e! (project-controller/->ChangeRoadObjectAoe (-> % .-target .-value)))}]]])
+                :value road-buffer-meters
+                :on-change #(e! (project-controller/->ChangeRoadObjectAoe (-> % .-target .-value) entity-type))}]]])
 
 (defn project-page-structure
   [e!
@@ -204,49 +204,22 @@
    project
    breadcrumbs
    {:keys [header body footer map-settings]}]
-  [:div {:class (<class project-style/project-page-structure)}
-   [project-header project breadcrumbs]
-   [:div {:style {:position "relative"
-                  :display  "flex" :flex-direction "column" :flex 1}}
-    [project-map e! app project]
-    [Paper {:class (<class project-style/project-content-overlay)}
-     header
-     [:div {:class (<class project-style/content-overlay-inner)}
-      body]
-     (when footer
-       footer)]
-    (when (:geometry-range? map-settings)
-      [road-geometry-range-input e! (:map app)])]])
-
-(defn project-lifecycle-content
-  [e! {{lifecycle-type :db/ident} :thk.lifecycle/type
-       activities                 :thk.lifecycle/activities}]
-  [:section
-   [typography/Heading2 (tr [:enum lifecycle-type])]
-   [typography/Heading3
-    (if (= lifecycle-type :thk.lifecycle-type/design)
-      (tr [:common :design-stage-activities])
-      ;; else
-      (tr [:common :construction-phase-activities]))]
-
-
-   (for [{:activity/keys [name estimated-end-date estimated-start-date] :as activity} activities]
-     ^{:key (:db/id activity)}
-     [:div {:style {:margin-bottom "1rem"}}
-      [:a {:href  (url/set-params :activity (:db/id activity))
-           :class (<class common-styles/list-item-link)}
-       (tr [:enum (:db/ident name)])
-       " "
-       (format/date estimated-start-date) " — " (format/date estimated-end-date)]])
-
-   [buttons/button-primary
-    {:on-click   (e! project-controller/->OpenActivityDialog)
-     :start-icon (r/as-element [icons/content-add])}
-
-    (if (= lifecycle-type :thk.lifecycle-type/design)
-      (tr [:common :design-stage])
-      ;; else
-      (tr [:common :construction-phase]))]])
+  (let [related-entity-type (or
+                              (project-controller/project-setup-step app)
+                              (get-in app [:query :configure]))]
+    [:div {:class (<class project-style/project-page-structure)}
+     [project-header project breadcrumbs]
+     [:div {:style {:position "relative"
+                    :display "flex" :flex-direction "column" :flex 1}}
+      [project-map e! app project]
+      [Paper {:class (<class project-style/project-content-overlay)}
+       header
+       [:div {:class (<class project-style/content-overlay-inner)}
+        body]
+       (when footer
+         footer)]
+      (when (:geometry-range? map-settings)
+        [road-geometry-range-input e! (:map app) related-entity-type])]]))
 
 (defn activities-tab
   [e! {:keys [stepper] :as _app} project]
@@ -255,11 +228,11 @@
 (defn add-user-form
   [e! user project-id]
   [:div
-   [form/form {:e!              e!
-               :value           user
+   [form/form {:e! e!
+               :value user
                :on-change-event #(e! (project-controller/->UpdateProjectPermissionForm %))
-               :save-event      #(e! (project-controller/->SaveProjectPermission project-id user))
-               :spec            :project/add-permission-form}
+               :save-event #(e! (project-controller/->SaveProjectPermission project-id user))
+               :spec :project/add-permission-form}
     ^{:attribute :project/participant}
     [select/select-user {:e! e! :attribute :project/participant}]]])
 
@@ -269,7 +242,7 @@
    [:div {:class (<class project-style/permission-container)}
     [:p (tr [:user :role]) ": " (tr [:roles (:permission/role permission)])]
     [:p (tr [:common :added-on]) ": " (format/date-time (:meta/created-at permission))]]
-   [:div {:style {:display         :flex
+   [:div {:style {:display :flex
                   :justify-content :flex-end}}
     [buttons/delete-button-with-confirm {:action #(e! (project-controller/->RevokeProjectPermission (:db/id permission)))}
      (tr [:project :remove-from-project])]]])
@@ -280,9 +253,9 @@
    (when permissions
      (let [permission-links (map (fn [{:keys [user] :as _}]
                                    (let [user-id (:db/id user)]
-                                     {:key       user-id
-                                      :href      (url/set-params :person user-id)
-                                      :title     (str (:user/given-name user) " " (:user/family-name user))
+                                     {:key user-id
+                                      :href (url/set-params :person user-id)
+                                      :title (str (:user/given-name user) " " (:user/family-name user))
                                       :selected? (= (str user-id) selected-person)}))
                                  permissions)]
        [itemlist/white-link-list permission-links]))
@@ -290,7 +263,7 @@
     (tr [:project :add-users])]])
 
 (defn people-modal
-  [e! {:keys           [add-participant]
+  [e! {:keys [add-participant]
        permitted-users :thk.project/permitted-users :as project} {:keys [modal person] :as query}]
   (let [open? (= modal "people")
         selected-person (when person
@@ -298,12 +271,12 @@
                                (filter (fn [{user :user}]
                                          (= (str (:db/id user)) person)))
                                first))]
-    [panels/modal+ {:open-atom   (r/wrap open? :_)
-                    :title       (if person
-                                   (str (get-in selected-person [:user :user/given-name]) " " (get-in selected-person [:user :user/family-name]))
-                                   (tr [:project :add-users]))
-                    :on-close    (e! project-controller/->CloseDialog)
-                    :left-panel  [people-panel-user-list permitted-users person]
+    [panels/modal+ {:open-atom (r/wrap open? :_)
+                    :title (if person
+                             (str (get-in selected-person [:user :user/given-name]) " " (get-in selected-person [:user :user/family-name]))
+                             (tr [:project :add-users]))
+                    :on-close (e! project-controller/->CloseDialog)
+                    :left-panel [people-panel-user-list permitted-users person]
                     :right-panel (if selected-person
                                    [permission-information e! selected-person]
                                    [add-user-form e! add-participant (:db/id project)])}]))
@@ -313,28 +286,31 @@
   [:div
    [people-modal e! project query]
    [:div
-    [:div {:class (<class project-style/people-tab-heading-style)}
+    [:div {:class (<class project-style/heading-and-button-style)}
      [typography/Heading2 (tr [:people-tab :managers])]
      (when-pm-or-owner
        project
        [buttons/button-secondary {:on-click (e! project-controller/->OpenEditProjectDialog)
-                                  :size     :small}
+                                  :size :small}
         (tr [:buttons :edit])])]
-    [itemlist/permission-list [{:permission/role :manager
-                                :user            manager}
-                               {:permission/role :owner
-                                :user            owner}]]]
+    [itemlist/gray-bg-list [{:primary-text (str (:user/given-name manager) " " (:user/family-name manager))
+                             :secondary-text (tr [:roles :manager])}
+                             {:primary-text (str (:user/given-name owner) " " (:user/family-name owner))
+                              :secondary-text (tr [:roles :owner])}]]]
    [:div
-    [:div {:class (<class project-style/people-tab-heading-style)}
+    [:div {:class (<class project-style/heading-and-button-style)}
      [typography/Heading2 (tr [:people-tab :other-users])]
      (when-pm-or-owner
        project
        [buttons/button-secondary {:on-click (e! project-controller/->OpenPeopleModal)
-                                  :size     :small}
+                                  :size :small}
         (tr [:buttons :edit])])]
     (if (empty? permitted-users)
       [typography/GreyText (tr [:people-tab :no-other-users])]
-      [itemlist/permission-list permitted-users])]])
+      [itemlist/gray-bg-list (for [{:keys [user] :as permission} permitted-users]
+                               {:primary-text (str (:user/given-name user) " " (:user/family-name user))
+                                :secondary-text (tr [:roles (:permission/role permission)])
+                                :id (:db/id user)})])]])
 
 (defn details-tab [e! _app project]
   [project-details e! project])
@@ -344,27 +320,52 @@
   (initialization-fn)
   (fn [e! app lifecycle-type _]
     (when-let [activity-data (:edit-activity-data app)]     ;;Otherwise the form renderer can't format dates properly
-      [activity-view/activity-form e! {:on-change      activity-controller/->UpdateEditActivityForm
-                                       :save           activity-controller/->SaveEditActivityForm
-                                       :close          project-controller/->CloseDialog
-                                       :activity       (:edit-activity-data app)
+      [activity-view/activity-form e! {:on-change activity-controller/->UpdateEditActivityForm
+                                       :save activity-controller/->SaveEditActivityForm
+                                       :close project-controller/->CloseDialog
+                                       :activity (:edit-activity-data app)
                                        :lifecycle-type lifecycle-type
-                                       :delete         (project-controller/->DeleteActivity (str (:db/id activity-data)))}])))
+                                       :delete (project-controller/->DeleteActivity (str (:db/id activity-data)))}])))
+
+(defn data-tab
+  [e! {{project-id :project} :params :as app} project]
+  [:div
+   [:div {:class (<class project-style/heading-and-button-style)}
+    [typography/Heading2 "Restrictions"]
+    [buttons/button-secondary {:component "a"
+                               :href (str "/#/projects/" project-id "?tab=data&configure=restrictions")
+                               :size :small}
+     (tr [:buttons :edit])]]
+   [itemlist/gray-bg-list [{:secondary-text (tr [:data-tab :restriction-count]
+                                                {:count (count (:thk.project/related-restrictions project))})}]]
+
+   [:div {:class (<class project-style/heading-and-button-style)}
+    [typography/Heading2 "Cadastral units"]
+    [buttons/button-secondary {:component "a"
+                               :href (str "/#/projects/" project-id "?tab=data&configure=cadastral-units")
+                               :size :small}
+     (tr [:buttons :edit])]]
+   [itemlist/gray-bg-list [{:secondary-text (tr [:data-tab :cadastral-unit-count]
+                                                {:count (count (:thk.project/related-cadastral-units project))})}]]])
 
 (def project-tabs-layout
   ;; FIXME: Labels with TR paths instead of text
-  [{:label     "Activities"
-    :value     "activities"
+  [{:label "Activities"
+    :value "activities"
     :component activities-tab
-    :layers    #{:thk-project :related-cadastral-units :related-restrictions}}
-   {:label     "People"                                     ;; HIDDEN UNTIL something is built for this tab
-    :value     "people"
+    :layers #{:thk-project :related-cadastral-units :related-restrictions}}
+   {:label "People"                                         ;; HIDDEN UNTIL something is built for this tab
+    :value "people"
     :component people-tab
-    :layers    #{:thk-project}}
-   {:label     "Details"
-    :value     "details"
+    :layers #{:thk-project}}
+   {:label "Details"
+    :value "details"
     :component details-tab
-    :layers    #{:thk-project}}])
+    :layers #{:thk-project}}
+   {:label "Data"
+    :value "data"
+    :component data-tab
+    :layers #{:thk-project}}])
 
 (defn selected-project-tab [{{:keys [tab]} :query :as _app}]
   (if tab
@@ -372,7 +373,7 @@
     (first project-tabs-layout)))
 
 (defn- project-tabs [e! app]
-  [tabs/tabs {:e!           e!
+  [tabs/tabs {:e! e!
               :selected-tab (:value (selected-project-tab app))}
    project-tabs-layout])
 
@@ -384,14 +385,14 @@
   (when-not (:basic-information-form project)
     (e! (project-controller/->UpdateBasicInformationForm
           (cu/without-nils {:thk.project/project-name (or (:thk.project/project-name project) (:thk.project/name project))
-                            :thk.project/owner        (:thk.project/owner project)
-                            :thk.project/manager      (:thk.project/manager project)}))))
+                            :thk.project/owner (:thk.project/owner project)
+                            :thk.project/manager (:thk.project/manager project)}))))
   (fn [e! {form :basic-information-form :as project}]
-    [form/form {:e!              e!
-                :value           form
+    [form/form {:e! e!
+                :value form
                 :on-change-event project-controller/->UpdateBasicInformationForm
-                :save-event      project-controller/->PostProjectEdit
-                :spec            :project/edit-form}
+                :save-event project-controller/->PostProjectEdit
+                :spec :project/edit-form}
 
      ^{:attribute :thk.project/project-name
        :adornment [project-setup-view/original-name-adornment e! project]}
@@ -417,16 +418,16 @@
           (case add
             "task"
             [[task-form e!
-              {:close     project-controller/->CloseDialog
-               :task      (:new-task project)
-               :save      task-controller/->CreateTask
+              {:close project-controller/->CloseDialog
+               :task (:new-task project)
+               :save task-controller/->CreateTask
                :on-change task-controller/->UpdateTaskForm}]
              (tr [:project :add-task])]
             "activity"
-            [[activity-view/activity-form e! {:close     project-controller/->CloseDialog
-                                              :activity  (get-in app [:project (:thk.project/id project) :new-activity])
+            [[activity-view/activity-form e! {:close project-controller/->CloseDialog
+                                              :activity (get-in app [:project (:thk.project/id project) :new-activity])
                                               :on-change activity-controller/->UpdateActivityForm
-                                              :save      activity-controller/->CreateActivity
+                                              :save activity-controller/->CreateActivity
                                               :lifecycle-type lifecycle-type}]
              (tr [:project :add-activity lifecycle-type])])
           edit
@@ -439,8 +440,8 @@
              (tr [:project :edit-project])])
           :else nil)]
     [panels/modal {:open-atom (r/wrap (boolean modal) :_)
-                   :title     (or modal-label "")
-                   :on-close  (e! project-controller/->CloseDialog)}
+                   :title (or modal-label "")
+                   :on-close (e! project-controller/->CloseDialog)}
 
      modal]))
 
@@ -453,19 +454,84 @@
     [:span {:class (<class common-styles/warning-text)}
      (tr [:project :wizard :setup-incomplete])]]
 
-   [buttons/button-primary {:type     :submit
+   [buttons/button-primary {:type :submit
                             :on-click #(e! (project-controller/->ContinueProjectSetup (:thk.project/id project)))}
     (tr [:buttons :continue])]])
 
+(defn change-restrictions-view
+  [e! app _project]
+  (let [buffer-m (get-in app [:map :road-buffer-meters])]
+    (e! (project-controller/->FetchRelatedInfo buffer-m "restrictions")))
+  (fn [e! app {:keys [open-types restriction-candidates checked-restrictions] :or {open-types #{}} :as project}]
+    (let [buffer-m (get-in app [:map :road-buffer-meters])]
+      (when restriction-candidates
+        [project-setup-view/restrictions-listing e!
+         open-types
+         buffer-m
+         {:restrictions restriction-candidates
+          :checked-restrictions (or checked-restrictions #{})
+          :toggle-restriction (e! project-controller/->ToggleRestriction)
+          :on-mouse-enter (e! project-controller/->FeatureMouseOvers "related-restriction-candidates" true)
+          :on-mouse-leave (e! project-controller/->FeatureMouseOvers "related-restriction-candidates" false)}]))))
+
+(defn change-cadastral-units-view
+  [e! app project]
+  (let [buffer-m (get-in app [:map :road-buffer-meters])]
+    (e! (project-controller/->FetchRelatedInfo buffer-m "cadastral-units")))
+  (fn [e! app {:keys [cadastral-candidates checked-cadastral-units] :as project}]
+    (let [buffer-m (get-in app [:map :road-buffer-meters])]
+      [project-setup-view/cadastral-units-listing
+       e!
+       buffer-m
+       {:cadastral-units         cadastral-candidates
+        :checked-cadastral-units (or checked-cadastral-units #{})
+        :toggle-cadastral-unit   (e! project-controller/->ToggleCadastralUnit)
+        :on-mouse-enter          (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" true)
+        :on-mouse-leave          (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" false)}])))
+
 (defn- initialized-project-view
   "The project view shown for initialized projects."
-  [e! app project breadcrumbs]
-  [project-page-structure e! app project breadcrumbs
-   (merge {:header       [project-tabs e! app]
-           :body         [project-tab e! app project]
-           :map-settings {:layers #{:thk-project :surveys}}}
-          (when (:thk.project/setup-skipped? project)
-            {:footer [setup-incomplete-footer e! project]}))])
+  [e! {{configure :configure} :query :as app} project breadcrumbs]
+  (cond
+    (= configure "restrictions")
+    [project-page-structure e! app project breadcrumbs
+     {:header [:div {:class (<class project-style/project-view-header)}
+               [typography/Heading1 {:style {:margin-bottom 0}} "Select relevant restrictions"]]
+      :body [change-restrictions-view e! app project]
+      :map-settings {:geometry-range? true
+                     :layers #{:thk-project :thk-project-buffer :related-restrictions}}
+      :footer [:div {:class (<class project-style/wizard-footer)}
+               [buttons/button-warning {:component "a"
+                                        :href (url/remove-param :configure)}
+                "cancel"]
+               [buttons/button-primary
+                {:on-click (e! project-controller/->UpdateProjectRestrictions
+                               (:checked-restrictions project)
+                               (:thk.project/id project))}
+                "save"]]}]
+    (= configure "cadastral-units")
+    [project-page-structure e! app project breadcrumbs
+     {:header [:div {:class (<class project-style/project-view-header)}
+               [typography/Heading1 {:style {:margin-bottom 0}} "Select relevant Cadastral units"]]
+      :body [change-cadastral-units-view e! app project]
+      :map-settings {:geometry-range? true
+                     :layers #{:thk-project :thk-project-buffer :related-cadastral-units}}
+      :footer [:div {:class (<class project-style/wizard-footer)}
+               [buttons/button-warning {:component "a"
+                                        :href (url/remove-param :configure)}
+                "cancel"]
+               [buttons/button-primary
+                {:on-click (e! project-controller/->UpdateProjectCadastralUnits
+                               (:checked-cadastral-units project)
+                               (:thk.project/id project))}
+                "save"]]}]
+    :else
+    [project-page-structure e! app project breadcrumbs
+     (merge {:header [project-tabs e! app]
+             :body [project-tab e! app project]
+             :map-settings {:layers #{:thk-project :surveys}}}
+            (when (:thk.project/setup-skipped? project)
+              {:footer [setup-incomplete-footer e! project]}))]))
 
 (defn- project-setup-view
   "The project setup wizard that is shown for uninitialized projects."

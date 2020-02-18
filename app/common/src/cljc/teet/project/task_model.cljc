@@ -19,14 +19,32 @@
 (defn document-by-id [{documents :task/documents} document-id]
   (some #(when (id= document-id (:db/id %)) %) documents))
 
-(def ^:const completed-statuses #{:task.status/completed :task.status/accepted})
-(def ^:const in-progress-statuses #{:task.status/in-preparation :task.status/in-progress})
+(def ^:const completed-statuses #{:task.status/accepted
+                                  ;; unused/obsolete statuses:
+                                  :task.status/completed})
+(def ^:const in-progress-statuses #{:task.status/in-preparation
+                                    :task.status/adjustment
+                                    :task.status/reviewing
+                                    ;; unused/obsolete statuses:
+                                    :task.status/in-progress})
+(def ^:const rejected-statuses #{:task.status/canceled
+                                 ;; unused/obsolete statuses:
+                                 :task.status/rejected})
+
+;; statuses excluding obsoleted ones, that should be selectable in status changes
+(def ^:const current-statuses #{:task.status/canceled
+                                :task.status/assigned
+                                :task.status/submitted
+                                :task.status/reviewing
+                                :task.status/adjustment
+                                :task.status/accepted})
+
 
 (defn completed? [{status :task/status}]
   (boolean (completed-statuses (:db/ident status))))
 
 (defn rejected? [{status :task/status}]
-  (-> status :db/ident (= :task.status/rejected)))
+  (boolean (rejected-statuses (:db/ident status))))
 
 (defn in-progress? [{status :task/status}]
   (boolean (in-progress-statuses (:db/ident status))))

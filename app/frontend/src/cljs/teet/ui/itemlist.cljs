@@ -141,12 +141,15 @@
         [:a {:class (<class itemlist-styles/white-link-style selected?)
              :href  href} title]]))])
 
-(defn permission-list
-  [permissions]
+(defn gray-bg-list
+  [list]
   [:ul {:style {:padding 0}}
-   (for [{:keys [user] :as permission} permissions]
-     ^{:key (:db/id user)}
-     [:li {:class (<class itemlist-styles/user-list-element-style)}
-      [typography/Heading3
-       (:user/given-name user) " " (:user/family-name user)]
-      [typography/Text (tr [:roles (:permission/role permission)])]])])
+   (doall
+     (for [{:keys [id primary-text secondary-text] :as item} list]
+       ^{:key id}
+       [:li {:class (<class itemlist-styles/gray-bg-list-element)}
+        (when primary-text
+          [typography/Heading3
+           primary-text])
+        (when secondary-text
+          [typography/Text secondary-text])]))])
