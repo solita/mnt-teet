@@ -123,21 +123,19 @@ GRANT EXECUTE ON FUNCTION teet.geojson_entities(type entity_type) TO teet_user;
 GRANT EXECUTE ON FUNCTION teet.geojson_entity_cluster_pins(type entity_type, NUMERIC) TO teet_user;
 
 
-CREATE OR REPLACE FUNCTION teet.store_entity_info(id TEXT, type entity_type, tooltip TEXT,
-                                                 road INTEGER, carriageway INTEGER, start_m INTEGER, end_m INTEGER)
+CREATE OR REPLACE FUNCTION teet.store_entity_info(id TEXT, type entity_type, tooltip TEXT, geometry_wkt TEXT)
 RETURNS BIGINT
 AS $$
 INSERT
   INTO teet.entity
        (id, type, tooltip, geometry)
-VALUES (id::BIGINT, type, tooltip,
-       teet.road_part_geometry(road, carriageway, numrange(start_m/1000.0,end_m/1000.0)))
+VALUES (id::BIGINT, type, tooltip, ST_SetSRID(ST_GeomFromText(geometry_wkt), 3301))
 ON CONFLICT (id) DO
 UPDATE SET tooltip = EXCLUDED.tooltip,
-           geometry = teet.road_part_geometry(road, carriageway, numrange(start_m/1000.0,end_m/1000.0))
+           geometry = ST_SetSRID(ST_GeomFromText(geometry_wkt), 3301)
 RETURNING id;
 $$ LANGUAGE SQL SECURITY DEFINER;
 
 GRANT teet_backend TO authenticator;
 GRANT USAGE ON SCHEMA teet TO teet_backend;
-GRANT EXECUTE ON FUNCTION teet.store_entity_info TO teet_backend;
+GRANT EXECUTE ON FUNCTION teet.store_entity_info(text,entity_type,text,text) TO teet_backend;

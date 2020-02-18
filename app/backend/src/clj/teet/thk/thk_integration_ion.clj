@@ -102,8 +102,9 @@
                              :where [?e :thk.project/road-nr _]]
                            db))]
     (log/info "Update entity info for all" (count projects) "projects.")
-    (project-geometry/update-project-geometries! (select-keys ctx [:api-url :api-shared-secret])
-                                                 projects)
+    (project-geometry/update-project-geometries!
+     (select-keys ctx [:api-url :api-shared-secret :wfs-url])
+     projects)
     ctx))
 
 (defn- on-import-error [{:keys [error] :as ctx}]
@@ -119,7 +120,8 @@
     (let [result (ctx-> {:event event
                          :connection (environment/datomic-connection)
                          :api-url (environment/config-value :api-url)
-                         :api-shared-secret (environment/config-value :auth :jwt-secret)}
+                         :api-shared-secret (environment/config-value :auth :jwt-secret)
+                         :wfs-url (environment/config-value :road-registry :wfs-url)}
                         integration-s3/read-trigger-event
                         integration-s3/load-file-from-s3
                         file->csv
@@ -138,7 +140,8 @@
     (ctx-> {:file (io/input-stream (io/file filepath))
             :connection (environment/datomic-connection)
             :api-url (environment/config-value :api-url)
-            :api-shared-secret (environment/config-value :auth :jwt-secret)}
+            :api-shared-secret (environment/config-value :auth :jwt-secret)
+            :wfs-url (environment/config-value :road-registry :wfs-url)}
            file->csv
            upsert-projects
            update-entity-info)
