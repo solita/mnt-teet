@@ -5,13 +5,20 @@
             [teet.environment :as environment]
             [teet.util.geo :as geo]))
 
+(defonce cache-options
+  ;; uncomment this to cache everything (for caching in poor connectivity)
+  #_{:cache-atom (atom {})}
+  {})
+
 (defn wfs-config []
   (let [wfs-url  (environment/config-value :road-registry :wfs-url)]
     (when (nil? wfs-url)
       (throw (ex-info "No Teeregister WFS URL configured"
                       {:status 500
                        :error :teeregister-wfs-configuration-missing})))
-    {:wfs-url wfs-url}))
+    (merge
+     {:wfs-url wfs-url}
+     cache-options)))
 
 (defquery :road/geometry
   {:doc "Fetch road geometry for road, carriageway and meter range."
