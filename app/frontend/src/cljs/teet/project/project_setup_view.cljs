@@ -199,8 +199,8 @@
                       (when on-mouse-leave
                         {:on-mouse-leave (r/partial on-mouse-leave restriction)})))]]))])))
 
-(defn project-setup-restrictions-form [e! _project _step {:keys [road-buffer-meters] :as _map}]
-  (e! (project-controller/->FetchRestrictions road-buffer-meters))
+(defn project-setup-restrictions-form [e! _project step {:keys [road-buffer-meters] :as _map}]
+  (e! (project-controller/->FetchRelatedInfo road-buffer-meters step))
   (fn [e! {:keys [restriction-candidates checked-restrictions open-types] :or {open-types #{}} :as _project} {step-label :step-label :as step} _map]
     [:form {:id        step-label
             :on-submit (let [step-constructor (project-controller/navigate-to-next-step-event project-setup-steps step)]
@@ -252,8 +252,8 @@
             :on-mouse-enter (r/partial on-mouse-enter cadastral-unit)
             :on-mouse-leave (r/partial on-mouse-leave cadastral-unit)}))]]]))
 
-(defn project-setup-cadastral-units-form [e! _project _step {:keys [road-buffer-meters] :as _map}]
-  (e! (project-controller/->FetchRestrictions road-buffer-meters))
+(defn project-setup-cadastral-units-form [e! _project step {:keys [road-buffer-meters] :as _map}]
+  (e! (project-controller/->FetchRelatedInfo road-buffer-meters step))
   (fn [e! {:keys [cadastral-candidates checked-cadastral-units]} {step-label :step-label :as step} map]
     [:form {:id        step-label
             :on-submit (e! (project-controller/navigate-to-next-step-event project-setup-steps step))}
@@ -282,7 +282,7 @@
                        project-setup-steps)))
 
 (defn setup-wizard-header [{:keys [step-label step-number]}]
-  [:div {:class (<class project-style/wizard-header)}
+  [:div {:class (<class project-style/project-view-header)}
    [:div {:class (<class project-style/wizard-header-step-info)}
     [typography/Text {:color :textSecondary}
      (tr [:project :wizard :project-setup])]

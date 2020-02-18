@@ -11,7 +11,9 @@
             [teet.meta.meta-model :refer [modification-meta creation-meta deletion-tx]]
             [teet.project.project-specs]
             [clojure.spec.alpha :as s]
-            [teet.project.project-db :as project-db])
+            [clojure.set :as set]
+            [teet.project.project-db :as project-db]
+            [teet.meta.meta-model :as meta-model])
   (:import (java.util Date)))
 
 (defcommand :thk.project/initialize!
@@ -29,13 +31,13 @@ and cadastral units"
                                    [:thk.project/owner :thk.project/estimated-start-date :thk.project/estimated-end-date]
                                    [:thk.project/id id])]
     (if (project-model/initialized? project-in-datomic)
-      (db-api/fail! {:error  :project-already-initialized
-                     :msg    (str "Project " id " is already initialized")
+      (db-api/fail! {:error :project-already-initialized
+                     :msg (str "Project " id " is already initialized")
                      :status 409})
       (let [{db :db-after}
             (d/transact
               conn
-              {:tx-data [(merge {:thk.project/id    id
+              {:tx-data [(merge {:thk.project/id id
                                  :thk.project/owner [:user/id (:user/id owner)]}
                                 (when-not (str/blank? project-name)
                                   {:thk.project/project-name project-name})
@@ -53,7 +55,7 @@ and cadastral units"
                                   {:thk.project/related-cadastral-units related-cadastral-units})
                                 (modification-meta user))]})]
         (project-geometry/update-project-geometries!
-          (environment/config-map {:api-url           [:api-url]
+          (environment/config-map {:api-url [:api-url]
                                    :api-shared-secret [:auth :jwt-secret]})
           [(d/pull db '[:db/id :thk.project/name
                         :thk.project/road-nr :thk.project/carriageway
@@ -95,46 +97,83 @@ and cadastral units"
    :payload {project-id :thk.project/id}
    :project-id [:thk.project/id project-id]
    :authorization {:project/project-setup {:link :thk.project/owner}}
-   :transact [(merge {:thk.project/id             project-id
+   :transact [(merge {:thk.project/id project-id
                       :thk.project/setup-skipped? false}
                      (modification-meta user))]})
 
 (defcommand :thk.project/revoke-permission
   ;; Options
   {:doc "Revoke a permission by setting its validity to end now."
-   :context {:keys [user db]} ; bindings from ctx map
-   :payload {:keys [permission-id]} ; bindings from payload
+   :context {:keys [user db]}                               ; bindings from ctx map
+   :payload {:keys [permission-id]}                         ; bindings from payload
    :project-id (project-db/permission-project-id db permission-id)
    :authorization {:project/edit-permissions {:link :thk.project/owner}}
    :transact [(merge {:db/id permission-id
                       :permission/valid-until (Date.)}
                      (modification-meta user))]})
 
+(defn- update-related-entities-tx
+  "Return transaction data to update related map features"
+  [db user project-eid datasource-feature-ids link-attribute-kw]
+  (let [current-entities-in-db (set
+                                 (link-attribute-kw
+                                   (d/pull db
+                                           [link-attribute-kw]
+                                           project-eid)))
+        to-be-removed (set/difference current-entities-in-db datasource-feature-ids)
+        to-be-added (set/difference datasource-feature-ids current-entities-in-db)]
+    (into [(meta-model/tx-meta user)]
+          (concat
+            (for [id-to-remove to-be-removed]
+              [:db/retract project-eid
+               link-attribute-kw id-to-remove])
+            (for [id-to-add to-be-added]
+              [:db/add project-eid
+               link-attribute-kw id-to-add])))))
+
+(defcommand :thk.project/update-restrictions
+  {:doc "Update project related restrictions"
+   :context {:keys [user db]}
+   :payload {:keys [restrictions project-id]}
+   :project-id [:thk.project/id project-id]
+   :authorization {:project/project-info {:eid [:thk.project/id project-id]
+                                          :link :thk.project/owner}}
+   :transact (update-related-entities-tx db user [:thk.project/id project-id] restrictions :thk.project/related-restrictions)})
+
+(defcommand :thk.project/update-cadastral-units
+  {:doc "Update project related cadastral-units"
+   :context {:keys [user db]}
+   :payload {:keys [cadastral-units project-id]}
+   :project-id [:thk.project/id project-id]
+   :authorization {:project/project-info {:eid [:thk.project/id project-id]
+                                          :link :thk.project/owner}}
+   :transact (update-related-entities-tx db user [:thk.project/id project-id] cadastral-units :thk.project/related-cadastral-units)})
+
 (defcommand :thk.project/add-permission
   {:doc "Add permission to project"
    :context {:keys [conn user db]}
    :payload {project-id :project-id
              {user-id :user/id} :user}
-   :spec (s/keys :req-un [::project-id ])
+   :spec (s/keys :req-un [::project-id])
    :project-id project-id
    :authorization {:project/edit-permissions {:link :thk.project/owner}}}
   (let [user-already-added?
         (boolean
-         (seq
-          (permission-db/user-permission-for-project db [:user/id user-id] project-id)))]
+          (seq
+            (permission-db/user-permission-for-project db [:user/id user-id] project-id)))]
     (if-not user-already-added?
       (do
         (d/transact
-         conn
-         {:tx-data [{:db/id [:user/id user-id]
-                     :user/permissions
-                     [(merge {:db/id                 "new-permission"
-                              :permission/role       :internal-consultant
-                              :permission/projects   project-id
-                              :permission/valid-from (Date.)}
-                             (creation-meta user))]}]})
+          conn
+          {:tx-data [{:db/id [:user/id user-id]
+                      :user/permissions
+                      [(merge {:db/id "new-permission"
+                               :permission/role :internal-consultant
+                               :permission/projects project-id
+                               :permission/valid-from (Date.)}
+                              (creation-meta user))]}]})
         {:success "User added successfully"})
       (db-api/fail!
         {:status 400
          :msg "User is already added"
-         :error  :permission-already-granted}))))
+         :error :permission-already-granted}))))

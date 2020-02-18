@@ -30,6 +30,9 @@
   :design-stage-activities "Ülesanded",
   :select {:empty "- Valin"},
   :clear "Puhastan"},
+ :data-tab
+ {:restriction-count "Praegu kuvatakse {count} Kitsendused",
+  :cadastral-unit-count "Praegu kuvatakse {count} Katastriüksused"},
  :document
  {:download-file "Laen faili alla",
   :comments "Märkused",
@@ -156,6 +159,8 @@
   :activity-deleted "Tegevus edukalt kustutatud",
   :activity-updated "Tegevus edukalt värskendatud",
   :permission-added-successfully "Luba on edukalt lisatud",
+  :cadastral-units-updated "Katastriüksused edukalt värskendatud",
+  :restrictions-updated "Kitsendused edukalt värskendatud",
   :task-deleted "Ülesanne edukalt kustutatud"},
  :people-tab
  {:managers "Juhid",
