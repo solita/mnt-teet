@@ -621,4 +621,10 @@
            :enum/valid-for :thk.lifecycle-type/design}
           {:db/ident :activity.name/land-acquisition
            :enum/attribute :activity/name
-           :enum/valid-for :thk.lifecycle-type/design}]]}]
+           :enum/valid-for :thk.lifecycle-type/design}]]}
+
+ {:db/ident :migration/document-status-2
+  :txes [[{:db/ident :document.status/updated :enum/attribute :document/status}
+          {:db/ident :document.status/ready :enum/attribute :document/status}
+          {:db/ident :document.status/invalid :enum/attribute :document/status}
+          {:db/ident :document.status/approved :enum/attribute :document/status}]]}]
