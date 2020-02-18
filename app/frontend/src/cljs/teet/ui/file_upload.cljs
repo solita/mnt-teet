@@ -7,7 +7,10 @@
             [teet.ui.icons :as icons]
             [teet.localization :refer [tr]]
             [teet.ui.typography :refer [Heading1 SectionHeading]]
-            [teet.ui.format :as format]))
+            [teet.ui.format :as format]
+            [teet.document.document-model :as document-model]
+            teet.document.document-spec
+            [cljs.spec.alpha :as s]))
 
 (defn- page-overlay []
   {;; Cover the whole page
@@ -137,7 +140,7 @@
           :border-radius "3px"
           :padding       "1rem"}
          (when error
-           {:border "solid 1px #91001D"})))                 ;;This should also use material ui theme.error
+           {:border (str "solid 1px " theme-colors/error)})))                 ;;This should also use material ui theme.error
 
 (defn files-field [{:keys [value on-change error]}]
   [:div {:class (<class files-field-style error)}
@@ -148,8 +151,17 @@
       (fn [i ^js/File file]
         ^{:key i}
         [ListItem {}
-         [ListItemText {:primary (.-name file)
-                        :secondary (str (.-type file) " " (format/file-size (.-size file)))}]
+         (.log js/console file)
+         (let [invalidfile? (not (s/valid? :document/file-object file))
+               file (document-model/file-info file)]
+           [ListItemText (merge
+                           {:primary (:file/name file)
+                            :secondary (r/as-component [:<>
+                                                        [:span (merge {} (when invalidfile?
+                                                                           {:style {:color theme-colors/error}}))
+                                                         (str (:file/type file)) (when invalidfile?
+                                                                                   (str " " (tr [:document :wrong-file-type])))]
+                                                        [:span {:style {:display :block}} (str (format/file-size (:file/size file)))]])})])
          [ListItemSecondaryAction
           [IconButton {:edge "end"
                        :on-click #(on-change (into (subvec value 0 i)

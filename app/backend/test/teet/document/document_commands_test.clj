@@ -1,6 +1,7 @@
 (ns teet.document.document-commands-test
   (:require [clojure.test :refer :all]
-            [teet.document.document-commands :as document-commands]))
+            [teet.document.document-commands :as document-commands]
+            [teet.document.document-model :as document-model]))
 
 (deftest validate-document
   (testing "too large files are invalid"
@@ -13,5 +14,5 @@
            :file-type-not-allowed)))
   (testing "other files are valid"
     (is (nil? (document-commands/validate-file
-               {:file/type (rand-nth (vec document-commands/upload-allowed-file-types))
-                :file/size (rand (inc document-commands/upload-max-file-size))})))))
+                {:file/type (rand-nth (vec document-model/upload-allowed-file-types))
+                 :file/size (rand (inc document-model/upload-max-file-size))})))))

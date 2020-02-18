@@ -1,7 +1,8 @@
 (ns teet.document.document-spec
   "Specs for document data"
   (:require [clojure.spec.alpha :as s]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.document.document-model :as document-model]))
 
 (s/def :document/status keyword?)
 (s/def :document/name (s/and string? (complement str/blank?)))
@@ -16,6 +17,21 @@
                                                  :document/description
                                                  :document/status
                                                  :document/author]))
+
+(s/def :document/add-files (s/keys :req [:document/files]))
+
+(s/def :document/file (s/and (s/keys :req [:file/type
+                                           :file/name
+                                           :file/size])
+                             #(document-model/upload-allowed-file-types (:file/type (document-model/type-by-suffix %)))))
+
+#?(:cljs
+   (do
+     (s/def :document/files (s/coll-of :document/file-object))
+     (s/def :document/file-object
+       (s/and
+         #(instance? js/File %)
+         #(s/valid? :document/file (document-model/file-info %))))))
 
 (s/def :activity/name keyword?)
 (s/def :activity/status keyword?)
