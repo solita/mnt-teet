@@ -332,12 +332,10 @@
   [:div
    [:div {:class (<class project-style/heading-and-button-style)}
     [typography/Heading2 "Restrictions"]
-    (when-pm-or-owner
-      project
-      [buttons/button-secondary {:component "a"
-                                 :href (str "/#/projects/" project-id "?tab=data&configure=restrictions")
-                                 :size :small}
-       (tr [:buttons :edit])])]
+    [buttons/button-secondary {:component "a"
+                               :href (str "/#/projects/" project-id "?tab=data&configure=restrictions")
+                               :size :small}
+     (tr [:buttons :edit])]]
    [itemlist/gray-bg-list [{:secondary-text (tr [:data-tab :restriction-count]
                                                 {:count (count (:thk.project/related-restrictions project))})}]]
 
