@@ -122,8 +122,7 @@
 
 (defn fetch-related-info
   [app road-buffer-meters info-type]
-  (let [args {;:entity_id (str (get-in app [:route :project :db/id]))
-              :geometry_wkt (str "LINESTRING("
+  (let [args {:geometry_wkt (str "LINESTRING("
                                  (str/join ","
                                            (map #(str/join " " %)
                                                 (get-in app [:route :project :geometry])))
