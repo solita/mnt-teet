@@ -194,6 +194,11 @@
    (let [geom (volatile! [])
          {:keys [ol3]} (reagent/state this)
          pixel (.-pixel e)]
+     ;; PENDING: very slow for lots of image geometries in MVT layers
+     ;; it will do pixel checks on the imagedata
+     ;;
+     ;; Can't be fixed by getting features in extent from source as
+     ;; the vectortile source doesn't have that method.
      (.forEachFeatureAtPixel ol3 pixel
                              (fn [feature layer]
                                (vswap! geom conj (feature-geometry feature layer))
