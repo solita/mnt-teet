@@ -9,7 +9,8 @@
             [teet.road.road-model :as road-model]
             [teet.map.map-controller :as map-controller]
             goog.math.Long
-            [teet.snackbar.snackbar-controller :as snackbar-controller]))
+            [teet.snackbar.snackbar-controller :as snackbar-controller]
+            [clojure.string :as str]))
 
 (defrecord OpenActivityDialog [lifecycle])                  ; open add activity modal dialog
 (defrecord OpenTaskDialog [activity])
@@ -122,7 +123,11 @@
 (defn fetch-related-info
   [app road-buffer-meters info-type]
   (let [args {;:entity_id (str (get-in app [:route :project :db/id]))
-              :geometry_wkt "LINESTRING(10 20, 30 40)"
+              :geometry_wkt (str "LINESTRING("
+                                 (str/join ","
+                                           (map #(str/join " " %)
+                                                (get-in app [:route :project :geometry])))
+                                 ")")
               :distance  road-buffer-meters}]
     (merge
       {:tuck.effect/type :rpc
