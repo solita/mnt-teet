@@ -32,8 +32,7 @@
     :content [map-view/overlay {:arrow-direction :left :height 30}
               end-label]}])
 
-(defn- km-range-label-overlays-from-source [start-label end-label callback {source :source}]
-  (.log js/console "set km range labels " start-label end-label)
+(defn- update-km-range-label-overlays! [start-label end-label callback {source :source}]
   (when-let [geom (some-> ^ol.source.Vector source
                           .getFeatures
                           (aget 0)
@@ -103,7 +102,7 @@
                                  (assoc options
                                         ;; Update start/end labels from source geometry
                                         ;; once it is loaded
-                                        :on-load (partial km-range-label-overlays-from-source
+                                        :on-load (partial update-km-range-label-overlays!
                                                           start-label end-label
                                                           set-overlays!))))}))
 
