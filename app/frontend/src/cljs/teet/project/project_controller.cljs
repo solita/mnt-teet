@@ -121,11 +121,12 @@
 
 (defn fetch-related-info
   [app road-buffer-meters info-type]
-  (let [args {:entity_id (str (get-in app [:route :project :db/id]))
+  (let [args {;:entity_id (str (get-in app [:route :project :db/id]))
+              :geometry_wkt "LINESTRING(10 20, 30 40)"
               :distance  road-buffer-meters}]
     (merge
       {:tuck.effect/type :rpc
-       :rpc              "geojson_entity_related_features"
+       :rpc              "geojson_features_within_area"
        :endpoint         (get-in app [:config :api-url])}
       (case info-type
         "restrictions"
@@ -406,12 +407,38 @@
 
   UpdateBasicInformationForm
   (process-event [{:keys [form-data]} app]
-    (if (get-in app [:route :project :basic-information-form :road-info])
-      (update-in app [:route :project :basic-information-form]
-                 merge form-data)
-      (t/fx app
-            (fn [e!]
-              (e! (->FetchRoadInformation form-data))))))
+    (log/info "UpdateBasicInformationForm" form-data)
+    (let [project-meter-range (fn [app]
+                                (let [{[start-km-string end-km-string] :thk.project/km-range}
+                                      (get-in app [:route :project :basic-information-form])]
+                                  [(or (some-> start-km-string road-model/parse-km road-model/km->m)
+                                       (get-in app [:route :project :thk.project/start-m]))
+                                   (or (some-> end-km-string road-model/parse-km road-model/km->m)
+                                       (get-in app [:route :project :thk.project/end-m]))]))
+          old-meter-range (project-meter-range app)
+          app (update-in app [:route :project :basic-information-form]
+                         merge form-data)
+          [new-start-m new-end-m :as new-meter-range] (project-meter-range app)
+          fetch-geometry? (or (not (contains? (get-in app [:route :project]) :geometry))
+                              (not= old-meter-range new-meter-range))]
+      (t/fx
+       (if fetch-geometry?
+         (update-in app [:route :project] dissoc :geometry)
+         app)
+
+       ;; Fetch new road geometry if it hasn't been fetched yet or has changed
+       (when fetch-geometry?
+         {:tuck.effect/type :query
+          :query :road/geometry
+          :args {:road (get-in app [:route :project :thk.project/road-nr])
+                 :carriageway (get-in app [:route :project :thk.project/carriageway])
+                 :start-m new-start-m
+                 :end-m new-end-m}
+          :result-path [:route :project :geometry]}))
+
+      ;; FIXME: fetch road info from WFS
+      ;; (e! (->FetchRoadInformation form-data))
+      ))
 
   FetchRoadInformation
   (process-event [{form-data :form-data} app]
