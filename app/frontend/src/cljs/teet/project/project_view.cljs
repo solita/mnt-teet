@@ -296,7 +296,7 @@
     [itemlist/gray-bg-list [{:primary-text (str (:user/given-name manager) " " (:user/family-name manager))
                              :secondary-text (tr [:roles :manager])}
                              {:primary-text (str (:user/given-name owner) " " (:user/family-name owner))
-                              :secondary-text (tr [:roles :manager])}]]]
+                              :secondary-text (tr [:roles :owner])}]]]
    [:div
     [:div {:class (<class project-style/heading-and-button-style)}
      [typography/Heading2 (tr [:people-tab :other-users])]
