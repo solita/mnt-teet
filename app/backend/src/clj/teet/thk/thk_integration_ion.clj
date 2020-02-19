@@ -163,5 +163,6 @@
            export-projects
            csv->file
            write-file-to-s3)
+    {:success true}
     (catch Exception e
       (log/error "Error exporting projects CSV to S3: " (pr-str (ex-data e))))))
