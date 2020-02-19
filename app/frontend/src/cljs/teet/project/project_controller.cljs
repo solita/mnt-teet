@@ -91,7 +91,6 @@
 (defrecord UpdateProjectRestrictions [restrictions project-id])
 (defrecord UpdateProjectCadastralUnits [cadastral-units project-id])
 (defrecord FeaturesUpdatedSuccessfully [result])
-(defrecord FetchRoadInformation [form-data])
 (defrecord ChangeRoadObjectAoe [val entity-type])
 (defrecord SaveRestrictions [])
 (defrecord UpdateRestrictionsForm [form-data])
@@ -99,6 +98,7 @@
 (defrecord UpdateCadastralUnitsForm [form-data])
 (defrecord SaveActivities [])
 (defrecord UpdateActivitiesForm [form-data])
+(defrecord RoadGeometryAndInfoResponse [result])
 
 (defrecord FetchRelatedInfo [road-buffer-meters entity-type])
 (defrecord ToggleRestriction [restriction])
@@ -122,28 +122,31 @@
 
 (defn fetch-related-info
   [app road-buffer-meters info-type]
-  (let [args {:geometry_wkt (str "LINESTRING("
-                                 (str/join ","
-                                           (map #(str/join " " %)
-                                                (get-in app [:route :project :geometry])))
-                                 ")")
-              :distance  road-buffer-meters}]
+  (let [[rpc args] (if-let [g (get-in app [:route :project :geometry])]
+                     ["geojson_features_within_area"
+                      {:geometry_wkt (str "LINESTRING("
+                                          (str/join "," (map #(str/join " " %) g))
+                                          ")")}]
+                     ["geojson_entity_related_features"
+                      {:entity_id (str (get-in app [:route :project :db/id]))}])]
     (merge
       {:tuck.effect/type :rpc
-       :rpc              "geojson_features_within_area"
+       :rpc              rpc
        :endpoint         (get-in app [:config :api-url])}
       (case info-type
         "restrictions"
         {:args         (assoc args
-                         ;; FIXME: dataosource ids from map datasources info
-                         :datasource_ids (map-controller/select-rpc-datasources
-                                           app map-controller/restriction-datasource?))
+                              ;; FIXME: dataosource ids from map datasources info
+                              :distance road-buffer-meters
+                              :datasource_ids (map-controller/select-rpc-datasources
+                                               app map-controller/restriction-datasource?))
          :result-event (partial ->FetchFeatureCandidatesResponse :restrictions)}
 
         "cadastral-units"
         {:args         (assoc args
-                         :datasource_ids (map-controller/select-rpc-datasources
-                                           app map-controller/cadastral-unit-datasource?))
+                              :distance road-buffer-meters
+                              :datasource_ids (map-controller/select-rpc-datasources
+                                               app map-controller/cadastral-unit-datasource?))
          :result-event (partial ->FetchFeatureCandidatesResponse :cadastral-units)}
         {}))))
 
@@ -427,35 +430,22 @@
                               (not= old-meter-range new-meter-range))]
       (t/fx
        (if fetch-geometry?
-         (update-in app [:route :project] dissoc :geometry)
+         (update-in app [:route :project] dissoc :geometry :road-info)
          app)
 
        ;; Fetch new road geometry if it hasn't been fetched yet or has changed
        (when fetch-geometry?
          {:tuck.effect/type :query
-          :query :road/geometry
+          :query :road/geometry-with-road-info
           :args {:road (get-in app [:route :project :thk.project/road-nr])
                  :carriageway (get-in app [:route :project :thk.project/carriageway])
                  :start-m new-start-m
                  :end-m new-end-m}
-          :result-path [:route :project :geometry]}))
+          :result-event ->RoadGeometryAndInfoResponse}))))
 
-      ;; FIXME: fetch road info from WFS
-      ;; (e! (->FetchRoadInformation form-data))
-      ))
-
-  FetchRoadInformation
-  (process-event [{form-data :form-data} app]
-    (let [{:thk.project/keys [road-nr carriageway]} (get-in app [:route :project])]
-      (t/fx (update-in app [:route :project :basic-information-form]
-                       merge form-data)
-            {:tuck.effect/type :rpc
-             :endpoint (get-in app [:config :api-url])
-             :method :GET
-             :rpc "road_info"
-             :args {:road road-nr
-                    :carriageway carriageway}
-             :result-path [:route :project :basic-information-form :road-info]})))
+  RoadGeometryAndInfoResponse
+  (process-event [{result :result} app]
+    (update-in app [:route :project] merge result))
 
   FetchRelatedInfo
   (process-event [{road-buffer-meters :road-buffer-meters
