@@ -143,13 +143,16 @@
            {:border (str "solid 1px " theme-colors/error)})))                 ;;This should also use material ui theme.error
 
 (defn file-info
-  [invalid-file-type? {:file/keys [type  size] :as _file}]
+  [{:file/keys [type  size] :as _file} invalid-file-type? file-too-large?]
   [:<>
    [:span (merge {} (when invalid-file-type?
                       {:style {:color theme-colors/error}}))
     (str type) (when invalid-file-type?
                  (str " " (tr [:document :invalid-file-type])))]
-   [:span {:style {:display :block}} (str (format/file-size size))]])
+   [:span {:style (merge {:display :block}
+                         (when file-too-large?
+                           {:color theme-colors/error}))}
+    (str (format/file-size size) " " (tr [:document :file-too-large]))]])
 
 (defn files-field [{:keys [value on-change error]}]
   [:div {:class (<class files-field-style error)}
@@ -160,13 +163,14 @@
       (fn [i ^js/File file]
         ^{:key i}
         [ListItem {}
-         (let [{:file/keys [type name] :as file} (-> file
-                                                     document-model/file-info
-                                                     document-model/type-by-suffix)
-               invalid-file-type? (not (document-model/upload-allowed-file-types type))]
+         (let [{:file/keys [type name size] :as file} (-> file
+                                                          document-model/file-info
+                                                          document-model/type-by-suffix)
+               invalid-file-type? (not (document-model/upload-allowed-file-types type))
+               file-too-large? (> size document-model/upload-max-file-size)]
            [ListItemText (merge
                            {:primary name
-                            :secondary (r/as-component [file-info invalid-file-type? file])})])
+                            :secondary (r/as-component [file-info file invalid-file-type? file-too-large?])})])
          [ListItemSecondaryAction
           [IconButton {:edge "end"
                        :on-click #(on-change (into (subvec value 0 i)
