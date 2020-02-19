@@ -142,6 +142,15 @@
          (when error
            {:border (str "solid 1px " theme-colors/error)})))                 ;;This should also use material ui theme.error
 
+(defn file-info
+  [invalid-file-type? {:file/keys [type  size] :as _file}]
+  [:<>
+   [:span (merge {} (when invalid-file-type?
+                      {:style {:color theme-colors/error}}))
+    (str type) (when invalid-file-type?
+                 (str " " (tr [:document :invalid-file-type])))]
+   [:span {:style {:display :block}} (str (format/file-size size))]])
+
 (defn files-field [{:keys [value on-change error]}]
   [:div {:class (<class files-field-style error)}
    [SectionHeading (tr [:common :files])]
@@ -151,17 +160,13 @@
       (fn [i ^js/File file]
         ^{:key i}
         [ListItem {}
-         (.log js/console file)
-         (let [invalidfile? (not (s/valid? :document/file-object file))
-               file (document-model/file-info file)]
+         (let [{:file/keys [type name] :as file} (-> file
+                                                     document-model/file-info
+                                                     document-model/type-by-suffix)
+               invalid-file-type? (not (document-model/upload-allowed-file-types type))]
            [ListItemText (merge
-                           {:primary (:file/name file)
-                            :secondary (r/as-component [:<>
-                                                        [:span (merge {} (when invalidfile?
-                                                                           {:style {:color theme-colors/error}}))
-                                                         (str (:file/type file)) (when invalidfile?
-                                                                                   (str " " (tr [:document :wrong-file-type])))]
-                                                        [:span {:style {:display :block}} (str (format/file-size (:file/size file)))]])})])
+                           {:primary name
+                            :secondary (r/as-component [file-info invalid-file-type? file])})])
          [ListItemSecondaryAction
           [IconButton {:edge "end"
                        :on-click #(on-change (into (subvec value 0 i)
