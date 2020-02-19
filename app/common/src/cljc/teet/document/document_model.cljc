@@ -1,8 +1,11 @@
 (ns teet.document.document-model
   (:require [clojure.string :as str]))
 
-(def ^:const upload-max-file-size (* 1024 1024 100))
+(def ^:const upload-max-file-size (* 1024 1024 3000))
 (def ^:const upload-allowed-file-types #{"image/png"
+                                         "video/mp4"
+                                         "video/x-ms-wmv"
+                                         "video/x-msvideo"
                                          "image/jpeg"
                                          "application/pdf"
                                          "application/zip"
