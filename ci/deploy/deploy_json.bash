@@ -22,6 +22,6 @@ then
     ./wait_for_datomic.bash;
 fi
 
-echo "{\"commit\":\"$COMMIT\",\"status\":\"$1\",\"timestamp\":\"`date`\"}" > deploy.json
+echo "{\"commit\":\"$CODEBUILD_RESOLVED_SOURCE_VERSION\",\"status\":\"$1\",\"timestamp\":\"`date`\"}" > deploy.json
 aws s3 cp deploy.json s3://$PUBLICDIR/js/deploy.json --acl public-read
 rm deploy.json
