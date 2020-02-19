@@ -23,7 +23,7 @@
 (s/def :document/file (s/and (s/keys :req [:file/type
                                            :file/name
                                            :file/size])
-                             #(document-model/upload-allowed-file-types (:file/type (document-model/type-by-suffix %)))))
+                             #(nil? (document-model/validate-file (document-model/type-by-suffix %)))))
 
 #?(:cljs
    (do

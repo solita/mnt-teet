@@ -9,7 +9,6 @@
                                          "text/ags"
                                          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"})
 
-
 (def ^:const upload-file-suffix-type {"ags" "text/ags"})
 
 (defn type-by-suffix [{:file/keys [name type] :as file}]
