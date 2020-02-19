@@ -18,7 +18,7 @@ fi
 # If setting status to deployed, make sure db is up and running
 if [ $1 == "deployed" ]
 then
-    timeout 5m ./wait_for_db.bash || exit 1;
+    timeout 5m ./wait_for_datomic.bash || exit 1;
 fi
 
 echo "{\"commit\":\"$COMMIT\",\"status\":\"$1\",\"timestamp\":\"`date`\"}" > deploy.json
