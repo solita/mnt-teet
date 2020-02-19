@@ -24,7 +24,7 @@ phases:
       - bash build.sh
   post_build:
     commands:
-      - NOTIFY_ON_SUCCESS=0 && bash ../../ci/scripts/slack.bash Backend $COMMIT
+      - NOTIFY_ON_SUCCESS=0 && bash ../../ci/scripts/slack.bash Backend $CODEBUILD_RESOLVED_SOURCE_VERSION
 cache:
   paths:
     - '/root/.m2/**/*'

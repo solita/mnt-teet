@@ -14,5 +14,5 @@ echo "Package artifact"
 
 COMMIT=`git rev-parse HEAD`
 cd resources/public
-zip -r ../../../../frontend-$COMMIT.zip *
+zip -r ../../../../frontend-$CODEBUILD_RESOLVED_SOURCE_VERSION.zip *
 cd ../..
