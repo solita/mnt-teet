@@ -52,7 +52,6 @@
 (defn projects-listing [e! app all-projects]
   (let [unassigned-only? (common-controller/query-param-boolean-atom app :unassigned)]
     [:<>
-
      [table/table {:after-title [:div {:style {:margin-left "2rem" :display :inline-block}}
                                  [FormControlLabel
                                   {:value "unassigned-only"
