@@ -18,9 +18,10 @@ fi
 # If setting status to deployed, make sure db is up and running
 if [ $1 == "deployed" ]
 then
-    timeout 5m ./wait_for_db.bash || exit 1;
+    echo "Waiting for Datomic";
+    ./wait_for_datomic.bash;
 fi
 
-echo "{\"commit\":\"$COMMIT\",\"status\":\"$1\",\"timestamp\":\"`date`\"}" > deploy.json
+echo "{\"commit\":\"$CODEBUILD_RESOLVED_SOURCE_VERSION\",\"status\":\"$1\",\"timestamp\":\"`date`\"}" > deploy.json
 aws s3 cp deploy.json s3://$PUBLICDIR/js/deploy.json --acl public-read
 rm deploy.json
