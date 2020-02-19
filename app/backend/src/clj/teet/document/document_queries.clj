@@ -1,6 +1,6 @@
 (ns teet.document.document-queries
   (:require [teet.db-api.core :as db-api :refer [defquery]]
-            [teet.document.document-specs]
+            [teet.document.document-spec]
             [teet.document.document-storage :as document-storage]
             [datomic.client.api :as d]
             [teet.project.project-db :as project-db]))
