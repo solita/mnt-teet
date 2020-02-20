@@ -2,6 +2,12 @@
  {:unresolved-symbol
   {:exclude [(teet.db-api.core/defcommand)
              (teet.db-api.core/defquery)
-             (teet.db-api.core/defrequest*)]}}
+             (teet.db-api.core/defrequest*)
+             (teet.integration.integration-context/defstep)]}}
  :lint-as {teet.ui.material-ui-macros/define-mui-components clojure.core/declare
-           reagent.core/with-let clojure.core/let}}
+           reagent.core/with-let clojure.core/let
+           teet.integration.integration-context/defstep clojure.core/def
+           herb.core/defglobal clojure.core/def
+           herb.core/defkeyframes clojure.core/def
+           teet.route-macros/define-main-page clojure.core/def
+           teet.route-macros/define-router clojure.core/def}}
