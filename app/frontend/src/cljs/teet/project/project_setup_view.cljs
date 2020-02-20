@@ -246,6 +246,9 @@
 
      [:div {:style {:margin-top "1rem"}}
       [itemlist/checkbox-list
+       {:on-select-all #(e! (project-controller/->SelectCadastralUnits (set cadastral-units)))
+        :on-deselect-all #(e! (project-controller/->DeselectCadastralUnits (set cadastral-units)))}
+
        (doall
          (for [cadastral-unit (sort-by (juxt :VOOND :teet-id) cadastral-units)
                :let [checked? (boolean (checked-cadastral-units cadastral-unit))]]

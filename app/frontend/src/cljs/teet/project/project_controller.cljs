@@ -106,6 +106,9 @@
 (defrecord SelectRestrictions [restrictions])
 (defrecord DeselectRestrictions [restrictions])
 (defrecord ToggleCadastralUnit [cadastral-unit])
+(defrecord SelectCadastralUnits [cadastral-units])
+(defrecord DeselectCadastralUnits [cadastral-units])
+
 (defrecord FeatureMouseOvers [layer enter? feature])
 (defrecord ToggleRestrictionCategory [restrictions group])
 (defrecord ToggleSelectedCategory [])
@@ -170,51 +173,43 @@
       (fn []
         (->NavigateToStep step-label)))))
 
-(defn toggle-cadastral-unit
-  [app cadastral-unit]
-  (let [old-cadastral-units (or (get-in app [:route :project :checked-cadastral-units])
-                                #{})
-        new-cadastral-units (if (old-cadastral-units cadastral-unit)
-                              (disj old-cadastral-units cadastral-unit)
-                              (conj old-cadastral-units cadastral-unit))
-        cadastral-candidates-geojson (get-in app [:route :project :cadastral-candidates-geojson])
-        candidates-match (->> cadastral-candidates-geojson
-                              ->clj
-                              :features
-                              (filter #(= (get-in % [:properties :teet-id]) (:teet-id cadastral-unit)))
-                              first)
-        checked-match (first
-                        (filter
-                          #(= (get-in % [:properties :teet-id]) (:teet-id cadastral-unit))
-                          (get-in app [:route :project :checked-cadastral-geojson])))
-        cadastral-geojson (or checked-match candidates-match)
-        old-cadastral-geojson (or (get-in app [:route :project :checked-cadastral-geojson])
-                                  #{})
-        new-cadastral-geojson (if (old-cadastral-geojson cadastral-geojson)
-                                (disj old-cadastral-geojson cadastral-geojson)
-                                (conj old-cadastral-geojson cadastral-geojson))]
-    (-> app
-        (assoc-in [:route :project :checked-cadastral-geojson] new-cadastral-geojson)
-        (assoc-in [:route :project :checked-cadastral-units] new-cadastral-units))))
 
-(defn- update-checked-restrictions [app new-restrictions]
-  (let [ids (into #{} (map :teet-id) new-restrictions)
-        restriction-candidates-geojson (get-in app [:route :project :restriction-candidates-geojson])
-        new-restrictions-geojson (into #{}
-                                       (filter #(ids (get-in % [:properties :teet-id])))
-                                       (->> restriction-candidates-geojson ->clj :features))]
+(defn- update-related-features [features-path features-geojson-path feature-candidates-geojson-path
+                                app new-features]
+  (let [ids (into #{} (map :teet-id) new-features)
+        feature-candidates-geojson (get-in app feature-candidates-geojson-path)
+        new-features-geojson (into #{}
+                                   (filter #(ids (get-in % [:properties :teet-id])))
+                                   (->> feature-candidates-geojson ->clj :features))]
     (-> app
-        (assoc-in [:route :project :checked-restrictions] new-restrictions)
-        (assoc-in [:route :project :checked-restrictions-geojson] new-restrictions-geojson))))
+        (assoc-in features-path new-features)
+        (assoc-in features-geojson-path new-features-geojson))))
 
-(defn toggle-restriction
-  [app restriction]
-  (update-checked-restrictions
+(def update-checked-restrictions (partial update-related-features
+                                          [:route :project :checked-restrictions]
+                                          [:route :project :checked-restrictions-geojson]
+                                          [:route :project :restriction-candidates-geojson]))
+
+(def update-checked-cadastral-units (partial update-related-features
+                                             [:route :project :checked-cadastral-units]
+                                             [:route :project :checked-cadastral-geojson]
+                                             [:route :project :cadastral-candidates-geojson]))
+
+(defn toggle-related-feature [features-path update-checked-fn app feature]
+  (update-checked-fn
    app
-   (let [old-restrictions (get-in app [:route :project :checked-restrictions] #{})]
-     (if (old-restrictions restriction)
-       (disj old-restrictions restriction)
-       (conj old-restrictions restriction)))))
+   (let [old-features (get-in app features-path #{})]
+     (if (old-features feature)
+       (disj old-features feature)
+       (conj old-features feature)))))
+
+(def toggle-cadastral-unit (partial toggle-related-feature
+                                    [:route :project :checked-cadastral-units]
+                                    update-checked-cadastral-units))
+
+(def toggle-restriction (partial toggle-related-feature
+                                 [:route :project :checked-restrictions]
+                                 update-checked-restrictions))
 
 (defn navigate-to-previous-step-event
   "Given `current-step`, navigatest to next step in `steps`"
@@ -474,6 +469,20 @@
   ToggleCadastralUnit
   (process-event [{cadastral-unit :cadastral-unit} app]
     (toggle-cadastral-unit app cadastral-unit))
+
+  SelectCadastralUnits
+  (process-event [{cadastral-units :cadastral-units} app]
+    (update-checked-cadastral-units
+     app
+     (set/union (get-in app [:route :project :checked-cadastral-units] #{})
+                cadastral-units)))
+
+  DeselectCadastralUnits
+  (process-event [{cadastral-units :cadastral-units} app]
+    (update-checked-cadastral-units
+     app
+     (set/difference (get-in app [:route :project :checked-cadastral-units] #{})
+                     cadastral-units)))
 
   ToggleSelectedCategory
   (process-event [{} app]

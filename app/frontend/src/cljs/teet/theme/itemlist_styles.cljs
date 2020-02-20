@@ -31,7 +31,8 @@
 
 (defn checkbox-list-link []
   ;; Pad checkbox list link to make it align with checkbox item labels
-  {:padding-left "5rem"})
+  {:padding-left "5rem"
+   :cursor "pointer"})
 
 (defn layer-checkbox
   []
