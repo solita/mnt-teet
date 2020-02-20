@@ -1,0 +1,5 @@
+{:linters
+ {:unresolved-symbols
+  {:exclude [(teet.db-api.core/defcommand)
+             (teet.db-api.core/defquery)]}}
+ :lint-as {teet.ui.material-ui-macros/define-mui-components clojure.core/declare}}
