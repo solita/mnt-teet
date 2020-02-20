@@ -3,8 +3,17 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.string :as str]))
 
+
+(s/def ::task-id integer?)
+(s/def ::file-id integer?)
+
+(s/def :document/upload (s/keys :req [:document/name :document/type :document/size :thk/id]
+                                :opt-un [::task-id]))
+(s/def :document/download-file (s/keys :req-un [::file-id]))
 (s/def :document/status keyword?)
 (s/def :document/name (s/and string? (complement str/blank?)))
+(s/def :document/type string?)
+(s/def :document/size integer?)
 (s/def :document/description (s/and string? (complement str/blank?)))
 (s/def :document/category keyword?)
 (s/def :document/sub-category keyword?)

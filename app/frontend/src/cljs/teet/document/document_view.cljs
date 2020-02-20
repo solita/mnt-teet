@@ -43,7 +43,9 @@
         [file-upload/files-field {}])
 
       ^{:attribute :document/status}
-      [select/select-enum {:e! e! :attribute :document/status}]
+      [select/select-enum {:e! e! :attribute :document/status
+                           :values-filter #{:document.status/updated :document.status/ready :document.status/invalid
+                                            :document.status/approved :document.status/draft}}]
 
       ^{:attribute :document/author}
       [select/select-user {:e! e!}]]

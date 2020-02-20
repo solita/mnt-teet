@@ -663,7 +663,7 @@
   ToggleStepperLifecycle
   (process-event [{lifecycle :lifecycle} app]
     (if (= (str lifecycle) (str (get-in app [:stepper :lifecycle])))
-      (assoc-in app [:stepper :lifecycle] nil)
+      (update-in app [:stepper] dissoc :lifecycle)
       (assoc-in app [:stepper :lifecycle] lifecycle)))
 
   ToggleStepperActivity

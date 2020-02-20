@@ -14,7 +14,6 @@ phases:
       - bash linux-install-1.10.1.466.sh
   build:
     commands:
-      - export COMMIT=`git rev-parse HEAD`
       - (cd ci/deploy; bash deploy_json.bash deploying)
       - cd db && bash migrate.bash && cd ..
       - cd ci/deploy
@@ -26,7 +25,7 @@ phases:
 
   post_build:
     commands:
-      - NOTIFY_ON_SUCCESS=1 bash $CODEBUILD_SRC_DIR/ci/scripts/slack.bash Deploy $COMMIT
+      - NOTIFY_ON_SUCCESS=1 bash $CODEBUILD_SRC_DIR/ci/scripts/slack.bash Deploy $CODEBUILD_RESOLVED_SOURCE_VERSION
 cache:
   paths:
     - '/root/.m2/**/*'
