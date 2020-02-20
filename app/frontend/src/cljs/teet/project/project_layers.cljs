@@ -133,30 +133,6 @@
                                     {:opacity 1})}))
 
 
-;; PENDING: not needed anymore, we draw the buffer with a different stroke
-#_(defn road-buffer [{{:keys [query] :as app} :app {:keys [basic-information-form]
-                                                  :thk.project/keys [start-m end-m road-nr carriageway] :as project} :project}]
-  (let [road-information (:road-info basic-information-form)
-        configure (:configure query)
-        {[start-km-string end-km-string] :thk.project/km-range} basic-information-form
-        road-start-m (or (some-> start-km-string road-model/parse-km km->m) start-m)
-        road-end-m (or (some-> end-km-string road-model/parse-km km->m) end-m)
-        road-buffer-meters (get-in app [:map :road-buffer-meters])
-        road-info {:start-m road-start-m
-                   :end-m road-end-m
-                   :road-nr road-nr
-                   :carriageway carriageway}]
-    (when (and (not-empty road-buffer-meters)
-               (>= road-buffer-meters 0)
-               (or
-                 configure
-                 (and
-                  basic-information-form
-                  #_(given-range-in-actual-road? road-information [road-start-m road-end-m]))))
-      {:thk-project-buffer
-       (project-road-buffer-layer road-info (endpoint app) road-buffer-meters)})))
-
-
 (defn related-restrictions [{{query :query :as app} :app
                              {restrictions :thk.project/related-restrictions} :project}]
   (when (and restrictions (not (:configure query)))
