@@ -175,19 +175,6 @@
                          @overlays))}
       map]]))
 
-(defn collapse-skeleton
-  [title? n]
-  [:<>
-   (when title?
-     [skeleton/skeleton {:parent-style {:padding "1.5rem 0"
-                                        :text-transform "capitalize"}
-                         :style {:width "40%"}}])
-   (doall
-     (for [y (range n)]
-       ^{:key y}
-       [skeleton/skeleton {:style {:width "70%"}
-                           :parent-style (skeleton/restriction-skeleton-style)}]))])
-
 (defn road-geometry-range-input
   [e! {road-buffer-meters :road-buffer-meters} entity-type]
   [Paper {:class (<class project-style/road-geometry-range-selector)}
@@ -464,32 +451,33 @@
   [e! app _project]
   (let [buffer-m (get-in app [:map :road-buffer-meters])]
     (e! (project-controller/->FetchRelatedInfo buffer-m "restrictions")))
-  (fn [e! app {:keys [open-types restriction-candidates checked-restrictions] :or {open-types #{}} :as project}]
+  (fn [e! app {:keys [open-types restriction-candidates checked-restrictions loading] :or {open-types #{}} :as project}]
     (let [buffer-m (get-in app [:map :road-buffer-meters])]
-      (when restriction-candidates
-        [project-setup-view/restrictions-listing e!
-         open-types
-         buffer-m
-         {:restrictions restriction-candidates
-          :checked-restrictions (or checked-restrictions #{})
-          :toggle-restriction (e! project-controller/->ToggleRestriction)
-          :on-mouse-enter (e! project-controller/->FeatureMouseOvers "related-restriction-candidates" true)
-          :on-mouse-leave (e! project-controller/->FeatureMouseOvers "related-restriction-candidates" false)}]))))
+      [project-setup-view/restrictions-listing e!
+       open-types
+       buffer-m
+       {:restrictions restriction-candidates
+        :loading loading
+        :checked-restrictions (or checked-restrictions #{})
+        :toggle-restriction (e! project-controller/->ToggleRestriction)
+        :on-mouse-enter (e! project-controller/->FeatureMouseOvers "related-restriction-candidates" true)
+        :on-mouse-leave (e! project-controller/->FeatureMouseOvers "related-restriction-candidates" false)}])))
 
 (defn change-cadastral-units-view
   [e! app project]
   (let [buffer-m (get-in app [:map :road-buffer-meters])]
     (e! (project-controller/->FetchRelatedInfo buffer-m "cadastral-units")))
-  (fn [e! app {:keys [cadastral-candidates checked-cadastral-units] :as project}]
+  (fn [e! app {:keys [cadastral-candidates checked-cadastral-units loading] :as project}]
     (let [buffer-m (get-in app [:map :road-buffer-meters])]
       [project-setup-view/cadastral-units-listing
        e!
        buffer-m
-       {:cadastral-units         cadastral-candidates
+       {:cadastral-units cadastral-candidates
+        :loading loading
         :checked-cadastral-units (or checked-cadastral-units #{})
-        :toggle-cadastral-unit   (e! project-controller/->ToggleCadastralUnit)
-        :on-mouse-enter          (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" true)
-        :on-mouse-leave          (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" false)}])))
+        :toggle-cadastral-unit (e! project-controller/->ToggleCadastralUnit)
+        :on-mouse-enter (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" true)
+        :on-mouse-leave (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" false)}])))
 
 (defn- initialized-project-view
   "The project view shown for initialized projects."
