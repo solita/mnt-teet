@@ -81,7 +81,14 @@
                                           :thk.project/effective-km-range)))
         options {:fit-on-load? true
                  ;; Use left side padding so that road is not shown under the project panel
-                 :fit-padding map-obj-padding}]
+                 :fit-padding map-obj-padding}
+
+        ;; If we have geometry (in setup wizard) or are editing related features
+        ;; show the buffer as well, otherwise just the road line
+        style (if (or geometry
+                      (#{"restrictions" "cadastral-units"} (get-in app [:query :configure])))
+                (map-features/project-line-style-with-buffer (get-in app [:map :road-buffer-meters]))
+                map-features/project-line-style)]
 
     {:thk-project
      (if geometry
@@ -92,13 +99,13 @@
          (map-layers/geojson-data-layer
           "geojson_road_geometry"
           (line-string-to-geojson geometry)
-          (map-features/project-line-style-with-buffer (get-in app [:map :road-buffer-meters]))
+          style
           options))
 
        (map-layers/geojson-layer endpoint
                                  "geojson_entities"
                                  {"ids" (str "{" (:db/id project) "}")}
-                                 map-features/project-line-style
+                                 style
                                  (assoc options
                                         ;; Update start/end labels from source geometry
                                         ;; once it is loaded
