@@ -12,4 +12,4 @@ jobs:
     - name: install clj-kondo
       run: bash <(curl -s https://raw.githubusercontent.com/borkdude/clj-kondo/master/script/install-clj-kondo) --dir /home/runner/work
     - name: clj-kondo checks
-      run: /home/runner/work/clj-kondo -m clj-kondo.main --lint app/backend/src app/frontend/src
+      run: ./ci/scripts/lint.bash
