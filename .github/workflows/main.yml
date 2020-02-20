@@ -10,6 +10,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: install clj-kondo
-      shell: bash <(curl -s https://raw.githubusercontent.com/borkdude/clj-kondo/master/script/install-clj-kondo)
+      run: bash <(curl -s https://raw.githubusercontent.com/borkdude/clj-kondo/master/script/install-clj-kondo)
     - name: clj-kondo checks
       run: clj-kondo -m clj-kondo.main --lint app/backend/src app/frontend/src
