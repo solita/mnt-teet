@@ -34,7 +34,11 @@ do
         if [ $TYPE == "warning" ]; then
             WARNINGS=$((WARNINGS + 1))
         fi
-        ANNOTATIONS="$ANNOTATIONS$SEP{\"path\":\"$FILE\",\"start_line\":$ROW,\"end_line\":$ROW,\"annotation_level\":\"$TYPE\",\"message\":\"$MSG\"}"
+
+        # Github API allows at most 50 annotations
+        if [ $(( (FAILURES + WARNINGS) < 50 )) ]; then
+            ANNOTATIONS="$ANNOTATIONS$SEP{\"path\":\"$FILE\",\"start_line\":$ROW,\"end_line\":$ROW,\"annotation_level\":\"$TYPE\",\"message\":\"$MSG\"}"
+        fi
     fi
 done
 
