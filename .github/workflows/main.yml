@@ -10,7 +10,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: clj-kondo checks
-      uses: DeLaGuardo/clojure-lint-action@v1
+      uses: adriffaud/lint-clojure@v1
       with:
-        clj-kondo-args: --lint app/backend/src
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        path: ./app/backend/src
