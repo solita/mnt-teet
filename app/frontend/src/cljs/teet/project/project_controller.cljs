@@ -123,10 +123,14 @@
 (defn fetch-related-info
   [app road-buffer-meters info-type]
   (let [[rpc args] (if-let [g (get-in app [:route :project :geometry])]
+                     ;; If we have a project geometry (in setup wizard)
+                     ;; fetch features by giving the geometry area
                      ["geojson_features_within_area"
                       {:geometry_wkt (str "LINESTRING("
                                           (str/join "," (map #(str/join " " %) g))
                                           ")")}]
+
+                     ;; Otherwise get related features based on the stored entity geometry
                      ["geojson_entity_related_features"
                       {:entity_id (str (get-in app [:route :project :db/id]))}])]
     (merge
@@ -426,14 +430,16 @@
           app (update-in app [:route :project :basic-information-form]
                          merge form-data)
           [new-start-m new-end-m :as new-meter-range] (project-meter-range app)
+
+          ;; Fetch new road geometry if it hasn't been fetched yet or has changed
           fetch-geometry? (or (not (contains? (get-in app [:route :project]) :geometry))
                               (not= old-meter-range new-meter-range))]
       (t/fx
        (if fetch-geometry?
+         ;; Remove previously fetched geometry and road info
          (update-in app [:route :project] dissoc :geometry :road-info)
          app)
 
-       ;; Fetch new road geometry if it hasn't been fetched yet or has changed
        (when fetch-geometry?
          {:tuck.effect/type :query
           :query :road/geometry-with-road-info
