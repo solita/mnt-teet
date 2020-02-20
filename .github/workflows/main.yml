@@ -1,6 +1,6 @@
 name: CI
 
-on: [pull_request]
+on: [push, pull_request]
 
 jobs:
   build:
@@ -9,11 +9,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: setup clojure
+      uses: DeLaGuardo/setup-clojure@2.0
+      with:
+        tools-deps: 0.8.677
     - name: backend clj-kondo checks
-      uses: adriffaud/lint-clojure@v1
-      with:
-        path: ./app/backend/src
+      working-directory: app/backend
+      run: clj -Sdeps '{:deps {clj-kondo {:mvn/version "RELEASE"}}}' -m clj-kondo.main --lint src
     - name: frontend clj-kondo checks
-      uses: adriffaud/lint-clojure@v1
-      with:
-        path: ./app/frontend/src
+      working-directory: app/frontend
+      run: clj -Sdeps '{:deps {clj-kondo {:mvn/version "RELEASE"}}}' -m clj-kondo.main --lint src
