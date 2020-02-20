@@ -13,7 +13,7 @@
             [teet.ui.form :as form]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Paper Grid]]
+            [teet.ui.material-ui :refer [Paper Grid Link]]
             [teet.ui.select :as select]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.typography :as typography]
@@ -163,8 +163,6 @@
 
 (defn restrictions-listing
   [e! open-types road-buffer-meters {:keys [restrictions loading checked-restrictions toggle-restriction on-mouse-enter on-mouse-leave]}]
-  (println "LOADING:?!?!?!??!?!?! " loading)
-  (println "RESTRICITIONS:?!?!?!??!?!?! " restrictions)
   [:<>
    (if (and loading (not restrictions))
      [fetching-features-skeletons 10]
@@ -201,6 +199,8 @@
                                                                                          :total (count restrictions)})]}
              group
              [itemlist/checkbox-list
+              {:on-select-all  #(e! (project-controller/->SelectRestrictions (set restrictions)))
+              :on-deselect-all #(e! (project-controller/->DeselectRestrictions (set restrictions)))}
               (for [restriction (sort-by (juxt :VOOND :teet-id) restrictions)
                     :let [checked? (boolean (group-checked restriction))]]
                 (merge {:id (:teet-id restriction)
@@ -257,6 +257,8 @@
 
        [:div {:style {:margin-top "1rem"}}
         [itemlist/checkbox-list
+         {:on-select-all #(e! (project-controller/->SelectCadastralUnits (set cadastral-units)))
+          :on-deselect-all #(e! (project-controller/->DeselectCadastralUnits (set cadastral-units)))}
          (doall
            (for [cadastral-unit (sort-by (juxt :VOOND :teet-id) cadastral-units)
                  :let [checked? (boolean (checked-cadastral-units cadastral-unit))]]
