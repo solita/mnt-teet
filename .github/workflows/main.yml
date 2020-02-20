@@ -13,3 +13,6 @@ jobs:
       run: bash <(curl -s https://raw.githubusercontent.com/borkdude/clj-kondo/master/script/install-clj-kondo) --dir /home/runner/work
     - name: clj-kondo checks
       run: ./ci/scripts/lint.bash
+      env:
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
