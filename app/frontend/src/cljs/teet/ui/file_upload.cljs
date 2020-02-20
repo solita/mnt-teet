@@ -7,7 +7,10 @@
             [teet.ui.icons :as icons]
             [teet.localization :refer [tr]]
             [teet.ui.typography :refer [Heading1 SectionHeading]]
-            [teet.ui.format :as format]))
+            [teet.ui.format :as format]
+            [teet.document.document-model :as document-model]
+            teet.document.document-spec
+            [cljs.spec.alpha :as s]))
 
 (defn- page-overlay []
   {;; Cover the whole page
@@ -137,7 +140,19 @@
           :border-radius "3px"
           :padding       "1rem"}
          (when error
-           {:border "solid 1px #91001D"})))                 ;;This should also use material ui theme.error
+           {:border (str "solid 1px " theme-colors/error)})))                 ;;This should also use material ui theme.error
+
+(defn file-info
+  [{:file/keys [type  size] :as _file} invalid-file-type? file-too-large?]
+  [:<>
+   [:span (merge {} (when invalid-file-type?
+                      {:style {:color theme-colors/error}}))
+    (str type) (when invalid-file-type?
+                 (str " " (tr [:document :invalid-file-type])))]
+   [:span {:style (merge {:display :block}
+                         (when file-too-large?
+                           {:color theme-colors/error}))}
+    (str (format/file-size size) " " (tr [:document :file-too-large]))]])
 
 (defn files-field [{:keys [value on-change error]}]
   [:div {:class (<class files-field-style error)}
@@ -148,8 +163,14 @@
       (fn [i ^js/File file]
         ^{:key i}
         [ListItem {}
-         [ListItemText {:primary (.-name file)
-                        :secondary (str (.-type file) " " (format/file-size (.-size file)))}]
+         (let [{:file/keys [type name size] :as file} (-> file
+                                                          document-model/file-info
+                                                          document-model/type-by-suffix)
+               invalid-file-type? (not (document-model/upload-allowed-file-types type))
+               file-too-large? (> size document-model/upload-max-file-size)]
+           [ListItemText (merge
+                           {:primary name
+                            :secondary (r/as-component [file-info file invalid-file-type? file-too-large?])})])
          [ListItemSecondaryAction
           [IconButton {:edge "end"
                        :on-click #(on-change (into (subvec value 0 i)

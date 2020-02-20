@@ -60,12 +60,6 @@
         canvas))))
 
 
-(def road-buffer-fill-style
-  (ol.style.Style.
-    #js {:stroke (ol.style.Stroke. #js {:color "rgba(0,0,255,0.6)"
-                                       :width 1})
-         :fill (ol.style.Fill. #js {:color "rgba(0,0,255,0.2)"})}))
-
 (defn road-line-style [color ^ol.render.Feature _feature res]
   (let [line-width (+ 3 (min 5 (int (/ 200 res))))]
     ;; Show project road geometry line
@@ -78,6 +72,13 @@
 (def ^{:doc "Show project geometry as the road line."} project-line-style
   (partial road-line-style "blue"))
 
+(defn project-line-style-with-buffer [buffer]
+  (fn [feature res]
+    #js [(project-line-style feature res)
+         (ol.style.Style. #js {:stroke (ol.style.Stroke. #js {:color "rgba(0,0,255,0.25)"
+                                                              :width (/ (* 2 buffer) res)
+                                                              :opacity 0.5})
+                               :zIndex 3})]))
 
 (def electric-pattern
   (let [a (atom nil)
@@ -160,7 +161,7 @@
               res)]
     (ol.style.Style.
       #js {:stroke (ol.style.Stroke. #js {:color    "rgba(0,0,0,0.6)"
-                                          :lineDash #js [(/ 15 res), (/ 30 res)] ;;TOdo fix issues with zooming
+                                          :lineDash #js [(/ 15 res), (/ 30 res)]
                                           :width    2})
            :fill   (ol.style.Fill. #js {:cursor :pointer
                                         :color  (if hover?

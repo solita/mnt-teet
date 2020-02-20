@@ -63,8 +63,10 @@
           ol-layer (or ol-layer
                        (ol.layer.Vector.
                         #js {:source source
-                             :wrapX true
-                             :style style-fn}))]
+                             :wrapX true}))]
+
+
+      (.setStyle ol-layer style-fn)
 
       (when on-change
         (.on source "change" #(on-change {:extent (.getExtent source)

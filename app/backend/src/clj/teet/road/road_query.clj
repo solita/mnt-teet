@@ -152,48 +152,63 @@
                p points))))
   (println "part " (:start-m road-part) (:end-m road-part)))
 
+(defn- cached [cache-atom cache-key fetch-fn]
+  (if-let [cached-value (and cache-atom
+                             (get @cache-atom cache-key))]
+    cached-value
+    (let [fetched-value (fetch-fn cache-key)]
+      (when cache-atom
+        (swap! cache-atom assoc cache-key fetched-value))
+      fetched-value)))
 
-(defn- wfs-request [wfs-url query-params]
-  (let [{:keys [error body]}
-        @(client/get wfs-url
-                     {:connect-timeout 10000
-                      :query-params (merge
-                                     {:SERVICE "WFS"
-                                      :REQUEST "GetFeature"
-                                      :VERSION "1.1.0"
-                                      :TYPENAME "ms:teeosa"
-                                      :SRSNAME "urn:ogc:def:crs:EPSG::3301"}
-                                     query-params)
-                      :as :stream})]
-    (if error
-      (throw (ex-info "Unable to fetch road parts from WFS"
-                      {:status 500
-                       :error :wfs-request-failed
-                       :wfs-url wfs-url
-                       :query-params query-params}
-                      error))
-      (-> body xml/parse zip/xml-zip
-          read-feature-collection))))
+(defn- wfs-request [{:keys [cache-atom wfs-url]} query-params]
+  (cached
+   cache-atom
+   query-params
+   (fn [query-params]
+     (let [{:keys [error body]}
+           @(client/get wfs-url
+                        {:connect-timeout 10000
+                         :query-params (merge
+                                        {:SERVICE "WFS"
+                                         :REQUEST "GetFeature"
+                                         :VERSION "1.1.0"
+                                         :TYPENAME "ms:teeosa"
+                                         :SRSNAME "urn:ogc:def:crs:EPSG::3301"}
+                                        query-params)
+                         :as :stream})]
+       (if error
+         (throw (ex-info "Unable to fetch road parts from WFS"
+                         {:status 500
+                          :error :wfs-request-failed
+                          :wfs-url wfs-url
+                          :query-params query-params}
+                         error))
+         (-> body xml/parse zip/xml-zip
+             read-feature-collection))))))
 
-(defn fetch-road-parts [{wfs-url :wfs-url} road-nr carriageway-nr]
-  (wfs-request wfs-url {:FILTER (query-by-road-and-carriageway road-nr carriageway-nr)}))
+(defn fetch-road-parts [config road-nr carriageway-nr]
+  (wfs-request config {:FILTER (query-by-road-and-carriageway road-nr carriageway-nr)}))
 
-(defn fetch-road-parts-by-coordinate [{wfs-url :wfs-url} coordinate distance-m]
-  (wfs-request wfs-url {:FILTER (query-by-coordinate coordinate distance-m)}))
+(defn fetch-road-parts-by-coordinate [config coordinate distance-m]
+  (wfs-request config {:FILTER (query-by-coordinate coordinate distance-m)}))
+
+(defn fetch-road-info [config road-nr carriageway-nr]
+  (let [parts (fetch-road-parts config road-nr carriageway-nr)]
+    {:name (:name (first parts))
+     :total-length (reduce + (map :length parts))
+     :start-m (reduce min (map :start-m parts))
+     :end-m (reduce max (map :end-m parts))}))
 
 (defn fetch-road-geometry
   "Fetch road geometry for the given road, carriageway and start/end range.
   Returns a line-string (sequence of coordinates).
 
-  Queries Maanteeamet WFS service specified in `wfs-url` option.
+  Queries Maanteeamet WFS service specified by `:wfs-url` in config.
 
-  If `cache-atom` is given, it is used to cache fetched road parts
-  and used in subsequent calls for the same road/carriagway. This will
+  If config `:cache-atom` is given, it is used to cache requests responses
+  and used in subsequent calls with the same query parameters. This will
   reduce query load for the WFS server when fetching multiple road geometries."
-  [{:keys [wfs-url cache-atom]} road-nr carriageway-nr start-m end-m]
-  (let [parts (or (and cache-atom
-                       (get @cache-atom [road-nr carriageway-nr]))
-                  (fetch-road-parts {:wfs-url wfs-url} road-nr carriageway-nr))]
-    (when cache-atom
-      (swap! cache-atom assoc [road-nr carriageway-nr] parts))
-    (extract-road-geometry parts start-m end-m)))
+  [config road-nr carriageway-nr start-m end-m]
+  (extract-road-geometry (fetch-road-parts config road-nr carriageway-nr)
+                         start-m end-m))
