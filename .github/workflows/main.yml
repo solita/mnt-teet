@@ -9,7 +9,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: clj-kondo checks
+    - name: backend clj-kondo checks
       uses: adriffaud/lint-clojure@v1
       with:
         path: ./app/backend/src
+    - name: frontend clj-kondo checks
+      uses: adriffaud/lint-clojure@v1
+      with:
+        path: ./app/frontend/src
