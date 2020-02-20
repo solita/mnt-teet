@@ -122,10 +122,20 @@
 
 (defn checkbox-list
   ([items] (checkbox-list {} items))
-  ([{:keys [key]
+  ([{:keys [key on-select-all on-deselect-all]
      :or   {key :id}}
     items]
    [:div {:class (<class itemlist-styles/checkbox-list-contents)}
+    (when (and on-select-all (every? (complement :checked?) items))
+      [Link {:class (<class itemlist-styles/checkbox-list-link)
+             :on-click #(do
+                          (.preventDefault %)
+                          (on-select-all))} (tr [:common :select-all])])
+    (when (and on-deselect-all (some :checked? items))
+      [Link {:class (<class itemlist-styles/checkbox-list-link)
+             :on-click #(do
+                          (.preventDefault %)
+                          (on-deselect-all))} (tr [:common :deselect-all])])
     (doall
       (for [item items]
         ^{:key (key item)}

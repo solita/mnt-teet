@@ -13,7 +13,7 @@
             [teet.ui.form :as form]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Paper Grid]]
+            [teet.ui.material-ui :refer [Paper Grid Link]]
             [teet.ui.select :as select]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.typography :as typography]
@@ -187,17 +187,21 @@
                                                                                        {:selected (count group-checked)
                                                                                         :total    (count restrictions)})]}
             group
-            [itemlist/checkbox-list
-             (for [restriction (sort-by (juxt :VOOND :teet-id) restrictions)
-                   :let [checked? (boolean (group-checked restriction))]]
-               (merge {:id        (:teet-id restriction)
-                       :checked?  checked?
-                       :value     (:VOOND restriction)
-                       :on-change (r/partial toggle-restriction restriction)}
-                      (when on-mouse-enter
-                        {:on-mouse-enter (r/partial on-mouse-enter restriction)})
-                      (when on-mouse-leave
-                        {:on-mouse-leave (r/partial on-mouse-leave restriction)})))]]))])))
+            [:<>
+
+             [itemlist/checkbox-list
+              {:on-select-all  #(e! (project-controller/->SelectRestrictions (set restrictions)))
+               :on-deselect-all #(e! (project-controller/->DeselectRestrictions (set restrictions)))}
+              (for [restriction (sort-by (juxt :VOOND :teet-id) restrictions)
+                    :let [checked? (boolean (group-checked restriction))]]
+                (merge {:id        (:teet-id restriction)
+                        :checked?  checked?
+                        :value     (:VOOND restriction)
+                        :on-change (r/partial toggle-restriction restriction)}
+                       (when on-mouse-enter
+                         {:on-mouse-enter (r/partial on-mouse-enter restriction)})
+                       (when on-mouse-leave
+                         {:on-mouse-leave (r/partial on-mouse-leave restriction)})))]]]))])))
 
 (defn project-setup-restrictions-form [e! _project step {:keys [road-buffer-meters] :as _map}]
   (e! (project-controller/->FetchRelatedInfo road-buffer-meters step))

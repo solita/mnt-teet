@@ -29,6 +29,10 @@
                   "bold !important"
                   "normal")})
 
+(defn checkbox-list-link []
+  ;; Pad checkbox list link to make it align with checkbox item labels
+  {:padding-left "5rem"})
+
 (defn layer-checkbox
   []
   {:margin-right "0.5rem"})

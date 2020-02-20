@@ -10,7 +10,8 @@
             [teet.map.map-controller :as map-controller]
             goog.math.Long
             [teet.snackbar.snackbar-controller :as snackbar-controller]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clojure.set :as set]))
 
 (defrecord OpenActivityDialog [lifecycle])                  ; open add activity modal dialog
 (defrecord OpenTaskDialog [activity])
@@ -102,6 +103,8 @@
 
 (defrecord FetchRelatedInfo [road-buffer-meters entity-type])
 (defrecord ToggleRestriction [restriction])
+(defrecord SelectRestrictions [restrictions])
+(defrecord DeselectRestrictions [restrictions])
 (defrecord ToggleCadastralUnit [cadastral-unit])
 (defrecord FeatureMouseOvers [layer enter? feature])
 (defrecord ToggleRestrictionCategory [restrictions group])
@@ -194,34 +197,24 @@
         (assoc-in [:route :project :checked-cadastral-geojson] new-cadastral-geojson)
         (assoc-in [:route :project :checked-cadastral-units] new-cadastral-units))))
 
-(defn toggle-restriction
-  [app restriction]
-  (let [old-restrictions (or (get-in app [:route :project :checked-restrictions])
-                             #{})
-        new-restrictions (if (old-restrictions restriction)
-                           (disj old-restrictions restriction)
-                           (conj old-restrictions restriction))
+(defn- update-checked-restrictions [app new-restrictions]
+  (let [ids (into #{} (map :teet-id) new-restrictions)
         restriction-candidates-geojson (get-in app [:route :project :restriction-candidates-geojson])
-        candidates-match (->> restriction-candidates-geojson
-                              ->clj
-                              :features
-                              (filter #(= (get-in % [:properties :teet-id]) (:teet-id restriction)))
-                              first)
-        checked-match (first
-                        (filter
-                          #(= (get-in % [:properties :teet-id]) (:teet-id restriction))
-                          (get-in app [:route :project :checked-restrictions-geojson])))
-
-        restriction-geojson (or checked-match candidates-match)
-        old-restrictions-geojson (or (get-in app [:route :project :checked-restrictions-geojson])
-                                     #{})
-        new-restrictions-geojson (if (old-restrictions-geojson restriction-geojson)
-                                   (disj old-restrictions-geojson restriction-geojson)
-                                   (conj old-restrictions-geojson restriction-geojson))]
-
+        new-restrictions-geojson (into #{}
+                                       (filter #(ids (get-in % [:properties :teet-id])))
+                                       (->> restriction-candidates-geojson ->clj :features))]
     (-> app
         (assoc-in [:route :project :checked-restrictions] new-restrictions)
         (assoc-in [:route :project :checked-restrictions-geojson] new-restrictions-geojson))))
+
+(defn toggle-restriction
+  [app restriction]
+  (update-checked-restrictions
+   app
+   (let [old-restrictions (get-in app [:route :project :checked-restrictions] #{})]
+     (if (old-restrictions restriction)
+       (disj old-restrictions restriction)
+       (conj old-restrictions restriction)))))
 
 (defn navigate-to-previous-step-event
   "Given `current-step`, navigatest to next step in `steps`"
@@ -463,6 +456,20 @@
   ToggleRestriction
   (process-event [{restriction :restriction} app]
     (toggle-restriction app restriction))
+
+  SelectRestrictions
+  (process-event [{restrictions :restrictions} app]
+    (update-checked-restrictions
+     app
+     (set/union (get-in app [:route :project :checked-restrictions] #{})
+                restrictions)))
+
+  DeselectRestrictions
+  (process-event [{restrictions :restrictions} app]
+    (update-checked-restrictions
+     app
+     (set/difference (get-in app [:route :project :checked-restrictions] #{})
+                     restrictions)))
 
   ToggleCadastralUnit
   (process-event [{cadastral-unit :cadastral-unit} app]
