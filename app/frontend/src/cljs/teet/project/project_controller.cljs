@@ -252,6 +252,7 @@
                                  (filter #(related-features (get-in % [:properties :teet-id])))
                                  set)]
       (-> app
+          (update-in [:route :project] dissoc :loading)
           (assoc-in result-path features)
           (assoc-in geojson-path geojson)
           (assoc-in checked-feature-path selected-candidates)
@@ -444,7 +445,8 @@
   FetchRelatedInfo
   (process-event [{road-buffer-meters :road-buffer-meters
                    entity-type :entity-type} app]
-    (t/fx app
+    (t/fx (assoc-in app [:route :project :loading] (or (project-setup-step app)
+                                                       entity-type))
           (fetch-related-info app road-buffer-meters (or (project-setup-step app)
                                                          entity-type))))
 
