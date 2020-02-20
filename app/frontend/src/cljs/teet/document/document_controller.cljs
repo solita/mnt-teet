@@ -6,7 +6,8 @@
             tuck.effect
             [teet.common.common-controller :as common-controller]
             [teet.project.task-model :as task-model]
-            [teet.localization :refer [tr]]))
+            [teet.localization :refer [tr]]
+            [teet.document.document-model :as document-model]))
 
 (defrecord CreateDocument []) ; create empty document and link it to task
 (defrecord CancelDocument []) ; cancel document creation
@@ -28,10 +29,7 @@
 
 (defrecord AddFilesToDocument [files]) ;; upload more files to existing document
 
-(defn- file-info [^js/File f]
-  {:file/name (.-name f)
-   :file/size (.-size f)
-   :file/type (.-type f)})
+
 
 (extend-protocol t/Event
 
@@ -160,7 +158,7 @@
               {:tuck.effect/type :command!
                :command :document/upload-file
                :payload {:document-id document-id
-                         :file (file-info file)}
+                         :file (document-model/file-info file)}
                :result-event (fn [result]
                                (map->UploadFileUrlReceived
                                 (merge result
@@ -176,7 +174,7 @@
     (let [doc-id  (get-in app [:params :document])]
       (t/fx (common-controller/update-page-state
              app [:document/files]
-             into (comp (map file-info)
+             into (comp (map document-model/file-info)
                         (map #(assoc %
                                      :in-progress? true
                                      :db/id (str (random-uuid))))) files)
