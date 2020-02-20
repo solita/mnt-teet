@@ -62,6 +62,22 @@ SELECT row_to_json(fc)::TEXT
                    AND f.datasource_id = ANY(datasource_ids)) f) fc;
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION teet.geojson_features_within_area(
+   datasource_ids INT[],
+   geometry_wkt TEXT,
+   distance INTEGER)
+RETURNS TEXT AS $$
+SELECT row_to_json(fc)::TEXT
+  FROM (SELECT 'FeatureCollection' as type,
+               array_to_json(array_agg(f)) as features
+          FROM (SELECT 'Feature' as type,
+                       ST_AsGeoJSON(f.geometry)::json as geometry,
+                       (jsonb_build_object('teet-id', CONCAT(f.datasource_id,':',f.id)) || f.properties) AS properties
+                  FROM teet.feature f
+                 WHERE ST_DWithin(f.geometry, ST_SetSRID(ST_GeomFromText(geometry_wkt),3301), distance)
+                   AND f.datasource_id = ANY(datasource_ids)) f) fc;
+$$ LANGUAGE SQL STABLE SECURITY DEFINER;
+
 CREATE OR REPLACE FUNCTION teet.geojson_features_by_id(
   ids TEXT[])
 RETURNS TEXT
@@ -128,3 +144,4 @@ GRANT EXECUTE ON FUNCTION teet.geojson_features_by_id(TEXT[]) TO teet_user;
 GRANT EXECUTE ON FUNCTION teet.datasources() TO teet_user;
 GRANT EXECUTE ON FUNCTION teet.upsert_entity_feature(TEXT,TEXT,TEXT,TEXT,TEXT,JSONB) TO teet_backend;
 GRANT EXECUTE ON FUNCTION teet.geojson_entity_features_by_id(TEXT[]) TO teet_user;
+GRANT EXECUTE ON FUNCTION teet.geojson_features_within_area(INT[],TEXT,INTEGER) TO teet_user;

@@ -23,7 +23,16 @@
                                   map-features/survey-style
                                   {:opacity 0.5})})
 
-(defn- km-range-label-overlays [start-label end-label callback {source :source}]
+(defn- km-range-label-overlays [start-label start-coordinate
+                                end-label end-coordinate]
+  [{:coordinate start-coordinate
+    :content [map-view/overlay {:arrow-direction :right :height 30}
+              start-label]}
+   {:coordinate end-coordinate
+    :content [map-view/overlay {:arrow-direction :left :height 30}
+              end-label]}])
+
+(defn- update-km-range-label-overlays! [start-label end-label callback {source :source}]
   (when-let [geom (some-> ^ol.source.Vector source
                           .getFeatures
                           (aget 0)
@@ -31,12 +40,9 @@
     (let [start (.getFirstCoordinate geom)
           end (.getLastCoordinate geom)]
       (callback
-        [{:coordinate (js->clj start)
-          :content [map-view/overlay {:arrow-direction :right :height 30}
-                    start-label]}
-         {:coordinate (js->clj end)
-          :content [map-view/overlay {:arrow-direction :left :height 30}
-                    end-label]}]))))
+       (km-range-label-overlays
+        start-label (js->clj start)
+        end-label (js->clj end))))))
 
 (defn given-range-in-actual-road?
   "Check to see if the forms given road range is in the actual road"
@@ -45,14 +51,23 @@
        (>= form-start-m start_m)
        (>= end_m form-end-m)))
 
+(defn- line-string-to-geojson [ls]
+  #js {:type "FeatureCollection"
+       :features
+       #js [#js {:type "Feature"
+                 :properties #js {}
+                 :geometry #js {:type "LineString"
+                                :coordinates (into-array (map into-array ls))}}]})
+
 (defn project-road-geometry-layer
   "Show project geometry or custom road part in case the start and end
   km are being edited during initialization"
   [map-obj-padding
    {app :app
     {:thk.project/keys [road-nr carriageway]
-     :keys [basic-information-form] :as project} :project
+     :keys [basic-information-form geometry] :as project} :project
     set-overlays! :set-overlays!}]
+
   (let [endpoint (endpoint app)
         [start-label end-label]
         (if-let [km-range (:thk.project/km-range basic-information-form)]
@@ -64,39 +79,32 @@
                       km->m)
                 (project-model/get-column project
                                           :thk.project/effective-km-range)))
-        road-information (:road-info basic-information-form)
         options {:fit-on-load? true
                  ;; Use left side padding so that road is not shown under the project panel
-                 :fit-padding map-obj-padding
-                 :on-load (partial km-range-label-overlays
-                                   start-label end-label
-                                   set-overlays!)}]
+                 :fit-padding map-obj-padding}]
 
     {:thk-project
-     (if (:thk.project/km-range basic-information-form)
-       (let [{[start-km-string end-km-string] :thk.project/km-range} basic-information-form
-             form-start-m (some-> start-km-string road-model/parse-km km->m)
-             form-end-m (some-> end-km-string road-model/parse-km km->m)]
-         (if (given-range-in-actual-road? road-information [form-start-m form-end-m])
-           (map-layers/geojson-layer
-             endpoint
-             "geojson_road_geometry"
-             {"road" road-nr
-              "carriageway" carriageway
-              "start_m" form-start-m
-              "end_m" form-end-m}
-             map-features/project-line-style
-             (merge options
-                    {:content-type "application/json"}))
-           ;; Needed to remove road ending markers
-           (do (set-overlays! nil)
-               nil)))
+     (if geometry
+       (do
+         ;; Set start/end labels directly from geometry
+         (set-overlays! (km-range-label-overlays start-label (first geometry)
+                                                 end-label (last geometry)))
+         (map-layers/geojson-data-layer
+          "geojson_road_geometry"
+          (line-string-to-geojson geometry)
+          (map-features/project-line-style-with-buffer (get-in app [:map :road-buffer-meters]))
+          options))
 
        (map-layers/geojson-layer endpoint
                                  "geojson_entities"
                                  {"ids" (str "{" (:db/id project) "}")}
                                  map-features/project-line-style
-                                 options))}))
+                                 (assoc options
+                                        ;; Update start/end labels from source geometry
+                                        ;; once it is loaded
+                                        :on-load (partial update-km-range-label-overlays!
+                                                          start-label end-label
+                                                          set-overlays!))))}))
 
 (defn setup-restriction-candidates [{{:keys [query]} :app
                                      {:keys [setup-step
@@ -123,45 +131,6 @@
                                     candidates
                                     map-features/cadastral-unit-style
                                     {:opacity 1})}))
-
-
-(defn project-road-buffer-layer
-  "Show buffer area for project-geometry"
-  [{:keys [start-m end-m road-nr carriageway] :as settings}
-   endpoint
-   road-buffer-meters]
-  (map-layers/geojson-layer
-    endpoint
-    "geojson_road_buffer_geometry"
-    {"road" road-nr
-     "carriageway" carriageway
-     "start_m" start-m
-     "end_m" end-m
-     "buffer" road-buffer-meters}
-    map-features/road-buffer-fill-style
-    {:content-type "application/json"}))
-
-(defn road-buffer [{{:keys [query] :as app} :app {:keys [basic-information-form]
-                                                  :thk.project/keys [start-m end-m road-nr carriageway] :as project} :project}]
-  (let [road-information (:road-info basic-information-form)
-        configure (:configure query)
-        {[start-km-string end-km-string] :thk.project/km-range} basic-information-form
-        road-start-m (or (some-> start-km-string road-model/parse-km km->m) start-m)
-        road-end-m (or (some-> end-km-string road-model/parse-km km->m) end-m)
-        road-buffer-meters (get-in app [:map :road-buffer-meters])
-        road-info {:start-m road-start-m
-                   :end-m road-end-m
-                   :road-nr road-nr
-                   :carriageway carriageway}]
-    (when (and (not-empty road-buffer-meters)
-               (>= road-buffer-meters 0)
-               (or
-                 configure
-                 (and
-                   basic-information-form
-                   (given-range-in-actual-road? road-information [road-start-m road-end-m]))))
-      {:thk-project-buffer
-       (project-road-buffer-layer road-info (endpoint app) road-buffer-meters)})))
 
 
 (defn related-restrictions [{{query :query :as app} :app

@@ -9,7 +9,8 @@
             [teet.road.road-model :as road-model]
             [teet.map.map-controller :as map-controller]
             goog.math.Long
-            [teet.snackbar.snackbar-controller :as snackbar-controller]))
+            [teet.snackbar.snackbar-controller :as snackbar-controller]
+            [clojure.string :as str]))
 
 (defrecord OpenActivityDialog [lifecycle])                  ; open add activity modal dialog
 (defrecord OpenTaskDialog [activity])
@@ -90,7 +91,6 @@
 (defrecord UpdateProjectRestrictions [restrictions project-id])
 (defrecord UpdateProjectCadastralUnits [cadastral-units project-id])
 (defrecord FeaturesUpdatedSuccessfully [result])
-(defrecord FetchRoadInformation [form-data])
 (defrecord ChangeRoadObjectAoe [val entity-type])
 (defrecord SaveRestrictions [])
 (defrecord UpdateRestrictionsForm [form-data])
@@ -98,6 +98,7 @@
 (defrecord UpdateCadastralUnitsForm [form-data])
 (defrecord SaveActivities [])
 (defrecord UpdateActivitiesForm [form-data])
+(defrecord RoadGeometryAndInfoResponse [result])
 
 (defrecord FetchRelatedInfo [road-buffer-meters entity-type])
 (defrecord ToggleRestriction [restriction])
@@ -121,24 +122,35 @@
 
 (defn fetch-related-info
   [app road-buffer-meters info-type]
-  (let [args {:entity_id (str (get-in app [:route :project :db/id]))
-              :distance  road-buffer-meters}]
+  (let [[rpc args] (if-let [g (get-in app [:route :project :geometry])]
+                     ;; If we have a project geometry (in setup wizard)
+                     ;; fetch features by giving the geometry area
+                     ["geojson_features_within_area"
+                      {:geometry_wkt (str "LINESTRING("
+                                          (str/join "," (map #(str/join " " %) g))
+                                          ")")}]
+
+                     ;; Otherwise get related features based on the stored entity geometry
+                     ["geojson_entity_related_features"
+                      {:entity_id (str (get-in app [:route :project :db/id]))}])]
     (merge
       {:tuck.effect/type :rpc
-       :rpc              "geojson_entity_related_features"
+       :rpc              rpc
        :endpoint         (get-in app [:config :api-url])}
       (case info-type
         "restrictions"
         {:args         (assoc args
-                         ;; FIXME: dataosource ids from map datasources info
-                         :datasource_ids (map-controller/select-rpc-datasources
-                                           app map-controller/restriction-datasource?))
+                              ;; FIXME: dataosource ids from map datasources info
+                              :distance road-buffer-meters
+                              :datasource_ids (map-controller/select-rpc-datasources
+                                               app map-controller/restriction-datasource?))
          :result-event (partial ->FetchFeatureCandidatesResponse :restrictions)}
 
         "cadastral-units"
         {:args         (assoc args
-                         :datasource_ids (map-controller/select-rpc-datasources
-                                           app map-controller/cadastral-unit-datasource?))
+                              :distance road-buffer-meters
+                              :datasource_ids (map-controller/select-rpc-datasources
+                                               app map-controller/cadastral-unit-datasource?))
          :result-event (partial ->FetchFeatureCandidatesResponse :cadastral-units)}
         {}))))
 
@@ -406,25 +418,40 @@
 
   UpdateBasicInformationForm
   (process-event [{:keys [form-data]} app]
-    (if (get-in app [:route :project :basic-information-form :road-info])
-      (update-in app [:route :project :basic-information-form]
-                 merge form-data)
-      (t/fx app
-            (fn [e!]
-              (e! (->FetchRoadInformation form-data))))))
+    (log/info "UpdateBasicInformationForm" form-data)
+    (let [project-meter-range (fn [app]
+                                (let [{[start-km-string end-km-string] :thk.project/km-range}
+                                      (get-in app [:route :project :basic-information-form])]
+                                  [(or (some-> start-km-string road-model/parse-km road-model/km->m)
+                                       (get-in app [:route :project :thk.project/start-m]))
+                                   (or (some-> end-km-string road-model/parse-km road-model/km->m)
+                                       (get-in app [:route :project :thk.project/end-m]))]))
+          old-meter-range (project-meter-range app)
+          app (update-in app [:route :project :basic-information-form]
+                         merge form-data)
+          [new-start-m new-end-m :as new-meter-range] (project-meter-range app)
 
-  FetchRoadInformation
-  (process-event [{form-data :form-data} app]
-    (let [{:thk.project/keys [road-nr carriageway]} (get-in app [:route :project])]
-      (t/fx (update-in app [:route :project :basic-information-form]
-                       merge form-data)
-            {:tuck.effect/type :rpc
-             :endpoint (get-in app [:config :api-url])
-             :method :GET
-             :rpc "road_info"
-             :args {:road road-nr
-                    :carriageway carriageway}
-             :result-path [:route :project :basic-information-form :road-info]})))
+          ;; Fetch new road geometry if it hasn't been fetched yet or has changed
+          fetch-geometry? (or (not (contains? (get-in app [:route :project]) :geometry))
+                              (not= old-meter-range new-meter-range))]
+      (t/fx
+       (if fetch-geometry?
+         ;; Remove previously fetched geometry and road info
+         (update-in app [:route :project] dissoc :geometry :road-info)
+         app)
+
+       (when fetch-geometry?
+         {:tuck.effect/type :query
+          :query :road/geometry-with-road-info
+          :args {:road (get-in app [:route :project :thk.project/road-nr])
+                 :carriageway (get-in app [:route :project :thk.project/carriageway])
+                 :start-m new-start-m
+                 :end-m new-end-m}
+          :result-event ->RoadGeometryAndInfoResponse}))))
+
+  RoadGeometryAndInfoResponse
+  (process-event [{result :result} app]
+    (update-in app [:route :project] merge result))
 
   FetchRelatedInfo
   (process-event [{road-buffer-meters :road-buffer-meters

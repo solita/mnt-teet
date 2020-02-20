@@ -133,7 +133,10 @@
 
 (defn project-map [e! {:keys [map page] :as app} project]
   (r/with-let [overlays (r/atom [])
-               set-overlays! #(reset! overlays %)
+               set-overlays! (fn [new-overlays]
+                               (when (not= new-overlays @overlays)
+                                 ;; Only set if actually changed (to avoid rerender loop)
+                                 (reset! overlays new-overlays)))
                map-object-padding (if (= page :project)
                                     [25 25 25 (+ 100 (* 1.05 (project-style/project-panel-width)))]
                                     [25 25 25 25])]
@@ -150,7 +153,6 @@
                            (merge layers (layer-fn opts)))
                          {}
                          [#_project-layers/surveys-layer
-                          project-layers/road-buffer
                           (partial project-layers/project-road-geometry-layer map-object-padding)
                           project-layers/setup-restriction-candidates
                           project-layers/setup-cadastral-unit-candidates
