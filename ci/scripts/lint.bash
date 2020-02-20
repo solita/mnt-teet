@@ -36,13 +36,14 @@ do
         fi
 
         # Github API allows at most 50 annotations
-        if [ $(( (FAILURES + WARNINGS) < 50 )) ]; then
+        if (( (FAILURES + WARNINGS) < 50 )); then
             ANNOTATIONS="$ANNOTATIONS$SEP{\"path\":\"$FILE\",\"start_line\":$ROW,\"end_line\":$ROW,\"annotation_level\":\"$TYPE\",\"message\":\"$MSG\"}"
         fi
     fi
 done
 
 BODY="{\"name\": \"lint\", \"head_sha\": \"$SHA\", \"output\": {\"title\":\"Lint output\",\"summary\": \"$FAILURES failures, $WARNINGS warnings\", \"annotations\": [$ANNOTATIONS]}}"
+
 
 curl -H "Content-Type: application/json" \
      -H "Accept: application/vnd.github.antiope-preview+json" \
