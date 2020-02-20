@@ -6,6 +6,7 @@
             [teet.util.geo :as geo]))
 
 (defonce cache-options
+  ;; For local development use:
   ;; uncomment this to cache everything (for caching in poor connectivity)
   #_{:cache-atom (atom {})}
   {})
