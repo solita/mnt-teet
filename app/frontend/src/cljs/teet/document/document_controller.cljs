@@ -140,7 +140,6 @@
     (let [doc-id (goog.math.Long/fromString (get-in app [:query :document]))]
       (t/fx app
             (fn [e!]
-              (println "FILESSSS: " files)
               (e! (map->UploadFiles {:files files
                                      :document-id doc-id
                                      :progress-increment (int (/ 100 (count files)))
