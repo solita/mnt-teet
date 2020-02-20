@@ -3,40 +3,10 @@
             [datomic.client.api :as d]
             [teet.document.document-storage :as document-storage]
             teet.document.document-spec
-            [clojure.string :as str]
             [teet.meta.meta-model :refer [modification-meta creation-meta deletion-tx]]
             [teet.util.collection :as cu]
-            [teet.util.datomic :as du])
-  (:import (java.util Date)))
+            [teet.document.document-model :as document-model]))
 
-
-(def ^:const upload-max-file-size (* 1024 1024 100))
-(def ^:const upload-allowed-file-types #{"image/png"
-                                         "image/jpeg"
-                                         "application/pdf"
-                                         "application/zip"
-                                         "text/ags"})
-
-(def ^:const upload-file-suffix-type {"ags" "text/ags"})
-
-(defn- type-by-suffix [{:file/keys [name type] :as file}]
-  (if-not (str/blank? type)
-    file
-    (if-let [type-by-suffix (-> name (str/split #"\.") last upload-file-suffix-type)]
-      (assoc file :file/type type-by-suffix)
-      file)))
-
-(defn validate-file [{:file/keys [type size]}]
-  (cond
-    (> size upload-max-file-size)
-    {:error :file-too-large :max-allowed-size upload-max-file-size}
-
-    (not (upload-allowed-file-types type))
-    {:error :file-type-not-allowed :allowed-types upload-allowed-file-types}
-
-    ;; No problems, upload can proceed
-    :else
-    nil))
 
 ;; Create new document and link it to task. Returns entity id for document.
 (defmethod db-api/command! :document/new-document [{conn :conn
@@ -68,8 +38,8 @@
 (defmethod db-api/command! :document/upload-file [{conn :conn
                                                    user :user}
                                                   {:keys [document-id file]}]
-  (let [file (type-by-suffix file)]
-    (or (validate-file file)
+  (let [file (document-model/type-by-suffix file)]
+    (or (document-model/validate-file file)
         (let [res (d/transact conn {:tx-data [{:db/id (or document-id "new-document")
                                                :document/files (merge file
                                                                       {:db/id "new-file"}

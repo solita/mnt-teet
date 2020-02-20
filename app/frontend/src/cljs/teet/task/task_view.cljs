@@ -26,7 +26,7 @@
             [teet.comments.comments-controller :as comments-controller]))
 
 (defn task-status [e! status modified]
-  
+
   [select/status {:e!        e!
                   :on-change (e! task-controller/->UpdateTaskStatus)
                   :status    (:db/ident status)
@@ -172,10 +172,11 @@
      [form/form {:e!              e!
                  :value           @form
                  :on-change-event (form/update-atom-event form merge)
-                 :save-event      (partial document-controller/->AddFilesToDocument (:files @form))
+                 :save-event      (partial document-controller/->AddFilesToDocument (:document/files @form))
                  :cancel-event    #(common-controller/->SetQueryParam :add-files nil)
-                 :in-progress?    upload-progress}
-      ^{:attribute :files}
+                 :in-progress?    upload-progress
+                 :spec :document/add-files}
+      ^{:attribute :document/files}
       [file-upload/files-field {}]]
      (when upload-progress
        [LinearProgress {:variant "determinate"

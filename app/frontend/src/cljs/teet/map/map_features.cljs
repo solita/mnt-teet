@@ -161,7 +161,7 @@
               res)]
     (ol.style.Style.
       #js {:stroke (ol.style.Stroke. #js {:color    "rgba(0,0,0,0.6)"
-                                          :lineDash #js [(/ 15 res), (/ 30 res)] ;;TOdo fix issues with zooming
+                                          :lineDash #js [(/ 15 res), (/ 30 res)]
                                           :width    2})
            :fill   (ol.style.Fill. #js {:cursor :pointer
                                         :color  (if hover?
