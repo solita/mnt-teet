@@ -6,7 +6,7 @@
             [cljs-time.format :as tf]
             [teet.localization :as localization :refer [tr]]
             [teet.ui.material-ui :refer [IconButton Popover ClickAwayListener
-                                         InputAdornment Button Grid]]
+                                         Button Grid]]
             [teet.ui.text-field :refer [TextField]]
             [teet.theme.theme-colors :as colors]
             [herb.core :refer [<class]]))

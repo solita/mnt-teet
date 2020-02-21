@@ -3,7 +3,7 @@
   (:require [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.material-ui :refer [ButtonBase Paper]]
+            [teet.ui.material-ui :refer [ButtonBase]]
             [teet.ui.typography :refer [Text SmallText] :as typography]
             [teet.common.common-styles :as common-styles]))
 
