@@ -9,8 +9,7 @@
             [teet.ui.typography :refer [Heading1 SectionHeading]]
             [teet.ui.format :as format]
             [teet.document.document-model :as document-model]
-            teet.document.document-spec
-            [cljs.spec.alpha :as s]))
+            teet.document.document-spec))
 
 (defn- page-overlay []
   {;; Cover the whole page

@@ -4,9 +4,8 @@
             [reagent.core :as r]
             [teet.ui.material-ui :refer [Card CardHeader CardContent
                                          Collapse IconButton Divider
-                                         DialogActions Modal Fade Paper
-                                         Backdrop
-                                         Dialog DialogTitle DialogContent]]
+                                         Modal Fade Dialog DialogTitle
+                                         DialogContent]]
             [teet.ui.icons :as icons]
             [teet.ui.typography :as typography]
             [teet.theme.theme-colors :as theme-colors]))
@@ -94,7 +93,7 @@
 
 (defn modal+
   "Advanced modal container"
-  [{:keys [title on-close open-atom left-panel right-panel] :as opts} content]
+  [{:keys [title on-close open-atom left-panel right-panel] :as _opts}]
   (let [open-atom (or open-atom (r/atom true))
         close-fn #(do
                     (reset! open-atom false)
@@ -124,7 +123,7 @@
 
 (defn modal
   "Simple modal container"
-  [{:keys [title on-close open-atom actions] :as opts} content]
+  [{:keys [title on-close open-atom actions] :as _opts} content]
   (let [open-atom (or open-atom (r/atom true))      ;;creates new atoms unnecessarily
         close-fn #(do
                     (reset! open-atom false)
