@@ -21,7 +21,7 @@ jobs:
       with:
         tools-deps: '1.10.1.510'
     - name: run backend tests
-      run: clojure -A:test
+      run: clojure -Sdeps "{:mvn/repos {\"datomic-cloud\" {:url \"s3://datomic-releases-1fc2183a/maven/releases\"}}}" -A:test
       working-directory: app/backend/
     - name: run frontend tests
       run: clojure -A:test
