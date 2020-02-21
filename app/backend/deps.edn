@@ -39,7 +39,7 @@
 
              }
  :paths ["src/clj" "../common/src/cljc" "../common/src/clj" "resources"]
- :aliases {:dev {:extra-deps {com.datomic/ion-dev {:mvn/version "0.9.234"}
+ :aliases {:dev {:extra-deps {;com.datomic/ion-dev {:mvn/version "0.9.234"}
                               org.clojure/tools.namespace {:mvn/version "0.3.1"}}}
            :pack {:extra-deps {pack/pack.alpha {:git/url "https://github.com/juxt/pack.alpha.git"
                                                 :sha "2769a6224bfb938e777906ea311b3daf7d2220f5"}}}
