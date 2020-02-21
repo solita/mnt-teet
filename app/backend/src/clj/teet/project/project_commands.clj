@@ -1,19 +1,17 @@
 (ns teet.project.project-commands
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
             [datomic.client.api :as d]
-            [teet.log :as log]
             [teet.project.project-model :as project-model]
             [teet.permission.permission-db :as permission-db]
             [clojure.string :as str]
             [teet.project.project-geometry :as project-geometry]
             [teet.environment :as environment]
             [teet.util.collection :as cu]
-            [teet.meta.meta-model :refer [modification-meta creation-meta deletion-tx]]
+            [teet.meta.meta-model :refer [modification-meta creation-meta] :as meta-model]
             [teet.project.project-specs]
             [clojure.spec.alpha :as s]
             [clojure.set :as set]
-            [teet.project.project-db :as project-db]
-            [teet.meta.meta-model :as meta-model])
+            [teet.project.project-db :as project-db])
   (:import (java.util Date)))
 
 (defcommand :thk.project/initialize!

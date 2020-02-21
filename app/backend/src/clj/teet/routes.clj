@@ -26,16 +26,16 @@
    (if (= :dev (:mode config))
      ;; In dev mode, serve files under frontend figwheel build
      (routes
-      (POST "/success" req
+      (POST "/success" _req
             {:status 200
              :headers {"Content-Type" "application/json"}
              :body (cheshire/encode {:success "great"})})
-      (POST "/fail" req
+      (POST "/fail" _req
             {:status 500
              :headers {"Content-Type" "application/json"}
              :body (cheshire/encode {:success "not"})})
       ;; Simulates the JSON file written by the deploy script
-      (GET "/js/deploy.json" req
+      (GET "/js/deploy.json" _req
            {:status 200
             :headers {"Content-Type" "application/json"}
             :body (cheshire/encode {:commit "the-commit-sha"

@@ -1,6 +1,5 @@
 (ns teet.activity.activity-controller
   (:require [tuck.core :as t]
-            [teet.log :as log]
             [teet.localization :refer [tr]]
             [teet.common.common-controller :as common-controller]
             goog.math.Long

@@ -1,7 +1,6 @@
 (ns teet.activity.activity-view
   (:require [teet.ui.select :as select]
             [teet.ui.date-picker :as date-picker]
-            [teet.activity.activity-controller :as activity-controller]
             [teet.localization :refer [tr]]
             [teet.ui.form :as form]
             teet.document.document-spec))

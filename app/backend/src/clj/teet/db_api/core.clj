@@ -3,7 +3,6 @@
   (:require [teet.authorization.authorization-check :as authorization-check]
             [teet.permission.permission-db :as permission-db]
             [datomic.client.api :as d]
-            [teet.util.collection :as cu]
             [teet.meta.meta-query :as meta-query]
             [teet.log :as log]))
 

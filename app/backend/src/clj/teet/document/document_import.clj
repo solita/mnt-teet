@@ -59,12 +59,11 @@
     (:db/id project)))
 
 (defn import-uploaded-file [event]
-  (do
-    (ctx-> {:event event
-            :conn (environment/datomic-connection)
-            :api-url (environment/config-value :api-url)
-            :api-secret (environment/config-value :auth :jwt-secret)}
-           integration-s3/read-trigger-event
-           extract-project-from-filename
-           import-by-suffix)
-    "ok"))
+  (ctx-> {:event event
+          :conn (environment/datomic-connection)
+          :api-url (environment/config-value :api-url)
+          :api-secret (environment/config-value :auth :jwt-secret)}
+         integration-s3/read-trigger-event
+         extract-project-from-filename
+         import-by-suffix)
+  "ok")

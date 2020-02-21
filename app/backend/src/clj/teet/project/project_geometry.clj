@@ -44,7 +44,6 @@
                                   (str "Bearer "
                                        (jwt-token/create-backend-token api-shared-secret))}
                         :body (cheshire/encode request-body)})]
-        (def the-response response)
         (when-not (= 200 (:status response))
           (throw (ex-info "Update project geometries failed"
                           {:expected-response-status 200

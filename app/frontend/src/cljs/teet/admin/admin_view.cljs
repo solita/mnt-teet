@@ -1,7 +1,6 @@
 (ns teet.admin.admin-view
   "Admin user interface"
   (:require [teet.admin.admin-controller :as admin-controller]
-            [teet.user.user-controller :as user-controller]
             [teet.ui.material-ui :refer [Table TableHead TableBody TableRow TableCell]]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.buttons :as buttons]

@@ -87,18 +87,6 @@
                                    [:thk.project/id project-id]))))
 
 
-(defn- fetch-project [result db path]
-  (let [project (d/pull db
-                        project-model/project-info-attributes
-                        (get-in result (into path [:db/id])))]
-    (assoc result :project project)))
-
-(defn- fetch-lifecycle [result db path]
-  (let [project (d/pull db
-                        [:thk.lifecycle/type]
-                        (get-in result (into path [:db/id])))]
-    (assoc result :lifecycle project)))
-
 (defquery :thk.project/listing
   {:doc "List all project basic info"
    :context {db :db}

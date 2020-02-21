@@ -1,6 +1,5 @@
 (ns teet.comments.comments-controller
   (:require [tuck.core :as t]
-            [teet.log :as log]
             [goog.math.Long]
             tuck.effect
             [teet.project.task-model :as task-model]
