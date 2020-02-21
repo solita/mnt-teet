@@ -2,13 +2,12 @@
   (:require [teet.ui.itemlist :as itemlist]
             [teet.user.user-model :as user-model]
             [teet.project.task-model :as task-model]
-            [teet.ui.util :as util]
             [teet.ui.typography :as typography]
             [teet.routes :as routes]
             [teet.ui.material-ui :refer [Link Paper]]
             [teet.localization :refer [tr]]))
 
-(defn dashboard-page [e! {user :user :as _app} {:keys [tasks] :as _dashboard} _breadcrumbs]
+(defn dashboard-page [_e! {user :user :as _app} {:keys [tasks] :as _dashboard} _breadcrumbs]
   (let [tasks-by-project  (group-by #(get-in % [:activity/_tasks 0
                                                 :thk.lifecycle/_activities 0
                                                 :thk.project/_lifecycles 0]) tasks)]

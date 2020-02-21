@@ -8,7 +8,7 @@
             [teet.road.road-query :as road-query]
             [teet.util.geo :as geo]))
 
-(defn- valid-api-info? [{:keys [api-url api-shared-secret] :as api}]
+(defn- valid-api-info? [{:keys [api-url api-shared-secret]}]
   (and (not (str/blank? api-url))
        (not (str/blank? api-shared-secret))))
 

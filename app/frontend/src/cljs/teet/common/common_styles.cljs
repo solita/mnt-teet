@@ -42,7 +42,7 @@
      :fill        color
      :text-align  "center"}))
 
-(defn tab-icon [current?]
+(defn tab-icon [_current?]
   {:width  "40px"
    :height "35px"
    :margin "1px 5px 1px 5px"})
