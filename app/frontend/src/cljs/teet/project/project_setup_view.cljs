@@ -3,7 +3,7 @@
             [goog.string.format]
             [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
-            [teet.localization :refer [tr tr-tree]]
+            [teet.localization :refer [tr]]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-model :as project-model]
             [teet.project.project-specs]
@@ -13,14 +13,12 @@
             [teet.ui.form :as form]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Paper Grid Link]]
+            [teet.ui.material-ui :refer [Grid]]
             [teet.ui.select :as select]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.typography :as typography]
             [teet.util.collection :as cu]
             [teet.road.road-model :as road-model]
-            [teet.log :as log]
-            [teet.theme.theme-colors :as theme-colors]
             [teet.ui.skeleton :as skeleton]))
 
 (declare project-setup-steps)
@@ -271,7 +269,10 @@
 
 (defn project-setup-cadastral-units-form [e! _project step {:keys [road-buffer-meters] :as _map}]
   (e! (project-controller/->FetchRelatedInfo road-buffer-meters step))
-  (fn [e! {:keys [cadastral-candidates checked-cadastral-units loading]} {step-label :step-label :as step} map]
+  (fn [e!
+       {:keys [cadastral-candidates checked-cadastral-units loading]}
+       {step-label :step-label :as step}
+       _map]
     [:form {:id        step-label
             :on-submit (e! (project-controller/navigate-to-next-step-event project-setup-steps step))}
      [cadastral-units-listing e!
