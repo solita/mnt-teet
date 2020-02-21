@@ -16,3 +16,13 @@ jobs:
       env:
         GITHUB_REPOSITORY: ${{ github.repository }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: setup clojure
+      uses: DeLaGuardo/setup-clojure@2.0
+      with:
+        tools-deps: '1.10.1.510'
+    - name: run backend tests
+      run: clojure -A:test
+      working-directory: app/backend/
+    - name: run frontend tests
+      run: clojure -A:test
+      working-directory: app/frontend/
