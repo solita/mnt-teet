@@ -3,8 +3,6 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as str]))
 
-(def f "example.ags")
-
 (def ags-item-pattern #"^\"([^\"]*)\"(.*)")
 
 (defn- parse-ags-line [input-line]
@@ -26,7 +24,7 @@
             ;; PENDING: should parse as BigDecimal to get exact value?
             (Double/parseDouble %))})
 
-(defn- group-data-parser [group heading unit type]
+(defn- group-data-parser [group heading _unit type]
   (let [group-ns (second group)
         strip-prefix (str group-ns "_")
         fields (map (fn [field type]
@@ -69,6 +67,3 @@
   has been consumed."
   [input]
   (groups-seq (line-seq (io/reader input :encoding "ISO-8859-1"))))
-
-(defn t1 []
-  (def g1 (with-open [in (io/reader f)] (doall (parse in)))))

@@ -1,12 +1,8 @@
 (ns teet.comment.comment-commands
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
             [datomic.client.api :as d]
-            [teet.document.document-storage :as document-storage]
             teet.document.document-spec
-            [clojure.string :as str]
-            [teet.meta.meta-model :refer [modification-meta creation-meta deletion-tx]]
-            [teet.util.collection :as cu]
-            [teet.util.datomic :as du]))
+            [teet.meta.meta-model :refer [creation-meta deletion-tx]]))
 
 (defn comment-key-for-entity
   [db entity-id]
@@ -18,6 +14,8 @@
       :file/comments
       :else
       (throw (ex-info "Can only comment on files and documents" {:comment-target-id entity-id})))))
+
+;; FIXME: defcommand these
 
 (defmethod db-api/command! :comment/post-comment [{conn :conn
                                                    user :user}

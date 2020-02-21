@@ -1,6 +1,5 @@
 (ns tara.token
-  (:import (com.nimbusds.jwt SignedJWT JWTClaimsSet)
-           (com.nimbusds.jose JWSVerifier)
+  (:import (com.nimbusds.jwt SignedJWT)
            (com.nimbusds.jose.crypto RSASSAVerifier)))
 
 (defn verify

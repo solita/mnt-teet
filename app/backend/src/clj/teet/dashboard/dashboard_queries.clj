@@ -1,7 +1,6 @@
 (ns teet.dashboard.dashboard-queries
   (:require [teet.db-api.core :refer [defquery]]
             [datomic.client.api :as d]
-            [teet.util.datomic :as du]
             [teet.meta.meta-query :as meta-query]))
 
 (defquery :dashboard/user-dashboard

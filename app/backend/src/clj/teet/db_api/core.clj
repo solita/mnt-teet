@@ -219,7 +219,7 @@
   attribute defaults to :meta/creator if omitted.
   "
   [command-name
-   {:keys [payload context authorization project-id transact] :as options}
+   {:keys [transact] :as options}
    & body]
 
   (assert (or (and (seq body)

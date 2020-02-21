@@ -2,8 +2,7 @@
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
             [teet.meta.meta-model :as meta-model]
             [teet.project.project-db :as project-db]
-            [datomic.client.api :as d]
-            [teet.log :as log])
+            [datomic.client.api :as d])
   (:import (java.util Date)))
 
 (defn valid-activity-name?
@@ -22,7 +21,7 @@
 
 (defn conflicting-activites?
   "Check if the lifecycle contains any activities withe the same name that have not ended yet"
-  [db {activity-name :activity/name :as activity} lifecycle-id]
+  [db {activity-name :activity/name :as _activity} lifecycle-id]
   (boolean
     (seq
       (mapv first (d/q '[:find (pull ?a [*])
