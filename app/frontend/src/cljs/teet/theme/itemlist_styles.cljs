@@ -2,7 +2,7 @@
   (:require [teet.theme.theme-colors :as theme-colors]))
 
 (defn heading
-  [variant]
+  [_variant]
   {:margin-bottom   "1rem"
    :display         :flex
    :justify-content :space-between

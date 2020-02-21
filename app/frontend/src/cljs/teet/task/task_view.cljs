@@ -62,7 +62,7 @@
     [:b (tr [:task :results])]]
    (doall
      (for [{:document/keys [name status files]
-            :meta/keys     [modified-at] :as document} documents]
+            :as document} documents]
        ^{:key (str (:db/id document))}
        [:div
         [:div
@@ -216,10 +216,9 @@
           :delete            (document-controller/->DeleteDocument (:document query))})]
       [:span])]])
 
-(defn task-page [e! {{:keys [add-document edit] :as query} :query
-                     new-document                          :new-document :as app}
-                 {type    :task/type
-                  project :project :as task}
+(defn task-page [e! {{:keys [add-document] :as query} :query
+                     new-document :new-document :as app}
+                 {project :project :as task}
                  breadcrumbs]
   [:div {:style {:padding        "1.5rem 1.875rem"
                  :display        :flex

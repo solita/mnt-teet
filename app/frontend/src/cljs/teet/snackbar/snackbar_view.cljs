@@ -3,7 +3,7 @@
             [reagent.core :as r]
             [teet.ui.icons :as icons]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
-            [teet.ui.material-ui :refer [IconButton Snackbar SnackbarContent Fade]]
+            [teet.ui.material-ui :refer [IconButton Snackbar SnackbarContent]]
             [teet.theme.theme-colors :as theme-colors]))
 
 (def snack-color {:success theme-colors/success
