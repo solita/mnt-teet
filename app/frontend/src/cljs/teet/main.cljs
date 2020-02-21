@@ -6,7 +6,7 @@
             [postgrest-ui.impl.style.material]
             [reagent.core :as r]
             [teet.app-state :as app-state]
-            [teet.localization :as localization :refer [tr]]
+            [teet.localization :as localization]
             [teet.log :as log]
             [teet.login.login-view :as login-view]
             [teet.navigation.navigation-view :as navigation-view]
