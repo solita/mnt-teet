@@ -11,10 +11,11 @@
     {:ladataan 0 :ladattu 0}
     lataus))
 
-(defn kasvata-ladataan-lukua [{:keys [ladataan ladattu] :as lataus}]
+(defn kasvata-ladataan-lukua
   "Selaimessa piirrettäessä :ladattu saattaa olla :ladataan edellä, koska
   meillä ei ole täydellisiä työkaluja, joilla seurata edistymistä. Kasvatateaan :ladataan
   arvoa, jotta näyttää siltä, että osaamme arvata sinne päin."
+  [{:keys [ladataan ladattu] :as lataus}]
   (if (< ladataan ladattu)
     {:ladataan (+ ladataan (* 2 (- ladattu ladataan))) :ladattu ladattu}
     lataus))

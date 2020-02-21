@@ -5,7 +5,6 @@
             [goog.math.Long]
             tuck.effect
             [teet.common.common-controller :as common-controller]
-            [teet.project.task-model :as task-model]
             [teet.localization :refer [tr]]
             [teet.document.document-model :as document-model]))
 
