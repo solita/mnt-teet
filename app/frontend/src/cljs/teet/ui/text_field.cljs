@@ -2,7 +2,8 @@
   (:require [herb.core :as herb :refer [<class]]
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.material-ui :refer [IconButton]]
-            [teet.ui.common :as common]))
+            [teet.ui.common :as common]
+            [teet.common.common-styles :as common-styles]))
 
 (defn- input-field-style
   [error multiline start-icon?]
@@ -37,12 +38,6 @@
    :position :absolute
    :top 0
    :right 0})
-
-(defn- input-error-text-style
-  []
-  {:font-size "1rem"
-   :color theme-colors/error
-   :position :absolute})
 
 (defn- start-icon-style
   []
@@ -98,5 +93,5 @@
                      :class (<class input-button-style)}
          [input-button-icon]])]
      (when (and error error-text)
-       [:span {:class (<class input-error-text-style)}
+       [:span {:class (<class common-styles/input-error-text-style)}
         error-text])]))

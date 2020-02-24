@@ -10,7 +10,8 @@
             [herb.core :refer [<class]]
             [teet.ui.buttons :as buttons]
             [teet.theme.theme-colors :as theme-colors]
-            [tuck.core :as t]))
+            [tuck.core :as t]
+            [teet.log :as log]))
 
 (def default-value
   "Mapping of component to default value. Some components don't want nil as the value (like text area)."
@@ -140,30 +141,29 @@
                                        (e! (on-change-event {field v}))
                                        v))
                validate-attribute-fn (fn [validate-field field value]
-                                       (println validate-field "   validate " field " = " value " => " (valid-attribute? field value))
                                        (swap! invalid-attributes
                                               (fn [fields]
                                                 (if (and
                                                      (or (nil? validate-field)
-                                                         (validate-field value))
+                                                         (nil? (validate-field value)))
                                                      (valid-attribute? field value))
                                                   (disj fields field)
                                                   (conj fields field)))))
                validate (fn [value fields]
-                          (log/info "VALIDOIDAAN VAAN")
                           (let [invalid-attrs (into (missing-attributes spec value)
                                                     (for [{attr :attribute
                                                            validate-field :validate} (map meta fields)
-                                                          :when (or (and validate-field (not (validate-field (get value attr))))
+                                                          :let [validation-error
+                                                                (and validate-field
+                                                                     (validate-field (get value attr)))]
+                                                          :when (or validation-error
                                                                     (not (valid-attribute? attr (get value attr))))]
                                                       attr))
-                                valid? (or (nil? spec) (s/valid? spec value))]
-                            (when-not valid?
-                              ;; Spec validation failed, show errors for missing or invalid attributes
-                              (reset! invalid-attributes invalid-attrs))
+                                valid? (and (empty? invalid-attrs)
+                                            (or (nil? spec) (s/valid? spec value)))]
+                            (reset! invalid-attributes invalid-attrs)
                             valid?))
                submit! (fn [e! save-event value fields e]
-                         (log/info "SUBMITOITUU!!!!")
                          (.preventDefault e)
                          (when (validate value fields)
                            (e! (save-event))))
@@ -171,7 +171,6 @@
                ;; Determine required fields by getting missing attributes of an empty map
                required-fields (missing-attributes spec {})]
     [:form (merge {:on-submit #(submit! e! save-event value fields %)
-                   :data-validate #(validate value fields)
                    :style {:flex 1
                            :display :flex
                            :flex-direction :column
@@ -192,10 +191,13 @@
                             validate-field :validate} (meta field)
                            _ (assert (keyword? attribute) "All form fields must have :attribute meta key!")
                            value (get value attribute (default-value (first field)))
+                           error-text (and validate-field
+                                           (validate-field value))
                            opts {:value value
                                  :on-change (r/partial update-attribute-fn attribute)
                                  :label (tr [:fields attribute])
-                                 :error (boolean (@invalid-attributes attribute))
+                                 :error (boolean (or error-text (@invalid-attributes attribute)))
+                                 :error-text error-text
                                  :required (boolean (required-fields attribute))}]
                        [Grid (merge {:item true :xs (or xs 12)}
                                     (when lg

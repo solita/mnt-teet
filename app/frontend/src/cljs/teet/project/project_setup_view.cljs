@@ -19,7 +19,9 @@
             [teet.ui.typography :as typography]
             [teet.util.collection :as cu]
             [teet.road.road-model :as road-model]
-            [teet.ui.skeleton :as skeleton]))
+            [teet.ui.skeleton :as skeleton]
+            [teet.log :as log]
+            [teet.common.common-styles :as common-styles]))
 
 (declare project-setup-steps)
 
@@ -47,9 +49,10 @@
 
 
 ;; FIXME: This is a generic component, move to another namespace
-(defn num-range [{:keys [error value on-change start-label end-label required spacing
+(defn num-range [{:keys [value on-change start-label end-label required spacing
                          reset-start reset-end
-                         min-value max-value]
+                         min-value max-value
+                         error error-text]
                   :or   {spacing 3}}]
   (let [[start end] value]
     [Grid {:container true
@@ -79,7 +82,12 @@
                          :required  required}
                         (when reset-end
                           {:input-button-icon icons/av-replay
-                           :input-button-click (reset-end value)}))]]]))
+                           :input-button-click (reset-end value)}))]]
+     (when (and error error-text)
+       [Grid {:item true
+              :xs 12}
+        [:p {:class (<class common-styles/input-error-text-style)}
+         error-text]])]))
 
 (defn km-range-changed? [project]
   (let [{:thk.project/keys [start-m end-m]} project
@@ -109,7 +117,7 @@
 (defn project-setup-basic-information-form
   [e! project {:keys [step-label] :as step} _map]
   (when-not (:basic-information-form project)
-    (e! (project-controller/->UpdateBasicInformationForm
+    (e! (project-controller/->InitializeBasicInformationForm
           (cu/without-nils {:thk.project/project-name (:thk.project/name project)
                             :thk.project/km-range     (-> project
                                                           (project-model/get-column :thk.project/effective-km-range)
@@ -135,9 +143,13 @@
             max-km (some-> project :road-info :end-m road-model/m->km)]
         ^{:xs 12 :attribute :thk.project/km-range
           :validate (fn [[start end :as value]]
-                      (log/info "validate: " value)
-                      (and (not (num-range-error nil value start min-km max-km))
-                           (not (num-range-error nil value end min-km max-km))))}
+                      (let [validation-result
+                            (when (or (num-range-error nil value start min-km max-km)
+                                      (num-range-error nil value end min-km max-km))
+                              (str "Valid km range: " min-km "km - " max-km "km"))]
+
+                        (log/info "validate: " value "? " validation-result)
+                        validation-result))}
         [num-range {:start-label "Start km"
                     :end-label   "End km"
                     :min-value min-km
@@ -147,7 +159,7 @@
 
       ;; FIXME: The map should also reflect the changed range
       (when (km-range-changed? project)
-        ^{:xs 12 :attribute :thk.project/meter-range-changed-reason}
+        ^{:xs 12 :attribute :thk.project/m-range-change-reason}
         [TextField {:multiline true
                     :rows      3}])
 

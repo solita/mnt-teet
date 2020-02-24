@@ -21,12 +21,6 @@
    :display         :flex
    :justify-content :center})
 
-(defn input-error-text-style
-  []
-  {:font-size "1rem"
-   :color     theme-colors/error
-   :position  :absolute})
-
 (defn grid-left-item
   []
   {:display        :flex
@@ -90,3 +84,9 @@
   {:display :flex
    :justify-content :space-between
    :align-items :center})
+
+(defn input-error-text-style
+  []
+  {:font-size "1rem"
+   :color theme-colors/error
+   :text-align :center})

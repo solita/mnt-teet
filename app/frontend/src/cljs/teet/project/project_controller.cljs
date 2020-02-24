@@ -88,6 +88,7 @@
 
 (defrecord SaveProjectSetup [])
 (defrecord SaveProjectSetupResponse [])
+(defrecord InitializeBasicInformationForm [form-data])
 (defrecord UpdateBasicInformationForm [form-data])
 (defrecord UpdateProjectRestrictions [restrictions project-id])
 (defrecord UpdateProjectCadastralUnits [cadastral-units project-id])
@@ -350,7 +351,7 @@
   SaveProjectSetup
   (process-event [_ app]
     (let [{:thk.project/keys [id name] :as project} (get-in app [:route :project])
-          {:thk.project/keys [project-name owner manager km-range meter-range-changed-reason]}
+          {:thk.project/keys [project-name owner manager km-range m-range-change-reason]}
           (get-in app [:route :project :basic-information-form])
           [start-km end-km :as custom-km-range] (mapv road-model/parse-km km-range)
           checked-restrictions (not-empty (get-in app [:route :project :checked-restrictions]))
@@ -364,7 +365,7 @@
                                             {:thk.project/project-name project-name})
                                           (when (not= custom-km-range
                                                       (project-model/get-column project :thk.project/effective-km-range))
-                                            {:thk.project/m-range-change-reason meter-range-changed-reason
+                                            {:thk.project/m-range-change-reason m-range-change-reason
                                              :thk.project/custom-start-m        (road-model/km->m start-km)
                                              :thk.project/custom-end-m          (road-model/km->m end-km)})
                                           (when checked-restrictions
@@ -405,6 +406,24 @@
                  :success-message (tr [:notifications :cadastral-units-updated])
                  :result-event ->FeaturesUpdatedSuccessfully})))
 
+  InitializeBasicInformationForm
+  (process-event [{:keys [form-data]} app]
+    (let [app (-> app
+                  (update-in [:route :project :basic-information-form]
+                             merge form-data)
+                  (update-in [:route :project] dissoc :geometry :road-info))
+          {:thk.project/keys [road-nr carriageway start-m end-m]} (get-in app [:route :project])]
+      (t/fx
+       app
+
+       {:tuck.effect/type :query
+        :query :road/geometry-with-road-info
+        :args {:road road-nr
+               :carriageway carriageway
+               :start-m  start-m
+               :end-m end-m}
+        :result-event ->RoadGeometryAndInfoResponse})))
+
   UpdateBasicInformationForm
   (process-event [{:keys [form-data]} app]
     (log/info "UpdateBasicInformationForm" form-data)
@@ -425,18 +444,18 @@
                               (not= old-meter-range new-meter-range))]
       (t/fx
        (if fetch-geometry?
-         ;; Remove previously fetched geometry and road info
-         (update-in app [:route :project] dissoc :geometry :road-info)
+         ;; Remove previously fetched geometry
+         (update-in app [:route :project] dissoc :geometry)
          app)
 
        (when fetch-geometry?
          {:tuck.effect/type :query
-          :query :road/geometry-with-road-info
+          :query :road/geometry
           :args {:road (get-in app [:route :project :thk.project/road-nr])
                  :carriageway (get-in app [:route :project :thk.project/carriageway])
                  :start-m new-start-m
                  :end-m new-end-m}
-          :result-event ->RoadGeometryAndInfoResponse}))))
+          :result-path [:route :project :geometry]}))))
 
   RoadGeometryAndInfoResponse
   (process-event [{result :result} app]
