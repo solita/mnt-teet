@@ -8,11 +8,11 @@
 (defrecord DeleteComment [comment-id])
 (defrecord CommentOnFile [])                                ; save new comment to file
 (defrecord UpdateFileNewCommentForm [form-data])            ; update new comment on selected file
-(defrecord Comment [])                                      ; save new comment to document
+(defrecord CommentOnDocument [])                            ; save new comment to document
 (defrecord UpdateNewCommentForm [form-data])                ; update new comment form data
 
 (extend-protocol t/Event
-  Comment
+  CommentOnDocument
   (process-event [_ app]
     (let [doc (get-in app [:query :document])
           new-comment (->> (get-in app [:route :activity-task :task/documents])
@@ -22,8 +22,8 @@
                            :comment/comment)]
       (t/fx app
             {:tuck.effect/type :command!
-             :command          :comment/post-comment
-             :payload          {:comment-target-id (goog.math.Long/fromString doc)
+             :command          :comment/comment-on-document
+             :payload          {:document-id (goog.math.Long/fromString doc)
                                 :comment           new-comment}
              :result-event     common-controller/->Refresh})))
 
@@ -57,8 +57,8 @@
                           :comment/comment)]
       (t/fx app
             {:tuck.effect/type :command!
-             :command          :comment/post-comment
-             :payload          {:comment-target-id (goog.math.Long/fromString file-id)
+             :command          :comment/comment-on-file
+             :payload          {:file-id (goog.math.Long/fromString file-id)
                                 :comment           new-comment}
              :result-event     common-controller/->Refresh})))
 
