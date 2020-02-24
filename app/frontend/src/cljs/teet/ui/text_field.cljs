@@ -57,8 +57,8 @@
            on-change input-button-icon
            placeholder input-button-click required input-style
            multiline on-blur error-text input-class start-icon
-           maxrows rows auto-complete step] :as props
-    :or {rows 2}} & children]
+           maxrows rows auto-complete step] :as _props
+    :or {rows 2}} & _children]
   (let [element (if multiline
                   :textarea
                   :input)]
@@ -80,7 +80,9 @@
                        :style input-style
                        :on-blur on-blur
                        :placeholder placeholder
-                       :class (herb/join (<class input-field-style error multiline (boolean start-icon)) input-class)
+                       :class (herb/join (<class input-field-style error multiline
+                                                 (boolean start-icon))
+                                         input-class)
                        :on-change on-change}
                       (when multiline
                         {:rows rows
@@ -89,7 +91,7 @@
                         {:auto-complete auto-complete})
                       (when step
                         {:step step}))]
-      (if (and input-button-click input-button-icon)
+      (when (and input-button-click input-button-icon)
         [IconButton {:on-click input-button-click
                      :disable-ripple true
                      :color :primary
