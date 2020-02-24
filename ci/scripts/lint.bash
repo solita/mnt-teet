@@ -4,9 +4,11 @@ export PATH="$PATH:/home/runner/work"
 
 IFS='
 '
-OUTPUT=`clj-kondo --lint app/backend/src app/frontend/src --config .clj-kondo/config.edn`
+OUTPUT=$(clj-kondo --lint app/backend/src app/frontend/src --config .clj-kondo/config.edn)
 
-SHA=`git rev-parse HEAD`
+CLJ_KONDO_EXIT=$?
+
+SHA=$(git rev-parse HEAD)
 
 ANNOTATIONS=''
 FIRST=1
@@ -18,20 +20,19 @@ do
     if [[ $output =~ ^([^:]+):([0-9]+):([0-9]+):\ ([^:]+):\ (.*)$ ]]; then
         FILE=${BASH_REMATCH[1]}
         ROW=${BASH_REMATCH[2]}
-        COL=${BASH_REMATCH[3]}
+        #COL=${BASH_REMATCH[3]}
         TYPE=${BASH_REMATCH[4]}
         MSG=${BASH_REMATCH[5]}
-        #echo "FILE: $FILE, TYPE: $TYPE, MSG: $MSG"
         SEP=","
         if [ $FIRST -eq 1 ]; then
             SEP=""
             FIRST=0
         fi
-        if [ $TYPE == "error" ]; then
+        if [ "$TYPE" == "error" ]; then
             TYPE="failure"
             FAILURES=$((FAILURES + 1))
         fi
-        if [ $TYPE == "warning" ]; then
+        if [ "$TYPE" == "warning" ]; then
             WARNINGS=$((WARNINGS + 1))
         fi
 
@@ -50,11 +51,11 @@ curl -H "Content-Type: application/json" \
      -H "Authorization: Bearer $GITHUB_TOKEN" \
      -X POST \
      -d "$BODY" \
-     https://api.github.com/repos/$GITHUB_REPOSITORY/check-runs
+     "https://api.github.com/repos/$GITHUB_REPOSITORY/check-runs"
 
 
-if [ $? -eq 2 ]; then
+if [ $CLJ_KONDO_EXIT -eq 2 ]; then
     exit 0;
 fi
 
-exit $?
+exit $CLJ_KONDO_EXIT
