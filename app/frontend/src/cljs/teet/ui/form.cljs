@@ -26,7 +26,7 @@
     (not= :cljs.spec.alpha/invalid (s/conform spec value))
     true))
 
-(defn- add-validation [field validate-attribute-fn attribute _value]
+(defn- add-validation [field validate-attribute-fn attribute]
   (let [field-component (first field)]
     (cond
       ;; For text fields add input props to do on-blur validation
@@ -139,17 +139,23 @@
                                                value)]
                                        (e! (on-change-event {field v}))
                                        v))
-               validate-attribute-fn (fn [field value]
-                                       ;;(println "validate " field " = " value " => " (valid-attribute? field value))
+               validate-attribute-fn (fn [validate-field field value]
+                                       (println validate-field "   validate " field " = " value " => " (valid-attribute? field value))
                                        (swap! invalid-attributes
                                               (fn [fields]
-                                                (if (valid-attribute? field value)
+                                                (if (and
+                                                     (or (nil? validate-field)
+                                                         (validate-field value))
+                                                     (valid-attribute? field value))
                                                   (disj fields field)
                                                   (conj fields field)))))
                validate (fn [value fields]
+                          (log/info "VALIDOIDAAN VAAN")
                           (let [invalid-attrs (into (missing-attributes spec value)
-                                                    (for [{attr :attribute} (map meta fields)
-                                                          :when (not (valid-attribute? attr (get value attr)))]
+                                                    (for [{attr :attribute
+                                                           validate-field :validate} (map meta fields)
+                                                          :when (or (and validate-field (not (validate-field (get value attr))))
+                                                                    (not (valid-attribute? attr (get value attr))))]
                                                       attr))
                                 valid? (or (nil? spec) (s/valid? spec value))]
                             (when-not valid?
@@ -157,6 +163,7 @@
                               (reset! invalid-attributes invalid-attrs))
                             valid?))
                submit! (fn [e! save-event value fields e]
+                         (log/info "SUBMITOITUU!!!!")
                          (.preventDefault e)
                          (when (validate value fields)
                            (e! (save-event))))
@@ -164,6 +171,7 @@
                ;; Determine required fields by getting missing attributes of an empty map
                required-fields (missing-attributes spec {})]
     [:form (merge {:on-submit #(submit! e! save-event value fields %)
+                   :data-validate #(validate value fields)
                    :style {:flex 1
                            :display :flex
                            :flex-direction :column
@@ -180,7 +188,8 @@
               (map (fn [field]
                      (assert (vector? field) "Field must be a hiccup vector")
                      (assert (map? (second field)) "First argument to field must be an options map")
-                     (let [{:keys [xs lg md attribute adornment]} (meta field)
+                     (let [{:keys [xs lg md attribute adornment]
+                            validate-field :validate} (meta field)
                            _ (assert (keyword? attribute) "All form fields must have :attribute meta key!")
                            value (get value attribute (default-value (first field)))
                            opts {:value value
@@ -195,7 +204,7 @@
                                       {:md md}))
                         (add-validation
                          (update field 1 merge opts)
-                         validate-attribute-fn attribute value)
+                         (partial validate-attribute-fn validate-field) attribute)
                         (when adornment
                           adornment)])))))]]
      (when (and footer

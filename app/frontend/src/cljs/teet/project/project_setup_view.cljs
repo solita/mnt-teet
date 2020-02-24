@@ -131,13 +131,19 @@
         :adornment [original-name-adornment e! project]}
       [TextField {:full-width true :variant :outlined}]
 
-      ^{:xs 12 :attribute :thk.project/km-range}
-      [num-range {:start-label "Start km"
-                  :end-label   "End km"
-                  :min-value   (some-> form :road-info :start_m road-model/m->km)
-                  :max-value   (some-> form :road-info :end_m road-model/m->km)
-                  :reset-start (partial reset-range-value e! project :start)
-                  :reset-end   (partial reset-range-value e! project :end)}]
+      (let [min-km (some-> project :road-info :start-m road-model/m->km)
+            max-km (some-> project :road-info :end-m road-model/m->km)]
+        ^{:xs 12 :attribute :thk.project/km-range
+          :validate (fn [[start end :as value]]
+                      (log/info "validate: " value)
+                      (and (not (num-range-error nil value start min-km max-km))
+                           (not (num-range-error nil value end min-km max-km))))}
+        [num-range {:start-label "Start km"
+                    :end-label   "End km"
+                    :min-value min-km
+                    :max-value max-km
+                    :reset-start (partial reset-range-value e! project :start)
+                    :reset-end   (partial reset-range-value e! project :end)}])
 
       ;; FIXME: The map should also reflect the changed range
       (when (km-range-changed? project)
