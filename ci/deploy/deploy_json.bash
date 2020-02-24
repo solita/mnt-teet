@@ -19,7 +19,7 @@ fi
 if [ $1 == "deployed" ]
 then
     echo "Waiting for Datomic";
-    ./wait_for_datomic.bash;
+    timeout 5m ./wait_for_datomic.bash;
 fi
 
 echo "{\"commit\":\"$CODEBUILD_RESOLVED_SOURCE_VERSION\",\"status\":\"$1\",\"timestamp\":\"`date`\"}" > deploy.json
