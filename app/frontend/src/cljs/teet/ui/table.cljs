@@ -1,6 +1,6 @@
 (ns teet.ui.table
   "Sortable and filterable table view"
-  (:require [teet.ui.material-ui :refer [TableCell TableSortLabel Button Link
+  (:require [teet.ui.material-ui :refer [TableCell TableSortLabel Button
                                          Table TableRow TableHead TableBody
                                          TableSortLabel]]
             [teet.ui.text-field :refer [TextField]]
