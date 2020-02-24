@@ -3,10 +3,6 @@
   (:require [reagent.core :as r]
             [herb.core :as herb :refer [<class]]
             [teet.theme.theme-colors :as theme-colors]
-            [taoensso.timbre :as log]
-            [teet.ui.material-ui :refer [Select MenuItem Menu Button
-                                         InputLabel FormControl ButtonGroup]]
-            [teet.ui.icons :as icons]
             [teet.common.common-controller :as common-controller]
             [teet.common.common-styles :as common-styles]
             [tuck.core :as t]
@@ -45,43 +41,39 @@
   {:font-size "1rem"})
 
 (defn form-select [{:keys [label name id items on-change value format-item
-                               show-empty-selection? error error-text required show-label?]
-                        :or {format-item :label
-                             show-label? true}}]
-  (r/with-let [reference (r/atom nil)
-               set-ref! (fn [el]
-                          (reset! reference el))]
-    (let [option-idx (zipmap items (range))
-          change-value (fn [e]
-                         (let [val (-> e .-target .-value)]
-                           (if (= val "")
-                             (on-change nil)
-                             (on-change (nth items (int val))))))]
-      [:label {:for id
-               :class (<class select-label-style)}
-       [:span label (when required
-                      [common/required-astrix])]
-       [:div {:style {:position :relative}}
-        [:select
-         {:value (or (option-idx value) "")
-          :name name
-          :class (<class primary-select-style error)
-          :required (boolean required)
-          :id id
-          :on-change (fn [e]
-                       (change-value e))}
-         (when show-empty-selection?
-           [:option {:value ""}])
-         (doall
-           (map-indexed
-             (fn [i item]
-               [:option {:value i
-                         :key i}
-                (format-item item)])
-             items))]]
-       (when (and error-text error)
-         [:span {:class (<class common-styles/input-error-text-style)}
-          error-text])])))
+                               show-empty-selection? error error-text required]
+                        :or {format-item :label}}]
+  (let [option-idx (zipmap items (range))
+        change-value (fn [e]
+                       (let [val (-> e .-target .-value)]
+                         (if (= val "")
+                           (on-change nil)
+                           (on-change (nth items (int val))))))]
+    [:label {:for id
+             :class (<class select-label-style)}
+     [:span label (when required
+                    [common/required-astrix])]
+     [:div {:style {:position :relative}}
+      [:select
+       {:value (or (option-idx value) "")
+        :name name
+        :class (<class primary-select-style error)
+        :required (boolean required)
+        :id id
+        :on-change (fn [e]
+                     (change-value e))}
+       (when show-empty-selection?
+         [:option {:value ""}])
+       (doall
+        (map-indexed
+         (fn [i item]
+           [:option {:value i
+                     :key i}
+            (format-item item)])
+         items))]]
+     (when (and error-text error)
+       [:span {:class (<class common-styles/input-error-text-style)}
+        error-text])]))
 
 ;; TODO this needs better styles and better dropdown menu
 
@@ -130,11 +122,10 @@
    :margin-bottom "2px"})
 
 (defn select-with-action
-  [{:keys [label id name value items format-item error on-change
-           required? show-empty-selection? show-label?
+  [{:keys [label id name value items format-item on-change
+           required? show-empty-selection?
            container-class select-class]
-    :or {format-item :label
-         show-label? true}}]
+    :or {format-item :label}}]
   (let [option-idx (zipmap items (range))
         change-value (fn [e]
                        (let [val (-> e .-target .-value)]
@@ -168,7 +159,7 @@
 
 (defn select-enum
   "Select an enum value based on attribute. Automatically fetches enum values from database."
-  [{:keys [e! attribute required tiny-select? show-label? container-class class values-filter seppo]
+  [{:keys [e! attribute required tiny-select? show-label?]
     :or {show-label? true}}]
   (when-not (contains? @enum-values attribute)
     (e! (common-controller/->Query {:query :enum/values
@@ -240,21 +231,14 @@
    :padding-bottom "1rem"
    :margin-bottom "1rem"})
 
-(defn- status-style
-  []
-  {:flex-basis "30%"})
-
 (defn status
-  [{:keys [e! status attribute modified on-change values-filter]}]
+  [{:keys [e! status attribute modified on-change]}]
   [:div {:class (<class status-container-style)}
    [select-enum {:e!                     e!
-                        :on-change       on-change
-                        :value           status
-                        :tiny-select?    true
-                        :attribute       attribute
-                        :seppo      (some? values-filter)
-                        :container-class (<class status-style)
-                        :values-filter   values-filter}]
+                 :on-change       on-change
+                 :value           status
+                 :tiny-select?    true
+                 :attribute       attribute}]
    [common/labeled-data {:label (tr [:common :last-modified])
                          :data  (or (format/date modified)
                                     "-")}]])
