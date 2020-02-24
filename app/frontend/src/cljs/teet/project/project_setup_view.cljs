@@ -143,13 +143,9 @@
             max-km (some-> project :road-info :end-m road-model/m->km)]
         ^{:xs 12 :attribute :thk.project/km-range
           :validate (fn [[start end :as value]]
-                      (let [validation-result
-                            (when (or (num-range-error nil value start min-km max-km)
-                                      (num-range-error nil value end min-km max-km))
-                              (str "Valid km range: " min-km "km - " max-km "km"))]
-
-                        (log/info "validate: " value "? " validation-result)
-                        validation-result))}
+                      (when (or (num-range-error nil value start min-km max-km)
+                                (num-range-error nil value end min-km max-km))
+                        (str "Valid km range: " min-km "km - " max-km "km")))}
         [num-range {:start-label "Start km"
                     :end-label   "End km"
                     :min-value min-km
