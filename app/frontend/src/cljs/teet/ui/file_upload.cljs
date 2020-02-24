@@ -151,7 +151,9 @@
    [:span {:style (merge {:display :block}
                          (when file-too-large?
                            {:color theme-colors/error}))}
-    (str (format/file-size size) " " (tr [:document :file-too-large]))]])
+    (str (format/file-size size))
+    (when file-too-large?
+      (str " " (tr [:document :file-too-large])))]])
 
 (defn files-field [{:keys [value on-change error]}]
   [:div {:class (<class files-field-style error)}
