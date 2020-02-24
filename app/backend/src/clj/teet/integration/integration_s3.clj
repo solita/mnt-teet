@@ -5,9 +5,6 @@
             [teet.integration.integration-context :refer [defstep]]
             [cheshire.core :as cheshire]))
 
-(defn- decode-input [{:keys [event] :as ctx}]
-  (assoc ctx :input (cheshire/decode (:input event) keyword)))
-
 (defn- bucket-and-key [s3-data]
   {:bucket   (get-in s3-data [:bucket :name])
    :file-key (get-in s3-data [:object :key])})

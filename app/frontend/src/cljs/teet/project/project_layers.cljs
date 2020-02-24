@@ -4,12 +4,10 @@
             [teet.map.map-controller :as map-controller]
             [teet.map.map-features :as map-features]
             [teet.road.road-model :as road-model :refer [km->m]]
-            [cljs-bean.core :refer [->clj ->js]]
+            [cljs-bean.core :refer [->js]]
             [teet.map.map-view :as map-view]
             [teet.project.project-model :as project-model]
-            [teet.project.project-style :as project-style]
             [clojure.string :as str]
-            [teet.log :as log]
             [reagent.core :as r]))
 
 (defn- endpoint [app]
@@ -64,8 +62,7 @@
   km are being edited during initialization"
   [map-obj-padding
    {app :app
-    {:thk.project/keys [road-nr carriageway]
-     :keys [basic-information-form geometry] :as project} :project
+    {:keys [basic-information-form geometry] :as project} :project
     set-overlays! :set-overlays!}]
 
   (let [endpoint (endpoint app)
@@ -81,7 +78,14 @@
                                           :thk.project/effective-km-range)))
         options {:fit-on-load? true
                  ;; Use left side padding so that road is not shown under the project panel
-                 :fit-padding map-obj-padding}]
+                 :fit-padding map-obj-padding}
+
+        ;; If we have geometry (in setup wizard) or are editing related features
+        ;; show the buffer as well, otherwise just the road line
+        style (if (or geometry
+                      (#{"restrictions" "cadastral-units"} (get-in app [:query :configure])))
+                (map-features/project-line-style-with-buffer (get-in app [:map :road-buffer-meters]))
+                map-features/project-line-style)]
 
     {:thk-project
      (if geometry
@@ -92,13 +96,13 @@
          (map-layers/geojson-data-layer
           "geojson_road_geometry"
           (line-string-to-geojson geometry)
-          (map-features/project-line-style-with-buffer (get-in app [:map :road-buffer-meters]))
+          style
           options))
 
        (map-layers/geojson-layer endpoint
                                  "geojson_entities"
                                  {"ids" (str "{" (:db/id project) "}")}
-                                 map-features/project-line-style
+                                 style
                                  (assoc options
                                         ;; Update start/end labels from source geometry
                                         ;; once it is loaded

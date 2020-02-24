@@ -1,7 +1,7 @@
 (ns tara.endpoint
   (:require [org.httpkit.client :as client]
             [tara.json :as json])
-  (:import (com.nimbusds.jose.jwk JWKSet RSAKey)))
+  (:import (com.nimbusds.jose.jwk JWKSet)))
 
 (defn- load-openid-configuration [url]
   (->  (str url "/.well-known/openid-configuration")

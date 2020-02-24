@@ -7,7 +7,7 @@
             [teet.localization :refer [tr]]
             [teet.map.map-controller :as map-controller]
             [teet.ui.container :as container]
-            [teet.ui.material-ui :refer [Fab Button Switch Checkbox FormControlLabel Collapse ClickAwayListener Fade IconButton]]
+            [teet.ui.material-ui :refer [Fab Button Fade IconButton]]
             [teet.ui.typography :as typography]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
@@ -72,7 +72,7 @@
             ^{:key category}
             [category-layers-control e! layer map-controls]))]]]]))
 
-(defn map-control-buttons [e! {:keys [background-layer map-controls map-restrictions] :as map-data
+(defn map-control-buttons [e! {:keys [background-layer map-controls] :as _map-data
                                :or   {background-layer "kaart"}}
                            layer-controls?]
   [:div {:class (<class map-styles/map-control-buttons)}

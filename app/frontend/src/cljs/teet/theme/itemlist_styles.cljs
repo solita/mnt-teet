@@ -2,7 +2,7 @@
   (:require [teet.theme.theme-colors :as theme-colors]))
 
 (defn heading
-  [variant]
+  [_variant]
   {:margin-bottom   "1rem"
    :display         :flex
    :justify-content :space-between
@@ -28,6 +28,11 @@
   {:font-weight (if selected?
                   "bold !important"
                   "normal")})
+
+(defn checkbox-list-link []
+  ;; Pad checkbox list link to make it align with checkbox item labels
+  {:padding-left "5rem"
+   :cursor "pointer"})
 
 (defn layer-checkbox
   []

@@ -1,6 +1,6 @@
 (ns teet.ui.component-demo
   (:require [clojure.string :as str]
-            [teet.ui.material-ui :refer [Button Fab IconButton Divider Checkbox InputAdornment]]
+            [teet.ui.material-ui :refer [Button Fab Divider Checkbox]]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.file-upload :as file-upload]
             [teet.ui.icons :as icons]
@@ -13,8 +13,7 @@
             [teet.ui.typography :refer [DataLabel Heading1 Heading2 Heading3 Paragraph SectionHeading Text]]
             [tuck.core :as t]
             [teet.log :as log]
-            [reagent.core :as r]
-            [teet.ui.date-picker :as datepicker]))
+            [reagent.core :as r]))
 
 (defrecord TestFileUpload [files])
 (defrecord UploadFiles [files])

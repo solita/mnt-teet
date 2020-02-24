@@ -7,12 +7,8 @@
             [teet.navigation.navigation-logo :as navigation-logo]
             [teet.ui.icons :as icons]
             [teet.ui.buttons :as buttons]
-            [teet.localization :refer [tr]]
-            [teet.localization :as localization]
             [teet.login.login-styles :as login-styles]
-            [teet.log :as log]
-            [reagent.core :as r]
-            [teet.ui.typography :as typography]))
+            [teet.log :as log]))
 
 (defn login-logo
   []

@@ -1,8 +1,8 @@
 (ns teet.search.search-view
   "Quick search of projects and project groups"
   (:require [reagent.core :as r]
-            [teet.ui.material-ui :refer [Paper CircularProgress IconButton InputLabel Input
-                                         List ListItem ListItemIcon ListItemText InputAdornment FormControl]]
+            [teet.ui.material-ui :refer [Paper CircularProgress IconButton
+                                         List ListItem ListItemIcon ListItemText InputAdornment]]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.icons :as icons]
             [teet.ui.common :as common]

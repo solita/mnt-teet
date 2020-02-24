@@ -115,7 +115,7 @@
         id-attrs (take-while :db/unique sorted-attrs)
         attrs (drop-while :db/unique sorted-attrs)
 
-        format-attr (fn [{:db/keys [ident valueType cardinality unique doc]}]
+        format-attr (fn [{:db/keys [ident valueType cardinality unique]}]
                       (let [many? (= :db.cardinality/many (:db/ident cardinality))]
                         (str  "  "
                               (when unique "* ")
@@ -134,8 +134,7 @@
          "\n}\n")))
 
 (defn output-datomic-entity-diagram []
-  (let [links { } ;; map from ref attr kw to refered "entity type"
-        include-entities #{"thk.project" "thk.lifecycle" "activity"
+  (let [include-entities #{"thk.project" "thk.lifecycle" "activity"
                            "task" "document" "file" "comment" "permission"
                            "user" "meta"}
         types {:permission/projects "List<thk.project>"

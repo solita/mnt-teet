@@ -2,10 +2,9 @@
   "Import features from an AGS file in S3"
   (:require [teet.ags.ags-parser :as ags-parser]
             [teet.ags.ags-features :as ags-features]
-            [teet.integration.integration-context :refer [ctx-> defstep]]
+            [teet.integration.integration-context :refer [defstep]]
             [teet.integration.integration-s3 :as integration-s3]
             [datomic.client.api :as d]
-            [clojure.spec.alpha :as s]
             [teet.project.project-model :as project-model]
             [teet.document.document-storage :as document-storage]
             [teet.log :as log]
@@ -102,7 +101,7 @@
                {:headers {"Authorization" (str "Bearer " (jwt-token/create-backend-token api-secret))
                           "Content-Type" "application/json"}
                 :body (cheshire/encode
-                       (for [{:keys [geometry properties id] :as f} features]
+                       (for [{:keys [geometry properties id]} features]
                          {:entity (str entity-id)
                           :id id
 
@@ -121,11 +120,3 @@
       load-ags-files
       prepare-features
       upsert-features))
-
-(comment
-  (->> {:conn (teet.environment/datomic-connection)
-        :project [:thk.project/id "14612"]
-        :api-url "http://localhost:3000"
-        :api-secret "secret1234567890secret1234567890"}
-       import-project-ags-files
-       (spit "debug")))

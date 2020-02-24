@@ -125,7 +125,7 @@
 
 (defn project-restriction-style
   "Show restriction geometrys as area. Restrictions are all (multi)polygons."
-  [^ol.render.Feature feature _res]
+  [^ol.render.Feature _feature _res]
   (ol.style.Style.
     #js {:stroke (ol.style.Stroke. #js {:color "rgba(143,0,255,0.8)"
                                         :width 1})
@@ -189,7 +189,7 @@
 
 (defn survey-style
   "Show survey area."
-  [^ol.render.Feature feature _res]
+  [^ol.render.Feature _feature _res]
   (ol.style.Style.
    #js {:stroke (ol.style.Stroke. #js {:color "#830891"
                                        :width 2})
@@ -198,7 +198,7 @@
 
 (defn ags-survey-style
   "Show AGS survey feature (point)"
-  [^ol.render.Feature feature _res]
+  [^ol.render.Feature _feature _res]
   (ol.style.Style.
    #js {:image (ol.style.Circle.
                 #js {:fill (ol.style.Fill. #js {:color "red"})

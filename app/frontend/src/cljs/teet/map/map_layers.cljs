@@ -2,8 +2,7 @@
   (:require [teet.map.openlayers.mvt :as mvt]
             [teet.map.openlayers.geojson :as geojson]
             [teet.map.openlayers :as openlayers]
-            [clojure.string :as str]
-            [teet.log :as log]))
+            [clojure.string :as str]))
 
 (def ^:const default-projection "EPSG:3301")
 

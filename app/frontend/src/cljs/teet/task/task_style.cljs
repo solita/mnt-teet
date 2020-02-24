@@ -1,5 +1,6 @@
 (ns teet.task.task-style
-  (:require [teet.common.common-styles :as common-styles]))
+  (:require [teet.common.common-styles :as common-styles]
+            [teet.theme.theme-colors :as theme-colors]))
 
 (defn task-status-container-style
   []
@@ -7,7 +8,7 @@
    :flex-direction :row
    :align-items :center
    :border-bottom "solid 1px"
-   :border-color teet.theme.theme-colors/gray-light
+   :border-color theme-colors/gray-light
    :padding-bottom "1rem"
    :margin-bottom "1rem"})
 

@@ -8,7 +8,7 @@
             [teet.road.road-query :as road-query]
             [teet.util.geo :as geo]))
 
-(defn- valid-api-info? [{:keys [api-url api-shared-secret] :as api}]
+(defn- valid-api-info? [{:keys [api-url api-shared-secret]}]
   (and (not (str/blank? api-url))
        (not (str/blank? api-shared-secret))))
 
@@ -44,7 +44,6 @@
                                   (str "Bearer "
                                        (jwt-token/create-backend-token api-shared-secret))}
                         :body (cheshire/encode request-body)})]
-        (def the-response response)
         (when-not (= 200 (:status response))
           (throw (ex-info "Update project geometries failed"
                           {:expected-response-status 200

@@ -1,8 +1,6 @@
 (ns teet.admin.admin-commands
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
-            [datomic.client.api :as d]
             [teet.user.user-roles :as user-roles]
-            [teet.log :as log]
             teet.user.user-spec))
 
 (defn- new-user []

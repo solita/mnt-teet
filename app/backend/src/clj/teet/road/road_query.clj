@@ -79,7 +79,7 @@
   [{part-start-m :start-m
     part-end-m :end-m
     part-geometry :geometry
-    :as road-part} start-m end-m]
+    :as _road-part} start-m end-m]
 
   (cond
     ;; The whole part is included, return geometry as is

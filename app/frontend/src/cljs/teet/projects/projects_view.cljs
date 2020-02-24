@@ -11,7 +11,6 @@
             [teet.ui.material-ui :refer [FormControlLabel Checkbox]]
             postgrest-ui.elements
             [teet.localization :as localization :refer [tr]]
-            [clojure.string :as string]
             [teet.project.project-model :as project-model]
             [teet.project.project-controller :as project-controller]
             [teet.common.common-styles :as common-styles]
@@ -25,10 +24,6 @@
   {:icon [icons/file-folder-open]
    :text (project-model/get-column project :thk.project/project-name)
    :href (str "#/projects/" id)})
-
-(defn link-to-project [{:strs [id name]}]
-  name)
-
 
 (defn format-column-value [column value]
   (case column
@@ -92,7 +87,7 @@
            (map-layers/mvt-layer api-url
                                  "mvt_restrictions"
                                  {"type" type
-                                  "layers" (string/join ", " selected-restrictions)}
+                                  "layers" (str/join ", " selected-restrictions)}
                                  map-features/project-restriction-style
                                  {:max-resolution project-restriction-resolution})])))
 

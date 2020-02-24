@@ -1,15 +1,7 @@
 (ns teet.thk.thk-export
   "Export project lifecycle and activity data to THK"
   (:require [datomic.client.api :as d]
-            [teet.thk.thk-mapping :as thk-mapping]
-            [clojure.string :as str]))
-
-(def ^:private date-format (java.text.SimpleDateFormat. "yyyy-MM-dd"))
-
-(defn- dt [get]
-  (fn [row]
-    (some->> row get
-             (.format date-format))))
+            [teet.thk.thk-mapping :as thk-mapping]))
 
 (defn- all-projects [db]
   (d/q '[:find (pull ?e [*
@@ -47,30 +39,27 @@
                              (read-integration-info (:thk.project/integration-info project))
                              (read-integration-info (:thk.lifecycle/integration-info lifecycle))
                              (read-integration-info (:activity/integration-info activity)))]]
-       (do
-         (def the-data data)
+       (mapv (fn [csv-column]
+               (case csv-column
+                 ;; Fetch TEET update timestamps from tx info
+                 "object_teetupdstamp"
+                 (thk-mapping/datetime-str (find-last-tx-of db (:db/id project)))
+                 "phase_teetupdstamp"
+                 (thk-mapping/datetime-str (find-last-tx-of db (:db/id lifecycle)))
+                 "activity_teetupdstamp"
+                 (thk-mapping/datetime-str (find-last-tx-of db (:db/id activity)))
 
-         (mapv (fn [csv-column]
-                 (case csv-column
-                   ;; Fetch TEET update timestamps from tx info
-                   "object_teetupdstamp"
-                   (thk-mapping/datetime-str (find-last-tx-of db (:db/id project)))
-                   "phase_teetupdstamp"
-                   (thk-mapping/datetime-str (find-last-tx-of db (:db/id lifecycle)))
-                   "activity_teetupdstamp"
-                   (thk-mapping/datetime-str (find-last-tx-of db (:db/id activity)))
+                 ;; TEET id for phase and activity
+                 "phase_teetid"
+                 (str (:db/id lifecycle))
+                 "activity_teetid"
+                 (str (:db/id activity))
 
-                   ;; TEET id for phase and activity
-                   "phase_teetid"
-                   (str (:db/id lifecycle))
-                   "activity_teetid"
-                   (str (:db/id activity))
-
-                   ;; Regular columns
-                   (let [[teet-kw _ fmt] (thk-mapping/thk->teet csv-column)
-                         fmt (or fmt str)
-                         value (get data teet-kw)]
-                     (if value
-                       (fmt value)
-                       ""))))
-               thk-mapping/csv-column-names))))))
+                 ;; Regular columns
+                 (let [[teet-kw _ fmt] (thk-mapping/thk->teet csv-column)
+                       fmt (or fmt str)
+                       value (get data teet-kw)]
+                   (if value
+                     (fmt value)
+                     ""))))
+             thk-mapping/csv-column-names)))))

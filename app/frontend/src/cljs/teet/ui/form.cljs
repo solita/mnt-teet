@@ -1,17 +1,16 @@
 (ns teet.ui.form
   "Common container for forms"
   (:require [reagent.core :as r]
-            [teet.ui.material-ui :refer [Grid Button]]
+            [teet.ui.material-ui :refer [Grid]]
             [teet.ui.text-field :refer [TextField ]]
             [teet.ui.util :as util]
             [teet.localization :refer [tr]]
             [goog.object :as gobj]
-            [teet.log :as log]
             [clojure.spec.alpha :as s]
             [herb.core :refer [<class]]
-            [teet.theme.theme-spacing :as theme-spacing]
             [teet.ui.buttons :as buttons]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.theme.theme-colors :as theme-colors]
+            [tuck.core :as t]))
 
 (def default-value
   "Mapping of component to default value. Some components don't want nil as the value (like text area)."
@@ -27,7 +26,7 @@
     (not= :cljs.spec.alpha/invalid (s/conform spec value))
     true))
 
-(defn- add-validation [field validate-attribute-fn attribute value]
+(defn- add-validation [field validate-attribute-fn attribute _value]
   (let [field-component (first field)]
     (cond
       ;; For text fields add input props to do on-blur validation
@@ -42,11 +41,12 @@
                                         (fn [value]
                                           (validate-attribute-fn attribute (on-change value))))))))
 
-(defn- contains-predicate [pred]
+(defn- contains-predicate
   "Check that predicate matches:
    (cljs.core/fn [%] (cljs.core/contains? % ?attr))
 
   Returns ?attr or nil."
+  [pred]
   (and (seq? pred)
        (= 3 (count pred))
        (= 3 (count (nth pred 2)))
@@ -107,7 +107,7 @@
   Leaves app state unaffected."
   ([the-atom] (update-atom-event the-atom (fn [_old new] new)))
   ([the-atom update-fn]
-   #(reify tuck.core/Event
+   #(reify t/Event
       (process-event [_ app]
         (swap! the-atom update-fn %)
         app))))

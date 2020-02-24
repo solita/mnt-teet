@@ -5,7 +5,7 @@
 (deftest validate-document
   (testing "too large files are invalid"
     (is (= (:error (document-model/validate-file {:file/type "image/png"
-                                                     :file/size (* 1024 1024 1024)}))
+                                                     :file/size (* 1024 1024 3001)}))
            :file-too-large)))
   (testing "files of illegal type are invalid"
     (is (= (:error (document-model/validate-file {:file/type "application/nonsense"

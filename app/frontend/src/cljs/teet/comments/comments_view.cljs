@@ -7,15 +7,12 @@
             [teet.localization :refer [tr]]
             [teet.ui.itemlist :as itemlist]
             [teet.ui.format :as format]
-            [teet.ui.icons :as icons]
             [teet.comments.comments-styles :as comments-styles]
             [teet.ui.typography :as typography]
             [teet.user.user-info :as user-info]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.buttons :as buttons]
-            [teet.comments.comments-controller :as comment-controller]
-            [reagent.core :as r]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.comments.comments-controller :as comment-controller]))
 
 (defn- new-comment-footer [{:keys [validate disabled?]}]
   [:div {:class (<class comments-styles/comment-buttons-style)}

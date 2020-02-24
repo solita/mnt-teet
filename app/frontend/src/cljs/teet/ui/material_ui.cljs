@@ -52,11 +52,3 @@
 
 ;; Snackbar
 (define-mui-components Snackbar SnackbarContent)
-
-;; monkey patch based on this https://github.com/reagent-project/reagent/blob/master/doc/examples/material-ui.md
-(def ^:private input-component
-  (r/reactify-component
-    (fn [props]
-      [:input (-> props
-                  (assoc :ref (:inputRef props))
-                  (dissoc :inputRef))])))

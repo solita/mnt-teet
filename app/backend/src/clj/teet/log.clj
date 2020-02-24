@@ -33,8 +33,7 @@
 ;;
 ;; Ion appender
 ;;
-(defn- ion-appender [{:keys [level msg_ ?ns-str ?line ?err] :as l1}]
-  (def l l1)
+(defn- ion-appender [{:keys [level msg_ ?ns-str ?line ?err]}]
   ((case level
      (:error :warn :fatal) cast/alert
      :info cast/event

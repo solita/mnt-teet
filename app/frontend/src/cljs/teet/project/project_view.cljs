@@ -3,7 +3,7 @@
             [reagent.core :as r]
             [teet.activity.activity-view :as activity-view]
             [teet.common.common-styles :as common-styles]
-            [teet.localization :refer [tr tr-tree]]
+            [teet.localization :refer [tr]]
             [teet.map.map-view :as map-view]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-model :as project-model]
@@ -20,18 +20,16 @@
             [teet.ui.icons :as icons]
             [teet.ui.stepper :as stepper]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Divider Paper]]
+            [teet.ui.material-ui :refer [Paper]]
             [teet.ui.panels :as panels]
-            [teet.ui.progress :as progress]
             [teet.ui.select :as select]
-            [teet.ui.skeleton :as skeleton]
             [teet.ui.tabs :as tabs]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.typography :refer [Heading1 Heading3] :as typography]
             [teet.ui.url :as url]
             [teet.util.collection :as cu]
             [teet.activity.activity-controller :as activity-controller]
-            [teet.authorization.authorization-check :refer [when-authorized when-pm-or-owner]]
+            [teet.authorization.authorization-check :refer [when-pm-or-owner]]
             [teet.theme.theme-colors :as theme-colors]))
 
 (defn task-form [_e! {:keys [initialization-fn]}]
@@ -84,7 +82,7 @@
   []
   {:padding "1.5rem 1.875rem"})
 
-(defn- project-header [{:thk.project/keys [name] :as project} breadcrumbs activities]
+(defn- project-header [project breadcrumbs _activities]
   [:div {:class (<class project-header-style)}
    [:div
     [breadcrumbs/breadcrumbs breadcrumbs]
@@ -100,8 +98,7 @@
 (defn project-activity
   [e!
    {thk-id :thk.project/id}
-   {id :db/id
-    :activity/keys [name tasks estimated-end-date estimated-start-date] :as activity}]
+   {:activity/keys [name tasks estimated-end-date estimated-start-date] :as _activity}]
   [:div {:class (<class project-style/project-activity-style)}
    [:div {:style {:display :flex
                   :justify-content :space-between
@@ -174,19 +171,6 @@
                                          [itemlist/Item {:label k} v])]]})
                          @overlays))}
       map]]))
-
-(defn collapse-skeleton
-  [title? n]
-  [:<>
-   (when title?
-     [skeleton/skeleton {:parent-style {:padding "1.5rem 0"
-                                        :text-transform "capitalize"}
-                         :style {:width "40%"}}])
-   (doall
-     (for [y (range n)]
-       ^{:key y}
-       [skeleton/skeleton {:style {:width "70%"}
-                           :parent-style (skeleton/restriction-skeleton-style)}]))])
 
 (defn road-geometry-range-input
   [e! {road-buffer-meters :road-buffer-meters} entity-type]
@@ -266,7 +250,7 @@
 
 (defn people-modal
   [e! {:keys [add-participant]
-       permitted-users :thk.project/permitted-users :as project} {:keys [modal person] :as query}]
+       permitted-users :thk.project/permitted-users :as project} {:keys [modal person] :as _query}]
   (let [open? (= modal "people")
         selected-person (when person
                           (->> permitted-users
@@ -284,7 +268,7 @@
                                    [add-user-form e! add-participant (:db/id project)])}]))
 
 
-(defn people-tab [e! {{:keys [modal] :as query} :query :as app} {:thk.project/keys [manager owner permitted-users] :as project}]
+(defn people-tab [e! {query :query :as _app} {:thk.project/keys [manager owner permitted-users] :as project}]
   [:div
    [people-modal e! project query]
    [:div
@@ -318,7 +302,7 @@
   [project-details e! project])
 
 (defn edit-activity-form
-  [_ _ lifecycle-type initialization-fn]
+  [_ _ _lifecycle-type initialization-fn]
   (initialization-fn)
   (fn [e! app lifecycle-type _]
     (when-let [activity-data (:edit-activity-data app)]     ;;Otherwise the form renderer can't format dates properly
@@ -330,7 +314,7 @@
                                        :delete (project-controller/->DeleteActivity (str (:db/id activity-data)))}])))
 
 (defn data-tab
-  [e! {{project-id :project} :params :as app} project]
+  [_e! {{project-id :project} :params :as _app} project]
   [:div
    [:div {:class (<class project-style/heading-and-button-style)}
     [typography/Heading2 "Restrictions"]
@@ -464,32 +448,33 @@
   [e! app _project]
   (let [buffer-m (get-in app [:map :road-buffer-meters])]
     (e! (project-controller/->FetchRelatedInfo buffer-m "restrictions")))
-  (fn [e! app {:keys [open-types restriction-candidates checked-restrictions] :or {open-types #{}} :as project}]
+  (fn [e! app {:keys [open-types restriction-candidates checked-restrictions loading] :or {open-types #{}} :as _project}]
     (let [buffer-m (get-in app [:map :road-buffer-meters])]
-      (when restriction-candidates
-        [project-setup-view/restrictions-listing e!
-         open-types
-         buffer-m
-         {:restrictions restriction-candidates
-          :checked-restrictions (or checked-restrictions #{})
-          :toggle-restriction (e! project-controller/->ToggleRestriction)
-          :on-mouse-enter (e! project-controller/->FeatureMouseOvers "related-restriction-candidates" true)
-          :on-mouse-leave (e! project-controller/->FeatureMouseOvers "related-restriction-candidates" false)}]))))
+      [project-setup-view/restrictions-listing e!
+       open-types
+       buffer-m
+       {:restrictions restriction-candidates
+        :loading loading
+        :checked-restrictions (or checked-restrictions #{})
+        :toggle-restriction (e! project-controller/->ToggleRestriction)
+        :on-mouse-enter (e! project-controller/->FeatureMouseOvers "related-restriction-candidates" true)
+        :on-mouse-leave (e! project-controller/->FeatureMouseOvers "related-restriction-candidates" false)}])))
 
 (defn change-cadastral-units-view
-  [e! app project]
+  [e! app _project]
   (let [buffer-m (get-in app [:map :road-buffer-meters])]
     (e! (project-controller/->FetchRelatedInfo buffer-m "cadastral-units")))
-  (fn [e! app {:keys [cadastral-candidates checked-cadastral-units] :as project}]
+  (fn [e! app {:keys [cadastral-candidates checked-cadastral-units loading] :as _project}]
     (let [buffer-m (get-in app [:map :road-buffer-meters])]
       [project-setup-view/cadastral-units-listing
        e!
        buffer-m
-       {:cadastral-units         cadastral-candidates
+       {:cadastral-units cadastral-candidates
+        :loading loading
         :checked-cadastral-units (or checked-cadastral-units #{})
-        :toggle-cadastral-unit   (e! project-controller/->ToggleCadastralUnit)
-        :on-mouse-enter          (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" true)
-        :on-mouse-leave          (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" false)}])))
+        :toggle-cadastral-unit (e! project-controller/->ToggleCadastralUnit)
+        :on-mouse-enter (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" true)
+        :on-mouse-leave (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" false)}])))
 
 (defn- initialized-project-view
   "The project view shown for initialized projects."

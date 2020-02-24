@@ -5,15 +5,13 @@
                                          FormControlLabel Checkbox]]
             [teet.ui.icons :as icons]
             [teet.ui.progress :as progress]
-            [teet.localization :refer [tr tr-tree]]
-            [teet.ui.typography :refer [Heading2 Heading3 SectionHeading DataLabel]]
+            [teet.localization :refer [tr]]
+            [teet.ui.typography :refer [Heading2 Heading3 SectionHeading DataLabel] :as typography]
             [teet.theme.theme-colors :as theme-colors]
             [teet.theme.itemlist-styles :as itemlist-styles]
             [herb.core :refer [<class]]
             [teet.ui.util :as util]
-            [teet.util.collection :as uc]
-            [teet.map.map-controller :as map-controller]
-            [teet.ui.typography :as typography]))
+            [teet.util.collection :as uc]))
 
 (defn ListHeading
   [{:keys [title subtitle action variant]
@@ -106,7 +104,7 @@
    [:b (str label ": ")]
    value])
 
-(defn checkbox-item [{:keys [checked? value on-change on-mouse-enter on-mouse-leave] :as item}]
+(defn checkbox-item [{:keys [checked? value on-change on-mouse-enter on-mouse-leave] :as _item}]
   [FormControlLabel
    (uc/without-nils {:class          (<class itemlist-styles/checkbox-container)
                      :on-mouse-enter on-mouse-enter
@@ -122,10 +120,20 @@
 
 (defn checkbox-list
   ([items] (checkbox-list {} items))
-  ([{:keys [key]
+  ([{:keys [key on-select-all on-deselect-all]
      :or   {key :id}}
     items]
    [:div {:class (<class itemlist-styles/checkbox-list-contents)}
+    (when (and on-select-all (every? (complement :checked?) items))
+      [Link {:class (<class itemlist-styles/checkbox-list-link)
+             :on-click #(do
+                          (.preventDefault %)
+                          (on-select-all))} (tr [:common :select-all])])
+    (when (and on-deselect-all (some :checked? items))
+      [Link {:class (<class itemlist-styles/checkbox-list-link)
+             :on-click #(do
+                          (.preventDefault %)
+                          (on-deselect-all))} (tr [:common :deselect-all])])
     (doall
       (for [item items]
         ^{:key (key item)}
@@ -145,11 +153,10 @@
   [list]
   [:ul {:style {:padding 0}}
    (doall
-     (for [{:keys [id primary-text secondary-text] :as item} list]
+     (for [{:keys [id primary-text secondary-text] :as _item} list]
        ^{:key id}
        [:li {:class (<class itemlist-styles/gray-bg-list-element)}
         (when primary-text
-          [typography/Heading3
-           primary-text])
+          [Heading3 primary-text])
         (when secondary-text
           [typography/Text secondary-text])]))])

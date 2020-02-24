@@ -9,7 +9,6 @@
             [tuck.core :as t]
             [tuck.effect :as tuck-effect]
             [teet.app-state :as app-state]
-            [teet.login.login-paths :as login-paths]
             [teet.transit :as transit]
             [teet.localization :refer [tr tr-or]]
             postgrest-ui.impl.fetch))
@@ -208,7 +207,7 @@
            js/Headers)
         (loop [ks (.keys headers)
                headers-map {}]
-          (let [{:strs [done value] :as n} (js->clj (.next ks))]
+          (let [{:strs [done value]} (js->clj (.next ks))]
             (if done
               headers-map
               (recur ks
@@ -436,7 +435,7 @@
   (reset! api-token token)
   (reset! postgrest-ui.impl.fetch/fetch-impl (partial fetch* e! nil)))
 
-(defmethod tuck-effect/process-effect :clear-api-token [e! _]
+(defmethod tuck-effect/process-effect :clear-api-token [_e! _]
   (reset! api-token nil))
 
 (defmulti map-item-selected :map/type)
