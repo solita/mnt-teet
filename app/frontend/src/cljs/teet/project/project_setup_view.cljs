@@ -20,7 +20,6 @@
             [teet.util.collection :as cu]
             [teet.road.road-model :as road-model]
             [teet.ui.skeleton :as skeleton]
-            [teet.log :as log]
             [teet.common.common-styles :as common-styles]))
 
 (declare project-setup-steps)

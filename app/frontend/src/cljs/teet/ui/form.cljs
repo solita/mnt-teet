@@ -10,8 +10,7 @@
             [herb.core :refer [<class]]
             [teet.ui.buttons :as buttons]
             [teet.theme.theme-colors :as theme-colors]
-            [tuck.core :as t]
-            [teet.log :as log]))
+            [tuck.core :as t]))
 
 (def default-value
   "Mapping of component to default value. Some components don't want nil as the value (like text area)."
