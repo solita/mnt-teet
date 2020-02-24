@@ -1,6 +1,5 @@
 (ns teet.ui.skeleton
-  (:require [reagent.core :as r]
-            [herb.core :refer [<class defkeyframes]]))
+  (:require [herb.core :refer [<class defkeyframes]]))
 
 (defkeyframes skeleton-animation
   ["0%" {:opacity 1}]
@@ -26,10 +25,10 @@
 (defn skeleton-parent-style
   [opts]
   (merge
-    {:animation [[skeleton-animation "1.5s" :infinite :ease-in-out]]
-     :border-radius "5px"
-     :border-color "#e6e6e6"}
-    opts))
+   {:animation [[skeleton-animation "1.5s" :infinite :ease-in-out]]
+    :border-radius "5px"
+    :border-color "#e6e6e6"}
+   opts))
 
 (defn skeleton
   [{:keys [parent-style style]}]
