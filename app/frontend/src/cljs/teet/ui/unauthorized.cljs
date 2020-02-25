@@ -3,7 +3,7 @@
             [teet.localization :refer [tr]]))
 
 (defn restricted-path
-  [e!]
+  [_ _]
   [:div {:style {:display :flex
                  :align-items :center
                  :flex-direction :column
