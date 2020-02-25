@@ -12,6 +12,8 @@
  :common
  {:hide-menu "Peidan menüü",
   :send-feedback "Saadan tagasisidet",
+  :forbidden-explanation
+  "Olete proovinud juurdepääsu ressursile, millele teil pole juurdepääsuõigust.",
   :select-files "Valin fail(id)",
   :back-to-project "Tagasi projekti",
   :now "Nüüd",
@@ -20,6 +22,7 @@
   :deletion-modal-text "Kas soovite kindlasti selle üksuse kustutada?",
   :design-stage "Staadium",
   :deselect-all "Tühista kõik valikud",
+  :forbidden "Keelatud",
   :construction-phase-activities "Faasid",
   :last-modified "Viimati muudetud",
   :added-on "Lisatud",
