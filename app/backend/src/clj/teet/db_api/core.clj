@@ -109,7 +109,9 @@
          ~@(when-not unauthenticated?
              [`(when (nil? ~-user)
                  (throw (ex-info "Unauthenticated access not allowed"
-                                 {~request-type ~request-name})))
+                                 {~request-type ~request-name
+                                  :status 401
+                                  :error :unauthorized})))
 
               ;; Go through the declared authorization requirements
               ;; and try to find user permissions that satisfy them
