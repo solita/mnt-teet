@@ -7,11 +7,16 @@
             [ol.style.Fill]
             [ol.render.Feature]
             [ol.style.Circle]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.theme.theme-colors :as theme-colors]
+            [ol.extent :as ol-extent]))
 
 
 (def ^:const map-pin-height 26)
 (def ^:const map-pin-width 20)
+
+(defn- styles [& ol-styles]
+  (into-array
+   (remove nil? ol-styles)))
 
 (defn- draw-map-pin-path [ctx]
   ;; "M9.96587 0.5C15.221 0.5 19.5 4.78348 19.5 9.96587C19.5 12.7235 17.9724 15.4076 15.9208 18.0187C14.9006 19.3172 13.7685 20.5764 12.6603 21.802C12.611 21.8565 12.5618 21.911 12.5126 21.9653C11.6179 22.9546 10.7407 23.9244 9.9694 24.8638C9.1882 23.8963 8.29237 22.8969 7.37848 21.8774L7.31238 21.8036C6.21334 20.5775 5.08749 19.3183 4.07125 18.0195C2.02771 15.4079 0.5 12.7237 0.5 9.96587C0.5 4.78126 4.78126 0.5 9.96587 0.5Z"
@@ -58,7 +63,6 @@
               .stroke
               .fill)))
         canvas))))
-
 
 (defn road-line-style [color ^ol.render.Feature _feature res]
   (let [line-width (+ 3 (min 5 (int (/ 200 res))))]
@@ -109,11 +113,28 @@
       @electric-pattern
       default-color)))
 
+(def ^:const small-feature-area-threshold
+  "Minimum feature area divided by resolution to show indicator"
+  2000)
+
+;; A green transparent circle icon
+(def ^:const small-feature-icon-src "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAA4ElEQVRYR+2X3Q6AIAiFc61365F7t9ZqttmMAI8sfy7ssoTzAZrgpsxn2eZTM9nXw+W4hBanRCVBBEYFsApTIA1EBNDENYeSnWTDAnBOkHTSyKkfzscHADHK2WR+beyTQrwASogHWAniASgprkGwAJZ6o2UJgQaNG6BG9FIWPgAlo6cQXqs9gHZE0Lpa1gVdNwBGBkYGmmcgdV1aznjKJr4P2v8Ju7iMapaBvY5rZYHb8P20ZFzD4N/90R/ATakEYQVBOq0+BxMtE6mfDPfdNJrFjqwzIrJ/oOk4BwYRjf1dniXWGdHmXjUAAAAASUVORK5CYII=")
+
+(defn- small-feature-style [^ol.render.Feature feature res]
+  (let [g (.getGeometry feature)]
+    (when (<= (/ (.getArea g) res) small-feature-area-threshold)
+      (ol.style.Style.
+       #js {:geometry (ol.geom.Point. (ol-extent/getCenter (.getExtent g)))
+            :image (ol.style.Icon.
+                    #js {:src small-feature-icon-src
+                         :imgSize #js [32 32]})}))))
+
 (defn project-related-restriction-style
   "Show project related restriction as a filled area."
-  [^ol.render.Feature feature _res]
+  [^ol.render.Feature feature res]
   (let [hover? (.get feature "hover")]
-    (ol.style.Style.
+    (styles
+     (ol.style.Style.
       #js {:stroke (ol.style.Stroke. #js {:color "rgba(143,0,255,0.8)"
                                           :width (if hover?
                                                    3
@@ -121,7 +142,9 @@
            :fill   (ol.style.Fill. #js {:color (if hover?
                                                  "rgba(143,0,255,0.5)"
                                                  (restriction-fill feature "rgba(143,0,255,0.2)"))})
-           :zIndex 3})))
+           :zIndex 3})
+     (when hover?
+       (small-feature-style feature res)))))
 
 (defn project-restriction-style
   "Show restriction geometrys as area. Restrictions are all (multi)polygons."
@@ -159,14 +182,17 @@
         res (if (> 1 res)
               1
               res)]
-    (ol.style.Style.
+    (styles
+     (ol.style.Style.
       #js {:stroke (ol.style.Stroke. #js {:color    "rgba(0,0,0,0.6)"
                                           :lineDash #js [(/ 15 res), (/ 30 res)]
                                           :width    2})
            :fill   (ol.style.Fill. #js {:cursor :pointer
                                         :color  (if hover?
                                                   "rgba(100,110,105,0.6)"
-                                                  "rgba(186,187,171,0.6)")})})))
+                                                  "rgba(186,187,171,0.6)")})})
+     (when hover?
+       (small-feature-style feature res)))))
 
 (defn selected-cadastral-unit-style
   "style for selected cadastral units"
