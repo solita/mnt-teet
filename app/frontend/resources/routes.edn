@@ -33,7 +33,7 @@
 
  :projects-list {:path "/projects/list"
                  :crumb (tr [:projects :list-view])
-                 :title (tr [:project :list-view])
+                 :title (tr [:projects :list-view])
                  :view teet.projects.projects-view/projects-list-page
                  :state {:query :thk.project/listing
                          :args {}}}
