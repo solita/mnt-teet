@@ -2,38 +2,64 @@
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
             [datomic.client.api :as d]
             teet.document.document-spec
-            [teet.meta.meta-model :refer [creation-meta deletion-tx]]))
+            [teet.meta.meta-model :refer [creation-meta deletion-tx]]
+            [teet.project.project-db :as project-db]))
 
-(defn comment-key-for-entity
-  [db entity-id]
-  (let [entity (d/pull db [:document/name :file/name] entity-id)]
-    (cond
-      (:document/name entity)
-      :document/comments
-      (:file/name entity)
-      :file/comments
-      :else
-      (throw (ex-info "Can only comment on files and documents" {:comment-target-id entity-id})))))
+(defcommand :comment/comment-on-document
+  {:doc "Add new comment on a document entity"
+   :context {:keys [db user]}
+   :payload {:keys [document-id comment]}
+   :project-id (project-db/document-project-id db document-id)
+   :authorization {:document/comment-on-document {:db/id document-id}}
+   :transact [(merge {:db/id document-id
+                      :document/comments [(merge {:db/id             "new-comment"
+                                                  :comment/author    [:user/id (:user/id user)]
+                                                  :comment/comment   comment
+                                                  :comment/timestamp (java.util.Date.)}
+                                                 (creation-meta user))]})]})
 
-;; FIXME: defcommand these
+(defcommand :comment/comment-on-file
+  {:doc "Add new comment on a document entity"
+   :context {:keys [db user]}
+   :payload {:keys [file-id comment]}
+   :project-id (project-db/file-project-id db file-id)
+   :authorization {:document/comment-on-document
+                   {:db/id (ffirst
+                            (d/q '[:find ?doc
+                                   :in $ ?file
+                                   :where
+                                   [?doc :document/files ?file]]
+                                 db file-id))}}
+   :transact [(merge {:db/id file-id
+                      :file/comments [(merge {:db/id             "new-comment"
+                                              :comment/author    [:user/id (:user/id user)]
+                                              :comment/comment   comment
+                                              :comment/timestamp (java.util.Date.)}
+                                             (creation-meta user))]})]})
 
-(defmethod db-api/command! :comment/post-comment [{conn :conn
-                                                   user :user}
-                                                  {:keys [comment-target-id comment]}]
-  (let [comment-key (comment-key-for-entity (d/db conn) comment-target-id)]
-    (-> conn
-        (d/transact {:tx-data [(merge {:db/id      comment-target-id
-                                       comment-key [(merge {:db/id             "new-comment"
-                                                            :comment/author    [:user/id (:user/id user)]
-                                                            :comment/comment   comment
-                                                            :comment/timestamp (java.util.Date.)}
-                                                           (creation-meta user))]})]})
-        (get-in [:tempids "new-comment"]))))
+(defn- comment-parent-entity [db comment-id]
+  (if-let [doc-id (ffirst
+                   (d/q '[:find ?doc
+                          :in $ ?comment
+                          :where [?doc :document/comments ?comment]]
+                        db comment-id))]
+    [:document doc-id]
+    (if-let [file-id (ffirst
+                      (d/q '[:find ?file
+                             :in $ ?comment
+                             :where [?file :file/comments ?comment]]
+                           db comment-id))]
+      [:file file-id]
+      nil)))
 
-(defmethod db-api/command! :comment/delete-comment [{conn :conn
-                                                     user :user}
-                                                    {:keys [comment-id]}]
-  (d/transact
-    conn
-    {:tx-data [(deletion-tx user comment-id)]})
-  :ok)
+(defcommand :comment/delete-comment
+  {:doc "Delete existing comment"
+   :context {:keys [db user]}
+   :payload {:keys [comment-id]}
+   :project-id (let [[parent-type parent-id] (comment-parent-entity db comment-id)]
+                 (case parent-type
+                   :document (project-db/document-project-id db parent-id)
+                   :file (project-db/file-project-id db parent-id)
+                   (db-api/bad-request! "No such comment")))
+   :authorization {:document/delete-comment {:db/id comment-id}}
+   :transact [(deletion-tx user comment-id)]})

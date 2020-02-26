@@ -2,7 +2,8 @@
   (:require [herb.core :as herb :refer [<class]]
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.material-ui :refer [IconButton]]
-            [teet.ui.common :as common]))
+            [teet.ui.common :as common]
+            [teet.common.common-styles :as common-styles]))
 
 (defn- input-field-style
   [error multiline start-icon?]
@@ -38,12 +39,6 @@
    :top 0
    :right 0})
 
-(defn- input-error-text-style
-  []
-  {:font-size "1rem"
-   :color theme-colors/error
-   :position :absolute})
-
 (defn- start-icon-style
   []
   {:min-height "42px"
@@ -57,8 +52,8 @@
            on-change input-button-icon
            placeholder input-button-click required input-style
            multiline on-blur error-text input-class start-icon
-           maxrows rows auto-complete step] :as props
-    :or {rows 2}} & children]
+           maxrows rows auto-complete step] :as _props
+    :or {rows 2}} & _children]
   (let [element (if multiline
                   :textarea
                   :input)]
@@ -80,7 +75,9 @@
                        :style input-style
                        :on-blur on-blur
                        :placeholder placeholder
-                       :class (herb/join (<class input-field-style error multiline (boolean start-icon)) input-class)
+                       :class (herb/join (<class input-field-style error multiline
+                                                 (boolean start-icon))
+                                         input-class)
                        :on-change on-change}
                       (when multiline
                         {:rows rows
@@ -89,12 +86,12 @@
                         {:auto-complete auto-complete})
                       (when step
                         {:step step}))]
-      (if (and input-button-click input-button-icon)
+      (when (and input-button-click input-button-icon)
         [IconButton {:on-click input-button-click
                      :disable-ripple true
                      :color :primary
                      :class (<class input-button-style)}
          [input-button-icon]])]
      (when (and error error-text)
-       [:span {:class (<class input-error-text-style)}
+       [:span {:class (<class common-styles/input-error-text-style)}
         error-text])]))

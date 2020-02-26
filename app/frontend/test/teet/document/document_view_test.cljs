@@ -11,7 +11,7 @@
                              :new-comment          (:new-comment document)
                              :comments             (:document/comments document)
                              :update-comment-event comments-controller/->UpdateNewCommentForm
-                             :save-comment-event   comments-controller/->Comment}]))
+                             :save-comment-event   comments-controller/->CommentOnDocument}]))
 
 (drt/define-drtest comment-form-test
                    {:initial-context {:app (drt/atom {:query {:document "666"}
@@ -46,11 +46,11 @@
             :selector "button")
 
   (drt/step :expect-tuck-event "Expect save comment event"
-            :predicate #(instance? comments-controller/Comment %)
+            :predicate #(instance? comments-controller/CommentOnDocument %)
             :apply? true
             :as "save-event")
 
   (drt/step :wait-command "Wait for save command"
-            :command :document/comment
+            :command :comment/comment-on-document
             :predicate #(= "this is a comment" (get-in % [:payload :comment]))
             :as :req))

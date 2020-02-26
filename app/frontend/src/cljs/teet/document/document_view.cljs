@@ -59,6 +59,4 @@
                            :new-comment          new-comment
                            :comments             (:document/comments document)
                            :update-comment-event comments-controller/->UpdateNewCommentForm
-                           :save-comment-event   comments-controller/->Comment}])
-
-
+                           :save-comment-event   comments-controller/->CommentOnDocument}])

@@ -1,12 +1,11 @@
 (ns teet.ui.stepper
-  (:require [teet.ui.material-ui :refer [Link Divider Collapse]]
+  (:require [teet.ui.material-ui :refer [Link Collapse]]
             [herb.core :refer [<class]]
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.buttons :as buttons]
             [teet.ui.icons :as icons]
             [teet.project.project-controller :as project-controller]
-            [teet.routes :as routes]
-            [teet.localization :refer [tr tr-tree]]
+            [teet.localization :refer [tr]]
             [reagent.core :as r]
             [teet.ui.format :as format]
             [teet.ui.typography :as typography]
@@ -43,7 +42,7 @@
    :list-style   :none})
 
 (defn- item-class
-  [done? last?]
+  [done? _last?]
   {:padding-left "1.5rem"
    :margin-left  "1rem"
    :position     :relative
@@ -159,7 +158,7 @@
     lc-status))
 
 (defn vertical-stepper
-  [e! {:thk.project/keys [lifecycles id] :as _project} stepper]
+  [e! {:thk.project/keys [lifecycles] :as _project} stepper]
   (let [lifecycle-ids (mapv :db/id lifecycles)
         lc-id (:lifecycle stepper)
         old-stepper? (empty? (filter #(= lc-id %) lifecycle-ids))]

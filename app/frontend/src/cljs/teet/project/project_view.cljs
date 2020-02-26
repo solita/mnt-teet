@@ -71,7 +71,7 @@
      (when (and start-m end-m)
        [:div [:span (tr [:project :information :km-range]) ": "
               (.toFixed (/ start-m 1000) 3) " \u2013 "
-              (.toFixed (/ start-m 1000) 3)]])
+              (.toFixed (/ end-m 1000) 3)]])
      [:div [:span (tr [:project :information :procurement-number]) ": " procurement-nr]]
      [:div [:span (tr [:project :information :carriageway]) ": " carriageway]]
      (when repair-method

@@ -1,0 +1,19 @@
+@startuml
+
+participant "THK export\ntrigger lambda" as trigger
+participant "S3 bucket" as s3
+participant "TEET backend" as teet
+database "Datomic" as datomic
+participant "THK" as thk
+
+trigger->teet: Export CSV file
+note left: Scheduled invocation of\ntrigger lambda\nevery morning
+teet->datomic: Fetch projects with\nlifecycles and activities
+datomic->teet: Project info
+teet->s3: Write export CSV\nto S3 bucket
+note right: TEET backend formats\nproject data into\nCSV file
+thk->s3: Fetch CSV file
+s3->thk: File contents
+note right: THK does its import process
+thk->s3: Move file to processed or error
+@enduml

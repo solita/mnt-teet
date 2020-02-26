@@ -64,3 +64,21 @@
               :where [?permission :permission/projects ?project]]
             db permission-id))
       (db-api/bad-request! "No such permission")))
+
+(defn document-project-id
+  ([db document-id]
+   (document-project-id db document-id ::throw))
+  ([db document-id default-value]
+   (or
+    (ffirst
+     (d/q '[:find ?project
+            :in $ ?doc
+            :where
+            [?task :task/documents ?doc]
+            [?activity :activity/tasks ?task]
+            [?lifecycle :thk.lifecycle/activities ?activity]
+            [?project :thk.project/lifecycles ?lifecycle]]
+          db document-id))
+    (if (= default-value ::throw)
+      (db-api/bad-request! "No such document")
+      default-value))))

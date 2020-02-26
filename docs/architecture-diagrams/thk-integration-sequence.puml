@@ -1,0 +1,26 @@
+@startuml
+
+participant "THK" as thk
+participant "S3 bucket" as s3
+participant "THK import\ntrigger lambda" as trigger
+participant "TEET backend" as teet
+database "Datomic" as datomic
+participant "PostgREST" as postgrest
+database "PostgreSQL" as pg
+participant "Road registry WFS" as wfs
+
+thk->s3: Upload new CSV file
+note left: THK creates and\nuploads new CSV\nfile to S3
+s3->trigger: New file notification
+trigger->teet: File information
+teet->s3: Read CSV file from bucket
+s3->teet: File contents
+note right: TEET backend reads\nthe file contents\nfrom S3 bucket
+teet->datomic: Upsert new data
+teet->wfs: Query road parts
+wfs->teet: Road parts with geometry
+teet->postgrest: Upsert entity geometry
+postgrest->pg: Upsert entity geometry
+teet->s3: Move file to processed or error
+note left: File is moved to\nprocessed or error\nfolder based on\nsuccess
+@enduml

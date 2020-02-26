@@ -129,7 +129,7 @@
                             :new-comment          (:new-comment document)
                             :comments             (:document/comments document)
                             :update-comment-event comments-controller/->UpdateNewCommentForm
-                            :save-comment-event   comments-controller/->Comment}]])
+                            :save-comment-event   comments-controller/->CommentOnDocument}]])
 
 (defn document-file-content
   [e! {:file/keys [name timestamp]

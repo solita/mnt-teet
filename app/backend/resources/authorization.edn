@@ -17,6 +17,12 @@
   :external-consultant :read,
   :authenticated-guest :read,
   :guest :read},
+ :document/delete-comment
+ {:admin :full,
+  :manager :full,
+  :internal-consultant :link,
+  :external-consultant :link,
+  :authenticated-guest :link},
  :document/upload-document
  {:admin :full,
   :manager :full,
