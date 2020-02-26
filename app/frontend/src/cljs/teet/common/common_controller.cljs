@@ -129,9 +129,8 @@
          :page :login}))
 
 (defmethod on-server-error :forbidden-resource [_ app]
-  (t/fx app
-        {:tuck.effect/type :navigate
-         :page :unauthorized}))
+  (assoc app :page :unauthorized)                           ;; Don't actually navigate because we want to show the unauthorized resources url
+  )
 
 (extend-protocol t/Event
   DebounceEffect
