@@ -8,8 +8,6 @@ while true
 do
     read -r CURRENT_COMMIT STATUS < <(curl -s -L -w ' %{http_code}\n' "$BASEURL$ENDPOINT")
 
-    echo "CURRENT_COMMIT: $CURRENT_COMMIT"
-    echo "STATUS: $STATUS"
     #if [ "$STATUS" == "200" ] && [ "$CODEBUILD_RESOLVED_SOURCE_VERSION" == "$CURRENT_COMMIT" ]; then
     if [ "$STATUS" == "200" ]; then
         echo "Matching versions, deploy finished"
