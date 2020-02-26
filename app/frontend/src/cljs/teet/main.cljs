@@ -40,7 +40,8 @@
 
 (defn main-view [e! _]
   (log/hook-onerror! e!)
-  (poll-version e!)
+  ;; TODO: Enable after getting proper sha from backend
+  ;; (poll-version e!)
   (e! (login-controller/->CheckExistingSession))
   (fn [e! {:keys [page user navigation quick-search snackbar] :as app}]
     (let [nav-open? (boolean (:open? navigation))]
