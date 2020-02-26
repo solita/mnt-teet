@@ -16,7 +16,7 @@
             [tuck.core :as t]
             [teet.theme.theme-provider :as theme]
             [teet.snackbar.snackbar-view :as snackbar]
-            [teet.common.common-controller :refer [when-feature poll-version]]
+            [teet.common.common-controller :refer [when-feature]]
 
     ;; Import view namespaces
             teet.projects.projects-view
