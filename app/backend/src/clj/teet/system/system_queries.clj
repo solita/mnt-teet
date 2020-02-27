@@ -1,5 +1,6 @@
 (ns teet.system.system-queries
   (:require [datomic.ion :as ion]
+            [cheshire.core :as cheshire]
             [teet.db-api.core :as db-api :refer [defquery]]
             [teet.util.build-info :as build-info]))
 
@@ -28,6 +29,8 @@
    :args _
    :unauthenticated? true}
   (with-meta
-    {:env (ion/get-env)
-     :app-info (ion/get-app-info)}
+    {:status 200
+     :headers {"Content-Type" "application/json"}
+     :body (cheshire/encode {:env (ion/get-env)
+                             :app-info (ion/get-app-info)})}
     {:format :raw}))
