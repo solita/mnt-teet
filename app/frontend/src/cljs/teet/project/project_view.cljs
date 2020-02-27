@@ -16,6 +16,7 @@
             [teet.ui.buttons :as buttons]
             [teet.ui.common :as common]
             [teet.ui.form :as form]
+            [teet.ui.project-feature-search-area :as project-feature-search-area]
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
             [teet.ui.stepper :as stepper]
@@ -173,17 +174,6 @@
                          @overlays))}
       map]]))
 
-(defn road-geometry-range-input
-  [e! {road-buffer-meters :road-buffer-meters} entity-type]
-  [Paper {:class (<class project-style/road-geometry-range-selector)}
-   [:div {:class (<class project-style/project-view-header)}
-    [typography/Heading3 "Road geometry inclusion"]]
-   [:div {:class (<class project-style/road-geometry-range-body)}
-    [TextField {:label "Inclusion distance"
-                :type :number
-                :placeholder "Give value to show related areas"
-                :value road-buffer-meters
-                :on-change #(e! (project-controller/->ChangeRoadObjectAoe (-> % .-target .-value) entity-type))}]]])
 
 (defn project-page-structure
   [e!
@@ -206,7 +196,7 @@
        (when footer
          footer)]
       (when (:geometry-range? map-settings)
-        [road-geometry-range-input e! (:map app) related-entity-type])]]))
+        [project-feature-search-area/feature-search-area e! (:map app) related-entity-type])]]))
 
 (defn activities-tab
   [e! {:keys [stepper] :as _app} project]
