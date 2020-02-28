@@ -15,9 +15,6 @@
 (defn ags->geojson [input]
   (ags-parser/parse input))
 
-
-
-
 (defstep fetch-project-ags-files
   {:doc "Find uploaded .ags files in project. Takes in connection (:conn) and project entity id (:project)"
    :in {conn {:spec some?
