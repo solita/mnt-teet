@@ -7,10 +7,7 @@
             [datomic.client.api :as d]
             [teet.project.project-model :as project-model]
             [teet.document.document-storage :as document-storage]
-            [teet.log :as log]
-            [teet.auth.jwt-token :as jwt-token]
-            [cheshire.core :as cheshire]
-            [org.httpkit.client :as client]))
+            [teet.gis.entity-features :as entity-features]))
 
 (defn ags->geojson [input]
   (ags-parser/parse input))
@@ -90,26 +87,10 @@
   (doall
    (for [{entity-id :db/id
           features :features} files]
-     (let [url (str api-url "/rpc/upsert_entity_feature")]
-       (log/info "Upserting" (count features) "features for entity" entity-id ". URL: " api-url)
-       (let [response
-             @(client/post
-               url
-               {:headers {"Authorization" (str "Bearer " (jwt-token/create-backend-token api-secret))
-                          "Content-Type" "application/json"}
-                :body (cheshire/encode
-                       (for [{:keys [geometry properties id]} features]
-                         {:entity (str entity-id)
-                          :id id
-
-                          ;; PENDING: what should we take from AGS for these?
-                          :label ""
-                          :type "ags"
-
-                          :geometry geometry
-                          :properties properties}))})]
-         (log/info "Upsert features: " (:status response))
-         response)))))
+     (entity-features/upsert-entity-features! {:api-url api-url
+                                              :api-secret api-secret}
+                                              entity-id
+                                              features))))
 
 (defn import-project-ags-files [ctx]
   (-> ctx
