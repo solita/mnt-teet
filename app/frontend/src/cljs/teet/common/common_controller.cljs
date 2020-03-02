@@ -366,7 +366,8 @@
                                            :variant :error
                                            :hide-duration nil}))))
 
-(defmethod on-server-error :request-timeout [_ app]
+;; disabled 2020-03-02 pending debugging
+#_(defmethod on-server-error :request-timeout [_ app]
   (t/fx app {:tuck.effect/type :deploy-status
              :result-event ->DeployStatusResponse}))
 
