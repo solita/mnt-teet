@@ -7,7 +7,8 @@
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.select :as select]
             [teet.comments.comments-view :as comments-view]
-            [teet.comments.comments-controller :as comments-controller]))
+            [teet.comments.comments-controller :as comments-controller]
+            [taoensso.timbre :as log]))
 
 (defn document-form [_ {:keys [initialization-fn]}]
   (when initialization-fn
@@ -25,7 +26,11 @@
                  :spec            :document/new-document-form}
 
       ^{:attribute :document/category :xs 6}
-      [select/select-enum {:e! e! :attribute :document/category}]
+      [select/select-enum {:e! e!
+                           :attribute :document/category
+                           :values-filter (fn doc-category-filter [category]
+                                            (log/debug "values-filter:" category "->" (not-empty (select/valid-enums-for category :document/category)))
+                                            (not-empty (select/valid-enums-for category :document/sub-category)))}]
 
       (when-let [category (:document/category doc)]
         ^{:attribute :document/sub-category :xs 6}
