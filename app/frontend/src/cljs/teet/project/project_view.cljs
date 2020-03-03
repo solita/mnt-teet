@@ -130,6 +130,7 @@
 
 (defn project-map [e! {:keys [map page] :as app} project]
   (r/with-let [overlays (r/atom [])
+               fitted-atom (atom false)
                set-overlays! (fn [new-overlays]
                                (when (not= new-overlays @overlays)
                                  ;; Only set if actually changed (to avoid rerender loop)
@@ -150,7 +151,7 @@
                            (merge layers (layer-fn opts)))
                          {}
                          [#_project-layers/surveys-layer
-                          (partial project-layers/project-road-geometry-layer map-object-padding)
+                          (partial project-layers/project-road-geometry-layer map-object-padding fitted-atom)
                           project-layers/setup-restriction-candidates
                           project-layers/setup-cadastral-unit-candidates
                           project-layers/ags-surveys
