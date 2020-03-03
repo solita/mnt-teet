@@ -16,7 +16,8 @@
             [teet.ui.buttons :as buttons]
             [teet.ui.common :as common]
             [teet.ui.form :as form]
-            [teet.ui.project-feature-search-area :as project-feature-search-area]
+            [teet.ui.drawing-indicator :as drawing-indicator]
+            [teet.project.search-area-view :as search-area-view]
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
             [teet.ui.stepper :as stepper]
@@ -31,7 +32,8 @@
             [teet.util.collection :as cu]
             [teet.activity.activity-controller :as activity-controller]
             [teet.authorization.authorization-check :refer [when-pm-or-owner]]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.project.search-area-controller :as search-area-controller]))
 
 (defn task-form [_e! {:keys [initialization-fn]}]
   ;;Task definition (under project activity)

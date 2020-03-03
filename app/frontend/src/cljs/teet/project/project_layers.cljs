@@ -57,6 +57,17 @@
                  :geometry #js {:type "LineString"
                                 :coordinates (into-array (map into-array ls))}}]})
 
+(defn project-drawn-area-layer
+  [{app :app}]
+  (let [drawn-geojsons (get-in app [:map :search-area :drawn-areas-geojson])
+        tab-drawn? (boolean (= (get-in app [:map :search-area :tab]) :drawn-area))]
+    (when tab-drawn?
+      {:drawn-area-style
+       (map-layers/geojson-data-layer "project-drawn-areas"
+                                      drawn-geojsons
+                                      map-features/drawn-area-style
+                                      {})})))
+
 (defn geometry-fit-on-first-load
   "Get atom as parameter that has info if the geometry fit has happened
    And switch the atom state if it's the first time fit is happening"
