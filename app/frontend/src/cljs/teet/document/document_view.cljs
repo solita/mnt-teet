@@ -7,7 +7,14 @@
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.select :as select]
             [teet.comments.comments-view :as comments-view]
-            [teet.comments.comments-controller :as comments-controller]))
+            [teet.comments.comments-controller :as comments-controller]
+            [teet.common.common-controller :as common-controller]
+            [taoensso.timbre :as log]))
+
+;; needed because we peek into the available enums using select/valid-enums-for
+
+(common-controller/register-init-event! :set-subcategory-enum-values
+                                        #(select/query-enums-for-attribute! :document/sub-category))
 
 (defn document-form [_ {:keys [initialization-fn]}]
   (when initialization-fn
@@ -23,9 +30,14 @@
                  :cancel-event    on-close-event
                  :in-progress?    in-progress?
                  :spec            :document/new-document-form}
-
+      
       ^{:attribute :document/category :xs 6}
-      [select/select-enum {:e! e! :attribute :document/category}]
+
+      [select/select-enum {:e! e!
+                           :attribute :document/category
+                           :values-filter (fn doc-category-filter [category]
+                                            (not-empty (select/valid-enums-for category
+                                                                               :document/sub-category)))}]
 
       (when-let [category (:document/category doc)]
         ^{:attribute :document/sub-category :xs 6}
