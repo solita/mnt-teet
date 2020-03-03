@@ -8,7 +8,11 @@
             [teet.ui.select :as select]
             [teet.comments.comments-view :as comments-view]
             [teet.comments.comments-controller :as comments-controller]
+            [teet.common.common-controller :as common-controller]
             [taoensso.timbre :as log]))
+
+;; needed because we peek into the available enums using select/valid-enums-for
+(common-controller/register-init-event! :set-subcategory-enum-values (partial select/->SetEnumValues :document/sub-category))
 
 (defn document-form [_ {:keys [initialization-fn]}]
   (when initialization-fn
@@ -24,8 +28,9 @@
                  :cancel-event    on-close-event
                  :in-progress?    in-progress?
                  :spec            :document/new-document-form}
-
+      
       ^{:attribute :document/category :xs 6}
+
       [select/select-enum {:e! e!
                            :attribute :document/category
                            :values-filter (fn doc-category-filter [category]

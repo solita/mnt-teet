@@ -75,6 +75,12 @@
        :in $ ?project-id
        :where [?e :thk.project/id ?project-id]] (db) project-id))
 
+(defn query-all-users
+  []
+  (q '[:find (pull ?e [*])
+       :in $
+       :where [?e :user/id _]] (db)))
+
 (defn retract-from-project!
   "use like: (retract-from-project! \"17187\" :thk.project/manager 45264694692282960)"
   [project-id a v]

@@ -85,6 +85,8 @@
     (swap! enum-values assoc attribute values)
     app))
 
+;; (common-controller/register-init-event! :set-enum-values (partial ->SetEnumValues))
+
 (defn select-style
   []
   ^{:pseudo {:hover {:border-bottom (str "2px solid " theme-colors/primary)
@@ -159,11 +161,13 @@
            items))]]]))
 
 
-(defn valid-enums-for [valid-for-criterion attribute]
+(defn valid-enums-for
+  "called along the lines of (valid-enums-for :document.category/project-doc ...)"
+  [valid-for-criterion attribute]
   (into []
         (comp (if valid-for-criterion
                 (do
-                  ;; (log/debug "valid check(2): filter " valid-for-criterion "vs attr" attribute "enum-vals" (map :db/ident  (@enum-values attribute)))
+                  (log/debug "valid check(2): filter " valid-for-criterion "vs attr" attribute "enum-vals" (map :db/ident  (@enum-values attribute)))
                   (filter #(= valid-for-criterion (:enum/valid-for %))))
                 identity)
               (map :db/ident)) (@enum-values attribute)))
@@ -173,6 +177,7 @@
   [{:keys [e! attribute required tiny-select? show-label?]
     :or {show-label? true}}]
   (when-not (contains? @enum-values attribute)
+    (log/debug "getting enum vals for attribute" attribute)
     (e! (common-controller/->Query {:query :enum/values
                                     :args {:attribute attribute}
                                     :result-event (partial ->SetEnumValues attribute)})))
@@ -182,10 +187,11 @@
           select-comp (if tiny-select?
                         select-with-action
                         form-select)
+          ;; values (valid-enums-for valid-for attribute)
           values (into []
                        (comp (if valid-for
                                (do
-                                 ;; (log/debug "valid check: filter " valid-for "vs attr" attribute "enum vals" (map :db/ident  (@enum-values attribute)))
+                                 (log/debug "valid check(1): filter " valid-for "vs attr" attribute "enum vals" (map :db/ident  (@enum-values attribute)))
                                  (filter #(= valid-for (:enum/valid-for %))))
                                identity)
                              (map :db/ident))
