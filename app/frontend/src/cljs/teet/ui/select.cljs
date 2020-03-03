@@ -82,6 +82,7 @@
 (defrecord SetEnumValues [attribute values]
   t/Event
   (process-event [_ app]
+    ;; (log/debug "SetEnumValues" attribute (count values))
     (swap! enum-values assoc attribute values)
     app))
 
@@ -160,6 +161,10 @@
               (format-item item)])
            items))]]]))
 
+(defn query-enums-for-attribute! [attribute]
+  (common-controller/->Query {:query :enum/values
+                              :args {:attribute attribute}
+                              :result-event (partial ->SetEnumValues attribute)}))
 
 (defn valid-enums-for
   "called along the lines of (valid-enums-for :document.category/project-doc ...)"
@@ -178,9 +183,7 @@
     :or {show-label? true}}]
   (when-not (contains? @enum-values attribute)
     (log/debug "getting enum vals for attribute" attribute)
-    (e! (common-controller/->Query {:query :enum/values
-                                    :args {:attribute attribute}
-                                    :result-event (partial ->SetEnumValues attribute)})))
+    (e! (query-enums-for-attribute! attribute)))
   (fn [{:keys [value on-change name id error container-class class values-filter]
         :enum/keys [valid-for]}]
     (let [tr* #(tr [:enum %])

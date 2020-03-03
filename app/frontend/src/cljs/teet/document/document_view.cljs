@@ -12,7 +12,9 @@
             [taoensso.timbre :as log]))
 
 ;; needed because we peek into the available enums using select/valid-enums-for
-(common-controller/register-init-event! :set-subcategory-enum-values (partial select/->SetEnumValues :document/sub-category))
+
+(common-controller/register-init-event! :set-subcategory-enum-values
+                                        #(select/query-enums-for-attribute! :document/sub-category))
 
 (defn document-form [_ {:keys [initialization-fn]}]
   (when initialization-fn
@@ -34,8 +36,8 @@
       [select/select-enum {:e! e!
                            :attribute :document/category
                            :values-filter (fn doc-category-filter [category]
-                                            (log/debug "values-filter:" category "->" (not-empty (select/valid-enums-for category :document/category)))
-                                            (not-empty (select/valid-enums-for category :document/sub-category)))}]
+                                            (not-empty (select/valid-enums-for category
+                                                                               :document/sub-category)))}]
 
       (when-let [category (:document/category doc)]
         ^{:attribute :document/sub-category :xs 6}
