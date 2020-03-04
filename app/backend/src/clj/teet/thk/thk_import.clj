@@ -11,7 +11,8 @@
             [clojure.string :as str]
             [datomic.client.api :as d]
             [teet.util.collection :as cu]
-            [teet.thk.thk-mapping :as thk-mapping])
+            [teet.thk.thk-mapping :as thk-mapping]
+            [teet.log :as log])
   (:import (org.apache.commons.io.input BOMInputStream)))
 
 (def excluded-project-types #{"TUGI" "TEEMU"})
@@ -103,8 +104,16 @@
   (into [{:db/id "datomic.tx"
           :integration/source-uri url}]
         (for [prj projects-csv
-              :when (teet-project? prj)]
-          (project-datomic-attributes prj))))
+              :when (teet-project? prj)
+              :let [{:thk.project/keys [id lifecycles] :as project}
+                    (project-datomic-attributes prj)]]
+          (do
+            (log/info "THK project " id
+                      "has" (count lifecycles) "lifecycles (ids: "
+                      (str/join ", " (map :thk.lifecycle/id lifecycles)) ") with"
+                      (reduce + (map #(count (:thk.lifecycle/activities %)) lifecycles))
+                      "activities.")
+            project))))
 
 (defn- check-unique-activity-ids [projects]
   (into {}

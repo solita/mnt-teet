@@ -29,7 +29,16 @@
 
 (defn export-thk-projects [connection]
   (let [db (d/db connection)
-        projects (map first (all-projects db))]
+        projects (->> db
+                      all-projects
+
+                      ;; Take the pulled map from each result
+                      (map first)
+
+                      ;; Sort projects by THK project id (as number)
+                      ;; This outputs them in the same order as THK->TEET
+                      ;; for easier comparison
+                      (sort-by (comp #(Integer/parseInt %) :thk.project/id)))]
     (into
      [thk-mapping/csv-column-names]
      (for [project projects
