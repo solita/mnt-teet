@@ -26,16 +26,16 @@
                            :when (and (integer? (or custom-start-m start-m))
                                       (integer? (or custom-end-m end-m))
                                       (integer? road-nr)
-                                      (integer? carriageway))]
+                                      (integer? carriageway))
+                           :let [geometry (road-query/fetch-road-geometry {:wfs-url wfs-url
+                                                                           :cache-atom road-part-cache}
+                                                                          road-nr carriageway
+                                                                          (or custom-start-m start-m)
+                                                                          (or custom-end-m end-m))]]
                        {:id (str id)
                         :type "project"
                         :tooltip name
-                        :geometry_wkt (geo/line-string-to-wkt
-                                       (road-query/fetch-road-geometry {:wfs-url wfs-url
-                                                                        :cache-atom road-part-cache}
-                                                                       road-nr carriageway
-                                                                       (or custom-start-m start-m)
-                                                                       (or custom-end-m end-m)))})]
+                        :geometry_wkt (geo/line-string-to-wkt geometry)})]
     (when (not-empty request-body)
       (let [response @(client/post
                        (str api-url "/rpc/store_entity_info")
