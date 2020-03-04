@@ -26,11 +26,13 @@
              ~'tr teet.localization/tr]
          (case page#
            ~@(mapcat
-              (fn [[route-name {:keys [state view path skeleton role keep-query-params] :as route}]]
+              (fn [[route-name {:keys [state view path skeleton role keep-query-params title] :as route}]]
                 [route-name
                  `(let [{:keys [~@(param-names path)]} ~'params
                         ~'state (get-in ~'app [:route ~route-name])
+                        title# ~title
                         ~'refresh (get-in ~'app [:route ~(keyword (str (name route-name) "-refresh"))])]
+                    (set! (.-title js/document) (or title# "TEET"))
                     (if-not (teet.user.user-controller/has-role? ~role)
                       {:page [:div "No such page"]}
                       {:page ~(if state

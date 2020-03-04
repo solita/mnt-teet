@@ -128,6 +128,10 @@
         {:tuck.effect/type :navigate
          :page :login}))
 
+(defmethod on-server-error :forbidden-resource [_ app]
+  (assoc app :page :unauthorized)                           ;; Don't actually navigate because we want to show the unauthorized resources url
+  )
+
 (extend-protocol t/Event
   DebounceEffect
   (process-event [{effect :effect} app]
@@ -170,8 +174,11 @@
 (defn check-response-status [response]
   (let [status (.-status response)]
     (case status
-      (401 403)
+      401
       (throw (ex-info "Authorization failure" {:error :authorization-failure}))
+
+      403
+      (throw (ex-info "Unauthorized to access this resource" {:error :forbidden-resource}))
 
       200
       response
@@ -359,7 +366,8 @@
                                            :variant :error
                                            :hide-duration nil}))))
 
-(defmethod on-server-error :request-timeout [_ app]
+;; disabled 2020-03-02 pending debugging
+#_(defmethod on-server-error :request-timeout [_ app]
   (t/fx app {:tuck.effect/type :deploy-status
              :result-event ->DeployStatusResponse}))
 

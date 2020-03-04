@@ -18,7 +18,8 @@
 {:root {:path "/"
         :crumb (tr [:projects :map-view])
         :view teet.projects.projects-view/projects-map-page}
- :login {:path "/login"}
+ :login {:path "/login"
+         :title (tr [:login :login])}
 
  :dashboard {:path "/dashboard"
              :crumb "Dashboard" ;(tr [:dashboard :title])
@@ -27,10 +28,12 @@
                      :args {}}}
  :projects {:path "/projects/map"
             :crumb (tr [:projects :map-view])
+            :title (tr [:projects :map-view])
             :view teet.projects.projects-view/projects-map-page}
 
  :projects-list {:path "/projects/list"
                  :crumb (tr [:projects :list-view])
+                 :title (tr [:projects :list-view])
                  :view teet.projects.projects-view/projects-list-page
                  :state {:query :thk.project/listing
                          :args {}}}
@@ -38,6 +41,7 @@
  :project {:path "/projects/:project"
            :keep-query-params #{:tab}
            :parent :projects-list
+           :title (:thk.project/name state)
            :crumb (teet.project.project-model/get-column (or (some-> state :project)
                                                              state)
                                                          :thk.project/project-name)
@@ -48,11 +52,13 @@
  :activity-task {:path "/projects/:project/:task"
                  :parent :project
                  :crumb (tr [:enum (-> state :task/type :db/ident)])
+                 :title (tr [:enum (-> state :task/type :db/ident)])
                  :view teet.task.task-view/task-page
                  :state {:query :thk.project/fetch-task
                          :args {:thk.project/id project
                                 :task-id (goog.math.Long/fromString task)}}}
 
+ :unauthorized {:path "/unauthorized" :view teet.ui.unauthorized/restricted-path}
  :components {:path "/components" :view teet.ui.component-demo/demo}
  :road {:path "/road"
         :view teet.road-visualization.road-visualization-view/road-visualization}

@@ -57,10 +57,21 @@
                  :geometry #js {:type "LineString"
                                 :coordinates (into-array (map into-array ls))}}]})
 
+(defn geometry-fit-on-first-load
+  "Get atom as parameter that has info if the geometry fit has happened
+   And switch the atom state if it's the first time fit is happening"
+  [fitted-atom]
+  (if @fitted-atom
+    false
+    (do
+      (reset! fitted-atom true)
+      true)))
+
 (defn project-road-geometry-layer
   "Show project geometry or custom road part in case the start and end
   km are being edited during initialization"
   [map-obj-padding
+   fitted-atom
    {app :app
     {:keys [basic-information-form geometry] :as project} :project
     set-overlays! :set-overlays!}]
@@ -76,7 +87,7 @@
                       km->m)
                 (project-model/get-column project
                                           :thk.project/effective-km-range)))
-        options {:fit-on-load? true
+        options {:fit-on-load? (geometry-fit-on-first-load fitted-atom)
                  ;; Use left side padding so that road is not shown under the project panel
                  :fit-padding map-obj-padding}
 

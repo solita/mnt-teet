@@ -46,7 +46,7 @@
   (when km-range-string
     (when-let [[_ start-km end-km] (re-matches #"\[(\d+\.\d+),(\d+\.\d+)\]"
                                                    km-range-string)]
-      (str (string/replace start-km #"\." \,)
+      (str (string/replace start-km #"\." ",")
            " km — "
-           (string/replace end-km #"\." \,)
+           (string/replace end-km #"\." ",")
            " km"))))

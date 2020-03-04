@@ -16,7 +16,7 @@
             [tuck.core :as t]
             [teet.theme.theme-provider :as theme]
             [teet.snackbar.snackbar-view :as snackbar]
-            [teet.common.common-controller :refer [when-feature poll-version]]
+            [teet.common.common-controller :refer [when-feature]]
 
     ;; Import view namespaces
             teet.projects.projects-view
@@ -27,6 +27,7 @@
             teet.ui.component-demo
             teet.admin.admin-view
             teet.dashboard.dashboard-view
+            teet.ui.unauthorized
 
             teet.ui.query
             goog.math.Long
@@ -39,7 +40,8 @@
 
 (defn main-view [e! _]
   (log/hook-onerror! e!)
-  (poll-version e!)
+  ;; TODO: Enable after getting proper sha from backend
+  ;; (poll-version e!)
   (e! (login-controller/->CheckExistingSession))
   (fn [e! {:keys [page user navigation quick-search snackbar] :as app}]
     (let [nav-open? (boolean (:open? navigation))]
