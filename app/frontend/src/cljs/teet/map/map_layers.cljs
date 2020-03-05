@@ -137,9 +137,9 @@
 (defmethod create-data-layer :cadastral-units
   [ctx {:keys [datasource-ids]}]
   (let [api-url (get-in ctx [:config :api-url])]
-    (mvt-layer api-url "cadastral-units-" datasource-ids
-               map-features/cadastral-unit-style
-               {:max-resolution cadastral-unit-resolution})))
+    (mvt-for-datasource-ids api-url "cadastral-units-" datasource-ids
+                            map-features/cadastral-unit-style
+                            {:max-resolution cadastral-unit-resolution})))
 
 (defmethod create-data-layer :default [_ {type :type}]
   (log/warn "Unsupported data layer type: " type)

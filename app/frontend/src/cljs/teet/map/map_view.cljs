@@ -81,6 +81,18 @@
                    :on-change toggle}]
         description]))])
 
+(defmethod layer-filters-form :cadastral-units
+  [e! _ map-data]
+  ;; immediately set the one datasource id
+  (e! (map-controller/->UpdateLayer {:datasource-ids
+                                     (into #{}
+                                           (comp
+                                            (filter #(= "cadastral-units" (:name %)))
+                                            (map :id))
+                                           (:datasources map-data))}))
+  (fn [_ _ _]
+    (tr [:map :layers :no-filters])))
+
 (defmethod layer-filters-form :default
   [_ _ _]
   (tr [:map :layers :no-filters]))
