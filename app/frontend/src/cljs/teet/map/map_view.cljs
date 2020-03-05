@@ -7,7 +7,7 @@
             [teet.localization :refer [tr]]
             [teet.map.map-controller :as map-controller]
             [teet.ui.container :as container]
-            [teet.ui.material-ui :refer [Fab Button Grid Link]]
+            [teet.ui.material-ui :refer [Fab Button Grid Link Checkbox]]
             [teet.ui.typography :as typography]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
@@ -16,7 +16,8 @@
             [teet.ui.buttons :as buttons]
             [teet.ui.panels :as panels]
             [teet.map.map-layers :as map-layers]
-            [teet.ui.util :as util]))
+            [teet.ui.util :as util]
+            [teet.util.collection :as cu]))
 
 (def default-extent [20 50 30 60])
 
@@ -62,13 +63,29 @@
 
 (defmulti layer-filters-form
   "Render layer type speficic filters selection form."
-  (fn [_e! layer] (:type layer)))
+  (fn [_e! layer _map-data] (:type layer)))
+
+(defmethod layer-filters-form :restrictions
+  [e! {checked-ids :datasource-ids :as layer
+       :or {checked-ids #{}}} map-data]
+  [:div
+   (util/with-keys
+     (for [{:keys [id description] :as ds} (:datasources map-data)
+           :when (map-controller/restriction-datasource? ds)
+           :let [checked? (boolean (checked-ids id))
+                 toggle (e! map-controller/->UpdateLayer
+                            (update layer :datasource-ids cu/toggle id))]]
+       [:div {:on-click toggle
+              :style {:cursor :pointer}}
+        [Checkbox {:checked checked?
+                   :on-change toggle}]
+        description]))])
 
 (defmethod layer-filters-form :default
-  [_ _]
+  [_ _ _]
   (tr [:map :layers :no-filters]))
 
-(defn edit-layer-dialog [e! {:keys [new? type] :as edit-layer}]
+(defn edit-layer-dialog [e! {:keys [new? type] :as edit-layer} map-data]
   [panels/modal {:disable-content-wrapper? true
                  :on-close (e! map-controller/->CancelLayer)}
    (let [edit-component
@@ -80,7 +97,7 @@
                   (tr [:map :layers :layer]))
              "")]
           [:div {:class (<class map-styles/edit-layer-options)}
-           [layer-filters-form edit-layer]]
+           [layer-filters-form e! edit-layer map-data]]
           [:div.edit-layer-buttons
            (if new?
              [buttons/button-secondary {:on-click (e! map-controller/->CancelLayer)}
@@ -109,10 +126,10 @@
        edit-component))])
 
 (defn map-layer-controls
-  [e! {:keys [layers edit-layer]}]
+  [e! {:keys [layers edit-layer] :as map-data}]
   [:<>
    (when edit-layer
-     [edit-layer-dialog e! edit-layer])
+     [edit-layer-dialog e! edit-layer map-data])
    [:div {:class (<class map-styles/map-layer-controls)}
     [:div {:class (<class map-styles/map-controls-heading)}
      [icons/maps-layers]

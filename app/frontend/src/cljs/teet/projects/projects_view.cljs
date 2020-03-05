@@ -71,25 +71,10 @@
 
 
 
-(def ^:const project-restriction-resolution 20)
-(def ^:const cadastral-unit-resolution 5)
 
-(defn generate-mvt-layers                                   ;;This should probably be moved somewhere else so we can use it in project view also if needed
-  [restrictions api-url]
-  (into {}
-        (for [[type restrictions] restrictions
-              :let [selected-restrictions (->> restrictions
-                                               (filter second)
-                                               (map first))]
-              :when (and (not= type "Katastri")
-                         (seq selected-restrictions))]
-          [(keyword type)
-           (map-layers/mvt-layer api-url
-                                 "mvt_restrictions"
-                                 {"type" type
-                                  "layers" (str/join ", " selected-restrictions)}
-                                 map-features/project-restriction-style
-                                 {:max-resolution project-restriction-resolution})])))
+
+
+
 
 
 (defn projects-map-page [e! app]
@@ -103,7 +88,8 @@
       :class (<class theme-spacing/fill-content)
       :layer-controls? true
       :layers (merge
-               (if-not (str/blank? search-term)
+               {}
+               (when-not (str/blank? search-term)
                  ;; Showing search results, only fetch those
                  {:search-results
                   (map-layers/geojson-layer api-url
@@ -117,16 +103,7 @@
                                             {"ids" (str "{" (str/join "," search-results) "}")}
                                             map-features/project-pin-style
                                             {:min-resolution map-layers/project-pin-resolution-threshold
-                                             :fit-on-load? true})})
-
-                     (when (get-in app [:map :map-restrictions "Katastri" "katastriyksus"])
-                       {:cadastral-units
-                        (map-layers/mvt-layer api-url
-                                              "mvt_cadastral_units"
-                                              {}
-                                              map-features/cadastral-unit-style
-                                              {:max-resolution cadastral-unit-resolution})})
-                     (generate-mvt-layers (get-in app [:map :map-restrictions]) api-url))}
+                                             :fit-on-load? true})}))}
      (:map app)]))
 
 (defn projects-list-page [e! app projects _breadcrumbs]

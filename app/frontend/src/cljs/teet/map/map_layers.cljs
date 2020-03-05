@@ -113,6 +113,34 @@
                     {:min-resolution project-pin-resolution-threshold
                      :fit-on-load? true})}))
 
+(defn- mvt-for-datasource-ids [api-url prefix datasource-ids style opts]
+  (into {}
+        (for [id datasource-ids]
+          [(keyword (str prefix id))
+           (mvt-layer api-url
+                      "mvt_features"
+                      {"datasource" id
+                       "types" "{}"}
+                      style opts)])))
+
+(def ^:const project-restriction-resolution 20)
+
+(defmethod create-data-layer :restrictions
+  [ctx {:keys [datasource-ids]}]
+  (let [api-url (get-in ctx [:config :api-url])]
+    (mvt-for-datasource-ids api-url "restrictions-" datasource-ids
+                            map-features/project-restriction-style
+                            {:max-resolution project-restriction-resolution})))
+
+(def ^:const cadastral-unit-resolution 5)
+
+(defmethod create-data-layer :cadastral-units
+  [ctx {:keys [datasource-ids]}]
+  (let [api-url (get-in ctx [:config :api-url])]
+    (mvt-layer api-url "cadastral-units-" datasource-ids
+               map-features/cadastral-unit-style
+               {:max-resolution cadastral-unit-resolution})))
+
 (defmethod create-data-layer :default [_ {type :type}]
   (log/warn "Unsupported data layer type: " type)
   {})
