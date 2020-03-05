@@ -15,7 +15,8 @@
             [teet.map.map-styles :as map-styles]
             [teet.ui.buttons :as buttons]
             [teet.ui.panels :as panels]
-            [teet.map.map-layers :as map-layers]))
+            [teet.map.map-layers :as map-layers]
+            [teet.ui.util :as util]))
 
 (def default-extent [20 50 30 60])
 
@@ -117,11 +118,12 @@
      [icons/maps-layers]
      (tr [:map :map-layers])]
     (if (seq layers)
-      (doall
-       (for [layer layers]
-         ^{:key (:id layer)}
-         [Link {:on-click (e! map-controller/->EditLayer layer)}
-          (tr [:map :layers (:type layer)])]))
+      (util/with-keys
+        (for [layer layers]
+          ^{:key (:id layer)}
+          [:div
+           [Link {:on-click (e! map-controller/->EditLayer layer)}
+           (tr [:map :layers (:type layer)])]]))
       [:div (tr [:map :layers :no-layers])])
     [buttons/button-primary
      {:on-click (e! map-controller/->AddLayer)
