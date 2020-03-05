@@ -3,7 +3,8 @@
             [teet.map.openlayers.geojson :as geojson]
             [teet.map.openlayers :as openlayers]
             [clojure.string :as str]
-            [teet.map.map-features :as map-features]))
+            [teet.map.map-features :as map-features]
+            [teet.log :as log]))
 
 (def ^:const default-projection "EPSG:3301")
 
@@ -111,3 +112,7 @@
                     map-features/project-pin-style
                     {:min-resolution project-pin-resolution-threshold
                      :fit-on-load? true})}))
+
+(defmethod create-data-layer :default [_ {type :type}]
+  (log/warn "Unsupported data layer type: " type)
+  {})
