@@ -70,7 +70,7 @@
                    :default-sort-column :thk.project/project-name}]]))
 
 
-(def ^:const project-pin-resolution-threshold 100)
+
 (def ^:const project-restriction-resolution 20)
 (def ^:const cadastral-unit-resolution 5)
 
@@ -99,7 +99,8 @@
                              (map :db/id)
                              (get-in app [:quick-search :results]))]
     [map-view/map-view e!
-     {:class (<class theme-spacing/fill-content)
+     {:config (:config app)
+      :class (<class theme-spacing/fill-content)
       :layer-controls? true
       :layers (merge
                (if-not (str/blank? search-term)
@@ -109,28 +110,13 @@
                                             "geojson_entities"
                                             {"ids" (str "{" (str/join "," search-results) "}")}
                                             map-features/project-line-style
-                                            {:max-resolution project-pin-resolution-threshold})
+                                            {:max-resolution map-layers/project-pin-resolution-threshold})
                   :search-result-pins
                   (map-layers/geojson-layer api-url
                                             "geojson_entity_pins"
                                             {"ids" (str "{" (str/join "," search-results) "}")}
                                             map-features/project-pin-style
-                                            {:min-resolution project-pin-resolution-threshold
-                                             :fit-on-load? true})}
-
-                 ;; Show all projects
-                 {:thk-projects
-                  (map-layers/mvt-layer api-url
-                                        "mvt_entities"
-                                        {"type" "project"}
-                                        map-features/project-line-style
-                                        {:max-resolution project-pin-resolution-threshold})
-                  :thk-project-pins
-                  (map-layers/geojson-layer api-url
-                                            "geojson_entity_pins"
-                                            {"type" "project"}
-                                            map-features/project-pin-style
-                                            {:min-resolution project-pin-resolution-threshold
+                                            {:min-resolution map-layers/project-pin-resolution-threshold
                                              :fit-on-load? true})})
 
                      (when (get-in app [:map :map-restrictions "Katastri" "katastriyksus"])

@@ -2,7 +2,8 @@
   (:require [teet.map.openlayers.mvt :as mvt]
             [teet.map.openlayers.geojson :as geojson]
             [teet.map.openlayers :as openlayers]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.map.map-features :as map-features]))
 
 (def ^:const default-projection "EPSG:3301")
 
@@ -81,3 +82,32 @@
                        (when fit-on-load?
                          (fit-extent fit-padding layer)))
                      on-select))
+
+(defmulti create-data-layer
+  "Create data layer from description. Dispatches on :type key.
+  Must return a map of {layer-name-kw layer-record} and may return
+  multiple layers.
+
+  Context is a map containing relevant parts of the app state:
+  :config "
+  (fn [_ctx layer-description]
+    (:type layer-description)))
+
+(def ^:const project-pin-resolution-threshold 100)
+
+(defmethod create-data-layer :projects
+  [ctx _]
+  (let [api-url (get-in ctx [:config :api-url])]
+    {:projects
+     (mvt-layer api-url
+                "mvt_entities"
+                {"type" "project"}
+                map-features/project-line-style
+                {:max-resolution project-pin-resolution-threshold})
+     :project-pins
+     (geojson-layer api-url
+                    "geojson_entity_pins"
+                    {"type" "project"}
+                    map-features/project-pin-style
+                    {:min-resolution project-pin-resolution-threshold
+                     :fit-on-load? true})}))

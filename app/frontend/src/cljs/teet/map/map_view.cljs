@@ -7,12 +7,15 @@
             [teet.localization :refer [tr]]
             [teet.map.map-controller :as map-controller]
             [teet.ui.container :as container]
-            [teet.ui.material-ui :refer [Fab Button Fade IconButton]]
+            [teet.ui.material-ui :refer [Fab Button Grid Link]]
             [teet.ui.typography :as typography]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
             [teet.common.common-controller :as common-controller]
-            [teet.map.map-styles :as map-styles]))
+            [teet.map.map-styles :as map-styles]
+            [teet.ui.buttons :as buttons]
+            [teet.ui.panels :as panels]
+            [teet.map.map-layers :as map-layers]))
 
 (def default-extent [20 50 30 60])
 
@@ -50,40 +53,84 @@
              :on-change (fn [e]
                           (.stopPropagation e)
                           (e! (map-controller/->LayerToggle category layer)))})]]))))
+(def ^:private layer-types [:projects
+                            :restrictions
+                            :cadastral-units
+                            :land-surveys])
+
+
+(defmulti layer-filters-form
+  "Render layer type speficic filters selection form."
+  (fn [_e! layer] (:type layer)))
+
+(defmethod layer-filters-form :default
+  [_ _]
+  (tr [:map :layers :no-filters]))
+
+(defn edit-layer-dialog [e! {:keys [new? type] :as edit-layer}]
+  [panels/modal {:disable-content-wrapper? true
+                 :on-close (e! map-controller/->CancelLayer)}
+   (let [edit-component
+         [:div {:class (<class map-styles/edit-layer-form)}
+          [typography/Heading2
+           (if type
+             (str (tr [:map :layers type])
+                  " "
+                  (tr [:map :layers :layer]))
+             "")]
+          [:div {:class (<class map-styles/edit-layer-options)}
+           [layer-filters-form edit-layer]]
+          [:div.edit-layer-buttons
+           (if new?
+             [buttons/button-secondary {:on-click (e! map-controller/->CancelLayer)}
+              (tr [:buttons :cancel])]
+
+             [buttons/button-warning {:on-click (e! map-controller/->RemoveLayer edit-layer)}
+              (tr [:buttons :delete])])
+           [buttons/button-primary {:on-click (e! map-controller/->SaveLayer)
+                                    :disabled (nil? type)}
+            (tr [:buttons :save])]]]]
+     (if new?
+       [Grid {:container true}
+        [Grid {:item true
+               :xs 4}
+         [:div {:class (<class map-styles/edit-layer-type)}
+          (doall
+           (for [type layer-types]
+             ^{:key (name type)}
+             [typography/Heading3 {:class (<class map-styles/edit-layer-type-heading
+                                                  (= type (:type edit-layer)))
+                                   :on-click (e! map-controller/->UpdateLayer {:type type})}
+              (tr [:map :layers type])]))]]
+        [Grid {:item true
+               :xs 8}
+         edit-component]]
+       edit-component))])
 
 (defn map-layer-controls
-  [e! _ _]
-  (e! (map-controller/->FetchMapLayers))
-  (fn [e! map-layers {:keys [open?] :as map-controls}]
-    [:div
-     [Fade {:in open?}
-      [:div {:class (<class map-styles/map-controls)}
-       [:div {:class (<class map-styles/map-controls-heading)}
-        [typography/Heading3
-         (tr [:map :map-layers])]
-        [IconButton {:color    :primary
-                     :size     :small
-                     :on-click #(e! (map-controller/->CloseMapControls))}
-         [icons/navigation-close]]]
-       [:div {:style {:max-height "40vh"
-                      :overflow-y :scroll}}
-        (doall
-          (for [[category _ :as layer] map-layers]
-            ^{:key category}
-            [category-layers-control e! layer map-controls]))]]]]))
+  [e! {:keys [layers edit-layer]}]
+  [:<>
+   (when edit-layer
+     [edit-layer-dialog e! edit-layer])
+   [:div {:class (<class map-styles/map-layer-controls)}
+    [:div {:class (<class map-styles/map-controls-heading)}
+     [icons/maps-layers]
+     (tr [:map :map-layers])]
+    (if (seq layers)
+      (doall
+       (for [layer layers]
+         ^{:key (:id layer)}
+         [Link {:on-click (e! map-controller/->EditLayer layer)}
+          (tr [:map :layers (:type layer)])]))
+      [:div (tr [:map :layers :no-layers])])
+    [buttons/button-primary
+     {:on-click (e! map-controller/->AddLayer)
+      :class (<class map-styles/add-layer-button)}
+     [icons/content-add-circle]]]])
 
-(defn map-control-buttons [e! {:keys [background-layer map-controls] :as _map-data
-                               :or   {background-layer "kaart"}}
-                           layer-controls?]
+(defn map-control-buttons [e! {:keys [background-layer] :as _map-data
+                               :or   {background-layer "kaart"}}]
   [:div {:class (<class map-styles/map-control-buttons)}
-   (when layer-controls?
-     [Fab (merge
-            {:size     :small
-             :class    (<class map-styles/map-control-button)
-             :on-click #(e! (map-controller/->ToggleMapControls))}
-            (when (:open? map-controls)
-              {:color :primary}))
-      [icons/maps-layers]])
    [Fab (merge
           {:size     :small
            :class    (<class map-styles/map-control-button)
@@ -103,8 +150,19 @@
    :position       :relative
    :overflow       :hidden})
 
-(defn map-view [e! {:keys [height class layer-controls?] :or {height "100%"} :as opts}
-                {:keys [map-restrictions map-controls background-layer] :as map-data
+(defn- create-data-layers [ctx layers]
+  (log/info "Create data layers: " layers)
+  (reduce merge {}
+          (map-indexed
+           (fn [i {:keys [id] :as layer}]
+             (map-layers/create-data-layer
+              ctx
+              (merge {:id (or id (keyword (str "data-layer-" i)))}
+                     layer)))
+           layers)))
+
+(defn map-view [e! {:keys [config height class layer-controls?] :or {height "100%"} :as opts}
+                {:keys [background-layer] :as map-data
                  :or   {background-layer "kaart"}}]
   (r/with-let [current-tool (volatile! (get-in map-data [:tool]))
                current-zoom (volatile! nil)
@@ -116,8 +174,9 @@
 
     (let [{:keys [extent]} map-data]
       [:div {:class (<class map-container-style)}
-       [map-layer-controls e! map-restrictions map-controls]
-       [map-control-buttons e! map-data layer-controls?]
+       (when layer-controls?
+         [map-layer-controls e! map-data])
+       [map-control-buttons e! map-data]
 
        [openlayers/openlayers
         {:id                 "mapview"
@@ -176,8 +235,9 @@
                                  (constantly [:div (pr-str tt)])))
 
          :geometries         (merge (get-in map-data [:geometries])
-                                    (get-in map-data [:layers])
-                                    (:layers opts))
+                                    (:layers opts)
+                                    (create-data-layers {:config config}
+                                                        (:layers map-data)))
 
          :overlays           (mapv (fn [{:keys [coordinate content]}]
                                      {:coordinate coordinate
