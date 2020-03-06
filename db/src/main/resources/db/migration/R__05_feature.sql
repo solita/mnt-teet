@@ -88,7 +88,7 @@ SELECT row_to_json(fc)::text
                  array_to_json(array_agg(ef)) as features
             FROM (SELECT 'Feature' as type,
                          ST_AsGeoJSON(ef.geometry)::json as geometry,
-                         (jsonb_build_object('label', ef.label)) AS properties
+                         (jsonb_build_object('label', ef.label, 'id', ef.id)) AS properties
                     FROM teet.entity_feature ef
                     WHERE ef.entity_id = $1 AND ef.type = $2) ef) fc
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;
