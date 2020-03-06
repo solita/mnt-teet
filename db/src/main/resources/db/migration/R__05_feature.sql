@@ -178,3 +178,4 @@ GRANT EXECUTE ON FUNCTION teet.geojson_entity_features_by_id(TEXT[]) TO teet_use
 GRANT EXECUTE ON FUNCTION teet.geojson_features_within_area(INT[],TEXT,INTEGER) TO teet_user;
 GRANT EXECUTE ON FUNCTION teet.geojson_related_features_for_entity_by_type(INT[], BIGINT, TEXT) TO teet_user;
 GRANT EXECUTE ON FUNCTION teet.geojson_entity_features_by_type(bigint, TEXT) TO teet_user;
+GRANT ALL ON TABLE teet.entity_feature TO teet_backend;
