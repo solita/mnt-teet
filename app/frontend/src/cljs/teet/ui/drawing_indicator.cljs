@@ -5,21 +5,25 @@
             [reagent.core :as r]))
 
 
-(defn button-class
+(defn button-style
   []
-  {:border-radius 0})
+  {:border-radius "2px"
+   :height "40px"
+   :box-shadow "0px 3px 5px -1px rgba(0,0,0,0.2),0px 6px 10px 0px rgba(0,0,0,0.14),0px 1px 18px 0px rgba(0,0,0,0.12)"})
+
+(defn drawing-indicator-container-style
+  []
+  {:position :absolute
+   :top "25px"
+   :right "75px"})
 
 (defn drawing-indicator
   [cancel-action]
-  [:div {:style {:position :absolute
-                 :top "25px"
-                 :right "75px"}}
-
+  [:div {:class (<class drawing-indicator-container-style)}
    [Button {:color :primary
-            :class (<class button-class)
+            :class (<class button-style)
             :disable-ripple true
             :on-click cancel-action
             :variant :contained
             :start-icon (r/as-element [icons/image-edit])}
-    [:span  "drawing"
-     [:span "Cancel"]]]])
+    [:span "Cancel drawing"]]])

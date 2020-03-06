@@ -192,7 +192,7 @@
                :on-mouse-enter (e! project-controller/->FeatureMouseOvers "selected-restrictions" true restriction)
                :on-mouse-leave (e! project-controller/->FeatureMouseOvers "selected-restrictions" false restriction)})])]
         [:<>
-         [:h2 {:style {:padding-left "1rem"}} (str "Inclusion distance: " road-buffer-meters)] ;;TODO add localization
+         [typography/Heading2 {:style {:padding "1rem"}} "Found related features:"]
          (doall
            (for [[group restrictions] restrictions-by-type
                  :let [group-checked (into #{}
@@ -263,7 +263,7 @@
               :on-mouse-enter (e! project-controller/->FeatureMouseOvers "selected-cadastral-units" true cadastral-unit)
               :on-mouse-leave (e! project-controller/->FeatureMouseOvers "selected-cadastral-units" false cadastral-unit)})])]
 
-       [:h2 {:style {:padding-left "1rem"}} (str "Inclusion distance: " road-buffer-meters)] ;;todo add localization
+       [typography/Heading2 {:style {:padding "1rem"}} "Found related features: "]
 
        [:div {:style {:margin-top "1rem"}}
         [itemlist/checkbox-list
