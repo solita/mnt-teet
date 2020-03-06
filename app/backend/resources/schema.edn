@@ -194,7 +194,7 @@
            :db/cardinality :db.cardinality/one
            :db/doc "Timestamp of when this file upload was started"}]]}
 
- 
+
  {:db/ident :migration/task-status-enum
   :txes [[{:db/ident :task.status/not-started
            :enum/attribute :task/status}
@@ -627,4 +627,27 @@
   :txes [[{:db/ident :document.status/updated :enum/attribute :document/status}
           {:db/ident :document.status/ready :enum/attribute :document/status}
           {:db/ident :document.status/invalid :enum/attribute :document/status}
-          {:db/ident :document.status/approved :enum/attribute :document/status}]]}]
+          {:db/ident :document.status/approved :enum/attribute :document/status}]]}
+
+ {:db/ident :migration/activity-new-task-definitions
+  :txes [[;; Task type
+          {:db/ident :task.type/design-requirements :enum/attribute :task/type}
+          {:db/ident :task.type/terms-of-Reference :enum/attribute :task/type}
+          {:db/ident :task.type/data :enum/attribute :task/type}
+          {:db/ident :task.type/flora-fauna-study :enum/attribute :task/type}
+          {:db/ident :task.type/noise-study :enum/attribute :task/type}
+          {:db/ident :task.type/eia-assessment :enum/attribute :task/type}
+          {:db/ident :task.type/feasibility-study :enum/attribute :task/type}
+          {:db/ident :task.type/road :enum/attribute :task/type}
+          {:db/ident :task.type/railroad :enum/attribute :task/type}
+          {:db/ident :task.type/drainage :enum/attribute :task/type}
+          {:db/ident :task.type/landscaping :enum/attribute :task/type}
+          {:db/ident :task.type/lighting :enum/attribute :task/type}
+          {:db/ident :task.type/equipment :enum/attribute :task/type}
+          {:db/ident :task.type/structures :enum/attribute :task/type}
+          {:db/ident :task.type/utilities :enum/attribute :task/type}
+          {:db/ident :task.type/buildings :enum/attribute :task/type}
+          {:db/ident :task.type/acceptances-no-objection :enum/attribute :task/type}
+          {:db/ident :task.type/road-safety-audit-design :enum/attribute :task/type}
+          {:db/ident :task.type/third-party-review :enum/attribute :task/type}
+          {:db/ident :task.type/land-owners :enum/attribute :task/type}]]}]
