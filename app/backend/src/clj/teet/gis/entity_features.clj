@@ -29,3 +29,21 @@
                                                      :entity-id entity-id
                                                      :features features})))
       :ok)))
+
+(defn delete-entity-feature!
+  "Uses postgrest endpoint to delete an entity feature."
+  [{:keys [api-url api-secret]} entity-id feature-id]
+  (let [url (str api-url "/entity_feature")
+        response @(client/delete
+                    url
+                    {:headers {"Authorization" (str "Bearer " (jwt-token/create-backend-token api-secret))
+                               "Content-Type" "application/json"
+                               "count" "exact"}
+                     :query-params {"entity_id" (str "eq." entity-id)
+                                    "id" (str "eq." feature-id)}})]
+    (when (not= (:status response) 204)                     ;; Postgrest returns 204 even if it doesn't delete anything.
+      (throw (ex-info "Entity deletion failed" {:response response
+                                                :entity-id entity-id
+                                                :feature-id feature-id})))
+    :ok))
+
