@@ -364,6 +364,17 @@
     [(+ minx (/ width 2))
      (+ miny (/ height 2))]))
 
+(def draw-state (atom {}))
+
+(defn disable-draw!
+  []
+  (let [{:keys [interaction layer]} @draw-state
+        m @the-map]
+    (when interaction
+      (.removeInteraction m interaction))
+    (when layer
+      (.removeLayer m layer))))
+
 (defn enable-draw!
   [on-draw-finish]
   (let [source (ol.source.Vector. #js {})
@@ -375,10 +386,10 @@
                       (.on "drawend" (fn [e]
                                        ;; Remove interaction and layer
                                        ;; Call on-draw-finish with feature wkt reprecentation
-                                       (.removeInteraction m interaction)
-                                       (.removeLayer m layer)
                                        (when on-draw-finish
                                          (on-draw-finish (map-utils/feature->wkt (.-feature e)))))))]
+    (reset! draw-state {:interaction interaction
+                        :layer layer})
     (doto m
         (.addLayer layer)
         (.addInteraction interaction))))
@@ -404,8 +415,6 @@
       (reset! openlayers-map-height new-height)
 
       (invalidate-size!))))
-
-
 
 (defn- remove-window-resize-listener []
   (when @window-resize-listener-atom
