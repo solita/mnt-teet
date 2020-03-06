@@ -1,7 +1,7 @@
 (ns teet.project.project-setup-view
   (:require [goog.string :as gstring]
             [goog.string.format]
-            [herb.core :as herb :refer [<class]]
+            [herb.core :refer [<class]]
             [reagent.core :as r]
             [teet.localization :refer [tr]]
             [teet.project.project-controller :as project-controller]
@@ -173,7 +173,7 @@
        [skeleton/skeleton {:parent-style (skeleton/restriction-skeleton-style)}]))])
 
 (defn restrictions-listing
-  [e! open-types road-buffer-meters {:keys [restrictions loading checked-restrictions toggle-restriction on-mouse-enter on-mouse-leave]}]
+  [e! open-types _road-buffer-meters {:keys [restrictions loading checked-restrictions toggle-restriction on-mouse-enter on-mouse-leave]}]
   [:<>
    (if (and loading (not restrictions))
      [fetching-features-skeletons 10]
@@ -242,7 +242,7 @@
 
 
 (defn cadastral-units-listing
-  [e! road-buffer-meters {:keys [loading cadastral-units checked-cadastral-units toggle-cadastral-unit on-mouse-enter on-mouse-leave]}]
+  [e! _road-buffer-meters {:keys [loading cadastral-units checked-cadastral-units toggle-cadastral-unit on-mouse-enter on-mouse-leave]}]
   (r/with-let [open-types (r/atom #{})]
     (if (and loading (empty? cadastral-units))
       [fetching-features-skeletons 10]
@@ -276,8 +276,8 @@
               :checked? checked?
               :value (str (:L_AADRESS cadastral-unit) " " (:TUNNUS cadastral-unit))
               :on-change (r/partial toggle-cadastral-unit cadastral-unit)
-              :on-mouse-enter (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" true cadastral-unit)
-              :on-mouse-leave (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" false cadastral-unit)}))]]])))
+              :on-mouse-enter on-mouse-enter
+              :on-mouse-leave on-mouse-leave}))]]])))
 
 (defn project-setup-cadastral-units-form [e! _project step {:keys [road-buffer-meters] :as _map}]
   (e! (project-controller/->FetchRelatedInfo road-buffer-meters step))

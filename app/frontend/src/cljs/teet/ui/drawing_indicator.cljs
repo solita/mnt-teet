@@ -1,5 +1,5 @@
 (ns teet.ui.drawing-indicator
-  (:require [teet.ui.material-ui :refer [ButtonGroup Button]]
+  (:require [teet.ui.material-ui :refer [Button]]
             [herb.core :refer [<class]]
             [teet.ui.icons :as icons]
             [reagent.core :as r]))

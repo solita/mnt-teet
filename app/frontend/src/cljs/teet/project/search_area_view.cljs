@@ -6,11 +6,10 @@
             [teet.localization :refer [tr]]
             [teet.project.search-area-style :as search-area-style]
             [teet.ui.material-ui :refer [Paper Tab Tabs ButtonBase]]
-            [herb.core :as herb :refer [<class]]
+            [herb.core :refer [<class]]
             [teet.ui.text-field :refer [TextField]]
             [reagent.core :as r]
             [teet.theme.theme-colors :as theme-colors]
-            [tuck.core :as t]
             [teet.ui.buttons :as buttons]))
 
 (defn feature-and-action-style
@@ -27,8 +26,8 @@
    :align-items :center})
 
 (defn feature-and-action
-  [{:keys [label] :as feature}
-   {:keys [button-label action on-mouse-enter on-mouse-leave] :as actions}]
+  [{:keys [label]}
+   {:keys [button-label action on-mouse-enter on-mouse-leave]}]
   [:div {:on-mouse-enter on-mouse-enter
          :on-mouse-leave on-mouse-leave
          :class (<class feature-and-action-style)}
@@ -38,7 +37,7 @@
 
 
 (defn- add-area-button
-  [{:keys [on-click class disabled?]} label]
+  [{:keys [on-click disabled?]} label]
   [ButtonBase {:on-click on-click
                :disable-ripple true
                :disabled disabled?
@@ -55,13 +54,13 @@
                :on-change #(e! (search-area-controller/->ChangeRoadObjectAoe (-> % .-target .-value) entity-type))}]])
 
 (defn drawn-road-areas
-  [e! _ _ _]
+  [e! _ _]
   (r/create-class
     {:display-name "Project drawn interest areas"
      :component-will-unmount (e! search-area-controller/->StopCustomAreaDraw)
      :component-did-mount (e! search-area-controller/->FetchDrawnAreas)
      :reagent-render
-     (fn [e! {:keys [map]} project entity-type]
+     (fn [e! {:keys [map]} project]
        (let [drawing? (get-in map [:search-area :drawing?])
              drawn-geometries (get-in map [:search-area :drawn-areas])]
          [:div {:style {:padding "1rem"}}
@@ -108,4 +107,4 @@
             :buffer-area
             [road-geometry-range-input e! map entity-type]
             :drawn-area
-            [drawn-road-areas e! app project entity-type])]))}))
+            [drawn-road-areas e! app project])]))}))
