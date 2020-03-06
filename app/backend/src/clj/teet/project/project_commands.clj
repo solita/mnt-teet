@@ -5,6 +5,7 @@
             [teet.permission.permission-db :as permission-db]
             [clojure.string :as str]
             [teet.project.project-geometry :as project-geometry]
+            [teet.gis.entity-features :as entity-features]
             [teet.environment :as environment]
             [teet.util.collection :as cu]
             [teet.meta.meta-model :refer [modification-meta creation-meta] :as meta-model]
@@ -12,7 +13,7 @@
             [clojure.spec.alpha :as s]
             [clojure.set :as set]
             [teet.project.project-db :as project-db])
-  (:import (java.util Date)))
+  (:import (java.util Date UUID)))
 
 (defcommand :thk.project/initialize!
   {:doc "Initialize project state. Sets project basic information and linked restrictions
@@ -176,3 +177,38 @@ and cadastral units"
         {:status 400
          :msg "User is already added"
          :error :permission-already-granted}))))
+
+(defcommand :thk.project/add-search-geometry
+  {:doc "Add a new geometry to use in the related restriction search"
+   :context {:keys [user]}
+   :payload {geometry :geometry
+             geometry-label :geometry-label
+             id :project-db-id}
+   :spec (s/keys :req-un [:geometry])
+   :project-id [:thk.project/id id]
+   :authorization {:project/project-info {:eid [:thk.project/id id]
+                                          :link :thk.project/owner}}
+   :pre [(number? id)]}
+  (let [config (environment/config-map {:api-url [:api-url]
+                                        :api-secret [:auth :jwt-secret]})
+        features [{:label geometry-label
+                   :id (str (UUID/randomUUID))
+                   :geometry geometry
+                   :type "search-area"}]]
+    (entity-features/upsert-entity-features! config id features)))
+
+
+(defcommand :thk.project/delete-search-geometry
+  {:doc "Delete a single search geometry used in a project"
+   :context {:keys [user]}
+   :payload {entity-id :entity-id
+             geometry-id :geometry-id}
+   :spec (s/keys :req-un [:entity-id :geometry-id])
+   :project-id [:thk.project/id entity-id]
+   :authorization {:project/project-info {:eid [:thk.project/id entity-id]
+                                          :link :thk.project/owner}}
+   :pre [(number? entity-id)
+         (string? geometry-id)]}
+  (let [config (environment/config-map {:api-url [:api-url]
+                                        :api-secret [:auth :jwt-secret]})]
+    (entity-features/delete-entity-feature! config entity-id geometry-id)))
