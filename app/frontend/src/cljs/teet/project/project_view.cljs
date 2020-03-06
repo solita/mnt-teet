@@ -156,6 +156,7 @@
                          [#_project-layers/surveys-layer
                           (partial project-layers/project-road-geometry-layer map-object-padding fitted-atom)
                           project-layers/setup-restriction-candidates
+                          project-layers/project-drawn-area-layer
                           project-layers/setup-cadastral-unit-candidates
                           project-layers/ags-surveys
                           project-layers/related-restrictions
@@ -188,8 +189,7 @@
                               (get-in app [:query :configure]))]
     [:div {:class (<class project-style/project-page-structure)}
      [project-header project breadcrumbs]
-     [:div {:style {:position "relative"
-                    :display "flex" :flex-direction "column" :flex 1}}
+     [:div {:class (<class project-style/project-map-container)}
       [project-map e! app project]
       [Paper {:class (<class project-style/project-content-overlay)}
        header
@@ -197,8 +197,10 @@
         body]
        (when footer
          footer)]
+      (when (get-in app [:map :search-area :drawing?])
+        [drawing-indicator/drawing-indicator #(e! (search-area-controller/->StopCustomAreaDraw))])
       (when (:geometry-range? map-settings)
-        [project-feature-search-area/feature-search-area e! (:map app) related-entity-type])]]))
+        [search-area-view/feature-search-area e! app project related-entity-type])]]))
 
 (defn activities-tab
   [e! {:keys [stepper] :as _app} project]

@@ -178,50 +178,49 @@
    (if (and loading (not restrictions))
      [fetching-features-skeletons 10]
      (let [restrictions-by-type (group-by :VOOND restrictions)]
-       [container/collapsible-container {:on-toggle (e! project-controller/->ToggleSelectedCategory)
-                                         :open? (open-types :selected)}
-        (str (count checked-restrictions) " selected")
-        (when (not-empty checked-restrictions)
-          [itemlist/checkbox-list
-           (for [restriction (sort-by (juxt :VOOND :teet-id) checked-restrictions)]
-             (merge {:id (:teet-id restriction)
-                     :checked? true
-                     :value (:VOOND restriction)
-                     :on-change (r/partial toggle-restriction restriction)}
-                    (when on-mouse-enter
-                      {:on-mouse-enter (r/partial on-mouse-enter restriction)})
-                    (when on-mouse-leave
-                      {:on-mouse-leave (r/partial on-mouse-leave restriction)})))])]
        [:<>
-        [:h2 {:style {:padding-left "1rem"}} (str "Inclusion distance: " road-buffer-meters)] ;;TODO add localization
-        (doall
-          (for [[group restrictions] restrictions-by-type
-                :let [group-checked (into #{}
-                                          (filter checked-restrictions restrictions))]]
-            ^{:key group}
-            [container/collapsible-container {:on-toggle (fn [_]
-                                                           (e! (project-controller/->ToggleRestrictionCategory
-                                                                 (into #{}
-                                                                       (mapv :teet-id restrictions))
-                                                                 group)))
-                                              :open? (open-types group)
-                                              :side-component [typography/SmallText (tr [:project :wizard :selected-count]
-                                                                                        {:selected (count group-checked)
-                                                                                         :total (count restrictions)})]}
-             group
-             [itemlist/checkbox-list
-              {:on-select-all  #(e! (project-controller/->SelectRestrictions (set restrictions)))
-              :on-deselect-all #(e! (project-controller/->DeselectRestrictions (set restrictions)))}
-              (for [restriction (sort-by (juxt :VOOND :teet-id) restrictions)
-                    :let [checked? (boolean (group-checked restriction))]]
-                (merge {:id (:teet-id restriction)
-                        :checked? checked?
-                        :value (:VOOND restriction)
-                        :on-change (r/partial toggle-restriction restriction)}
-                       (when on-mouse-enter
-                         {:on-mouse-enter (r/partial on-mouse-enter restriction)})
-                       (when on-mouse-leave
-                         {:on-mouse-leave (r/partial on-mouse-leave restriction)})))]]))]))])
+        [container/collapsible-container {:on-toggle (e! project-controller/->ToggleSelectedCategory)
+                                          :open? (open-types :selected)}
+         (str (count checked-restrictions) " selected")
+         (when (not-empty checked-restrictions)
+           [itemlist/checkbox-list
+            (for [restriction (sort-by (juxt :VOOND :teet-id) checked-restrictions)]
+              {:id (:teet-id restriction)
+               :checked? true
+               :value (:VOOND restriction)
+               :on-change (r/partial toggle-restriction restriction)
+               :on-mouse-enter (e! project-controller/->FeatureMouseOvers "selected-restrictions" true restriction)
+               :on-mouse-leave (e! project-controller/->FeatureMouseOvers "selected-restrictions" false restriction)})])]
+        [:<>
+         [:h2 {:style {:padding-left "1rem"}} (str "Inclusion distance: " road-buffer-meters)] ;;TODO add localization
+         (doall
+           (for [[group restrictions] restrictions-by-type
+                 :let [group-checked (into #{}
+                                           (filter checked-restrictions restrictions))]]
+             ^{:key group}
+             [container/collapsible-container {:on-toggle (fn [_]
+                                                            (e! (project-controller/->ToggleRestrictionCategory
+                                                                  (into #{}
+                                                                        (mapv :teet-id restrictions))
+                                                                  group)))
+                                               :open? (open-types group)
+                                               :side-component [typography/SmallText (tr [:project :wizard :selected-count]
+                                                                                         {:selected (count group-checked)
+                                                                                          :total (count restrictions)})]}
+              group
+              [itemlist/checkbox-list
+               {:on-select-all #(e! (project-controller/->SelectRestrictions (set restrictions)))
+                :on-deselect-all #(e! (project-controller/->DeselectRestrictions (set restrictions)))}
+               (for [restriction (sort-by (juxt :VOOND :teet-id) restrictions)
+                     :let [checked? (boolean (group-checked restriction))]]
+                 (merge {:id (:teet-id restriction)
+                         :checked? checked?
+                         :value (:VOOND restriction)
+                         :on-change (r/partial toggle-restriction restriction)}
+                        (when on-mouse-enter
+                          {:on-mouse-enter (r/partial on-mouse-enter restriction)})
+                        (when on-mouse-leave
+                          {:on-mouse-leave (r/partial on-mouse-leave restriction)})))]]))]]))])
 
 (defn project-setup-restrictions-form [e! _project step {:keys [road-buffer-meters] :as _map}]
   (e! (project-controller/->FetchRelatedInfo road-buffer-meters step))
@@ -261,8 +260,8 @@
               :checked? true
               :value (str (:L_AADRESS cadastral-unit) " " (:TUNNUS cadastral-unit))
               :on-change (r/partial toggle-cadastral-unit cadastral-unit)
-              :on-mouse-enter (r/partial on-mouse-enter cadastral-unit)
-              :on-mouse-leave (r/partial on-mouse-leave cadastral-unit)})])]
+              :on-mouse-enter (e! project-controller/->FeatureMouseOvers "selected-cadastral-units" true cadastral-unit)
+              :on-mouse-leave (e! project-controller/->FeatureMouseOvers "selected-cadastral-units" false cadastral-unit)})])]
 
        [:h2 {:style {:padding-left "1rem"}} (str "Inclusion distance: " road-buffer-meters)] ;;todo add localization
 
@@ -277,8 +276,8 @@
               :checked? checked?
               :value (str (:L_AADRESS cadastral-unit) " " (:TUNNUS cadastral-unit))
               :on-change (r/partial toggle-cadastral-unit cadastral-unit)
-              :on-mouse-enter (r/partial on-mouse-enter cadastral-unit)
-              :on-mouse-leave (r/partial on-mouse-leave cadastral-unit)}))]]])))
+              :on-mouse-enter (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" true cadastral-unit)
+              :on-mouse-leave (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" false cadastral-unit)}))]]])))
 
 (defn project-setup-cadastral-units-form [e! _project step {:keys [road-buffer-meters] :as _map}]
   (e! (project-controller/->FetchRelatedInfo road-buffer-meters step))
