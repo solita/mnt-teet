@@ -10,31 +10,7 @@
             [teet.ui.text-field :refer [TextField]]
             [reagent.core :as r]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.buttons :as buttons]))
-
-(defn feature-and-action-style
-  []
-  ^{:pseudo {:hover {:background-color theme-colors/gray-dark}}}
-  {:background-color theme-colors/gray
-   :color theme-colors/white
-   :transition "background-color 200ms ease-in-out"
-   :padding "0.5rem"
-   :padding-left "1rem"
-   :margin-bottom "0.5rem"
-   :display :flex
-   :justify-content :space-between
-   :align-items :center})
-
-(defn feature-and-action
-  [{:keys [label]}
-   {:keys [button-label action on-mouse-enter on-mouse-leave]}]
-  [:div {:on-mouse-enter on-mouse-enter
-         :on-mouse-leave on-mouse-leave
-         :class (<class feature-and-action-style)}
-   [:span label]
-   [buttons/rect-white {:on-click action}
-    button-label]])
-
+            [teet.ui.common :as common]))
 
 (defn- add-area-button
   [{:keys [on-click disabled?]} label]
@@ -68,8 +44,8 @@
           (doall
             (for [{:keys [label id] :as feature} drawn-geometries]
               ^{:key id}
-              [feature-and-action {:label label
-                                   :id id}
+              [common/feature-and-action {:label label
+                                          :id id}
                {:button-label (tr [:buttons :delete])
                 :on-mouse-enter #(e! (search-area-controller/->MouseOverDrawnAreas "project-drawn-areas" true feature))
                 :on-mouse-leave #(e! (search-area-controller/->MouseOverDrawnAreas "project-drawn-areas" false feature))
