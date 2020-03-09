@@ -267,7 +267,8 @@
            [Popper {:open true
                     :anchorEl element
                     :placement "top"
-                    :modifiers #js {:preventOverflow #js {:enabled false}
+                    :modifiers #js {:hide #js {:enabled false}
+                                    :preventOverflow #js {:enabled false}
                                     :arrow #js {:enabled true
                                                 ;; Override arrow modifier functionality
                                                 :fn (fn [state]
