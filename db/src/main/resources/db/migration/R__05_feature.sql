@@ -62,6 +62,37 @@ SELECT row_to_json(fc)::TEXT
                    AND f.datasource_id = ANY(datasource_ids)) f) fc;
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION teet.geojson_related_features_for_entity_by_type(
+    datasource_ids INT[],
+    entity_id bigint,
+    type text)
+RETURNS TEXT AS $$
+SELECT row_to_json(fc)::TEXT
+  FROM (SELECT 'FeatureCollection' as type,
+               array_to_json(array_agg(f)) as features
+          FROM (SELECT 'Feature' as type,
+                       ST_AsGeoJSON(f.geometry)::json as geometry,
+                       (jsonb_build_object('teet-id', CONCAT(f.datasource_id,':',f.id)) || f.properties) AS properties
+                  FROM teet.feature f
+                  JOIN teet.entity_feature e ON ST_DWithin(e.geometry, f.geometry, 0)
+                 WHERE e.entity_id = $2 AND e.type = $3
+                   AND f.datasource_id = ANY(datasource_ids)) f) fc;
+$$ LANGUAGE SQL STABLE SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION teet.geojson_entity_features_by_type(
+    entity_id bigint,
+    type text)
+RETURNS TEXT AS $$
+SELECT row_to_json(fc)::text
+    FROM (SELECT 'FeatureCollection' as type,
+                 array_to_json(array_agg(ef)) as features
+            FROM (SELECT 'Feature' as type,
+                         ST_AsGeoJSON(ef.geometry)::json as geometry,
+                         (jsonb_build_object('label', ef.label, 'id', ef.id)) AS properties
+                    FROM teet.entity_feature ef
+                    WHERE ef.entity_id = $1 AND ef.type = $2) ef) fc
+$$ LANGUAGE SQL STABLE SECURITY DEFINER;
+
 CREATE OR REPLACE FUNCTION teet.geojson_features_within_area(
    datasource_ids INT[],
    geometry_wkt TEXT,
@@ -145,3 +176,6 @@ GRANT EXECUTE ON FUNCTION teet.datasources() TO teet_user;
 GRANT EXECUTE ON FUNCTION teet.upsert_entity_feature(TEXT,TEXT,TEXT,TEXT,TEXT,JSONB) TO teet_backend;
 GRANT EXECUTE ON FUNCTION teet.geojson_entity_features_by_id(TEXT[]) TO teet_user;
 GRANT EXECUTE ON FUNCTION teet.geojson_features_within_area(INT[],TEXT,INTEGER) TO teet_user;
+GRANT EXECUTE ON FUNCTION teet.geojson_related_features_for_entity_by_type(INT[], BIGINT, TEXT) TO teet_user;
+GRANT EXECUTE ON FUNCTION teet.geojson_entity_features_by_type(bigint, TEXT) TO teet_user;
+GRANT ALL ON TABLE teet.entity_feature TO teet_backend;

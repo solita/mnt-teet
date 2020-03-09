@@ -53,4 +53,6 @@
                                non-location-groups))]]
       {:id (props "id")
        :geometry (str "POINT(" x " " y ")")
+       :type "ags"
+       :label ""                                            ;;todo: should have label?
        :properties props})))
