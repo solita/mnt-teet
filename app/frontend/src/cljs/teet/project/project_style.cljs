@@ -12,6 +12,13 @@
    :right "0px"
    :top theme-spacing/appbar-height})
 
+(defn project-map-container
+  []
+  {:position "relative"
+   :display "flex"
+   :flex-direction "column"
+   :height "calc(100vh - 204px)"})
+
 (defn project-page-structure
   []
   {:display        :flex
@@ -107,20 +114,6 @@
     :display :flex
     :flex-direction :column}))
 
-(defn road-geometry-range-selector
-  []
-  {:position :absolute
-   :top      "calc(100vh - 380px)"
-   :right    "25px"})
-
-(defn road-geometry-range-header
-  []
-  {:background-color theme-colors/gray-lightest})
-
-(defn road-geometry-range-body
-  []
-  {:padding "1rem"})
-
 (defn content-overlay-inner []
   {:padding "1rem"
    :flex 1
@@ -135,10 +128,9 @@
    :flex-direction :column
    :justify-content :space-between})
 
-
 (defn project-view-header
   []
-  {:padding "0.5rem"
+  {:padding "0.75rem 0.5rem"
    :background-color theme-colors/gray-lightest
    :border-bottom (str "1px solid" theme-colors/gray-lighter)})
 

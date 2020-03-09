@@ -210,72 +210,73 @@
        [map-control-buttons e! map-data]
 
        [openlayers/openlayers
-        {:id                 "mapview"
-         :width              "100%"
+        {:id "mapview"
+         :width "100%"
          ;; set width/height as CSS units, must set height as pixels!
-         :height             height
-         :unselectable       "on"
-         :style              (merge {:user-select "none"
-                                     :display     :flex}
-                                    (when (#{:bbox-select :position-select} @current-tool)
-                                      {:cursor "crosshair"}))
-         :class              class
-         :extent             (or extent default-extent)
-         :center             default-center
+         :height height
+         :unselectable "on"
+         :style (merge {:user-select "none"
+                        :display :flex}
+                       (when (#{:bbox-select :position-select} @current-tool)
+                         {:cursor "crosshair"}))
+         :class class
+         :extent (or extent default-extent)
+         :center default-center
          ;:selection          nav/valittu-hallintayksikko
-         :on-drag            (fn [_item _event]
-                               #_(log/debug "drag" item event)
-                               #_(paivita-extent item event)
-                               #_(t/julkaise! {:aihe :karttaa-vedetty}))
-         :on-postrender      (fn [e]
-                               (let [old-z @current-zoom
-                                     new-z (some->> e openlayers/event-map openlayers/map-zoom js/Math.round)
-                                     new-res (some->> e openlayers/event-map openlayers/map-resolution)]
-                                 (when (not= old-z new-z)
-                                   (vreset! current-zoom new-z)
-                                   (vreset! current-res new-res)
-                                   #_(e! (map-controller/->UpdateMapInfo {:zoom        new-z
-                                                                          :is-zooming? true
-                                                                          :resolution  new-res}))
+         :on-drag (fn [_item _event]
+                    #_(log/debug "drag" item event)
+                    #_(paivita-extent item event)
+                    #_(t/julkaise! {:aihe :karttaa-vedetty}))
+         :on-postrender (fn [e]
+                          (let [old-z @current-zoom
+                                new-z (some->> e openlayers/event-map openlayers/map-zoom js/Math.round)
+                                new-res (some->> e openlayers/event-map openlayers/map-resolution)]
+                            (when (not= old-z new-z)
+                              (vreset! current-zoom new-z)
+                              (vreset! current-res new-res)
+                              #_(e! (map-controller/->UpdateMapInfo {:zoom new-z
+                                                                     :is-zooming? true
+                                                                     :resolution new-res}))
 
-                                   #_(doseq [on-zoom @on-zoom
-                                             :let [e (common-controller/on-zoom on-zoom new-z)]
-                                             :when e]
-                                       (e! e))
-                                   #_(e! (map-controller/->ResetIsZooming)))))
-         :on-mount           (fn [initialextent]
-                               (log/debug "on-mount" initialextent)
-                               #_(paivita-extent nil initialextent)
-                               #_(e! (map-controller/->UpdateMapLayers)))
-         :on-click           (fn [event]
-                               (when-let [on-click (:on-click opts)]
-                                 (on-click {:coordinate (js->clj (aget event "coordinate"))})))
+                              #_(doseq [on-zoom @on-zoom
+                                        :let [e (common-controller/on-zoom on-zoom new-z)]
+                                        :when e]
+                                  (e! e))
+                              #_(e! (map-controller/->ResetIsZooming)))))
+         :on-mount (fn [initialextent]
+                     (log/debug "on-mount" initialextent)
+                     #_(paivita-extent nil initialextent)
+                     #_(e! (map-controller/->UpdateMapLayers)))
+         :on-click (fn [event]
+                     (when-let [on-click (:on-click opts)]
+                       (on-click {:coordinate (js->clj (aget event "coordinate"))})))
 
-         :on-select          (fn [[item & _] _event]
-                               (when-let [event (common-controller/map-item-selected item)]
-                                 (e! event)))
+         :on-select (fn [[item & _] _event]
+                      (when-let [event (common-controller/map-item-selected item)]
+                        (e! event)))
 
-         :on-dblclick        nil
+         :on-dblclick nil
 
          :on-dblclick-select nil #_kasittele-dblclick-select!
 
-         :tooltip-fn         (fn [geom]
-                               (when-let [tt (:map/tooltip geom)]
-                                 ;; Returns a function for current tooltip value or nil
-                                 ;; if item has no tooltip specified.
-                                 (constantly [:div (pr-str tt)])))
+         :tooltip-fn (fn [geom]
+                       (when-let [tt (:map/tooltip geom)]
+                         ;; Returns a function for current tooltip value or nil
+                         ;; if item has no tooltip specified.
+                         (constantly [:div (pr-str tt)])))
 
-         :geometries         (merge (get-in map-data [:geometries])
-                                    (:layers opts)
-                                    (create-data-layers {:config config}
-                                                        (:layers map-data)))
+         :geometries (merge (get-in map-data [:geometries])
+                            (:layers opts)
+                            (when layer-controls?
+                              (create-data-layers {:config config}
+                                                  (:layers map-data))))
 
-         :overlays           (mapv (fn [{:keys [coordinate content]}]
-                                     {:coordinate coordinate
-                                      :content    [:div {:class (<class map-styles/map-overlay)}
-                                                   content]})
-                                   (:overlays opts))
-         :current-zoom       (get-in map-data [:map-info])
+         :overlays (mapv (fn [{:keys [coordinate content]}]
+                           {:coordinate coordinate
+                            :content [:div {:class (<class map-styles/map-overlay)}
+                                      content]})
+                         (:overlays opts))
+         :current-zoom (get-in map-data [:map-info])
          ;; map of geometry layer keys to control map zoom. If a key's value changes map is re-zoomed
          :zoom-to-geometries (get-in map-data [:zoom-to-geometries])
 
@@ -283,19 +284,19 @@
          :center-on-geometry (get-in map-data [:center-on-geometry])
 
          ;; Use this to set a buffer for extent fitting on map view. If not defined, default value is used.
-         :extent-buffer      (get-in map-data [:extent-buffer])
+         :extent-buffer (get-in map-data [:extent-buffer])
 
-         :rotation           (if (get-in map-data [:rotate?])
-                               (get-in map-data [:rotation])
-                               0)
+         :rotation (if (get-in map-data [:rotate?])
+                     (get-in map-data [:rotation])
+                     0)
 
          ;; Show "foto" or "kaart" background layer from Maa-amet
-         :layers             [{:type :maa-amet :layer background-layer :default true}]
+         :layers [{:type :maa-amet :layer background-layer :default true}]
          #_(vec
              (for [layer ["BAASKAART" "MAANTEED" "pohi_vr2"]]
-               {:type    :wms :url "http://kaart.maaamet.ee/wms/alus?"
-                :layer   layer
-                :style   ""
+               {:type :wms :url "http://kaart.maaamet.ee/wms/alus?"
+                :layer layer
+                :style ""
                 :default true}))}]])))
 
 (defn overlay
