@@ -204,9 +204,7 @@
                                                            #js {:passive false})
 
                x-start 25
-               y-start 25
-               arrow-placement (r/atom :bottom)
-               set-arrow-placement! #(reset! arrow-placement %)]
+               y-start 25]
     (if-not (and start-date end-date)
       [:span.timeline-no-start-or-end]
       (let [years (year-range opts)
@@ -268,15 +266,7 @@
                     :anchorEl element
                     :placement "top"
                     :modifiers #js {:hide #js {:enabled false}
-                                    :preventOverflow #js {:enabled false}
-                                    :arrow #js {:enabled true
-                                                ;; Override arrow modifier functionality
-                                                :fn (fn [state]
-                                                      (set-arrow-placement!
-                                                       (case (aget state "placement")
-                                                         "top" :bottom
-                                                         "bottom" :top))
-                                                      state)}}
+                                    :preventOverflow #js {:enabled false}}
                     :disable-portal true}
-            [:div {:class (<class theme-panels/popup-panel @arrow-placement)}
+            [:div {:class (<class theme-panels/popup-panel :bottom)}
              content]])]))))
