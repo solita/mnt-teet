@@ -146,6 +146,7 @@
                    :flex-direction :column}}
      [map-view/map-view e!
       {:class (<class map-style)
+       :config (:config app)
        :layers (let [opts {:e! e!
                            :app app
                            :project project
