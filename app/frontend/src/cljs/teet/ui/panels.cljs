@@ -128,7 +128,9 @@
 
 (defn modal
   "Default modal container"
-  [{:keys [title on-close open-atom actions disable-content-wrapper?] :as _opts} content]
+  [{:keys [title on-close open-atom actions disable-content-wrapper? max-width]
+    :or {max-width "sm"}
+    :as _opts} content]
   (let [open-atom (or open-atom (r/atom true))      ;;creates new atoms unnecessarily
         close-fn #(do
                     (reset! open-atom false)
@@ -141,7 +143,7 @@
                                   :size           :small}
                       [icons/navigation-close]]]
     [Dialog {:full-width true
-             :max-width  "sm"
+             :max-width  max-width
              :open       @open-atom
              :on-close   close-fn}
      (if title

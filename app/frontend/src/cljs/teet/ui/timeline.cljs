@@ -2,7 +2,7 @@
   "SVG timeline component"
   (:require [goog.date :as dt]
             [reagent.core :as r]
-            [teet.ui.material-ui :refer [Popper]]
+            [teet.ui.material-ui :refer [Popover Popper]]
             [cljs-time.core :as t]
             [teet.theme.theme-panels :as theme-panels]
             [herb.core :refer [<class]]
@@ -204,7 +204,9 @@
                                                            #js {:passive false})
 
                x-start 25
-               y-start 25]
+               y-start 25
+               arrow-placement (r/atom :bottom)
+               set-arrow-placement! #(reset! arrow-placement %)]
     (if-not (and start-date end-date)
       [:span.timeline-no-start-or-end]
       (let [years (year-range opts)
@@ -260,9 +262,20 @@
                            :line-width line-width
                            :line-height line-height
                            :num-items num-items}]])]
+
          (when-let [{:keys [element content]} @hover]
            [Popper {:open true
                     :anchorEl element
-                    :placement "top"}
-            [:div {:class (<class theme-panels/popup-panel)}
+                    :placement "top"
+                    :modifiers #js {:preventOverflow #js {:enabled false}
+                                    :arrow #js {:enabled true
+                                                ;; Override arrow modifier functionality
+                                                :fn (fn [state]
+                                                      (set-arrow-placement!
+                                                       (case (aget state "placement")
+                                                         "top" :bottom
+                                                         "bottom" :top))
+                                                      state)}}
+                    :disable-portal true}
+            [:div {:class (<class theme-panels/popup-panel @arrow-placement)}
              content]])]))))

@@ -9,20 +9,28 @@
 
 (defn popup-panel
   "Small popup info panel. Should be anchored to some element."
-  []
-  ^{:pseudo {:after {:content "''"
+  [arrow-placement]
+  (with-meta
+    {:background-color theme-colors/popup-background
+     :position "relative"
+     :top (case arrow-placement
+            :top "10px"
+            :bottom "0px")
+     :margin-bottom "12px"
+     :max-width "30vw"
+     :border-radius 5
+     :padding "0.5rem"
+     :box-shadow (str "0px 2px 4px " theme-colors/popup-border)}
+    {:pseudo
+     {:after (merge {:content "''"
                      :border-width "10px"
                      :border-color (str theme-colors/popup-border " transparent transparent transparent")
                      :border-style "solid"
                      :display "block"
                      :position "absolute"
-                     :left "50%"
-                     :transform "translate(-50%)"
-                     :bottom "-20px"}}}
-  {:background-color theme-colors/popup-background
-   :position "relative"
-   :margin-bottom "12px"
-   :max-width "20vw"
-   :border-radius 5
-   :padding "0.5rem"
-   :box-shadow (str "0px 2px 4px " theme-colors/popup-border)})
+                     :left "50%"}
+                    (case arrow-placement
+                      :bottom {:bottom "-20px"
+                               :transform "translate(-50%)"}
+                      :top {:top "-20px"
+                            :transform "translate(-50%) rotateX(180deg)"}))}}))

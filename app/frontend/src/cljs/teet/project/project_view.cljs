@@ -3,7 +3,7 @@
             [reagent.core :as r]
             [teet.activity.activity-view :as activity-view]
             [teet.common.common-styles :as common-styles]
-            [teet.localization :refer [tr]]
+            [teet.localization :refer [tr tr-tree]]
             [teet.map.map-view :as map-view]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-model :as project-model]
@@ -22,13 +22,14 @@
             [teet.ui.icons :as icons]
             [teet.ui.stepper :as stepper]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Paper]]
+            [teet.ui.material-ui :refer [Paper Fab]]
             [teet.ui.panels :as panels]
             [teet.ui.select :as select]
             [teet.ui.tabs :as tabs]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.typography :refer [Heading1 Heading3] :as typography]
             [teet.ui.url :as url]
+            [teet.ui.timeline :as timeline]
             [teet.util.collection :as cu]
             [teet.activity.activity-controller :as activity-controller]
             [teet.authorization.authorization-check :refer [when-pm-or-owner]]
@@ -294,8 +295,53 @@
                                 :secondary-text (tr [:roles (:permission/role permission)])
                                 :id (:db/id user)})])]])
 
+(defn- project-timeline [{:thk.project/keys [estimated-start-date estimated-end-date lifecycles]
+                          :as project}]
+  (r/with-let [show-in-modal? (r/atom false)]
+    (when (and estimated-start-date estimated-end-date)
+      (let [tr* (tr-tree [:enum])
+            project-name (project-model/get-column project :thk.project/project-name)
+            timeline-component [timeline/timeline {:start-date estimated-start-date
+                             :end-date   estimated-end-date}
+          (concat
+           [{:label      project-name
+             :start-date estimated-start-date
+             :end-date   estimated-end-date
+             :fill       "black"
+             :hover      [:div project-name]}]
+           (mapcat (fn [{:thk.lifecycle/keys [type estimated-start-date estimated-end-date
+                                              activities]}]
+                     (concat
+                      [{:label      (-> type :db/ident tr*)
+                        :start-date estimated-start-date
+                        :end-date   estimated-end-date
+                        :fill       "magenta"
+                        :hover      [:div (tr* (:db/ident type))]}]
+                      (for [{:activity/keys [name status estimated-start-date estimated-end-date]
+                             :as activity} activities
+                            :let [label (-> name :db/ident tr*)]]
+                        {:label label
+                         :start-date estimated-start-date
+                         :end-date estimated-end-date
+                         :fill "cyan"
+                         :hover [:div
+                                 [:div [:b (tr [:fields :activity/name]) ": "] label]
+                                 [:div [:b (tr [:fields :activity/status]) ": "] (tr* (:db/ident status))]]})))
+                   (sort-by :thk.lifecycle/estimated-start-date lifecycles)))]]
+
+        [:<>
+         [Fab {:on-click #(reset! show-in-modal? true)} [icons/action-zoom-in]]
+         (if @show-in-modal?
+           [panels/modal {:title "Timeline"
+                          :max-width "lg"
+                          :on-close #(reset! show-in-modal? false)}
+            timeline-component]
+           timeline-component)]))))
+
 (defn details-tab [e! _app project]
-  [project-details e! project])
+  [:<>
+   [project-details e! project]
+   [project-timeline project]])
 
 (defn edit-activity-form
   [_ _ _lifecycle-type initialization-fn]
