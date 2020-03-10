@@ -58,9 +58,10 @@
 
 
 (defn project-details
-  [_e! {:thk.project/keys [estimated-start-date estimated-end-date road-nr start-m end-m
+  [_e! {:thk.project/keys [estimated-start-date estimated-end-date road-nr
                            carriageway repair-method procurement-nr id] :as project}]
-  (let [project-name (project-model/get-column project :thk.project/project-name)]
+  (let [project-name (project-model/get-column project :thk.project/project-name)
+        [start-km end-km] (project-model/get-column project :thk.project/effective-km-range)]
     [:div
      [typography/Heading2 {:style {:margin-bottom "2rem"}} project-name]
      [:div [:span "THK id: " id]]
@@ -68,10 +69,9 @@
             ": "
             (format/date estimated-start-date)] " \u2013 " (format/date estimated-end-date)]
      [:div [:span (tr [:project :information :road-number]) ": " road-nr]]
-     (when (and start-m end-m)
-       [:div [:span (tr [:project :information :km-range]) ": "
-              (.toFixed (/ start-m 1000) 3) " \u2013 "
-              (.toFixed (/ end-m 1000) 3)]])
+     [:div [:span (tr [:project :information :km-range]) ": "
+            (.toFixed start-km 3) " \u2013 "
+            (.toFixed end-km 3)]]
      [:div [:span (tr [:project :information :procurement-number]) ": " procurement-nr]]
      [:div [:span (tr [:project :information :carriageway]) ": " carriageway]]
      (when repair-method
