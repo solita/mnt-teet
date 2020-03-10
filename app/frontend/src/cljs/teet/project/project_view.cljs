@@ -557,12 +557,12 @@
       :footer [:div {:class (<class project-style/wizard-footer)}
                [buttons/button-warning {:component "a"
                                         :href (url/remove-param :configure)}
-                "cancel"]
+                (tr [:buttons :cancel])]
                [buttons/button-primary
                 {:on-click (e! project-controller/->UpdateProjectCadastralUnits
                                (:checked-cadastral-units project)
                                (:thk.project/id project))}
-                "save"]]}]
+                (tr [:buttons :save])]]}]
     :else
     [project-page-structure e! app project breadcrumbs
      (merge {:header [project-tabs e! app]
