@@ -13,7 +13,9 @@
             [teet.common.common-controller :refer [when-feature]]
             [herb.core :as herb :refer [<class]]
             [teet.user.user-controller :as user-controller]
-            [teet.login.login-controller :as login-controller]))
+            [teet.authorization.authorization-check :refer [authorized?]]
+            [teet.login.login-controller :as login-controller]
+            [taoensso.timbre :as log]))
 
 (def entity-quote (fnil js/escape "(nil)"))
 
@@ -86,7 +88,7 @@
        [ListItemText {:primary name}])]))
 
 (defn- page-listing
-  [e! open? page]
+  [e! open? user page]
   [List {:class (<class navigation-style/page-listing)}
    [drawer-header e! open?]
    [view-link {:open? open?
@@ -115,8 +117,7 @@
                  :link {:page :components}
                  :icon icons/content-archive
                  :name "Components"}])
-   (user-controller/when-role
-     :admin
+   (when (authorized? user :admin/add-user :admin)
      [view-link {:open? open?
                  :current-page page
                  :link {:page :admin}
@@ -166,7 +167,7 @@
             :variant "permanent"
             :anchor "left"
             :open open?}
-    [page-listing e! open? page]]])
+    [page-listing e! open? user page]]])
 
 (defn main-container [navigation-open? content]
   [:main {:class (<class navigation-style/main-container navigation-open?)}
