@@ -4,58 +4,112 @@
 ;; "In THK module is allowed to upload file extensions: gif, jpg, jpeg, png, pdf, csv, txt, xlsx, docx, xls, doc, dwg, ppt, pptx.""
 
 (def ^:const upload-max-file-size (* 1024 1024 3000))
-(def ^:const upload-allowed-file-types #{;; Word
-                                         "application/msword"
-                                         "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                                         ;; Excel
-                                         "application/msexcel"
-                                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
 
-"
-                                         ;; Powerpoint
-                                         "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-                                         "application/mspowerpoint"
+;; See confluence page: TEET File format list
+(def ^:const upload-allowed-file-types
+  #{;; Office files
+    "application/msword"
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    "application/msexcel"
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    "application/mspowerpoint"
+    "application/rtf"
+    "application/odf"
 
-                                         ;; PDF
-                                         "application/pdf"
+    ;; Portable documents
+    "application/pdf"
+    "application/dwf"
 
-                                         ;; images
-                                         "image/gif"
-                                         "image/jpeg"
-                                         "image/png"
+    ;; Digitally signed containers
+    "application/ddoc"
+    "application/bdoc"
+    "application/asice"
 
-                                         ;; video
-                                         "video/mp4"
-                                         "video/x-ms-wmv"
-                                         "video/x-msvideo"
+    ;; Design/drawing/GIS files
+    "application/dwg"
+    "application/dgn"
+    "application/dxf"
+    "application/shp"
+    "application/dbf"
+    "application/kml"
+    "application/kmz"
 
-                                         ;; archive
-                                         "application/zip"
+    ;; Design model files, Building Information Models
+    "application/ifc"
+    "application/xml"
+    "application/bcf"
+    "application/rvt"
+    "application/skp"
+    "application/3dm"
 
-                                         ;; Domain tools
-                                         "text/ags"
-                                         "image/vnd.dwg"
+    ;; Speficic data files
+    "application/ags"
+    "application/gpx"
 
-                                         ;; text
-                                         "text/plain"
-                                         "text/csv"})
 
-(def ^:const upload-file-suffix-type {"ags" "text/ags"
-                                      "doc" "application/msword"
-                                      "docx" "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                                      "xlsx" "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                      "xls" "application/msexcel"
-                                      "ppt" "application/mspowerpoint"
-                                      "pptx" "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-                                      "dwg" "image/vnd.dwg"
-                                      "pdf" "application/pdf"
-                                      "zip" "application/zip"
-                                      "csv" "text/csv"
-                                      "txt" "text/plain"
-                                      "gif" "image/gif"
-                                      "png" "image/png"
-                                      "jpg" "image/jpeg"
-                                      "jpeg" "image/jpeg"})
+    ;; Images
+    "image/png"
+    "image/jpeg"
+    "image/tiff"
+    "image/ecw"
+
+    ;; Other supporting files
+    "shx" "application/shx"
+    "lin" "application/lin"})
+
+(def ^:const upload-file-suffix-type
+  {;; Generic office files
+   "doc" "application/msword"
+   "docx" "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+   "xlsx" "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+   "xls" "application/msexcel"
+   "ppt" "application/mspowerpoint"
+   "pptx" "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+   "rtf" "application/rtf"
+   "odf" "application/odf"
+
+   ;; Portable documents
+   "pdf" "application/pdf"
+   "dwf" "application/dwf"
+
+   ;; Digitally signed containers
+   "ddoc" "application/ddoc"
+   "bdoc" "application/bdoc"
+   "asice" "application/asice"
+
+   ;; Design/drawing/GIS files
+   "dwg" "application/dwg"
+   "dgn" "application/dgn"
+   "dxf" "application/dxf"
+   "shp" "application/shp"
+   "dbf" "application/dbf"
+   "kml" "application/kml"
+   "kmz" "application/kmz"
+
+   ;; Design model files, Building Information Models
+   "ifc" "application/ifc"
+   "xml" "application/xml"
+   "bcf" "application/bcf"
+   "rvt" "application/rvt"
+   "skp" "application/skp"
+   "3dm" "application/3dm"
+
+   ;; Speficid data files
+   "ags" "application/ags"
+   "gpx" "application/gpx"
+
+   ;; Images
+   "png" "image/png"
+   "jpg" "image/jpeg"
+   "jpeg" "image/jpeg"
+   "tif" "image/tiff"
+   "tiff" "image/tiff"
+   "ecw" "image/ecw"
+
+   ;; Other supporting files
+   "shx" "application/shx"
+   "lin" "application/lin"})
 
 (defn type-by-suffix [{:file/keys [name type] :as file}]
   (if-not (str/blank? type)
