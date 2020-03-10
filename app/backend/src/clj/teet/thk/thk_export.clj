@@ -56,9 +56,11 @@
                  (str (:db/id activity))
 
                  ;; Regular columns
-                 (let [[teet-kw _ fmt] (thk-mapping/thk->teet csv-column)
+                 (let [[teet-kw _ fmt override-kw] (thk-mapping/thk->teet csv-column)
                        fmt (or fmt str)
-                       value (get data teet-kw)]
+                       value (if override-kw
+                               (get data override-kw (get data teet-kw))
+                               (get data teet-kw))]
                    (if value
                      (fmt value)
                      ""))))
