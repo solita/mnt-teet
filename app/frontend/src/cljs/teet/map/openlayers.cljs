@@ -368,10 +368,15 @@
 
 (defn disable-draw!
   []
-  (let [{:keys [interaction layer]} @draw-state
+  (let [{:keys [interaction]} @draw-state
         m @the-map]
     (when interaction
-      (.removeInteraction m interaction))
+      (.removeInteraction m interaction))))
+
+(defn remove-drawing-layer!
+  []
+  (let [{:keys [layer]} @draw-state
+        m @the-map]
     (when layer
       (.removeLayer m layer))))
 

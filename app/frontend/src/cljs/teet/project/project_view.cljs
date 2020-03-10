@@ -200,7 +200,10 @@
        (when footer
          footer)]
       (when (get-in app [:map :search-area :drawing?])
-        [drawing-indicator/drawing-indicator #(e! (search-area-controller/->StopCustomAreaDraw))])
+        [drawing-indicator/drawing-indicator
+         {:save-disabled? (not (boolean (get-in app [:map :search-area :unsaved-drawing])))
+          :cancel-action #(e! (search-area-controller/->StopCustomAreaDraw))
+          :save-action #(e! (search-area-controller/->SaveDrawnArea (get-in app [:map :search-area :unsaved-drawing])))}])
       (when (:geometry-range? map-settings)
         [search-area-view/feature-search-area e! app project related-entity-type])]]))
 
@@ -278,8 +281,8 @@
         (tr [:buttons :edit])])]
     [itemlist/gray-bg-list [{:primary-text (str (:user/given-name manager) " " (:user/family-name manager))
                              :secondary-text (tr [:roles :manager])}
-                             {:primary-text (str (:user/given-name owner) " " (:user/family-name owner))
-                              :secondary-text (tr [:roles :owner])}]]]
+                            {:primary-text (str (:user/given-name owner) " " (:user/family-name owner))
+                             :secondary-text (tr [:roles :owner])}]]]
    [:div
     [:div {:class (<class project-style/heading-and-button-style)}
      [typography/Heading2 (tr [:people-tab :other-users])]
@@ -487,32 +490,38 @@
     (tr [:buttons :continue])]])
 
 (defn change-restrictions-view
-  [e! app _project]
-  (let [buffer-m (get-in app [:map :road-buffer-meters])]
-    (e! (project-controller/->FetchRelatedInfo buffer-m "restrictions")))
-  (fn [e! app {:keys [open-types restriction-candidates checked-restrictions loading] :or {open-types #{}} :as _project}]
-    (let [buffer-m (get-in app [:map :road-buffer-meters])]
+  [e! app project]
+  (let [buffer-m (get-in app [:map :road-buffer-meters])
+        {:thk.project/keys [related-restrictions]} project]
+    (e! (project-controller/->FetchRelatedCandidates buffer-m "restrictions"))
+    (e! (project-controller/->FetchRelatedFeatures related-restrictions :restrictions)))
+  (fn [e! app {:keys [open-types checked-restrictions feature-candidates] :or {open-types #{}} :as _project}]
+    (let [buffer-m (get-in app [:map :road-buffer-meters])
+          {:keys [loading? restriction-candidates]} feature-candidates]
       [project-setup-view/restrictions-listing e!
        open-types
        buffer-m
        {:restrictions restriction-candidates
-        :loading loading
+        :loading? loading?
         :checked-restrictions (or checked-restrictions #{})
         :toggle-restriction (e! project-controller/->ToggleRestriction)
         :on-mouse-enter (e! project-controller/->FeatureMouseOvers "related-restriction-candidates" true)
         :on-mouse-leave (e! project-controller/->FeatureMouseOvers "related-restriction-candidates" false)}])))
 
 (defn change-cadastral-units-view
-  [e! app _project]
-  (let [buffer-m (get-in app [:map :road-buffer-meters])]
-    (e! (project-controller/->FetchRelatedInfo buffer-m "cadastral-units")))
-  (fn [e! app {:keys [cadastral-candidates checked-cadastral-units loading] :as _project}]
-    (let [buffer-m (get-in app [:map :road-buffer-meters])]
+  [e! app project]
+  (let [buffer-m (get-in app [:map :road-buffer-meters])
+        {:thk.project/keys [related-cadastral-units]} project]
+    (e! (project-controller/->FetchRelatedCandidates buffer-m "cadastral-units"))
+    (e! (project-controller/->FetchRelatedFeatures related-cadastral-units :cadastral-units)))
+  (fn [e! app {:keys [feature-candidates checked-cadastral-units] :as _project}]
+    (let [buffer-m (get-in app [:map :road-buffer-meters])
+          {:keys [loading? cadastral-candidates]} feature-candidates]
       [project-setup-view/cadastral-units-listing
        e!
        buffer-m
        {:cadastral-units cadastral-candidates
-        :loading loading
+        :loading? loading?
         :checked-cadastral-units (or checked-cadastral-units #{})
         :toggle-cadastral-unit (e! project-controller/->ToggleCadastralUnit)
         :on-mouse-enter (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" true)

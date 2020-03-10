@@ -149,16 +149,17 @@
 
 (defn setup-cadastral-unit-candidates [{{:keys [query]} :app
                                         {:keys [setup-step
-                                                cadastral-candidates-geojson]} :project}]
-  (when (and (or
-               (= setup-step "cadastral-units")
-               (= (:configure query) "cadastral-units"))
-             (get (js->clj cadastral-candidates-geojson) "features"))
-    {:related-cadastral-unit-candidates
-     (map-layers/geojson-data-layer "related-cadastral-unit-candidates"
-                                    cadastral-candidates-geojson
-                                    map-features/cadastral-unit-style
-                                    {:opacity 1})}))
+                                                feature-candidates]} :project}]
+  (let [{:keys [cadastral-candidates-geojson]} feature-candidates]
+    (when (and (or
+                 (= setup-step "cadastral-units")
+                 (= (:configure query) "cadastral-units"))
+               (get (js->clj cadastral-candidates-geojson) "features"))
+      {:related-cadastral-unit-candidates
+       (map-layers/geojson-data-layer "related-cadastral-unit-candidates"
+                                      cadastral-candidates-geojson
+                                      map-features/cadastral-unit-style
+                                      {:opacity 1})})))
 
 
 (defn related-restrictions [{{query :query :as app} :app

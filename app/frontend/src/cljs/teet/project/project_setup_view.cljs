@@ -173,9 +173,9 @@
        [skeleton/skeleton {:parent-style (skeleton/restriction-skeleton-style)}]))])
 
 (defn restrictions-listing
-  [e! open-types _road-buffer-meters {:keys [restrictions loading checked-restrictions toggle-restriction on-mouse-enter on-mouse-leave]}]
+  [e! open-types _road-buffer-meters {:keys [restrictions loading? checked-restrictions toggle-restriction on-mouse-enter on-mouse-leave]}]
   [:<>
-   (if (and loading (not restrictions))
+   (if loading?
      [fetching-features-skeletons 10]
      (let [restrictions-by-type (group-by :VOOND restrictions)]
        [:<>
@@ -222,29 +222,10 @@
                         (when on-mouse-leave
                           {:on-mouse-leave (r/partial on-mouse-leave restriction)})))]]))]]))])
 
-(defn project-setup-restrictions-form [e! _project step {:keys [road-buffer-meters] :as _map}]
-  (e! (project-controller/->FetchRelatedInfo road-buffer-meters step))
-  (fn [e! {:keys [restriction-candidates checked-restrictions open-types loading] :or {open-types #{}} :as _project} {step-label :step-label :as step} _map]
-    [:form {:id        step-label
-            :on-submit (let [step-constructor (project-controller/navigate-to-next-step-event project-setup-steps step)]
-                         #(let [event (step-constructor)]
-                            (e! event)
-                            (.preventDefault %)))}
-     [restrictions-listing e!
-      open-types
-      road-buffer-meters
-      {:restrictions restriction-candidates
-       :loading loading
-       :checked-restrictions (or checked-restrictions #{})
-       :toggle-restriction (e! project-controller/->ToggleRestriction)
-       :on-mouse-enter (e! project-controller/->FeatureMouseOvers "related-restriction-candidates" true)
-       :on-mouse-leave (e! project-controller/->FeatureMouseOvers "related-restriction-candidates" false)}]]))
-
-
 (defn cadastral-units-listing
-  [e! _road-buffer-meters {:keys [loading cadastral-units checked-cadastral-units toggle-cadastral-unit on-mouse-enter on-mouse-leave]}]
+  [e! _road-buffer-meters {:keys [loading? cadastral-units checked-cadastral-units toggle-cadastral-unit on-mouse-enter on-mouse-leave]}]
   (r/with-let [open-types (r/atom #{})]
-    (if (and loading (empty? cadastral-units))
+    (if loading?
       [fetching-features-skeletons 10]
       [:<>
        [container/collapsible-container {:on-toggle (fn [_]
@@ -276,25 +257,45 @@
               :checked? checked?
               :value (str (:L_AADRESS cadastral-unit) " " (:TUNNUS cadastral-unit))
               :on-change (r/partial toggle-cadastral-unit cadastral-unit)
-              :on-mouse-enter on-mouse-enter
-              :on-mouse-leave on-mouse-leave}))]]])))
+              :on-mouse-enter (r/partial on-mouse-enter cadastral-unit)
+              :on-mouse-leave (r/partial on-mouse-leave cadastral-unit)}))]]])))
+
+(defn project-setup-restrictions-form [e! _project step {:keys [road-buffer-meters] :as _map}]
+  (e! (project-controller/->FetchRelatedCandidates road-buffer-meters step))
+  (fn [e! {:keys [checked-restrictions open-types feature-candidates] :or {open-types #{}} :as _project} {step-label :step-label :as step} _map]
+    (let [{:keys [loading? restriction-candidates]} feature-candidates]
+      [:form {:id step-label
+              :on-submit (let [step-constructor (project-controller/navigate-to-next-step-event project-setup-steps step)]
+                           #(let [event (step-constructor)]
+                              (e! event)
+                              (.preventDefault %)))}
+       [restrictions-listing e!
+        open-types
+        road-buffer-meters
+        {:restrictions restriction-candidates
+         :loading? loading?
+         :checked-restrictions (or checked-restrictions #{})
+         :toggle-restriction (e! project-controller/->ToggleRestriction)
+         :on-mouse-enter (e! project-controller/->FeatureMouseOvers "related-restriction-candidates" true)
+         :on-mouse-leave (e! project-controller/->FeatureMouseOvers "related-restriction-candidates" false)}]])))
 
 (defn project-setup-cadastral-units-form [e! _project step {:keys [road-buffer-meters] :as _map}]
-  (e! (project-controller/->FetchRelatedInfo road-buffer-meters step))
+  (e! (project-controller/->FetchRelatedCandidates road-buffer-meters step))
   (fn [e!
-       {:keys [cadastral-candidates checked-cadastral-units loading]}
+       {:keys [checked-cadastral-units feature-candidates]}
        {step-label :step-label :as step}
        _map]
-    [:form {:id        step-label
-            :on-submit (e! (project-controller/navigate-to-next-step-event project-setup-steps step))}
-     [cadastral-units-listing e!
-      road-buffer-meters
-      {:cadastral-units cadastral-candidates
-       :loading loading
-       :checked-cadastral-units (or checked-cadastral-units #{})
-       :toggle-cadastral-unit (e! project-controller/->ToggleCadastralUnit)
-       :on-mouse-enter (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" true)
-       :on-mouse-leave (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" false)}]]))
+    (let [{:keys [loading? cadastral-candidates]} feature-candidates]
+      [:form {:id step-label
+              :on-submit (e! (project-controller/navigate-to-next-step-event project-setup-steps step))}
+       [cadastral-units-listing e!
+        road-buffer-meters
+        {:cadastral-units cadastral-candidates
+         :loading? loading?
+         :checked-cadastral-units (or checked-cadastral-units #{})
+         :toggle-cadastral-unit (e! project-controller/->ToggleCadastralUnit)
+         :on-mouse-enter (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" true)
+         :on-mouse-leave (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" false)}]])))
 
 
 (def project-setup-steps
