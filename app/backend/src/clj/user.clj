@@ -55,6 +55,7 @@
   [user-eid]
   (tx {:db/id            user-eid
        :user/permissions [{:db/id                 "new-permission"
+                           :user/roles :admin
                            :permission/role       :admin
                            :permission/valid-from (Date.)}]}))
 
