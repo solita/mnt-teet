@@ -100,6 +100,9 @@
                                                             "&:focus"      theme-colors/focus-style
                                                             :box-shadow    "none"
                                                             "&:hover"      {:box-shadow "none"}}
+                                       :containedPrimary   {"&:disabled"   {:opacity "0.8"
+                                                                            :background-color theme-colors/primary
+                                                                            :color theme-colors/white}}
                                        :root               {:text-transform :none
                                                             :font-weight    400
                                                             :padding        "4px 1.875rem"
