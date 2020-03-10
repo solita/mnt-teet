@@ -227,19 +227,27 @@
 
 (defn select-user
   "Select user"
-  [{:keys [e! value on-change label required error]}]
+  [{:keys [e! value on-change label required error
+           extra-selection extra-selection-label]}]
   (when (nil? @selectable-users)
     (e! (common-controller/->Query {:query :user/list
                                     :args {}
                                     :result-event ->SetSelectableUsers})))
-  [form-select {:label label
-                :value value
-                :error error
-                :required required
-                :on-change on-change
-                :show-empty-selection? true
-                :items @selectable-users
-                :format-item user-info/user-name-and-email}])
+  [form-select (merge
+                {:label label
+                 :value value
+                 :error error
+                 :required required
+                 :on-change on-change
+                 :show-empty-selection? true}
+                (if extra-selection
+                  {:items (conj @selectable-users extra-selection)
+                   :format-item (fn [user]
+                                  (if (= user extra-selection)
+                                    extra-selection-label
+                                    (user-info/user-name-and-email user)))}
+                  {:items @selectable-users
+                   :format-item user-info/user-name-and-email}))])
 ;;
 ;; Status
 ;;

@@ -643,7 +643,7 @@
 
   UpdateProjectPermissionForm
   (process-event [{form-data :form-data} app]
-    (assoc-in app [:route :project :add-participant] form-data))
+    (update-in app [:route :project :add-participant] merge form-data))
 
 
   CloseDialog

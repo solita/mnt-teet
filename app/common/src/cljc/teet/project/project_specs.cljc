@@ -24,4 +24,5 @@
                 :thk.project/manager]))
 
 (s/def :project/add-permission-form
-  (s/keys :req [:project/participant]))
+  (s/keys :req [:project/participant
+                :permission/role]))
