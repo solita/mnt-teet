@@ -17,7 +17,8 @@
             [teet.ui.panels :as panels]
             [teet.map.map-layers :as map-layers]
             [teet.ui.util :as util]
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [teet.ui.common :as common]))
 
 (def default-extent [20 50 30 60])
 
@@ -150,9 +151,10 @@
       (util/with-keys
         (for [layer layers]
           ^{:key (:id layer)}
-          [:div
-           [Link {:on-click (e! map-controller/->EditLayer layer)}
-           (tr [:map :layers (:type layer)])]]))
+          [common/feature-and-action
+           {:label (tr [:map :layers (:type layer)])}
+           {:button-label (tr [:buttons :edit])
+            :action (e! map-controller/->EditLayer layer)}]))
       [:div (tr [:map :layers :no-layers])])
     [buttons/button-primary
      {:on-click (e! map-controller/->AddLayer)
