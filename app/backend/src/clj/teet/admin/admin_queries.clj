@@ -5,7 +5,7 @@
 (defquery :admin/list-users
   {:doc "List users who have been given access"
    :context {db :db user :user}
-   :pre [(user-roles/require-role user :admin)]
+   :pre [(user-roles/has-role? user :admin)]
    :args _
    :project-id nil
    :authorization {:admin/add-user {}}}
