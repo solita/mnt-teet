@@ -243,33 +243,13 @@
 (extend-protocol t/Event
   FetchFeatureCandidatesResponse
   (process-event [{:keys [candidate-type response]} app]
-    (let [{:keys [result-path geojson-path selected-feature-path checked-feature-path checked-feature-geojson-path]} (candidate-paths candidate-type)
-          previously-selected (get-in app checked-feature-path)
-          previously-selected-geojson (get-in app checked-feature-geojson-path)
-          previously-selected-ids (map
-                                    #(get-in % [:properties :teet-id])
-                                    previously-selected)
+    (let [{:keys [result-path geojson-path]} (candidate-paths candidate-type)
           geojson (js/JSON.parse response)
           features (-> geojson
                        (js->clj :keywordize-keys true)
                        :features
                        (as-> fs
-                             (map :properties fs)))
-          related-features (into #{} (if (empty? previously-selected-ids)
-                                       (get-in app selected-feature-path)
-                                       previously-selected-ids))
-          selected-candidates (set
-                                (concat
-                                  previously-selected
-                                  (filter
-                                    #(related-features (:teet-id %))
-                                    features)))
-          selected-geojsons (->> geojson
-                                 ->clj
-                                 :features
-                                 (filter #(related-features (get-in % [:properties :teet-id])))
-                                 (concat (vec previously-selected-geojson))
-                                 set)]
+                             (map :properties fs)))]
       (-> app
           (update-in [:route :project :feature-candidates] dissoc :loading?)
           (assoc-in result-path features)

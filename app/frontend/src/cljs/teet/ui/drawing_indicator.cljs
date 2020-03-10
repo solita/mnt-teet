@@ -2,7 +2,6 @@
   (:require [teet.ui.material-ui :refer [Button]]
             [herb.core :refer [<class]]
             [teet.ui.icons :as icons]
-            [reagent.core :as r]
             [teet.localization :refer [tr]]
             [teet.theme.theme-colors :as theme-colors]))
 
