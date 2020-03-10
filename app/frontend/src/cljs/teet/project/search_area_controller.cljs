@@ -8,6 +8,7 @@
 (defrecord InitializeCustomAreaDraw [])
 (defrecord StopCustomAreaDraw [])
 (defrecord SaveDrawnArea [area])
+(defrecord FinishDrawnArea [area])
 (defrecord ChangeTab [new-tab])
 (defrecord SaveDrawnAreaSuccess [result])
 (defrecord DrawnAreaSuccess [result])
@@ -45,18 +46,23 @@
         (t/fx app
               {:tuck.effect/type :debounce
                :timeout 600
-               :effect (project-controller/fetch-related-info app val entity-type)})
+               :effect (project-controller/fetch-related-candidates app val entity-type)})
         app)))
 
   UnMountSearchComponent
   (process-event [_ app]
     (update-in app [:map :search-area] dissoc :tab))
 
+  FinishDrawnArea
+  (process-event [{area :area} app]
+    (openlayers/disable-draw!)
+    (assoc-in app [:map :search-area :unsaved-drawing] area))
+
   SaveDrawnArea
   (process-event [{area :area} app]
     (let [project-id (get-in app [:route :project :db/id])]
       (openlayers/disable-draw!)
-      (t/fx (update-in app [:map :search-area] dissoc :drawing?)
+      (t/fx (update-in app [:map :search-area] dissoc :drawing? :unsaved-drawing)
             {:tuck.effect/type :command!
              :command :thk.project/add-search-geometry
              :payload {:geometry area
@@ -72,10 +78,11 @@
   SaveDrawnAreaSuccess
   (process-event [{_result :result} app]
     (let [info-type (info-type app)]
+      (openlayers/remove-drawing-layer!)
       (t/fx app
             (fetch-drawn-areas app)
             (when info-type
-              (project-controller/fetch-related-info app 0 info-type)))))
+              (project-controller/fetch-related-candidates app 0 info-type)))))
 
   DrawnAreaSuccess
   (process-event [{result :result} app]
@@ -109,17 +116,18 @@
       (t/fx app
             (fetch-drawn-areas app)
             (when info-type
-              (project-controller/fetch-related-info app buffer-meters info-type)))))
+              (project-controller/fetch-related-candidates app buffer-meters info-type)))))
 
   InitializeCustomAreaDraw
   (process-event [_ app]
-    (openlayers/enable-draw! (t/send-async! ->SaveDrawnArea))
+    (openlayers/enable-draw! (t/send-async! ->FinishDrawnArea))
     (assoc-in app [:map :search-area :drawing?] true))
 
   StopCustomAreaDraw
   (process-event [_ app]
     (openlayers/disable-draw!)
-    (update-in app [:map :search-area] dissoc :drawing?))
+    (openlayers/remove-drawing-layer!)
+    (update-in app [:map :search-area] dissoc :drawing? :unsaved-drawing))
 
   MouseOverDrawnAreas
   (process-event [{layer :layer
@@ -140,8 +148,7 @@
     (let [buffer-meters (get-in app [:map :road-buffer-meters])
           app (assoc-in app [:map :search-area :tab] new-tab)
           info-type (info-type app)]
-      (println "CHANGE TAB: " info-type)
       (if info-type
         (t/fx app
-              (project-controller/fetch-related-info app buffer-meters info-type))
+              (project-controller/fetch-related-candidates app buffer-meters info-type))
         app))))
