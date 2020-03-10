@@ -117,7 +117,7 @@
                  :link {:page :components}
                  :icon icons/content-archive
                  :name "Components"}])
-   (when (authorized? user :admin/add-user :admin)
+   (when (authorized? user :admin/add-user)
      [view-link {:open? open?
                  :current-page page
                  :link {:page :admin}
