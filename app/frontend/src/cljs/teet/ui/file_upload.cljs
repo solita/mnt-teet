@@ -147,7 +147,10 @@
    [:span (merge {} (when invalid-file-type?
                       {:style {:color theme-colors/error}}))
     (str type) (when invalid-file-type?
-                 (str " " (tr [:document :invalid-file-type])))]
+                 (str " " )
+                 [:a {:target "_blank"
+                      :href "https://confluence.mkm.ee/pages/viewpage.action?spaceKey=TEET&title=TEET+File+format+list"}
+                  (tr [:document :invalid-file-type])])]
    [:span {:style (merge {:display :block}
                          (when file-too-large?
                            {:color theme-colors/error}))}
@@ -164,14 +167,15 @@
       (fn [i ^js/File file]
         ^{:key i}
         [ListItem {}
-         (let [{:file/keys [type name size] :as file} (-> file
-                                                          document-model/file-info
-                                                          document-model/type-by-suffix)
+         (let [{:file/keys [type name size] :as file}
+               (-> file
+                   document-model/file-info
+                   document-model/type-by-suffix)
                invalid-file-type? (not (document-model/upload-allowed-file-types type))
                file-too-large? (> size document-model/upload-max-file-size)]
            [ListItemText (merge
-                           {:primary name
-                            :secondary (r/as-component [file-info file invalid-file-type? file-too-large?])})])
+                          {:primary name
+                           :secondary (r/as-component [file-info file invalid-file-type? file-too-large?])})])
          [ListItemSecondaryAction
           [IconButton {:edge "end"
                        :on-click #(on-change (into (subvec value 0 i)
