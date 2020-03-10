@@ -34,7 +34,8 @@
                         title# ~title
                         ~'refresh (get-in ~'app [:route ~(keyword (str (name route-name) "-refresh"))])]
                     (set! (.-title js/document) (or title# "TEET"))
-                    (if-not (authorized? @teet.app-state/user ~permission)
+                    (log/debug "authorized? perm" ~permission "->"  (authorized? @teet.app-state/user ~permission))
+                    (if-not (or (nil? ~permission) (authorized? @teet.app-state/user ~permission))
                       {:page [:div "No such page"]}
                       {:page ~(if state
                                 ;; If page has needed state, wrap it in the query component to fetch it
