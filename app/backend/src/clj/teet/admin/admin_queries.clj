@@ -1,6 +1,5 @@
 (ns teet.admin.admin-queries
-  (:require [teet.db-api.core :as db-api :refer [defquery]]
-            [teet.authorization.authorization-check :refer [authorized?]]))
+  (:require [teet.db-api.core :as db-api :refer [defquery]]))
 
 (defquery :admin/list-users
   {:doc "List users who have been given access"
