@@ -199,7 +199,7 @@
    :display :flex
    :align-items :center})
 
-(defn thk-link-icon-style
+(defn- thk-link-icon-style
   []
   {:margin-left "0.5rem"
    :font-size "20px"
@@ -211,3 +211,28 @@
                opts)
    label
    [icons/action-open-in-new {:class (<class thk-link-icon-style)}]])
+
+
+(defn- add-button-style
+  [disabled?]
+  (with-meta
+    (merge {:border "1px solid black"
+            :transition "background-color 0.2s ease-in-out"
+            :display :flex
+            :width "100%"
+            :height "42px"
+            :justify-content :center
+            :padding "0.5rem"}
+           (when disabled?
+             {:background-color teet.theme.theme-colors/gray-light}))
+    (when (not disabled?)
+      {:pseudo {:hover {:background-color theme-colors/gray-lightest}
+                :active {:background-color theme-colors/gray-light}}})))
+
+(defn add-button
+  [{:keys [on-click disabled?]} label]
+  [ButtonBase {:on-click on-click
+               :disable-ripple true
+               :disabled disabled?
+               :class (<class add-button-style disabled?)}
+   label])

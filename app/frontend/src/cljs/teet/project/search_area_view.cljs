@@ -12,13 +12,6 @@
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.common :as common]))
 
-(defn- add-area-button
-  [{:keys [on-click disabled?]} label]
-  [ButtonBase {:on-click on-click
-               :disable-ripple true
-               :disabled disabled?
-               :class (<class search-area-style/add-area-button-style disabled?)}
-   label])
 
 (defn road-geometry-range-input
   [e! {road-buffer-meters :road-buffer-meters} entity-type]
@@ -50,7 +43,7 @@
                 :on-mouse-enter #(e! (search-area-controller/->MouseOverDrawnAreas "project-drawn-areas" true feature))
                 :on-mouse-leave #(e! (search-area-controller/->MouseOverDrawnAreas "project-drawn-areas" false feature))
                 :action #(e! (search-area-controller/->DeleteDrawnArea id (:db/id project)))}]))
-          [add-area-button {:on-click #(e! (search-area-controller/->InitializeCustomAreaDraw))
+          [common/add-button {:on-click #(e! (search-area-controller/->InitializeCustomAreaDraw))
                             :disabled? drawing?}
            (if drawing?
              [:span {:style {:color theme-colors/gray-lightest}}
