@@ -12,7 +12,8 @@
 (defn user-name
   "Show full user name"
   [{:user/keys [given-name family-name]}]
-  (str given-name " " family-name))
+  (when (or given-name family-name)
+    (str given-name " " family-name)))
 
 (defn user-name-and-email
   "Show user name and email"

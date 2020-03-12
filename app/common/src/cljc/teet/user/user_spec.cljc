@@ -18,8 +18,9 @@
   Estonian person ID. Does not validate dates or checksum."
   [s]
   (and (string? s)
-       (str/starts-with? s "EE")
-       (re-matches estonian-person-id-pattern (subs s 2))))
+       (or (re-matches estonian-person-id-pattern s)
+           (and (str/starts-with? s "EE")
+                (re-matches estonian-person-id-pattern (subs s 2))))))
 
 (s/def :user/person-id estonian-person-id?)
 

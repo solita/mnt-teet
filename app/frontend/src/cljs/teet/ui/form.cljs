@@ -10,7 +10,8 @@
             [herb.core :refer [<class]]
             [teet.ui.buttons :as buttons]
             [teet.theme.theme-colors :as theme-colors]
-            [tuck.core :as t]))
+            [tuck.core :as t]
+            [teet.log :as log]))
 
 (def default-value
   "Mapping of component to default value. Some components don't want nil as the value (like text area)."
@@ -160,6 +161,7 @@
                                                       attr))
                                 valid? (and (empty? invalid-attrs)
                                             (or (nil? spec) (s/valid? spec value)))]
+                            (log/info "VALIDATE invalid: " invalid-attrs)
                             (reset! invalid-attributes invalid-attrs)
                             valid?))
                submit! (fn [e! save-event value fields e]
@@ -198,6 +200,7 @@
                                  :error (boolean (or error-text (@invalid-attributes attribute)))
                                  :error-text error-text
                                  :required (boolean (required-fields attribute))}]
+                       (log/info "OPTS: " opts)
                        [Grid (merge {:item true :xs (or xs 12)}
                                     (when lg
                                       {:lg lg})

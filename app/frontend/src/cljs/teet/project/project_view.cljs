@@ -35,7 +35,8 @@
             [teet.authorization.authorization-check :as authorization-check :refer [when-pm-or-owner]]
             [teet.theme.theme-colors :as theme-colors]
             [teet.project.search-area-controller :as search-area-controller]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.user.user-model :as user-model]))
 
 (defn task-form [_e! {:keys [initialization-fn]}]
   ;;Task definition (under project activity)
@@ -214,8 +215,8 @@
 
 (defn add-user-form
   [e! user project-id]
-  (log/info "USER: " user)
-  (let [roles (-> @authorization-check/roles
+  (let [user ()
+        roles (-> @authorization-check/roles
                   (disj :admin)
                   vec)]
     [:div
@@ -237,12 +238,11 @@
       (when (= (:project/participant user) :new)
         ^{:attribute :user/person-id
           :xs 6}
-        [TextField {:start-icon (fn [{c :class}]
-                                  [:div {:class (str c " "
-                                                     (<class common-styles/input-start-text-adornment))} "EE"])
-
-                    }])
-      ]]))
+        [TextField {:start-icon
+                    (fn [{c :class}]
+                      [:div {:class (str c " "
+                                         (<class common-styles/input-start-text-adornment))}
+                       "EE"])}])]]))
 
 (defn permission-information
   [e! permission]
@@ -263,7 +263,8 @@
                                    (let [user-id (:db/id user)]
                                      {:key user-id
                                       :href (url/set-params :person user-id)
-                                      :title (str (:user/given-name user) " " (:user/family-name user))
+                                      :title (or (user-model/user-name user)
+                                                 (tr [:common :unknown]))
                                       :selected? (= (str user-id) selected-person)}))
                                  permissions)]
        [itemlist/white-link-list permission-links]))

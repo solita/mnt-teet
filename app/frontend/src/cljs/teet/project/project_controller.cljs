@@ -614,12 +614,17 @@
 
   SaveProjectPermission
   (process-event [{project-id :project-id form-data :form-data} app]
-    (let [participant (:project/participant form-data)]
+    (let [participant (:project/participant form-data)
+          role (:permission/role form-data)]
+      (log/info "SAVE PROJECT PErmisSION " form-data)
       (t/fx app
             {:tuck.effect/type :command!
              :command          :thk.project/add-permission
              :payload          {:project-id  project-id
-                                :user participant}
+                                :user (if (= participant :new)
+                                        {:user/person-id (:user/person-id form-data)}
+                                        participant)
+                                :role role}
              :success-message  (tr [:notifications :permission-added-successfully])
              :result-event     common-controller/->Refresh})))
 

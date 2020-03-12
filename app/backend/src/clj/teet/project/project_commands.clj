@@ -12,7 +12,8 @@
             [teet.project.project-specs]
             [clojure.spec.alpha :as s]
             [clojure.set :as set]
-            [teet.project.project-db :as project-db])
+            [teet.project.project-db :as project-db]
+            [teet.log :as log])
   (:import (java.util Date UUID)))
 
 (defcommand :thk.project/initialize!
@@ -151,27 +152,34 @@ and cadastral units"
 
 (defcommand :thk.project/add-permission
   {:doc "Add permission to project"
-   :context {:keys [conn user db]}
-   :payload {project-id :project-id
-             {user-id :user/id} :user}
+   :context {granting-user :user
+             :keys [conn db]}
+   :payload {:keys [project-id user role] :as payload}
    :spec (s/keys :req-un [::project-id])
    :project-id project-id
    :authorization {:project/edit-permissions {:link :thk.project/owner}}}
-  (let [user-already-added?
-        (boolean
-          (seq
-            (permission-db/user-permission-for-project db [:user/id user-id] project-id)))]
+  (let [user-exists? (:user/id user)
+        user-already-added?
+        (and user-exists?
+             (boolean
+              (seq
+               (permission-db/user-permission-for-project db [:user/id (:user/id user)] project-id))))]
     (if-not user-already-added?
-      (do
-        (d/transact
-          conn
-          {:tx-data [{:db/id [:user/id user-id]
-                      :user/permissions
-                      [(merge {:db/id "new-permission"
-                               :permission/role :internal-consultant
-                               :permission/projects project-id
-                               :permission/valid-from (Date.)}
-                              (creation-meta user))]}]})
+      (let [tx [(merge
+                 {:db/id (if user-exists?
+                           [:user/id (:user/id user)]
+                           "new-user")
+                  :user/permissions
+                  [(merge {:db/id "new-permission"
+                           :permission/role :internal-consultant
+                           :permission/projects project-id
+                           :permission/valid-from (Date.)}
+                          (creation-meta granting-user))]}
+                 (when-not user-exists?
+                   {:user/person-id (:user/person-id user)}))]]
+        (log/info "PAYLOAD: " payload)
+        (log/info "TX: " tx)
+        (d/transact conn {:tx-data tx})
         {:success "User added successfully"})
       (db-api/fail!
         {:status 400
