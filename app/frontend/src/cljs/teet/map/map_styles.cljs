@@ -16,10 +16,14 @@
     (case position
       :top {:top "25px"}
       :bottom {:bottom "25px"
-               :right "8px"}))))
+               :min-width "250px"
+               :right "25px"}))))
 
 (defn map-layer-controls []
   (map-controls {:position :bottom}))
+
+(defn map-layer-controls-body []
+  {:padding "0.5rem"})
 
 (defn add-layer-button []
   {:width "100%"})

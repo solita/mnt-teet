@@ -1,5 +1,5 @@
 (ns teet.project.search-area-style
-  (:require [teet.theme.theme-colors :as theme-colors]))
+  (:require [teet.map.map-styles :as map-styles]))
 
 (defn road-geometry-range-body
   []
@@ -7,6 +7,4 @@
 
 (defn road-geometry-range-selector
   []
-  {:position :absolute
-   :bottom "25px"
-   :right "25px"})
+  (map-styles/map-controls {:position :bottom}))
