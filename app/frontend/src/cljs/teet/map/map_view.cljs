@@ -156,7 +156,7 @@
            {:button-label (tr [:buttons :edit])
             :action (e! map-controller/->EditLayer layer)}]))
       [:div (tr [:map :layers :no-layers])])
-    [buttons/button-primary
+    [buttons/add-button
      {:on-click (e! map-controller/->AddLayer)
       :class (<class map-styles/add-layer-button)}
      [icons/content-add-circle]]]])
