@@ -19,11 +19,14 @@
   "Convert line string to WKT string.
   For QGIS testing with QuickWKT plugin"
   [line-string]
-  (str "LINESTRING ("
-       (str/join ", "
-                 (map (fn [[x y]]
-                        (str x " " y)) line-string))
-       ")"))
+  (str "LINESTRING "
+       (if (seq line-string)
+         (str "("
+              (str/join ", "
+                        (map (fn [[x y]]
+                               (str x " " y)) line-string))
+              ")")
+         "EMPTY")))
 
 (defn interpolate-point
   "Calculate a point between p1 and p2 as a fraction of p1 to p2.
