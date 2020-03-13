@@ -12,8 +12,7 @@
             [teet.project.project-specs]
             [clojure.spec.alpha :as s]
             [clojure.set :as set]
-            [teet.project.project-db :as project-db]
-            [teet.log :as log])
+            [teet.project.project-db :as project-db])
   (:import (java.util Date UUID)))
 
 (defcommand :thk.project/initialize!
