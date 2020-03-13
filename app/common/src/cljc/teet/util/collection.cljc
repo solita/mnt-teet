@@ -48,3 +48,13 @@
       (when (predicate element)
         i))
     collection)))
+
+(defn toggle
+  "Toggle value membership in set.
+  If set is nil, it is initialized to an empty set so
+  it is safe to call this for an uninitialized set."
+  [set value]
+  (let [set (or set #{})]
+    (if (set value)
+      (disj set value)
+      (conj set value))))

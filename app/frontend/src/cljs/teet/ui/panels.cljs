@@ -91,6 +91,11 @@
    :justify-content :space-between
    :align-items     :center})
 
+(defn- dialog-floating-close-button-style []
+  {:display :inline-block
+   :position :absolute
+   :right "0px"})
+
 (defn modal+
   "Advanced modal container"
   [{:keys [title on-close open-atom left-panel right-panel] :as _opts}]
@@ -122,29 +127,40 @@
 
 
 (defn modal
-  "Simple modal container"
-  [{:keys [title on-close open-atom actions] :as _opts} content]
+  "Default modal container"
+  [{:keys [title on-close open-atom actions disable-content-wrapper? max-width]
+    :or {max-width "sm"}
+    :as _opts} content]
   (let [open-atom (or open-atom (r/atom true))      ;;creates new atoms unnecessarily
         close-fn #(do
                     (reset! open-atom false)
                     (when on-close
-                      (on-close)))]
+                      (on-close)))
+        close-button [IconButton {:aria-label     "close"
+                                  :color          :primary
+                                  :disable-ripple true
+                                  :on-click       close-fn
+                                  :size           :small}
+                      [icons/navigation-close]]]
     [Dialog {:full-width true
-             :max-width  "sm"
+             :max-width  max-width
              :open       @open-atom
              :on-close   close-fn}
-     [DialogTitle {:disable-typography true
-                   :class              (<class dialog-title-style)}
-      [typography/Heading1
-       {:class (<class dialog-heading-style)}
-       title]
-      [IconButton {:aria-label     "close"
-                   :color          :primary
-                   :disable-ripple true
-                   :on-click       close-fn
-                   :size           :small}
-       [icons/navigation-close]]]
-     [DialogContent
+     (if title
+       ;; Title specified, show title and close button
+       [DialogTitle {:disable-typography true
+                     :class              (<class dialog-title-style)}
+        [typography/Heading1
+         {:class (<class dialog-heading-style)}
+         title]
+        close-button]
+
+       ;; No title specified, just show floating close button
+       [:div {:class (<class dialog-floating-close-button-style)}
+         close-button])
+     [(if disable-content-wrapper?
+        :<>
+        DialogContent)
       content]
      (when actions
        actions)]))

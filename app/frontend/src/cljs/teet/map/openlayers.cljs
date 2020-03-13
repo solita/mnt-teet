@@ -11,6 +11,7 @@
             [ol.View]
             [ol.events.condition :as condition]
             [ol.interaction :as ol-interaction]
+            [ol.interaction.Draw]
             [ol.interaction.Select]
             [ol.layer.Layer]
             [ol.layer.Vector]
@@ -25,6 +26,7 @@
             [teet.map.openlayers.projektiot :refer [estonian-extent]]
             [teet.map.openlayers.layer :as taso]
             [teet.map.openlayers.background :as background]
+            [teet.map.map-utils :as map-utils]
 
             [teet.log :as log]
 
@@ -201,8 +203,12 @@
      ;; the vectortile source doesn't have that method.
      (.forEachFeatureAtPixel ol3 pixel
                              (fn [feature layer]
-                               (vswap! geom conj (feature-geometry feature layer))
-                               return-first?)
+                               ;; layer may be null for drawn features
+                               (if (and feature layer)
+                                 (do
+                                   (vswap! geom conj (feature-geometry feature layer))
+                                   return-first?)
+                                 true))
                              ;; Function can be given options, which contians hitTolerance. Meaning the radius, from which features are fetched.
                              )
 
@@ -358,35 +364,40 @@
     [(+ minx (/ width 2))
      (+ miny (/ height 2))]))
 
+(def draw-state (atom {}))
 
-(defn- create-dragbox-interaction [opts]
-  (ol-interaction/DragBox. (clj->js opts)))
+(defn disable-draw!
+  []
+  (let [{:keys [interaction]} @draw-state
+        m @the-map]
+    (when interaction
+      (.removeInteraction m interaction))))
 
-(defn- create-select-interaction [opts]
-  (ol-interaction/Select. (clj->js opts)))
+(defn remove-drawing-layer!
+  []
+  (let [{:keys [layer]} @draw-state
+        m @the-map]
+    (when layer
+      (.removeLayer m layer))))
 
-
-(defn add-interaction! [interaction key]
-  (some-> @the-map (.addInteraction interaction))
-  (swap! map-interactions assoc key interaction))
-
-(defn remove-interaction! [key]
-  (some-> @the-map (.removeInteraction (key @map-interactions)))
-  (swap! map-interactions dissoc key))
-
-
-(defn enable-bbox-select! [_]
-  (let [drag-box (create-dragbox-interaction {:condition condition/platformModifierKeyOnly})
-        select (create-select-interaction {})]
-
-    (add-interaction! drag-box :bbox-drag-box)
-    (add-interaction! select :bbox-select)
-
-    drag-box))
-
-(defn disable-bbox-select! []
-  (remove-interaction! :bbox-select)
-  (remove-interaction! :bbox-drag-box))
+(defn enable-draw!
+  [on-draw-finish]
+  (let [source (ol.source.Vector. #js {})
+        layer (ol.layer.Vector. #js {:source source})
+        m @the-map
+        interaction (ol.interaction.Draw. #js {:source source
+                                   :type "Polygon"})
+        interaction (doto interaction
+                      (.on "drawend" (fn [e]
+                                       ;; Remove interaction and layer
+                                       ;; Call on-draw-finish with feature wkt reprecentation
+                                       (when on-draw-finish
+                                         (on-draw-finish (map-utils/feature->wkt (.-feature e)))))))]
+    (reset! draw-state {:interaction interaction
+                        :layer layer})
+    (doto m
+        (.addLayer layer)
+        (.addInteraction interaction))))
 
 (defn resize-map [m]
   (let [target-element (.getTargetElement m)
@@ -409,8 +420,6 @@
       (reset! openlayers-map-height new-height)
 
       (invalidate-size!))))
-
-
 
 (defn- remove-window-resize-listener []
   (when @window-resize-listener-atom

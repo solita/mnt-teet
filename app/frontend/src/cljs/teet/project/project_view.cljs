@@ -3,34 +3,40 @@
             [reagent.core :as r]
             [teet.activity.activity-view :as activity-view]
             [teet.common.common-styles :as common-styles]
-            [teet.localization :refer [tr]]
+            [teet.localization :refer [tr tr-tree]]
             [teet.map.map-view :as map-view]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-model :as project-model]
             [teet.project.project-style :as project-style]
             [teet.project.project-setup-view :as project-setup-view]
             [teet.project.project-layers :as project-layers]
+            [teet.project.project-info :as project-info]
             [teet.task.task-controller :as task-controller]
             teet.task.task-spec
             [teet.ui.breadcrumbs :as breadcrumbs]
             [teet.ui.buttons :as buttons]
             [teet.ui.common :as common]
             [teet.ui.form :as form]
+            [teet.ui.drawing-indicator :as drawing-indicator]
+            [teet.project.search-area-view :as search-area-view]
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
             [teet.ui.stepper :as stepper]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Paper]]
+            [teet.ui.material-ui :refer [Paper Fab Link]]
             [teet.ui.panels :as panels]
             [teet.ui.select :as select]
             [teet.ui.tabs :as tabs]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.typography :refer [Heading1 Heading3] :as typography]
             [teet.ui.url :as url]
+            [teet.ui.timeline :as timeline]
             [teet.util.collection :as cu]
             [teet.activity.activity-controller :as activity-controller]
             [teet.authorization.authorization-check :refer [when-pm-or-owner]]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.project.search-area-controller :as search-area-controller]
+            [clojure.string :as str]))
 
 (defn task-form [_e! {:keys [initialization-fn]}]
   ;;Task definition (under project activity)
@@ -58,9 +64,10 @@
 
 
 (defn project-details
-  [_e! {:thk.project/keys [estimated-start-date estimated-end-date road-nr start-m end-m
+  [_e! {:thk.project/keys [estimated-start-date estimated-end-date road-nr
                            carriageway repair-method procurement-nr id] :as project}]
-  (let [project-name (project-model/get-column project :thk.project/project-name)]
+  (let [project-name (project-model/get-column project :thk.project/project-name)
+        [start-km end-km] (project-model/get-column project :thk.project/effective-km-range)]
     [:div
      [typography/Heading2 {:style {:margin-bottom "2rem"}} project-name]
      [:div [:span "THK id: " id]]
@@ -68,10 +75,9 @@
             ": "
             (format/date estimated-start-date)] " \u2013 " (format/date estimated-end-date)]
      [:div [:span (tr [:project :information :road-number]) ": " road-nr]]
-     (when (and start-m end-m)
-       [:div [:span (tr [:project :information :km-range]) ": "
-              (.toFixed (/ start-m 1000) 3) " \u2013 "
-              (.toFixed (/ end-m 1000) 3)]])
+     [:div [:span (tr [:project :information :km-range]) ": "
+            (.toFixed start-km 3) " \u2013 "
+            (.toFixed end-km 3)]]
      [:div [:span (tr [:project :information :procurement-number]) ": " procurement-nr]]
      [:div [:span (tr [:project :information :carriageway]) ": " carriageway]]
      (when repair-method
@@ -83,11 +89,17 @@
   {:padding "1.5rem 1.875rem"})
 
 (defn- project-header [project breadcrumbs _activities]
-  [:div {:class (<class project-header-style)}
-   [:div
-    [breadcrumbs/breadcrumbs breadcrumbs]
-    [Heading1 {:style {:margin-bottom 0}}
-     (project-model/get-column project :thk.project/project-name)]]])
+  (let [thk-url (project-info/thk-url project)]
+    [:div {:class (<class project-header-style)}
+     [:div
+      [breadcrumbs/breadcrumbs breadcrumbs]
+      [:div {:style {:display :flex
+                     :justify-content :space-between}}
+       [Heading1 {:style {:margin-bottom 0}}
+        (project-model/get-column project :thk.project/project-name)]
+       [common/thk-link {:href thk-url
+                         :target "_blank"}
+        (str "THK" (:thk.project/id project))]]]]))
 
 (defn heading-state
   [title select]
@@ -130,6 +142,7 @@
 
 (defn project-map [e! {:keys [map page] :as app} project]
   (r/with-let [overlays (r/atom [])
+               fitted-atom (atom false)
                set-overlays! (fn [new-overlays]
                                (when (not= new-overlays @overlays)
                                  ;; Only set if actually changed (to avoid rerender loop)
@@ -142,6 +155,7 @@
                    :flex-direction :column}}
      [map-view/map-view e!
       {:class (<class map-style)
+       :config (:config app)
        :layers (let [opts {:e! e!
                            :app app
                            :project project
@@ -150,8 +164,9 @@
                            (merge layers (layer-fn opts)))
                          {}
                          [#_project-layers/surveys-layer
-                          (partial project-layers/project-road-geometry-layer map-object-padding)
+                          (partial project-layers/project-road-geometry-layer map-object-padding fitted-atom)
                           project-layers/setup-restriction-candidates
+                          project-layers/project-drawn-area-layer
                           project-layers/setup-cadastral-unit-candidates
                           project-layers/ags-surveys
                           project-layers/related-restrictions
@@ -172,17 +187,6 @@
                          @overlays))}
       map]]))
 
-(defn road-geometry-range-input
-  [e! {road-buffer-meters :road-buffer-meters} entity-type]
-  [Paper {:class (<class project-style/road-geometry-range-selector)}
-   [:div {:class (<class project-style/project-view-header)}
-    [typography/Heading3 "Road geometry inclusion"]]
-   [:div {:class (<class project-style/road-geometry-range-body)}
-    [TextField {:label "Inclusion distance"
-                :type :number
-                :placeholder "Give value to show related areas"
-                :value road-buffer-meters
-                :on-change #(e! (project-controller/->ChangeRoadObjectAoe (-> % .-target .-value) entity-type))}]]])
 
 (defn project-page-structure
   [e!
@@ -195,8 +199,7 @@
                               (get-in app [:query :configure]))]
     [:div {:class (<class project-style/project-page-structure)}
      [project-header project breadcrumbs]
-     [:div {:style {:position "relative"
-                    :display "flex" :flex-direction "column" :flex 1}}
+     [:div {:class (<class project-style/project-map-container)}
       [project-map e! app project]
       [Paper {:class (<class project-style/project-content-overlay)}
        header
@@ -204,8 +207,13 @@
         body]
        (when footer
          footer)]
+      (when (get-in app [:map :search-area :drawing?])
+        [drawing-indicator/drawing-indicator
+         {:save-disabled? (not (boolean (get-in app [:map :search-area :unsaved-drawing])))
+          :cancel-action #(e! (search-area-controller/->StopCustomAreaDraw))
+          :save-action #(e! (search-area-controller/->SaveDrawnArea (get-in app [:map :search-area :unsaved-drawing])))}])
       (when (:geometry-range? map-settings)
-        [road-geometry-range-input e! (:map app) related-entity-type])]]))
+        [search-area-view/feature-search-area e! app project related-entity-type])]]))
 
 (defn activities-tab
   [e! {:keys [stepper] :as _app} project]
@@ -281,8 +289,8 @@
         (tr [:buttons :edit])])]
     [itemlist/gray-bg-list [{:primary-text (str (:user/given-name manager) " " (:user/family-name manager))
                              :secondary-text (tr [:roles :manager])}
-                             {:primary-text (str (:user/given-name owner) " " (:user/family-name owner))
-                              :secondary-text (tr [:roles :owner])}]]]
+                            {:primary-text (str (:user/given-name owner) " " (:user/family-name owner))
+                             :secondary-text (tr [:roles :owner])}]]]
    [:div
     [:div {:class (<class project-style/heading-and-button-style)}
      [typography/Heading2 (tr [:people-tab :other-users])]
@@ -298,8 +306,53 @@
                                 :secondary-text (tr [:roles (:permission/role permission)])
                                 :id (:db/id user)})])]])
 
+(defn- project-timeline [{:thk.project/keys [estimated-start-date estimated-end-date lifecycles]
+                          :as project}]
+  (r/with-let [show-in-modal? (r/atom false)]
+    (when (and estimated-start-date estimated-end-date)
+      (let [tr* (tr-tree [:enum])
+            project-name (project-model/get-column project :thk.project/project-name)
+            timeline-component [timeline/timeline {:start-date estimated-start-date
+                             :end-date   estimated-end-date}
+          (concat
+           [{:label      project-name
+             :start-date estimated-start-date
+             :end-date   estimated-end-date
+             :fill       "black"
+             :hover      [:div project-name]}]
+           (mapcat (fn [{:thk.lifecycle/keys [type estimated-start-date estimated-end-date
+                                              activities]}]
+                     (concat
+                      [{:label      (-> type :db/ident tr*)
+                        :start-date estimated-start-date
+                        :end-date   estimated-end-date
+                        :fill       "magenta"
+                        :hover      [:div (tr* (:db/ident type))]}]
+                      (for [{:activity/keys [name status estimated-start-date estimated-end-date]
+                             :as activity} activities
+                            :let [label (-> name :db/ident tr*)]]
+                        {:label label
+                         :start-date estimated-start-date
+                         :end-date estimated-end-date
+                         :fill "cyan"
+                         :hover [:div
+                                 [:div [:b (tr [:fields :activity/name]) ": "] label]
+                                 [:div [:b (tr [:fields :activity/status]) ": "] (tr* (:db/ident status))]]})))
+                   (sort-by :thk.lifecycle/estimated-start-date lifecycles)))]]
+
+        [:<>
+         [Fab {:on-click #(reset! show-in-modal? true)} [icons/action-zoom-in]]
+         (if @show-in-modal?
+           [panels/modal {:title "Timeline"
+                          :max-width "lg"
+                          :on-close #(reset! show-in-modal? false)}
+            timeline-component]
+           timeline-component)]))))
+
 (defn details-tab [e! _app project]
-  [project-details e! project])
+  [:<>
+   [project-details e! project]
+   [project-timeline project]])
 
 (defn edit-activity-form
   [_ _ _lifecycle-type initialization-fn]
@@ -445,32 +498,38 @@
     (tr [:buttons :continue])]])
 
 (defn change-restrictions-view
-  [e! app _project]
-  (let [buffer-m (get-in app [:map :road-buffer-meters])]
-    (e! (project-controller/->FetchRelatedInfo buffer-m "restrictions")))
-  (fn [e! app {:keys [open-types restriction-candidates checked-restrictions loading] :or {open-types #{}} :as _project}]
-    (let [buffer-m (get-in app [:map :road-buffer-meters])]
+  [e! app project]
+  (let [buffer-m (get-in app [:map :road-buffer-meters])
+        {:thk.project/keys [related-restrictions]} project]
+    (e! (project-controller/->FetchRelatedCandidates buffer-m "restrictions"))
+    (e! (project-controller/->FetchRelatedFeatures related-restrictions :restrictions)))
+  (fn [e! app {:keys [open-types checked-restrictions feature-candidates] :or {open-types #{}} :as _project}]
+    (let [buffer-m (get-in app [:map :road-buffer-meters])
+          {:keys [loading? restriction-candidates]} feature-candidates]
       [project-setup-view/restrictions-listing e!
        open-types
        buffer-m
        {:restrictions restriction-candidates
-        :loading loading
+        :loading? loading?
         :checked-restrictions (or checked-restrictions #{})
         :toggle-restriction (e! project-controller/->ToggleRestriction)
         :on-mouse-enter (e! project-controller/->FeatureMouseOvers "related-restriction-candidates" true)
         :on-mouse-leave (e! project-controller/->FeatureMouseOvers "related-restriction-candidates" false)}])))
 
 (defn change-cadastral-units-view
-  [e! app _project]
-  (let [buffer-m (get-in app [:map :road-buffer-meters])]
-    (e! (project-controller/->FetchRelatedInfo buffer-m "cadastral-units")))
-  (fn [e! app {:keys [cadastral-candidates checked-cadastral-units loading] :as _project}]
-    (let [buffer-m (get-in app [:map :road-buffer-meters])]
+  [e! app project]
+  (let [buffer-m (get-in app [:map :road-buffer-meters])
+        {:thk.project/keys [related-cadastral-units]} project]
+    (e! (project-controller/->FetchRelatedCandidates buffer-m "cadastral-units"))
+    (e! (project-controller/->FetchRelatedFeatures related-cadastral-units :cadastral-units)))
+  (fn [e! app {:keys [feature-candidates checked-cadastral-units] :as _project}]
+    (let [buffer-m (get-in app [:map :road-buffer-meters])
+          {:keys [loading? cadastral-candidates]} feature-candidates]
       [project-setup-view/cadastral-units-listing
        e!
        buffer-m
        {:cadastral-units cadastral-candidates
-        :loading loading
+        :loading? loading?
         :checked-cadastral-units (or checked-cadastral-units #{})
         :toggle-cadastral-unit (e! project-controller/->ToggleCadastralUnit)
         :on-mouse-enter (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" true)
@@ -506,12 +565,12 @@
       :footer [:div {:class (<class project-style/wizard-footer)}
                [buttons/button-warning {:component "a"
                                         :href (url/remove-param :configure)}
-                "cancel"]
+                (tr [:buttons :cancel])]
                [buttons/button-primary
                 {:on-click (e! project-controller/->UpdateProjectCadastralUnits
                                (:checked-cadastral-units project)
                                (:thk.project/id project))}
-                "save"]]}]
+                (tr [:buttons :save])]]}]
     :else
     [project-page-structure e! app project breadcrumbs
      (merge {:header [project-tabs e! app]

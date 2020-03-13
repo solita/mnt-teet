@@ -2,7 +2,7 @@
   "SVG timeline component"
   (:require [goog.date :as dt]
             [reagent.core :as r]
-            [teet.ui.material-ui :refer [Popper]]
+            [teet.ui.material-ui :refer [Popover Popper]]
             [cljs-time.core :as t]
             [teet.theme.theme-panels :as theme-panels]
             [herb.core :refer [<class]]
@@ -260,9 +260,13 @@
                            :line-width line-width
                            :line-height line-height
                            :num-items num-items}]])]
+
          (when-let [{:keys [element content]} @hover]
            [Popper {:open true
                     :anchorEl element
-                    :placement "top"}
-            [:div {:class (<class theme-panels/popup-panel)}
+                    :placement "top"
+                    :modifiers #js {:hide #js {:enabled false}
+                                    :preventOverflow #js {:enabled false}}
+                    :disable-portal true}
+            [:div {:class (<class theme-panels/popup-panel :bottom)}
              content]])]))))

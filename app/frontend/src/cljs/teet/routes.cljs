@@ -1,5 +1,7 @@
 (ns teet.routes
-  "Routing for TEET app"
+  "Routing for TEET app
+
+  See also route definitions resources/routes.edn and route_macros.clj "
   (:require [bide.core :as r]
             [tuck.core :as tuck]
             [teet.app-state :as app-state]

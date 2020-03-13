@@ -87,22 +87,16 @@
 (defrecord NavigateToStep [step])
 
 (defrecord SaveProjectSetup [])
-(defrecord SaveProjectSetupResponse [])
 (defrecord InitializeBasicInformationForm [form-data])
 (defrecord UpdateBasicInformationForm [form-data])
 (defrecord UpdateProjectRestrictions [restrictions project-id])
 (defrecord UpdateProjectCadastralUnits [cadastral-units project-id])
 (defrecord FeaturesUpdatedSuccessfully [result])
-(defrecord ChangeRoadObjectAoe [val entity-type])
-(defrecord SaveRestrictions [])
-(defrecord UpdateRestrictionsForm [form-data])
-(defrecord SaveCadastralUnits [])
-(defrecord UpdateCadastralUnitsForm [form-data])
-(defrecord SaveActivities [])
-(defrecord UpdateActivitiesForm [form-data])
 (defrecord RoadGeometryAndInfoResponse [result])
 
-(defrecord FetchRelatedInfo [road-buffer-meters entity-type])
+(defrecord FetchRelatedCandidates [road-buffer-meters entity-type])
+(defrecord FetchRelatedFeatures [feature-ids feature-type])
+(defrecord RelatedFeaturesSuccess [type result])
 (defrecord ToggleRestriction [restriction])
 (defrecord SelectRestrictions [restrictions])
 (defrecord DeselectRestrictions [restrictions])
@@ -127,39 +121,50 @@
 
 (defrecord FetchFeatureCandidatesResponse [candidate-type response])
 
-(defn fetch-related-info
+(defn datasource-ids-by-type
+  [app type]
+  (case type
+    "restrictions"
+    (map-controller/select-rpc-datasources
+      app map-controller/restriction-datasource?)
+
+    "cadastral-units"
+    (map-controller/select-rpc-datasources
+      app map-controller/cadastral-unit-datasource?)))
+
+(defn fetch-related-candidates
   [app road-buffer-meters info-type]
-  (let [[rpc args] (if-let [g (get-in app [:route :project :geometry])]
-                     ;; If we have a project geometry (in setup wizard)
-                     ;; fetch features by giving the geometry area
-                     ["geojson_features_within_area"
-                      {:geometry_wkt (str "LINESTRING("
-                                          (str/join "," (map #(str/join " " %) g))
-                                          ")")}]
+  (let [entity-id (str (get-in app [:route :project :db/id]))
+        [rpc args]
+        (if (= (get-in app [:map :search-area :tab]) :drawn-area)
+          ["geojson_related_features_for_entity_by_type"
+           {:entity_id entity-id
+            :type "search-area"}]
+          (if-let [g (get-in app [:route :project :geometry])]
+            ;; If we have a project geometry (in setup wizard)
+            ;; fetch features by giving the geometry area
+            ["geojson_features_within_area"
+             {:geometry_wkt (str "LINESTRING("
+                                 (str/join "," (map #(str/join " " %) g))
+                                 ")")
+              :distance road-buffer-meters}]
 
-                     ;; Otherwise get related features based on the stored entity geometry
-                     ["geojson_entity_related_features"
-                      {:entity_id (str (get-in app [:route :project :db/id]))}])]
-    (merge
-      {:tuck.effect/type :rpc
-       :rpc              rpc
-       :endpoint         (get-in app [:config :api-url])}
-      (case info-type
-        "restrictions"
-        {:args         (assoc args
-                              ;; FIXME: dataosource ids from map datasources info
-                              :distance road-buffer-meters
-                              :datasource_ids (map-controller/select-rpc-datasources
-                                               app map-controller/restriction-datasource?))
-         :result-event (partial ->FetchFeatureCandidatesResponse :restrictions)}
-
-        "cadastral-units"
-        {:args         (assoc args
-                              :distance road-buffer-meters
-                              :datasource_ids (map-controller/select-rpc-datasources
-                                               app map-controller/cadastral-unit-datasource?))
-         :result-event (partial ->FetchFeatureCandidatesResponse :cadastral-units)}
-        {}))))
+            ;; Otherwise get related features based on the stored entity geometry
+            ["geojson_entity_related_features"
+             {:entity_id entity-id
+              :distance road-buffer-meters}]))]
+    {:tuck.effect/type :rpc
+     :rpc rpc
+     :loading-path [:route :project :feature-candidates]
+     :endpoint (get-in app [:config :api-url])
+     :args (assoc args :datasource_ids
+                       (datasource-ids-by-type app info-type))
+     :result-event
+     (case info-type
+       "restrictions"
+       (partial ->FetchFeatureCandidatesResponse :restrictions)
+       "cadastral-units"
+       (partial ->FetchFeatureCandidatesResponse :cadastral-units))}))
 
 (defn navigate-to-next-step-event
   "Given `current-step`, navigates to next step in `steps`"
@@ -178,10 +183,13 @@
 (defn- update-related-features [features-path features-geojson-path feature-candidates-geojson-path
                                 app new-features]
   (let [ids (into #{} (map :teet-id) new-features)
-        feature-candidates-geojson (get-in app feature-candidates-geojson-path)
+        selected-features-geojson (get-in app features-geojson-path)
+        feature-candidates-geojson (->> (get-in app feature-candidates-geojson-path)
+                                        ->clj
+                                        :features)
         new-features-geojson (into #{}
                                    (filter #(ids (get-in % [:properties :teet-id])))
-                                   (->> feature-candidates-geojson ->clj :features))]
+                                   (concat selected-features-geojson feature-candidates-geojson))]
     (-> app
         (assoc-in features-path new-features)
         (assoc-in features-geojson-path new-features-geojson))))
@@ -189,12 +197,12 @@
 (def update-checked-restrictions (partial update-related-features
                                           [:route :project :checked-restrictions]
                                           [:route :project :checked-restrictions-geojson]
-                                          [:route :project :restriction-candidates-geojson]))
+                                          [:route :project :feature-candidates :restriction-candidates-geojson]))
 
 (def update-checked-cadastral-units (partial update-related-features
                                              [:route :project :checked-cadastral-units]
                                              [:route :project :checked-cadastral-geojson]
-                                             [:route :project :cadastral-candidates-geojson]))
+                                             [:route :project :feature-candidates :cadastral-candidates-geojson]))
 
 (defn toggle-related-feature [features-path update-checked-fn app feature]
   (update-checked-fn
@@ -221,13 +229,13 @@
       (->NavigateToStep step-label))))
 
 (def candidate-paths
-  {:restrictions {:result-path [:route :project :restriction-candidates]
-                  :geojson-path [:route :project :restriction-candidates-geojson]
+  {:restrictions {:result-path [:route :project :feature-candidates :restriction-candidates]
+                  :geojson-path [:route :project :feature-candidates :restriction-candidates-geojson]
                   :selected-feature-path [:route :project :thk.project/related-restrictions]
                   :checked-feature-path [:route :project :checked-restrictions]
                   :checked-feature-geojson-path [:route :project :checked-restrictions-geojson]}
-   :cadastral-units {:result-path [:route :project :cadastral-candidates]
-                     :geojson-path [:route :project :cadastral-candidates-geojson]
+   :cadastral-units {:result-path [:route :project :feature-candidates :cadastral-candidates]
+                     :geojson-path [:route :project :feature-candidates :cadastral-candidates-geojson]
                      :selected-feature-path [:route :project :thk.project/related-cadastral-units]
                      :checked-feature-path [:route :project :checked-cadastral-units]
                      :checked-feature-geojson-path [:route :project :checked-cadastral-geojson]}})
@@ -235,33 +243,21 @@
 (extend-protocol t/Event
   FetchFeatureCandidatesResponse
   (process-event [{:keys [candidate-type response]} app]
-    (let [{:keys [result-path geojson-path selected-feature-path checked-feature-path checked-feature-geojson-path]} (candidate-paths candidate-type)
+    (let [{:keys [result-path geojson-path]} (candidate-paths candidate-type)
           geojson (js/JSON.parse response)
           features (-> geojson
                        (js->clj :keywordize-keys true)
                        :features
                        (as-> fs
-                             (map :properties fs)))
-          related-features (into #{} (get-in app selected-feature-path))
-          selected-candidates (set
-                                (filter
-                                     #(related-features (:teet-id %))
-                                     features))
-          selected-geojsons (->> geojson
-                                 ->clj
-                                 :features
-                                 (filter #(related-features (get-in % [:properties :teet-id])))
-                                 set)]
+                             (map :properties fs)))]
       (-> app
-          (update-in [:route :project] dissoc :loading)
+          (update-in [:route :project :feature-candidates] dissoc :loading?)
           (assoc-in result-path features)
-          (assoc-in geojson-path geojson)
-          (assoc-in checked-feature-path selected-candidates)
-          (assoc-in checked-feature-geojson-path selected-geojsons))))
+          (assoc-in geojson-path geojson))))
 
   SelectCadastralUnit
   (process-event [{p :p} app]
-    (let [cadastral-candidates (get-in app [:route :project :cadastral-candidates])
+    (let [cadastral-candidates (get-in app [:route :project :feature-candidates :cadastral-candidates])
           cadastral-selections (get-in app [:route :project :checked-cadastral-units])
           cadastral-unit (or
                            (first (filter #(= (:teet-id %) (:map/teet-id p)) cadastral-selections))
@@ -292,17 +288,6 @@
            :command          :thk.project/skip-setup
            :payload          {:thk.project/id project-id}
            :result-event     common-controller/->Refresh}))
-
-  ChangeRoadObjectAoe
-  (process-event [{val :val
-                   entity-type :entity-type} {:keys [page params] :as app}]
-    (let [app (assoc-in app [:map :road-buffer-meters] val)]
-      (if (and entity-type (not-empty val))
-        (t/fx app
-              {:tuck.effect/type :debounce
-               :timeout          600
-               :effect           (fetch-related-info app val entity-type)})
-        app)))
 
   DeleteActivity
   (process-event [{activity-id :activity-id} app]
@@ -426,7 +411,6 @@
 
   UpdateBasicInformationForm
   (process-event [{:keys [form-data]} app]
-    (log/info "UpdateBasicInformationForm" form-data)
     (let [project-meter-range (fn [app]
                                 (let [{[start-km-string end-km-string] :thk.project/km-range}
                                       (get-in app [:route :project :basic-information-form])]
@@ -461,13 +445,42 @@
   (process-event [{result :result} app]
     (update-in app [:route :project] merge result))
 
-  FetchRelatedInfo
+  FetchRelatedCandidates
   (process-event [{road-buffer-meters :road-buffer-meters
-                   entity-type :entity-type} app]
-    (t/fx (assoc-in app [:route :project :loading] (or (project-setup-step app)
-                                                       entity-type))
-          (fetch-related-info app road-buffer-meters (or (project-setup-step app)
-                                                         entity-type))))
+                   entity-type :entity-type}
+                  app]
+    (t/fx app
+          (fetch-related-candidates app road-buffer-meters (or (project-setup-step app)
+                                                               entity-type))))
+
+  FetchRelatedFeatures
+  (process-event [{feature-ids :feature-ids
+                   feature-type :feature-type} app]
+    (t/fx app
+          {:tuck.effect/type :rpc
+           :endpoint (get-in app [:config :api-url])
+           :rpc "geojson_features_by_id"
+           :args {"ids" (str "{" (str/join "," feature-ids) "}")}
+           :result-event (partial ->RelatedFeaturesSuccess feature-type)}))
+
+  RelatedFeaturesSuccess
+  (process-event [{type :type
+                   result :result} app]
+    (let [{:keys [checked-feature-path checked-feature-geojson-path]} (candidate-paths type)
+          geojson (js/JSON.parse result)
+          features (-> geojson
+                       (js->clj :keywordize-keys true)
+                       :features
+                       (as-> fs
+                             (map :properties fs))
+                       set)
+          feature-geojsons (->> geojson
+                                ->clj
+                                :features
+                                set)]
+      (-> app
+          (assoc-in checked-feature-path features)
+          (assoc-in checked-feature-geojson-path feature-geojsons))))
 
   ToggleRestriction
   (process-event [{restriction :restriction} app]
@@ -525,7 +538,7 @@
           new-open-types (if opening?
                            (conj open-types group)
                            (disj open-types group))
-          restriction-geojsons (get-in app [:route :project :restriction-candidates-geojson])
+          restriction-geojsons (get-in app [:route :project :feature-candidates :restriction-candidates-geojson])
           previously-open-geojsons (-> (get-in app [:route :project :open-restrictions-geojsons])
                                        ->clj
                                        :features)

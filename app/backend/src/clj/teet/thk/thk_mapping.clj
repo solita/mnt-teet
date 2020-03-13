@@ -160,8 +160,10 @@
    "object_groupname" [:thk.project/repair-method]
    "object_roadnr" [:thk.project/road-nr ->int]
    "object_carriageway" [:thk.project/carriageway ->int]
-   "object_kmstart" [:thk.project/start-m (comp km->m ->num) m->km-str]
-   "object_kmend" [:thk.project/end-m (comp km->m ->num) m->km-str]
+   "object_kmstart" [:thk.project/start-m (comp km->m ->num) m->km-str
+                     :thk.project/custom-start-m]
+   "object_kmend" [:thk.project/end-m (comp km->m ->num) m->km-str
+                   :thk.project/custom-end-m]
    "object_bridgenr" [:thk.project/bridge-nr ->int]
    "object_name" [:thk.project/name]
    "object_projectname" [:thk.project/project-name]

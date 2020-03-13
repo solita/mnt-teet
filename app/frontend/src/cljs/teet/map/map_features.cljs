@@ -175,6 +175,17 @@
                   #js {:src "/img/crosshair.png"
                        :anchor #js [0.5 0.5]})}))
 
+(defn drawn-area-style
+  [^ol.render.Feature feature _res]
+  (let [hover? (.get feature "hover")]
+    (ol.style.Style.
+      #js {:stroke (ol.style.Stroke. #js {:color "rgba(0,123,175,0.8)"
+                                          :width 2})
+           :fill (ol.style.Fill. #js {:cursor :pointer
+                                      :color (if hover?
+                                               "rgba(0,123,175,0.8)"
+                                               "rgba(0,123,175,0.3)")})})))
+
 (defn cadastral-unit-style
   "Show cadastral unit."
   [^ol.render.Feature feature res]
@@ -196,22 +207,33 @@
 
 (defn selected-cadastral-unit-style
   "style for selected cadastral units"
-  [^ol.render.Feature _feature _res]
-  (ol.style.Style.
-    #js {:stroke (ol.style.Stroke. #js {:color "rgba(0,94,135,0.8)"
-                                        :width 2})
-         :fill   (ol.style.Fill. #js {:cursor :pointer
-                                      :color  "rgba(0,94,135,0.5)"})}))
+  [^ol.render.Feature feature res]
+  (let [hover? (.get feature "hover")]
+    (styles
+      (ol.style.Style.
+        #js {:stroke (ol.style.Stroke. #js {:color "rgba(0,94,135,0.8)"
+                                            :width 2})
+             :fill (ol.style.Fill. #js {:cursor :pointer
+                                        :color (if hover?
+                                                 "rgba(0,94,135,0.8)"
+                                                 "rgba(0,94,135,0.5)")})})
+      (when hover?
+        (small-feature-style feature res)))))
 
 (defn selected-restrictions-style
   "Show project related restriction as a filled area."
-  [^ol.render.Feature _feature _res]
-  (ol.style.Style.
-    #js {:stroke (ol.style.Stroke. #js {:color "rgba(0,94,135,0.8)"
-                                        :width 2})
-         :fill   (ol.style.Fill. #js {:cursor :pointer
-                                      :color  "rgba(0,94,135,0.5)"})}))
-
+  [^ol.render.Feature feature res]
+  (let [hover? (.get feature "hover")]
+    (styles
+      (ol.style.Style.
+        #js {:stroke (ol.style.Stroke. #js {:color "rgba(0,94,135,0.8)"
+                                            :width 2})
+             :fill (ol.style.Fill. #js {:cursor :pointer
+                                        :color (if hover?
+                                                 "rgba(0,94,135,0.8)"
+                                                 "rgba(0,94,135,0.5)")})})
+      (when hover?
+        (small-feature-style feature res)))))
 
 (defn survey-style
   "Show survey area."

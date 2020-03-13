@@ -164,7 +164,15 @@
  :map
  {:clear-selections "Tühjendan valikud",
   :select-all "Valin kõik",
-  :map-layers "Kaardikihid"},
+  :map-layers "Kaardikihid",
+  :layers
+  {:no-layers "Ei kihid",
+   :projects "Projektid",
+   :restrictions "Kitsendused",
+   :cadastral-units "Katastriüksused",
+   :land-surveys "Maa uuring",
+   :layer "kiht",
+   :no-filters "Ei filtrid"}},
  :notifications
  {:permission-revoked "Luba tühistati edukalt",
   :activity-deleted "Tegevus edukalt kustutatud",
@@ -173,6 +181,7 @@
   :cadastral-units-updated "Katastriüksused edukalt värskendatud",
   :restrictions-updated "Kitsendused edukalt värskendatud",
   :task-deleted "Ülesanne edukalt kustutatud"},
+ :page-title {:project-list "{name} projekti"},
  :people-tab
  {:managers "Juhid",
   :other-users "Muud kasutajad",

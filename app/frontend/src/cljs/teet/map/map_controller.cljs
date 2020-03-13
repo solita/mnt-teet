@@ -24,6 +24,14 @@
 (defrecord FetchOverlayForEntityFeature [result-path teet-id])
 (defrecord FetchOverlayForEntityFeatureResponse [result-path teet-id response])
 
+;; Events for adding/removing/editing visible layers
+(defrecord AddLayer []) ; open new layer dialog
+(defrecord EditLayer [layer]) ; open layer edit dialog
+(defrecord SaveLayer []) ; save new/edited layer
+(defrecord CancelLayer []) ; cancel add/edit layer
+(defrecord UpdateLayer [layer]) ; update layer with new data
+(defrecord RemoveLayer [layer]) ; remove layer
+
 (extend-protocol t/Event
   ToggleCategorySelect
   (process-event [{:keys [category closing?]} app]
@@ -114,7 +122,51 @@
                 result-path
                 {teet-id
                  {:coordinate (-> feature :geometry :coordinates)
-                  :content-data (-> feature :properties)}}))))
+                  :content-data (-> feature :properties)}})))
+
+  AddLayer
+  (process-event [_ app]
+    (assoc-in app [:map :edit-layer]
+              {:new? true}))
+
+  EditLayer
+  (process-event [{layer :layer} app]
+    (assoc-in app [:map :edit-layer] layer))
+
+  UpdateLayer
+  (process-event [{:keys [layer]} app]
+    (update-in app [:map :edit-layer] merge layer))
+
+  SaveLayer
+  (process-event [_ app]
+    (let [{:keys [new? type] :as layer} (get-in app [:map :edit-layer])
+          layer (dissoc layer :new?)]
+      (-> app
+          (update-in [:map :layers]
+                     (fn [layers]
+                       (if new?
+                         (conj (or layers []) layer)
+                         (mapv #(if (= (:type %) type)
+                                  layer
+                                  %)
+                               layers))))
+          (update :map dissoc :edit-layer))))
+
+  CancelLayer
+  (process-event [_ app]
+    (update app :map dissoc :edit-layer))
+
+  RemoveLayer
+  (process-event [{:keys [layer]} app]
+    (-> app
+        (update-in [:map :layers]
+                   (fn [layers]
+                     (into []
+                           (keep #(when (not= (:type layer)
+                                              (:type %))
+                                    %))
+                           layers)))
+        (update :map dissoc :edit-layer))))
 
 (defn update-features! [layer-name update-fn & args]
   (let [^ol.Map m (openlayers/get-the-map)]

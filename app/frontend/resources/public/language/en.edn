@@ -96,7 +96,7 @@
   :task.status/assigned "Assigned",
   :task.type/geology "Geology",
   :task.status/in-preparation "In preparation",
-  :document.category/as-built-doc "Contruction documentation",
+  :document.category/as-built-doc "Construction documentation",
   :activity.status/other "Other",
   :document.status/invalid "Invalid",
   :document.sub-category/explanatory-letter "Explanatory letter ",
@@ -163,7 +163,15 @@
  :map
  {:clear-selections "Clear selections",
   :select-all "Select all",
-  :map-layers "Map layers"},
+  :map-layers "Map layers",
+  :layers
+  {:no-layers "No map layers",
+   :projects "Projects",
+   :restrictions "Restrictions",
+   :cadastral-units "Cadastral units",
+   :land-surveys "Land surveys",
+   :layer "layer",
+   :no-filters "No filters available."}},
  :notifications
  {:permission-revoked "Permission revoked successfully",
   :activity-deleted "Activity deleted successfully",
@@ -172,6 +180,7 @@
   :cadastral-units-updated "Cadastral units updated successfully",
   :restrictions-updated "Restrictions updated succesfully",
   :task-deleted "Task deleted successfully"},
+ :page-title {:project-list "{name} project"},
  :people-tab
  {:managers "Managers",
   :other-users "Other users",

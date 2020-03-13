@@ -2,10 +2,12 @@
   "Common UI utilities"
   (:require [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
+            [teet.ui.icons :as icons]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.material-ui :refer [ButtonBase]]
+            [teet.ui.material-ui :refer [ButtonBase Link]]
             [teet.ui.typography :refer [Text SmallText] :as typography]
-            [teet.common.common-styles :as common-styles]))
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.buttons :as buttons]))
 
 (def lifecycle-methods
   "Supported lifecycle methods in mixins."
@@ -164,3 +166,49 @@
   [:div {:class (<class common-styles/header-with-actions)}
    [typography/Heading1 header-text]
    (into [:div {:class (<class heading-buttons-style)}] actions)])
+
+
+(defn feature-and-action-style
+  []
+  ^{:pseudo {:hover {:background-color theme-colors/gray-dark}}}
+  {:background-color theme-colors/gray
+   :color theme-colors/white
+   :transition "background-color 200ms ease-in-out"
+   :padding "0.5rem"
+   :padding-left "1rem"
+   :margin-bottom "0.5rem"
+   :display :flex
+   :justify-content :space-between
+   :align-items :center})
+
+(defn feature-and-action
+  [{:keys [label]}
+   {:keys [button-label action on-mouse-enter on-mouse-leave]}]
+  [:div {:on-mouse-enter on-mouse-enter
+         :on-mouse-leave on-mouse-leave
+         :class (<class feature-and-action-style)}
+   [:span label]
+   [buttons/rect-white {:on-click action}
+    button-label]])
+
+(defn- thk-link-style
+  []
+  ^{:pseudo {:hover {:text-decoration :underline}}}
+  {:font-size "24px"
+   :text-decoration :none
+   :display :flex
+   :align-items :center})
+
+(defn- thk-link-icon-style
+  []
+  {:margin-left "0.5rem"
+   :font-size "20px"
+   :font-weight :bold})
+
+(defn thk-link
+  [opts label]
+  [Link (merge {:class (<class thk-link-style)}
+               opts)
+   label
+   [icons/action-open-in-new {:class (<class thk-link-icon-style)}]])
+

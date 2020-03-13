@@ -70,26 +70,11 @@
                    :default-sort-column :thk.project/project-name}]]))
 
 
-(def ^:const project-pin-resolution-threshold 100)
-(def ^:const project-restriction-resolution 20)
-(def ^:const cadastral-unit-resolution 5)
 
-(defn generate-mvt-layers                                   ;;This should probably be moved somewhere else so we can use it in project view also if needed
-  [restrictions api-url]
-  (into {}
-        (for [[type restrictions] restrictions
-              :let [selected-restrictions (->> restrictions
-                                               (filter second)
-                                               (map first))]
-              :when (and (not= type "Katastri")
-                         (seq selected-restrictions))]
-          [(keyword type)
-           (map-layers/mvt-layer api-url
-                                 "mvt_restrictions"
-                                 {"type" type
-                                  "layers" (str/join ", " selected-restrictions)}
-                                 map-features/project-restriction-style
-                                 {:max-resolution project-restriction-resolution})])))
+
+
+
+
 
 
 (defn projects-map-page [e! app]
@@ -99,48 +84,26 @@
                              (map :db/id)
                              (get-in app [:quick-search :results]))]
     [map-view/map-view e!
-     {:class (<class theme-spacing/fill-content)
+     {:config (:config app)
+      :class (<class theme-spacing/fill-content)
       :layer-controls? true
       :layers (merge
-               (if-not (str/blank? search-term)
+               {}
+               (when-not (str/blank? search-term)
                  ;; Showing search results, only fetch those
                  {:search-results
                   (map-layers/geojson-layer api-url
                                             "geojson_entities"
                                             {"ids" (str "{" (str/join "," search-results) "}")}
                                             map-features/project-line-style
-                                            {:max-resolution project-pin-resolution-threshold})
+                                            {:max-resolution map-layers/project-pin-resolution-threshold})
                   :search-result-pins
                   (map-layers/geojson-layer api-url
                                             "geojson_entity_pins"
                                             {"ids" (str "{" (str/join "," search-results) "}")}
                                             map-features/project-pin-style
-                                            {:min-resolution project-pin-resolution-threshold
-                                             :fit-on-load? true})}
-
-                 ;; Show all projects
-                 {:thk-projects
-                  (map-layers/mvt-layer api-url
-                                        "mvt_entities"
-                                        {"type" "project"}
-                                        map-features/project-line-style
-                                        {:max-resolution project-pin-resolution-threshold})
-                  :thk-project-pins
-                  (map-layers/geojson-layer api-url
-                                            "geojson_entity_pins"
-                                            {"type" "project"}
-                                            map-features/project-pin-style
-                                            {:min-resolution project-pin-resolution-threshold
-                                             :fit-on-load? true})})
-
-                     (when (get-in app [:map :map-restrictions "Katastri" "katastriyksus"])
-                       {:cadastral-units
-                        (map-layers/mvt-layer api-url
-                                              "mvt_cadastral_units"
-                                              {}
-                                              map-features/cadastral-unit-style
-                                              {:max-resolution cadastral-unit-resolution})})
-                     (generate-mvt-layers (get-in app [:map :map-restrictions]) api-url))}
+                                            {:min-resolution map-layers/project-pin-resolution-threshold
+                                             :fit-on-load? true})}))}
      (:map app)]))
 
 (defn projects-list-page [e! app projects _breadcrumbs]

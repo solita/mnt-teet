@@ -71,9 +71,9 @@
         [TextField {:label "end adonrmnet"
                     :value @val
                     :on-change on-change
-                    :placeholder "Placeholder"
+                    :placeholder "Calendar"
                     :variant :outlined
-                    :input-icon icons/action-calendar-today
+                    :start-icon [:span "123"]
                     :button-click println}]
         [TextField {:label "Tekstiä"
                     :on-change on-change

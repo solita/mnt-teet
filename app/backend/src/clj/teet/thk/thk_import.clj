@@ -11,7 +11,8 @@
             [clojure.string :as str]
             [datomic.client.api :as d]
             [teet.util.collection :as cu]
-            [teet.thk.thk-mapping :as thk-mapping])
+            [teet.thk.thk-mapping :as thk-mapping]
+            [teet.log :as log])
   (:import (org.apache.commons.io.input BOMInputStream)))
 
 (def excluded-project-types #{"TUGI" "TEEMU"})
@@ -103,8 +104,16 @@
   (into [{:db/id "datomic.tx"
           :integration/source-uri url}]
         (for [prj projects-csv
-              :when (teet-project? prj)]
-          (project-datomic-attributes prj))))
+              :when (teet-project? prj)
+              :let [{:thk.project/keys [id lifecycles] :as project}
+                    (project-datomic-attributes prj)]]
+          (do
+            (log/info "THK project " id
+                      "has" (count lifecycles) "lifecycles (ids: "
+                      (str/join ", " (map :thk.lifecycle/id lifecycles)) ") with"
+                      (reduce + (map #(count (:thk.lifecycle/activities %)) lifecycles))
+                      "activities.")
+            project))))
 
 (defn- check-unique-activity-ids [projects]
   (into {}
@@ -119,11 +128,27 @@
                      activity-ids]))))
         (partition 1 projects)))
 
+(defn- check-unique-lifecycle-ids
+  [projects]
+  (into {}
+        (keep (fn [[id lifecycles]]
+                (let [lifecycle-ids (map :thk.lifecycle/id lifecycles)
+                      unique-lifecycle-ids (into #{} lifecycle-ids)]
+                  (when (not= (count lifecycle-ids) (count unique-lifecycle-ids))
+                    [id
+                     lifecycle-ids]))))
+        projects))
+
 (defn import-thk-projects! [connection url projects]
   (let [duplicate-activity-id-projects
-        (check-unique-activity-ids projects)]
+        (check-unique-activity-ids projects)
+        duplicate-lifecycle-id-projects
+        (check-unique-lifecycle-ids projects)]
     (when (seq duplicate-activity-id-projects)
       (throw (ex-info "Duplicate activity ids exist"
-                      {:projects-with-duplicate-activity-ids duplicate-activity-id-projects}))))
-  (d/transact connection
-              {:tx-data (thk-project-tx url projects)}))
+                      {:projects-with-duplicate-activity-ids duplicate-activity-id-projects})))
+    (when (seq duplicate-lifecycle-id-projects)
+      (throw (ex-info "Duplicate lifecycle ids exist"
+                      {:projects-with-duplicate-lifecycle-ids duplicate-lifecycle-id-projects})))
+    (d/transact connection
+                {:tx-data (thk-project-tx url projects)})))

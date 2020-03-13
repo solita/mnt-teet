@@ -166,3 +166,13 @@
     "{\"success\": true}"
     (catch Exception e
       (log/error "Error exporting projects CSV to S3: " (pr-str (ex-data e))))))
+
+(defn export-projects-to-local-file [filepath]
+  (let [dump (fn [{file :file}]
+               (with-open [out (io/output-stream filepath)]
+                 (.write out file)))]
+    (ctx-> {:connection (environment/datomic-connection)}
+           export-projects
+           csv->file
+           dump))
+  :ok)

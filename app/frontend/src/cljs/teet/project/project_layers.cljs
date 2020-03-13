@@ -57,15 +57,37 @@
                  :geometry #js {:type "LineString"
                                 :coordinates (into-array (map into-array ls))}}]})
 
+(defn project-drawn-area-layer
+  [{app :app}]
+  (let [drawn-geojsons (get-in app [:map :search-area :drawn-areas-geojson])
+        tab-drawn? (boolean (= (get-in app [:map :search-area :tab]) :drawn-area))]
+    (when (and tab-drawn? drawn-geojsons)
+      {:drawn-area-style
+       (map-layers/geojson-data-layer "project-drawn-areas"
+                                      drawn-geojsons
+                                      map-features/drawn-area-style
+                                      {})})))
+
+(defn geometry-fit-on-first-load
+  "Get atom as parameter that has info if the geometry fit has happened
+   And switch the atom state if it's the first time fit is happening"
+  [fitted-atom]
+  (if @fitted-atom
+    false
+    (do
+      (reset! fitted-atom true)
+      true)))
+
 (defn project-road-geometry-layer
   "Show project geometry or custom road part in case the start and end
   km are being edited during initialization"
   [map-obj-padding
+   fitted-atom
    {app :app
     {:keys [basic-information-form geometry] :as project} :project
     set-overlays! :set-overlays!}]
-
-  (let [endpoint (endpoint app)
+  (let [tab-drawn? (boolean (= (get-in app [:map :search-area :tab]) :drawn-area))
+        endpoint (endpoint app)
         [start-label end-label]
         (if-let [km-range (:thk.project/km-range basic-information-form)]
           (mapv (comp road-model/format-distance
@@ -76,14 +98,16 @@
                       km->m)
                 (project-model/get-column project
                                           :thk.project/effective-km-range)))
-        options {:fit-on-load? true
+        options {:fit-on-load? (geometry-fit-on-first-load fitted-atom)
                  ;; Use left side padding so that road is not shown under the project panel
                  :fit-padding map-obj-padding}
 
         ;; If we have geometry (in setup wizard) or are editing related features
         ;; show the buffer as well, otherwise just the road line
-        style (if (or geometry
-                      (#{"restrictions" "cadastral-units"} (get-in app [:query :configure])))
+        style (if (and
+                    (not tab-drawn?)
+                    (or geometry
+                        (#{"restrictions" "cadastral-units"} (get-in app [:query :configure]))))
                 (map-features/project-line-style-with-buffer (get-in app [:map :road-buffer-meters]))
                 map-features/project-line-style)]
 
@@ -125,16 +149,17 @@
 
 (defn setup-cadastral-unit-candidates [{{:keys [query]} :app
                                         {:keys [setup-step
-                                                cadastral-candidates-geojson]} :project}]
-  (when-let [candidates (and (or
-                               (= setup-step "cadastral-units")
-                               (= (:configure query) "cadastral-units"))
-                             cadastral-candidates-geojson)]
-    {:related-cadastral-unit-candidates
-     (map-layers/geojson-data-layer "related-cadastral-unit-candidates"
-                                    candidates
-                                    map-features/cadastral-unit-style
-                                    {:opacity 1})}))
+                                                feature-candidates]} :project}]
+  (let [{:keys [cadastral-candidates-geojson]} feature-candidates]
+    (when (and (or
+                 (= setup-step "cadastral-units")
+                 (= (:configure query) "cadastral-units"))
+               (get (js->clj cadastral-candidates-geojson) "features"))
+      {:related-cadastral-unit-candidates
+       (map-layers/geojson-data-layer "related-cadastral-unit-candidates"
+                                      cadastral-candidates-geojson
+                                      map-features/cadastral-unit-style
+                                      {:opacity 1})})))
 
 
 (defn related-restrictions [{{query :query :as app} :app
@@ -163,7 +188,7 @@
 (defn selected-cadastral-units [{{:keys [query]} :app
                                  {checked-cadastral-geojson :checked-cadastral-geojson
                                   setup-step :setup-step} :project}]
-  (when (and checked-cadastral-geojson
+  (when (and (not-empty (js->clj checked-cadastral-geojson))
              (or
                (= (:configure query) "cadastral-units")
                (= setup-step "cadastral-units")))
@@ -176,7 +201,8 @@
 (defn selected-restrictions [{{:keys [query]} :app
                               {checked-restrictions-geojson :checked-restrictions-geojson
                                setup-step :setup-step} :project}]
-  (when (and checked-restrictions-geojson
+
+  (when (and (not-empty (js->clj checked-restrictions-geojson))
              (or
                (= (:configure query) "restrictions")
                (= setup-step "restrictions")))

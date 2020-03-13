@@ -42,17 +42,22 @@
 
     (when-not (.verify signed-id-token (MACVerifier. shared-secret))
       (throw (ex-info "Could not verify JWT signature"
-                      {:invalid-token signed-id-token})))
+                      {:invalid-token signed-id-token
+                       :error :jwt-verification-failed})))
 
     (when (.before (.getExpirationTime claims-set) (java.util.Date.))
       (throw (ex-info "JWT token is expired"
-                      {:expiration-time (.getExpirationTime claims-set)})))
+                      {:expiration-time (.getExpirationTime claims-set)
+                       :error :jwt-verification-failed
+                       })))
 
     (let [{:strs [sub given_name family_name role email id roles]} claims]
       (when-not (= role "teet_user")
         (throw (ex-info "Unexpected role in JWT token"
                         {:expected-role "teet_user"
-                         :actual-role role})))
+                         :actual-role role
+                         :error :jwt-verification-failed
+                         })))
       #:user {:given-name given_name
               :family-name family_name
               :email email

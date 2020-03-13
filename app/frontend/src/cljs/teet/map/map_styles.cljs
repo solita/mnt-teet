@@ -2,18 +2,56 @@
   (:require [teet.theme.theme-colors :as theme-colors]))
 
 (defn map-controls
-  []
-  {:background-color "white"
-   :max-width "40vw"
-   :position :absolute
-   :top "25px"
-   :right "80px"
-   :z-index 999
-   :box-shadow "0px 2px 8px rgba(0, 0, 0, 0.25)"})
+  ([] (map-controls {}))
+  ([{:keys [position right]
+     :or {position :top
+          right "80px"}}]
+   (merge
+    {:background-color "white"
+     :max-width "40vw"
+     :position :absolute
+     :right right
+     :z-index 999
+     :box-shadow "0px 2px 8px rgba(0, 0, 0, 0.25)"}
+    (case position
+      :top {:top "25px"}
+      :bottom {:bottom "25px"
+               :min-width "250px"
+               :right "25px"}))))
 
+(defn map-layer-controls []
+  (map-controls {:position :bottom}))
+
+(defn map-layer-controls-body []
+  {:padding "0.5rem"})
+
+(defn add-layer-button []
+  {:width "100%"})
 (defn category-collapse-button
   []
   {:margin-right "1rem"})
+
+(defn edit-layer-type []
+  {:padding "1rem"
+   :background-color theme-colors/gray
+   :color theme-colors/white
+   :height "100%"})
+
+(defn edit-layer-form []
+  {:padding "1rem"
+   :display :flex
+   :flex-direction :column
+   :min-height "40vh"})
+
+(defn edit-layer-type-heading [selected?]
+  {:cursor :pointer
+   :color (if selected?
+            theme-colors/white
+            theme-colors/gray-lighter)})
+
+(defn edit-layer-options []
+  {:flex-grow 100
+   :background-color theme-colors/gray-lightest})
 
 (defn map-controls-heading
   []
@@ -22,6 +60,7 @@
    :align-items :center
    :padding "1rem"
    :margin 0
+   :background theme-colors/gray-lighter
    :border-bottom (str "1px solid " theme-colors/gray-light)})
 
 (defn category-container

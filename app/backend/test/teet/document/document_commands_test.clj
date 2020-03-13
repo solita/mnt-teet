@@ -9,7 +9,7 @@
            :file-too-large)))
   (testing "files of illegal type are invalid"
     (is (= (:error (document-model/validate-file {:file/type "application/nonsense"
-                                                     :file/size 1024}))
+                                                  :file/size 1024}))
            :file-type-not-allowed)))
   (testing "other files are valid"
     (is (nil? (document-model/validate-file
