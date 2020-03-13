@@ -200,11 +200,16 @@
   (spit "entity-diagram.puml" (output-datomic-entity-diagram)))
 
 (defn delete-all-imported-thk-projects! []
-  (let [projects (into #{}
-                       (map first)
-                       (q '[:find ?e :where [?e :thk.project/id _]] (db)))]
-    (println "Deleting " (count projects) "THK projects. Press enter to continue")
+  (let [db (db)
+        entity-ids #(into #{} (map first)
+                          (q % db))
+        projects (entity-ids '[:find ?e :where [?e :thk.project/id _]])
+        lifecycles (entity-ids '[:find ?e :where [?e :thk.lifecycle/id _]])
+        activities (entity-ids '[:find ?e :where [?e :thk.activity/id _]])]
+    (println "Deleting THK entities: " (count projects) " projects, "
+             (count lifecycles) " lifecycles"
+             (count activities) " activities. Press enter to continue!")
     (read-line)
     (apply tx
-           (for [id projects]
+           (for [id (concat projects lifecycles activities)]
              [:db/retractEntity id]))))

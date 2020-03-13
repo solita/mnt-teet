@@ -147,19 +147,20 @@
     [:div {:class (<class map-styles/map-controls-heading)}
      [icons/maps-layers]
      (tr [:map :map-layers])]
-    (if (seq layers)
-      (util/with-keys
-        (for [layer layers]
-          ^{:key (:id layer)}
-          [common/feature-and-action
-           {:label (tr [:map :layers (:type layer)])}
-           {:button-label (tr [:buttons :edit])
-            :action (e! map-controller/->EditLayer layer)}]))
-      [:div (tr [:map :layers :no-layers])])
-    [buttons/button-primary
-     {:on-click (e! map-controller/->AddLayer)
-      :class (<class map-styles/add-layer-button)}
-     [icons/content-add-circle]]]])
+    [:div {:class (<class map-styles/map-layer-controls-body)}
+     (if (seq layers)
+            (util/with-keys
+              (for [layer layers]
+                ^{:key (:id layer)}
+                [common/feature-and-action
+                 {:label (tr [:map :layers (:type layer)])}
+                 {:button-label (tr [:buttons :edit])
+                  :action (e! map-controller/->EditLayer layer)}]))
+            [:div (tr [:map :layers :no-layers])])
+     [buttons/add-button
+      {:on-click (e! map-controller/->AddLayer)
+       :class (<class map-styles/add-layer-button)}
+      [icons/content-add-circle]]]]])
 
 (defn map-control-buttons [e! {:keys [background-layer] :as _map-data
                                :or   {background-layer "kaart"}}]

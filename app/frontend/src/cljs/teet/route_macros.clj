@@ -1,7 +1,8 @@
 (ns teet.route-macros
   "Macros for defining the app structure"
   (:require [clojure.java.io :as io]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.authorization.authorization-check :refer [authorized?]]))
 
 (defn read-route-defs []
   (read-string
@@ -26,14 +27,14 @@
              ~'tr teet.localization/tr]
          (case page#
            ~@(mapcat
-              (fn [[route-name {:keys [state view path skeleton role keep-query-params title] :as route}]]
+              (fn [[route-name {:keys [state view path skeleton permission keep-query-params title] :as route}]]
                 [route-name
                  `(let [{:keys [~@(param-names path)]} ~'params
                         ~'state (get-in ~'app [:route ~route-name])
                         title# ~title
                         ~'refresh (get-in ~'app [:route ~(keyword (str (name route-name) "-refresh"))])]
                     (set! (.-title js/document) (or title# "TEET"))
-                    (if-not (teet.user.user-controller/has-role? ~role)
+                    (if-not (or (nil? ~permission) (authorized? @teet.app-state/user ~permission))
                       {:page [:div "No such page"]}
                       {:page ~(if state
                                 ;; If page has needed state, wrap it in the query component to fetch it
