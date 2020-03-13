@@ -176,7 +176,11 @@ and cadastral units"
                            :permission/valid-from (Date.)}
                           (creation-meta granting-user))]}
                  (when-not user-exists?
-                   {:user/person-id (:user/person-id user)
+                   {:user/person-id (let [pid (:user/person-id user)]
+                                      ;; Normalize estonian ids to start with "EE"
+                                      (if (str/starts-with? pid "EE")
+                                        pid
+                                        (str "EE" pid)))
                     :user/roles [:user]}))]]
         (d/transact conn {:tx-data tx})
         {:success "User added successfully"})
