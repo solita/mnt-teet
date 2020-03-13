@@ -69,14 +69,6 @@
                    :key :thk.project/id
                    :default-sort-column :thk.project/project-name}]]))
 
-
-
-
-
-
-
-
-
 (defn projects-map-page [e! app]
   (let [api-url (get-in app [:config :api-url])
         search-term (get-in app [:quick-search :term])
