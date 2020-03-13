@@ -221,8 +221,7 @@
 
 (defn add-user-form
   [e! user project-id]
-  (let [user ()
-        roles (-> @authorization-check/roles
+  (let [roles (-> @authorization-check/roles
                   (disj :admin)
                   vec)]
     [:div
