@@ -10,6 +10,7 @@
             [teet.project.project-style :as project-style]
             [teet.project.project-setup-view :as project-setup-view]
             [teet.project.project-layers :as project-layers]
+            [teet.project.project-info :as project-info]
             [teet.task.task-controller :as task-controller]
             teet.task.task-spec
             [teet.ui.breadcrumbs :as breadcrumbs]
@@ -22,7 +23,7 @@
             [teet.ui.icons :as icons]
             [teet.ui.stepper :as stepper]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Paper Fab]]
+            [teet.ui.material-ui :refer [Paper Fab Link]]
             [teet.ui.panels :as panels]
             [teet.ui.select :as select]
             [teet.ui.tabs :as tabs]
@@ -34,7 +35,8 @@
             [teet.activity.activity-controller :as activity-controller]
             [teet.authorization.authorization-check :refer [when-pm-or-owner]]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.project.search-area-controller :as search-area-controller]))
+            [teet.project.search-area-controller :as search-area-controller]
+            [clojure.string :as str]))
 
 (defn task-form [_e! {:keys [initialization-fn]}]
   ;;Task definition (under project activity)
@@ -87,11 +89,17 @@
   {:padding "1.5rem 1.875rem"})
 
 (defn- project-header [project breadcrumbs _activities]
-  [:div {:class (<class project-header-style)}
-   [:div
-    [breadcrumbs/breadcrumbs breadcrumbs]
-    [Heading1 {:style {:margin-bottom 0}}
-     (project-model/get-column project :thk.project/project-name)]]])
+  (let [thk-url (project-info/thk-url project)]
+    [:div {:class (<class project-header-style)}
+     [:div
+      [breadcrumbs/breadcrumbs breadcrumbs]
+      [:div {:style {:display :flex
+                     :justify-content :space-between}}
+       [Heading1 {:style {:margin-bottom 0}}
+        (project-model/get-column project :thk.project/project-name)]
+       [common/thk-link {:href thk-url
+                         :target "_blank"}
+        (str "THK" (:thk.project/id project))]]]]))
 
 (defn heading-state
   [title select]

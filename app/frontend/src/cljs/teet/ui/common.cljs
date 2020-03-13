@@ -2,8 +2,9 @@
   "Common UI utilities"
   (:require [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
+            [teet.ui.icons :as icons]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.material-ui :refer [ButtonBase]]
+            [teet.ui.material-ui :refer [ButtonBase Link]]
             [teet.ui.typography :refer [Text SmallText] :as typography]
             [teet.common.common-styles :as common-styles]
             [teet.ui.buttons :as buttons]))
@@ -189,3 +190,25 @@
    [:span label]
    [buttons/rect-white {:on-click action}
     button-label]])
+
+(defn- thk-link-style
+  []
+  ^{:pseudo {:hover {:text-decoration :underline}}}
+  {:font-size "24px"
+   :text-decoration :none
+   :display :flex
+   :align-items :center})
+
+(defn- thk-link-icon-style
+  []
+  {:margin-left "0.5rem"
+   :font-size "20px"
+   :font-weight :bold})
+
+(defn thk-link
+  [opts label]
+  [Link (merge {:class (<class thk-link-style)}
+               opts)
+   label
+   [icons/action-open-in-new {:class (<class thk-link-icon-style)}]])
+

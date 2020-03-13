@@ -5,20 +5,14 @@
             [teet.ui.icons :as icons]
             [teet.localization :refer [tr]]
             [teet.project.search-area-style :as search-area-style]
-            [teet.ui.material-ui :refer [Paper Tab Tabs ButtonBase]]
+            [teet.ui.material-ui :refer [Paper Tab Tabs]]
             [herb.core :refer [<class]]
             [teet.ui.text-field :refer [TextField]]
             [reagent.core :as r]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.common :as common]))
+            [teet.ui.common :as common]
+            [teet.ui.buttons :as buttons]))
 
-(defn- add-area-button
-  [{:keys [on-click disabled?]} label]
-  [ButtonBase {:on-click on-click
-               :disable-ripple true
-               :disabled disabled?
-               :class (<class search-area-style/add-area-button-style disabled?)}
-   label])
 
 (defn road-geometry-range-input
   [e! {road-buffer-meters :road-buffer-meters} entity-type]
@@ -50,8 +44,8 @@
                 :on-mouse-enter #(e! (search-area-controller/->MouseOverDrawnAreas "project-drawn-areas" true feature))
                 :on-mouse-leave #(e! (search-area-controller/->MouseOverDrawnAreas "project-drawn-areas" false feature))
                 :action #(e! (search-area-controller/->DeleteDrawnArea id (:db/id project)))}]))
-          [add-area-button {:on-click #(e! (search-area-controller/->InitializeCustomAreaDraw))
-                            :disabled? drawing?}
+          [buttons/add-button {:on-click #(e! (search-area-controller/->InitializeCustomAreaDraw))
+                               :disabled? drawing?}
            (if drawing?
              [:span {:style {:color theme-colors/gray-lightest}}
               "Waiting for area..."]
