@@ -176,9 +176,8 @@ and cadastral units"
                            :permission/valid-from (Date.)}
                           (creation-meta granting-user))]}
                  (when-not user-exists?
-                   {:user/person-id (:user/person-id user)}))]]
-        (log/info "PAYLOAD: " payload)
-        (log/info "TX: " tx)
+                   {:user/person-id (:user/person-id user)
+                    :user/roles [:user]}))]]
         (d/transact conn {:tx-data tx})
         {:success "User added successfully"})
       (db-api/fail!
