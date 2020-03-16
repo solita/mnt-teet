@@ -157,6 +157,7 @@ and cadastral units"
    :spec (s/keys :req-un [::project-id])
    :project-id project-id
    :authorization {:project/edit-permissions {:link :thk.project/owner}}}
+  (assert (not= role :admin) "Can't give admin permission to project")
   (let [user-exists? (:user/id user)
         user-already-added?
         (and user-exists?
@@ -170,7 +171,7 @@ and cadastral units"
                            "new-user")
                   :user/permissions
                   [(merge {:db/id "new-permission"
-                           :permission/role :internal-consultant
+                           :permission/role role
                            :permission/projects project-id
                            :permission/valid-from (Date.)}
                           (creation-meta granting-user))]}
