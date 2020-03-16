@@ -49,7 +49,7 @@
   {:doc "Fetch task"
    :context {db :db}
    :args {project-id :thk.project/id
-          task-id    :task-id}
+          task-id :task-id}
    :pre [(project-db/task-belongs-to-project db [:thk.project/id project-id] task-id)]
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/task-information {:db/id task-id
@@ -86,18 +86,21 @@
                                    project-model/project-info-attributes
                                    [:thk.project/id project-id]))))
 
-
 (defquery :thk.project/listing
   {:doc "List all project basic info"
    :context {db :db}
    :args _
    :project-id nil
    :authorization {}}
-  (mapv first
-        (d/q '[:find (pull ?e columns)
-               :in $ columns
-               :where [?e :thk.project/id _]]
-             db project-model/project-listing-attributes)))
+  (map
+    project-model/project-with-status
+    (meta-query/without-deleted
+      db
+      (mapv first
+            (d/q '[:find (pull ?e columns)
+                   :in $ columns
+                   :where [?e :thk.project/id _]]
+                 db project-model/project-list-with-status-attributes)))))
 
 (defquery :thk.project/search
   {:doc "Search for a project by text"

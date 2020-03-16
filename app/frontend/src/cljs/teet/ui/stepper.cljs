@@ -4,6 +4,7 @@
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.buttons :as buttons]
             [teet.ui.icons :as icons]
+            [teet.project.activity-model :as activity-model]
             [teet.project.project-controller :as project-controller]
             [teet.localization :refer [tr]]
             [reagent.core :as r]
@@ -106,19 +107,13 @@
    :flex-direction :column
    :align-items    :flex-start})
 
-(def ^:private activity-in-progress-statuses
-  #{:activity.status/valid :activity.status/other :activity.status/research :activity.status/in-progress})
-
-(def ^:private activity-ready-statuses
-  #{:activity.status/completed :activity.status/expired :activity.status/canceled})
-
 (defn- activity-step-state
   [activity]
   (let [status (get-in activity [:activity/status :db/ident])]
     (cond
-      (activity-ready-statuses status)
+      (activity-model/activity-ready-statuses status)
       :done
-      (activity-in-progress-statuses status)
+      (activity-model/activity-in-progress-statuses status)
       :started
       :else
       :not-started)))
@@ -141,12 +136,12 @@
   (let [in-progress-activities (->> lifecycle
                                     :thk.lifecycle/activities
                                     (map #(get-in % [:activity/status :db/ident]))
-                                    (filter activity-in-progress-statuses)
+                                    (filter activity-model/activity-in-progress-statuses)
                                     count)
         ready-activities (->> lifecycle
                               :thk.lifecycle/activities
                               (map #(get-in % [:activity/status :db/ident]))
-                              (filter activity-ready-statuses)
+                              (filter activity-model/activity-ready-statuses)
                               count)
         lc-status (cond
                     (and (zero? in-progress-activities) (zero? ready-activities))
