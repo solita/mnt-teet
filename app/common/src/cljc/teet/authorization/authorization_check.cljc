@@ -15,7 +15,9 @@
                                  slurp
                                  read-string))))
 
-(defonce roles
+(defonce
+  ^{:doc "Delayed set of all role names"}
+  all-roles
   (delay (->> @authorization-rules
               vals
               (map (comp set keys))
