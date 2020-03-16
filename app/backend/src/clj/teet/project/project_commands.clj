@@ -12,7 +12,8 @@
             [teet.project.project-specs]
             [clojure.spec.alpha :as s]
             [clojure.set :as set]
-            [teet.project.project-db :as project-db])
+            [teet.project.project-db :as project-db]
+            [teet.authorization.authorization-check :as authorization-check])
   (:import (java.util Date UUID)))
 
 (defcommand :thk.project/initialize!
@@ -157,7 +158,7 @@ and cadastral units"
    :spec (s/keys :req-un [::project-id])
    :project-id project-id
    :authorization {:project/edit-permissions {:link :thk.project/owner}}}
-  (assert (not= role :admin) "Can't give admin permission to project")
+  (assert (authorization-check/role-can-be-granted? role) "Can't grant role")
   (let [user-exists? (:user/id user)
         user-already-added?
         (and user-exists?
