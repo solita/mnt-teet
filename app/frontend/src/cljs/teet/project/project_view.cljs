@@ -221,9 +221,9 @@
 
 (defn add-user-form
   [e! user project-id]
-  (let [roles (-> @authorization-check/all-roles
-                  (disj :admin)
-                  vec)]
+  (let [roles (into []
+                    (filter authorization-check/role-can-be-granted?)
+                    @authorization-check/all-roles)]
     [:div
      [form/form {:e! e!
                  :value user
@@ -237,7 +237,8 @@
 
       ^{:attribute :permission/role
         :xs 6}
-      [select/form-select {:format-item name
+      [select/form-select {:format-item #(tr [:roles %])
+                           :show-empty-selection? true
                            :items roles}]
 
       (when (= (:project/participant user) :new)
