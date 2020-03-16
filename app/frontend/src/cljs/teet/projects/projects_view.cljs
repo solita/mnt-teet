@@ -17,7 +17,9 @@
             [teet.ui.format :as format]
             [teet.ui.table :as table]
             [teet.common.common-controller :as common-controller]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.ui.typography :as typography]
+            [teet.projects.projects-style :as projects-style]))
 
 (defmethod search-interface/format-search-result :project
   [{:thk.project/keys [id] :as project}]
@@ -25,8 +27,22 @@
    :text (project-model/get-column project :thk.project/project-name)
    :href (str "#/projects/" id)})
 
-(defn format-column-value [column value]
+(defn name-and-status-view
+  [status name thk-id]
+  [:div {:class (<class projects-style/name-and-status-row-style)}
+   [:div {:class (<class projects-style/status-circle-style status)
+          :title status}]
+   [:p
+    [:strong {:class (<class projects-style/project-name-style)} name]
+    [typography/GreyText (str "THK" thk-id)]]])
+
+(defn format-column-value [column value row]
   (case column
+    :thk.project/project-name
+    (let [status (:thk.project/status row)
+          thk-id (:thk.project/id row)]
+      [name-and-status-view status value thk-id])
+
     :thk.project/effective-km-range
     (let [[start end] value]
       [:span {:style {:white-space :nowrap}} (str (.toFixed start 3) " \u2013 " (.toFixed end 3))])
