@@ -616,7 +616,6 @@
   (process-event [{project-id :project-id form-data :form-data} app]
     (let [participant (:project/participant form-data)
           role (:permission/role form-data)]
-      (log/info "SAVE PROJECT PErmisSION " form-data)
       (t/fx app
             {:tuck.effect/type :command!
              :command          :thk.project/add-permission
