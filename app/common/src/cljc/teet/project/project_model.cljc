@@ -3,6 +3,7 @@
   (:require [teet.user.user-model :as user-model]
             #?@(:cljs ([teet.ui.format :as format]
                        [clojure.string :as str]
+                       [cljs-time.core :as t]
                        goog.math.Long)
                 :clj ([clojure.string :as str]))
             [teet.log :as log]
@@ -10,7 +11,7 @@
             [teet.project.activity-model :as activity-model]
             [teet.project.task-model :as task-model]
             [clojure.spec.alpha :as s])
-  (:import (java.util Date)))
+  #?(:clj (:import (java.util Date))))
 
 ;; A valid project id is either the :db/id in datomic or
 ;; a lookup ref specifying the project id in THK
@@ -178,7 +179,8 @@
 
 (defn date-in-past?
   [date]
-  (.before date (Date.)))
+  #?(:clj (.before date (Date.))
+     :cljs (t/before? date (js/Date.))))
 
 (defn- activity-behind-schedule?
   [{:activity/keys [estimated-end-date] :as activity}]
@@ -187,10 +189,9 @@
 
 (defn- atleast-one-activity-over-deadline?
   [activities]
-  (let [activities-past-deadline (filter
-                                   activity-behind-schedule?
-                                   activities)]
-    (seq activities-past-deadline)))
+  (some
+    activity-behind-schedule?
+    activities))
 
 (defn- task-behind-schedule?
   [{:task/keys [estimated-end-date] :as task}]
@@ -199,10 +200,9 @@
 
 (defn- atleast-one-task-over-deadline?
   [tasks]
-  (let [tasks-past-deadline (filter
-                              task-behind-schedule?
-                              tasks)]
-    (seq tasks-past-deadline)))
+  (some
+    task-behind-schedule?
+    tasks))
 
 (defn project-with-status
   [{:thk.project/keys [lifecycles owner estimated-end-date estimated-start-date] :as project}]
@@ -214,14 +214,15 @@
                     #(assoc % :task/estimated-end-date (:activity/estimated-end-date activity))
                     (:activity/tasks activity)))
                 (mapcat :thk.lifecycle/activities (:thk.project/lifecycles project)))]
-    (cond
-      (and (nil? owner) (date-in-past? estimated-start-date))
-      (assoc project :thk.project/status :unassigned-over-start-date)
-      (and (atleast-one-activity-over-deadline? activities) (date-in-past? estimated-end-date))
-      (assoc project :thk.project/status :activity-over-deadline)
-      (atleast-one-task-over-deadline? tasks)
-      (assoc project :thk.project/status :task-over-deadline)
-      (not (nil? owner))
-      (assoc project :thk.project/status :on-schedule)
-      :else
-      (assoc project :thk.project/status :unassigned))))
+    (assoc project :thk.project/status
+                   (cond
+                     (and (nil? owner) (date-in-past? estimated-start-date))
+                     :unassigned-over-start-date
+                     (and (atleast-one-activity-over-deadline? activities) (date-in-past? estimated-end-date))
+                     :activity-over-deadline
+                     (atleast-one-task-over-deadline? tasks)
+                     :task-over-deadline
+                     (not (nil? owner))
+                     :on-schedule
+                     :else
+                     :unassigned))))
