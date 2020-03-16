@@ -4,7 +4,8 @@
             [teet.environment :as environment]
             [teet.thk.thk-integration-ion :as thk-integration]
             [clojure.string :as str])
-  (:import (java.util Date)))
+  (:import (java.util Date)
+           (java.util.concurrent TimeUnit Executors)))
 
 (defn go []
   (main/restart)
@@ -213,3 +214,11 @@
     (apply tx
            (for [id (concat projects lifecycles activities)]
              [:db/retractEntity id]))))
+
+(defn keep-connection-alive
+  "Starts a thread where a single datomic query is ran every minute to keep datomic proxy open."
+  []
+  (.scheduleWithFixedDelay
+    (Executors/newScheduledThreadPool 1)
+    #(q '[:find ?e :where [?e :db/ident :task.status/accepted]] (db))
+    1 1 TimeUnit/MINUTES))
