@@ -253,7 +253,10 @@
  :roles
  {:internal-consultant "Sisekonsultant",
   :owner "Projektijuht",
-  :manager "Vastutav isik"},
+  :manager "Vastutav isik",
+  :external-consultant "Väline konsultant",
+  :guest "Külaline",
+  :authenticated-guest "Autenditud külaline"},
  :search {:quick-search "Otsin", :clear-filters "Puhastan filtrid"},
  :task
  {:add-document "Lisan dokumendi",

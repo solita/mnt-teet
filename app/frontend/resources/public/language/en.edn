@@ -252,7 +252,10 @@
  :roles
  {:internal-consultant "Internal consultant",
   :owner "Owner",
-  :manager "Manager"},
+  :manager "Manager",
+  :external-consultant "External consultant",
+  :guest "Guest",
+  :authenticated-guest "Authenticated guest"},
  :search {:quick-search "Search", :clear-filters "Clear filters"},
  :task
  {:add-document "Add document",
