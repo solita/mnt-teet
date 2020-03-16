@@ -113,7 +113,7 @@
                   (for [column columns]
                     ^{:key (name column)}
                     [TableCell {}
-                     (format-column column (get-column row column))]))]))]]
+                     (format-column column (get-column row column) row)]))]))]]
            [scroll-sensor/scroll-sensor show-more!]]))})))
 
 (defn- filtered-data [get-column data filters]
