@@ -23,6 +23,13 @@
               (map (comp set keys))
               (reduce set/union #{}))))
 
+(def ^{:doc "Roles that cannot be currently granted from user interface."
+       :private true}
+  ungrantable-roles #{:admin :guest :authenticated-guest})
+
+(defn role-can-be-granted? [role]
+  (not (ungrantable-roles role)))
+
 (defn access-for
   "Returns the description of access given in the `rule` for `role`."
   [rule role]
