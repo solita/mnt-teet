@@ -23,7 +23,7 @@
             [teet.ui.icons :as icons]
             [teet.ui.stepper :as stepper]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Paper Fab Link]]
+            [teet.ui.material-ui :refer [Paper Fab]]
             [teet.ui.panels :as panels]
             [teet.ui.select :as select]
             [teet.ui.tabs :as tabs]
@@ -33,10 +33,10 @@
             [teet.ui.timeline :as timeline]
             [teet.util.collection :as cu]
             [teet.activity.activity-controller :as activity-controller]
-            [teet.authorization.authorization-check :refer [when-pm-or-owner]]
+            [teet.authorization.authorization-check :as authorization-check :refer [when-pm-or-owner]]
             [teet.theme.theme-colors :as theme-colors]
             [teet.project.search-area-controller :as search-area-controller]
-            [clojure.string :as str]))
+            [teet.user.user-model :as user-model]))
 
 (defn task-form [_e! {:keys [initialization-fn]}]
   ;;Task definition (under project activity)
@@ -221,14 +221,34 @@
 
 (defn add-user-form
   [e! user project-id]
-  [:div
-   [form/form {:e! e!
-               :value user
-               :on-change-event #(e! (project-controller/->UpdateProjectPermissionForm %))
-               :save-event #(e! (project-controller/->SaveProjectPermission project-id user))
-               :spec :project/add-permission-form}
-    ^{:attribute :project/participant}
-    [select/select-user {:e! e! :attribute :project/participant}]]])
+  (let [roles (into []
+                    (filter authorization-check/role-can-be-granted?)
+                    @authorization-check/all-roles)]
+    [:div
+     [form/form {:e! e!
+                 :value user
+                 :on-change-event #(e! (project-controller/->UpdateProjectPermissionForm %))
+                 :save-event #(e! (project-controller/->SaveProjectPermission project-id user))
+                 :spec :project/add-permission-form}
+      ^{:attribute :project/participant :xs 6}
+      [select/select-user {:e! e! :attribute :project/participant
+                           :extra-selection :new
+                           :extra-selection-label (tr [:people-tab :invite-user])}]
+
+      ^{:attribute :permission/role
+        :xs 6}
+      [select/form-select {:format-item #(tr [:roles %])
+                           :show-empty-selection? true
+                           :items roles}]
+
+      (when (= (:project/participant user) :new)
+        ^{:attribute :user/person-id
+          :xs 6}
+        [TextField {:start-icon
+                    (fn [{c :class}]
+                      [:div {:class (str c " "
+                                         (<class common-styles/input-start-text-adornment))}
+                       "EE"])}])]]))
 
 (defn permission-information
   [e! permission]
@@ -249,11 +269,13 @@
                                    (let [user-id (:db/id user)]
                                      {:key user-id
                                       :href (url/set-params :person user-id)
-                                      :title (str (:user/given-name user) " " (:user/family-name user))
+                                      :title (or (user-model/user-name user)
+                                                 (tr [:common :unknown]))
                                       :selected? (= (str user-id) selected-person)}))
                                  permissions)]
        [itemlist/white-link-list permission-links]))
    [buttons/rect-white {:href (url/remove-param :person)}
+    [icons/content-add]
     (tr [:project :add-users])]])
 
 (defn people-modal

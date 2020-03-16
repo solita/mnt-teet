@@ -3,7 +3,8 @@
                :cljs [cljs.reader :as reader])
             #?(:cljs [teet.app-state :as app-state])
             [teet.log :as log]
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [clojure.set :as set]))
 
 (defonce authorization-rules
          (delay #?(:cljs (-> js/window
@@ -13,6 +14,21 @@
                                  io/resource
                                  slurp
                                  read-string))))
+
+(defonce
+  ^{:doc "Delayed set of all role names"}
+  all-roles
+  (delay (->> @authorization-rules
+              vals
+              (map (comp set keys))
+              (reduce set/union #{}))))
+
+(def ^{:doc "Roles that cannot be currently granted from user interface."
+       :private true}
+  ungrantable-roles #{:admin :guest :authenticated-guest})
+
+(defn role-can-be-granted? [role]
+  (not (ungrantable-roles role)))
 
 (defn access-for
   "Returns the description of access given in the `rule` for `role`."

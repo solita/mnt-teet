@@ -90,3 +90,14 @@
   {:font-size "1rem"
    :color theme-colors/error
    :text-align :center})
+
+(defn input-start-text-adornment
+  "Style for a short text adornment before input text"
+  []
+  {:padding "0px 7px 0px 7px"
+   :left "1px"
+   :top "1px"
+   :min-height "39px"
+   :background-color theme-colors/gray-lighter
+   :color theme-colors/gray-dark
+   :user-select :none})
