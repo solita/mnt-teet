@@ -10,7 +10,7 @@ ARGS=""
 URI=""
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    ARGS="--rm -p 3000:3000"
+    ARGS="--rm -p 127.0.0.1:3000:3000"
     URI="postgres://$DBUSER@host.docker.internal:5432/teet"
 elif [[ "$OSTYPE" == "linux-gnu" ]]; then
     ARGS="-d --rm --link teetdb --network docker_teet --name teetapi -p 127.0.0.1:3000:3000"
