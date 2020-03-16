@@ -346,6 +346,7 @@
                         10000)
       (.then #(.json %))
       (.then (fn [json-response]
+               (log/debug "fetch-deploy-status resolving")
                (js/Promise.resolve (js->clj json-response))))))
 
 ;; Check deploy status, show corresponding snackbar message
@@ -371,27 +372,28 @@
   (t/fx app {:tuck.effect/type :deploy-status
              :result-event ->DeployStatusResponse}))
 
-(def ^:private poll-timeout-ms 30000)
+(def ^:private poll-timeout-ms 8000)
 
+(defonce version-seen-on-startup (atom nil))
 (defn poll-version
   "Polls whether the client's version of the app is the same as the one
   currently deployed. If not, shows a warning that a new version is
   being, or has been, deployed."
   [e!]
+  (log/debug "poll-version")
   (-> (fetch-deploy-status)
       (.then (fn [{:strs [commit status]}]
+               (log/debug "deploy-status cb, commit=" commit)
+               (when (and (some? commit)
+                          (nil? @version-seen-on-startup))
+                 (reset! version-seen-on-startup commit))
+               
                (js/setTimeout #(poll-version e!) poll-timeout-ms)
-               (if (= status "deploying")
-                 (e! (snackbar-controller/->OpenSnackBarWithOptions {:message (tr [:warning :deploying])
-                                                                     :variant :warning
-                                                                     :hide-duration nil}))
-                 (let [current-version-commit (aget js/window "teet_githash")]
-                   (when (and current-version-commit
-                              (not= commit
-                                    current-version-commit))
-                     (e! (snackbar-controller/->OpenSnackBarWithOptions {:message (tr [:warning :version-mismatch])
-                                                                         :variant :warning
-                                                                         :hide-duration nil})))))))))
+               (when (and (some? commit) (not= commit @version-seen-on-startup))
+                 (e! (snackbar-controller/->OpenSnackBarWithOptions
+                      {:message (tr [:warning :version-mismatch])
+                       :variant :warning
+                       :hide-duration nil})))))))
 
 (defn query-url
   "Generate an URL to a query with the given args. This is useful for queries
