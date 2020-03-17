@@ -166,7 +166,7 @@
 
 (defn activities-tab
   [e! {:keys [stepper] :as _app} project]
-  [project-navigator-view/project-navigator e! project stepper])
+  [project-navigator-view/project-navigator e! project stepper false])
 
 (defn add-user-form
   [e! user project-id]
