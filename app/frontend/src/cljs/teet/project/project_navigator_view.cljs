@@ -152,7 +152,7 @@
                     :started)]
     lc-status))
 
-(defn vertical-stepper
+(defn project-navigator
   [e! {:thk.project/keys [lifecycles] :as _project} stepper]
   (let [lifecycle-ids (mapv :db/id lifecycles)
         lc-id (:lifecycle stepper)

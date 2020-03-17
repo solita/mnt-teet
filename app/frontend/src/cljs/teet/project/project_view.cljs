@@ -11,6 +11,7 @@
             [teet.project.project-setup-view :as project-setup-view]
             [teet.project.project-layers :as project-layers]
             [teet.project.project-info :as project-info]
+            [teet.project.project-navigator-view :as project-navigator-view]
             [teet.task.task-controller :as task-controller]
             teet.task.task-spec
             [teet.ui.breadcrumbs :as breadcrumbs]
@@ -21,7 +22,6 @@
             [teet.project.search-area-view :as search-area-view]
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
-            [teet.ui.stepper :as stepper]
             [teet.ui.itemlist :as itemlist]
             [teet.ui.material-ui :refer [Paper Fab]]
             [teet.ui.panels :as panels]
@@ -217,7 +217,7 @@
 
 (defn activities-tab
   [e! {:keys [stepper] :as _app} project]
-  [stepper/vertical-stepper e! project stepper])
+  [project-navigator-view/project-navigator e! project stepper])
 
 (defn add-user-form
   [e! user project-id]
