@@ -194,7 +194,7 @@
            :db/cardinality :db.cardinality/one
            :db/doc "Timestamp of when this file upload was started"}]]}
 
- 
+
  {:db/ident :migration/task-status-enum
   :txes [[{:db/ident :task.status/not-started
            :enum/attribute :task/status}
@@ -627,4 +627,120 @@
   :txes [[{:db/ident :document.status/updated :enum/attribute :document/status}
           {:db/ident :document.status/ready :enum/attribute :document/status}
           {:db/ident :document.status/invalid :enum/attribute :document/status}
-          {:db/ident :document.status/approved :enum/attribute :document/status}]]}]
+          {:db/ident :document.status/approved :enum/attribute :document/status}]]}
+
+
+ {:db/ident :migration/subtasks
+  :txes [;; Remove previously existing task types
+         teet.migration.enum-values/remove-old-task-types
+         [;; Add subtasks to task
+          {:db/ident :task/subtasks
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "Subtasks in this task"}
+
+          ;; new task types
+          {:db/ident :task.type/base-data :enum/attribute :task/type}
+          {:db/ident :task.type/study :enum/attribute :task/type}
+          {:db/ident :task.type/design :enum/attribute :task/type}
+          {:db/ident :task.type/design-approval :enum/attribute :task/type}
+          {:db/ident :task.type/land-purchase :enum/attribute :task/type}
+
+          ;; Subtask types
+          {:db/ident :subtask.type/design-requirements :enum/attribute :subtask/type :enum/valid-for :task.type/base-data}
+          {:db/ident :subtask.type/terms-of-reference :enum/attribute :subtask/type :enum/valid-for :task.type/base-data}
+          {:db/ident :subtask.type/data :enum/attribute :subtask/type :enum/valid-for :task.type/base-data}
+          {:db/ident :subtask.type/geological-study :enum/attribute :subtask/type :enum/valid-for :task.type/study}
+          {:db/ident :subtask.type/traffic-study :enum/attribute :subtask/type :enum/valid-for :task.type/study}
+          {:db/ident :subtask.type/flora-and-fauna-study :enum/attribute :subtask/type :enum/valid-for :task.type/study}
+          {:db/ident :subtask.type/archeological-study :enum/attribute :subtask/type :enum/valid-for :task.type/study}
+          {:db/ident :subtask.type/topogeodesy :enum/attribute :subtask/type :enum/valid-for :task.type/study}
+          {:db/ident :subtask.type/noise-study :enum/attribute :subtask/type :enum/valid-for :task.type/study}
+          {:db/ident :subtask.type/eia-pre-assessment :enum/attribute :subtask/type :enum/valid-for :task.type/study}
+          {:db/ident :subtask.type/environmental-impact-assessment :enum/attribute :subtask/type :enum/valid-for :task.type/study}
+          {:db/ident :subtask.type/feasibility-study :enum/attribute :subtask/type :enum/valid-for :task.type/study}
+          {:db/ident :subtask.type/road :enum/attribute :subtask/type :enum/valid-for :task.type/design}
+          {:db/ident :subtask.type/railroad :enum/attribute :subtask/type :enum/valid-for :task.type/design}
+          {:db/ident :subtask.type/drainage :enum/attribute :subtask/type :enum/valid-for :task.type/design}
+          {:db/ident :subtask.type/landscaping :enum/attribute :subtask/type :enum/valid-for :task.type/design}
+          {:db/ident :subtask.type/lighting :enum/attribute :subtask/type :enum/valid-for :task.type/design}
+          {:db/ident :subtask.type/equipment :enum/attribute :subtask/type :enum/valid-for :task.type/design}
+          {:db/ident :subtask.type/structures :enum/attribute :subtask/type :enum/valid-for :task.type/design}
+          {:db/ident :subtask.type/utilities :enum/attribute :subtask/type :enum/valid-for :task.type/design}
+          {:db/ident :subtask.type/buildings :enum/attribute :subtask/type :enum/valid-for :task.type/design}
+          {:db/ident :subtask.type/acceptances :enum/attribute :subtask/type :enum/valid-for :task.type/design-approval}
+          {:db/ident :subtask.type/design-road-safety-audit :enum/attribute :subtask/type :enum/valid-for :task.type/design-approval}
+          {:db/ident :subtask.type/third-party-review :enum/attribute :subtask/type :enum/valid-for :task.type/design-approval}
+          {:db/ident :subtask.type/land-owners :enum/attribute :subtask/type :enum/valid-for :task.type/design-approval}
+          {:db/ident :subtask.type/allotment-plan :enum/attribute :subtask/type :enum/valid-for :task.type/land-purchase}
+          {:db/ident :subtask.type/property-valuation :enum/attribute :subtask/type :enum/valid-for :task.type/land-purchase}
+          {:db/ident :subtask.type/preliminary-agreements :enum/attribute :subtask/type :enum/valid-for :task.type/land-purchase}
+          {:db/ident :subtask.type/cadastral-works :enum/attribute :subtask/type :enum/valid-for :task.type/land-purchase}
+          {:db/ident :subtask.type/purchase-agreements :enum/attribute :subtask/type :enum/valid-for :task.type/land-purchase}
+          {:db/ident :subtask.type/cleanup :enum/attribute :subtask/type :enum/valid-for :task.type/land-purchase}
+          {:db/ident :subtask.type/other :enum/attribute :subtask/type}
+
+          ;; Add subtask attributes
+          {:db/ident :subtask/type
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Subtask type"}
+
+          {:db/ident :subtask/description
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Subtask human readable description"}
+
+          {:db/ident :subtask/status
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Subtask status enum"}
+
+          {:db/ident :subtask.status/not-started :enum/attribute :subtask/status}
+          {:db/ident :subtask.status/in-progress :enum/attribute :subtask/status}
+          {:db/ident :subtask.status/completed :enum/attribute :subtask/status}
+
+
+          {:db/ident :subtask/deadline
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "Deadline for the subtask"}
+
+          {:db/ident :subtask/assignee
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Person assigned to deliver results"}
+
+          {:db/ident :subtask/comments
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "Comments for this subtask"}
+
+          {:db/ident :subtask/files
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "File results for this subtask"}]
+
+         ;; File versioning and status support
+         [{:db/ident :file/status
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Reference to file status"}
+
+          {:db/ident :file.status/draft :enum/attribute :file/status}
+          {:db/ident :file.status/final :enum/attribute :file/status}
+
+          {:db/ident :file/version
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one
+           :db/doc "Version of this file, ordinal number"}
+
+          {:db/ident :file/number
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "User specified file number per project (may be number or string), not unique"}
+
+          {:db/ident :file/previous-version
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Reference to the previous version of this file that this file supersedes."}]]}]
