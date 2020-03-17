@@ -23,7 +23,8 @@
             [teet.ui.file-upload :as file-upload]
             [teet.ui.select :as select]
             [teet.ui.common :as common]
-            [teet.comments.comments-controller :as comments-controller]))
+            [teet.comments.comments-controller :as comments-controller]
+            [teet.project.project-navigator-view :as project-navigator-view]))
 
 (defn task-status [e! status modified]
 
@@ -235,19 +236,6 @@
    [breadcrumbs/breadcrumbs breadcrumbs]
    [Heading1 (:thk.project/name project)]
 
-   [Paper {:class (<class task-style/task-page-paper-style)}
-    [Grid {:container true
-           :spacing   3}
-     [Grid {:item  true
-            :xs    3
-            :style {:max-width "300px"}}
-      [task-navigation task query]]
-     [Grid {:item  true
-            :xs    6
-            :style {:max-width "800px"}}
-      [task-page-content e! query task]]
-     [Grid {:item  true
-            :xs    :auto
-            :style {:display :flex
-                    :flex    1}}
-      [project-view/project-map e! app project]]]]])
+   [project-navigator-view/project-navigator-with-content
+    e! project app
+    [task-page-content e! query task]]])

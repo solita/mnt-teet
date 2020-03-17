@@ -1,5 +1,5 @@
-(ns teet.ui.stepper
-  (:require [teet.ui.material-ui :refer [Link Collapse]]
+(ns teet.project.project-navigator-view
+  (:require [teet.ui.material-ui :refer [Link Collapse Paper Grid]]
             [herb.core :refer [<class]]
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.buttons :as buttons]
@@ -10,7 +10,9 @@
             [reagent.core :as r]
             [teet.ui.format :as format]
             [teet.ui.typography :as typography]
-            [teet.project.task-model :as task-model]))
+            [teet.project.task-model :as task-model]
+            [teet.task.task-style :as task-style]
+            [teet.project.project-map-view :as project-map-view]))
 
 (defn- svg-style
   [bottom?]
@@ -254,3 +256,21 @@
                                                         [icons/content-add])}
                     (tr [:project :add-activity lc-type])]]]]]]))
           lifecycles))]]))
+
+(defn project-navigator-with-content [e! project app & content]
+  [Paper {:class (<class task-style/task-page-paper-style)}
+   [Grid {:container true
+          :spacing   3}
+    [Grid {:item  true
+           :xs    3
+           :style {:max-width "300px"}}
+     [project-navigator e! project (:stepper app)]]
+    [Grid {:item  true
+           :xs    6
+           :style {:max-width "800px"}}
+     content]
+    [Grid {:item  true
+           :xs    :auto
+           :style {:display :flex
+                   :flex    1}}
+     [project-map-view/project-map e! app project]]]])

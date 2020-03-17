@@ -3,7 +3,8 @@
             [teet.ui.date-picker :as date-picker]
             [teet.localization :refer [tr]]
             [teet.ui.form :as form]
-            teet.document.document-spec))
+            teet.document.document-spec
+            [teet.project.project-navigator-view :as project-navigator-view]))
 
 (defn activity-form [e! {:keys [close activity save on-change delete lifecycle-type]}]
   ;; Activity name (drop-down selector, a predefined list of activities: eskiisprojekt, eelprojekt, põhiprojekt, maade omandamine, ehitus)
@@ -25,5 +26,8 @@
    ^{:attribute :activity/status}
    [select/select-enum {:e! e! :attribute :activity/status}]])
 
-(defn activity-page [e! app activity breadcrumbs]
-  [:div "tässäpä activity"])
+(defn activity-page [e! app project breadcrumbs]
+  [project-navigator-view/project-navigator-with-content
+   e! project app
+
+   [:div "tässäpä activity"]])
