@@ -27,9 +27,6 @@
 
 (defn add-layer-button []
   {:width "100%"})
-(defn category-collapse-button
-  []
-  {:margin-right "1rem"})
 
 (defn edit-layer-type []
   {:padding "1rem"
@@ -38,19 +35,22 @@
    :height "100%"})
 
 (defn edit-layer-form []
-  {:padding "1rem"
+  {:padding "1.5rem"
    :display :flex
    :flex-direction :column
    :min-height "40vh"})
 
 (defn edit-layer-type-heading [selected?]
   {:cursor :pointer
+   :margin-bottom "1rem"
    :color (if selected?
             theme-colors/white
             theme-colors/gray-lighter)})
 
 (defn edit-layer-options []
-  {:flex-grow 100
+  {:flex-grow 1
+   :padding "1rem"
+   :margin-bottom "1rem"
    :background-color theme-colors/gray-lightest})
 
 (defn map-controls-heading
@@ -63,23 +63,18 @@
    :background theme-colors/gray-lighter
    :border-bottom (str "1px solid " theme-colors/gray-light)})
 
-(defn category-container
+(defn layer-edit-save-style
   []
-  {})
+  {:margin-left "1rem"})
 
-(defn category-control
+(defn layer-heading-style
+  []
+  {:padding-bottom "1rem"})
+
+(defn layer-edit-button-container-style
   []
   {:display :flex
-   :padding "1rem"
-   :border-bottom (str "1px solid " theme-colors/gray-lighter)
-   :align-items :center
-   :justify-content :space-between})
-
-(defn category-selections
-  []
-  {:padding "0.5rem 1rem"
-   :background-color theme-colors/gray-lightest
-   :border-bottom (str "1px solid " theme-colors/gray-lighter)})
+   :justify-content :flex-end})
 
 (defn map-control-buttons
   []

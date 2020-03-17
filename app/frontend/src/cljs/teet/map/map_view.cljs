@@ -103,7 +103,7 @@
                  :on-close (e! map-controller/->CancelLayer)}
    (let [edit-component
          [:div {:class (<class map-styles/edit-layer-form)}
-          [typography/Heading2
+          [typography/Heading2 {:class (<class map-styles/layer-heading-style)}
            (if type
              (str (tr [:map :layers type])
                   " "
@@ -111,7 +111,7 @@
              "")]
           [:div {:class (<class map-styles/edit-layer-options)}
            [layer-filters-form e! edit-layer map-data]]
-          [:div.edit-layer-buttons
+          [:div.edit-layer-buttons {:class (<class map-styles/layer-edit-button-container-style)}
            (if new?
              [buttons/button-secondary {:on-click (e! map-controller/->CancelLayer)}
               (tr [:buttons :cancel])]
@@ -119,7 +119,8 @@
              [buttons/button-warning {:on-click (e! map-controller/->RemoveLayer edit-layer)}
               (tr [:buttons :delete])])
            [buttons/button-primary {:on-click (e! map-controller/->SaveLayer)
-                                    :disabled (nil? type)}
+                                    :disabled (nil? type)
+                                    :class (<class map-styles/layer-edit-save-style)}
             (tr [:buttons :save])]]]]
      (if new?
        [Grid {:container true}
