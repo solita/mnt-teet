@@ -40,7 +40,6 @@
 
 (defn main-view [e! _]
   (log/hook-onerror! e!)
-  (log/debug "main-view calling poll-version")
   (poll-version e!)
   (e! (login-controller/->CheckExistingSession))
   (fn [e! {:keys [page user navigation quick-search snackbar] :as app}]

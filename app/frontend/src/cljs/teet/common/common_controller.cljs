@@ -107,7 +107,6 @@
     (-> err ex-data :error)))
 
 (defn default-server-error-handler [err app]
-  (log/debug "snack-bar open called -> :snackbar :open? should go true in appdb")
   (snackbar-controller/open-snack-bar app (tr-or [:error (-> err ex-data :error)]
                                                  [:error :server-error]
                                                  "error")
@@ -346,7 +345,6 @@
                         10000)
       (.then #(.json %))
       (.then (fn [json-response]
-               (log/debug "fetch-deploy-status resolving")
                (js/Promise.resolve (js->clj json-response))))))
 
 ;; Check deploy status, show corresponding snackbar message
@@ -372,7 +370,7 @@
   (t/fx app {:tuck.effect/type :deploy-status
              :result-event ->DeployStatusResponse}))
 
-(def ^:private poll-timeout-ms 8000)
+(def ^:private poll-timeout-ms 30000)
 
 (defonce version-seen-on-startup (atom nil))
 (defn poll-version
@@ -380,10 +378,8 @@
   currently deployed. If not, shows a warning that a new version is
   being, or has been, deployed."
   [e!]
-  (log/debug "poll-version")
   (-> (fetch-deploy-status)
       (.then (fn [{:strs [commit status]}]
-               (log/debug "deploy-status cb, commit=" commit)
                (when (and (some? commit)
                           (nil? @version-seen-on-startup))
                  (reset! version-seen-on-startup commit))
