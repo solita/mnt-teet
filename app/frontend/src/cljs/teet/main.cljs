@@ -27,6 +27,7 @@
             teet.ui.component-demo
             teet.admin.admin-view
             teet.dashboard.dashboard-view
+            teet.activity.activity-view
             teet.ui.unauthorized
 
             teet.ui.query

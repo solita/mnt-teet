@@ -24,3 +24,6 @@
 
    ^{:attribute :activity/status}
    [select/select-enum {:e! e! :attribute :activity/status}]])
+
+(defn activity-page [e! app activity breadcrumbs]
+  [:div "tässäpä activity"])
