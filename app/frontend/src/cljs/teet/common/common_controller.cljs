@@ -389,7 +389,14 @@
                  (reset! version-seen-on-startup commit))
                
                (js/setTimeout #(poll-version e!) poll-timeout-ms)
-               (when (and (some? commit) (not= commit @version-seen-on-startup))
+               (cond
+                 (= status "deploying")
+                 (e! (snackbar-controller/->OpenSnackBarWithOptions
+                      {:message (tr [:warning :deploying])
+                       :variant :warning
+                       :hide-duration nil}))
+                 
+                 (and (some? commit) (not= commit @version-seen-on-startup))
                  (e! (snackbar-controller/->OpenSnackBarWithOptions
                       {:message (tr [:warning :version-mismatch])
                        :variant :warning
