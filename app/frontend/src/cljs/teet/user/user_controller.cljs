@@ -17,3 +17,4 @@
 (defn when-role [role component]
   (when (has-role? role)
     component))
+
