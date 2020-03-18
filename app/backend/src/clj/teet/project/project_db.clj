@@ -96,15 +96,5 @@
                        {:thk.lifecycle/activities
                         [*
                          {:activity/tasks [*
-                                           {:task/subtasks [*
-                                                            {:subtask/assignee [*]}]}]}]}]}])
+                                           {:task/assignee [*]}]}]}]}])
           eid))
-
-(defn subtask-by-id
-  "Fetch a subtask by id. Includes data to link it to task."
-  [db subtask-id]
-  (d/pull db
-          '[*
-            {:subtask/files [*]}
-            {:task/_subtasks [:db/id]}]
-          subtask-id))
