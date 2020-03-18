@@ -75,14 +75,14 @@
                  :state {:query :thk.project/fetch-project
                          :args {:thk.project/id project}}}
 
- :subtask {:path "/projects/:project/:activity/:task/:subtask"
-           :parent :activity-task
-           :crumb (-> state :subtask :subtask/type tr-enum)
-           :title (-> state :subtask :subtask/type tr-enum)
-           :view teet.subtask.subtask-view/subtask-page
-           :state {:query :thk.project/fetch-project
-                   :args {:thk.project/id project
-                          :subtask subtask}}}
+ :file {:path "/projects/:project/:activity/:task/:file"
+        :parent :activity-task
+        :crumb (-> state :file :file/name)
+        :title (-> state :file :file/name)
+        :view teet.file.file-view/file-page
+        :state {:query :thk.project/fetch-project
+                :args {:thk.project/id project
+                       :file file}}}
 
  :unauthorized {:path "/unauthorized" :view teet.ui.unauthorized/restricted-path}
  :components {:path "/components" :view teet.ui.component-demo/demo}
