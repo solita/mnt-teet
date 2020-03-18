@@ -329,7 +329,8 @@
       [project-navigator e! project (:stepper app) true]]
      [Grid {:item  true
             :xs    6
-            :style {:max-width "800px"}}
+            :style {:max-width "800px"
+                    :padding "2rem 1.5rem"}}
       content]
      [Grid {:item  true
             :xs    :auto
