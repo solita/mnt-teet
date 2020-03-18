@@ -177,7 +177,8 @@
   {:background-color (if dark-theme?
                        theme-colors/gray-dark
                        theme-colors/white)
-   :padding "1rem"})
+   :padding "1rem"
+   :height "100%"})
 
 (defn- activity [{:keys [e! stepper dark-theme? disable-buttons? project-id lc-id rect-button]}
                  {activity-id :db/id
@@ -322,14 +323,15 @@
       [project-navigator-dialog opts dialog]])
    [Paper {:class (<class task-style/task-page-paper-style)}
     [Grid {:container true
-           :spacing   3}
+           :spacing   0}
      [Grid {:item  true
             :xs    3
-            :style {:max-width "300px"}}
+            :style {:max-width "400px"}}
       [project-navigator e! project (:stepper app) true]]
      [Grid {:item  true
             :xs    6
-            :style {:max-width "800px"}}
+            :style {:max-width "800px"
+                    :padding "2rem 1.5rem"}}
       content]
      [Grid {:item  true
             :xs    :auto
