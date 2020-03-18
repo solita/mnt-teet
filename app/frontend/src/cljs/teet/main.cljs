@@ -16,7 +16,7 @@
             [tuck.core :as t]
             [teet.theme.theme-provider :as theme]
             [teet.snackbar.snackbar-view :as snackbar]
-            [teet.common.common-controller :refer [when-feature]]
+            [teet.common.common-controller :refer [when-feature poll-version]]
 
     ;; Import view namespaces
             teet.projects.projects-view
@@ -42,8 +42,7 @@
 
 (defn main-view [e! _]
   (log/hook-onerror! e!)
-  ;; TODO: Enable after getting proper sha from backend
-  ;; (poll-version e!)
+  (poll-version e!)
   (e! (login-controller/->CheckExistingSession))
   (fn [e! {:keys [page user navigation quick-search snackbar] :as app}]
     (let [nav-open? (boolean (:open? navigation))]
