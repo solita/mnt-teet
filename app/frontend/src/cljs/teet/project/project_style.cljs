@@ -160,3 +160,9 @@
   {:display         :flex
    :justify-content :space-between
    :margin-bottom   "1rem"})
+
+(defn page-container []
+  {:padding        "1.5rem 1.875rem"
+   :display        :flex
+   :flex-direction :column
+   :flex           1})

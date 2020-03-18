@@ -10,6 +10,7 @@
             [teet.ui.material-ui :refer [Grid Paper Link LinearProgress]]
             [teet.ui.icons :as icons]
             [teet.ui.typography :as typography :refer [Heading1]]
+            [teet.ui.util :refer [mapc]]
             [teet.project.project-view :as project-view]
             [teet.ui.panels :as panels]
             [teet.ui.url :as url]
@@ -24,7 +25,12 @@
             [teet.ui.select :as select]
             [teet.ui.common :as common]
             [teet.comments.comments-controller :as comments-controller]
-            [teet.project.project-navigator-view :as project-navigator-view]))
+            [teet.project.project-navigator-view :as project-navigator-view]
+            [teet.project.project-style :as project-style]
+            [teet.project.project-model :as project-model]
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.user.user-model :as user-model]
+            [teet.routes :as routes]))
 
 (defn task-status [e! status modified]
 
@@ -92,20 +98,7 @@
               name])
            [typography/SmallText (format/file-size size)]])]))])
 
-(defn- task-overview
-  [e! {:task/keys [description status modified type] :as _task}]
-  [:div {:style {:padding "2rem 0"}}
-   [:div {:style {:justify-content :space-between
-                  :display         :flex}}
-    [Heading1 (tr [:enum (:db/ident type)])]
-    [:div {:style {:display :flex}}
-     [buttons/button-secondary {:on-click (e! task-controller/->OpenEditModal :task)}
-      (tr [:buttons :edit])]]]
-   [:p description]
-   [task-status e! status modified]
-   [buttons/button-primary {:on-click   #(e! (task-controller/->OpenAddDocumentDialog))
-                            :start-icon (r/as-element [icons/content-add])}
-    (tr [:task :add-document])]])
+
 
 (defn- task-document-content
   [e! document]
@@ -157,15 +150,31 @@
                             :new-comment          (:new-comment file)
                             :comments             (:file/comments file)}]])
 
+(defn- subtask-list-style []
+  {:display :flex
+   :flex-direction :column})
+
+(defn- subtask-list-item []
+  {:display :flex
+   :justify-content :space-between
+   :border (str "1px solid " theme-colors/gray-lightest)
+   :border-width "1px 0px 1px 0px"
+   :padding "1rem 0"})
+
+(defn task-subtasks [e! params subtasks]
+  [:div {:class (<class subtask-list-style)}
+   (mapc (fn [{:subtask/keys [type assignee status] id :db/id}]
+           [:div {:class (<class subtask-list-item)}
+            [Link {:href (routes/url-for {:page :subtask
+                                          :params (assoc params :subtask id)})}
+             (tr [:enum (:db/ident type)])]
+            (user-model/user-name assignee)
+            (tr [:enum (:db/ident status)])])
+         subtasks)])
+
 (defn task-page-content
-  [e! {:keys [file document]} task]
-  (cond
-    file
-    [document-file-content e! (task-model/file-by-id task file)]
-    document
-    [task-document-content e! (task-model/document-by-id task document)]
-    :else
-    [task-overview e! task]))
+  [e! params {subtasks :task/subtasks :as task}]
+  [task-subtasks e! params subtasks])
 
 (defn- add-files-form [e! upload-progress]
   (r/with-let [form (r/atom {})]
@@ -218,13 +227,11 @@
       [:span])]])
 
 (defn task-page [e! {{:keys [add-document] :as query} :query
+                     {task-id :task :as params} :params
                      new-document :new-document :as app}
-                 {project :project :as task}
+                 project
                  breadcrumbs]
-  [:div {:style {:padding        "1.5rem 1.875rem"
-                 :display        :flex
-                 :flex-direction :column
-                 :flex           1}}
+  [:div {:class (<class project-style/page-container)}
    [task-page-modal e! app query]
    [panels/modal {:open-atom (r/wrap (boolean add-document) :_)
                   :title     (tr [:task :add-document])
@@ -238,4 +245,6 @@
 
    [project-navigator-view/project-navigator-with-content
     e! project app
-    [task-page-content e! query task]]])
+    ;; FIXME: get task from project hierarchy by url param
+    [task-page-content e! params
+     (project-model/task-by-id project task-id)]]])

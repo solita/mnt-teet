@@ -28,6 +28,7 @@
             teet.admin.admin-view
             teet.dashboard.dashboard-view
             teet.activity.activity-view
+            teet.subtask.subtask-view
             teet.ui.unauthorized
 
             teet.ui.query

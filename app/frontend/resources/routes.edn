@@ -62,9 +62,17 @@
                  :crumb (tr [:enum (-> state :task/type :db/ident)])
                  :title (tr [:enum (-> state :task/type :db/ident)])
                  :view teet.task.task-view/task-page
-                 :state {:query :thk.project/fetch-task
-                         :args {:thk.project/id project
-                                :task-id (goog.math.Long/fromString task)}}}
+                 :state {:query :thk.project/fetch-project
+                         :args {:thk.project/id project}}}
+
+ :subtask {:path "/projects/:project/:activity/:task/:subtask"
+           :parent :activity-task
+           :crumb "subtaski jee"
+           :title "tässäpä subtaski"
+           :view teet.subtask.subtask-view/subtask-page
+           :state {:query :thk.project/fetch-project
+                   :args {:thk.project/id project
+                          :subtask subtask}}}
 
  :unauthorized {:path "/unauthorized" :view teet.ui.unauthorized/restricted-path}
  :components {:path "/components" :view teet.ui.component-demo/demo}

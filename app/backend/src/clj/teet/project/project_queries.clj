@@ -17,6 +17,7 @@
       (d/pull [:thk.project/id] id)
       :thk.project/id))
 
+
 (defquery :thk.project/fetch-project
   {:doc "Fetch project information"
    :context {db :db}
@@ -26,17 +27,7 @@
                                           :link :thk.project/owner}}}
   (let [project (meta-query/without-deleted
                   db
-                  (d/pull db (into project-model/project-info-attributes
-                                   '[{:thk.project/lifecycles
-                                      [:db/id
-                                       :thk.lifecycle/estimated-start-date
-                                       :thk.lifecycle/estimated-end-date
-                                       :thk.lifecycle/type
-                                       {:thk.lifecycle/activities
-                                        [*
-                                         {:activity/tasks [*
-                                                           {:task/documents [{:document/files [*]}]}]}]}]}])
-                          [:thk.project/id id]))]
+                  (project-db/project-by-id db [:thk.project/id id]))]
     (-> project
         (assoc :thk.project/permitted-users (project-model/users-with-permission
                                               (permission-db/valid-project-permissions db (:db/id project))))

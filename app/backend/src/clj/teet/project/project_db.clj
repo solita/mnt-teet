@@ -1,7 +1,8 @@
 (ns teet.project.project-db
   "Utilities for project datomic queries"
   (:require [datomic.client.api :as d]
-            [teet.db-api.core :as db-api]))
+            [teet.db-api.core :as db-api]
+            [teet.project.project-model :as project-model]))
 
 (defn task-project-id [db task-id]
   (or (ffirst
@@ -82,3 +83,19 @@
     (if (= default-value ::throw)
       (db-api/bad-request! "No such document")
       default-value))))
+
+(defn project-by-id
+  "Fetch project by id. Includes all information on nested items required by project navigator."
+  [db eid]
+  (d/pull db (into project-model/project-info-attributes
+                   '[{:thk.project/lifecycles
+                      [:db/id
+                       :thk.lifecycle/estimated-start-date
+                       :thk.lifecycle/estimated-end-date
+                       :thk.lifecycle/type
+                       {:thk.lifecycle/activities
+                        [*
+                         {:activity/tasks [*
+                                           {:task/subtasks [*
+                                                            {:subtask/assignee [*]}]}]}]}]}])
+          eid))

@@ -226,3 +226,14 @@
                      :on-schedule
                      :else
                      :unassigned))))
+
+(defn task-by-id
+  "Fetch project task by id.
+  Goes through lifecycles and activities and returns a task with matching id."
+  [{lcs :thk.project/lifecycles} task-id]
+  (some
+   (fn [{activities :thk.lifecycle/activities}]
+     (some (fn [{tasks :activity/tasks}]
+             (some #(when (id= (:db/id %) task-id) %) tasks))
+           activities))
+   lcs))
