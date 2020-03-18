@@ -17,17 +17,10 @@
       (d/pull [:thk.project/id] id)
       :thk.project/id))
 
-(defn maybe-fetch-subtask [project db subtask-id]
-  (if subtask-id
-    (let [subtask (project-db/subtask-by-id db (Long/parseLong subtask-id))]
-      (assoc project :subtask subtask))
-    project))
-
 (defquery :thk.project/fetch-project
   {:doc "Fetch project information"
    :context {db :db}
-   :args {:thk.project/keys [id]
-          subtask :subtask}
+   :args {:thk.project/keys [id]}
    :project-id [:thk.project/id id]
    :authorization {:project/project-info {:eid [:thk.project/id id]
                                           :link :thk.project/owner}}}
@@ -40,8 +33,7 @@
         (update :thk.project/lifecycles project-model/sort-lifecycles)
         (update :thk.project/lifecycles
                 (fn [lifecycle]
-                  (map #(update % :thk.lifecycle/activities project-model/sort-activities) lifecycle)))
-        (maybe-fetch-subtask db subtask))))
+                  (map #(update % :thk.lifecycle/activities project-model/sort-activities) lifecycle))))))
 
 (defquery :thk.project/fetch-task
   {:doc "Fetch task"
