@@ -324,7 +324,7 @@
            :spacing   3}
      [Grid {:item  true
             :xs    3
-            :style {:max-width "300px"}}
+            :style {:max-width "400px"}}
       [project-navigator e! project (:stepper app) true]]
      [Grid {:item  true
             :xs    6
