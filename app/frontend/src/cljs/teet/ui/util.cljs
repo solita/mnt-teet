@@ -19,3 +19,9 @@
     (if (map? (first children))
       (into [component (merge props (first children))] (rest children))
       (into [component (or props {})] children))))
+
+(defn mapc
+  "Map component. Like map but runs doall and adds keys to to result."
+  [component-fn & collections]
+  (with-keys
+    (apply map component-fn collections)))
