@@ -32,9 +32,10 @@
 
 (defn activity-page [e! app project breadcrumbs]
   [:div {:class (<class project-style/page-container)}
-   [breadcrumbs/breadcrumbs breadcrumbs]
-   [typography/Heading1 "activity"]
    [project-navigator-view/project-navigator-with-content
-    e! project app
+    {:e! e!
+     :project project
+     :app app
+     :breadcrumbs breadcrumbs}
 
     [:div "tässäpä activity"]]])

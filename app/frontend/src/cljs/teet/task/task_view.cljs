@@ -240,11 +240,12 @@
                                      :save           document-controller/->CreateDocument
                                      :on-change      document-controller/->UpdateDocumentForm
                                      :document       new-document}]]
-   [breadcrumbs/breadcrumbs breadcrumbs]
-   [Heading1 (:thk.project/name project)]
 
    [project-navigator-view/project-navigator-with-content
-    e! project app
-    ;; FIXME: get task from project hierarchy by url param
+    {:e! e!
+     :project project
+     :app app
+     :breadcrumbs breadcrumbs}
+
     [task-page-content e! params
      (project-model/task-by-id project task-id)]]])

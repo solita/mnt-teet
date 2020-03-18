@@ -13,7 +13,8 @@
             [teet.ui.typography :as typography]
             [teet.project.task-model :as task-model]
             [teet.task.task-style :as task-style]
-            [teet.project.project-map-view :as project-map-view]))
+            [teet.project.project-map-view :as project-map-view]
+            [teet.ui.breadcrumbs :as breadcrumbs]))
 
 (defn- svg-style
   [bottom?]
@@ -301,20 +302,23 @@
                      (tr [:project :add-activity lc-type])]]]]]))
             lifecycles))]])))
 
-(defn project-navigator-with-content [e! project app & content]
-  [Paper {:class (<class task-style/task-page-paper-style)}
-   [Grid {:container true
-          :spacing   3}
-    [Grid {:item  true
-           :xs    3
-           :style {:max-width "300px"}}
-     [project-navigator e! project (:stepper app) true]]
-    [Grid {:item  true
-           :xs    6
-           :style {:max-width "800px"}}
-     content]
-    [Grid {:item  true
-           :xs    :auto
-           :style {:display :flex
-                   :flex    1}}
-     [project-map-view/project-map e! app project]]]])
+(defn project-navigator-with-content [{:keys [e! project app breadcrumbs]} & content]
+  [:<>
+   [breadcrumbs/breadcrumbs breadcrumbs]
+   [typography/Heading1 (:thk.project/name project)]
+   [Paper {:class (<class task-style/task-page-paper-style)}
+    [Grid {:container true
+           :spacing   3}
+     [Grid {:item  true
+            :xs    3
+            :style {:max-width "300px"}}
+      [project-navigator e! project (:stepper app) true]]
+     [Grid {:item  true
+            :xs    6
+            :style {:max-width "800px"}}
+      content]
+     [Grid {:item  true
+            :xs    :auto
+            :style {:display :flex
+                    :flex    1}}
+      [project-map-view/project-map e! app project]]]]])
