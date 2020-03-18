@@ -165,6 +165,12 @@
   ([language tree-path]
    (get-in (get @loaded-languages language) tree-path)))
 
+(defn tr-enum [kw-or-map-with-db-ident]
+  (let [kw (if (keyword? kw-or-map-with-db-ident)
+             kw-or-map-with-db-ident
+             (:db/ident kw-or-map-with-db-ident))]
+    (tr [:enum kw])))
+
 (let [warn (memoize (fn [msg]
                       (.warn js/console "UNTRANSLATED MESSAGE: " msg)))]
 

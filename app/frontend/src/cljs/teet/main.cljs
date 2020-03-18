@@ -20,7 +20,7 @@
 
     ;; Import view namespaces
             teet.projects.projects-view
-            teet.project.project-view
+            teet.project.project-view teet.project.project-model
             teet.task.task-view
             teet.document.document-view
             teet.road-visualization.road-visualization-view

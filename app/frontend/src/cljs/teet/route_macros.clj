@@ -24,7 +24,8 @@
                            :as ~'app}]
        (let [~'params (:params ~'app)
              ~'query-params (:query ~'app)
-             ~'tr teet.localization/tr]
+             ~'tr teet.localization/tr
+             ~'tr-enum teet.localization/tr-enum]
          (case page#
            ~@(mapcat
               (fn [[route-name {:keys [state view path skeleton permission keep-query-params title] :as route}]]

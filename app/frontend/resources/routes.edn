@@ -51,16 +51,26 @@
 
  :activity {:path "/projects/:project/:activity"
             :parent :project
-            :crumb "activity crumb"
-            :title "activity title"
+            :crumb (-> state
+                       (teet.project.project-model/activity-by-id activity)
+                       :activity/name tr-enum)
+            :title (-> state
+                       (teet.project.project-model/activity-by-id activity)
+                       :activity/name tr-enum)
             :view teet.activity.activity-view/activity-page
             :state {:query :thk.project/fetch-project
                     :args {:thk.project/id project}}}
 
  :activity-task {:path "/projects/:project/:activity/:task"
                  :parent :activity
-                 :crumb (tr [:enum (-> state :task/type :db/ident)])
-                 :title (tr [:enum (-> state :task/type :db/ident)])
+                 :crumb (-> state
+                            (teet.project.project-model/task-by-id task)
+                            :task/type
+                            tr-enum)
+                 :title  (-> state
+                             (teet.project.project-model/task-by-id task)
+                             :task/type
+                             tr-enum)
                  :view teet.task.task-view/task-page
                  :state {:query :thk.project/fetch-project
                          :args {:thk.project/id project}}}
