@@ -321,7 +321,7 @@
       [project-navigator-dialog opts dialog]])
    [Paper {:class (<class task-style/task-page-paper-style)}
     [Grid {:container true
-           :spacing   3}
+           :spacing   0}
      [Grid {:item  true
             :xs    3
             :style {:max-width "400px"}}
