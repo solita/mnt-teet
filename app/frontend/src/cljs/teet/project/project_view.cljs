@@ -39,29 +39,7 @@
             [teet.user.user-model :as user-model]
             [teet.project.project-map-view :as project-map-view]))
 
-(defn task-form [_e! {:keys [initialization-fn]}]
-  ;;Task definition (under project activity)
-  ;; Task type (a predefined list of tasks: topogeodeesia, geoloogia, liiklusuuring, KMH eelhinnang, loomastikuuuring, arheoloogiline uuring, muu)
-  ;; Description (short description of the task for clarification, 255char, in case more detailed description is needed, it will be uploaded as a file under the task)
-  ;; Responsible person (email)
-  (when initialization-fn
-    (initialization-fn))
-  (fn [e! {:keys [close task save on-change delete]}]
-    [form/form {:e! e!
-                :value task
-                :on-change-event on-change
-                :cancel-event close
-                :save-event save
-                :delete delete
-                :spec :task/new-task-form}
-     ^{:xs 12 :attribute :task/type}
-     [select/select-enum {:e! e! :attribute :task/type}]
 
-     ^{:attribute :task/description}
-     [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
-
-     ^{:attribute :task/assignee}
-     [select/select-user {:e! e! :attribute :task/assignee}]]))
 
 
 (defn project-details
@@ -414,7 +392,7 @@
      ^{:attribute :thk.project/manager}
      [select/select-user {:e! e! :attribute :thk.project/manager}]]))
 
-(defn project-page-modals
+#_(defn project-page-modals
   [e! {{:keys [add edit lifecycle]} :query :as app} project]
   (let [lifecycle-type (some->> project
                                 :thk.project/lifecycles
@@ -560,7 +538,7 @@
   "Shows the normal project view for initialized projects, setup wizard otherwise."
   [e! app project breadcrumbs]
   [:<>
-   [project-page-modals e! app project]
+   #_[project-page-modals e! app project]
    (if (or (:thk.project/setup-skipped? project) (project-model/initialized? project))
      [initialized-project-view e! app project breadcrumbs]
      [project-setup-view e! app project breadcrumbs])])

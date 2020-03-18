@@ -30,7 +30,8 @@
             [teet.project.project-model :as project-model]
             [teet.theme.theme-colors :as theme-colors]
             [teet.user.user-model :as user-model]
-            [teet.routes :as routes]))
+            [teet.routes :as routes]
+            [teet.ui.text-field :refer [TextField]]))
 
 (defn task-status [e! status modified]
 
@@ -192,7 +193,36 @@
        [LinearProgress {:variant "determinate"
                         :value   upload-progress}])]))
 
-(defn task-page-modal
+
+(defn task-form [_e! {:keys [initialization-fn]}]
+  ;;Task definition (under project activity)
+  ;; Task type (a predefined list of tasks: topogeodeesia, geoloogia, liiklusuuring, KMH eelhinnang, loomastikuuuring, arheoloogiline uuring, muu)
+  ;; Description (short description of the task for clarification, 255char, in case more detailed description is needed, it will be uploaded as a file under the task)
+  ;; Responsible person (email)
+  (when initialization-fn
+    (initialization-fn))
+  (fn [e! task]
+    [form/form {:e! e!
+                :value task
+                :on-change-event task-controller/->UpdateEditTaskForm
+                :cancel-event task-controller/->CloseEditDialog
+                :save-event task-controller/->PostTaskEditForm
+                :delete (task-controller/->DeleteTask (:db/id task))
+                :spec :task/new-task-form}
+     ^{:xs 12 :attribute :task/type}
+     [select/select-enum {:e! e! :attribute :task/type}]
+
+     ^{:attribute :task/description}
+     [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
+
+     ^{:attribute :task/assignee}
+     [select/select-user {:e! e! :attribute :task/assignee}]]))
+
+(defmethod project-navigator-view/project-navigator-dialog :new-task
+  [{:keys [e! app] :as opts} dialog]
+  [task-form e! (:edit-task-data app)])
+
+#_(defn task-page-modal
   [e! {:keys [params] :as app} {:keys [edit add-files] :as query}]
   [:<>
    [panels/modal {:open-atom (r/wrap (boolean add-files) :_)
@@ -232,7 +262,6 @@
                  project
                  breadcrumbs]
   [:div {:class (<class project-style/page-container)}
-   [task-page-modal e! app query]
    [panels/modal {:open-atom (r/wrap (boolean add-document) :_)
                   :title     (tr [:task :add-document])
                   :on-close  (e! task-controller/->CloseAddDocumentDialog)}

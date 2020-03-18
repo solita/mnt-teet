@@ -77,8 +77,8 @@
 
  :subtask {:path "/projects/:project/:activity/:task/:subtask"
            :parent :activity-task
-           :crumb "subtaski jee"
-           :title "tässäpä subtaski"
+           :crumb (-> state :subtask :subtask/type tr-enum)
+           :title (-> state :subtask :subtask/type tr-enum)
            :view teet.subtask.subtask-view/subtask-page
            :state {:query :thk.project/fetch-project
                    :args {:thk.project/id project

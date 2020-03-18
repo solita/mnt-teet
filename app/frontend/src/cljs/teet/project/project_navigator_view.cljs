@@ -310,6 +310,7 @@
   [_opts dialog]
   [:div "Unsupported project navigator dialog " (pr-str dialog)])
 
+
 (defn project-navigator-with-content [{:keys [e! project app breadcrumbs] :as opts} & content]
   [:<>
    [breadcrumbs/breadcrumbs breadcrumbs]
