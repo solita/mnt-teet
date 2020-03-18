@@ -285,21 +285,21 @@
                                             :lc-id lc-id
                                             :rect-button rect-button
                                             :project-id id})
-                         (:thk.lifecycle/activities lifecycle))]
+                         (:thk.lifecycle/activities lifecycle))
 
-                  [:div {:class (<class item-class (= :done lc-status) dark-theme?)}
-                   [circle-svg {:status :not-started :size 20 :bottom? last? :dark-theme? dark-theme?}]
-                   [:div {:style (merge {:position :relative}
-                                        (if last?
-                                          {:top "3px"}
-                                          {:top "-3px"
-                                           :padding-bottom "1.5rem"}))}
-                    [rect-button {:size :small
-                                  :disabled disable-buttons?
-                                  :on-click (e! project-controller/->OpenActivityDialog (str lc-id))
-                                  :start-icon (r/as-element
-                                               [icons/content-add])}
-                     (tr [:project :add-activity lc-type])]]]]]))
+                   [:div {:class (<class item-class (= :done lc-status) dark-theme?)}
+                    [circle-svg {:status :not-started :size 20 :bottom? last? :dark-theme? dark-theme?}]
+                    [:div {:style (merge {:position :relative}
+                                         (if last?
+                                           {:top "3px"}
+                                           {:top "-3px"
+                                            :padding-bottom "1.5rem"}))}
+                     [rect-button {:size :small
+                                   :disabled disable-buttons?
+                                   :on-click (e! project-controller/->OpenActivityDialog (str lc-id))
+                                   :start-icon (r/as-element
+                                                 [icons/content-add])}
+                      (tr [:project :add-activity lc-type])]]]]]]))
             lifecycles))]])))
 
 (defn project-navigator-with-content [{:keys [e! project app breadcrumbs]} & content]
