@@ -652,7 +652,8 @@
 
   CloseDialog
   (process-event [_ {:keys [page params query] :as app}]
-    (t/fx app
+    (update app :stepper dissoc :dialog)
+    #_(t/fx app
           {:tuck.effect/type :navigate
            :page             page
            :params           params
@@ -660,7 +661,9 @@
 
   OpenTaskDialog
   (process-event [{activity :activity} {:keys [page params query] :as app}]
-    (t/fx app
+    (assoc-in app [:stepper :dialog] {:type :new-task
+                                      :activity-id activity})
+    #_(t/fx app
           {:tuck.effect/type :navigate
            :page             page
            :params           params
@@ -701,7 +704,10 @@
   OpenEditActivityDialog
   (process-event [{activity-id :activity-id
                    lifecycle-id :lifecycle-id} {:keys [page params query] :as app}]
-    (t/fx app
+    (assoc-in app [:stepper :dialog] {:type :edit-activity
+                                      :activity-id activity-id
+                                      :lifecycle-id lifecycle-id})
+    #_(t/fx app
           {:tuck.effect/type :navigate
            :page             page
            :params           params

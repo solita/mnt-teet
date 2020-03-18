@@ -14,7 +14,8 @@
             [teet.project.task-model :as task-model]
             [teet.task.task-style :as task-style]
             [teet.project.project-map-view :as project-map-view]
-            [teet.ui.breadcrumbs :as breadcrumbs]))
+            [teet.ui.breadcrumbs :as breadcrumbs]
+            [teet.ui.panels :as panels]))
 
 (defn- svg-style
   [bottom?]
@@ -302,10 +303,22 @@
                      (tr [:project :add-activity lc-type])]]]]]))
             lifecycles))]])))
 
-(defn project-navigator-with-content [{:keys [e! project app breadcrumbs]} & content]
+(defmulti project-navigator-dialog (fn [_opts dialog]
+                                     (:type dialog)))
+
+(defmethod project-navigator-dialog :default
+  [_opts dialog]
+  [:div "Unsupported project navigator dialog " (pr-str dialog)])
+
+(defn project-navigator-with-content [{:keys [e! project app breadcrumbs] :as opts} & content]
   [:<>
    [breadcrumbs/breadcrumbs breadcrumbs]
    [typography/Heading1 (:thk.project/name project)]
+   (when-let [dialog (get-in app [:stepper :dialog])]
+     [panels/modal {:title (tr [:project (:type dialog)])
+                    :open-atom (r/wrap true :_)
+                    :on-close (e! project-controller/->CloseDialog)}
+      [project-navigator-dialog opts dialog]])
    [Paper {:class (<class task-style/task-page-paper-style)}
     [Grid {:container true
            :spacing   3}
