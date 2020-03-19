@@ -200,7 +200,6 @@
                 ^{:key (str (:db/id task))}
                 [:li
                  [:div {:class (<class item-class (= :done activity-state) dark-theme?)}
-                  [circle-svg {:status task-status :size 14 :dark-theme? dark-theme?}]
                   [:div {:class (<class task-info dark-theme?)}
                    [Link {:href (str "#/projects/" project-id "/" activity-id "/" (:db/id task))
                           :class (<class stepper-button-style {:size "16px"
@@ -214,7 +213,6 @@
       [:div {:class (<class task-info dark-theme?)}
        [:span (tr [:project :activity :no-tasks])]]])
    [:div {:class (<class item-class (= :done activity-state) dark-theme?)}
-    [circle-svg {:status :not-started :size 14 :dark-theme? dark-theme?}]
     [:div {:class (<class task-info dark-theme?)}
      [rect-button {:size :small
                    :disabled disable-buttons?
@@ -231,7 +229,6 @@
                   :as activity}]
 
   (let [activity-state (activity-step-state activity)
-        activity-status (get-in activity [:activity/status :db/ident])
         activity-open? (= (str activity-id) (str (:activity stepper)))]
     ^{:key (str (:db/id activity))}
     [:ol {:class (<class ol-class)}
@@ -246,8 +243,6 @@
                                                         :dark-theme? dark-theme?})}
           (tr [:enum (:db/ident (:activity/name activity))])]
          [typography/SmallText
-          [:strong
-           (tr [:enum activity-status]) " "]
           (format/date activity-est-start) " – " (format/date activity-est-end)]]
         (when (= (str activity-id) (str (:activity stepper)))
           [buttons/button-secondary {:size :small
