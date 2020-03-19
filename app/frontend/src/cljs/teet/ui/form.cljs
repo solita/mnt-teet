@@ -138,7 +138,10 @@
                                      (let [v (if (gobj/containsKey value "target")
                                                (gobj/getValueByKeys value "target" "value")
                                                value)]
-                                       (e! (on-change-event {field v}))
+                                       (e! (on-change-event
+                                            (if (vector? field)
+                                              (zipmap field value)
+                                              {field v})))
                                        v))
                validate-attribute-fn (fn [validate-field field value]
                                        (swap! invalid-attributes
@@ -189,9 +192,17 @@
                      (assert (vector? field) "Field must be a hiccup vector")
                      (assert (map? (second field)) "First argument to field must be an options map")
                      (let [{:keys [xs lg md attribute adornment]
-                            validate-field :validate} (meta field)
-                           _ (assert (keyword? attribute) "All form fields must have :attribute meta key!")
-                           value (get value attribute (default-value (first field)))
+                            validate-field :validate :as field-meta} (meta field)
+                           value (cond
+                                   (keyword? attribute)
+                                   (get value attribute (default-value (first field)))
+
+                                   (vector? attribute)
+                                   (mapv #(get value % (default-value (first field))) attribute)
+
+                                   :else
+                                   (throw (ex-info "All form fields must have :attribute meta key (keyword or vector of keywords)"
+                                                   {:meta field-meta})))
                            error-text (and validate-field
                                            (validate-field value))
                            opts {:value value
