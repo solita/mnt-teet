@@ -30,10 +30,7 @@
 
    ^{:attribute [:activity/estimated-start-date :activity/estimated-end-date]}
    [date-picker/date-range-input {:start-label (tr [:fields :activity/estimated-start-date])
-                                  :end-label (tr [:fields :activity/estimated-end-date])}]
-
-   ^{:attribute :activity/status}
-   [select/select-enum {:e! e! :attribute :activity/status}]])
+                                  :end-label (tr [:fields :activity/estimated-end-date])}]])
 
 (defmethod project-navigator-view/project-navigator-dialog :edit-activity
   [{:keys [e! app]}  dialog]
