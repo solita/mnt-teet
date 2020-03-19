@@ -392,46 +392,6 @@
      ^{:attribute :thk.project/manager}
      [select/select-user {:e! e! :attribute :thk.project/manager}]]))
 
-#_(defn project-page-modals
-  [e! {{:keys [add edit lifecycle]} :query :as app} project]
-  (let [lifecycle-type (some->> project
-                                :thk.project/lifecycles
-                                (filter #(= lifecycle (str (:db/id %))))
-                                first
-                                :thk.lifecycle/type
-                                :db/ident)
-        [modal modal-label]
-        (cond
-          add
-          (case add
-            "task"
-            [[task-form e!
-              {:close project-controller/->CloseDialog
-               :task (:new-task project)
-               :save task-controller/->CreateTask
-               :on-change task-controller/->UpdateTaskForm}]
-             (tr [:project :add-task])]
-            "activity"
-            [[activity-view/activity-form e! {:close project-controller/->CloseDialog
-                                              :activity (get-in app [:project (:thk.project/id project) :new-activity])
-                                              :on-change activity-controller/->UpdateActivityForm
-                                              :save activity-controller/->CreateActivity
-                                              :lifecycle-type lifecycle-type}]
-             (tr [:project :add-activity lifecycle-type])])
-          edit
-          (case edit
-            "activity"
-            [[edit-activity-form e! app lifecycle-type (e! project-controller/->InitializeActivityEditForm)]
-             (tr [:project :edit-activity])]
-            "project"
-            [[edit-project-basic-information e! project]
-             (tr [:project :edit-project])])
-          :else nil)]
-    [panels/modal {:open-atom (r/wrap (boolean modal) :_)
-                   :title (or modal-label "")
-                   :on-close (e! project-controller/->CloseDialog)}
-
-     modal]))
 
 (defn- setup-incomplete-footer
   [e! project]

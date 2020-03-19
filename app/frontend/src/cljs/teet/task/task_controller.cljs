@@ -11,8 +11,6 @@
 (defrecord UpdateTaskResponse [response])
 (defrecord UpdateTaskStatus [status])
 (defrecord UpdateTaskForm [form-data])
-(defrecord CreateTask [])
-(defrecord CreateTaskResult [result])
 
 (defrecord DeleteTask [task-id])
 (defrecord DeleteTaskResult [response])
@@ -20,8 +18,8 @@
 (defrecord OpenEditModal [entity])
 (defrecord CloseEditDialog [])
 (defrecord UpdateEditTaskForm [form-data])
-(defrecord PostTaskEditForm [])
-(defrecord TaskEditSuccess [])
+(defrecord SaveTaskForm [])
+(defrecord SaveTaskSuccess [])
 (defrecord MoveDataForEdit [])
 
 (defrecord OpenAddDocumentDialog [])
@@ -112,23 +110,31 @@
   (process-event [{form-data :form-data} app]
     (update-in app [:edit-task-data] merge form-data))
 
-  PostTaskEditForm
-  (process-event [_ app]
-    (let [task (:edit-task-data app)]
+  SaveTaskForm
+  (process-event [_ {task :edit-task-data
+                     stepper :stepper :as app}]
+    (let [{id :db/id :as task} task]
       (t/fx app
-            {:tuck.effect/type :command!
-             :command          :task/update
-             :payload          task
-             :success-message "Task edited succesfully"
-             :result-event     ->TaskEditSuccess})))
+            (merge
+             {:tuck.effect/type :command!
+              :result-event ->SaveTaskSuccess}
+             (if id
+               {:command :task/update
+                :payload task
+                :success-message "Task edited succesfully"}  ; FIXME: localize
+               {:command :task/create
 
-  TaskEditSuccess
+                :payload {:activity-id (goog.math.Long/fromString (get-in stepper [:dialog :activity-id]))
+                          :task (-> task
+                                    (update :task/assignee (fn [{id :user/id}] [:user/id id]))
+                                    (merge {:db/id "new-task"}))}
+                :success-message "Task created successfully"})))))
+
+  SaveTaskSuccess
   (process-event [_ {:keys [page query params] :as app}]
-    (t/fx app
-          {:tuck.effect/type :navigate
-           :page             page
-           :query            (dissoc query :edit)
-           :params           params}
+    (t/fx (-> app
+              (dissoc :edit-task-form)
+              (update :stepper dissoc :dialog))
           common-controller/refresh-fx))
 
   UpdateTask
@@ -150,32 +156,7 @@
 
   UpdateTaskForm
   (process-event [{form-data :form-data} app]
-    (update-in app [:route :project :new-task] merge form-data))
-
-  CreateTask
-  (process-event [_ app]
-    (log/info "create task!")
-    (let [activity-id (get-in app [:query :activity])
-          task (get-in app [:route :project :new-task])]
-      (t/fx app
-            {:tuck.effect/type :command!
-             :command :task/create
-             :payload {:activity-id (goog.math.Long/fromString activity-id)
-                       :task (-> task
-                                 (update :task/assignee (fn [{id :user/id}] [:user/id id]))
-                                 (merge {:db/id "new-task"}))}
-             :result-event ->CreateTaskResult})))
-
-  CreateTaskResult
-  (process-event [{result :result} {:keys [page params query] :as app}]
-    (log/info "create task result: " result)
-    (let [project (get-in app [:params :project])]
-      (t/fx (update-in app [:project project] dissoc :new-task)
-           {:tuck.effect/type :navigate
-            :page page
-            :params params
-            :query (dissoc query :add)}
-           common-controller/refresh-fx))))
+    (update-in app [:route :project :new-task] merge form-data)))
 
 (defn document-page-url [{{:keys [project activity task]} :params} doc]
   (str "#/projects/" project "/" activity "/" task "/" (:db/id doc)))

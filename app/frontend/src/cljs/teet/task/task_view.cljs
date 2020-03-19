@@ -201,16 +201,19 @@
   ;; Responsible person (email)
   (when initialization-fn
     (initialization-fn))
-  (fn [e! task]
+  (fn [e! {id :db/id :as task}]
     [form/form {:e! e!
                 :value task
                 :on-change-event task-controller/->UpdateEditTaskForm
                 :cancel-event task-controller/->CloseEditDialog
-                :save-event task-controller/->PostTaskEditForm
-                :delete (task-controller/->DeleteTask (:db/id task))
+                :save-event task-controller/->SaveTaskForm
+                :delete (when id (task-controller/->DeleteTask id))
                 :spec :task/new-task-form}
-     ^{:xs 12 :attribute :task/type}
-     [select/select-enum {:e! e! :attribute :task/type}]
+     ^{:xs 6 :attribute :task/group}
+     [select/select-enum {:e! e! :attribute :task/group}]
+     ^{:xs 6 :attribute :task/type}
+     [select/select-enum {:e! e! :attribute :task/type
+                          :enum/valid-for (:task/group task)}]
 
      ^{:attribute :task/description}
      [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
@@ -221,40 +224,6 @@
 (defmethod project-navigator-view/project-navigator-dialog :new-task
   [{:keys [e! app] :as opts} dialog]
   [task-form e! (:edit-task-data app)])
-
-#_(defn task-page-modal
-  [e! {:keys [params] :as app} {:keys [edit add-files] :as query}]
-  [:<>
-   [panels/modal {:open-atom (r/wrap (boolean add-files) :_)
-                  :title     (tr [:document :add-files])
-                  :on-close  #(e! (common-controller/->SetQueryParam :add-files nil))}
-    [add-files-form e! (get-in app [:new-document :in-progress?])]]
-   [panels/modal {:open-atom (r/wrap (boolean edit) :_)
-                  :title     (if-not edit
-                               ""
-                               (tr [:task (keyword (str "edit-" edit))]))
-                  :on-close  (e! task-controller/->CloseEditDialog)}
-    (case edit
-      "task"
-      [project-view/task-form e!
-       (merge
-         {:close             task-controller/->CloseEditDialog
-          :task              (:edit-task-data app)
-          :initialization-fn (e! task-controller/->MoveDataForEdit)
-          :save              task-controller/->PostTaskEditForm
-          :on-change         task-controller/->UpdateEditTaskForm
-          :delete            (task-controller/->DeleteTask (:task params))})]
-      "document"
-      [document-view/document-form e!
-       (merge
-         {:on-close-event    task-controller/->CloseEditDialog
-          :initialization-fn (e! document-controller/->MoveDocumentDataForEdit (:document query))
-          :save              document-controller/->PostDocumentEdit
-          :on-change         document-controller/->UpdateDocumentEditForm
-          :document          (:edit-document-data app)
-          :editing?          true
-          :delete            (document-controller/->DeleteDocument (:document query))})]
-      [:span])]])
 
 (defn task-page [e! {{:keys [add-document] :as query} :query
                      {task-id :task :as params} :params
