@@ -680,11 +680,6 @@
           {:db/ident :task.type/other :enum/attribute :task/type}
 
 
-          {:db/ident :task/deadline
-           :db/valueType :db.type/instant
-           :db/cardinality :db.cardinality/one
-           :db/doc "Deadline for the task"}
-
           {:db/ident :task/files
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/many
@@ -712,4 +707,18 @@
           {:db/ident :file/previous-version
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
-           :db/doc "Reference to the previous version of this file that this file supersedes."}]]}]
+           :db/doc "Reference to the previous version of this file that this file supersedes."}]]}
+
+ {:db/ident :migration/task-times
+  :txes [[{:db/ident :task/estimated-start-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :task/estimated-end-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :task/actual-start-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :task/actual-end-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one}]]}]
