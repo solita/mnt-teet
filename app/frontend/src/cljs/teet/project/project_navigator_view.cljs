@@ -223,7 +223,7 @@
                                 [icons/content-add])}
       (tr [:project :add-task])]]]])
 
-(defn- activity [{:keys [e! stepper dark-theme? disable-buttons? project-id lc-id rect-button] :as ctx}
+(defn- activity [{:keys [e! stepper dark-theme? disable-buttons? lc-id] :as ctx}
                  {activity-id :db/id
                   activity-est-end :activity/estimated-end-date
                   activity-est-start :activity/estimated-start-date
