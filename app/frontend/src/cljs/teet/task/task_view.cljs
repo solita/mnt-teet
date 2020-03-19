@@ -31,7 +31,8 @@
             [teet.theme.theme-colors :as theme-colors]
             [teet.user.user-model :as user-model]
             [teet.routes :as routes]
-            [teet.ui.text-field :refer [TextField]]))
+            [teet.ui.text-field :refer [TextField]]
+            [teet.ui.date-picker :as date-picker]))
 
 (defn task-status [e! status modified]
 
@@ -217,6 +218,12 @@
 
      ^{:attribute :task/description}
      [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
+
+     ^{:attribute :task/estimated-start-date :xs 6}
+     [date-picker/date-input {}]
+
+     ^{:attribute :task/estimated-end-date :xs 6}
+     [date-picker/date-input {}]
 
      ^{:attribute :task/assignee}
      [select/select-user {:e! e! :attribute :task/assignee}]]))
