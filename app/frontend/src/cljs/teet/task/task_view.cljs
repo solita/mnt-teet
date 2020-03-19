@@ -220,7 +220,9 @@
      [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
 
      ^{:attribute [:task/estimated-start-date :task/estimated-end-date] :xs 12}
-     [date-picker/date-range-input {}]
+     [date-picker/date-range-input {:start-label (tr [:fields :task/estimated-start-date])
+                                    :end-label (tr [:fields :task/estimated-end-date])
+                                    :required true}]
 
      ^{:attribute :task/assignee}
      [select/select-user {:e! e! :attribute :task/assignee}]]))

@@ -111,7 +111,7 @@
 (defrecord ToggleStepperActivity [activity])
 
 (defrecord PostActivityEditForm [])
-(defrecord OpenEditActivityDialog [activity-id lifecycle-id])
+(defrecord OpenEditActivityDialog [activity-id])
 (defrecord InitializeActivityEditForm [])
 (defrecord ContinueProjectSetup [project-id])
 (defrecord SkipProjectSetup [project-id])
@@ -597,12 +597,14 @@
 
   OpenActivityDialog
   (process-event [{lifecycle :lifecycle} {:keys [page params query] :as app}]
-    (t/fx app
-          {:tuck.effect/type :navigate
-           :page             page
-           :params           params
-           :query            (assoc query :add "activity"
-                                          :lifecycle lifecycle)}))
+    (-> app
+        (assoc-in [:stepper :dialog]
+                  {:type :edit-activity
+                   :lifecycle-type (-> app
+                                       common-controller/page-state
+                                       (project-model/lifecycle-by-id lifecycle)
+                                       :thk.lifecycle/type :db/ident)})
+        (assoc :edit-activity-data {})))
 
   OpenPeopleModal
   (process-event [_ {:keys [page params query] :as app}]
@@ -702,18 +704,11 @@
            :query            (assoc query :edit "project")}))
 
   OpenEditActivityDialog
-  (process-event [{activity-id :activity-id
-                   lifecycle-id :lifecycle-id} {:keys [page params query] :as app}]
-    (assoc-in app [:stepper :dialog] {:type :edit-activity
-                                      :activity-id activity-id
-                                      :lifecycle-id lifecycle-id})
-    #_(t/fx app
-          {:tuck.effect/type :navigate
-           :page             page
-           :params           params
-           :query            (assoc query :edit "activity"
-                                          :activity activity-id
-                                          :lifecycle lifecycle-id)}))
+  (process-event [{activity-id :activity-id} app]
+    (-> app
+        (assoc-in [:stepper :dialog] {:type :edit-activity})
+        (assoc :edit-activity-data (project-model/activity-by-id (common-controller/page-state app)
+                                                                 activity-id))))
 
   UpdateActivityState
   (process-event [{activity-id :id status :status} app]

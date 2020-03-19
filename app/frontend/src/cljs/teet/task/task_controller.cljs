@@ -133,7 +133,7 @@
   SaveTaskSuccess
   (process-event [_ {:keys [page query params] :as app}]
     (t/fx (-> app
-              (dissoc :edit-task-form)
+              (dissoc :edit-task-data)
               (update :stepper dissoc :dialog))
           common-controller/refresh-fx))
 
