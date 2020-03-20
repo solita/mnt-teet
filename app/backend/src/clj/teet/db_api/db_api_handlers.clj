@@ -10,6 +10,7 @@
             teet.document.document-commands
             teet.document.document-queries
             teet.comment.comment-commands
+            teet.comment.comment-queries
             teet.login.login-commands
             teet.enum.enum-queries
             teet.admin.admin-queries
