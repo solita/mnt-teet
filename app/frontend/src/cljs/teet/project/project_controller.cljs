@@ -110,9 +110,7 @@
 (defrecord ToggleStepperLifecycle [lifecycle])
 (defrecord ToggleStepperActivity [activity])
 
-(defrecord PostActivityEditForm [])
 (defrecord OpenEditActivityDialog [activity-id])
-(defrecord InitializeActivityEditForm [])
 (defrecord ContinueProjectSetup [project-id])
 (defrecord SkipProjectSetup [project-id])
 
@@ -664,37 +662,7 @@
   OpenTaskDialog
   (process-event [{activity :activity} {:keys [page params query] :as app}]
     (assoc-in app [:stepper :dialog] {:type :new-task
-                                      :activity-id activity})
-    #_(t/fx app
-          {:tuck.effect/type :navigate
-           :page             page
-           :params           params
-           :query            (assoc query :add "task"
-                                          :activity activity)}))
-
-  PostActivityEditForm
-  (process-event [_ {:keys [page params query edit-activity-data] :as app}]
-    (let [activity-data edit-activity-data]
-      (t/fx app
-            {:tuck.effect/type :navigate
-             :page             page
-             :query            (dissoc query :edit)
-             :params           params}
-            {:tuck.effect/type :command!
-             :command          :activity/update
-             :payload          activity-data
-             :result-event     common-controller/->Refresh})))
-
-  InitializeActivityEditForm
-  (process-event [_ {:keys [query route] :as app}]
-    (let [activity-data (project-model/activity-by-id (:project route) (:activity query))
-          date-range [(:activity/estimated-start-date activity-data) (:activity/estimated-end-date activity-data)]
-          activity (merge (select-keys activity-data [:activity/name :activity/status :db/id])
-                          {:activity/status (get-in activity-data [:activity/status :db/ident])}
-                          {:activity/name (get-in activity-data [:activity/name :db/ident])}
-                          {:activity/estimated-date-range date-range})]
-      (assoc app :edit-activity-data activity)))
-
+                                      :activity-id activity}))
   OpenEditProjectDialog
   (process-event [_ {:keys [page params query] :as app}]
     (t/fx app
@@ -707,8 +675,10 @@
   (process-event [{activity-id :activity-id} app]
     (-> app
         (assoc-in [:stepper :dialog] {:type :edit-activity})
-        (assoc :edit-activity-data (project-model/activity-by-id (common-controller/page-state app)
-                                                                 activity-id))))
+        (assoc :edit-activity-data
+               (-> app common-controller/page-state
+                   (project-model/activity-by-id activity-id)
+                   (update :activity/name :db/ident)))))
 
   UpdateActivityState
   (process-event [{activity-id :id status :status} app]

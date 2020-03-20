@@ -60,7 +60,7 @@
 (defcommand :activity/update
   {:doc "Update activity basic info"
    :context {:keys [conn user db]}
-   :payload activity
+   :payload {:keys [activity]}
    :project-id (project-db/activity-project-id db (:db/id activity))
    :authorization {:activity/edit-activity {:db/id (:db/id activity)}}
    :pre [(valid-activity-name? db activity
@@ -70,8 +70,7 @@
                                             db
                                             (:db/id activity))))]
    :transact [(merge (select-keys activity
-                                  [:activity/name :activity/status
-                                   :activity/estimated-start-date
+                                  [:activity/estimated-start-date
                                    :activity/estimated-end-date
                                    :db/id])
                      (meta-model/modification-meta user))]})

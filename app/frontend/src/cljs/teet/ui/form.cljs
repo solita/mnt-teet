@@ -164,7 +164,8 @@
                                                       attr))
                                 valid? (and (empty? invalid-attrs)
                                             (or (nil? spec) (s/valid? spec value)))]
-                            (log/info "VALIDATE invalid: " invalid-attrs)
+                            (log/info "VALIDATE invalid: " invalid-attrs " valid? " valid?
+                                      (s/explain-str spec value))
                             (reset! invalid-attributes invalid-attrs)
                             valid?))
                submit! (fn [e! save-event value fields e]

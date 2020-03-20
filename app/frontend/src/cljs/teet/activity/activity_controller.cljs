@@ -3,7 +3,8 @@
             [teet.localization :refer [tr]]
             [teet.common.common-controller :as common-controller]
             goog.math.Long
-            [teet.snackbar.snackbar-controller :as snackbar-controller]))
+            [teet.snackbar.snackbar-controller :as snackbar-controller]
+            [teet.log :as log]))
 
 (defmethod common-controller/on-server-error :conflicting-activities [err app]
   (let [error (-> err ex-data :error)]
@@ -24,24 +25,23 @@
 
   SaveActivityForm
   (process-event [_ {:keys [edit-activity-data] :as app}]
-    (let [[start end] (:activity/estimated-date-range edit-activity-data)
-          payload (-> edit-activity-data
-                      (dissoc :activity/estimated-date-range)
-                      (assoc :activity/estimated-start-date start)
-                      (assoc :activity/estimated-end-date end))]
+    (let [new? (nil? (:db/id edit-activity-data))]
+      (log/info "Save activity: " edit-activity-data)
       (t/fx app
             {:tuck.effect/type :command!
              ;; create/update
-             :command          :activity/update
-             :payload          payload
-             :success-message  (tr [:notifications :activity-updated])
+             :command          (if new?
+                                 :activity/create
+                                 :activity/update)
+             :payload          (if new?
+                                 {:activity edit-activity-data
+                                  :lifecycle-id (get-in app [:stepper :lifecycle])}
+                                 {:activity edit-activity-data})
+             :success-message  (tr [:notifications (if new? :activity-create :activity-updated)])
              :result-event     ->SaveActivityResponse})))
 
   SaveActivityResponse
   (process-event [{response :response} {:keys [page params query] :as app}]
-    (t/fx app
-          {:tuck.effect/type :navigate
-           :page             page
-           :params           params
-           :query            (dissoc query :edit)}
+    (t/fx (-> app
+              (update :stepper dissoc :dialog))
           common-controller/refresh-fx)))
