@@ -38,3 +38,5 @@ $PSQL_TEET "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA teet TO teet_anon;"
 
 echo "Adding all privileges in schema teet to teet_anon."
 $PSQL_TEET "GRANT SELECT, UPDATE, INSERT, DELETE ON ALL TABLES IN SCHEMA teet TO teet_user;"
+
+echo "Done! Next, import datasources in ../app/datasource-import/. The datasource ids can be found from the teet.datasources table."
