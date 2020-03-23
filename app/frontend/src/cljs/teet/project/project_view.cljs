@@ -303,18 +303,6 @@
    [project-details e! project]
    [project-timeline project]])
 
-(defn edit-activity-form
-  [_ _ _lifecycle-type initialization-fn]
-  (initialization-fn)
-  (fn [e! app lifecycle-type _]
-    (when-let [activity-data (:edit-activity-data app)]     ;;Otherwise the form renderer can't format dates properly
-      [activity-view/activity-form e! {:on-change activity-controller/->UpdateEditActivityForm
-                                       :save activity-controller/->SaveEditActivityForm
-                                       :close project-controller/->CloseDialog
-                                       :activity (:edit-activity-data app)
-                                       :lifecycle-type lifecycle-type
-                                       :delete (project-controller/->DeleteActivity (str (:db/id activity-data)))}])))
-
 (defn data-tab
   [_e! {{project-id :project} :params :as _app} project]
   [:div

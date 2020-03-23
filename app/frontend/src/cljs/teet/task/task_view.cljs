@@ -32,7 +32,8 @@
             [teet.user.user-model :as user-model]
             [teet.routes :as routes]
             [teet.ui.text-field :refer [TextField]]
-            [teet.ui.date-picker :as date-picker]))
+            [teet.ui.date-picker :as date-picker]
+            [teet.project.project-controller :as project-controller]))
 
 (defn task-status [e! status modified]
 
@@ -206,7 +207,7 @@
     [form/form {:e! e!
                 :value task
                 :on-change-event task-controller/->UpdateEditTaskForm
-                :cancel-event task-controller/->CloseEditDialog
+                :cancel-event project-controller/->CloseDialog
                 :save-event task-controller/->SaveTaskForm
                 :delete (when id (task-controller/->DeleteTask id))
                 :spec :task/new-task-form}
@@ -220,12 +221,14 @@
      [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
 
      ^{:attribute [:task/estimated-start-date :task/estimated-end-date] :xs 12}
-     [date-picker/date-range-input {}]
+     [date-picker/date-range-input {:start-label (tr [:fields :task/estimated-start-date])
+                                    :end-label (tr [:fields :task/estimated-end-date])
+                                    :required true}]
 
      ^{:attribute :task/assignee}
      [select/select-user {:e! e! :attribute :task/assignee}]]))
 
-(defmethod project-navigator-view/project-navigator-dialog :new-task
+(defmethod project-navigator-view/project-navigator-dialog :add-task
   [{:keys [e! app] :as opts} dialog]
   [task-form e! (:edit-task-data app)])
 

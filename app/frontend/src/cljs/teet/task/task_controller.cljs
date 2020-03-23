@@ -16,7 +16,6 @@
 (defrecord DeleteTaskResult [response])
 
 (defrecord OpenEditModal [entity])
-(defrecord CloseEditDialog [])
 (defrecord UpdateEditTaskForm [form-data])
 (defrecord SaveTaskForm [])
 (defrecord SaveTaskSuccess [])
@@ -26,14 +25,6 @@
 (defrecord CloseAddDocumentDialog [])
 
 (extend-protocol t/Event
-  CloseEditDialog
-  (process-event [_ {:keys [params page query] :as app}]
-    (t/fx app
-          {:tuck.effect/type :navigate
-           :page page
-           :params params
-           :query (dissoc query :edit)}))
-
   MoveDataForEdit
   (process-event [_ app]
     (let [task-data (select-keys (get-in app [:route :activity-task]) [:db/id :task/assignee :task/type :task/description])
@@ -133,7 +124,7 @@
   SaveTaskSuccess
   (process-event [_ {:keys [page query params] :as app}]
     (t/fx (-> app
-              (dissoc :edit-task-form)
+              (dissoc :edit-task-data)
               (update :stepper dissoc :dialog))
           common-controller/refresh-fx))
 
@@ -156,7 +147,7 @@
 
   UpdateTaskForm
   (process-event [{form-data :form-data} app]
-    (update-in app [:route :project :new-task] merge form-data)))
+    (update-in app [:route :project :add-task] merge form-data)))
 
 (defn document-page-url [{{:keys [project activity task]} :params} doc]
   (str "#/projects/" project "/" activity "/" task "/" (:db/id doc)))
