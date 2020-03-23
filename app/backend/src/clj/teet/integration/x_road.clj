@@ -36,6 +36,7 @@
 
 (defn rr442-parse-name [xml-string]
   (let [xml (xml/parse xml-string)
+        _ (assert (some? xml))
         zipped-xml (clojure.zip/xml-zip xml)
         avaldaja (z/xml1-> zipped-xml :SOAP-ENV:Envelope :SOAP-ENV:Body :prod:RR442Response :response :Avaldaja)
         fields [:Eesnimi :Perenimi :Isikukood]
@@ -44,7 +45,7 @@
                             [fieldname (z/xml1-> avaldaja fieldname z/text)])]
     (into {} (mapv fieldname->kvpair fields))))
 
-(defn make-request [url eid]
+(defn perform-rr442-request [url eid]
   (let [req (rr442-request-xml eid)
         
         resp-atom (htclient/post url {:body req
