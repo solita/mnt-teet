@@ -101,3 +101,13 @@
    :background-color theme-colors/gray-lighter
    :color theme-colors/gray-dark
    :user-select :none})
+
+(defn flex-row-space-between
+  []
+  {:display :flex
+   :flex-direction :row
+   :justify-content :space-between})
+
+(defn margin-bottom-1
+  []
+  {:margin-bottom "0.5rem"})
