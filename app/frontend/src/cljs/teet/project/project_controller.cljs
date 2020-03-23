@@ -282,6 +282,7 @@
   DrawSelectionConfirm
   (process-event [{:keys [related-feature-type select?]} app]
     (let [selected (get-in app [:route :project :draw-selection-features])
+          checked-feature-path (get-in candidate-paths [related-feature-type :checked-feature-path])
           update-checked (case related-feature-type
                            :restrictions update-checked-restrictions
                            :cadastral-units update-checked-cadastral-units)]
@@ -290,7 +291,7 @@
           (update-in [:route :project] dissoc :draw-selection-features)
           (update-checked
            ((if select? set/union set/difference) ; select or remove selection
-            (get-in app [:route :project :checked-restrictions] #{})
+            (get-in app checked-feature-path)
             selected)))))
 
   DrawSelectionCancel

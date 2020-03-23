@@ -258,7 +258,9 @@
                           {:on-mouse-leave (r/partial on-mouse-leave restriction)})))]]))]]))])
 
 (defn cadastral-units-listing
-  [e! _road-buffer-meters {:keys [loading? cadastral-units checked-cadastral-units toggle-cadastral-unit on-mouse-enter on-mouse-leave]}]
+  [e! _road-buffer-meters {:keys [loading? cadastral-units checked-cadastral-units
+                                  draw-selection-features
+                                  toggle-cadastral-unit on-mouse-enter on-mouse-leave]}]
   (r/with-let [open-types (r/atom #{})]
     (if loading?
       [fetching-features-skeletons 10]
@@ -284,7 +286,8 @@
        [:div {:style {:margin-top "1rem"}}
         [itemlist/checkbox-list
          {:on-select-all #(e! (project-controller/->SelectCadastralUnits (set cadastral-units)))
-          :on-deselect-all #(e! (project-controller/->DeselectCadastralUnits (set cadastral-units)))}
+          :on-deselect-all #(e! (project-controller/->DeselectCadastralUnits (set cadastral-units)))
+          :actions (list [draw-selection e! :cadastral-units cadastral-units draw-selection-features])}
          (doall
            (for [cadastral-unit (sort-by (juxt :VOOND :teet-id) cadastral-units)
                  :let [checked? (boolean (checked-cadastral-units cadastral-unit))]]
@@ -319,7 +322,7 @@
 (defn project-setup-cadastral-units-form [e! _project step {:keys [road-buffer-meters] :as _map}]
   (e! (project-controller/->FetchRelatedCandidates road-buffer-meters step))
   (fn [e!
-       {:keys [checked-cadastral-units feature-candidates]}
+       {:keys [checked-cadastral-units feature-candidates draw-selection-features]}
        {step-label :step-label :as step}
        _map]
     (let [{:keys [loading? cadastral-candidates]} feature-candidates]
@@ -329,6 +332,7 @@
         road-buffer-meters
         {:cadastral-units cadastral-candidates
          :loading? loading?
+         :draw-selection-features draw-selection-features
          :checked-cadastral-units (or checked-cadastral-units #{})
          :toggle-cadastral-unit (e! project-controller/->ToggleCadastralUnit)
          :on-mouse-enter (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" true)
