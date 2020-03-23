@@ -30,7 +30,7 @@
                  :cancel-event    on-close-event
                  :in-progress?    in-progress?
                  :spec            :document/new-document-form}
-      
+
       ^{:attribute :document/category :xs 6}
 
       [select/select-enum {:e! e!
@@ -65,10 +65,3 @@
      (when in-progress?
        [LinearProgress {:variant "determinate"
                         :value   in-progress?}])]))
-
-(defn comments [e! {:keys [new-comment] :as document}]
-  [comments-view/comments {:e!                   e!
-                           :new-comment          new-comment
-                           :comments             (:document/comments document)
-                           :update-comment-event comments-controller/->UpdateNewCommentForm
-                           :save-comment-event   comments-controller/->CommentOnDocument}])

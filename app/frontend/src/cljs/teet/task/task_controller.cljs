@@ -87,12 +87,12 @@
              :app-path [:task task :task/documents]})))
 
   UpdateTaskStatus
-  (process-event [{status :status :as event} app]
-    (let [{id :db/id} (common-controller/page-state app)]
+  (process-event [{status :status} app]
+    (let [task-id (get-in app [:params :task])]
       (t/fx app
         {:tuck.effect/type :command!
          :command          :task/update
-         :payload          {:db/id id
+         :payload          {:db/id (goog.math.Long/fromString task-id)
                             :task/status status}
          :success-message  "Task status update successful"
          :result-event     common-controller/->Refresh})))

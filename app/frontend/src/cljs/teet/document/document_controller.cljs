@@ -26,7 +26,7 @@
 (defrecord DeleteFile [file-id])
 (defrecord DeleteFileResult [])
 
-(defrecord AddFilesToDocument [files]) ;; upload more files to existing document
+(defrecord AddFilesToTask [files]) ;; upload more files to existing document
 
 
 
@@ -134,13 +134,13 @@
                                                 :progress-increment (int (/ 100 file-count))
                                                 :on-success ->UploadFinished}))})))
 
-  AddFilesToDocument
+  AddFilesToTask
   (process-event [{files :files} app]
-    (let [doc-id (goog.math.Long/fromString (get-in app [:query :document]))]
+    (let [task-id (goog.math.Long/fromString (get-in app [:params :task]))]
       (t/fx app
             (fn [e!]
               (e! (map->UploadFiles {:files files
-                                     :document-id doc-id
+                                     :document-id task-id
                                      :progress-increment (int (/ 100 (count files)))
                                      :on-success ->UploadFinished}))))))
 
