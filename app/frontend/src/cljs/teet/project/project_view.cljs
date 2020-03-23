@@ -142,6 +142,51 @@
       (when (:geometry-range? map-settings)
         [search-area-view/feature-search-area e! app project related-entity-type])]]))
 
+(defn- project-timeline [{:thk.project/keys [estimated-start-date estimated-end-date lifecycles]
+                          :as project}]
+  (r/with-let [show-in-modal? (r/atom false)]
+    (when (and estimated-start-date estimated-end-date)
+      (let [tr* (tr-tree [:enum])
+            project-name (project-model/get-column project :thk.project/project-name)
+            timeline-component [timeline/timeline {:start-date estimated-start-date
+                                                   :end-date   estimated-end-date}
+                                (concat
+                                 [{:label      project-name
+                                   :start-date estimated-start-date
+                                   :end-date   estimated-end-date
+                                   :fill       "black"
+                                   :hover      [:div project-name]}]
+                                 (mapcat (fn [{:thk.lifecycle/keys [type estimated-start-date estimated-end-date
+                                                                    activities]}]
+                                           (concat
+                                            [{:label      (-> type :db/ident tr*)
+                                              :start-date estimated-start-date
+                                              :end-date   estimated-end-date
+                                              :fill       "magenta"
+                                              :hover      [:div (tr* (:db/ident type))]}]
+                                            (for [{:activity/keys [name status estimated-start-date estimated-end-date]
+                                                   :as activity} activities
+                                                  :let [label (-> name :db/ident tr*)]]
+                                              {:label label
+                                               :start-date estimated-start-date
+                                               :end-date estimated-end-date
+                                               :fill "cyan"
+                                               :hover [:div
+                                                       [:div [:b (tr [:fields :activity/name]) ": "] label]
+                                                       [:div [:b (tr [:fields :activity/status]) ": "] (tr* (:db/ident status))]]})))
+                                         (sort-by :thk.lifecycle/estimated-start-date lifecycles)))]]
+
+        [:<>
+         [icons/action-date-range]
+         [buttons/link-button {:on-click #(reset! show-in-modal? true)
+                               :class (<class project-style/project-timeline-link)}
+          "Show project timeline"]
+         (when @show-in-modal?
+           [panels/modal {:title "Timeline"
+                          :max-width "lg"
+                          :on-close #(reset! show-in-modal? false)}
+            timeline-component])]))))
+
 (defn activities-tab
   [e! {:keys [stepper] :as _app} project]
   [project-navigator-view/project-navigator e! project stepper false])
@@ -255,53 +300,9 @@
                                 :secondary-text (tr [:roles (:permission/role permission)])
                                 :id (:db/id user)})])]])
 
-(defn- project-timeline [{:thk.project/keys [estimated-start-date estimated-end-date lifecycles]
-                          :as project}]
-  (r/with-let [show-in-modal? (r/atom false)]
-    (when (and estimated-start-date estimated-end-date)
-      (let [tr* (tr-tree [:enum])
-            project-name (project-model/get-column project :thk.project/project-name)
-            timeline-component [timeline/timeline {:start-date estimated-start-date
-                             :end-date   estimated-end-date}
-          (concat
-           [{:label      project-name
-             :start-date estimated-start-date
-             :end-date   estimated-end-date
-             :fill       "black"
-             :hover      [:div project-name]}]
-           (mapcat (fn [{:thk.lifecycle/keys [type estimated-start-date estimated-end-date
-                                              activities]}]
-                     (concat
-                      [{:label      (-> type :db/ident tr*)
-                        :start-date estimated-start-date
-                        :end-date   estimated-end-date
-                        :fill       "magenta"
-                        :hover      [:div (tr* (:db/ident type))]}]
-                      (for [{:activity/keys [name status estimated-start-date estimated-end-date]
-                             :as activity} activities
-                            :let [label (-> name :db/ident tr*)]]
-                        {:label label
-                         :start-date estimated-start-date
-                         :end-date estimated-end-date
-                         :fill "cyan"
-                         :hover [:div
-                                 [:div [:b (tr [:fields :activity/name]) ": "] label]
-                                 [:div [:b (tr [:fields :activity/status]) ": "] (tr* (:db/ident status))]]})))
-                   (sort-by :thk.lifecycle/estimated-start-date lifecycles)))]]
-
-        [:<>
-         [Fab {:on-click #(reset! show-in-modal? true)} [icons/action-zoom-in]]
-         (if @show-in-modal?
-           [panels/modal {:title "Timeline"
-                          :max-width "lg"
-                          :on-close #(reset! show-in-modal? false)}
-            timeline-component]
-           timeline-component)]))))
-
 (defn details-tab [e! _app project]
   [:<>
-   [project-details e! project]
-   [project-timeline project]])
+   [project-details e! project]])
 
 (defn data-tab
   [_e! {{project-id :project} :params :as _app} project]
@@ -324,12 +325,17 @@
    [itemlist/gray-bg-list [{:secondary-text (tr [:data-tab :cadastral-unit-count]
                                                 {:count (count (:thk.project/related-cadastral-units project))})}]]])
 
+(defn activities-tab-footer [_e! _app project]
+  [:div {:class (<class project-style/activities-tab-footer)}
+   [project-timeline project]])
+
 (def project-tabs-layout
   ;; FIXME: Labels with TR paths instead of text
   [{:label "Activities"
     :value "activities"
     :component activities-tab
-    :layers #{:thk-project :related-cadastral-units :related-restrictions}}
+    :layers #{:thk-project :related-cadastral-units :related-restrictions}
+    :footer activities-tab-footer}
    {:label "People"                                         ;; HIDDEN UNTIL something is built for this tab
     :value "people"
     :component people-tab
@@ -473,8 +479,10 @@
      (merge {:header [project-tabs e! app]
              :body [project-tab e! app project]
              :map-settings {:layers #{:thk-project :surveys}}}
-            (when (:thk.project/setup-skipped? project)
-              {:footer [setup-incomplete-footer e! project]}))]))
+            (if (:thk.project/setup-skipped? project)
+              {:footer [setup-incomplete-footer e! project]}
+              (when-let [tab-footer (:footer (selected-project-tab app))]
+                {:footer [tab-footer e! app project]})))]))
 
 (defn- project-setup-view
   "The project setup wizard that is shown for uninitialized projects."
