@@ -151,26 +151,30 @@
             timeline-component [timeline/timeline {:start-date estimated-start-date
                                                    :end-date   estimated-end-date}
                                 (concat
+                                 ;; Project
                                  [{:label      project-name
                                    :start-date estimated-start-date
                                    :end-date   estimated-end-date
-                                   :fill       "black"
+                                   :fill       (:project timeline/colors)
                                    :hover      [:div project-name]}]
+                                 ;; Lifecycles
                                  (mapcat (fn [{:thk.lifecycle/keys [type estimated-start-date estimated-end-date
                                                                     activities]}]
                                            (concat
                                             [{:label      (-> type :db/ident tr*)
                                               :start-date estimated-start-date
                                               :end-date   estimated-end-date
-                                              :fill       "magenta"
+                                              :fill       (:lifecycle timeline/colors)
                                               :hover      [:div (tr* (:db/ident type))]}]
+                                            ;; Activities
                                             (for [{:activity/keys [name status estimated-start-date estimated-end-date]
                                                    :as activity} activities
                                                   :let [label (-> name :db/ident tr*)]]
+                                              ;; TODO add subtasks
                                               {:label label
                                                :start-date estimated-start-date
                                                :end-date estimated-end-date
-                                               :fill "cyan"
+                                               :fill (:activity timeline/colors)
                                                :hover [:div
                                                        [:div [:b (tr [:fields :activity/name]) ": "] label]
                                                        [:div [:b (tr [:fields :activity/status]) ": "] (tr* (:db/ident status))]]})))

@@ -4,6 +4,7 @@
             [reagent.core :as r]
             [teet.ui.material-ui :refer [Popover Popper]]
             [cljs-time.core :as t]
+            [teet.theme.theme-colors :as theme-colors]
             [teet.theme.theme-panels :as theme-panels]
             [herb.core :refer [<class]]
             [teet.localization :refer [tr]]
@@ -92,7 +93,7 @@
     [:g#today
      [:line {:x1 x :x2 x
              :y1 0 :y2 y
-             :style {:stroke "red" :stroke-width line-width
+             :style {:stroke theme-colors/red-dark :stroke-width line-width
                      :stroke-dasharray "3 1"}}]
      [:text {:x x :y (+ y (/ line-height 1.25))
              :text-anchor "middle"}
@@ -140,7 +141,7 @@
       [:g
        [:line {:x1 x :x2 x
                :y1 0 :y2 y
-               :style {:stroke "black" :stroke-width line-width}}]
+               :style {:stroke theme-colors/blue-dark :stroke-width line-width}}]
        [:text {:x (+ x 5) :y y} year]]))])
 
 (defn- month-labels-group [{:keys [x-of years month-width]}]
@@ -171,6 +172,12 @@
                          (.requestAnimationFrame js/window (partial animate! start-ms))))))]
     (.requestAnimationFrame js/window
                             (partial animate! nil))))
+
+(def colors
+  {:project theme-colors/blue
+   :lifecycle theme-colors/blue-light
+   :activity theme-colors/blue-lighter
+   :subtask theme-colors/gray})
 
 (defn timeline [{:keys [start-date end-date
                         month-width
