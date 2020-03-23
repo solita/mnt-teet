@@ -661,7 +661,7 @@
 
   OpenTaskDialog
   (process-event [{activity :activity} {:keys [page params query] :as app}]
-    (assoc-in app [:stepper :dialog] {:type :new-task
+    (assoc-in app [:stepper :dialog] {:type :add-task
                                       :activity-id activity}))
   OpenEditProjectDialog
   (process-event [_ {:keys [page params query] :as app}]
