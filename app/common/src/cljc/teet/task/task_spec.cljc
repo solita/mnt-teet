@@ -20,3 +20,5 @@
                                        :file/name
                                        :file/size])
                          #(nil? (file-model/validate-file (file-model/type-by-suffix %)))))
+
+(s/def :task/new-comment-form (s/keys :req [:comment/comment]))
