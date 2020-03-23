@@ -56,7 +56,8 @@
   [:g#items
    (doall
     (for [i (range (count timeline-items))
-          :let [{:keys [start-date end-date fill] :as item} (nth timeline-items i)
+          :let [{:keys [start-date end-date colors label] :as item} (nth timeline-items i)
+                {fill :background text-color :text} colors
                 start-x (x-of start-date)
                 end-x (x-of end-date)
                 y (+ (y-of i) (* 0.1 line-height))
@@ -77,10 +78,14 @@
            rects
            (let [[pct fill-style] f
                  w (* width pct)]
-             (recur (conj rects
-                          [:rect {:key i
-                                  :x x :y y :width w :height height
-                                  :style {:fill fill-style}}])
+             (recur (-> rects
+                        (conj [:rect {:key i
+                                      :x x :y y :width w :height height
+                                      :style {:fill fill-style}}])
+                        (conj [:text {:key (str i "-text")
+                                      :fill text-color
+                                      :x (+ x 6) :y (+ y (* height 0.8))}
+                               label]))
                     (inc i)
                     (+ x w)
                     fills))))]))])
@@ -174,10 +179,13 @@
                             (partial animate! nil))))
 
 (def colors
-  {:project theme-colors/blue
-   :lifecycle theme-colors/blue-light
-   :activity theme-colors/blue-lighter
-   :subtask theme-colors/gray})
+  {:project {:background theme-colors/blue
+             :text       theme-colors/white}
+   :lifecycle {:background theme-colors/blue-light
+               :text       theme-colors/white}
+   :activity {:background theme-colors/blue-lighter
+              :text       theme-colors/blue-dark}
+   :subtask {:background theme-colors/gray}})
 
 (defn timeline [{:keys [start-date end-date
                         month-width

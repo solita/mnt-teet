@@ -155,7 +155,7 @@
                                  [{:label      project-name
                                    :start-date estimated-start-date
                                    :end-date   estimated-end-date
-                                   :fill       (:project timeline/colors)
+                                   :colors     (:project timeline/colors)
                                    :hover      [:div project-name]}]
                                  ;; Lifecycles
                                  (mapcat (fn [{:thk.lifecycle/keys [type estimated-start-date estimated-end-date
@@ -164,7 +164,7 @@
                                             [{:label      (-> type :db/ident tr*)
                                               :start-date estimated-start-date
                                               :end-date   estimated-end-date
-                                              :fill       (:lifecycle timeline/colors)
+                                              :colors     (:lifecycle timeline/colors)
                                               :hover      [:div (tr* (:db/ident type))]}]
                                             ;; Activities
                                             (for [{:activity/keys [name status estimated-start-date estimated-end-date]
@@ -174,7 +174,7 @@
                                               {:label label
                                                :start-date estimated-start-date
                                                :end-date estimated-end-date
-                                               :fill (:activity timeline/colors)
+                                               :colors (:activity timeline/colors)
                                                :hover [:div
                                                        [:div [:b (tr [:fields :activity/name]) ": "] label]
                                                        [:div [:b (tr [:fields :activity/status]) ": "] (tr* (:db/ident status))]]})))
