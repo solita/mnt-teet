@@ -1,10 +1,11 @@
 (ns teet.integration.x-road
-  (:require [clojure.xml :refer [parse]]
+  (:require [clojure.xml :as xml]
             [clojure.data.zip.xml :as z]
+            [clojure.zip]
             [hiccup.core :as hiccup]
             [org.httpkit.client :as htclient]))
 
-(defn request-hiccup [eid]
+(defn rr442-request-hiccup [eid]
   [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"
                    :xmlns:xrd "http://x-road.eu/xsd/xroad.xsd"
                    :xmlns:ns5 "http://rr.x-road.eu/producer"
@@ -30,12 +31,29 @@
      [:request
       [:Isikukood eid]]]]])
 
-(defn request-xml [params]
-  (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (hiccup/html (make-request* params))))
+(defn rr442-request-xml [params]
+  (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (hiccup/html (rr442-request-hiccup params))))
+
+(defn rr442-parse-name [xml-string]
+  (let [xml (xml/parse xml-string)
+        zipped-xml (clojure.zip/xml-zip xml)
+        avaldaja (z/xml1-> zipped-xml :SOAP-ENV:Envelope :SOAP-ENV:Body :prod:RR442Response :response :Avaldaja)
+        fields [:Eesnimi :Perenimi :Isikukood]
+        _ (def *x avaldaja)
+        fieldname->kvpair (fn [fieldname]
+                            [fieldname (z/xml1-> avaldaja fieldname z/text)])]
+    (into {} (mapv fieldname->kvpair fields))))
 
 (defn make-request [url eid]
-  (let [req (request-xml eid)
-        resp-atom (htclient/post url {:body req})
+  (let [req (rr442-request-xml eid)
+        
+        resp-atom (htclient/post url {:body req
+                                      :as :stream
+                                      :headers {"Content-Type" "text/xml; charset=UTF-8"}})
         resp (deref resp-atom)]
     (if (= 200 (:status resp))
-      (println "got successful resp, body:" (:body resp)))))
+      {:status :ok
+       :result (rr442-parse-name (:body resp))}
+      ;; else
+      {:status :error
+       :result resp})))
