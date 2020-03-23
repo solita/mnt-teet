@@ -7,17 +7,13 @@
             [teet.localization :refer [tr tr-enum]]
             [teet.ui.buttons :as buttons]
             [teet.ui.format :as format]
-            [teet.ui.material-ui :refer [Grid Paper Link LinearProgress]]
+            [teet.ui.material-ui :refer [Link LinearProgress]]
             [teet.ui.icons :as icons]
-            [teet.ui.typography :as typography :refer [Heading1]]
-            [teet.ui.util :refer [mapc]]
-            [teet.project.project-view :as project-view]
+            [teet.ui.typography :as typography]
             [teet.ui.panels :as panels]
             [teet.ui.url :as url]
-            [teet.document.document-view :as document-view]
-            [teet.ui.breadcrumbs :as breadcrumbs]
             [teet.project.task-model :as task-model]
-            [teet.document.document-controller :as document-controller]
+            [teet.file.file-controller :as file-controller]
             [teet.comments.comments-view :as comments-view]
             [teet.ui.form :as form]
             [teet.common.common-controller :as common-controller]
@@ -28,9 +24,7 @@
             [teet.project.project-navigator-view :as project-navigator-view]
             [teet.project.project-style :as project-style]
             [teet.project.project-model :as project-model]
-            [teet.theme.theme-colors :as theme-colors]
             [teet.user.user-model :as user-model]
-            [teet.routes :as routes]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.tabs :as tabs]
             [teet.common.common-styles :as common-styles]
@@ -110,12 +104,12 @@
   [:<>
    [common/header-with-actions
     name
-    [buttons/delete-button-with-confirm {:action (e! document-controller/->DeleteFile id)}
+    [buttons/delete-button-with-confirm {:action (e! file-controller/->DeleteFile id)}
      (tr [:buttons :delete])]]
    [typography/SmallText {:style {:margin-bottom "1rem"}}
     (tr [:document :updated]) " "
     (format/date-time timestamp)]
-   [buttons/button-primary {:href       (document-controller/download-url id)
+   [buttons/button-primary {:href       (file-controller/download-url id)
                             :style      {:margin-bottom "2rem"}
                             :element    "a"
                             :target     "_blank"
@@ -197,7 +191,7 @@
      [form/form {:e!              e!
                  :value           @form
                  :on-change-event (form/update-atom-event form merge)
-                 :save-event      (partial document-controller/->AddFilesToTask (:document/files @form))
+                 :save-event      (partial file-controller/->AddFilesToTask (:document/files @form))
                  :cancel-event    #(common-controller/->SetQueryParam :add-files nil)
                  :in-progress?    upload-progress
                  :spec :document/add-files}

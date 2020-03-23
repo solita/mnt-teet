@@ -3,7 +3,7 @@
             [goog.math.Long]
             [teet.log :as log]
             [teet.localization :refer [tr]]
-            [teet.document.document-controller]
+            [teet.file.file-controller]
             [teet.common.common-controller :as common-controller]))
 
 (defrecord UploadDocuments [files])
