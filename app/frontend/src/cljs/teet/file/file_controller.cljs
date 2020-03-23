@@ -6,9 +6,9 @@
             tuck.effect
             [teet.common.common-controller :as common-controller]
             [teet.localization :refer [tr]]
-            [teet.document.document-model :as document-model]))
+            [teet.file.file-model :as file-model]))
 
-(defrecord UploadFiles [files document-id on-success progress-increment]) ; Upload files (one at a time) to document
+(defrecord UploadFiles [files task-id on-success progress-increment]) ; Upload files (one at a time) to document
 (defrecord UploadFinished []) ; upload completed, can close dialog
 (defrecord UploadFileUrlReceived [file-data file document-id url on-success])
 
@@ -43,12 +43,12 @@
       (t/fx app
             (fn [e!]
               (e! (map->UploadFiles {:files files
-                                     :document-id task-id
+                                     :task-id task-id
                                      :progress-increment (int (/ 100 (count files)))
                                      :on-success ->UploadFinished}))))))
 
   UploadFiles
-  (process-event [{:keys [files document-id on-success progress-increment] :as event} app]
+  (process-event [{:keys [files task-id on-success progress-increment] :as event} app]
     (if-let [file (first files)]
       ;; More files to upload
       (do
@@ -58,9 +58,9 @@
                            + progress-increment)
                 app)
               {:tuck.effect/type :command!
-               :command :document/upload-file
-               :payload {:document-id document-id
-                         :file (document-model/file-info file)}
+               :command :task/upload-file
+               :payload {:task-id task-id
+                         :file (file-model/file-info file)}
                :result-event (fn [result]
                                (map->UploadFileUrlReceived
                                 (merge result
@@ -96,4 +96,4 @@
           common-controller/refresh-fx)))
 
 (defn download-url [file-id]
-  (common-controller/query-url :document/download-file {:file-id file-id}))
+  (common-controller/query-url :file/download-file {:file-id file-id}))

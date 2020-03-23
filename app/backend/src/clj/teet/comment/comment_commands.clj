@@ -1,7 +1,7 @@
 (ns teet.comment.comment-commands
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
             [datomic.client.api :as d]
-            teet.document.document-spec
+            teet.file.file-spec
             [teet.meta.meta-model :refer [creation-meta deletion-tx]]
             [teet.project.project-db :as project-db])
   (:import (java.util Date)))

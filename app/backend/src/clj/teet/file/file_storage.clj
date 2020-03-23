@@ -1,4 +1,4 @@
-(ns teet.document.document-storage
+(ns teet.file.file-storage
   "Access to S3 bucket for storing files. Access must be checked in previous layers."
   (:require [amazonica.aws.s3 :as s3]
             [teet.environment :as environment])

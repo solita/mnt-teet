@@ -6,7 +6,7 @@
             [teet.integration.integration-s3 :as integration-s3]
             [datomic.client.api :as d]
             [teet.project.project-model :as project-model]
-            [teet.document.document-storage :as document-storage]
+            [teet.file.file-storage :as file-storage]
             [teet.gis.entity-features :as entity-features]))
 
 (defn ags->geojson [input]
@@ -48,7 +48,7 @@
          :default-path [:ags-files]}}
   (mapv (fn [file]
           (dissoc
-           (->> {:s3 (document-storage/document-s3-ref file)}
+           (->> {:s3 (file-storage/document-s3-ref file)}
                 integration-s3/load-file-from-s3
                 :file
                 ags-parser/parse

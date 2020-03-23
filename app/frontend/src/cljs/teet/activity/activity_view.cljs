@@ -3,7 +3,7 @@
             [teet.ui.date-picker :as date-picker]
             [teet.localization :refer [tr]]
             [teet.ui.form :as form]
-            teet.document.document-spec
+            teet.file.file-spec
             [teet.project.project-navigator-view :as project-navigator-view]
             [teet.project.project-style :as project-style]
             [herb.core :refer [<class]]

@@ -12,6 +12,7 @@
             [teet.ui.typography :as typography]
             [teet.ui.panels :as panels]
             [teet.ui.url :as url]
+            teet.task.task-spec
             [teet.project.task-model :as task-model]
             [teet.file.file-controller :as file-controller]
             [teet.comments.comments-view :as comments-view]
@@ -191,11 +192,11 @@
      [form/form {:e!              e!
                  :value           @form
                  :on-change-event (form/update-atom-event form merge)
-                 :save-event      (partial file-controller/->AddFilesToTask (:document/files @form))
+                 :save-event      (partial file-controller/->AddFilesToTask (:task/files @form))
                  :cancel-event    #(common-controller/->SetQueryParam :add-files nil)
                  :in-progress?    upload-progress
-                 :spec :document/add-files}
-      ^{:attribute :document/files}
+                 :spec :task/add-files}
+      ^{:attribute :task/files}
       [file-upload/files-field {}]]
      (when upload-progress
        [LinearProgress {:variant "determinate"
