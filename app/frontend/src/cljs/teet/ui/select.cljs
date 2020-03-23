@@ -261,19 +261,13 @@
   {:display :flex
    :flex-direction :row
    :align-items :center
-   :border-bottom "solid 1px"
-   :border-color theme-colors/gray-light
    :padding-bottom "1rem"
    :margin-bottom "1rem"})
 
 (defn status
-  [{:keys [e! status attribute modified on-change]}]
+  [{:keys [e! status attribute on-change]}]
   [:div {:class (<class status-container-style)}
    [select-enum {:e!                     e!
                  :on-change       on-change
                  :value           status
-                 :tiny-select?    true
-                 :attribute       attribute}]
-   [common/labeled-data {:label (tr [:common :last-modified])
-                         :data  (or (format/date modified)
-                                    "-")}]])
+                 :attribute       attribute}]])
