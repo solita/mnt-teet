@@ -7,7 +7,7 @@
             [teet.ui.util :refer [mapc]]
             [teet.project.activity-model :as activity-model]
             [teet.project.project-controller :as project-controller]
-            [teet.localization :refer [tr]]
+            [teet.localization :refer [tr tr-enum]]
             [reagent.core :as r]
             [teet.ui.format :as format]
             [teet.ui.typography :as typography]
@@ -177,16 +177,58 @@
   {:background-color (if dark-theme?
                        theme-colors/gray-dark
                        theme-colors/white)
-   :padding "1rem"})
+   :padding "1rem"
+   :height "100%"})
 
-(defn- activity [{:keys [e! stepper dark-theme? disable-buttons? project-id lc-id rect-button]}
+(defn- activity-task-list [{:keys [e! dark-theme? disable-buttons? project-id rect-button]}
+                           {:keys [tasks activity-state activity-id]}]
+  [:<>
+   (if (seq tasks)
+     [:div
+      (mapc
+       (fn [[group tasks]]
+         [:div.task-group
+          [:ol {:class (<class ol-class)}
+           ;; FIXME: style the group better
+           [:li {:class (<class item-class true dark-theme?)}
+            [:div {:class (<class task-info dark-theme?)}
+             [icons/file-folder-open]
+             (tr-enum group)]]
+           (doall
+            (for [{:task/keys [type] :as task} tasks]
+              (let [task-status (task-step-state task)]
+                ^{:key (str (:db/id task))}
+                [:li
+                 [:div {:class (<class item-class (= :done activity-state) dark-theme?)}
+                  [:div {:class (<class task-info dark-theme?)}
+                   [Link {:href (str "#/projects/" project-id "/" activity-id "/" (:db/id task))
+                          :class (<class stepper-button-style {:size "16px"
+                                                               :open? false
+                                                               :dark-theme? dark-theme?})}
+                    (tr [:enum (:db/ident type)])]]]])))]])
+
+       ;; group tasks by the task group
+       (group-by :task/group tasks))]
+     [:div {:class (<class item-class (= :done activity-state) dark-theme?)}
+      [:div {:class (<class task-info dark-theme?)}
+       [:span (tr [:project :activity :no-tasks])]]])
+   [:div {:class (<class item-class (= :done activity-state) dark-theme?)}
+    [:div {:class (<class task-info dark-theme?)}
+     [rect-button {:size :small
+                   :disabled disable-buttons?
+                   :on-click (e! project-controller/->OpenTaskDialog (str activity-id))
+                   :start-icon (r/as-element
+                                [icons/content-add])}
+      (tr [:project :add-task])]]]])
+
+(defn- activity [{:keys [e! stepper dark-theme? disable-buttons? lc-id] :as ctx}
                  {activity-id :db/id
                   activity-est-end :activity/estimated-end-date
                   activity-est-start :activity/estimated-start-date
+                  tasks :activity/tasks
                   :as activity}]
 
   (let [activity-state (activity-step-state activity)
-        activity-status (get-in activity [:activity/status :db/ident])
         activity-open? (= (str activity-id) (str (:activity stepper)))]
     ^{:key (str (:db/id activity))}
     [:ol {:class (<class ol-class)}
@@ -201,44 +243,16 @@
                                                         :dark-theme? dark-theme?})}
           (tr [:enum (:db/ident (:activity/name activity))])]
          [typography/SmallText
-          [:strong
-           (tr [:enum activity-status]) " "]
           (format/date activity-est-start) " – " (format/date activity-est-end)]]
         (when (= (str activity-id) (str (:activity stepper)))
           [buttons/button-secondary {:size :small
                                      :disabled disable-buttons?
-                                     :on-click (e! #(project-controller/->OpenEditActivityDialog
-                                                     (str activity-id) (str lc-id)))}
+                                     :on-click (e! #(project-controller/->OpenEditActivityDialog activity-id))}
            (tr [:buttons :edit])])]]
       (when activity-open?
-        [:<>
-         (if (:activity/tasks activity)
-           [:ol {:class (<class ol-class)}
-            (doall
-             (for [{:task/keys [type] :as task} (:activity/tasks activity)]
-               (let [task-status (task-step-state task)]
-                 ^{:key (str (:db/id task))}
-                 [:li
-                  [:div {:class (<class item-class (= :done activity-state) dark-theme?)}
-                   [circle-svg {:status task-status :size 14 :dark-theme? dark-theme?}]
-                   [:div {:class (<class task-info dark-theme?)}
-                    [Link {:href (str "#/projects/" project-id "/" activity-id "/" (:db/id task))
-                           :class (<class stepper-button-style {:size "16px"
-                                                                :open? false
-                                                                :dark-theme? dark-theme?})}
-                     (tr [:enum (:db/ident type)])]]]])))]
-           [:div {:class (<class item-class (= :done activity-state) dark-theme?)}
-            [:div {:class (<class task-info dark-theme?)}
-             [:span (tr [:project :activity :no-tasks])]]])
-         [:div {:class (<class item-class (= :done activity-state) dark-theme?)}
-          [circle-svg {:status :not-started :size 14 :dark-theme? dark-theme?}]
-          [:div {:class (<class task-info dark-theme?)}
-           [rect-button {:size :small
-                         :disabled disable-buttons?
-                         :on-click (e! project-controller/->OpenTaskDialog (str activity-id))
-                         :start-icon (r/as-element
-                                      [icons/content-add])}
-            (tr [:project :add-task])]]]])]]))
+        [activity-task-list ctx {:tasks tasks
+                                 :activity-id activity-id
+                                 :activity-state activity-state}])]]))
 
 (defn project-navigator
   [e! {:thk.project/keys [lifecycles] :as _project} stepper dark-theme?]
@@ -310,7 +324,10 @@
   [_opts dialog]
   [:div "Unsupported project navigator dialog " (pr-str dialog)])
 
-(defn project-navigator-with-content [{:keys [e! project app breadcrumbs] :as opts} & content]
+
+(defn project-navigator-with-content
+  "Page structure showing project navigator along with content."
+  [{:keys [e! project app breadcrumbs] :as opts} & content]
   [:<>
    [breadcrumbs/breadcrumbs breadcrumbs]
    [typography/Heading1 (:thk.project/name project)]
@@ -321,14 +338,15 @@
       [project-navigator-dialog opts dialog]])
    [Paper {:class (<class task-style/task-page-paper-style)}
     [Grid {:container true
-           :spacing   3}
+           :spacing   0}
      [Grid {:item  true
             :xs    3
             :style {:max-width "400px"}}
       [project-navigator e! project (:stepper app) true]]
      [Grid {:item  true
             :xs    6
-            :style {:max-width "800px"}}
+            :style {:max-width "800px"
+                    :padding "2rem 1.5rem"}}
       content]
      [Grid {:item  true
             :xs    :auto

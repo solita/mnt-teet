@@ -96,6 +96,5 @@
                        {:thk.lifecycle/activities
                         [*
                          {:activity/tasks [*
-                                           {:task/subtasks [*
-                                                            {:subtask/assignee [*]}]}]}]}]}])
+                                           {:task/assignee [*]}]}]}]}])
           eid))

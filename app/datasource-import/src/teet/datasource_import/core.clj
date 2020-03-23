@@ -110,19 +110,35 @@
 (defn dump-ctx [ctx]
   (spit "debug-ctx" (pr-str ctx)))
 
+(defn get-all-datasource-ids [{:keys [api-url api-secret]}]
+  (->> (client/get (str api-url "/datasource?select=id")
+                   {:headers (merge (auth-headers {:api-secret api-secret})
+                                    {"Prefer" "resolution=merge-duplicates"
+                                     "Content-Type" "application/json"})})
+       :body
+       cheshire/decode
+       (mapv #(get % "id"))))
+
+(defn make-config [[config-file datasource-id]]
+  {:post [(seq (:datasources %))]}
+  (assert (and config-file
+               (.canRead (io/file config-file)))
+          "Specify config file to read")
+  (let [config (-> config-file slurp read-string)]
+    (assert (valid-api? config)
+            "Specify :api-url and :api-secret")
+    (assoc config
+           :datasources
+           (or (some-> datasource-id
+                       Long/parseLong
+                       vector)
+               (do (println "No datasource id provided, importing all of them.")
+                   (get-all-datasource-ids config))))))
+
 (defn -main [& args]
-  (let [[config-file datasource-id] args
-        datasource (some-> datasource-id
-                           Long/parseLong)]
-    (assert (and config-file
-                 (.canRead (io/file config-file)))
-            "Specify config file to read")
-    (let [config (-> config-file slurp read-string)]
-      (assert (valid-api? config)
-              "Specify :api-url and :api-secret")
-      (assert (some? datasource)
-              "Specify :datasource-id")
-      (-> (assoc config :datasource-id datasource)
+  (let [config (make-config args)]
+    (doseq [datasource-id (:datasources config)]
+      (-> (assoc config :datasource-id datasource-id)
           fetch-datasource-config
           download-datasource
           extract-datasource

@@ -17,7 +17,6 @@
       (d/pull [:thk.project/id] id)
       :thk.project/id))
 
-
 (defquery :thk.project/fetch-project
   {:doc "Fetch project information"
    :context {db :db}

@@ -237,3 +237,13 @@
              (some #(when (id= (:db/id %) task-id) %) tasks))
            activities))
    lcs))
+
+(defn subtask-by-id
+  [{lcs :thk.project/lifecycles} subtask-id]
+  (first
+   (for [lc lcs
+         ac (:thk.lifecycle/activities lc)
+         t (:activity/tasks ac)
+         st (:task/subtasks t)
+         :when (= (:db/id st) subtask-id)]
+     st)))

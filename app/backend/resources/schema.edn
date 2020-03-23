@@ -630,96 +630,60 @@
           {:db/ident :document.status/approved :enum/attribute :document/status}]]}
 
 
- {:db/ident :migration/subtasks
+ {:db/ident :migration/tasks-and-task-groups
   :txes [;; Remove previously existing task types
          teet.migration.enum-values/remove-old-task-types
-         [;; Add subtasks to task
-          {:db/ident :task/subtasks
+         [;; task group enum
+          {:db/ident :task/group
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one}
+
+          ;; new task group enum values
+          {:db/ident :task.group/base-data :enum/attribute :task/group}
+          {:db/ident :task.group/study :enum/attribute :task/group}
+          {:db/ident :task.group/design :enum/attribute :task/group}
+          {:db/ident :task.group/design-approval :enum/attribute :task/group}
+          {:db/ident :task.group/land-purchase :enum/attribute :task/group}
+
+          ;; Task types for different task groups
+          {:db/ident :task.type/design-requirements :enum/attribute :task/type :enum/valid-for :task.group/base-data}
+          {:db/ident :task.type/terms-of-reference :enum/attribute :task/type :enum/valid-for :task.group/base-data}
+          {:db/ident :task.type/data :enum/attribute :task/type :enum/valid-for :task.group/base-data}
+          {:db/ident :task.type/geological-study :enum/attribute :task/type :enum/valid-for :task.group/study}
+          {:db/ident :task.type/traffic-study :enum/attribute :task/type :enum/valid-for :task.group/study}
+          {:db/ident :task.type/flora-and-fauna-study :enum/attribute :task/type :enum/valid-for :task.group/study}
+          {:db/ident :task.type/archeological-study :enum/attribute :task/type :enum/valid-for :task.group/study}
+          {:db/ident :task.type/topogeodesy :enum/attribute :task/type :enum/valid-for :task.group/study}
+          {:db/ident :task.type/noise-study :enum/attribute :task/type :enum/valid-for :task.group/study}
+          {:db/ident :task.type/eia-pre-assessment :enum/attribute :task/type :enum/valid-for :task.group/study}
+          {:db/ident :task.type/environmental-impact-assessment :enum/attribute :task/type :enum/valid-for :task.group/study}
+          {:db/ident :task.type/feasibility-study :enum/attribute :task/type :enum/valid-for :task.group/study}
+          {:db/ident :task.type/road :enum/attribute :task/type :enum/valid-for :task.group/design}
+          {:db/ident :task.type/railroad :enum/attribute :task/type :enum/valid-for :task.group/design}
+          {:db/ident :task.type/drainage :enum/attribute :task/type :enum/valid-for :task.group/design}
+          {:db/ident :task.type/landscaping :enum/attribute :task/type :enum/valid-for :task.group/design}
+          {:db/ident :task.type/lighting :enum/attribute :task/type :enum/valid-for :task.group/design}
+          {:db/ident :task.type/equipment :enum/attribute :task/type :enum/valid-for :task.group/design}
+          {:db/ident :task.type/structures :enum/attribute :task/type :enum/valid-for :task.group/design}
+          {:db/ident :task.type/utilities :enum/attribute :task/type :enum/valid-for :task.group/design}
+          {:db/ident :task.type/buildings :enum/attribute :task/type :enum/valid-for :task.group/design}
+          {:db/ident :task.type/acceptances :enum/attribute :task/type :enum/valid-for :task.group/design-approval}
+          {:db/ident :task.type/design-road-safety-audit :enum/attribute :task/type :enum/valid-for :task.group/design-approval}
+          {:db/ident :task.type/third-party-review :enum/attribute :task/type :enum/valid-for :task.group/design-approval}
+          {:db/ident :task.type/land-owners :enum/attribute :task/type :enum/valid-for :task.group/design-approval}
+          {:db/ident :task.type/allotment-plan :enum/attribute :task/type :enum/valid-for :task.group/land-purchase}
+          {:db/ident :task.type/property-valuation :enum/attribute :task/type :enum/valid-for :task.group/land-purchase}
+          {:db/ident :task.type/preliminary-agreements :enum/attribute :task/type :enum/valid-for :task.group/land-purchase}
+          {:db/ident :task.type/cadastral-works :enum/attribute :task/type :enum/valid-for :task.group/land-purchase}
+          {:db/ident :task.type/purchase-agreements :enum/attribute :task/type :enum/valid-for :task.group/land-purchase}
+          {:db/ident :task.type/cleanup :enum/attribute :task/type :enum/valid-for :task.group/land-purchase}
+          {:db/ident :task.type/other :enum/attribute :task/type}
+
+
+          {:db/ident :task/files
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/many
-           :db/doc "Subtasks in this task"}
-
-          ;; new task types
-          {:db/ident :task.type/base-data :enum/attribute :task/type}
-          {:db/ident :task.type/study :enum/attribute :task/type}
-          {:db/ident :task.type/design :enum/attribute :task/type}
-          {:db/ident :task.type/design-approval :enum/attribute :task/type}
-          {:db/ident :task.type/land-purchase :enum/attribute :task/type}
-
-          ;; Subtask types
-          {:db/ident :subtask.type/design-requirements :enum/attribute :subtask/type :enum/valid-for :task.type/base-data}
-          {:db/ident :subtask.type/terms-of-reference :enum/attribute :subtask/type :enum/valid-for :task.type/base-data}
-          {:db/ident :subtask.type/data :enum/attribute :subtask/type :enum/valid-for :task.type/base-data}
-          {:db/ident :subtask.type/geological-study :enum/attribute :subtask/type :enum/valid-for :task.type/study}
-          {:db/ident :subtask.type/traffic-study :enum/attribute :subtask/type :enum/valid-for :task.type/study}
-          {:db/ident :subtask.type/flora-and-fauna-study :enum/attribute :subtask/type :enum/valid-for :task.type/study}
-          {:db/ident :subtask.type/archeological-study :enum/attribute :subtask/type :enum/valid-for :task.type/study}
-          {:db/ident :subtask.type/topogeodesy :enum/attribute :subtask/type :enum/valid-for :task.type/study}
-          {:db/ident :subtask.type/noise-study :enum/attribute :subtask/type :enum/valid-for :task.type/study}
-          {:db/ident :subtask.type/eia-pre-assessment :enum/attribute :subtask/type :enum/valid-for :task.type/study}
-          {:db/ident :subtask.type/environmental-impact-assessment :enum/attribute :subtask/type :enum/valid-for :task.type/study}
-          {:db/ident :subtask.type/feasibility-study :enum/attribute :subtask/type :enum/valid-for :task.type/study}
-          {:db/ident :subtask.type/road :enum/attribute :subtask/type :enum/valid-for :task.type/design}
-          {:db/ident :subtask.type/railroad :enum/attribute :subtask/type :enum/valid-for :task.type/design}
-          {:db/ident :subtask.type/drainage :enum/attribute :subtask/type :enum/valid-for :task.type/design}
-          {:db/ident :subtask.type/landscaping :enum/attribute :subtask/type :enum/valid-for :task.type/design}
-          {:db/ident :subtask.type/lighting :enum/attribute :subtask/type :enum/valid-for :task.type/design}
-          {:db/ident :subtask.type/equipment :enum/attribute :subtask/type :enum/valid-for :task.type/design}
-          {:db/ident :subtask.type/structures :enum/attribute :subtask/type :enum/valid-for :task.type/design}
-          {:db/ident :subtask.type/utilities :enum/attribute :subtask/type :enum/valid-for :task.type/design}
-          {:db/ident :subtask.type/buildings :enum/attribute :subtask/type :enum/valid-for :task.type/design}
-          {:db/ident :subtask.type/acceptances :enum/attribute :subtask/type :enum/valid-for :task.type/design-approval}
-          {:db/ident :subtask.type/design-road-safety-audit :enum/attribute :subtask/type :enum/valid-for :task.type/design-approval}
-          {:db/ident :subtask.type/third-party-review :enum/attribute :subtask/type :enum/valid-for :task.type/design-approval}
-          {:db/ident :subtask.type/land-owners :enum/attribute :subtask/type :enum/valid-for :task.type/design-approval}
-          {:db/ident :subtask.type/allotment-plan :enum/attribute :subtask/type :enum/valid-for :task.type/land-purchase}
-          {:db/ident :subtask.type/property-valuation :enum/attribute :subtask/type :enum/valid-for :task.type/land-purchase}
-          {:db/ident :subtask.type/preliminary-agreements :enum/attribute :subtask/type :enum/valid-for :task.type/land-purchase}
-          {:db/ident :subtask.type/cadastral-works :enum/attribute :subtask/type :enum/valid-for :task.type/land-purchase}
-          {:db/ident :subtask.type/purchase-agreements :enum/attribute :subtask/type :enum/valid-for :task.type/land-purchase}
-          {:db/ident :subtask.type/cleanup :enum/attribute :subtask/type :enum/valid-for :task.type/land-purchase}
-          {:db/ident :subtask.type/other :enum/attribute :subtask/type}
-
-          ;; Add subtask attributes
-          {:db/ident :subtask/type
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/one
-           :db/doc "Subtask type"}
-
-          {:db/ident :subtask/description
-           :db/valueType :db.type/string
-           :db/cardinality :db.cardinality/one
-           :db/doc "Subtask human readable description"}
-
-          {:db/ident :subtask/status
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/one
-           :db/doc "Subtask status enum"}
-
-          {:db/ident :subtask.status/not-started :enum/attribute :subtask/status}
-          {:db/ident :subtask.status/in-progress :enum/attribute :subtask/status}
-          {:db/ident :subtask.status/completed :enum/attribute :subtask/status}
-
-
-          {:db/ident :subtask/deadline
-           :db/valueType :db.type/instant
-           :db/cardinality :db.cardinality/one
-           :db/doc "Deadline for the subtask"}
-
-          {:db/ident :subtask/assignee
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/one
-           :db/doc "Person assigned to deliver results"}
-
-          {:db/ident :subtask/comments
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/many
-           :db/doc "Comments for this subtask"}
-
-          {:db/ident :subtask/files
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/many
-           :db/doc "File results for this subtask"}]
+           :db/doc "File results for this task"}]
 
          ;; File versioning and status support
          [{:db/ident :file/status
@@ -743,4 +707,18 @@
           {:db/ident :file/previous-version
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
-           :db/doc "Reference to the previous version of this file that this file supersedes."}]]}]
+           :db/doc "Reference to the previous version of this file that this file supersedes."}]]}
+
+ {:db/ident :migration/task-times
+  :txes [[{:db/ident :task/estimated-start-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :task/estimated-end-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :task/actual-start-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :task/actual-end-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one}]]}]

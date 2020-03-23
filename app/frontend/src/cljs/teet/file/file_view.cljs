@@ -1,10 +1,10 @@
-(ns teet.subtask.subtask-view
+(ns teet.file.file-view
   (:require [teet.project.project-navigator-view :as project-navigator-view]))
 
-(defn subtask-page [e! app project breadcrumbs]
+(defn file-page [e! app {file :file :as project} breadcrumbs]
   [project-navigator-view/project-navigator-with-content
    {:e! e!
-    :project project
     :app app
+    :project project
     :breadcrumbs breadcrumbs}
-   [:div "subu subu"]])
+   [:div "filen sivu " (pr-str file)]])

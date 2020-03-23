@@ -39,29 +39,7 @@
             [teet.user.user-model :as user-model]
             [teet.project.project-map-view :as project-map-view]))
 
-(defn task-form [_e! {:keys [initialization-fn]}]
-  ;;Task definition (under project activity)
-  ;; Task type (a predefined list of tasks: topogeodeesia, geoloogia, liiklusuuring, KMH eelhinnang, loomastikuuuring, arheoloogiline uuring, muu)
-  ;; Description (short description of the task for clarification, 255char, in case more detailed description is needed, it will be uploaded as a file under the task)
-  ;; Responsible person (email)
-  (when initialization-fn
-    (initialization-fn))
-  (fn [e! {:keys [close task save on-change delete]}]
-    [form/form {:e! e!
-                :value task
-                :on-change-event on-change
-                :cancel-event close
-                :save-event save
-                :delete delete
-                :spec :task/new-task-form}
-     ^{:xs 12 :attribute :task/type}
-     [select/select-enum {:e! e! :attribute :task/type}]
 
-     ^{:attribute :task/description}
-     [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
-
-     ^{:attribute :task/assignee}
-     [select/select-user {:e! e! :attribute :task/assignee}]]))
 
 
 (defn project-details
@@ -325,18 +303,6 @@
    [project-details e! project]
    [project-timeline project]])
 
-(defn edit-activity-form
-  [_ _ _lifecycle-type initialization-fn]
-  (initialization-fn)
-  (fn [e! app lifecycle-type _]
-    (when-let [activity-data (:edit-activity-data app)]     ;;Otherwise the form renderer can't format dates properly
-      [activity-view/activity-form e! {:on-change activity-controller/->UpdateEditActivityForm
-                                       :save activity-controller/->SaveEditActivityForm
-                                       :close project-controller/->CloseDialog
-                                       :activity (:edit-activity-data app)
-                                       :lifecycle-type lifecycle-type
-                                       :delete (project-controller/->DeleteActivity (str (:db/id activity-data)))}])))
-
 (defn data-tab
   [_e! {{project-id :project} :params :as _app} project]
   [:div
@@ -414,46 +380,6 @@
      ^{:attribute :thk.project/manager}
      [select/select-user {:e! e! :attribute :thk.project/manager}]]))
 
-(defn project-page-modals
-  [e! {{:keys [add edit lifecycle]} :query :as app} project]
-  (let [lifecycle-type (some->> project
-                                :thk.project/lifecycles
-                                (filter #(= lifecycle (str (:db/id %))))
-                                first
-                                :thk.lifecycle/type
-                                :db/ident)
-        [modal modal-label]
-        (cond
-          add
-          (case add
-            "task"
-            [[task-form e!
-              {:close project-controller/->CloseDialog
-               :task (:new-task project)
-               :save task-controller/->CreateTask
-               :on-change task-controller/->UpdateTaskForm}]
-             (tr [:project :add-task])]
-            "activity"
-            [[activity-view/activity-form e! {:close project-controller/->CloseDialog
-                                              :activity (get-in app [:project (:thk.project/id project) :new-activity])
-                                              :on-change activity-controller/->UpdateActivityForm
-                                              :save activity-controller/->CreateActivity
-                                              :lifecycle-type lifecycle-type}]
-             (tr [:project :add-activity lifecycle-type])])
-          edit
-          (case edit
-            "activity"
-            [[edit-activity-form e! app lifecycle-type (e! project-controller/->InitializeActivityEditForm)]
-             (tr [:project :edit-activity])]
-            "project"
-            [[edit-project-basic-information e! project]
-             (tr [:project :edit-project])])
-          :else nil)]
-    [panels/modal {:open-atom (r/wrap (boolean modal) :_)
-                   :title (or modal-label "")
-                   :on-close (e! project-controller/->CloseDialog)}
-
-     modal]))
 
 (defn- setup-incomplete-footer
   [e! project]
@@ -560,7 +486,7 @@
   "Shows the normal project view for initialized projects, setup wizard otherwise."
   [e! app project breadcrumbs]
   [:<>
-   [project-page-modals e! app project]
+   #_[project-page-modals e! app project]
    (if (or (:thk.project/setup-skipped? project) (project-model/initialized? project))
      [initialized-project-view e! app project breadcrumbs]
      [project-setup-view e! app project breadcrumbs])])

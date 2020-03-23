@@ -187,6 +187,11 @@
   (fn [{:keys [value on-change name id error container-class class values-filter]
         :enum/keys [valid-for]}]
     (let [tr* #(tr [:enum %])
+          value (if (and (map? value)
+                         (contains? value :db/ident))
+                  ;; If value is a enum ref pulled from db, extract the kw value
+                  (:db/ident value)
+                  value)
           select-comp (if tiny-select?
                         select-with-action
                         form-select)

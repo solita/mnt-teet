@@ -30,7 +30,10 @@
             [teet.project.project-model :as project-model]
             [teet.theme.theme-colors :as theme-colors]
             [teet.user.user-model :as user-model]
-            [teet.routes :as routes]))
+            [teet.routes :as routes]
+            [teet.ui.text-field :refer [TextField]]
+            [teet.ui.date-picker :as date-picker]
+            [teet.project.project-controller :as project-controller]))
 
 (defn task-status [e! status modified]
 
@@ -192,39 +195,42 @@
        [LinearProgress {:variant "determinate"
                         :value   upload-progress}])]))
 
-(defn task-page-modal
-  [e! {:keys [params] :as app} {:keys [edit add-files] :as query}]
-  [:<>
-   [panels/modal {:open-atom (r/wrap (boolean add-files) :_)
-                  :title     (tr [:document :add-files])
-                  :on-close  #(e! (common-controller/->SetQueryParam :add-files nil))}
-    [add-files-form e! (get-in app [:new-document :in-progress?])]]
-   [panels/modal {:open-atom (r/wrap (boolean edit) :_)
-                  :title     (if-not edit
-                               ""
-                               (tr [:task (keyword (str "edit-" edit))]))
-                  :on-close  (e! task-controller/->CloseEditDialog)}
-    (case edit
-      "task"
-      [project-view/task-form e!
-       (merge
-         {:close             task-controller/->CloseEditDialog
-          :task              (:edit-task-data app)
-          :initialization-fn (e! task-controller/->MoveDataForEdit)
-          :save              task-controller/->PostTaskEditForm
-          :on-change         task-controller/->UpdateEditTaskForm
-          :delete            (task-controller/->DeleteTask (:task params))})]
-      "document"
-      [document-view/document-form e!
-       (merge
-         {:on-close-event    task-controller/->CloseEditDialog
-          :initialization-fn (e! document-controller/->MoveDocumentDataForEdit (:document query))
-          :save              document-controller/->PostDocumentEdit
-          :on-change         document-controller/->UpdateDocumentEditForm
-          :document          (:edit-document-data app)
-          :editing?          true
-          :delete            (document-controller/->DeleteDocument (:document query))})]
-      [:span])]])
+
+(defn task-form [_e! {:keys [initialization-fn]}]
+  ;;Task definition (under project activity)
+  ;; Task type (a predefined list of tasks: topogeodeesia, geoloogia, liiklusuuring, KMH eelhinnang, loomastikuuuring, arheoloogiline uuring, muu)
+  ;; Description (short description of the task for clarification, 255char, in case more detailed description is needed, it will be uploaded as a file under the task)
+  ;; Responsible person (email)
+  (when initialization-fn
+    (initialization-fn))
+  (fn [e! {id :db/id :as task}]
+    [form/form {:e! e!
+                :value task
+                :on-change-event task-controller/->UpdateEditTaskForm
+                :cancel-event project-controller/->CloseDialog
+                :save-event task-controller/->SaveTaskForm
+                :delete (when id (task-controller/->DeleteTask id))
+                :spec :task/new-task-form}
+     ^{:xs 6 :attribute :task/group}
+     [select/select-enum {:e! e! :attribute :task/group}]
+     ^{:xs 6 :attribute :task/type}
+     [select/select-enum {:e! e! :attribute :task/type
+                          :enum/valid-for (:task/group task)}]
+
+     ^{:attribute :task/description}
+     [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
+
+     ^{:attribute [:task/estimated-start-date :task/estimated-end-date] :xs 12}
+     [date-picker/date-range-input {:start-label (tr [:fields :task/estimated-start-date])
+                                    :end-label (tr [:fields :task/estimated-end-date])
+                                    :required true}]
+
+     ^{:attribute :task/assignee}
+     [select/select-user {:e! e! :attribute :task/assignee}]]))
+
+(defmethod project-navigator-view/project-navigator-dialog :add-task
+  [{:keys [e! app] :as opts} dialog]
+  [task-form e! (:edit-task-data app)])
 
 (defn task-page [e! {{:keys [add-document] :as query} :query
                      {task-id :task :as params} :params
@@ -232,7 +238,6 @@
                  project
                  breadcrumbs]
   [:div {:class (<class project-style/page-container)}
-   [task-page-modal e! app query]
    [panels/modal {:open-atom (r/wrap (boolean add-document) :_)
                   :title     (tr [:task :add-document])
                   :on-close  (e! task-controller/->CloseAddDocumentDialog)}
