@@ -162,7 +162,9 @@
 
 (defn project-timeline-link
   []
-  {:margin-left "1rem"})
+  ^{:pseudo {:hover {:color theme-colors/blue-dark}}}
+  {:margin-left "1rem"
+   :text-decoration :none})
 
 (defn heading-and-button-style
   []
