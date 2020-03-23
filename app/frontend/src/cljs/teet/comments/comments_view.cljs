@@ -5,6 +5,7 @@
             [teet.common.common-styles :as common-styles]
             [herb.core :refer [<class]]
             [teet.localization :refer [tr]]
+            teet.task.task-spec
             [teet.ui.itemlist :as itemlist]
             [teet.ui.query :as query]
             [teet.ui.format :as format]
@@ -68,7 +69,7 @@
                  :on-change-event update-comment-event
                  :save-event save-comment-event
                  :footer new-comment-footer
-                 :spec :document/new-comment-form}
+                 :spec :task/new-comment-form}
       ^{:attribute :comment/comment}
       [TextField {:rows 4
                   :multiline true

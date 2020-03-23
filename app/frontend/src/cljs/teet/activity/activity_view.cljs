@@ -20,7 +20,7 @@
               :save-event activity-controller/->SaveActivityForm
               :cancel-event project-controller/->CloseDialog
               :delete (e! activity-controller/->DeleteActivity)
-              :spec :document/new-activity-form}
+              :spec :activity/new-activity-form}
    (when-not (:db/id activity)
      ^{:attribute :activity/name}
      [select/select-enum {:e! e! :attribute :activity/name :enum/valid-for lifecycle-type}])

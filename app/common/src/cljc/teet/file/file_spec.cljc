@@ -40,12 +40,9 @@
 (s/def :activity/estimated-end-date inst?)
 (s/def :activity/estimated-start-date inst?)
 (s/def :activity/estimated-date-range (s/coll-of inst? :count 2))
-(s/def :file/new-activity-form (s/keys :req [(or :db/id :activity/name)
+(s/def :activity/new-activity-form (s/keys :req [(or :db/id :activity/name)
                                                  :activity/estimated-start-date
                                                  :activity/estimated-end-date]))
-
 (s/def :comment/comment (s/and string? (complement str/blank?)))
-(s/def :file/new-comment-form (s/keys :req [:comment/comment]))
-
 (s/def :file/file-id integer?)
 (s/def :file/comment (s/keys :req-un [:comment/comment :file/file-id]))
