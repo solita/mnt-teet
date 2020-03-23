@@ -212,7 +212,6 @@
                                  :error (boolean (or error-text (@invalid-attributes attribute)))
                                  :error-text error-text
                                  :required (boolean (required-fields attribute))}]
-                       (log/info "OPTS: " opts)
                        [Grid (merge {:item true :xs (or xs 12)}
                                     (when lg
                                       {:lg lg})

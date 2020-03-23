@@ -1,5 +1,4 @@
-{nil "Olek",
- :admin {:title "Admin", :create-user "Lisan kasutaja"},
+{:admin {:title "Admin", :create-user "Lisan kasutaja"},
  :buttons
  {:cancel "Tühistan",
   :save "Salvestan",
@@ -7,23 +6,24 @@
   :back "Tagasi",
   :delete "Kustutan",
   :continue "Jätkan",
-  :edit "Muudan"},
+  :edit "Muudan",
+  :confirm "Kinnitan"},
  :comment
  {:save "Salvestan märkuse", :comment-as "Kommenteerimine kui {name}"},
  :common
  {:hide-menu "Peidan menüü",
   :send-feedback "Saadan tagasisidet",
-  :forbidden-explanation
-  "Olete proovinud juurdepääsu ressursile, millele teil pole juurdepääsuõigust.",
+  :forbidden-explanation "Puuduvad juurdepääsu õigused",
   :select-files "Valin fail(id)",
   :back-to-project "Tagasi projekti",
   :now "Nüüd",
   :construction-phase "Ehitusetapp",
   :general "Üldine",
-  :unknown "Unknown",
-  :deletion-modal-text "Kas soovite kindlasti selle üksuse kustutada?",
+  :unknown "Teadmata",
+  :deletion-modal-text
+  "Oled sa kindel, et soovid selle üksuse kustutada?",
   :design-stage "Staadium",
-  :deselect-all "Tühista kõik valikud",
+  :deselect-all "Tühistan kõik valikud",
   :forbidden "Keelatud",
   :construction-phase-activities "Faasid",
   :last-modified "Viimati muudetud",
@@ -46,8 +46,8 @@
   :updated "Uuendatud",
   :comments "Märkused",
   :download-file "Laen faili alla",
-  :invalid-file-type "failitüüp pole kehtiv",
-  :file-too-large "faili on liiga suur",
+  :invalid-file-type "Failitüüp ei ole toetatud",
+  :file-too-large "Fail on liiga suur",
   :deleted-notification "Dokument edukalt kustutatud",
   :file-deleted-notification "Fail edukalt kustutatud"},
  :enum
@@ -145,10 +145,10 @@
  :error
  {:permission-already-granted "Selle kasutaja luba on juba antud",
   :authorization-failure "Sessioon aegus. Palun sisene uuesti.",
-  :request-timeout nil,
-  :bad-request "Halb taotlus",
+  :request-timeout "Ei saanud serveriga ühendust",
+  :bad-request "Vigane päring",
   :conflicting-activities
-  "Korraga võib olla aktiivne ainult üks tüüpi tegevus.",
+  "Korraga võib aktiivne olla ainult üht tüüpi tegevus.",
   :server-error "Serveri viga."},
  :fields
  {:document/status "Olek",
@@ -163,7 +163,7 @@
   :task/modified "Muudetud",
   :task/status "Olek",
   "projectgroup" {"activity" "Etapp"},
-  :permission/role "Rolli",
+  :permission/role "Roll",
   :thk.project/carriageway "Sõidutee",
   :common {"name" "Nimi", "description" "Kirjeldus"},
   :document/sub-category "Dokumendi alamtüüp",
@@ -210,16 +210,16 @@
  {:managers "Juhid",
   :other-users "Muud kasutajad",
   :no-other-users "Teisi kasutajaid pole",
-  :invite-user "Kutsu uus kasutaja"},
+  :invite-user "Lisan uue kasutaja"},
  :project
  {:add-users "Lisan kasutajaid",
-  :remove-from-project "Eemalda projektist",
+  :remove-from-project "Eemaldan projektist",
   :details-view "Detailid",
   :map-view "Kaart",
   :add-activity
   #:thk.lifecycle-type{:design "Lisan faasi",
                        :construction "Lisan staadiumi"},
-  :edit-activity "Redigeeri tegevust",
+  :edit-activity "Muudan tegevust",
   :restrictions-tab "Kitsendused",
   :activity {:no-tasks "Ülesandeid pole"},
   :edit-project "Redigeeri projekti",
@@ -234,6 +234,10 @@
    :cadastral-units "Valin mõjutatud katastriüksused",
    :skip-setup "Jätan seadistuse vahele"},
   :add-task "Lisan ülesande",
+  :draw-selection
+  {:link "Joonistan ala kaardile",
+   :select "Valin alad",
+   :deselect "Puhastan alad"},
   :information
   {:estimated-duration "Eeldatav kestus",
    :road-number "Tee number",
@@ -251,7 +255,7 @@
   :list-view "Projektide loetelu",
   :unassigned-only "Määramata projektid"},
  :roles
- {:internal-consultant "Sisekonsultant",
+ {:internal-consultant "Sisemine konsultant",
   :owner "Projektijuht",
   :manager "Vastutav isik",
   :external-consultant "Väline konsultant",
@@ -260,11 +264,15 @@
  :search {:quick-search "Otsin", :clear-filters "Puhastan filtrid"},
  :task
  {:add-document "Lisan dokumendi",
-  :edit-document "Redigeeri dokumendi",
-  :edit-task "Redigeeri ülesannet",
+  :edit-document "Redigeerin dokumenti",
+  :edit-task "Redigeerin ülesannet",
   :documents "Dokumendid",
   :task-overview "Ülesande ülevaade",
   :no-documents "Dokumente ei ole",
   :results "Tulemused"},
  :user {:role "Roll"},
- :warning {:version-mismatch nil, :deploying nil}}
+ :warning
+ {:version-mismatch
+  "Rakenduse uus versioon on laetud. Palun värskenda lehte.",
+  :deploying
+  "Rakenduse uut versiooni laetakse. Palun oota mõned minutid ning seejärel värskenda lehte."}}
