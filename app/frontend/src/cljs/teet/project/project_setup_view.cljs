@@ -178,17 +178,14 @@
 (defn draw-selection [e! related-feature-type features draw-selection-features]
   (r/with-let [select? (r/atom true)]
     [:<>
-     (log/info "DRAW-SELECTION-FEATURES: " draw-selection-features)
      (when (seq draw-selection-features)
-       [panels/modal {:title (tr [:project :draw-selection :title])
+       [panels/modal {:title (str (count draw-selection-features) " "
+                                  (case related-feature-type
+                                    :restrictions (tr [:project :restrictions-tab])
+                                    :cadastral-units (tr [:project :cadastral-units-tab])))
                       :on-close (e! project-controller/->DrawSelectionCancel)
                       :open-atom (r/wrap true :_)}
         [:div
-         [:div
-          (count draw-selection-features) " "
-          (case related-feature-type
-            :restrictions (tr [:project :restrictions-tab])
-            :cadastral-units (tr [:project :cadastral-units-tab]))]
          [select/radio {:value @select?
                         :on-change #(reset! select? %)
                         :items [true false]
@@ -208,7 +205,6 @@
   [e! open-types _road-buffer-meters {:keys [restrictions loading? checked-restrictions toggle-restriction
                                              draw-selection-features
                                              on-mouse-enter on-mouse-leave]}]
-  (log/info "restrictions-listing render" (count draw-selection-features))
   [:<>
    (if loading?
      [fetching-features-skeletons 10]
@@ -224,8 +220,10 @@
                :checked? true
                :value (:VOOND restriction)
                :on-change (r/partial toggle-restriction restriction)
-               :on-mouse-enter (e! project-controller/->FeatureMouseOvers "selected-restrictions" true restriction)
-               :on-mouse-leave (e! project-controller/->FeatureMouseOvers "selected-restrictions" false restriction)})])]
+               :on-mouse-enter (e! project-controller/->FeatureMouseOvers "selected-restrictions"
+                                   true restriction)
+               :on-mouse-leave (e! project-controller/->FeatureMouseOvers "selected-restrictions"
+                                   false restriction)})])]
         [:<>
          [typography/Heading2 {:style {:padding "1rem"}} "Found related features:"]
          (doall
@@ -233,15 +231,16 @@
                  :let [group-checked (into #{}
                                            (filter checked-restrictions restrictions))]]
              ^{:key group}
-             [container/collapsible-container {:on-toggle (fn [_]
-                                                            (e! (project-controller/->ToggleRestrictionCategory
-                                                                  (into #{}
-                                                                        (mapv :teet-id restrictions))
-                                                                  group)))
-                                               :open? (open-types group)
-                                               :side-component [typography/SmallText (tr [:project :wizard :selected-count]
-                                                                                         {:selected (count group-checked)
-                                                                                          :total (count restrictions)})]}
+             [container/collapsible-container
+              {:on-toggle (fn [_]
+                            (e! (project-controller/->ToggleRestrictionCategory
+                                 (into #{}
+                                       (mapv :teet-id restrictions))
+                                 group)))
+               :open? (open-types group)
+               :side-component [typography/SmallText (tr [:project :wizard :selected-count]
+                                                         {:selected (count group-checked)
+                                                          :total (count restrictions)})]}
               group
               [itemlist/checkbox-list
                {:on-select-all #(e! (project-controller/->SelectRestrictions (set restrictions)))
