@@ -120,7 +120,7 @@
 
 (defn checkbox-list
   ([items] (checkbox-list {} items))
-  ([{:keys [key on-select-all on-deselect-all]
+  ([{:keys [key on-select-all on-deselect-all actions]
      :or   {key :id}}
     items]
    [:div {:class (<class itemlist-styles/checkbox-list-contents)}
@@ -134,6 +134,9 @@
              :on-click #(do
                           (.preventDefault %)
                           (on-deselect-all))} (tr [:common :deselect-all])])
+    (when actions
+      (util/with-keys
+        actions))
     (doall
       (for [item items]
         ^{:key (key item)}

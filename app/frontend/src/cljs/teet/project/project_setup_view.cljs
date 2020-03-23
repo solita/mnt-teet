@@ -13,14 +13,17 @@
             [teet.ui.form :as form]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Grid]]
+            [teet.ui.material-ui :refer [Grid Link]]
             [teet.ui.select :as select]
             [teet.ui.text-field :refer [TextField]]
+            [teet.ui.material-ui :refer [RadioGroup FormControl FormControlLabel Radio]]
             [teet.ui.typography :as typography]
             [teet.util.collection :as cu]
             [teet.road.road-model :as road-model]
             [teet.ui.skeleton :as skeleton]
-            [teet.common.common-styles :as common-styles]))
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.panels :as panels]
+            [teet.log :as log]))
 
 (declare project-setup-steps)
 
@@ -172,8 +175,36 @@
        ^{:key y}
        [skeleton/skeleton {:parent-style (skeleton/restriction-skeleton-style)}]))])
 
+(defn draw-selection [e! related-feature-type features draw-selection-features]
+  (r/with-let [select? (r/atom true)]
+    [:<>
+     (when (seq draw-selection-features)
+       [panels/modal {:title (str (count draw-selection-features) " "
+                                  (case related-feature-type
+                                    :restrictions (tr [:project :restrictions-tab])
+                                    :cadastral-units (tr [:project :cadastral-units-tab])))
+                      :on-close (e! project-controller/->DrawSelectionCancel)
+                      :open-atom (r/wrap true :_)}
+        [:div
+         [select/radio {:value @select?
+                        :on-change #(reset! select? %)
+                        :items [true false]
+                        :format-item {true (tr [:project :draw-selection :select])
+                                      false (tr [:project :draw-selection :deselect])}}]
+         [:div {:style {:display :flex
+                        :justify-content :space-between}}
+          [buttons/button-secondary {:on-click (e! project-controller/->DrawSelectionCancel)}
+           (tr [:buttons :cancel])]
+          [buttons/button-primary {:on-click (e! project-controller/->DrawSelectionConfirm
+                                                 @select? related-feature-type)}
+           (tr [:buttons :confirm])]]]])
+     [Link {:on-click (e! project-controller/->DrawSelectionOnMap related-feature-type features)}
+      (tr [:project :draw-selection :link])]]))
+
 (defn restrictions-listing
-  [e! open-types _road-buffer-meters {:keys [restrictions loading? checked-restrictions toggle-restriction on-mouse-enter on-mouse-leave]}]
+  [e! open-types _road-buffer-meters {:keys [restrictions loading? checked-restrictions toggle-restriction
+                                             draw-selection-features
+                                             on-mouse-enter on-mouse-leave]}]
   [:<>
    (if loading?
      [fetching-features-skeletons 10]
@@ -189,8 +220,10 @@
                :checked? true
                :value (:VOOND restriction)
                :on-change (r/partial toggle-restriction restriction)
-               :on-mouse-enter (e! project-controller/->FeatureMouseOvers "selected-restrictions" true restriction)
-               :on-mouse-leave (e! project-controller/->FeatureMouseOvers "selected-restrictions" false restriction)})])]
+               :on-mouse-enter (e! project-controller/->FeatureMouseOvers "selected-restrictions"
+                                   true restriction)
+               :on-mouse-leave (e! project-controller/->FeatureMouseOvers "selected-restrictions"
+                                   false restriction)})])]
         [:<>
          [typography/Heading2 {:style {:padding "1rem"}} "Found related features:"]
          (doall
@@ -198,19 +231,21 @@
                  :let [group-checked (into #{}
                                            (filter checked-restrictions restrictions))]]
              ^{:key group}
-             [container/collapsible-container {:on-toggle (fn [_]
-                                                            (e! (project-controller/->ToggleRestrictionCategory
-                                                                  (into #{}
-                                                                        (mapv :teet-id restrictions))
-                                                                  group)))
-                                               :open? (open-types group)
-                                               :side-component [typography/SmallText (tr [:project :wizard :selected-count]
-                                                                                         {:selected (count group-checked)
-                                                                                          :total (count restrictions)})]}
+             [container/collapsible-container
+              {:on-toggle (fn [_]
+                            (e! (project-controller/->ToggleRestrictionCategory
+                                 (into #{}
+                                       (mapv :teet-id restrictions))
+                                 group)))
+               :open? (open-types group)
+               :side-component [typography/SmallText (tr [:project :wizard :selected-count]
+                                                         {:selected (count group-checked)
+                                                          :total (count restrictions)})]}
               group
               [itemlist/checkbox-list
                {:on-select-all #(e! (project-controller/->SelectRestrictions (set restrictions)))
-                :on-deselect-all #(e! (project-controller/->DeselectRestrictions (set restrictions)))}
+                :on-deselect-all #(e! (project-controller/->DeselectRestrictions (set restrictions)))
+                :actions (list [draw-selection e! :restrictions restrictions draw-selection-features])}
                (for [restriction (sort-by (juxt :VOOND :teet-id) restrictions)
                      :let [checked? (boolean (group-checked restriction))]]
                  (merge {:id (:teet-id restriction)
@@ -223,7 +258,9 @@
                           {:on-mouse-leave (r/partial on-mouse-leave restriction)})))]]))]]))])
 
 (defn cadastral-units-listing
-  [e! _road-buffer-meters {:keys [loading? cadastral-units checked-cadastral-units toggle-cadastral-unit on-mouse-enter on-mouse-leave]}]
+  [e! _road-buffer-meters {:keys [loading? cadastral-units checked-cadastral-units
+                                  draw-selection-features
+                                  toggle-cadastral-unit on-mouse-enter on-mouse-leave]}]
   (r/with-let [open-types (r/atom #{})]
     (if loading?
       [fetching-features-skeletons 10]
@@ -249,7 +286,8 @@
        [:div {:style {:margin-top "1rem"}}
         [itemlist/checkbox-list
          {:on-select-all #(e! (project-controller/->SelectCadastralUnits (set cadastral-units)))
-          :on-deselect-all #(e! (project-controller/->DeselectCadastralUnits (set cadastral-units)))}
+          :on-deselect-all #(e! (project-controller/->DeselectCadastralUnits (set cadastral-units)))
+          :actions (list [draw-selection e! :cadastral-units cadastral-units draw-selection-features])}
          (doall
            (for [cadastral-unit (sort-by (juxt :VOOND :teet-id) cadastral-units)
                  :let [checked? (boolean (checked-cadastral-units cadastral-unit))]]
@@ -262,7 +300,8 @@
 
 (defn project-setup-restrictions-form [e! _project step {:keys [road-buffer-meters] :as _map}]
   (e! (project-controller/->FetchRelatedCandidates road-buffer-meters step))
-  (fn [e! {:keys [checked-restrictions open-types feature-candidates] :or {open-types #{}} :as _project} {step-label :step-label :as step} _map]
+  (fn [e! {:keys [checked-restrictions open-types feature-candidates draw-selection-features]
+           :or {open-types #{}} :as _project} {step-label :step-label :as step} _map]
     (let [{:keys [loading? restriction-candidates]} feature-candidates]
       [:form {:id step-label
               :on-submit (let [step-constructor (project-controller/navigate-to-next-step-event project-setup-steps step)]
@@ -273,6 +312,7 @@
         open-types
         road-buffer-meters
         {:restrictions restriction-candidates
+         :draw-selection-features draw-selection-features
          :loading? loading?
          :checked-restrictions (or checked-restrictions #{})
          :toggle-restriction (e! project-controller/->ToggleRestriction)
@@ -282,7 +322,7 @@
 (defn project-setup-cadastral-units-form [e! _project step {:keys [road-buffer-meters] :as _map}]
   (e! (project-controller/->FetchRelatedCandidates road-buffer-meters step))
   (fn [e!
-       {:keys [checked-cadastral-units feature-candidates]}
+       {:keys [checked-cadastral-units feature-candidates draw-selection-features]}
        {step-label :step-label :as step}
        _map]
     (let [{:keys [loading? cadastral-candidates]} feature-candidates]
@@ -292,6 +332,7 @@
         road-buffer-meters
         {:cadastral-units cadastral-candidates
          :loading? loading?
+         :draw-selection-features draw-selection-features
          :checked-cadastral-units (or checked-cadastral-units #{})
          :toggle-cadastral-unit (e! project-controller/->ToggleCadastralUnit)
          :on-mouse-enter (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" true)

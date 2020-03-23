@@ -11,7 +11,8 @@
             goog.math.Long
             [teet.snackbar.snackbar-controller :as snackbar-controller]
             [clojure.string :as str]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [teet.map.openlayers :as openlayers]))
 
 (defrecord OpenActivityDialog [lifecycle])                  ; open add activity modal dialog
 (defrecord OpenTaskDialog [activity])
@@ -110,6 +111,13 @@
 (defrecord ToggleStepperLifecycle [lifecycle])
 (defrecord ToggleStepperActivity [activity])
 
+(defrecord DrawSelectionOnMap [related-feature-type features]) ; start drawing selection on map
+(defrecord DrawSelectionDone [area related-feature-type features]) ; selection drawn
+(defrecord DrawSelectionResults [geojson related-feature-type features])
+(defrecord DrawSelectionConfirm [select? related-feature-type])
+(defrecord DrawSelectionCancel [])
+
+
 (defrecord OpenEditActivityDialog [activity-id])
 (defrecord ContinueProjectSetup [project-id])
 (defrecord SkipProjectSetup [project-id])
@@ -122,11 +130,11 @@
 (defn datasource-ids-by-type
   [app type]
   (case type
-    "restrictions"
+    (:restrictions "restrictions")
     (map-controller/select-rpc-datasources
       app map-controller/restriction-datasource?)
 
-    "cadastral-units"
+    (:cadastral-units "cadastral-units")
     (map-controller/select-rpc-datasources
       app map-controller/cadastral-unit-datasource?)))
 
@@ -237,6 +245,59 @@
                      :selected-feature-path [:route :project :thk.project/related-cadastral-units]
                      :checked-feature-path [:route :project :checked-cadastral-units]
                      :checked-feature-geojson-path [:route :project :checked-cadastral-geojson]}})
+
+(extend-protocol t/Event
+  DrawSelectionOnMap
+  (process-event [{:keys [related-feature-type features]} app]
+    (log/info "Piirretään " features)
+    (openlayers/enable-draw!
+     (t/send-async! ->DrawSelectionDone related-feature-type features))
+    app)
+
+  DrawSelectionDone
+  (process-event [{:keys [related-feature-type features area]} app]
+    (openlayers/disable-draw!)
+    (t/fx app
+          {:tuck.effect/type :rpc
+           :rpc "geojson_features_within_area"
+           :endpoint (get-in app [:config :api-url])
+           :args {"geometry_wkt" area
+                  "datasource_ids" (datasource-ids-by-type app related-feature-type)
+                  "distance" 0}
+           :result-event #(->DrawSelectionResults % related-feature-type features)}))
+
+  DrawSelectionResults
+  (process-event [{:keys [related-feature-type features geojson]} app]
+    (let [features-by-teet-id (into {} (map (juxt :teet-id identity)) features)
+          selected (-> geojson
+                       js/JSON.parse
+                       (js->clj :keywordize-keys true)
+                       :features
+                       (as-> fs
+                           (into #{}
+                                 (keep (comp features-by-teet-id :teet-id :properties))
+                                 fs)))]
+      (assoc-in app [:route :project :draw-selection-features] selected)))
+
+  DrawSelectionConfirm
+  (process-event [{:keys [related-feature-type select?]} app]
+    (let [selected (get-in app [:route :project :draw-selection-features])
+          checked-feature-path (get-in candidate-paths [related-feature-type :checked-feature-path])
+          update-checked (case related-feature-type
+                           :restrictions update-checked-restrictions
+                           :cadastral-units update-checked-cadastral-units)]
+      (openlayers/remove-drawing-layer!)
+      (-> app
+          (update-in [:route :project] dissoc :draw-selection-features)
+          (update-checked
+           ((if select? set/union set/difference) ; select or remove selection
+            (get-in app checked-feature-path)
+            selected)))))
+
+  DrawSelectionCancel
+  (process-event [{:keys [related-feature-type]} app]
+    (openlayers/remove-drawing-layer!)
+    (update-in app [:route :project] dissoc :draw-selection-features)))
 
 (extend-protocol t/Event
   FetchFeatureCandidatesResponse
