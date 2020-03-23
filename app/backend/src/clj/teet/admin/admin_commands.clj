@@ -17,17 +17,16 @@
         name-valid? (complement blank?)
         name-map {:user/given-name (-> resp :result :Eesnimi)
                   :user/family-name (-> resp :result :Perenimi)}]
-    (if (and (:ok resp) (every? name-valid? (vals name-map)))
+    (if (and (= :ok (:status resp)) (every? name-valid? (vals name-map)))
       name-map
       ;; else
-      (throw (ex-info "x-road user name data not valid" [name-map])))))
+      (throw (ex-info "x-road user name data not valid" {:names name-map :ok? (:ok resp)})))))
 
 (defcommand :admin/create-user
   {:doc "Create user"
    :context {:keys [conn user]}
    :payload user-data
-                                        ; :pre [(user-roles/require-role user :admin)]
-   :pre [true]
+   :pre [(user-roles/require-role user :admin)]
    :project-id nil
    :authorization {:admin/add-user {}}
    :transact [(merge (new-user)

@@ -36,11 +36,12 @@
 
 (defn rr442-parse-name [xml-string]
   (let [xml (xml/parse xml-string)
-        _ (assert (some? xml))
+        ;; _ (assert (some? xml))
+        ;; _ (def *xx xml)
         zipped-xml (clojure.zip/xml-zip xml)
         avaldaja (z/xml1-> zipped-xml :SOAP-ENV:Envelope :SOAP-ENV:Body :prod:RR442Response :response :Avaldaja)
         fields [:Eesnimi :Perenimi :Isikukood]
-        _ (def *x avaldaja)
+        ;; _ (def *x avaldaja)
         fieldname->kvpair (fn [fieldname]
                             [fieldname (z/xml1-> avaldaja fieldname z/text)])]
     (into {} (mapv fieldname->kvpair fields))))
