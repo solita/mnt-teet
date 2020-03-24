@@ -177,14 +177,14 @@
                                                                   :hover [:div
                                                                           [:div [:b (tr [:fields :activity/name]) ": "] label]
                                                                           [:div [:b (tr [:fields :activity/status]) ": "] (tr* (:db/ident status))]]}]
-                                                                (for [{:task/keys [description estimated-start-date estimated-end-date]} tasks]
+                                                                (for [{:task/keys [description type estimated-start-date estimated-end-date]} tasks]
                                                                   ;; TODO what label
-                                                                  {:label description
+                                                                  {:label (tr [:enum (:db/ident type)])
                                                                    :start-date estimated-start-date
                                                                    :end-date estimated-end-date
                                                                    :colors (:task timeline/colors)
                                                                    ;; TODO what to hover?
-                                                                   :hover [:div "This is a task"]}))))
+                                                                   :hover [:div description]}))))
                                                     activities)))
                                          (sort-by :thk.lifecycle/estimated-start-date lifecycles)))]]
 
