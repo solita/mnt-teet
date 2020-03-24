@@ -238,12 +238,13 @@
            activities))
    lcs))
 
-(defn subtask-by-id
-  [{lcs :thk.project/lifecycles} subtask-id]
+(defn file-by-id
+  "Fetch file in project by file id"
+  [{lcs :thk.project/lifecycles} file-id]
   (first
    (for [lc lcs
          ac (:thk.lifecycle/activities lc)
          t (:activity/tasks ac)
-         st (:task/subtasks t)
-         :when (= (:db/id st) subtask-id)]
-     st)))
+         f (:task/files t)
+         :when (id= (:db/id f) file-id)]
+     f)))
