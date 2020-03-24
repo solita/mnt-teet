@@ -141,11 +141,11 @@
    (doall
     (for [year years
           :let [x (x-of (t/date-time year 1 1))
-                y (y-of (inc num-items))]]
+                y 15]]
       ^{:key year}
       [:g
        [:line {:x1 x :x2 x
-               :y1 0 :y2 y
+               :y1 0 :y2 (* 2 y)
                :style {:stroke theme-colors/blue-dark :stroke-width line-width}}]
        [:text {:x (+ x 5) :y y} year]]))])
 
@@ -158,7 +158,7 @@
             :let [x (+ 5 ;(/ month-width 2)
                        (x-of (t/date-time year month)))]]
         ^{:key (str year "/" month)}
-        [:text {:x x :y 15}
+        [:text {:x x :y 30}
          (if (> month-width 50)
            (tr [:calendar :months (dec month)])
            (str month))])))])
@@ -219,7 +219,7 @@
                                                            #js {:passive false})
 
                x-start 25
-               y-start 25]
+               y-start 35]
     (if-not (and start-date end-date)
       [:span.timeline-no-start-or-end]
       (let [years (year-range opts)
