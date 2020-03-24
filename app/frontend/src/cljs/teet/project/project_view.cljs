@@ -192,8 +192,10 @@
             timeline-component])]))))
 
 (defn activities-tab
-  [e! {:keys [stepper] :as _app} project]
-  [project-navigator-view/project-navigator e! project stepper false])
+  [e! {:keys [stepper] :as app} project]
+  [:<>
+   [project-navigator-view/project-navigator-dialogs {:e! e! :app app}]
+   [project-navigator-view/project-navigator e! project stepper false]])
 
 (defn add-user-form
   [e! user project-id]
