@@ -380,10 +380,11 @@
   [e!]
   (-> (fetch-deploy-status)
       (.then (fn [{:strs [commit status]}]
+               (log/debug "Polled commit " commit)
                (when (and (some? commit)
                           (nil? @version-seen-on-startup))
                  (reset! version-seen-on-startup commit))
-               
+
                (js/setTimeout #(poll-version e!) poll-timeout-ms)
                (cond
                  (= status "deploying")
@@ -391,7 +392,7 @@
                       {:message (tr [:warning :deploying])
                        :variant :warning
                        :hide-duration nil}))
-                 
+
                  (and (some? commit) (not= commit @version-seen-on-startup))
                  (e! (snackbar-controller/->OpenSnackBarWithOptions
                       {:message (tr [:warning :version-mismatch])
