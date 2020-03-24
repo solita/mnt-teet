@@ -3,7 +3,6 @@
   (:require [clojure.string :as str])
   (:require-macros [teet.route-macros :refer [define-url-functions]]))
 
-(define-url-functions)
 
 (defn with-params [url & param-names-and-values]
   (str url "?" (str/join "&"
@@ -18,6 +17,8 @@
                     (when param-value
                       (str (name param-name) "=" (js/encodeURIComponent (str param-value)))))
                   params)))
+
+(define-url-functions)
 
 (def
   ^:private
