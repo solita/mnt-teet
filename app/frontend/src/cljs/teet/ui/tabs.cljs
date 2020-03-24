@@ -42,13 +42,13 @@
         [:div {:style {:margin-bottom "1rem"}}
          [:div {:style {:display :inline-block}}            ;;TODO cleanup inline-styles and html structure
           (if (= (:tab query) "comments")
-            [Link {:href (url/remove-param :tab)} "Details"]
+            [Link {:href (url/remove-query-param :tab)} "Details"]
             [typography/SectionHeading "Details"])]
          [:div {:style {:display :inline-block
                         :margin-left "2rem"}}
           (if (= (:tab query) "comments")
             [typography/SectionHeading "Comments"]
-            [Link {:href (url/set-params :tab "comments")} "Comments"])]]
+            [Link {:href (url/set-query-param :tab "comments")} "Comments"])]]
         (if (= (:tab query) "comments")                     ;;TODO LOAD comments on render and
           [comments-view/lazy-comments {:e! e!
                                         :app app
