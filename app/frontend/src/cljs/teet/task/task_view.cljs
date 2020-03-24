@@ -4,20 +4,17 @@
             [reagent.core :as r]
             [teet.task.task-controller :as task-controller]
             [teet.task.task-style :as task-style]
-            [teet.localization :refer [tr]]
+            [teet.localization :refer [tr tr-enum]]
             [teet.ui.buttons :as buttons]
             [teet.ui.format :as format]
-            [teet.ui.material-ui :refer [Grid Paper Link LinearProgress]]
+            [teet.ui.material-ui :refer [Link LinearProgress]]
             [teet.ui.icons :as icons]
-            [teet.ui.typography :as typography :refer [Heading1]]
-            [teet.ui.util :refer [mapc]]
-            [teet.project.project-view :as project-view]
+            [teet.ui.typography :as typography]
             [teet.ui.panels :as panels]
             [teet.ui.url :as url]
-            [teet.document.document-view :as document-view]
-            [teet.ui.breadcrumbs :as breadcrumbs]
+            teet.task.task-spec
             [teet.project.task-model :as task-model]
-            [teet.document.document-controller :as document-controller]
+            [teet.file.file-controller :as file-controller]
             [teet.comments.comments-view :as comments-view]
             [teet.ui.form :as form]
             [teet.common.common-controller :as common-controller]
@@ -28,20 +25,19 @@
             [teet.project.project-navigator-view :as project-navigator-view]
             [teet.project.project-style :as project-style]
             [teet.project.project-model :as project-model]
-            [teet.theme.theme-colors :as theme-colors]
             [teet.user.user-model :as user-model]
-            [teet.routes :as routes]
             [teet.ui.text-field :refer [TextField]]
+            [teet.ui.tabs :as tabs]
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.table :as table]
             [teet.ui.date-picker :as date-picker]
             [teet.project.project-controller :as project-controller]))
 
-(defn task-status [e! status modified]
-
+(defn task-status [e! {:task/keys [status] :as task}]
   [select/status {:e!        e!
                   :on-change (e! task-controller/->UpdateTaskStatus)
                   :status    (:db/ident status)
                   :attribute :task/status
-                  :modified  modified
                   :values-filter task-model/current-statuses}])
 
 (defn get-latest-modification
@@ -103,43 +99,18 @@
 
 
 
-(defn- task-document-content
-  [e! document]
-  [:<>
-   [common/header-with-actions
-    (:document/name document)
-
-    [buttons/button-secondary
-     {:element    "a"
-      :href       (url/set-params "add-files" "1")
-      :start-icon (r/as-element
-                    [icons/content-add])}
-     (tr [:document :add-files])]
-
-    [buttons/button-secondary
-     {:style    {:margin-left "1rem"}
-      :on-click (e! task-controller/->OpenEditModal :document)}
-     (tr [:buttons :edit])]]
-   [typography/Paragraph {:style {:margin-bottom "2rem"}}
-    (:document/description document)]
-   [comments-view/comments {:e!                   e!
-                            :new-comment          (:new-comment document)
-                            :comments             (:document/comments document)
-                            :update-comment-event comments-controller/->UpdateNewCommentForm
-                            :save-comment-event   comments-controller/->CommentOnDocument}]])
-
 (defn document-file-content
   [e! {:file/keys [name timestamp]
        id         :db/id :as file}]
   [:<>
    [common/header-with-actions
     name
-    [buttons/delete-button-with-confirm {:action (e! document-controller/->DeleteFile id)}
+    [buttons/delete-button-with-confirm {:action (e! file-controller/->DeleteFile id)}
      (tr [:buttons :delete])]]
    [typography/SmallText {:style {:margin-bottom "1rem"}}
     (tr [:document :updated]) " "
     (format/date-time timestamp)]
-   [buttons/button-primary {:href       (document-controller/download-url id)
+   [buttons/button-primary {:href       (file-controller/download-url id)
                             :style      {:margin-bottom "2rem"}
                             :element    "a"
                             :target     "_blank"
@@ -153,31 +124,67 @@
                             :new-comment          (:new-comment file)
                             :comments             (:file/comments file)}]])
 
-(defn- subtask-list-style []
-  {:display :flex
-   :flex-direction :column})
+(def file-columns
+  [:file/name
+   :file/number
+   :file/type
+   :file/version
+   :file/status
+   :file/controls])
 
-(defn- subtask-list-item []
-  {:display :flex
-   :justify-content :space-between
-   :border (str "1px solid " theme-colors/gray-lightest)
-   :border-width "1px 0px 1px 0px"
-   :padding "1rem 0"})
+(defn format-file-list
+  [column value row]
+  (case column
+    :file/controls
+    [:div "controls"]
+    (str value)))
 
-(defn task-subtasks [e! params subtasks]
-  [:div {:class (<class subtask-list-style)}
-   (mapc (fn [{:subtask/keys [type assignee status] id :db/id}]
-           [:div {:class (<class subtask-list-item)}
-            [Link {:href (routes/url-for {:page :subtask
-                                          :params (assoc params :subtask id)})}
-             (tr [:enum (:db/ident type)])]
-            (user-model/user-name assignee)
-            (tr [:enum (:db/ident status)])])
-         subtasks)])
+(defn file-list
+  [e! files]
+  [:div
+   [table/table
+    {:columns file-columns
+     :format-column format-file-list
+     :data files
+     :get-column get
+     :filter-type {}}]
+   [buttons/button-primary {:href (url/set-params :add-document 1)}
+    "Add files"]])
+
+(defn task-basic-info
+  [e! {:task/keys [deadline assignee] :as task}]
+  [:div {:class (<class common-styles/flex-row-space-between)}
+   [:div
+    [:p "Deadline"]
+    [:span (format/date deadline)]]
+   [:div
+    [:p "Assignee"]
+    [:span (user-model/user-name assignee)]]
+   [:div
+    [task-status e! task]]])
+
+(defn task-details
+  [e! {:task/keys [description files] :as task}]
+  [:div
+   (when description
+     [typography/Paragraph description])
+   [task-basic-info e! task]
+   [file-list e! files]])
 
 (defn task-page-content
-  [e! params {subtasks :task/subtasks :as task}]
-  [task-subtasks e! params subtasks])
+  [e! app task]
+  [:div
+   [typography/Heading1 (tr-enum (:task/type task))]
+   [tabs/details-and-comments-tabs {:e! e!
+                                    :query (:query app)
+                                    :app app
+                                    :comment-form (:comment-form app)
+                                    :comments (:task/comments task)
+                                    :type :task-comment
+                                    :comment-command :comment/comment-on-task
+                                    :details [task-details e! task]
+                                    :entity-type :task
+                                    :entity-id (:db/id task)}]])
 
 (defn- add-files-form [e! upload-progress]
   (r/with-let [form (r/atom {})]
@@ -185,11 +192,11 @@
      [form/form {:e!              e!
                  :value           @form
                  :on-change-event (form/update-atom-event form merge)
-                 :save-event      (partial document-controller/->AddFilesToDocument (:document/files @form))
+                 :save-event      (partial file-controller/->AddFilesToTask (:task/files @form))
                  :cancel-event    #(common-controller/->SetQueryParam :add-files nil)
                  :in-progress?    upload-progress
-                 :spec :document/add-files}
-      ^{:attribute :document/files}
+                 :spec :task/add-files}
+      ^{:attribute :task/files}
       [file-upload/files-field {}]]
      (when upload-progress
        [LinearProgress {:variant "determinate"
@@ -241,10 +248,7 @@
    [panels/modal {:open-atom (r/wrap (boolean add-document) :_)
                   :title     (tr [:task :add-document])
                   :on-close  (e! task-controller/->CloseAddDocumentDialog)}
-    [document-view/document-form e! {:on-close-event task-controller/->CloseAddDocumentDialog
-                                     :save           document-controller/->CreateDocument
-                                     :on-change      document-controller/->UpdateDocumentForm
-                                     :document       new-document}]]
+    [add-files-form e! (:in-progress? new-document)]]
 
    [project-navigator-view/project-navigator-with-content
     {:e! e!
@@ -252,5 +256,5 @@
      :app app
      :breadcrumbs breadcrumbs}
 
-    [task-page-content e! params
+    [task-page-content e! app
      (project-model/task-by-id project task-id)]]])

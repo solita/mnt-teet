@@ -27,8 +27,7 @@
 
 (defn- listing-header
   ([] (listing-header {:filters (r/wrap {} :_)}))
-  ([{:keys [sort! sort-column sort-direction filters columns filter-type]
-     :or {filter-type {}}}]
+  ([{:keys [sort! sort-column sort-direction filters columns filter-type]}]
    [TableHead {}
     [TableRow {}
      (doall
@@ -91,7 +90,9 @@
                                       ;; filters/results have changed
                                       (reset! show-count 20))
       :reagent-render
-      (fn [{:keys [on-row-click filters data columns filter-type get-column format-column key]}]
+      (fn [{:keys [on-row-click filters data columns filter-type get-column format-column key]
+            :or {filter-type {}
+                 get-column get}}]
         (let [[sort-col sort-dir] @sort-column]
           [:<>
            [Table {}

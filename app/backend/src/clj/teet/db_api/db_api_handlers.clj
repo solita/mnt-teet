@@ -7,9 +7,10 @@
             [clojure.spec.alpha :as s]
 
             ;; Require all namespaces that provide queries/commands
-            teet.document.document-commands
-            teet.document.document-queries
+            teet.file.file-commands
+            teet.file.file-queries
             teet.comment.comment-commands
+            teet.comment.comment-queries
             teet.login.login-commands
             teet.enum.enum-queries
             teet.admin.admin-queries

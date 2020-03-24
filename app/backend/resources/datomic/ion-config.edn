@@ -19,7 +19,7 @@
             :description "Process THK CSV file"}
 
            :process-upload
-           {:fn teet.document.document-import/import-uploaded-file
+           {:fn teet.file.file-import/import-uploaded-file
             :description "Import uploaded file"}
 
            :thk-export

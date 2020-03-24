@@ -8,8 +8,8 @@
             [teet.localization :refer [tr]]
             [teet.ui.typography :refer [Heading1 SectionHeading]]
             [teet.ui.format :as format]
-            [teet.document.document-model :as document-model]
-            teet.document.document-spec))
+            [teet.file.file-model :as file-model]
+            teet.file.file-spec))
 
 (defn- page-overlay []
   {;; Cover the whole page
@@ -169,10 +169,10 @@
         [ListItem {}
          (let [{:file/keys [type name size] :as file}
                (-> file
-                   document-model/file-info
-                   document-model/type-by-suffix)
-               invalid-file-type? (not (document-model/upload-allowed-file-types type))
-               file-too-large? (> size document-model/upload-max-file-size)]
+                   file-model/file-info
+                   file-model/type-by-suffix)
+               invalid-file-type? (not (file-model/upload-allowed-file-types type))
+               file-too-large? (> size file-model/upload-max-file-size)]
            [ListItemText (merge
                           {:primary name
                            :secondary (r/as-component [file-info file invalid-file-type? file-too-large?])})])

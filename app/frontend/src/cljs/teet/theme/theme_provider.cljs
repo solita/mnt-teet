@@ -18,12 +18,10 @@
    :textTransform :uppercase})
 
 (def section-heading-style
-  {:fontFamily    "Roboto Condensed"
-   :fontWeight    700
+  {:fontWeight    700
    :fontSize      "1rem"
    :lineHeight    1.375
-   :letterSpacing "0.25px"
-   :textTransform :uppercase})
+   :letterSpacing "0.25px"})
 
 (def teet-theme
   {:typography {:body2      {:fontSize "1rem"}

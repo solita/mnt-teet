@@ -22,6 +22,8 @@
   InputLabel Input
   Select MenuItem Menu ButtonGroup)
 
+(define-mui-components RadioGroup Radio)
+
 (define-mui-components Paper Typography)
 
 ;; Common utility components

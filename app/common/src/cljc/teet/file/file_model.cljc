@@ -1,4 +1,4 @@
-(ns teet.document.document-model
+(ns teet.file.file-model
   (:require [clojure.string :as str]))
 
 ;; "In THK module is allowed to upload file extensions: gif, jpg, jpeg, png, pdf, csv, txt, xlsx, docx, xls, doc, dwg, ppt, pptx.""

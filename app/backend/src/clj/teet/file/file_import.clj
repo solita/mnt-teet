@@ -1,4 +1,4 @@
-(ns teet.document.document-import
+(ns teet.file.file-import
   "Post process uploaded files and import features from them."
   (:require [teet.ags.ags-import :as ags-import]
             [teet.integration.integration-context :refer [ctx-> defstep]]

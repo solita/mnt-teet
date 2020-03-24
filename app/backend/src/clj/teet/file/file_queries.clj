@@ -1,11 +1,11 @@
-(ns teet.document.document-queries
+(ns teet.file.file-queries
   (:require [teet.db-api.core :as db-api :refer [defquery]]
-            [teet.document.document-spec]
-            [teet.document.document-storage :as document-storage]
+            [teet.file.file-spec]
+            [teet.file.file-storage :as file-storage]
             [datomic.client.api :as d]
             [teet.project.project-db :as project-db]))
 
-(defquery :document/download-file
+(defquery :file/download-file
   {:doc "Get a download link to the given file"
    :context {db :db}
    :args {file-id :file-id}
@@ -15,4 +15,4 @@
         s3-file-name (str file-id "-" file-name)]
     ^{:format :raw}
     {:status 302
-     :headers {"Location" (document-storage/download-url s3-file-name)}}))
+     :headers {"Location" (file-storage/download-url s3-file-name)}}))

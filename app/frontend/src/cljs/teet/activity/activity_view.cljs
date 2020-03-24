@@ -3,7 +3,7 @@
             [teet.ui.date-picker :as date-picker]
             [teet.localization :refer [tr]]
             [teet.ui.form :as form]
-            teet.document.document-spec
+            teet.file.file-spec
             [teet.project.project-navigator-view :as project-navigator-view]
             [teet.project.project-style :as project-style]
             [herb.core :refer [<class]]
@@ -20,7 +20,7 @@
               :save-event activity-controller/->SaveActivityForm
               :cancel-event project-controller/->CloseDialog
               :delete (e! activity-controller/->DeleteActivity)
-              :spec :document/new-activity-form}
+              :spec :activity/new-activity-form}
    (when-not (:db/id activity)
      ^{:attribute :activity/name}
      [select/select-enum {:e! e! :attribute :activity/name :enum/valid-for lifecycle-type}])
