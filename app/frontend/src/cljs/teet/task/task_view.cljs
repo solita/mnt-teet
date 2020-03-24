@@ -207,6 +207,12 @@
                                     :end-label (tr [:fields :task/estimated-end-date])
                                     :required true}]
 
+     ^{:attribute [:task/actual-start-date :task/actual-end-date] :xs 12}
+     [date-picker/date-range-input {:start-label (tr [:fields :task/actual-start-date])
+                                    :end-label (tr [:fields :task/actual-end-date])
+                                    :required false}]
+     
+     
      ^{:attribute :task/assignee}
      [select/select-user {:e! e! :attribute :task/assignee}]]))
 
