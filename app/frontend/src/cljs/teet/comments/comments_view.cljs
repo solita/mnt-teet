@@ -14,7 +14,8 @@
             [teet.user.user-info :as user-info]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.buttons :as buttons]
-            [teet.comments.comments-controller :as comment-controller]))
+            [teet.comments.comments-controller :as comment-controller]
+            [teet.ui.skeleton :as skeleton]))
 
 (defn- new-comment-footer [{:keys [validate disabled?]}]
   [:div {:class (<class comments-styles/comment-buttons-style)}
@@ -31,7 +32,7 @@
             :comment/keys [author comment timestamp] :as entity} comments]
        ^{:key id}
        [:div
-        [:div {:class [(<class common-styles/space-between-center) (<class common-styles/margin-bottom-1)]}
+        [:div {:class [(<class common-styles/space-between-center) (<class common-styles/margin-bottom 0.5)]}
          [:span
           [typography/SectionHeading
            {:style {:display :inline-block}}
@@ -46,6 +47,14 @@
                            (tr [:buttons :delete])])]
         [typography/Paragraph comment]]))])
 
+(defn comment-skeleton
+  [n]
+  [:<>
+   (doall
+     (for [y (range n)]
+       ^{:key y}
+       [skeleton/skeleton {:parent-style (skeleton/comment-skeleton-style)}]))])
+
 (defn lazy-comments
   [{:keys [e! app
            entity-type
@@ -54,12 +63,13 @@
            update-comment-event
            save-comment-event]}]
   (let [comments (get-in app [:comments-for-entity entity-id])]
-    (.log js/console "Comments in lazy: " (count comments))
     [layout/section
      [query/query {:e! e!
-                   :query :task/fetch-comments              ;; TODO case by entity-type
+                   :query (case entity-type
+                            :task :task/fetch-comments
+                            :task/fetch-comments)
                    :args {:db/id entity-id}
-                   :skeleton [:span "skeleton"]
+                   :skeleton [comment-skeleton 2]
                    :state-path [:comments-for-entity entity-id]
                    :state comments
                    :view comment-list
