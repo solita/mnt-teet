@@ -2,7 +2,7 @@
   "SVG timeline component"
   (:require [goog.date :as dt]
             [reagent.core :as r]
-            [teet.ui.material-ui :refer [Popover Popper]]
+            [teet.ui.material-ui :refer [Popper]]
             [cljs-time.core :as t]
             [teet.theme.theme-colors :as theme-colors]
             [teet.theme.theme-panels :as theme-panels]
@@ -145,8 +145,9 @@
       ^{:key year}
       [:g
        [:line {:x1 x :x2 x
-               :y1 0 :y2 (* 2 y)
-               :style {:stroke theme-colors/blue-dark :stroke-width line-width}}]
+               :y1 0 :y2 (y-of (+ 1.5 num-items))
+               :style {:stroke theme-colors/gray-lighter
+                       :stroke-width line-width}}]
        [:text {:x (+ x 5) :y y} year]]))])
 
 (defn- month-labels-group [{:keys [x-of years month-width]}]
@@ -185,7 +186,8 @@
                :text       theme-colors/white}
    :activity {:background theme-colors/blue-lighter
               :text       theme-colors/blue-dark}
-   :subtask {:background theme-colors/gray}})
+   :task {:background theme-colors/gray-lighter
+          :text       theme-colors/blue-dark}})
 
 (defn timeline [{:keys [start-date end-date
                         month-width
@@ -195,9 +197,6 @@
                       line-width 2}}
                 timeline-items]
   (r/with-let [hover (r/atom nil)
-               line-height (r/atom nil)
-               set-line-height! #(when %
-                                   (->> % .-clientHeight (reset! line-height)))
                initial-month-width month-width
                month-width (r/atom month-width)
                on-wheel (fn [e]
@@ -228,53 +227,41 @@
                    (+ x-start
                       (* @month-width
                          (months-from (first years) d))))
-            line-height @line-height
+            line-height 24 ; TODO from style files?
             y-of (fn [i]
                    (+ y-start
                       (* line-height i)))]
 
         [:div {:class (<class container-style)}
-         [:div.timeline-labels {:class (<class labels-style y-start)}
-          (doall
-           (for [i (range num-items)
-                 :let [{label :label start-date :start-date} (nth timeline-items i)]]
-             ^{:key i}
-             [:div (merge
-                    {:class (<class label-style)
-                     :on-click #(scroll-left! (x-of start-date))}
-                    (when (zero? i)
-                      {:ref set-line-height!}))
-              label]))]
          [:div.timeline-bars {:class (<class bars-style)
                               :on-wheel on-wheel
                               :on-mouse-enter disable-window-scroll
                               :on-mouse-leave enable-window-scroll
                               :id bars-id}
 
-          (when line-height
-            [:svg {:width (x-of (t/plus (t/date-time end-date) (t/years 5)))
-                   :height (y-of (+ 3 num-items))}
-             [pattern-defs line-height initial-month-width line-width]
-             [year-bars-group {:x-of x-of
-                               :y-of y-of
-                               :num-items num-items
-                               :line-width line-width
-                               :years years}]
-             [month-labels-group {:x-of x-of
-                                  :years years
-                                  :month-width @month-width}]
+          [:svg {:width (x-of (t/plus (t/date-time end-date) (t/years 5)))
+                 :height (y-of (+ 3 num-items))}
+           [pattern-defs line-height initial-month-width line-width]
+           [year-bars-group {:x-of x-of
+                             :y-of y-of
+                             :num-items num-items
+                             :line-width line-width
+                             :years years}]
+           [month-labels-group {:x-of x-of
+                                :years years
+                                :month-width @month-width}]
 
-             [timeline-items-group {:x-of x-of
-                                    :y-of y-of
-                                    :hover hover
-                                    :timeline-items timeline-items
-                                    :line-height line-height}]
+           [timeline-items-group {:x-of x-of
+                                  :y-of y-of
+                                  :hover hover
+                                  :timeline-items timeline-items
+                                  :line-height line-height}]
 
-             [today-group {:x-of x-of
-                           :y-of y-of
-                           :line-width line-width
-                           :line-height line-height
-                           :num-items num-items}]])]
+           [today-group {:x-of x-of
+                         :y-of y-of
+                         :line-width line-width
+                         :line-height line-height
+                         :num-items num-items}]]]
 
          (when-let [{:keys [element content]} @hover]
            [Popper {:open true

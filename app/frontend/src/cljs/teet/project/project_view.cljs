@@ -167,17 +167,25 @@
                                               :colors     (:lifecycle timeline/colors)
                                               :hover      [:div (tr* (:db/ident type))]}]
                                             ;; Activities
-                                            (for [{:activity/keys [name status estimated-start-date estimated-end-date]
-                                                   :as activity} activities
-                                                  :let [label (-> name :db/ident tr*)]]
-                                              ;; TODO add subtasks
-                                              {:label label
-                                               :start-date estimated-start-date
-                                               :end-date estimated-end-date
-                                               :colors (:activity timeline/colors)
-                                               :hover [:div
-                                                       [:div [:b (tr [:fields :activity/name]) ": "] label]
-                                                       [:div [:b (tr [:fields :activity/status]) ": "] (tr* (:db/ident status))]]})))
+                                            (mapcat (fn [{:activity/keys [name status estimated-start-date estimated-end-date tasks]
+                                                          :as _activity}]
+                                                      (let [label (-> name :db/ident tr*)]
+                                                        (concat [{:label label
+                                                                  :start-date estimated-start-date
+                                                                  :end-date estimated-end-date
+                                                                  :colors (:activity timeline/colors)
+                                                                  :hover [:div
+                                                                          [:div [:b (tr [:fields :activity/name]) ": "] label]
+                                                                          [:div [:b (tr [:fields :activity/status]) ": "] (tr* (:db/ident status))]]}]
+                                                                (for [{:task/keys [description estimated-start-date estimated-end-date]} tasks]
+                                                                  ;; TODO what label
+                                                                  {:label description
+                                                                   :start-date estimated-start-date
+                                                                   :end-date estimated-end-date
+                                                                   :colors (:task timeline/colors)
+                                                                   ;; TODO what to hover?
+                                                                   :hover [:div "This is a task"]}))))
+                                                    activities)))
                                          (sort-by :thk.lifecycle/estimated-start-date lifecycles)))]]
 
         [:<>
