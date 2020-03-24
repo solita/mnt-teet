@@ -29,11 +29,11 @@
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.tabs :as tabs]
             [teet.common.common-styles :as common-styles]
-            [teet.ui.table :as table]
+            [teet.file.file-view :as file-view]
             [teet.ui.date-picker :as date-picker]
             [teet.project.project-controller :as project-controller]))
 
-(defn task-status [e! {:task/keys [status] :as task}]
+(defn task-status [e! {:task/keys [status] :as _task}]
   [select/status {:e!        e!
                   :on-change (e! task-controller/->UpdateTaskStatus)
                   :status    (:db/ident status)
@@ -124,33 +124,7 @@
                             :new-comment          (:new-comment file)
                             :comments             (:file/comments file)}]])
 
-(def file-columns
-  [:file/name
-   :file/number
-   :file/type
-   :file/version
-   :file/status
-   :file/controls])
 
-(defn format-file-list
-  [column value row]
-  (case column
-    :file/controls
-    [:div "controls"]
-    (str value)))
-
-(defn file-list
-  [e! files]
-  [:div
-   [table/table
-    {:on-row-click (e! task-controller/->NavigateToFile)
-     :columns file-columns
-     :format-column format-file-list
-     :data files
-     :get-column get
-     :filter-type {}}]
-   [buttons/button-primary {:href (url/set-params :add-document 1)}
-    (tr [:task :upload-files])]])
 
 (defn task-basic-info
   [e! {:task/keys [deadline assignee] :as task}]
@@ -170,7 +144,7 @@
    (when description
      [typography/Paragraph description])
    [task-basic-info e! task]
-   [file-list e! files]])
+   [file-view/file-table e! files]])
 
 (defn task-page-content
   [e! app task]

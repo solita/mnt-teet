@@ -16,6 +16,7 @@
 (defrecord DeleteFileResult [])
 
 (defrecord AddFilesToTask [files]) ;; upload more files to existing document
+(defrecord NavigateToFile [file])
 
 (extend-protocol t/Event
 
@@ -93,7 +94,14 @@
            :page page
            :params params
            :query (dissoc query :add-files :add-document)}
-          common-controller/refresh-fx)))
+          common-controller/refresh-fx))
+
+  NavigateToFile
+  (process-event [{file :file} {params :params :as app}]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page :file
+           :params (assoc params :file (:db/id file))})))
 
 (defn download-url [file-id]
   (common-controller/query-url :file/download-file {:file-id file-id}))

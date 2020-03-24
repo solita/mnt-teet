@@ -7,6 +7,8 @@
                       :sha "4afc81236a0c62155afb1a704501424e025323fb"}
         data-frisk-reagent {:mvn/version "0.4.5" :exclusions [reagent]}
         herb {:mvn/version "0.10.0"}
+        tatut/re-svg-icons {:git/url "https://github.com/tatut/re-svg-icons"
+                            :sha "bc236886fc81b186888226bb161dcd279db2bee0"}
 
         ;; Routing
         funcool/bide {:mvn/version "1.6.0"}
