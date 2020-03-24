@@ -113,6 +113,12 @@
         (swap! the-atom update-fn %)
         app))))
 
+(defn required-field? [attribute required-fields]
+  (boolean
+   (if (vector? attribute)
+     (not-empty (clojure.set/intersection required-fields (set attribute)))
+     (required-fields attribute))))
+
 (defn form
   "Simple grid based form container."
   [{:keys [e! ;; Tuck event handle
@@ -174,7 +180,8 @@
                            (e! (save-event))))
 
                ;; Determine required fields by getting missing attributes of an empty map
-               required-fields (missing-attributes spec {})]
+               required-fields (missing-attributes spec {})
+               _ (log/debug "required-fields:" required-fields)]
     [:form (merge {:on-submit #(submit! e! save-event value fields %)
                    :style {:flex 1
                            :display :flex
@@ -211,7 +218,9 @@
                                  :label (tr [:fields attribute])
                                  :error (boolean (or error-text (@invalid-attributes attribute)))
                                  :error-text error-text
-                                 :required (boolean (required-fields attribute))}]
+                                 :required (required-field? attribute required-fields)}
+                           ;; _ (log/debug "determining required-ness for" attribute " - " required-fields "says" (boolean (required-fields attribute)))
+                           ]
                        [Grid (merge {:item true :xs (or xs 12)}
                                     (when lg
                                       {:lg lg})
