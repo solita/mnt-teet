@@ -52,6 +52,14 @@
             :x2 (/ month-width 2) :y2 line-height
             :style {:stroke "lightgray" :stroke-width (* 3 line-width)}}]]])
 
+(defn timeline-item
+  [width color]
+  {:white-space :nowrap
+   :overflow :hidden
+   :text-overflow :ellipsis
+   :width width
+   :color color})
+
 (defn- timeline-items-group [{:keys [x-of y-of hover line-height timeline-items]}]
   [:g#items
    (doall
@@ -82,7 +90,13 @@
                         (conj [:rect {:key i
                                       :x x :y y :width w :height height
                                       :style {:fill fill-style}}])
-                        (conj [:text {:key (str i "-text")
+                        (conj [:foreignObject {:x x :y y
+                                               :width w :height height
+                                               :key (str i "-text")}
+                               [:div {:xmlns "http://www.w3.org/1999/xhtml"
+                                      :class (<class timeline-item w text-color)}
+                                label]]
+                              #_[:text {:key (str i "-text")
                                       :fill text-color
                                       :x (+ x 6) :y (+ y (* height 0.8))}
                                label]))
