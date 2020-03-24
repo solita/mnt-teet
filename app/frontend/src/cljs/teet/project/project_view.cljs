@@ -177,7 +177,8 @@
                                                                   :hover [:div
                                                                           [:div [:b (tr [:fields :activity/name]) ": "] label]
                                                                           [:div [:b (tr [:fields :activity/status]) ": "] (tr* (:db/ident status))]]}]
-                                                                (for [{:task/keys [description type estimated-start-date estimated-end-date]} tasks]
+                                                                (for [{:task/keys [description type estimated-start-date estimated-end-date]}
+                                                                      (sort-by :task/estimated-start-date tasks)]
                                                                   ;; TODO what label
                                                                   {:label (tr [:enum (:db/ident type)])
                                                                    :start-date estimated-start-date
