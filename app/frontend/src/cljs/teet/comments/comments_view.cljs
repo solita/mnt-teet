@@ -17,7 +17,8 @@
             [teet.comments.comments-controller :as comment-controller]
             [reagent.core :as r]
             [teet.common.common-controller :as common-controller]
-            [teet.ui.skeleton :as skeleton]))
+            [teet.ui.skeleton :as skeleton]
+            [teet.log :as log]))
 
 (defn- new-comment-footer [{:keys [validate disabled?]}]
   [:div {:class (<class comments-styles/comment-buttons-style)}
@@ -26,29 +27,6 @@
                             :on-click validate}
     (tr [:comment :save])]])
 
-(defn comment-list
-  [e! _app comments _breacrumbs]
-  [itemlist/ItemList {}
-   (doall
-     (for [{id :db/id
-            :comment/keys [author comment timestamp] :as entity} comments]
-       ^{:key id}
-       [:div
-        [:div {:class [(<class common-styles/space-between-center) (<class common-styles/margin-bottom 0.5)]}
-         [:span
-          [typography/SectionHeading
-           {:style {:display :inline-block}}
-           [user-info/user-name author]]
-          [typography/GreyText {:style {:display :inline-block
-                                        :margin-left "1rem"}}
-           (format/date timestamp)]]
-         (when-authorized :comment-delete
-                          entity
-                          [buttons/delete-button-with-confirm {:small? true
-                                                               :action (e! comment-controller/->DeleteComment id)}
-                           (tr [:buttons :delete])])]
-        [typography/Paragraph comment]]))])
-
 (defn comment-skeleton
   [n]
   [:<>
@@ -56,6 +34,36 @@
      (for [y (range n)]
        ^{:key y}
        [skeleton/skeleton {:parent-style (skeleton/comment-skeleton-style)}]))])
+
+(defn comment-list
+  [e! _app comments _breacrumbs]
+  [itemlist/ItemList {}
+   (doall
+    (for [{id :db/id
+           :comment/keys [author comment timestamp] :as entity} comments]
+      (if (nil? entity)
+        ;; New comment was just added but hasn't been refetched yet, show skeleton
+        ^{:key "loading-comment"}
+        [comment-skeleton 1]
+
+        ^{:key id}
+        [:div
+         [:div {:class [(<class common-styles/space-between-center) (<class common-styles/margin-bottom 0.5)]}
+          [:span
+           [typography/SectionHeading
+            {:style {:display :inline-block}}
+            [user-info/user-name author]]
+           [typography/GreyText {:style {:display :inline-block
+                                         :margin-left "1rem"}}
+            (format/date timestamp)]]
+          (when-authorized :comment-delete
+            entity
+            [buttons/delete-button-with-confirm {:small? true
+                                                 :action (e! comment-controller/->DeleteComment id)}
+             (tr [:buttons :delete])])]
+         [typography/Paragraph comment]])))])
+
+
 
 (defn lazy-comments
   [{:keys [e! app
@@ -67,17 +75,20 @@
       (.log js/console "Comments in lazy: " (count comments))
       [layout/section
        [query/query {:e! e!
-                     :query :task/fetch-comments              ;; TODO case by entity-type
+                     :query :comment/fetch-comments              ;; TODO case by entity-type
                      :args {:db/id entity-id}
-                     :skeleton [:span "skeleton"]
+                     :skeleton [comment-skeleton 1]
                      :state-path [:comments-for-entity entity-id]
                      :state comments
                      :view comment-list
                      :refresh (count comments)}]
        [form/form {:e! e!
-                   :value comment-form
+                   :value @comment-form
                    :on-change-event ->UpdateCommentForm
-                   :save-event #(save-comment-event (:comment/comment @comment-form))
+                   :save-event #(let [comment (:comment/comment @comment-form)]
+                                  (reset! comment-form {})
+                                  (log/info "COMMENT: " comment)
+                                  (save-comment-event comment))
                    :footer new-comment-footer
                    :spec :task/new-comment-form}
         ^{:attribute :comment/comment}

@@ -10,7 +10,7 @@
 (defrecord UpdateFileNewCommentForm [form-data])            ; update new comment on selected file
 (defrecord CommentOnDocument [])                            ; save new comment to document
 (defrecord UpdateNewCommentForm [form-data])                ; update new comment form data
-(defrecord CommentOnEntity [entity-id comment-command])
+(defrecord CommentOnEntity [entity-id comment-command comment])
 (defrecord ClearCommentField [])
 (defrecord CommentAddSuccess [entity-id])
 
@@ -63,9 +63,10 @@
 
   CommentAddSuccess
   (process-event [{entity-id :entity-id} app]
-    (-> app
-        (dissoc :comment-form)
-        (update-in [:comments-for-entity entity-id] conj nil)))
+    ;; Add nil comment as the first comment in list
+    (update-in app [:comments-for-entity entity-id]
+               (fn [comments]
+                 (into [nil] comments))))
 
   ClearCommentField
   (process-event [_ app]
