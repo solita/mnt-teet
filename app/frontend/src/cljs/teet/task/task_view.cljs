@@ -151,10 +151,8 @@
   [:div
    [typography/Heading1 (tr-enum (:task/type task))]
    [tabs/details-and-comments-tabs {:e! e!
-                                    :query (:query app)
                                     :app app
                                     :comment-form (:comment-form app)
-                                    :comments (:task/comments task)
                                     :type :task-comment
                                     :comment-command :comment/comment-on-task
                                     :details [task-details e! task]
@@ -209,8 +207,8 @@
      ^{:attribute [:task/actual-start-date :task/actual-end-date] :xs 12}
      [date-picker/date-range-input {:start-label (tr [:fields :task/actual-start-date])
                                     :end-label (tr [:fields :task/actual-end-date])}]
-     
-     
+
+
      ^{:attribute :task/assignee}
      [select/select-user {:e! e! :attribute :task/assignee}]]))
 

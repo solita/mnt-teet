@@ -14,7 +14,8 @@
             [clojure.string :as str]
             [re-svg-icons.tabler-icons :as ti]
             [re-svg-icons.feather-icons :as fi]
-            ))
+
+            [teet.ui.tabs :as tabs]))
 
 (def file-columns
   [:file/name
@@ -72,7 +73,8 @@
           files)]])
 
 (defn file-info [e! {:file/keys [name] :as file}]
-  [:<>
+  [tabs/details-and-comments-tabs
+   {:e! e!}
    [file-icon file]
    name])
 

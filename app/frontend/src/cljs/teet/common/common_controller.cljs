@@ -495,3 +495,21 @@
     ;; General error handler for when the client sends faulty data.
     ;; Commands can fail requests with :error :bad-request to trigger this
     (t/fx (snackbar-controller/open-snack-bar app (tr [:error error]) :warning))))
+
+
+(defn internal-state
+  "Use component internal state that is not in global app.
+  Returns vector of [current-value-atom update-event].
+  The current-value-atom can be dereferenced to get the current value of the internal state.
+  The update-event is a function that takes new state and returns tuck event that sets it
+  when processed.
+
+  Use with reagent.core/with-let"
+  [initial-value]
+  (let [internal-state-atom (r/atom initial-value)]
+    [internal-state-atom
+     (fn [new-value]
+       (reify t/Event
+         (process-event [_ app]
+           (reset! internal-state-atom new-value)
+           app)))]))
