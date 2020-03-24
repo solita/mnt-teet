@@ -143,13 +143,14 @@
   [e! files]
   [:div
    [table/table
-    {:columns file-columns
+    {:on-row-click (e! task-controller/->NavigateToFile)
+     :columns file-columns
      :format-column format-file-list
      :data files
      :get-column get
      :filter-type {}}]
    [buttons/button-primary {:href (url/set-params :add-document 1)}
-    "Add files"]])
+    (tr [:task :upload-files])]])
 
 (defn task-basic-info
   [e! {:task/keys [deadline assignee] :as task}]
