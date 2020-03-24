@@ -24,8 +24,6 @@
 (defrecord OpenAddDocumentDialog [])
 (defrecord CloseAddDocumentDialog [])
 
-(defrecord NavigateToFile [file])
-
 (extend-protocol t/Event
   MoveDataForEdit
   (process-event [_ app]
@@ -149,14 +147,7 @@
 
   UpdateTaskForm
   (process-event [{form-data :form-data} app]
-    (update-in app [:route :project :add-task] merge form-data))
-
-  NavigateToFile
-  (process-event [{file :file} {params :params :as app}]
-    (t/fx app
-          {:tuck.effect/type :navigate
-           :page :file
-           :params (assoc params :file (:db/id file))})))
+    (update-in app [:route :project :add-task] merge form-data)))
 
 (defn document-page-url [{{:keys [project activity task]} :params} doc]
   (str "#/projects/" project "/" activity "/" task "/" (:db/id doc)))

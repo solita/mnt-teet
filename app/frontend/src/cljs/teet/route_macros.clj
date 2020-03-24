@@ -104,8 +104,11 @@
                     (~fn-name (~(first params) ~(first param-syms)))
                     (str "#" ~@(split-path path))))
              ;; more than 1 parameter
-             `(defn ~fn-name
-                ([{:keys [~@param-syms]}]
-                 (~fn-name ~@param-syms))
-                ([~@param-syms]
-                 (str "#" ~@(split-path path)))))))))
+             `(def ~fn-name
+                (fn route#
+                  ([{:keys [~@param-syms] query# :teet.ui.url/query}]
+                   (str (route# ~@param-syms)
+                        (when query#
+                          (str "?" (teet.ui.url/format-params query#)))))
+                  ([~@param-syms]
+                   (str "#" ~@(split-path path))))))))))
