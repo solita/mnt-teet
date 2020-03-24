@@ -88,7 +88,8 @@
    :padding-top "10px"
    :padding-left "1rem"
    :padding-bottom "1rem"
-   :display :block
+   :display :flex
+   :align-items :center
    :position :relative})
 
 (defn- stepper-button-style
@@ -192,7 +193,6 @@
            ;; FIXME: style the group better
            [:li {:class (<class item-class true dark-theme?)}
             [:div {:class (<class task-info dark-theme?)}
-             [icons/file-folder-open]
              (tr-enum group)]]
            (doall
             (for [{:task/keys [type] :as task} tasks]
@@ -341,6 +341,7 @@
    [project-navigator-dialogs opts]
    [Paper {:class (<class task-style/task-page-paper-style)}
     [Grid {:container true
+           :wrap :nowrap
            :spacing   0}
      [Grid {:item  true
             :xs    3
