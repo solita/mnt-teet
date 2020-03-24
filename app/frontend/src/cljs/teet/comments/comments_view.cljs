@@ -75,8 +75,9 @@
       (.log js/console "Comments in lazy: " (count comments))
       [layout/section
        [query/query {:e! e!
-                     :query :comment/fetch-comments              ;; TODO case by entity-type
-                     :args {:db/id entity-id}
+                     :query :comment/fetch-comments
+                     :args {:db/id entity-id
+                            :for entity-type}
                      :skeleton [comment-skeleton 1]
                      :state-path [:comments-for-entity entity-id]
                      :state comments

@@ -151,7 +151,6 @@
    [typography/Heading1 (tr-enum (:task/type task))]
    [tabs/details-and-comments-tabs {:e! e!
                                     :app app
-                                    :comment-form (:comment-form app)
                                     :type :task-comment
                                     :comment-command :comment/comment-on-task
                                     :details [task-details e! (:params app) task]
