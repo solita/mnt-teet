@@ -11,5 +11,7 @@
    :authorization {}}
   (let [task-comments (d/pull db
                               '[{:task/comments [* {:comment/author [*]}]}] id)]
-    (:task/comments task-comments)))
+    (if (empty? task-comments)
+      []
+      (:task/comments task-comments))))
 

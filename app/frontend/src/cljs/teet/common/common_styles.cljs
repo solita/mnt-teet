@@ -108,6 +108,6 @@
    :flex-direction :row
    :justify-content :space-between})
 
-(defn margin-bottom-1
-  []
-  {:margin-bottom "0.5rem"})
+(defn margin-bottom
+  [rem]
+  {:margin-bottom (str rem "rem")})

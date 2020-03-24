@@ -197,13 +197,13 @@
      (let [permission-links (map (fn [{:keys [user] :as _}]
                                    (let [user-id (:db/id user)]
                                      {:key user-id
-                                      :href (url/set-params :person user-id)
+                                      :href (url/set-query-param :person user-id)
                                       :title (or (user-model/user-name user)
                                                  (tr [:common :unknown]))
                                       :selected? (= (str user-id) selected-person)}))
                                  permissions)]
        [itemlist/white-link-list permission-links]))
-   [buttons/rect-white {:href (url/remove-param :person)}
+   [buttons/rect-white {:href (url/remove-query-param :person)}
     [icons/content-add]
     (tr [:project :add-users])]])
 
@@ -449,7 +449,7 @@
                      :layers #{:thk-project :thk-project-buffer :related-restrictions}}
       :footer [:div {:class (<class project-style/wizard-footer)}
                [buttons/button-warning {:component "a"
-                                        :href (url/remove-param :configure)}
+                                        :href (url/remove-query-param :configure)}
                 (tr [:buttons :cancel])]
                [buttons/button-primary
                 {:on-click (e! project-controller/->UpdateProjectRestrictions
@@ -465,7 +465,7 @@
                      :layers #{:thk-project :thk-project-buffer :related-cadastral-units}}
       :footer [:div {:class (<class project-style/wizard-footer)}
                [buttons/button-warning {:component "a"
-                                        :href (url/remove-param :configure)}
+                                        :href (url/remove-query-param :configure)}
                 (tr [:buttons :cancel])]
                [buttons/button-primary
                 {:on-click (e! project-controller/->UpdateProjectCadastralUnits

@@ -16,7 +16,8 @@
             [teet.ui.buttons :as buttons]
             [teet.comments.comments-controller :as comment-controller]
             [reagent.core :as r]
-            [teet.common.common-controller :as common-controller]))
+            [teet.common.common-controller :as common-controller]
+            [teet.ui.skeleton :as skeleton]))
 
 (defn- new-comment-footer [{:keys [validate disabled?]}]
   [:div {:class (<class comments-styles/comment-buttons-style)}
@@ -33,7 +34,7 @@
             :comment/keys [author comment timestamp] :as entity} comments]
        ^{:key id}
        [:div
-        [:div {:class [(<class common-styles/space-between-center) (<class common-styles/margin-bottom-1)]}
+        [:div {:class [(<class common-styles/space-between-center) (<class common-styles/margin-bottom 0.5)]}
          [:span
           [typography/SectionHeading
            {:style {:display :inline-block}}
@@ -47,6 +48,14 @@
                                                                :action (e! comment-controller/->DeleteComment id)}
                            (tr [:buttons :delete])])]
         [typography/Paragraph comment]]))])
+
+(defn comment-skeleton
+  [n]
+  [:<>
+   (doall
+     (for [y (range n)]
+       ^{:key y}
+       [skeleton/skeleton {:parent-style (skeleton/comment-skeleton-style)}]))])
 
 (defn lazy-comments
   [{:keys [e! app

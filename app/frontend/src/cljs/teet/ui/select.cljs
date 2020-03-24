@@ -44,7 +44,7 @@
   {:font-size "1rem"})
 
 (defn form-select [{:keys [label name id items on-change value format-item
-                               show-empty-selection? error error-text required]
+                           show-label? show-empty-selection? error error-text required]
                         :or {format-item :label}}]
   (let [option-idx (zipmap items (range))
         change-value (fn [e]
@@ -54,8 +54,9 @@
                            (on-change (nth items (int val))))))]
     [:label {:for id
              :class (<class select-label-style)}
-     [:span label (when required
-                    [common/required-astrix])]
+     (when show-label?
+       [:span label (when required
+                      [common/required-astrix])])
      [:div {:style {:position :relative}}
       [:select
        {:value (or (option-idx value) "")
@@ -269,10 +270,10 @@
 (defn status
   [{:keys [e! status attribute on-change]}]
   [:div {:class (<class status-container-style)}
-   [select-enum {:e!                     e!
-                 :on-change       on-change
-                 :value           status
-                 :attribute       attribute}]])
+   [select-enum {:e! e!
+                 :on-change on-change
+                 :value status
+                 :attribute attribute}]])
 
 (defn radio [{:keys [value items format-item on-change]}]
   (let [item->value (zipmap items (map str (range)))]
