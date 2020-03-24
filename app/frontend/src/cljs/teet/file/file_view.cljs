@@ -5,8 +5,9 @@
             [teet.file.file-controller :as file-controller]
             [teet.ui.buttons :as buttons]
             [teet.ui.url :as url]
+            [teet.ui.icons :as icons]
             [teet.localization :refer [tr tr-enum]]
-            [teet.ui.material-ui :refer [Grid]]
+            [teet.ui.material-ui :refer [Grid Link]]
             [teet.ui.typography :as typography]
             [teet.ui.util :refer [mapc]]
             [herb.core :refer [<class]]
@@ -14,7 +15,8 @@
             [clojure.string :as str]
             [re-svg-icons.tabler-icons :as ti]
             [re-svg-icons.feather-icons :as fi]
-            ))
+            [teet.theme.theme-colors :as theme-colors]
+            [reagent.core :as r]))
 
 (def file-columns
   [:file/name
@@ -31,17 +33,68 @@
     [:div "controls"]
     (str value)))
 
+(defn file-column-style
+  ([basis]
+   (file-column-style basis :flex-start))
+  ([basis justify-content]
+   ^{:pseudo {:first-child {:border-left 0}
+              :last-child {:border-right 0}}}
+   {:flex-basis (str basis "%")
+    :border-color theme-colors/gray-lighter
+    :border-style :solid
+    :border-width "2px 2px 0 0"
+    :flex-grow 0
+    :flex-shrink 0
+    :word-break :break-all
+    :display :flex
+    :align-items :center
+    :padding "0.25rem"
+    :justify-content justify-content}))
+
+(defn file-row-icon-style
+  []
+  {:margin "0 0.25rem"})
+
+(defn file-row
+  [e! {:keys [activity project task] :as params} {:file/keys [number type version status name] :as file}]
+  (let [file-url-map {:activity activity
+                      :project project
+                      :task task
+                      :file (:db/id file)}]
+    [:div {:style {:display :flex
+                   :flex-direction :row
+                   :margin-bottom "0.5rem"}}
+     [:div {:class (<class file-column-style 30)}
+      [Link {:href (url/file file-url-map)}
+       name]]
+     [:div {:class (<class file-column-style 7)}
+      [:span number]]
+     [:div {:class (<class file-column-style 16)}
+      [:span type]]
+     [:div {:class (<class file-column-style 7)}
+      [:span version]]
+     [:div {:class (<class file-column-style 10)}
+      [:span status]]
+     [:div {:class (<class file-column-style 30 :flex-end)}
+      [Link {:class (<class file-row-icon-style)
+             :href (url/file (merge file-url-map {::url/query {:tab "comment"}}))}
+       [icons/communication-comment]]
+      [Link {:class (<class file-row-icon-style)
+             :href "asd"}                                   ;;TODO add implementatkion
+       [icons/file-cloud-upload]]
+      [Link {:class (<class file-row-icon-style)
+             :href "test"}
+       [icons/file-cloud-download]]]]))
+
 (defn file-table
-  [e! files]
+  [e! params files]
   [:div
-   [table/table
-    {:on-row-click (e! file-controller/->NavigateToFile)
-     :columns file-columns
-     :format-column format-file-list
-     :data files
-     :get-column get
-     :filter-type {}}]
-   [buttons/button-primary {:href (url/set-params :add-document 1)}
+   (when files
+     (for [file files]
+       [file-row e! params file]))
+   [buttons/button-primary {:href (url/set-query-param :add-document 1)
+                            :start-icon (r/as-element
+                                          [icons/file-cloud-upload])}
     (tr [:task :upload-files])]])
 
 (defn file-icon [{:file/keys [name type]}]
