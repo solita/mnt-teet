@@ -325,17 +325,20 @@
   [:div "Unsupported project navigator dialog " (pr-str dialog)])
 
 
+(defn project-navigator-dialogs [{:keys [e! app] :as opts}]
+  (when-let [dialog (get-in app [:stepper :dialog])]
+     [panels/modal {:title (tr [:project (:type dialog)])
+                    :open-atom (r/wrap true :_)
+                    :on-close (e! project-controller/->CloseDialog)}
+      [project-navigator-dialog opts dialog]]))
+
 (defn project-navigator-with-content
   "Page structure showing project navigator along with content."
   [{:keys [e! project app breadcrumbs] :as opts} & content]
   [:<>
    [breadcrumbs/breadcrumbs breadcrumbs]
    [typography/Heading1 (:thk.project/name project)]
-   (when-let [dialog (get-in app [:stepper :dialog])]
-     [panels/modal {:title (tr [:project (:type dialog)])
-                    :open-atom (r/wrap true :_)
-                    :on-close (e! project-controller/->CloseDialog)}
-      [project-navigator-dialog opts dialog]])
+   [project-navigator-dialogs opts]
    [Paper {:class (<class task-style/task-page-paper-style)}
     [Grid {:container true
            :spacing   0}
