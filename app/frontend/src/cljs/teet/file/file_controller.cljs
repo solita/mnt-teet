@@ -18,7 +18,18 @@
 (defrecord AddFilesToTask [files]) ;; upload more files to existing document
 (defrecord NavigateToFile [file])
 
+(defrecord UpdateFileStatus [file-id status])
+
 (extend-protocol t/Event
+
+  UpdateFileStatus
+  (process-event [{:keys [file-id status]} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :file/update-status
+           :payload {:file-id file-id
+                     :status status}
+           :result-event common-controller/->Refresh}))
 
   DeleteFile
   (process-event [{file-id :file-id} app]

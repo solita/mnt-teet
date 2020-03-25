@@ -5,7 +5,7 @@
             [teet.ui.buttons :as buttons]
             [teet.ui.url :as url]
             [teet.ui.icons :as icons]
-            [teet.localization :refer [tr tr-enum]]
+            [teet.localization :refer [tr tr-enum tr-tree]]
             [teet.ui.material-ui :refer [Grid Link]]
             [teet.ui.typography :as typography]
             [teet.ui.util :refer [mapc]]
@@ -16,7 +16,8 @@
             [re-svg-icons.feather-icons :as fi]
             [teet.ui.tabs :as tabs]
             [teet.theme.theme-colors :as theme-colors]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [teet.ui.select :as select]))
 
 (defn file-column-style
   ([basis]
@@ -101,12 +102,35 @@
                       (tr-enum status))])])
           files)]])
 
-(defn file-info [e! {:file/keys [name] :as file}]
-  [tabs/details-and-comments-tabs
-   {:e! e!}
-   [:<>
-    [file-icon file]
-    name]])
+(defn- file-status [e! file]
+  [select/status {:e! e!
+                  :status (:file/status file)
+                  :attribute :file/status
+                  :on-change (e! file-controller/->UpdateFileStatus (:db/id file))}])
+
+(defn- file-details [e! file]
+  [:div
+   [:div (:file/name file)]
+   [:div {:class (<class common-styles/flex-row-space-between)}
+    (mapc (fn [[label data]]
+            [:div {:class (<class common-styles/inline-block)}
+             [:div [:b label]]
+             [:div data]])
+          [[(tr [:fields :file/timestamp]) (:file/timestamp file)]
+           [(tr [:fields :file/number]) (:file/number file)]
+           [(tr [:fields :file/version]) (:file/version file)]
+           ;; change to pulldown
+           [(tr [:fields :file/status]) [file-status e! file]]])]
+   [:div {:style {:background-color theme-colors/gray-lightest
+                  :width "100%"
+                  :height "250px"
+                  :text-align :center
+                  :vertical-align :middle
+                  :display :flex
+                  :justify-content :space-around
+                  :flex-direction :column}}
+    "Preview"]
+   ])
 
 (defn file-page [e! {{file-id :file
                       task-id :task} :params
@@ -133,5 +157,4 @@
          :app app
          :entity-id (:db/id file)
          :entity-type :file}
-
-        [:div "filen sivu " (pr-str file)]]]]]))
+        [file-details e! file]]]]]))
