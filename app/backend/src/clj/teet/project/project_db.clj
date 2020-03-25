@@ -30,8 +30,7 @@
        (d/q '[:find ?project
               :in $ ?f
               :where
-              [?doc :document/files ?f]
-              [?task :task/documents ?doc]
+              [?task :task/files ?f]
               [?activity :activity/tasks ?task]
               [?lifecycle :thk.lifecycle/activities ?activity]
               [?project :thk.project/lifecycles ?lifecycle]]
@@ -100,3 +99,9 @@
                                            {:task/comments [* {:comment/author [*]}]}
                                            {:task/assignee [*]}]}]}]}])
           eid))
+
+(defn entity-project-id [db entity-type entity-id]
+  (case entity-type
+    :activity (activity-project-id db entity-id)
+    :task (task-project-id db entity-id)
+    :file (file-project-id db entity-id)))
