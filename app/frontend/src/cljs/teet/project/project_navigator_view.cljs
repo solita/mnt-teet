@@ -223,7 +223,7 @@
                                 [icons/content-add])}
       (tr [:project :add-task])]]]])
 
-(defn- activity [{:keys [e! stepper dark-theme? disable-buttons? lc-id] :as ctx}
+(defn- activity [{:keys [e! stepper params dark-theme? disable-buttons? lc-id] :as ctx}
                  {activity-id :db/id
                   activity-est-end :activity/estimated-end-date
                   activity-est-start :activity/estimated-start-date
@@ -231,7 +231,7 @@
                   :as activity}]
 
   (let [activity-state (activity-step-state activity)
-        activity-open? (= (str activity-id) (str (:activity stepper)))]
+        activity-open? (= (str activity-id) (:activity params))]
     ^{:key (str (:db/id activity))}
     [:ol {:class (<class ol-class)}
      [:li
@@ -240,7 +240,6 @@
        [:div {:class (<class step-container-style {:offset -4})}
         [:div {:class (<class flex-column)}
          [:a {:href (url/activity {:activity (:db/id activity)})
-              :on-click #(e! (project-controller/->ToggleStepperActivity activity-id))
               :class (<class stepper-button-style {:size "20px"
                                                    :open? activity-open?
                                                    :dark-theme? dark-theme?})}
@@ -258,7 +257,7 @@
                                  :activity-state activity-state}])]]))
 
 (defn project-navigator
-  [e! {:thk.project/keys [lifecycles] :as _project} stepper dark-theme?]
+  [e! {:thk.project/keys [lifecycles] :as _project} stepper params dark-theme?]
   (let [lifecycle-ids (mapv :db/id lifecycles)
         lc-id (:lifecycle stepper)
         old-stepper? (empty? (filter #(= lc-id %) lifecycle-ids))]
@@ -278,7 +277,8 @@
                     lc-type (:db/ident type)
                     disable-buttons? (= :thk.lifecycle-type/construction lc-type) ;; Disable buttons related to adding stages or tasks in construction until that part is more planned out
                     first-activity-status (activity-step-state (first activities))
-                    lc-status (lifecycle-status lifecycle)]
+                    lc-status (lifecycle-status lifecycle)
+                    open? (= (str lc-id) (str (:lifecycle stepper)))]
                 ^{:key (str lc-id)}
                 [:li
                  ;; Use first activity status instead of lifecycle, because there is no work to be done between the lifecycle and the first activity
@@ -288,21 +288,22 @@
                    [:div {:class (<class flex-column)}
                     [:button
                      {:class (<class stepper-button-style {:size "24px"
-                                                           :open? (= (str lc-id) (str (:lifecycle stepper)))
+                                                           :open? open?
                                                            :dark-theme? dark-theme?})
                       :on-click #(e! (project-controller/->ToggleStepperLifecycle lc-id))}
                      (tr [:enum (get-in lifecycle [:thk.lifecycle/type :db/ident])])]
                     [typography/SmallText
                      (format/date estimated-start-date) " – " (format/date estimated-end-date)]]]]
                  [:div
-                  [Collapse {:in (= (str lc-id) (str (:lifecycle stepper)))}
+                  [Collapse {:in open?}
                    (mapc (partial activity {:e! e!
                                             :stepper stepper
                                             :dark-theme? dark-theme?
                                             :disable-buttons? disable-buttons?
                                             :lc-id lc-id
                                             :rect-button rect-button
-                                            :project-id id})
+                                            :project-id id
+                                            :params params})
                          (:thk.lifecycle/activities lifecycle))
 
                    [:div {:class (<class item-class (= :done lc-status) dark-theme?)}
@@ -349,7 +350,7 @@
      [Grid {:item  true
             :xs    3
             :style {:max-width "400px"}}
-      [project-navigator e! project (:stepper app) true]]
+      [project-navigator e! project (:stepper app) (:params app) true]]
      [Grid {:item  true
             :xs    6
             :style {:max-width "800px"
