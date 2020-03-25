@@ -17,7 +17,9 @@
             [teet.ui.tabs :as tabs]
             [teet.theme.theme-colors :as theme-colors]
             [reagent.core :as r]
-            [teet.ui.select :as select]))
+            [teet.ui.select :as select]
+            [teet.user.user-model :as user-model]
+            [teet.ui.format :as format]))
 
 (defn file-column-style
   ([basis]
@@ -111,13 +113,14 @@
 (defn- file-details [e! file]
   [:div
    [:div (:file/name file)]
+   [:div (tr [:file :upload-info] {:author (user-model/user-name (:file/author file))
+                                   :date (format/date (:file/timestamp file))})]
    [:div {:class (<class common-styles/flex-row-space-between)}
     (mapc (fn [[label data]]
             [:div {:class (<class common-styles/inline-block)}
              [:div [:b label]]
              [:div data]])
-          [[(tr [:fields :file/timestamp]) (:file/timestamp file)]
-           [(tr [:fields :file/number]) (:file/number file)]
+          [[(tr [:fields :file/number]) (:file/number file)]
            [(tr [:fields :file/version]) (:file/version file)]
            ;; change to pulldown
            [(tr [:fields :file/status]) [file-status e! file]]])]

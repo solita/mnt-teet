@@ -89,8 +89,8 @@
   :activity.name/land-acquisition "Land acquisition",
   :document.sub-category/laboratory-certificate
   "Laboratory Certificate",
-  :document.status/draft "Draft",
   :task.type/eia-pre-assessment "EIA pre-assessment",
+  :file.status/draft "Draft",
   :activity.status/valid "Valid",
   :task.type/topogeodesy "Topogeodesy",
   :task.type/equipment "Equipment",
@@ -182,6 +182,7 @@
   :task/description "Description",
   :thk.project/region-name "Region",
   :comment/comment "Comment",
+  :file/timestamp "Upload date",
   :file/type "Type",
   :task/actual-start-date "Start date",
   :thk.project/road-nr "Road number",
@@ -192,6 +193,7 @@
   :thk.project/estimated-date-range "Estimated duration",
   :file/status "Status",
   :thk.project/owner "Owner"},
+ :file {:upload-info "Uploaded {date} by {author}"},
  :login {:login "Login", :password "Password", :username "Username"},
  :map
  {:clear-selections "Clear selections",
