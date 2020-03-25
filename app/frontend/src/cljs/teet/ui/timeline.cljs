@@ -61,12 +61,34 @@
    :color color
    :margin-left "0.2rem"})
 
+(defn lifecycle-label
+  []
+  {:text-transform :uppercase
+   :font-weight :bold})
+
+(defn task-label
+  []
+  ^{:pseudo {:before {:content "'• '"}}}
+  {})
+
+(def item-styles
+  {:project {:background theme-colors/blue
+             :text       theme-colors/white}
+   :lifecycle {:background theme-colors/blue-light
+               :text       theme-colors/white
+               :label-class (<class lifecycle-label)}
+   :activity {:background theme-colors/blue-lighter
+              :text       theme-colors/blue-dark}
+   :task {:background theme-colors/gray-lighter
+          :text       theme-colors/blue-dark
+          :label-class (<class task-label)}})
+
 (defn- timeline-items-group [{:keys [x-of y-of hover line-height timeline-items]}]
   [:g#items
    (doall
     (for [i (range (count timeline-items))
-          :let [{:keys [start-date end-date colors label] :as item} (nth timeline-items i)
-                {fill :background text-color :text} colors
+          :let [{:keys [start-date end-date label item-type] :as item} (nth timeline-items i)
+                {fill :background text-color :text} (item-type item-styles)
                 start-x (x-of start-date)
                 end-x (x-of end-date)
                 y (+ (y-of i) (* 0.1 line-height))
@@ -194,16 +216,6 @@
     (.requestAnimationFrame js/window
                             (partial animate! nil))))
 
-(def colors
-  {:project {:background theme-colors/blue
-             :text       theme-colors/white}
-   :lifecycle {:background theme-colors/blue-light
-               :text       theme-colors/white}
-   :activity {:background theme-colors/blue-lighter
-              :text       theme-colors/blue-dark}
-   :task {:background theme-colors/gray-lighter
-          :text       theme-colors/blue-dark}})
-
 (defn timeline [{:keys [start-date end-date
                         month-width
                         line-width]
@@ -212,6 +224,9 @@
                       line-width 2}}
                 timeline-items]
   (r/with-let [hover (r/atom nil)
+               line-height (r/atom nil)
+               set-line-height! #(when %
+                                   (->> % .-clientHeight (reset! line-height)))
                initial-month-width month-width
                month-width (r/atom month-width)
                on-wheel (fn [e]
@@ -233,7 +248,8 @@
                                                            #js {:passive false})
 
                x-start 25
-               y-start 35]
+               y-start 35
+               timeline-items (rest timeline-items)]
     (if-not (and start-date end-date)
       [:span.timeline-no-start-or-end]
       (let [years (year-range opts)
@@ -242,12 +258,25 @@
                    (+ x-start
                       (* @month-width
                          (months-from (first years) d))))
-            line-height 24 ; TODO from style files?
+            line-height @line-height
             y-of (fn [i]
                    (+ y-start
                       (* line-height i)))]
 
         [:div {:class (<class container-style)}
+         [:div.timeline-labels {:class (<class labels-style y-start)}
+          (doall
+           (for [i (range num-items)
+                 :let [{label :label start-date :start-date item-type :item-type} (nth timeline-items i)]]
+             ^{:key i}
+             [:div (merge
+                    {:class (<class label-style)
+                     :on-click #(scroll-left! (x-of start-date))}
+                    (when (zero? i)
+                      {:ref set-line-height!}))
+              [:div (when-let [class (-> item-styles item-type :label-class)]
+                       {:class class})
+               label]]))]
          [:div.timeline-bars {:class (<class bars-style)
                               :on-wheel on-wheel
                               :on-mouse-enter disable-window-scroll
@@ -257,6 +286,7 @@
           [:svg {:width (x-of (t/plus (t/date-time end-date) (t/years 1)))
                  :height (y-of (+ 3 num-items))}
            [pattern-defs line-height initial-month-width line-width]
+           ;; TODO project start and end bars
            [year-bars-group {:x-of x-of
                              :y-of y-of
                              :num-items num-items

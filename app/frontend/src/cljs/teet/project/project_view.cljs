@@ -155,7 +155,6 @@
                                  [{:label      project-name
                                    :start-date estimated-start-date
                                    :end-date   estimated-end-date
-                                   :colors     (:project timeline/colors)
                                    :hover      [:div project-name]}]
                                  ;; Lifecycles
                                  (mapcat (fn [{:thk.lifecycle/keys [type estimated-start-date estimated-end-date
@@ -164,7 +163,7 @@
                                             [{:label      (-> type :db/ident tr*)
                                               :start-date estimated-start-date
                                               :end-date   estimated-end-date
-                                              :colors     (:lifecycle timeline/colors)
+                                              :item-type  :lifecycle
                                               :hover      [:div (tr* (:db/ident type))]}]
                                             ;; Activities
                                             (mapcat (fn [{:activity/keys [name status estimated-start-date estimated-end-date tasks]
@@ -173,7 +172,7 @@
                                                         (concat [{:label label
                                                                   :start-date estimated-start-date
                                                                   :end-date estimated-end-date
-                                                                  :colors (:activity timeline/colors)
+                                                                  :item-type :activity
                                                                   :hover [:div
                                                                           [:div [:b (tr [:fields :activity/name]) ": "] label]
                                                                           [:div [:b (tr [:fields :activity/status]) ": "] (tr* (:db/ident status))]]}]
@@ -183,7 +182,7 @@
                                                                   {:label (tr [:enum (:db/ident type)])
                                                                    :start-date estimated-start-date
                                                                    :end-date estimated-end-date
-                                                                   :colors (:task timeline/colors)
+                                                                   :item-type :task
                                                                    ;; TODO what to hover?
                                                                    :hover [:div description]}))))
                                                     activities)))
@@ -195,7 +194,8 @@
                                :class (<class project-style/project-timeline-link)}
           "Show project timeline"]
          (when @show-in-modal?
-           [panels/modal {:title "Timeline"
+           [panels/modal {:title (str project-name " "
+                                      (format/date estimated-start-date) " – " (format/date estimated-end-date))
                           :max-width "lg"
                           :on-close #(reset! show-in-modal? false)}
             timeline-component])]))))
