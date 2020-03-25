@@ -89,11 +89,11 @@
    [:div
     (mapc (fn [{id :db/id :file/keys [name type version number status] :as f}]
             [:div
-             [Link {:href (url/file {:file id})} name]
              (mapc (fn [item]
                      [:div {:class (<class common-styles/inline-block)}
                       item])
                    [[file-icon f]
+                    [Link {:href (url/file {:file id})} name]
                     type
                     number
                     version
@@ -104,8 +104,9 @@
 (defn file-info [e! {:file/keys [name] :as file}]
   [tabs/details-and-comments-tabs
    {:e! e!}
-   [file-icon file]
-   name])
+   [:<>
+    [file-icon file]
+    name]])
 
 (defn file-page [e! {{file-id :file
                       task-id :task} :params

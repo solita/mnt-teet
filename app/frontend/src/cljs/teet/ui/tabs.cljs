@@ -37,7 +37,7 @@
   (reagent/create-class
     {:component-will-unmount #(e! (comments-controller/->ClearCommentField))
      :reagent-render
-     (fn [{:keys [e! app details entity-id entity-type]}]
+     (fn [{:keys [e! app entity-id entity-type]} details]
        (let [query (:query app)]
          [:div
           [:div {:style {:margin-bottom "1rem"}}

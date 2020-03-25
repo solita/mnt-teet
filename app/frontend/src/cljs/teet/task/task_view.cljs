@@ -149,13 +149,14 @@
   [e! app task]
   [:div
    [typography/Heading1 (tr-enum (:task/type task))]
-   [tabs/details-and-comments-tabs {:e! e!
-                                    :app app
-                                    :type :task-comment
-                                    :comment-command :comment/comment-on-task
-                                    :details [task-details e! (:params app) task]
-                                    :entity-type :task
-                                    :entity-id (:db/id task)}]])
+   [tabs/details-and-comments-tabs
+    {:e! e!
+     :app app
+     :type :task-comment
+     :comment-command :comment/comment-on-task
+     :entity-type :task
+     :entity-id (:db/id task)}
+    [task-details e! (:params app) task]]])
 
 (defn- add-files-form [e! upload-progress]
   (r/with-let [form (r/atom {})]
