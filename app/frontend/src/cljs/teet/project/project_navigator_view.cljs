@@ -4,6 +4,7 @@
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.buttons :as buttons]
             [teet.ui.icons :as icons]
+            [teet.ui.url :as url]
             [teet.ui.util :refer [mapc]]
             [teet.project.activity-model :as activity-model]
             [teet.project.project-controller :as project-controller]
@@ -99,6 +100,7 @@
                               theme-colors/blue-dark)}}}
   {:border :none
    :background :none
+   :text-decoration :none
    :transition "color 0.2s ease-in-out"
    :font-size size
    :font-weight (if open?
@@ -237,10 +239,11 @@
        [circle-svg {:status activity-state :size 20 :dark-theme? dark-theme?}]
        [:div {:class (<class step-container-style {:offset -4})}
         [:div {:class (<class flex-column)}
-         [:button {:on-click #(e! (project-controller/->ToggleStepperActivity activity-id))
-                   :class (<class stepper-button-style {:size "20px"
-                                                        :open? activity-open?
-                                                        :dark-theme? dark-theme?})}
+         [:a {:href (url/activity {:activity (:db/id activity)})
+              :on-click #(e! (project-controller/->ToggleStepperActivity activity-id))
+              :class (<class stepper-button-style {:size "20px"
+                                                   :open? activity-open?
+                                                   :dark-theme? dark-theme?})}
           (tr [:enum (:db/ident (:activity/name activity))])]
          [typography/SmallText
           (format/date activity-est-start) " – " (format/date activity-est-end)]]
