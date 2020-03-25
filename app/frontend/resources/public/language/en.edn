@@ -157,6 +157,7 @@
   :task/actual-end-date "End date",
   :task/assignee "Responsible person",
   :thk.project/owner-info "Owner",
+  :task/group "Task group",
   :file/version "Version",
   :user/family-name "Family name",
   :project/participant "Participant",

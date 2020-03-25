@@ -111,3 +111,8 @@
 (defn margin-bottom
   [rem]
   {:margin-bottom (str rem "rem")})
+
+(defn flex-row
+  []
+  {:display :flex
+   :flex-direction :row})
