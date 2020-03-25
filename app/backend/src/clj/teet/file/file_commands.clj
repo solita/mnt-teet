@@ -43,9 +43,7 @@
     (or (file-model/validate-file file)
         (let [res (d/transact conn {:tx-data [{:db/id (or task-id "new-task")
                                                :task/files (merge file
-                                                                  {:db/id "new-file"
-                                                                   :file/timestamp (java.util.Date.)
-                                                                   :file/author [:user/id (:user/id user)]}
+                                                                  {:db/id "new-file"}
                                                                   (creation-meta user))}
                                               {:db/id "datomic.tx"
                                                :tx/author (:user/id user)}]})
