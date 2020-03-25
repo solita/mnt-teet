@@ -95,8 +95,8 @@
                        {:thk.lifecycle/activities
                         [*
                          {:activity/tasks [*
-                                           {:task/files [*]}
-                                           {:task/comments [* {:comment/author [*]}]}
+                                           {:task/files [*
+                                                         {:file/author [:user/id :user/family-name :user/given-name]}]}
                                            {:task/assignee [*]}]}]}]}])
           eid))
 
