@@ -39,7 +39,6 @@
 
 (defn- request [handler-fn]
   (fn [req]
-    (log/debug "REQUEST: " (pr-str req))
     (try
       (let [user (some->> req jwt-token (jwt-token/verify-token
                                          (environment/config-value :auth :jwt-secret)))]
