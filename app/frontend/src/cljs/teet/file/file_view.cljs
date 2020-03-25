@@ -58,9 +58,7 @@
 
 (defn file-row
   [{id :db/id :file/keys [number type version status name] :as file}]
-  [:div {:style {:display :flex
-                 :flex-direction :row
-                 :margin-bottom "0.5rem"}}
+  [:div {:class [(<class common-styles/flex-row) (<class common-styles/margin-bottom 0.5)]}
    [:div {:class (<class file-column-style 30)}
     [Link {:href (url/file {:file id})}
      name]]
