@@ -47,7 +47,7 @@
   [{id :db/id :file/keys [number type version status name] :as _file}]
   [:div {:class [(<class common-styles/flex-row) (<class common-styles/margin-bottom 0.5)]}
    [:div {:class (<class file-column-style 30)}
-    [Link {:href (url/file {:file id})}
+    [url/Link {:page :file :params {:file id}}
      name]]
    [:div {:class (<class file-column-style 7)}
     [:span number]]
@@ -58,10 +58,11 @@
    [:div {:class (<class file-column-style 10)}
     [:span status]]
    [:div {:class (<class file-column-style 30 :flex-end)}
-    [Link {:class (<class file-row-icon-style)
-           :href (url/file {:file id
-                            ::url/query {:tab "comment"}})}
-     [icons/communication-comment]]
+    [url/Link {:class (<class file-row-icon-style)
+               :page :file
+               :params {:file id}
+               :query {:tab "comment"}}
+       [icons/communication-comment]]
     [Link {:class (<class file-row-icon-style)
            :href "asd"}                                   ;;TODO add implementatkion
      [icons/file-cloud-upload]]
