@@ -5,7 +5,7 @@
             [teet.ui.buttons :as buttons]
             [teet.ui.url :as url]
             [teet.ui.icons :as icons]
-            [teet.localization :refer [tr tr-enum tr-tree]]
+            [teet.localization :refer [tr tr-enum]]
             [teet.ui.material-ui :refer [Grid Link]]
             [teet.ui.typography :as typography]
             [teet.ui.util :refer [mapc]]
