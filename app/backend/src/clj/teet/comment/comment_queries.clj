@@ -9,7 +9,7 @@
     :file :file/comments))
 
 (defquery :comment/fetch-comments
-  {:doc "Fetch comments for any :db/id"
+  {:doc "Fetch comments for any :db/id and entity type. Returns comments newest first."
    :context {db :db}
    :args {id :db/id entity-type :for}
    :project-id (project-db/task-project-id db id)
