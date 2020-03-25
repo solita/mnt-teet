@@ -113,8 +113,8 @@
 (defn- file-details [e! file]
   [:div
    [:div (:file/name file)]
-   [:div (tr [:file :upload-info] {:author (user-model/user-name (:file/author file))
-                                   :date (format/date (:file/timestamp file))})]
+   [:div (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator file))
+                                   :date (format/date (:meta/created-at file))})]
    [:div {:class (<class common-styles/flex-row-space-between)}
     (mapc (fn [[label data]]
             [:div {:class (<class common-styles/inline-block)}
