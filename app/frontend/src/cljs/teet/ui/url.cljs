@@ -18,6 +18,24 @@
                       (str (name param-name) "=" (js/encodeURIComponent (str param-value)))))
                   params)))
 
+(def ^{:dynamic true
+       :doc "Current navigation info for generating URLs.
+Contains :page, :params and :query.
+Set each time main view renders."}
+  current-navigation-info
+  (atom {}))
+
+;; This defines functions for generating URLs to routes
+;; For example a route named :file in routes.edn will generate
+;; function file in this namespace.
+;;
+;; If the route has path parameters, the function will take arguments.
+;; The path parameters can be specified as a map or separate arguments
+;; in the same order as they appear in the path.
+;;
+;; In the map variant, if any parameter is omitted, the value is taken
+;; from the current navigation info, so there is no need to pass all
+;; parameters.
 (define-url-functions)
 
 (def

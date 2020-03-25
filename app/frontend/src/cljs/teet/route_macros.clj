@@ -26,6 +26,7 @@
              ~'query-params (:query ~'app)
              ~'tr teet.localization/tr
              ~'tr-enum teet.localization/tr-enum]
+         (reset! teet.ui.url/current-navigation-info (select-keys ~'app [:page :params :query]))
          (case page#
            ~@(mapcat
               (fn [[route-name {:keys [state view path skeleton permission keep-query-params title] :as route}]]
@@ -107,8 +108,12 @@
              `(def ~fn-name
                 (fn route#
                   ([{:keys [~@param-syms] query# :teet.ui.url/query}]
-                   (str (route# ~@param-syms)
-                        (when query#
-                          (str "?" (teet.ui.url/format-params query#)))))
+                   (let [~'current-params (:params @teet.ui.url/current-navigation-info)]
+                     (str (route# ~@(for [p param-syms]
+                                      `(if (nil? ~p)
+                                         (get ~'current-params ~(keyword (name p)))
+                                         ~p)))
+                          (when query#
+                            (str "?" (teet.ui.url/format-params query#))))))
                   ([~@param-syms]
                    (str "#" ~@(split-path path))))))))))
