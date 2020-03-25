@@ -1,6 +1,9 @@
 (ns teet.ui.url
-  "Define functions to generate URLs for any route"
-  (:require [clojure.string :as str])
+  "Define functions to generate URLs and links for any route"
+  (:require [clojure.string :as str]
+            [reagent.core :as r]
+            [teet.ui.context :as context]
+            teet.ui.material-ui)
   (:require-macros [teet.route-macros :refer [define-url-functions]]))
 
 
@@ -36,6 +39,7 @@ Set each time main view renders."}
 ;; In the map variant, if any parameter is omitted, the value is taken
 ;; from the current navigation info, so there is no need to pass all
 ;; parameters.
+(declare route-url-fns)
 (define-url-functions)
 
 (def
@@ -78,3 +82,32 @@ Set each time main view renders."}
         {:keys [path params]} (parse-hash hash)
         params (into params (map vec) (partition 2 param-names-and-values))]
     (str path "?" (format-params params))))
+
+(defn provide-navigation-info
+  "Provide navigation info map as context to child components.
+  The navigation context contains :page, :params and :query and is
+  used when generating URL links to routes."
+  [context child]
+  (context/provide :navigation-info context child))
+
+(defn consume-navigation-info
+  "Consume navigation info. Takes navigation info from context
+  and calls component with the context provided value."
+  [component-fn]
+  (context/consume :navigation-info component-fn))
+
+(defn Link
+  "Convenience component to create Material UI Link to given page with params.
+  Missing path parameters are filled from navigation context."
+  [{:keys [page params query class]}
+   content]
+  [consume-navigation-info
+   (fn [{context-params :params}]
+     [teet.ui.material-ui/Link
+      (merge {:href ((route-url-fns page)
+                     (merge context-params params
+                            (when query
+                              {::query query})))}
+             (when class
+               {:class class}))
+      content])])
