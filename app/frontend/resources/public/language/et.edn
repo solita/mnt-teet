@@ -153,11 +153,11 @@
  :fields
  {:thk.project/manager "Vastutav isik",
   :thk.project/project-name "Nimi",
-  :task/type "Ülesandetüüp",
+  :task/type "Ülesanne",
   :task/actual-end-date "Lõppkuupäev",
   :task/assignee "Vastutav isik",
   :thk.project/owner-info "Projektijuht",
-  :task/group "Ülesande rühm",
+  :task/group "Ülesande tüüp",
   :file/version "Versioon",
   :user/family-name "Perekonnanimi",
   :project/participant "Osaleja",
