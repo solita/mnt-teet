@@ -5,7 +5,7 @@
             [teet.ui.buttons :as buttons]
             [teet.ui.url :as url]
             [teet.ui.icons :as icons]
-            [teet.localization :refer [tr tr-enum tr-tree]]
+            [teet.localization :refer [tr tr-enum]]
             [teet.ui.material-ui :refer [Grid Link]]
             [teet.ui.typography :as typography]
             [teet.ui.util :refer [mapc]]
@@ -47,7 +47,7 @@
   [{id :db/id :file/keys [number type version status name] :as _file}]
   [:div {:class [(<class common-styles/flex-row) (<class common-styles/margin-bottom 0.5)]}
    [:div {:class (<class file-column-style 30)}
-    [Link {:href (url/file {:file id})}
+    [url/Link {:page :file :params {:file id}}
      name]]
    [:div {:class (<class file-column-style 7)}
     [:span number]]
@@ -58,10 +58,11 @@
    [:div {:class (<class file-column-style 10)}
     [:span status]]
    [:div {:class (<class file-column-style 30 :flex-end)}
-    [Link {:class (<class file-row-icon-style)
-           :href (url/file {:file id
-                            ::url/query {:tab "comment"}})}
-     [icons/communication-comment]]
+    [url/Link {:class (<class file-row-icon-style)
+               :page :file
+               :params {:file id}
+               :query {:tab "comment"}}
+       [icons/communication-comment]]
     [Link {:class (<class file-row-icon-style)
            :href "asd"}                                   ;;TODO add implementatkion
      [icons/file-cloud-upload]]
@@ -78,7 +79,7 @@
                                           [icons/file-cloud-upload])}
     (tr [:task :upload-files])]])
 
-(defn file-icon [{:file/keys [name type]}]
+(defn file-icon [{:file/keys [type]}]
   (cond
     (and type (str/starts-with? type "image/"))
     [fi/image]
