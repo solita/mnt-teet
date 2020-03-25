@@ -16,23 +16,7 @@
             [re-svg-icons.feather-icons :as fi]
             [teet.ui.tabs :as tabs]
             [teet.theme.theme-colors :as theme-colors]
-            [reagent.core :as r]
-            [teet.log :as log]))
-
-(def file-columns
-  [:file/name
-   :file/number
-   :file/type
-   :file/version
-   :file/status
-   :file/controls])
-
-(defn format-file-list
-  [column value _row]
-  (case column
-    :file/controls
-    [:div "controls"]
-    (str value)))
+            [reagent.core :as r]))
 
 (defn file-column-style
   ([basis]
@@ -57,7 +41,7 @@
   {:margin "0 0.25rem"})
 
 (defn file-row
-  [{id :db/id :file/keys [number type version status name] :as file}]
+  [{id :db/id :file/keys [number type version status name] :as _file}]
   [:div {:style {:display :flex
                  :flex-direction :row
                  :margin-bottom "0.5rem"}}
@@ -101,14 +85,13 @@
     :else
     [ti/file]))
 
-(defn file-list [e! files]
+(defn file-list [files]
   [:<>
    [typography/Heading2 (tr [:task :results])]
    [:div
     (mapc (fn [{id :db/id :file/keys [name type version number status] :as f}]
-            ^{:key (str id)}
             [:div
-             [:div name]
+             [Link {:href (url/file {:file id})} name]
              (mapc (fn [item]
                      [:div {:class (<class common-styles/inline-block)}
                       item])
@@ -138,6 +121,18 @@
       :breadcrumbs breadcrumbs}
      [Grid {:container true}
       [Grid {:item true :xs 4}
-       [file-list e! (:task/files task)]]
+       [file-list (:task/files task)]]
       [Grid {:item true :xs 8}
-       [:div "filen sivu " (pr-str file)]]]]))
+       [:div
+        [file-icon file]
+        [typography/Heading2 (:file/name file)]
+        [buttons/button-secondary {:on-click :D}
+         (tr [:buttons :edit])]]
+
+       [tabs/details-and-comments-tabs
+        {:e! e!
+         :app app
+         :entity-id (:db/id file)
+         :entity-type :file}
+
+        [:div "filen sivu " (pr-str file)]]]]]))
