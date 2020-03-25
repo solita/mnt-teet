@@ -2,6 +2,7 @@
   "SVG timeline component"
   (:require [goog.date :as dt]
             [reagent.core :as r]
+            [teet.ui.format :as format]
             [teet.ui.material-ui :refer [Popper]]
             [cljs-time.core :as t]
             [teet.theme.theme-colors :as theme-colors]
@@ -118,11 +119,7 @@
                                                :key (str i "-text")}
                                [:div {:xmlns "http://www.w3.org/1999/xhtml"
                                       :class (<class timeline-item w text-color)}
-                                label]]
-                              #_[:text {:key (str i "-text")
-                                      :fill text-color
-                                      :x (+ x 6) :y (+ y (* height 0.8))}
-                               label]))
+                                label]]))
                     (inc i)
                     (+ x w)
                     fills))))]))])
@@ -187,6 +184,26 @@
                        :stroke-width line-width}}]
        [:text {:x (+ x 5) :y y} year]]))])
 
+(defn- project-bars-group [{:keys [x-of y-of start-date end-date num-items line-width line-height]}]
+  (let [x-start (x-of start-date)
+        x-end (x-of end-date)
+        y (y-of (+ 1.5 num-items))]
+    [:g.timeline-project-bars
+     [:line {:x1 x-start :x2 x-start
+             :y1 0 :y2 y
+             :style {:stroke theme-colors/blue-dark
+                     :stroke-width line-width}}]
+     [:text {:x x-start :y (+ y (/ line-height 1.25))
+             :text-anchor "middle"}
+      (format/date start-date)]
+     [:line {:x1 x-end :x2 x-end
+             :y1 0 :y2 y
+             :style {:stroke theme-colors/blue-dark
+                     :stroke-width line-width}}]
+     [:text {:x x-end :y (+ y (/ line-height 1.25))
+             :text-anchor "middle"}
+      (format/date end-date)]]))
+
 (defn- month-labels-group [{:keys [x-of years month-width]}]
   [:g.timeline-month-labels
    (when (> month-width 20)
@@ -249,7 +266,8 @@
 
                x-start 25
                y-start 35
-               timeline-items (rest timeline-items)]
+
+               [project-item & timeline-items] timeline-items]
     (if-not (and start-date end-date)
       [:span.timeline-no-start-or-end]
       (let [years (year-range opts)
@@ -292,6 +310,13 @@
                              :num-items num-items
                              :line-width line-width
                              :years years}]
+           [project-bars-group {:x-of x-of
+                                :y-of y-of
+                                :start-date (:start-date project-item)
+                                :end-date (:end-date project-item)
+                                :num-items num-items
+                                :line-width line-width
+                                :line-height line-height}]
            [month-labels-group {:x-of x-of
                                 :years years
                                 :month-width @month-width}]
