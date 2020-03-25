@@ -58,7 +58,8 @@
    :overflow :hidden
    :text-overflow :ellipsis
    :width width
-   :color color})
+   :color color
+   :margin-left "0.2rem"})
 
 (defn- timeline-items-group [{:keys [x-of y-of hover line-height timeline-items]}]
   [:g#items
@@ -90,7 +91,7 @@
                         (conj [:rect {:key i
                                       :x x :y y :width w :height height
                                       :style {:fill fill-style}}])
-                        (conj [:foreignObject {:x x :y y
+                        (conj [:foreignObject {:x x :y (- y 2)
                                                :width w :height height
                                                :key (str i "-text")}
                                [:div {:xmlns "http://www.w3.org/1999/xhtml"
@@ -253,7 +254,7 @@
                               :on-mouse-leave enable-window-scroll
                               :id bars-id}
 
-          [:svg {:width (x-of (t/plus (t/date-time end-date) (t/years 5)))
+          [:svg {:width (x-of (t/plus (t/date-time end-date) (t/years 1)))
                  :height (y-of (+ 3 num-items))}
            [pattern-defs line-height initial-month-width line-width]
            [year-bars-group {:x-of x-of
