@@ -146,7 +146,7 @@
   [e! {:keys [stepper] :as app} project]
   [:<>
    [project-navigator-view/project-navigator-dialogs {:e! e! :app app}]
-   [project-navigator-view/project-navigator e! project stepper false]])
+   [project-navigator-view/project-navigator e! project stepper (:params app) false]])
 
 (defn add-user-form
   [e! user project-id]
@@ -231,7 +231,7 @@
   [:div
    [people-modal e! project query]
    [:div
-    [:div {:class (<class project-style/heading-and-button-style)}
+    [:div {:class (<class common-styles/heading-and-button-style)}
      [typography/Heading2 (tr [:people-tab :managers])]
      (when-pm-or-owner
        project
@@ -243,7 +243,7 @@
                             {:primary-text (str (:user/given-name owner) " " (:user/family-name owner))
                              :secondary-text (tr [:roles :owner])}]]]
    [:div
-    [:div {:class (<class project-style/heading-and-button-style)}
+    [:div {:class (<class common-styles/heading-and-button-style)}
      [typography/Heading2 (tr [:people-tab :other-users])]
      (when-pm-or-owner
        project
@@ -308,7 +308,7 @@
 (defn data-tab
   [_e! {{project-id :project} :params :as _app} project]
   [:div
-   [:div {:class (<class project-style/heading-and-button-style)}
+   [:div {:class (<class common-styles/heading-and-button-style)}
     [typography/Heading2 "Restrictions"]
     [buttons/button-secondary {:component "a"
                                :href (str "/#/projects/" project-id "?tab=data&configure=restrictions")
@@ -317,7 +317,7 @@
    [itemlist/gray-bg-list [{:secondary-text (tr [:data-tab :restriction-count]
                                                 {:count (count (:thk.project/related-restrictions project))})}]]
 
-   [:div {:class (<class project-style/heading-and-button-style)}
+   [:div {:class (<class common-styles/heading-and-button-style)}
     [typography/Heading2 "Cadastral units"]
     [buttons/button-secondary {:component "a"
                                :href (str "/#/projects/" project-id "?tab=data&configure=cadastral-units")
