@@ -143,7 +143,7 @@
    (when description
      [typography/Paragraph description])
    [task-basic-info e! task]
-   [file-view/file-table e! params files]])
+   [file-view/file-table files]])
 
 (defn task-page-content
   [e! app task]

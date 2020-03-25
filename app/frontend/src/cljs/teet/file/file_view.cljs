@@ -1,7 +1,6 @@
 (ns teet.file.file-view
   (:require [teet.project.project-navigator-view :as project-navigator-view]
             [teet.project.project-model :as project-model]
-            [teet.ui.table :as table]
             [teet.file.file-controller :as file-controller]
             [teet.ui.buttons :as buttons]
             [teet.ui.url :as url]
@@ -17,7 +16,8 @@
             [re-svg-icons.feather-icons :as fi]
             [teet.ui.tabs :as tabs]
             [teet.theme.theme-colors :as theme-colors]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [teet.log :as log]))
 
 (def file-columns
   [:file/name
@@ -57,42 +57,37 @@
   {:margin "0 0.25rem"})
 
 (defn file-row
-  [e! {:keys [activity project task] :as params} {:file/keys [number type version status name] :as file}]
-  (let [file-url-map {:activity activity
-                      :project project
-                      :task task
-                      :file (:db/id file)}]
-    [:div {:style {:display :flex
-                   :flex-direction :row
-                   :margin-bottom "0.5rem"}}
-     [:div {:class (<class file-column-style 30)}
-      [Link {:href (url/file file-url-map)}
-       name]]
-     [:div {:class (<class file-column-style 7)}
-      [:span number]]
-     [:div {:class (<class file-column-style 16)}
-      [:span type]]
-     [:div {:class (<class file-column-style 7)}
-      [:span version]]
-     [:div {:class (<class file-column-style 10)}
-      [:span status]]
-     [:div {:class (<class file-column-style 30 :flex-end)}
-      [Link {:class (<class file-row-icon-style)
-             :href (url/file (merge file-url-map {::url/query {:tab "comment"}}))}
-       [icons/communication-comment]]
-      [Link {:class (<class file-row-icon-style)
-             :href "asd"}                                   ;;TODO add implementatkion
-       [icons/file-cloud-upload]]
-      [Link {:class (<class file-row-icon-style)
-             :href "test"}
-       [icons/file-cloud-download]]]]))
+  [{id :db/id :file/keys [number type version status name] :as file}]
+  [:div {:style {:display :flex
+                 :flex-direction :row
+                 :margin-bottom "0.5rem"}}
+   [:div {:class (<class file-column-style 30)}
+    [Link {:href (url/file {:file id})}
+     name]]
+   [:div {:class (<class file-column-style 7)}
+    [:span number]]
+   [:div {:class (<class file-column-style 16)}
+    [:span type]]
+   [:div {:class (<class file-column-style 7)}
+    [:span version]]
+   [:div {:class (<class file-column-style 10)}
+    [:span status]]
+   [:div {:class (<class file-column-style 30 :flex-end)}
+    [Link {:class (<class file-row-icon-style)
+           :href (url/file {:file id
+                            ::url/query {:tab "comment"}})}
+     [icons/communication-comment]]
+    [Link {:class (<class file-row-icon-style)
+           :href "asd"}                                   ;;TODO add implementatkion
+     [icons/file-cloud-upload]]
+    [Link {:class (<class file-row-icon-style)
+           :href "test"}
+     [icons/file-cloud-download]]]])
 
 (defn file-table
-  [e! params files]
+  [files]
   [:div
-   (when files
-     (for [file files]
-       [file-row e! params file]))
+   (mapc file-row files)
    [buttons/button-primary {:href (url/set-query-param :add-document 1)
                             :start-icon (r/as-element
                                           [icons/file-cloud-upload])}

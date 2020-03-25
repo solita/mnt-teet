@@ -18,7 +18,7 @@
             [teet.snackbar.snackbar-view :as snackbar]
             [teet.common.common-controller :refer [when-feature poll-version]]
 
-    ;; Import view namespaces
+            ;; Import view namespaces and needed utility namespaces (macroexpansion)
             teet.projects.projects-view
             teet.project.project-view teet.project.project-model
             teet.task.task-view
@@ -31,6 +31,8 @@
             teet.ui.unauthorized
 
             teet.ui.query
+            teet.ui.url
+
             goog.math.Long
             [teet.login.login-controller :as login-controller]
             [teet.common.common-styles :as common-styles])
