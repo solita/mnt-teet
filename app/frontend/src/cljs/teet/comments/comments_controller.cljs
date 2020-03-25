@@ -10,7 +10,7 @@
 (defrecord UpdateFileNewCommentForm [form-data])            ; update new comment on selected file
 (defrecord CommentOnDocument [])                            ; save new comment to document
 (defrecord UpdateNewCommentForm [form-data])                ; update new comment form data
-(defrecord CommentOnEntity [entity-id comment-command comment])
+(defrecord CommentOnEntity [entity-type entity-id comment])
 (defrecord ClearCommentField [])
 (defrecord CommentAddSuccess [entity-id])
 
@@ -51,13 +51,12 @@
                        documents))))
 
   CommentOnEntity
-  (process-event [{entity-id :entity-id
-                   comment-command :comment-command         ;;todo case by entity type rather than straight command
-                   comment :comment} app]
+  (process-event [{:keys [entity-type entity-id comment]} app]
     (t/fx app
           {:tuck.effect/type :command!
-           :command comment-command
+           :command :comment/create
            :payload {:entity-id entity-id
+                     :entity-type entity-type
                      :comment comment}
            :result-event (partial ->CommentAddSuccess entity-id)}))
 

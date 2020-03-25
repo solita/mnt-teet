@@ -37,7 +37,7 @@
   (reagent/create-class
     {:component-will-unmount #(e! (comments-controller/->ClearCommentField))
      :reagent-render
-     (fn [{:keys [e! app details entity-id comment-command entity-type]}]
+     (fn [{:keys [e! app details entity-id entity-type]}]
        (let [query (:query app)]
          [:div
           [:div {:style {:margin-bottom "1rem"}}
@@ -53,7 +53,7 @@
           (if (= (:tab query) "comments")                     ;;TODO LOAD comments on render and
             [comments-view/lazy-comments {:e! e!
                                           :app app
-                                          :save-comment-event (partial comments-controller/->CommentOnEntity entity-id comment-command)
+                                          :save-comment-event (partial comments-controller/->CommentOnEntity entity-type entity-id)
                                           :entity-type entity-type
                                           :entity-id entity-id}]
             details)]))}))
