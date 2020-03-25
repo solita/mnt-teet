@@ -79,7 +79,7 @@
                                           [icons/file-cloud-upload])}
     (tr [:task :upload-files])]])
 
-(defn file-icon [{:file/keys [name type]}]
+(defn file-icon [{:file/keys [type]}]
   (cond
     (and type (str/starts-with? type "image/"))
     [fi/image]
