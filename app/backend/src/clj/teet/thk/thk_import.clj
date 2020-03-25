@@ -142,12 +142,12 @@
 (defn import-thk-projects! [connection url projects]
   (let [duplicate-activity-id-projects
         (check-unique-activity-ids projects)
-        duplicate-lifecycle-id-projects
+        _duplicate-lifecycle-id-projects
         (check-unique-lifecycle-ids projects)]
     (when (seq duplicate-activity-id-projects)
       (throw (ex-info "Duplicate activity ids exist"
                       {:projects-with-duplicate-activity-ids duplicate-activity-id-projects})))
-    (when (seq duplicate-lifecycle-id-projects)
+    #_(when (seq duplicate-lifecycle-id-projects)
       (throw (ex-info "Duplicate lifecycle ids exist"
                       {:projects-with-duplicate-lifecycle-ids duplicate-lifecycle-id-projects})))
     (d/transact connection
