@@ -96,7 +96,7 @@
                         [*
                          {:activity/tasks [*
                                            {:task/files [*
-                                                         {:file/author [:user/id :user/family-name :user/given-name]}]}
+                                                         {:meta/creator [:user/id :user/family-name :user/given-name]}]}
                                            {:task/assignee [*]}]}]}]}])
           eid))
 
