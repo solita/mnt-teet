@@ -6,7 +6,8 @@
             tuck.effect
             [teet.common.common-controller :as common-controller]
             [teet.localization :refer [tr]]
-            [teet.file.file-model :as file-model]))
+            [teet.file.file-model :as file-model]
+            [teet.transit :as transit]))
 
 (defrecord UploadFiles [files task-id on-success progress-increment]) ; Upload files (one at a time) to document
 (defrecord UploadFinished []) ; upload completed, can close dialog
@@ -62,20 +63,21 @@
 
 
   UploadNewVersion
-  (process-event [{:keys [file new-version]} app]
-    (log/info "FILE:" file)
-    (log/info "NEW-VERSION: " new-version)
+  (process-event [{:keys [file new-version]} {params :params :as app}]
     (t/fx app
           {:tuck.effect/type :command!
            :command :file/upload
            :payload {:task-id (goog.math.Long/fromString (get-in app [:params :task]))
                      :file (file-model/file-info (first new-version))
                      :previous-version-id (:db/id file)}
-           :result-event (fn [result]
+           :result-event (fn [{file :file :as result}]
                            (map->UploadFileUrlReceived
                             (merge result
                                    {:file-data (first new-version)
-                                    :on-success (common-controller/->Refresh)})))}))
+                                    :on-success (common-controller/->Navigate
+                                                 :file
+                                                 (assoc params :file (str (:db/id file)))
+                                                 {})})))}))
 
   UploadFiles
   (process-event [{:keys [files task-id on-success progress-increment] :as event} app]
