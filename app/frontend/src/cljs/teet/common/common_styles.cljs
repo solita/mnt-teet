@@ -116,3 +116,7 @@
   []
   {:display :flex
    :flex-direction :row})
+
+(defn heading-and-button-style []
+  ;; FIXME: this style was missing but used in project view
+  {})
