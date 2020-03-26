@@ -1,4 +1,4 @@
-{:deps {org.clojure/clojurescript {:mvn/version "1.10.520"}
+{:deps {org.clojure/clojurescript {:mvn/version "1.10.597"}
         ;; UI Libraries
         reagent {:mvn/version "0.9.0" :exclusions [cljsjs/react-dom-server]}
         tatut/postgrest-ui {:git/url "https://github.com/tatut/postgrest-ui"

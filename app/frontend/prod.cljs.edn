@@ -1,2 +1,3 @@
 {:main teet.main
- :closure-extra-annotations ["api" "observable"]}
+ :closure-extra-annotations ["api" "observable"]
+ :externs ["src/externs.js"]}
