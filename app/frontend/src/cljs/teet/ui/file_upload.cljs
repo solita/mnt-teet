@@ -79,7 +79,7 @@
 (defn FileUpload
   "Note! Use one of the predefined file upload components, such as
   FileUploadButton instead of using this directly."
-  [{:keys [drop-message]} & _]
+  [_ & _]
   (let [state (r/atom {:overlay 0
                        :events-to-remove []
                        :enable-pointer-events nil})]
@@ -100,7 +100,7 @@
                    (remove-event))
                  [])))
       :reagent-render
-      (fn [{:keys [id on-drop]}
+      (fn [{:keys [id on-drop drop-message multiple?]}
            & children]
         (into [:label
                {:htmlFor id}
@@ -113,21 +113,23 @@
                    drop-message]])
                [:input {:style {:display "none"}
                         :id id
-                        :multiple true
+                        :multiple multiple?
                         :droppable "true"
                         :type "file"
                         :on-change #(on-drop (file-vector %))}]]
               children))})))
 
-(defn FileUploadButton [{:keys [id on-drop drop-message]} & children]
+(defn FileUploadButton [{:keys [id on-drop drop-message icon color multiple?]
+                         :or {multiple? true}} & children]
   [FileUpload {:id id
                :on-drop on-drop
-               :drop-message drop-message}
+               :drop-message drop-message
+               :multiple? multiple?}
    (into [Button {:component :span
                   :variant :contained
                   :disable-ripple true
-                  :color :primary
-                  :start-icon (r/as-element [icons/content-add])}]
+                  :color (or color :primary)
+                  :start-icon (r/as-element (or icon [icons/content-add]))}]
          children)])
 
 (defn- files-field-style [error]
