@@ -42,8 +42,7 @@
  {:restriction-count "Praegu kuvatakse {count} kitsendus(t)",
   :cadastral-unit-count "Praegu kuvatakse {count} katastriüksus(t)"},
  :document
- {:download-file "Laen faili alla",
-  :comments "Märkused",
+ {:comments "Märkused",
   :new-comment "Uus märkus",
   :updated "Uuendatud",
   :file-deleted-notification "Fail edukalt kustutatud",
@@ -165,6 +164,7 @@
   :task/modified "Muudetud",
   :file/number "Number",
   :task/status "Olek",
+  :file/size "Suurus",
   "projectgroup" {"activity" "Etapp"},
   :permission/role "Roll",
   :thk.project/carriageway "Sõidutee",
@@ -193,7 +193,10 @@
   :thk.project/estimated-date-range "Eeldatav kestus",
   :file/status "Olek",
   :thk.project/owner "Projektijuht"},
- :file {:upload-info "Ules laadinud {author} {date} "},
+ :file
+ {:upload-new-version "laadige üles uus versioon",
+  :download "Laen faili alla",
+  :upload-info "Ules laadinud {author} {date} "},
  :login {:login "Sisenen", :password "Salasõna", :username "Kasutaja"},
  :map
  {:clear-selections "Tühjendan valikud",

@@ -41,8 +41,7 @@
  {:restriction-count "Currently showing {count} restrictions",
   :cadastral-unit-count "Currently showing {count} cadastral units"},
  :document
- {:download-file "Download file",
-  :comments "Comments",
+ {:comments "Comments",
   :new-comment "New comment",
   :updated "Updated",
   :file-deleted-notification "File deleted successfully",
@@ -165,6 +164,7 @@
   :task/modified "Modified",
   :file/number "Number",
   :task/status "Status",
+  :file/size "Size",
   "projectgroup" {"activity" "Activities"},
   :permission/role "Roles",
   :thk.project/carriageway "Carriageway",
@@ -193,7 +193,10 @@
   :thk.project/estimated-date-range "Estimated duration",
   :file/status "Status",
   :thk.project/owner "Owner"},
- :file {:upload-info "Uploaded {date} by {author}"},
+ :file
+ {:upload-new-version "Upload new version",
+  :download "Download file",
+  :upload-info "Uploaded {date} by {author}"},
  :login {:login "Login", :password "Password", :username "Username"},
  :map
  {:clear-selections "Clear selections",
