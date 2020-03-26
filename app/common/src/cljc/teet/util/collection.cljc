@@ -58,3 +58,34 @@
     (if (set value)
       (disj set value)
       (conj set value))))
+
+(defn- update-path* [[path & rest-path] update-fn update-args here]
+  (cond
+    ;; Done traversing update the value here
+    (nil? path)
+    (apply update-fn here update-args)
+
+    (fn? path)
+    (mapv (fn [item]
+            (if (path item)
+              (update-path* rest-path update-fn update-args item)
+              item)) here)
+
+    :else
+    (update here path (partial update-path* rest-path update-fn update-args))))
+
+(defn update-path
+  "Generic deep update. Like update-in but more powerful.
+
+  Here is the deeply nested structure that needs update.
+
+  Path-spec is a vector of path components.
+
+  If a path-component is a function, it is a predicate
+  that only updates entries in a sequential context
+  that match the predicate.
+
+  Anything else is considered an associative key (like
+  keywords, numbers for vectors)."
+  [here path-spec update-fn & update-args]
+  (update-path* path-spec update-fn update-args here))
