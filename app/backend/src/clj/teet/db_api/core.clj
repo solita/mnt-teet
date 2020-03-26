@@ -58,6 +58,10 @@
           :error :bad-request
           :msg msg}))
 
+;; Dynamically bound info used in tx to record info about transaction
+(def ^:dynamic *request-name* nil)
+(def ^:dynamic *request-ctx* nil)
+
 (defmacro defrequest*
   "Do not call directly. Use defcommand and defquery."
   [request-type request-name
@@ -95,70 +99,72 @@
                    :command 'teet.db-api.core/command!
                    :query 'teet.db-api.core/query)
        ~request-name [~-ctx ~-payload]
-       (let [~(or context -ctx) ~-ctx
-             ~(or (case request-type
-                    :command payload
-                    :query args) -payload) ~-payload
-             ~-db (d/db (:conn ~-ctx))
-             ~-user (:user ~-ctx)
-             ~-perms (when (:user ~-ctx)
-                       (permission-db/user-permissions ~-db [:user/id (:user/id (:user ~-ctx))]))
-             ~-proj-id ~project-id]
+       (binding [*request-name* ~request-name
+                 *request-ctx* ~-ctx]
+         (let [~(or context -ctx) ~-ctx
+               ~(or (case request-type
+                      :command payload
+                      :query args) -payload) ~-payload
+               ~-db (d/db (:conn ~-ctx))
+               ~-user (:user ~-ctx)
+               ~-perms (when (:user ~-ctx)
+                         (permission-db/user-permissions ~-db [:user/id (:user/id (:user ~-ctx))]))
+               ~-proj-id ~project-id]
 
-         ;; Check user is logged in
-         ~@(when-not unauthenticated?
-             [`(when (nil? ~-user)
-                 (throw (ex-info "Unauthenticated access not allowed"
-                                 {~request-type ~request-name
-                                  :status 401
-                                  :error :unauthorized})))
+           ;; Check user is logged in
+           ~@(when-not unauthenticated?
+               [`(when (nil? ~-user)
+                   (throw (ex-info "Unauthenticated access not allowed"
+                                   {~request-type ~request-name
+                                    :status 401
+                                    :error :unauthorized})))
 
-              ;; Go through the declared authorization requirements
-              ;; and try to find user permissions that satisfy them
-              `(when-not (every? (fn [[functionality# {entity-id# :db/id
-                                                       eid# :eid
-                                                       access# :access
-                                                       link# :link
-                                                       :as options#}]]
-                                   (authorization-check/authorized?
-                                    ~-user functionality#
-                                    {:access access#
-                                     :project-id ~-proj-id
-                                     :entity (when (or entity-id# eid#)
-                                               (apply meta-query/entity-meta ~-db (or entity-id# eid#)
-                                                      (when link#
-                                                        [link#])))}))
-                                 ~authorization)
-                 (log/warn "Failed to authorize command " ~request-name " for user " ~-user)
-                 (throw (ex-info "Request authorization failed"
-                                 {:status 403
-                                  :error :request-authorization-failed})))])
+                ;; Go through the declared authorization requirements
+                ;; and try to find user permissions that satisfy them
+                `(when-not (every? (fn [[functionality# {entity-id# :db/id
+                                                         eid# :eid
+                                                         access# :access
+                                                         link# :link
+                                                         :as options#}]]
+                                     (authorization-check/authorized?
+                                      ~-user functionality#
+                                      {:access access#
+                                       :project-id ~-proj-id
+                                       :entity (when (or entity-id# eid#)
+                                                 (apply meta-query/entity-meta ~-db (or entity-id# eid#)
+                                                        (when link#
+                                                          [link#])))}))
+                                   ~authorization)
+                   (log/warn "Failed to authorize command " ~request-name " for user " ~-user)
+                   (throw (ex-info "Request authorization failed"
+                                   {:status 403
+                                    :error :request-authorization-failed})))])
 
-         ;; Go through pre checks
-         ~@(for [pre (:pre options)
-                 :let [error (or (:error (meta pre)) :request-pre-check-failed)]]
-             `(when-not ~pre
-                (throw (ex-info "Pre check failed"
-                                {:status 400
-                                 :msg "Pre check failed"
-                                 :error ~error
-                                 :pre-check ~(str pre)}))))
+           ;; Go through pre checks
+           ~@(for [pre (:pre options)
+                   :let [error (or (:error (meta pre)) :request-pre-check-failed)]]
+               `(when-not ~pre
+                  (throw (ex-info "Pre check failed"
+                                  {:status 400
+                                   :msg "Pre check failed"
+                                   :error ~error
+                                   :pre-check ~(str pre)}))))
 
-         (let [~'%
-               ~(if (and (= :command request-type) transact)
-                  `(select-keys (datomic.client.api/transact (:conn ~-ctx) {:tx-data ~transact})
-                                [:tempids])
-                  `(do ~@body))]
+           (let [~'%
+                 ~(if (and (= :command request-type) transact)
+                    `(select-keys (tx ~transact)
+                                  [:tempids])
+                    `(do ~@body))]
 
-           ~@(for [post (:post options)]
-               `(when-not ~post
-                  (throw (ex-info "Post check failed"
-                                  {:status 500
-                                   :msg "Internal server error"
-                                   :error :request-post-check-failed
-                                   :post-check ~(str post)}))))
-           ;; Return result
-           ~'%)))))
+             ~@(for [post (:post options)]
+                 `(when-not ~post
+                    (throw (ex-info "Post check failed"
+                                    {:status 500
+                                     :msg "Internal server error"
+                                     :error :request-post-check-failed
+                                     :post-check ~(str post)}))))
+             ;; Return result
+             ~'%))))))
 
 (defmacro defcommand
   "Define a command.
@@ -245,3 +251,16 @@
           "Specify :query that defines query or body, not both.")
   (assert (some? args) "Must specify :args binding")
   `(defrequest* :query ~query-name ~options ~@body))
+
+(defn tx
+  "Execute Datomic transaction inside defcommand. Automatically adds transaction info to the tx-data."
+  [tx-data]
+  (assert (vector? tx-data) "tx-data must be a vector!")
+  (let [{:keys [user conn]} *request-ctx*
+        command *request-name*]
+    (assert *request-name* "tx can only be called within defcommand")
+    (log/info "tx  command: " command ", user: " user)
+    (d/transact conn {:tx-data (conj tx-data
+                                     {:db/id "datomic.tx"
+                                      ;; PENDING: add the command being run
+                                      :tx/author (:user/id user)})})))
