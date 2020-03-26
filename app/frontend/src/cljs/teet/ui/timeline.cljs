@@ -233,6 +233,11 @@
     (.requestAnimationFrame js/window
                             (partial animate! nil))))
 
+;; TODO some parts of the timeline component are project specific
+;; e.g. [project-item & timeline-items] timeline-items
+;; and the use of :item-type
+;; If needed elsewhere, we need to rip the project specific parts into
+;; teet.project.project-timeline
 (defn timeline [{:keys [start-date end-date
                         month-width
                         line-width]
