@@ -95,8 +95,6 @@
                        {:thk.lifecycle/activities
                         [*
                          {:activity/tasks [*
-                                           {:task/files [*
-                                                         {:meta/creator [:user/id :user/family-name :user/given-name]}]}
                                            {:task/assignee [*]}]}]}]}])
           eid))
 

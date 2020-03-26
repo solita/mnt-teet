@@ -8,7 +8,9 @@
   and adds all previous versions of a files as :versions key."
   [db task-eid]
   (let [files (mapv first
-                    (d/q '[:find (pull ?f [* {:file/previous-version [:db/id]}])
+                    (d/q '[:find (pull ?f [*
+                                           {:file/previous-version [:db/id]}
+                                           {:meta/creator [:user/id :user/family-name :user/given-name]}])
                            :where [?t :task/files ?f]
                            :in $ ?t] db task-eid))
         ;; Group files to first versions and next versions
