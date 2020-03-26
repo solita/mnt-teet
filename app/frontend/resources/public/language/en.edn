@@ -233,6 +233,7 @@
   #:thk.lifecycle-type{:design "Add phase", :construction "Add stage"},
   :edit-activity "Edit activity",
   :restrictions-tab "Restrictions",
+  :show-timeline "Show project timeline",
   :activity {:no-tasks "No tasks defined"},
   :edit-project "Edit project",
   :wizard

@@ -1,18 +1,15 @@
 (ns teet.project.project-view
   (:require [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
-            [teet.activity.activity-view :as activity-view]
             [teet.common.common-styles :as common-styles]
             [teet.localization :refer [tr tr-tree]]
-            [teet.map.map-view :as map-view]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-model :as project-model]
             [teet.project.project-style :as project-style]
             [teet.project.project-setup-view :as project-setup-view]
-            [teet.project.project-layers :as project-layers]
             [teet.project.project-info :as project-info]
             [teet.project.project-navigator-view :as project-navigator-view]
-            [teet.task.task-controller :as task-controller]
+            [teet.project.project-timeline-view :as project-timeline-view]
             teet.task.task-spec
             [teet.ui.breadcrumbs :as breadcrumbs]
             [teet.ui.buttons :as buttons]
@@ -23,16 +20,14 @@
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Paper Fab]]
+            [teet.ui.material-ui :refer [Paper]]
             [teet.ui.panels :as panels]
             [teet.ui.select :as select]
             [teet.ui.tabs :as tabs]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.typography :refer [Heading1 Heading3] :as typography]
             [teet.ui.url :as url]
-            [teet.ui.timeline :as timeline]
             [teet.util.collection :as cu]
-            [teet.activity.activity-controller :as activity-controller]
             [teet.authorization.authorization-check :as authorization-check :refer [when-pm-or-owner]]
             [teet.theme.theme-colors :as theme-colors]
             [teet.project.search-area-controller :as search-area-controller]
@@ -257,53 +252,9 @@
                                 :secondary-text (tr [:roles (:permission/role permission)])
                                 :id (:db/id user)})])]])
 
-(defn- project-timeline [{:thk.project/keys [estimated-start-date estimated-end-date lifecycles]
-                          :as project}]
-  (r/with-let [show-in-modal? (r/atom false)]
-    (when (and estimated-start-date estimated-end-date)
-      (let [tr* (tr-tree [:enum])
-            project-name (project-model/get-column project :thk.project/project-name)
-            timeline-component [timeline/timeline {:start-date estimated-start-date
-                             :end-date   estimated-end-date}
-          (concat
-           [{:label      project-name
-             :start-date estimated-start-date
-             :end-date   estimated-end-date
-             :fill       "black"
-             :hover      [:div project-name]}]
-           (mapcat (fn [{:thk.lifecycle/keys [type estimated-start-date estimated-end-date
-                                              activities]}]
-                     (concat
-                      [{:label      (-> type :db/ident tr*)
-                        :start-date estimated-start-date
-                        :end-date   estimated-end-date
-                        :fill       "magenta"
-                        :hover      [:div (tr* (:db/ident type))]}]
-                      (for [{:activity/keys [name status estimated-start-date estimated-end-date]
-                             :as activity} activities
-                            :let [label (-> name :db/ident tr*)]]
-                        {:label label
-                         :start-date estimated-start-date
-                         :end-date estimated-end-date
-                         :fill "cyan"
-                         :hover [:div
-                                 [:div [:b (tr [:fields :activity/name]) ": "] label]
-                                 [:div [:b (tr [:fields :activity/status]) ": "] (tr* (:db/ident status))]]})))
-                   (sort-by :thk.lifecycle/estimated-start-date lifecycles)))]]
-
-        [:<>
-         [Fab {:on-click #(reset! show-in-modal? true)} [icons/action-zoom-in]]
-         (if @show-in-modal?
-           [panels/modal {:title "Timeline"
-                          :max-width "lg"
-                          :on-close #(reset! show-in-modal? false)}
-            timeline-component]
-           timeline-component)]))))
-
 (defn details-tab [e! _app project]
   [:<>
-   [project-details e! project]
-   [project-timeline project]])
+   [project-details e! project]])
 
 (defn data-tab
   [_e! {{project-id :project} :params :as _app} project]
@@ -326,12 +277,17 @@
    [itemlist/gray-bg-list [{:secondary-text (tr [:data-tab :cadastral-unit-count]
                                                 {:count (count (:thk.project/related-cadastral-units project))})}]]])
 
+(defn activities-tab-footer [_e! _app project]
+  [:div {:class (<class project-style/activities-tab-footer)}
+   [project-timeline-view/timeline project]])
+
 (def project-tabs-layout
   ;; FIXME: Labels with TR paths instead of text
   [{:label "Activities"
     :value "activities"
     :component activities-tab
-    :layers #{:thk-project :related-cadastral-units :related-restrictions}}
+    :layers #{:thk-project :related-cadastral-units :related-restrictions}
+    :footer activities-tab-footer}
    {:label "People"                                         ;; HIDDEN UNTIL something is built for this tab
     :value "people"
     :component people-tab
@@ -477,8 +433,10 @@
      (merge {:header [project-tabs e! app]
              :body [project-tab e! app project]
              :map-settings {:layers #{:thk-project :surveys}}}
-            (when (:thk.project/setup-skipped? project)
-              {:footer [setup-incomplete-footer e! project]}))]))
+            (if (:thk.project/setup-skipped? project)
+              {:footer [setup-incomplete-footer e! project]}
+              (when-let [tab-footer (:footer (selected-project-tab app))]
+                {:footer [tab-footer e! app project]})))]))
 
 (defn- project-setup-view
   "The project setup wizard that is shown for uninitialized projects."

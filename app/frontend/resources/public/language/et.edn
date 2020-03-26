@@ -234,6 +234,7 @@
                        :construction "Lisan staadiumi"},
   :edit-activity "Muudan tegevust",
   :restrictions-tab "Kitsendused",
+  :show-timeline "Näita projekti ajakava",
   :activity {:no-tasks "Ülesandeid pole"},
   :edit-project "Redigeeri projekti",
   :wizard

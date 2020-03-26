@@ -136,4 +136,3 @@
                :disabled disabled?
                :class (<class add-button-style disabled?)}
    label])
-
