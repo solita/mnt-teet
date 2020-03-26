@@ -7,9 +7,12 @@
 
 (s/def ::task-id integer?)
 (s/def ::file-id integer?)
+(s/def ::previous-version-id integer?)
+(s/def ::file (s/keys :req [:file/name :file/size :file/type]))
 
-(s/def :file/upload (s/keys :req [:file/name :file/type :file/size :thk/id]
-                                :opt-un [::task-id]))
+(s/def :file/upload (s/keys :req-un [::task-id ::file]
+                            :opt-un [::previous-version-id]))
+
 (s/def :file/download-file (s/keys :req-un [::file-id]))
 (s/def :file/status keyword?)
 (s/def :file/name (s/and string? (complement str/blank?)))

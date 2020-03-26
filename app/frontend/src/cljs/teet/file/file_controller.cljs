@@ -11,6 +11,7 @@
 (defrecord UploadFiles [files task-id on-success progress-increment]) ; Upload files (one at a time) to document
 (defrecord UploadFinished []) ; upload completed, can close dialog
 (defrecord UploadFileUrlReceived [file-data file document-id url on-success])
+(defrecord UploadNewVersion [file new-version])
 
 (defrecord DeleteFile [file-id])
 (defrecord DeleteFileResult [])
@@ -59,6 +60,23 @@
                                      :progress-increment (int (/ 100 (count files)))
                                      :on-success ->UploadFinished}))))))
 
+
+  UploadNewVersion
+  (process-event [{:keys [file new-version]} app]
+    (log/info "FILE:" file)
+    (log/info "NEW-VERSION: " new-version)
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :file/upload
+           :payload {:task-id (goog.math.Long/fromString (get-in app [:params :task]))
+                     :file (file-model/file-info (first new-version))
+                     :previous-version-id (:db/id file)}
+           :result-event (fn [result]
+                           (map->UploadFileUrlReceived
+                            (merge result
+                                   {:file-data (first new-version)
+                                    :on-success (common-controller/->Refresh)})))}))
+
   UploadFiles
   (process-event [{:keys [files task-id on-success progress-increment] :as event} app]
     (if-let [file (first files)]
@@ -70,7 +88,7 @@
                            + progress-increment)
                 app)
               {:tuck.effect/type :command!
-               :command :task/upload-file
+               :command :file/upload
                :payload {:task-id task-id
                          :file (file-model/file-info file)}
                :result-event (fn [result]

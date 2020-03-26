@@ -6,7 +6,7 @@
             [teet.ui.url :as url]
             [teet.ui.icons :as icons]
             [teet.localization :refer [tr tr-enum]]
-            [teet.ui.material-ui :refer [Grid Link]]
+            [teet.ui.material-ui :refer [Grid Link LinearProgress]]
             [teet.ui.typography :as typography]
             [teet.ui.util :refer [mapc]]
             [herb.core :refer [<class]]
@@ -19,7 +19,8 @@
             [reagent.core :as r]
             [teet.ui.select :as select]
             [teet.user.user-model :as user-model]
-            [teet.ui.format :as format]))
+            [teet.ui.format :as format]
+            [teet.ui.file-upload :as file-upload]))
 
 (defn file-column-style
   ([basis]
@@ -97,7 +98,8 @@
                      [:div {:class (<class common-styles/inline-block)}
                       item])
                    [[file-icon f]
-                    [Link {:href (url/file {:file id})} name]
+                    [url/Link {:page :file
+                               :params {:file id}} name]
                     type
                     number
                     version
@@ -111,19 +113,20 @@
                   :attribute :file/status
                   :on-change (e! file-controller/->UpdateFileStatus (:db/id file))}])
 
-(defn- file-details [e! file]
+(defn- labeled-data [[label data]]
+  [:div {:class (<class common-styles/inline-block)}
+   [:div [:b label]]
+   [:div data]])
+
+(defn- file-details [e! {:keys [replacement-upload-progress] :as file}]
   [:div
    [:div (:file/name file)]
    [:div (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator file))
                                    :date (format/date (:meta/created-at file))})]
    [:div {:class (<class common-styles/flex-row-space-between)}
-    (mapc (fn [[label data]]
-            [:div {:class (<class common-styles/inline-block)}
-             [:div [:b label]]
-             [:div data]])
+    (mapc labeled-data
           [[(tr [:fields :file/number]) (:file/number file)]
            [(tr [:fields :file/version]) (:file/version file)]
-           ;; change to pulldown
            [(tr [:fields :file/status]) [file-status e! file]]])]
    [:div {:style {:background-color theme-colors/gray-lightest
                   :width "100%"
@@ -134,7 +137,20 @@
                   :justify-content :space-around
                   :flex-direction :column}}
     "Preview"]
-   ])
+   [:div {:class (<class common-styles/flex-row-space-between)}
+    [labeled-data [(tr [:fields :file/size]) (format/file-size (:file/size file))]]
+    (if replacement-upload-progress
+      [LinearProgress {:variant :determinate
+                       :value replacement-upload-progress}]
+      [file-upload/FileUploadButton {:on-drop (e! file-controller/->UploadNewVersion file)
+                                     :color :secondary
+                                     :icon [icons/file-cloud-upload]
+                                     :multiple? false}
+       (tr [:file :upload-new-version])])
+    [buttons/button-primary {:on-click (e! :D)
+                             :start-icon (r/as-element
+                                          [icons/file-cloud-download])}
+     (tr [:file :download])]]])
 
 (defn file-page [e! {{file-id :file
                       task-id :task} :params
