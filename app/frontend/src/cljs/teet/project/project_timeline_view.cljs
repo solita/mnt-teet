@@ -61,7 +61,7 @@
          [icons/action-date-range]
          [buttons/link-button {:on-click #(reset! show-in-modal? true)
                                :class (<class project-style/project-timeline-link)}
-          "Show project timeline"]
+          (tr [:project :show-timeline])]
          (when @show-in-modal?
            [panels/modal {:title (str project-name " "
                                       (format/date estimated-start-date) " – " (format/date estimated-end-date))
