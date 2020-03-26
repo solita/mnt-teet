@@ -53,7 +53,7 @@
             :x2 (/ month-width 2) :y2 line-height
             :style {:stroke "lightgray" :stroke-width (* 3 line-width)}}]]])
 
-(defn timeline-item
+(defn- timeline-item
   [width color]
   {:white-space :nowrap
    :overflow :hidden
@@ -62,29 +62,7 @@
    :color color
    :margin-left "0.2rem"})
 
-(defn lifecycle-label
-  []
-  {:text-transform :uppercase
-   :font-weight :bold})
-
-(defn task-label
-  []
-  ^{:pseudo {:before {:content "'• '"}}}
-  {})
-
-(def item-styles
-  {:project {:background theme-colors/blue
-             :text       theme-colors/white}
-   :lifecycle {:background theme-colors/blue-light
-               :text       theme-colors/white
-               :label-class (<class lifecycle-label)}
-   :activity {:background theme-colors/blue-lighter
-              :text       theme-colors/blue-dark}
-   :task {:background theme-colors/gray-lighter
-          :text       theme-colors/blue-dark
-          :label-class (<class task-label)}})
-
-(defn- timeline-items-group [{:keys [x-of y-of hover line-height timeline-items]}]
+(defn- timeline-items-group [{:keys [x-of y-of hover line-height timeline-items item-styles]}]
   [:g#items
    (doall
     (for [i (range (count timeline-items))
@@ -184,11 +162,11 @@
                        :stroke-width line-width}}]
        [:text {:x (+ x 5) :y y} year]]))])
 
-(defn- project-bars-group [{:keys [x-of y-of start-date end-date num-items line-width line-height]}]
+(defn- overall-duration-bars-group [{:keys [x-of y-of start-date end-date num-items line-width line-height]}]
   (let [x-start (x-of start-date)
         x-end (x-of end-date)
         y (y-of (+ 1.5 num-items))]
-    [:g.timeline-project-bars
+    [:g.timeline-overall-duration-bars
      [:line {:x1 x-start :x2 x-start
              :y1 0 :y2 y
              :style {:stroke theme-colors/blue-dark
@@ -233,14 +211,10 @@
     (.requestAnimationFrame js/window
                             (partial animate! nil))))
 
-;; TODO some parts of the timeline component are project specific
-;; e.g. [project-item & timeline-items] timeline-items
-;; and the use of :item-type
-;; If needed elsewhere, we need to rip the project specific parts into
-;; teet.project.project-timeline
 (defn timeline [{:keys [start-date end-date
                         month-width
-                        line-width]
+                        line-width
+                        item-styles] ;; Item styles for timeline items
                  :as opts
                  :or {month-width 20
                       line-width 2}}
@@ -270,9 +244,7 @@
                                                            #js {:passive false})
 
                x-start 25
-               y-start 35
-
-               [project-item & timeline-items] timeline-items]
+               y-start 35]
     (if-not (and start-date end-date)
       [:span.timeline-no-start-or-end]
       (let [years (year-range opts)
@@ -309,19 +281,18 @@
           [:svg {:width (x-of (t/plus (t/date-time end-date) (t/years 1)))
                  :height (y-of (+ 3 num-items))}
            [pattern-defs line-height initial-month-width line-width]
-           ;; TODO project start and end bars
            [year-bars-group {:x-of x-of
                              :y-of y-of
                              :num-items num-items
                              :line-width line-width
                              :years years}]
-           [project-bars-group {:x-of x-of
-                                :y-of y-of
-                                :start-date (:start-date project-item)
-                                :end-date (:end-date project-item)
-                                :num-items num-items
-                                :line-width line-width
-                                :line-height line-height}]
+           [overall-duration-bars-group {:x-of x-of
+                                          :y-of y-of
+                                          :start-date start-date
+                                          :end-date end-date
+                                          :num-items num-items
+                                          :line-width line-width
+                                          :line-height line-height}]
            [month-labels-group {:x-of x-of
                                 :years years
                                 :month-width @month-width}]
@@ -330,6 +301,7 @@
                                   :y-of y-of
                                   :hover hover
                                   :timeline-items timeline-items
+                                  :item-styles item-styles
                                   :line-height line-height}]
 
            [today-group {:x-of x-of
