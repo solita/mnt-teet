@@ -214,7 +214,7 @@
 (defn timeline [{:keys [start-date end-date
                         month-width
                         line-width
-                        item-styles] ;; Item styles for timeline items
+                        item-styles] ;; Item styles for timeline items. TODO a bad abstraction, doesn't allow for styles per item, only per item type.
                  :as opts
                  :or {month-width 20
                       line-width 2}}
