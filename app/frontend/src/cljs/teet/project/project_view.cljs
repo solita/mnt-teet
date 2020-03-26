@@ -9,6 +9,7 @@
             [teet.project.project-setup-view :as project-setup-view]
             [teet.project.project-info :as project-info]
             [teet.project.project-navigator-view :as project-navigator-view]
+            [teet.project.project-timeline-view :as project-timeline-view]
             teet.task.task-spec
             [teet.ui.breadcrumbs :as breadcrumbs]
             [teet.ui.buttons :as buttons]
@@ -26,7 +27,6 @@
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.typography :refer [Heading1 Heading3] :as typography]
             [teet.ui.url :as url]
-            [teet.ui.timeline :as timeline]
             [teet.util.collection :as cu]
             [teet.authorization.authorization-check :as authorization-check :refer [when-pm-or-owner]]
             [teet.theme.theme-colors :as theme-colors]
@@ -136,64 +136,6 @@
           :save-action #(e! (search-area-controller/->SaveDrawnArea (get-in app [:map :search-area :unsaved-drawing])))}])
       (when (:geometry-range? map-settings)
         [search-area-view/feature-search-area e! app project related-entity-type])]]))
-
-(defn- project-timeline [{:thk.project/keys [estimated-start-date estimated-end-date lifecycles]
-                          :as project}]
-  (r/with-let [show-in-modal? (r/atom false)]
-    (when (and estimated-start-date estimated-end-date)
-      (let [tr* (tr-tree [:enum])
-            project-name (project-model/get-column project :thk.project/project-name)
-            timeline-component [timeline/timeline {:start-date estimated-start-date
-                                                   :end-date   estimated-end-date}
-                                (concat
-                                 ;; Project
-                                 [{:label      project-name
-                                   :start-date estimated-start-date
-                                   :end-date   estimated-end-date
-                                   :hover      [:div project-name]}]
-                                 ;; Lifecycles
-                                 (mapcat (fn [{:thk.lifecycle/keys [type estimated-start-date estimated-end-date
-                                                                    activities]}]
-                                           (concat
-                                            [{:label      (-> type :db/ident tr*)
-                                              :start-date estimated-start-date
-                                              :end-date   estimated-end-date
-                                              :item-type  :lifecycle
-                                              :hover      [:div (tr* (:db/ident type))]}]
-                                            ;; Activities
-                                            (mapcat (fn [{:activity/keys [name status estimated-start-date estimated-end-date tasks]
-                                                          :as _activity}]
-                                                      (let [label (-> name :db/ident tr*)]
-                                                        (concat [{:label label
-                                                                  :start-date estimated-start-date
-                                                                  :end-date estimated-end-date
-                                                                  :item-type :activity
-                                                                  :hover [:div
-                                                                          [:div [:b (tr [:fields :activity/name]) ": "] label]
-                                                                          [:div [:b (tr [:fields :activity/status]) ": "] (tr* (:db/ident status))]]}]
-                                                                (for [{:task/keys [description type estimated-start-date estimated-end-date]}
-                                                                      (sort-by :task/estimated-start-date tasks)]
-                                                                  ;; TODO what label
-                                                                  {:label (tr [:enum (:db/ident type)])
-                                                                   :start-date estimated-start-date
-                                                                   :end-date estimated-end-date
-                                                                   :item-type :task
-                                                                   ;; TODO what to hover?
-                                                                   :hover [:div description]}))))
-                                                    activities)))
-                                         (sort-by :thk.lifecycle/estimated-start-date lifecycles)))]]
-
-        [:<>
-         [icons/action-date-range]
-         [buttons/link-button {:on-click #(reset! show-in-modal? true)
-                               :class (<class project-style/project-timeline-link)}
-          "Show project timeline"]
-         (when @show-in-modal?
-           [panels/modal {:title (str project-name " "
-                                      (format/date estimated-start-date) " – " (format/date estimated-end-date))
-                          :max-width "lg"
-                          :on-close #(reset! show-in-modal? false)}
-            timeline-component])]))))
 
 (defn activities-tab
   [e! {:keys [stepper] :as app} project]
@@ -337,7 +279,7 @@
 
 (defn activities-tab-footer [_e! _app project]
   [:div {:class (<class project-style/activities-tab-footer)}
-   [project-timeline project]])
+   [project-timeline-view/timeline project]])
 
 (def project-tabs-layout
   ;; FIXME: Labels with TR paths instead of text
