@@ -5,6 +5,8 @@
             [hiccup.core :as hiccup]
             [org.httpkit.client :as htclient]))
 
+;; see also https://x-tee.ee/catalogue-data/ee-dev/ee-dev/GOV/70008440/rr/155.wsdl
+
 (defn rr442-request-hiccup [eid]
   [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"
                    :xmlns:xrd "http://x-road.eu/xsd/xroad.xsd"

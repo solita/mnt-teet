@@ -29,16 +29,17 @@
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.tabs :as tabs]
             [teet.common.common-styles :as common-styles]
-            [teet.ui.table :as table]
+            [teet.file.file-view :as file-view]
             [teet.ui.date-picker :as date-picker]
             [teet.project.project-controller :as project-controller]))
 
-(defn task-status [e! {:task/keys [status] :as task}]
-  [select/status {:e!        e!
-                  :on-change (e! task-controller/->UpdateTaskStatus)
-                  :status    (:db/ident status)
-                  :attribute :task/status
-                  :values-filter task-model/current-statuses}])
+(defn task-status [e! {:task/keys [status]}]
+  [select/select-enum {:e! e!
+                       :on-change (e! task-controller/->UpdateTaskStatus)
+                       :value (:db/ident status)
+                       :show-label? false
+                       :attribute :task/status
+                       :values-filter task-model/current-statuses}])
 
 (defn get-latest-modification
   "Takes the document and returns the latest modification time from either files or the doc it self"
@@ -61,8 +62,8 @@
      [:b {:class (<class task-style/study-link-style)}
       (tr [:enum (-> task :task/type :db/ident)])]
      [Link {:class (<class task-style/study-link-style)
-            :href  (url/set-params :document nil
-                                   :file nil)}
+            :href  (url/set-query-param :document nil
+                                        :file nil)}
       (tr [:enum (-> task :task/type :db/ident)])])
    [:p
     [:b (tr [:task :results])]]
@@ -76,8 +77,8 @@
            [:b {:class (<class task-style/result-style)}
             name]
            [Link {:class (<class task-style/result-style)
-                  :href  (url/set-params :document (:db/id document)
-                                         :file nil)}
+                  :href  (url/set-query-param :document (:db/id document)
+                                              :file nil)}
             name])
          [typography/SmallText {:style {:margin-bottom "0.5rem"}}
           [:span {:style {:font-weight    :bold
@@ -92,99 +93,45 @@
            (if (= (str file-id) selected-file-id)
              [:b {:class (<class task-style/document-file-name)} name]
              [Link {:class (<class task-style/document-file-name)
-                    :href  (url/set-params :document (:db/id document)
-                                           :file (:db/id file))}
+                    :href  (url/set-query-param :document (:db/id document)
+                                                :file (:db/id file))}
               name])
            [typography/SmallText (format/file-size size)]])]))])
 
 
 
-(defn document-file-content
-  [e! {:file/keys [name timestamp]
-       id         :db/id :as file}]
-  [:<>
-   [common/header-with-actions
-    name
-    [buttons/delete-button-with-confirm {:action (e! file-controller/->DeleteFile id)}
-     (tr [:buttons :delete])]]
-   [typography/SmallText {:style {:margin-bottom "1rem"}}
-    (tr [:document :updated]) " "
-    (format/date-time timestamp)]
-   [buttons/button-primary {:href       (file-controller/download-url id)
-                            :style      {:margin-bottom "2rem"}
-                            :element    "a"
-                            :target     "_blank"
-                            :start-icon (r/as-element
-                                          [icons/file-cloud-download])}
-    (tr [:document :download-file])]
-
-   [comments-view/comments {:e!                   e!
-                            :update-comment-event comments-controller/->UpdateFileNewCommentForm
-                            :save-comment-event   comments-controller/->CommentOnFile
-                            :new-comment          (:new-comment file)
-                            :comments             (:file/comments file)}]])
-
-(def file-columns
-  [:file/name
-   :file/number
-   :file/type
-   :file/version
-   :file/status
-   :file/controls])
-
-(defn format-file-list
-  [column value row]
-  (case column
-    :file/controls
-    [:div "controls"]
-    (str value)))
-
-(defn file-list
-  [e! files]
-  [:div
-   [table/table
-    {:columns file-columns
-     :format-column format-file-list
-     :data files
-     :get-column get
-     :filter-type {}}]
-   [buttons/button-primary {:href (url/set-params :add-document 1)}
-    "Add files"]])
-
 (defn task-basic-info
   [e! {:task/keys [deadline assignee] :as task}]
-  [:div {:class (<class common-styles/flex-row-space-between)}
+  [:div {:class [(<class common-styles/flex-row-space-between) (<class common-styles/margin-bottom 1)]}
    [:div
-    [:p "Deadline"]
+    [typography/BoldGreyText (tr [:common :deadline])]
     [:span (format/date deadline)]]
    [:div
-    [:p "Assignee"]
+    [typography/BoldGreyText (tr [:fields :task/assignee])]
     [:span (user-model/user-name assignee)]]
    [:div
     [task-status e! task]]])
 
 (defn task-details
-  [e! {:task/keys [description files] :as task}]
+  [e! params {:task/keys [description files] :as task}]
   [:div
    (when description
      [typography/Paragraph description])
    [task-basic-info e! task]
-   [file-list e! files]])
+   [file-view/file-table files]])
 
 (defn task-page-content
   [e! app task]
   [:div
    [typography/Heading1 (tr-enum (:task/type task))]
-   [tabs/details-and-comments-tabs {:e! e!
-                                    :query (:query app)
-                                    :app app
-                                    :comment-form (:comment-form app)
-                                    :comments (:task/comments task)
-                                    :type :task-comment
-                                    :comment-command :comment/comment-on-task
-                                    :details [task-details e! task]
-                                    :entity-type :task
-                                    :entity-id (:db/id task)}]])
+   [tabs/details-and-comments-tabs
+    {:e! e!
+     :app app
+     :type :task-comment
+     :comment-command :comment/comment-on-task
+     :entity-type :task
+     :entity-id (:db/id task)}
+    [task-details e! (:params app) task]]])
 
 (defn- add-files-form [e! upload-progress]
   (r/with-let [form (r/atom {})]
@@ -229,8 +176,12 @@
 
      ^{:attribute [:task/estimated-start-date :task/estimated-end-date] :xs 12}
      [date-picker/date-range-input {:start-label (tr [:fields :task/estimated-start-date])
-                                    :end-label (tr [:fields :task/estimated-end-date])
-                                    :required true}]
+                                    :end-label (tr [:fields :task/estimated-end-date])}]
+
+     ^{:attribute [:task/actual-start-date :task/actual-end-date] :xs 12}
+     [date-picker/date-range-input {:start-label (tr [:fields :task/actual-start-date])
+                                    :end-label (tr [:fields :task/actual-end-date])}]
+
 
      ^{:attribute :task/assignee}
      [select/select-user {:e! e! :attribute :task/assignee}]]))

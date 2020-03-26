@@ -22,6 +22,10 @@
           :padding "1.5rem 0"}
     opts))
 
+(defn comment-skeleton-style
+  []
+  {:padding "0.5rem"})
+
 (defn skeleton-parent-style
   [opts]
   (merge

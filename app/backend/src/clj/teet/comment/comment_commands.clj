@@ -3,34 +3,24 @@
             [datomic.client.api :as d]
             teet.file.file-spec
             [teet.meta.meta-model :refer [creation-meta deletion-tx]]
+            [teet.comment.comment-model :as comment-model]
             [teet.project.project-db :as project-db])
   (:import (java.util Date)))
 
-(defcommand :comment/comment-on-document
-  {:doc "Add new comment on a document entity"
-   :context {:keys [db user]}
-   :payload {:keys [document-id comment]}
-   :project-id (project-db/document-project-id db document-id)
-   :authorization {:document/comment-on-document {:db/id document-id}}
-   :transact [(merge {:db/id document-id
-                      :document/comments [(merge {:db/id             "new-comment"
-                                                  :comment/author    [:user/id (:user/id user)]
-                                                  :comment/comment   comment
-                                                  :comment/timestamp (Date.)}
-                                                 (creation-meta user))]})]})
 
-(defcommand :comment/comment-on-task
-  {:doc "Add a new comment on a task entity"
+(defcommand :comment/create
+  {:doc "Create a new comment and add it to an entity"
    :context {:keys [db user]}
-   :payload {:keys [entity-id comment]}
-   :project-id (project-db/task-project-id db entity-id)
+   :payload {:keys [entity-id entity-type comment]}
+   :project-id (project-db/entity-project-id db entity-type entity-id)
    :authorization {:task/comment-task {:db/id entity-id}}
    :transact [(merge {:db/id entity-id
-                      :task/comments [(merge {:db/id "new-comment"
-                                              :comment/author [:user/id (:user/id user)]
-                                              :comment/comment comment
-                                              :comment/timestamp (Date.)}
-                                             (creation-meta user))]})]})
+                      (comment-model/comments-attribute-for-entity-type entity-type)
+                      [(merge {:db/id "new-comment"
+                               :comment/author [:user/id (:user/id user)]
+                               :comment/comment comment
+                               :comment/timestamp (Date.)}
+                              (creation-meta user))]})]})
 
 (defcommand :comment/comment-on-file
   {:doc "Add new comment on a document entity"

@@ -204,7 +204,7 @@
   [e! {:keys [stepper] :as app} project]
   [:<>
    [project-navigator-view/project-navigator-dialogs {:e! e! :app app}]
-   [project-navigator-view/project-navigator e! project stepper false]])
+   [project-navigator-view/project-navigator e! project stepper (:params app) false]])
 
 (defn add-user-form
   [e! user project-id]
@@ -255,13 +255,13 @@
      (let [permission-links (map (fn [{:keys [user] :as _}]
                                    (let [user-id (:db/id user)]
                                      {:key user-id
-                                      :href (url/set-params :person user-id)
+                                      :href (url/set-query-param :person user-id)
                                       :title (or (user-model/user-name user)
                                                  (tr [:common :unknown]))
                                       :selected? (= (str user-id) selected-person)}))
                                  permissions)]
        [itemlist/white-link-list permission-links]))
-   [buttons/rect-white {:href (url/remove-param :person)}
+   [buttons/rect-white {:href (url/remove-query-param :person)}
     [icons/content-add]
     (tr [:project :add-users])]])
 
@@ -289,7 +289,7 @@
   [:div
    [people-modal e! project query]
    [:div
-    [:div {:class (<class project-style/heading-and-button-style)}
+    [:div {:class (<class common-styles/heading-and-button-style)}
      [typography/Heading2 (tr [:people-tab :managers])]
      (when-pm-or-owner
        project
@@ -301,7 +301,7 @@
                             {:primary-text (str (:user/given-name owner) " " (:user/family-name owner))
                              :secondary-text (tr [:roles :owner])}]]]
    [:div
-    [:div {:class (<class project-style/heading-and-button-style)}
+    [:div {:class (<class common-styles/heading-and-button-style)}
      [typography/Heading2 (tr [:people-tab :other-users])]
      (when-pm-or-owner
        project
@@ -322,7 +322,7 @@
 (defn data-tab
   [_e! {{project-id :project} :params :as _app} project]
   [:div
-   [:div {:class (<class project-style/heading-and-button-style)}
+   [:div {:class (<class common-styles/heading-and-button-style)}
     [typography/Heading2 "Restrictions"]
     [buttons/button-secondary {:component "a"
                                :href (str "/#/projects/" project-id "?tab=data&configure=restrictions")
@@ -331,7 +331,7 @@
    [itemlist/gray-bg-list [{:secondary-text (tr [:data-tab :restriction-count]
                                                 {:count (count (:thk.project/related-restrictions project))})}]]
 
-   [:div {:class (<class project-style/heading-and-button-style)}
+   [:div {:class (<class common-styles/heading-and-button-style)}
     [typography/Heading2 "Cadastral units"]
     [buttons/button-secondary {:component "a"
                                :href (str "/#/projects/" project-id "?tab=data&configure=cadastral-units")
@@ -468,7 +468,7 @@
                      :layers #{:thk-project :thk-project-buffer :related-restrictions}}
       :footer [:div {:class (<class project-style/wizard-footer)}
                [buttons/button-warning {:component "a"
-                                        :href (url/remove-param :configure)}
+                                        :href (url/remove-query-param :configure)}
                 (tr [:buttons :cancel])]
                [buttons/button-primary
                 {:on-click (e! project-controller/->UpdateProjectRestrictions
@@ -484,7 +484,7 @@
                      :layers #{:thk-project :thk-project-buffer :related-cadastral-units}}
       :footer [:div {:class (<class project-style/wizard-footer)}
                [buttons/button-warning {:component "a"
-                                        :href (url/remove-param :configure)}
+                                        :href (url/remove-query-param :configure)}
                 (tr [:buttons :cancel])]
                [buttons/button-primary
                 {:on-click (e! project-controller/->UpdateProjectCadastralUnits

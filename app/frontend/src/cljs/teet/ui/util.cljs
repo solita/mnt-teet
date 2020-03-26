@@ -1,6 +1,9 @@
 (ns teet.ui.util
   "Small utilities for reagent")
 
+(defn has-key? [component]
+  (contains? (meta component) :key))
+
 (defn with-keys
   "doall children-seq and ensure every child has a unique key.
   If the child items have no key in metadata, an index based key
@@ -8,7 +11,7 @@
   [children-seq]
   (doall
    (map-indexed (fn [i child]
-                  (if (contains? (meta child) :key)
+                  (if (has-key? child)
                     child
                     (with-meta child
                       {:key i})))
@@ -21,7 +24,21 @@
       (into [component (or props {})] children))))
 
 (defn mapc
-  "Map component. Like map but runs doall and adds keys to to result."
+  "Map component. Like map but runs doall and adds keys to to result.
+  If the input arguments to the component-fn contain a :db/id it will
+  be added as a key if the returned component does not have a key."
   [component-fn & collections]
   (with-keys
-    (apply map component-fn collections)))
+    (apply map
+           (fn [& args]
+             (let [component (apply component-fn args)]
+               (if (has-key? component)
+                 ;; Component already has key, return it as is
+                 component
+
+                 ;; Try to add :db/id key found in arguments as the key
+                 (if-let [id (some :db/id args)]
+                   (with-meta component
+                     {:key (str id)})
+                   component))))
+           collections)))

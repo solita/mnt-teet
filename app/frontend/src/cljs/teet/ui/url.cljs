@@ -1,9 +1,11 @@
 (ns teet.ui.url
-  "Define functions to generate URLs for any route"
-  (:require [clojure.string :as str])
+  "Define functions to generate URLs and links for any route"
+  (:require [clojure.string :as str]
+            [reagent.core :as r]
+            [teet.ui.context :as context]
+            teet.ui.material-ui)
   (:require-macros [teet.route-macros :refer [define-url-functions]]))
 
-(define-url-functions)
 
 (defn with-params [url & param-names-and-values]
   (str url "?" (str/join "&"
@@ -18,6 +20,27 @@
                     (when param-value
                       (str (name param-name) "=" (js/encodeURIComponent (str param-value)))))
                   params)))
+
+(def ^{:dynamic true
+       :doc "Current navigation info for generating URLs.
+Contains :page, :params and :query.
+Set each time main view renders."}
+  current-navigation-info
+  (atom {}))
+
+;; This defines functions for generating URLs to routes
+;; For example a route named :file in routes.edn will generate
+;; function file in this namespace.
+;;
+;; If the route has path parameters, the function will take arguments.
+;; The path parameters can be specified as a map or separate arguments
+;; in the same order as they appear in the path.
+;;
+;; In the map variant, if any parameter is omitted, the value is taken
+;; from the current navigation info, so there is no need to pass all
+;; parameters.
+(declare route-url-fns)
+(define-url-functions)
 
 (def
   ^:private
@@ -46,16 +69,45 @@
   (let [[_ path _] (re-matches path-and-params-pattern js/window.location.hash)]
     path))
 
-(defn remove-param
-  [param-key]
+(defn remove-query-param
+  [query-param-key]
   (let [hash js/window.location.hash
         {:keys [path params]} (parse-hash hash)
-        params (dissoc params param-key)]
+        params (dissoc params query-param-key)]
     (str path "?" (format-params params))))
 
-(defn set-params
+(defn set-query-param
   [& param-names-and-values]
   (let [hash js/window.location.hash
         {:keys [path params]} (parse-hash hash)
         params (into params (map vec) (partition 2 param-names-and-values))]
     (str path "?" (format-params params))))
+
+(defn provide-navigation-info
+  "Provide navigation info map as context to child components.
+  The navigation context contains :page, :params and :query and is
+  used when generating URL links to routes."
+  [context child]
+  (context/provide :navigation-info context child))
+
+(defn consume-navigation-info
+  "Consume navigation info. Takes navigation info from context
+  and calls component with the context provided value."
+  [component-fn]
+  (context/consume :navigation-info component-fn))
+
+(defn Link
+  "Convenience component to create Material UI Link to given page with params.
+  Missing path parameters are filled from navigation context."
+  [{:keys [page params query class]}
+   content]
+  [consume-navigation-info
+   (fn [{context-params :params}]
+     [teet.ui.material-ui/Link
+      (merge {:href ((route-url-fns page)
+                     (merge context-params params
+                            (when query
+                              {::query query})))}
+             (when class
+               {:class class}))
+      content])])

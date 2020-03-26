@@ -27,7 +27,6 @@
    :body (clj->transit data)})
 
 (defn transit-request [{:keys [body params request-method] :as req}]
-  (log/info "TRANSIT-REQUEST: " req)
   (case request-method
     :get (transit->clj (get params "q"))
     :post (transit->clj body)))

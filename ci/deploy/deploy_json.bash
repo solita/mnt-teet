@@ -23,5 +23,5 @@ then
 fi
 
 echo "{\"commit\":\"$CODEBUILD_RESOLVED_SOURCE_VERSION\",\"status\":\"$1\",\"timestamp\":\"`date`\"}" > deploy.json
-aws s3 cp deploy.json s3://$PUBLICDIR/js/deploy.json --acl public-read
+aws s3 cp deploy.json s3://$PUBLICDIR/js/deploy.json --metadata-directive REPLACE --acl public-read  --cache-control no-cache
 rm deploy.json

@@ -108,6 +108,17 @@
    :flex-direction :row
    :justify-content :space-between})
 
-(defn margin-bottom-1
+(defn margin-bottom
+  [rem]
+  {:margin-bottom (str rem "rem")})
+
+(defn flex-row
   []
-  {:margin-bottom "0.5rem"})
+  {:display :flex
+   :flex-direction :row})
+
+(defn heading-and-button-style
+  []
+  {:display         :flex
+   :justify-content :space-between
+   :margin-bottom   "1rem"})

@@ -1,11 +1,12 @@
 (ns teet.file.file-commands
-  (:require [teet.db-api.core :as db-api]
+  (:require [teet.db-api.core :as db-api :refer [defcommand]]
             [datomic.client.api :as d]
             [teet.file.file-storage :as file-storage]
             teet.file.file-spec
             [teet.meta.meta-model :refer [modification-meta creation-meta deletion-tx]]
             [teet.util.collection :as cu]
-            [teet.file.file-model :as file-model]))
+            [teet.file.file-model :as file-model]
+            [teet.project.project-db :as project-db]))
 
 
 ;; Create new document and link it to task. Returns entity id for document.
@@ -42,8 +43,8 @@
     (or (file-model/validate-file file)
         (let [res (d/transact conn {:tx-data [{:db/id (or task-id "new-task")
                                                :task/files (merge file
-                                                                      {:db/id "new-file"}
-                                                                      (creation-meta user))}
+                                                                  {:db/id "new-file"}
+                                                                  (creation-meta user))}
                                               {:db/id "datomic.tx"
                                                :tx/author (:user/id user)}]})
               t-id (or task-id (get-in res [:tempids "new-task"]))
@@ -53,6 +54,15 @@
           {:url (file-storage/upload-url key)
            :task-id t-id
            :file (d/pull (:db-after res) '[*] file-id)}))))
+
+(defcommand :file/update-status
+  {:doc "Update status of a file"
+   :context {:keys [db]}
+   :payload {:keys [file-id status]}
+   :project-id (project-db/file-project-id db file-id)
+   :authorization {:document/update-document-status {:db/id file-id}}
+   :transact [{:db/id file-id
+               :file/status status}]})
 
 
 #_(defmethod db-api/command! :document/delete [{conn :conn
