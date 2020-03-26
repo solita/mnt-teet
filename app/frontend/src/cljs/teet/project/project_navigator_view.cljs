@@ -239,10 +239,11 @@
        [circle-svg {:status activity-state :size 20 :dark-theme? dark-theme?}]
        [:div {:class (<class step-container-style {:offset -4})}
         [:div {:class (<class flex-column)}
-         [:a {:href (url/activity {:activity (:db/id activity)})
-              :class (<class stepper-button-style {:size "20px"
-                                                   :open? activity-open?
-                                                   :dark-theme? dark-theme?})}
+         [url/Link {:page :activity
+                    :params {:activity (:db/id activity)}
+                    :class (<class stepper-button-style {:size "20px"
+                                                         :open? activity-open?
+                                                         :dark-theme? dark-theme?})}
           (tr [:enum (:db/ident (:activity/name activity))])]
          [typography/SmallText
           (format/date activity-est-start) " – " (format/date activity-est-end)]]
