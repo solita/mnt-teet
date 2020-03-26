@@ -100,31 +100,6 @@
 
 
 
-(defn document-file-content
-  [e! {:file/keys [name timestamp]
-       id         :db/id :as file}]
-  [:<>
-   [common/header-with-actions
-    name
-    [buttons/delete-button-with-confirm {:action (e! file-controller/->DeleteFile id)}
-     (tr [:buttons :delete])]]
-   [typography/SmallText {:style {:margin-bottom "1rem"}}
-    (tr [:document :updated]) " "
-    (format/date-time timestamp)]
-   [buttons/button-primary {:href       (file-controller/download-url id)
-                            :style      {:margin-bottom "2rem"}
-                            :element    "a"
-                            :target     "_blank"
-                            :start-icon (r/as-element
-                                          [icons/file-cloud-download])}
-    (tr [:document :download-file])]
-
-   [comments-view/comments {:e!                   e!
-                            :update-comment-event comments-controller/->UpdateFileNewCommentForm
-                            :save-comment-event   comments-controller/->CommentOnFile
-                            :new-comment          (:new-comment file)
-                            :comments             (:file/comments file)}]])
-
 (defn task-basic-info
   [e! {:task/keys [deadline assignee] :as task}]
   [:div {:class [(<class common-styles/flex-row-space-between) (<class common-styles/margin-bottom 1)]}
