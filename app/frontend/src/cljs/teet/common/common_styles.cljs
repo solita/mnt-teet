@@ -122,3 +122,17 @@
   {:display         :flex
    :justify-content :space-between
    :margin-bottom   "1rem"})
+
+(defn flex-align-center
+  []
+  {:display :flex
+   :align-items :center})
+
+(defn status-circle-style
+  [color]
+  {:height "15px"
+   :width "15px"
+   :border-radius "100%"
+   :flex-shrink 0
+   :margin-right "1rem"
+   :background-color color})
