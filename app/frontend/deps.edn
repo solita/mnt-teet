@@ -38,5 +38,6 @@
                   :extra-paths ["test"]}
            :dev {:main-opts ["-m" "figwheel.main" "-b" "dev" "-r"]
                  :extra-deps {com.bhauman/figwheel-main {:mvn/version "0.2.3"}
-                              webjure/drtest {:mvn/version "20190611"}}
+                              webjure/drtest {:mvn/version "20190611"}
+                              com.datomic/client-cloud {:mvn/version "0.8.78"}}
                  :extra-paths ["test"]}}}
