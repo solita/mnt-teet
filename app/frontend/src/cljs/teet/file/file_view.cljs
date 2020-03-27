@@ -135,57 +135,63 @@
    [:div [:b label]]
    [:div data]])
 
-(defn- file-details [e! {:keys [replacement-upload-progress] :as file} old? latest-file-id]
-  [:div
-   [:div (:file/name file)]
-   [:div (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator file))
-                                   :date (format/date (:meta/created-at file))})]
-   [:div {:class (<class common-styles/flex-row-space-between)}
-    (mapc labeled-data
-          [[(tr [:fields :file/number]) (:file/number file)]
-           [(tr [:fields :file/version]) [:span (when old?
-                                                  {:class (<class common-styles/warning-text)})
-                                          (str (:file/version file)
-                                               (when old?
-                                                 " " (tr [:file :old-version])))]]
-           (if old?
-             ["" [url/Link {:page :file
-                            :params {:file latest-file-id}}
-                  (tr [:file :switch-to-latest-version])]]
-             [(tr [:fields :file/status]) [file-status e! file]])])]
+(defn- file-details [e! {:keys [replacement-upload-progress] :as file} latest-file]
+  (let [old? (some? latest-file)
+        other-versions (if old?
+                         (into [latest-file]
+                               (filter #(not= (:db/id file) (:db/id %))
+                                       (:versions latest-file)))
+                         (:versions file))]
+    [:div
+     [:div (:file/name file)]
+     [:div (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator file))
+                                     :date (format/date (:meta/created-at file))})]
+     [:div {:class (<class common-styles/flex-row-space-between)}
+      (mapc labeled-data
+            [[(tr [:fields :file/number]) (:file/number file)]
+             [(tr [:fields :file/version]) [:span (when old?
+                                                    {:class (<class common-styles/warning-text)})
+                                            (str (:file/version file)
+                                                 (when old?
+                                                   " " (tr [:file :old-version])))]]
+             (if old?
+               ["" [url/Link {:page :file
+                              :params {:file (:db/id latest-file)}}
+                    (tr [:file :switch-to-latest-version])]]
+               [(tr [:fields :file/status]) [file-status e! file]])])]
 
-   ;; preview block (placeholder for now)
-   [:div {:style {:background-color theme-colors/gray-lightest
-                  :width "100%"
-                  :height "250px"
-                  :text-align :center
-                  :vertical-align :middle
-                  :display :flex
-                  :justify-content :space-around
-                  :flex-direction :column
-                  :margin "2rem 0 2rem 0"}}
-    "Preview"]
+     ;; preview block (placeholder for now)
+     [:div {:style {:background-color theme-colors/gray-lightest
+                    :width "100%"
+                    :height "250px"
+                    :text-align :center
+                    :vertical-align :middle
+                    :display :flex
+                    :justify-content :space-around
+                    :flex-direction :column
+                    :margin "2rem 0 2rem 0"}}
+      "Preview"]
 
-   ;; size, upload new version and download buttons
-   [:div {:class (<class common-styles/flex-row-space-between)}
-    [labeled-data [(tr [:fields :file/size]) (format/file-size (:file/size file))]]
-    (if replacement-upload-progress
-      [LinearProgress {:variant :determinate
-                       :value replacement-upload-progress}]
-      [file-upload/FileUploadButton {:on-drop (e! file-controller/->UploadNewVersion file)
-                                     :color :secondary
-                                     :icon [icons/file-cloud-upload]
-                                     :multiple? false}
-       (tr [:file :upload-new-version])])
-    [buttons/button-primary {:on-click (e! :D)
-                             :start-icon (r/as-element
-                                          [icons/file-cloud-download])}
-     (tr [:file :download])]]
+     ;; size, upload new version and download buttons
+     [:div {:class (<class common-styles/flex-row-space-between)}
+      [labeled-data [(tr [:fields :file/size]) (format/file-size (:file/size file))]]
+      (if replacement-upload-progress
+        [LinearProgress {:variant :determinate
+                         :value replacement-upload-progress}]
+        [file-upload/FileUploadButton {:on-drop (e! file-controller/->UploadNewVersion file)
+                                       :color :secondary
+                                       :icon [icons/file-cloud-upload]
+                                       :multiple? false}
+         (tr [:file :upload-new-version])])
+      [buttons/button-primary {:on-click (e! :D)
+                               :start-icon (r/as-element
+                                            [icons/file-cloud-download])}
+       (tr [:file :download])]]
 
-   ;; list previous versions
-   [typography/Heading2 (tr [:file :other-versions])]
-   [:div
-    (mapc other-version-row (:versions file))]])
+     ;; list previous versions
+     [typography/Heading2 (tr [:file :other-versions])]
+     [:div
+      (mapc other-version-row other-versions)]]))
 
 (defn file-page [e! {{file-id :file
                       task-id :task} :params
@@ -194,8 +200,8 @@
         file (project-model/file-by-id project file-id false)
         old? (nil? file)
         file (or file (project-model/file-by-id project file-id true))
-        latest-file-id (when old?
-                         (:db/id (project-model/latest-version-for-file-id project file-id)))]
+        latest-file (when old?
+                      (project-model/latest-version-for-file-id project file-id))]
     [project-navigator-view/project-navigator-with-content
      {:e! e!
       :app app
@@ -216,4 +222,4 @@
          :app app
          :entity-id (:db/id file)
          :entity-type :file}
-        [file-details e! file old? latest-file-id]]]]]))
+        [file-details e! file latest-file]]]]]))
