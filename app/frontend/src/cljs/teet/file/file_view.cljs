@@ -21,7 +21,8 @@
             [teet.user.user-model :as user-model]
             [teet.ui.format :as format]
             [teet.ui.file-upload :as file-upload]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.common.common-controller :as common-controller]))
 
 (defn- file-column-style
   ([basis]
@@ -170,7 +171,10 @@
                     :justify-content :space-around
                     :flex-direction :column
                     :margin "2rem 0 2rem 0"}}
-      "Preview"]
+      (if (str/starts-with? (:file/type file) "image/")
+        [:img {:style {:width "100%" :height "250px"}
+               :src (common-controller/query-url :file/download-file {:file-id (:db/id file)})}]
+        "Preview")]
 
      ;; size, upload new version and download buttons
      [:div {:class (<class common-styles/flex-row-space-between)}
@@ -183,7 +187,10 @@
                                        :icon [icons/file-cloud-upload]
                                        :multiple? false}
          (tr [:file :upload-new-version])])
-      [buttons/button-primary {:on-click (e! :D)
+      [buttons/button-primary {:element "a"
+                               :href (common-controller/query-url :file/download-file
+                                                                  {:file-id (:db/id file)})
+                               :target "_blank"
                                :start-icon (r/as-element
                                             [icons/file-cloud-download])}
        (tr [:file :download])]]
