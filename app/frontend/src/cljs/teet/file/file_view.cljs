@@ -153,7 +153,8 @@
                   :vertical-align :middle
                   :display :flex
                   :justify-content :space-around
-                  :flex-direction :column}}
+                  :flex-direction :column
+                  :margin "2rem 0 2rem 0"}}
     "Preview"]
 
    ;; size, upload new version and download buttons
@@ -188,7 +189,7 @@
       :project project
       :breadcrumbs breadcrumbs}
      [Grid {:container true}
-      [Grid {:item true :xs 4}
+      [Grid {:item true :xs 2 :xl 2}
        [file-list (:task/files task)]]
       [Grid {:item true :xs 8}
        [:div

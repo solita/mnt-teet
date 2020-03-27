@@ -5,7 +5,8 @@
             [teet.map.map-view :as map-view]
             [teet.project.project-layers :as project-layers]
             [teet.project.project-style :as project-style]
-            [teet.ui.itemlist :as itemlist]))
+            [teet.ui.itemlist :as itemlist]
+            [teet.ui.common :as common]))
 
 (defn map-style
   []
@@ -23,7 +24,10 @@
                                     [25 25 25 25])]
     [:div {:style {:flex 1
                    :display :flex
-                   :flex-direction :column}}
+                   :flex-direction :column
+                   :height "calc(100vh - 120px)"}}
+     ;; Add window width as key to force map rerender when window width changes.
+     ^{:key (str @common/window-width)}
      [map-view/map-view e!
       {:class (<class map-style)
        :config (:config app)

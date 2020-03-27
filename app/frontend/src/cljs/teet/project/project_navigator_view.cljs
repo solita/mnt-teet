@@ -345,15 +345,18 @@
            :spacing   0}
      [Grid {:item  true
             :xs    3
+            :xl 1
             :style {:max-width "400px"}}
       [project-navigator e! project (:stepper app) (:params app) true]]
      [Grid {:item  true
             :xs    6
-            :style {:max-width "800px"
+            :xl 8
+            :style {;:max-width "800px"
                     :padding "2rem 1.5rem"}}
       content]
      [Grid {:item  true
             :xs    :auto
+            :xl 3
             :style {:display :flex
                     :flex    1}}
       [project-map-view/project-map e! app project]]]]])

@@ -18,7 +18,8 @@
             [reagent.core :as r]
             [teet.common.common-controller :as common-controller]
             [teet.ui.skeleton :as skeleton]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.comments.comments-controller :as comments-controller]))
 
 (defn- new-comment-footer [{:keys [validate disabled?]}]
   [:div {:class (<class comments-styles/comment-buttons-style)}
@@ -64,12 +65,10 @@
          [typography/Paragraph comment]])))])
 
 
-
 (defn lazy-comments
   [{:keys [e! app
            entity-type
-           entity-id
-           save-comment-event]}]
+           entity-id]}]
   (r/with-let [[comment-form ->UpdateCommentForm] (common-controller/internal-state {})]
     (let [comments (get-in app [:comments-for-entity entity-id])]
       (.log js/console "Comments in lazy: " (count comments))
@@ -88,8 +87,8 @@
                    :on-change-event ->UpdateCommentForm
                    :save-event #(let [comment (:comment/comment @comment-form)]
                                   (reset! comment-form {})
-                                  (log/info "COMMENT: " comment)
-                                  (save-comment-event comment))
+                                  (comments-controller/->CommentOnEntity
+                                   entity-type entity-id comment))
                    :footer new-comment-footer
                    :spec :task/new-comment-form}
         ^{:attribute :comment/comment}
