@@ -8,6 +8,7 @@
                                          DialogContent]]
             [teet.ui.icons :as icons]
             [teet.ui.typography :as typography]
+            [teet.ui.util :refer [mapc]]
             [teet.theme.theme-colors :as theme-colors]))
 
 (defn collapsible-panel
@@ -164,3 +165,33 @@
       content]
      (when actions
        actions)]))
+
+(defn- side-by-side-container-style
+  []
+  {:display :flex
+   :flex-direction :row})
+(defn- side-by-side-column-style
+  [basis]
+  ^{:pseudo {:first-child {:border-left 0}
+             :last-child {:border-right 0}}}
+  {:flex-basis (str basis "%")
+   :border-color theme-colors/gray-lighter
+   :border-style :solid
+   :border-width "0 2px 0 0"
+   :flex-grow 0
+   :flex-shrink 0
+   :word-break :break-all
+   :display :flex
+   :align-items :center
+   :padding "0.5rem 0.25rem"
+   :justify-content :flex-start})
+
+(defn side-by-side
+  "Show components side by side. With border in between.
+  Takes in alternating width percentages (1-100) and components."
+  [& percentages-and-components]
+  [:div {:class (<class side-by-side-container-style)}
+   (mapc (fn [[percentage component]]
+           [:div {:class (<class side-by-side-column-style percentage)}
+            component])
+         (partition 2 percentages-and-components))])
