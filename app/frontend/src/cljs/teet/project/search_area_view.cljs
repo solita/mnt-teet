@@ -17,9 +17,9 @@
 (defn road-geometry-range-input
   [e! {road-buffer-meters :road-buffer-meters} entity-type]
   [:div {:class (<class search-area-style/road-geometry-range-body)}
-   [TextField {:label "Inclusion distance"
+   [TextField {:label (tr [:search-area :inclusion-distance])
                :type :number
-               :placeholder "Give value to show related areas"
+               :placeholder (tr [:search-area :inclusion-distance-placeholder])
                :value road-buffer-meters
                :on-change #(e! (search-area-controller/->ChangeRoadObjectAoe (-> % .-target .-value) entity-type))}]])
 
@@ -48,7 +48,7 @@
                                :disabled? drawing?}
            (if drawing?
              [:span {:style {:color theme-colors/gray-lightest}}
-              "Waiting for area..."]
+              (tr [:search-area :waiting-for-area]) "..."]
              [icons/content-add-circle {:size :large}])]]))}))
 
 (defn feature-search-area
@@ -61,18 +61,18 @@
        (let [tab (or (get-in map [:search-area :tab]) :buffer-area)]
          [Paper {:class (<class search-area-style/road-geometry-range-selector)}
           [:div {:class (<class project-style/project-view-header)}
-           [typography/Heading3 "Road geometry inclusion"]]
+           [typography/Heading3 (tr [:search-area :component-title])]]
           [Tabs {:on-change (fn [_ v]
                               (e! (search-area-controller/->ChangeTab (keyword v))))
                  :value tab}
            (Tab {:key 1
                  :value :buffer-area
                  :index 1
-                 :label "Buffer area"})
+                 :label (tr [:search-area :filter-by-distance])})
            (Tab {:key 2
                  :value :drawn-area
                  :index 2
-                 :label "Drawn area"})]
+                 :label (tr [:search-area :filter-by-area])})]
           (case tab
             :buffer-area
             [road-geometry-range-input e! map entity-type]

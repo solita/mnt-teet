@@ -109,7 +109,6 @@
     :top "25px"
     :bottom "25px"
     :width (str (project-panel-width) "px")
-    :height "calc(100vh - 270px)"
     :max-width "500px"
     :display :flex
     :flex-direction :column}))
