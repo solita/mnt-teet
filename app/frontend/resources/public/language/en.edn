@@ -240,6 +240,11 @@
   :map-view "Map",
   :add-activity
   #:thk.lifecycle-type{:design "Add phase", :construction "Add stage"},
+  :tabs
+  {:activities "Activities",
+   :people "People",
+   :details "Details",
+   :data "Data"},
   :edit-activity "Edit activity",
   :restrictions-tab "Restrictions",
   :show-timeline "Show project timeline",

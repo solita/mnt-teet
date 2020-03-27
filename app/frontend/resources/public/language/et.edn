@@ -241,6 +241,11 @@
   :add-activity
   #:thk.lifecycle-type{:design "Lisan faasi",
                        :construction "Lisan staadiumi"},
+  :tabs
+  {:activities "Tegevused",
+   :people "Inimesed",
+   :details "Üksikasjad",
+   :data "Andmed"},
   :edit-activity "Muudan tegevust",
   :restrictions-tab "Kitsendused",
   :show-timeline "Näita projekti ajakava",

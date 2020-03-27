@@ -280,20 +280,20 @@
 
 (def project-tabs-layout
   ;; FIXME: Labels with TR paths instead of text
-  [{:label "Activities"
+  [{:label (tr [:project :tabs :activities])
     :value "activities"
     :component activities-tab
     :layers #{:thk-project :related-cadastral-units :related-restrictions}
     :footer activities-tab-footer}
-   {:label "People"                                         ;; HIDDEN UNTIL something is built for this tab
+   {:label (tr [:project :tabs :people])
     :value "people"
     :component people-tab
     :layers #{:thk-project}}
-   {:label "Details"
+   {:label (tr [:project :tabs :details])
     :value "details"
     :component details-tab
     :layers #{:thk-project}}
-   {:label "Data"
+   {:label (tr [:project :tabs :data])
     :value "data"
     :component data-tab
     :layers #{:thk-project}}])
