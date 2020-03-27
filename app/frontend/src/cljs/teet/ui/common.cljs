@@ -212,3 +212,9 @@
    label
    [icons/action-open-in-new {:class (<class thk-link-icon-style)}]])
 
+(def ^{:const true
+       :doc "Minimum browser window width that is considered wide for layout purposes."}
+  wide-display-cutoff-width 2200)
+
+(defn wide-display? []
+  (>= js/document.body.clientWidth wide-display-cutoff-width))
