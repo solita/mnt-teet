@@ -22,17 +22,19 @@
             [teet.ui.format :as format]
             [teet.ui.file-upload :as file-upload]))
 
-(defn file-column-style
+(defn- file-column-style
   ([basis]
    (file-column-style basis :flex-start))
   ([basis justify-content]
+   (file-column-style basis justify-content 0))
+  ([basis justify-content grow]
    ^{:pseudo {:first-child {:border-left 0}
               :last-child {:border-right 0}}}
    {:flex-basis (str basis "%")
     :border-color theme-colors/gray-lighter
     :border-style :solid
     :border-width "2px 2px 0 0"
-    :flex-grow 0
+    :flex-grow grow
     :flex-shrink 0
     :word-break :break-all
     :display :flex
@@ -40,11 +42,11 @@
     :padding "0.5rem 0.25rem"
     :justify-content justify-content}))
 
-(defn file-row-icon-style
+(defn- file-row-icon-style
   []
   {:margin "0 0.25rem"})
 
-(defn file-row
+(defn- file-row
   [{id :db/id :file/keys [number type version status name] :as _file}]
   [:div {:class [(<class common-styles/flex-row) (<class common-styles/margin-bottom 0.5)]}
    [:div {:class (<class file-column-style 30)}
@@ -71,13 +73,27 @@
            :href "test"}
      [icons/file-cloud-download]]]])
 
+(defn- other-version-row
+  [{id :db/id
+    :file/keys [name version]
+    :meta/keys [created-at creator]
+    :as _file}]
+  [:div {:class [(<class common-styles/flex-row) (<class common-styles/margin-bottom 0.5)]}
+   [:div {:class (<class file-column-style 60)}
+    [url/Link {:page :file :params {:file id}}
+     name]]
+   [:div {:class (<class file-column-style 10 :center)}
+    [:span version]]
+   [:div {:class (<class file-column-style 30 :flex-end)}
+    [:span (format/date created-at)]]])
+
 (defn file-table
   [files]
   [:div
    (mapc file-row files)
    [buttons/button-primary {:href (url/set-query-param :add-document 1)
                             :start-icon (r/as-element
-                                          [icons/file-cloud-upload])}
+                                         [icons/file-cloud-upload])}
     (tr [:task :upload-files])]])
 
 (defn file-icon [{:file/keys [type]}]
@@ -128,6 +144,8 @@
           [[(tr [:fields :file/number]) (:file/number file)]
            [(tr [:fields :file/version]) (:file/version file)]
            [(tr [:fields :file/status]) [file-status e! file]]])]
+
+   ;; preview block (placeholder for now)
    [:div {:style {:background-color theme-colors/gray-lightest
                   :width "100%"
                   :height "250px"
@@ -137,6 +155,8 @@
                   :justify-content :space-around
                   :flex-direction :column}}
     "Preview"]
+
+   ;; size, upload new version and download buttons
    [:div {:class (<class common-styles/flex-row-space-between)}
     [labeled-data [(tr [:fields :file/size]) (format/file-size (:file/size file))]]
     (if replacement-upload-progress
@@ -150,7 +170,12 @@
     [buttons/button-primary {:on-click (e! :D)
                              :start-icon (r/as-element
                                           [icons/file-cloud-download])}
-     (tr [:file :download])]]])
+     (tr [:file :download])]]
+
+   ;; list previous versions
+   [typography/Heading2 (tr [:file :other-versions])]
+   [:div
+    (mapc other-version-row (:versions file))]])
 
 (defn file-page [e! {{file-id :file
                       task-id :task} :params
