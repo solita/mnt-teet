@@ -137,7 +137,7 @@
    [Link {:class (<class navigation-style/logout-style)
           :href "/#/login"
           :on-click (e! login-controller/->Logout)}
-    "Log out"]])
+    (tr [:common :log-out])]])
 
 (defn navigation-header-links
   [user e!]
