@@ -178,7 +178,7 @@
 (defn draw-selection [e! related-feature-type features draw-selection-features]
   (r/with-let [select? (r/atom true)]
     [:<>
-     (when (seq draw-selection-features)
+     (when (not (nil? draw-selection-features))
        [panels/modal {:title (str (count draw-selection-features) " "
                                   (case related-feature-type
                                     :restrictions (tr [:project :restrictions-tab])

@@ -249,15 +249,14 @@
 (extend-protocol t/Event
   DrawSelectionOnMap
   (process-event [{:keys [related-feature-type features]} app]
-    (log/info "Piirretään " features)
     (openlayers/enable-draw!
      (t/send-async! ->DrawSelectionDone related-feature-type features))
-    app)
+    (assoc-in app [:map :search-area :drawing?] true))
 
   DrawSelectionDone
   (process-event [{:keys [related-feature-type features area]} app]
     (openlayers/disable-draw!)
-    (t/fx app
+    (t/fx (update-in app [:map :search-area] dissoc :drawing?)
           {:tuck.effect/type :rpc
            :rpc "geojson_features_within_area"
            :endpoint (get-in app [:config :api-url])

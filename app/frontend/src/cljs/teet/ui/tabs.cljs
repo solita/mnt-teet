@@ -1,8 +1,8 @@
 (ns teet.ui.tabs
-  (:require [teet.ui.material-ui :refer [Tabs Tab]]
+  (:require [teet.ui.material-ui :refer [Link Tabs Tab]]
             [teet.common.common-controller :as common-controller]
-            [teet.ui.material-ui :refer [Link]]
             [teet.ui.url :as url]
+            [teet.localization :refer [tr]]
             [teet.comments.comments-view :as comments-view]
             [teet.comments.comments-controller :as comments-controller]
             [reagent.core :as reagent]
@@ -32,7 +32,9 @@
       (for [{:keys [value label]} tabs]
         (Tab {:key value
               :disable-ripple true
-              :label label})))]))
+              :label (if (vector? label)
+                       (tr label)
+                       label)})))]))
 
 
 (defn details-and-comments-tabs
