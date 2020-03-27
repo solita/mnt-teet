@@ -29,8 +29,8 @@
 
 (defn name-and-status-view
   [status name thk-id]
-  [:div {:class (<class projects-style/name-and-status-row-style)}
-   [:div {:class (<class projects-style/status-circle-style status)
+  [:div {:class (<class common-styles/flex-align-center)}
+   [:div {:class (<class projects-style/project-status-circle-style status)
           :title status}]
    [:p
     [:strong {:class (<class projects-style/project-name-style)} name]

@@ -246,12 +246,7 @@
                                                          :dark-theme? dark-theme?})}
           (tr [:enum (:db/ident (:activity/name activity))])]
          [typography/SmallText
-          (format/date activity-est-start) " – " (format/date activity-est-end)]]
-        (when (= (str activity-id) (str (:activity stepper)))
-          [buttons/button-secondary {:size :small
-                                     :disabled disable-buttons?
-                                     :on-click (e! #(project-controller/->OpenEditActivityDialog activity-id))}
-           (tr [:buttons :edit])])]]
+          (format/date activity-est-start) " – " (format/date activity-est-end)]]]]
       (when activity-open?
         [activity-task-list ctx {:tasks tasks
                                  :activity-id activity-id

@@ -1,14 +1,23 @@
 (ns teet.activity.activity-view
   (:require [teet.ui.select :as select]
             [teet.ui.date-picker :as date-picker]
-            [teet.localization :refer [tr]]
+            [teet.localization :refer [tr tr-enum]]
             [teet.ui.form :as form]
             teet.file.file-spec
             [teet.project.project-navigator-view :as project-navigator-view]
             [teet.project.project-style :as project-style]
+            [teet.activity.activity-style :as activity-style]
             [herb.core :refer [<class]]
             [teet.activity.activity-controller :as activity-controller]
-            [teet.project.project-controller :as project-controller]))
+            [teet.project.project-controller :as project-controller]
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.typography :as typography]
+            [teet.ui.buttons :as buttons]
+            [teet.project.project-model :as project-model]
+            [teet.user.user-model :as user-model]
+            [teet.ui.util :as util]
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.ui.url :as url]))
 
 (defn activity-form [e! activity lifecycle-type]
   ;; Activity name (drop-down selector, a predefined list of activities: eskiisprojekt, eelprojekt, põhiprojekt, maade omandamine, ehitus)
@@ -33,7 +42,63 @@
   [{:keys [e! app]}  dialog]
   [activity-form e! (:edit-activity-data app) (:lifecycle-type dialog)])
 
-(defn activity-page [e! app project breadcrumbs]
+(defn project-management
+  [owner manager]
+  [:div {:style {:display :flex}
+         :class (<class common-styles/margin-bottom 1)}
+   [:div {:style {:margin-right "2rem"}}
+    [typography/SectionHeading (tr [:roles :owner])]
+    [:span (user-model/user-name owner)]]
+   [:div
+    [typography/SectionHeading (tr [:roles :manager])]
+    [:span (user-model/user-name manager)]]])
+
+(defn activity-header
+  [e! activity]
+  [:div {:class (<class common-styles/heading-and-button-style)}
+   [typography/Heading1 (tr-enum (:activity/name activity))]
+   [buttons/button-secondary {:on-click #(e! (project-controller/->OpenEditActivityDialog (:db/id activity)))}
+    (tr [:buttons :edit])]])
+
+(defn task-name-and-status
+  [task]
+  [:div {:class [(<class activity-style/task-row-column-style :start) (<class common-styles/flex-align-center)]}
+   [:div {:class (<class common-styles/status-circle-style theme-colors/gray-light ;;TODO: setup rules for task status coloring
+                         )}]
+   [:div
+    [url/Link {:page :activity-task :params {:task (str (:db/id task))}}
+     (tr-enum (:task/type task))]]])
+
+(defn task-row
+  [{:task/keys [type assignee status] :as task}]
+  [:div {:class (<class activity-style/task-row-style)}
+   [task-name-and-status task]
+   [:div {:class (<class activity-style/task-row-column-style :center)}
+    [:span (user-model/user-name assignee)]]
+   [:div {:class (<class activity-style/task-row-column-style :end)}
+    [:span (tr-enum status)]]])
+
+(defn task-group
+  [[group tasks]]
+  [:div {:class (<class common-styles/margin-bottom 1)}
+   [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}  (tr-enum group)]
+   [:div
+    (util/mapc task-row tasks)]])
+
+(defn task-lists
+  [tasks]
+  [:div
+   (util/mapc task-group (group-by :task/group tasks))])
+
+(defn activity-content
+  [e! params project]
+  (let [activity (project-model/activity-by-id project (:activity params))]
+    [:<>
+     [activity-header e! activity]
+     [project-management (:thk.project/owner project) (:thk.project/manager project)]
+     [task-lists (:activity/tasks activity)]]))
+
+(defn activity-page [e! {:keys [params] :as app} project breadcrumbs]
   [:div {:class (<class project-style/page-container)}
    [project-navigator-view/project-navigator-with-content
     {:e! e!
@@ -41,4 +106,4 @@
      :app app
      :breadcrumbs breadcrumbs}
 
-    [:div "tässäpä activity"]]])
+    [activity-content e! params project]]])

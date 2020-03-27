@@ -34,9 +34,6 @@
             [teet.user.user-model :as user-model]
             [teet.project.project-map-view :as project-map-view]))
 
-
-
-
 (defn project-details
   [_e! {:thk.project/keys [estimated-start-date estimated-end-date road-nr
                            carriageway repair-method procurement-nr id] :as project}]
