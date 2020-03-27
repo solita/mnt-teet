@@ -11,7 +11,8 @@
             [teet.theme.itemlist-styles :as itemlist-styles]
             [herb.core :refer [<class]]
             [teet.ui.util :as util]
-            [teet.util.collection :as uc]))
+            [teet.util.collection :as uc]
+            [teet.ui.buttons :as buttons]))
 
 (defn ListHeading
   [{:keys [title subtitle action variant]
@@ -125,15 +126,13 @@
     items]
    [:div {:class (<class itemlist-styles/checkbox-list-contents)}
     (when (and on-select-all (every? (complement :checked?) items))
-      [Link {:class (<class itemlist-styles/checkbox-list-link)
-             :on-click #(do
-                          (.preventDefault %)
-                          (on-select-all))} (tr [:common :select-all])])
+      [buttons/link-button {:class (<class itemlist-styles/checkbox-list-link)
+                            :on-click on-select-all}
+       (tr [:common :select-all])])
     (when (and on-deselect-all (some :checked? items))
-      [Link {:class (<class itemlist-styles/checkbox-list-link)
-             :on-click #(do
-                          (.preventDefault %)
-                          (on-deselect-all))} (tr [:common :deselect-all])])
+      [buttons/link-button {:class (<class itemlist-styles/checkbox-list-link)
+                            :on-click on-deselect-all}
+       (tr [:common :deselect-all])])
     (when actions
       (util/with-keys
         actions))

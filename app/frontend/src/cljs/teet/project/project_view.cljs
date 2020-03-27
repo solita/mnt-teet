@@ -357,12 +357,14 @@
     (e! (project-controller/->FetchRelatedFeatures related-restrictions :restrictions)))
   (fn [e! app {:keys [open-types checked-restrictions feature-candidates draw-selection-features] :or {open-types #{}} :as _project}]
     (let [buffer-m (get-in app [:map :road-buffer-meters])
+          search-type (get-in app [:map :search-area :tab])
           {:keys [loading? restriction-candidates]} feature-candidates]
       [project-setup-view/restrictions-listing e!
        open-types
        buffer-m
        {:restrictions restriction-candidates
         :draw-selection-features draw-selection-features
+        :search-type search-type
         :loading? loading?
         :checked-restrictions (or checked-restrictions #{})
         :toggle-restriction (e! project-controller/->ToggleRestriction)
@@ -377,6 +379,7 @@
     (e! (project-controller/->FetchRelatedFeatures related-cadastral-units :cadastral-units)))
   (fn [e! app {:keys [feature-candidates checked-cadastral-units draw-selection-features] :as _project}]
     (let [buffer-m (get-in app [:map :road-buffer-meters])
+          search-type (get-in app [:map :search-area :tab])
           {:keys [loading? cadastral-candidates]} feature-candidates]
       [project-setup-view/cadastral-units-listing
        e!
@@ -384,6 +387,7 @@
        {:cadastral-units cadastral-candidates
         :draw-selection-features draw-selection-features
         :loading? loading?
+        :search-type search-type
         :checked-cadastral-units (or checked-cadastral-units #{})
         :toggle-cadastral-unit (e! project-controller/->ToggleCadastralUnit)
         :on-mouse-enter (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" true)
@@ -396,7 +400,7 @@
     (= configure "restrictions")
     [project-page-structure e! app project breadcrumbs
      {:header [:div {:class (<class project-style/project-view-header)}
-               [typography/Heading1 {:style {:margin-bottom 0}} "Select relevant restrictions"]]
+               [typography/Heading1 {:style {:margin-bottom 0}} (tr [:search-area :select-relevant-restrictions])]]
       :body [change-restrictions-view e! app project]
       :map-settings {:geometry-range? true
                      :layers #{:thk-project :thk-project-buffer :related-restrictions}}
@@ -412,7 +416,7 @@
     (= configure "cadastral-units")
     [project-page-structure e! app project breadcrumbs
      {:header [:div {:class (<class project-style/project-view-header)}
-               [typography/Heading1 {:style {:margin-bottom 0}} "Select relevant Cadastral units"]]
+               [typography/Heading1 {:style {:margin-bottom 0}} (tr [:search-area :select-relevant-cadastral-units])]]
       :body [change-cadastral-units-view e! app project]
       :map-settings {:geometry-range? true
                      :layers #{:thk-project :thk-project-buffer :related-cadastral-units}}

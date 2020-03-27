@@ -198,12 +198,12 @@
           [buttons/button-primary {:on-click (e! project-controller/->DrawSelectionConfirm
                                                  @select? related-feature-type)}
            (tr [:buttons :confirm])]]]])
-     [Link {:on-click (e! project-controller/->DrawSelectionOnMap related-feature-type features)}
+     [buttons/link-button {:on-click (e! project-controller/->DrawSelectionOnMap related-feature-type features)}
       (tr [:project :draw-selection :link])]]))
 
 (defn restrictions-listing
-  [e! open-types _road-buffer-meters {:keys [restrictions loading? checked-restrictions toggle-restriction
-                                             draw-selection-features
+  [e! open-types road-buffer-meters {:keys [restrictions loading? checked-restrictions toggle-restriction
+                                             draw-selection-features search-type
                                              on-mouse-enter on-mouse-leave]}]
   [:<>
    (if loading?
@@ -225,7 +225,10 @@
                :on-mouse-leave (e! project-controller/->FeatureMouseOvers "selected-restrictions"
                                    false restriction)})])]
         [:<>
-         [typography/Heading2 {:style {:padding "1rem"}} "Found related features:"]
+         (if (= search-type :drawn-area)
+           [typography/Heading2 {:style {:padding "1rem"}} (tr [:search-area :restriction-results-by-area] {:count (count restrictions)})]
+           [typography/Heading2 {:style {:padding "1rem"}} (tr [:search-area :restriction-results-by-buffer] {:count (count restrictions)
+                                                                                                              :meters road-buffer-meters})])
          (doall
            (for [[group restrictions] restrictions-by-type
                  :let [group-checked (into #{}
@@ -258,8 +261,8 @@
                           {:on-mouse-leave (r/partial on-mouse-leave restriction)})))]]))]]))])
 
 (defn cadastral-units-listing
-  [e! _road-buffer-meters {:keys [loading? cadastral-units checked-cadastral-units
-                                  draw-selection-features
+  [e! road-buffer-meters {:keys [loading? cadastral-units checked-cadastral-units
+                                  draw-selection-features search-type
                                   toggle-cadastral-unit on-mouse-enter on-mouse-leave]}]
   (r/with-let [open-types (r/atom #{})]
     (if loading?
@@ -281,7 +284,10 @@
               :on-mouse-enter (e! project-controller/->FeatureMouseOvers "selected-cadastral-units" true cadastral-unit)
               :on-mouse-leave (e! project-controller/->FeatureMouseOvers "selected-cadastral-units" false cadastral-unit)})])]
 
-       [typography/Heading2 {:style {:padding "1rem"}} "Found related features: "]
+       (if (= search-type :drawn-area)
+         [typography/Heading2 {:style {:padding "1rem"}} (tr [:search-area :cadastral-results-by-area] {:count (count cadastral-units)})]
+         [typography/Heading2 {:style {:padding "1rem"}} (tr [:search-area :cadastral-results-by-buffer] {:count (count cadastral-units)
+                                                                                                          :meters road-buffer-meters})])
 
        [:div {:style {:margin-top "1rem"}}
         [itemlist/checkbox-list

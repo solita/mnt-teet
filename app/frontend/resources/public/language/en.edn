@@ -285,16 +285,22 @@
   :authenticated-guest "Authenticated guest"},
  :search {:quick-search "Search", :clear-filters "Clear filters"},
  :search-area
- {:component-title "Related features search area",
-  :filter-by-distance "Filter by distance",
-  :filter-by-area "Filter by area",
+ {:filter-by-distance "Filter by distance",
+  :select-relevant-restrictions "Select relevant restrictions",
   :waiting-for-area "Waiting for area",
   :inclusion-distance "Inclusion distance",
-  :inclusion-distance-placeholder "Give value to show related areas",
+  :select-relevant-cadastral-units "Select relevant Cadastral units",
   :restriction-results-by-buffer
   "Found {count} restrictions within {meters} meters.",
   :restriction-results-by-area
-  "Found {count} restrictions within the defined inclusion areas."},
+  "Found {count} restrictions within the defined inclusion areas.",
+  :cadastral-results-by-buffer
+  "Found {count} cadastral units within {meters} meters.",
+  :cadastral-results-by-area
+  "Found {count} restrictions within the defined inclusion areas.",
+  :filter-by-area "Filter by area",
+  :inclusion-distance-placeholder "Give value to show related areas",
+  :component-title "Related features search area"},
  :task
  {:add-document "Add document",
   :edit-document "Edit document",

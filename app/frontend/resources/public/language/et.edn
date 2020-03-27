@@ -286,17 +286,23 @@
   :authenticated-guest "Autenditud külaline"},
  :search {:quick-search "Otsin", :clear-filters "Puhastan filtrid"},
  :search-area
- {:component-title "Seotud funktsioonide otsinguala",
-  :filter-by-distance "Filtreeri kauguse järgi",
-  :filter-by-area "Filtreeri piirkonna järgi",
+ {:filter-by-distance "Filtreeri kauguse järgi",
+  :select-relevant-restrictions "Valige asjakohased piirangud",
   :waiting-for-area "Piirkonna ootamine",
   :inclusion-distance "Kaasamise kaugus",
-  :inclusion-distance-placeholder
-  "Andke väärtust seotud piirkondade kuvamiseks",
+  :select-relevant-cadastral-units "Valige sobivad katastriüksused",
   :restriction-results-by-buffer
   "Leiti {count} piirangut {meters} meetri raadiuses.",
   :restriction-results-by-area
-  "Leiti {count} piiranguid määratletud kaasamisaladel."},
+  "Leiti {count} piiranguid määratletud kaasamisaladel.",
+  :cadastral-results-by-buffer
+  "Leiti {count} katastriüksusi {meters} meetri raadiuses.",
+  :cadastral-results-by-area
+  "Leiti {count} katastriüksusi määratletud kaasamisaladel.",
+  :filter-by-area "Filtreeri piirkonna järgi",
+  :inclusion-distance-placeholder
+  "Andke väärtust seotud piirkondade kuvamiseks",
+  :component-title "Seotud funktsioonide otsinguala"},
  :task
  {:add-document "Lisan dokumendi",
   :edit-document "Redigeerin dokumenti",
