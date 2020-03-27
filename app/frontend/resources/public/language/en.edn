@@ -15,6 +15,7 @@
   :forbidden-explanation
   "You have tried to access a resource you're not authorized to access.",
   :select-files "Select files to upload",
+  :log-out "Log out",
   :back-to-project "Back to project",
   :now "Now",
   :construction-phase "Phase",
@@ -202,6 +203,8 @@
  {:upload-new-version "Upload new version",
   :download "Download file",
   :other-versions "Other versions",
+  :old-version "Old version",
+  :switch-to-latest-version "Switch back to latest version",
   :upload-info "Uploaded {date} by {author}"},
  :login {:login "Login", :password "Password", :username "Username"},
  :map
@@ -281,6 +284,12 @@
   :guest "Guest",
   :authenticated-guest "Authenticated guest"},
  :search {:quick-search "Search", :clear-filters "Clear filters"},
+ :search-area
+ {:component-title "Related features search area",
+  :filter-by-distance "Filter by distance",
+  :filter-by-area "Filter by area",
+  :waiting-for-area "Waiting for area",
+  :inclusion-distance "Inclusion distance"},
  :task
  {:add-document "Add document",
   :edit-document "Edit document",

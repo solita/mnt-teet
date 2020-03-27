@@ -15,6 +15,7 @@
   :send-feedback "Saadan tagasisidet",
   :forbidden-explanation "Puuduvad juurdepääsu õigused",
   :select-files "Valin fail(id)",
+  :log-out "Logi välja",
   :back-to-project "Tagasi projekti",
   :now "Nüüd",
   :construction-phase "Ehitusetapp",
@@ -202,6 +203,8 @@
  {:upload-new-version "laadige üles uus versioon",
   :download "Laen faili alla",
   :other-versions "Muud versioonid",
+  :old-version "Vana versioon",
+  :switch-to-latest-version "lülitage tagasi uusimale versioonile",
   :upload-info "Ules laadinud {author} {date} "},
  :login {:login "Sisenen", :password "Salasõna", :username "Kasutaja"},
  :map
@@ -282,6 +285,12 @@
   :guest "Külaline",
   :authenticated-guest "Autenditud külaline"},
  :search {:quick-search "Otsin", :clear-filters "Puhastan filtrid"},
+ :search-area
+ {:component-title "Seotud funktsioonide otsinguala",
+  :filter-by-distance "Filtreeri kauguse järgi",
+  :filter-by-area "Filtreeri piirkonna järgi",
+  :waiting-for-area "Piirkonna ootamine",
+  :inclusion-distance "Kaasamise kaugus"},
  :task
  {:add-document "Lisan dokumendi",
   :edit-document "Redigeerin dokumenti",
@@ -290,7 +299,7 @@
   :task-overview "Ülesande ülevaade",
   :no-documents "Dokumente ei ole",
   :results "Tulemused",
-  :upload-files nil},
+  :upload-files "Faile üles laadima"},
  :user {:role "Roll"},
  :warning
  {:version-mismatch
