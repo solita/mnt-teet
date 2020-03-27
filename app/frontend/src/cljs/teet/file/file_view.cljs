@@ -20,7 +20,8 @@
             [teet.ui.select :as select]
             [teet.user.user-model :as user-model]
             [teet.ui.format :as format]
-            [teet.ui.file-upload :as file-upload]))
+            [teet.ui.file-upload :as file-upload]
+            [teet.log :as log]))
 
 (defn- file-column-style
   ([basis]
@@ -134,7 +135,7 @@
    [:div [:b label]]
    [:div data]])
 
-(defn- file-details [e! {:keys [replacement-upload-progress] :as file}]
+(defn- file-details [e! {:keys [replacement-upload-progress] :as file} old? latest-file-id]
   [:div
    [:div (:file/name file)]
    [:div (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator file))
@@ -142,8 +143,16 @@
    [:div {:class (<class common-styles/flex-row-space-between)}
     (mapc labeled-data
           [[(tr [:fields :file/number]) (:file/number file)]
-           [(tr [:fields :file/version]) (:file/version file)]
-           [(tr [:fields :file/status]) [file-status e! file]]])]
+           [(tr [:fields :file/version]) [:span (when old?
+                                                  {:class (<class common-styles/warning-text)})
+                                          (str (:file/version file)
+                                               (when old?
+                                                 " " (tr [:file :old-version])))]]
+           (if old?
+             ["" [url/Link {:page :file
+                            :params {:file latest-file-id}}
+                  (tr [:file :switch-to-latest-version])]]
+             [(tr [:fields :file/status]) [file-status e! file]])])]
 
    ;; preview block (placeholder for now)
    [:div {:style {:background-color theme-colors/gray-lightest
@@ -182,7 +191,11 @@
                       task-id :task} :params
                      :as app} project breadcrumbs]
   (let [task (project-model/task-by-id project task-id)
-        file (project-model/file-by-id project file-id)]
+        file (project-model/file-by-id project file-id false)
+        old? (nil? file)
+        file (or file (project-model/file-by-id project file-id true))
+        latest-file-id (when old?
+                         (:db/id (project-model/latest-version-for-file-id project file-id)))]
     [project-navigator-view/project-navigator-with-content
      {:e! e!
       :app app
@@ -203,4 +216,4 @@
          :app app
          :entity-id (:db/id file)
          :entity-type :file}
-        [file-details e! file]]]]]))
+        [file-details e! file old? latest-file-id]]]]]))

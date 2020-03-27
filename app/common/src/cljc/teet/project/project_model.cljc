@@ -10,7 +10,8 @@
             [teet.util.datomic :refer [id=]]
             [teet.project.activity-model :as activity-model]
             [teet.project.task-model :as task-model]
-            [clojure.spec.alpha :as s])
+            [clojure.spec.alpha :as s]
+            [teet.util.collection :as cu])
   #?(:clj (:import (java.util Date))))
 
 ;; A valid project id is either the :db/id in datomic or
@@ -240,11 +241,32 @@
 
 (defn file-by-id
   "Fetch file in project by file id"
-  [{lcs :thk.project/lifecycles} file-id]
-  (first
-   (for [lc lcs
-         ac (:thk.lifecycle/activities lc)
-         t (:activity/tasks ac)
-         f (:task/files t)
-         :when (id= (:db/id f) file-id)]
-     f)))
+  ([project file-id]
+   (file-by-id project file-id true))
+  ([project file-id include-old-versions?]
+   (or
+    ;; Find file that is the latest version
+    (cu/find-> project
+               :thk.project/lifecycles some?
+               :thk.lifecycle/activities some?
+               :activity/tasks some?
+               :task/files #(id= file-id (:db/id %)))
+
+    ;; If not found, search through previous versions of files
+    (when include-old-versions?
+      (cu/find-> project
+                 :thk.project/lifecycles some?
+                 :thk.lifecycle/activities some?
+                 :activity/tasks some?
+                 :task/files some?
+                 :versions #(id= file-id (:db/id %)))))))
+
+(defn latest-version-for-file-id
+  "Find the parent (latest) file the given old version belongs to."
+  [project file-id]
+  (cu/find-> project
+             :thk.project/lifecycles some?
+             :thk.lifecycle/activities some?
+             :activity/tasks some?
+             :task/files (fn [file]
+                           (cu/find-> file :versions #(id= file-id (:db/id %))))))
