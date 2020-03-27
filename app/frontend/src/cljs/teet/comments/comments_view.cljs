@@ -71,7 +71,6 @@
            entity-id]}]
   (r/with-let [[comment-form ->UpdateCommentForm] (common-controller/internal-state {})]
     (let [comments (get-in app [:comments-for-entity entity-id])]
-      (.log js/console "Comments in lazy: " (count comments))
       [layout/section
        [query/query {:e! e!
                      :query :comment/fetch-comments
