@@ -62,6 +62,7 @@
   :document.category/project-doc "Project documentation",
   :task.type/railroad "Railroad",
   :document.sub-category/design-requirements "Design requirements",
+  :task.group/design-approval "Design approval",
   :task.type/geological-study "Geological study",
   :file.status/ready "Ready",
   :activity.name/detailed-design "Detailed design",
@@ -69,6 +70,7 @@
   :file.status/approved "Approved / Valid",
   :document.sub-category/terms-of-reference "Terms of Reference",
   :document.sub-category/report "Report",
+  :task.group/design "Design",
   :file.status/final "Final",
   :task.type/feasibility-study "Feasibility Study",
   :document.sub-category/procurement-specification
@@ -89,6 +91,7 @@
   :document.sub-category/laboratory-certificate
   "Laboratory Certificate",
   :task.type/eia-pre-assessment "EIA pre-assessment",
+  :task.group/study "Studies",
   :file.status/draft "Draft",
   :activity.status/valid "Valid",
   :task.type/topogeodesy "Topogeodesy",
@@ -102,6 +105,7 @@
   :document.sub-category/drawing "Drawing",
   :task.type/traffic-study "Traffic study",
   :task.status/accepted "Accepted",
+  :task.group/base-data "Base data ",
   :task.status/completed "Completed",
   :task.type/land-owners "Land-owners",
   :task.type/acceptances-no-objection
@@ -131,6 +135,7 @@
   :document.sub-category/calculation-report "Calculation report",
   :task.type/data "Data",
   :task.type/terms-of-Reference "Terms of Reference",
+  :task.group/land-purchase "Land purchase",
   :activity.status/canceled "Cancelled",
   :document.sub-category/table-of-content "Table of Content",
   :task.status/not-started "Not started",
@@ -196,6 +201,7 @@
  :file
  {:upload-new-version "Upload new version",
   :download "Download file",
+  :other-versions "Other versions",
   :upload-info "Uploaded {date} by {author}"},
  :login {:login "Login", :password "Password", :username "Username"},
  :map
