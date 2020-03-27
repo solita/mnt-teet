@@ -89,3 +89,26 @@
   keywords, numbers for vectors)."
   [here path-spec update-fn & update-args]
   (update-path* path-spec update-fn update-args here))
+
+
+(defn find->
+  "Finds item in paths. Like some-> but more powerful.
+
+  Here is a deeply nested structure to find something in.
+
+  Paths is a list of path components to traverse.
+  Path components are either keys to get from the current
+  value or predicates to filter it with."
+  [here & paths]
+  (let [path (first paths)]
+    (cond
+      (nil? path)
+      here
+
+      (fn? path)
+      (some (fn [item]
+              (when (path item)
+                (apply find-> item (rest paths)))) here)
+
+      :else
+      (apply find-> (get here path) (rest paths)))))
