@@ -292,7 +292,11 @@
   :waiting-for-area "Piirkonna ootamine",
   :inclusion-distance "Kaasamise kaugus",
   :inclusion-distance-placeholder
-  "Andke väärtust seotud piirkondade kuvamiseks"},
+  "Andke väärtust seotud piirkondade kuvamiseks",
+  :restriction-results-by-buffer
+  "Leiti {count} piirangut {meters} meetri raadiuses.",
+  :restriction-results-by-area
+  "Leiti {count} piiranguid määratletud kaasamisaladel."},
  :task
  {:add-document "Lisan dokumendi",
   :edit-document "Redigeerin dokumenti",
