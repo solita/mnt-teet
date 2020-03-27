@@ -289,7 +289,8 @@
   :filter-by-distance "Filter by distance",
   :filter-by-area "Filter by area",
   :waiting-for-area "Waiting for area",
-  :inclusion-distance "Inclusion distance"},
+  :inclusion-distance "Inclusion distance",
+  :inclusion-distance-placeholder "Give value to show related areas"},
  :task
  {:add-document "Add document",
   :edit-document "Edit document",

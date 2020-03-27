@@ -290,7 +290,9 @@
   :filter-by-distance "Filtreeri kauguse järgi",
   :filter-by-area "Filtreeri piirkonna järgi",
   :waiting-for-area "Piirkonna ootamine",
-  :inclusion-distance "Kaasamise kaugus"},
+  :inclusion-distance "Kaasamise kaugus",
+  :inclusion-distance-placeholder
+  "Andke väärtust seotud piirkondade kuvamiseks"},
  :task
  {:add-document "Lisan dokumendi",
   :edit-document "Redigeerin dokumenti",
