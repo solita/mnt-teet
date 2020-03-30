@@ -89,7 +89,7 @@
     [url/Link {:page :file :params {:file id}}
      name]]
    [:div {:class (<class file-column-style 10 :center)}
-    [:span version]]
+    [:span (str "V" version)]]
    [:div {:class (<class file-column-style 30 :flex-end)}
     [:span (format/date created-at)]]])
 
@@ -117,28 +117,33 @@
      :else
      [ti/file])])
 
-(defn file-list [files]
+(defn- file-list [files current-file-id]
   [:<>
    [typography/Heading2 (tr [:task :results])]
    [:div
-    (mapc (fn [{id :db/id :file/keys [name type version number status] :as f}]
+    (mapc (fn [{id :db/id :file/keys [name version number status] :as f}]
             (let [[_ base-name suffix] (re-matches #"^(.*)\.([^\.]+)$" name)]
               [:div
                [:div
                 [file-icon f]
-                [url/Link {:page :file
-                           :params {:file id}}
-                 (or base-name name)]]
+                (if (= current-file-id id)
+                  [:b (or base-name name)]
+                  [url/Link {:page :file
+                             :params {:file id}}
+                   (or base-name name)])]
                [:div {:style {:font-size "12px" :display :flex
                               :justify-content :space-between
                               :margin "0 1rem 1rem 1rem"}}
-                [:span (if suffix
-                         (str/upper-case suffix)
-                         "")]
-                [:span number]
-                [:span version]
-                [:span (when status
-                         (tr-enum status))]]]))
+                (mapc
+                 (fn [item]
+                   [:span {:style {:flex-basis "25%" :flex-shrink 0 :flex-grow 0}} item])
+                 [(if suffix
+                    (str/upper-case suffix)
+                    "")
+                  number
+                  (str "V" version)
+                  (when status
+                    (tr-enum status))])]]))
           files)]])
 
 (defn- file-status [e! file]
@@ -180,9 +185,9 @@
             [[(tr [:fields :file/number]) (:file/number file)]
              [(tr [:fields :file/version]) [:span (when old?
                                                     {:class (<class common-styles/warning-text)})
-                                            (str (:file/version file)
+                                            (str "V" (:file/version file)
                                                  (when old?
-                                                   " " (tr [:file :old-version])))]]
+                                                   (str " " (tr [:file :old-version]))))]]
              (if old?
                ["" [url/Link {:page :file
                               :params {:file (:db/id latest-file)}}
@@ -239,7 +244,7 @@
       :column-widths [2 8 2]}
      [Grid {:container true}
       [Grid {:item true :xs 3 :xl 2}
-       [file-list (:task/files task)]]
+       [file-list (:task/files task) (:db/id file)]]
       [Grid {:item true :xs 9}
        [:div
         [typography/Heading2 [file-icon file] (:file/name file)]
