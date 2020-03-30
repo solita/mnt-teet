@@ -34,13 +34,15 @@
            :result-event common-controller/->Refresh}))
 
   DeleteFile
-  (process-event [{file-id :file-id} app]
+  (process-event [{file-id :file-id} {params :params :as app}]
     (t/fx app
           {:tuck.effect/type :command!
-           :command :document/delete-file
+           :command :file/delete
            :payload {:file-id file-id}
            :success-message (tr [:document :file-deleted-notification])
-           :result-event ->DeleteFileResult}))
+           :result-event (fn [_]
+                           (log/info "FILE TUHOTTU!")
+                           (common-controller/->Navigate :activity-task (dissoc params :file) {}))}))
 
   DeleteFileResult
   (process-event [_ {:keys [page params query] :as app}]

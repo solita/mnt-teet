@@ -14,11 +14,9 @@
             [teet.user.user-info :as user-info]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.buttons :as buttons]
-            [teet.comments.comments-controller :as comment-controller]
             [reagent.core :as r]
             [teet.common.common-controller :as common-controller]
             [teet.ui.skeleton :as skeleton]
-            [teet.log :as log]
             [teet.comments.comments-controller :as comments-controller]))
 
 (defn- new-comment-footer [{:keys [validate disabled?]}]
@@ -60,7 +58,7 @@
           (when-authorized :comment-delete
             entity
             [buttons/delete-button-with-confirm {:small? true
-                                                 :action (e! comment-controller/->DeleteComment id)}
+                                                 :action (e! comments-controller/->DeleteComment id)}
              (tr [:buttons :delete])])]
          [typography/Paragraph comment]])))])
 
@@ -68,7 +66,9 @@
 (defn lazy-comments
   [{:keys [e! app
            entity-type
-           entity-id]}]
+           entity-id
+           show-comment-form?]
+    :or {show-comment-form? true}}]
   (r/with-let [[comment-form ->UpdateCommentForm] (common-controller/internal-state {})]
     (let [comments (get-in app [:comments-for-entity entity-id])]
       [layout/section
@@ -81,21 +81,22 @@
                      :state comments
                      :view comment-list
                      :refresh (count comments)}]
-       [form/form {:e! e!
-                   :value @comment-form
-                   :on-change-event ->UpdateCommentForm
-                   :save-event #(let [comment (:comment/comment @comment-form)]
-                                  (reset! comment-form {})
-                                  (comments-controller/->CommentOnEntity
-                                   entity-type entity-id comment))
-                   :footer new-comment-footer
-                   :spec :task/new-comment-form}
-        ^{:attribute :comment/comment}
-        [TextField {:rows 4
-                    :multiline true
-                    :InputLabelProps {:shrink true}
-                    :full-width true
-                    :placeholder (tr [:document :new-comment])}]]])))
+       (when show-comment-form?
+         [form/form {:e! e!
+                     :value @comment-form
+                     :on-change-event ->UpdateCommentForm
+                     :save-event #(let [comment (:comment/comment @comment-form)]
+                                    (reset! comment-form {})
+                                    (comments-controller/->CommentOnEntity
+                                     entity-type entity-id comment))
+                     :footer new-comment-footer
+                     :spec :task/new-comment-form}
+          ^{:attribute :comment/comment}
+          [TextField {:rows 4
+                      :multiline true
+                      :InputLabelProps {:shrink true}
+                      :full-width true
+                      :placeholder (tr [:document :new-comment])}]])])))
 
 (defn comments [{:keys [e!
                         new-comment

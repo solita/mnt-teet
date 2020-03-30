@@ -722,8 +722,7 @@
 
   CloseDialog
   (process-event [_ {:keys [page params query] :as app}]
-    (update app :stepper dissoc :dialog)
-    #_(t/fx app
+    (t/fx (update app :stepper dissoc :dialog)
           {:tuck.effect/type :navigate
            :page             page
            :params           params

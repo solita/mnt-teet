@@ -43,8 +43,9 @@
                   db
                   (project-db/project-by-id db [:thk.project/id id]))]
     (-> project
-        (assoc :thk.project/permitted-users (project-model/users-with-permission
-                                              (permission-db/valid-project-permissions db (:db/id project))))
+        (assoc :thk.project/permitted-users
+               (project-model/users-with-permission
+                (permission-db/valid-project-permissions db (:db/id project))))
         (update :thk.project/lifecycles project-model/sort-lifecycles)
         (update :thk.project/lifecycles
                 (fn [lifecycle]

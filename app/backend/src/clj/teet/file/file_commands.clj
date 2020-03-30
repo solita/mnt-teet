@@ -54,14 +54,14 @@
                       :file/status status}
                      (modification-meta user))]})
 
+(defcommand :file/delete
+  {:doc "Delete file"
+   :context {:keys [user db]}
+   :payload {:keys [file-id status]}
+   :project-id (project-db/file-project-id db file-id)
+   :authorization {:document/delete-document {:db/id file-id}}
+   :transact [(deletion-tx user file-id)]})
 
-#_(defmethod db-api/command! :document/delete [{conn :conn
-                                              user :user}
-                                             {:keys [document-id]}]
-  (d/transact
-    conn
-    {:tx-data [(deletion-tx user document-id)]})
-  :ok)
 
 #_(defmethod db-api/command! :document/delete-file [{conn :conn
                                                    user :user}
