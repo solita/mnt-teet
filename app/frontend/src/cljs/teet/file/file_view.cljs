@@ -255,5 +255,6 @@
         {:e! e!
          :app app
          :entity-id (:db/id file)
-         :entity-type :file}
+         :entity-type :file
+         :show-comment-form? (not old?)}
         [file-details e! file latest-file]]]]]))
