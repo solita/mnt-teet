@@ -3,14 +3,12 @@
   (:require [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
             [teet.task.task-controller :as task-controller]
-            [teet.task.task-style :as task-style]
             [teet.localization :refer [tr tr-enum]]
             [teet.ui.buttons :as buttons]
             [teet.ui.format :as format]
-            [teet.ui.material-ui :refer [Link LinearProgress]]
+            [teet.ui.material-ui :refer [LinearProgress]]
             [teet.ui.typography :as typography]
             [teet.ui.panels :as panels]
-            [teet.ui.url :as url]
             teet.task.task-spec
             [teet.project.task-model :as task-model]
             [teet.file.file-controller :as file-controller]
@@ -19,7 +17,6 @@
             [teet.ui.file-upload :as file-upload]
             [teet.ui.select :as select]
             [teet.project.project-navigator-view :as project-navigator-view]
-            [teet.project.project-style :as project-style]
             [teet.project.project-model :as project-model]
             [teet.user.user-model :as user-model]
             [teet.ui.text-field :refer [TextField]]
@@ -139,8 +136,8 @@
   [task-form e! (:edit-task-data app)])
 
 
-(defn task-page [e! {{:keys [add-document] :as query} :query
-                     {task-id :task :as params} :params
+(defn task-page [e! {{:keys [add-document] :as _query} :query
+                     {task-id :task :as _params} :params
                      new-document :new-document :as app}
                  project
                  breadcrumbs]
