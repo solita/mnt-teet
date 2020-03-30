@@ -1,8 +1,29 @@
 (ns teet.task.task-commands
-  (:require [teet.db-api.core :as db-api :refer [defcommand]]
+  (:require [datomic.client.api :as d]
+            [teet.db-api.core :as db-api :refer [defcommand]]
             [teet.project.project-db :as project-db]
             [teet.meta.meta-model :as meta-model]
             [teet.util.collection :as uc]))
+
+(defn task-type-and-group-both-present-or-absent?
+  "Check that both task type and group are present, or neither"
+  [{:task/keys [type group]}]
+  (= (boolean type)
+     (boolean group)))
+
+(defn valid-task-type-and-group-pair?
+  "Check if the task type is valid for the given task group, if present"
+  [db {:task/keys [type group]}]
+  (or (and (not type) (not group))
+      (boolean
+       (seq
+        (d/q '[:find ?type-enum
+               :in $ ?type-enum ?group
+               :where
+               [?type-enum :enum/valid-for ?group]]
+             db
+             type
+             group)))))
 
 (defcommand :task/delete
   {:doc "Mark a task as deleted"
@@ -20,7 +41,8 @@
    :project-id (project-db/task-project-id db id)
    :authorization {:task/task-information {:db/id id
                                            :link :task/assignee}}  ; auth checks
-   ;; TODO check that type is valid for group
+   :pre [(task-type-and-group-both-present-or-absent? task)
+         (valid-task-type-and-group-pair? db task)]
    ;; TODO how to remove e.g. end date?
    :transact [(merge (-> task
                          (select-keys [:db/id :task/name :task/description
