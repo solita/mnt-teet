@@ -78,8 +78,8 @@
 
  :file {:path "/projects/:project/:activity/:task/:file"
         :parent :activity-task
-        :crumb (-> state :file :file/name)
-        :title (-> state :file :file/name)
+        :crumb (-> state (teet.project.project-model/file-by-id file) :file/name)
+        :title (-> state (teet.project.project-model/file-by-id file) :file/name)
         :view teet.file.file-view/file-page
         :state {:query :thk.project/fetch-project
                 :args {:thk.project/id project
