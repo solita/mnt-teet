@@ -48,32 +48,36 @@
   []
   {:margin "0 0.25rem"})
 
+(defn- base-name-and-suffix [name]
+  (let [[_ base-name suffix] (re-matches #"^(.*)\.([^\.]+)$" name)]
+    (if base-name
+      [base-name (str/upper-case suffix)]
+      [name ""])))
+
 (defn- file-row
-  [{id :db/id :file/keys [number type version status name] :as _file}]
-  [:div {:class [(<class common-styles/flex-row) (<class common-styles/margin-bottom 0.5)]}
-   [:div {:class (<class file-column-style 30)}
-    [url/Link {:page :file :params {:file id}}
-     name]]
-   [:div {:class (<class file-column-style 7)}
-    [:span number]]
-   [:div {:class (<class file-column-style 16)}
-    [:span type]]
-   [:div {:class (<class file-column-style 7)}
-    [:span version]]
-   [:div {:class (<class file-column-style 10)}
-    [:span status]]
-   [:div {:class (<class file-column-style 30 :flex-end)}
-    [url/Link {:class (<class file-row-icon-style)
-               :page :file
-               :params {:file id}
-               :query {:tab "comment"}}
+  [{id :db/id :file/keys [number version status name] :as _file}]
+  (let [[base-name suffix] (base-name-and-suffix name)]
+    [:div {:class [(<class common-styles/flex-row) (<class common-styles/margin-bottom 0.5)]}
+     [:div {:class (<class file-column-style 44)}
+      [url/Link {:page :file :params {:file id}} base-name]]
+     [:div {:class (<class file-column-style 10)}
+      [:span number]]
+     [:div {:class (<class file-column-style 10)}
+      [:span suffix]]
+     [:div {:class (<class file-column-style 10)}
+      [:span version]]
+     [:div {:class (<class file-column-style 13)}
+      [:span status]]
+     [:div {:class (<class file-column-style 13 :flex-end)}
+      [url/Link {:class (<class file-row-icon-style)
+                 :page :file
+                 :params {:file id}
+                 :query {:tab "comments"}}
        [icons/communication-comment]]
-    [Link {:class (<class file-row-icon-style)
-           :href "asd"}                                   ;;TODO add implementatkion
-     [icons/file-cloud-upload]]
-    [Link {:class (<class file-row-icon-style)
-           :href "test"}
-     [icons/file-cloud-download]]]])
+      [Link {:class (<class file-row-icon-style)
+             :target :_blank
+             :href (common-controller/query-url :file/download-file {:file-id id})}
+       [icons/file-cloud-download]]]]))
 
 (defn- other-version-row
   [{id :db/id
