@@ -334,29 +334,33 @@
 
 (defn project-navigator-with-content
   "Page structure showing project navigator along with content."
-  [{:keys [e! project app breadcrumbs] :as opts} & content]
-  [:<>
-   [breadcrumbs/breadcrumbs breadcrumbs]
-   [typography/Heading1 (:thk.project/name project)]
-   [project-navigator-dialogs opts]
-   [Paper {:class (<class task-style/task-page-paper-style)}
-    [Grid {:container true
-           :wrap :nowrap
-           :spacing   0}
-     [Grid {:item  true
-            :xs    3
-            :xl 1
-            :style {:max-width "400px"}}
-      [project-navigator e! project (:stepper app) (:params app) true]]
-     [Grid {:item  true
-            :xs    6
-            :xl 8
-            :style {;:max-width "800px"
-                    :padding "2rem 1.5rem"}}
-      content]
-     [Grid {:item  true
-            :xs    :auto
-            :xl 3
-            :style {:display :flex
-                    :flex    1}}
-      [project-map-view/project-map e! app project]]]]])
+  [{:keys [e! project app breadcrumbs column-widths]
+    :or {column-widths [3 6 3]}
+    :as opts} & content]
+  (let [[nav-w content-w map-w] column-widths]
+    [:<>
+     [breadcrumbs/breadcrumbs breadcrumbs]
+     [typography/Heading1 (:thk.project/name project)]
+     [project-navigator-dialogs opts]
+     [Paper {:class (<class task-style/task-page-paper-style)}
+      [Grid {:container true
+             :wrap :nowrap
+             :spacing   0}
+       [Grid {:item  true
+              :xs nav-w
+              :style {:max-width "400px"}}
+        [project-navigator e! project (:stepper app) (:params app) true]]
+       [Grid {:item  true
+              :xs content-w
+              :style {
+                      :padding "2rem 1.5rem"
+                      :overflow-y :scroll
+                      ;; content area should scroll, not the whole page because we
+                      ;; want map to stay in place without scrolling it
+                      :max-height "calc(100vh - 150px)"}}
+        content]
+       [Grid {:item  true
+              :xs map-w
+              :style {:display :flex
+                      :flex    1}}
+        [project-map-view/project-map e! app project]]]]]))

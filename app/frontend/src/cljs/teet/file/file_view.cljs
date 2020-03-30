@@ -98,43 +98,67 @@
                                          [icons/file-cloud-upload])}
     (tr [:task :upload-files])]])
 
-(defn file-icon [{:file/keys [type]}]
-  (cond
-    (and type (str/starts-with? type "image/"))
-    [fi/image]
+(defn- file-icon-style []
+  {:display :inline-block
+   :margin-right "0.25rem"
+   :position :relative
+   :top "6px"})
 
-    :else
-    [ti/file]))
+(defn file-icon [{:file/keys [type]}]
+  [:div {:class (<class file-icon-style)}
+   (cond
+     (and type (str/starts-with? type "image/"))
+     [fi/image]
+
+     :else
+     [ti/file])])
 
 (defn file-list [files]
   [:<>
    [typography/Heading2 (tr [:task :results])]
    [:div
     (mapc (fn [{id :db/id :file/keys [name type version number status] :as f}]
-            [:div
-             (mapc (fn [item]
-                     [:div {:class (<class common-styles/inline-block)}
-                      item])
-                   [[file-icon f]
-                    [url/Link {:page :file
-                               :params {:file id}} name]
-                    type
-                    number
-                    version
-                    (when status
-                      (tr-enum status))])])
+            (let [[_ base-name suffix] (re-matches #"^(.*)\.([^\.]+)$" name)]
+              [:div
+               [:div
+                [file-icon f]
+                [url/Link {:page :file
+                           :params {:file id}}
+                 (or base-name name)]]
+               [:div {:style {:font-size "12px" :display :flex
+                              :justify-content :space-between
+                              :margin "0 1rem 1rem 1rem"}}
+                [:span (if suffix
+                         (str/upper-case suffix)
+                         "")]
+                [:span number]
+                [:span version]
+                [:span (when status
+                         (tr-enum status))]]]))
           files)]])
 
 (defn- file-status [e! file]
-  [select/status {:e! e!
-                  :status (:file/status file)
-                  :attribute :file/status
-                  :on-change (e! file-controller/->UpdateFileStatus (:db/id file))}])
+  [select/select-enum {:e! e!
+                       :show-label? false
+                       :value (:file/status file)
+                       :attribute :file/status
+                       :on-change (e! file-controller/->UpdateFileStatus (:db/id file))}])
 
 (defn- labeled-data [[label data]]
   [:div {:class (<class common-styles/inline-block)}
    [:div [:b label]]
    [:div data]])
+
+(defn preview-style []
+  {:background-color theme-colors/gray-lightest
+   :width "100%"
+   :height "250px"
+   :text-align :center
+   :vertical-align :middle
+   :display :flex
+   :justify-content :space-around
+   :flex-direction :column
+   :margin "2rem 0 2rem 0"})
 
 (defn- file-details [e! {:keys [replacement-upload-progress] :as file} latest-file]
   (let [old? (some? latest-file)
@@ -162,17 +186,11 @@
                [(tr [:fields :file/status]) [file-status e! file]])])]
 
      ;; preview block (placeholder for now)
-     [:div {:style {:background-color theme-colors/gray-lightest
-                    :width "100%"
-                    :height "250px"
-                    :text-align :center
-                    :vertical-align :middle
-                    :display :flex
-                    :justify-content :space-around
-                    :flex-direction :column
-                    :margin "2rem 0 2rem 0"}}
+     [:div {:class (<class preview-style)}
       (if (str/starts-with? (:file/type file) "image/")
-        [:img {:style {:width "100%" :height "250px"}
+        [:img {:style {:width :auto :height :auto
+                       :max-height "250px"
+                       :object-fit :contain}
                :src (common-controller/query-url :file/download-file {:file-id (:db/id file)})}]
         "Preview")]
 
@@ -213,14 +231,14 @@
      {:e! e!
       :app app
       :project project
-      :breadcrumbs breadcrumbs}
+      :breadcrumbs breadcrumbs
+      :column-widths [2 8 2]}
      [Grid {:container true}
-      [Grid {:item true :xs 2 :xl 2}
+      [Grid {:item true :xs 3 :xl 2}
        [file-list (:task/files task)]]
-      [Grid {:item true :xs 8}
+      [Grid {:item true :xs 9}
        [:div
-        [file-icon file]
-        [typography/Heading2 (:file/name file)]
+        [typography/Heading2 [file-icon file] (:file/name file)]
         [buttons/button-secondary {:on-click :D}
          (tr [:buttons :edit])]]
 

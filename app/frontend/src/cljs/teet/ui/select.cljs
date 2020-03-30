@@ -256,24 +256,6 @@
                                     (user-info/user-name-and-email user)))}
                   {:items @selectable-users
                    :format-item user-info/user-name-and-email}))])
-;;
-;; Status
-;;
-(defn- status-container-style
-  []
-  {:display :flex
-   :flex-direction :row
-   :align-items :center
-   :padding-bottom "1rem"
-   :margin-bottom "1rem"})
-
-(defn status
-  [{:keys [e! status attribute on-change]}]
-  [:div {:class (<class status-container-style)}
-   [select-enum {:e! e!
-                 :on-change on-change
-                 :value status
-                 :attribute attribute}]])
 
 (defn radio [{:keys [value items format-item on-change]}]
   (let [item->value (zipmap items (map str (range)))]

@@ -24,8 +24,7 @@
                                     [25 25 25 25])]
     [:div {:style {:flex 1
                    :display :flex
-                   :flex-direction :column
-                   :height "calc(100vh - 120px)"}}
+                   :flex-direction :column}}
      ;; Add window width as key to force map rerender when window width changes.
      ^{:key (str @common/window-width)}
      [map-view/map-view e!
