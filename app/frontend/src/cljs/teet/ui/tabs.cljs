@@ -56,7 +56,7 @@
 
            ;; Not a wide display, show tabbed interface
            [:div
-            [:div {:style {:margin-bottom "1rem"}}
+            [:div {:style {:margin "1rem 0 1rem 0"}}
              [:div {:style {:display :inline-block}}            ;;TODO cleanup inline-styles and html structure
               (if (= (:tab query) "comments")
                 [Link {:href (url/remove-query-param :tab)} "Details"]
