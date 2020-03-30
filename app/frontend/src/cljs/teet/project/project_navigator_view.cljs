@@ -16,7 +16,8 @@
             [teet.task.task-style :as task-style]
             [teet.project.project-map-view :as project-map-view]
             [teet.ui.breadcrumbs :as breadcrumbs]
-            [teet.ui.panels :as panels]))
+            [teet.ui.panels :as panels]
+            [teet.project.project-style :as project-style]))
 
 (defn- svg-style
   [bottom?]
@@ -338,7 +339,7 @@
     :or {column-widths [3 6 3]}
     :as opts} & content]
   (let [[nav-w content-w map-w] column-widths]
-    [:<>
+    [:div {:class (<class project-style/page-container)}
      [breadcrumbs/breadcrumbs breadcrumbs]
      [typography/Heading1 (:thk.project/name project)]
      [project-navigator-dialogs opts]
@@ -354,7 +355,7 @@
               :xs content-w
               :style {
                       :padding "2rem 1.5rem"
-                      :overflow-y :scroll
+                      :overflow-y :auto
                       ;; content area should scroll, not the whole page because we
                       ;; want map to stay in place without scrolling it
                       :max-height "calc(100vh - 150px)"}}

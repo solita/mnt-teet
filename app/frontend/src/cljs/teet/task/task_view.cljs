@@ -131,7 +131,7 @@
                      new-document :new-document :as app}
                  project
                  breadcrumbs]
-  [:div {:class (<class project-style/page-container)}
+  [:<>
    [panels/modal {:open-atom (r/wrap (boolean add-document) :_)
                   :title     (tr [:task :add-document])
                   :on-close  (e! task-controller/->CloseAddDocumentDialog)}
