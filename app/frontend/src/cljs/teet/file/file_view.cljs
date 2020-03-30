@@ -6,7 +6,7 @@
             [teet.ui.url :as url]
             [teet.ui.icons :as icons]
             [teet.localization :refer [tr tr-enum]]
-            [teet.ui.material-ui :refer [Grid Link LinearProgress]]
+            [teet.ui.material-ui :refer [Grid Link LinearProgress Menu MenuItem]]
             [teet.ui.typography :as typography]
             [teet.ui.util :refer [mapc]]
             [herb.core :refer [<class]]
@@ -22,7 +22,8 @@
             [teet.ui.format :as format]
             [teet.ui.file-upload :as file-upload]
             [teet.log :as log]
-            [teet.common.common-controller :as common-controller]))
+            [teet.common.common-controller :as common-controller]
+            [teet.ui.panels :as panels]))
 
 (defn- file-column-style
   ([basis]
@@ -227,34 +228,60 @@
      [:div
       (mapc other-version-row other-versions)]]))
 
+
+(defn- file-edit-dialog [{:keys [e! on-close file]}]
+  [panels/modal {:title (tr [:file :edit])
+                 :on-close on-close}
+   [:div
+    [:div {:style {:background-color theme-colors/gray-lighter
+                   :width "100%"
+                   :height "150px"
+                   :margin-bottom "1rem"}}
+     (:file/name file)]
+    [:div {:style {:display :flex
+                   :justify-content :space-between}}
+     [:div {:style {:flex-basis "50%"}}
+      [buttons/button-warning {:on-click :D}
+       (tr [:buttons :delete])]]
+     [:div
+      [buttons/button-secondary {:on-click on-close}
+       (tr [:buttons :cancel])]
+      [buttons/button-primary {:on-click on-close}
+       (tr [:buttons :save])]]]]])
+
 (defn file-page [e! {{file-id :file
                       task-id :task} :params
                      :as app} project breadcrumbs]
-  (let [task (project-model/task-by-id project task-id)
-        file (project-model/file-by-id project file-id false)
-        old? (nil? file)
-        file (or file (project-model/file-by-id project file-id true))
-        latest-file (when old?
-                      (project-model/latest-version-for-file-id project file-id))]
-    [project-navigator-view/project-navigator-with-content
-     {:e! e!
-      :app app
-      :project project
-      :breadcrumbs breadcrumbs
-      :column-widths [2 8 2]}
-     [Grid {:container true}
-      [Grid {:item true :xs 3 :xl 2}
-       [file-list (:task/files task) (:db/id file)]]
-      [Grid {:item true :xs 9}
-       [:div
-        [typography/Heading2 [file-icon file] (:file/name file)]
-        [buttons/button-secondary {:on-click :D}
-         (tr [:buttons :edit])]]
+  (r/with-let [edit-open? (r/atom false)]
+    (let [task (project-model/task-by-id project task-id)
+          file (project-model/file-by-id project file-id false)
+          old? (nil? file)
+          file (or file (project-model/file-by-id project file-id true))
+          latest-file (when old?
+                        (project-model/latest-version-for-file-id project file-id))]
+      [project-navigator-view/project-navigator-with-content
+       {:e! e!
+        :app app
+        :project project
+        :breadcrumbs breadcrumbs
+        :column-widths [2 8 2]}
+       [Grid {:container true}
+        [Grid {:item true :xs 3 :xl 2}
+         [file-list (:task/files task) (:db/id file)]]
+        [Grid {:item true :xs 9}
+         [:div
+          [typography/Heading2 [file-icon file] (:file/name file)
 
-       [tabs/details-and-comments-tabs
-        {:e! e!
-         :app app
-         :entity-id (:db/id file)
-         :entity-type :file
-         :show-comment-form? (not old?)}
-        [file-details e! file latest-file]]]]]))
+           [buttons/button-secondary {:on-click #(reset! edit-open? true)
+                                      :style {:float :right}}
+            (tr [:buttons :edit])]
+           (when @edit-open?
+             [file-edit-dialog {:e! e! :on-close #(reset! edit-open? false) :file file}])]]
+
+         [tabs/details-and-comments-tabs
+          {:e! e!
+           :app app
+           :entity-id (:db/id file)
+           :entity-type :file
+           :show-comment-form? (not old?)}
+          [file-details e! file latest-file]]]]])))
