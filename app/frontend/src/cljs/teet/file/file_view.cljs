@@ -224,9 +224,12 @@
        (tr [:file :download])]]
 
      ;; list previous versions
-     [typography/Heading2 (tr [:file :other-versions])]
-     [:div
-      (mapc other-version-row other-versions)]]))
+     (when (seq other-versions)
+       [:<>
+        [:br]
+        [typography/Heading2 (tr [:file :other-versions])]
+        [:div
+         (mapc other-version-row other-versions)]])]))
 
 
 (defn- file-edit-dialog [{:keys [e! on-close file]}]
@@ -241,7 +244,7 @@
     [:div {:style {:display :flex
                    :justify-content :space-between}}
      [:div {:style {:flex-basis "50%"}}
-      [buttons/button-warning {:on-click :D}
+      [buttons/button-warning {:on-click (e! file-controller/->DeleteFile (:db/id file))}
        (tr [:buttons :delete])]]
      [:div
       [buttons/button-secondary {:on-click on-close}

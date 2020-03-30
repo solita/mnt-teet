@@ -25,8 +25,10 @@
                              next-versions))]
     (vec
      (for [f first-versions
-           :let [[latest-version & previous-versions]
-                 (reverse
-                  (take-while some? (iterate next-version f)))]]
+           :let [versions (filter (complement :meta/deleted?)
+                                  (reverse
+                                   (take-while some? (iterate next-version f))))
+                 [latest-version & previous-versions] versions]
+           :when latest-version]
        (assoc latest-version
               :versions previous-versions)))))
