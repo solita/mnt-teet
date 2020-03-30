@@ -1,7 +1,8 @@
 (ns teet.task.task-commands
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
             [teet.project.project-db :as project-db]
-            [teet.meta.meta-model :as meta-model]))
+            [teet.meta.meta-model :as meta-model]
+            [teet.util.collection :as uc]))
 
 (defcommand :task/delete
   {:doc "Mark a task as deleted"
@@ -19,8 +20,15 @@
    :project-id (project-db/task-project-id db id)
    :authorization {:task/task-information {:db/id id
                                            :link :task/assignee}}  ; auth checks
-   :transact [(merge (select-keys task
-                                  [:db/id :task/name :task/description :task/status :task/assignee])
+   ;; TODO check that type is valid for group
+   ;; TODO how to remove e.g. end date?
+   :transact [(merge (-> task
+                         (select-keys [:db/id :task/name :task/description
+                                       :task/group :task/type
+                                       :task/status :task/assignee
+                                       :task/estimated-start-date :task/estimated-end-date
+                                       :task/actual-start-date :task/actual-end-date])
+                         (uc/without-nils))
                      (meta-model/modification-meta user))]})
 
 (defcommand :task/create

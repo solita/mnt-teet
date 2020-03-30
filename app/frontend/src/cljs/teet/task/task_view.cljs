@@ -120,10 +120,17 @@
    [task-basic-info e! task]
    [file-view/file-table files]])
 
+(defn- task-header
+  [e! task]
+  [:div {:class (<class common-styles/heading-and-button-style)}
+   [typography/Heading1 (tr-enum (:task/type task))]
+   [buttons/button-secondary {:on-click #(e! (project-controller/->OpenEditTaskDialog (:db/id task)))}
+    (tr [:buttons :edit])]])
+
 (defn task-page-content
   [e! app task]
   [:div
-   [typography/Heading1 (tr-enum (:task/type task))]
+   [task-header e! task]
    [tabs/details-and-comments-tabs
     {:e! e!
      :app app
@@ -187,8 +194,13 @@
      [select/select-user {:e! e! :attribute :task/assignee}]]))
 
 (defmethod project-navigator-view/project-navigator-dialog :add-task
-  [{:keys [e! app] :as opts} dialog]
+  [{:keys [e! app]} _dialog]
   [task-form e! (:edit-task-data app)])
+
+(defmethod project-navigator-view/project-navigator-dialog :edit-task
+  [{:keys [e! app]}  _dialog]
+  [task-form e! (:edit-task-data app)])
+
 
 (defn task-page [e! {{:keys [add-document] :as query} :query
                      {task-id :task :as params} :params

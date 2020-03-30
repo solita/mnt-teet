@@ -118,6 +118,7 @@
 (defrecord DrawSelectionCancel [])
 
 
+(defrecord OpenEditTaskDialog [task-id])
 (defrecord OpenEditActivityDialog [activity-id])
 (defrecord ContinueProjectSetup [project-id])
 (defrecord SkipProjectSetup [project-id])
@@ -245,6 +246,15 @@
                      :selected-feature-path [:route :project :thk.project/related-cadastral-units]
                      :checked-feature-path [:route :project :checked-cadastral-units]
                      :checked-feature-geojson-path [:route :project :checked-cadastral-geojson]}})
+
+(defn- task->edit-task-data
+  "updates task data obtained from the db into one suitable for task form"
+  [task]
+  (-> task
+      (update :task/type :db/ident)
+      (update :task/group :db/ident)
+      (update :task/status :db/ident)
+      (update :task/assignee #(select-keys % [:user/email :user/family-name :user/given-name :user/id]))))
 
 (extend-protocol t/Event
   DrawSelectionOnMap
@@ -739,6 +749,15 @@
                (-> app common-controller/page-state
                    (project-model/activity-by-id activity-id)
                    (update :activity/name :db/ident)))))
+
+  OpenEditTaskDialog
+  (process-event [{task-id :task-id} app]
+    (-> app
+        (assoc-in [:stepper :dialog] {:type :edit-task})
+        (assoc :edit-task-data
+               (-> app common-controller/page-state
+                   (project-model/task-by-id task-id)
+                   task->edit-task-data))))
 
   UpdateActivityState
   (process-event [{activity-id :id status :status} app]
