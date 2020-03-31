@@ -94,7 +94,7 @@
          :command          :task/update
          :payload          {:db/id (goog.math.Long/fromString task-id)
                             :task/status status}
-         :success-message  "Task status update successful"
+         :success-message (tr [:notifications :task-status-updated])
          :result-event     common-controller/->Refresh})))
 
   UpdateEditTaskForm
@@ -112,14 +112,14 @@
              (if id
                {:command :task/update
                 :payload task
-                :success-message "Task edited succesfully"}  ; FIXME: localize
+                :success-message (tr [:notifications :task-updated])}
                {:command :task/create
 
                 :payload {:activity-id (goog.math.Long/fromString (get-in stepper [:dialog :activity-id]))
                           :task (-> task
                                     (update :task/assignee (fn [{id :user/id}] [:user/id id]))
                                     (merge {:db/id "new-task"}))}
-                :success-message "Task created successfully"})))))
+                :success-message (tr [:notifications :task-created])})))))
 
   SaveTaskSuccess
   (process-event [_ {:keys [page query params] :as app}]
