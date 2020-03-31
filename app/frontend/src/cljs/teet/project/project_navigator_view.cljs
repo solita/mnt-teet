@@ -337,7 +337,7 @@
   "Page structure showing project navigator along with content."
   [{:keys [e! project app breadcrumbs column-widths]
     :or {column-widths [3 6 3]}
-    :as opts} & content]
+    :as opts} content]
   (let [[nav-w content-w map-w] column-widths]
     [:div {:class (<class project-style/page-container)}
      [breadcrumbs/breadcrumbs breadcrumbs]
