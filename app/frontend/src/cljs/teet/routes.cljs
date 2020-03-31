@@ -80,7 +80,8 @@
                                       :params params
                                       :query query
                                       :url js/window.location.href
-                                      :route-key (-> js/window.location.hash (str/split #"\?") first)}
+                                      ;; Use the name of the page as route key instead of all params
+                                      :route-key (name route-name)}
                      navigation-data (assoc navigation-data :current-app app)
 
                      event-leave (on-leave-event {:current-app app
