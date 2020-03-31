@@ -2,6 +2,7 @@
   "View for a workflow task"
   (:require [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
+            [teet.authorization.authorization-check :refer [when-authorized]]
             [teet.common.common-controller :as common-controller]
             [teet.common.common-styles :as common-styles]
             [teet.file.file-controller :as file-controller]
@@ -58,8 +59,10 @@
   [e! task]
   [:div {:class (<class common-styles/heading-and-button-style)}
    [typography/Heading1 (tr-enum (:task/type task))]
-   [buttons/button-secondary {:on-click #(e! (project-controller/->OpenEditTaskDialog (:db/id task)))}
-    (tr [:buttons :edit])]])
+   ;; TODO Does when-authorized work when link is not meta/creator?
+   (when-authorized :task/task-information task
+     [buttons/button-secondary {:on-click #(e! (project-controller/->OpenEditTaskDialog (:db/id task)))}
+      (tr [:buttons :edit])])])
 
 (defn task-page-content
   [e! app task]

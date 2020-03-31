@@ -86,12 +86,6 @@
                                        :functionality functionality
                                        :entity        entity})))))
 
-#?(:clj
-   (defmacro when-authorized
-     [user functionality entity & body]
-     `(when (authorized? ~user ~functionality {:entity ~entity})
-        ~@body)))
-
 #?(:cljs
    (defn when-pm-or-owner
          [project component]
@@ -101,11 +95,11 @@
 
 #?(:cljs
    (defn when-authorized
-         [functionality entity component]
-         (log/info "Authorization-check functionality: " functionality
-                   "entity : " entity
-                   "App-state/User" @app-state/user
-                   "rules for functionality: " (@authorization-rules functionality))
+     [functionality entity component]
+     (log/info "Authorization-check functionality: " functionality
+               "entity : " entity
+               "App-state/User" @app-state/user
+               "rules for functionality: " (@authorization-rules functionality))
      (when (authorized? @app-state/user functionality {:entity entity})
        component)))
 
