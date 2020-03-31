@@ -170,7 +170,7 @@
    :flex-direction :column
    :margin "2rem 0 2rem 0"})
 
-(defn- file-details [e! {:keys [replacement-upload-progress] :as file} latest-file]
+(defn- file-details [e! {:keys [replacement-upload-progress] :as file} latest-file edit-open?]
   (let [old? (some? latest-file)
         other-versions (if old?
                          (into [latest-file]
@@ -178,7 +178,12 @@
                                        (:versions latest-file)))
                          (:versions file))]
     [:div
-     [:div (:file/name file)]
+     [:div {:class [(<class common-styles/heading-and-button-style) (<class common-styles/margin-bottom 2)]}
+      [typography/Heading2 [file-icon file] (:file/name file)]
+
+      [buttons/button-secondary {:on-click #(reset! edit-open? true)}
+       (tr [:buttons :edit])]]
+     [:div [:span (:file/name file)]]
      [:div (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator file))
                                      :date (format/date (:meta/created-at file))})]
      [:div {:class (<class common-styles/flex-row-space-between)}
@@ -220,7 +225,7 @@
                                                                   {:file-id (:db/id file)})
                                :target "_blank"
                                :start-icon (r/as-element
-                                            [icons/file-cloud-download])}
+                                             [icons/file-cloud-download])}
        (tr [:file :download])]]
 
      ;; list previous versions
@@ -271,20 +276,14 @@
        [Grid {:container true}
         [Grid {:item true :xs 3 :xl 2}
          [file-list (:task/files task) (:db/id file)]]
-        [Grid {:item true :xs 9}
-         [:div
-          [typography/Heading2 [file-icon file] (:file/name file)
-
-           [buttons/button-secondary {:on-click #(reset! edit-open? true)
-                                      :style {:float :right}}
-            (tr [:buttons :edit])]
-           (when @edit-open?
-             [file-edit-dialog {:e! e! :on-close #(reset! edit-open? false) :file file}])]]
-
+        [Grid {:item true :xs 9 :xl 10}
+         [:<>
+          (when @edit-open?
+            [file-edit-dialog {:e! e! :on-close #(reset! edit-open? false) :file file}])]
          [tabs/details-and-comments-tabs
           {:e! e!
            :app app
            :entity-id (:db/id file)
            :entity-type :file
            :show-comment-form? (not old?)}
-          [file-details e! file latest-file]]]]])))
+          [file-details e! file latest-file edit-open?]]]]])))

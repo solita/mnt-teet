@@ -8,8 +8,10 @@
             [reagent.core :as reagent]
             [teet.ui.typography :as typography]
             [teet.ui.common :as common]
+            [herb.core :refer [<class]]
             [teet.ui.panels :as panels]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.common.common-styles :as common-styles]))
 
 (defn tabs [{:keys [e! selected-tab class]} tabs]
   (let [tabs (map-indexed
@@ -44,10 +46,12 @@
      :reagent-render
      (fn [{:keys [app] :as opts} details]
        (let [query (:query app)
-             comments-component [comments-view/lazy-comments
-                                 (select-keys opts [:e! :app :entity-id :entity-type
-                                                    :show-comment-form?])]]
-         (log/info "WIDE? " (common/wide-display?))
+             comments-component [:div
+                                 (when (common/wide-display?)
+                                   [typography/Heading2 {:class (<class common-styles/margin-bottom 2)} (tr [:document :comments])])
+                                 [comments-view/lazy-comments
+                                  (select-keys opts [:e! :app :entity-id :entity-type
+                                                     :show-comment-form?])]]]
          (if (common/wide-display?)
            ;; Wide display, show side by side
            [panels/side-by-side
