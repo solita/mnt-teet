@@ -68,4 +68,6 @@
                 [Link {:href (url/set-query-param :tab "comments")} "Comments"])]]
             (if (= (:tab query) "comments")                     ;;TODO LOAD comments on render and
               comments-component
-              details)])))}))
+              (with-meta
+                details
+                {:key "details"}))])))}))
