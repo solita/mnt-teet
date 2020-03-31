@@ -11,8 +11,8 @@
             [teet.project.activity-model :as activity-model]
             [teet.project.task-model :as task-model]
             [clojure.spec.alpha :as s]
-            [teet.util.collection :as cu])
-  #?(:clj (:import (java.util Date))))
+            [teet.util.collection :as cu]
+            [teet.util.date :as date]))
 
 ;; A valid project id is either the :db/id in datomic or
 ;; a lookup ref specifying the project id in THK
@@ -178,15 +178,10 @@
 (def sort-activities
   (partial sort-by :activity/estimated-start-date))
 
-(defn date-in-past?
-  [date]
-  #?(:clj (.before date (Date.))
-     :cljs (t/before? date (js/Date.))))
-
 (defn- activity-behind-schedule?
   [{:activity/keys [estimated-end-date] :as activity}]
   (and (not (activity-model/activity-ready-statuses (get-in activity [:activity/status :db/ident])))
-       (date-in-past? estimated-end-date)))
+       (date/date-in-past? estimated-end-date)))
 
 (defn- atleast-one-activity-over-deadline?
   [activities]
@@ -197,7 +192,7 @@
 (defn- task-behind-schedule?
   [{:task/keys [estimated-end-date] :as task}]
   (and (not (task-model/completed? task))
-       (date-in-past? estimated-end-date)))
+       (date/date-in-past? estimated-end-date)))
 
 (defn- atleast-one-task-over-deadline?
   [tasks]
@@ -217,9 +212,9 @@
                 (mapcat :thk.lifecycle/activities (:thk.project/lifecycles project)))]
     (assoc project :thk.project/status
                    (cond
-                     (and (nil? owner) (date-in-past? estimated-start-date))
+                     (and (nil? owner) (date/date-in-past? estimated-start-date))
                      :unassigned-over-start-date
-                     (and (atleast-one-activity-over-deadline? activities) (date-in-past? estimated-end-date))
+                     (and (atleast-one-activity-over-deadline? activities) (date/date-in-past? estimated-end-date))
                      :activity-over-deadline
                      (atleast-one-task-over-deadline? tasks)
                      :task-over-deadline

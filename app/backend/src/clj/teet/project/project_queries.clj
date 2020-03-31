@@ -7,7 +7,8 @@
             [teet.meta.meta-query :as meta-query]
             [teet.project.project-db :as project-db]
             [teet.util.collection :as cu]
-            [teet.task.task-db :as task-db]))
+            [teet.task.task-db :as task-db]
+            [teet.project.task-model :as task-model]))
 
 (defquery :thk.project/db-id->thk-id
   {:doc "Fetch THK project id for given entity :db/id"
@@ -31,11 +32,29 @@
      ;; Fetch and assoc the tasks
      assoc :task/files (task-db/files-for-task db task-id))))
 
+
+(defn activities-with-statuses
+  [tasks]
+  (map
+    task-model/task-with-status
+    tasks))
+
+(defn maybe-update-activity-tasks
+  [project activity-id]
+  (if-not activity-id
+    project
+    (cu/update-path
+      project
+      [:thk.project/lifecycles some?
+       :thk.lifecycle/activities #(= activity-id (str (:db/id %)))]
+      update :activity/tasks activities-with-statuses)))
+
 (defquery :thk.project/fetch-project
   {:doc "Fetch project information"
    :context {db :db}
    :args {:thk.project/keys [id]
-          task-id :task-id}
+          task-id :task-id
+          activity-id :activity-id}
    :project-id [:thk.project/id id]
    :authorization {:project/project-info {:eid [:thk.project/id id]
                                           :link :thk.project/owner}}}
@@ -50,7 +69,8 @@
         (update :thk.project/lifecycles
                 (fn [lifecycle]
                   (map #(update % :thk.lifecycle/activities project-model/sort-activities) lifecycle)))
-        (maybe-fetch-task-files db task-id))))
+        (maybe-fetch-task-files db task-id)
+        (maybe-update-activity-tasks activity-id))))
 
 
 (defquery :thk.project/listing

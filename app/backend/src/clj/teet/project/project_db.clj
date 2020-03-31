@@ -94,9 +94,16 @@
                        :thk.lifecycle/type
                        {:thk.lifecycle/activities
                         [*
-                         {:activity/tasks [*
-                                           {:task/assignee [*]}]}]}]}])
+                         {:activity/tasks [:db/id
+                                           :task/name :task/description
+                                           :task/status :task/type :task/group
+                                           :task/estimated-start-date :task/estimated-end-date
+                                           :task/actual-start-date :task/actual-end-date
+                                           {:task/assignee [:user/given-name
+                                                            :db/id
+                                                            :user/family-name]}]}]}]}])
           eid))
+
 
 (defn entity-project-id [db entity-type entity-id]
   (case entity-type

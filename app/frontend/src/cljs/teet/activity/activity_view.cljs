@@ -3,6 +3,7 @@
             [teet.ui.date-picker :as date-picker]
             [teet.localization :refer [tr tr-enum]]
             [teet.ui.form :as form]
+            [teet.ui.icons :as icons]
             teet.file.file-spec
             [teet.project.project-navigator-view :as project-navigator-view]
             [teet.project.project-style :as project-style]
@@ -60,11 +61,24 @@
    [buttons/button-secondary {:on-click #(e! (project-controller/->OpenEditActivityDialog (:db/id activity)))}
     (tr [:buttons :edit])]])
 
+(defn task-status-color
+  [derived-status]
+  (case derived-status
+    :unassigned-past-start-date theme-colors/red
+    :task-over-deadline theme-colors/red
+    :close-to-deadline theme-colors/yellow
+    :in-progress theme-colors/green
+    :done theme-colors/green
+    :unassigned theme-colors/gray))
+
 (defn task-name-and-status
-  [task]
+  [{:task/keys [derived-status] :as task}]
   [:div {:class [(<class activity-style/task-row-column-style :start) (<class common-styles/flex-align-center)]}
-   [:div {:class (<class common-styles/status-circle-style theme-colors/gray-light ;;TODO: setup rules for task status coloring
-                         )}]
+
+   (if (= :done derived-status)
+     [icons/action-done {:style {:color "white"}
+                         :class (<class common-styles/status-circle-style (task-status-color derived-status))}]
+     [:div {:class (<class common-styles/status-circle-style (task-status-color derived-status))}])
    [:div
     [url/Link {:page :activity-task :params {:task (str (:db/id task))}}
      (tr-enum (:task/type task))]]])
@@ -99,11 +113,10 @@
      [task-lists (:activity/tasks activity)]]))
 
 (defn activity-page [e! {:keys [params] :as app} project breadcrumbs]
-  [:div {:class (<class project-style/page-container)}
-   [project-navigator-view/project-navigator-with-content
-    {:e! e!
-     :project project
-     :app app
-     :breadcrumbs breadcrumbs}
+  [project-navigator-view/project-navigator-with-content
+   {:e! e!
+    :project project
+    :app app
+    :breadcrumbs breadcrumbs}
 
-    [activity-content e! params project]]])
+   [activity-content e! params project]])

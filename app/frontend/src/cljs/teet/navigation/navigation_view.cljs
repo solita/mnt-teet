@@ -2,7 +2,7 @@
   (:require [teet.routes :as routes]
             [teet.ui.select :as select]
             [teet.ui.material-ui :refer [AppBar Toolbar Drawer List ListItem
-                                         ListItemText ListItemIcon Link]]
+                                         ListItemText ListItemIcon Link LinearProgress]]
             [teet.ui.icons :as icons]
             [teet.ui.common :as ui-common]
             [teet.localization :as localization :refer [tr]]
@@ -15,7 +15,8 @@
             [teet.user.user-controller :as user-controller]
             [teet.authorization.authorization-check :refer [authorized?]]
             [teet.login.login-controller :as login-controller]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [teet.common.common-controller :as common-controller]))
 
 (def entity-quote (fnil js/escape "(nil)"))
 
@@ -171,4 +172,7 @@
 
 (defn main-container [navigation-open? content]
   [:main {:class (<class navigation-style/main-container navigation-open?)}
+   (when (common-controller/in-flight-requests?)
+     [:div {:style {:position :absolute :width "100%"}}
+      [LinearProgress]])
    content])

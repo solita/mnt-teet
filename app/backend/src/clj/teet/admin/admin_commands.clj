@@ -12,8 +12,9 @@
 
 (defn user-data-from-xroad [person-id]
   (let [xroad-url (environment/config-value :xroad-query-url)
+        xroad-instance-id (environment/config-value :xroad-instance-id)
         resp (teet.integration.x-road/perform-rr442-request
-              xroad-url person-id)
+              xroad-url xroad-instance-id person-id)
         name-valid? (complement blank?)
         name-map {:user/given-name (-> resp :result :Eesnimi)
                   :user/family-name (-> resp :result :Perenimi)}]
