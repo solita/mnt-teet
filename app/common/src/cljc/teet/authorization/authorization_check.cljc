@@ -70,15 +70,6 @@
                        (:db/id user)))))))
          (:user/permissions user))))
 
-
-
-(defn user-pm-or-manager?
-  [user {:thk.project/keys [manager owner] :as project}]
-  (let [owner-id (:user/id owner)
-        manager-id (:user/id manager)
-        cur-user-id (:user/id user)]
-    (or (= cur-user-id owner-id) (= cur-user-id manager-id))))
-
 #?(:clj
    (defn check-authorized
      [user functionality entity]
