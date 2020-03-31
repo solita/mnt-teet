@@ -99,7 +99,9 @@
                                            :task/status :task/type :task/group
                                            :task/estimated-start-date :task/estimated-end-date
                                            :task/actual-start-date :task/actual-end-date
-                                           {:task/assignee [*]}]}]}]}])
+                                           {:task/assignee [:user/given-name
+                                                            :db/id
+                                                            :user/family-name]}]}]}]}])
           eid))
 
 
