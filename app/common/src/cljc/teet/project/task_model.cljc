@@ -1,6 +1,7 @@
 (ns teet.project.task-model
   (:require [teet.util.datomic :refer [id=]]
-            [teet.util.collection :refer [find-idx]]))
+            [teet.util.collection :refer [find-idx]]
+            [teet.util.date :as date]))
 
 (defn file-by-id-path
   "Returns vector path to the given file in task."
@@ -48,3 +49,20 @@
 
 (defn in-progress? [{status :task/status}]
   (boolean (in-progress-statuses (:db/ident status))))
+
+(defn task-with-status
+  [{:task/keys [assignee estimated-start-date estimated-end-date] :as task}]
+  (assoc task :task/derived-status
+              (cond
+                (and (nil? assignee) (date/date-in-past? estimated-start-date))
+                :unassigned-past-start-date
+                (and (date/date-in-past? estimated-end-date) (not (completed? task)))
+                :task-over-deadline
+                (completed? task)
+                :done
+                (and (> 7 (date/days-until-date estimated-end-date)) (not (completed? task)))
+                :close-to-deadline
+                (and (> (date/days-until-date estimated-end-date) 7) (some? assignee))
+                :in-progress
+                :else
+                :unassigned)))

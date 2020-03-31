@@ -95,7 +95,9 @@
                        {:thk.lifecycle/activities
                         [*
                          {:activity/tasks [*
-                                           {:task/assignee [*]}]}]}]}])
+                                           {:task/assignee [:user/given-name
+                                                            :db/id
+                                                            :user/family-name]}]}]}]}])
           eid))
 
 (defn entity-project-id [db entity-type entity-id]

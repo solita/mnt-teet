@@ -131,6 +131,7 @@
 (defn status-circle-style
   [color]
   {:height "15px"
+   :font-size :inherit
    :width "15px"
    :border-radius "100%"
    :flex-shrink 0

@@ -59,7 +59,8 @@
                        :activity/name tr-enum)
             :view teet.activity.activity-view/activity-page
             :state {:query :thk.project/fetch-project
-                    :args {:thk.project/id project}}}
+                    :args {:thk.project/id project
+                           :activity-id activity}}}
 
  :activity-task {:path "/projects/:project/:activity/:task"
                  :parent :activity
