@@ -28,7 +28,7 @@
             [teet.ui.typography :refer [Heading1 Heading3] :as typography]
             [teet.ui.url :as url]
             [teet.util.collection :as cu]
-            [teet.authorization.authorization-check :as authorization-check :refer [when-pm-or-owner when-authorized]]
+            [teet.authorization.authorization-check :as authorization-check :refer [when-authorized]]
             [teet.theme.theme-colors :as theme-colors]
             [teet.project.search-area-controller :as search-area-controller]
             [teet.user.user-model :as user-model]

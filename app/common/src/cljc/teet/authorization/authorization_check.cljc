@@ -87,13 +87,6 @@
                                        :entity        entity})))))
 
 #?(:cljs
-   (defn when-pm-or-owner
-         [project component]
-         (log/info "Checking for user to be pm or owner of the project")   ;; TODO: REMOVE THIS WHOLE FN WHEN PROPER IMPLEMENTATION IS DONE FOR AUTHORIZATION CHECK
-         (when (user-pm-or-manager? @app-state/user project)
-               component)))
-
-#?(:cljs
    (defn when-authorized
      [functionality entity component]
      (log/info "Authorization-check functionality: " functionality
