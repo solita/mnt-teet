@@ -51,6 +51,7 @@
 (defn task-details
   [e! params {:task/keys [description files] :as task}]
   [:div
+   [typography/Heading2 {:class (<class common-styles/margin-bottom 1)} (tr-enum (:task/type task))]
    (when description
      [typography/Paragraph description])
    [task-basic-info e! task]
@@ -59,7 +60,6 @@
 (defn task-page-content
   [e! app task]
   [:div
-   [typography/Heading1 (tr-enum (:task/type task))]
    [tabs/details-and-comments-tabs
     {:e! e!
      :app app
