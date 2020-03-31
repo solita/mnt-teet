@@ -113,11 +113,10 @@
      [task-lists (:activity/tasks activity)]]))
 
 (defn activity-page [e! {:keys [params] :as app} project breadcrumbs]
-  [:div {:class (<class project-style/page-container)}
-   [project-navigator-view/project-navigator-with-content
-    {:e! e!
-     :project project
-     :app app
-     :breadcrumbs breadcrumbs}
+  [project-navigator-view/project-navigator-with-content
+   {:e! e!
+    :project project
+    :app app
+    :breadcrumbs breadcrumbs}
 
-    [activity-content e! params project]]])
+   [activity-content e! params project]])
