@@ -69,7 +69,7 @@
     :close-to-deadline theme-colors/yellow
     :in-progress theme-colors/green
     :done theme-colors/green
-    :unassigned theme-colors/gray))
+    theme-colors/gray-lighter))
 
 (defn task-name-and-status
   [{:task/keys [derived-status] :as task}]

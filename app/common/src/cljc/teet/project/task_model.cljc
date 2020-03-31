@@ -54,12 +54,14 @@
   [{:task/keys [assignee estimated-start-date estimated-end-date] :as task}]
   (assoc task :task/derived-status
               (cond
+                (completed? task)
+                :done
+                (or (nil? estimated-end-date) (nil? estimated-start-date))
+                :unknown-status
                 (and (nil? assignee) (date/date-in-past? estimated-start-date))
                 :unassigned-past-start-date
                 (and (date/date-in-past? estimated-end-date) (not (completed? task)))
                 :task-over-deadline
-                (completed? task)
-                :done
                 (and (> 7 (date/days-until-date estimated-end-date)) (not (completed? task)))
                 :close-to-deadline
                 (and (> (date/days-until-date estimated-end-date) 7) (some? assignee))
