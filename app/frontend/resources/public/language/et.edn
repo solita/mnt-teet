@@ -205,6 +205,7 @@
   :other-versions "Muud versioonid",
   :old-version "Vana versioon",
   :switch-to-latest-version "lülitage tagasi uusimale versioonile",
+  :edit "Redigeeri faili",
   :upload-info "Ules laadinud {author} {date} "},
  :login {:login "Sisenen", :password "Salasõna", :username "Kasutaja"},
  :map
@@ -249,6 +250,7 @@
   :edit-activity "Muudan tegevust",
   :restrictions-tab "Kitsendused",
   :show-timeline "Näita projekti ajakava",
+  :edit-task "Redigeerin ülesannet",
   :activity {:no-tasks "Ülesandeid pole"},
   :edit-project "Redigeeri projekti",
   :wizard
@@ -311,7 +313,6 @@
  :task
  {:add-document "Lisan dokumendi",
   :edit-document "Redigeerin dokumenti",
-  :edit-task "Redigeerin ülesannet",
   :documents "Dokumendid",
   :task-overview "Ülesande ülevaade",
   :no-documents "Dokumente ei ole",

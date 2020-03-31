@@ -445,11 +445,27 @@
   [project-page-structure e! app project breadcrumbs
    (project-setup-view/view-settings e! app project)])
 
+(defn project-page-modals
+  [e! {{:keys [edit]} :query} project]
+  (let [[modal modal-label]
+        (cond
+          edit
+          (case edit
+            "project"
+            [[edit-project-basic-information e! project]
+             (tr [:project :edit-project])])
+          :else nil)]
+    [panels/modal {:open-atom (r/wrap (boolean modal) :_)
+                   :title (or modal-label "")
+                   :on-close (e! project-controller/->CloseDialog)}
+
+     modal]))
+
 (defn project-page
   "Shows the normal project view for initialized projects, setup wizard otherwise."
   [e! app project breadcrumbs]
   [:<>
-   #_[project-page-modals e! app project]
+   [project-page-modals e! app project]
    (if (or (:thk.project/setup-skipped? project) (project-model/initialized? project))
      [initialized-project-view e! app project breadcrumbs]
      [project-setup-view e! app project breadcrumbs])])

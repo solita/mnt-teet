@@ -205,6 +205,7 @@
   :other-versions "Other versions",
   :old-version "Old version",
   :switch-to-latest-version "Switch back to latest version",
+  :edit "Edit file",
   :upload-info "Uploaded {date} by {author}"},
  :login {:login "Login", :password "Password", :username "Username"},
  :map
@@ -248,6 +249,7 @@
   :edit-activity "Edit activity",
   :restrictions-tab "Restrictions",
   :show-timeline "Show project timeline",
+  :edit-task "Edit task",
   :activity {:no-tasks "No tasks defined"},
   :edit-project "Edit project",
   :wizard
@@ -309,7 +311,6 @@
  :task
  {:add-document "Add document",
   :edit-document "Edit document",
-  :edit-task "Edit task",
   :documents "Documents",
   :task-overview "Task overview",
   :no-documents "No documents",

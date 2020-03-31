@@ -5,23 +5,18 @@
             [teet.task.task-controller :as task-controller]
             [teet.task.task-style :as task-style]
             [teet.localization :refer [tr tr-enum]]
-            [teet.ui.buttons :as buttons]
             [teet.ui.format :as format]
             [teet.ui.material-ui :refer [Link LinearProgress]]
-            [teet.ui.icons :as icons]
             [teet.ui.typography :as typography]
             [teet.ui.panels :as panels]
             [teet.ui.url :as url]
             teet.task.task-spec
             [teet.project.task-model :as task-model]
             [teet.file.file-controller :as file-controller]
-            [teet.comments.comments-view :as comments-view]
             [teet.ui.form :as form]
             [teet.common.common-controller :as common-controller]
             [teet.ui.file-upload :as file-upload]
             [teet.ui.select :as select]
-            [teet.ui.common :as common]
-            [teet.comments.comments-controller :as comments-controller]
             [teet.project.project-navigator-view :as project-navigator-view]
             [teet.project.project-style :as project-style]
             [teet.project.project-model :as project-model]
@@ -40,65 +35,6 @@
                        :show-label? false
                        :attribute :task/status
                        :values-filter task-model/current-statuses}])
-
-(defn get-latest-modification
-  "Takes the document and returns the latest modification time from either files or the doc it self"
-  [{:meta/keys     [created-at modified-at]
-    :document/keys [files]}]
-  (let [latest-change
-        (reduce (fn [latest-time {:meta/keys [created-at]}]
-                  (if (> latest-time created-at)
-                    latest-time
-                    created-at))
-                (or modified-at created-at)
-                files)]
-    latest-change))
-
-(defn task-navigation
-  [{:task/keys [documents] :as task} {selected-file-id     :file
-                                      selected-document-id :document}]
-  [:div {:style {:padding "2rem 0 2rem 2rem"}}
-   (if (and (nil? selected-file-id) (nil? selected-document-id))
-     [:b {:class (<class task-style/study-link-style)}
-      (tr [:enum (-> task :task/type :db/ident)])]
-     [Link {:class (<class task-style/study-link-style)
-            :href  (url/set-query-param :document nil
-                                        :file nil)}
-      (tr [:enum (-> task :task/type :db/ident)])])
-   [:p
-    [:b (tr [:task :results])]]
-   (doall
-     (for [{:document/keys [name status files]
-            :as document} documents]
-       ^{:key (str (:db/id document))}
-       [:div
-        [:div
-         (if (and (= (str (:db/id document)) selected-document-id) (nil? selected-file-id))
-           [:b {:class (<class task-style/result-style)}
-            name]
-           [Link {:class (<class task-style/result-style)
-                  :href  (url/set-query-param :document (:db/id document)
-                                              :file nil)}
-            name])
-         [typography/SmallText {:style {:margin-bottom "0.5rem"}}
-          [:span {:style {:font-weight    :bold
-                          :text-transform :uppercase}}
-           (tr [:enum (:db/ident status)])]
-          [:span
-           " " (tr [:common :last-modified]) ": " (format/date (get-latest-modification document))]]]
-        (for [{:file/keys [name size] :as file
-               file-id    :db/id} files]
-          ^{:key (str file-id)}
-          [:div {:class (<class task-style/file-container-style)}
-           (if (= (str file-id) selected-file-id)
-             [:b {:class (<class task-style/document-file-name)} name]
-             [Link {:class (<class task-style/document-file-name)
-                    :href  (url/set-query-param :document (:db/id document)
-                                                :file (:db/id file))}
-              name])
-           [typography/SmallText (format/file-size size)]])]))])
-
-
 
 (defn task-basic-info
   [e! {:task/keys [deadline assignee] :as task}]
@@ -195,7 +131,7 @@
                      new-document :new-document :as app}
                  project
                  breadcrumbs]
-  [:div {:class (<class project-style/page-container)}
+  [:<>
    [panels/modal {:open-atom (r/wrap (boolean add-document) :_)
                   :title     (tr [:task :add-document])
                   :on-close  (e! task-controller/->CloseAddDocumentDialog)}

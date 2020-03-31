@@ -42,13 +42,11 @@
   (reagent/create-class
     {:component-will-unmount #(e! (comments-controller/->ClearCommentField))
      :reagent-render
-     (fn [{:keys [e! app entity-id entity-type]} details]
+     (fn [{:keys [app] :as opts} details]
        (let [query (:query app)
              comments-component [comments-view/lazy-comments
-                                 {:e! e!
-                                  :app app
-                                  :entity-type entity-type
-                                  :entity-id entity-id}]]
+                                 (select-keys opts [:e! :app :entity-id :entity-type
+                                                    :show-comment-form?])]]
          (log/info "WIDE? " (common/wide-display?))
          (if (common/wide-display?)
            ;; Wide display, show side by side
@@ -58,7 +56,7 @@
 
            ;; Not a wide display, show tabbed interface
            [:div
-            [:div {:style {:margin-bottom "1rem"}}
+            [:div {:style {:margin "1rem 0 1rem 0"}}
              [:div {:style {:display :inline-block}}            ;;TODO cleanup inline-styles and html structure
               (if (= (:tab query) "comments")
                 [Link {:href (url/remove-query-param :tab)} "Details"]

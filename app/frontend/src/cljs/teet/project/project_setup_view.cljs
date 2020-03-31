@@ -176,29 +176,37 @@
        [skeleton/skeleton {:parent-style (skeleton/restriction-skeleton-style)}]))])
 
 (defn draw-selection [e! related-feature-type features draw-selection-features]
-  (r/with-let [select? (r/atom true)]
+  (r/with-let [select? (r/atom true)
+               current-open (r/atom false)]
     [:<>
-     (when (not (nil? draw-selection-features))
-       [panels/modal {:title (str (count draw-selection-features) " "
-                                  (case related-feature-type
-                                    :restrictions (tr [:project :restrictions-tab])
-                                    :cadastral-units (tr [:project :cadastral-units-tab])))
-                      :on-close (e! project-controller/->DrawSelectionCancel)
-                      :open-atom (r/wrap true :_)}
-        [:div
-         [select/radio {:value @select?
-                        :on-change #(reset! select? %)
-                        :items [true false]
-                        :format-item {true (tr [:project :draw-selection :select])
-                                      false (tr [:project :draw-selection :deselect])}}]
-         [:div {:style {:display :flex
-                        :justify-content :space-between}}
-          [buttons/button-secondary {:on-click (e! project-controller/->DrawSelectionCancel)}
-           (tr [:buttons :cancel])]
-          [buttons/button-primary {:on-click (e! project-controller/->DrawSelectionConfirm
-                                                 @select? related-feature-type)}
-           (tr [:buttons :confirm])]]]])
-     [buttons/link-button {:on-click (e! project-controller/->DrawSelectionOnMap related-feature-type features)}
+     [panels/modal {:title (str (count draw-selection-features) " "
+                                (case related-feature-type
+                                  :restrictions (tr [:project :restrictions-tab])
+                                  :cadastral-units (tr [:project :cadastral-units-tab])))
+                    :on-close #(do
+                                 (reset! current-open false)
+                                 (e! project-controller/->DrawSelectionCancel))
+                    :open-atom (r/wrap (and (not (nil? draw-selection-features)) @current-open) :_)}
+      [:div
+       [select/radio {:value @select?
+                      :on-change #(reset! select? %)
+                      :items [true false]
+                      :format-item {true (tr [:project :draw-selection :select])
+                                    false (tr [:project :draw-selection :deselect])}}]
+       [:div {:style {:display :flex
+                      :justify-content :space-between}}
+        [buttons/button-secondary {:on-click #(do
+                                                (reset! current-open false)
+                                                (e! (project-controller/->DrawSelectionCancel)))}
+         (tr [:buttons :cancel])]
+        [buttons/button-primary {:on-click #(do
+                                              (reset! current-open false)
+                                              (e! (project-controller/->DrawSelectionConfirm
+                                                    @select? related-feature-type)))}
+         (tr [:buttons :confirm])]]]]
+     [buttons/link-button {:on-click #(do
+                                        (reset! current-open true)
+                                        (e! (project-controller/->DrawSelectionOnMap related-feature-type features)))}
       (tr [:project :draw-selection :link])]]))
 
 (defn restrictions-listing
@@ -248,7 +256,7 @@
               [itemlist/checkbox-list
                {:on-select-all #(e! (project-controller/->SelectRestrictions (set restrictions)))
                 :on-deselect-all #(e! (project-controller/->DeselectRestrictions (set restrictions)))
-                :actions (list [draw-selection e! :restrictions restrictions draw-selection-features])}
+                :actions (list [draw-selection e! :restrictions restrictions draw-selection-features group])}
                (for [restriction (sort-by (juxt :VOOND :teet-id) restrictions)
                      :let [checked? (boolean (group-checked restriction))]]
                  (merge {:id (:teet-id restriction)
