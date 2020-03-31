@@ -25,7 +25,7 @@
      [:id:xRoadInstance "ee-dev"]
      [:id:memberClass "GOV"]
      [:id:memberCode "70008440"]
-     [:id:subsystemCode "rr"w]
+     [:id:subsystemCode "rr"]
      [:id:serviceCode "RR442"]
      [:id:serviceVersion "v3"]]]
    [:soap:Body
@@ -50,7 +50,7 @@
 
 (defn perform-rr442-request [url instance-id eid]
   (let [req (rr442-request-xml eid instance-id)
-        
+
         resp-atom (htclient/post url {:body req
                                       :as :stream
                                       :headers {"Content-Type" "text/xml; charset=UTF-8"}})
