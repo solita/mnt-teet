@@ -13,6 +13,14 @@
             [teet.localization :refer [tr tr-or]]
             postgrest-ui.impl.fetch))
 
+;; Track how many requests are in flight to show progress
+(def in-flight-requests (r/atom 0))
+
+(defn in-flight-requests?
+  "Returns true if there are currently any requests in flight."
+  []
+  (not (zero? @in-flight-requests)))
+
 (def api-token routes/api-token)
 (defonce enabled-features (r/cursor app-state/app [:enabled-features]))
 
@@ -171,6 +179,7 @@
     (on-server-error err app)))
 
 (defn check-response-status [response]
+  (swap! in-flight-requests dec)
   (let [status (.-status response)]
     (case status
       401
@@ -254,6 +263,7 @@
   Returns a Promise yielding a response data or app-state map."
   [e! error-event & [url authless-arg-map-js]]
   {:post [(instance? js/Promise %)]}
+  (swap! in-flight-requests inc)
   (-> (fetch-or-timeout url
                         (-> authless-arg-map-js
                             js->clj
