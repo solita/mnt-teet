@@ -172,17 +172,19 @@
    :flex-direction :row})
 (defn- side-by-side-column-style
   [basis]
-  ^{:pseudo {:first-child {:border-left 0}
-             :last-child {:border-right 0}}}
+  ^{:pseudo {:first-child {:border-left 0
+                           :padding-right "0.5rem"}
+             :last-child {:border-right 0
+                          :padding-left "0.5rem"}}}
   {:flex-basis (str basis "%")
    :border-color theme-colors/gray-lighter
    :border-style :solid
    :border-width "0 2px 0 0"
    :flex-grow 0
    :flex-shrink 0
+   :flex-direction :column
    :word-break :break-all
    :display :flex
-   :align-items :center
    :padding "0.5rem 0.25rem"
    :justify-content :flex-start})
 
