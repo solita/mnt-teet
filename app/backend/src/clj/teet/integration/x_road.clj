@@ -7,7 +7,7 @@
 
 ;; see also https://x-tee.ee/catalogue-data/ee-dev/ee-dev/GOV/70008440/rr/155.wsdl
 
-(defn rr442-request-hiccup [eid]
+(defn rr442-request-hiccup [eid instance-id]
   [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"
                    :xmlns:xrd "http://x-road.eu/xsd/xroad.xsd"
                    :xmlns:ns5 "http://rr.x-road.eu/producer"
@@ -17,7 +17,7 @@
     [:xrd:id "170a5cb119b70008440895042451"]
     [:xrd:protocolVersion "4.0"]
     [:xrd:client {:id:objectType "SUBSYSTEM"}
-     [:id:xRoadInstance "ee-dev"]
+     [:id:xRoadInstance instance-id]
      [:id:memberClass "GOV"]
      [:id:memberCode "70001490"]
      [:id:subsystemCode "liiklusregister"]]
@@ -25,7 +25,7 @@
      [:id:xRoadInstance "ee-dev"]
      [:id:memberClass "GOV"]
      [:id:memberCode "70008440"]
-     [:id:subsystemCode "rr"]
+     [:id:subsystemCode "rr"w]
      [:id:serviceCode "RR442"]
      [:id:serviceVersion "v3"]]]
    [:soap:Body
@@ -33,8 +33,8 @@
      [:request
       [:Isikukood eid]]]]])
 
-(defn rr442-request-xml [params]
-  (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (hiccup/html (rr442-request-hiccup params))))
+(defn rr442-request-xml [eid instance-id]
+  (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (hiccup/html (rr442-request-hiccup eid instance-id))))
 
 (defn rr442-parse-name [xml-string]
   (let [xml (xml/parse xml-string)
@@ -48,8 +48,8 @@
                             [fieldname (z/xml1-> avaldaja fieldname z/text)])]
     (into {} (mapv fieldname->kvpair fields))))
 
-(defn perform-rr442-request [url eid]
-  (let [req (rr442-request-xml eid)
+(defn perform-rr442-request [url instance-id eid]
+  (let [req (rr442-request-xml eid instance-id)
         
         resp-atom (htclient/post url {:body req
                                       :as :stream

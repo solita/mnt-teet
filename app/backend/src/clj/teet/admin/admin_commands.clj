@@ -12,6 +12,7 @@
 
 (defn user-data-from-xroad [person-id]
   (let [xroad-url (environment/config-value :xroad-query-url)
+        xroad-instance-id (environment/config-value :xroad-instance-id)
         resp (teet.integration.x-road/perform-rr442-request
               xroad-url person-id)
         name-valid? (complement blank?)
