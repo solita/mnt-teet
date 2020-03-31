@@ -237,7 +237,7 @@
    [:div
     [:div {:class (<class common-styles/heading-and-button-style)}
      [typography/Heading2 (tr [:people-tab :other-users])]
-     (when-pm-or-owner
+     (when-authorized :project/edit-permissions
        project
        [buttons/button-secondary {:on-click (e! project-controller/->OpenPeopleModal)
                                   :size :small}
