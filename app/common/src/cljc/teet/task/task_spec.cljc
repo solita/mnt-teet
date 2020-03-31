@@ -3,6 +3,12 @@
   (:require [clojure.spec.alpha :as s]
             [teet.file.file-model :as file-model]))
 
+(defn- task-type-and-group-both-present-or-absent?
+  "Check that both task type and group are present, or neither"
+  [{:task/keys [type group]}]
+  (= (boolean type)
+     (boolean group)))
+
 (s/def :task/type keyword?)
 (s/def :task/description string?)
 (s/def :task/assignee (s/keys :req [:user/id]))
@@ -13,6 +19,10 @@
                                          :task/assignee
                                          :task/estimated-start-date
                                          :task/estimated-end-date]))
+
+(s/def :task/update (s/and (s/keys)
+                           task-type-and-group-both-present-or-absent?))
+
 
 (s/def :task/add-files (s/keys :req [:task/files]))
 

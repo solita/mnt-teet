@@ -5,12 +5,6 @@
             [teet.meta.meta-model :as meta-model]
             [teet.util.collection :as uc]))
 
-(defn task-type-and-group-both-present-or-absent?
-  "Check that both task type and group are present, or neither"
-  [{:task/keys [type group]}]
-  (= (boolean type)
-     (boolean group)))
-
 (defn valid-task-type-and-group-pair?
   "Check if the task type is valid for the given task group, if present"
   [db {:task/keys [type group]}]
@@ -41,8 +35,7 @@
    :project-id (project-db/task-project-id db id)
    :authorization {:task/task-information {:db/id id
                                            :link :task/assignee}}  ; auth checks
-   :pre [(task-type-and-group-both-present-or-absent? task)
-         (valid-task-type-and-group-pair? db task)]
+   :pre [(valid-task-type-and-group-pair? db task)]
    ;; TODO how to remove e.g. end date?
    :transact [(merge (-> task
                          (select-keys [:db/id :task/name :task/description
