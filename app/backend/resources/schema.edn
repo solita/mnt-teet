@@ -721,4 +721,22 @@
            :db/cardinality :db.cardinality/one}
           {:db/ident :task/actual-end-date
            :db/valueType :db.type/instant
-           :db/cardinality :db.cardinality/one}]]}]
+           :db/cardinality :db.cardinality/one}]]}
+
+
+ {:db/ident :migration/thk-task-type
+  :txes [[{:db/ident :task/thk-type
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "The type of a task when sending to THK. Tasks without this attribute are not sent."}
+
+          {:db/ident :thk/code
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "The code value in THK for the selection, used for mapping in CSV"}]
+
+         [{:db/ident :task.thk-type/design-requirements :thk/code "4014" :enum/attribute :task/thk-type}
+          {:db/ident :task.thk-type/study :thk/code "4001" :enum/attribute :task/thk-type}
+          {:db/ident :task.thk-type/environmental-impact-assessment :thk/code "4002" :enum/attribute :task/thk-type}
+          {:db/ident :task.thk-type/third-party-review :thk/code "4010" :enum/attribute :task/thk-type}
+          {:db/ident :task.thk-type/road-safety-audit :thk/code "4009" :enum/attribute :task/thk-type}]]}]

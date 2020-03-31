@@ -141,7 +141,8 @@
    & fields]
   (r/with-let [invalid-attributes (r/atom #{})
                update-attribute-fn (fn [field value]
-                                     (let [v (if (gobj/containsKey value "target")
+                                     (let [v (if (and (not (boolean? value))
+                                                      (gobj/containsKey value "target"))
                                                (gobj/getValueByKeys value "target" "value")
                                                value)]
                                        (e! (on-change-event

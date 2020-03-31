@@ -6,7 +6,7 @@
             [teet.task.task-style :as task-style]
             [teet.localization :refer [tr tr-enum]]
             [teet.ui.format :as format]
-            [teet.ui.material-ui :refer [Link LinearProgress]]
+            [teet.ui.material-ui :refer [LinearProgress]]
             [teet.ui.typography :as typography]
             [teet.ui.panels :as panels]
             [teet.ui.url :as url]
@@ -106,6 +106,14 @@
      ^{:xs 6 :attribute :task/type}
      [select/select-enum {:e! e! :attribute :task/type
                           :enum/valid-for (:task/group task)}]
+
+     ;; Send to THK and type selection
+     ^{:xs 6 :attribute :task/send-to-thk?}
+     [select/checkbox {:label "send to THK"}]
+
+     (when (:task/send-to-thk? task)
+       ^{:xs 6 :attribute :task/thk-type}
+       [select/select-enum {:e! e! :attribute :task/thk-type}])
 
      ^{:attribute :task/description}
      [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]

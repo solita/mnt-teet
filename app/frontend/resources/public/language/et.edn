@@ -58,6 +58,8 @@
   :document.category/maintenance-doc "Hooldedokumentatsioon",
   :document.category/source-doc "Lähtedokumentatsioon",
   :task.status/canceled "Tühistatud",
+  :task.thk-type/design-requirements "Projekteerimistingimused",
+  :task.thk-type/third-party-review "Ekspertiis",
   :task.type/noise-study "Mürauuring",
   :task.status/rejected "Tagasi lükatud",
   :task.status/reviewing "Ülevaatamisel",
@@ -66,6 +68,7 @@
   :document.sub-category/design-requirements
   "Projekteerimistingimused",
   :task.group/design-approval "Design approval",
+  :task.thk-type/environmental-impact-assessment "KMH eelhinnang",
   :task.type/geological-study "Geoloogiline uuring",
   :file.status/ready "Valmis",
   :activity.name/detailed-design "Põhiprojekt",
@@ -87,6 +90,7 @@
   :activity.name/pre-design "Eskiisprojekt",
   :document.sub-category/no-objection-letters "Kooskõlastused",
   :thk.lifecycle-type/design "Projekteerimine",
+  :task.thk-type/study "Uuring",
   :document.sub-category/rsa-exception-report
   "Eriarvamuste aruanne (LOA)",
   :task.type/lighting "Valgustus",
@@ -141,6 +145,8 @@
   :activity.status/canceled "Katkestatud",
   :document.sub-category/table-of-content "Sisukord",
   :task.status/not-started "Alustamata",
+  :task.thk-type/road-safety-audit
+  "Liiklusohutuse audit (eelprojekt, põhiprojekt)",
   :task.type/road "Tee"},
  :environment
  {:info-text
@@ -156,8 +162,10 @@
   "Korraga võib aktiivne olla ainult üht tüüpi tegevus.",
   :server-error "Serveri viga."},
  :fields
- {:thk.project/manager "Vastutav isik",
+ {:task/send-to-thk? "Saata THK",
+  :thk.project/manager "Vastutav isik",
   :thk.project/project-name "Nimi",
+  :task/thk-type "THK tüüp",
   :task/type "Ülesanne",
   :task/actual-end-date "Lõppkuupäev",
   :task/assignee "Vastutav isik",
@@ -221,13 +229,16 @@
    :layer "kiht",
    :no-filters "Ei filtrid"}},
  :notifications
- {:permission-revoked "Luba tühistati edukalt",
+ {:task-status-updated "Ülesande olek edukalt värskendatud",
+  :task-deleted "Ülesanne edukalt kustutatud",
+  :permission-added-successfully "Luba on edukalt lisatud",
+  :permission-revoked "Luba tühistati edukalt",
+  :task-created "Ülesanne edukalt lisatud",
+  :restrictions-updated "Kitsendused edukalt värskendatud",
+  :task-updated "Ülesanne edukalt värskendatud",
   :activity-deleted "Tegevus edukalt kustutatud",
   :activity-updated "Tegevus edukalt värskendatud",
-  :permission-added-successfully "Luba on edukalt lisatud",
-  :cadastral-units-updated "Katastriüksused edukalt värskendatud",
-  :restrictions-updated "Kitsendused edukalt värskendatud",
-  :task-deleted "Ülesanne edukalt kustutatud"},
+  :cadastral-units-updated "Katastriüksused edukalt värskendatud"},
  :page-title {:project-list "{name} projekt"},
  :people-tab
  {:managers "Juhid",
