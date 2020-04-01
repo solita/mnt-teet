@@ -60,6 +60,8 @@
   [:div {:class (<class common-styles/heading-and-button-style)}
    [typography/Heading1 (tr-enum (:task/type task))]
    ;; TODO Does when-authorized work when link is not meta/creator?
+   ;; TODO Use command/query for authorization check
+   ;; Also fix FIXme
    (when-authorized :task/task-information task
      [buttons/button-secondary {:on-click #(e! (project-controller/->OpenEditTaskDialog (:db/id task)))}
       (tr [:buttons :edit])])])
