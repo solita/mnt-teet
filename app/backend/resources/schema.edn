@@ -745,8 +745,8 @@
           {:db/ident :thk.task-type/study :thk/code "4001"}
           {:db/ident :thk.task-type/environmental-impact-assessment :thk/code "4002"}
           {:db/ident :thk.task-type/third-party-review :thk/code "4010"}
-          {:db/ident :thk.task-type/road-safety-audit :thk/code "4009"}
-          {:db/ident :thk.task-type/building-permit :thk/code "???"}]
+          {:db/ident :thk.task-type/road-safety-audit :thk/code "4011"}
+          {:db/ident :thk.task-type/building-permit :thk/code "4015"}]
 
          ;; Assign THK task types to THK
          [{:db/ident :task.type/design-requirements :thk/task-type :thk.task-type/design-requirements}
