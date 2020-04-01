@@ -62,6 +62,12 @@
 (def ^:dynamic *request-name* nil)
 (def ^:dynamic *request-ctx* nil)
 
+(defn project-id->db-id [db project-id]
+  (if (vector? project-id)
+    (:db/id (d/pull db '[:db/id :thk.project/id]
+                    project-id))
+    project-id))
+
 (defmacro defrequest*
   "Do not call directly. Use defcommand and defquery."
   [request-type request-name
@@ -109,7 +115,7 @@
                ~-user (:user ~-ctx)
                ~-perms (when (:user ~-ctx)
                          (permission-db/user-permissions ~-db [:user/id (:user/id (:user ~-ctx))]))
-               ~-proj-id ~project-id]
+               ~-proj-id (project-id->db-id ~-db ~project-id)]
 
            ;; Check user is logged in
            ~@(when-not unauthenticated?
