@@ -187,7 +187,8 @@
   (when-not (contains? @enum-values attribute)
     (log/debug "getting enum vals for attribute" attribute)
     (e! (query-enums-for-attribute! attribute)))
-  (fn [{:keys [value on-change name id error container-class class values-filter]
+  (fn [{:keys [value on-change name id error container-class class values-filter
+               full-value?]
         :enum/keys [valid-for]}]
     (let [tr* #(tr [:enum %])
           value (if (and (map? value)
@@ -218,7 +219,15 @@
                     :show-label? show-label?
                     :error (boolean error)
                     :value (or value :none)
-                    :on-change on-change
+                    :on-change (if full-value?
+                                 ;; If full value is specified, use the enum map (which may have
+                                 ;; other interesting attributes) as the value instead of just
+                                 ;; the keyword.
+                                 (fn [kw]
+                                   (on-change (some #(when (= (:db/ident %) kw) %) (@enum-values attribute))))
+
+                                 ;; Otherwise pass the kw as value as is
+                                 on-change)
                     :show-empty-selection? true
                     :items (sort-by tr* values)
                     :format-item tr*
