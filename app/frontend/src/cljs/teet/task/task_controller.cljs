@@ -45,7 +45,9 @@
           {:tuck.effect/type :command!
            :command          :task/delete
            :success-message  (tr [:notifications :task-deleted])
-           :payload          {:db/id (goog.math.Long/fromString task-id)}
+           :payload          {:db/id (if (string? task-id)
+                                       (goog.math.Long/fromString task-id)
+                                       task-id)}
            :result-event     ->DeleteTaskResult}))
 
   DeleteTaskResult
@@ -53,7 +55,9 @@
     (let [activity-id (get-in app [:route :activity-task :activity/_tasks 0 :db/id])
           lifecycle-id (get-in app
                                [:route :activity-task :activity/_tasks 0 :thk.lifecycle/_activities 0 :db/id])]
-      (t/fx app
+      (t/fx (-> app
+                (dissoc :edit-task-data)
+                (update :stepper dissoc :dialog))
             {:tuck.effect/type :navigate
              :page             :project
              :params           {:project (:project params)}
