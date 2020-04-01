@@ -9,7 +9,6 @@
             [teet.localization :refer [tr]]
             [teet.user.user-info :as user-info]
             [teet.ui.common :as common]
-            [teet.ui.format :as format]
             [taoensso.timbre :as log]
             [teet.ui.material-ui :refer [FormControl FormControlLabel RadioGroup Radio Checkbox]]
             [teet.ui.util :as util]))
