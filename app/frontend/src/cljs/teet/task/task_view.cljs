@@ -105,15 +105,14 @@
      [select/select-enum {:e! e! :attribute :task/group}]
      ^{:xs 6 :attribute :task/type}
      [select/select-enum {:e! e! :attribute :task/type
-                          :enum/valid-for (:task/group task)}]
+                          :enum/valid-for (:task/group task)
+                          :full-value? true}]
 
-     ;; Send to THK and type selection
-     ^{:xs 6 :attribute :task/send-to-thk?}
-     [select/checkbox {:label "send to THK"}]
+     ;; Show "Send to THK" if task type has associated THK type
+     (when (-> task :task/type :thk/task-type)
+       ^{:xs 12 :attribute :task/send-to-thk?}
+       [select/checkbox {}])
 
-     (when (:task/send-to-thk? task)
-       ^{:xs 6 :attribute :task/thk-type}
-       [select/select-enum {:e! e! :attribute :task/thk-type}])
 
      ^{:attribute :task/description}
      [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
