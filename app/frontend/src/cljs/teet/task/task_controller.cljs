@@ -107,7 +107,7 @@
     (let [{id :db/id :as task}
           (-> edit-task-data
               (update :task/assignee (fn [{id :user/id}] [:user/id id]))
-              (merge {:db/id "new-task"})
+              (update :db/id #(or % "new-task"))
 
               ;; Ensure only task with THK type can be sent
               (update :task/send-to-thk?
@@ -120,7 +120,7 @@
             (merge
              {:tuck.effect/type :command!
               :result-event ->SaveTaskSuccess}
-             (if id
+             (if (not= "new-task" id)
                {:command :task/update
                 :payload task
                 :success-message (tr [:task :edit-success-notification])}

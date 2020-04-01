@@ -3,7 +3,9 @@
   (:require [clojure.spec.alpha :as s]
             [teet.file.file-model :as file-model]))
 
-(s/def :task/type keyword?)
+(s/def :db/ident keyword?)
+(s/def :task/type (s/or :enum-keyword keyword?
+                        :enum-ref-map (s/keys :req [:db/ident])))
 (s/def :task/description string?)
 (s/def :task/assignee (s/keys :req [:user/id]))
 
