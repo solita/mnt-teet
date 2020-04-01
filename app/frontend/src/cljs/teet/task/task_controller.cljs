@@ -102,24 +102,33 @@
     (update-in app [:edit-task-data] merge form-data))
 
   SaveTaskForm
-  (process-event [_ {task :edit-task-data
+  (process-event [_ {edit-task-data :edit-task-data
                      stepper :stepper :as app}]
-    (let [{id :db/id :as task} task]
+    (let [{id :db/id :as task}
+          (-> edit-task-data
+              (update :task/assignee (fn [{id :user/id}] [:user/id id]))
+              (update :db/id #(or % "new-task"))
+
+              ;; Ensure only task with THK type can be sent
+              (update :task/send-to-thk?
+                      (fn [send?]
+                        (boolean (and send? (get-in edit-task-data [:task/type :thk/task-type])))))
+
+              ;; Take keyword value for task type
+              (update :task/type :db/ident))]
       (t/fx app
             (merge
              {:tuck.effect/type :command!
               :result-event ->SaveTaskSuccess}
-             (if id
+             (if (not= "new-task" id)
                {:command :task/update
                 :payload task
-                :success-message "Task edited succesfully"}  ; FIXME: localize
+                :success-message (tr [:task :edit-success-notification])}
                {:command :task/create
 
                 :payload {:activity-id (goog.math.Long/fromString (get-in stepper [:dialog :activity-id]))
-                          :task (-> task
-                                    (update :task/assignee (fn [{id :user/id}] [:user/id id]))
-                                    (merge {:db/id "new-task"}))}
-                :success-message "Task created successfully"})))))
+                          :task task}
+                :success-message (tr [:task :create-success-notification])})))))
 
   SaveTaskSuccess
   (process-event [_ {:keys [page query params] :as app}]

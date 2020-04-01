@@ -721,4 +721,49 @@
            :db/cardinality :db.cardinality/one}
           {:db/ident :task/actual-end-date
            :db/valueType :db.type/instant
-           :db/cardinality :db.cardinality/one}]]}]
+           :db/cardinality :db.cardinality/one}]]}
+
+
+ {:db/ident :migration/thk-task-types
+  :txes [[{:db/ident :thk/task-type
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "The THK type associated of a task when sending to THK. Tasks without this attribute are not sent."}
+
+          {:db/ident :thk/code
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "The code value in THK for the selection, used for mapping in CSV"}
+
+          {:db/ident :task/send-to-thk?
+           :db/valueType :db.type/boolean
+           :db/cardinality :db.cardinality/one
+           :db/doc "If true, send this task to THK. Task type must have THK task type mapped."}]
+
+         ;; Create the THK task types
+         [{:db/ident :thk.task-type/design-requirements :thk/code "4014"}
+          {:db/ident :thk.task-type/study :thk/code "4001"}
+          {:db/ident :thk.task-type/environmental-impact-assessment :thk/code "4002"}
+          {:db/ident :thk.task-type/third-party-review :thk/code "4010"}
+          {:db/ident :thk.task-type/road-safety-audit :thk/code "4011"}
+          {:db/ident :thk.task-type/building-permit :thk/code "4015"}]
+
+         ;; Assign THK task types to THK
+         [{:db/ident :task.type/design-requirements :thk/task-type :thk.task-type/design-requirements}
+          {:db/ident :task.type/geological-study :thk/task-type :thk.task-type/study}
+          {:db/ident :task.type/traffic-study :thk/task-type :thk.task-type/study}
+          {:db/ident :task.type/flora-and-fauna-study :thk/task-type :thk.task-type/study}
+          {:db/ident :task.type/archeological-study :thk/task-type :thk.task-type/study}
+          {:db/ident :task.type/topogeodesy :thk/task-type :thk.task-type/study}
+          {:db/ident :task.type/noise-study :thk/task-type :thk.task-type/study}
+          {:db/ident :task.type/eia-pre-assessment :thk/task-type :thk.task-type/environmental-impact-assessment}
+          {:db/ident :task.type/environmental-impact-assessment :thk/task-type :thk.task-type/environmental-impact-assessment}
+          {:db/ident :task.type/feasibility-study :thk/task-type :thk.task-type/study}
+          {:db/ident :task.type/other :thk/task-type :thk.task-type/study}
+          {:db/ident :task.type/third-party-review :thk/task-type :thk.task-type/third-party-review}
+          {:db/ident :task.type/design-road-safety-audit :thk/task-type :thk.task-type/road-safety-audit}
+
+          ;; Building permit is a new task type
+          {:db/ident :task.type/building-permit
+           :enum/attribute :task/type :enum/valid-for :task.group/design-approval
+           :thk/task-type :thk.task-type/building-permit}]]}]

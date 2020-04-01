@@ -3,13 +3,11 @@
   (:require [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
             [teet.task.task-controller :as task-controller]
-            [teet.task.task-style :as task-style]
             [teet.localization :refer [tr tr-enum]]
             [teet.ui.format :as format]
-            [teet.ui.material-ui :refer [Link LinearProgress]]
+            [teet.ui.material-ui :refer [LinearProgress]]
             [teet.ui.typography :as typography]
             [teet.ui.panels :as panels]
-            [teet.ui.url :as url]
             teet.task.task-spec
             [teet.project.task-model :as task-model]
             [teet.file.file-controller :as file-controller]
@@ -18,7 +16,6 @@
             [teet.ui.file-upload :as file-upload]
             [teet.ui.select :as select]
             [teet.project.project-navigator-view :as project-navigator-view]
-            [teet.project.project-style :as project-style]
             [teet.project.project-model :as project-model]
             [teet.user.user-model :as user-model]
             [teet.ui.text-field :refer [TextField]]
@@ -49,7 +46,7 @@
     [task-status e! task]]])
 
 (defn task-details
-  [e! params {:task/keys [description files] :as task}]
+  [e! _params {:task/keys [description files] :as task}]
   [:div
    [typography/Heading2 {:class (<class common-styles/margin-bottom 1)} (tr-enum (:task/type task))]
    (when description
@@ -105,7 +102,14 @@
      [select/select-enum {:e! e! :attribute :task/group}]
      ^{:xs 6 :attribute :task/type}
      [select/select-enum {:e! e! :attribute :task/type
-                          :enum/valid-for (:task/group task)}]
+                          :enum/valid-for (:task/group task)
+                          :full-value? true}]
+
+     ;; Show "Send to THK" if task type has associated THK type
+     (when (-> task :task/type :thk/task-type)
+       ^{:xs 12 :attribute :task/send-to-thk?}
+       [select/checkbox {}])
+
 
      ^{:attribute :task/description}
      [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
@@ -123,11 +127,11 @@
      [select/select-user {:e! e! :attribute :task/assignee}]]))
 
 (defmethod project-navigator-view/project-navigator-dialog :add-task
-  [{:keys [e! app] :as opts} dialog]
+  [{:keys [e! app] :as _opts} _dialog]
   [task-form e! (:edit-task-data app)])
 
-(defn task-page [e! {{:keys [add-document] :as query} :query
-                     {task-id :task :as params} :params
+(defn task-page [e! {{:keys [add-document] :as _query} :query
+                     {task-id :task :as _params} :params
                      new-document :new-document :as app}
                  project
                  breadcrumbs]
