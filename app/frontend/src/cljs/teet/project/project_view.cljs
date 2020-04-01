@@ -172,15 +172,17 @@
                        "EE"])}])]]))
 
 (defn permission-information
-  [e! permission]
+  [e! project permission]
   [:div
    [:div {:class (<class project-style/permission-container)}
     [:p (tr [:user :role]) ": " (tr [:roles (:permission/role permission)])]
     [:p (tr [:common :added-on]) ": " (format/date-time (:meta/created-at permission))]]
    [:div {:style {:display :flex
                   :justify-content :flex-end}}
-    [buttons/delete-button-with-confirm {:action #(e! (project-controller/->RevokeProjectPermission (:db/id permission)))}
-     (tr [:project :remove-from-project])]]])
+    (when-authorized :thk.project/revoke-permission
+      project
+      [buttons/delete-button-with-confirm {:action #(e! (project-controller/->RevokeProjectPermission (:db/id permission)))}
+       (tr [:project :remove-from-project])])]])
 
 (defn people-panel-user-list
   [permissions selected-person]
@@ -215,7 +217,7 @@
                     :on-close (e! project-controller/->CloseDialog)
                     :left-panel [people-panel-user-list permitted-users person]
                     :right-panel (if selected-person
-                                   [permission-information e! selected-person]
+                                   [permission-information e! project selected-person]
                                    [add-user-form e! add-participant (:db/id project)])}]))
 
 
@@ -225,7 +227,7 @@
    [:div
     [:div {:class (<class common-styles/heading-and-button-style)}
      [typography/Heading2 (tr [:people-tab :managers])]
-     (when-authorized :project/project-info
+     (when-authorized :thk.project/update
        project
        [buttons/button-secondary {:on-click (e! project-controller/->OpenEditProjectDialog)
                                   :size :small}
@@ -237,7 +239,7 @@
    [:div
     [:div {:class (<class common-styles/heading-and-button-style)}
      [typography/Heading2 (tr [:people-tab :other-users])]
-     (when-authorized :project/edit-permissions
+     (when-authorized :thk.project/add-permission
        project
        [buttons/button-secondary {:on-click (e! project-controller/->OpenPeopleModal)
                                   :size :small}

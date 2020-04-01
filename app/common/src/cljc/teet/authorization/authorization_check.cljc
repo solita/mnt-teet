@@ -79,9 +79,6 @@
                                        :entity        entity})))))
 
 #?(:cljs
-   (def request-permissions (atom nil?)))
-
-#?(:cljs
    (defn query-request-permissions! [e!]
      (e! (query/->Query :authorization/permissions
                         {}
@@ -89,11 +86,13 @@
 
 #?(:cljs
    (defn when-authorized
-         [action entity component]
-     (let [permissions @request-permissions
-           user @app-state/user]
+     [action entity component]
+     (let [permissions @app-state/action-permissions
+           user @app-state/user
+           action-permissions (action permissions)]
        (when (and permissions
-                  user)
+                  user
+                  action-permissions)
          (when (every? (fn [[permission {:keys [link]}]]
                          (authorized? @app-state/user permission (merge {:entity entity}
                                                                         (when link {:link link}))))

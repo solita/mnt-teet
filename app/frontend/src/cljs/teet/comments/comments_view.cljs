@@ -55,7 +55,7 @@
            [typography/GreyText {:style {:display :inline-block
                                          :margin-left "1rem"}}
             (format/date timestamp)]]
-          (when-authorized :comment-delete
+          (when-authorized :comment/delete-comment
             entity
             [buttons/delete-button-with-confirm {:small? true
                                                  :action (e! comments-controller/->DeleteComment id)}
