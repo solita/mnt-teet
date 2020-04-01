@@ -2,7 +2,7 @@
   (:require #?(:clj  [clojure.java.io :as io]
                :cljs [cljs.reader :as reader])
             #?(:cljs [teet.app-state :as app-state])
-            [teet.log :as log]
+            #?(:cljs [teet.ui.query :as query])
             [teet.util.collection :as cu]
             [clojure.set :as set]))
 
@@ -79,14 +79,26 @@
                                        :entity        entity})))))
 
 #?(:cljs
+   (def request-permissions (atom nil?)))
+
+#?(:cljs
+   (defn query-request-permissions! [e!]
+     (e! (query/->Query :authorization/permissions
+                        {}
+                        [:authorization/permissions]))))
+
+#?(:cljs
    (defn when-authorized
-     [functionality entity component]
-     (log/info "Authorization-check functionality: " functionality
-               "entity : " entity
-               "App-state/User" @app-state/user
-               "rules for functionality: " (@authorization-rules functionality))
-     (when (authorized? @app-state/user functionality {:entity entity})
-       component)))
+         [action entity component]
+     (let [permissions @request-permissions
+           user @app-state/user]
+       (when (and permissions
+                  user)
+         (when (every? (fn [[permission {:keys [link]}]]
+                         (authorized? @app-state/user permission (merge {:entity entity}
+                                                                        (when link {:link link}))))
+                       (action permissions))
+           component)))))
 
 (defn authorization-rule-names []
   (into #{} (keys @authorization-rules)))

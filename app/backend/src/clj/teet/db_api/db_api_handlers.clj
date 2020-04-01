@@ -7,6 +7,7 @@
             [clojure.spec.alpha :as s]
 
             ;; Require all namespaces that provide queries/commands
+            teet.authorization.authorization-queries
             teet.file.file-commands
             teet.file.file-queries
             teet.comment.comment-commands

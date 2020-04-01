@@ -112,3 +112,19 @@
 
       :else
       (apply find-> (get here path) (rest paths)))))
+
+(defn map-keys
+  "Given map `m` returns a map where each key `k` is replaced by `(f k)`"
+  [f m]
+  {:pre [(map? m)]}
+  (into {}
+        (for [[k v] m]
+          [(f k) v])))
+
+(defn map-vals
+  "Given map `m` returns a map where each value `v` is replaced by `(f v)`"
+  [f m]
+  {:pre [(map? m)]}
+  (into {}
+        (for [[k v] m]
+          [k (f v)])))

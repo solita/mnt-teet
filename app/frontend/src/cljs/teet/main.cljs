@@ -6,6 +6,7 @@
             [postgrest-ui.impl.style.material]
             [reagent.core :as r]
             [teet.app-state :as app-state]
+            [teet.authorization.authorization-check :as authorization-check]
             [teet.localization :as localization]
             [teet.log :as log]
             [teet.login.login-view :as login-view]
@@ -43,6 +44,7 @@
 
 (defn main-view [e! _]
   (log/hook-onerror! e!)
+  (authorization-check/query-request-permissions! e!)
   (poll-version e!)
   (e! (login-controller/->CheckExistingSession))
   (fn [e! {:keys [page user navigation quick-search snackbar] :as app}]

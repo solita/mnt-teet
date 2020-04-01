@@ -4,7 +4,8 @@
             [teet.permission.permission-db :as permission-db]
             [datomic.client.api :as d]
             [teet.meta.meta-query :as meta-query]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.util.collection :as cu]))
 
 (defmulti query
   "Execute a given named query.
@@ -70,6 +71,11 @@
 
 (def request-permissions (atom {}))
 
+(defn- authorization->registrable-permissions [authorization]
+  (cu/map-vals #(select-keys % [:link])
+               (or authorization
+                   {})))
+
 (defn register-permissions! [request-name _request-type permissions]
   (swap! request-permissions
          assoc request-name
@@ -107,10 +113,11 @@
         -perms (gensym "PERMISSIONS")
         -db (gensym "DB")
         -user (gensym "USER")
-        -proj-id (gensym "PID")]
+        -proj-id (gensym "PID")
+        prepared-permissions (authorization->registrable-permissions authorization)]
     `(do (register-permissions! ~request-name
                                 ~request-type
-                                ~(->> authorization keys (into [])))
+                                ~prepared-permissions)
          (defmethod ~(case request-type
                        :command 'teet.db-api.core/command!
                        :query 'teet.db-api.core/query)
