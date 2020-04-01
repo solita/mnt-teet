@@ -68,6 +68,13 @@
                     project-id))
     project-id))
 
+(def request-permissions (atom {}))
+
+(defn register-permissions! [request-name _request-type permissions]
+  (swap! request-permissions
+         assoc request-name
+         permissions))
+
 (defmacro defrequest*
   "Do not call directly. Use defcommand and defquery."
   [request-type request-name
@@ -85,7 +92,7 @@
   (assert (string? (:doc options)) "Specify :doc for request")
   (assert (and (keyword? request-name)
                (some? (namespace request-name)))
-          "Request name must be a namespaced keyword")
+                          "Request name must be a namespaced keyword")
   (assert (map? options) "Options must be a map")
   (assert (or (not (contains? options :authorization))
               (map? authorization)) "Authorization option must be a map")
@@ -101,76 +108,79 @@
         -db (gensym "DB")
         -user (gensym "USER")
         -proj-id (gensym "PID")]
-    `(defmethod ~(case request-type
-                   :command 'teet.db-api.core/command!
-                   :query 'teet.db-api.core/query)
-       ~request-name [~-ctx ~-payload]
-       (binding [*request-name* ~request-name
-                 *request-ctx* ~-ctx]
-         (let [~(or context -ctx) ~-ctx
-               ~(or (case request-type
-                      :command payload
-                      :query args) -payload) ~-payload
-               ~-db (d/db (:conn ~-ctx))
-               ~-user (:user ~-ctx)
-               ~-perms (when (:user ~-ctx)
-                         (permission-db/user-permissions ~-db [:user/id (:user/id (:user ~-ctx))]))
-               ~-proj-id (project-id->db-id ~-db ~project-id)]
+    `(do (register-permissions! ~request-name
+                                ~request-type
+                                ~(->> authorization keys (into [])))
+         (defmethod ~(case request-type
+                       :command 'teet.db-api.core/command!
+                       :query 'teet.db-api.core/query)
+           ~request-name [~-ctx ~-payload]
+           (binding [*request-name* ~request-name
+                     *request-ctx* ~-ctx]
+             (let [~(or context -ctx) ~-ctx
+                   ~(or (case request-type
+                          :command payload
+                          :query args) -payload) ~-payload
+                   ~-db (d/db (:conn ~-ctx))
+                   ~-user (:user ~-ctx)
+                   ~-perms (when (:user ~-ctx)
+                             (permission-db/user-permissions ~-db [:user/id (:user/id (:user ~-ctx))]))
+                   ~-proj-id (project-id->db-id ~-db ~project-id)]
 
-           ;; Check user is logged in
-           ~@(when-not unauthenticated?
-               [`(when (nil? ~-user)
-                   (throw (ex-info "Unauthenticated access not allowed"
-                                   {~request-type ~request-name
-                                    :status 401
-                                    :error :unauthorized})))
+               ;; Check user is logged in
+               ~@(when-not unauthenticated?
+                   [`(when (nil? ~-user)
+                       (throw (ex-info "Unauthenticated access not allowed"
+                                       {~request-type ~request-name
+                                        :status 401
+                                        :error :unauthorized})))
 
-                ;; Go through the declared authorization requirements
-                ;; and try to find user permissions that satisfy them
-                `(when-not (every? (fn [[functionality# {entity-id# :db/id
-                                                         eid# :eid
-                                                         access# :access
-                                                         link# :link
-                                                         :as options#}]]
-                                     (authorization-check/authorized?
-                                      ~-user functionality#
-                                      {:access access#
-                                       :project-id ~-proj-id
-                                       :entity (when (or entity-id# eid#)
-                                                 (apply meta-query/entity-meta ~-db (or entity-id# eid#)
-                                                        (when link#
-                                                          [link#])))}))
-                                   ~authorization)
-                   (log/warn "Failed to authorize command " ~request-name " for user " ~-user)
-                   (throw (ex-info "Request authorization failed"
-                                   {:status 403
-                                    :error :request-authorization-failed})))])
+                    ;; Go through the declared authorization requirements
+                    ;; and try to find user permissions that satisfy them
+                    `(when-not (every? (fn [[functionality# {entity-id# :db/id
+                                                             eid# :eid
+                                                             access# :access
+                                                             link# :link
+                                                             :as options#}]]
+                                         (authorization-check/authorized?
+                                          ~-user functionality#
+                                          {:access access#
+                                           :project-id ~-proj-id
+                                           :entity (when (or entity-id# eid#)
+                                                     (apply meta-query/entity-meta ~-db (or entity-id# eid#)
+                                                            (when link#
+                                                              [link#])))}))
+                                       ~authorization)
+                       (log/warn "Failed to authorize command " ~request-name " for user " ~-user)
+                       (throw (ex-info "Request authorization failed"
+                                       {:status 403
+                                        :error :request-authorization-failed})))])
 
-           ;; Go through pre checks
-           ~@(for [pre (:pre options)
-                   :let [error (or (:error (meta pre)) :request-pre-check-failed)]]
-               `(when-not ~pre
-                  (throw (ex-info "Pre check failed"
-                                  {:status 400
-                                   :msg "Pre check failed"
-                                   :error ~error
-                                   :pre-check ~(str pre)}))))
+               ;; Go through pre checks
+               ~@(for [pre (:pre options)
+                       :let [error (or (:error (meta pre)) :request-pre-check-failed)]]
+                   `(when-not ~pre
+                      (throw (ex-info "Pre check failed"
+                                      {:status 400
+                                       :msg "Pre check failed"
+                                       :error ~error
+                                       :pre-check ~(str pre)}))))
 
-           (let [~'%
-                 ~(if (and (= :command request-type) transact)
-                    `(select-keys (tx ~transact)
-                                  [:tempids])
-                    `(do ~@body))]
+               (let [~'%
+                     ~(if (and (= :command request-type) transact)
+                        `(select-keys (tx ~transact)
+                                      [:tempids])
+                        `(do ~@body))]
 
-             ~@(for [post (:post options)]
-                 `(when-not ~post
-                    (throw (ex-info "Post check failed"
-                                    {:status 500
-                                     :msg "Internal server error"
-                                     :error :request-post-check-failed
-                                     :post-check ~(str post)}))))
-             ;; Return result
-             ~'%))))))
+                 ~@(for [post (:post options)]
+                     `(when-not ~post
+                        (throw (ex-info "Post check failed"
+                                        {:status 500
+                                         :msg "Internal server error"
+                                         :error :request-post-check-failed
+                                         :post-check ~(str post)}))))
+                 ;; Return result
+                 ~'%)))))))
 
 (defmacro defcommand
   "Define a command.
