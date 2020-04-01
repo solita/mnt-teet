@@ -99,6 +99,7 @@
   :document.sub-category/laboratory-certificate "Laboriprotokoll",
   :task.type/eia-pre-assessment "KMH eelhinnang",
   :task.group/study "Uuringud",
+  :task.thk-type/building-permit "Ehitusluba",
   :file.status/draft "Mustand",
   :activity.status/valid "Kehtiv",
   :task.type/topogeodesy "Topogeodeesia",

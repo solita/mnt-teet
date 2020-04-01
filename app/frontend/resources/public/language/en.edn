@@ -98,6 +98,7 @@
   "Laboratory Certificate",
   :task.type/eia-pre-assessment "EIA pre-assessment",
   :task.group/study "Studies",
+  :task.thk-type/building-permit "Building permit",
   :file.status/draft "Draft",
   :activity.status/valid "Valid",
   :task.type/topogeodesy "Topogeodesy",
