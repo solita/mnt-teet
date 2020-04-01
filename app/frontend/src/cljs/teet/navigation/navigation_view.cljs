@@ -173,6 +173,7 @@
 (defn main-container [navigation-open? content]
   [:main {:class (<class navigation-style/main-container navigation-open?)}
    (when (common-controller/in-flight-requests?)
-     [:div {:style {:position :absolute :width "100%"}}
+     [:div {:style {:position :absolute :width "100%"
+                    :overflow :hidden}}
       [LinearProgress]])
    content])
