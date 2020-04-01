@@ -97,7 +97,12 @@
          [:soap:Body
           [:kr:Kinnistu_Detailandmed
            [:kr:request
-            [:kin:registriosa_nr registriosa-nr]]]]]]    
+            [:kin:jao_nr "0,1,2,3,4"]
+            [:kin:kande_kehtivus "1"]
+            [:kin:kasutajanimi]
+            [:kin:parool]
+            [:kin:registriosa_nr registriosa-nr]
+            ]]]]]    
     (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (hiccup/html req-hic))))
 
 
@@ -105,15 +110,13 @@
 (defn kinnistu-d-parse-response [xml-string]
   (let [xml (xml/parse (clojure.java.io/input-stream (.getBytes xml-string)))
         zipped-xml (clojure.zip/xml-zip xml)
-        ;; avaldaja (z/xml1-> zipped-xml :SOAP-ENV:Envelope :SOAP-ENV:Body :prod:RR442Response :response :Avaldaja)
-        ;; fields [:Eesnimi :Perenimi :Isikukood]
-        ;; _ (def *x avaldaja)
-        ;; fieldname->kvpair (fn [fieldname]
-        ;;                     [fieldname (z/xml1-> avaldaja fieldname z/text)])
+        d-response (z/xml1-> zipped-xml :s:Envelope :s:Body :Kinnistu_DetailandmedResponse)
+        fields [:detailandmed :jagu0 :jagu1 :jagu2]
+        _ (def *x d-response)
+        fieldname->kvpair (fn [fieldname]
+                            [fieldname (z/xml1-> d-response fieldname z/text)])
         ]
-    #_(into {} (mapv fieldname->kvpair fields))
-    zipped-xml
-    ))
+    (into {} (mapv fieldname->kvpair fields))))
 
 (defn unpeel-multipart [ht-resp]
   (let [c-type (:content-type (:headers ht-resp))
@@ -151,6 +154,8 @@
                                       :headers {"Content-Type" "text/xml; charset=UTF-8"}})
         resp (deref resp-atom)
         ]
+    (println "req was" req)
+    (def *rq req)
     (def *rr resp)
     (if (= 200 (:status resp))
       {:status :ok
@@ -159,3 +164,8 @@
       ;; else
       {:status :error
        :result resp})))
+
+;; repl
+;; (def *r  (perform-kinnistu-d-request "http://localhost:12073" "ee-dev" "308104"))
+;; (kinnistu-d-parse-response (unpeel-multipart *rr))
+
