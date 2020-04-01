@@ -53,5 +53,5 @@
    :authorization {:task/create-task {}
                    :activity/edit-activity {:db/id activity-id}}
    :transact [(merge {:db/id          activity-id
-                      :activity/tasks [(select-keys task task-keys)]}
-                     (meta-model/creation-meta user))]})
+                      :activity/tasks [(merge (select-keys task task-keys)
+                                              (meta-model/creation-meta user))]})]})
