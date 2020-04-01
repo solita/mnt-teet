@@ -336,7 +336,7 @@
 (defn project-navigator-with-content
   "Page structure showing project navigator along with content."
   [{:keys [e! project app breadcrumbs column-widths]
-    :or {column-widths [3 6 3]}
+    :or {column-widths [3 6 :auto]}
     :as opts} content]
   (let [[nav-w content-w map-w] column-widths]
     [:div {:class (<class project-style/page-container)}
@@ -361,7 +361,7 @@
                       :max-height "calc(100vh - 150px)"}}
         content]
        [Grid {:item  true
-              :xs map-w
+              :xs :auto
               :style {:display :flex
                       :flex    1}}
         [project-map-view/project-map e! app project]]]]]))
