@@ -89,6 +89,7 @@
   :task.type/lighting "Lighting",
   :document.sub-category/geological-basis "Geological basis",
   :activity.name/land-acquisition "Land acquisition",
+  :thk.task-type/road-safety-audit "Road safety audit",
   :document.sub-category/laboratory-certificate
   "Laboratory Certificate",
   :task.type/eia-pre-assessment "EIA pre-assessment",
@@ -99,6 +100,7 @@
   :task.type/equipment "Equipment",
   :task.type/structures "Structures",
   :activity.name/design-requirements "Design requirements",
+  :thk.task-type/third-party-review "3rd party review",
   :document.sub-category/photo "Photo",
   :thk.lifecycle-type/construction "Construction",
   :task.type/road-safety-audit-design
@@ -106,11 +108,14 @@
   :document.sub-category/drawing "Drawing",
   :task.type/traffic-study "Traffic study",
   :task.status/accepted "Accepted",
+  :thk.task-type/design-requirements "Design requirements",
   :task.group/base-data "Base data ",
   :task.status/completed "Completed",
   :task.type/land-owners "Land-owners",
   :task.type/acceptances-no-objection
   "Acceptances (No-objection co-ordination)",
+  :thk.task-type/environmental-impact-assessment
+  "Environmental Impact Assessment (EIA)",
   :document.sub-category/drill-posts "Drill posts",
   :activity.status/in-progress "In progress",
   :task.status/assigned "Assigned",
@@ -121,6 +126,7 @@
   :task.type/landscaping "Landscaping",
   :file.status/invalid "Invalid",
   :task.type/third-party-review "3rd party review",
+  :thk.task-type/study "Study",
   :document.sub-category/explanatory-letter "Explanatory letter ",
   :activity.status/completed "Completed",
   :activity.name/preliminary-design "Preliminary design",
@@ -130,6 +136,7 @@
   :task.type/design-requirements "Design requirements",
   :file.status/updated "Updated",
   :task.type/buildings "Buildings",
+  :thk.task-type/building-permit "Building permit",
   :document.sub-category/presentation "Presentation / Visual",
   :task.type/archeological-study "Archeological study",
   :document.sub-category/study-plan "Study Plan",
@@ -156,8 +163,10 @@
   "Only one activity of a type can be active at the same time.",
   :server-error "Server error."},
  :fields
- {:thk.project/manager "Manager",
+ {:task/send-to-thk? "Send to THK",
+  :thk.project/manager "Manager",
   :thk.project/project-name "Name",
+  :task/thk-type "THK type",
   :task/type "Task type",
   :task/actual-end-date "End date",
   :task/assignee "Responsible person",
@@ -312,13 +321,15 @@
   :inclusion-distance-placeholder "Give value to show related areas",
   :component-title "Related features search area"},
  :task
- {:add-document "Add document",
+ {:task-overview "Task overview",
+  :upload-files "Upload files",
   :edit-document "Edit document",
+  :create-success-notification "Task created successfully",
   :documents "Documents",
-  :task-overview "Task overview",
+  :add-document "Add document",
   :no-documents "No documents",
-  :results "Results",
-  :upload-files "Upload files"},
+  :edit-success-notification "Task edited successfully",
+  :results "Results"},
  :user {:role "Role"},
  :warning
  {:version-mismatch

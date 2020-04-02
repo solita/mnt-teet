@@ -10,8 +10,12 @@
      (boolean group)))
 
 (s/def :task/type keyword?)
+(s/def :db/ident keyword?)
+(s/def :task/type (s/or :enum-keyword keyword?
+                        :enum-ref-map (s/keys :req [:db/ident])))
 (s/def :task/description string?)
 (s/def :task/assignee (s/keys :req [:user/id]))
+(s/def :task/send-to-thk? boolean?)
 
 (s/def :task/new-task-form (s/keys :req [:task/group
                                          :task/type

@@ -48,7 +48,7 @@
     [task-status e! task]]])
 
 (defn task-details
-  [e! params {:task/keys [description files] :as task}]
+  [e! _params {:task/keys [description files] :as task}]
   [:div
    [typography/Heading2 {:class (<class common-styles/margin-bottom 1)} (tr-enum (:task/type task))]
    (when description
@@ -114,7 +114,14 @@
      [select/select-enum {:e! e! :attribute :task/group}]
      ^{:xs 6 :attribute :task/type}
      [select/select-enum {:e! e! :attribute :task/type
-                          :enum/valid-for (:task/group task)}]
+                          :enum/valid-for (:task/group task)
+                          :full-value? true}]
+
+     ;; Show "Send to THK" if task type has associated THK type
+     (when (-> task :task/type :thk/task-type)
+       ^{:xs 12 :attribute :task/send-to-thk?}
+       [select/checkbox {}])
+
 
      ^{:attribute :task/description}
      [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
@@ -132,13 +139,12 @@
      [select/select-user {:e! e! :attribute :task/assignee}]]))
 
 (defmethod project-navigator-view/project-navigator-dialog :add-task
-  [{:keys [e! app]} _dialog]
+  [{:keys [e! app] :as _opts} _dialog]
   [task-form e! (:edit-task-data app)])
 
 (defmethod project-navigator-view/project-navigator-dialog :edit-task
-  [{:keys [e! app]}  _dialog]
+  [{:keys [e! app] :as _opts}  _dialog]
   [task-form e! (:edit-task-data app)])
-
 
 (defn task-page [e! {{:keys [add-document] :as _query} :query
                      {task-id :task :as _params} :params

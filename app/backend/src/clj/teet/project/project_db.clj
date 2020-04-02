@@ -100,6 +100,8 @@
                                            :task/estimated-start-date :task/estimated-end-date
                                            :task/actual-start-date :task/actual-end-date
                                            {:task/assignee [:user/given-name
+                                                            :user/email
+                                                            :user/id
                                                             :db/id
                                                             :user/family-name]}]}]}]}])
           eid))
