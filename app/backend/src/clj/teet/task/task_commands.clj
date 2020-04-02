@@ -34,10 +34,6 @@
                    always-selected-keys
                    (concat always-selected-keys thk-provided-keys)))))
 
-(def task-keys (into task-update-keys
-                     [:task/group :task/type
-                      :task/send-to-thk?]))
-
 (defn- valid-thk-send? [db {:task/keys [send-to-thk? type]}]
   (boolean
    (or (not send-to-thk?)
