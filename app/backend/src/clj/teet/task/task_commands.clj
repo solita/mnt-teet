@@ -19,16 +19,20 @@
    :pre [(not (send-to-thk? db task-id))]
    :transact [(meta-model/deletion-tx user task-id)]})
 
+(def ^:private always-selected-keys
+  [:db/id :task/description :task/status :task/assignee
+   :task/estimated-start-date :task/estimated-end-date])
+
+(def ^:private thk-provided-keys
+  [:task/actual-start-date :task/actual-end-date])
+
 (defn select-update-keys
   "Select keys to update. The set of keys depends on whether the task is sent to THK."
   [task send-to-thk?]
-  (let [always-selected-keys [:db/id :task/description :task/status :task/assignee
-                              :task/estimated-start-date :task/estimated-end-date]
-        thk-provided-keys [:task/actual-start-date :task/actual-end-date]]
-    (select-keys task
-                 (if send-to-thk?
-                   always-selected-keys
-                   (concat always-selected-keys thk-provided-keys)))))
+  (select-keys task
+               (if send-to-thk?
+                 always-selected-keys
+                 (concat always-selected-keys thk-provided-keys))))
 
 (defn- valid-thk-send? [db {:task/keys [send-to-thk? type]}]
   (boolean
@@ -54,6 +58,12 @@
                          uc/without-nils)
                      (meta-model/modification-meta user))]})
 
+(def ^:private task-create-keys
+  (into (concat always-selected-keys
+                thk-provided-keys)
+        [:task/group :task/type
+         :task/send-to-thk?]))
+
 (defcommand :task/create
   {:doc "Add task to activity"
    :context {:keys [db conn user]}
@@ -66,6 +76,6 @@
                    :activity/edit-activity {:db/id activity-id}}
    :transact [(merge {:db/id          activity-id
                       :activity/tasks [(merge (-> task
-                                                  (select-keys task-keys)
+                                                  (select-keys task-create-keys)
                                                   (update :task/assignee (fn [{id :user/id}] [:user/id id])))
                                               (meta-model/creation-meta user))]})]})
