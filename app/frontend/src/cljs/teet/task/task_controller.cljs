@@ -19,18 +19,11 @@
 (defrecord UpdateEditTaskForm [form-data])
 (defrecord SaveTaskForm [])
 (defrecord SaveTaskSuccess [])
-(defrecord MoveDataForEdit [])
 
 (defrecord OpenAddDocumentDialog [])
 (defrecord CloseAddDocumentDialog [])
 
 (extend-protocol t/Event
-  MoveDataForEdit
-  (process-event [_ app]
-    (let [task-data (select-keys (get-in app [:route :activity-task]) [:db/id :task/assignee :task/type :task/description])
-          task-with-type (assoc task-data :task/type (get-in task-data [:task/type :db/ident]))]
-      (assoc app :edit-task-data task-with-type)))
-
   OpenEditModal
   (process-event [{entity :entity} {:keys [params page query] :as app}]
     (t/fx app
