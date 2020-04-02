@@ -84,8 +84,6 @@
     (do (log/warn "No spec for " spec ", every query and command should have a spec!")
         nil)
     (when-let [problems (s/explain-data spec data)]
-      (log/error (s/explain-str spec data))
-      (clojure.pprint/pprint data)
       (with-meta
         (merge
           {:status 422
