@@ -6,6 +6,5 @@
 (defquery :authorization/permissions
   {:doc "Fetch required permissions for commands and queries"
    :args {}
-   :project-id nil
-   :authorization {}}
+   :unauthenticated? true}
   @db-api/request-permissions)
