@@ -83,17 +83,27 @@
                          name :activity/name
                          :as activity} activities
                         :when (and id name)]
-                    (merge
-                     (cu/without-nils
-                      (select-keys activity #{:thk.activity/id
-                                              :activity/estimated-start-date
-                                              :activity/estimated-end-date
-                                              :activity/name
-                                              :activity/status}))
-                     {:db/id (str "act-" id)
-                      :activity/integration-info (integration-info
-                                                  activity
-                                                  thk-mapping/activity-integration-info-fields)}))}))))}))))
+                    (if-let [task-id (:activity/task-id activity)]
+                      ;; This is a task that has previously been sent to THK
+                      (cu/without-nils
+                       {:db/id task-id
+                        :task/estimated-start-date (:activity/estimated-start-date activity)
+                        :task/estimated-end-date (:activity/estimated-end-date activity)
+                        :task/actual-start-date (:activity/actual-start-date activity)
+                        :task/actual-end-date (:activity/actual-end-date activity)})
+
+                      ;; This is an activity
+                      (merge
+                       (cu/without-nils
+                        (select-keys activity #{:thk.activity/id
+                                                :activity/estimated-start-date
+                                                :activity/estimated-end-date
+                                                :activity/name
+                                                :activity/status}))
+                       {:db/id (str "act-" id)
+                        :activity/integration-info (integration-info
+                                                    activity
+                                                    thk-mapping/activity-integration-info-fields)})))}))))}))))
 
 (defn teet-project? [[_ [p1 & _]]]
   (and p1

@@ -211,4 +211,5 @@
    ;;"activity_teetdelstamp" :activity/teetdelstamp
    "activity_cost" [:activity/cost]
    "activity_procurementno" [:activity/procurementno]
-   "activity_procurementid" [:activity/procurementid]})
+   "activity_procurementid" [:activity/procurementid]
+   "activity_taskid" [:activity/task-id ->int]})
