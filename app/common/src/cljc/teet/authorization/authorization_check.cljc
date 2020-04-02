@@ -46,7 +46,6 @@
                  (and (if (seq projects)
                         ;; Project specific permission: check project id is included
                         (and project-id
-                             ;; FIXme project-id is not db/id
                              (cu/contains-value? projects {:db/id project-id}))
 
                         ;; Global permission

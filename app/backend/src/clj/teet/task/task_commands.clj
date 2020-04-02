@@ -7,11 +7,7 @@
             [teet.util.collection :as uc]))
 
 (defn- send-to-thk? [db task-id]
-  (boolean
-   (ffirst (d/q '[:find ?send
-                  :where [?t :task/send-to-thk? ?send]
-                  :in $ ?t]
-                db task-id))))
+  (:task/send-to-thk? (d/pull db [:task/send-to-thk?] task-id)))
 
 (defcommand :task/delete
   {:doc "Mark a task as deleted"

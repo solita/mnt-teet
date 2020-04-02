@@ -251,7 +251,6 @@
   "updates task data obtained from the db into one suitable for task form"
   [task]
   (-> task
-      #_(update :task/type :db/ident)
       (update :task/group :db/ident)
       (update :task/status :db/ident)
       (update :task/assignee #(select-keys % [:user/email :user/family-name :user/given-name :user/id]))))
