@@ -145,7 +145,8 @@
    "activity_teetdelstamp"
    "activity_cost"
    "activity_procurementno"
-   "activity_procurementid"])
+   "activity_procurementid"
+   "activity_taskid"])
 
 (defn estonian-person-id->user [id]
   (when-not (str/blank? id)

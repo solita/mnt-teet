@@ -13,6 +13,15 @@
          :where [?e :thk.project/id _]]
        db))
 
+(defn- tasks-to-send [db activity-id]
+  (mapv first
+        (d/q '[:find (pull ?e [*])
+               :where
+               [?activity :activity/tasks ?e]
+               [?e :task/send-to-thk? true]
+               :in $ ?activity]
+             db activity-id)))
+
 (defn read-integration-info [info-str]
   (when info-str
     (binding [*read-eval* false]
@@ -44,6 +53,7 @@
      (for [project projects
            lifecycle (:thk.project/lifecycles project)
            activity (:thk.lifecycle/activities lifecycle)
+           activity-or-task (into [activity] (tasks-to-send db (:db/id activity)))
            :let [data (merge project lifecycle activity
                              (read-integration-info (:thk.project/integration-info project))
                              (read-integration-info (:thk.lifecycle/integration-info lifecycle))
@@ -63,6 +73,12 @@
                  (str (:db/id lifecycle))
                  "activity_teetid"
                  (str (:db/id activity))
+
+                 ;; Id for task id (only when a task is being sent to THK)
+                 "activity_taskid"
+                 (if (= activity-or-task activity)
+                   ""
+                   (str (:db/id activity-or-task)))
 
                  ;; Regular columns
                  (let [[teet-kw _ fmt override-kw] (thk-mapping/thk->teet csv-column)
