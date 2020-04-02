@@ -17,6 +17,7 @@
 
 (defrecord OpenEditModal [entity])
 (defrecord UpdateEditTaskForm [form-data])
+(defrecord CancelTaskEdit [])
 (defrecord SaveTaskForm [])
 (defrecord SaveTaskSuccess [])
 
@@ -97,6 +98,16 @@
   UpdateEditTaskForm
   (process-event [{form-data :form-data} app]
     (update-in app [:edit-task-data] merge form-data))
+
+  CancelTaskEdit
+  (process-event [_ {:keys [page params query] :as app}]
+    (t/fx (-> app
+              (dissoc :edit-task-data)
+              (update :stepper dissoc :dialog))
+          {:tuck.effect/type :navigate
+           :page             page
+           :params           params
+           :query            (dissoc query :modal :add :edit :activity :lifecycle)}))
 
   SaveTaskForm
   (process-event [_ {edit-task-data :edit-task-data

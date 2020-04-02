@@ -99,6 +99,7 @@
                                            :task/status :task/type :task/group
                                            :task/estimated-start-date :task/estimated-end-date
                                            :task/actual-start-date :task/actual-end-date
+                                           :task/send-to-thk?
                                            {:task/assignee [:user/given-name
                                                             :user/email
                                                             :user/id

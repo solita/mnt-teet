@@ -106,9 +106,8 @@
     [form/form {:e! e!
                 :value task
                 :on-change-event task-controller/->UpdateEditTaskForm
-                :cancel-event project-controller/->CloseDialog
+                :cancel-event task-controller/->CancelTaskEdit
                 :save-event task-controller/->SaveTaskForm
-                :delete (when id (task-controller/->DeleteTask id))
                 :spec :task/new-task-form}
      ^{:xs 6 :attribute :task/group}
      [select/select-enum {:e! e! :attribute :task/group}]
@@ -138,13 +137,40 @@
      ^{:attribute :task/assignee}
      [select/select-user {:e! e! :attribute :task/assignee}]]))
 
+(defn edit-task-form [_e! {:keys [initialization-fn]}]
+  (when initialization-fn
+    (initialization-fn))
+  (fn [e! {id :db/id send-to-thk? :task/send-to-thk? :as task}]
+    [form/form {:e! e!
+                :value task
+                :on-change-event task-controller/->UpdateEditTaskForm
+                :cancel-event task-controller/->CancelTaskEdit
+                :save-event task-controller/->SaveTaskForm
+                :delete (when (and id (not send-to-thk?))
+                          (task-controller/->DeleteTask id))
+                :spec :task/edit-task-form}
+
+     ^{:attribute :task/description}
+     [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
+
+     ^{:attribute [:task/estimated-start-date :task/estimated-end-date] :xs 12}
+     [date-picker/date-range-input {:start-label (tr [:fields :task/estimated-start-date])
+                                    :end-label (tr [:fields :task/estimated-end-date])}]
+
+     (when (not send-to-thk?)
+       ^{:attribute [:task/actual-start-date :task/actual-end-date] :xs 12}
+       [date-picker/date-range-input {:start-label (tr [:fields :task/actual-start-date])
+                                      :end-label (tr [:fields :task/actual-end-date])}])
+     ^{:attribute :task/assignee}
+     [select/select-user {:e! e! :attribute :task/assignee}]]))
+
 (defmethod project-navigator-view/project-navigator-dialog :add-task
   [{:keys [e! app] :as _opts} _dialog]
   [task-form e! (:edit-task-data app)])
 
 (defmethod project-navigator-view/project-navigator-dialog :edit-task
   [{:keys [e! app] :as _opts}  _dialog]
-  [task-form e! (:edit-task-data app)])
+  [edit-task-form e! (:edit-task-data app)])
 
 (defn task-page [e! {{:keys [add-document] :as _query} :query
                      {task-id :task :as _params} :params

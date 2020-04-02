@@ -24,6 +24,8 @@
                                          :task/estimated-start-date
                                          :task/estimated-end-date]))
 
+(s/def :task/edit-task-form (s/keys))
+
 (s/def :task/update (s/and (s/keys)
                            task-type-and-group-both-present-or-absent?))
 
