@@ -46,17 +46,12 @@
 
   DeleteTaskResult
   (process-event [_response {:keys [page params query] :as app}]
-    (let [activity-id (get-in app [:route :activity-task :activity/_tasks 0 :db/id])
-          lifecycle-id (get-in app
-                               [:route :activity-task :activity/_tasks 0 :thk.lifecycle/_activities 0 :db/id])]
-      (t/fx (-> app
-                (dissoc :edit-task-data)
-                (update :stepper dissoc :dialog))
-            {:tuck.effect/type :navigate
-             :page             :project
-             :params           {:project (:project params)}
-             :query            {:lifecycle lifecycle-id
-                                :activity activity-id}})))
+    (t/fx (-> app
+              (dissoc :edit-task-data)
+              (update :stepper dissoc :dialog))
+          {:tuck.effect/type :navigate
+           :page             :activity
+           :params           (select-keys params [:project :activity])}))
 
   OpenAddDocumentDialog
   (process-event [_ app]
