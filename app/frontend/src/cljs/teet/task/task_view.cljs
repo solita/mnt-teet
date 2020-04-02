@@ -102,7 +102,7 @@
   ;; Responsible person (email)
   (when initialization-fn
     (initialization-fn))
-  (fn [e! {id :db/id :as task}]
+  (fn [e! task]
     [form/form {:e! e!
                 :value task
                 :on-change-event task-controller/->UpdateEditTaskForm

@@ -2,7 +2,7 @@
   (:require [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
             [teet.common.common-styles :as common-styles]
-            [teet.localization :refer [tr tr-tree]]
+            [teet.localization :refer [tr]]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-model :as project-model]
             [teet.project.project-style :as project-style]
