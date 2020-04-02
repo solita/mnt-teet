@@ -286,4 +286,5 @@
            :entity-id (:db/id file)
            :entity-type :file
            :show-comment-form? (not old?)}
-          [file-details e! file latest-file edit-open?]]]]])))
+          (when file
+            [file-details e! file latest-file edit-open?])]]]])))

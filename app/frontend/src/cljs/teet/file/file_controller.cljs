@@ -13,6 +13,7 @@
 (defrecord UploadFinished []) ; upload completed, can close dialog
 (defrecord UploadFileUrlReceived [file-data file document-id url on-success])
 (defrecord UploadNewVersion [file new-version])
+(defrecord UploadSuccess [file-id])
 
 (defrecord DeleteFile [file-id])
 (defrecord DeleteFileResult [])
@@ -64,6 +65,15 @@
                                      :on-success ->UploadFinished}))))))
 
 
+  UploadSuccess
+  (process-event [{file-id :file-id} {:keys [page params query] :as app}]
+    (t/fx app
+      {:tuck.effect/type :navigate
+       :page             page
+       :params           (assoc params :file (str file-id))
+       :query            query}
+      common-controller/refresh-fx))
+
   UploadNewVersion
   (process-event [{:keys [file new-version]} {params :params :as app}]
     (t/fx app
@@ -74,12 +84,9 @@
                      :previous-version-id (:db/id file)}
            :result-event (fn [{file :file :as result}]
                            (map->UploadFileUrlReceived
-                            (merge result
-                                   {:file-data (first new-version)
-                                    :on-success (common-controller/->Navigate
-                                                 :file
-                                                 (assoc params :file (str (:db/id file)))
-                                                 {})})))}))
+                             (merge result
+                                    {:file-data (first new-version)
+                                     :on-success (->UploadSuccess (:db/id file))})))}))
 
   UploadFiles
   (process-event [{:keys [files task-id on-success progress-increment] :as event} app]
