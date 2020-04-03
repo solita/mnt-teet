@@ -135,19 +135,17 @@
 
 (defn table [{:keys [get-column data label after-title]
               :as opts}]
-  (r/with-let [open? (r/atom true)
-               filters (r/atom {})
+  (r/with-let [filters (r/atom {})
                clear-filters! #(reset! filters {})]
     (let [data (filtered-data (or get-column get) data @filters)]
       ^{:key "table-listing-panel"}
-      [panels/collapsible-panel
+      [panels/panel-with-action
        {:title [:<>
                 (str label
                      (when-let [total (and (seq data)
                                            (count data))]
                        (str " (" total ")")))
                 after-title]
-        :open-atom open?
         :action    [Button {:color    "secondary"
                             :on-click clear-filters!
                             :size     "small"

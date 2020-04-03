@@ -11,30 +11,20 @@
             [teet.ui.util :refer [mapc]]
             [teet.theme.theme-colors :as theme-colors]))
 
-(defn collapsible-panel
-  "Panel that shows content that can be opened/closed with a button.
-  In the initial closed state only the title is shown and an arrow icon button to open.
-  Additional :action can element can be provided to add another action to the panel header."
+(defn panel-with-action
+  "Panel with an action element.
+  Additional :action element can be provided to add an action to the panel header."
   [{:keys [title action] :as opts} content]
-  (r/with-let [open-atom (or (:open-atom opts) (r/atom false))]
-    (let [open-atom (or (:open-atom opts) open-atom)
-          open? @open-atom]
-      [Card
-       [CardHeader {:title (if (vector? title)
-                             (r/as-element title)
-                             title)
-                    :action (r/as-element
-                              [:div {:style {:display "inline-block"}}
-                               action
-                               #_[IconButton {:color    "primary"
-                                            :on-click #(swap! open-atom not)}
-                                (if open?
-                                  [icons/navigation-expand-less]
-                                  [icons/navigation-expand-more])]])}]
-       [Collapse {:in open? :unmountOnExit true :timeout "auto"}
-        [CardContent
-         [Divider]
-         content]]])))
+  [Card
+   [CardHeader {:title (if (vector? title)
+                         (r/as-element title)
+                         title)
+                :action (r/as-element
+                          [:div {:style {:display "inline-block"}}
+                           action])}]
+   [CardContent
+    [Divider]
+    content]])
 
 (defn panel
   "Simple content panel with title and content"

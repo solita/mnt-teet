@@ -6,6 +6,7 @@
             [teet.project.project-controller :as project-controller]
             [teet.project.project-model :as project-model]
             [teet.project.project-style :as project-style]
+            [teet.project.land-view :as land-tab]
             [teet.project.project-setup-view :as project-setup-view]
             [teet.project.project-info :as project-info]
             [teet.project.project-navigator-view :as project-navigator-view]
@@ -298,7 +299,10 @@
    {:label [:project :tabs :data]
     :value "data"
     :component data-tab
-    :layers #{:thk-project}}])
+    :layers #{:thk-project}}
+   {:label [:project :tabs :land]
+    :value "land"
+    :component land-tab/related-cadastral-units-info}])
 
 (defn selected-project-tab [{{:keys [tab]} :query :as _app}]
   (if tab
