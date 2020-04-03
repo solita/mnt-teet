@@ -50,6 +50,7 @@
     {:background-color theme-colors/gray-lightest
      :flex 1
      :display :flex
+     :position :relative
      :flex-direction :column
      :width (str "calc(100% - " dw "px)")
      :transition "all 0.2s ease-in-out"
