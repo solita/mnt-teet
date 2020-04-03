@@ -766,4 +766,10 @@
           ;; Building permit is a new task type
           {:db/ident :task.type/building-permit
            :enum/attribute :task/type :enum/valid-for :task.group/design-approval
-           :thk/task-type :thk.task-type/building-permit}]]}]
+           :thk/task-type :thk.task-type/building-permit}]]}
+
+ {:db/ident :migration/comment-images
+  :txes [[{:db/ident :comment/files
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "Image files attached to a comment"}]]}]
