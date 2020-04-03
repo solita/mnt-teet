@@ -14,9 +14,6 @@
             [teet.ui.url :as url]
             [clojure.string :as str]))
 
-(defn cadastral-unit-style)
-
-
 (defn cadastral-unit
   [unit]
   ^{:key (str (:TUNNUS unit))}
