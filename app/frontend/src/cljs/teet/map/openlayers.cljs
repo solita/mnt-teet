@@ -175,8 +175,8 @@
 
 (defn center-point
   "Calculates the center point of the geometry based on the extent"
-  [geometria]
-  (let [[x1 y1 x2 y2] (.getExtent geometria)]
+  [geometry]
+  (let [[x1 y1 x2 y2] (.getExtent geometry)]
     [(+ x1 (/ (- x2 x1) 2))
      (+ y1 (/ (- y2 y1) 2))]))
 
