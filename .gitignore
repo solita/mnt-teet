@@ -15,3 +15,6 @@
 # Large files that we don't want to download too often
 /db/KITSENDUSED.gpkg
 /db/KATASTRIYKSUS.*
+/ci/browser-tests/cypress/screenshots/
+/ci/browser-tests/node_modules/
+/ci/browser-tests/cypress/videos/
