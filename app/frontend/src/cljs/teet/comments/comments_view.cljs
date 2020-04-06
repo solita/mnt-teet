@@ -21,6 +21,7 @@
             [teet.ui.util :refer [mapc]]
             [teet.ui.file-upload :as file-upload]
             [teet.user.user-info :as user-info]
+            [teet.user.user-model :as user-model]
             [teet.file.file-controller :as file-controller]
             [teet.log :as log]))
 
@@ -39,7 +40,8 @@
        ^{:key y}
        [skeleton/skeleton {:parent-style (skeleton/comment-skeleton-style)}]))])
 
-(defn- comment-entry [e! {id :db/id :comment/keys [author comment timestamp files] :as entity}]
+(defn- comment-entry [e! {id :db/id :comment/keys [author comment timestamp files] :as entity}
+                      quote-comment!]
   [:div {:class (<class common-styles/margin-bottom 1)}
    [:div {:class [(<class common-styles/space-between-center) (<class common-styles/margin-bottom 0)]}
     [:span
@@ -51,7 +53,9 @@
       (format/date timestamp)]
      [buttons/button-text {:size :small
                            :color :primary
-                           :start-icon (r/as-element [icons/editor-format-quote])}
+                           :start-icon (r/as-element [icons/editor-format-quote])
+                           :on-click #(quote-comment! (user-model/user-name author)
+                                                      comment)}
       (tr [:buttons :quote])]]]
    [typography/Paragraph comment]
    (when (seq files)
@@ -72,7 +76,7 @@
        (tr [:buttons :delete])])]])
 
 (defn comment-list
-  [e! _app comments _breacrumbs]
+  [quote-comment! e! _app comments _breacrumbs]
   [itemlist/ItemList {}
    (doall
     (for [{id :db/id :as entity} comments]
@@ -82,7 +86,7 @@
         [comment-skeleton 1]
 
         ^{:key id}
-        [comment-entry e! entity])))])
+        [comment-entry e! entity quote-comment!])))])
 
 (defn- attached-images-field
   "File field that only allows uploading images. Files are
@@ -103,6 +107,8 @@
                                    (on-success-event
                                     {:comment/files (into (or value [])
                                                           files)}))}))}]])
+
+
 (defn lazy-comments
   [{:keys [e! app
            entity-type
@@ -120,7 +126,9 @@
                      :skeleton [comment-skeleton 1]
                      :state-path [:comments-for-entity entity-id]
                      :state comments
-                     :view comment-list
+                     :view (partial comment-list
+                                    #(e! (->UpdateCommentForm
+                                          {:comment/comment (str %1 ": \"" %2 "\"")})))
                      :refresh (count comments)}]
        (when show-comment-form?
          [form/form {:e! e!
