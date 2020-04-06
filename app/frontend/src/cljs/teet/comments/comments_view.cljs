@@ -142,28 +142,3 @@
           ^{:attribute :comment/files}
           [attached-images-field {:e! e!
                                   :on-success-event ->UpdateCommentForm} ]])])))
-
-(defn comments [{:keys [e!
-                        new-comment
-                        comments
-                        update-comment-event
-                        save-comment-event]}]
-  [layout/section
-   [:div {:class (<class common-styles/gray-light-border)}
-    [typography/Heading3 (tr [:document :comments])]
-    [:span {:class (<class comments-styles/comment-amount)}
-     (count comments)]]
-   [comment-list e! nil comments nil]
-
-   [form/form {:e!              e!
-               :value           new-comment
-               :on-change-event update-comment-event
-               :save-event      save-comment-event
-               :footer          new-comment-footer
-               :spec            :document/new-comment-form}
-    ^{:attribute :comment/comment}
-    [TextField {:rows            4
-                :multiline       true
-                :InputLabelProps {:shrink true}
-                :full-width      true
-                :placeholder     (tr [:document :new-comment])}]]])
