@@ -22,6 +22,10 @@
 
 (def file-keys [:file/name :file/size :file/type])
 
+(defn check-image-only [file]
+  (when-not (str/starts-with? (:file/type file) "image/")
+    (db-api/bad-request! "Not allowed as attachment")))
+
 (defcommand :file/upload-attachment
   {:doc "Upload attachment file that is not linked to anything yet"
    :context {:keys [conn user db]}
@@ -29,16 +33,15 @@
    :project-id nil
    :authorization {:document/upload-document {}}}
   (let [file (file-model/type-by-suffix file)]
-    (or (and (file-model/validate-file file)
-             (str/starts-with? (:file/type file) "image/"))
-        (let [res (tx [(merge (select-keys file file-keys)
-                              {:db/id "new-file"}
-                              (creation-meta user))])
-              file-id (get-in res [:tempids "new-file"])
-              key (str file-id "-" (:file/name file))]
+    (check-image-only file)
+    (let [res (tx [(merge (select-keys file file-keys)
+                          {:db/id "new-file"}
+                          (creation-meta user))])
+          file-id (get-in res [:tempids "new-file"])
+          key (str file-id "-" (:file/name file))]
 
-          {:url (file-storage/upload-url key)
-           :file (d/pull (:db-after res) '[*] file-id)}))))
+      {:url (file-storage/upload-url key)
+       :file (d/pull (:db-after res) '[*] file-id)})))
 
 
 (defcommand :file/delete-attachment
