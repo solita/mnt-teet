@@ -11,6 +11,7 @@
             [teet.ui.buttons :as buttons]
             [teet.ui.form :as form]
             [teet.ui.format :as format]
+            [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
             [teet.ui.layout :as layout]
             [teet.ui.query :as query]
@@ -47,7 +48,11 @@
       [user-info/user-name author]]
      [typography/GreyText {:style {:display :inline-block
                                    :margin-left "1rem"}}
-      (format/date timestamp)]]]
+      (format/date timestamp)]
+     [:span {:class (<class common-styles/margin-left 0.5)}
+      [buttons/button-text {;; :size :small
+                            :start-icon (r/as-element [icons/editor-format-quote])}
+       (tr [:buttons :quote])]]]]
 
    [typography/Paragraph comment]
    [:div ;; TODO edit button, proper styles
