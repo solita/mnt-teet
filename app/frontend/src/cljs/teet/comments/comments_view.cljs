@@ -14,10 +14,15 @@
             [teet.user.user-info :as user-info]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.buttons :as buttons]
+            [teet.ui.util :refer [mapc]]
+            [teet.ui.file-upload :as file-upload]
             [reagent.core :as r]
             [teet.common.common-controller :as common-controller]
             [teet.ui.skeleton :as skeleton]
-            [teet.comments.comments-controller :as comments-controller]))
+            [teet.comments.comments-controller :as comments-controller]
+            [teet.file.file-controller :as file-controller]
+            [teet.log :as log]
+            [teet.file.file-model :as file-model]))
 
 (defn- new-comment-footer [{:keys [validate disabled?]}]
   [:div {:class (<class comments-styles/comment-buttons-style)}
@@ -62,7 +67,25 @@
              (tr [:buttons :delete])])]
          [typography/Paragraph comment]])))])
 
-
+(defn- attached-images-field
+  "File field that only allows uploading images. Files are
+  directly uploaded and on-change called after success."
+  [{:keys [e! value on-success-event error]}]
+  [:div
+   (when (seq value)
+     [:ul
+      (mapc (fn [{:file/keys [name]}]
+              [:li name]) value)])
+   [file-upload/FileUploadButton
+    {:id "images-field"
+     :on-drop #(e! (file-controller/map->UploadFiles
+                    {:files %
+                     :attachment? true
+                     :on-success (fn [files]
+                                   (log/info "FILES UPLOADED: " files)
+                                   (on-success-event
+                                    {:files (into (or value [])
+                                                  files)}))}))}]])
 (defn lazy-comments
   [{:keys [e! app
            entity-type
@@ -96,7 +119,11 @@
                       :multiline true
                       :InputLabelProps {:shrink true}
                       :full-width true
-                      :placeholder (tr [:document :new-comment])}]])])))
+                      :placeholder (tr [:document :new-comment])}]
+
+          ^{:attribute :files}
+          [attached-images-field {:e! e!
+                                  :on-success-event ->UpdateCommentForm} ]])])))
 
 (defn comments [{:keys [e!
                         new-comment
