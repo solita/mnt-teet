@@ -9,7 +9,7 @@
             [teet.file.file-model :as file-model]
             [teet.transit :as transit]))
 
-(defrecord UploadFiles [files task-id on-success progress-increment]) ; Upload files (one at a time) to document
+(defrecord UploadFiles [files task-id on-success progress-increment file-results]) ; Upload files (one at a time) to document
 (defrecord UploadFinished []) ; upload completed, can close dialog
 (defrecord UploadFileUrlReceived [file-data file document-id url on-success])
 (defrecord UploadNewVersion [file new-version])
@@ -89,7 +89,9 @@
                                      :on-success (->UploadSuccess (:db/id file))})))}))
 
   UploadFiles
-  (process-event [{:keys [files task-id on-success progress-increment] :as event} app]
+  (process-event [{:keys [files task-id on-success progress-increment attachment?
+                          file-results]
+                   :as event} app]
     (if-let [file (first files)]
       ;; More files to upload
       (do
@@ -99,9 +101,10 @@
                            + progress-increment)
                 app)
               {:tuck.effect/type :command!
-               :command :file/upload
-               :payload {:task-id task-id
-                         :file (file-model/file-info file)}
+               :command (if attachment? :file/upload-attachment :file/upload)
+               :payload (merge {:file (file-model/file-info file)}
+                               (when-not attachment?
+                                 {:task-id task-id}))
                :result-event (fn [result]
                                (map->UploadFileUrlReceived
                                 (merge result
@@ -110,7 +113,7 @@
       (do
         (log/info "No more files to upload. Return on-success event: " on-success)
         (t/fx app
-              (fn [e!] (e! (on-success)))))))
+              (fn [e!] (e! (on-success file-results)))))))
 
   UploadFileUrlReceived
   (process-event [{:keys [file file-data document-id url on-success]} app]
@@ -122,7 +125,9 @@
                          (if (.-ok resp)
                            (do
                              (log/info "Upload successfull, calling on-success: " on-success)
-                             (e! on-success))
+                             (e! (update on-success
+                                         :file-results
+                                         (fnil conj []) file)))
                            ;; FIXME: notify somehow
                            (log/warn "Upload failed: " (.-status resp) (.-statusText resp)))))))))
 
