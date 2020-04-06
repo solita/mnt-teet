@@ -26,7 +26,7 @@
                             :on-click validate}
     (tr [:comment :save])]])
 
-(defn comment-skeleton
+(defn- comment-skeleton
   [n]
   [:<>
    (doall
@@ -34,33 +34,37 @@
        ^{:key y}
        [skeleton/skeleton {:parent-style (skeleton/comment-skeleton-style)}]))])
 
+(defn- comment-entry [e! {id :db/id :comment/keys [author comment timestamp] :as entity}]
+  [:div {:class (<class common-styles/margin-bottom 1)}
+   [:div {:class [(<class common-styles/space-between-center) (<class common-styles/margin-bottom 0)]}
+    [:span
+     [typography/SectionHeading
+      {:style {:display :inline-block}}
+      [user-info/user-name author]]
+     [typography/GreyText {:style {:display :inline-block
+                                   :margin-left "1rem"}}
+      (format/date timestamp)]]]
+   [typography/Paragraph comment]
+   [:div ;; TODO edit
+    (when-authorized :comment/delete-comment
+      entity
+      [buttons/delete-button-with-confirm {:small? true
+                                           :icon-position :start
+                                           :action (e! comments-controller/->DeleteComment id)}
+       (tr [:buttons :delete])])]])
+
 (defn comment-list
   [e! _app comments _breacrumbs]
   [itemlist/ItemList {}
    (doall
-    (for [{id :db/id
-           :comment/keys [author comment timestamp] :as entity} comments]
+    (for [{id :db/id :as entity} comments]
       (if (nil? entity)
         ;; New comment was just added but hasn't been refetched yet, show skeleton
         ^{:key "loading-comment"}
         [comment-skeleton 1]
 
         ^{:key id}
-        [:div
-         [:div {:class [(<class common-styles/space-between-center) (<class common-styles/margin-bottom 0.5)]}
-          [:span
-           [typography/SectionHeading
-            {:style {:display :inline-block}}
-            [user-info/user-name author]]
-           [typography/GreyText {:style {:display :inline-block
-                                         :margin-left "1rem"}}
-            (format/date timestamp)]]
-          (when-authorized :comment/delete-comment
-            entity
-            [buttons/delete-button-with-confirm {:small? true
-                                                 :action (e! comments-controller/->DeleteComment id)}
-             (tr [:buttons :delete])])]
-         [typography/Paragraph comment]])))])
+        [comment-entry e! entity])))])
 
 
 (defn lazy-comments

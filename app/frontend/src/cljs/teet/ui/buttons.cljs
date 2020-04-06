@@ -84,7 +84,9 @@
                              :type      :button}))
 
 (defn delete-button-with-confirm
-  [{:keys [action modal-title modal-text style small?]} button-content]
+  [{:keys [action modal-title modal-text style small? icon-position]
+    :or {icon-position :end}}
+   button-content]
   (let [open-atom (r/atom false)
         open #(reset! open-atom true)
         close #(reset! open-atom false)]
@@ -105,9 +107,11 @@
          modal-text
          (tr [:common :deletion-modal-text]))]]
      (if small?
-       [button-text-warning {:on-click open
-                             :size :small
-                             :end-icon (r/as-element [icons/action-delete-outline])}
+       [button-text-warning (merge {:on-click open
+                                    :size :small}
+                                   (case icon-position
+                                     :end {:end-icon (r/as-element [icons/action-delete-outline])}
+                                     :start {:start-icon (r/as-element [icons/action-delete-outline])}))
         button-content]
        [button-warning {:on-click open
                         :style    style}
