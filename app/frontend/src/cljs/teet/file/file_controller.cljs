@@ -23,6 +23,8 @@
 
 (defrecord UpdateFileStatus [file-id status])
 
+(defrecord DeleteAttachment [on-success-event file-id])
+
 (extend-protocol t/Event
 
   UpdateFileStatus
@@ -44,6 +46,14 @@
            :result-event (fn [_]
                            (log/info "FILE TUHOTTU!")
                            (common-controller/->Navigate :activity-task (dissoc params :file) {}))}))
+
+  DeleteAttachment
+  (process-event [{:keys [file-id on-success-event]} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :file/delete-attachment
+           :payload {:file-id file-id}
+           :result-event on-success-event}))
 
   DeleteFileResult
   (process-event [_ {:keys [page params query] :as app}]

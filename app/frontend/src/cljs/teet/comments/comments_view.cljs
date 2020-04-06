@@ -18,6 +18,7 @@
             [teet.ui.query :as query]
             [teet.ui.skeleton :as skeleton]
             [teet.ui.text-field :refer [TextField]]
+            [teet.ui.material-ui :refer [IconButton]]
             [teet.ui.typography :as typography]
             [teet.ui.util :refer [mapc]]
             [teet.ui.file-upload :as file-upload]
@@ -96,8 +97,23 @@
   [:div
    (when (seq value)
      [:ul
-      (mapc (fn [{:file/keys [name]}]
-              [:li name]) value)])
+      (mapc (fn [{id :db/id :file/keys [name]}]
+              [:li
+               [:a {:target :_blank
+                    :href (common-controller/query-url :file/download-attachment
+                                                       {:file-id id
+                                                        :comment-id nil})}
+                name]
+               [IconButton {:on-click (e! file-controller/->DeleteAttachment
+                                          (constantly
+                                           (on-success-event
+                                            {:comment/files
+                                             (into []
+                                                   (filter #(not= (:db/id %) id))
+                                                   value)}))
+                                          id)}
+                [icons/action-delete]]])
+            value)])
    [file-upload/FileUploadButton
     {:id "images-field"
      :color :secondary
