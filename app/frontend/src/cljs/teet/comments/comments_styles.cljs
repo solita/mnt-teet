@@ -24,4 +24,14 @@
 
 (defn attachment-list
   []
-  {:display :flex})
+  {:background-color theme-colors/gray-lightest
+   :border (str "solid 1px " theme-colors/gray-dark)})
+
+(defn attachment-list-item
+  []
+  {:display :inline-block
+   :margin "0.5rem"})
+
+(defn attachment-list-separator
+  []
+  {:width "95%"})

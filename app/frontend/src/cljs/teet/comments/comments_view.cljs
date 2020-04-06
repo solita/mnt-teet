@@ -25,7 +25,8 @@
             [teet.user.user-info :as user-info]
             [teet.user.user-model :as user-model]
             [teet.file.file-controller :as file-controller]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.ui.util :as util]))
 
 (defn- new-comment-footer [{:keys [validate disabled?]}]
   [:div {:class (<class comments-styles/comment-buttons-style)}
@@ -41,6 +42,25 @@
      (for [y (range n)]
        ^{:key y}
        [skeleton/skeleton {:parent-style (skeleton/comment-skeleton-style)}]))])
+
+(defn attachments [{:keys [files on-delete comment-id]}]
+  (when (seq files)
+    [:div {:class (<class comments-styles/attachment-list)}
+     (util/with-keys
+       (butlast
+        (interleave
+         (mapc (fn [{file-id :db/id name :file/name :as file}]
+                 [:div {:class (<class comments-styles/attachment-list-item)}
+                  [:a {:target :_blank
+                       :href (common-controller/query-url :file/download-attachment
+                                                          {:comment-id comment-id
+                                                           :file-id file-id})}
+                   name]
+                  (when on-delete
+                    [IconButton {:on-click #(on-delete file)}
+                     [icons/action-delete]])])
+               files)
+         (repeat [:hr {:class (<class comments-styles/attachment-list-separator)}]))))]))
 
 (defn- comment-entry [e! {id :db/id :comment/keys [author comment timestamp files] :as entity}
                       quote-comment!]
@@ -60,15 +80,7 @@
                                                       comment)}
       (tr [:comment :quote])]]]
    [typography/Paragraph comment]
-   (when (seq files)
-     [:ul {:class (<class comments-styles/attachment-list)}
-      (mapc (fn [{file-id :db/id name :file/name}]
-              [:li [:a {:target :_blank
-                        :href (common-controller/query-url :file/download-attachment
-                                                           {:comment-id id
-                                                            :file-id file-id})}
-                    name]])
-            files)])
+   [attachments {:files files :comment-id id}]
    [:div ;; TODO edit button, proper styles
     (when-authorized :comment/delete-comment
       entity
@@ -95,25 +107,17 @@
   directly uploaded and on-change called after success."
   [{:keys [e! value on-success-event]}]
   [:div
-   (when (seq value)
-     [:ul
-      (mapc (fn [{id :db/id :file/keys [name]}]
-              [:li
-               [:a {:target :_blank
-                    :href (common-controller/query-url :file/download-attachment
-                                                       {:file-id id
-                                                        :comment-id nil})}
-                name]
-               [IconButton {:on-click (e! file-controller/->DeleteAttachment
-                                          (constantly
-                                           (on-success-event
-                                            {:comment/files
-                                             (into []
-                                                   (filter #(not= (:db/id %) id))
-                                                   value)}))
-                                          id)}
-                [icons/action-delete]]])
-            value)])
+   [attachments {:files value
+                 :comment-id nil
+                 :on-delete (fn [{id :db/id}]
+                              (e! (file-controller/->DeleteAttachment
+                                   (constantly
+                                    (on-success-event
+                                     {:comment/files
+                                      (into []
+                                            (filter #(not= (:db/id %) id))
+                                            value)}))
+                                   id)))}]
    [file-upload/FileUploadButton
     {:id "images-field"
      :color :secondary
