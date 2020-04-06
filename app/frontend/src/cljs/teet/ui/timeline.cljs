@@ -7,6 +7,7 @@
             [cljs-time.core :as t]
             [teet.theme.theme-colors :as theme-colors]
             [teet.theme.theme-panels :as theme-panels]
+            [teet.ui.animate :as animate]
             [herb.core :refer [<class]]
             [teet.localization :refer [tr]]
             [clojure.string :as str]))
@@ -198,18 +199,11 @@
 
 (def ^:const animation-duration-ms 160)
 
-(defn- animate! [elt prop-name to]
-  (let [from (aget elt prop-name)
-        animate! (fn animate! [start-ms now]
-                   (let [start-ms (or start-ms now)]
-                     (if (>= now (+ start-ms animation-duration-ms))
-                       (aset elt prop-name to)
-                       (do
-                         (aset elt prop-name
-                               (+ from (* (/ (- now start-ms) animation-duration-ms) (- to from))))
-                         (.requestAnimationFrame js/window (partial animate! start-ms))))))]
-    (.requestAnimationFrame js/window
-                            (partial animate! nil))))
+(defn- animate! [elt-id prop-name to]
+  (animate/animate-by-id! {:duration-ms animation-duration-ms}
+                          elt-id
+                          prop-name
+                          to))
 
 (defn timeline [{:keys [start-date end-date
                         month-width
@@ -235,8 +229,7 @@
                                                (+ old-width (int (/ (.-deltaY e) 2)))))))
                             (scroll-view e)))
                bars-id (gensym "timeline-bars")
-               scroll-left! #(animate! (js/document.getElementById bars-id)
-                                       "scrollLeft" %)
+               scroll-left! (partial animate! bars-id :scrollLeft)
 
                disable-window-scroll #(.addEventListener js/window "wheel" on-scroll
                                                          #js {:passive false})
