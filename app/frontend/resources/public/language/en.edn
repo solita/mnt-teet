@@ -11,7 +11,8 @@
  :comment
  {:quote "Quote",
   :save "Save comment",
-  :comment-as "Commenting as {name}"},
+  :comment-as "Commenting as {name}",
+  :add-images "Add images"},
  :common
  {:hide-menu "Hide menu",
   :send-feedback "Send feedback",

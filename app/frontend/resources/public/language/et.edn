@@ -11,7 +11,8 @@
  :comment
  {:quote nil,
   :save "Salvestan märkuse",
-  :comment-as "Kommenteerimine kui {name}"},
+  :comment-as "Kommenteerimine kui {name}",
+  :add-images "lisada pilte"},
  :common
  {:hide-menu "Peidan menüü",
   :send-feedback "Saadan tagasisidet",
