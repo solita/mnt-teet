@@ -6,7 +6,7 @@
             [teet.common.common-controller :as common-controller]))
 
 (defrecord DeleteComment [comment-id])
-(defrecord CommentOnFile [])                                ; save new comment to file
+
 (defrecord UpdateFileNewCommentForm [form-data])            ; update new comment on selected file
 (defrecord CommentOnDocument [])                            ; save new comment to document
 (defrecord UpdateNewCommentForm [form-data])                ; update new comment form data
@@ -70,21 +70,6 @@
   ClearCommentField
   (process-event [_ app]
     (dissoc app :comment-form))
-
-  CommentOnFile
-  (process-event [_ {:keys [query] :as app}]
-    (let [file-id (:file query)
-          task (get-in app [:route :activity-task])
-          new-comment (-> task
-                          (get-in (task-model/file-by-id-path task file-id))
-                          :new-comment
-                          :comment/comment)]
-      (t/fx app
-            {:tuck.effect/type :command!
-             :command          :comment/comment-on-file
-             :payload          {:file-id (goog.math.Long/fromString file-id)
-                                :comment           new-comment}
-             :result-event     common-controller/->Refresh})))
 
 
   DeleteComment

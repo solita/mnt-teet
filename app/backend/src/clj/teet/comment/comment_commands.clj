@@ -22,25 +22,6 @@
                                :comment/timestamp (Date.)}
                               (creation-meta user))]})]})
 
-(defcommand :comment/comment-on-file
-  {:doc "Add new comment on a document entity"
-   :context {:keys [db user]}
-   :payload {:keys [file-id comment]}
-   :project-id (project-db/file-project-id db file-id)
-   :authorization {:document/comment-on-document
-                   {:db/id (ffirst
-                            (d/q '[:find ?doc
-                                   :in $ ?file
-                                   :where
-                                   [?doc :document/files ?file]]
-                                 db file-id))}}
-   :transact [(merge {:db/id file-id
-                      :file/comments [(merge {:db/id             "new-comment"
-                                              :comment/author    [:user/id (:user/id user)]
-                                              :comment/comment   comment
-                                              :comment/timestamp (java.util.Date.)}
-                                             (creation-meta user))]})]})
-
 (defn- comment-parent-entity [db comment-id]
   (if-let [doc-id (ffirst
                    (d/q '[:find ?doc
