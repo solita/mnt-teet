@@ -6,7 +6,8 @@
             [teet.meta.meta-model :refer [modification-meta creation-meta deletion-tx]]
             [teet.file.file-model :as file-model]
             [teet.project.project-db :as project-db]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.file.file-db :as file-db]))
 
 
 
@@ -39,15 +40,6 @@
           {:url (file-storage/upload-url key)
            :file (d/pull (:db-after res) '[*] file-id)}))))
 
-(defn- own-file? [db user file-id]
-  (boolean
-   (ffirst
-    (d/q '[:find ?f
-           :where
-           [?f :file/name _]
-           [?f :meta/creator ?user]
-           :in $ ?user ?f]
-         db [:user/id (:user/id user)] file-id))))
 
 (defcommand :file/delete-attachment
   {:doc "Delete an attachment"
@@ -55,7 +47,7 @@
    :payload {:keys [file-id]}
    :project-id nil
    :authorization {}
-   :pre [(own-file? db user file-id)]
+   :pre [(file-db/own-file? db user file-id)]
    :transact [(deletion-tx user file-id)]})
 
 (defcommand :file/upload

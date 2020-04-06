@@ -3,7 +3,8 @@
             [teet.file.file-spec]
             [teet.file.file-storage :as file-storage]
             [datomic.client.api :as d]
-            [teet.project.project-db :as project-db]))
+            [teet.project.project-db :as project-db]
+            [teet.file.file-db :as file-db]))
 
 (defn- url-for-file [db file-id]
   (let [file-name (:file/name (d/pull db '[:file/name] file-id))
@@ -20,19 +21,13 @@
    :authorization {:document/view-document {:db/id file-id}}}
   (url-for-file db file-id))
 
-(defn- file-is-attached-to-comment? [db file-id comment-id]
-  (boolean
-   (ffirst
-    (d/q '[:find ?f
-           :where [?c :comment/files ?f]
-           :in $ ?f ?c]
-         db file-id comment-id))))
+
 
 (defquery :file/download-attachment
   {:doc "Download comment attachment"
    :context {db :db}
    :args {:keys [file-id comment-id]}
-   :pre [(file-is-attached-to-comment? db file-id comment-id)]
+   :pre [(file-db/file-is-attached-to-comment? db file-id comment-id)]
    :project-id (project-db/comment-project-id db comment-id)
    :authorization {:document/view-document {:db/id comment-id}}}
   (url-for-file db file-id))
