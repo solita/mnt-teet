@@ -515,11 +515,15 @@
   when processed.
 
   Use with reagent.core/with-let"
-  [initial-value]
-  (let [internal-state-atom (r/atom initial-value)]
-    [internal-state-atom
-     (fn [new-value]
-       (reify t/Event
-         (process-event [_ app]
-           (reset! internal-state-atom new-value)
-           app)))]))
+  ([initial-value]
+   (internal-state initial-value {:merge? false}))
+  ([initial-value {:keys [merge?]}]
+   (let [internal-state-atom (r/atom initial-value)]
+     [internal-state-atom
+      (fn [new-value]
+        (reify t/Event
+          (process-event [_ app]
+            (if merge?
+              (swap! internal-state-atom merge new-value)
+              (reset! internal-state-atom new-value))
+            app)))])))
