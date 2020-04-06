@@ -100,6 +100,7 @@
               [:li name]) value)])
    [file-upload/FileUploadButton
     {:id "images-field"
+     :color :secondary
      :on-drop #(e! (file-controller/map->UploadFiles
                     {:files %
                      :attachment? true
@@ -107,7 +108,8 @@
                                    (log/info "FILES UPLOADED: " files)
                                    (on-success-event
                                     {:comment/files (into (or value [])
-                                                          files)}))}))}]])
+                                                          files)}))}))}
+    (tr [:comment :add-images])]])
 
 
 (defn- quote-comment-fn
