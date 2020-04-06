@@ -140,7 +140,7 @@
               :eesnimi (isikud-get ox :a:KinnistuIsik :a:eesnimi)
               :omandi_liik (omandi-get ox :a:omandi_liik)
               :omandi_liik_tekst (omandi-get ox :a:omandi_liik_tekst)
-              :omandi_liik_algus (omandi-get ox :a:omandi_liik_algus)
+              :omandi_algus (omandi-get ox :a:omandi_algus)
               :omandiosa_lugeja (omandi-get ox :a:omandiosa_lugeja)
               :omandiosa_nimetaja (omandi-get ox :a:omandiosa_nimetaja)
               :omandiosa_suurus (omandi-get ox :a:omandiosa_suurus)})
