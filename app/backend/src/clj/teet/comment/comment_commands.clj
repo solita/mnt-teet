@@ -2,7 +2,7 @@
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
             [datomic.client.api :as d]
             teet.file.file-spec
-            [teet.meta.meta-model :refer [creation-meta deletion-tx]]
+            [teet.meta.meta-model :refer [creation-meta modification-meta deletion-tx]]
             [teet.comment.comment-model :as comment-model]
             [teet.project.project-db :as project-db])
   (:import (java.util Date)))
@@ -57,6 +57,20 @@
                            db comment-id))]
       [:file file-id]
       nil)))
+
+(defcommand :comment/update
+  {:doc "Update existing comment"
+   :context {:keys [db user]}
+   :payload {:keys [comment-id comment]}
+   :project-id (let [[parent-type parent-id] (comment-parent-entity db comment-id)]
+                 (case parent-type
+                   :document (project-db/document-project-id db parent-id)
+                   :file (project-db/file-project-id db parent-id)
+                   (db-api/bad-request! "No such comment")))
+   :authorization {:document/delete-comment {:db/id comment-id}} ;; TODO: Do we have comment edit permission?
+   :transact [(merge {:db/id comment-id
+                      :comment/comment comment}
+                     (modification-meta user))]})
 
 (defcommand :comment/delete-comment
   {:doc "Delete existing comment"

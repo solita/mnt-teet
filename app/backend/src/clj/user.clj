@@ -1,8 +1,10 @@
 (ns user
   (:require [datomic.client.api :as d]
+            [teet.db-api.db-api-handlers :as db-api-handlers]
             [teet.main :as main]
             [teet.environment :as environment]
             [teet.thk.thk-integration-ion :as thk-integration]
+            [teet.user.user-db :as user-db]
             [clojure.string :as str])
   (:import (java.util Date)
            (java.util.concurrent TimeUnit Executors)))
@@ -222,3 +224,25 @@
     (Executors/newScheduledThreadPool 1)
     #(q '[:find ?e :where [?e :db/ident :task.status/accepted]] (db))
     1 1 TimeUnit/MINUTES))
+
+
+;;
+;; Commands and queries from the REPL
+;;
+
+(defn action-ctx [user-id]
+  (let [db (db)]
+    {:conn (db-connection)
+     :db db
+     :user (user-db/user-info db user-id)
+     :session "foo"}))
+
+(defn local-query [user-id query & [args]]
+  (db-api-handlers/raw-query-handler (action-ctx user-id)
+                                     {:args args
+                                      :query query}))
+
+(defn local-command [user-id command & [args]]
+  (db-api-handlers/raw-command-handler (action-ctx user-id)
+                                       {:payload args
+                                        :command command}))
