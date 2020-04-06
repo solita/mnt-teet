@@ -113,3 +113,15 @@
     :activity (activity-project-id db entity-id)
     :task (task-project-id db entity-id)
     :file (file-project-id db entity-id)))
+
+(defn comment-project-id [db comment-id]
+  ;; Find what entity this comment is linked to and get
+  ;; entity project id
+  (or (some (fn [[entity-type query-attr]]
+              (when-let [id (ffirst (d/q [:find '?id
+                                          :where ['?id query-attr comment-id]]
+                                         db))]
+                (entity-project-id db entity-type id)))
+            [[:task :task/comments]
+             [:file :file/comments]])
+      (db-api/bad-request! "No such comment")))

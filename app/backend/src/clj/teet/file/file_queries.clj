@@ -5,14 +5,34 @@
             [datomic.client.api :as d]
             [teet.project.project-db :as project-db]))
 
+(defn- url-for-file [db file-id]
+  (let [file-name (:file/name (d/pull db '[:file/name] file-id))
+        s3-file-name (str file-id "-" file-name)]
+    ^{:format :raw}
+    {:status 302
+     :headers {"Location" (file-storage/download-url s3-file-name)}}))
+
 (defquery :file/download-file
   {:doc "Get a download link to the given file"
    :context {db :db}
    :args {file-id :file-id}
    :project-id (project-db/file-project-id db file-id)
    :authorization {:document/view-document {:db/id file-id}}}
-  (let [file-name (:file/name (d/pull db '[:file/name] file-id))
-        s3-file-name (str file-id "-" file-name)]
-    ^{:format :raw}
-    {:status 302
-     :headers {"Location" (file-storage/download-url s3-file-name)}}))
+  (url-for-file db file-id))
+
+(defn- file-is-attached-to-comment? [db file-id comment-id]
+  (boolean
+   (ffirst
+    (d/q '[:find ?f
+           :where [?c :comment/files ?f]
+           :in $ ?f ?c]
+         db file-id comment-id))))
+
+(defquery :file/download-attachment
+  {:doc "Download comment attachment"
+   :context {db :db}
+   :args {:keys [file-id comment-id]}
+   :pre [(file-is-attached-to-comment? db file-id comment-id)]
+   :project-id (project-db/comment-project-id db comment-id)
+   :authorization {:document/view-document {:db/id comment-id}}}
+  (url-for-file db file-id))
