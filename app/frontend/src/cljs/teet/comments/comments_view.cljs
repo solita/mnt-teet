@@ -1,6 +1,7 @@
 (ns teet.comments.comments-view
   (:require [herb.core :refer [<class]]
             [reagent.core :as r]
+            [tuck.core :as t]
             [teet.authorization.authorization-check :refer [when-authorized]]
             [teet.comments.comments-controller :as comments-controller]
             [teet.comments.comments-styles :as comments-styles]
@@ -56,7 +57,7 @@
                            :start-icon (r/as-element [icons/editor-format-quote])
                            :on-click #(quote-comment! (user-model/user-name author)
                                                       comment)}
-      (tr [:buttons :quote])]]]
+      (tr [:comment :quote])]]]
    [typography/Paragraph comment]
    (when (seq files)
      [:ul {:class (<class comments-styles/attachment-list)}
@@ -109,6 +110,20 @@
                                                           files)}))}))}]])
 
 
+(defn- quote-comment-fn
+  "An ad hoc event that merges the quote at the end of current new
+  comment text."
+  [internal-state-atom]
+  (fn [new-value]
+    (reify t/Event
+      (process-event [_ app]
+        (swap! internal-state-atom update :comment/comment
+               (fn [old-value]
+                 (if (not-empty old-value)
+                   (str old-value "\n" new-value)
+                   new-value)))
+        app))))
+
 (defn lazy-comments
   [{:keys [e! app
            entity-type
@@ -127,8 +142,8 @@
                      :state-path [:comments-for-entity entity-id]
                      :state comments
                      :view (partial comment-list
-                                    #(e! (->UpdateCommentForm
-                                          {:comment/comment (str %1 ": \"" %2 "\"")})))
+                                    #(e! ((quote-comment-fn comment-form)
+                                          (str %1 ": \"" %2 "\""))))
                      :refresh (count comments)}]
        (when show-comment-form?
          [form/form {:e! e!

@@ -9,7 +9,9 @@
   :edit "Muudan",
   :confirm "Kinnitan"},
  :comment
- {:save "Salvestan märkuse", :comment-as "Kommenteerimine kui {name}"},
+ {:quote nil,
+  :save "Salvestan märkuse",
+  :comment-as "Kommenteerimine kui {name}"},
  :common
  {:hide-menu "Peidan menüü",
   :send-feedback "Saadan tagasisidet",
@@ -65,7 +67,7 @@
   :task.type/railroad "Raudtee",
   :document.sub-category/design-requirements
   "Projekteerimistingimused",
-  :task.group/design-approval "Design approval",
+  :task.group/design-approval "Projekti heakskiitmine",
   :task.type/geological-study "Geoloogiline uuring",
   :file.status/ready "Valmis",
   :activity.name/detailed-design "Põhiprojekt",
@@ -73,7 +75,7 @@
   :file.status/approved "Kinnitatud / Kehtiv",
   :document.sub-category/terms-of-reference "Lähteülesanne",
   :document.sub-category/report "Aruanne",
-  :task.group/design "Design",
+  :task.group/design "Projekt",
   :file.status/final "Lõplik",
   :task.type/feasibility-study "Teostatavusuuring",
   :document.sub-category/procurement-specification
@@ -112,7 +114,7 @@
   :task.type/traffic-study "Liiklusuuring",
   :task.status/accepted "Aktsepteeritud",
   :thk.task-type/design-requirements "Projekteerimistingimused",
-  :task.group/base-data "Base data",
+  :task.group/base-data "Lähteandmed",
   :task.status/completed "Valmis",
   :task.type/land-owners "Maaomanike kooskõlastused",
   :task.type/acceptances-no-objection "Kooskõlastused",
@@ -144,7 +146,7 @@
   :document.sub-category/calculation-report "Arvutus/Katendiarvutus",
   :task.type/data "Andmed",
   :task.type/terms-of-Reference "Lähteülesanne",
-  :task.group/land-purchase "Land pruchase",
+  :task.group/land-purchase "Maade omandamine",
   :activity.status/canceled "Katkestatud",
   :document.sub-category/table-of-content "Sisukord",
   :task.status/not-started "Alustamata",
@@ -163,7 +165,7 @@
   "Korraga võib aktiivne olla ainult üht tüüpi tegevus.",
   :server-error "Serveri viga."},
  :fields
- {:task/send-to-thk? "Saata THK",
+ {:task/send-to-thk? "Saada THK",
   :thk.project/manager "Vastutav isik",
   :thk.project/project-name "Nimi",
   :task/thk-type "THK tüüp",
@@ -197,7 +199,7 @@
   :task/description "Kirjeldus",
   :thk.project/region-name "Regioon",
   :comment/comment "Märkus",
-  :file/timestamp "üleslaadimise kuupäev",
+  :file/timestamp "Üleslaadimise kuupäev",
   :file/type "Tüüp",
   :task/actual-start-date "Alguskuupäev",
   :thk.project/road-nr "Tee number",
@@ -209,12 +211,12 @@
   :file/status "Olek",
   :thk.project/owner "Projektijuht"},
  :file
- {:upload-new-version "laadige üles uus versioon",
+ {:upload-new-version "Laen üles uue versiooni",
   :download "Laen faili alla",
   :other-versions "Muud versioonid",
   :old-version "Vana versioon",
   :switch-to-latest-version "lülitage tagasi uusimale versioonile",
-  :edit "Redigeeri faili",
+  :edit "Toimeta faili",
   :upload-info "Ules laadinud {author} {date} "},
  :login {:login "Sisenen", :password "Salasõna", :username "Kasutaja"},
  :map
@@ -307,21 +309,21 @@
  :search-area
  {:filter-by-distance "Filtreeri kauguse järgi",
   :select-relevant-restrictions "Valige asjakohased piirangud",
-  :waiting-for-area "Piirkonna ootamine",
-  :inclusion-distance "Kaasamise kaugus",
+  :waiting-for-area "Mõjuala ootamine",
+  :inclusion-distance "Mõju ulatus",
   :select-relevant-cadastral-units "Valige sobivad katastriüksused",
   :restriction-results-by-buffer
   "Leiti {count} piirangut {meters} meetri raadiuses.",
   :restriction-results-by-area
-  "Leiti {count} piiranguid määratletud kaasamisaladel.",
+  "Leiti {count} piirangut määratletud mõjualadel.",
   :cadastral-results-by-buffer
-  "Leiti {count} katastriüksusi {meters} meetri raadiuses.",
+  "Leiti {count} katastriüksust {meters} meetri raadiuses.",
   :cadastral-results-by-area
-  "Leiti {count} katastriüksusi määratletud kaasamisaladel.",
-  :filter-by-area "Filtreeri piirkonna järgi",
+  "Leiti {count} katastriüksust määratletud mõjualadel.",
+  :filter-by-area "Filtreeri mõjuala järgi",
   :inclusion-distance-placeholder
-  "Andke väärtust seotud piirkondade kuvamiseks",
-  :component-title "Seotud funktsioonide otsinguala"},
+  "Anna väärtus seotud piirkondade kuvamiseks",
+  :component-title "Seotud objektide otsinguala"},
  :task
  {:task-overview "Ülesande ülevaade",
   :upload-files "Faile üles laadima",

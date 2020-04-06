@@ -8,7 +8,10 @@
   :continue "Continue",
   :edit "Edit",
   :confirm "Confirm"},
- :comment {:save "Save comment", :comment-as "Commenting as {name}"},
+ :comment
+ {:quote "Quote",
+  :save "Save comment",
+  :comment-as "Commenting as {name}"},
  :common
  {:hide-menu "Hide menu",
   :send-feedback "Send feedback",
