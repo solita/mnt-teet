@@ -93,8 +93,8 @@
                      :on-success (fn [files]
                                    (log/info "FILES UPLOADED: " files)
                                    (on-success-event
-                                    {:files (into (or value [])
-                                                  files)}))}))}]])
+                                    {:comment/files (into (or value [])
+                                                          files)}))}))}]])
 (defn lazy-comments
   [{:keys [e! app
            entity-type
@@ -117,10 +117,10 @@
          [form/form {:e! e!
                      :value @comment-form
                      :on-change-event ->UpdateCommentForm
-                     :save-event #(let [comment (:comment/comment @comment-form)]
+                     :save-event #(let [{:comment/keys [comment files]} @comment-form]
                                     (reset! comment-form {})
                                     (comments-controller/->CommentOnEntity
-                                     entity-type entity-id comment))
+                                     entity-type entity-id comment files))
                      :footer new-comment-footer
                      :spec :task/new-comment-form}
           ^{:attribute :comment/comment}
@@ -130,7 +130,7 @@
                       :full-width true
                       :placeholder (tr [:document :new-comment])}]
 
-          ^{:attribute :files}
+          ^{:attribute :comment/files}
           [attached-images-field {:e! e!
                                   :on-success-event ->UpdateCommentForm} ]])])))
 

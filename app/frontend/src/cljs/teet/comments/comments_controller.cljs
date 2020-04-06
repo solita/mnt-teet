@@ -8,28 +8,12 @@
 (defrecord DeleteComment [comment-id])
 
 (defrecord UpdateFileNewCommentForm [form-data])            ; update new comment on selected file
-(defrecord CommentOnDocument [])                            ; save new comment to document
 (defrecord UpdateNewCommentForm [form-data])                ; update new comment form data
-(defrecord CommentOnEntity [entity-type entity-id comment])
+(defrecord CommentOnEntity [entity-type entity-id comment files])
 (defrecord ClearCommentField [])
 (defrecord CommentAddSuccess [entity-id])
 
 (extend-protocol t/Event
-  CommentOnDocument
-  (process-event [_ app]
-    (let [doc (get-in app [:query :document])
-          new-comment (->> (get-in app [:route :activity-task :task/documents])
-                           (filter #(= (str (:db/id %)) doc))
-                           first
-                           :new-comment
-                           :comment/comment)]
-      (t/fx app
-            {:tuck.effect/type :command!
-             :command          :comment/comment-on-document
-             :payload          {:document-id (goog.math.Long/fromString doc)
-                                :comment           new-comment}
-             :result-event     common-controller/->Refresh})))
-
 
   UpdateFileNewCommentForm
   (process-event [{form-data :form-data} {:keys [query] :as app}]
@@ -51,13 +35,14 @@
                        documents))))
 
   CommentOnEntity
-  (process-event [{:keys [entity-type entity-id comment]} app]
+  (process-event [{:keys [entity-type entity-id comment files]} app]
     (t/fx app
           {:tuck.effect/type :command!
            :command :comment/create
            :payload {:entity-id entity-id
                      :entity-type entity-type
-                     :comment comment}
+                     :comment comment
+                     :files (mapv :db/id files)}
            :result-event (partial ->CommentAddSuccess entity-id)}))
 
   CommentAddSuccess
