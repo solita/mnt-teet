@@ -9,6 +9,7 @@
             [teet.common.common-styles :as common-styles]
             [teet.localization :refer [tr]]
             teet.task.task-spec
+            [teet.ui.animate :as animate]
             [teet.ui.buttons :as buttons]
             [teet.ui.form :as form]
             [teet.ui.format :as format]
@@ -131,7 +132,6 @@
                                                           files)}))}))}
     (tr [:comment :add-images])]])
 
-
 (defn- quote-comment-fn
   "An ad hoc event that merges the quote at the end of current new
   comment text."
@@ -144,6 +144,9 @@
                  (if (not-empty old-value)
                    (str old-value "\n" new-value)
                    new-value)))
+        (animate/scroll-into-view-by-id! "new-comment-input" {:behavior :smooth})
+        (js/setTimeout #(animate/focus-by-id! "new-comment-input")
+                       500)
         app))))
 
 (defn lazy-comments
@@ -178,7 +181,8 @@
                      :footer new-comment-footer
                      :spec :task/new-comment-form}
           ^{:attribute :comment/comment}
-          [TextField {:rows 4
+          [TextField {:id "new-comment-input"
+                      :rows 4
                       :multiline true
                       :InputLabelProps {:shrink true}
                       :full-width true

@@ -200,10 +200,10 @@
 (def ^:const animation-duration-ms 160)
 
 (defn- animate! [elt-id prop-name to]
-  (animate/animate-by-id! {:duration-ms animation-duration-ms}
-                          elt-id
-                          prop-name
-                          to))
+  (animate/animate-by-id! elt-id
+                          {:duration-ms animation-duration-ms
+                           :property prop-name
+                           :to to}))
 
 (defn timeline [{:keys [start-date end-date
                         month-width
