@@ -93,7 +93,7 @@
 (defn- attached-images-field
   "File field that only allows uploading images. Files are
   directly uploaded and on-change called after success."
-  [{:keys [e! value on-success-event error]}]
+  [{:keys [e! value on-success-event]}]
   [:div
    (when (seq value)
      [:ul
