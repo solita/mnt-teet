@@ -14,7 +14,9 @@
    :authorization {}}
   (let [attr (comment-model/comments-attribute-for-entity-type entity-type)
         entity-comments (d/pull db
-                                [{attr '[* {:comment/author [*]}]}] id)]
+                                [{attr '[*
+                                         {:comment/author [*]}
+                                         {:comment/files [:db/id :file/name]}]}] id)]
     (if (empty? entity-comments)
       []
       (->> entity-comments

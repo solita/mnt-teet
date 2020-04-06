@@ -21,3 +21,7 @@
    :color            theme-colors/white
    :background-color theme-colors/gray
    :border-radius    "50%"})
+
+(defn attachment-list
+  []
+  {:display :flex})

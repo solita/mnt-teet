@@ -39,7 +39,7 @@
        ^{:key y}
        [skeleton/skeleton {:parent-style (skeleton/comment-skeleton-style)}]))])
 
-(defn- comment-entry [e! {id :db/id :comment/keys [author comment timestamp] :as entity}]
+(defn- comment-entry [e! {id :db/id :comment/keys [author comment timestamp files] :as entity}]
   [:div {:class (<class common-styles/margin-bottom 1)}
    [:div {:class [(<class common-styles/space-between-center) (<class common-styles/margin-bottom 0)]}
     [:span
@@ -54,6 +54,15 @@
                            :start-icon (r/as-element [icons/editor-format-quote])}
       (tr [:buttons :quote])]]]
    [typography/Paragraph comment]
+   (when (seq files)
+     [:ul {:class (<class comments-styles/attachment-list)}
+      (mapc (fn [{file-id :db/id name :file/name}]
+              [:li [:a {:target :_blank
+                        :href (common-controller/query-url :file/download-attachment
+                                                           {:comment-id id
+                                                            :file-id file-id})}
+                    name]])
+            files)])
    [:div ;; TODO edit button, proper styles
     (when-authorized :comment/delete-comment
       entity
