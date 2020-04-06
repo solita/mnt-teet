@@ -1,28 +1,27 @@
 (ns teet.comments.comments-view
-  (:require [teet.authorization.authorization-check :refer [when-authorized]]
-            [teet.ui.form :as form]
-            [teet.ui.layout :as layout]
+  (:require [herb.core :refer [<class]]
+            [reagent.core :as r]
+            [teet.authorization.authorization-check :refer [when-authorized]]
+            [teet.comments.comments-controller :as comments-controller]
+            [teet.comments.comments-styles :as comments-styles]
+            [teet.common.common-controller :as common-controller]
             [teet.common.common-styles :as common-styles]
-            [herb.core :refer [<class]]
             [teet.localization :refer [tr]]
             teet.task.task-spec
-            [teet.ui.itemlist :as itemlist]
-            [teet.ui.query :as query]
-            [teet.ui.format :as format]
-            [teet.comments.comments-styles :as comments-styles]
-            [teet.ui.typography :as typography]
-            [teet.user.user-info :as user-info]
-            [teet.ui.text-field :refer [TextField]]
             [teet.ui.buttons :as buttons]
+            [teet.ui.form :as form]
+            [teet.ui.format :as format]
+            [teet.ui.itemlist :as itemlist]
+            [teet.ui.layout :as layout]
+            [teet.ui.query :as query]
+            [teet.ui.skeleton :as skeleton]
+            [teet.ui.text-field :refer [TextField]]
+            [teet.ui.typography :as typography]
             [teet.ui.util :refer [mapc]]
             [teet.ui.file-upload :as file-upload]
-            [reagent.core :as r]
-            [teet.common.common-controller :as common-controller]
-            [teet.ui.skeleton :as skeleton]
-            [teet.comments.comments-controller :as comments-controller]
+            [teet.user.user-info :as user-info]
             [teet.file.file-controller :as file-controller]
-            [teet.log :as log]
-            [teet.file.file-model :as file-model]))
+            [teet.log :as log]))
 
 (defn- new-comment-footer [{:keys [validate disabled?]}]
   [:div {:class (<class comments-styles/comment-buttons-style)}
@@ -31,7 +30,7 @@
                             :on-click validate}
     (tr [:comment :save])]])
 
-(defn comment-skeleton
+(defn- comment-skeleton
   [n]
   [:<>
    (doall
@@ -39,33 +38,38 @@
        ^{:key y}
        [skeleton/skeleton {:parent-style (skeleton/comment-skeleton-style)}]))])
 
+(defn- comment-entry [e! {id :db/id :comment/keys [author comment timestamp] :as entity}]
+  [:div {:class (<class common-styles/margin-bottom 1)}
+   [:div {:class [(<class common-styles/space-between-center) (<class common-styles/margin-bottom 0)]}
+    [:span
+     [typography/SectionHeading
+      {:style {:display :inline-block}}
+      [user-info/user-name author]]
+     [typography/GreyText {:style {:display :inline-block
+                                   :margin-left "1rem"}}
+      (format/date timestamp)]]]
+
+   [typography/Paragraph comment]
+   [:div ;; TODO edit button, proper styles
+    (when-authorized :comment/delete-comment
+      entity
+      [buttons/delete-button-with-confirm {:small? true
+                                           :icon-position :start
+                                           :action (e! comments-controller/->DeleteComment id)}
+       (tr [:buttons :delete])])]])
+
 (defn comment-list
   [e! _app comments _breacrumbs]
   [itemlist/ItemList {}
    (doall
-    (for [{id :db/id
-           :comment/keys [author comment timestamp] :as entity} comments]
+    (for [{id :db/id :as entity} comments]
       (if (nil? entity)
         ;; New comment was just added but hasn't been refetched yet, show skeleton
         ^{:key "loading-comment"}
         [comment-skeleton 1]
 
         ^{:key id}
-        [:div
-         [:div {:class [(<class common-styles/space-between-center) (<class common-styles/margin-bottom 0.5)]}
-          [:span
-           [typography/SectionHeading
-            {:style {:display :inline-block}}
-            [user-info/user-name author]]
-           [typography/GreyText {:style {:display :inline-block
-                                         :margin-left "1rem"}}
-            (format/date timestamp)]]
-          (when-authorized :comment/delete-comment
-            entity
-            [buttons/delete-button-with-confirm {:small? true
-                                                 :action (e! comments-controller/->DeleteComment id)}
-             (tr [:buttons :delete])])]
-         [typography/Paragraph comment]])))])
+        [comment-entry e! entity])))])
 
 (defn- attached-images-field
   "File field that only allows uploading images. Files are
