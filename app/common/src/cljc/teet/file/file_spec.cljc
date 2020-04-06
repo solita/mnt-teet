@@ -13,6 +13,8 @@
 (s/def :file/upload (s/keys :req-un [::task-id ::file]
                             :opt-un [::previous-version-id]))
 
+(s/def :file/upload-attachment (s/keys :req-un [::file]))
+
 (s/def :file/download-file (s/keys :req-un [::file-id]))
 (s/def :file/status keyword?)
 (s/def :file/name (s/and string? (complement str/blank?)))
