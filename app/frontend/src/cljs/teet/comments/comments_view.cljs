@@ -1,23 +1,23 @@
 (ns teet.comments.comments-view
-  (:require [teet.authorization.authorization-check :refer [when-authorized]]
-            [teet.ui.form :as form]
-            [teet.ui.layout :as layout]
+  (:require [herb.core :refer [<class]]
+            [reagent.core :as r]
+            [teet.authorization.authorization-check :refer [when-authorized]]
+            [teet.comments.comments-controller :as comments-controller]
+            [teet.comments.comments-styles :as comments-styles]
+            [teet.common.common-controller :as common-controller]
             [teet.common.common-styles :as common-styles]
-            [herb.core :refer [<class]]
             [teet.localization :refer [tr]]
             teet.task.task-spec
-            [teet.ui.itemlist :as itemlist]
-            [teet.ui.query :as query]
-            [teet.ui.format :as format]
-            [teet.comments.comments-styles :as comments-styles]
-            [teet.ui.typography :as typography]
-            [teet.user.user-info :as user-info]
-            [teet.ui.text-field :refer [TextField]]
             [teet.ui.buttons :as buttons]
-            [reagent.core :as r]
-            [teet.common.common-controller :as common-controller]
+            [teet.ui.form :as form]
+            [teet.ui.format :as format]
+            [teet.ui.itemlist :as itemlist]
+            [teet.ui.layout :as layout]
+            [teet.ui.query :as query]
             [teet.ui.skeleton :as skeleton]
-            [teet.comments.comments-controller :as comments-controller]))
+            [teet.ui.text-field :refer [TextField]]
+            [teet.ui.typography :as typography]
+            [teet.user.user-info :as user-info]))
 
 (defn- new-comment-footer [{:keys [validate disabled?]}]
   [:div {:class (<class comments-styles/comment-buttons-style)}
@@ -44,8 +44,9 @@
      [typography/GreyText {:style {:display :inline-block
                                    :margin-left "1rem"}}
       (format/date timestamp)]]]
+
    [typography/Paragraph comment]
-   [:div ;; TODO edit
+   [:div ;; TODO edit button, proper styles
     (when-authorized :comment/delete-comment
       entity
       [buttons/delete-button-with-confirm {:small? true
