@@ -49,11 +49,10 @@
      [typography/GreyText {:style {:display :inline-block
                                    :margin-left "1rem"}}
       (format/date timestamp)]
-     [:span {:class (<class common-styles/margin-left 0.5)}
-      [buttons/button-text {;; :size :small
-                            :start-icon (r/as-element [icons/editor-format-quote])}
-       (tr [:buttons :quote])]]]]
-
+     [buttons/button-text {:size :small
+                           :color :primary
+                           :start-icon (r/as-element [icons/editor-format-quote])}
+      (tr [:buttons :quote])]]]
    [typography/Paragraph comment]
    [:div ;; TODO edit button, proper styles
     (when-authorized :comment/delete-comment
