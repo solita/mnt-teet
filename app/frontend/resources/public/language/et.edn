@@ -117,6 +117,7 @@
   :thk.task-type/design-requirements "Projekteerimistingimused",
   :task.group/base-data "Lähteandmed",
   :task.status/completed "Valmis",
+  :task.type/building-permit "Ehitusluba",
   :task.type/land-owners "Maaomanike kooskõlastused",
   :task.type/acceptances-no-objection "Kooskõlastused",
   :thk.task-type/environmental-impact-assessment "KMH eelhinnang",
