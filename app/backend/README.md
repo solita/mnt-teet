@@ -12,7 +12,7 @@ Backend app hosts the index page and SPA application JS.
 - Call `teet.main/restart`
 
 
-# Unit testing
+# Testing
 
 [Kaocha](https://github.com/lambdaisland/kaocha) is used for running unit tests.
 
@@ -38,6 +38,12 @@ clojure -A:test --config-file tests_ci.edn
 # See all available options
 clojure -A:test --test-help
 ```
+
+## Tests with db
+- Tag test namespace with `^:db`
+- Apply necessary fixtures from `teet.test.utils`
+- Run with `clojure -A:db-test`
+- Run alongside unit tests with `clojure -A:test-all`
 
 # Datomic
 

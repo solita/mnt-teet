@@ -1,12 +1,9 @@
 (ns user
   (:require [datomic.client.api :as d]
-            [teet.db-api.db-api-handlers :as db-api-handlers]
-            [teet.log :as log]
             [teet.main :as main]
             [teet.environment :as environment]
             [teet.test.utils :as tu]
             [teet.thk.thk-integration-ion :as thk-integration]
-            [teet.user.user-db :as user-db]
             [clojure.string :as str])
   (:import (java.util Date)
            (java.util.concurrent TimeUnit Executors)))
@@ -231,15 +228,7 @@
 ;;
 ;; Commands and queries from the REPL
 ;;
-(intern 'user
-        'logged-user
-        @#'teet.test.utils/logged-user)
-(intern 'user
-        'local-login
-        @#'teet.test.utils/local-login)
-(intern 'user
-        'local-query
-        @#'teet.test.utils/local-query)
-(intern 'user
-        'local-command
-        @#'teet.test.utils/local-command)
+(def logged-user   tu/logged-user)
+(def local-login   tu/local-login)
+(def local-query   tu/local-query)
+(def local-command tu/local-command)
