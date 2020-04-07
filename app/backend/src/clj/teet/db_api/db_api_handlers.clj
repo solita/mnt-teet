@@ -90,40 +90,42 @@
            :body "Spec validation failed"} problems)
         {:format :raw}))))
 
+(defn raw-query-handler [ctx {:keys [query args]}]
+  (log/event :query {:request/name query})
+  (log/metric query 1 :count)
+  (or
+   (check-spec query args)
+   (let [ctx (assoc ctx :query/name query)
+         query-result (db-api/query ctx args)]
+     (if (and (map? query-result)
+              (contains? query-result :query)
+              (contains? query-result :args))
+       (let [result-fn (or (:result-fn query-result) identity)]
+         (result-fn (d/q (select-keys query-result [:query :args]))))
+       query-result))))
+
 (def query-handler
   "Ring handler to invoke a named Datomic query.
   Takes input as transit, invokes the query and returns
   the result as transit."
-  (request
-   (fn [ctx {:keys [query args]}]
-     (log/event :query {:request/name query})
-     (log/metric query 1 :count)
-     (or
-      (check-spec query args)
-      (let [ctx (assoc ctx :query/name query)
-            query-result (db-api/query ctx args)]
-        (if (and (map? query-result)
-                 (contains? query-result :query)
-                 (contains? query-result :args))
-          (let [result-fn (or (:result-fn query-result) identity)]
-            (result-fn (d/q (select-keys query-result [:query :args]))))
-          query-result))))))
+  (request raw-query-handler))
+
+(defn raw-command-handler [ctx {:keys [command payload]}]
+  (log/event :command {:request/name command})
+  (log/metric command 1 :count)
+  (or
+   (check-spec command payload)
+   (let [ctx (assoc ctx :command/name command)
+         result (db-api/command! ctx payload)]
+     (log/debug "command: " command ", payload: " payload ", result => " result)
+     (if-let [error (:error result)]
+       (with-meta
+         error
+         {:format :raw})
+       result))))
 
 (def command-handler
   "Ring handler to invoke a named Datomic query.
   Takes input as transit, invokes the query and returns
   the result as transit."
-  (request
-   (fn [ctx {:keys [command payload]}]
-     (log/event :command {:request/name command})
-     (log/metric command 1 :count)
-     (or
-       (check-spec command payload)
-       (let [ctx (assoc ctx :command/name command)
-             result (db-api/command! ctx payload)]
-         (log/debug "command: " command ", payload: " payload ", result => " result)
-         (if-let [error (:error result)]
-           (with-meta
-             error
-             {:format :raw})
-           result))))))
+  (request raw-command-handler))
