@@ -1,0 +1,17 @@
+version: 0.2
+
+env:
+  parameter-store:
+    CYPRESS_SITE_PASSWORD: "/teet/api/basic-auth-password"
+
+phases:
+  install:
+    runtime-version:
+      nodejs: 13
+    commands:
+      - cd ci/browser-tests
+      - npm install
+  build:
+    commands:
+      - pwd
+      - ./node_modules/cypress/bin/cypress run
