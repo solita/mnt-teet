@@ -192,6 +192,7 @@
    ;; Activity fields
    "activity_id" [:thk.activity/id]
    "activity_teetid" [:db/id ->int]
+   "activity_taskid" [:activity/task-id ->int]
    "activity_typefk" [:activity/name
                       thk-activity-type->activity-name
                       (comp activity-name->thk-activity-type :db/ident)]
@@ -211,5 +212,4 @@
    ;;"activity_teetdelstamp" :activity/teetdelstamp
    "activity_cost" [:activity/cost]
    "activity_procurementno" [:activity/procurementno]
-   "activity_procurementid" [:activity/procurementid]
-   "activity_taskid" [:activity/task-id ->int]})
+   "activity_procurementid" [:activity/procurementid]})
