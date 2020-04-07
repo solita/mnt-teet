@@ -21,7 +21,7 @@
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Paper]]
+            [teet.ui.material-ui :refer [Paper Link]]
             [teet.ui.panels :as panels]
             [teet.ui.select :as select]
             [teet.ui.tabs :as tabs]
@@ -33,7 +33,8 @@
             [teet.theme.theme-colors :as theme-colors]
             [teet.project.search-area-controller :as search-area-controller]
             [teet.user.user-model :as user-model]
-            [teet.project.project-map-view :as project-map-view]))
+            [teet.project.project-map-view :as project-map-view]
+            [teet.common.common-controller :as common-controller]))
 
 (defn project-details
   [_e! {:thk.project/keys [estimated-start-date estimated-end-date road-nr
@@ -69,9 +70,17 @@
                      :justify-content :space-between}}
        [Heading1 {:style {:margin-bottom 0}}
         (project-model/get-column project :thk.project/project-name)]
-       [common/thk-link {:href thk-url
-                         :target "_blank"}
-        (str "THK" (:thk.project/id project))]]]]))
+       [:div {:style {:display :flex
+                      :align-items :center}}
+        [Link {:target :_blank
+               :style {:margin-right "0.5rem"}
+               :href (common-controller/query-url :thk.project/download-related-info
+                                                  (select-keys project [:thk.project/id]))}
+         (tr [:project :download-related-info])
+         [icons/file-cloud-download]]
+        [common/thk-link {:href thk-url
+                          :target "_blank"}
+         (str "THK" (:thk.project/id project))]]]]]))
 
 (defn heading-state
   [title select]

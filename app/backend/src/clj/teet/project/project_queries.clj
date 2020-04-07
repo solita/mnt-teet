@@ -8,7 +8,13 @@
             [teet.project.project-db :as project-db]
             [teet.util.collection :as cu]
             [teet.task.task-db :as task-db]
-            [teet.project.task-model :as task-model]))
+            [teet.project.task-model :as task-model]
+            [dk.ative.docjure.spreadsheet :as spreadsheet]
+            [ring.util.io :as ring-io]
+            [teet.environment :as environment]
+            [org.httpkit.client :as client]
+            [teet.auth.jwt-token :as jwt-token]
+            [cheshire.core :as cheshire]))
 
 (defquery :thk.project/db-id->thk-id
   {:doc "Fetch THK project id for given entity :db/id"
@@ -71,6 +77,54 @@
                   (map #(update % :thk.lifecycle/activities project-model/sort-activities) lifecycle)))
         (maybe-fetch-task-files db task-id)
         (maybe-update-activity-tasks activity-id))))
+
+
+(defn- fetch-features [{:keys [api-url api-shared-secret]} ids]
+  (-> (str api-url "/rpc/geojson_features_by_id")
+      (client/get
+       {:query-params {"ids" (str "{" (str/join "," ids) "}")}
+        :headers {"Accept" "text/plain"
+                  "Authorization"
+                  (str "Bearer "
+                       (jwt-token/create-backend-token api-shared-secret))}})
+      deref :body
+      (cheshire/decode keyword)))
+
+(defn- feature-collection->sheet-data [feature-collection]
+  (let [feature-props (->> feature-collection
+                           :features
+                           (map :properties))
+        headers (sort (keys (first feature-props)))]
+    (into [(mapv name headers)]
+          (map (apply juxt headers))
+          feature-props)))
+
+(defquery :thk.project/download-related-info
+  {:doc "Download restrictions and cadastral units data as Excel."
+   :context {db :db}
+   :args {:thk.project/keys [id]}
+   :project-id [:thk.project/id id]
+   :authorization {:project/project-info {:eid [:thk.project/id id]
+                                          :link :thk.project/owner}}}
+  ^{:format :raw}
+  {:status 200
+   :headers {"Content-Disposition" (str "attachment; filename=THK" id "-related.xlsx")}
+   :body (let [ctx (environment/config-map {:api-url [:api-url]
+                                            :api-shared-secret [:auth :jwt-secret]})
+               project (d/pull db '[:thk.project/related-cadastral-units
+                                    :thk.project/related-restrictions]
+                               [:thk.project/id id])
+               {:thk.project/keys [related-cadastral-units
+                                   related-restrictions]}
+               (cu/map-vals (partial fetch-features ctx) project)]
+
+           (ring-io/piped-input-stream
+            (fn [out]
+              (spreadsheet/save-workbook-into-stream!
+               out
+               (spreadsheet/create-workbook
+                "restrictions" (feature-collection->sheet-data related-restrictions)
+                "cadastral-units" (feature-collection->sheet-data related-cadastral-units))))))})
 
 
 (defquery :thk.project/listing
