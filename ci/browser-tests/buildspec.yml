@@ -7,7 +7,7 @@ env:
 phases:
   install:
     runtime-version:
-      nodejs: 13
+      nodejs: latest
     commands:
       - cd ci/browser-tests
       - npm install
