@@ -1,6 +1,7 @@
 (ns user
   (:require [datomic.client.api :as d]
             [teet.db-api.db-api-handlers :as db-api-handlers]
+            [teet.log :as log]
             [teet.main :as main]
             [teet.environment :as environment]
             [teet.thk.thk-integration-ion :as thk-integration]
@@ -229,6 +230,11 @@
 ;;
 ;; Commands and queries from the REPL
 ;;
+(def logged-in-user-id (atom nil))
+
+(defn local-login [user-id]
+  (reset! logged-in-user-id user-id)
+  (log/info "Locally logged in as " user-id))
 
 (defn action-ctx [user-id]
   (let [db (db)]
@@ -237,12 +243,24 @@
      :user (user-db/user-info db user-id)
      :session "foo"}))
 
-(defn local-query [user-id query & [args]]
-  (db-api-handlers/raw-query-handler (action-ctx user-id)
-                                     {:args args
-                                      :query query}))
+(defn local-query
+  ([query args]
+   (if-let [user-id @logged-in-user-id]
+     (local-query user-id query args)
+     (log/error "Not logged in! Call user/local-login with an existing user id to log in.")))
 
-(defn local-command [user-id command & [args]]
-  (db-api-handlers/raw-command-handler (action-ctx user-id)
-                                       {:payload args
-                                        :command command}))
+  ([user-id query args]
+   (db-api-handlers/raw-query-handler (action-ctx user-id)
+                                      {:args args
+                                       :query query})))
+
+(defn local-command
+  ([command args]
+   (if-let [user-id @logged-in-user-id]
+     (local-command user-id command args)
+     (log/error "Not logged in! Call user/local-login with an existing user id to log in.")))
+
+  ([user-id command args]
+   (db-api-handlers/raw-command-handler (action-ctx user-id)
+                                        {:payload args
+                                         :command command})))
