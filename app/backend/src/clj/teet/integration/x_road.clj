@@ -39,15 +39,20 @@
 
 (defn rr442-parse-name [xml-string]
   (let [xml (xml/parse xml-string)
-        ;; _ (assert (some? xml))
-        ;; _ (def *xx xml)
         zipped-xml (clojure.zip/xml-zip xml)
+        fault (or
+               (z/xml1-> zipped-xml :SOAP-ENV:Envelope :SOAP-ENV:Body :SOAP-ENV:Fault z/text)
+               (z/xml1-> zipped-xml :SOAP-ENV:Body :prod:RR442Response :response :faultString z/text))
         avaldaja (z/xml1-> zipped-xml :SOAP-ENV:Envelope :SOAP-ENV:Body :prod:RR442Response :response :Avaldaja)
         fields [:Eesnimi :Perenimi :Isikukood]
-        ;; _ (def *x avaldaja)
-        fieldname->kvpair (fn [fieldname]
-                            [fieldname (z/xml1-> avaldaja fieldname z/text)])]
-    (into {} (mapv fieldname->kvpair fields))))
+        fieldname->kvpair (fn [fieldname]                            
+                            [fieldname (z/xml1-> avaldaja fieldname z/text)])]    
+    (if fault
+      {:status :error :fault fault}
+      (if avaldaja
+        (merge {:status :ok}
+               (into {} (mapv fieldname->kvpair fields)))
+        {:status :error :fault "no fault code or Avaldaja section found in response"}))))
 
 (defn perform-rr442-request [url instance-id eid]
   (let [req (rr442-request-xml eid instance-id)
@@ -57,11 +62,10 @@
                                       :headers {"Content-Type" "text/xml; charset=UTF-8"}})
         resp (deref resp-atom)]
     (if (= 200 (:status resp))
-      {:status :ok
-       :result (rr442-parse-name (:body resp))}
+      (rr442-parse-name (:body resp))      
       ;; else
       {:status :error
-       :result resp})))
+       :result (str "http error" resp)})))
 
 (defn kr-kinnistu-d-request-xml [registriosa-nr instance-id]
   ;; xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
@@ -144,22 +148,41 @@
   (let [xml (xml/parse (clojure.java.io/input-stream (.getBytes xml-string)))
         zipped-xml (clojure.zip/xml-zip xml)
         d-response (z/xml1-> zipped-xml :s:Envelope :s:Body :Kinnistu_DetailandmedResponse)
+        d-status (z/xml1-> zipped-xml :s:Envelope :s:Body :Kinnistu_DetailandmedResponse :teade z/text)
+        d-fault (or (z/xml1-> zipped-xml :SOAP-ENV:Envelope :SOAP-ENV:Body :SOAP-ENV:Fault z/text)
+                    (z/xml1-> zipped-xml :s:Envelope :s:Body :Kinnistu_DetailandmedResponse :faultString z/text))
         ;; _ (def *x d-response)
+        ;; _ (def *x0 zipped-xml)
         ]
-    (merge {}
-           (d-cadastral-units d-response)
-           (d-property-owners d-response))))
+    (if d-response      
+      (if (= "OK" d-status)
+        (merge {:status :ok}
+               (d-cadastral-units d-response)
+               (d-property-owners d-response))
+        ;; else
+        {:status :error
+         :fault (str "teade: " d-status)})
+      ;; else
+      (if d-fault
+        {:status :error
+         :fault d-fault}
+        ;; else
+        {:status :error
+         :fault "empty response"}))))
 
 (defn unpeel-multipart [ht-resp]
   (let [c-type (:content-type (:headers ht-resp))
         multipart-match (re-find #"multipart/related;.*boundary=\"([^\"]+)\"" c-type)
         body (slurp (:body ht-resp))
-        xml-match (re-find #"(?is).*(<\?xml.*Envelope>)" body)]
-    (if (> (count xml-match) 2)
-      (log/error "received more than 1 part in multipart response, not implemented")
+        xml-match (re-find #"(?is).*(<\?xml.*Envelope>)" body)
+        soap-msg (second xml-match)
+        boundary (second multipart-match)]
+    (if (and boundary soap-msg (clojure.string/includes? soap-msg boundary))
+      (throw (ex-info "received more than 1 part in multipart response, not implemented"
+                      {}))
       (if-not multipart-match
         body
-        (get xml-match 1)))))
+        soap-msg))))
 
 (defn perform-kinnistu-d-request [url instance-id reg-nr]
   (let [req (kr-kinnistu-d-request-xml reg-nr instance-id)
@@ -171,12 +194,10 @@
     ;; (def *rq req)
     ;; (def *rr resp)
     (if (= 200 (:status resp))
-      {:status :ok
-       :result (kinnistu-d-parse-response (unpeel-multipart resp))
-       }
+      (kinnistu-d-parse-response (unpeel-multipart resp))      
       ;; else
       {:status :error
-       :result resp})))
+       :result (str "http error" resp)})))
 
 ;; repl notes:
 
