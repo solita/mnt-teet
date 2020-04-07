@@ -2,6 +2,8 @@
   (:require [clojure.xml :as xml]
             [clojure.data.zip.xml :as z]
             [clojure.zip]
+            [clojure.java.io]
+            [clojure.string]
             [hiccup.core :as hiccup]
             [org.httpkit.client :as htclient]
             [taoensso.timbre :as log]))
@@ -48,11 +50,16 @@
         fieldname->kvpair (fn [fieldname]                            
                             [fieldname (z/xml1-> avaldaja fieldname z/text)])]    
     (if fault
-      {:status :error :fault fault}
+      (do
+        (log/error "population register soap fault:", fault)
+        {:status :error :fault (str "rr soap response reports fault: fault")})
       (if avaldaja
         (merge {:status :ok}
                (into {} (mapv fieldname->kvpair fields)))
-        {:status :error :fault "no fault code or Avaldaja section found in response"}))))
+        (do
+          (log/error "pop register empty response without fault code")
+          {:status :error
+           :fault "no fault code or Avaldaja section found in pop register response"})))))
 
 (defn perform-rr442-request [url instance-id eid]
   (let [req (rr442-request-xml eid instance-id)
@@ -64,8 +71,10 @@
     (if (= 200 (:status resp))
       (rr442-parse-name (:body resp))      
       ;; else
-      {:status :error
-       :result (str "http error" resp)})))
+      (let [msg (str "http error communicating to x-road, error=" (:error resp) ", http status=" (:status resp))]
+        (log/error msg)
+        {:status :error
+         :result msg}))))
 
 (defn kr-kinnistu-d-request-xml [registriosa-nr instance-id]
   ;; xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
@@ -160,15 +169,21 @@
                (d-cadastral-units d-response)
                (d-property-owners d-response))
         ;; else
-        {:status :error
-         :fault (str "teade: " d-status)})
+        (do
+          (log/error "property register non-ok status string:" d-status)
+          {:status :error
+           :fault (str "teade: " d-status)}))
       ;; else
       (if d-fault
-        {:status :error
-         :fault d-fault}
+        (do
+          (log/error "propety register soap fault:" d-fault)
+          {:status :error
+           :fault d-fault})
         ;; else
-        {:status :error
-         :fault "empty response"}))))
+        (do
+          (log/error "property register empty response")
+          {:status :error
+           :fault "empty response"})))))
 
 (defn unpeel-multipart [ht-resp]
   (let [c-type (:content-type (:headers ht-resp))
@@ -196,8 +211,10 @@
     (if (= 200 (:status resp))
       (kinnistu-d-parse-response (unpeel-multipart resp))      
       ;; else
-      {:status :error
-       :result (str "http error" resp)})))
+      (let [msg (str "http error communicating to x-road, error=" (:error resp) ", http status=" (:status resp))]
+        (log/error msg)
+        {:status :error
+         :result msg}))))
 
 ;; repl notes:
 
