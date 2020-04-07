@@ -115,6 +115,7 @@
   :thk.task-type/design-requirements "Design requirements",
   :task.group/base-data "Base data ",
   :task.status/completed "Completed",
+  :task.type/building-permit "Building permit",
   :task.type/land-owners "Land-owners",
   :task.type/acceptances-no-objection
   "Acceptances (No-objection co-ordination)",

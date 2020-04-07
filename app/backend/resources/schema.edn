@@ -772,4 +772,7 @@
   :txes [[{:db/ident :comment/files
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/many
-           :db/doc "Image files attached to a comment"}]]}]
+           :db/doc "Image files attached to a comment"}]]}
+
+ {:db/ident :migration/remove-activity-type-design-req
+  :txes [[[:db/retractEntity :activity.name/design-requirements]]]}]
