@@ -265,6 +265,7 @@
    :data "Data"},
   :edit-activity "Edit activity",
   :restrictions-tab "Restrictions",
+  :download-related-info "Download related info",
   :show-timeline "Show project timeline",
   :edit-task "Edit task",
   :activity {:no-tasks "No tasks defined"},

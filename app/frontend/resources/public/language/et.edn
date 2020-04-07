@@ -265,6 +265,7 @@
    :data "Andmed"},
   :edit-activity "Muudan tegevust",
   :restrictions-tab "Kitsendused",
+  :download-related-info "laadige seotud teave alla",
   :show-timeline "Näita projekti ajakava",
   :edit-task "Redigeerin ülesannet",
   :activity {:no-tasks "Ülesandeid pole"},
