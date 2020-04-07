@@ -15,3 +15,6 @@ phases:
     commands:
       - pwd
       - ./node_modules/cypress/bin/cypress run
+cache:
+  paths:
+    - '/root/.cache/**/*'
