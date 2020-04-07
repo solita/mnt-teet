@@ -30,6 +30,9 @@
 
 (def config (atom init-config))
 
+(defn reset-config! []
+  (reset! config init-config))
+
 ;; "road-information-view, component-view"
 (defn parse-enabled-features [ssm-param]
   (->> (str/split ssm-param #",")
@@ -86,6 +89,7 @@
                                      b))
                                  init-config
                                  (read-string (slurp file)))))))
+
 (defn db-name []
   (-> @config
       (get-in [:datomic :db-name])
