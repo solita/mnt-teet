@@ -40,12 +40,19 @@
              }
  :paths ["src/clj" "../common/src/cljc" "../common/src/clj" "resources"]
  :aliases {:dev {:extra-deps {com.datomic/ion-dev {:mvn/version "0.9.234"}
-                              org.clojure/tools.namespace {:mvn/version "0.3.1"}}}
+                              org.clojure/tools.namespace {:mvn/version "0.3.1"}}
+                 :extra-paths ["test"]}
            :pack {:extra-deps {pack/pack.alpha {:git/url "https://github.com/juxt/pack.alpha.git"
                                                 :sha "2769a6224bfb938e777906ea311b3daf7d2220f5"}}}
-           :test {:main-opts ["-m" "kaocha.runner"]
+           :test {:main-opts ["-m" "kaocha.runner" "--skip-meta" "db"]
                   :extra-deps {lambdaisland/kaocha {:mvn/version "0.0-529"}}
                   :extra-paths ["test"]}
+           :db-test {:main-opts ["-m" "kaocha.runner" "--focus-meta" "db"]
+                     :extra-deps {lambdaisland/kaocha {:mvn/version "0.0-529"}}
+                     :extra-paths ["test"]}
+           :test-all {:main-opts ["-m" "kaocha.runner"]
+                      :extra-deps {lambdaisland/kaocha {:mvn/version "0.0-529"}}
+                      :extra-paths ["test"]}
            :authorizations {:main-opts ["-m" "teet.authorization"]
                             :extra-paths ["src/build"]
                             :extra-deps {:dk.ative/docjure {:mvn/version "1.12.0"}}}}
