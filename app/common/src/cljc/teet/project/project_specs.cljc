@@ -26,3 +26,7 @@
 (s/def :project/add-permission-form
   (s/keys :req [:project/participant
                 :permission/role]))
+
+
+(s/def :thk.project/fetch-project
+  (s/keys :req [:thk.project/id]))
