@@ -190,18 +190,23 @@
   "Show cadastral unit."
   [^ol.render.Feature feature res]
   (let [hover? (.get feature "hover")
+        selected? (.get feature "selected")
         res (if (> 1 res)
               1
               res)]
     (styles
      (ol.style.Style.
-      #js {:stroke (ol.style.Stroke. #js {:color    "rgba(0,0,0,0.6)"
+      #js {:stroke (ol.style.Stroke. #js {:color "rgba(0,0,0,0.6)"
                                           :lineDash #js [(/ 15 res), (/ 30 res)]
-                                          :width    2})
-           :fill   (ol.style.Fill. #js {:cursor :pointer
-                                        :color  (if hover?
-                                                  "rgba(100,110,105,0.6)"
-                                                  "rgba(186,187,171,0.6)")})})
+                                          :width 2})
+           :fill (ol.style.Fill. #js {:cursor :pointer
+                                      :color (cond
+                                               selected?
+                                               "rgba(100,110,105,0.8)"
+                                               hover?
+                                               "rgba(100,110,105,0.6)"
+                                               :else
+                                               "rgba(186,187,171,0.6)")})})
      (when hover?
        (small-feature-style feature res)))))
 
