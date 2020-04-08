@@ -130,6 +130,7 @@
    "phase_cost"
    "activity_id"
    "activity_teetid"
+   "activity_taskid"
    "activity_typefk"
    "activity_shortname"
    "activity_statusfk"
@@ -145,8 +146,7 @@
    "activity_teetdelstamp"
    "activity_cost"
    "activity_procurementno"
-   "activity_procurementid"
-   "activity_taskid"])
+   "activity_procurementid"])
 
 (defn estonian-person-id->user [id]
   (when-not (str/blank? id)
