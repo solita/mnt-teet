@@ -52,6 +52,11 @@
  :activity/delete-activity {:admin :full, :manager :full},
  :land/delete-comments
  {:admin :full, :manager :link, :internal-consultant :link},
+ :document/edit-comment
+ {:admin :full,
+  :manager :link,
+  :internal-consultant :link,
+  :authenticated-guest :link},
  :project/edit-permissions
  {:admin :full, :manager :full, :external-consultant :link},
  :project/project-setup {:admin :full, :manager :full},
@@ -189,6 +194,8 @@
   :manager :link,
   :internal-consultant :link,
   :authenticated-guest :link},
+ :land/view-personal-information-of-estate-owners
+ {:admin :full, :manager :full},
  :document/view-document
  {:admin :full,
   :manager :full,
