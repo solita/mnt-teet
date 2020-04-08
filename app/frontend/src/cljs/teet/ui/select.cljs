@@ -179,6 +179,19 @@
                 identity)
               (map :db/ident)) (@enum-values attribute)))
 
+(defn with-enum-values
+  "Call component with the values of the given enumeration.
+  Automatically fetches enum values from database, if they haven't already been fetched."
+  [{:keys [e! attribute]} _]
+  (when-not (contains? @enum-values attribute)
+    (log/debug "getting enum vals for attribute" attribute)
+    (e! (query-enums-for-attribute! attribute)))
+  (fn [{:keys [attribute]} component]
+    (when-let [values (@enum-values attribute)]
+      (if (vector? component)
+        (conj component values)
+        [component values]))))
+
 (defn select-enum
   "Select an enum value based on attribute. Automatically fetches enum values from database."
   [{:keys [e! attribute required tiny-select? show-label?]
