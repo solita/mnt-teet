@@ -2,7 +2,7 @@
   (:require [datomic.client.api :as d]
             [teet.main :as main]
             [teet.environment :as environment]
-            [teet.test.utils :as tu]
+            ;; [teet.test.utils :as tu]
             [teet.thk.thk-integration-ion :as thk-integration]
             [clojure.string :as str])
   (:import (java.util Date)
@@ -228,7 +228,7 @@
 ;;
 ;; Commands and queries from the REPL
 ;;
-(def logged-user   tu/logged-user)
-(def local-login   tu/local-login)
-(def local-query   tu/local-query)
-(def local-command tu/local-command)
+;; (def logged-user   tu/logged-user)
+;; (def local-login   tu/local-login)
+;; (def local-query   tu/local-query)
+;; (def local-command tu/local-command)
