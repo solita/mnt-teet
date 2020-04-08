@@ -15,7 +15,7 @@
              user :user}
    :payload {task-id :db/id}
    :project-id (project-db/task-project-id db task-id)
-   :authorization {} ;; FIXME: :task/delete
+   :authorization {:task/delete-task {}}
    :pre [(not (send-to-thk? db task-id))]
    :transact [(meta-model/deletion-tx user task-id)]})
 

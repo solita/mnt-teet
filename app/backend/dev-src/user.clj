@@ -50,8 +50,17 @@
                   :user/family-name "Boss"
                   :user/email "benjamin.boss@example.com"
                   ; :user/organization "Maanteeamet"
+                  }
+
+                 {:user/id #uuid "008af5b7-0f45-01ba-03d0-003c111c8f00"
+                  :user/person-id "1233726123"
+                  :user/given-name "Edna E."
+                  :user/family-name "Consultant"
+                  :user/email "edna.e.consultant@example.com"
+                  ; :user/organization "Maanteeamet"
                   }])
 
+(def danny-uuid (-> mock-users first :user/id))
 
 (defn give-admin-permission
   [user-eid]
@@ -59,6 +68,25 @@
        :user/permissions [{:db/id                 "new-permission"
                            :user/roles :admin
                            :permission/role       :admin
+                           :permission/valid-from (Date.)}]}))
+
+(defn give-manager-permission
+  [user-eid]
+  (tx {:db/id            user-eid
+       :user/permissions [{:db/id                 "new-permission"
+                           :permission/role       :manager
+                           :permission/valid-from (Date.)}]}))
+
+(defn remove-permission [user-uuid permission-eid]
+  (d/transact (environment/datomic-connection)
+              {:tx-data [[:db/retract [:user/id user-uuid]
+                          :user/permissions permission-eid]]}))
+
+(defn admin-permission
+  [user-eid]
+  (tx {:db/id            user-eid
+       :user/permissions [{:db/id                 "new-permission"
+                           :permission/role       :manager
                            :permission/valid-from (Date.)}]}))
 
 (defn all-permissions

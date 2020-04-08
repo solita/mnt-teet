@@ -35,3 +35,9 @@
 (defn attachment-list-separator
   []
   {:width "95%"})
+
+(defn edited
+  []
+  {:color theme-colors/gray-light
+   :font-size "0.75rem"
+   :padding-left "0.5rem"})
