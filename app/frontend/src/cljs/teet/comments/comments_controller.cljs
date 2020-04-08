@@ -9,7 +9,7 @@
 
 (defrecord UpdateFileNewCommentForm [form-data])            ; update new comment on selected file
 (defrecord UpdateNewCommentForm [form-data])                ; update new comment form data
-(defrecord CommentOnEntity [entity-type entity-id comment files])
+(defrecord CommentOnEntity [entity-type entity-id comment files visibility])
 (defrecord ClearCommentField [])
 (defrecord CommentAddSuccess [entity-id])
 
@@ -35,13 +35,15 @@
                        documents))))
 
   CommentOnEntity
-  (process-event [{:keys [entity-type entity-id comment files]} app]
+  (process-event [{:keys [entity-type entity-id comment files visibility] :as keto} app]
+    (assert (some? visibility))
     (t/fx app
           {:tuck.effect/type :command!
            :command :comment/create
            :payload {:entity-id entity-id
                      :entity-type entity-type
                      :comment comment
+                     :visibility visibility
                      :files (mapv :db/id files)}
            :result-event (partial ->CommentAddSuccess entity-id)}))
 

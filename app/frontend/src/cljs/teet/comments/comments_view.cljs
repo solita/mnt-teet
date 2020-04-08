@@ -27,7 +27,8 @@
             [teet.user.user-model :as user-model]
             [teet.file.file-controller :as file-controller]
             [teet.log :as log]
-            [teet.ui.util :as util]))
+            [teet.ui.util :as util]
+            [teet.ui.select]))
 
 (defn- new-comment-footer [{:keys [validate disabled?]}]
   [:div {:class (<class comments-styles/comment-buttons-style)}
@@ -174,10 +175,11 @@
          [form/form {:e! e!
                      :value @comment-form
                      :on-change-event ->UpdateCommentForm
-                     :save-event #(let [{:comment/keys [comment files]} @comment-form]
+                     :save-event #(let [{:comment/keys [comment files visibility]} @comment-form]
                                     (reset! comment-form {})
+                                    (assert visibility)
                                     (comments-controller/->CommentOnEntity
-                                     entity-type entity-id comment files))
+                                     entity-type entity-id comment files (keyword (:value visibility))))
                      :footer new-comment-footer
                      :spec :task/new-comment-form}
           ^{:attribute :comment/comment}
@@ -188,6 +190,14 @@
                       :full-width true
                       :placeholder (tr [:document :new-comment])}]
 
+          ^{:attribute :comment/visibility}
+          [teet.ui.select/form-select {:value "default-visibility"
+                                       :label "Visibility"
+                                       :id "comment-visibility"
+                                       :name "comment-visibility"
+                                       :items [{:value "default-visibility" :label "Default visbility"}
+                                               {:value "external-consultant" :label "Visible to external consultants"}]}]
+          
           ^{:attribute :comment/files}
           [attached-images-field {:e! e!
                                   :on-success-event ->UpdateCommentForm} ]])])))

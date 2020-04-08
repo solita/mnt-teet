@@ -30,7 +30,7 @@
 (defcommand :comment/create
   {:doc "Create a new comment and add it to an entity"
    :context {:keys [db user]}
-   :payload {:keys [entity-id entity-type comment files]}
+   :payload {:keys [entity-id entity-type comment files visibility]}
    :project-id (project-db/entity-project-id db entity-type entity-id)
    :authorization {:task/comment-task {:db/id entity-id}}
    :transact [(merge {:db/id entity-id
@@ -38,6 +38,7 @@
                       [(merge {:db/id "new-comment"
                                :comment/author [:user/id (:user/id user)]
                                :comment/comment comment
+                               :comment/visibility visibility
                                :comment/timestamp (Date.)}
                               (creation-meta user)
                               (when (seq files)

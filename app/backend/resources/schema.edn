@@ -775,4 +775,9 @@
            :db/doc "Image files attached to a comment"}]]}
 
  {:db/ident :migration/remove-activity-type-design-req
-  :txes [[[:db/retractEntity :activity.name/design-requirements]]]}]
+  :txes [[[:db/retractEntity :activity.name/design-requirements]]]}
+ {:db/ident :comment-visibility
+  :txes [[{:db/ident :comment/visibility
+           :db/doc "Indicator of special visibility, eg :external-consultant for showing also to ext consultants"
+           :db/valueType :db.type/keyword
+           :db/cardinality :db.cardinality/one}]]}]

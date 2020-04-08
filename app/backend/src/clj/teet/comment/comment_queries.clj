@@ -11,7 +11,8 @@
    :context {db :db}
    :args {id :db/id entity-type :for}
    :project-id (project-db/entity-project-id db entity-type id)
-   :authorization {}}
+   :authorization {:land/read-comments {:db/id id}}}
+
   (let [attr (comment-model/comments-attribute-for-entity-type entity-type)
         entity-comments (d/pull db
                                 [{attr '[*
@@ -24,3 +25,6 @@
            (sort-by :comment/timestamp)
            reverse
            vec))))
+
+
+
