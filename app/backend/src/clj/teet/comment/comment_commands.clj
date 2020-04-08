@@ -67,7 +67,7 @@
                    :document (project-db/document-project-id db parent-id)
                    :file (project-db/file-project-id db parent-id)
                    (db-api/bad-request! "No such comment")))
-   :authorization {:document/delete-comment {:db/id comment-id}} ;; TODO: Do we have comment edit permission?
+   :authorization {:document/edit-comment {:db/id comment-id}}
    :transact [(merge {:db/id comment-id
                       :comment/comment comment}
                      (modification-meta user))]})

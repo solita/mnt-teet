@@ -12,7 +12,8 @@
  {:quote nil,
   :save "Salvestan märkuse",
   :comment-as "Kommenteerimine kui {name}",
-  :add-images "lisada pilte"},
+  :add-images "lisada pilte",
+  :edited nil},
  :common
  {:hide-menu "Peidan menüü",
   :send-feedback "Saadan tagasisidet",

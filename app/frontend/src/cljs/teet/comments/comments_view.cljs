@@ -63,7 +63,10 @@
                files)
          (repeat [:hr {:class (<class comments-styles/attachment-list-separator)}]))))]))
 
-(defn- comment-entry [e! {id :db/id :comment/keys [author comment timestamp files] :as entity}
+(defn- comment-entry [e! {id :db/id
+                          :comment/keys [author comment timestamp files]
+                          :meta/keys [modified-at]
+                          :as entity}
                       quote-comment!]
   [:div {:class (<class common-styles/margin-bottom 1)}
    [:div {:class [(<class common-styles/space-between-center) (<class common-styles/margin-bottom 0)]}
@@ -80,7 +83,12 @@
                            :on-click #(quote-comment! (user-model/user-name author)
                                                       comment)}
       (tr [:comment :quote])]]]
-   [typography/Paragraph comment]
+   [typography/Paragraph
+    comment
+    (when modified-at
+      [:span {:class (<class comments-styles/edited)}
+       (tr [:comment :edited]
+           {:date (format/date modified-at)})])]
    [attachments {:files files :comment-id id}]
    [:div ;; TODO edit button, proper styles
     (when-authorized :comment/delete-comment
