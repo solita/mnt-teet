@@ -73,10 +73,13 @@
        [:div {:style {:display :flex
                       :align-items :center}}
         [Link {:target :_blank
-               :style {:margin-right "0.5rem"}
+               :style {:margin-right "1rem"
+                       :display :flex
+                       :align-items :center}
                :href (common-controller/query-url :thk.project/download-related-info
                                                   (select-keys project [:thk.project/id]))}
-         (tr [:project :download-related-info])
+         [:span {:style {:margin-right "0.5rem"}}
+          (tr [:project :download-related-info])]
          [icons/file-cloud-download]]
         [common/thk-link {:href thk-url
                           :target "_blank"}
