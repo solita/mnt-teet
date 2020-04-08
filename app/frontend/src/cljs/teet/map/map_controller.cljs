@@ -32,6 +32,7 @@
 (defrecord UpdateLayer [layer]) ; update layer with new data
 (defrecord RemoveLayer [layer]) ; remove layer
 
+
 (extend-protocol t/Event
   ToggleCategorySelect
   (process-event [{:keys [category closing?]} app]
@@ -180,6 +181,37 @@
                           (.forEach
                            (fn [item]
                              (apply update-fn item args))))))))))
+
+(defn zoom-on-layer [layer-name]
+  (let [^ol.Map m (openlayers/get-the-map)]
+    (-> m
+        .getLayers
+        (.forEach (fn [layer]
+                    (when (= layer-name (.get layer "teet-source"))
+                      (.log js/console layer)
+                      (-> layer
+                          .getSource
+                          .getExtent
+                          (openlayers/fit! {:padding [0 0 0 300]}))))))))
+
+(defn zoom-on-feature [layer-name unit]
+  (let [^ol.Map m (openlayers/get-the-map)]
+    (-> m
+        .getLayers
+        (.forEach (fn [layer]
+                    (when (= layer-name (.get layer "teet-source"))
+                      (-> layer
+                          .getSource
+                          .getFeatures
+                          (.forEach
+                            (fn [item]
+                              (let [id (.get item "teet-id")]
+                                (when (= id (:teet-id unit))
+                                  (let [extent (-> item
+                                                   .getGeometry
+                                                   .getExtent
+                                                   vec)]
+                                    (openlayers/fit! extent {:padding [0 0 0 300]})))))))))))))
 
 (common-controller/register-init-event! :fetch-datasources ->FetchDatasources)
 
