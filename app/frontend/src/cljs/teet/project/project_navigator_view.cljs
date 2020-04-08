@@ -325,12 +325,22 @@
   [_opts dialog]
   [:div "Unsupported project navigator dialog " (pr-str dialog)])
 
+(defn- override-project-navigator-dialog-options
+  [dialog]
+  (case (:type dialog)
+    :new-activity {:max-width :md
+                   :title (tr [:project :add-activity
+                               (:lifecycle-type dialog)])}
+    {}))
+
 
 (defn project-navigator-dialogs [{:keys [e! app] :as opts}]
   (when-let [dialog (get-in app [:stepper :dialog])]
-     [panels/modal {:title (tr [:project (:type dialog)])
-                    :open-atom (r/wrap true :_)
-                    :on-close (e! project-controller/->CloseDialog)}
+    [panels/modal (merge {:title (tr [:project (:type dialog)])
+                          :open-atom (r/wrap true :_)
+                          :on-close (e! project-controller/->CloseDialog)
+                          :max-width :sm}
+                         (override-project-navigator-dialog-options dialog))
       [project-navigator-dialog opts dialog]]))
 
 (defn project-navigator-with-content
