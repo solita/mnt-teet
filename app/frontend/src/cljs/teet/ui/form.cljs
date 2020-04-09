@@ -249,38 +249,43 @@
   [field-info field
    {:keys [value update-attribute-fn invalid-attributes required-fields
            validate-attribute-fn current-fields]}]
-  (r/create-class
-   {:component-did-mount
-    (fn [this]
-      (log/info "form field for " field-info " mounted")
-      (swap! current-fields assoc field-info {:attribute field-info}))
-    :reagent-render
-    (fn [_ _ {:keys [value]}]
-      (let [{:keys [attribute]
-             validate-field :validate} (if (map? field-info)
-                                         field-info
-                                         {:attribute field-info})
-            value (cond
-                    (keyword? attribute)
-                    (get value attribute (default-value (first field)))
+  (let [{:keys [attribute]
+         validate-field :validate
+         :as field-info} (if (map? field-info)
+                           field-info
+                           {:attribute field-info})]
+    (r/create-class
+     {:component-did-mount
+      (fn [_]
+        (log/info "form field for " attribute " mounted")
+        (swap! current-fields assoc attribute field-info))
+      :component-will-unmount
+      (fn [_]
+        (swap! current-fields dissoc attribute))
+      :reagent-render
+      (fn [_ _ {:keys [value]}]
+        (let [
+              value (cond
+                      (keyword? attribute)
+                      (get value attribute (default-value (first field)))
 
-                    (vector? attribute)
-                    (mapv #(get value % (default-value (first field))) attribute)
+                      (vector? attribute)
+                      (mapv #(get value % (default-value (first field))) attribute)
 
-                    :else
-                    (throw (ex-info "All form fields must have :attribute key (keyword or vector of keywords)"
-                                    {:meta field-info})))
-            error-text (and validate-field
-                            (validate-field value))
-            opts {:value value
-                  :on-change (r/partial update-attribute-fn attribute)
-                  :label (tr [:fields attribute])
-                  :error (boolean (or error-text (@invalid-attributes attribute)))
-                  :error-text error-text
-                  :required (required-field? attribute required-fields)}]
-        (add-validation
-         (update field 1 merge opts)
-         (partial validate-attribute-fn validate-field) attribute)))}))
+                      :else
+                      (throw (ex-info "All form fields must have :attribute key (keyword or vector of keywords)"
+                                      {:meta field-info})))
+              error-text (and validate-field
+                              (validate-field value))
+              opts {:value value
+                    :on-change (r/partial update-attribute-fn attribute)
+                    :label (tr [:fields attribute])
+                    :error (boolean (or error-text (@invalid-attributes attribute)))
+                    :error-text error-text
+                    :required (required-field? attribute required-fields)}]
+          (add-validation
+           (update field 1 merge opts)
+           (partial validate-attribute-fn validate-field) attribute)))})))
 
 (defn field
   "Form component in form2. Field-info is the attribute
@@ -371,7 +376,6 @@
                              :disabled? (boolean in-progress?)
                              :delete (when delete
                                        #(e! delete))}}]
-
     [:form (merge {:on-submit #(submit! e! save-event value @current-fields %)
                    :style {:flex 1
                            :display :flex
