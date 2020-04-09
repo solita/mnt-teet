@@ -14,7 +14,7 @@
 (defrecord ClearCommentField [])
 (defrecord CommentAddSuccess [entity-id])
 
-(defrecord OpenEditCommentDialog [comment-id commented-entity comment])
+(defrecord OpenEditCommentDialog [comment-entity commented-entity])
 (defrecord UpdateEditCommentForm [form-data])
 (defrecord CancelCommentEdit [])
 (defrecord SaveEditCommentForm [])
@@ -85,13 +85,14 @@
           (comments-query commented-entity)))
 
   OpenEditCommentDialog
-  (process-event [{:keys [comment-id commented-entity comment]} app]
+  (process-event [{:keys [comment-entity commented-entity]} app]
     (-> app
         (assoc-in [:stepper :dialog] {:type :edit-comment})
         (assoc :edit-comment-data
-               {:db/id comment-id
-                :comment/commented-entity commented-entity
-                :comment/comment comment})))
+               (merge {:comment/files []}
+                      (select-keys comment-entity
+                                   [:db/id :comment/comment :comment/files])
+                      {:comment/commented-entity commented-entity}))))
 
   CancelCommentEdit
   (process-event [_ {:keys [page params] :as app}]
@@ -115,7 +116,9 @@
            {:tuck.effect/type :command!
             :result-event ->SaveEditCommentSuccess
             :command :comment/update
-            :payload (select-keys edit-comment-data [:db/id :comment/comment])
+            :payload (-> edit-comment-data
+                         (select-keys [:db/id :comment/comment :comment/files])
+                         (update :comment/files (partial map :db/id)))
             :success-message (tr [:notifications :comment-edited])})))
 
   SaveEditCommentSuccess

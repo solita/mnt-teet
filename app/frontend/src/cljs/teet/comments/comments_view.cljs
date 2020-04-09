@@ -27,6 +27,7 @@
             [teet.ui.file-upload :as file-upload]
             [teet.user.user-info :as user-info]
             [teet.user.user-model :as user-model]
+            [teet.util.collection :as cu]
             [teet.file.file-controller :as file-controller]
             [teet.log :as log]
             [teet.ui.util :as util]))
@@ -65,27 +66,60 @@
                files)
          (repeat [:hr {:class (<class comments-styles/attachment-list-separator)}]))))]))
 
-(defn- edit-comment-form [_e! _]
-  (fn [e! comment-data]
-    [form/form {:e! e!
-                :value comment-data
-                :on-change-event comments-controller/->UpdateEditCommentForm
-                :cancel-event comments-controller/->CancelCommentEdit
-                :save-event comments-controller/->SaveEditCommentForm
-                :spec :comment/edit-comment-form}
-     ^{:attribute :comment/comment}
-     [TextField {:full-width true :multiline true :rows 4}]]))
+(defn- edit-attached-images-field
+  "File field that only allows uploading images. Files are
+  directly uploaded and on-change called after success."
+  [{:keys [e! value comment-id on-success-event]}]
+  [:div
+   [attachments {:files value
+                 :comment-id comment-id
+                 :on-delete (fn [{file-id :db/id}]
+                              (e! (comments-controller/->UpdateEditCommentForm
+                                   {:comment/files
+                                    (into []
+                                          (cu/remove-by-id file-id)
+                                          value)})))}]
+   [file-upload/FileUploadButton
+    {:id "images-field"
+     :color :secondary
+     :on-drop #(e! (file-controller/map->UploadFiles
+                    {:files %
+                     :attachment? true
+                     :on-success (fn [uploaded-files]
+                                   (log/info "FILES UPLOADED: " uploaded-files)
+                                   (log/info on-success-event)
+                                   (on-success-event
+                                    {:comment/files (into (or value [])
+                                                          uploaded-files)}))}))}
+    (tr [:comment :add-images])]])
+
+;; TODO: Both this and the create comment form should be replaced with
+;;       form2 to make the add image button look decent.
+(defn- edit-comment-form [e! comment-data]
+  [form/form {:e! e!
+              :value comment-data
+              :on-change-event comments-controller/->UpdateEditCommentForm
+              :cancel-event comments-controller/->CancelCommentEdit
+              :save-event comments-controller/->SaveEditCommentForm
+              :spec :comment/edit-comment-form}
+   ^{:attribute :comment/comment}
+   [TextField {:full-width true :multiline true :rows 4}]
+
+   ^{:attribute :comment/files}
+   [edit-attached-images-field {:e! e!
+                                :comment-id (:db/id comment-data)
+                                :on-success-event comments-controller/->UpdateEditCommentForm}]])
 
 (defmethod project-navigator-view/project-navigator-dialog :edit-comment
   [{:keys [e! app] :as _opts} _dialog]
   [edit-comment-form e! (:edit-comment-data app)])
 
-(defn- edit-comment-button [e! id comment commented-entity]
+(defn- edit-comment-button [e! comment-entity commented-entity]
   [buttons/button-text {:size :small
                         :icon-position :start
                         :color :primary
                         :start-icon (r/as-element [icons/image-edit])
-                        :on-click #(e! (comments-controller/->OpenEditCommentDialog id commented-entity comment))}
+                        :on-click #(e! (comments-controller/->OpenEditCommentDialog comment-entity commented-entity))}
    (tr [:buttons :edit])])
 
 (defn- comment-entry [e! {id :db/id
@@ -119,7 +153,7 @@
    [:div
     [when-authorized :comment/update
      comment-entity
-     [edit-comment-button e! id comment commented-entity]]
+     [edit-comment-button e! comment-entity commented-entity]]
     [when-authorized :comment/delete-comment
      comment-entity
      [buttons/delete-button-with-confirm {:small? true
@@ -140,35 +174,6 @@
         ^{:key id}
         [comment-entry e! comment-entity commented-entity-id quote-comment!])))])
 
-(defn- attached-images-field
-  "File field that only allows uploading images. Files are
-  directly uploaded and on-change called after success."
-  [{:keys [e! value on-success-event]}]
-  [:div
-   [attachments {:files value
-                 :comment-id nil
-                 :on-delete (fn [{id :db/id}]
-                              (e! (file-controller/->DeleteAttachment
-                                   (constantly
-                                    (on-success-event
-                                     {:comment/files
-                                      (into []
-                                            (filter #(not= (:db/id %) id))
-                                            value)}))
-                                   id)))}]
-   [file-upload/FileUploadButton
-    {:id "images-field"
-     :color :secondary
-     :on-drop #(e! (file-controller/map->UploadFiles
-                    {:files %
-                     :attachment? true
-                     :on-success (fn [files]
-                                   (log/info "FILES UPLOADED: " files)
-                                   (on-success-event
-                                    {:comment/files (into (or value [])
-                                                          files)}))}))}
-    (tr [:comment :add-images])]])
-
 (defn- quote-comment-fn
   "An ad hoc event that merges the quote at the end of current new
   comment text."
@@ -185,6 +190,35 @@
         (js/setTimeout #(animate/focus-by-id! "new-comment-input")
                        500)
         app))))
+
+(defn- attached-images-field
+  "File field that only allows uploading images. Files are
+  directly uploaded and on-change called after success."
+  [{:keys [e! value on-success-event]}]
+  [:div
+   [attachments {:files value
+                 :comment-id nil
+                 :on-delete (fn [{id :db/id}]
+                              (e! (file-controller/->DeleteAttachment
+                                   (constantly
+                                    (on-success-event
+                                     {:comment/files
+                                      (into []
+                                            (cu/remove-by-id id)
+                                            value)}))
+                                   id)))}]
+   [file-upload/FileUploadButton
+    {:id "images-field"
+     :color :secondary
+     :on-drop #(e! (file-controller/map->UploadFiles
+                    {:files %
+                     :attachment? true
+                     :on-success (fn [files]
+                                   (log/info "FILES UPLOADED: " files)
+                                   (on-success-event
+                                    {:comment/files (into (or value [])
+                                                          files)}))}))}
+    (tr [:comment :add-images])]])
 
 (defn lazy-comments
   [{:keys [e! app
@@ -209,7 +243,10 @@
                                     {:db/id entity-id
                                      :for   entity-type})
                      :refresh (count comments)}]
-       (when show-comment-form?
+       (when (and show-comment-form?
+                  ;; TODO: This circumvents the fact that there can be
+                  ;; only one file upload element in the dom at once.
+                  (not (-> app :stepper :dialog)))
          [form/form {:e! e!
                      :value @comment-form
                      :on-change-event ->UpdateCommentForm

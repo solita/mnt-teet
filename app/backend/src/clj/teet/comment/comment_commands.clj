@@ -1,8 +1,10 @@
 (ns teet.comment.comment-commands
-  (:require [teet.db-api.core :as db-api :refer [defcommand]]
+  (:require [clojure.set :as set]
+            [teet.db-api.core :as db-api :refer [defcommand]]
             [datomic.client.api :as d]
             teet.file.file-spec
             [teet.meta.meta-model :refer [creation-meta modification-meta deletion-tx]]
+            [teet.meta.meta-query :as meta-query]
             [teet.comment.comment-model :as comment-model]
             [teet.project.project-db :as project-db])
   (:import (java.util Date)))
@@ -65,15 +67,38 @@
       :task (project-db/task-project-id db parent-id)
       (db-api/bad-request! "No such comment"))))
 
+(defn- files-in-db [db comment-id]
+  (->> (d/pull db
+               [:comment/files]
+               comment-id)
+       :comment/files
+       (meta-query/without-deleted db)
+       (map :db/id)
+       set))
+
+(defn- update-files [user comment-id files-in-command files-in-db]
+  (let [to-be-removed (set/difference files-in-db files-in-command)
+        to-be-added (set/difference files-in-command files-in-db)]
+    (into []
+          (concat (for [id-to-remove to-be-removed]
+                    (deletion-tx user id-to-remove))
+                  (for [id-to-add to-be-added]
+                    [:db/add
+                     comment-id :comment/files id-to-add])))))
+
 (defcommand :comment/update
   {:doc "Update existing comment"
    :context {:keys [db user]}
-   :payload {comment-id :db/id comment :comment/comment}
+   :payload {comment-id :db/id comment :comment/comment files :comment/files}
    :project-id (get-project-id-of-comment db comment-id)
    :authorization {:document/edit-comment {:db/id comment-id}}
-   :transact [(merge {:db/id comment-id
-                      :comment/comment comment}
-                     (modification-meta user))]})
+   :transact (into [(merge {:db/id comment-id
+                            :comment/comment comment}
+                           (modification-meta user))]
+                   (update-files user
+                                 comment-id
+                                 (set files)
+                                 (files-in-db db comment-id)))})
 
 (defcommand :comment/delete-comment
   {:doc "Delete existing comment"

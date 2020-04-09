@@ -4,7 +4,8 @@
 
 (s/def :comment/comment string?)
 (s/def :comment/edit-comment-form (s/keys :req [:db/id
-                                                :comment/comment]))
+                                                :comment/comment
+                                                :comment/files]))
 
 (s/def :comment/update (s/keys :req [:db/id
                                      :comment/comment]))

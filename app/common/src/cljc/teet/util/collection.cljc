@@ -46,6 +46,13 @@
                     :db/id)
               collection))
 
+(defn remove-by-id
+  "Remove elements in `collection` whose `:db/id` is `id`"
+  ([id]
+   (remove #(= (:db/id %) id)))
+  ([id collection]
+   (remove #(= (:db/id %) id) collection)))
+
 (defn find-idx
   "Find index of first element in `collection` matching `predicate`."
   [predicate collection]
