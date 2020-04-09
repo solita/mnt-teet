@@ -20,6 +20,8 @@
             teet.logging.logging-commands
             teet.project.project-queries
             teet.project.project-commands
+            teet.land.land-commands
+            teet.land.land-queries
             teet.road.road-query-queries
             teet.system.system-queries
             teet.task.task-commands

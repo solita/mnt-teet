@@ -202,7 +202,7 @@
               (map (fn [field]
                      (assert (vector? field) "Field must be a hiccup vector")
                      (assert (map? (second field)) "First argument to field must be an options map")
-                     (let [{:keys [xs lg md attribute adornment]
+                     (let [{:keys [xs lg md attribute adornment container-class]
                             validate-field :validate :as field-meta} (meta field)
                            value (cond
                                    (keyword? attribute)
@@ -229,11 +229,12 @@
                                       {:lg lg})
                                     (when md
                                       {:md md}))
-                        (add-validation
-                         (update field 1 merge opts)
-                         (partial validate-attribute-fn validate-field) attribute)
-                        (when adornment
-                          adornment)])))))]]
+                        [:div {:class container-class}
+                         (add-validation
+                           (update field 1 merge opts)
+                           (partial validate-attribute-fn validate-field) attribute)
+                         (when adornment
+                           adornment)]])))))]]
      (when (and footer
                 (or cancel-event save-event))
        [footer (merge

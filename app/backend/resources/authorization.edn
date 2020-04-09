@@ -57,6 +57,7 @@
   :manager :link,
   :internal-consultant :link,
   :authenticated-guest :link},
+ :land/create-land-acquisition {:admin :full, :manager :full},
  :project/edit-permissions
  {:admin :full, :manager :full, :external-consultant :link},
  :project/project-setup {:admin :full, :manager :full},
@@ -94,6 +95,7 @@
   :external-consultant :link,
   :authenticated-guest :read,
   :guest :read},
+ :land/edit-land-acquisition {:admin :full, :manager :full},
  :maintenance/asset-search
  {:admin :full,
   :manager :full,
