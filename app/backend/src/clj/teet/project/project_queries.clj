@@ -12,9 +12,7 @@
             [dk.ative.docjure.spreadsheet :as spreadsheet]
             [ring.util.io :as ring-io]
             [teet.environment :as environment]
-            [org.httpkit.client :as client]
-            [teet.auth.jwt-token :as jwt-token]
-            [cheshire.core :as cheshire]))
+            [teet.gis.features :as features]))
 
 (defquery :thk.project/db-id->thk-id
   {:doc "Fetch THK project id for given entity :db/id"
@@ -79,16 +77,7 @@
         (maybe-update-activity-tasks activity-id))))
 
 
-(defn- fetch-features [{:keys [api-url api-shared-secret]} ids]
-  (-> (str api-url "/rpc/geojson_features_by_id")
-      (client/get
-       {:query-params {"ids" (str "{" (str/join "," ids) "}")}
-        :headers {"Accept" "text/plain"
-                  "Authorization"
-                  (str "Bearer "
-                       (jwt-token/create-backend-token api-shared-secret))}})
-      deref :body
-      (cheshire/decode keyword)))
+
 
 (defn- feature-collection->sheet-data [feature-collection]
   (let [feature-props (->> feature-collection
@@ -116,7 +105,7 @@
                                [:thk.project/id id])
                {:thk.project/keys [related-cadastral-units
                                    related-restrictions]}
-               (cu/map-vals (partial fetch-features ctx) project)]
+               (cu/map-vals (partial features/geojson-features-by-id ctx) project)]
 
            (ring-io/piped-input-stream
             (fn [out]
