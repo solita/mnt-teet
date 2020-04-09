@@ -27,4 +27,6 @@
                     nil
                     (fn [ctx]
                       (r/as-element
-                       [component-fn ctx]))))
+                       (if (vector? component-fn)
+                         (conj component-fn ctx)
+                         [component-fn ctx])))))

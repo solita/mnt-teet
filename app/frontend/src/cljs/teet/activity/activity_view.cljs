@@ -46,42 +46,38 @@
    [task-selection opts task-groups]])
 
 (defn create-activity-form [e! activity lifecycle-type]
-  [Grid {:container true :style {:height "90%"}}
-   [Grid {:item true :xs 4}
-    [form/form {:e! e!
-                :value activity
-                :on-change-event activity-controller/->UpdateActivityForm
-                }
-     ^{:attribute :activity/name}
-     [select/select-enum {:e! e! :attribute :activity/name :enum/valid-for lifecycle-type}]
+  [form/form2 {:e! e!
+               :value activity
+               :on-change-event activity-controller/->UpdateActivityForm
+               :cancel-event project-controller/->CloseDialog
+               :save-event activity-controller/->SaveActivityForm}
+   [Grid {:container true :style {:height "90%"} :spacing 3}
+    [Grid {:item true :xs 4}
 
-     ^{:attribute :activity/status}
-     [select/select-enum {:e! e! :attribute :activity/status}]
+     [form/field :activity/name
+      [select/select-enum {:e! e! :attribute :activity/name :enum/valid-for lifecycle-type}]]
 
-     ^{:attribute :activity/estimated-start-date}
-     [date-picker/date-input {:label (tr [:fields :activity/estimated-start-date])
-                              :selectable? (constantly true)}]
+     [form/field :activity/status
+      [select/select-enum {:e! e! :attribute :activity/status}]]
 
-     ^{:attribute :activity/estimated-end-date}
-     [date-picker/date-input {:label (tr [:fields :activity/estimated-end-date])
-                              :selectable? (constantly true)}]
+     [form/field :activity/estimated-start-date
+      [date-picker/date-input {:label (tr [:fields :activity/estimated-start-date])
+                               :selectable? (constantly true)}]]
 
-     ]]
-   [Grid {:item true :xs 8}
-    [select/with-enum-values {:e! e!
-                              :attribute :task/group}
-     [task-groups-and-tasks {:e! e!
-                             :on-change #(e! (activity-controller/->UpdateActivityForm
-                                              {:selected-tasks %}))
-                             :selected (or (:selected-tasks activity) #{})}]]]
+     [form/field :activity/estimated-end-date
+      [date-picker/date-input {:label (tr [:fields :activity/estimated-end-date])
+                               :selectable? (constantly true)}]]]
+    [Grid {:item true :xs 8}
+     [select/with-enum-values {:e! e!
+                               :attribute :task/group}
+      [task-groups-and-tasks {:e! e!
+                              :on-change #(e! (activity-controller/->UpdateActivityForm
+                                               {:selected-tasks %}))
+                              :selected (or (:selected-tasks activity) #{})}]]]
 
-   [Grid {:item true :xs 12}
-    [:div {:style {:display :flex :justify-content :flex-end}}
-     [buttons/button-secondary {:on-click (e! project-controller/->CloseDialog)
-                                :style {:margin "1rem"}} (tr [:buttons :cancel])]
-     [buttons/button-primary {:on-click :D
-                              :style {:margin "1rem"}}
-      (tr [:buttons :save])]]]])
+    [Grid {:item true :xs 12}
+     [:div {:style {:display :flex :justify-content :flex-end}}
+      [form/footer2]]]]])
 
 (defn edit-activity-form [e! activity]
   [form/form {:e! e!
