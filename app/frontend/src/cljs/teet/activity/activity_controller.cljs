@@ -34,7 +34,8 @@
                                  :activity/create
                                  :activity/update)
              :payload          (if new?
-                                 {:activity edit-activity-data
+                                 {:activity (dissoc edit-activity-data :selected-tasks)
+                                  :tasks (:selected-tasks edit-activity-data)
                                   :lifecycle-id (get-in app [:stepper :lifecycle])}
                                  {:activity edit-activity-data})
              :success-message  (tr [:notifications (if new? :activity-create :activity-updated)])

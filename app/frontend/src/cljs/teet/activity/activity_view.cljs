@@ -51,7 +51,7 @@
                :on-change-event activity-controller/->UpdateActivityForm
                :cancel-event project-controller/->CloseDialog
                :save-event activity-controller/->SaveActivityForm}
-   [Grid {:container true :style {:height "90%"}}
+   [Grid {:container true :style {:height "90%"} :spacing 3}
     [Grid {:item true :xs 4}
 
      [form/field :activity/name
@@ -66,9 +66,7 @@
 
      [form/field :activity/estimated-end-date
       [date-picker/date-input {:label (tr [:fields :activity/estimated-end-date])
-                               :selectable? (constantly true)}]]
-
-     ]
+                               :selectable? (constantly true)}]]]
     [Grid {:item true :xs 8}
      [select/with-enum-values {:e! e!
                                :attribute :task/group}
