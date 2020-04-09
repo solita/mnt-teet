@@ -2,7 +2,6 @@
   (:require [goog.math.Long]
             [tuck.core :as t]
             tuck.effect
-            [teet.common.common-controller :as common-controller]
             [teet.localization :refer [tr]]
             [teet.project.task-model :as task-model]))
 

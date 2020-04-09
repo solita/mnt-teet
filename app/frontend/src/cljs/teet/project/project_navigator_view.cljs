@@ -13,7 +13,6 @@
             [reagent.core :as r]
             [teet.ui.format :as format]
             [teet.ui.typography :as typography]
-            [teet.project.task-model :as task-model]
             [teet.task.task-style :as task-style]
             [teet.project.project-map-view :as project-map-view]
             [teet.ui.breadcrumbs :as breadcrumbs]
