@@ -243,7 +243,8 @@
   :total-area "Total area {area} m2",
   :filter-label "Filter units",
   :unit "unit",
-  :units "units"},
+  :units "units",
+  :land-acquisition-saved "Land acquisition saved successfully"},
  :login {:login "Login", :password "Password", :username "Username"},
  :map
  {:clear-selections "Clear selections",

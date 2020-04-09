@@ -242,7 +242,8 @@
   :total-area "Üldpind {area} m2",
   :filter-label "Filtreeri ühikud",
   :unit "ühik",
-  :units "ühikut"},
+  :units "ühikut",
+  :land-acquisition-saved "Maa omandamine päästis edukalt"},
  :login {:login "Sisenen", :password "Salasõna", :username "Kasutaja"},
  :map
  {:clear-selections "Tühjendan valikud",
