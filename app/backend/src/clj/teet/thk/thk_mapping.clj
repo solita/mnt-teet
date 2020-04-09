@@ -96,7 +96,7 @@
 
 (def activity-integration-info-fields
   #{:activity/typefk :activity/shortname :activity/statusname
-    :activity/contract :activity/actualstart :activity/actualend
+    :activity/contract
     :activity/guaranteeexpired :activity/thkupdstamp :activity/cost
     :activity/procurementno :activity/procurementid})
 
@@ -155,61 +155,104 @@
 
 (def thk->teet
   {;; Object/project fields
-   "object_id" [:thk.project/id]
-   "object_groupfk" [:object/groupfk]
-   "object_groupshortname" [:object/groupshortname]
-   "object_groupname" [:thk.project/repair-method]
-   "object_roadnr" [:thk.project/road-nr ->int]
-   "object_carriageway" [:thk.project/carriageway ->int]
-   "object_kmstart" [:thk.project/start-m (comp km->m ->num) m->km-str
-                     :thk.project/custom-start-m]
-   "object_kmend" [:thk.project/end-m (comp km->m ->num) m->km-str
-                   :thk.project/custom-end-m]
-   "object_bridgenr" [:thk.project/bridge-nr ->int]
-   "object_name" [:thk.project/name]
-   "object_projectname" [:thk.project/project-name]
-   "object_owner" [:thk.project/owner estonian-person-id->user :user/person-id]
-   "object_regionfk" [:object/regionfk]
-   "object_regionname" [:thk.project/region-name]
-   "object_thkupdstamp" [:object/thkupdstamp]
+   "object_id" {:attribute :thk.project/id}
+   "object_groupfk" {:attribute :object/groupfk}
+   "object_groupshortname" {:attribute :object/groupshortname}
+   "object_groupname" {:attribute :thk.project/repair-method}
+   "object_roadnr" {:attribute :thk.project/road-nr
+                    :parse ->int}
+   "object_carriageway" {:attribute :thk.project/carriageway
+                         :parse ->int}
+   "object_kmstart" {:attribute :thk.project/start-m
+                     :parse (comp km->m ->num)
+                     :format m->km-str
+                     :override-kw :thk.project/custom-start-m}
+   "object_kmend" {:attribute :thk.project/end-m
+                   :parse (comp km->m ->num)
+                   :format m->km-str
+                   :override-kw :thk.project/custom-end-m}
+   "object_bridgenr" {:attribute :thk.project/bridge-nr
+                      :parse ->int}
+   "object_name" {:attribute :thk.project/name}
+   "object_projectname" {:attribute :thk.project/project-name}
+   "object_owner" {:attribute :thk.project/owner
+                   :parse estonian-person-id->user
+                   :format :user/person-id}
+   "object_regionfk" {:attribute :object/regionfk}
+   "object_regionname" {:attribute :thk.project/region-name}
+   "object_thkupdstamp" {:attribute :object/thkupdstamp}
    ;;"object_teetupdstamp"
-   "object_statusfk" [:object/statusfk]
-   "object_statusname" [:object/statusname]
+   "object_statusfk" {:attribute :object/statusfk}
+   "object_statusname" {:attribute :object/statusname}
 
    ;; Phase/lifecycle fields
-   "phase_id" [:thk.lifecycle/id]
-   "phase_teetid" [:db/id ->int]
-   "phase_typefk" [:phase/typefk]
-   "phase_shortname" [:thk.lifecycle/type
-                      phase-name->lifecycle-type
-                      (comp lifecycle-type->phase-name :db/ident)]
-   "phase_eststart" [:thk.lifecycle/estimated-start-date ->date date-str]
-   "phase_estend" [:thk.lifecycle/estimated-end-date ->date date-str]
-   "phase_thkupdstamp" [:phase/thkupdstamp]
+   "phase_id" {:attribute :thk.lifecycle/id}
+   "phase_teetid" {:attribute :db/id
+                   :parse ->int}
+   "phase_typefk" {:attribute :phase/typefk}
+   "phase_shortname" {:attribute :thk.lifecycle/type
+                      :parse phase-name->lifecycle-type
+                      :format (comp lifecycle-type->phase-name :db/ident)}
+   "phase_eststart" {:attribute :thk.lifecycle/estimated-start-date
+                     :parse ->date
+                     :format date-str}
+   "phase_estend" {:attribute :thk.lifecycle/estimated-end-date
+                   :parse ->date
+                   :format date-str}
+   "phase_thkupdstamp" {:attribute :phase/thkupdstamp}
    ;"phase_teetupdstamp"
-   "phase_cost" [:phase/cost]
+   "phase_cost" {:attribute :phase/cost}
 
    ;; Activity fields
-   "activity_id" [:thk.activity/id]
-   "activity_teetid" [:db/id ->int]
-   "activity_taskid" [:activity/task-id ->int]
-   "activity_typefk" [:activity/name
-                      thk-activity-type->activity-name
-                      (comp activity-name->thk-activity-type :db/ident)]
-   "activity_shortname" [:activity/shortname]
-   "activity_statusfk" [:activity/status
-                        thk-activity-status->status
-                        (comp status->thk-activity-status :db/ident)]
-   "activity_statusname" [:activity/statusname]
-   "activity_contract" [:activity/contract]
-   "activity_eststart" [:activity/estimated-start-date ->date date-str]
-   "activity_estend" [:activity/estimated-end-date ->date date-str]
-   "activity_actualstart" [:activity/actualstart]
-   "activity_actualend" [:activity/actualend]
-   "activity_guaranteeexpired" [:activity/guaranteeexpired]
-   "activity_thkupdstamp" [:activity/thkupdstamp]
+   "activity_id" {:attribute :thk.activity/id}
+   "activity_teetid" {:attribute :db/id
+                      :parse ->int}
+   "activity_taskid" {:attribute :activity/task-id
+                      :parse ->int
+                      :task {:attribute :db/id}}
+   "activity_typefk" {:attribute :activity/name
+                      :parse thk-activity-type->activity-name
+                      :format (comp activity-name->thk-activity-type :db/ident)
+                      :task {:attribute :task/type
+                             :format #(get-in % [:thk/task-type :thk/code])}}
+   "activity_shortname" {:attribute :activity/shortname
+                         :task {:attribute :task/type
+                                :format #(some-> % :db/ident name)}}
+   "activity_statusfk" {:attribute :activity/status
+                        :parse thk-activity-status->status
+                        :format (comp status->thk-activity-status :db/ident)
+                        :task {:attribute :task/status
+                               :format #(case (:db/ident %)
+                                         :task.status/in-progress "4102"
+                                         :task.status/completed "4104"
+                                         "")}}
+   "activity_statusname" {:attribute :activity/statusname
+                          :task {:attribute :task/status
+                                 :format #(case (:db/ident %)
+                                            :task.status/in-progress "Töös"
+                                            :task.status/completed "Lõpetatud"
+                                            "")}}
+   "activity_contract" {:attribute :activity/contract}
+   "activity_eststart" {:attribute :activity/estimated-start-date
+                        :parse ->date
+                        :format date-str
+                        :task {:attribute :task/estimated-start-date}}
+   "activity_estend" {:attribute :activity/estimated-end-date
+                      :parse ->date
+                      :format date-str
+                      :task {:attribute :task/estimated-end-date}}
+   "activity_actualstart" {:attribute :activity/actual-start-date
+                           :parse ->date
+                           :format date-str
+                           :task {:attribute :task/actual-start-date}}
+   "activity_actualend" {:attribute :activity/actual-end-date
+                         :parse ->date
+                         :format date-str
+                         :task {:attribute :task/actual-end-date}}
+   "activity_guaranteeexpired" {:attribute :activity/guaranteeexpired}
+   "activity_thkupdstamp" {:attribute :activity/thkupdstamp}
    ;;"activity_teetupdstamp" :activity/teetupdstamp
    ;;"activity_teetdelstamp" :activity/teetdelstamp
-   "activity_cost" [:activity/cost]
-   "activity_procurementno" [:activity/procurementno]
-   "activity_procurementid" [:activity/procurementid]})
+   "activity_cost" {:attribute :activity/cost}
+   "activity_procurementno" {:attribute :activity/procurementno}
+   "activity_procurementid" {:attribute :activity/procurementid}})
