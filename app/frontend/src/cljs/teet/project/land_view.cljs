@@ -11,16 +11,14 @@
             [teet.project.land-controller :as land-controller]
             [postgrest-ui.components.query :as postgrest-query]
             [teet.theme.theme-colors :as theme-colors]
-            [garden.color :refer [darken as-hex]]
+            [garden.color :refer [darken]]
             [teet.ui.url :as url]
             [teet.land.land-specs]
-            [clojure.string :as str]
             [teet.project.project-controller :as project-controller]
             [teet.map.map-controller :as map-controller]
             [teet.ui.form :as form]
             [teet.common.common-controller :as common-controller]
-            [teet.ui.select :as select]
-            [teet.ui.query :as query]))
+            [teet.ui.select :as select]))
 
 (defn cadastral-unit-style
   [selected?]
