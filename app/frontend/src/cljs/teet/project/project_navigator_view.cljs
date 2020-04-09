@@ -143,19 +143,6 @@
       :else
       :not-started)))
 
-(defn- task-step-state
-  [task]
-  (let [status (get-in task [:task/status :db/ident])
-        task-done-statuses #{:task.status/accepted :task.status/completed
-                              :task.status/rejected :task.status/canceled}]
-    (cond
-      (task-done-statuses status)
-      :done
-      (task-model/in-progress? status)
-      :started
-      :else
-      :not-started)))
-
 (defn- lifecycle-status
   [{:thk.lifecycle/keys [activities] :as lifecycle}]
   (let [in-progress-activities (->> lifecycle
