@@ -1,7 +1,7 @@
 (ns teet.land.land-commands
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
             [datomic.client.api :as d]
-            [teet.meta.meta-model :refer [modification-meta creation-meta] :as meta-model]
+            [teet.meta.meta-model :as meta-model]
             [teet.util.collection :as cu]))
 
 
