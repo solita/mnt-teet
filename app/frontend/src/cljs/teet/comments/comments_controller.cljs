@@ -6,7 +6,8 @@
             [teet.localization :refer [tr]]
             [teet.project.task-model :as task-model]))
 
-(defrecord DeleteComment [comment-id])
+(defrecord DeleteComment [comment-id commented-entity])
+(defrecord DeleteCommentResult [commented-entity])
 
 (defrecord UpdateFileNewCommentForm [form-data])            ; update new comment on selected file
 (defrecord UpdateNewCommentForm [form-data])                ; update new comment form data
@@ -19,6 +20,12 @@
 (defrecord CancelCommentEdit [])
 (defrecord SaveEditCommentForm [])
 (defrecord SaveEditCommentSuccess [])
+
+(defn comments-query [commented-entity]
+  {:tuck.effect/type :query
+   :query :comment/fetch-comments
+   :args commented-entity
+   :result-path [:comments-for-entity (:db/id commented-entity)]})
 
 (extend-protocol t/Event
 
@@ -65,12 +72,18 @@
 
 
   DeleteComment
-  (process-event [{comment-id :comment-id} app]
+  (process-event [{:keys [comment-id commented-entity]} app]
     (t/fx app
           {:tuck.effect/type :command!
            :command          :comment/delete-comment
            :payload          {:comment-id comment-id}
-           :result-event     common-controller/->Refresh}))
+           :success-message (tr [:notifications :comment-deleted])
+           :result-event     (partial ->DeleteCommentResult commented-entity)}))
+
+  DeleteCommentResult
+  (process-event [{:keys [commented-entity]} app]
+    (t/fx app
+          (comments-query commented-entity)))
 
   OpenEditCommentDialog
   (process-event [{:keys [comment-id commented-entity comment]} app]
@@ -110,9 +123,6 @@
   (process-event [_ app]
     (let [commented-entity (-> app :edit-comment-data :comment/commented-entity)]
       (t/fx (-> app
-               (dissoc :edit-comment-data)
-               (update :stepper dissoc :dialog))
-           {:tuck.effect/type :query
-            :query :comment/fetch-comments
-            :args commented-entity
-            :result-path [:comments-for-entity (:db/id commented-entity)]}))))
+                (dissoc :edit-comment-data)
+                (update :stepper dissoc :dialog))
+            (comments-query commented-entity)))))

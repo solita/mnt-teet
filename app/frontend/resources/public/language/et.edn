@@ -239,6 +239,7 @@
   :task-deleted "Ülesanne edukalt kustutatud",
   :permission-added-successfully "Luba on edukalt lisatud",
   :comment-edited nil,
+  :comment-deleted nil,
   :permission-revoked "Luba tühistati edukalt",
   :task-created "Ülesanne edukalt lisatud",
   :restrictions-updated "Kitsendused edukalt värskendatud",

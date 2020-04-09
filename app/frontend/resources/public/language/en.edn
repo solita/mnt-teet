@@ -240,6 +240,7 @@
   :task-deleted "Task deleted successfully",
   :permission-added-successfully "Permission added successfully",
   :comment-edited "Comment edited successfully",
+  :comment-deleted "Comment deleted successfully",
   :permission-revoked "Permission revoked successfully",
   :task-created "Task created successfully",
   :restrictions-updated "Restrictions updated succesfully",

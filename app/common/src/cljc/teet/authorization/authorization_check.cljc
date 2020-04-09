@@ -97,7 +97,7 @@
    (defn when-authorized
      [action entity component]
      [consume-authorization-info
-      (fn [{:keys [project-id] :as arg}]
+      (fn [{:keys [project-id]}]
         (let [permissions @app-state/action-permissions
               user @app-state/user
               action-permissions (action permissions)]

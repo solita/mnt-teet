@@ -81,17 +81,17 @@
   [edit-comment-form e! (:edit-comment-data app)])
 
 (defn- edit-comment-button [e! id comment commented-entity]
-  [buttons/button-text {:small? true
+  [buttons/button-text {:size :small
                         :icon-position :start
                         :color :primary
                         :start-icon (r/as-element [icons/image-edit])
                         :on-click #(e! (comments-controller/->OpenEditCommentDialog id commented-entity comment))}
-   "Edit"])
+   (tr [:buttons :edit])])
 
 (defn- comment-entry [e! {id :db/id
                           :comment/keys [author comment timestamp files]
                           :meta/keys [modified-at]
-                          :as entity}
+                          :as comment-entity}
                       commented-entity
                       quote-comment!]
   [:div {:class (<class common-styles/margin-bottom 1)}
@@ -116,15 +116,15 @@
        (tr [:comment :edited]
            {:date (format/date modified-at)})])]
    [attachments {:files files :comment-id id}]
-   [:div ;; TODO edit button, proper styles
+   [:div
     [when-authorized :comment/update
-     entity
+     comment-entity
      [edit-comment-button e! id comment commented-entity]]
     [when-authorized :comment/delete-comment
-     entity
+     comment-entity
      [buttons/delete-button-with-confirm {:small? true
                                           :icon-position :start
-                                          :action (e! comments-controller/->DeleteComment id)}
+                                          :action (e! comments-controller/->DeleteComment id commented-entity)}
       (tr [:buttons :delete])]]]])
 
 (defn comment-list
