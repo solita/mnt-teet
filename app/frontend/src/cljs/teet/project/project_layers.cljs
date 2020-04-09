@@ -161,10 +161,9 @@
                                       map-features/cadastral-unit-style
                                       {:opacity 1})})))
 
-
 (defn related-restrictions [{{query :query :as app} :app
                              {restrictions :thk.project/related-restrictions} :project}]
-  (when (and restrictions (not (:configure query)))
+  (when (and restrictions (not (or (:configure query) (= (:tab query) "land"))))
     {:related-restrictions
      (map-layers/geojson-layer (endpoint app)
                                "geojson_features_by_id"
@@ -173,14 +172,16 @@
                                {})}))
 
 (defn related-cadastral-units [{{query :query :as app} :app
-                                {cadastral-units :thk.project/related-cadastral-units} :project}]
+                                {cadastral-units :thk.project/related-cadastral-units
+                                 filtered-units :thk.project/filtered-cadastral-units} :project}]
   (when (and cadastral-units (not (:configure query)))
-    {:related-cadastral-units
-     (map-layers/geojson-layer (endpoint app)
-                               "geojson_features_by_id"
-                               {"ids" (str "{" (str/join "," cadastral-units) "}")}
-                               map-features/cadastral-unit-style
-                               {})}))
+    (let [units (or filtered-units cadastral-units)]
+      {:related-cadastral-units
+       (map-layers/geojson-layer (endpoint app)
+                                 "geojson_features_by_id"
+                                 {"ids" (str "{" (str/join "," units) "}")}
+                                 map-features/cadastral-unit-style
+                                 {})})))
 
 (defn- ags-on-select [e! {:map/keys [teet-id]}]
   (e! (map-controller/->FetchOverlayForEntityFeature [:route :project :overlays] teet-id)))
