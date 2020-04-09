@@ -238,6 +238,7 @@
  {:task-status-updated "Ülesande olek edukalt värskendatud",
   :task-deleted "Ülesanne edukalt kustutatud",
   :permission-added-successfully "Luba on edukalt lisatud",
+  :comment-edited nil,
   :permission-revoked "Luba tühistati edukalt",
   :task-created "Ülesanne edukalt lisatud",
   :restrictions-updated "Kitsendused edukalt värskendatud",
@@ -256,6 +257,7 @@
   :remove-from-project "Eemaldan projektist",
   :details-view "Detailid",
   :map-view "Kaart",
+  :new-activity nil,
   :add-activity
   #:thk.lifecycle-type{:design "Lisan faasi",
                        :construction "Lisan staadiumi"},
@@ -267,6 +269,7 @@
   :edit-activity "Muudan tegevust",
   :restrictions-tab "Kitsendused",
   :download-related-info "laadige seotud teave alla",
+  :edit-comment nil,
   :show-timeline "Näita projekti ajakava",
   :edit-task "Redigeerin ülesannet",
   :activity {:no-tasks "Ülesandeid pole"},

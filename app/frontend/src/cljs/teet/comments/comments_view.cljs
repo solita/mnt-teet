@@ -3,11 +3,13 @@
             [reagent.core :as r]
             [tuck.core :as t]
             [teet.authorization.authorization-check :refer [when-authorized]]
+            teet.comment.comment-spec
             [teet.comments.comments-controller :as comments-controller]
             [teet.comments.comments-styles :as comments-styles]
             [teet.common.common-controller :as common-controller]
             [teet.common.common-styles :as common-styles]
             [teet.localization :refer [tr]]
+            [teet.project.project-navigator-view :as project-navigator-view]
             teet.task.task-spec
             [teet.ui.animate :as animate]
             [teet.ui.buttons :as buttons]
@@ -63,10 +65,34 @@
                files)
          (repeat [:hr {:class (<class comments-styles/attachment-list-separator)}]))))]))
 
+(defn- edit-comment-form [_e! _]
+  (fn [e! comment-data]
+    [form/form {:e! e!
+                :value comment-data
+                :on-change-event comments-controller/->UpdateEditCommentForm
+                :cancel-event comments-controller/->CancelCommentEdit
+                :save-event comments-controller/->SaveEditCommentForm
+                :spec :comment/edit-comment-form}
+     ^{:attribute :comment/comment}
+     [TextField {:full-width true :multiline true :rows 4}]]))
+
+(defmethod project-navigator-view/project-navigator-dialog :edit-comment
+  [{:keys [e! app] :as _opts} _dialog]
+  [edit-comment-form e! (:edit-comment-data app)])
+
+(defn- edit-comment-button [e! id comment commented-entity]
+  [buttons/button-text {:small? true
+                        :icon-position :start
+                        :color :primary
+                        :start-icon (r/as-element [icons/image-edit])
+                        :on-click #(e! (comments-controller/->OpenEditCommentDialog id commented-entity comment))}
+   "Edit"])
+
 (defn- comment-entry [e! {id :db/id
                           :comment/keys [author comment timestamp files]
                           :meta/keys [modified-at]
                           :as entity}
+                      commented-entity
                       quote-comment!]
   [:div {:class (<class common-styles/margin-bottom 1)}
    [:div {:class [(<class common-styles/space-between-center) (<class common-styles/margin-bottom 0)]}
@@ -91,25 +117,28 @@
            {:date (format/date modified-at)})])]
    [attachments {:files files :comment-id id}]
    [:div ;; TODO edit button, proper styles
-    (when-authorized :comment/delete-comment
-      entity
-      [buttons/delete-button-with-confirm {:small? true
-                                           :icon-position :start
-                                           :action (e! comments-controller/->DeleteComment id)}
-       (tr [:buttons :delete])])]])
+    [when-authorized :comment/update
+     entity
+     [edit-comment-button e! id comment commented-entity]]
+    [when-authorized :comment/delete-comment
+     entity
+     [buttons/delete-button-with-confirm {:small? true
+                                          :icon-position :start
+                                          :action (e! comments-controller/->DeleteComment id)}
+      (tr [:buttons :delete])]]]])
 
 (defn comment-list
-  [quote-comment! e! _app comments _breacrumbs]
+  [quote-comment! commented-entity-id e! _app comments _breacrumbs]
   [itemlist/ItemList {}
    (doall
-    (for [{id :db/id :as entity} comments]
-      (if (nil? entity)
+    (for [{id :db/id :as comment-entity} comments]
+      (if (nil? comment-entity)
         ;; New comment was just added but hasn't been refetched yet, show skeleton
         ^{:key "loading-comment"}
         [comment-skeleton 1]
 
         ^{:key id}
-        [comment-entry e! entity quote-comment!])))])
+        [comment-entry e! comment-entity commented-entity-id quote-comment!])))])
 
 (defn- attached-images-field
   "File field that only allows uploading images. Files are
@@ -176,7 +205,9 @@
                      :state comments
                      :view (partial comment-list
                                     #(e! ((quote-comment-fn comment-form)
-                                          (str %1 ": \"" %2 "\""))))
+                                          (str %1 ": \"" %2 "\"")))
+                                    {:db/id entity-id
+                                     :for   entity-type})
                      :refresh (count comments)}]
        (when show-comment-form?
          [form/form {:e! e!

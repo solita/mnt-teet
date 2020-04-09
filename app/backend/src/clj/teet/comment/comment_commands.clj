@@ -44,29 +44,32 @@
                                 {:comment/files (validate-files db user files)}))]})]})
 
 (defn- comment-parent-entity [db comment-id]
-  (if-let [doc-id (ffirst
-                   (d/q '[:find ?doc
-                          :in $ ?comment
-                          :where [?doc :document/comments ?comment]]
-                        db comment-id))]
-    [:document doc-id]
-    (if-let [file-id (ffirst
-                      (d/q '[:find ?file
+  (if-let [file-id (ffirst
+                    (d/q '[:find ?file
+                           :in $ ?comment
+                           :where [?file :file/comments ?comment]]
+                         db comment-id))]
+    [:file file-id]
+    (if-let [task-id (ffirst
+                      (d/q '[:find ?task
                              :in $ ?comment
-                             :where [?file :file/comments ?comment]]
+                             :where [?task :task/comments ?comment]]
                            db comment-id))]
-      [:file file-id]
+      [:task task-id]
       nil)))
+
+(defn- get-project-id-of-comment [db comment-id]
+  (let [[parent-type parent-id] (comment-parent-entity db comment-id)]
+    (case parent-type
+      :file (project-db/file-project-id db parent-id)
+      :task (project-db/task-project-id db parent-id)
+      (db-api/bad-request! "No such comment"))))
 
 (defcommand :comment/update
   {:doc "Update existing comment"
    :context {:keys [db user]}
-   :payload {:keys [comment-id comment]}
-   :project-id (let [[parent-type parent-id] (comment-parent-entity db comment-id)]
-                 (case parent-type
-                   :document (project-db/document-project-id db parent-id)
-                   :file (project-db/file-project-id db parent-id)
-                   (db-api/bad-request! "No such comment")))
+   :payload {comment-id :db/id comment :comment/comment}
+   :project-id (get-project-id-of-comment db comment-id)
    :authorization {:document/edit-comment {:db/id comment-id}}
    :transact [(merge {:db/id comment-id
                       :comment/comment comment}
@@ -76,10 +79,6 @@
   {:doc "Delete existing comment"
    :context {:keys [db user]}
    :payload {:keys [comment-id]}
-   :project-id (let [[parent-type parent-id] (comment-parent-entity db comment-id)]
-                 (case parent-type
-                   :document (project-db/document-project-id db parent-id)
-                   :file (project-db/file-project-id db parent-id)
-                   (db-api/bad-request! "No such comment")))
+   :project-id (get-project-id-of-comment db comment-id)
    :authorization {:document/delete-comment {:db/id comment-id}}
    :transact [(deletion-tx user comment-id)]})

@@ -2,6 +2,7 @@
   (:require #?(:clj  [clojure.java.io :as io]
                :cljs [cljs.reader :as reader])
             #?(:cljs [teet.app-state :as app-state])
+            #?(:cljs [teet.ui.context :as context])
             #?(:cljs [teet.ui.query :as query])
             [teet.util.collection :as cu]
             [clojure.set :as set]))
@@ -84,19 +85,32 @@
                         [:authorization/permissions]))))
 
 #?(:cljs
+   (defn provide-authorization-info [context child]
+     (println context)
+     (context/provide :authorization-info context child)))
+
+#?(:cljs
+   (defn- consume-authorization-info [component-fn]
+     (context/consume :authorization-info component-fn)))
+
+#?(:cljs
    (defn when-authorized
      [action entity component]
-     (let [permissions @app-state/action-permissions
-           user @app-state/user
-           action-permissions (action permissions)]
-       (when (and permissions
-                  user
-                  action-permissions)
-         (when (every? (fn [[permission {:keys [link]}]]
-                         (authorized? @app-state/user permission (merge {:entity entity}
-                                                                        (when link {:link link}))))
-                       (action permissions))
-           component)))))
+     [consume-authorization-info
+      (fn [{:keys [project-id] :as arg}]
+        (let [permissions @app-state/action-permissions
+              user @app-state/user
+              action-permissions (action permissions)]
+          (when (and permissions
+                     user
+                     action-permissions)
+            (when (every? (fn [[permission {:keys [link]}]]
+                            (authorized? @app-state/user permission (merge {:project-id project-id
+                                                                            :entity entity}
+
+                                                                           (when link {:link link}))))
+                          (action permissions))
+              component))))]))
 
 (defn authorization-rule-names []
   (into #{} (keys @authorization-rules)))

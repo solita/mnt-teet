@@ -1,5 +1,6 @@
 (ns teet.app-state
   (:require [reagent.core :as r]
+            [reagent.ratom :as ratom]
             [teet.road.road-model :as road-model]))
 
 (defonce app (r/atom {:config     {}

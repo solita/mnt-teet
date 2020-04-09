@@ -239,6 +239,7 @@
  {:task-status-updated "Task status updated successfully",
   :task-deleted "Task deleted successfully",
   :permission-added-successfully "Permission added successfully",
+  :comment-edited "Comment edited successfully",
   :permission-revoked "Permission revoked successfully",
   :task-created "Task created successfully",
   :restrictions-updated "Restrictions updated succesfully",
@@ -257,6 +258,7 @@
   :remove-from-project "Remove from project",
   :details-view "Details",
   :map-view "Map",
+  :new-activity nil,
   :add-activity
   #:thk.lifecycle-type{:design "Add phase", :construction "Add stage"},
   :tabs
@@ -267,6 +269,7 @@
   :edit-activity "Edit activity",
   :restrictions-tab "Restrictions",
   :download-related-info "Download related info",
+  :edit-comment "Edit comment",
   :show-timeline "Show project timeline",
   :edit-task "Edit task",
   :activity {:no-tasks "No tasks defined"},

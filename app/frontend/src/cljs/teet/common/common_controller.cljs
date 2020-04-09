@@ -527,3 +527,8 @@
               (swap! internal-state-atom merge new-value)
               (reset! internal-state-atom new-value))
             app)))])))
+
+(defn comments-for-entity
+  "Get comments for the given entity (db id) from the app state"
+  [{:keys [comments-for-entity] :as _app} entity]
+  (get comments-for-entity entity))

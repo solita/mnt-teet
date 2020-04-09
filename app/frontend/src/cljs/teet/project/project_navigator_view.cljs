@@ -2,6 +2,7 @@
   (:require [teet.ui.material-ui :refer [Link Collapse Paper Grid]]
             [herb.core :refer [<class]]
             [teet.theme.theme-colors :as theme-colors]
+            [teet.authorization.authorization-check :as ac]
             [teet.ui.buttons :as buttons]
             [teet.ui.icons :as icons]
             [teet.ui.url :as url]
@@ -254,7 +255,7 @@
                                  :activity-state activity-state}])]]))
 
 (defn project-navigator
-  [e! {:thk.project/keys [lifecycles] :as _project} stepper params dark-theme?]
+  [e! {id :db/id :thk.project/keys [lifecycles] :as _project} stepper params dark-theme?]
   (let [lifecycle-ids (mapv :db/id lifecycles)
         lc-id (:lifecycle stepper)
         old-stepper? (empty? (filter #(= lc-id %) lifecycle-ids))]
@@ -267,56 +268,56 @@
       [:div {:class (<class navigator-container-style dark-theme?)}
        [:ol {:class (<class ol-class)}
         (doall
-          (map-indexed
-            (fn [i {lc-id :db/id
-                    :thk.lifecycle/keys [activities estimated-end-date estimated-start-date type] :as lifecycle}]
-              (let [last? (= (+ i 1) (count lifecycles))
-                    lc-type (:db/ident type)
-                    disable-buttons? (= :thk.lifecycle-type/construction lc-type) ;; Disable buttons related to adding stages or tasks in construction until that part is more planned out
-                    first-activity-status (activity-step-state (first activities))
-                    lc-status (lifecycle-status lifecycle)
-                    open? (= (str lc-id) (str (:lifecycle stepper)))]
-                ^{:key (str lc-id)}
-                [:li
-                 ;; Use first activity status instead of lifecycle, because there is no work to be done between the lifecycle and the first activity
-                 [:div {:class (<class lifecycle-style (= (str lc-id) (str (:lifecycle stepper))) last? (= :done first-activity-status) dark-theme?)}
-                  [circle-svg {:status lc-status :size 28 :dark-theme? dark-theme?}]
-                  [:div {:class (<class step-container-style {:offset -3})}
-                   [:div {:class (<class flex-column)}
-                    [:button
-                     {:class (<class stepper-button-style {:size "24px"
-                                                           :open? open?
-                                                           :dark-theme? dark-theme?})
-                      :on-click #(e! (project-controller/->ToggleStepperLifecycle lc-id))}
-                     (tr [:enum (get-in lifecycle [:thk.lifecycle/type :db/ident])])]
-                    [typography/SmallText
-                     (format/date estimated-start-date) " – " (format/date estimated-end-date)]]]]
-                 [:div
-                  [Collapse {:in open?}
-                   (mapc (partial activity {:e! e!
-                                            :stepper stepper
-                                            :dark-theme? dark-theme?
-                                            :disable-buttons? disable-buttons?
-                                            :lc-id lc-id
-                                            :rect-button rect-button
-                                            :project-id id
-                                            :params params})
-                         (:thk.lifecycle/activities lifecycle))
+         (map-indexed
+          (fn [i {lc-id :db/id
+                  :thk.lifecycle/keys [activities estimated-end-date estimated-start-date type] :as lifecycle}]
+            (let [last? (= (+ i 1) (count lifecycles))
+                  lc-type (:db/ident type)
+                  disable-buttons? (= :thk.lifecycle-type/construction lc-type) ;; Disable buttons related to adding stages or tasks in construction until that part is more planned out
+                  first-activity-status (activity-step-state (first activities))
+                  lc-status (lifecycle-status lifecycle)
+                  open? (= (str lc-id) (str (:lifecycle stepper)))]
+              ^{:key (str lc-id)}
+              [:li
+               ;; Use first activity status instead of lifecycle, because there is no work to be done between the lifecycle and the first activity
+               [:div {:class (<class lifecycle-style (= (str lc-id) (str (:lifecycle stepper))) last? (= :done first-activity-status) dark-theme?)}
+                [circle-svg {:status lc-status :size 28 :dark-theme? dark-theme?}]
+                [:div {:class (<class step-container-style {:offset -3})}
+                 [:div {:class (<class flex-column)}
+                  [:button
+                   {:class (<class stepper-button-style {:size "24px"
+                                                         :open? open?
+                                                         :dark-theme? dark-theme?})
+                    :on-click #(e! (project-controller/->ToggleStepperLifecycle lc-id))}
+                   (tr [:enum (get-in lifecycle [:thk.lifecycle/type :db/ident])])]
+                  [typography/SmallText
+                   (format/date estimated-start-date) " – " (format/date estimated-end-date)]]]]
+               [:div
+                [Collapse {:in open?}
+                 (mapc (partial activity {:e! e!
+                                          :stepper stepper
+                                          :dark-theme? dark-theme?
+                                          :disable-buttons? disable-buttons?
+                                          :lc-id lc-id
+                                          :rect-button rect-button
+                                          :project-id id
+                                          :params params})
+                       (:thk.lifecycle/activities lifecycle))
 
-                   [:div {:class (<class item-class (= :done lc-status) dark-theme?)}
-                    [circle-svg {:status :not-started :size 20 :bottom? last? :dark-theme? dark-theme?}]
-                    [:div {:style (merge {:position :relative}
-                                         (if last?
-                                           {:top "3px"}
-                                           {:top "-3px"
-                                            :padding-bottom "1.5rem"}))}
-                     [rect-button {:size :small
-                                   :disabled disable-buttons?
-                                   :on-click (e! project-controller/->OpenActivityDialog (str lc-id))
-                                   :start-icon (r/as-element
-                                                 [icons/content-add])}
-                      (tr [:project :add-activity lc-type])]]]]]]))
-            lifecycles))]])))
+                 [:div {:class (<class item-class (= :done lc-status) dark-theme?)}
+                  [circle-svg {:status :not-started :size 20 :bottom? last? :dark-theme? dark-theme?}]
+                  [:div {:style (merge {:position :relative}
+                                       (if last?
+                                         {:top "3px"}
+                                         {:top "-3px"
+                                          :padding-bottom "1.5rem"}))}
+                   [rect-button {:size :small
+                                 :disabled disable-buttons?
+                                 :on-click (e! project-controller/->OpenActivityDialog (str lc-id))
+                                 :start-icon (r/as-element
+                                              [icons/content-add])}
+                    (tr [:project :add-activity lc-type])]]]]]]))
+          lifecycles))]])))
 
 (defmulti project-navigator-dialog (fn [_opts dialog]
                                      (:type dialog)))
@@ -349,29 +350,31 @@
     :or {column-widths [3 6 :auto]}
     :as opts} content]
   (let [[nav-w content-w map-w] column-widths]
-    [:div {:class (<class project-style/page-container)}
-     [breadcrumbs/breadcrumbs breadcrumbs]
-     [typography/Heading1 (:thk.project/name project)]
-     [project-navigator-dialogs opts]
-     [Paper {:class (<class task-style/task-page-paper-style)}
-      [Grid {:container true
-             :wrap :nowrap
-             :spacing   0}
-       [Grid {:item  true
-              :xs nav-w
-              :style {:max-width "400px"}}
-        [project-navigator e! project (:stepper app) (:params app) true]]
-       [Grid {:item  true
-              :xs content-w
-              :style {
-                      :padding "2rem 1.5rem"
-                      :overflow-y :auto
-                      ;; content area should scroll, not the whole page because we
-                      ;; want map to stay in place without scrolling it
-                      :max-height "calc(100vh - 150px)"}}
-        content]
-       [Grid {:item  true
-              :xs :auto
-              :style {:display :flex
-                      :flex    1}}
-        [project-map-view/project-map e! app project]]]]]))
+    [ac/provide-authorization-info
+     {:project-id (:db/id project)}
+     [:div {:class (<class project-style/page-container)}
+      [breadcrumbs/breadcrumbs breadcrumbs]
+      [typography/Heading1 (:thk.project/name project)]
+      [project-navigator-dialogs opts]
+      [Paper {:class (<class task-style/task-page-paper-style)}
+       [Grid {:container true
+              :wrap :nowrap
+              :spacing   0}
+        [Grid {:item  true
+               :xs nav-w
+               :style {:max-width "400px"}}
+         [project-navigator e! project (:stepper app) (:params app) true]]
+        [Grid {:item  true
+               :xs content-w
+               :style {
+                       :padding "2rem 1.5rem"
+                       :overflow-y :auto
+                       ;; content area should scroll, not the whole page because we
+                       ;; want map to stay in place without scrolling it
+                       :max-height "calc(100vh - 150px)"}}
+         content]
+        [Grid {:item  true
+               :xs :auto
+               :style {:display :flex
+                       :flex    1}}
+         [project-map-view/project-map e! app project]]]]]]))
