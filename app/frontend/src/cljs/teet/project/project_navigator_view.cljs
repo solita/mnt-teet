@@ -200,16 +200,15 @@
              (tr-enum group)]]
            (doall
             (for [{:task/keys [type] :as task} tasks]
-              (let [task-status (task-step-state task)]
-                ^{:key (str (:db/id task))}
-                [:li
-                 [:div {:class (<class item-class (= :done activity-state) dark-theme?)}
-                  [:div {:class (<class task-info dark-theme?)}
-                   [Link {:href (str "#/projects/" project-id "/" activity-id "/" (:db/id task))
-                          :class (<class stepper-button-style {:size "16px"
-                                                               :open? false
-                                                               :dark-theme? dark-theme?})}
-                    (tr [:enum (:db/ident type)])]]]])))]])
+              ^{:key (str (:db/id task))}
+              [:li
+               [:div {:class (<class item-class (= :done activity-state) dark-theme?)}
+                [:div {:class (<class task-info dark-theme?)}
+                 [Link {:href (str "#/projects/" project-id "/" activity-id "/" (:db/id task))
+                        :class (<class stepper-button-style {:size "16px"
+                                                             :open? false
+                                                             :dark-theme? dark-theme?})}
+                  (tr [:enum (:db/ident type)])]]]]))]])
 
        ;; group tasks by the task group
        (group-by :task/group tasks))]
@@ -225,7 +224,7 @@
                                 [icons/content-add])}
       (tr [:project :add-task])]]]])
 
-(defn- activity [{:keys [e! stepper params dark-theme? disable-buttons? lc-id] :as ctx}
+(defn- activity [{:keys [params dark-theme?] :as ctx}
                  {activity-id :db/id
                   activity-est-end :activity/estimated-end-date
                   activity-est-start :activity/estimated-start-date
@@ -255,7 +254,7 @@
                                  :activity-state activity-state}])]]))
 
 (defn project-navigator
-  [e! {id :db/id :thk.project/keys [lifecycles] :as _project} stepper params dark-theme?]
+  [e! {:thk.project/keys [lifecycles] :as _project} stepper params dark-theme?]
   (let [lifecycle-ids (mapv :db/id lifecycles)
         lc-id (:lifecycle stepper)
         old-stepper? (empty? (filter #(= lc-id %) lifecycle-ids))]
@@ -349,7 +348,7 @@
   [{:keys [e! project app breadcrumbs column-widths]
     :or {column-widths [3 6 :auto]}
     :as opts} content]
-  (let [[nav-w content-w map-w] column-widths]
+  (let [[nav-w content-w] column-widths]
     [ac/provide-authorization-info
      {:project-id (:db/id project)}
      [:div {:class (<class project-style/page-container)}

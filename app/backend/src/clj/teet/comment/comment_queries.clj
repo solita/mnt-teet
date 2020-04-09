@@ -20,7 +20,6 @@
     (if (empty? entity-comments)
       []
       (->> entity-comments
-
            attr
            (sort-by :comment/timestamp)
            reverse

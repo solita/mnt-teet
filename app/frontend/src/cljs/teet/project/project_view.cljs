@@ -1,7 +1,7 @@
 (ns teet.project.project-view
   (:require [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
-            [teet.authorization.authorization-check :as ac]
+            [teet.authorization.authorization-check :as ac :refer [when-authorized]]
             [teet.common.common-styles :as common-styles]
             [teet.localization :refer [tr]]
             [teet.project.project-controller :as project-controller]
@@ -30,7 +30,6 @@
             [teet.ui.typography :refer [Heading1 Heading3] :as typography]
             [teet.ui.url :as url]
             [teet.util.collection :as cu]
-            [teet.authorization.authorization-check :as authorization-check :refer [when-authorized]]
             [teet.theme.theme-colors :as theme-colors]
             [teet.project.search-area-controller :as search-area-controller]
             [teet.user.user-model :as user-model]
@@ -157,8 +156,8 @@
 (defn add-user-form
   [e! user project-id]
   (let [roles (into []
-                    (filter authorization-check/role-can-be-granted?)
-                    @authorization-check/all-roles)]
+                    (filter ac/role-can-be-granted?)
+                    @ac/all-roles)]
     [:div
      [form/form {:e! e!
                  :value user

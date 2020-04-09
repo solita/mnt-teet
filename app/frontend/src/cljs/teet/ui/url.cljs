@@ -1,7 +1,6 @@
 (ns teet.ui.url
   "Define functions to generate URLs and links for any route"
   (:require [clojure.string :as str]
-            [reagent.core :as r]
             [teet.ui.context :as context]
             teet.ui.material-ui)
   (:require-macros [teet.route-macros :refer [define-url-functions]]))
