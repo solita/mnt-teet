@@ -116,7 +116,6 @@
 
 (defn- edit-comment-button [e! comment-entity commented-entity]
   [buttons/button-text {:size :small
-                        :icon-position :start
                         :color :primary
                         :start-icon (r/as-element [icons/image-edit])
                         :on-click #(e! (comments-controller/->OpenEditCommentDialog comment-entity commented-entity))}
