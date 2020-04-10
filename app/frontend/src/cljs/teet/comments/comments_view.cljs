@@ -30,7 +30,6 @@
             [teet.util.collection :as cu]
             [teet.file.file-controller :as file-controller]
             [teet.log :as log]
-            [teet.ui.util :as util]
             [teet.ui.select]))
 
 (defn- new-comment-footer [{:keys [validate disabled?]}]
