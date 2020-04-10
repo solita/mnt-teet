@@ -1,6 +1,7 @@
 (ns teet.comment.comment-queries
   (:require [teet.db-api.core :as db-api :refer [defquery]]
             [datomic.client.api :as d]
+            [teet.meta.meta-query :as meta-query]
             [teet.project.project-db :as project-db]
             [teet.comment.comment-model :as comment-model]))
 
@@ -21,6 +22,7 @@
       []
       (->> entity-comments
            attr
+           (meta-query/without-deleted db)
            (sort-by :comment/timestamp)
            reverse
            vec))))
