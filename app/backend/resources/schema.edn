@@ -776,8 +776,38 @@
 
  {:db/ident :migration/remove-activity-type-design-req
   :txes [[[:db/retractEntity :activity.name/design-requirements]]]}
+
  {:db/ident :comment-visibility
   :txes [[{:db/ident :comment/visibility
            :db/doc "Indicator of special visibility, eg :external-consultant for showing also to ext consultants"
            :db/valueType :db.type/keyword
-           :db/cardinality :db.cardinality/one}]]}]
+           :db/cardinality :db.cardinality/one}]]}
+
+ {:db/ident :migration/land-acquisition
+  :txes [[{:db/ident :land-acquisition/project
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "The project in which this land acquisition decision is made in"}
+          {:db/ident :land-acquisition/cadastral-unit
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "TEET ID of the cadastral unit"}
+          {:db/ident :land-acquisition/impact
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident :land-acquisition.impact/undecided
+           :enum/attribute :land-acquisition/impact}
+          {:db/ident :land-acquisition.impact/purchase-needed
+           :enum/attribute :land-acquisition/impact}
+          {:db/ident :land-acquisition.impact/purchase-not-needed
+           :enum/attribute :land-acquisition/impact}
+
+          {:db/ident :land-acquisition/pos-number
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one
+           :db/doc "Used to track land purchase process."}
+
+          {:db/ident :land-acquisition/area-to-obtain
+           :db/cardinality :db.cardinality/one
+           :db/valueType :db.type/long}]]}]

@@ -666,7 +666,7 @@
   (process-event [{lifecycle :lifecycle} {:keys [page params query] :as app}]
     (-> app
         (assoc-in [:stepper :dialog]
-                  {:type :edit-activity
+                  {:type :new-activity
                    :lifecycle-type (-> app
                                        common-controller/page-state
                                        (project-model/lifecycle-by-id lifecycle)

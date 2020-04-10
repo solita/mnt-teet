@@ -31,10 +31,11 @@
                        (map #(zipmap headers %))
                        (map #(into {}
                                    (for [[header value] %
-                                         :let [[teet-kw parse-fn] (thk-mapping/thk->teet header)]
-                                         :when (and teet-kw
+                                         :let [{:keys [attribute parse]}
+                                               (thk-mapping/thk->teet header)]
+                                         :when (and attribute
                                                     (not (str/blank? value)))]
-                                     [teet-kw ((or parse-fn identity) value)]))))
+                                     [attribute ((or parse identity) value)]))))
                       rows)))))
 
 

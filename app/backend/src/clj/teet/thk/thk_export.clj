@@ -1,7 +1,8 @@
 (ns teet.thk.thk-export
   "Export project lifecycle and activity data to THK"
   (:require [datomic.client.api :as d]
-            [teet.thk.thk-mapping :as thk-mapping]))
+            [teet.thk.thk-mapping :as thk-mapping]
+            [teet.log :as log]))
 
 (defn- all-projects [db]
   (d/q '[:find (pull ?e [*
@@ -15,7 +16,9 @@
 
 (defn- tasks-to-send [db activity-id]
   (mapv first
-        (d/q '[:find (pull ?e [*])
+        (d/q '[:find (pull ?e [*
+                               {:task/type [*
+                                            {:thk/task-type [:thk/code]}]}])
                :where
                [?activity :activity/tasks ?e]
                [?e :task/send-to-thk? true]
@@ -74,19 +77,33 @@
                  "activity_teetid"
                  (str (:db/id activity))
 
-                 ;; Id for task id (only when a task is being sent to THK)
-                 "activity_taskid"
-                 (if (= activity-or-task activity)
-                   ""
-                   (str (:db/id activity-or-task)))
-
                  ;; Regular columns
-                 (let [[teet-kw _ fmt override-kw] (thk-mapping/thk->teet csv-column)
-                       fmt (or fmt str)
+                 (let [{task-mapping :task :as mapping}
+                       (thk-mapping/thk->teet csv-column)
+
+                       {:keys [attribute format override-kw]}
+                       (if (or (= activity activity-or-task)
+                               (nil? task-mapping))
+                         ;; This is an activity row and column has
+                         ;; override or column has no override for tasks
+                         mapping
+
+                         ;; This is a task row, use override values
+                         (merge mapping task-mapping))
+
+                       ;; If task mapping overrides column, use task data
+                       data (if task-mapping
+                              activity-or-task
+                              data)
+
+                       format (or format str)
                        value (if override-kw
-                               (get data override-kw (get data teet-kw))
-                               (get data teet-kw))]
+                               (get data override-kw (get data attribute))
+                               (get data attribute))]
+                   #_(when (and (not= activity activity-or-task) task-mapping)
+                     (log/info "COLUMN " csv-column " HAS task " attribute
+                               "VALUE: " value))
                    (if value
-                     (fmt value)
+                     (format value)
                      ""))))
              thk-mapping/csv-column-names)))))

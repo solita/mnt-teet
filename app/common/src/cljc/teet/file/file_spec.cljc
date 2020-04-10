@@ -2,7 +2,8 @@
   "Specs for document data"
   (:require [clojure.spec.alpha :as s]
             [clojure.string :as str]
-            [teet.file.file-model :as file-model]))
+            #?(:cljs [teet.file.file-model :as file-model])
+            teet.util.datomic))
 
 
 (s/def ::task-id integer?)
@@ -41,7 +42,7 @@
          #(s/valid? :file/file (file-model/file-info %))))))
 
 (s/def :activity/name keyword?)
-(s/def :activity/status keyword?)
+(s/def :activity/status :teet.util.datomic/enum)
 (s/def :activity/estimated-end-date inst?)
 (s/def :activity/estimated-start-date inst?)
 (s/def :activity/estimated-date-range (s/coll-of inst? :count 2))

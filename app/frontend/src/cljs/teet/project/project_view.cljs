@@ -1,6 +1,7 @@
 (ns teet.project.project-view
   (:require [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
+            [teet.authorization.authorization-check :as ac :refer [when-authorized]]
             [teet.common.common-styles :as common-styles]
             [teet.localization :refer [tr]]
             [teet.project.project-controller :as project-controller]
@@ -29,7 +30,6 @@
             [teet.ui.typography :refer [Heading1 Heading3] :as typography]
             [teet.ui.url :as url]
             [teet.util.collection :as cu]
-            [teet.authorization.authorization-check :as authorization-check :refer [when-authorized]]
             [teet.theme.theme-colors :as theme-colors]
             [teet.project.search-area-controller :as search-area-controller]
             [teet.user.user-model :as user-model]
@@ -156,8 +156,8 @@
 (defn add-user-form
   [e! user project-id]
   (let [roles (into []
-                    (filter authorization-check/role-can-be-granted?)
-                    @authorization-check/all-roles)]
+                    (filter ac/role-can-be-granted?)
+                    @ac/all-roles)]
     [:div
      [form/form {:e! e!
                  :value user
@@ -192,10 +192,10 @@
     [:p (tr [:common :added-on]) ": " (format/date-time (:meta/created-at permission))]]
    [:div {:style {:display :flex
                   :justify-content :flex-end}}
-    (when-authorized :thk.project/revoke-permission
-      project
-      [buttons/delete-button-with-confirm {:action #(e! (project-controller/->RevokeProjectPermission (:db/id permission)))}
-       (tr [:project :remove-from-project])])]])
+    [when-authorized :thk.project/revoke-permission
+     project
+     [buttons/delete-button-with-confirm {:action #(e! (project-controller/->RevokeProjectPermission (:db/id permission)))}
+      (tr [:project :remove-from-project])]]]])
 
 (defn people-panel-user-list
   [permissions selected-person]
@@ -240,11 +240,11 @@
    [:div
     [:div {:class (<class common-styles/heading-and-button-style)}
      [typography/Heading2 (tr [:people-tab :managers])]
-     (when-authorized :thk.project/update
-       project
-       [buttons/button-secondary {:on-click (e! project-controller/->OpenEditProjectDialog)
-                                  :size :small}
-        (tr [:buttons :edit])])]
+     [when-authorized :thk.project/update
+      project
+      [buttons/button-secondary {:on-click (e! project-controller/->OpenEditProjectDialog)
+                                 :size :small}
+       (tr [:buttons :edit])]]]
     [itemlist/gray-bg-list [{:primary-text (str (:user/given-name manager) " " (:user/family-name manager))
                              :secondary-text (tr [:roles :manager])}
                             {:primary-text (str (:user/given-name owner) " " (:user/family-name owner))
@@ -252,11 +252,11 @@
    [:div
     [:div {:class (<class common-styles/heading-and-button-style)}
      [typography/Heading2 (tr [:people-tab :other-users])]
-     (when-authorized :thk.project/add-permission
-       project
-       [buttons/button-secondary {:on-click (e! project-controller/->OpenPeopleModal)
-                                  :size :small}
-        (tr [:buttons :edit])])]
+     [when-authorized :thk.project/add-permission
+      project
+      [buttons/button-secondary {:on-click (e! project-controller/->OpenPeopleModal)
+                                 :size :small}
+       (tr [:buttons :edit])]]]
     (if (empty? permitted-users)
       [typography/GreyText (tr [:people-tab :no-other-users])]
       [itemlist/gray-bg-list (for [{:keys [user] :as permission} permitted-users]
@@ -482,8 +482,10 @@
 (defn project-page
   "Shows the normal project view for initialized projects, setup wizard otherwise."
   [e! app project breadcrumbs]
-  [:<>
-   [project-page-modals e! app project]
-   (if (or (:thk.project/setup-skipped? project) (project-model/initialized? project))
-     [initialized-project-view e! app project breadcrumbs]
-     [project-setup-view e! app project breadcrumbs])])
+  [ac/provide-authorization-info
+   {:project-id (:db/id project)}
+   [:<>
+    [project-page-modals e! app project]
+    (if (or (:thk.project/setup-skipped? project) (project-model/initialized? project))
+      [initialized-project-view e! app project breadcrumbs]
+      [project-setup-view e! app project breadcrumbs])]])

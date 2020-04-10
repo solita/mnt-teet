@@ -1,7 +1,6 @@
 (ns teet.ui.url
   "Define functions to generate URLs and links for any route"
   (:require [clojure.string :as str]
-            [reagent.core :as r]
             [teet.ui.context :as context]
             teet.ui.material-ui)
   (:require-macros [teet.route-macros :refer [define-url-functions]]))
@@ -20,13 +19,6 @@
                     (when param-value
                       (str (name param-name) "=" (js/encodeURIComponent (str param-value)))))
                   params)))
-
-(def ^{:dynamic true
-       :doc "Current navigation info for generating URLs.
-Contains :page, :params and :query.
-Set each time main view renders."}
-  current-navigation-info
-  (atom {}))
 
 ;; This defines functions for generating URLs to routes
 ;; For example a route named :file in routes.edn will generate

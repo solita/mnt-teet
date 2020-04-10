@@ -2,6 +2,7 @@
   (:require [teet.ui.material-ui :refer [Link Collapse Paper Grid]]
             [herb.core :refer [<class]]
             [teet.theme.theme-colors :as theme-colors]
+            [teet.authorization.authorization-check :as ac]
             [teet.ui.buttons :as buttons]
             [teet.ui.icons :as icons]
             [teet.ui.url :as url]
@@ -12,7 +13,6 @@
             [reagent.core :as r]
             [teet.ui.format :as format]
             [teet.ui.typography :as typography]
-            [teet.project.task-model :as task-model]
             [teet.task.task-style :as task-style]
             [teet.project.project-map-view :as project-map-view]
             [teet.ui.breadcrumbs :as breadcrumbs]
@@ -142,19 +142,6 @@
       :else
       :not-started)))
 
-(defn- task-step-state
-  [task]
-  (let [status (get-in task [:task/status :db/ident])
-        task-done-statuses #{:task.status/accepted :task.status/completed
-                              :task.status/rejected :task.status/canceled}]
-    (cond
-      (task-done-statuses status)
-      :done
-      (task-model/in-progress? status)
-      :started
-      :else
-      :not-started)))
-
 (defn- lifecycle-status
   [{:thk.lifecycle/keys [activities] :as lifecycle}]
   (let [in-progress-activities (->> lifecycle
@@ -199,16 +186,15 @@
              (tr-enum group)]]
            (doall
             (for [{:task/keys [type] :as task} tasks]
-              (let [task-status (task-step-state task)]
-                ^{:key (str (:db/id task))}
-                [:li
-                 [:div {:class (<class item-class (= :done activity-state) dark-theme?)}
-                  [:div {:class (<class task-info dark-theme?)}
-                   [Link {:href (str "#/projects/" project-id "/" activity-id "/" (:db/id task))
-                          :class (<class stepper-button-style {:size "16px"
-                                                               :open? false
-                                                               :dark-theme? dark-theme?})}
-                    (tr [:enum (:db/ident type)])]]]])))]])
+              ^{:key (str (:db/id task))}
+              [:li
+               [:div {:class (<class item-class (= :done activity-state) dark-theme?)}
+                [:div {:class (<class task-info dark-theme?)}
+                 [Link {:href (str "#/projects/" project-id "/" activity-id "/" (:db/id task))
+                        :class (<class stepper-button-style {:size "16px"
+                                                             :open? false
+                                                             :dark-theme? dark-theme?})}
+                  (tr [:enum (:db/ident type)])]]]]))]])
 
        ;; group tasks by the task group
        (group-by :task/group tasks))]
@@ -224,7 +210,7 @@
                                 [icons/content-add])}
       (tr [:project :add-task])]]]])
 
-(defn- activity [{:keys [e! stepper params dark-theme? disable-buttons? lc-id] :as ctx}
+(defn- activity [{:keys [params dark-theme?] :as ctx}
                  {activity-id :db/id
                   activity-est-end :activity/estimated-end-date
                   activity-est-start :activity/estimated-start-date
@@ -267,56 +253,56 @@
       [:div {:class (<class navigator-container-style dark-theme?)}
        [:ol {:class (<class ol-class)}
         (doall
-          (map-indexed
-            (fn [i {lc-id :db/id
-                    :thk.lifecycle/keys [activities estimated-end-date estimated-start-date type] :as lifecycle}]
-              (let [last? (= (+ i 1) (count lifecycles))
-                    lc-type (:db/ident type)
-                    disable-buttons? (= :thk.lifecycle-type/construction lc-type) ;; Disable buttons related to adding stages or tasks in construction until that part is more planned out
-                    first-activity-status (activity-step-state (first activities))
-                    lc-status (lifecycle-status lifecycle)
-                    open? (= (str lc-id) (str (:lifecycle stepper)))]
-                ^{:key (str lc-id)}
-                [:li
-                 ;; Use first activity status instead of lifecycle, because there is no work to be done between the lifecycle and the first activity
-                 [:div {:class (<class lifecycle-style (= (str lc-id) (str (:lifecycle stepper))) last? (= :done first-activity-status) dark-theme?)}
-                  [circle-svg {:status lc-status :size 28 :dark-theme? dark-theme?}]
-                  [:div {:class (<class step-container-style {:offset -3})}
-                   [:div {:class (<class flex-column)}
-                    [:button
-                     {:class (<class stepper-button-style {:size "24px"
-                                                           :open? open?
-                                                           :dark-theme? dark-theme?})
-                      :on-click #(e! (project-controller/->ToggleStepperLifecycle lc-id))}
-                     (tr [:enum (get-in lifecycle [:thk.lifecycle/type :db/ident])])]
-                    [typography/SmallText
-                     (format/date estimated-start-date) " – " (format/date estimated-end-date)]]]]
-                 [:div
-                  [Collapse {:in open?}
-                   (mapc (partial activity {:e! e!
-                                            :stepper stepper
-                                            :dark-theme? dark-theme?
-                                            :disable-buttons? disable-buttons?
-                                            :lc-id lc-id
-                                            :rect-button rect-button
-                                            :project-id id
-                                            :params params})
-                         (:thk.lifecycle/activities lifecycle))
+         (map-indexed
+          (fn [i {lc-id :db/id
+                  :thk.lifecycle/keys [activities estimated-end-date estimated-start-date type] :as lifecycle}]
+            (let [last? (= (+ i 1) (count lifecycles))
+                  lc-type (:db/ident type)
+                  disable-buttons? (= :thk.lifecycle-type/construction lc-type) ;; Disable buttons related to adding stages or tasks in construction until that part is more planned out
+                  first-activity-status (activity-step-state (first activities))
+                  lc-status (lifecycle-status lifecycle)
+                  open? (= (str lc-id) (str (:lifecycle stepper)))]
+              ^{:key (str lc-id)}
+              [:li
+               ;; Use first activity status instead of lifecycle, because there is no work to be done between the lifecycle and the first activity
+               [:div {:class (<class lifecycle-style (= (str lc-id) (str (:lifecycle stepper))) last? (= :done first-activity-status) dark-theme?)}
+                [circle-svg {:status lc-status :size 28 :dark-theme? dark-theme?}]
+                [:div {:class (<class step-container-style {:offset -3})}
+                 [:div {:class (<class flex-column)}
+                  [:button
+                   {:class (<class stepper-button-style {:size "24px"
+                                                         :open? open?
+                                                         :dark-theme? dark-theme?})
+                    :on-click #(e! (project-controller/->ToggleStepperLifecycle lc-id))}
+                   (tr [:enum (get-in lifecycle [:thk.lifecycle/type :db/ident])])]
+                  [typography/SmallText
+                   (format/date estimated-start-date) " – " (format/date estimated-end-date)]]]]
+               [:div
+                [Collapse {:in open?}
+                 (mapc (partial activity {:e! e!
+                                          :stepper stepper
+                                          :dark-theme? dark-theme?
+                                          :disable-buttons? disable-buttons?
+                                          :lc-id lc-id
+                                          :rect-button rect-button
+                                          :project-id id
+                                          :params params})
+                       (:thk.lifecycle/activities lifecycle))
 
-                   [:div {:class (<class item-class (= :done lc-status) dark-theme?)}
-                    [circle-svg {:status :not-started :size 20 :bottom? last? :dark-theme? dark-theme?}]
-                    [:div {:style (merge {:position :relative}
-                                         (if last?
-                                           {:top "3px"}
-                                           {:top "-3px"
-                                            :padding-bottom "1.5rem"}))}
-                     [rect-button {:size :small
-                                   :disabled disable-buttons?
-                                   :on-click (e! project-controller/->OpenActivityDialog (str lc-id))
-                                   :start-icon (r/as-element
-                                                 [icons/content-add])}
-                      (tr [:project :add-activity lc-type])]]]]]]))
-            lifecycles))]])))
+                 [:div {:class (<class item-class (= :done lc-status) dark-theme?)}
+                  [circle-svg {:status :not-started :size 20 :bottom? last? :dark-theme? dark-theme?}]
+                  [:div {:style (merge {:position :relative}
+                                       (if last?
+                                         {:top "3px"}
+                                         {:top "-3px"
+                                          :padding-bottom "1.5rem"}))}
+                   [rect-button {:size :small
+                                 :disabled disable-buttons?
+                                 :on-click (e! project-controller/->OpenActivityDialog (str lc-id))
+                                 :start-icon (r/as-element
+                                              [icons/content-add])}
+                    (tr [:project :add-activity lc-type])]]]]]]))
+          lifecycles))]])))
 
 (defmulti project-navigator-dialog (fn [_opts dialog]
                                      (:type dialog)))
@@ -325,12 +311,22 @@
   [_opts dialog]
   [:div "Unsupported project navigator dialog " (pr-str dialog)])
 
+(defn- override-project-navigator-dialog-options
+  [dialog]
+  (case (:type dialog)
+    :new-activity {:max-width :md
+                   :title (tr [:project :add-activity
+                               (:lifecycle-type dialog)])}
+    {}))
+
 
 (defn project-navigator-dialogs [{:keys [e! app] :as opts}]
   (when-let [dialog (get-in app [:stepper :dialog])]
-     [panels/modal {:title (tr [:project (:type dialog)])
-                    :open-atom (r/wrap true :_)
-                    :on-close (e! project-controller/->CloseDialog)}
+    [panels/modal (merge {:title (tr [:project (:type dialog)])
+                          :open-atom (r/wrap true :_)
+                          :on-close (e! project-controller/->CloseDialog)
+                          :max-width :sm}
+                         (override-project-navigator-dialog-options dialog))
       [project-navigator-dialog opts dialog]]))
 
 (defn project-navigator-with-content
@@ -338,30 +334,32 @@
   [{:keys [e! project app breadcrumbs column-widths]
     :or {column-widths [3 6 :auto]}
     :as opts} content]
-  (let [[nav-w content-w map-w] column-widths]
-    [:div {:class (<class project-style/page-container)}
-     [breadcrumbs/breadcrumbs breadcrumbs]
-     [typography/Heading1 (:thk.project/name project)]
-     [project-navigator-dialogs opts]
-     [Paper {:class (<class task-style/task-page-paper-style)}
-      [Grid {:container true
-             :wrap :nowrap
-             :spacing   0}
-       [Grid {:item  true
-              :xs nav-w
-              :style {:max-width "400px"}}
-        [project-navigator e! project (:stepper app) (:params app) true]]
-       [Grid {:item  true
-              :xs content-w
-              :style {
-                      :padding "2rem 1.5rem"
-                      :overflow-y :auto
-                      ;; content area should scroll, not the whole page because we
-                      ;; want map to stay in place without scrolling it
-                      :max-height "calc(100vh - 150px)"}}
-        content]
-       [Grid {:item  true
-              :xs :auto
-              :style {:display :flex
-                      :flex    1}}
-        [project-map-view/project-map e! app project]]]]]))
+  (let [[nav-w content-w] column-widths]
+    [ac/provide-authorization-info
+     {:project-id (:db/id project)}
+     [:div {:class (<class project-style/page-container)}
+      [breadcrumbs/breadcrumbs breadcrumbs]
+      [typography/Heading1 (:thk.project/name project)]
+      [project-navigator-dialogs opts]
+      [Paper {:class (<class task-style/task-page-paper-style)}
+       [Grid {:container true
+              :wrap :nowrap
+              :spacing   0}
+        [Grid {:item  true
+               :xs nav-w
+               :style {:max-width "400px"}}
+         [project-navigator e! project (:stepper app) (:params app) true]]
+        [Grid {:item  true
+               :xs content-w
+               :style {
+                       :padding "2rem 1.5rem"
+                       :overflow-y :auto
+                       ;; content area should scroll, not the whole page because we
+                       ;; want map to stay in place without scrolling it
+                       :max-height "calc(100vh - 150px)"}}
+         content]
+        [Grid {:item  true
+               :xs :auto
+               :style {:display :flex
+                       :flex    1}}
+         [project-map-view/project-map e! app project]]]]]]))

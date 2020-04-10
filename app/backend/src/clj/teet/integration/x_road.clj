@@ -2,11 +2,11 @@
   (:require [clojure.xml :as xml]
             [clojure.data.zip.xml :as z]
             [clojure.zip]
-            [clojure.java.io]
             [clojure.string]
             [hiccup.core :as hiccup]
             [org.httpkit.client :as htclient]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [clojure.java.io :as io]))
 
 ;; see also https://x-tee.ee/catalogue-data/ee-dev/ee-dev/GOV/70008440/rr/155.wsdl
 
@@ -47,8 +47,8 @@
                (z/xml1-> zipped-xml :SOAP-ENV:Body :prod:RR442Response :response :faultString z/text))
         avaldaja (z/xml1-> zipped-xml :SOAP-ENV:Envelope :SOAP-ENV:Body :prod:RR442Response :response :Avaldaja)
         fields [:Eesnimi :Perenimi :Isikukood]
-        fieldname->kvpair (fn [fieldname]                            
-                            [fieldname (z/xml1-> avaldaja fieldname z/text)])]    
+        fieldname->kvpair (fn [fieldname]
+                            [fieldname (z/xml1-> avaldaja fieldname z/text)])]
     (if fault
       (do
         (log/error "population register soap fault:", fault)
@@ -69,7 +69,7 @@
                                       :headers {"Content-Type" "text/xml; charset=UTF-8"}})
         resp (deref resp-atom)]
     (if (= 200 (:status resp))
-      (rr442-parse-name (:body resp))      
+      (rr442-parse-name (:body resp))
       ;; else
       (let [msg (str "http error communicating to x-road, error=" (:error resp) ", http status=" (:status resp))]
         (log/error msg)
@@ -113,7 +113,7 @@
             [:kin:kasutajanimi]
             [:kin:parool]
             [:kin:registriosa_nr registriosa-nr]
-            ]]]]]    
+            ]]]]]
     (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (hiccup/html req-hic))))
 
 
@@ -165,7 +165,8 @@
 
 
 (defn kinnistu-d-parse-response [xml-string]
-  (let [xml (xml/parse (clojure.java.io/input-stream (.getBytes xml-string)))
+  (let [xml (xml/parse (io/input-stream
+                        (.getBytes xml-string "UTF-8")))
         zipped-xml (clojure.zip/xml-zip xml)
         d-response (z/xml1-> zipped-xml :s:Envelope :s:Body :Kinnistu_DetailandmedResponse)
         d-status (z/xml1-> zipped-xml :s:Envelope :s:Body :Kinnistu_DetailandmedResponse :teade z/text)
@@ -174,7 +175,7 @@
         ;; _ (def *x d-response)
         ;; _ (def *x0 zipped-xml)
         ]
-    (if d-response      
+    (if d-response
       (if (= "OK" d-status)
         (merge {:status :ok}
                (d-cadastral-units d-response)
@@ -219,7 +220,7 @@
                                       :headers {"Content-Type" "text/xml; charset=UTF-8"}})
         resp (deref resp-atom)]
     (if (= 200 (:status resp))
-      (kinnistu-d-parse-response (unpeel-multipart resp))      
+      (kinnistu-d-parse-response (unpeel-multipart resp))
       ;; else
       (let [msg (str "http error communicating to x-road, error=" (:error resp) ", http status=" (:status resp))]
         (log/error msg)

@@ -46,6 +46,7 @@
         (t/fx app
               {:tuck.effect/type :debounce
                :timeout 600
+               :id :road-object-aoe-change
                :effect (project-controller/fetch-related-candidates app val entity-type)})
         app)))
 

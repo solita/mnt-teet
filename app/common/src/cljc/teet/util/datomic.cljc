@@ -1,6 +1,11 @@
 (ns teet.util.datomic
   "Datomic query/transaction utility functions."
-  #?(:clj (:require [datomic.client.api :as d])))
+  (:require [clojure.spec.alpha :as s]
+            #?(:clj [datomic.client.api :as d])))
+
+(s/def :db/ident keyword?)
+(s/def ::enum (s/or :keyword keyword?
+                    :map-with-db-ident (s/keys :req [:db/ident])))
 
 (defn id=
   "Compare two :db/id values.

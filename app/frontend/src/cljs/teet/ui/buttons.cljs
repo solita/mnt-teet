@@ -84,8 +84,9 @@
                              :type      :button}))
 
 (defn delete-button-with-confirm
-  [{:keys [action modal-title modal-text style small? icon-position]
-    :or {icon-position :end}}
+  [{:keys [action modal-title modal-text style small? icon-position close-on-action?]
+    :or {icon-position :end
+         close-on-action? true}}
    button-content]
   (let [open-atom (r/atom false)
         open #(reset! open-atom true)
@@ -100,7 +101,10 @@
                                  {:on-click close}
                                  (tr [:buttons :cancel])]
                                 [button-warning
-                                 {:on-click action}
+                                 {:on-click (if close-on-action?
+                                              #(do (action)
+                                                   (close))
+                                              action)}
                                  (tr [:buttons :delete])]]}
       [DialogContentText
        (if modal-text

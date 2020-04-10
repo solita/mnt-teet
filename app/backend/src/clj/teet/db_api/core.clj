@@ -84,7 +84,8 @@
 (defmacro defrequest*
   "Do not call directly. Use defcommand and defquery."
   [request-type request-name
-   {:keys [payload args context unauthenticated? authorization project-id transact] :as options}
+   {:keys [payload args context unauthenticated? authorization project-id transact
+           config] :as options}
    & body]
 
   (assert (or (and unauthenticated?
@@ -132,7 +133,11 @@
                    ~-user (:user ~-ctx)
                    ~-perms (when (:user ~-ctx)
                              (permission-db/user-permissions ~-db [:user/id (:user/id (:user ~-ctx))]))
-                   ~-proj-id (project-id->db-id ~-db ~project-id)]
+                   ~-proj-id (project-id->db-id ~-db ~project-id)
+                   ~@(when config
+                       (mapcat (fn [[symbol path]]
+                                 [symbol `(teet.environment/config-value ~@path)])
+                               config))]
 
                ;; Check user is logged in
                ~@(when-not unauthenticated?
@@ -205,6 +210,10 @@
 
   :context        Optional binding form for the execution context
                   that always includes: db, user and conn.
+
+  :config         Optional binding for configuration values.
+                  If provided, it must be a map from local name to vector path
+                  in configuration.
 
   :unauthenticated?
                   If true, allow unauthenticated requests. Skips authorization

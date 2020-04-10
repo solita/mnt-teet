@@ -119,17 +119,18 @@
                         :on-change #(on-drop (file-vector %))}]]
               children))})))
 
-(defn FileUploadButton [{:keys [id on-drop drop-message icon color multiple?]
+(defn FileUploadButton [{:keys [id on-drop drop-message icon color multiple? button-attributes]
                          :or {multiple? true}} & children]
   [FileUpload {:id id
                :on-drop on-drop
                :drop-message drop-message
                :multiple? multiple?}
-   (into [Button {:component :span
-                  :variant :contained
-                  :disable-ripple true
-                  :color (or color :primary)
-                  :start-icon (r/as-element (or icon [icons/content-add]))}]
+   (into [Button (merge {:component :span
+                         :variant :contained
+                         :disable-ripple true
+                         :color (or color :primary)
+                         :start-icon (r/as-element (or icon [icons/content-add]))}
+                        button-attributes)]
          children)])
 
 (defn- files-field-style [error]

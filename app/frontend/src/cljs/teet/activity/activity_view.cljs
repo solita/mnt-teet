@@ -2,6 +2,7 @@
   (:require [teet.ui.select :as select]
             [teet.ui.date-picker :as date-picker]
             [teet.localization :refer [tr tr-enum]]
+            [teet.ui.material-ui :refer [Grid]]
             [teet.ui.form :as form]
             [teet.ui.icons :as icons]
             teet.file.file-spec
@@ -16,14 +17,69 @@
             [teet.ui.buttons :as buttons]
             [teet.project.project-model :as project-model]
             [teet.user.user-model :as user-model]
-            [teet.ui.util :as util]
+            [teet.ui.util :as util :refer [mapc]]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.url :as url]))
+            [teet.ui.url :as url]
+            [teet.util.collection :as cu]))
 
-(defn activity-form [e! activity lifecycle-type]
-  ;; Activity name (drop-down selector, a predefined list of activities: eskiisprojekt, eelprojekt, põhiprojekt, maade omandamine, ehitus)
-  ;; Timeline (EstStart, EstEnd, assumptions entered only)
-  ;; Status (drop-down selector, a predefined list of statuses)
+(defn task-selection [{:keys [e! on-change selected activity-name]} task-groups task-types]
+  [:div {:style {:max-height "70vh" :overflow-y :scroll}}
+   (mapc (fn [g]
+           [:div
+            [typography/Heading2 {:style {:font-variant :all-small-caps
+                                          :font-weight :bold}}
+             (tr-enum g)]
+            [:ul
+             (mapc (fn [{id :db/ident :as t}]
+                     [:div
+                      [select/checkbox {:label (tr-enum t)
+                                        :value (boolean (selected id))
+                                        :on-change #(on-change
+                                                     (cu/toggle selected id))}]])
+                   (filter #(= (:db/ident g) (:enum/valid-for %)) task-types))]])
+         (filter #(= (:db/ident activity-name)
+                     (:enum/valid-for %)) task-groups))]
+  )
+
+(defn- task-groups-and-tasks [{e! :e! :as opts} task-groups]
+  [select/with-enum-values {:e! e! :attribute :task/type}
+   [task-selection opts task-groups]])
+
+(defn create-activity-form [e! activity lifecycle-type]
+  [form/form2 {:e! e!
+               :value activity
+               :on-change-event activity-controller/->UpdateActivityForm
+               :cancel-event project-controller/->CloseDialog
+               :save-event activity-controller/->SaveActivityForm}
+   [Grid {:container true :style {:height "90%"} :spacing 3}
+    [Grid {:item true :xs 4}
+
+     [form/field :activity/name
+      [select/select-enum {:e! e! :attribute :activity/name :enum/valid-for lifecycle-type}]]
+
+     [form/field :activity/status
+      [select/select-enum {:e! e! :attribute :activity/status}]]
+
+     [form/field :activity/estimated-start-date
+      [date-picker/date-input {:label (tr [:fields :activity/estimated-start-date])
+                               :selectable? (constantly true)}]]
+
+     [form/field :activity/estimated-end-date
+      [date-picker/date-input {:label (tr [:fields :activity/estimated-end-date])
+                               :selectable? (constantly true)}]]]
+    [Grid {:item true :xs 8}
+     [select/with-enum-values {:e! e!
+                               :attribute :task/group}
+      [task-groups-and-tasks {:e! e!
+                              :on-change #(e! (activity-controller/->UpdateActivityForm
+                                               {:selected-tasks %}))
+                              :selected (or (:selected-tasks activity) #{})}]]]
+
+    [Grid {:item true :xs 12}
+     [:div {:style {:display :flex :justify-content :flex-end}}
+      [form/footer2]]]]])
+
+(defn edit-activity-form [e! activity]
   [form/form {:e! e!
               :value activity
               :on-change-event activity-controller/->UpdateActivityForm
@@ -31,17 +87,18 @@
               :cancel-event project-controller/->CloseDialog
               :delete (e! activity-controller/->DeleteActivity)
               :spec :activity/new-activity-form}
-   (when-not (:db/id activity)
-     ^{:attribute :activity/name}
-     [select/select-enum {:e! e! :attribute :activity/name :enum/valid-for lifecycle-type}])
 
    ^{:attribute [:activity/estimated-start-date :activity/estimated-end-date]}
    [date-picker/date-range-input {:start-label (tr [:fields :activity/estimated-start-date])
                                   :end-label (tr [:fields :activity/estimated-end-date])}]])
 
 (defmethod project-navigator-view/project-navigator-dialog :edit-activity
-  [{:keys [e! app]}  dialog]
-  [activity-form e! (:edit-activity-data app) (:lifecycle-type dialog)])
+  [{:keys [e! app]} _dialog]
+  [edit-activity-form e! (:edit-activity-data app)])
+
+(defmethod project-navigator-view/project-navigator-dialog :new-activity
+  [{:keys [e! app]} dialog]
+  [create-activity-form e! (:edit-activity-data app) (:lifecycle-type dialog)])
 
 (defn project-management
   [owner manager]

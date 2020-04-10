@@ -36,23 +36,45 @@
                     lifecycle-id
                     (Date.))))))
 
+(defn valid-tasks? [db tasks]
+  (or (empty? tasks)
+      (and (every? keyword? tasks)
+           (let [task-keywords (into #{}
+                                     (map first)
+                                     (d/q '[:find ?id
+                                            :where
+                                            [?kw :enum/attribute :task/type]
+                                            [?kw :db/ident ?id]]
+                                          db))]
+             (every? task-keywords tasks)))))
+
 (defcommand :activity/create
   {:doc "Create new activity to lifecycle"
    :context {:keys [db user conn]}
-   :payload {activity :activity
-             lifecycle-id :lifecycle-id}
+   :payload {:keys [activity lifecycle-id tasks]}
    :project-id (project-db/lifecycle-project-id db lifecycle-id)
    :authorization {:activity/create-activity {}}
    :pre [^{:error :invalid-activity-name}
          (valid-activity-name? db activity lifecycle-id)
 
          ^{:error :conflicting-activities}
-         (not (conflicting-activites? db activity lifecycle-id))]
+         (not (conflicting-activites? db activity lifecycle-id))
+
+         ^{:error :invalid-tasks}
+         (valid-tasks? db tasks)]
    :transact [(merge
                 {:db/id "new-activity"}
                 (select-keys activity [:activity/name :activity/status
                                        :activity/estimated-start-date
                                        :activity/estimated-end-date])
+                (when (seq tasks)
+                  {:activity/tasks
+                   (vec
+                    (for [task tasks]
+                      (merge {:db/id (str "NEW-TASK-" (name task))
+                              :task/status :task.status/in-preparation
+                              :task/type task}
+                             (meta-model/creation-meta user))))})
                 (meta-model/creation-meta user))
               {:db/id lifecycle-id
                :thk.lifecycle/activities ["new-activity"]}]})
