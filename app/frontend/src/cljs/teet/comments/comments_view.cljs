@@ -81,6 +81,8 @@
    [file-upload/FileUploadButton
     {:id "images-field"
      :color :secondary
+     :button-attributes {:variant :text
+                         :size :small}
      :on-drop #(e! (file-controller/map->UploadFiles
                     {:files %
                      :attachment? true
@@ -209,6 +211,8 @@
    [file-upload/FileUploadButton
     {:id "images-field"
      :color :secondary
+     :button-attributes {:variant :text
+                         :size :small}
      :on-drop #(e! (file-controller/map->UploadFiles
                     {:files %
                      :attachment? true
