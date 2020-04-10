@@ -51,20 +51,17 @@
   (when (seq files)
     [:div {:class (<class comments-styles/attachment-list)}
      (util/with-keys
-       (butlast
-        (interleave
-         (mapc (fn [{file-id :db/id name :file/name :as file}]
-                 [:div {:class (<class comments-styles/attachment-list-item)}
-                  [:a {:target :_blank
-                       :href (common-controller/query-url :file/download-attachment
-                                                          {:comment-id comment-id
-                                                           :file-id file-id})}
-                   name]
-                  (when on-delete
-                    [IconButton {:on-click #(on-delete file)}
-                     [icons/action-delete]])])
-               files)
-         (repeat [:hr {:class (<class comments-styles/attachment-list-separator)}]))))]))
+       (mapc (fn [{file-id :db/id name :file/name :as file}]
+               [:div {:class (<class comments-styles/attachment-list-item)}
+                [:a {:target :_blank
+                     :href (common-controller/query-url :file/download-attachment
+                                                        {:comment-id comment-id
+                                                         :file-id file-id})}
+                 name]
+                (when on-delete
+                  [IconButton {:on-click #(on-delete file)}
+                   [icons/action-delete]])])
+             files))]))
 
 (defn- edit-attached-images-field
   "File field that only allows uploading images. Files are

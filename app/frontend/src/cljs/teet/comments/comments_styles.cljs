@@ -24,17 +24,21 @@
 
 (defn attachment-list
   []
-  {:background-color theme-colors/gray-lightest
-   :border (str "solid 1px " theme-colors/gray-dark)})
+  {:background-color theme-colors/white
+   :border (str "solid 1px " theme-colors/gray-light)
+   :display :flex
+   :flex-direction :column
+   :align-items :stretch})
 
 (defn attachment-list-item
   []
+  ^{:pseudo {:last-child {:border-bottom 0}}}
   {:display :inline-block
-   :margin "0.5rem"})
-
-(defn attachment-list-separator
-  []
-  {:width "95%"})
+   :border-bottom (str "solid 1px" theme-colors/gray-light)
+   :padding-top "0.5rem"
+   :padding-bottom "0.5rem"
+   :margin-left "0.5rem"
+   :margin-right "0.5rem"})
 
 (defn edited
   []
