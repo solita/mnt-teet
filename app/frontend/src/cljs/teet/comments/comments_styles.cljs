@@ -33,12 +33,14 @@
 (defn attachment-list-item
   []
   ^{:pseudo {:last-child {:border-bottom 0}}}
-  {:display :inline-block
-   :border-bottom (str "solid 1px" theme-colors/gray-light)
+  {:border-bottom (str "solid 1px" theme-colors/gray-lighter)
    :padding-top "0.5rem"
    :padding-bottom "0.5rem"
    :margin-left "0.5rem"
-   :margin-right "0.5rem"})
+   :margin-right "0.5rem"
+   :display :flex
+   :align-items :flex-end
+   :justify-content :space-between})
 
 (defn edited
   []

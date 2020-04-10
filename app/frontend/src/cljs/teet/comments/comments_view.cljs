@@ -59,7 +59,8 @@
                                                          :file-id file-id})}
                  name]
                 (when on-delete
-                  [IconButton {:on-click #(on-delete file)}
+                  [IconButton {:size :small
+                               :on-click #(on-delete file)}
                    [icons/action-delete]])])
              files))]))
 
