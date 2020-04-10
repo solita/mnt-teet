@@ -23,14 +23,13 @@
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.material-ui :refer [IconButton]]
             [teet.ui.typography :as typography]
-            [teet.ui.util :refer [mapc]]
+            [teet.ui.util :as util :refer [mapc]]
             [teet.ui.file-upload :as file-upload]
             [teet.user.user-info :as user-info]
             [teet.user.user-model :as user-model]
             [teet.util.collection :as cu]
             [teet.file.file-controller :as file-controller]
-            [teet.log :as log]
-            [teet.ui.util :as util]))
+            [teet.log :as log]))
 
 (defn- new-comment-footer [{:keys [validate disabled?]}]
   [:div {:class (<class comments-styles/comment-buttons-style)}
