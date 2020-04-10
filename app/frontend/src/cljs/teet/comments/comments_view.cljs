@@ -53,7 +53,8 @@
      (util/with-keys
        (mapc (fn [{file-id :db/id name :file/name :as file}]
                [:div {:class (<class comments-styles/attachment-list-item)}
-                [:a {:target :_blank
+                [:a {:class (<class comments-styles/attachment-link)
+                     :target :_blank
                      :href (common-controller/query-url :file/download-attachment
                                                         {:comment-id comment-id
                                                          :file-id file-id})}
@@ -141,13 +142,12 @@
                            :on-click #(quote-comment! (user-model/user-name author)
                                                       comment)}
       (tr [:comment :quote])]]]
-   [typography/Paragraph
+   [typography/Text
     comment
     (when modified-at
       [:span {:class (<class comments-styles/edited)}
        (tr [:comment :edited]
            {:date (format/date modified-at)})])]
-   [attachments {:files files :comment-id id}]
    [:div
     [when-authorized :comment/update
      comment-entity
@@ -157,7 +157,8 @@
      [buttons/delete-button-with-confirm {:small? true
                                           :icon-position :start
                                           :action (e! comments-controller/->DeleteComment id commented-entity)}
-      (tr [:buttons :delete])]]]])
+      (tr [:buttons :delete])]]]
+   [attachments {:files files :comment-id id}]])
 
 (defn comment-list
   [quote-comment! commented-entity-id e! _app comments _breacrumbs]

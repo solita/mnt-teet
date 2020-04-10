@@ -42,6 +42,11 @@
    :align-items :flex-end
    :justify-content :space-between})
 
+(defn attachment-link
+  []
+  ^{:pseudo {:hover {:text-decoration :none}}}
+  {:color theme-colors/blue})
+
 (defn edited
   []
   {:color theme-colors/gray-light
