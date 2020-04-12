@@ -48,7 +48,7 @@
                        documents))))
 
   CommentOnEntity
-  (process-event [{:keys [entity-type entity-id comment files visibility] :as keto} app]
+  (process-event [{:keys [entity-type entity-id comment files visibility]} app]
     (assert (some? visibility))
     (t/fx app
           {:tuck.effect/type :command!

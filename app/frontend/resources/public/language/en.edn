@@ -112,6 +112,8 @@
   :task.group/study "Studies",
   :file.status/draft "Draft",
   :activity.status/valid "Valid",
+  :comment.visibility/all "Visible to all",
+  :comment.visibility/internal "Visble internally",
   :task.type/topogeodesy "Topogeodesy",
   :task.type/equipment "Equipment",
   :task.type/structures "Structures",
@@ -181,7 +183,8 @@
   "Only one activity of a type can be active at the same time.",
   :server-error "Server error."},
  :fields
- {:task/send-to-thk? "Send to THK",
+ {:comment/visibility "Visibility",
+  :task/send-to-thk? "Send to THK",
   :thk.project/manager "Manager",
   :thk.project/project-name "Name",
   :task/thk-type "THK type",

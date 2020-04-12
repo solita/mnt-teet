@@ -47,7 +47,7 @@
   ^{:pseudo {:hover {:text-decoration :none}}}
   {:color theme-colors/blue})
 
-(defn edited
+(defn data
   []
   {:color theme-colors/gray-light
    :font-size "0.75rem"

@@ -19,6 +19,7 @@
             [teet.ui.itemlist :as itemlist]
             [teet.ui.layout :as layout]
             [teet.ui.query :as query]
+            [teet.ui.select :as select]
             [teet.ui.skeleton :as skeleton]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.material-ui :refer [IconButton]]
@@ -123,7 +124,7 @@
    (tr [:buttons :edit])])
 
 (defn- comment-entry [e! {id :db/id
-                          :comment/keys [author comment timestamp files]
+                          :comment/keys [author comment timestamp files visibility]
                           :meta/keys [modified-at]
                           :as comment-entity}
                       commented-entity
@@ -134,19 +135,20 @@
      [typography/SectionHeading
       {:style {:display :inline-block}}
       [user-info/user-name author]]
-     [typography/GreyText {:style {:display :inline-block
-                                   :margin-left "1rem"}}
+     [:span {:class (<class comments-styles/data)}
       (format/date timestamp)]
      [buttons/button-text {:size :small
                            :color :primary
                            :start-icon (r/as-element [icons/editor-format-quote])
                            :on-click #(quote-comment! (user-model/user-name author)
                                                       comment)}
-      (tr [:comment :quote])]]]
+      (tr [:comment :quote])]]
+    [:span {:class (<class comments-styles/data)}
+     (tr [:enum (:db/ident visibility)])]]
    [typography/Text
     comment
     (when modified-at
-      [:span {:class (<class comments-styles/edited)}
+      [:span {:class (<class comments-styles/data)}
        (tr [:comment :edited]
            {:date (format/date modified-at)})])]
    [:div
@@ -254,9 +256,8 @@
                      :on-change-event ->UpdateCommentForm
                      :save-event #(let [{:comment/keys [comment files visibility]} @comment-form]
                                     (reset! comment-form {})
-                                    (assert visibility)
                                     (comments-controller/->CommentOnEntity
-                                     entity-type entity-id comment files (keyword (:value visibility))))
+                                     entity-type entity-id comment files visibility))
                      :footer new-comment-footer
                      :spec :task/new-comment-form}
           ^{:attribute :comment/comment}
@@ -268,12 +269,7 @@
                       :placeholder (tr [:document :new-comment])}]
 
           ^{:attribute :comment/visibility}
-          [teet.ui.select/form-select {:value "default-visibility"
-                                       :label "Visibility"
-                                       :id "comment-visibility"
-                                       :name "comment-visibility"
-                                       :items [{:value "default-visibility" :label "Default visbility"}
-                                               {:value "external-consultant" :label "Visible to external consultants"}]}]
+          [select/select-enum {:e! e! :attribute :comment/visibility}]
 
           ^{:attribute :comment/files}
           [attached-images-field {:e! e!

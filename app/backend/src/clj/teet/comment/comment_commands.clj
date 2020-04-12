@@ -34,12 +34,14 @@
    :context {:keys [db user]}
    :payload {:keys [entity-id entity-type comment files visibility]}
    :project-id (project-db/entity-project-id db entity-type entity-id)
+   ;; TODO: what about files?
    :authorization {:task/comment-task {:db/id entity-id}}
    :transact [(merge {:db/id entity-id
                       (comment-model/comments-attribute-for-entity-type entity-type)
                       [(merge {:db/id "new-comment"
                                :comment/author [:user/id (:user/id user)]
                                :comment/comment comment
+                               ;; TODO: Can external partners set visibility?
                                :comment/visibility visibility
                                :comment/timestamp (Date.)}
                               (creation-meta user)

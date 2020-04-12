@@ -777,12 +777,6 @@
  {:db/ident :migration/remove-activity-type-design-req
   :txes [[[:db/retractEntity :activity.name/design-requirements]]]}
 
- {:db/ident :comment-visibility
-  :txes [[{:db/ident :comment/visibility
-           :db/doc "Indicator of special visibility, eg :external-consultant for showing also to ext consultants"
-           :db/valueType :db.type/keyword
-           :db/cardinality :db.cardinality/one}]]}
-
  {:db/ident :migration/land-acquisition
   :txes [[{:db/ident :land-acquisition/project
            :db/valueType :db.type/ref
@@ -810,4 +804,15 @@
 
           {:db/ident :land-acquisition/area-to-obtain
            :db/cardinality :db.cardinality/one
-           :db/valueType :db.type/long}]]}]
+           :db/valueType :db.type/long}]]}
+
+ {:db/ident :comment-visibility
+  :txes [[{:db/ident :comment/visibility
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Indicator of special visibility, is the comment visible only internally or for external consultants as well"}
+
+          {:db/ident :comment.visibility/all
+           :enum/attribute :comment/visibility}
+          {:db/ident :comment.visibility/internal
+           :enum/attribute :comment/visibility}]]}]
