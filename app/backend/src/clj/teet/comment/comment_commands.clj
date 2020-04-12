@@ -92,11 +92,13 @@
 (defcommand :comment/update
   {:doc "Update existing comment"
    :context {:keys [db user]}
-   :payload {comment-id :db/id comment :comment/comment files :comment/files}
+   :payload {comment-id :db/id comment :comment/comment files :comment/files
+             visibility :comment/visibility}
    :project-id (get-project-id-of-comment db comment-id)
    :authorization {:document/edit-comment {:db/id comment-id}}
    :transact (into [(merge {:db/id comment-id
-                            :comment/comment comment}
+                            :comment/comment comment
+                            :comment/visibility visibility}
                            (modification-meta user))]
                    (update-files user
                                  comment-id

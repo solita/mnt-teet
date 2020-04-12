@@ -107,6 +107,9 @@
    ^{:attribute :comment/comment}
    [TextField {:full-width true :multiline true :rows 4}]
 
+   ^{:attribute :comment/visibility}
+   [select/select-enum {:e! e! :attribute :comment/visibility}]
+
    ^{:attribute :comment/files}
    [edit-attached-images-field {:e! e!
                                 :comment-id (:db/id comment-data)

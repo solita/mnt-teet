@@ -93,7 +93,7 @@
         (assoc :edit-comment-data
                (merge {:comment/files []}
                       (select-keys comment-entity
-                                   [:db/id :comment/comment :comment/files])
+                                   [:db/id :comment/comment :comment/visibility :comment/files])
                       {:comment/commented-entity commented-entity}))))
 
   CancelCommentEdit
@@ -119,7 +119,7 @@
             :result-event ->SaveEditCommentSuccess
             :command :comment/update
             :payload (-> edit-comment-data
-                         (select-keys [:db/id :comment/comment :comment/files])
+                         (select-keys [:db/id :comment/comment :comment/visibility :comment/files])
                          (update :comment/files (partial map :db/id)))
             :success-message (tr [:notifications :comment-edited])})))
 
