@@ -30,8 +30,7 @@
             [teet.user.user-model :as user-model]
             [teet.util.collection :as cu]
             [teet.file.file-controller :as file-controller]
-            [teet.log :as log]
-            [teet.ui.select]))
+            [teet.log :as log]))
 
 (defn- new-comment-footer [{:keys [validate disabled?]}]
   [:div {:class (<class comments-styles/comment-buttons-style)}

@@ -27,6 +27,3 @@
            (sort-by :comment/timestamp)
            reverse
            vec))))
-
-
-
