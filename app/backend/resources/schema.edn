@@ -820,10 +820,6 @@
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
            :db/doc "Reference to the user who receives this notification"}
-          {:db/ident :notification/originator
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/one
-           :db/doc "Optional reference to the user whose actions caused the notification"}
           {:db/ident :notification/target
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
