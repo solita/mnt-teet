@@ -9,4 +9,7 @@
    :project-id _
    :authorization {}}
   (->> (notification-db/unread-notifications db user)
+       ;; TODO: Assoc a URL string to the notification target, or
+       ;; necessary data to build the URL on the frontend side. We may
+       ;; need target type as well as id for this.
        (sort-by :meta/created-at)))

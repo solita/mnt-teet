@@ -2,7 +2,8 @@
   (:require [teet.routes :as routes]
             [teet.ui.select :as select]
             [teet.ui.material-ui :refer [AppBar Toolbar Drawer List ListItem
-                                         ListItemText ListItemIcon Link LinearProgress]]
+                                         ListItemText ListItemIcon Link LinearProgress
+                                         Badge]]
             [teet.ui.icons :as icons]
             [teet.ui.common :as ui-common]
             [teet.localization :as localization :refer [tr]]
@@ -140,11 +141,19 @@
           :on-click (e! login-controller/->Logout)}
     (tr [:common :log-out])]])
 
+(defn notifications []
+  [:div {:class (herb/join (<class navigation-style/notification-style)
+                           (<class navigation-style/divider-style))}
+   [Badge {:badge-content 5
+           :color "error"}
+    [icons/social-notifications {:color "primary"}]]])
+
 (defn navigation-header-links
   [user e!]
   [:div {:style {:display :flex
                  :justify-content :flex-end}}
    [feedback-link]
+   [notifications]
    [language-selector]
    (when-feature :my-role-display
      [user-info user])
