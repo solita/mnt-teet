@@ -54,3 +54,6 @@
 
 ;; Snackbar
 (define-mui-components Snackbar SnackbarContent)
+
+;; Badge
+(define-mui-components Badge)

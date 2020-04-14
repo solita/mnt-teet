@@ -804,4 +804,37 @@
 
           {:db/ident :land-acquisition/area-to-obtain
            :db/cardinality :db.cardinality/one
-           :db/valueType :db.type/long}]]}]
+           :db/valueType :db.type/long}]]}
+
+ {:db/ident :migration/notification
+  :txes [[{:db/ident :notification/type
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Type of notification, references :notification.type/* enum values"}
+
+          ;; Just an example notification type
+          {:db/ident :notification.type/comment-created
+           :enum/attribute :notification/type}
+
+          {:db/ident :notification/receiver
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Reference to the user who receives this notification"}
+          {:db/ident :notification/target
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Reference to the target of the action that caused the notification, e.g. project, lifecycle, task, etc."}
+          {:db/ident :notification/status
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Status of the notification, references :notification.status/* enum values"}
+          ;; Notification status types
+          {:db/ident :notification.status/unread
+           :enum/attribute :notification/status}
+          {:db/ident :notification.status/acknowledged}]]}
+
+ {:db/ident :migration/task-waiting-for-review-status
+  :txes [[{:db/ident :task.status/waiting-for-review
+           :enum/attribute :task/status}
+          {:db/ident :notification.type/task-waiting-for-review
+           :enum/attribute :notification/type}]]}]

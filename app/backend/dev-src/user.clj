@@ -121,9 +121,10 @@
 
 (defn query-all-users
   []
-  (q '[:find (pull ?e [*])
-       :in $
-       :where [?e :user/id _]] (db)))
+  (map first
+       (q '[:find (pull ?e [*])
+            :in $
+            :where [?e :user/id _]] (db))))
 
 (defn retract-from-project!
   "use like: (retract-from-project! \"17187\" :thk.project/manager 45264694692282960)"
