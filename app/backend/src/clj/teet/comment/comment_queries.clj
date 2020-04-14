@@ -5,15 +5,21 @@
             [teet.meta.meta-query :as meta-query]
             [teet.project.project-db :as project-db]))
 
+(def type->comments-attribute
+  {:task :task/comments
+   :file :file/comments})
+
 (defn comment-query [type visibility]
-  (let [type-attribute (-> type name (str "/comments") keyword)]
-    {:find '[(pull ?comment [*
-                             {:comment/author [*]
-                              :comment/files [:db/id :file/name]}])]
-     :in '[$ ?entity-id]
-     :where (into [['?entity-id type-attribute '?comment]]
-                  (when visibility
-                    [['?comment :comment/visibility visibility]]))}))
+  {:pre [(type->comments-attribute type)]}
+  {:find '[(pull ?comment [*
+                           {:comment/author [*]
+                            :comment/files [:db/id :file/name]}])]
+   :in '[$ ?entity-id]
+   :where (into [['?entity-id
+                  (type->comments-attribute type)
+                  '?comment]]
+                (when visibility
+                  [['?comment :comment/visibility visibility]]))})
 
 (defquery :comment/fetch-comments
   {:doc "Fetch comments for any :db/id and entity type. Returns comments newest first."
