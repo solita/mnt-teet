@@ -77,6 +77,13 @@
                            :permission/role       :manager
                            :permission/valid-from (Date.)}]}))
 
+(defn give-external-consultant-permission
+  [user-eid]
+  (tx {:db/id            user-eid
+       :user/permissions [{:db/id                 "new-permission"
+                           :permission/role       :external-consultant
+                           :permission/valid-from (Date.)}]}))
+
 (defn remove-permission [user-uuid permission-eid]
   (d/transact (environment/datomic-connection)
               {:tx-data [[:db/retract [:user/id user-uuid]
@@ -88,6 +95,12 @@
        :user/permissions [{:db/id                 "new-permission"
                            :permission/role       :manager
                            :permission/valid-from (Date.)}]}))
+
+(defn all-comments
+  []
+  (q '[:find (pull ?e [*])
+       :where [?e :comment/comment _]]
+     (db)))
 
 (defn all-permissions
   []
@@ -260,3 +273,6 @@
 (def local-login   tu/local-login)
 (def local-query   tu/local-query)
 (def local-command tu/local-command)
+
+
+; (local-query :comment/fetch-comments {:for :task :db/id 34287170600567084})

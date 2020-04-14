@@ -6,18 +6,19 @@
             [hiccup.core :as hiccup]
             [org.httpkit.client :as htclient]
             [taoensso.timbre :as log]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io])
+  (:import (java.util UUID)))
 
 ;; see also https://x-tee.ee/catalogue-data/ee-dev/ee-dev/GOV/70008440/rr/155.wsdl
 
-(defn rr442-request-hiccup [eid instance-id]
+(defn rr442-request-hiccup [{:keys [instance-id requesting-eid subject-eid]}]
   [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"
                    :xmlns:xrd "http://x-road.eu/xsd/xroad.xsd"
                    :xmlns:ns5 "http://rr.x-road.eu/producer"
                    :xmlns:id "http://x-road.eu/xsd/identifiers"}
    [:soap:Header
-    [:xrd:userId "EE47003280318"]
-    [:xrd:id "170a5cb119b70008440895042451"]
+    [:xrd:userId requesting-eid]
+    [:xrd:id (UUID/randomUUID)]
     [:xrd:protocolVersion "4.0"]
     [:xrd:client {:id:objectType "SUBSYSTEM"}
      [:id:xRoadInstance instance-id]
@@ -25,7 +26,7 @@
      [:id:memberCode "70001490"]
      [:id:subsystemCode "liiklusregister"]]
     [:xrd:service {:id:objectType "SERVICE"}
-     [:id:xRoadInstance "ee-dev"]
+     [:id:xRoadInstance instance-id]
      [:id:memberClass "GOV"]
      [:id:memberCode "70008440"]
      [:id:subsystemCode "rr"]
@@ -34,10 +35,10 @@
    [:soap:Body
     [:ns5:RR442
      [:request
-      [:Isikukood eid]]]]])
+      [:Isikukood subject-eid]]]]])
 
-(defn rr442-request-xml [eid instance-id]
-  (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (hiccup/html (rr442-request-hiccup eid instance-id))))
+(defn rr442-request-xml [qmap]
+  (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (hiccup/html (rr442-request-hiccup qmap))))
 
 (defn rr442-parse-name [xml-string]
   (let [xml (xml/parse xml-string)
@@ -61,8 +62,10 @@
           {:status :error
            :fault "no fault code or Avaldaja section found in pop register response"})))))
 
-(defn perform-rr442-request [url instance-id eid]
-  (let [req (rr442-request-xml eid instance-id)
+(defn perform-rr442-request
+  "params needs to have keys :instance-id, :requesting-eid, & :subject-eid"
+  [url params]
+    (let [req (rr442-request-xml params)
 
         resp-atom (htclient/post url {:body req
                                       :as :stream
@@ -76,7 +79,7 @@
         {:status :error
          :result msg}))))
 
-(defn kr-kinnistu-d-request-xml [registriosa-nr instance-id]
+(defn kr-kinnistu-d-request-xml [{:keys [instance-id registriosa-nr requesting-eid]}]
   ;; xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
   ;; xmlns:xro="http://x-road.eu/xsd/xroad.xsd"
   ;; xmlns:iden="http://x-road.eu/xsd/identifiers"
@@ -89,8 +92,8 @@
                          :xmlns:kin "http://schemas.datacontract.org/2004/07/KinnistuService.DTO"
                          :xmlns:id "http://x-road.eu/xsd/identifiers"}
          [:soap:Header
-          [:xrd:userId "EE47003280318"]
-          [:xrd:id "170a5cb119b70008440895042451"]
+          [:xrd:userId requesting-eid]
+          [:xrd:id (UUID/randomUUID)]
           [:xrd:protocolVersion "4.0"]
           [:xrd:client {:id:objectType "SUBSYSTEM"}
            [:id:xRoadInstance instance-id]
@@ -103,7 +106,7 @@
            [:id:memberCode "70000310"]
            [:id:subsystemCode "kr"]
            [:id:serviceCode "Kinnistu_Detailandmed"]
-           ;; [:id:serviceVersion ""] ;; was omitted in example SOAP?
+           ;; [:id:serviceVersion ""] ;; was omitted in example SOAP as well
            ]]
          [:soap:Body
           [:kr:Kinnistu_Detailandmed
@@ -213,8 +216,11 @@
         body
         soap-msg))))
 
-(defn perform-kinnistu-d-request [url instance-id reg-nr]
-  (let [req (kr-kinnistu-d-request-xml reg-nr instance-id)
+(defn perform-kinnistu-d-request
+  "query-params map should kave keys :instance-id, :reg-nr and :requesting-eid"
+  [url query-params]
+  
+  (let [req (kr-kinnistu-d-request-xml query-params)
         resp-atom (htclient/post url {:body req
                                       :as :stream
                                       :headers {"Content-Type" "text/xml; charset=UTF-8"}})
@@ -230,7 +236,8 @@
 ;; repl notes:
 
 ;; test land reg ids: 233102, 284502, 308104 (last one has empty jag3/jag4)
-;; (def *r  (perform-kinnistu-d-request "http://localhost:12073" "ee-dev" "308104"))
-;; (kinnistu-d-parse-response (unpeel-multipart *rr))
+;; (def *r  (perform-kinnistu-d-request "http://localhost:12073" {:instance-id "ee-dev" :registriosa-nr "308104" :requesting-eid <my-test-eid>}))
 
-;; rr testing: (def *r2 (perform-rr442-request "http://localhost:12073" "ee-dev" "47003280318"))
+;; rr testing:
+;; (def *r2 (perform-rr442-request "http://localhost:12073" {:instance-id "ee-dev" :subject-eid "47003280318" :requesting-eid "EE47003280318}))
+;; note - subject-eid without EE prefix, requesting-eid with EE prefix
