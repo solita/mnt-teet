@@ -2,34 +2,45 @@
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
             [teet.user.user-roles :as user-roles]
             [teet.environment :as environment]
-            [clojure.string :refer [blank?]]
+            [clojure.string :refer [blank? starts-with?]]
             [teet.integration.x-road]
+            [taoensso.timbre :as log]
             teet.user.user-spec))
 
 (defn- new-user []
   {:user/id (java.util.UUID/randomUUID)
    :user/roles [:user]})
 
-(defn user-data-from-xroad [person-id]
+(defn ensure-ee-prefix [eid]
+  (if (starts-with? eid "EE")
+    eid
+    (str "EE" eid)))
+
+(defn user-data-from-xroad [new-user-eid current-user-eid]
   (let [xroad-url (environment/config-value :xroad-query-url)
-        xroad-instance-id (environment/config-value :xroad-instance-id)
-        resp (teet.integration.x-road/perform-rr442-request
-              xroad-url xroad-instance-id person-id)
+        xroad-instance-id (environment/config-value :xroad-instance-id)        
+        resp (teet.integration.x-road/perform-rr442-request xroad-url 
+                                                            {:instance-id xroad-instance-id
+                                                             :requesting-eid (ensure-ee-prefix current-user-eid)
+                                                             :subject-eid new-user-eid})
         name-valid? (complement blank?)
         name-map {:user/given-name (-> resp :result :Eesnimi)
                   :user/family-name (-> resp :result :Perenimi)}]
     (if (and (= :ok (:status resp)) (every? name-valid? (vals name-map)))
       name-map
       ;; else
-      (throw (ex-info "x-road user name data not valid" {:names name-map :ok? (:ok resp)})))))
+      (if (= :ok (:status resp))
+        (throw (ex-info "x-road response status ok but user name data not valid" {:names name-map :ok? (:ok resp)}))
+        ;; else
+        (throw (ex-info "x-road error response" (merge resp {:names name-map})))))))
 
 (defcommand :admin/create-user
   {:doc "Create user"
    :context {:keys [conn user]}
    :payload user-data
-   :pre [(user-roles/require-role user :admin)]
    :project-id nil
    :authorization {:admin/add-user {}}
-   :transact [(merge (new-user)
+   :transact [;; (log/info "admin/create-user: current user" (:user/person-id user))
+              (merge (new-user)
                      (select-keys user-data [:user/id :user/person-id :user/roles])
-                     (user-data-from-xroad (:user/person-id user-data)))]})
+                     (user-data-from-xroad (:user/person-id user-data) (:user/person-id user)))]})

@@ -48,7 +48,8 @@
 (defn logged-user []
   @logged-in-user-id)
 
-(defn local-login [user-id]
+(defn local-login
+  [user-id]   
   (reset! logged-in-user-id user-id)
   (log/info "Locally logged in as " user-id))
 
