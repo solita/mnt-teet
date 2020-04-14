@@ -161,8 +161,8 @@
      [Menu {:anchor-el @selected-item
             :open (boolean @selected-item)
             :on-close handle-close!}
-      (mapc (fn [{:notification/keys [type target]
-                  id :db/id :as it}]
+      (mapc (fn [{:notification/keys [type]
+                  id :db/id}]
               [MenuItem {:on-click (e! notification-controller/->Acknowledge id)}
                (tr-enum type)])
             notifications)]]))
