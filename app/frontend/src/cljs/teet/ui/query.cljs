@@ -38,14 +38,20 @@
 
 (defn query
   "Component that does a datomic query and shows view with the resulting data."
-  [{:keys [e! query args state-path refresh]}]
+  [{:keys [e! query args state-path refresh poll-seconds]}]
   (let [refresh-value (atom refresh)
         previous-args (atom args)
         state-atom (when-not state-path
-                     (r/atom nil))]
+                     (r/atom nil))
+        poll-id (when poll-seconds
+                  (js/setInterval #(e! (->Query query args state-path state-atom))
+                                  (* 1000 poll-seconds)))]
     (e! (->Query query args state-path state-atom))
     (r/create-class
-     {:component-will-unmount (e! ->Cleanup state-path)
+     {:component-will-unmount #(do
+                                 (when poll-id
+                                   (js/clearInterval poll-id))
+                                 (e! (->Cleanup state-path)))
       :reagent-render
       (fn [{:keys [e! query args state-path skeleton view app state refresh breadcrumbs
                    simple-view loading-state]}]

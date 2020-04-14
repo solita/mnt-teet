@@ -170,7 +170,8 @@
                 :query :notification/unread-notifications
                 :args {}
                 :simple-view [notifications* e!]
-                :loading-state []}])
+                :loading-state []
+                :poll-seconds 300}])
 
 (defn navigation-header-links
   [user e!]
