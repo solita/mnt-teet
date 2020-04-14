@@ -36,3 +36,13 @@
               [?notification :notification/status :notification.status/unread]]
             db
             (:db/id user))))
+
+(defn navigation-info
+  "Fetch notification type and target for user's notification."
+  [db user notification-id]
+  (ffirst (d/q '[:find (pull ?notification [:notification/target :notification/type])
+                 :where [?notification :notification/receiver ?user]
+                 :in $ ?notification ?user]
+               db
+               notification-id
+               (user-model/user-ref user))))
