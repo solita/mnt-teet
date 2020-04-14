@@ -82,7 +82,8 @@
    (defn query-request-permissions! [e!]
      (e! (query/->Query :authorization/permissions
                         {}
-                        [:authorization/permissions]))))
+                        [:authorization/permissions]
+                        nil))))
 
 #?(:cljs
    (defn provide-authorization-info [context child]
