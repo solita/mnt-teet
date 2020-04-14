@@ -1,9 +1,10 @@
 (ns teet.navigation.navigation-view
-  (:require [teet.routes :as routes]
+  (:require [reagent.core :as r]
+            [teet.routes :as routes]
             [teet.ui.select :as select]
             [teet.ui.material-ui :refer [AppBar Toolbar Drawer List ListItem
                                          ListItemText ListItemIcon Link LinearProgress
-                                         Badge IconButton]]
+                                         Badge IconButton Menu MenuItem]]
             [teet.ui.icons :as icons]
             [teet.ui.common :as ui-common]
             [teet.localization :as localization :refer [tr]]
@@ -142,15 +143,26 @@
     (tr [:common :log-out])]])
 
 (defn notifications []
-  [:div {:class (herb/join (<class navigation-style/notification-style)
-                           (<class navigation-style/divider-style))}
-   [Badge {:badge-content 5
-           :color "error"}
-    [IconButton
-     {:color "primary"
-      :size "small"
-      :component "span"}
-     [icons/social-notifications {:color "primary"}]]]])
+  (r/with-let [selected-item (r/atom nil)
+               handle-click! (fn [event]
+                               (reset! selected-item (.-currentTarget event)))
+               handle-close! (fn []
+                               (reset! selected-item nil))]
+    [:div {:class (herb/join (<class navigation-style/notification-style)
+                            (<class navigation-style/divider-style))}
+     [Badge {:badge-content 5
+             :color "error"}
+      [IconButton
+       {:color "primary"
+        :size "small"
+        :component "span"
+        :on-click handle-click!}
+       [icons/social-notifications {:color "primary"}]]]
+     [Menu {:anchor-el @selected-item
+            :open (boolean @selected-item)
+            :on-close handle-close!}
+      [MenuItem {:on-click handle-close!} "Test item 10"]
+      [MenuItem {:on-click handle-close!} "Test item 2"]]]))
 
 (defn navigation-header-links
   [user e!]
@@ -162,7 +174,6 @@
    (when-feature :my-role-display
      [user-info user])
    [logout e!]])
-
 
 (defn header
   [e! {:keys [open? page quick-search]} user]
