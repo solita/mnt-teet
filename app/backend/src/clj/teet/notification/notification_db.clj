@@ -2,11 +2,9 @@
   "Utilities for notifications"
   (:require [datomic.client.api :as d]
             [teet.meta.meta-model :as meta-model]
-            teet.user.user-spec
-            [clojure.spec.alpha :as s]))
+            [teet.user.user-model :as user-model]))
 
-(defn user-eid? [user]
-  (s/valid? :user/eid user))
+
 
 (defn notification-tx
   "Return a notification transaction map."
@@ -14,12 +12,12 @@
            to      ;; user who receives the notification
            target  ;; id of the entity targeted by the notification
            type]}] ;; notification type
-  {:pre [(user-eid? from)
-         (user-eid? to)
+  {:pre [(user-model/user-ref from)
+         (user-model/user-ref to)
          (keyword? type)
          (some? target)]}
   (merge {:db/id (str "new-notification-" (str (java.util.UUID/randomUUID)))
-          :notification/receiver (:db/id to)
+          :notification/receiver (user-model/user-ref to)
           :notification/status :notification.status/unread
           :notification/target target
           :notification/type type}
