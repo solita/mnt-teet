@@ -37,7 +37,9 @@
    :thk.project/estimated-start-date
    :thk.project/estimated-end-date
    :thk.project/region-name
-   :thk.project/repair-method])
+   :thk.project/repair-method
+   {:thk.project/owner user-model/user-info-attributes}
+   {:thk.project/manager user-model/user-info-attributes}])
 
 (def project-list-with-status-attributes
   (into project-listing-attributes
@@ -45,9 +47,7 @@
                                     [:activity/estimated-end-date
                                      :activity/estimated-start-date
                                      :activity/status
-                                     {:activity/tasks [:task/status]}]}]}
-         {:thk.project/owner user-model/user-info-attributes}
-         {:thk.project/manager user-model/user-info-attributes}]))
+                                     {:activity/tasks [:task/status]}]}]}]))
 
 (def project-info-attributes
   (into project-listing-attributes
