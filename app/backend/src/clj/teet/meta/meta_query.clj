@@ -14,7 +14,7 @@
                              ids)
                            (vals entities)]
 
-                          (vector? entities)
+                          (sequential? entities)
                           [ids entities]
 
                           :else
@@ -27,12 +27,12 @@
 (defn remove-entities-by-ids
   [entities ids-to-remove]
   (walk/prewalk
-    (fn [entity]
-      (cond
+   (fn [entity]
+     (cond
         (and (map? entity) (ids-to-remove (:db/id entity)))
         nil
 
-        (vector? entity)
+        (sequential? entity)
         (filterv (fn [item]
                    (if-let [id (and (map? item) (:db/id item))]
                      (not (ids-to-remove id))
@@ -56,7 +56,7 @@
                                         :in $ [?e ...]]
                                       db
                                       ids))]
-    ;Walk result tree removing all deleted entities
+    ;; Walk result tree removing all deleted entities
     (remove-entities-by-ids entities deleted-entity-ids)))
 
 (defn is-creator? [db entity user]
