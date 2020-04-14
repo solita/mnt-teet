@@ -50,7 +50,9 @@ Then it will query X-road for the estate information."
 
         ;; Fetch the X-road estate info for each estate number
         (map (juxt identity
-                   #(x-road/perform-kinnistu-d-request xroad-url xroad-instance %)))
+                   #(x-road/perform-kinnistu-d-request xroad-url {:instance-id xroad-instance
+                                                                  :registriosa-nr %
+                                                                  :requesting-eid (str "EE" (:user/person-id user))})))
 
         ;; Fetch unique estate numbers for project's related cadastral units
         (project-cadastral-unit-estates db api-url api-shared-secret id)))
