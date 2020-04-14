@@ -2,19 +2,19 @@
   (:require #?(:clj  [clojure.java.io :as io]
                :cljs [cljs.reader :as reader])
             #?(:cljs [teet.app-state :as app-state])
-            #?(:cljs [teet.ui.context :as context])
+            #?(:cljs [teet.ui.project-context :as project-context])
             #?(:cljs [teet.ui.query :as query])
             [teet.util.collection :as cu]
             [clojure.set :as set]))
 
-(defonce authorization-rules
-         (delay #?(:cljs (-> js/window
-                             (aget "teet_authz")
-                             reader/read-string)
-                   :clj  (some-> "authorization.edn"
-                                 io/resource
-                                 slurp
-                                 read-string))))
+(def authorization-rules
+  (delay #?(:cljs (-> js/window
+                      (aget "teet_authz")
+                      reader/read-string)
+            :clj  (some-> "authorization.edn"
+                          io/resource
+                          slurp
+                          read-string))))
 
 (defonce
   ^{:doc "Delayed set of all role names"}
@@ -85,18 +85,9 @@
                         [:authorization/permissions]))))
 
 #?(:cljs
-   (defn provide-authorization-info [context child]
-     (println context)
-     (context/provide :authorization-info context child)))
-
-#?(:cljs
-   (defn- consume-authorization-info [component-fn]
-     (context/consume :authorization-info component-fn)))
-
-#?(:cljs
    (defn when-authorized
      [action entity component]
-     [consume-authorization-info
+     [project-context/consume
       (fn [{:keys [project-id]}]
         (let [permissions @app-state/action-permissions
               user @app-state/user

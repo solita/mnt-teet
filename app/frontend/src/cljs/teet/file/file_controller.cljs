@@ -9,7 +9,7 @@
             [teet.file.file-model :as file-model]
             [teet.transit :as transit]))
 
-(defrecord UploadFiles [files task-id on-success progress-increment file-results]) ; Upload files (one at a time) to document
+(defrecord UploadFiles [files project-id task-id on-success progress-increment file-results]) ; Upload files (one at a time) to document
 (defrecord UploadFinished []) ; upload completed, can close dialog
 (defrecord UploadFileUrlReceived [file-data file document-id url on-success])
 (defrecord UploadNewVersion [file new-version])
@@ -98,8 +98,7 @@
                                     {:file-data (first new-version)
                                      :on-success (->UploadSuccess (:db/id file))})))}))
 
-  UploadFiles
-  (process-event [{:keys [files task-id on-success progress-increment attachment?
+  UploadFiles  (process-event [{:keys [files project-id task-id on-success progress-increment attachment?
                           file-results]
                    :as event} app]
     (if-let [file (first files)]
@@ -113,7 +112,8 @@
               {:tuck.effect/type :command!
                :command (if attachment? :file/upload-attachment :file/upload)
                :payload (merge {:file (file-model/file-info file)}
-                               (when-not attachment?
+                               (if attachment?
+                                 {:project-id project-id}
                                  {:task-id task-id}))
                :result-event (fn [result]
                                (map->UploadFileUrlReceived

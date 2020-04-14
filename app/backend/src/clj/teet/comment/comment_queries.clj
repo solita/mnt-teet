@@ -26,7 +26,7 @@
    :context {user :user db :db}
    :args {id :db/id entity-type :for}
    :project-id (project-db/entity-project-id db entity-type id)
-   :authorization {:land/read-comments {:db/id id}}}
+   :authorization {:project/read-comments {:db/id id}}}
   (let [visibility (when-not (ac/authorized? user
                                              :project/view-internal-comments)
                      :comment.visibility/all)

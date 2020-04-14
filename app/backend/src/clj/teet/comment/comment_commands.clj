@@ -34,8 +34,7 @@
    :context {:keys [db user]}
    :payload {:keys [entity-id entity-type comment files visibility]}
    :project-id (project-db/entity-project-id db entity-type entity-id)
-   ;; TODO: what about files?
-   :authorization {:task/comment-task {:db/id entity-id}}
+   :authorization {:project/write-comments {}}
    :transact [(merge {:db/id entity-id
                       (comment-model/comments-attribute-for-entity-type entity-type)
                       [(merge {:db/id "new-comment"
@@ -95,7 +94,7 @@
    :payload {comment-id :db/id comment :comment/comment files :comment/files
              visibility :comment/visibility}
    :project-id (get-project-id-of-comment db comment-id)
-   :authorization {:document/edit-comment {:db/id comment-id}}
+   :authorization {:project/edit-comments {:db/id comment-id}}
    :transact (into [(merge {:db/id comment-id
                             :comment/comment comment
                             :comment/visibility visibility}
@@ -110,5 +109,5 @@
    :context {:keys [db user]}
    :payload {:keys [comment-id]}
    :project-id (get-project-id-of-comment db comment-id)
-   :authorization {:document/delete-comment {:db/id comment-id}}
+   :authorization {:project/delete-comments {:db/id comment-id}}
    :transact [(deletion-tx user comment-id)]})

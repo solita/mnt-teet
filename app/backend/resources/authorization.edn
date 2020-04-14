@@ -10,6 +10,13 @@
   :manager :full,
   :internal-consultant :full,
   :external-consultant :read},
+ :project/read-comments
+ {:admin :full,
+  :manager :full,
+  :internal-consultant :full,
+  :external-consultant :full,
+  :authenticated-guest :full,
+  :guest :read},
  :projects/projects-search
  {:admin :read,
   :manager :read,
@@ -50,8 +57,11 @@
   :internal-consultant :link,
   :external-consultant :link},
  :activity/delete-activity {:admin :full, :manager :full},
- :land/delete-comments
- {:admin :full, :manager :link, :internal-consultant :link},
+ :project/write-comments
+ {:admin :full,
+  :manager :full,
+  :internal-consultant :full,
+  :authenticated-guest :link},
  :document/edit-comment
  {:admin :full,
   :manager :link,
@@ -108,18 +118,11 @@
   :manager :full,
   :internal-consultant :read,
   :external-consultant :read},
- :land/write-comments
+ :project/edit-comments
  {:admin :full,
-  :manager :full,
-  :internal-consultant :full,
+  :manager :link,
+  :internal-consultant :link,
   :authenticated-guest :link},
- :land/read-comments
- {:admin :full,
-  :manager :full,
-  :internal-consultant :full,
-  :external-consultant :link,
-  :authenticated-guest :link,
-  :guest :read},
  :activity/activity-info
  {:admin :full,
   :manager :full,
@@ -131,6 +134,8 @@
  :project/view-internal-comments
  {:admin :full, :manager :full, :internal-consultant :link},
  :activity/change-activity-status {:admin :full, :manager :full},
+ :project/delete-comments
+ {:admin :full, :manager :link, :internal-consultant :link},
  :admin/change-user-role {:admin :full},
  :activity/edit-activity
  {:admin :full,
@@ -193,11 +198,6 @@
   :external-consultant :read,
   :authenticated-guest :read,
   :guest :read},
- :land/edit-comments
- {:admin :full,
-  :manager :link,
-  :internal-consultant :link,
-  :authenticated-guest :link},
  :land/view-personal-information-of-estate-owners
  {:admin :full, :manager :full},
  :document/view-document
@@ -208,6 +208,12 @@
   :authenticated-guest :read,
   :guest :read},
  :maintenance/delete-asset {:admin :full, :manager :full},
+ :project/upload-comment-attachment
+ {:admin :full,
+  :manager :full,
+  :internal-consultant :full,
+  :external-consultant :full,
+  :authenticated-guest :full},
  :maintenance/comment-asset
  {:admin :full,
   :manager :full,

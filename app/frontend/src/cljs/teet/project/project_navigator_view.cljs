@@ -2,9 +2,9 @@
   (:require [teet.ui.material-ui :refer [Link Collapse Paper Grid]]
             [herb.core :refer [<class]]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.authorization.authorization-check :as ac]
             [teet.ui.buttons :as buttons]
             [teet.ui.icons :as icons]
+            [teet.ui.project-context :as project-context]
             [teet.ui.url :as url]
             [teet.ui.util :refer [mapc]]
             [teet.project.activity-model :as activity-model]
@@ -335,7 +335,7 @@
     :or {column-widths [3 6 :auto]}
     :as opts} content]
   (let [[nav-w content-w] column-widths]
-    [ac/provide-authorization-info
+    [project-context/provide
      {:project-id (:db/id project)}
      [:div {:class (<class project-style/page-container)}
       [breadcrumbs/breadcrumbs breadcrumbs]

@@ -18,6 +18,7 @@
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
             [teet.ui.layout :as layout]
+            [teet.ui.project-context :as project-context]
             [teet.ui.query :as query]
             [teet.ui.select :as select]
             [teet.ui.skeleton :as skeleton]
@@ -69,30 +70,32 @@
   "File field that only allows uploading images. Files are
   directly uploaded and on-change called after success."
   [{:keys [e! value comment-id on-success-event]}]
-  [:div
-   [attachments {:files value
-                 :comment-id comment-id
-                 :on-delete (fn [{file-id :db/id}]
-                              (e! (comments-controller/->UpdateEditCommentForm
-                                   {:comment/files
-                                    (into []
-                                          (cu/remove-by-id file-id)
-                                          value)})))}]
-   [file-upload/FileUploadButton
-    {:id "images-field"
-     :color :secondary
-     :button-attributes {:variant :text
-                         :size :small}
-     :on-drop #(e! (file-controller/map->UploadFiles
-                    {:files %
-                     :attachment? true
-                     :on-success (fn [uploaded-files]
-                                   (log/info "FILES UPLOADED: " uploaded-files)
-                                   (log/info on-success-event)
-                                   (on-success-event
-                                    {:comment/files (into (or value [])
-                                                          uploaded-files)}))}))}
-    (tr [:comment :add-images])]])
+  [project-context/consume
+   (fn [{:keys [project-id]}]
+     [:div
+      [attachments {:files value
+                    :comment-id comment-id
+                    :on-delete (fn [{file-id :db/id}]
+                                 (e! (comments-controller/->UpdateEditCommentForm
+                                      {:comment/files
+                                       (into []
+                                             (cu/remove-by-id file-id)
+                                             value)})))}]
+      [file-upload/FileUploadButton
+       {:id "images-field"
+        :color :secondary
+        :button-attributes {:variant :text
+                            :size :small}
+        :on-drop #(e! (file-controller/map->UploadFiles
+                       {:files %
+                        :project-id project-id
+                        :attachment? true
+                        :on-success (fn [uploaded-files]
+                                      (log/info "FILES UPLOADED: " uploaded-files)
+                                      (on-success-event
+                                       {:comment/files (into (or value [])
+                                                             uploaded-files)}))}))}
+       (tr [:comment :add-images])]])])
 
 ;; TODO: Both this and the create comment form should be replaced with
 ;;       form2 to make the add image button look decent.
@@ -199,32 +202,35 @@
   "File field that only allows uploading images. Files are
   directly uploaded and on-change called after success."
   [{:keys [e! value on-success-event]}]
-  [:div
-   [attachments {:files value
-                 :comment-id nil
-                 :on-delete (fn [{id :db/id}]
-                              (e! (file-controller/->DeleteAttachment
-                                   (constantly
-                                    (on-success-event
-                                     {:comment/files
-                                      (into []
-                                            (cu/remove-by-id id)
-                                            value)}))
-                                   id)))}]
-   [file-upload/FileUploadButton
-    {:id "images-field"
-     :color :secondary
-     :button-attributes {:variant :text
-                         :size :small}
-     :on-drop #(e! (file-controller/map->UploadFiles
-                    {:files %
-                     :attachment? true
-                     :on-success (fn [files]
-                                   (log/info "FILES UPLOADED: " files)
-                                   (on-success-event
-                                    {:comment/files (into (or value [])
-                                                          files)}))}))}
-    (tr [:comment :add-images])]])
+  [project-context/consume
+   (fn [{:keys [project-id]}]
+     [:div
+      [attachments {:files value
+                    :comment-id nil
+                    :on-delete (fn [{id :db/id}]
+                                 (e! (file-controller/->DeleteAttachment
+                                      (constantly
+                                       (on-success-event
+                                        {:comment/files
+                                         (into []
+                                               (cu/remove-by-id id)
+                                               value)}))
+                                      id)))}]
+      [file-upload/FileUploadButton
+       {:id "images-field"
+        :color :secondary
+        :button-attributes {:variant :text
+                            :size :small}
+        :on-drop #(e! (file-controller/map->UploadFiles
+                       {:files %
+                        :project-id project-id
+                        :attachment? true
+                        :on-success (fn [files]
+                                      (log/info "FILES UPLOADED: " files)
+                                      (on-success-event
+                                       {:comment/files (into (or value [])
+                                                             files)}))}))}
+       (tr [:comment :add-images])]])])
 
 (defn lazy-comments
   [{:keys [e! app

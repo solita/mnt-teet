@@ -29,9 +29,10 @@
 (defcommand :file/upload-attachment
   {:doc "Upload attachment file that is not linked to anything yet"
    :context {:keys [conn user db]}
-   :payload {:keys [file]}
-   :project-id nil
-   :authorization {:document/upload-document {}}}
+   ;; TODO: Pass project id to check project authz
+   :payload {:keys [file project-id]}
+   :project-id project-id
+   :authorization {:project/upload-comment-attachment {}}}
   (let [file (file-model/type-by-suffix file)]
     (check-image-only file)
     (let [res (tx [(merge (select-keys file file-keys)

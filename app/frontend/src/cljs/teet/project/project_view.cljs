@@ -24,6 +24,7 @@
             [teet.ui.itemlist :as itemlist]
             [teet.ui.material-ui :refer [Paper Link]]
             [teet.ui.panels :as panels]
+            [teet.ui.project-context :as project-context]
             [teet.ui.select :as select]
             [teet.ui.tabs :as tabs]
             [teet.ui.text-field :refer [TextField]]
@@ -482,7 +483,7 @@
 (defn project-page
   "Shows the normal project view for initialized projects, setup wizard otherwise."
   [e! app project breadcrumbs]
-  [ac/provide-authorization-info
+  [project-context/provide
    {:project-id (:db/id project)}
    [:<>
     [project-page-modals e! app project]
