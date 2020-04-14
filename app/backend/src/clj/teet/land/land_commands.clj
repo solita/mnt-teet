@@ -21,10 +21,8 @@
               :land-acquisition/impact impact
               :land-acquisition/project [:thk.project/id project-id]
               :land-acquisition/cadastral-unit cadastral-unit
-              :land-acquisition/area-to-obtain (when area-to-obtain
-                                                 (Long/parseLong area-to-obtain))
-              :land-acquisition/pos-number (when pos-number
-                                             (Long/parseLong pos-number))}
+              :land-acquisition/area-to-obtain area-to-obtain
+              :land-acquisition/pos-number pos-number}
              (meta-model/creation-meta user)))]})
 
 
@@ -56,9 +54,7 @@
    [(cu/without-nils
       (merge {:db/id id
               :land-acquisition/impact impact
-              :land-acquisition/area-to-obtain (when area-to-obtain
-                                                 (Long/parseLong area-to-obtain))
-              :land-acquisition/pos-number (when pos-number
-                                             pos-number)}
+              :land-acquisition/area-to-obtain area-to-obtain
+              :land-acquisition/pos-number pos-number}
              (meta-model/modification-meta user)))]})
 
