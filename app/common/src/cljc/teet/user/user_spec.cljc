@@ -26,3 +26,16 @@
 
 (s/def :admin/create-user (s/keys :req [:user/person-id]))
 (s/def :admin/list-users (s/keys))
+
+;; User entity id
+(s/def :user/eid (s/or :db-id integer?
+                       :user-id ::user-id-ref
+                       :person-id ::person-id-ref))
+
+(s/def ::user-id-ref (s/and vector?
+                            (s/cat :user-id-kw #(= :user/id %)
+                                   :user-uuid uuid?)))
+
+(s/def ::person-id-ref (s/and vector?
+                              (s/cat :person-id-kw #(= :user/person-id %)
+                                     :person-id estonian-person-id?)))

@@ -831,4 +831,10 @@
           ;; Notification status types
           {:db/ident :notification.status/unread
            :enum/attribute :notification/status}
-          {:db/ident :notification.status/acknowledged}]]}]
+          {:db/ident :notification.status/acknowledged}]]}
+
+ {:db/ident :migration/task-waiting-for-review-status
+  :txes [[{:db/ident :task.status/waiting-for-review
+           :enum/attribute :task/status}
+          {:db/ident :notification.type/task-waiting-for-review
+           :enum/attribute :notification/type}]]}]
