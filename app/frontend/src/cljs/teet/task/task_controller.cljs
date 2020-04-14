@@ -24,7 +24,18 @@
 (defrecord OpenAddDocumentDialog [])
 (defrecord CloseAddDocumentDialog [])
 
+(defrecord SubmitResults [])
+
 (extend-protocol t/Event
+  SubmitResults
+  (process-event [_ {params :params :as app}]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :task/submit
+           :payload {:task-id (goog.math.Long/fromString (:task params))}
+           :success-message (tr [:task :submit-results-success])
+           :result-event common-controller/->Refresh}))
+
   OpenEditModal
   (process-event [{entity :entity} {:keys [params page query] :as app}]
     (t/fx app

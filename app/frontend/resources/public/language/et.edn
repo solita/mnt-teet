@@ -381,6 +381,10 @@
   :create-success-notification "Ülesanne edukalt loodud",
   :documents "Dokumendid",
   :add-document "Lisan dokumendi",
+  :submit-results "Esitage tulemused",
+  :submit-results-success "Tulemused on edukalt esitatud",
+  :submit-results-confirm
+  "Kas soovite kindlasti vastused {task} saata?",
   :no-documents "Dokumente ei ole",
   :edit-success-notification "Ülesanne edukalt muudetud",
   :results "Tulemused"},
