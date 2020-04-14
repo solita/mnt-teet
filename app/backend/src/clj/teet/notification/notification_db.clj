@@ -28,7 +28,8 @@
   [db user]
   ;; TODO
   (map first
-       (d/q '[:find (pull ?notification [:notification/status :notification/target :notification/type
+       (d/q '[:find (pull ?notification [:db/id :notification/status
+                                         :notification/target :notification/type
                                          :meta/created-at :meta/creator])
               :in $ ?user
               :where
@@ -46,3 +47,13 @@
                db
                notification-id
                (user-model/user-ref user))))
+
+(defn user-notification? [db user notification-id]
+  (boolean
+   (seq
+    (d/q '[:find ?notification
+           :where [?notification :notification/receiver ?user]
+           :in $ ?user ?notification]
+         db
+         (user-model/user-ref user)
+         notification-id))))

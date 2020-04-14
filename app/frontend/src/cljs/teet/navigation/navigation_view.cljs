@@ -17,6 +17,7 @@
             [herb.core :as herb :refer [<class]]
             [teet.authorization.authorization-check :refer [authorized?]]
             [teet.login.login-controller :as login-controller]
+            [teet.notification.notification-controller :as notification-controller]
             [teet.ui.query :as query]))
 
 (def entity-quote (fnil js/escape "(nil)"))
@@ -160,8 +161,9 @@
      [Menu {:anchor-el @selected-item
             :open (boolean @selected-item)
             :on-close handle-close!}
-      (mapc (fn [{:notification/keys [type target]}]
-              [MenuItem {:on-click :D}
+      (mapc (fn [{:notification/keys [type target]
+                  id :db/id :as it}]
+              [MenuItem {:on-click (e! notification-controller/->Acknowledge id)}
                (tr-enum type)])
             notifications)]]))
 
