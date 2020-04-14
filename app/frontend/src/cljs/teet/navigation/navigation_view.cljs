@@ -7,18 +7,17 @@
                                          Badge IconButton Menu MenuItem]]
             [teet.ui.icons :as icons]
             [teet.ui.common :as ui-common]
-            [teet.localization :as localization :refer [tr]]
+            [teet.ui.util :refer [mapc]]
+            [teet.localization :as localization :refer [tr tr-enum]]
             [teet.navigation.navigation-controller :as navigation-controller]
             [teet.navigation.navigation-logo :as navigation-logo]
             [teet.navigation.navigation-style :as navigation-style]
             [teet.search.search-view :as search-view]
-            [teet.common.common-controller :refer [when-feature]]
+            [teet.common.common-controller :as common-controller :refer [when-feature]]
             [herb.core :as herb :refer [<class]]
-            [teet.user.user-controller :as user-controller]
             [teet.authorization.authorization-check :refer [authorized?]]
             [teet.login.login-controller :as login-controller]
-            [taoensso.timbre :as log]
-            [teet.common.common-controller :as common-controller]))
+            [teet.ui.query :as query]))
 
 (def entity-quote (fnil js/escape "(nil)"))
 
@@ -142,15 +141,15 @@
           :on-click (e! login-controller/->Logout)}
     (tr [:common :log-out])]])
 
-(defn notifications []
+(defn- notifications* [e! notifications]
   (r/with-let [selected-item (r/atom nil)
                handle-click! (fn [event]
                                (reset! selected-item (.-currentTarget event)))
                handle-close! (fn []
                                (reset! selected-item nil))]
     [:div {:class (herb/join (<class navigation-style/notification-style)
-                            (<class navigation-style/divider-style))}
-     [Badge {:badge-content 5
+                             (<class navigation-style/divider-style))}
+     [Badge {:badge-content (count notifications)
              :color "error"}
       [IconButton
        {:color "primary"
@@ -161,15 +160,24 @@
      [Menu {:anchor-el @selected-item
             :open (boolean @selected-item)
             :on-close handle-close!}
-      [MenuItem {:on-click handle-close!} "Test item 10"]
-      [MenuItem {:on-click handle-close!} "Test item 2"]]]))
+      (mapc (fn [{:notification/keys [type target]}]
+              [MenuItem {:on-click :D}
+               (tr-enum type)])
+            notifications)]]))
+
+(defn notifications [e!]
+  [query/query {:e! e!
+                :query :notification/unread-notifications
+                :args {}
+                :simple-view [notifications* e!]
+                :loading-state []}])
 
 (defn navigation-header-links
   [user e!]
   [:div {:style {:display :flex
                  :justify-content :flex-end}}
    [feedback-link]
-   [notifications]
+   [notifications e!]
    [language-selector]
    (when-feature :my-role-display
      [user-info user])
