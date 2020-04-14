@@ -128,6 +128,8 @@
   :authenticated-guest :read,
   :guest :read},
  :activity/create-activity {:admin :full, :manager :full},
+ :project/view-internal-comments
+ {:admin :full, :manager :full, :internal-consultant :link},
  :activity/change-activity-status {:admin :full, :manager :full},
  :admin/change-user-role {:admin :full},
  :activity/edit-activity
