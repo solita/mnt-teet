@@ -7,7 +7,6 @@
             [teet.ui.icons :as icons]
             teet.file.file-spec
             [teet.project.project-navigator-view :as project-navigator-view]
-            [teet.project.project-style :as project-style]
             [teet.activity.activity-style :as activity-style]
             [herb.core :refer [<class]]
             [teet.activity.activity-controller :as activity-controller]
@@ -33,13 +32,12 @@
              (mapc (fn [{id :db/ident :as t}]
                      [:div
                       [select/checkbox {:label (tr-enum t)
-                                        :value (boolean (selected id))
+                                        :value (boolean (selected [(:db/ident g) id]))
                                         :on-change #(on-change
-                                                     (cu/toggle selected id))}]])
+                                                     (cu/toggle selected [(:db/ident g) id]))}]])
                    (filter #(= (:db/ident g) (:enum/valid-for %)) task-types))]])
          (filter #(= (:db/ident activity-name)
-                     (:enum/valid-for %)) task-groups))]
-  )
+                     (:enum/valid-for %)) task-groups))])
 
 (defn- task-groups-and-tasks [{e! :e! :as opts} task-groups]
   [select/with-enum-values {:e! e! :attribute :task/type}

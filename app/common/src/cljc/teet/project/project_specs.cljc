@@ -13,10 +13,13 @@
 
 (s/def :activity/update (s/keys :req [:activity/status]))
 
-(s/def :activity/create
+(s/def ::activity
   (s/keys :req [:activity/name :activity/status
                 :activity/estimated-start-date
                 :activity/estimated-end-date]))
+
+(s/def :activity/create
+  (s/keys :req-un [::activity ::tasks ::lifecycle-id]))
 
 (s/def :project/initialization-form
   (s/keys :req [:thk.project/project-name
