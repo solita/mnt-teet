@@ -3,7 +3,7 @@
             [teet.ui.select :as select]
             [teet.ui.material-ui :refer [AppBar Toolbar Drawer List ListItem
                                          ListItemText ListItemIcon Link LinearProgress
-                                         Badge]]
+                                         Badge IconButton]]
             [teet.ui.icons :as icons]
             [teet.ui.common :as ui-common]
             [teet.localization :as localization :refer [tr]]
@@ -146,7 +146,11 @@
                            (<class navigation-style/divider-style))}
    [Badge {:badge-content 5
            :color "error"}
-    [icons/social-notifications {:color "primary"}]]])
+    [IconButton
+     {:color "primary"
+      :size "small"
+      :component "span"}
+     [icons/social-notifications {:color "primary"}]]]])
 
 (defn navigation-header-links
   [user e!]
