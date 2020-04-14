@@ -3,6 +3,13 @@
             [teet.util.collection :refer [find-idx]]
             [teet.util.date :as date]))
 
+(def task-group-order
+  {:task.group/base-data 1
+   :task.group/study 2
+   :task.group/land-purchase 3
+   :task.group/design 4
+   :task.group/design-approval 4})
+
 (defn file-by-id-path
   "Returns vector path to the given file in task."
   [task file-id]

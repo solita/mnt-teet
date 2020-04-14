@@ -17,7 +17,8 @@
             [teet.project.project-map-view :as project-map-view]
             [teet.ui.breadcrumbs :as breadcrumbs]
             [teet.ui.panels :as panels]
-            [teet.project.project-style :as project-style]))
+            [teet.project.project-style :as project-style]
+            [teet.project.task-model :as task-model]))
 
 (defn- svg-style
   [bottom?]
@@ -197,7 +198,8 @@
                   (tr [:enum (:db/ident type)])]]]]))]])
 
        ;; group tasks by the task group
-       (group-by :task/group tasks))]
+       (sort-by (comp task-model/task-group-order :db/ident first)
+                (group-by :task/group tasks)))]
      [:div {:class (<class item-class (= :done activity-state) dark-theme?)}
       [:div {:class (<class task-info dark-theme?)}
        [:span (tr [:project :activity :no-tasks])]]])
