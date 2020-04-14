@@ -1,7 +1,6 @@
 (ns teet.notification.notification-db
   "Utilities for notifications"
   (:require [datomic.client.api :as d]
-            [teet.db-api.core :as db-api]
             [teet.meta.meta-model :as meta-model]
             teet.user.user-spec
             [clojure.spec.alpha :as s]))

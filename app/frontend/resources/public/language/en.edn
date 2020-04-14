@@ -379,6 +379,10 @@
   :create-success-notification "Task created successfully",
   :documents "Documents",
   :add-document "Add document",
+  :submit-results "Submit results",
+  :submit-results-success "Results submitted successfully",
+  :submit-results-confirm
+  "Are you sure you want to submit the reults to {task}?",
   :no-documents "No documents",
   :edit-success-notification "Task edited successfully",
   :results "Results"},
