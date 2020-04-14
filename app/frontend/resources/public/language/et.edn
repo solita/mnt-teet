@@ -234,6 +234,7 @@
   :comment/comment "Märkus",
   :file/timestamp "Üleslaadimise kuupäev",
   :land-acquisition/area-to-obtain "Omandatav ala",
+  :thk.project/repair-method "Remondimeetod",
   :land-acquisition/impact "Mõju",
   :file/type "Tüüp",
   :task/actual-start-date "Alguskuupäev",
