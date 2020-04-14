@@ -1,15 +1,18 @@
 (ns teet.meta.meta-model
   "Transaction functions for meta data"
+  (:require [teet.user.user-model :as user-model])
   (:import (java.util Date)))
 
 (defn creation-meta
-  [{id :user/id :as _user}]
-  {:meta/creator    [:user/id id]
+  [user]
+  {:pre [(user-model/user-ref user)]}
+  {:meta/creator    (user-model/user-ref user)
    :meta/created-at (Date.)})
 
 (defn modification-meta
-  [{id :user/id :as _user}]
-  {:meta/modifier    [:user/id id]
+  [user]
+  {:pre [(user-model/user-ref user)]}
+  {:meta/modifier    (user-model/user-ref user)
    :meta/modified-at (Date.)})
 
 (defn deletion-tx
@@ -21,4 +24,4 @@
 (defn tx-meta
   [user]
   {:db/id "datomic.tx"
-   :tx/author (:user/id user)})
+   :tx/author (user-model/user-ref user)})

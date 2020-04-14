@@ -1,4 +1,6 @@
-(ns teet.user.user-model)
+(ns teet.user.user-model
+  (:require teet.user.user-spec
+            [clojure.spec.alpha :as s]))
 
 (def user-listing-attributes
   [:user/id
@@ -21,3 +23,20 @@
   (str (user-name user)
        (when email
          (str " (" email ")"))))
+
+(defn user-ref
+  "Returns a user reference suitable for a datomic ref value.
+  User may be a user reference (eid) or a user entity map."
+  [user]
+  (cond
+    ;; Valid user reference, return as is
+    (s/valid? :user/eid user)
+    user
+
+    ;; This is a user entity map, return db id
+    (and (map? user)
+         (contains? user :db/id))
+    (:db/id user)
+
+    ;; Not valid user
+    :else nil))
