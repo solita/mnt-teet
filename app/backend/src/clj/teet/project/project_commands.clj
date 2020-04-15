@@ -55,9 +55,9 @@ and cadastral units"
                                   {:thk.project/related-cadastral-units related-cadastral-units})
                                 (modification-meta user))]})]
         (project-geometry/update-project-geometries!
-         (environment/config-map {:api-url           [:api-url]
-                                  :api-shared-secret [:auth :jwt-secret]
-                                  :wfs-url [:road-registry :wfs-url]})
+          (environment/config-map {:api-url [:api-url]
+                                   :api-shared-secret [:auth :jwt-secret]
+                                   :wfs-url [:road-registry :wfs-url]})
           [(d/pull db '[:db/id :thk.project/name
                         :thk.project/road-nr :thk.project/carriageway
                         :thk.project/start-m :thk.project/end-m
@@ -83,13 +83,29 @@ and cadastral units"
    :payload {id :thk.project/id :as project-form}
    :project-id [:thk.project/id id]
    :authorization {:project/project-info {:eid [:thk.project/id id]
-                                          :link :thk.project/owner}}
-   :transact [(merge (cu/without-nils (select-keys project-form
-                                                   [:thk.project/id
-                                                    :thk.project/owner
-                                                    :thk.project/manager
-                                                    :thk.project/project-name]))
-                     (modification-meta user))]})
+                                          :link :thk.project/owner}}}
+  (let [{db :db-after} (d/transact
+                         conn
+                         {:tx-data [(merge (cu/without-nils (select-keys project-form
+                                                                         [:thk.project/id
+                                                                          :thk.project/owner
+                                                                          :thk.project/manager
+                                                                          :thk.project/m-range-change-reason
+                                                                          :thk.project/project-name
+                                                                          :thk.project/custom-start-m
+                                                                          :thk.project/custom-end-m]))
+                                           (modification-meta user))]})]
+    (when (or (:thk.project/custom-start-m project-form) (:thk.project/custom-end-m project-form))
+      (project-geometry/update-project-geometries!
+        (environment/config-map {:api-url [:api-url]
+                                 :api-shared-secret [:auth :jwt-secret]
+                                 :wfs-url [:road-registry :wfs-url]})
+        [(d/pull db '[:db/id :thk.project/name
+                      :thk.project/road-nr :thk.project/carriageway
+                      :thk.project/start-m :thk.project/end-m
+                      :thk.project/custom-start-m :thk.project/custom-end-m]
+                 [:thk.project/id id])]))
+    :ok))
 
 (defcommand :thk.project/continue-setup
   {:doc "Undo project setup skip"
@@ -163,26 +179,26 @@ and cadastral units"
         user-already-added?
         (and user-exists?
              (boolean
-              (seq
-               (permission-db/user-permission-for-project db [:user/id (:user/id user)] project-id))))]
+               (seq
+                 (permission-db/user-permission-for-project db [:user/id (:user/id user)] project-id))))]
     (if-not user-already-added?
       (let [tx [(merge
-                 {:db/id (if user-exists?
-                           [:user/id (:user/id user)]
-                           "new-user")
-                  :user/permissions
-                  [(merge {:db/id "new-permission"
-                           :permission/role role
-                           :permission/projects project-id
-                           :permission/valid-from (Date.)}
-                          (creation-meta granting-user))]}
-                 (when-not user-exists?
-                   {:user/person-id (let [pid (:user/person-id user)]
-                                      ;; Normalize estonian ids to start with "EE"
-                                      (if (str/starts-with? pid "EE")
-                                        pid
-                                        (str "EE" pid)))
-                    :user/roles [:user]}))]]
+                  {:db/id (if user-exists?
+                            [:user/id (:user/id user)]
+                            "new-user")
+                   :user/permissions
+                   [(merge {:db/id "new-permission"
+                            :permission/role role
+                            :permission/projects project-id
+                            :permission/valid-from (Date.)}
+                           (creation-meta granting-user))]}
+                  (when-not user-exists?
+                    {:user/person-id (let [pid (:user/person-id user)]
+                                       ;; Normalize estonian ids to start with "EE"
+                                       (if (str/starts-with? pid "EE")
+                                         pid
+                                         (str "EE" pid)))
+                     :user/roles [:user]}))]]
         (d/transact conn {:tx-data tx})
         {:success "User added successfully"})
       (db-api/fail!
