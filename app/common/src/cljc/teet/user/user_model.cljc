@@ -33,10 +33,10 @@
     (s/valid? :user/eid user)
     user
 
-    ;; This is a user entity map, return db id
+    ;; This is a user entity map, return user uuid
     (and (map? user)
-         (contains? user :db/id))
-    (:db/id user)
+         (contains? user :user/id))
+    (:user/id user)
 
     ;; Not valid user
     :else nil))
