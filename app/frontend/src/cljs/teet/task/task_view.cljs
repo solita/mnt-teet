@@ -29,6 +29,7 @@
             [teet.ui.icons :as icons]
             [teet.theme.theme-colors :as theme-colors]))
 
+;; PENDING: remove this once we have workflow rules (no manual changing)
 (defn task-status [e! {:task/keys [status]}]
   [select/select-enum {:e! e!
                        :on-change (e! task-controller/->UpdateTaskStatus)
