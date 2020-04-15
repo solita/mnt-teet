@@ -34,7 +34,8 @@
         :on-click handle-click!}
        [icons/social-notifications {:color "primary"}]]]
      [Menu {:anchor-el @selected-item
-            :anchor-origin {:vertical :bottom}
+            :anchor-origin {:vertical :bottom
+                            :horizontal :center}
             :get-content-anchor-el nil
             :open (boolean @selected-item)
             :on-close handle-close!}
