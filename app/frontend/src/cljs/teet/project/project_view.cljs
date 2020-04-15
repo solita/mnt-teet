@@ -33,16 +33,24 @@
             [teet.theme.theme-colors :as theme-colors]
             [teet.project.search-area-controller :as search-area-controller]
             [teet.user.user-model :as user-model]
+            [teet.ui.num-range :as num-range]
             [teet.project.project-map-view :as project-map-view]
-            [teet.common.common-controller :as common-controller]))
+            [teet.common.common-controller :as common-controller]
+            [teet.road.road-model :as road-model]))
+
+
 
 (defn project-details
-  [_e! {:thk.project/keys [estimated-start-date estimated-end-date road-nr
+  [e! {:thk.project/keys [estimated-start-date estimated-end-date road-nr
                            carriageway repair-method procurement-nr id] :as project}]
   (let [project-name (project-model/get-column project :thk.project/project-name)
         [start-km end-km] (project-model/get-column project :thk.project/effective-km-range)]
     [:div
-     [typography/Heading2 {:style {:margin-bottom "2rem"}} project-name]
+     [:div {:class (<class common-styles/heading-and-button-style)}
+      [typography/Heading2 project-name]
+      [buttons/button-secondary {:size :small
+                                 :on-click (e! project-controller/->OpenEditDetailsDialog)}
+       (tr [:buttons :edit])]]
      [:div [:span "THK id: " id]]
      [:div [:span (tr [:project :information :estimated-duration])
             ": "
@@ -329,11 +337,14 @@
 (defn- project-tab [e! app project]
   [(:component (selected-project-tab app)) e! app project])
 
-(defn edit-project-basic-information
+(defn edit-project-management
   [e! project]
   (when-not (:basic-information-form project)
     (e! (project-controller/->UpdateBasicInformationForm
           (cu/without-nils {:thk.project/project-name (or (:thk.project/project-name project) (:thk.project/name project))
+                            :thk.project/km-range     (-> project
+                                                          (project-model/get-column :thk.project/effective-km-range)
+                                                          project-setup-view/format-range)
                             :thk.project/owner (:thk.project/owner project)
                             :thk.project/manager (:thk.project/manager project)}))))
   (fn [e! {form :basic-information-form :as project}]
@@ -342,10 +353,6 @@
                 :on-change-event project-controller/->UpdateBasicInformationForm
                 :save-event project-controller/->PostProjectEdit
                 :spec :project/edit-form}
-
-     ^{:attribute :thk.project/project-name
-       :adornment [project-setup-view/original-name-adornment e! project]}
-     [TextField {:full-width true :variant :outlined}]
 
      ^{:attribute :thk.project/owner}
      [select/select-user {:e! e! :attribute :thk.project/owner}]
@@ -463,6 +470,46 @@
   [project-page-structure e! app project breadcrumbs
    (project-setup-view/view-settings e! app project)])
 
+(defn edit-project-details
+  [e! project]
+  (when-not (:basic-information-form project)
+    (e! (project-controller/->InitializeBasicInformationForm
+          (cu/without-nils {:thk.project/project-name (:thk.project/name project)
+                            :thk.project/km-range     (-> project
+                                                          (project-model/get-column :thk.project/effective-km-range)
+                                                          project-setup-view/format-range)
+                            :thk.project/owner (:thk.project/owner project)
+                            :thk.project/manager (:thk.project/manager project)}))))
+  (fn [e! {form :basic-information-form :as project}]
+    [form/form {:e! e!
+                :value form
+                :on-change-event project-controller/->UpdateBasicInformationForm
+                :save-event project-controller/->PostProjectEdit
+                :cancel-event project-controller/->CancelUpdateProjectInformation
+                :spec :project/edit-details-form}
+
+     ^{:attribute :thk.project/project-name
+       :adornment [project-setup-view/original-name-adornment e! project]}
+     [TextField {:full-width true :variant :outlined}]
+     (let [min-km (some-> project :road-info :start-m road-model/m->km)
+           max-km (some-> project :road-info :end-m road-model/m->km)]
+       ^{:xs 12 :attribute :thk.project/km-range
+         :validate (fn [[start end :as value]]
+                     (when (or (num-range/num-range-error nil value start min-km max-km)
+                               (num-range/num-range-error nil value end min-km max-km))
+                       (str "Valid km range: " min-km "km - " max-km "km")))}
+       [num-range/num-range {:start-label "Start km"
+                             :end-label "End km"
+                             :min-value min-km
+                             :max-value max-km
+                             :reset-start (partial project-setup-view/reset-range-value e! project :start)
+                             :reset-end (partial project-setup-view/reset-range-value e! project :end)}])
+     (when (project-setup-view/km-range-changed? project)
+       ^{:xs 12 :attribute :thk.project/m-range-change-reason}
+       [TextField {:multiline true
+                   :rows 3}])]))
+
+
 (defn project-page-modals
   [e! {{:keys [edit]} :query} project]
   (let [[modal modal-label]
@@ -470,8 +517,11 @@
           edit
           (case edit
             "project"
-            [[edit-project-basic-information e! project]
-             (tr [:project :edit-project])])
+            [[edit-project-management e! project]
+             (tr [:project :edit-project])]
+            "details"
+            [[edit-project-details e! project]
+             "Edit project details"])
           :else nil)]
     [panels/modal {:open-atom (r/wrap (boolean modal) :_)
                    :title (or modal-label "")

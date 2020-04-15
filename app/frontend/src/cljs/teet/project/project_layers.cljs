@@ -106,8 +106,7 @@
         ;; show the buffer as well, otherwise just the road line
         style (if (and
                     (not tab-drawn?)
-                    (or geometry
-                        (#{"restrictions" "cadastral-units"} (get-in app [:query :configure]))))
+                    (#{"restrictions" "cadastral-units"} (get-in app [:query :configure])))
                 (map-features/project-line-style-with-buffer (get-in app [:map :road-buffer-meters]))
                 map-features/project-line-style)]
 

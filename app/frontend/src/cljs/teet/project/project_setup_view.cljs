@@ -7,21 +7,19 @@
             [teet.project.project-controller :as project-controller]
             [teet.project.project-model :as project-model]
             [teet.project.project-specs]
+            [teet.ui.num-range :as num-range]
             [teet.project.project-style :as project-style]
             [teet.ui.buttons :as buttons]
             [teet.ui.container :as container]
             [teet.ui.form :as form]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Grid Link]]
             [teet.ui.select :as select]
             [teet.ui.text-field :refer [TextField]]
-            [teet.ui.material-ui :refer [RadioGroup FormControl FormControlLabel Radio]]
             [teet.ui.typography :as typography]
             [teet.util.collection :as cu]
             [teet.road.road-model :as road-model]
             [teet.ui.skeleton :as skeleton]
-            [teet.common.common-styles :as common-styles]
             [teet.ui.panels :as panels]
             [teet.log :as log]))
 
@@ -34,70 +32,13 @@
    [buttons/link-button {:on-click #(e! (project-controller/->UpdateBasicInformationForm {:thk.project/project-name name}))}
     name]])
 
-(defn- nan? [x]
-  (not (= x x)))
-
-(defn- num-range-error [error [start end] own-value min-value max-value]
-  (let [v (when own-value
-            (js/parseFloat own-value))]
-    (or error
-        (nan? v)
-        (and v min-value (< v min-value))
-        (and v max-value (> v max-value))
-        (and start end
-             (< (js/parseFloat end)
-                (js/parseFloat start))))))
-
-
-
-;; FIXME: This is a generic component, move to another namespace
-(defn num-range [{:keys [value on-change start-label end-label required spacing
-                         reset-start reset-end
-                         min-value max-value
-                         error error-text]
-                  :or   {spacing 3}}]
-  (let [[start end] value]
-    [Grid {:container true
-           :spacing   spacing}
-     [Grid {:item true
-            :xs   6}
-      [TextField (merge {:label     start-label
-                         :on-change (fn [e]
-                                      (on-change [(-> e .-target .-value) end]))
-                         :value     start
-                         ;; :type      :number
-                         :step      "0.001"
-                         :error     (num-range-error error value start min-value max-value)
-                         :required  required}
-                        (when reset-start
-                          {:input-button-icon icons/av-replay
-                           :input-button-click (reset-start value)}))]]
-     [Grid {:item true
-            :xs   6}
-      [TextField (merge {:label     end-label
-                         :on-change (fn [e]
-                                      (on-change [start (-> e .-target .-value)]))
-                         :value     end
-                         ;; :type      :number
-                         :step      "0.001"
-                         :error     (num-range-error error value end min-value max-value)
-                         :required  required}
-                        (when reset-end
-                          {:input-button-icon icons/av-replay
-                           :input-button-click (reset-end value)}))]]
-     (when (and error error-text)
-       [Grid {:item true
-              :xs 12}
-        [:p {:class (<class common-styles/input-error-text-style)}
-         error-text]])]))
-
 (defn km-range-changed? [project]
-  (let [{:thk.project/keys [start-m end-m]} project
+  (let [{:thk.project/keys [start-m end-m custom-end-m custom-start-m]} project
         [start-km end-km] (-> project :basic-information-form :thk.project/km-range)
         form-start-m (long (* 1000 (js/parseFloat start-km)))
         form-end-m (long (* 1000 (js/parseFloat end-km)))]
-    (or (not= form-start-m start-m)
-        (not= form-end-m end-m))))
+    (or (not= form-start-m (or custom-start-m start-m))
+        (not= form-end-m (or custom-end-m end-m)))))
 
 (defn format-range [km-range]
   (mapv #(gstring/format "%.3f" %) km-range))
@@ -145,17 +86,16 @@
             max-km (some-> project :road-info :end-m road-model/m->km)]
         ^{:xs 12 :attribute :thk.project/km-range
           :validate (fn [[start end :as value]]
-                      (when (or (num-range-error nil value start min-km max-km)
-                                (num-range-error nil value end min-km max-km))
+                      (when (or (num-range/num-range-error nil value start min-km max-km)
+                                (num-range/num-range-error nil value end min-km max-km))
                         (str "Valid km range: " min-km "km - " max-km "km")))}
-        [num-range {:start-label "Start km"
-                    :end-label   "End km"
-                    :min-value min-km
-                    :max-value max-km
-                    :reset-start (partial reset-range-value e! project :start)
-                    :reset-end   (partial reset-range-value e! project :end)}])
+        [num-range/num-range {:start-label "Start km"
+                              :end-label "End km"
+                              :min-value min-km
+                              :max-value max-km
+                              :reset-start (partial reset-range-value e! project :start)
+                              :reset-end (partial reset-range-value e! project :end)}])
 
-      ;; FIXME: The map should also reflect the changed range
       (when (km-range-changed? project)
         ^{:xs 12 :attribute :thk.project/m-range-change-reason}
         [TextField {:multiline true

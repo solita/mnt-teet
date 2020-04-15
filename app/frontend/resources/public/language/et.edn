@@ -86,6 +86,8 @@
   :file.status/ready "Valmis",
   :activity.name/detailed-design "Põhiprojekt",
   :activity.status/expired "Aegunud",
+  :notification.type/task-waiting-for-review
+  "Ülesanne ootab ülevaatamist",
   :file.status/approved "Kinnitatud / Kehtiv",
   :task.type/acceptances "Kooskõlastused",
   :document.sub-category/terms-of-reference "Lähteülesanne",
@@ -121,6 +123,7 @@
   :task.type/eia-pre-assessment "KMH eelhinnang",
   :task.group/study "Uuringud",
   :file.status/draft "Mustand",
+  :notification.type/comment-created "Uus märkus",
   :activity.status/valid "Kehtiv",
   :comment.visibility/all "Avalik",
   :comment.visibility/internal "Sisemine",
@@ -276,7 +279,8 @@
    :layer "kiht",
    :no-filters "Ei filtrid"}},
  :notifications
- {:task-status-updated "Ülesande olek edukalt värskendatud",
+ {:no-unread-notifications "Lugemata teatisi pole",
+  :task-status-updated "Ülesande olek edukalt värskendatud",
   :task-deleted "Ülesanne edukalt kustutatud",
   :permission-added-successfully "Luba on edukalt lisatud",
   :comment-edited "Kommentaar edukalt muudetud",
@@ -299,6 +303,7 @@
   :remove-from-project "Eemaldan projektist",
   :details-view "Detailid",
   :map-view "Kaart",
+  :project-updated "Projekti värskendati edukalt",
   :new-activity "Lisan tegevuse",
   :add-activity
   #:thk.lifecycle-type{:design "Lisan faasi",

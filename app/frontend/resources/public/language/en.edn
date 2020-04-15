@@ -84,6 +84,7 @@
   :file.status/ready "Ready",
   :activity.name/detailed-design "Detailed design",
   :activity.status/expired "Expired",
+  :notification.type/task-waiting-for-review "Task waiting for review",
   :file.status/approved "Approved / Valid",
   :task.type/acceptances "Acceptances",
   :document.sub-category/terms-of-reference "Terms of Reference",
@@ -118,6 +119,7 @@
   :task.type/eia-pre-assessment "EIA pre-assessment",
   :task.group/study "Studies",
   :file.status/draft "Draft",
+  :notification.type/comment-created "New comment",
   :activity.status/valid "Valid",
   :comment.visibility/all "Public",
   :comment.visibility/internal "Visble internally",
@@ -276,7 +278,8 @@
    :layer "layer",
    :no-filters "No filters available."}},
  :notifications
- {:task-status-updated "Task status updated successfully",
+ {:no-unread-notifications "No unread notifications",
+  :task-status-updated "Task status updated successfully",
   :task-deleted "Task deleted successfully",
   :permission-added-successfully "Permission added successfully",
   :comment-edited "Comment edited successfully",
@@ -299,6 +302,7 @@
   :remove-from-project "Remove from project",
   :details-view "Details",
   :map-view "Map",
+  :project-updated "Project updated successfully",
   :new-activity "Add activity",
   :add-activity
   #:thk.lifecycle-type{:design "Add phase", :construction "Add stage"},
