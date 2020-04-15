@@ -18,3 +18,8 @@
 (defn project-name-style
   []
   {:display :block})
+
+(defn actitivies-ul-style
+  []
+  {:margin 0
+   :padding-left "18px"})
