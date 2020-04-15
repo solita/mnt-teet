@@ -1,4 +1,5 @@
-{:task/task-information
+{:task/review {:admin :full, :manager :full},
+ :task/task-information
  {:admin :full,
   :manager :full,
   :internal-consultant :read,
@@ -123,6 +124,11 @@
   :manager :link,
   :internal-consultant :link,
   :authenticated-guest :link},
+ :task/submit-results
+ {:admin :full,
+  :manager :full,
+  :internal-consultant :link,
+  :external-consultant :link},
  :activity/activity-info
  {:admin :full,
   :manager :full,
