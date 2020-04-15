@@ -205,6 +205,7 @@
   :task/thk-type "THK tüüp",
   :task/type "Ülesanne",
   :task/actual-end-date "Lõppkuupäev",
+  :thk.project/activity-status "Tegevusseisundid",
   :task/assignee "Vastutav isik",
   :thk.project/owner-info "Projektijuht",
   :activity/status "Olek",
@@ -352,7 +353,8 @@
  {:title "Projektid",
   :map-view "Kaart",
   :list-view "Projektide loetelu",
-  :unassigned-only "Määramata projektid"},
+  :unassigned-only "Määramata projektid",
+  :no-activities "Ei mingeid tegevusi"},
  :roles
  {:internal-consultant "Sisemine konsultant",
   :owner "Projektijuht",
