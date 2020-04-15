@@ -1,6 +1,7 @@
 (ns teet.thk.thk-mapping
   "Mapping of information between THK CSV and TEET attribute keywords"
-  (:require [clojure.string :as str])
+  (:require [clojure.string :as str]
+            [clojure.java.io :as io])
   (:import (java.text SimpleDateFormat)))
 
 (defn- blank? [s]
@@ -131,6 +132,7 @@
    "activity_id"
    "activity_teetid"
    "activity_taskid"
+   "activity_taskdescr"
    "activity_typefk"
    "activity_shortname"
    "activity_statusfk"
@@ -152,6 +154,19 @@
   (when-not (str/blank? id)
     {:db/id (str "new-user-" id)
      :user/person-id id}))
+
+(defonce estonian-translations
+  (delay
+    (-> "et.edn"
+        io/resource io/reader slurp
+        read-string)))
+
+(defn tr-enum [value]
+  (let [value (get-in @estonian-translations [:enum value])]
+    (if value
+      value
+      (throw (ex-info "Can't find estonian translation"
+                      {:enum value})))))
 
 (def thk->teet
   {;; Object/project fields
@@ -204,12 +219,17 @@
    "phase_cost" {:attribute :phase/cost}
 
    ;; Activity fields
-   "activity_id" {:attribute :thk.activity/id}
+   "activity_id" {:attribute :thk.activity/id
+                  ;; Tasks sent to THK have activity id as well
+                  :task {:attribute :thk.activity/id}}
    "activity_teetid" {:attribute :db/id
                       :parse ->int}
    "activity_taskid" {:attribute :activity/task-id
                       :parse ->int
                       :task {:attribute :db/id}}
+   "activity_taskdescr" {:attribute :activity/task-description
+                         :task {:attribute :task/type
+                                :format tr-enum}}
    "activity_typefk" {:attribute :activity/name
                       :parse thk-activity-type->activity-name
                       :format (comp activity-name->thk-activity-type :db/ident)

@@ -39,7 +39,8 @@
              "datomic-cloud" {:url "s3://datomic-releases-1fc2183a/maven/releases"}
 
              }
- :paths ["src/clj" "../common/src/cljc" "../common/src/clj" "resources"]
+ :paths ["src/clj" "../common/src/cljc" "../common/src/clj" "resources"
+         "../frontend/resources/public/language"]
  :aliases {:dev {:extra-deps {com.datomic/ion-dev {:mvn/version "0.9.234"}
                               org.clojure/tools.namespace {:mvn/version "0.3.1"}}
                  :extra-paths ["dev-src" "test"]}
