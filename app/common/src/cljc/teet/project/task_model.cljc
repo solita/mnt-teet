@@ -48,14 +48,28 @@
                                 :task.status/accepted})
 
 
-(defn completed? [{status :task/status}]
-  (boolean (completed-statuses (:db/ident status))))
+(def ^:const waiting-for-review-statuses #{:task.status/waiting-for-review})
 
-(defn rejected? [{status :task/status}]
-  (boolean (rejected-statuses (:db/ident status))))
+(def ^:const accepted-statuses #{:task.status/accepted})
+(def ^:const review-outcome-statuses #{:task.status/accepted :task.status/rejected})
 
-(defn in-progress? [{status :task/status}]
-  (boolean (in-progress-statuses (:db/ident status))))
+(defn- in-status [statuses task]
+  (boolean (statuses (get-in task [:task/status :db/ident]))))
+
+(def waiting-for-review? (partial in-status waiting-for-review-statuses))
+(def completed? (partial in-status completed-statuses))
+(def rejected? (partial in-status rejected-statuses))
+(def accepted? (partial in-status accepted-statuses))
+(def in-progress? (partial in-status in-progress-statuses))
+
+(defn can-submit?
+  "Determine if the task results can be submitted. If true, task
+  result files can be added and the task can be sent for review."
+  [task]
+  (and (not (waiting-for-review? task))
+       (not (accepted? task))))
+
+
 
 (defn task-with-status
   [{:task/keys [assignee estimated-start-date estimated-end-date] :as task}]

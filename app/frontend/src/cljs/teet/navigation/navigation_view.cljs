@@ -1,14 +1,11 @@
 (ns teet.navigation.navigation-view
-  (:require [reagent.core :as r]
-            [teet.routes :as routes]
+  (:require [teet.routes :as routes]
             [teet.ui.select :as select]
             [teet.ui.material-ui :refer [AppBar Toolbar Drawer List ListItem
-                                         ListItemText ListItemIcon Link LinearProgress
-                                         Badge IconButton Menu MenuItem]]
+                                         ListItemText ListItemIcon Link LinearProgress]]
             [teet.ui.icons :as icons]
             [teet.ui.common :as ui-common]
-            [teet.ui.util :refer [mapc]]
-            [teet.localization :as localization :refer [tr tr-enum]]
+            [teet.localization :as localization :refer [tr]]
             [teet.navigation.navigation-controller :as navigation-controller]
             [teet.navigation.navigation-logo :as navigation-logo]
             [teet.navigation.navigation-style :as navigation-style]
@@ -17,8 +14,7 @@
             [herb.core :as herb :refer [<class]]
             [teet.authorization.authorization-check :refer [authorized?]]
             [teet.login.login-controller :as login-controller]
-            [teet.notification.notification-controller :as notification-controller]
-            [teet.ui.query :as query]))
+            [teet.notification.notification-view :as notification-view]))
 
 (def entity-quote (fnil js/escape "(nil)"))
 
@@ -26,25 +22,26 @@
 
 (defn language-selector
   []
-  [select/select-with-action {:container-class (herb/join (<class navigation-style/language-select-container-style)
-                                                          (<class navigation-style/divider-style))
-                              :label (str (tr [:common :language]))
-                              :select-class (<class navigation-style/language-select-style)
-                              :id "language-select"
-                              :name "language"
-                              :value (case @localization/selected-language
-                                       :et
-                                       {:value "et" :label (get localization/language-names "et")}
-                                       :en
-                                       {:value "en" :label (get localization/language-names "en")})
-                              :items [{:value "et" :label (get localization/language-names "et")}
-                                      {:value "en" :label (get localization/language-names "en")}]
-                              :on-change (fn [val]
-                                           (localization/load-language!
-                                             (keyword (:value val))
-                                             (fn [language _]
-                                               (reset! localization/selected-language
-                                                       language))))}])
+  [select/select-with-action
+   {:container-class (herb/join (<class navigation-style/language-select-container-style)
+                                (<class navigation-style/divider-style))
+    :label (str (tr [:common :language]))
+    :select-class (<class navigation-style/language-select-style)
+    :id "language-select"
+    :name "language"
+    :value (case @localization/selected-language
+             :et
+             {:value "et" :label (get localization/language-names "et")}
+             :en
+             {:value "en" :label (get localization/language-names "en")})
+    :items [{:value "et" :label (get localization/language-names "et")}
+            {:value "en" :label (get localization/language-names "en")}]
+    :on-change (fn [val]
+                 (localization/load-language!
+                  (keyword (:value val))
+                  (fn [language _]
+                    (reset! localization/selected-language
+                            language))))}])
 
 
 (defn feedback-link
@@ -142,59 +139,14 @@
           :on-click (e! login-controller/->Logout)}
     (tr [:common :log-out])]])
 
-(defn- notifications* [e! notifications]
-  (r/with-let [selected-item (r/atom nil)
-               handle-click! (fn [event]
-                               (reset! selected-item (.-currentTarget event)))
-               handle-close! (fn []
-                               (reset! selected-item nil))]
-    [:div {:class (herb/join (<class navigation-style/notification-style)
-                             (<class navigation-style/divider-style))}
-     [Badge {:badge-content (count notifications)
-             :color "error"}
-      [IconButton
-       {:color "primary"
-        :size "small"
-        :component "span"
-        :on-click handle-click!}
-       [icons/social-notifications {:color "primary"}]]]
-     [Menu {:anchor-el @selected-item
-            :anchor-origin {:vertical :bottom}
-            :get-content-anchor-el nil
-            :open (boolean @selected-item)
-            :on-close handle-close!}
-      (if (seq notifications)
-        (mapc (fn [{:notification/keys [type]
-                    id :db/id}]
-                [MenuItem {:on-click (e! notification-controller/->Acknowledge id)}
-                 [ListItemIcon
-                  (case (:db/ident type)
-                    :notification.type/task-waiting-for-review
-                    [icons/action-assignment]
 
-                    :notification.type/comment-created
-                    [icons/communication-comment]
-
-                    [icons/navigation-more-horiz])]
-                 [ListItemText (tr-enum type)]])
-              notifications)
-        [MenuItem {:on-click handle-close!}
-         (tr [:notifications :no-unread-notifications])])]]))
-
-(defn notifications [e!]
-  [query/query {:e! e!
-                :query :notification/unread-notifications
-                :args {}
-                :simple-view [notifications* e!]
-                :loading-state []
-                :poll-seconds 300}])
 
 (defn navigation-header-links
   [user e!]
   [:div {:style {:display :flex
                  :justify-content :flex-end}}
    [feedback-link]
-   [notifications e!]
+   [notification-view/notifications e!]
    [language-selector]
    (when-feature :my-role-display
      [user-info user])

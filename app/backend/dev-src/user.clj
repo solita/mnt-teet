@@ -22,6 +22,9 @@
 (def q d/q)
 (def pull d/pull)
 
+(defn entity [eid]
+  (pull (db) '[*] eid))
+
 (defn tx
   "Transact given maps to db"
   [& maps]

@@ -18,8 +18,9 @@
 (defn task-navigation-info [db task-id]
   (let [[project activity]
         (first
-         (d/q '[:find ?project ?activity
+         (d/q '[:find ?project-id ?activity
                 :where
+                [?project :thk.project/id ?project-id]
                 [?project :thk.project/lifecycles ?lifecycle]
                 [?lifecycle :thk.lifecycle/activities ?activity]
                 [?activity :activity/tasks ?task]

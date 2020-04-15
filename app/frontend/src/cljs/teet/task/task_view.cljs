@@ -53,10 +53,7 @@
   (r/with-let [clicked? (r/atom false)]
     [:<>
      [buttons/button-primary {:on-click #(reset! clicked? true)
-                              :style {:float :right
-                                      ;; FIXME: hacky, position better with fileupload btn
-                                      :position :relative
-                                      :top "-2.2rem"}}
+                              :style {:float :right}}
       [icons/action-check-circle]
       (tr [:task :submit-results])]
      (when @clicked?
@@ -84,8 +81,18 @@
      [typography/Paragraph description])
    [task-basic-info e! task]
    [file-view/file-table files]
-   [when-authorized :task/submit task
-    [submit-results-button e! task]]])
+   (when (task-model/can-submit? task)
+     [:<>
+      [file-view/file-upload-button]
+      [when-authorized :task/submit task
+       [submit-results-button e! task]]])
+   (when (task-model/waiting-for-review? task)
+     [when-authorized :task/review task
+      [:div {:style {:display :flex :justify-content :space-between}}
+       [buttons/button-warning {:on-click (e! task-controller/->Review :task.status/rejected)}
+        (tr-enum :task.status/rejected)]
+       [buttons/button-primary {:on-click (e! task-controller/->Review :task.status/accepted)}
+        (tr-enum :task.status/accepted)]]])])
 
 (defn- task-header
   [e! task]

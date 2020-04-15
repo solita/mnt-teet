@@ -110,12 +110,7 @@
    :flex-grow 1
    :flex-basis "15%"})
 
-(defn notification-style
-  []
-  {:display :flex
-   :flex-direction :column
-   :justify-content :flex-end
-   :padding-bottom "0.5rem"})
+
 
 (defn logout-container-style
   []

@@ -24,7 +24,8 @@
 (defrecord OpenAddDocumentDialog [])
 (defrecord CloseAddDocumentDialog [])
 
-(defrecord SubmitResults [])
+(defrecord SubmitResults []) ; submit task for review
+(defrecord Review [status]) ; review results
 
 (extend-protocol t/Event
   SubmitResults
@@ -34,6 +35,15 @@
            :command :task/submit
            :payload {:task-id (goog.math.Long/fromString (:task params))}
            :success-message (tr [:task :submit-results-success])
+           :result-event common-controller/->Refresh}))
+
+  Review
+  (process-event [{status :status} {params :params :as app}]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :task/review
+           :payload {:task-id (goog.math.Long/fromString (:task params))
+                     :status status}
            :result-event common-controller/->Refresh}))
 
   OpenEditModal
