@@ -125,3 +125,7 @@
             [[:task :task/comments]
              [:file :file/comments]])
       (db-api/bad-request! "No such comment")))
+
+(defn project-owner [db project-eid]
+  (get-in (d/pull db '[:thk.project/owner] project-eid)
+          [:thk.project/owner :db/id]))

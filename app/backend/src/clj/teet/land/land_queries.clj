@@ -1,7 +1,8 @@
 (ns teet.land.land-queries
   (:require [teet.db-api.core :refer [defquery]]
             [teet.gis.features :as features]
-            [datomic.client.api :as d]))
+            [datomic.client.api :as d]
+            [teet.integration.x-road :as x-road]))
 
 (defquery :land/fetch-land-acquisitions
   {:doc "Fetch all land acquisitions related to proejct"
@@ -29,6 +30,7 @@
           (map (comp :KINNISTU :properties) (:features units)))
         distinct)))
 
+
 (defquery :land/related-project-estates
   {:doc "Fetch estates that are related to a given project's cadastral units.
 Will fetch the cadastral unit information from PostgREST to determine
@@ -44,5 +46,13 @@ Then it will query X-road for the estate information."
             api-shared-secret [:auth :jwt-secret]}
    :authorization {:land/view-cadastral-data {:eid [:thk.project/id id]
                                               :link :thk.project/owner}}}
-  ;; WIP: fetch estates from X-road
-  (project-cadastral-unit-estates db api-url api-shared-secret id))
+  (into {}
+
+        ;; Fetch the X-road estate info for each estate number
+        (map (juxt identity
+                   #(x-road/perform-kinnistu-d-request xroad-url {:instance-id xroad-instance
+                                                                  :registriosa-nr %
+                                                                  :requesting-eid (str "EE" (:user/person-id user))})))
+
+        ;; Fetch unique estate numbers for project's related cadastral units
+        (project-cadastral-unit-estates db api-url api-shared-secret id)))

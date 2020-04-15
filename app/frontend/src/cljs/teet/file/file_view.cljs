@@ -97,11 +97,13 @@
 (defn file-table
   [files]
   [:div
-   (mapc file-row files)
-   [buttons/button-primary {:href (url/set-query-param :add-document 1)
-                            :start-icon (r/as-element
-                                         [icons/file-cloud-upload])}
-    (tr [:task :upload-files])]])
+   (mapc file-row files)])
+
+(defn file-upload-button []
+  [buttons/button-primary {:href (url/set-query-param :add-document 1)
+                           :start-icon (r/as-element
+                                        [icons/file-cloud-upload])}
+   (tr [:task :upload-files])])
 
 (defn- file-icon-style []
   {:display :inline-block

@@ -61,7 +61,7 @@
          (not (conflicting-activites? db activity lifecycle-id))
 
          ^{:error :invalid-tasks}
-         (valid-tasks? db tasks)]
+         (valid-tasks? db (map second tasks))]
    :transact [(merge
                 {:db/id "new-activity"}
                 (select-keys activity [:activity/name :activity/status
@@ -70,10 +70,13 @@
                 (when (seq tasks)
                   {:activity/tasks
                    (vec
-                    (for [task tasks]
-                      (merge {:db/id (str "NEW-TASK-" (name task))
+                    (for [[task-group task-type] tasks]
+                      (merge {:db/id (str "NEW-TASK-"
+                                          (name task-group) "-"
+                                          (name task-type))
                               :task/status :task.status/in-preparation
-                              :task/type task}
+                              :task/group task-group
+                              :task/type task-type}
                              (meta-model/creation-meta user))))})
                 (meta-model/creation-meta user))
               {:db/id lifecycle-id

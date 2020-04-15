@@ -7,7 +7,6 @@
             [teet.ui.icons :as icons]
             teet.file.file-spec
             [teet.project.project-navigator-view :as project-navigator-view]
-            [teet.project.project-style :as project-style]
             [teet.activity.activity-style :as activity-style]
             [herb.core :refer [<class]]
             [teet.activity.activity-controller :as activity-controller]
@@ -20,7 +19,8 @@
             [teet.ui.util :as util :refer [mapc]]
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.url :as url]
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [teet.project.task-model :as task-model]))
 
 (defn task-selection [{:keys [e! on-change selected activity-name]} task-groups task-types]
   [:div {:style {:max-height "70vh" :overflow-y :scroll}}
@@ -33,13 +33,14 @@
              (mapc (fn [{id :db/ident :as t}]
                      [:div
                       [select/checkbox {:label (tr-enum t)
-                                        :value (boolean (selected id))
+                                        :value (boolean (selected [(:db/ident g) id]))
                                         :on-change #(on-change
-                                                     (cu/toggle selected id))}]])
+                                                     (cu/toggle selected [(:db/ident g) id]))}]])
                    (filter #(= (:db/ident g) (:enum/valid-for %)) task-types))]])
          (filter #(= (:db/ident activity-name)
-                     (:enum/valid-for %)) task-groups))]
-  )
+                     (:enum/valid-for %))
+                 (sort-by (comp task-model/task-group-order :db/ident)
+                          task-groups)))])
 
 (defn- task-groups-and-tasks [{e! :e! :as opts} task-groups]
   [select/with-enum-values {:e! e! :attribute :task/type}
@@ -159,7 +160,9 @@
 (defn task-lists
   [tasks]
   [:div
-   (util/mapc task-group (group-by :task/group tasks))])
+   (util/mapc task-group
+              (sort-by (comp task-model/task-group-order :db/ident first)
+                       (group-by :task/group tasks)))])
 
 (defn activity-content
   [e! params project]

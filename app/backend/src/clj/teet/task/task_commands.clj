@@ -4,7 +4,9 @@
             [teet.project.project-db :as project-db]
             [teet.meta.meta-model :as meta-model]
             teet.task.task-spec
-            [teet.util.collection :as uc]))
+            [teet.util.collection :as uc]
+            [teet.notification.notification-db :as notification-db]
+            [teet.project.task-model :as task-model]))
 
 (defn- send-to-thk? [db task-id]
   (:task/send-to-thk? (d/pull db [:task/send-to-thk?] task-id)))
@@ -79,3 +81,30 @@
                                                   (select-keys task-create-keys)
                                                   (update :task/assignee (fn [{id :user/id}] [:user/id id])))
                                               (meta-model/creation-meta user))]})]})
+
+(defcommand :task/submit
+  {:doc "Submit task results for review."
+   :context {:keys [db user]}
+   :payload {task-id :task-id}
+   :project-id (project-db/task-project-id db task-id)
+   :authorization {:task/submit-results {:eid task-id
+                                         :link :task/assignee}}
+   :transact [{:db/id task-id
+               :task/status :task.status/waiting-for-review}
+              (notification-db/notification-tx
+               {:from user
+                :to (project-db/project-owner db (project-db/task-project-id db task-id))
+                :target task-id
+                :type :notification.type/task-waiting-for-review})]})
+
+(defcommand :task/review
+  {:doc "Accept or reject review for task"
+   :context {:keys [db user]}
+   :payload {task-id :task-id
+             status :status}
+   :project-id (project-db/task-project-id db task-id)
+   :authorization {:task/review {:id task-id}}
+   :pre [(task-model/waiting-for-review? (d/pull db [:task/status] task-id))
+         (task-model/review-outcome-statuses status)]
+   :transact [{:db/id task-id
+               :task/status status}]})

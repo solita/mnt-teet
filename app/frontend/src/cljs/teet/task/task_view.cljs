@@ -25,8 +25,11 @@
             [teet.ui.tabs :as tabs]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.typography :as typography]
-            [teet.user.user-model :as user-model]))
+            [teet.user.user-model :as user-model]
+            [teet.ui.icons :as icons]
+            [teet.theme.theme-colors :as theme-colors]))
 
+;; PENDING: remove this once we have workflow rules (no manual changing)
 (defn task-status [e! {:task/keys [status]}]
   [select/select-enum {:e! e!
                        :on-change (e! task-controller/->UpdateTaskStatus)
@@ -47,6 +50,30 @@
    [:div
     [task-status e! task]]])
 
+(defn submit-results-button [e! task]
+  (r/with-let [clicked? (r/atom false)]
+    [:<>
+     [buttons/button-primary {:on-click #(reset! clicked? true)
+                              :style {:float :right}}
+      [icons/action-check-circle]
+      (tr [:task :submit-results])]
+     (when @clicked?
+       [panels/modal {:title (str (tr [:task :submit-results]) "?")
+                      :on-close #(reset! clicked? false)}
+        [:<>
+         [:div {:style {:padding "1rem"
+                        :margin-bottom "2rem"
+                        :background-color theme-colors/gray-lightest}}
+          (tr [:task :submit-results-confirm]
+              {:task (tr-enum (:task/type task))})]
+         [:div {:style {:display :flex
+                        :justify-content :flex-end}}
+          [buttons/button-secondary {:on-click #(reset! clicked? false)}
+           (tr [:buttons :cancel])]
+          [buttons/button-primary {:on-click (e! task-controller/->SubmitResults)
+                                   :style {:margin-left "1rem"}}
+           (tr [:buttons :confirm])]]]])]))
+
 (defn task-details
   [e! _params {:task/keys [description files] :as task}]
   [:div
@@ -54,7 +81,19 @@
    (when description
      [typography/Paragraph description])
    [task-basic-info e! task]
-   [file-view/file-table files]])
+   [file-view/file-table files]
+   (when (task-model/can-submit? task)
+     [:<>
+      [file-view/file-upload-button]
+      [when-authorized :task/submit task
+       [submit-results-button e! task]]])
+   (when (task-model/waiting-for-review? task)
+     [when-authorized :task/review task
+      [:div {:style {:display :flex :justify-content :space-between}}
+       [buttons/button-warning {:on-click (e! task-controller/->Review :task.status/rejected)}
+        (tr-enum :task.status/rejected)]
+       [buttons/button-primary {:on-click (e! task-controller/->Review :task.status/accepted)}
+        (tr-enum :task.status/accepted)]]])])
 
 (defn- task-header
   [e! task]

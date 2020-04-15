@@ -27,6 +27,8 @@
             teet.task.task-commands
             teet.activity.activity-commands
             teet.dashboard.dashboard-queries
+            teet.notification.notification-queries
+            teet.notification.notification-commands
 
             [teet.log :as log]
             [teet.auth.jwt-token :as jwt-token]

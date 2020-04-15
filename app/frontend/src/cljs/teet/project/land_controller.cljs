@@ -3,7 +3,8 @@
             [clojure.string :as str]
             [teet.util.collection :as cu]
             [teet.localization :refer [tr]]
-            [teet.map.map-controller :as map-controller]))
+            [teet.map.map-controller :as map-controller]
+            [goog.math.Long]))
 
 (defrecord SetCadastralInfo [response])
 (defrecord ToggleLandUnit [unit])
@@ -70,7 +71,8 @@
 
   SubmitLandPurchaseForm
   (process-event [{:keys [form-data cadastral-id]} app]
-    (let [project-id (get-in app [:params :project])]
+    (let [project-id (get-in app [:params :project])
+          {:land-acquisition/keys [area-to-obtain pos-number]} form-data]
       (t/fx app
             {:tuck.effect/type :command!
              :command (if (:db/id form-data)
@@ -79,7 +81,11 @@
              :success-message (tr [:land :land-acquisition-saved])
              :payload (merge form-data
                              {:cadastral-unit cadastral-id
-                              :project-id project-id})
+                              :project-id project-id}
+                             (when area-to-obtain
+                               {:land-acquisition/area-to-obtain (js/parseFloat area-to-obtain)})
+                             (when pos-number
+                               {:land-acquisition/pos-number (js/parseFloat pos-number)}))
              :result-event (partial ->FetchLandAcquisitions project-id)})))
 
   SetCadastralInfo

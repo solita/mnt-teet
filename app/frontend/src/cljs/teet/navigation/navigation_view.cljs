@@ -10,13 +10,11 @@
             [teet.navigation.navigation-logo :as navigation-logo]
             [teet.navigation.navigation-style :as navigation-style]
             [teet.search.search-view :as search-view]
-            [teet.common.common-controller :refer [when-feature]]
+            [teet.common.common-controller :as common-controller :refer [when-feature]]
             [herb.core :as herb :refer [<class]]
-            [teet.user.user-controller :as user-controller]
             [teet.authorization.authorization-check :refer [authorized?]]
             [teet.login.login-controller :as login-controller]
-            [taoensso.timbre :as log]
-            [teet.common.common-controller :as common-controller]))
+            [teet.notification.notification-view :as notification-view]))
 
 (def entity-quote (fnil js/escape "(nil)"))
 
@@ -24,25 +22,26 @@
 
 (defn language-selector
   []
-  [select/select-with-action {:container-class (herb/join (<class navigation-style/language-select-container-style)
-                                                          (<class navigation-style/divider-style))
-                              :label (str (tr [:common :language]))
-                              :select-class (<class navigation-style/language-select-style)
-                              :id "language-select"
-                              :name "language"
-                              :value (case @localization/selected-language
-                                       :et
-                                       {:value "et" :label (get localization/language-names "et")}
-                                       :en
-                                       {:value "en" :label (get localization/language-names "en")})
-                              :items [{:value "et" :label (get localization/language-names "et")}
-                                      {:value "en" :label (get localization/language-names "en")}]
-                              :on-change (fn [val]
-                                           (localization/load-language!
-                                             (keyword (:value val))
-                                             (fn [language _]
-                                               (reset! localization/selected-language
-                                                       language))))}])
+  [select/select-with-action
+   {:container-class (herb/join (<class navigation-style/language-select-container-style)
+                                (<class navigation-style/divider-style))
+    :label (str (tr [:common :language]))
+    :select-class (<class navigation-style/language-select-style)
+    :id "language-select"
+    :name "language"
+    :value (case @localization/selected-language
+             :et
+             {:value "et" :label (get localization/language-names "et")}
+             :en
+             {:value "en" :label (get localization/language-names "en")})
+    :items [{:value "et" :label (get localization/language-names "et")}
+            {:value "en" :label (get localization/language-names "en")}]
+    :on-change (fn [val]
+                 (localization/load-language!
+                  (keyword (:value val))
+                  (fn [language _]
+                    (reset! localization/selected-language
+                            language))))}])
 
 
 (defn feedback-link
@@ -140,16 +139,18 @@
           :on-click (e! login-controller/->Logout)}
     (tr [:common :log-out])]])
 
+
+
 (defn navigation-header-links
   [user e!]
   [:div {:style {:display :flex
                  :justify-content :flex-end}}
    [feedback-link]
+   [notification-view/notifications e!]
    [language-selector]
    (when-feature :my-role-display
      [user-info user])
    [logout e!]])
-
 
 (defn header
   [e! {:keys [open? page quick-search]} user]

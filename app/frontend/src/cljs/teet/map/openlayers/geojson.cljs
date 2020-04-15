@@ -83,9 +83,8 @@
         (.setMinResolution ol-layer min-resolution))
       (when (number? max-resolution)
         (.setMaxResolution ol-layer max-resolution))
-
+      (.set ol-layer "teet-source" source-name)
       (when luo?
-        (.set ol-layer "teet-source" source-name)
         (.addLayer ol3 ol-layer))
 
       (when z-index

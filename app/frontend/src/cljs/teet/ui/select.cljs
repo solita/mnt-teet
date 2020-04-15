@@ -44,7 +44,8 @@
 
 (defn form-select [{:keys [label name id items on-change value format-item
                            show-label? show-empty-selection? error error-text required]
-                        :or {format-item :label}}]
+                        :or {format-item :label
+                             show-label? true}}]
   (let [option-idx (zipmap items (range))
         change-value (fn [e]
                        (let [val (-> e .-target .-value)]

@@ -22,6 +22,9 @@
 (def q d/q)
 (def pull d/pull)
 
+(defn entity [eid]
+  (pull (db) '[*] eid))
+
 (defn tx
   "Transact given maps to db"
   [& maps]
@@ -77,6 +80,13 @@
                            :permission/role       :manager
                            :permission/valid-from (Date.)}]}))
 
+(defn give-external-consultant-permission
+  [user-eid]
+  (tx {:db/id            user-eid
+       :user/permissions [{:db/id                 "new-permission"
+                           :permission/role       :external-consultant
+                           :permission/valid-from (Date.)}]}))
+
 (defn remove-permission [user-uuid permission-eid]
   (d/transact (environment/datomic-connection)
               {:tx-data [[:db/retract [:user/id user-uuid]
@@ -88,6 +98,12 @@
        :user/permissions [{:db/id                 "new-permission"
                            :permission/role       :manager
                            :permission/valid-from (Date.)}]}))
+
+(defn all-comments
+  []
+  (q '[:find (pull ?e [*])
+       :where [?e :comment/comment _]]
+     (db)))
 
 (defn all-permissions
   []
@@ -108,9 +124,10 @@
 
 (defn query-all-users
   []
-  (q '[:find (pull ?e [*])
-       :in $
-       :where [?e :user/id _]] (db)))
+  (map first
+       (q '[:find (pull ?e [*])
+            :in $
+            :where [?e :user/id _]] (db))))
 
 (defn retract-from-project!
   "use like: (retract-from-project! \"17187\" :thk.project/manager 45264694692282960)"
@@ -260,3 +277,6 @@
 (def local-login   tu/local-login)
 (def local-query   tu/local-query)
 (def local-command tu/local-command)
+
+
+; (local-query :comment/fetch-comments {:for :task :db/id 34287170600567084})

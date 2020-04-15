@@ -37,36 +37,21 @@
    :thk.project/estimated-start-date
    :thk.project/estimated-end-date
    :thk.project/region-name
+   :thk.project/repair-method
    {:thk.project/owner user-model/user-info-attributes}
    {:thk.project/manager user-model/user-info-attributes}])
 
 (def project-list-with-status-attributes
-  [:db/id
-   :thk.project/id
-   :thk.project/name
-   :thk.project/project-name
-   :thk.project/road-nr
-   :thk.project/start-m
-   :thk.project/end-m
-   ;; FIXME: Also handle in project listing
-   :thk.project/custom-start-m
-   :thk.project/custom-end-m
-   :thk.project/carriageway
-   :thk.project/estimated-start-date
-   :thk.project/estimated-end-date
-   :thk.project/region-name
-   {:thk.project/lifecycles [{:thk.lifecycle/activities
-                              [:activity/estimated-end-date
-                               :activity/estimated-start-date
-                               :activity/status
-                               {:activity/tasks [:task/status]}]}]}
-   {:thk.project/owner user-model/user-info-attributes}
-   {:thk.project/manager user-model/user-info-attributes}])
+  (into project-listing-attributes
+        [{:thk.project/lifecycles [{:thk.lifecycle/activities
+                                    [:activity/estimated-end-date
+                                     :activity/estimated-start-date
+                                     :activity/status
+                                     {:activity/tasks [:task/status]}]}]}]))
 
 (def project-info-attributes
   (into project-listing-attributes
         [:thk.project/procurement-nr
-         :thk.project/repair-method
          :thk.project/setup-skipped?
          :thk.project/related-restrictions
          :thk.project/related-cadastral-units]))
@@ -78,6 +63,7 @@
    :thk.project/effective-km-range
    :thk.project/carriageway
    :thk.project/estimated-date-range
+   :thk.project/repair-method
    :thk.project/owner-info])
 
 (defmulti get-column (fn [_project column] column))

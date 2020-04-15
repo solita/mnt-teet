@@ -12,11 +12,13 @@
             [teet.snackbar.snackbar-controller :as snackbar-controller]
             [clojure.string :as str]
             [clojure.set :as set]
-            [teet.map.openlayers :as openlayers]))
+            [teet.map.openlayers :as openlayers]
+            [teet.util.collection :as cu]))
 
 (defrecord OpenActivityDialog [lifecycle])                  ; open add activity modal dialog
 (defrecord OpenTaskDialog [activity])
 (defrecord OpenEditProjectDialog [])
+(defrecord OpenEditDetailsDialog [])
 (defrecord PostProjectEdit [])
 (defrecord PostProjectEditResult [])
 (defrecord OpenPeopleModal [])
@@ -90,6 +92,8 @@
 (defrecord SaveProjectSetup [])
 (defrecord InitializeBasicInformationForm [form-data])
 (defrecord UpdateBasicInformationForm [form-data])
+(defrecord ProjectGeometryFetchSuccess [result])
+(defrecord CancelUpdateProjectInformation [])
 (defrecord UpdateProjectRestrictions [restrictions project-id])
 (defrecord UpdateProjectCadastralUnits [cadastral-units project-id])
 (defrecord FeaturesUpdatedSuccessfully [result])
@@ -381,19 +385,27 @@
   PostProjectEdit
   (process-event [_ app]
     (let [{:thk.project/keys [id]} (get-in app [:route :project])
-          {:thk.project/keys [project-name owner manager]}
-          (get-in app [:route :project :basic-information-form])]
+          {:thk.project/keys [project-name owner manager
+                              km-range m-range-change-reason]}
+          (get-in app [:route :project :basic-information-form])
+          [start-km end-km] (mapv road-model/parse-km km-range)]
       (t/fx app {:tuck.effect/type :command!
-                 :command          :thk.project/update
-                 :payload          {:thk.project/id           id
-                                    :thk.project/owner        owner
-                                    :thk.project/manager      manager
-                                    :thk.project/project-name project-name}
-                 :result-event     ->PostProjectEditResult})))
+                 :command :thk.project/update
+                 :payload (cu/without-nils (merge {:thk.project/id id
+                                                   :thk.project/owner owner
+                                                   :thk.project/manager manager
+                                                   :thk.project/project-name project-name}
+                                                  (when m-range-change-reason
+                                                    {:thk.project/m-range-change-reason m-range-change-reason})
+                                                  (when start-km
+                                                    {:thk.project/custom-start-m (road-model/km->m start-km)})
+                                                  (when end-km
+                                                    {:thk.project/custom-end-m (road-model/km->m end-km)})))
+                 :result-event ->PostProjectEditResult})))
 
   PostProjectEditResult
   (process-event [_ {:keys [params query page] :as app}]
-    (t/fx app
+    (t/fx (snackbar-controller/open-snack-bar app (tr [:project :project-updated]))
           {:tuck.effect/type :navigate
            :page             page
            :params           params
@@ -464,17 +476,32 @@
                   (update-in [:route :project :basic-information-form]
                              merge form-data)
                   (update-in [:route :project] dissoc :geometry :road-info))
-          {:thk.project/keys [road-nr carriageway start-m end-m]} (get-in app [:route :project])]
+          {:thk.project/keys [road-nr carriageway start-m end-m custom-end-m custom-start-m]} (get-in app [:route :project])]
       (t/fx
        app
-
        {:tuck.effect/type :query
         :query :road/geometry-with-road-info
         :args {:road road-nr
                :carriageway carriageway
-               :start-m  start-m
-               :end-m end-m}
+               :start-m (or custom-start-m start-m)
+               :end-m (or custom-end-m end-m)}
         :result-event ->RoadGeometryAndInfoResponse})))
+
+  CancelUpdateProjectInformation
+  (process-event [_ {:keys [query params page] :as  app}]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page page
+           :params params
+           :query (dissoc query :edit)}
+          common-controller/refresh-fx))
+
+  ProjectGeometryFetchSuccess
+  (process-event [{result :result} app]
+    (js/setTimeout
+      #(map-controller/zoom-on-layer "geojson_road_geometry")
+      250)
+    (assoc-in app [:route :project :geometry] result))
 
   UpdateBasicInformationForm
   (process-event [{:keys [form-data]} app]
@@ -506,7 +533,7 @@
                  :carriageway (get-in app [:route :project :thk.project/carriageway])
                  :start-m new-start-m
                  :end-m new-end-m}
-          :result-path [:route :project :geometry]}))))
+          :result-event ->ProjectGeometryFetchSuccess}))))
 
   RoadGeometryAndInfoResponse
   (process-event [{result :result} app]
@@ -733,6 +760,15 @@
         (assoc-in [:stepper :dialog] {:type :add-task
                                       :activity-id activity})
         (assoc-in [:edit-task-data :task/send-to-thk?] false)))
+
+  OpenEditDetailsDialog
+  (process-event [_ {:keys [page params query] :as app}]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page page
+           :params params
+           :query (assoc query :edit "details")}))
+
   OpenEditProjectDialog
   (process-event [_ {:keys [page params query] :as app}]
     (t/fx app
