@@ -6,11 +6,12 @@
             [teet.ui.icons :as icons]
             [teet.map.map-view :as map-view]
             [teet.map.map-layers :as map-layers]
+            [teet.ui.util :as util :refer [mapc]]
             [teet.map.map-features :as map-features]
             [teet.theme.theme-spacing :as theme-spacing]
             [teet.ui.material-ui :refer [FormControlLabel Checkbox]]
             postgrest-ui.elements
-            [teet.localization :as localization :refer [tr]]
+            [teet.localization :as localization :refer [tr tr-enum]]
             [teet.project.project-model :as project-model]
             [teet.project.project-controller :as project-controller]
             [teet.common.common-styles :as common-styles]
@@ -56,6 +57,16 @@
        value
        [:span {:class (<class common-styles/gray-text)}
         (tr [:common :unassigned])])
+
+    :thk.project/activity-status
+    (if (empty? value)
+      [:ul {:class [(<class projects-style/actitivies-ul-style) (<class common-styles/gray-text)]}
+       [:li (tr [:projects :no-activities])]]
+      [:ul {:class (<class projects-style/actitivies-ul-style)}
+       (mapc
+         (fn [activity]
+           [:li [:span (tr-enum (:activity/name activity)) " - " (tr-enum (:activity/status activity))]])
+         value)])
 
     ;; Default: stringify
     (str value)))
