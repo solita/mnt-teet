@@ -188,7 +188,6 @@
         .getLayers
         (.forEach (fn [layer]
                     (when (= layer-name (.get layer "teet-source"))
-                      (.log js/console layer)
                       (-> layer
                           .getSource
                           .getExtent
