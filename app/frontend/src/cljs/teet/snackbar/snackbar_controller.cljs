@@ -32,5 +32,4 @@
 
   CloseSnackbar
   (process-event [_ app]
-    (println "Closing snackbar")
     (assoc-in app [:snackbar :open?] false)))
