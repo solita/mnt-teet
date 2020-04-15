@@ -159,13 +159,27 @@
         :on-click handle-click!}
        [icons/social-notifications {:color "primary"}]]]
      [Menu {:anchor-el @selected-item
+            :anchor-origin {:vertical :bottom}
+            :get-content-anchor-el nil
             :open (boolean @selected-item)
             :on-close handle-close!}
-      (mapc (fn [{:notification/keys [type]
-                  id :db/id}]
-              [MenuItem {:on-click (e! notification-controller/->Acknowledge id)}
-               (tr-enum type)])
-            notifications)]]))
+      (if (seq notifications)
+        (mapc (fn [{:notification/keys [type]
+                    id :db/id}]
+                [MenuItem {:on-click (e! notification-controller/->Acknowledge id)}
+                 [ListItemIcon
+                  (case (:db/ident type)
+                    :notification.type/task-waiting-for-review
+                    [icons/action-assignment]
+
+                    :notification.type/comment-created
+                    [icons/communication-comment]
+
+                    [icons/navigation-more-horiz])]
+                 [ListItemText (tr-enum type)]])
+              notifications)
+        [MenuItem {:on-click handle-close!}
+         (tr [:notifications :no-unread-notifications])])]]))
 
 (defn notifications [e!]
   [query/query {:e! e!
