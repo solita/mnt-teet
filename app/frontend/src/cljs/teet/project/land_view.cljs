@@ -31,7 +31,7 @@
      :display :flex
      :flex-direction :column
      :transition "background-color 0.2s ease-in-out"
-     :align-items :flex-start
+     :align-items :normal
      :background-color bg-color
      :border-bottom (str "1px solid " theme-colors/gray-lighter)}))
 
@@ -127,7 +127,7 @@
                 :on-mouse-leave (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" false unit)
                 :on-click (e! land-controller/->ToggleLandUnit unit)
                 :class (<class cadastral-unit-style selected?)}
-    [typography/SectionHeading (:L_AADRESS unit)]
+    [typography/SectionHeading {:style {:text-align :left}} (:L_AADRESS unit)]
     [:div {:style {:display :flex
                    :width "100%"
                    :justify-content :space-between}}
