@@ -46,6 +46,7 @@
         [{:thk.project/lifecycles [{:thk.lifecycle/activities
                                     [:activity/estimated-end-date
                                      :activity/estimated-start-date
+                                     :activity/name
                                      :activity/status
                                      {:activity/tasks [:task/status]}]}]}]))
 
