@@ -130,7 +130,6 @@
                      stepper :stepper :as app}]
     (let [{id :db/id :as task}
           (-> edit-task-data
-              (update :task/assignee select-keys [:user/id])
               (update :db/id #(or % "new-task"))
 
               ;; Ensure only task with THK type can be sent
