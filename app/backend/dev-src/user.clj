@@ -62,13 +62,6 @@
               {:tx-data [[:db/retract [:user/id user-uuid]
                           :user/permissions permission-eid]]}))
 
-(defn admin-permission
-  [user-eid]
-  (tx {:db/id            user-eid
-       :user/permissions [{:db/id                 "new-permission"
-                           :permission/role       :manager
-                           :permission/valid-from (Date.)}]}))
-
 (defn all-comments
   []
   (q '[:find (pull ?e [*])
