@@ -36,7 +36,7 @@
     ;; This is a user entity map, return user uuid
     (and (map? user)
          (contains? user :user/id))
-    (:user/id user)
+    [:user/id (:user/id user)]
 
     ;; Not valid user
     :else nil))
