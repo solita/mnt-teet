@@ -85,8 +85,8 @@
            (doseq [df data-fixtures
                    :let [resource (str "resources/" (name df) ".edn")]]
              (log/info "Transacting data fixture: " df)
-             ((d/transact *connection* {:tx-data (-> resource io/resource
-                                                     slurp read-string)})))
+             (d/transact *connection* {:tx-data (-> resource io/resource
+                                                    slurp read-string)}))
            (f))
          (log/info "Deleting database " test-db-name)
          (d/delete-database client db-name))))))

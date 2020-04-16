@@ -1,10 +1,10 @@
 (ns teet.thk.thk-import-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest use-fixtures is testing]]
             [teet.thk.thk-import :as thk-import]
             [clojure.string :as str]
             [teet.test.utils :as tu]
             [datomic.client.api :as d]
-            [clojure.java.io :as io]))
+            [teet.thk.thk-export :as thk-export]))
 
 (use-fixtures :once
   tu/with-environment
@@ -27,6 +27,9 @@
 
 
 (deftest thk<->teet-import-export
+  (testing "Initially there are no projects"
+    (is (empty? (d/q '[:find ?e :where [?e :thk.project/id _]]
+                     (tu/db)))))
   (testing "THK -> TEET import"
     (let [projects (thk-import/parse-thk-export-csv
                     (java.io.ByteArrayInputStream.
@@ -46,7 +49,7 @@
                               :where [_ :thk.project/id ?id]]
                             db)))))
           (testing "Project 1 is owned by existing Danny"
-            (let [{owner :thk.project/owner :as p1}
+            (let [{owner :thk.project/owner :as _p1}
                   (d/pull db '[{:thk.project/owner [*]}]
                           [:thk.project/id "11111"])]
               (is (= {:user/person-id "1234567890"
@@ -56,7 +59,7 @@
                                          :user/given-name
                                          :user/family-name])))))
           (testing "Project 5 has newly created owner"
-            (let [{owner :thk.project/owner :as p5}
+            (let [{owner :thk.project/owner :as _p5}
                   (d/pull db '[* {:thk.project/owner [*]}]
                           [:thk.project/id "55555"])]
               (is (= {:user/person-id "66666666666"}
@@ -80,4 +83,14 @@
                               :task/send-to-thk? true
                               :task/estimated-start-date #inst "2020-04-15T14:00:39.855-00:00"
                               :task/estimated-end-date  #inst "2020-06-25T14:00:39.855-00:00"}]}))
-  )
+
+  (testing "Export CSV to THK has row for the task"
+    ;; Export projects to THK, expect row for task
+    (let [[header & rows] (thk-export/export-thk-projects (tu/connection))
+          exported (mapv #(zipmap header %) rows)
+          [task-row] (filter #(not (str/blank? (get % "activity_taskdescr")))
+                             exported)]
+      (is task-row "There is a row for the task")
+      (is (= (get task-row "activity_taskdescr") "Ekspertiis")
+          "task description is the estonian translation of task type")
+      (is (str/blank? (get task-row "activity_id")) "task has no activity_id yet"))))
