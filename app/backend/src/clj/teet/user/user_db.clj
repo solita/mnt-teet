@@ -5,9 +5,9 @@
 
 (defn user-roles
   "Given a datomic connection and a user uuid, return a set of user's roles."
-  [db id]
+  [db user-ref]
   (-> db
-      (d/pull '[:user/roles] [:user/id id])
+      (d/pull '[:user/roles] (user-model/user-ref user-ref))
       :user/roles
       set))
 

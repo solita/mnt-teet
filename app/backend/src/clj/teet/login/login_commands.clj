@@ -44,7 +44,7 @@
   (if (environment/check-site-password site-password)
     (let [secret (environment/config-value :auth :jwt-secret)
           db (d/db conn)
-          roles (user-db/user-roles db id)]
+          roles (user-db/user-roles db [:user/id id])]
       {:token (jwt-token/create-token secret "teet_user"
                                       {:given-name given-name
                                        :family-name family-name
@@ -52,7 +52,7 @@
                                        :email email
                                        :id id
                                        :roles roles})
-       :user (user-db/user-info db id)
+       :user (user-db/user-info db [:user/id id])
        :roles roles
        :enabled-features (environment/config-value :enabled-features)
        :api-url (environment/config-value :api-url)})
@@ -69,7 +69,7 @@
 
         id (ensure-user! conn person-id given_name family_name)
         db (d/db conn)
-        roles (user-db/user-roles db id)
+        roles (user-db/user-roles db [:user-id id])
         response {:status 302
                   :headers {"Location"
                             (str (environment/config-value :base-url)
@@ -105,7 +105,7 @@
    :payload _
    :project-id nil
    :authorization {}}
-  (let [roles (user-db/user-roles db id)]
+  (let [roles (user-db/user-roles db [:user/id id])]
     {:token (jwt-token/create-token (environment/config-value :auth :jwt-secret) "teet_user"
                                     {:given-name given-name
                                      :family-name family-name
@@ -113,7 +113,7 @@
                                      :email email
                                      :id id
                                      :roles roles})
-     :user (user-db/user-info db id)
+     :user (user-db/user-info db [:user/id id])
      :roles roles
      :enabled-features (environment/config-value :enabled-features)
      :api-url (environment/config-value :api-url)}))

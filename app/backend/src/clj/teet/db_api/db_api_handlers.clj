@@ -55,7 +55,7 @@
                      :db db
                      :user (merge user
                                   (when-let [user-id (:user/id user)]
-                                    (user-db/user-info db user-id)))
+                                    (user-db/user-info db [:user/id user-id])))
                      :session (:session req)}
                 request-payload (transit/transit-request req)
                 response (handler-fn ctx request-payload)]
