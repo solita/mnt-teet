@@ -265,8 +265,7 @@
         (swap! current-fields dissoc attribute))
       :reagent-render
       (fn [_ _ {:keys [value]}]
-        (let [
-              value (cond
+        (let [value (cond
                       (keyword? attribute)
                       (get value attribute (default-value (first field)))
 

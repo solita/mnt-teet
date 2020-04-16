@@ -254,10 +254,14 @@
 
 (defn date-range-input
   "combine two date-inputs to provide a consistent date-range-picker"
-  [{:keys [error value on-change start-label end-label required]}]
-  (let [[start end] value]
+  [{:keys [error value on-change start-label end-label required row?]
+    :or {row? true}}]
+  (let [[start end] value
+        element-size (if row?
+                       6
+                       12)]
     [Grid {:container true :spacing 1}
-     [Grid {:item true :xs 6}
+     [Grid {:item true :xs element-size}
       [date-input {:value start
                    :required required
                    :error (and error (nil? start))
@@ -269,7 +273,7 @@
                                   (if end
                                     (< (.-date day) end)
                                     true))}]]
-     [Grid {:item true :xs 6}
+     [Grid {:item true :xs element-size}
       [date-input {:value end
                    :required required
                    :error (and error (nil? end))

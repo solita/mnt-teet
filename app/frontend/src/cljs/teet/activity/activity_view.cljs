@@ -6,6 +6,7 @@
             [teet.ui.form :as form]
             [teet.ui.icons :as icons]
             teet.file.file-spec
+            [teet.project.project-specs :as project-specs]
             [teet.project.project-navigator-view :as project-navigator-view]
             [teet.activity.activity-style :as activity-style]
             [herb.core :refer [<class]]
@@ -51,7 +52,8 @@
                :value activity
                :on-change-event activity-controller/->UpdateActivityForm
                :cancel-event project-controller/->CloseDialog
-               :save-event activity-controller/->SaveActivityForm}
+               :save-event activity-controller/->SaveActivityForm
+               :spec ::project-specs/activity}
    [Grid {:container true :style {:height "90%"} :spacing 3}
     [Grid {:item true :xs 4}
 
@@ -61,13 +63,10 @@
      [form/field :activity/status
       [select/select-enum {:e! e! :attribute :activity/status}]]
 
-     [form/field :activity/estimated-start-date
-      [date-picker/date-input {:label (tr [:fields :activity/estimated-start-date])
-                               :selectable? (constantly true)}]]
-
-     [form/field :activity/estimated-end-date
-      [date-picker/date-input {:label (tr [:fields :activity/estimated-end-date])
-                               :selectable? (constantly true)}]]]
+     [form/field {:attribute [:activity/estimated-start-date :activity/estimated-end-date]}
+      [date-picker/date-range-input {:row? false
+                                     :start-label (tr [:fields :activity/estimated-start-date])
+                                     :end-label (tr [:fields :activity/estimated-end-date])}]]]
     [Grid {:item true :xs 8}
      [select/with-enum-values {:e! e!
                                :attribute :task/group}
