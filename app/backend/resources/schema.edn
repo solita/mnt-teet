@@ -848,4 +848,8 @@
   :txes [[{:db/ident :task.status/waiting-for-review
            :enum/attribute :task/status}
           {:db/ident :notification.type/task-waiting-for-review
+           :enum/attribute :notification/type}]]}
+
+ {:db/ident :migration/task-assigned-notification-type
+  :txes [[{:db/ident :notification.type/task-assigned
            :enum/attribute :notification/type}]]}]

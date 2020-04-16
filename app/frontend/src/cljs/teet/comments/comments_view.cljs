@@ -133,8 +133,13 @@
                           :meta/keys [modified-at]
                           :as comment-entity}
                       commented-entity
-                      quote-comment!]
-  [:div {:class (<class common-styles/margin-bottom 1)}
+                      quote-comment!
+                      focused?]
+  [:div (merge {:class (<class comments-styles/comment-entry focused?)}
+               (when focused?
+                 {:ref (fn [el]
+                         (when el
+                           (.scrollIntoViewIfNeeded el)))}))
    [:div {:class [(<class common-styles/space-between-center) (<class common-styles/margin-bottom 0)]}
     [:span
      [typography/SectionHeading
@@ -169,17 +174,18 @@
    [attachments {:files files :comment-id id}]])
 
 (defn comment-list
-  [quote-comment! commented-entity-id e! _app comments _breacrumbs]
+  [{:keys [e! quote-comment! commented-entity-id focused-comment]} comments]
   [itemlist/ItemList {}
    (doall
-    (for [{id :db/id :as comment-entity} comments]
+    (for [{id :db/id :as comment-entity} comments
+          :let [focused? (= (str id) focused-comment)]]
       (if (nil? comment-entity)
         ;; New comment was just added but hasn't been refetched yet, show skeleton
         ^{:key "loading-comment"}
         [comment-skeleton 1]
 
-        ^{:key id}
-        [comment-entry e! comment-entity commented-entity-id quote-comment!])))])
+        ^{:key (str id)}
+        [comment-entry e! comment-entity commented-entity-id quote-comment! focused?])))])
 
 (defn- quote-comment-fn
   "An ad hoc event that merges the quote at the end of current new
@@ -249,11 +255,12 @@
                      :skeleton [comment-skeleton 1]
                      :state-path [:comments-for-entity entity-id]
                      :state comments
-                     :view (partial comment-list
-                                    #(e! ((quote-comment-fn comment-form)
-                                          (str %1 ": \"" %2 "\"")))
-                                    {:db/id entity-id
-                                     :for   entity-type})
+                     :simple-view [comment-list {:e! e!
+                                                 :quote-comment! #(e! ((quote-comment-fn comment-form)
+                                                                       (str %1 ": \"" %2 "\"")))
+                                                 :commented-entity-id {:db/id entity-id
+                                                                       :for   entity-type}
+                                                 :focused-comment (get-in app [:query :focus-on])}]
                      :refresh (count comments)}]
        (when (and show-comment-form?
                   ;; TODO: This circumvents the fact that there can be

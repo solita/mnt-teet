@@ -1,5 +1,17 @@
 (ns teet.comments.comments-styles
-  (:require [teet.theme.theme-colors :as theme-colors]))
+  (:require [teet.theme.theme-colors :as theme-colors]
+            [teet.common.common-styles :as common-styles]
+            [herb.core :refer [defkeyframes]]))
+
+(defkeyframes focus-animation
+  ["0%" {:background-color theme-colors/gray}]
+  ["75%" {:background-color theme-colors/gray-light}]
+  ["100%" {:background-color "transparent"}])
+
+(defn comment-entry [focused?]
+  (merge (common-styles/margin-bottom 1)
+         (when focused?
+           {:animation [[focus-animation "1.5s"]]})))
 
 (defn comment-buttons-style
   []

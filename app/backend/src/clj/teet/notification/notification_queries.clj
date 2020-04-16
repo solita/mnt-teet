@@ -1,7 +1,8 @@
 (ns teet.notification.notification-queries
   (:require [teet.db-api.core :as db-api :refer [defquery]]
             [teet.notification.notification-db :as notification-db]
-            [datomic.client.api :as d]))
+            [datomic.client.api :as d]
+            [teet.comment.comment-model :as comment-model]))
 
 (defquery :notification/unread-notifications
   {:doc "Fetch unread notifications for user, sorted by most recent first."
@@ -31,15 +32,41 @@
               :activity (str activity)
               :task (str task-id)}}))
 
+(defn- comment-parent
+  "Returns [entity-type entity-id] for the parent of the given comment.
+  If parent is not found, returns nil."
+  [db comment-id]
+  (some (fn [[entity-type attr]]
+          (when-let [entity-id (ffirst
+                                (d/q [:find '?e
+                                      :where ['?e attr '?c]
+                                      :in '$ '?c]
+                                     db comment-id))]
+            [entity-type entity-id]))
+        comment-model/entity-comment-attribute))
+
+(defn comment-navigation-info [db comment-id]
+  (if-let [[entity-type entity-id] (comment-parent db comment-id)]
+    (case entity-type
+      :task (assoc (task-navigation-info db entity-id)
+                   :query {:tab "comments"
+                           :focus-on (str comment-id)})
+      ;; FIXME: implement file comment as well!
+      )
+    (db-api/bad-request! "No such comment")))
+
 (defquery :notification/navigate
   {:doc "Fetch navigation info for notification."
    :context {:keys [db user]}
    :args {:keys [notification-id]}
    :project-id nil
    :authorization {}}
-  (if-let [notification (notification-db/navigation-info db user notification-id)]
+  (if-let [{:notification/keys [type target]} (notification-db/navigation-info db user notification-id)]
     ;; FIXME: something more elegant? a multimethod?
-    (case (:db/ident (:notification/type notification))
-      :notification.type/task-waiting-for-review
-      (task-navigation-info db (:db/id (:notification/target notification))))
+    (case (:db/ident type)
+      (:notification.type/task-waiting-for-review :notification.type/task-assigned)
+      (task-navigation-info db (:db/id target))
+
+      :notification.type/comment-created
+      (comment-navigation-info db (:db/id target)))
     (db-api/bad-request! "No such notification")))
