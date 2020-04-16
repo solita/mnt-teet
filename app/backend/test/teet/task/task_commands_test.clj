@@ -11,7 +11,7 @@
   (tu/with-db))
 
 (deftest task-assignment-creates-notification-to-assignee
-  (tu/local-login (second tu/mock-user-boss))
+  (tu/local-login tu/mock-user-boss)
   (let [activity-id (tu/->db-id "p1-lc1-act1")
         result
         (tu/local-command
@@ -43,7 +43,7 @@
             "notification is unread and targets the task")
 
         (testing "Edna can fetch the notification nav info"
-          (tu/local-login (second tu/mock-user-edna-consultant))
+          (tu/local-login tu/mock-user-edna-consultant)
           (let [nav-info (tu/local-query :notification/navigate
                                          {:notification-id (:db/id notification)})]
             (is (= {:page :activity-task

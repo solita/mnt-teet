@@ -1,12 +1,16 @@
 (ns teet.test.utils
   (:require [datomic.client.api :as d]
+            teet.comment.comment-commands
+            teet.comment.comment-queries
             [teet.db-api.db-api-handlers :as db-api-handlers]
             [teet.environment :as environment]
             [teet.log :as log]
+            teet.task.task-commands
             [teet.user.user-model :as user-model]
             [teet.user.user-db :as user-db]
             [clojure.java.io :as io]
-            [clojure.set :as set]))
+            [clojure.set :as set])
+  (:import (java.util Date)))
 
 ;; Convenient shortcuts
 (def manager-id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74")
@@ -61,6 +65,7 @@
 
 (def ^:dynamic *connection* "Datomic connection during tests" nil)
 (def ^:dynamic *data-fixture-ids* ":db/id values for entities created in data fixtures" nil)
+(def ^:dynamic *global-test-data* "Test specific data that can be stored and retrieved within a single test." nil)
 
 (defn connection
   "Returns the current connection. Can only be called within tests using with-db fixture."
@@ -123,6 +128,20 @@
          (log/info "Deleting database " test-db-name)
          (d/delete-database client db-name))))))
 
+(defn with-global-data [f]
+  (binding [*global-test-data* (atom {})]
+    (f)))
+
+(defn store-data! [key value]
+  (assert *global-test-data* "store-data! can obly be used within with-global-data fixture")
+  (swap! *global-test-data* assoc key value))
+
+(defn get-data [key]
+  (assert *global-test-data* "get-data can obly be used within with-global-data fixture")
+  (let [data @*global-test-data*]
+    (assert (contains? data key) (str key " was never stored with store-data!"))
+    (get data key)))
+
 ;;
 ;; Database
 ;;
@@ -150,7 +169,8 @@
   "A valid datomic reference must be obtainable from `user` with `user-model/user-ref`"
   [user]
   (let [db (db)
-        user-ref (user-model/user-ref user)]
+        user-ref (when user
+                   (user-model/user-ref user))]
     {:conn (db-connection)
      :db db
      :user (when user-ref
@@ -179,3 +199,38 @@
    (db-api-handlers/raw-command-handler (action-ctx user-id)
                                         {:payload args
                                          :command command})))
+
+;;
+;; Various helpers
+;;
+(defn create-task [{:keys [user activity task]} & [global-test-data-key]]
+  (local-login user)
+  (let [task-id (-> (local-command :task/create {:activity-id activity
+                                                 :task (merge {:task/send-to-thk? false
+                                                               :task/type :task.type/design-requirements
+                                                               :task/group :task.group/base-data
+                                                               :db/id "new-id"
+                                                               :task/description "Design requirements for testing."
+                                                               :task/assignee {:user/id (second user)}
+                                                               :task/estimated-start-date (Date.)
+                                                               :task/estimated-end-date (Date.)}
+                                                              task)})
+                    :tempids
+                    (get "new-id"))]
+    (if global-test-data-key
+      (store-data! global-test-data-key task-id)
+      task-id)))
+
+(defn create-comment [{:keys [user entity-type entity-id comment]} & [global-test-data-key]]
+  (local-login user)
+  (let [comment-id (-> (local-command :comment/create (merge {:entity-id entity-id
+                                                              :entity-type entity-type
+                                                              :comment "Test comment"
+                                                              :files []
+                                                              :visibility :comment.visibility/all}
+                                                             comment))
+                       :tempids
+                       (get "new-comment"))]
+    (if global-test-data-key
+      (store-data! global-test-data-key comment-id)
+      comment-id)))
