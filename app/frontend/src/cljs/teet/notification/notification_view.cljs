@@ -17,6 +17,19 @@
    :justify-content :flex-end
    :padding-bottom "0.5rem"})
 
+(defn- notification-icon [type]
+  (case (:db/ident type)
+    :notification.type/task-waiting-for-review
+    [icons/action-assignment]
+
+    :notification.type/task-assigned
+    [icons/action-assignment-ind]
+
+    :notification.type/comment-created
+    [icons/communication-comment]
+
+    [icons/navigation-more-horiz]))
+
 (defn- notifications* [e! refresh! notifications]
   (r/with-let [selected-item (r/atom nil)
                handle-click! (fn [event]
@@ -55,14 +68,7 @@
                                                (handle-close!)
                                                (refresh!)))))}
                  [ListItemIcon
-                  (case (:db/ident type)
-                    :notification.type/task-waiting-for-review
-                    [icons/action-assignment]
-
-                    :notification.type/comment-created
-                    [icons/communication-comment]
-
-                    [icons/navigation-more-horiz])]
+                  (notification-icon type)]
                  [ListItemText (tr-enum type)]])
               notifications)
         [MenuItem {:on-click handle-close!}
