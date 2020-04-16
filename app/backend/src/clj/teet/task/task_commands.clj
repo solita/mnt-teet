@@ -83,7 +83,12 @@
                                   (update :task/assignee
                                           (fn [{id :user/id}]
                                             [:user/id id])))
-                              (meta-model/creation-meta user))]})]})
+                              (meta-model/creation-meta user))]})
+              (notification-db/notification-tx
+               {:from user
+                :to [:user/id (get-in task [:task/assignee :user/id])]
+                :target (:db/id task)
+                :type :notification.type/task-assigned})]})
 
 (defcommand :task/submit
   {:doc "Submit task results for review."
