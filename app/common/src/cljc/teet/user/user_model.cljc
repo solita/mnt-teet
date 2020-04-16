@@ -39,4 +39,6 @@
     [:user/id (:user/id user)]
 
     ;; Not valid user
-    :else nil))
+    :else
+    (throw (ex-info "Not a valid user reference. Expected eid or user info map."
+                    {:invalid-user-ref user}))))
