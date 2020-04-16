@@ -6,7 +6,11 @@
             [teet.meta.meta-model :refer [creation-meta modification-meta deletion-tx]]
             [teet.meta.meta-query :as meta-query]
             [teet.comment.comment-model :as comment-model]
-            [teet.project.project-db :as project-db])
+            [teet.project.project-db :as project-db]
+            [teet.authorization.authorization-check :as authorization-check]
+            [teet.permission.permission-db :as permission-db]
+            [teet.notification.notification-db :as notification-db]
+            [teet.user.user-model :as user-model])
   (:import (java.util Date)))
 
 (defn- validate-files
@@ -29,21 +33,58 @@
       (db-api/bad-request! "No such file")
       files)))
 
+(defn- participants
+  "Returns all participants (excluding `except-user`) in the comment thread.
+  If internal? is true, returns only participants allowed to
+  read internal comments."
+  [db entity-type entity-id internal? except-user]
+  (let [attr (comment-model/comments-attribute-for-entity-type entity-type)
+        query {:find '[(distinct ?author)]
+               :where [['?entity attr '?comment]
+                       '[?comment :comment/author ?author]
+                       '(not [?comment :comment/author ?except-user])]
+               :in '[$ ?entity ?except-user]}
+        participants (ffirst (d/q query
+                                  db entity-id
+                                  (user-model/user-ref except-user)))]
+    (if internal?
+      ;; Filter to participants who can view internal comments
+      (let [project-id (project-db/entity-project-id db entity-type entity-id)]
+        (into #{}
+              (filter (fn [participant]
+                        (authorization-check/authorized?
+                         {:user/permissions (permission-db/user-permissions db participant)}
+                         :project/view-internal-comments
+                         {:project-id project-id}))
+                      participants)))
+      ;; Return all participants
+      participants)))
+
 (defcommand :comment/create
   {:doc "Create a new comment and add it to an entity"
    :context {:keys [db user]}
    :payload {:keys [entity-id entity-type comment files]}
    :project-id (project-db/entity-project-id db entity-type entity-id)
    :authorization {:task/comment-task {:db/id entity-id}}
-   :transact [(merge {:db/id entity-id
-                      (comment-model/comments-attribute-for-entity-type entity-type)
-                      [(merge {:db/id "new-comment"
-                               :comment/author [:user/id (:user/id user)]
-                               :comment/comment comment
-                               :comment/timestamp (Date.)}
-                              (creation-meta user)
-                              (when (seq files)
-                                {:comment/files (validate-files db user files)}))]})]})
+   :transact
+   (into [(merge {:db/id entity-id
+                  (comment-model/comments-attribute-for-entity-type entity-type)
+                  [(merge {:db/id "new-comment"
+                           :comment/author [:user/id (:user/id user)]
+                           :comment/comment comment
+                           :comment/timestamp (Date.)}
+                          (creation-meta user)
+                          (when (seq files)
+                            {:comment/files (validate-files db user files)}))]})]
+         (map #(notification-db/notification-tx
+                {:from user
+                 :to %
+                 :type :notification.type/comment-created
+                 :target "new-comment"}))
+         (participants db entity-type entity-id
+                       ;; FIXME: when internal comment attr lands, use that
+                       false
+                       user))})
 
 (defn- comment-parent-entity [db comment-id]
   (if-let [file-id (ffirst
