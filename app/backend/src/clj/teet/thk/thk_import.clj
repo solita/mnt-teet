@@ -89,6 +89,7 @@
                       ;; This is a task that has previously been sent to THK
                       (cu/without-nils
                        {:db/id task-id
+                        :thk.activity/id (:thk.activity/id activity)
                         :task/estimated-start-date (:activity/estimated-start-date activity)
                         :task/estimated-end-date (:activity/estimated-end-date activity)
                         :task/actual-start-date (:activity/actual-start-date activity)
