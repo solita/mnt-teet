@@ -162,7 +162,9 @@
         read-string)))
 
 (defn tr-enum [value]
-  (let [value (get-in @estonian-translations [:enum value])]
+  (let [value (get-in @estonian-translations [:enum (if (keyword? value)
+                                                      value
+                                                      (:db/ident value))])]
     (if value
       value
       (throw (ex-info "Can't find estonian translation"
