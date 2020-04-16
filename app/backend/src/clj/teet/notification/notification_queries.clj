@@ -40,6 +40,6 @@
   (if-let [notification (notification-db/navigation-info db user notification-id)]
     ;; FIXME: something more elegant? a multimethod?
     (case (:db/ident (:notification/type notification))
-      :notification.type/task-waiting-for-review
+      (:notification.type/task-waiting-for-review :notification.type/task-assigned)
       (task-navigation-info db (:db/id (:notification/target notification))))
     (db-api/bad-request! "No such notification")))
