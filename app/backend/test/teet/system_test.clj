@@ -3,7 +3,7 @@
             [teet.test.utils :as tu]
             teet.system.system-queries))
 
-(use-fixtures :once tu/with-environment tu/with-db)
+(use-fixtures :once tu/with-environment (tu/with-db))
 
 (deftest db-query
   (testing ":teet.system/db can be called by anonymous user"

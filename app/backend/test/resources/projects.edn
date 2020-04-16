@@ -1,0 +1,152 @@
+[{:thk.project/estimated-start-date #inst "2020-04-06T21:00:00.000-00:00",
+  :thk.project/lifecycles
+  [{:db/id "p1-lc1"
+    :thk.lifecycle/estimated-start-date #inst "2020-04-06T21:00:00.000-00:00"
+    :thk.lifecycle/estimated-end-date #inst "2022-06-24T21:00:00.000-00:00"
+    :thk.lifecycle/activities
+    [{:db/id "p1-lc1-act1"
+      :activity/estimated-start-date #inst "2021-04-11T21:00:00.000-00:00"
+      :activity/estimated-end-date #inst "2022-06-24T21:00:00.000-00:00"
+      :activity/name :activity.name/land-acquisition
+      :thk.activity/id "15906"
+      :activity/integration-info "#:activity{:contract \"false\", :shortname \"Maaost\", :cost \"0.00\", :thkupdstamp \"2020-03-02 17:57:15.0\", :statusname \"Ettevalmistamisel\"}"}
+     {:db/id "p1-lc1-act2"
+      :activity/estimated-start-date #inst "2020-12-31T22:00:00.000-00:00"
+      :activity/estimated-end-date #inst "2020-06-11T21:00:00.000-00:00"
+      :activity/name :activity.name/detailed-design
+      :activity/status :activity.status/in-progress
+      :thk.activity/id "6594"
+      :activity/integration-info "#:activity{:contract \"true\", :procurementid \"666\", :shortname \"P?hiprojekt\", :cost \"111000.00\", :thkupdstamp \"2020-03-11 21:40:26.603836\", :statusname \"T??s\", :procurementno \"666666\"}"}]
+    :thk.lifecycle/type :thk.lifecycle-type/design
+    :thk.lifecycle/id "13906"
+    :thk.lifecycle/integration-info "#:phase{:typefk \"4099\", :cost \"2.00\", :thkupdstamp \"2020-04-07 13:43:28.959\"}"}
+   {:db/id "p1-lc2"
+    :thk.lifecycle/estimated-start-date #inst "2020-12-31T22:00:00.000-00:00"
+    :thk.lifecycle/estimated-end-date #inst "2022-12-30T22:00:00.000-00:00"
+    :thk.lifecycle/activities
+    [{:db/id "p1-lc2-act1"
+      :activity/estimated-start-date #inst "2020-12-31T22:00:00.000-00:00"
+      :activity/estimated-end-date #inst "2022-12-30T22:00:00.000-00:00"
+      :activity/name :activity.name/construction
+      :thk.activity/id "5455"
+      :activity/integration-info "#:activity{:contract \"false\", :procurementid \"777\", :shortname \"Teostus\", :cost \"640000.00\", :thkupdstamp \"2020-03-11 21:40:26.603836\", :statusname \"Hankeplaanis\"}"}]
+    :thk.lifecycle/type :thk.lifecycle-type/construction
+    :thk.lifecycle/id "13905"
+    :thk.lifecycle/integration-info "#:phase{:typefk \"4098\", :cost \"685000.00\", :thkupdstamp \"2020-03-11 21:40:26.603836\"}"}]
+  :thk.project/estimated-end-date #inst "2022-12-30T22:00:00.000-00:00"
+  :thk.project/start-m 19057
+  :thk.project/name "test sild project 1"
+  :thk.project/carriageway 1
+  :thk.project/id "11111"
+  :thk.project/region-name "Ida"
+  :db/id "p1"
+  :thk.project/repair-method "silla remont"
+  :thk.project/bridge-nr 176
+  :thk.project/road-nr 15128
+  :thk.project/integration-info "#:object{:statusfk \"1605\", :statusname \"Kinnitatud\", :regionfk \"1801\", :groupfk \"1107\", :groupshortname \"SILD\", :thkupdstamp \"2020-04-07 12:25:54.166\"}"
+  :thk.project/end-m 19117
+  :thk.project/owner [:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"]}
+
+ {:thk.project/estimated-start-date #inst "2020-04-12T21:00:00.000-00:00"
+  :thk.project/lifecycles
+  [{:db/id "p3-lc1"
+    :thk.lifecycle/estimated-start-date #inst "2020-04-12T21:00:00.000-00:00"
+    :thk.lifecycle/estimated-end-date #inst "2021-04-20T21:00:00.000-00:00"
+    :thk.lifecycle/type :thk.lifecycle-type/design
+    :thk.lifecycle/id "15921"
+    :thk.lifecycle/integration-info "#:phase{:typefk \"4099\", :cost \"16000.00\", :thkupdstamp \"2020-04-07 08:19:28.791\"}"}]
+  :thk.project/estimated-end-date #inst "2021-04-20T21:00:00.000-00:00"
+  :thk.project/start-m 2300
+  :thk.project/name "test lok project 3"
+  :thk.project/carriageway 1
+  :thk.project/id "33333"
+  :thk.project/region-name "Ida"
+  :db/id "p3"
+  :thk.project/repair-method "liiklusohtliku koha k?rvaldamine"
+  :thk.project/road-nr 23
+  :thk.project/integration-info "#:object{:statusfk \"1605\", :statusname \"Kinnitatud\", :regionfk \"1801\", :groupfk \"1108\", :groupshortname \"LOK\", :thkupdstamp \"2020-04-07 11:48:42.279\"}"
+  :thk.project/end-m 2700
+  :thk.project/owner [:user/id #uuid "fa8af5b7-df45-41ba-93d0-603c543c880d"]}
+
+ {:thk.project/estimated-start-date #inst "2020-04-06T21:00:00.000-00:00"
+  :thk.project/lifecycles
+  [{:db/id "p4-lc1"
+    :thk.lifecycle/estimated-start-date #inst "2020-04-06T21:00:00.000-00:00"
+    :thk.lifecycle/estimated-end-date #inst "2020-07-06T21:00:00.000-00:00"
+    :thk.lifecycle/type :thk.lifecycle-type/design
+    :thk.lifecycle/id "15927"
+    :thk.lifecycle/integration-info "#:phase{:typefk \"4099\", :cost \"44000.00\", :thkupdstamp \"2020-04-07 11:23:25.742\"}"}]
+  :thk.project/estimated-end-date #inst "2020-07-06T21:00:00.000-00:00"
+  :thk.project/start-m 2000
+  :thk.project/name "test rek project 4"
+  :thk.project/carriageway 1
+  :thk.project/id "44444"
+  :thk.project/region-name "Ida"
+  :db/id "p4"
+  :thk.project/repair-method "rekonstrueerimine"
+  :thk.project/road-nr 20
+  :thk.project/integration-info "#:object{:statusfk \"1605\", :statusname \"Kinnitatud\", :regionfk \"1801\", :groupfk \"1104\", :groupshortname \"REK\", :thkupdstamp \"2020-04-07 11:24:10.297\"}"
+  :thk.project/end-m 4000}
+
+ {:thk.project/estimated-start-date #inst "2020-04-20T21:00:00.000-00:00"
+  :thk.project/lifecycles
+  [{:db/id "p5-lc1"
+    :thk.lifecycle/estimated-start-date #inst "2020-04-20T21:00:00.000-00:00"
+    :thk.lifecycle/estimated-end-date #inst "2020-05-09T21:00:00.000-00:00"
+    :thk.lifecycle/type :thk.lifecycle-type/design
+    :thk.lifecycle/id "15932"
+    :thk.lifecycle/integration-info "#:phase{:typefk \"4099\", :cost \"80000.00\", :thkupdstamp \"2020-04-07 12:05:33.862\"}"}]
+  :thk.project/estimated-end-date #inst "2020-05-09T21:00:00.000-00:00"
+  :thk.project/start-m 0
+  :thk.project/name "test rek project 5"
+  :thk.project/carriageway 1
+  :thk.project/id "55555"
+  :thk.project/region-name "L??ne"
+  :db/id "p5"
+  :thk.project/repair-method "rekonstrueerimine"
+  :thk.project/road-nr 20
+  :thk.project/integration-info "#:object{:statusfk \"1605\", :statusname \"Kinnitatud\", :regionfk \"1803\", :groupfk \"1104\", :groupshortname \"REK\", :thkupdstamp \"2020-04-07 12:06:57.739\"}"
+  :thk.project/end-m 10000
+  :thk.project/owner {:db/id "p5-owner" :user/person-id "66666666666"}}
+
+ {:thk.project/estimated-start-date #inst "2020-07-05T21:00:00.000-00:00"
+  :thk.project/lifecycles
+  [{:db/id "p2-lc1"
+    :thk.lifecycle/estimated-start-date #inst "2022-06-26T21:00:00.000-00:00"
+    :thk.lifecycle/estimated-end-date #inst "2023-11-29T22:00:00.000-00:00"
+    :thk.lifecycle/activities
+    [{:db/id "p2-lc1-act1"
+      :activity/estimated-start-date #inst "2022-06-26T21:00:00.000-00:00"
+      :activity/estimated-end-date #inst "2023-11-29T22:00:00.000-00:00"
+      :activity/name :activity.name/construction
+      :thk.activity/id "5488"
+      :activity/integration-info "#:activity{:contract \"false\", :shortname \"Teostus\", :cost \"2350000.00\", :thkupdstamp \"2020-03-11 21:40:26.603836\", :statusname \"Ettevalmistamisel\"}"}]
+    :thk.lifecycle/type :thk.lifecycle-type/construction
+    :thk.lifecycle/id "13957"
+    :thk.lifecycle/integration-info "#:phase{:typefk \"4098\", :cost \"2446500.00\", :thkupdstamp \"2020-03-11 21:40:26.603836\"}"}
+
+   {:db/id "p2-lc2"
+    :thk.lifecycle/estimated-start-date #inst "2020-07-05T21:00:00.000-00:00"
+    :thk.lifecycle/estimated-end-date #inst "2021-11-29T22:00:00.000-00:00"
+    :thk.lifecycle/activities
+    [{:db/id "p2-lc2-act1"
+      :activity/estimated-start-date #inst "2020-07-05T21:00:00.000-00:00"
+      :activity/estimated-end-date #inst "2021-08-23T21:00:00.000-00:00"
+      :activity/name :activity.name/detailed-design
+      :thk.activity/id "6000"
+      :activity/integration-info "#:activity{:contract \"false\", :procurementid \"888\", :shortname \"P?hiprojekt\", :cost \"215000.00\", :thkupdstamp \"2020-03-11 21:40:26.603836\", :statusname \"Hankeplaanis\"}"}]
+    :thk.lifecycle/type :thk.lifecycle-type/design
+    :thk.lifecycle/id "13958"
+    :thk.lifecycle/integration-info "#:phase{:typefk \"4099\", :cost \"60000.00\", :thkupdstamp \"2020-03-11 21:40:26.603836\"}"}]
+  :thk.project/estimated-end-date #inst "2023-11-29T22:00:00.000-00:00"
+  :thk.project/start-m 69937
+  :thk.project/name "test rek project 2"
+  :thk.project/carriageway 1
+  :thk.project/id "22222"
+  :thk.project/region-name "L??ne"
+  :db/id "p2"
+  :thk.project/repair-method "rekonstrueerimine"
+  :thk.project/road-nr 6
+  :thk.project/integration-info "#:object{:statusfk \"1605\", :statusname \"Kinnitatud\", :regionfk \"1803\", :groupfk \"1104\", :groupshortname \"REK\", :thkupdstamp \"2019-11-01 09:37:44.915\"}"
+  :thk.project/end-m 72162
+  :thk.project/owner [:user/id #uuid "ccbedb7b-ab30-405c-b389-292cdfe85271"]}]

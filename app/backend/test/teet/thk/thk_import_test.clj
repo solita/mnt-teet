@@ -3,9 +3,14 @@
             [teet.thk.thk-import :as thk-import]
             [clojure.string :as str]
             [teet.test.utils :as tu]
-            [datomic.client.api :as d]))
+            [datomic.client.api :as d]
+            [clojure.java.io :as io]))
 
-(use-fixtures :once tu/with-environment tu/with-db)
+(use-fixtures :once
+  tu/with-environment
+  (tu/with-db
+    ;; Skip data fixtures, we want clean migrated db
+    {:data-fixtures []}))
 
 (def test-csv
   (str/join
@@ -20,6 +25,7 @@
     "44444;1104;REK;rekonstrueerimine;20;1;2.000;4.000;;test rek project 4;;;1801;Ida;2020-04-07 11:24:10.297;2020-04-07 13:35:08.0;1605;Kinnitatud;15927;;4099;projetapp;2020-04-07;2020-07-07;2020-04-07 11:23:25.742;;44000.00;;;;;;;;;;;;;;;;;;;;"
     "55555;1104;REK;rekonstrueerimine;20;1;0.000;10.000;;test rek project 5;;66666666666;1803;Lääne;2020-04-07 12:06:57.739;2020-04-07 13:35:08.0;1605;Kinnitatud;15932;;4099;projetapp;2020-04-21;2020-05-10;2020-04-07 12:05:33.862;;80000.00;;;;;;;;;;;;;;;;;;;;"]))
 
+
 (deftest thk<->teet-import-export
   (testing "THK -> TEET import"
     (let [projects (thk-import/parse-thk-export-csv
@@ -28,6 +34,7 @@
       (is (= 5 (count projects)))
       (testing "Import projects"
         (thk-import/import-thk-projects! (tu/connection) "test://test-csv" projects))
+
       (testing "Imported projects information is correct"
         (let [db (tu/db)]
           (testing "All projects are found by id after import"
@@ -57,18 +64,19 @@
               (is (= #{:db/id :user/person-id}
                      (set (keys owner))))))))))
 
-  ;; Create tasks for p5 activity that is sent to THK
+  ;; Create tasks for p1 activity that is sent to THK
   (let [act-id (ffirst
                 (d/q '[:find ?a
                        :where
                        [?p :thk.project/lifecycles ?l]
                        [?l :thk.lifecycle/activities ?a]
+                       [?a :activity/name :activity.name/land-acquisition]
                        :in $ ?p]
-                     (tu/db) [:thk.project/id "55555"]))]
-    (is act-id "Project 5 has one activity")
+                     (tu/db) [:thk.project/id "11111"]))]
+    (is act-id "Project 1 has land acquisition activity")
     (tu/tx {:db/id act-id
             :activity/tasks [{:db/id "new-task"
-                              :task/type :task.type/flora-and-fauna-study
+                              :task/type :task.type/third-party-review
                               :task/send-to-thk? true
                               :task/estimated-start-date #inst "2020-04-15T14:00:39.855-00:00"
                               :task/estimated-end-date  #inst "2020-06-25T14:00:39.855-00:00"}]}))

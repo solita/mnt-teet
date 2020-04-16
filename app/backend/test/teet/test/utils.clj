@@ -3,7 +3,8 @@
             [teet.db-api.db-api-handlers :as db-api-handlers]
             [teet.environment :as environment]
             [teet.log :as log]
-            [teet.user.user-db :as user-db]))
+            [teet.user.user-db :as user-db]
+            [clojure.java.io :as io]))
 
 (def mock-users
   [{:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"
@@ -66,20 +67,29 @@
   (log/info "Reloading local config.")
   (environment/load-local-config!))
 
-(defn with-db [f]
-  (log/redirect-ion-casts! :stderr)
-  (let [test-db-name (str "test-db-" (System/currentTimeMillis))]
-    (log/info "Creating database " test-db-name)
-    (swap! environment/config assoc-in [:datomic :db-name] test-db-name)
-    (let [client (d/client (environment/config-value :datomic :client))
-          db-name {:db-name test-db-name}]
-      (d/create-database client db-name)
-      (binding [*connection* (d/connect client db-name)]
-        (environment/migrate *connection*)
-        (d/transact *connection* {:tx-data mock-users})
-        (f))
-      (log/info "Deleting database " test-db-name)
-      (d/delete-database client db-name))))
+(defn with-db
+  ([] (with-db {}))
+  ([{:keys [data-fixtures]
+     :or {data-fixtures [:projects]} :as _opts}]
+   (fn with-db-fixture [f]
+     (log/redirect-ion-casts! :stderr)
+     (let [test-db-name (str "test-db-" (System/currentTimeMillis))]
+       (log/info "Creating database " test-db-name)
+       (swap! environment/config assoc-in [:datomic :db-name] test-db-name)
+       (let [client (d/client (environment/config-value :datomic :client))
+             db-name {:db-name test-db-name}]
+         (d/create-database client db-name)
+         (binding [*connection* (d/connect client db-name)]
+           (environment/migrate *connection*)
+           (d/transact *connection* {:tx-data mock-users})
+           (doseq [df data-fixtures
+                   :let [resource (str "resources/" (name df) ".edn")]]
+             (log/info "Transacting data fixture: " df)
+             ((d/transact *connection* {:tx-data (-> resource io/resource
+                                                     slurp read-string)})))
+           (f))
+         (log/info "Deleting database " test-db-name)
+         (d/delete-database client db-name))))))
 
 (defn with-test-data [f]
   ;; TODO: Initialize test db with some test data
