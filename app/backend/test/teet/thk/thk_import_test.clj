@@ -1,61 +1,75 @@
 (ns teet.thk.thk-import-test
   (:require [clojure.test :refer :all]
             [teet.thk.thk-import :as thk-import]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.test.utils :as tu]
+            [datomic.client.api :as d]))
 
+(use-fixtures :once tu/with-environment tu/with-db)
 
 (def test-csv
   (str/join
    "\n"
-   ["ob_id;plangroupfk;shortname;gr_nimi;roadnr;carriageway;kmstart;kmend;bridgenr;objectname;projname;owner;regionfk;reg_nimi;ob_thkupd;ob_teetupd;objectstatusfk;ob_status;ph_id;ph_teetid;ph_typefk;ph_shname;ph_estStart;ph_estEnd;ph_thkUpd;ph_teetupd;ph_cost;act_id;act_teetid;act_typefk;at_shname;act_statusfk;act_statname;act_contract;act_estStart;act_estEnd;act_actualStart;act_actualEnd;act_guarExpired;act_thkUpd;act_teetUpd;act_teetDel;actfin_id;act_fs;act_invcd;ac_cost;proc_No;proc_id"
-    "666;1108;LOK;liiklusohtliku koha kõrvaldamine;2;1;191.5;191.7;;Test Project;;rolf.teflon;1802;Lõuna;2019-11-27 16:28:47;;1605;Kinnitatud;8708;;4099;projetapp;2017-01-01;2019-10-01;2019-12-27 15:00:00;;76904;128;;4003;Põhiprojekt;4104;Lõpetatud;true;2017-01-01;2017-05-10;2017-02-03;2017-08-28;;2018-05-24 16:25:11;;;;;;11760;;"
-    "666;1108;LOK;liiklusohtliku koha kõrvaldamine;2;1;191.5;191.7;;Test Project;;rolf.teflon;1802;Lõuna;2019-11-27 16:28:47;;1605;Kinnitatud;8708;;4099;projetapp;2017-01-01;2019-10-01;2019-12-27 15:00:00;;76904;6436;;4003;Põhiprojekt;4102;Töös;true;2018-08-07;2019-09-30;2018-07-23;;;2018-08-14 10:46:33;;;;;;61644;198865;479"
-    "666;1108;LOK;liiklusohtliku koha kõrvaldamine;2;1;191.5;191.7;;Test Project;;rolf.teflon;1802;Lõuna;2019-11-27 16:28:47;;1605;Kinnitatud;8708;;4099;projetapp;2017-01-01;2019-10-01;2019-12-27 15:00:00;;76904;6464;;4011;LOA proj;4100;Ettevalmistamisel;false;2019-08-01;2019-10-01;;;;2018-08-24 09:00:28;;;;;;3500;;"
-    "666;1108;LOK;liiklusohtliku koha kõrvaldamine;2;1;191.5;191.7;;Test Project;;rolf.teflon;1802;Lõuna;2019-11-27 16:28:47;;1605;Kinnitatud;14092;;4098;ehitetapp;2022-03-01;2022-12-31;2019-12-27 15:00:00;;120100;5877;;4005;Teostus;4100;Ettevalmistamisel;false;2022-03-01;2022-12-31;;;;2019-11-11 15:50:10;;;;;;120100;;"]))
+   ["object_id;object_groupfk;object_groupshortname;object_groupname;object_roadnr;object_carriageway;object_kmstart;object_kmend;object_bridgenr;object_name;object_projectname;object_owner;object_regionfk;object_regionname;object_thkupdstamp;object_teetupdstamp;object_statusfk;object_statusname;phase_id;phase_teetid;phase_typefk;phase_shortname;phase_eststart;phase_estend;phase_thkupdstamp;phase_teetupdstamp;phase_cost;activity_id;activity_teetid;activity_taskid;activity_taskdescr;activity_typefk;activity_shortname;activity_statusfk;activity_statusname;activity_contract;activity_eststart;activity_estend;activity_actualstart;activity_actualend;activity_guaranteeexpired;activity_thkupdstamp;activity_teetupdstamp;activity_teetdelstamp;activity_cost;activity_procurementno;activity_procurementid"
+    "11111;1107;SILD;silla remont;15128;1;19.057;19.117;176;test sild project 1;;1234567890;1801;Ida;2020-04-07 12:25:54.166;2020-04-07 13:35:08.0;1605;Kinnitatud;13906;26432259531738205;4099;projetapp;2020-04-07;2022-06-25;2020-04-07 13:43:28.959;2020-04-07 13:35:08.0;2.00;15906;52772160086740303;;;4004;Maaost;4100;Ettevalmistamisel;false;2021-04-12;2022-06-25;;;;2020-03-02 17:57:15.0;2020-04-07 13:35:08.0;;0.00;;"
+    "11111;1107;SILD;silla remont;15128;1;19.057;19.117;176;test sild project 1;;1234567890;1801;Ida;2020-04-07 12:25:54.166;2020-04-07 13:35:08.0;1605;Kinnitatud;13906;26432259531738205;4099;projetapp;2020-04-07;2022-06-25;2020-04-07 13:43:28.959;2020-04-07 13:35:08.0;2.00;6594;71041645293866078;;;4003;Põhiprojekt;4102;Töös;true;2021-01-01;2020-06-12;2020-01-14;;;2020-03-11 21:40:26.603836;2020-04-07 13:35:08.0;;111000.00;666666;666"
+    "11111;1107;SILD;silla remont;15128;1;19.057;19.117;176;test sild project 1;;1234567890;1801;Ida;2020-04-07 12:25:54.166;2020-04-07 13:35:08.0;1605;Kinnitatud;13905;49763896273144927;4098;ehitetapp;2021-01-01;2022-12-31;2020-03-11 21:40:26.603836;2020-03-12 11:39:01.0;685000.00;5455;51413163714808928;;;4005;Teostus;4106;Hankeplaanis;false;2021-01-01;2022-12-31;;;;2020-03-11 21:40:26.603836;2020-03-12 11:39:01.0;;640000.00;;777"
+    "22222;1104;REK;rekonstrueerimine;6;1;69.937;72.162;;test rek project 2;;3344556677;1803;Lääne;2019-11-01 09:37:44.915;2020-03-12 11:39:01.0;1605;Kinnitatud;13958;62676560829746095;4099;projetapp;2020-07-06;2021-11-30;2020-03-11 21:40:26.603836;2020-03-12 11:39:01.0;60000.00;6000;7133631441013680;;;4003;Põhiprojekt;4106;Hankeplaanis;false;2020-07-06;2021-08-24;;;;2020-03-11 21:40:26.603836;2020-04-07 13:35:08.0;;215000.00;;888"
+    "22222;1104;REK;rekonstrueerimine;6;1;69.937;72.162;;test rek project 2;;3344556677;1803;Lääne;2019-11-01 09:37:44.915;2020-03-12 11:39:01.0;1605;Kinnitatud;13957;7621814603746225;4098;ehitetapp;2022-06-27;2023-11-30;2020-03-11 21:40:26.603836;2020-03-12 11:39:01.0;2446500.00;5488;11390940463762354;;;4005;Teostus;4100;Ettevalmistamisel;false;2022-06-27;2023-11-30;;;;2020-03-11 21:40:26.603836;2020-03-12 11:39:01.0;;2350000.00;;"
+    "33333;1108;LOK;liiklusohtliku koha kõrvaldamine;23;1;2.300;2.700;;test lok project 3;;9483726473;1801;Ida;2020-04-07 11:48:42.279;2020-04-07 13:35:08.0;1605;Kinnitatud;15921;;4099;projetapp;2020-04-13;2021-04-21;2020-04-07 08:19:28.791;;16000.00;;;;;;;;;;;;;;;;;;;;"
+    "44444;1104;REK;rekonstrueerimine;20;1;2.000;4.000;;test rek project 4;;;1801;Ida;2020-04-07 11:24:10.297;2020-04-07 13:35:08.0;1605;Kinnitatud;15927;;4099;projetapp;2020-04-07;2020-07-07;2020-04-07 11:23:25.742;;44000.00;;;;;;;;;;;;;;;;;;;;"
+    "55555;1104;REK;rekonstrueerimine;20;1;0.000;10.000;;test rek project 5;;66666666666;1803;Lääne;2020-04-07 12:06:57.739;2020-04-07 13:35:08.0;1605;Kinnitatud;15932;;4099;projetapp;2020-04-21;2020-05-10;2020-04-07 12:05:33.862;;80000.00;;;;;;;;;;;;;;;;;;;;"]))
 
-(def project-keys #{;:thk.project/estimated-start-date :thk.project/estimated-end-date
-                    :thk.project/road-nr :thk.project/start-m :thk.project/end-m
-                    :thk.project/carriageway
-                    :thk.project/name :thk.project/id})
+(deftest thk<->teet-import-export
+  (testing "THK -> TEET import"
+    (let [projects (thk-import/parse-thk-export-csv
+                    (java.io.ByteArrayInputStream.
+                     (.getBytes test-csv)))]
+      (is (= 5 (count projects)))
+      (testing "Import projects"
+        (thk-import/import-thk-projects! (tu/connection) "test://test-csv" projects))
+      (testing "Imported projects information is correct"
+        (let [db (tu/db)]
+          (testing "All projects are found by id after import"
+            (is (=
+                 #{"11111" "22222" "33333" "44444" "55555"}
+                 (into #{}
+                       (map first)
+                       (d/q '[:find ?id
+                              :where [_ :thk.project/id ?id]]
+                            db)))))
+          (testing "Project 1 is owned by existing Danny"
+            (let [{owner :thk.project/owner :as p1}
+                  (d/pull db '[{:thk.project/owner [*]}]
+                          [:thk.project/id "11111"])]
+              (is (= {:user/person-id "1234567890"
+                      :user/given-name "Danny D."
+                      :user/family-name "Manager"}
+                     (select-keys owner [:user/person-id
+                                         :user/given-name
+                                         :user/family-name])))))
+          (testing "Project 5 has newly created owner"
+            (let [{owner :thk.project/owner :as p5}
+                  (d/pull db '[* {:thk.project/owner [*]}]
+                          [:thk.project/id "55555"])]
+              (is (= {:user/person-id "66666666666"}
+                     (select-keys owner [:user/person-id])))
+              (is (= #{:db/id :user/person-id}
+                     (set (keys owner))))))))))
 
-(def phase-keys #{:thk.lifecycle/id :thk.lifecycle/type
-                  ;:thk.lifecycle/estimated-start-date
-                  ;:thk.lifecycle/estimated-end-date
-                  })
-
-#_(deftest csv-to-project-datomic-attributes
-  (let [csv (thk-import/parse-thk-export-csv (java.io.ByteArrayInputStream. (.getBytes test-csv)))]
-    (is (= '("666") (keys csv)) "Parsed CSV contains one project")
-    (let [{phases :thk.project/lifecycles :as project}
-          (thk-import/project-datomic-attributes (first csv))
-
-          [design-phase construction-phase]
-          (sort-by :thk.lifecycle/estimated-start-date phases)]
-
-      (is (= (select-keys project project-keys)
-             {;:thk.project/estimated-start-date #inst "2016-12-31T22:00:00.000-00:00"
-              ;:thk.project/estimated-end-date #inst "2022-12-30T22:00:00.000-00:00"
-              :thk.project/start-m 191500,
-              :thk.project/name "Test Project",
-              :thk.project/carriageway 1,
-              :thk.project/id "666",
-              :thk.project/road-nr 2,
-              :thk.project/end-m 191700}))
-
-      (is (= (select-keys design-phase phase-keys)
-             #:thk.lifecycle {:id "8708",
-                              :type :thk.lifecycle-type/design,
-                              ;:estimated-start-date #inst "2016-12-31T22:00:00.000-00:00"
-                              ;:estimated-end-date #inst "2019-09-30T21:00:00.000-00:00"
-                              }))
-
-      (is (= 2 (count (:thk.lifecycle/activities design-phase))))
-
-      (is (= (select-keys construction-phase phase-keys)
-             #:thk.lifecycle {:id "14092"
-                              :type :thk.lifecycle-type/construction
-                              ;:estimated-start-date #inst "2022-02-28T22:00:00.000-00:00"
-                              ;:estimated-end-date #inst "2022-12-30T22:00:00.000-00:00"
-                              }))
-
-      (is (= 1 (count (:thk.lifecycle/activities construction-phase)))))))
+  ;; Create tasks for p5 activity that is sent to THK
+  (let [act-id (ffirst
+                (d/q '[:find ?a
+                       :where
+                       [?p :thk.project/lifecycles ?l]
+                       [?l :thk.lifecycle/activities ?a]
+                       :in $ ?p]
+                     (tu/db) [:thk.project/id "55555"]))]
+    (is act-id "Project 5 has one activity")
+    (tu/tx {:db/id act-id
+            :activity/tasks [{:db/id "new-task"
+                              :task/type :task.type/flora-and-fauna-study
+                              :task/send-to-thk? true
+                              :task/estimated-start-date #inst "2020-04-15T14:00:39.855-00:00"
+                              :task/estimated-end-date  #inst "2020-06-25T14:00:39.855-00:00"}]}))
+  )

@@ -31,37 +31,7 @@
   (d/transact (environment/datomic-connection)
               {:tx-data (into [] maps)}))
 
-(def mock-users [{:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"
-                  :user/person-id "1234567890"
-                  :user/given-name "Danny D."
-                  :user/family-name "Manager"
-                  :user/email "danny.d.manager@example.com"
-                  ; :user/organization "Maanteeamet"
-                  }
-
-                 {:user/id #uuid "ccbedb7b-ab30-405c-b389-292cdfe85271"
-                  :user/person-id "3344556677"
-                  :user/given-name "Carla"
-                  :user/family-name "Consultant"
-                  :user/email "carla.consultant@example.com"
-                  ; :user/organization "ACME Road Consulting, Ltd."
-                  }
-
-                 {:user/id #uuid "fa8af5b7-df45-41ba-93d0-603c543c880d"
-                  :user/person-id "9483726473"
-                  :user/given-name "Benjamin"
-                  :user/family-name "Boss"
-                  :user/email "benjamin.boss@example.com"
-                  ; :user/organization "Maanteeamet"
-                  }
-
-                 {:user/id #uuid "008af5b7-0f45-01ba-03d0-003c111c8f00"
-                  :user/person-id "1233726123"
-                  :user/given-name "Edna E."
-                  :user/family-name "Consultant"
-                  :user/email "edna.e.consultant@example.com"
-                  ; :user/organization "Maanteeamet"
-                  }])
+(def mock-users tu/mock-users)
 
 (def danny-uuid (-> mock-users first :user/id))
 

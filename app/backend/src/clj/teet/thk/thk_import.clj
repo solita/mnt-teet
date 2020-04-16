@@ -60,7 +60,8 @@
                          :thk.project/repair-method
                          :thk.project/region-name
                          :thk.project/carriageway
-                         :thk.project/name})
+                         :thk.project/name
+                         :thk.project/owner})
       {:db/id (str "prj-" project-id)
        :thk.project/estimated-start-date project-est-start
        :thk.project/estimated-end-date project-est-end

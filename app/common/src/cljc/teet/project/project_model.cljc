@@ -46,6 +46,7 @@
         [{:thk.project/lifecycles [{:thk.lifecycle/activities
                                     [:activity/estimated-end-date
                                      :activity/estimated-start-date
+                                     :activity/name
                                      :activity/status
                                      {:activity/tasks [:task/status]}]}]}]))
 
@@ -64,6 +65,7 @@
    :thk.project/carriageway
    :thk.project/estimated-date-range
    :thk.project/repair-method
+   :thk.project/activity-status
    :thk.project/owner-info])
 
 (defmulti get-column (fn [_project column] column))
@@ -74,6 +76,10 @@
 (defmethod get-column :thk.project/km-range [{:thk.project/keys [start-m end-m]} _]
   [(/ start-m 1000)
    (/ end-m 1000)])
+
+(defmethod get-column :thk.project/activity-status
+  [{:thk.project/keys [lifecycles]} _]
+  (mapcat :thk.lifecycle/activities lifecycles))
 
 (defmethod get-column :thk.project/effective-km-range [{:thk.project/keys [start-m end-m custom-start-m custom-end-m]} _]
   [(/ (or custom-start-m start-m) 1000)

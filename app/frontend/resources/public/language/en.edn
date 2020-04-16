@@ -204,6 +204,7 @@
   :task/thk-type "THK type",
   :task/type "Task type",
   :task/actual-end-date "End date",
+  :thk.project/activity-status "Activity statuses",
   :task/assignee "Responsible person",
   :thk.project/owner-info "Owner",
   :activity/status "Status",
@@ -350,7 +351,8 @@
  {:title "Projects",
   :map-view "Map",
   :list-view "Project list",
-  :unassigned-only "Unassigned projects only"},
+  :unassigned-only "Unassigned projects only",
+  :no-activities "No activities"},
  :roles
  {:internal-consultant "Internal consultant",
   :owner "Owner",
