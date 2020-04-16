@@ -70,25 +70,26 @@
   {:doc "Add task to activity"
    :context {:keys [db conn user]}
    :payload {activity-id :activity-id
-             task        :task :as payload}
+             task :task :as payload}
    :project-id (project-db/activity-project-id db activity-id)
    :pre [(new? task)
          (valid-thk-send? db task)]
    :authorization {:task/create-task {}
                    :activity/edit-activity {:db/id activity-id}}
-   :transact [(merge {:db/id          activity-id
+   :transact [(merge {:db/id activity-id
                       :activity/tasks
                       [(merge (-> task
-                                  (select-keys task-create-keys)
-                                  (update :task/assignee
-                                          (fn [{id :user/id}]
-                                            [:user/id id])))
+                                  (select-keys task-create-keys))
+                              (when (seq? (:task/assignee task))
+                                {:task/assignee [:user/id (:user/id (:task/assignee task))]})
                               (meta-model/creation-meta user))]})
-              (notification-db/notification-tx
-               {:from user
-                :to [:user/id (get-in task [:task/assignee :user/id])]
-                :target (:db/id task)
-                :type :notification.type/task-assigned})]})
+              (if-let [assignee (:task/assignee task)]
+                (notification-db/notification-tx
+                  {:from user
+                   :to [:user/id (:user/id assignee)]
+                   :target (:db/id task)
+                   :type :notification.type/task-assigned})
+                {})]})
 
 (defcommand :task/submit
   {:doc "Submit task results for review."

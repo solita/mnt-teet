@@ -74,6 +74,7 @@
                       (merge {:db/id (str "NEW-TASK-"
                                           (name task-group) "-"
                                           (name task-type))
+                              :task/estimated-end-date (:activity/estimated-end-date activity)
                               :task/status :task.status/in-preparation
                               :task/group task-group
                               :task/type task-type}
