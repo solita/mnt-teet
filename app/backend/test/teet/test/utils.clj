@@ -3,11 +3,18 @@
             [teet.db-api.db-api-handlers :as db-api-handlers]
             [teet.environment :as environment]
             [teet.log :as log]
+            [teet.user.user-model :as user-model]
             [teet.user.user-db :as user-db]
             [clojure.java.io :as io]))
 
+;; Convenient shortcuts
+(def manager-id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74")
+(def external-consultant-id #uuid "ccbedb7b-ab30-405c-b389-292cdfe85271")
+(def internal-consultant-id #uuid "008af5b7-0f45-01ba-03d0-003c111c8f00")
+(def boss-id #uuid "fa8af5b7-df45-41ba-93d0-603c543c880d")
+
 (def mock-users
-  [{:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"
+  [{:user/id manager-id
     :user/person-id "1234567890"
     :user/given-name "Danny D."
     :user/family-name "Manager"
@@ -15,7 +22,7 @@
                                         ; :user/organization "Maanteeamet"
     }
 
-   {:user/id #uuid "ccbedb7b-ab30-405c-b389-292cdfe85271"
+   {:user/id external-consultant-id
     :user/person-id "3344556677"
     :user/given-name "Carla"
     :user/family-name "Consultant"
@@ -23,7 +30,7 @@
                                         ; :user/organization "ACME Road Consulting, Ltd."
     }
 
-   {:user/id #uuid "fa8af5b7-df45-41ba-93d0-603c543c880d"
+   {:user/id boss-id
     :user/person-id "9483726473"
     :user/given-name "Benjamin"
     :user/family-name "Boss"
@@ -31,7 +38,7 @@
                                         ; :user/organization "Maanteeamet"
     }
 
-   {:user/id #uuid "008af5b7-0f45-01ba-03d0-003c111c8f00"
+   {:user/id internal-consultant-id
     :user/person-id "1233726123"
     :user/given-name "Edna E."
     :user/family-name "Consultant"
@@ -91,10 +98,6 @@
          (log/info "Deleting database " test-db-name)
          (d/delete-database client db-name))))))
 
-(defn with-test-data [f]
-  ;; TODO: Initialize test db with some test data
-  (f))
-
 ;;
 ;; Database
 ;;
@@ -108,38 +111,41 @@
 ;;
 ;; Local login, queries, commands
 ;;
-(def ^:private logged-in-user-id (atom nil))
+(def ^:private logged-in-user-ref (atom nil))
 
 (defn logged-user []
-  @logged-in-user-id)
+  @logged-in-user-ref)
 
 (defn local-login
-  [user-id]
-  (reset! logged-in-user-id user-id)
-  (log/info "Locally logged in as " user-id))
+  [user-ref]
+  (reset! logged-in-user-ref user-ref)
+  (log/info "Locally logged in as " user-ref))
 
-(defn- action-ctx [user-id]
-  (let [db (db)]
+(defn- action-ctx
+  "A valid datomic reference must be obtainable from `user` with `user-model/user-ref`"
+  [user]
+  (let [db (db)
+        user-ref (user-model/user-ref user)]
     {:conn (db-connection)
      :db db
-     :user (when user-id
-             (user-db/user-info db user-id))
+     :user (when user-ref
+             (user-db/user-info db user-ref))
      :session "foo"}))
 
 (defn local-query
   ([query args]
-   (if-let [user-id @logged-in-user-id]
+   (if-let [user-id @logged-in-user-ref]
      (local-query user-id query args)
      (log/error "Not logged in! Call user/local-login with an existing user id to log in.")))
 
-  ([user-id query args]
-   (db-api-handlers/raw-query-handler (action-ctx user-id)
+  ([user-ref query args]
+   (db-api-handlers/raw-query-handler (action-ctx user-ref)
                                       {:args args
                                        :query query})))
 
 (defn local-command
   ([command args]
-   (if-let [user-id @logged-in-user-id]
+   (if-let [user-id @logged-in-user-ref]
      (local-command user-id command args)
      (log/error "Not logged in! Call user/local-login with an existing user id to log in.")))
 
