@@ -70,7 +70,7 @@
   {:doc "Add task to activity"
    :context {:keys [db conn user]}
    :payload {activity-id :activity-id
-             task        :task :as payload}
+             task :task :as payload}
    :project-id (project-db/activity-project-id db activity-id)
    :pre [(new? task)
          (valid-thk-send? db task)]
@@ -79,10 +79,9 @@
    :transact [(merge {:db/id          activity-id
                       :activity/tasks
                       [(merge (-> task
-                                  (select-keys task-create-keys)
-                                  (update :task/assignee
-                                          (fn [{id :user/id}]
-                                            [:user/id id])))
+                                  (select-keys task-create-keys))
+                              (when (seq? (:task/assignee task))
+                                {:task/assignee [:user/id (:user/id (:task/assignee task))]})
                               (meta-model/creation-meta user))]})
               (notification-db/notification-tx
                {:from user
