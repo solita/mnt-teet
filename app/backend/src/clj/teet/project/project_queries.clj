@@ -61,7 +61,8 @@
           activity-id :activity-id}
    :project-id [:thk.project/id id]
    :authorization {:project/project-info {:eid [:thk.project/id id]
-                                          :link :thk.project/owner}}}
+                                          :link :thk.project/owner
+                                          :access :read}}}
   (let [project (meta-query/without-deleted
                   db
                   (project-db/project-by-id db [:thk.project/id id]))]
