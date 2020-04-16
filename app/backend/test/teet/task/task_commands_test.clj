@@ -1,4 +1,4 @@
-(ns teet.task.task-commands-test
+(ns ^:db teet.task.task-commands-test
   (:require [clojure.test :refer [deftest is testing] :as t]
             [teet.test.utils :as tu]
             teet.task.task-commands
