@@ -77,10 +77,13 @@
    :authorization {:task/create-task {}
                    :activity/edit-activity {:db/id activity-id}}
    :transact [(merge {:db/id          activity-id
-                      :activity/tasks [(merge (-> task
-                                                  (select-keys task-create-keys)
-                                                  (update :task/assignee (fn [{id :user/id}] [:user/id id])))
-                                              (meta-model/creation-meta user))]})]})
+                      :activity/tasks
+                      [(merge (-> task
+                                  (select-keys task-create-keys)
+                                  (update :task/assignee
+                                          (fn [{id :user/id}]
+                                            [:user/id id])))
+                              (meta-model/creation-meta user))]})]})
 
 (defcommand :task/submit
   {:doc "Submit task results for review."
