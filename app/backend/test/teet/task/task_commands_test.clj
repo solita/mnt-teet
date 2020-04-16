@@ -40,4 +40,15 @@
                                  :notification/target])
                    (update :notification/status :db/ident)
                    (update :notification/type :db/ident)))
-            "notification is unread and targets the task")))))
+            "notification is unread and targets the task")
+
+        (testing "Edna can fetch the notification nav info"
+          (tu/local-login (second tu/mock-user-edna-consultant))
+          (let [nav-info (tu/local-query :notification/navigate
+                                         {:notification-id (:db/id notification)})]
+            (is (= {:page :activity-task
+                    :params {:activity (str activity-id)
+                             :task (str task-id)
+                             :project "11111"}}
+                   nav-info)
+                "navigation info is for the task page")))))))
