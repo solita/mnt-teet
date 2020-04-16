@@ -4,7 +4,8 @@
             [teet.environment :as environment]
             [teet.log :as log]
             [teet.user.user-db :as user-db]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [clojure.set :as set]))
 
 (def mock-users
   [{:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"
@@ -28,7 +29,9 @@
     :user/given-name "Benjamin"
     :user/family-name "Boss"
     :user/email "benjamin.boss@example.com"
-                                        ; :user/organization "Maanteeamet"
+    :user/permissions [{:db/id "boss-permission"
+                        :permission/role :manager
+                        :permission/valid-from (java.util.Date.)}]
     }
 
    {:user/id #uuid "008af5b7-0f45-01ba-03d0-003c111c8f00"
@@ -39,11 +42,18 @@
                                         ; :user/organization "Maanteeamet"
     }])
 
+(def mock-user-manager [:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"])
+(def mock-user-carla-consultant [:user/id #uuid "ccbedb7b-ab30-405c-b389-292cdfe85271"])
+(def mock-user-boss [:user/id #uuid "fa8af5b7-df45-41ba-93d0-603c543c880d"])
+(def mock-user-edna-consultant [:user/id #uuid "008af5b7-0f45-01ba-03d0-003c111c8f00"])
+
+
 ;;
 ;; Test fixtures
 ;;
 
 (def ^:dynamic *connection* "Datomic connection during tests" nil)
+(def ^:dynamic *data-fixture-ids* ":db/id values for entities created in data fixtures" nil)
 
 (defn connection
   "Returns the current connection. Can only be called within tests using with-db fixture."
@@ -59,6 +69,12 @@
   "Transact the given tx-data maps. Can only be called within tests using with-db fixture."
   [& tx-data]
   (d/transact (connection) {:tx-data (vec tx-data)}))
+
+(defn ->db-id [data-fixture-temp-id]
+  (assert *data-fixture-ids* "->db-id can only be used within with-db fixture")
+  (or (get @*data-fixture-ids* data-fixture-temp-id)
+      (throw (ex-info "No db id found for data-fixture-temp-id"
+                      {:temp-id data-fixture-temp-id}))))
 
 (defn with-environment [f]
   (log/info "Loading local config.")
@@ -79,14 +95,23 @@
        (let [client (d/client (environment/config-value :datomic :client))
              db-name {:db-name test-db-name}]
          (d/create-database client db-name)
-         (binding [*connection* (d/connect client db-name)]
+         (binding [*connection* (d/connect client db-name)
+                   *data-fixture-ids* (atom {})]
            (environment/migrate *connection*)
            (d/transact *connection* {:tx-data mock-users})
            (doseq [df data-fixtures
                    :let [resource (str "resources/" (name df) ".edn")]]
              (log/info "Transacting data fixture: " df)
-             (d/transact *connection* {:tx-data (-> resource io/resource
-                                                    slurp read-string)}))
+             (let [{tempids :tempids}
+                   (d/transact *connection* {:tx-data (-> resource io/resource
+                                                          slurp read-string)})]
+               (swap! *data-fixture-ids*
+                      (fn [current-tempids]
+                        (if-let [duplicates (seq (set/intersection (set (keys current-tempids))
+                                                                   (set (keys tempids))))]
+                          (throw (ex-info "Data fixtures have duplicate tempids!"
+                                          {:duplicates duplicates}))
+                          (merge current-tempids tempids))))))
            (f))
          (log/info "Deleting database " test-db-name)
          (d/delete-database client db-name))))))
@@ -139,6 +164,7 @@
 
 (defn local-command
   ([command args]
+   (log/info "Calling " command " with " args)
    (if-let [user-id @logged-in-user-id]
      (local-command user-id command args)
      (log/error "Not logged in! Call user/local-login with an existing user id to log in.")))
