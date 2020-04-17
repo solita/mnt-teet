@@ -254,7 +254,7 @@
 
 (defn date-range-input
   "combine two date-inputs to provide a consistent date-range-picker"
-  [{:keys [error value on-change start-label end-label required row?]
+  [{:keys [error value on-change start-label end-label required row? min-date max-date]
     :or {row? true}}]
   (let [[start end] value
         element-size (if row?
@@ -270,9 +270,16 @@
                    :on-change (fn [start]
                                 (on-change [start end]))
                    :selectable? (fn [day]
-                                  (if end
-                                    (< (.-date day) end)
-                                    true))}]]
+                                  (and
+                                    (if end
+                                      (< (.-date day) end)
+                                      true)
+                                    (if min-date
+                                      (< min-date (.-date day))
+                                      true)
+                                    (if max-date
+                                      (< (.-date day) max-date)
+                                      true)))}]]
      [Grid {:item true :xs element-size}
       [date-input {:value end
                    :required required
@@ -282,6 +289,13 @@
                    :on-change (fn [end]
                                 (on-change [start end]))
                    :selectable? (fn [day]
-                                  (if start
-                                    (< start (.-date day))
-                                    true))}]]]))
+                                  (and
+                                    (if start
+                                      (< start (.-date day))
+                                      true)
+                                    (if min-date
+                                      (< min-date (.-date day))
+                                      true)
+                                    (if max-date
+                                      (< (.-date day) max-date)
+                                      true)))}]]]))
