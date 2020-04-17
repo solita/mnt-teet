@@ -41,7 +41,8 @@
                       [?lifecycle :thk.lifecycle/activities ?activity]
                       [?project :thk.project/lifecycles ?lifecycle]
                       [?project :thk.project/id ?project-id]
-                      :in $ ?file]))]
+                      :in $ ?file]
+                    db file-id))]
     {:page :file
      :params {:project (str project)
               :activity (str activity)
