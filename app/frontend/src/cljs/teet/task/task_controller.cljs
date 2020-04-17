@@ -4,7 +4,8 @@
             [teet.log :as log]
             [teet.localization :refer [tr]]
             [teet.file.file-controller]
-            [teet.common.common-controller :as common-controller]))
+            [teet.common.common-controller :as common-controller]
+            [teet.util.collection :as cu]))
 
 (defrecord UploadDocuments [files])
 (defrecord UpdateTask [task updated-task]) ; update task info to database
@@ -138,7 +139,8 @@
                         (boolean (and send? (get-in edit-task-data [:task/type :thk/task-type])))))
 
               ;; Take keyword value for task type
-              (update :task/type :db/ident))]
+              (update :task/type :db/ident)
+              cu/without-nils)]
       (t/fx app
             (merge
              {:tuck.effect/type :command!
