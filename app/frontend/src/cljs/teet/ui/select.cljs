@@ -278,7 +278,10 @@
                                     extra-selection-label
                                     (user-info/user-name-and-email user)))}
                   {:items @selectable-users
-                   :format-item user-info/user-name-and-email}))])
+                   :format-item (fn [{:user/keys [family-name person-id] :as user}]
+                                  (if family-name
+                                    (user-info/user-name-and-email user)
+                                    (str person-id)))}))])
 
 (defn radio [{:keys [value items format-item on-change]}]
   (let [item->value (zipmap items (map str (range)))]

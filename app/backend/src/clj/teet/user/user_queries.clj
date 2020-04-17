@@ -9,7 +9,7 @@
    ;; FIXME: can anyone list users?
    :project-id nil
    :authorization {}}
-  {:query '[:find (pull ?e [:user/id :user/given-name :user/family-name :user/email])
+  {:query '[:find (pull ?e [:user/id :user/given-name :user/family-name :user/email :user/person-id])
             :where [?e :user/id _]]
    :args [db]
    :result-fn (partial mapv first)})
