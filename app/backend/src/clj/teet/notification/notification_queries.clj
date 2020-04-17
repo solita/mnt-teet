@@ -11,10 +11,15 @@
    :project-id nil
    :authorization {}}
   (->> (notification-db/unread-notifications db user)
-       ;; TODO: Assoc a URL string to the notification target, or
-       ;; necessary data to build the URL on the frontend side. We may
-       ;; need target type as well as id for this.
        (sort-by :meta/created-at)))
+
+(defquery :notification/user-notifications
+  {:doc "Fetch notifications for user, sorted by most recent first."
+   :context {:keys [db user]}
+   :args _
+   :project-id nil
+   :authorization {}}
+  (notification-db/user-notifications db user 20))
 
 (defn task-navigation-info [db task-id]
   (let [[project activity]

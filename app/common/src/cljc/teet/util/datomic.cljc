@@ -16,6 +16,18 @@
   #?(:clj (= id1 id2)
      :cljs (= (str id1) (str id2))))
 
+(defn enum=
+  "Compare two enum values.
+  Enum may be a keyword or a map containing :db/ident."
+  [e1 e2]
+  (let [v1 (if (keyword? e1)
+             e1
+             (:db/ident e1))
+        v2 (if (keyword e2)
+             e2
+             (:db/ident e2))]
+    (= v1 v2)))
+
 (defn changed-entity-ids
   "Returns all :db/id values of entities that were \"changed\" by the given transaction."
   [tx-result]

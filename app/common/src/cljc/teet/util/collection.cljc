@@ -12,6 +12,15 @@
             (update counts (group-fn v) (fnil inc 0)))
           {} coll))
 
+(defn count-matching
+  "Count the amount of items in `coll` matching `pred`"
+  [pred coll]
+  (reduce +
+          (for [item coll]
+            (if (pred item)
+              1
+              0))))
+
 (defn without-nils
   "Nonrecursively remove keys with nil values"
   [m]
