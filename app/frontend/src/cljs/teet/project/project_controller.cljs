@@ -257,7 +257,8 @@
   (-> task
       (update :task/group :db/ident)
       (update :task/status :db/ident)
-      (update :task/assignee #(select-keys % [:user/email :user/family-name :user/given-name :user/id]))))
+      (update :task/assignee #(when %
+                                (select-keys % [:user/email :user/family-name :user/given-name :user/id])))))
 
 (extend-protocol t/Event
   DrawSelectionOnMap
