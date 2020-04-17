@@ -60,10 +60,20 @@
       ;; Return all participants
       participants)))
 
+(defn- comment-status
+  [user project-id track?]
+  (if (authorization-check/authorized? user
+                                       :project/track-comment-status
+                                       {:project-id project-id})
+    (if track?
+      :comment.status/unresolved
+      :comment.status/untracked)
+    :comment.status/untracked))
+
 (defcommand :comment/create
   {:doc "Create a new comment and add it to an entity"
    :context {:keys [db user]}
-   :payload {:keys [entity-id entity-type comment files visibility]}
+   :payload {:keys [entity-id entity-type comment files visibility track?] :as payload}
    :project-id (project-db/entity-project-id db entity-type entity-id)
    :authorization {:project/write-comments {:db/id entity-id}}
    :transact
@@ -74,7 +84,10 @@
                            :comment/comment comment
                            ;; TODO: Can external partners set visibility?
                            :comment/visibility visibility
-                           :comment/timestamp (Date.)}
+                           :comment/timestamp (Date.)
+                           :comment/status (comment-status user
+                                                           (project-db/entity-project-id db entity-type entity-id)
+                                                           track?)}
                           (creation-meta user)
                           (when (seq files)
                             {:comment/files (validate-files db user files)}))]})]

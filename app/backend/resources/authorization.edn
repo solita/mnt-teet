@@ -142,6 +142,7 @@
  :activity/change-activity-status {:admin :full, :manager :full},
  :project/delete-comments
  {:admin :full, :manager :link, :internal-consultant :link},
+ :project/track-comment-status {:admin :full, :manager :full},
  :admin/change-user-role {:admin :full},
  :activity/edit-activity
  {:admin :full,

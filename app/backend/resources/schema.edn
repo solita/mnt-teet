@@ -852,4 +852,18 @@
 
  {:db/ident :migration/task-assigned-notification-type
   :txes [[{:db/ident :notification.type/task-assigned
-           :enum/attribute :notification/type}]]}]
+           :enum/attribute :notification/type}]]}
+
+ {:db/ident :migration/comment-status
+  :txes [[{:db/ident :comment/status
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Status of the comment, unresolved/resolved/untracked"}
+
+          {:db/ident :comment.status/unresolved
+           :enum/attribute :comment/status}
+          {:db/ident :comment.status/resolved
+           :enum/attribute :comment/status}
+          {:db/ident :comment.status/untracked
+           :enum/attribute :comment/status}]]}
+ ]
