@@ -133,12 +133,12 @@
     (f)))
 
 (defn store-data! [key value]
-  (assert *global-test-data* "store-data! can obly be used within with-global-data fixture")
+  (assert *global-test-data* "store-data! can only be used within with-global-data fixture")
   (swap! *global-test-data* assoc key value)
   value)
 
 (defn get-data [key]
-  (assert *global-test-data* "get-data can obly be used within with-global-data fixture")
+  (assert *global-test-data* "get-data can only be used within with-global-data fixture")
   (let [data @*global-test-data*]
     (assert (contains? data key) (str key " was never stored with store-data!"))
     (get data key)))
