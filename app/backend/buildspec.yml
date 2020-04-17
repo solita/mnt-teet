@@ -20,7 +20,6 @@ phases:
   build:
     commands:
       - cd $BACKEND
-      - clojure -A:test
       - bash build.sh
   post_build:
     commands:
