@@ -134,7 +134,8 @@
 
 (defn store-data! [key value]
   (assert *global-test-data* "store-data! can obly be used within with-global-data fixture")
-  (swap! *global-test-data* assoc key value))
+  (swap! *global-test-data* assoc key value)
+  value)
 
 (defn get-data [key]
   (assert *global-test-data* "get-data can obly be used within with-global-data fixture")
