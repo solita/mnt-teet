@@ -24,12 +24,15 @@
 
 (defn notification-style
   [read?]
-  {:font-weight (if read?
-                  :normal
-                  :bold)
-   :background-color (if read?
-                       theme-colors/white
-                       theme-colors/blue-lightest)})
+  (with-meta
+    {:font-weight (if read?
+                    :normal
+                    :bold)
+     :background-color (if read?
+                         theme-colors/white
+                         theme-colors/blue-lightest)}
+    (when (not read?)
+      {:pseudo {:hover {:background-color theme-colors/blue-lighter}}})))
 
 (defn- notification-icon [type]
   (case (:db/ident type)
@@ -43,6 +46,12 @@
     [icons/communication-comment]
 
     [icons/navigation-more-horiz]))
+
+(defn notification-menu-style
+  []
+  {:padding 0
+   :max-height "400px"
+   :overflow-y :auto})
 
 (defn- notifications* [e! refresh! notifications]
   (r/with-let [selected-item (r/atom nil)
@@ -66,6 +75,7 @@
      [Menu {:anchor-el @selected-item
             :anchor-origin {:vertical :bottom
                             :horizontal :center}
+            :classes {"list" (<class notification-menu-style)}
             :get-content-anchor-el nil
             :open (boolean @selected-item)
             :on-close handle-close!}
