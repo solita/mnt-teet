@@ -39,11 +39,15 @@
                        :values-filter task-model/current-statuses}])
 
 (defn task-basic-info
-  [e! {:task/keys [estimated-end-date assignee] :as task}]
+  [e! {:task/keys [estimated-end-date assignee actual-end-date] :as task}]
   [:div {:class [(<class common-styles/flex-row-space-between) (<class common-styles/margin-bottom 1)]}
    [:div
     [typography/BoldGreyText (tr [:common :deadline])]
     [:span (format/date estimated-end-date)]]
+   (when actual-end-date
+     [:div
+      [typography/BoldGreyText (tr [:fields :task/actual-end-date])]
+      [:span (format/date actual-end-date)]])
    [:div
     [typography/BoldGreyText (tr [:fields :task/assignee])]
     [:span (user-model/user-name assignee)]]
