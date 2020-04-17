@@ -242,13 +242,13 @@
                                  :activity-state activity-state}])]]))
 
 (defn project-navigator
-  [e! {:thk.project/keys [lifecycles] :as _project} stepper params dark-theme?]
+  [e! {:thk.project/keys [lifecycles] :as _project} stepper _ _]
   (let [lifecycle-ids (mapv :db/id lifecycles)
         lc-id (:lifecycle stepper)
         old-stepper? (empty? (filter #(= lc-id %) lifecycle-ids))]
     (when old-stepper?
       (e! (project-controller/->ToggleStepperLifecycle (first lifecycle-ids)))))
-  (fn [e! {:thk.project/keys [lifecycles id] :as _project} stepper]
+  (fn [e! {:thk.project/keys [lifecycles id] :as _project} stepper params dark-theme?]
     (let [rect-button (if dark-theme?
                         buttons/rect-white
                         buttons/rect-primary)]
