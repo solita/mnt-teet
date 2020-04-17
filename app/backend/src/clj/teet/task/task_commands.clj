@@ -47,6 +47,16 @@
 (defn- new? [{id :db/id}]
   (string? id))
 
+(defn assignment-notification-tx
+  [user task]
+  (if-let [assignee (:task/assignee task)]
+    (notification-db/notification-tx
+      {:from user
+       :to [:user/id (:user/id assignee)]
+       :target (:db/id task)
+       :type :notification.type/task-assigned})
+    {}))
+
 (defcommand :task/update
   {:doc "Update basic task information for existing task."
    :context {:keys [user db]} ; bindings from context
@@ -55,10 +65,15 @@
    :pre [(not (new? task))]
    :authorization {:task/task-information {:db/id id
                                            :link :task/assignee}}  ; auth checks
-   :transact [(merge (-> task
-                         (select-update-keys (send-to-thk? db id))
-                         uc/without-nils)
-                     (meta-model/modification-meta user))]})
+   :transact (let [new-assignee-id (get-in task [:task/assignee :user/id])
+                   old-assignee-id (get-in (d/pull db '[{:task/assignee [:user/id]}] id) [:task/assignee :user/id])]
+               [(merge (-> task
+                           (select-update-keys (send-to-thk? db id))
+                           uc/without-nils)
+                       (meta-model/modification-meta user))
+                (if (= new-assignee-id old-assignee-id)
+                  {}
+                  (assignment-notification-tx user task))])})
 
 (def ^:private task-create-keys
   (into (concat always-selected-keys
@@ -83,13 +98,7 @@
                               (when (seq? (:task/assignee task))
                                 {:task/assignee [:user/id (:user/id (:task/assignee task))]})
                               (meta-model/creation-meta user))]})
-              (if-let [assignee (:task/assignee task)]
-                (notification-db/notification-tx
-                  {:from user
-                   :to [:user/id (:user/id assignee)]
-                   :target (:db/id task)
-                   :type :notification.type/task-assigned})
-                {})]})
+              (assignment-notification-tx user task)]})
 
 (defcommand :task/submit
   {:doc "Submit task results for review."
