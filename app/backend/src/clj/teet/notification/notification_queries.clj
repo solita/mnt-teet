@@ -32,6 +32,22 @@
               :activity (str activity)
               :task (str task-id)}}))
 
+(defn- file-navigation-info [db file-id]
+  (let [[project activity task]
+        (first (d/q '[:find ?project-id ?activity ?task
+                      :where
+                      [?task :task/files ?file]
+                      [?activity :activity/tasks ?task]
+                      [?lifecycle :thk.lifecycle/activities ?activity]
+                      [?project :thk.project/lifecycles ?lifecycle]
+                      [?project :thk.project/id ?project-id]
+                      :in $ ?file]))]
+    {:page :file
+     :params {:project (str project)
+              :activity (str activity)
+              :task (str task)
+              :file (str file-id)}}))
+
 (defn- comment-parent
   "Returns [entity-type entity-id] for the parent of the given comment.
   If parent is not found, returns nil."
@@ -47,12 +63,12 @@
 
 (defn comment-navigation-info [db comment-id]
   (if-let [[entity-type entity-id] (comment-parent db comment-id)]
-    (case entity-type
-      :task (assoc (task-navigation-info db entity-id)
-                   :query {:tab "comments"
-                           :focus-on (str comment-id)})
-      ;; FIXME: implement file comment as well!
-      )
+    (merge
+     (case entity-type
+       :task (task-navigation-info db entity-id)
+       :file (file-navigation-info db entity-id))
+     {:query {:tab "comments"
+              :focus-on (str comment-id)}})
     (db-api/bad-request! "No such comment")))
 
 (defquery :notification/navigate
