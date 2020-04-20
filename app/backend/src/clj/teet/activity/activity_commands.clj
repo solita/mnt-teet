@@ -75,6 +75,7 @@
                                           (name task-group) "-"
                                           (name task-type))
                               :task/estimated-end-date (:activity/estimated-end-date activity)
+                              :task/estimated-start-date (:activity/estimated-start-date activity)
                               :task/status :task.status/in-preparation
                               :task/group task-group
                               :task/type task-type}
