@@ -1,4 +1,4 @@
-(ns teet.thk.thk-import-test
+(ns ^:db teet.thk.thk-import-test
   (:require [clojure.test :refer [deftest use-fixtures is testing]]
             [teet.thk.thk-import :as thk-import]
             [clojure.string :as str]
