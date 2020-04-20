@@ -18,6 +18,10 @@
 (defrecord DeleteActivity [])
 (defrecord DeleteActivityResponse [response])
 
+(defrecord SubmitResults []) ; submit activity for review
+(defrecord Review [status]) ; review results
+
+
 (extend-protocol t/Event
   UpdateActivityForm
   (process-event [{form-data :form-data} app]
@@ -45,4 +49,22 @@
   (process-event [{response :response} {:keys [page params query] :as app}]
     (t/fx (-> app
               (update :stepper dissoc :dialog))
-          common-controller/refresh-fx)))
+          common-controller/refresh-fx))
+
+  SubmitResults
+  (process-event [_ {params :params :as app}]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :activity/submit
+           :payload {:activity-id (goog.math.Long/fromString (:activity params))}
+           :success-message (tr [:activity :submit-results-success])
+           :result-event common-controller/->Refresh}))
+  
+  Review
+  (process-event [{status :status} {params :params :as app}]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :activity/review
+           :payload {:activity-id (goog.math.Long/fromString (:activity params))
+                     :status status}
+           :result-event common-controller/->Refresh})))
