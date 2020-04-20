@@ -947,4 +947,10 @@
           {:db/ident :task.type/cadastral-works :filename/code "MK"}
           {:db/ident :task.type/purchase-agreements :filename/code "LS"}
           {:db/ident :task.type/state-estate-registry :filename/code "RR"
-           :enum/attribute :task/type :enum/valid-for :task.group/land-purchase}]]}]
+           :enum/attribute :task/type :enum/valid-for :task.group/land-purchase}]]}
+
+ {:db/ident :migration/activity-not-started-and-pm-notification
+  :txes [[{:db/ident :activity.status/not-started
+           :enum/attribute :activity/status}
+          {:db/ident :notification.type/project-manager-assigned
+           :enum/attribute :notification/type}]]}]
