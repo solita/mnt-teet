@@ -73,6 +73,7 @@
   :task.status/canceled "Tühistatud",
   :land-acquisition.impact/purchase-not-needed
   "Omandamine ei ole vajalik",
+  :thk.lifecycle-type/maintenance "Hoole",
   :task.type/noise-study "Mürauuring",
   :task.status/rejected "Tagasi lükatud",
   :task.status/reviewing "Ülevaatamisel",
@@ -134,7 +135,7 @@
   :task.type/design-road-safety-audit "Liiklusohutuse audit",
   :thk.task-type/third-party-review "Ekspertiis",
   :document.sub-category/photo "Foto",
-  :thk.lifecycle-type/construction "Teostamine",
+  :thk.lifecycle-type/construction "Ehitamine",
   :task.type/road-safety-audit-design
   "Liiklusohutuse audit (projekteerimisetapp)",
   :document.sub-category/drawing "Joonis",
@@ -152,6 +153,8 @@
   :activity.status/in-progress "Tegemisel",
   :land-acquisition.impact/purchase-needed "Vaja omandada",
   :task.status/assigned "Töösse antud",
+  :notification.type/project-manager-assigned
+  "Olete määratud projektijuhiks",
   :task.type/geology "Geoloogia",
   :task.status/in-preparation "Ettevalmistamisel",
   :document.category/as-built-doc "Täitedokumentatsioon",

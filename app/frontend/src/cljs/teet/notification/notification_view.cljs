@@ -45,6 +45,9 @@
     :notification.type/comment-created
     [icons/communication-comment]
 
+    :notification.type/project-manager-assigned
+    [icons/action-work]
+
     [icons/navigation-more-horiz]))
 
 (defn notification-menu-style

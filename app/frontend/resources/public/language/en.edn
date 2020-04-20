@@ -72,6 +72,7 @@
   :document.category/source-doc "Source documentation",
   :task.status/canceled "Canceled",
   :land-acquisition.impact/purchase-not-needed "Purchase not needed",
+  :thk.lifecycle-type/maintenance "Maintenance",
   :task.type/noise-study "Noise study",
   :task.status/rejected "Rejected",
   :task.status/reviewing "Reviewing",
@@ -150,6 +151,8 @@
   :activity.status/in-progress "In progress",
   :land-acquisition.impact/purchase-needed "Purchase needed",
   :task.status/assigned "Assigned",
+  :notification.type/project-manager-assigned
+  "You have been assigned as project manager",
   :task.type/geology "Geology",
   :task.status/in-preparation "In preparation",
   :document.category/as-built-doc "Construction documentation",
