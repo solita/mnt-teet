@@ -60,9 +60,6 @@
      [form/field :activity/name
       [select/select-enum {:e! e! :attribute :activity/name :enum/valid-for lifecycle-type}]]
 
-     [form/field :activity/status
-      [select/select-enum {:e! e! :attribute :activity/status}]]
-
      [form/field {:attribute [:activity/estimated-start-date :activity/estimated-end-date]}
       [date-picker/date-range-input {:row? false
                                      :start-label (tr [:fields :activity/estimated-start-date])
