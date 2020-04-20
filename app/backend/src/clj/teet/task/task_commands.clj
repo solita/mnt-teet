@@ -66,8 +66,10 @@
    :pre [(not (new? task))]
    :authorization {:task/task-information {:db/id id
                                            :link :task/assignee}}  ; auth checks
-   :transact (let [new-assignee-id (get-in task [:task/assignee :user/id])
-                   old-assignee-id (get-in (du/entity db id) [:task/assignee :user/id])]
+   :transact (let [task* (du/entity db id)
+                   new-assignee-id (get-in task [:task/assignee :user/id])
+                   old-assignee-id (get-in task* [:task/assignee :user/id])
+                   assign? (not= new-assignee-id old-assignee-id)]
                [(merge
                  (when (and (not old-assignee-id)
                             new-assignee-id)
@@ -76,9 +78,14 @@
                      (select-update-keys (send-to-thk? db id))
                      uc/without-nils)
                  (meta-model/modification-meta user))
-                (if (= new-assignee-id old-assignee-id)
-                  {}
-                  (assignment-notification-tx user task))])})
+                (if assign?
+                  (assignment-notification-tx user task)
+                  {})
+                (if assign?
+                  ;; If assigning, set activity status to in-progress
+                  {:db/id (get-in task* [:activity/_tasks 0 :db/id])
+                   :activity/status :activity.status/in-progress}
+                  {})])})
 
 (def ^:private task-create-keys
   (into (concat always-selected-keys
@@ -96,15 +103,18 @@
          (valid-thk-send? db task)]
    :authorization {:task/create-task {}
                    :activity/edit-activity {:db/id activity-id}}
-   :transact [(merge {:db/id activity-id
-                      :activity/tasks
-                      [(merge (-> task
-                                  (select-keys task-create-keys))
-                              (if (seq? (:task/assignee task))
-                                {:task/status :task.status/in-progress
-                                 :task/assignee [:user/id (:user/id (:task/assignee task))]}
-                                {:task/status :task.status/not-started})
-                              (meta-model/creation-meta user))]})
+   :transact [(merge
+               (when (:task/assignee task)
+                 {:activity/status :activity.status/in-progress})
+               {:db/id activity-id
+                :activity/tasks
+                [(merge (-> task
+                            (select-keys task-create-keys))
+                        (if (seq? (:task/assignee task))
+                          {:task/status :task.status/in-progress
+                           :task/assignee [:user/id (:user/id (:task/assignee task))]}
+                          {:task/status :task.status/not-started})
+                        (meta-model/creation-meta user))]})
               (assignment-notification-tx user task)]})
 
 (defcommand :task/submit
