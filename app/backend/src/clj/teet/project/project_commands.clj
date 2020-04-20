@@ -1,5 +1,5 @@
 (ns teet.project.project-commands
-  (:require [teet.db-api.core :as db-api :refer [defcommand]]
+  (:require [teet.db-api.core :as db-api :refer [defcommand tx]]
             [datomic.client.api :as d]
             [teet.project.project-model :as project-model]
             [teet.permission.permission-db :as permission-db]
@@ -13,8 +13,16 @@
             [clojure.spec.alpha :as s]
             [clojure.set :as set]
             [teet.project.project-db :as project-db]
-            [teet.authorization.authorization-check :as authorization-check])
+            [teet.authorization.authorization-check :as authorization-check]
+            [teet.notification.notification-db :as notification-db])
   (:import (java.util Date UUID)))
+
+(defn- manager-notification-tx [project-eid user manager]
+  (notification-db/notification-tx
+   {:from user
+    :to manager
+    :target project-eid
+    :type :notification.type/project-manager-assigned}))
 
 (defcommand :thk.project/initialize!
   {:doc "Initialize project state. Sets project basic information and linked restrictions
@@ -35,34 +43,36 @@ and cadastral units"
                      :msg (str "Project " id " is already initialized")
                      :status 409})
       (let [{db :db-after}
-            (d/transact
-              conn
-              {:tx-data [(merge {:thk.project/id id
-                                 :thk.project/owner [:user/id (:user/id owner)]}
-                                (when-not (str/blank? project-name)
-                                  {:thk.project/project-name project-name})
-                                (when manager
-                                  {:thk.project/manager [:user/id (:user/id manager)]})
-                                (when custom-start-m
-                                  {:thk.project/custom-start-m custom-start-m})
-                                (when custom-end-m
-                                  {:thk.project/custom-end-m custom-end-m})
-                                (when m-range-change-reason
-                                  {:thk.project/m-range-change-reason m-range-change-reason})
-                                (when related-restrictions
-                                  {:thk.project/related-restrictions related-restrictions})
-                                (when related-cadastral-units
-                                  {:thk.project/related-cadastral-units related-cadastral-units})
-                                (modification-meta user))]})]
+            (tx [(merge {:thk.project/id id
+                         :thk.project/owner [:user/id (:user/id owner)]}
+                        (when-not (str/blank? project-name)
+                          {:thk.project/project-name project-name})
+                        (when manager
+                          {:thk.project/manager [:user/id (:user/id manager)]})
+                        (when custom-start-m
+                          {:thk.project/custom-start-m custom-start-m})
+                        (when custom-end-m
+                          {:thk.project/custom-end-m custom-end-m})
+                        (when m-range-change-reason
+                          {:thk.project/m-range-change-reason m-range-change-reason})
+                        (when related-restrictions
+                          {:thk.project/related-restrictions related-restrictions})
+                        (when related-cadastral-units
+                          {:thk.project/related-cadastral-units related-cadastral-units})
+                        (modification-meta user))
+                 ;; If setting project manager to some other user, send notification to them
+                 (when (and manager
+                            (not= (:user/id user) (:user/id manager)))
+                   (manager-notification-tx [:thk.project/id id] user manager))])]
         (project-geometry/update-project-geometries!
-          (environment/config-map {:api-url [:api-url]
-                                   :api-shared-secret [:auth :jwt-secret]
-                                   :wfs-url [:road-registry :wfs-url]})
-          [(d/pull db '[:db/id :thk.project/name
-                        :thk.project/road-nr :thk.project/carriageway
-                        :thk.project/start-m :thk.project/end-m
-                        :thk.project/custom-start-m :thk.project/custom-end-m]
-                   [:thk.project/id id])]))))
+         (environment/config-map {:api-url [:api-url]
+                                  :api-shared-secret [:auth :jwt-secret]
+                                  :wfs-url [:road-registry :wfs-url]})
+         [(d/pull db '[:db/id :thk.project/name
+                       :thk.project/road-nr :thk.project/carriageway
+                       :thk.project/start-m :thk.project/end-m
+                       :thk.project/custom-start-m :thk.project/custom-end-m]
+                  [:thk.project/id id])]))))
   :ok)
 
 (defcommand :thk.project/skip-setup
@@ -84,20 +94,26 @@ and cadastral units"
    :project-id [:thk.project/id id]
    :authorization {:project/project-info {:eid [:thk.project/id id]
                                           :link :thk.project/owner}}}
-  (let [{db :db-after} (d/transact
-                         conn
-                         {:tx-data [(merge (cu/without-nils (select-keys project-form
-                                                                         [:thk.project/id
-                                                                          :thk.project/owner
-                                                                          :thk.project/manager
-                                                                          :thk.project/m-range-change-reason
-                                                                          :thk.project/project-name
-                                                                          :thk.project/custom-start-m
-                                                                          :thk.project/custom-end-m]))
-                                           (modification-meta user))]})]
+  (let [current-manager-id (get-in (du/entity db [:thk.project/id id])
+                                   [:thk.project/manager :user/id])
+        new-manager (:thk.project/manager project-form)
+        {db :db-after} (tx [(merge (cu/without-nils
+                                    (select-keys project-form
+                                                 [:thk.project/id
+                                                  :thk.project/owner
+                                                  :thk.project/manager
+                                                  :thk.project/m-range-change-reason
+                                                  :thk.project/project-name
+                                                  :thk.project/custom-start-m
+                                                  :thk.project/custom-end-m]))
+                                   (modification-meta user))
+                            (if (and new-manager
+                                     (not= (:user/id new-manager) current-manager-id))
+                              (manager-notification-tx [:thk.project/id id] user new-manager)
+                              {})])]
     (when (or (:thk.project/custom-start-m project-form) (:thk.project/custom-end-m project-form))
       (project-geometry/update-project-geometries!
-        (environment/config-map {:api-url [:api-url]
+       (environment/config-map {:api-url [:api-url]
                                  :api-shared-secret [:auth :jwt-secret]
                                  :wfs-url [:road-registry :wfs-url]})
         [(d/pull db '[:db/id :thk.project/name
