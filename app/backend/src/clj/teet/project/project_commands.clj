@@ -14,7 +14,8 @@
             [clojure.set :as set]
             [teet.project.project-db :as project-db]
             [teet.authorization.authorization-check :as authorization-check]
-            [teet.notification.notification-db :as notification-db])
+            [teet.notification.notification-db :as notification-db]
+            [teet.util.datomic :as du])
   (:import (java.util Date UUID)))
 
 (defn- manager-notification-tx [project-eid user manager]
@@ -88,8 +89,7 @@ and cadastral units"
 
 (defcommand :thk.project/update
   {:doc "Edit project basic info"
-   :context {conn :conn
-             user :user}
+   :context {:keys [conn db user]}
    :payload {id :thk.project/id :as project-form}
    :project-id [:thk.project/id id]
    :authorization {:project/project-info {:eid [:thk.project/id id]
