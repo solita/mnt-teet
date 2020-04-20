@@ -6,7 +6,8 @@
             teet.task.task-spec
             [teet.util.collection :as uc]
             [teet.notification.notification-db :as notification-db]
-            [teet.project.task-model :as task-model]))
+            [teet.project.task-model :as task-model]
+            [teet.util.datomic :as du]))
 
 (defn- send-to-thk? [db task-id]
   (:task/send-to-thk? (d/pull db [:task/send-to-thk?] task-id)))
@@ -22,7 +23,7 @@
    :transact [(meta-model/deletion-tx user task-id)]})
 
 (def ^:private always-selected-keys
-  [:db/id :task/description :task/status :task/assignee
+  [:db/id :task/description :task/assignee
    :task/estimated-start-date :task/estimated-end-date])
 
 (def ^:private thk-provided-keys
@@ -66,11 +67,15 @@
    :authorization {:task/task-information {:db/id id
                                            :link :task/assignee}}  ; auth checks
    :transact (let [new-assignee-id (get-in task [:task/assignee :user/id])
-                   old-assignee-id (get-in (d/pull db '[{:task/assignee [:user/id]}] id) [:task/assignee :user/id])]
-               [(merge (-> task
-                           (select-update-keys (send-to-thk? db id))
-                           uc/without-nils)
-                       (meta-model/modification-meta user))
+                   old-assignee-id (get-in (du/entity db id) [:task/assignee :user/id])]
+               [(merge
+                 (when (and (not old-assignee-id)
+                            new-assignee-id)
+                   {:task/status :task.status/in-progress})
+                 (-> task
+                     (select-update-keys (send-to-thk? db id))
+                     uc/without-nils)
+                 (meta-model/modification-meta user))
                 (if (= new-assignee-id old-assignee-id)
                   {}
                   (assignment-notification-tx user task))])})
@@ -95,8 +100,10 @@
                       :activity/tasks
                       [(merge (-> task
                                   (select-keys task-create-keys))
-                              (when (seq? (:task/assignee task))
-                                {:task/assignee [:user/id (:user/id (:task/assignee task))]})
+                              (if (seq? (:task/assignee task))
+                                {:task/status :task.status/in-progress
+                                 :task/assignee [:user/id (:user/id (:task/assignee task))]}
+                                {:task/status :task.status/not-started})
                               (meta-model/creation-meta user))]})
               (assignment-notification-tx user task)]})
 
