@@ -852,4 +852,99 @@
 
  {:db/ident :migration/task-assigned-notification-type
   :txes [[{:db/ident :notification.type/task-assigned
-           :enum/attribute :notification/type}]]}]
+           :enum/attribute :notification/type}]]}
+
+ {:db/ident :migration/option-list-update-apr2020
+  :txes [;; Add attribute that maps enum value to filename metadata code
+         [{:db/ident :filename/code
+           :db/doc "Short code in filename that is mapped to this enum value"
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}]
+
+         ;; Lifecycle types (add maintenance)
+         [{:db/ident :thk.lifecycle-type/maintenance
+           :enum/attribute :thk.lifecycle/type}]
+
+         ;; Activity types
+         [{:db/ident :activity.name/pre-design
+           :filename/code "ES"}
+          {:db/ident :activity.name/preliminary-design
+           :filename/code "EP"}
+          {:db/ident :activity.name/detailed-design
+           :filename/code "PP"}
+          {:db/ident :activity.name/land-acquisition
+           :filename/code "MO"}
+          {:db/ident :activity.name/workshop-design
+           :filename/code "TP"
+           :enum/attribute :activity/name
+           :enum/valid-for :thk.lifecycle-type/construction}
+          {:db/ident :activity.name/construction
+           :filename/code "EH"}]
+
+         ;; Task groups (Add design reports)
+         [{:db/ident :task.group/design-reports
+           :enum/attribute :task/group}]
+
+         ;; Task types
+         [;; Base data
+          {:db/ident :task.type/general-part :filename/code "AA"
+           :enum/attribute :task/type :enum/valid-for :task.group/base-data}
+          {:db/ident :task.type/design-requirements :filename/code "PT"}
+          {:db/ident :task.type/terms-of-reference :filename/code "LY"}
+          {:db/ident :task.type/technical-conditions :filename/code "TT"
+           :enum/attribute :task/type :enum/valid-for :task.group/base-data}
+          {:db/ident :task.type/site-plan :filename/code "AS"
+           :enum/attribute :task/type :enum/valid-for :task.group/base-data}
+          {:db/ident :task.type/data :filename/code "AD"}
+
+          ;; Studies
+          {:db/ident :task.type/geological-study :filename/code "GL"}
+          {:db/ident :task.type/traffic-study :filename/code "LU"}
+          {:db/ident :task.type/flora-and-fauna-study :filename/code "FU"}
+          {:db/ident :task.type/archeological-study :filename/code "AU"}
+          {:db/ident :task.type/topogeodesy :filename/code "GD"}
+          {:db/ident :task.type/noise-study :filename/code "MU"}
+          {:db/ident :task.type/eia-pre-assessment :filename/code "KE"}
+          {:db/ident :task.type/environmental-impact-assessment :filename/code "KH"}
+          {:db/ident :task.type/feasibility-study :filename/code "TU"}
+          {:db/ident :task.type/other :filename/code "ZZ"}
+
+          ;; Design
+          {:db/ident :task.type/road :filename/code "TL"}
+          {:db/ident :task.type/railroad :filename/code "TR"}
+          {:db/ident :task.type/drainage :filename/code "DR"}
+          {:db/ident :task.type/landscaping :filename/code "MA"}
+          {:db/ident :task.type/lighting :filename/code "EL"}
+          {:db/ident :task.type/equipment :filename/code "EQ"}
+          {:db/ident :task.type/structures :filename/code "TS"}
+          {:db/ident :task.type/utilities :filename/code "TV"}
+          {:db/ident :task.type/other-facilities :filename/code "MR"
+           :enum/attribute :task/type :enum/valid-for :task.group/design}
+
+          ;; Design review
+          {:db/ident :task.type/no-objection-coordination :filename/code "KK"
+           :enum/attribute :task/type :enum/valid-for :task.group/design-approval}
+          {:db/ident :task.type/design-road-safety-audit :filename/code "LA"}
+          {:db/ident :task.type/third-party-review :filename/code "EK"}
+          {:db/ident :task.type/land-owners :filename/code "MO"}
+          {:db/ident :task.type/building-permit :filename/code "BP"}
+
+          ;; Design reports
+          {:db/ident :task.type/calculation-of-pavement :filename/code "KA"
+           :enum/attribute :task/type :enum/valid-for :task.group/design-reports}
+          {:db/ident :task.type/cost-list :filename/code "CL"
+           :enum/attribute :task/type :enum/valid-for :task.group/design-reports}
+          {:db/ident :task.type/funding-plan :filename/code "RK"
+           :enum/attribute :task/type :enum/valid-for :task.group/design-reports}
+          {:db/ident :task.type/calculation :filename/code "CC"
+           :enum/attribute :task/type :enum/valid-for :task.group/design-reports}
+
+          ;; Land purchase
+          {:db/ident :task.type/plot-allocation-plan :filename/code "KY"
+           :enum/attribute :task/type :enum/valid-for :task.group/land-purchase}
+          {:db/ident :task.type/property-valuation :filename/code "MH"}
+          {:db/ident :task.type/preliminary-agreements :filename/code "PA"}
+          {:db/ident :task.type/cadastral-works :filename/code "MK"}
+          {:db/ident :task.type/purchase-agreements :filename/code "LS"}
+          {:db/ident :task.type/state-estate-registry :filename/code "RR"
+           :enum/attribute :task/type :enum/valid-for :task.group/land-purchase}]]}]
