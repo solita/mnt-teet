@@ -10,7 +10,8 @@
             [teet.authorization.authorization-check :as authorization-check]
             [teet.permission.permission-db :as permission-db]
             [teet.notification.notification-db :as notification-db]
-            [teet.user.user-model :as user-model])
+            [teet.user.user-model :as user-model]
+            [teet.util.datomic :as du])
   (:import (java.util Date)))
 
 (defn- validate-files
@@ -35,21 +36,29 @@
 
 (defn- participants
   "Returns all participants (excluding `except-user`) in the comment thread.
+
+  The project manager is always considered to be participant.
+
   If internal? is true, returns only participants allowed to
   read internal comments."
   [db entity-type entity-id internal? except-user]
-  (let [attr (comment-model/comments-attribute-for-entity-type entity-type)
+  (let [project-id (project-db/entity-project-id db entity-type entity-id)
+        project-manager-uid (get-in (du/entity db project-id)
+                                    [:thk.project/manager :db/id])
+        attr (comment-model/comments-attribute-for-entity-type entity-type)
         query {:find '[(distinct ?author)]
                :where [['?entity attr '?comment]
-                       '[?comment :comment/author ?author]
-                       '(not [?comment :comment/author ?except-user])]
-               :in '[$ ?entity ?except-user]}
-        participants (ffirst (d/q query
-                                  db entity-id
-                                  (user-model/user-ref except-user)))]
+                       '[?comment :comment/author ?author]]
+               :in '[$ ?entity]}
+        participants (disj (into (if project-manager-uid
+                                 #{project-manager-uid}
+                                 #{})
+                               (ffirst (d/q query
+                                            db entity-id)))
+                           (:db/id (du/entity db (user-model/user-ref except-user))))]
     (if internal?
       ;; Filter to participants who can view internal comments
-      (let [project-id (project-db/entity-project-id db entity-type entity-id)]
+      (let []
         (into #{}
               (filter (fn [participant]
                         (authorization-check/authorized?
