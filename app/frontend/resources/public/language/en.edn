@@ -205,7 +205,9 @@
   :bad-request "Bad request",
   :conflicting-activities
   "Only one activity of a type can be active at the same time.",
-  :server-error "Server error."},
+  :server-error "Server error.",
+  :invalid-activity-dates "Check activity dates",
+  :invalid-task-dates "Check task dates"},
  :fields
  {:comment/visibility "Visibility",
   :task/send-to-thk? "Send to THK",

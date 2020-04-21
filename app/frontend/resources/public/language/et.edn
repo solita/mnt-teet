@@ -206,7 +206,9 @@
   :bad-request "Vigane päring",
   :conflicting-activities
   "Korraga võib aktiivne olla ainult üht tüüpi tegevus.",
-  :server-error "Serveri viga."},
+  :server-error "Serveri viga.",
+  :invalid-activity-dates "Kontrolli tegevuse kuupäevi",
+  :invalid-task-dates "Kontrollige ülesande kuupäevi"},
  :fields
  {:comment/visibility "Nähtavus",
   :task/send-to-thk? "Saadan THKsse",
