@@ -133,19 +133,31 @@
   [e!
    {:meta/keys [modified-at]
     :comment/keys [comment status]
-    :as comment-entity}]
+    comment-id :db/id
+    :as comment-entity}
+   commented-entity]
   [:div {:class (<class comments-styles/comment-contents
-                        (comment-model/tracked? comment-entity))}
+                        (comment-model/tracked? comment-entity)
+                        (:db/ident status))}
    (when (comment-model/tracked? comment-entity)
-     [:div {:class (<class comments-styles/comment-status)}
+     [:div {:class (<class comments-styles/comment-status (:db/ident status))}
       (tr [:enum (:db/ident status)])
-      (if (= (:db/id status) :comment.status/unresolved)
-        [buttons/button-text {:size :small
-                              :color :primary
-                              :end-icon (r/as-element [icons/action-check-circle-outline])}
-         "Resolve"]
-        [buttons/button-text {:size :small
-                              :end-icon (r/as-element [icons/content-block])}])])
+      (case (:db/ident status)
+        :comment.status/unresolved
+        [buttons/button-text {:color :primary
+                              :end-icon (r/as-element [icons/action-check-circle-outline])
+                              :on-click #(e! (comments-controller/->SetCommentStatus comment-id
+                                                                                     :comment.status/resolved
+                                                                                     commented-entity))}
+         (tr [:comment :resolve])]
+
+        :comment.status/resolved
+        [buttons/button-text {:end-icon (r/as-element [icons/content-block])
+                              :on-click #(e! (comments-controller/->SetCommentStatus comment-id
+                                                                                     :comment.status/unresolved
+                                                                                     commented-entity))}
+         (tr [:comment :unresolve])])])
+
    [typography/Text
     comment
     (when modified-at
@@ -179,7 +191,7 @@
       (tr [:comment :quote])]]
     [:span {:class (<class comments-styles/data)}
      (tr [:enum (:db/ident visibility)])]]
-   [comment-contents-and-status e! comment-entity]
+   [comment-contents-and-status e! comment-entity commented-entity]
    [:div
     [when-authorized :comment/update
      comment-entity

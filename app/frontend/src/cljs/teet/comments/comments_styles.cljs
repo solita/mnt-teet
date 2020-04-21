@@ -14,20 +14,29 @@
            {:animation [[focus-animation "1.5s"]]})))
 
 (defn comment-contents
-  [tracked?]
+  [tracked? status]
   (merge {}
          (when tracked?
-           {:padding "0.5rem"
-            :background-color (theme-colors/blue-alpha 0.2)})))
+           {:padding "0.5rem"})
+         (case status
+           :comment.status/unresolved
+           {:background-color (theme-colors/blue-alpha 0.2)}
+
+           :comment.status/resolved
+           {:background-color theme-colors/gray-lighter}
+
+           {})))
 
 (defn comment-status
-  []
-  {:color theme-colors/blue
-   :margin-bottom "0.5rem"
-   :font-weight :bold
-   :display :flex
-   :align-items :center
-   :justify-content :space-between})
+  [status]
+  (merge {:color theme-colors/blue
+          :margin-bottom "0.5rem"
+          :font-weight :bold
+          :display :flex
+          :align-items :center
+          :justify-content :space-between}
+         (when (= status :comment.status/resolved)
+           {:color theme-colors/gray})))
 
 (defn comment-buttons-style
   []
