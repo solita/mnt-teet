@@ -2,6 +2,7 @@
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
             [teet.meta.meta-model :as meta-model]
             [teet.project.project-db :as project-db]
+            [teet.activity.activity-model :refer [all-tasks-completed?]]
             [datomic.client.api :as d])
   (:import (java.util Date)))
 
@@ -111,3 +112,39 @@
    :project-id (project-db/activity-project-id db activity-id)
    :authorization {:activity/delete-activity {}}
    :transact [(meta-model/deletion-tx user activity-id)]})
+
+
+(defn check-tasks-are-complete [db activity-eid]
+  (let [activity (d/pull db '[:activity/name :activity/status {:activity/tasks [:task/status]}] activity-eid)]    
+    (and (not-empty activity)
+         (:activity/name activity)
+         (all-tasks-completed? activity))))
+
+(defcommand :activity/submit-for-review
+  {:doc "Submit activity for review, when tasks are complete"
+   :context {:keys [conn user db]}
+   :payload {:keys [activity-id]}
+   :authorization {:activity/change-activity-status {}}
+   :pre [(check-tasks-are-complete db (:db/id activity))]
+   :transact [(merge (select-keys activity
+                                  [:db/id])                     
+                     {:activity/status :in-review}
+                     (meta-model/modification-meta user))]})
+
+(defcommand :activity/review
+  {:doc "Submit activity for review, when tasks are complete"
+   :context {:keys [conn user db]}
+   :payload {:keys [activity-id status]}
+   :authorization {:activity/change-activity-status {}}
+   ;; precondition checks that 1. user is project owner, 2. status is one of the permissible review outcomes
+   :pre [(let [project-id (project-db/activity-project-id db activity-id)
+               project-owner (project-db/project-owner db project-id)]
+           ;; could this also be implemented with a :link authorization check?
+           (= (:db/id user) project-owner))
+         (#{:activity.status/canceled
+            :activity.status/archived
+            :activity.status/completed} status)] 
+   :transact [(merge (select-keys activity
+                                  [:db/id])                     
+                     {:activity/status status}
+                     (meta-model/modification-meta user))]})
