@@ -49,6 +49,15 @@
                                           db))]
              (every? task-keywords tasks)))))
 
+(defn valid-activity-dates?
+  [db lifecycle-id {:activity/keys [estimated-start-date estimated-end-date] :as activity}]
+  (let [activity-dates (project-db/lifecycle-dates db lifecycle-id)
+        dates (filterv some? [estimated-end-date estimated-start-date])]
+    (every? (fn [date]
+              (and (.after date (:thk.lifecycle/estimated-start-date activity-dates))
+                   (.before date (:thk.lifecycle/estimated-end-date activity-dates))))
+            dates)))
+
 (defcommand :activity/create
   {:doc "Create new activity to lifecycle"
    :context {:keys [db user conn]}
@@ -57,6 +66,9 @@
    :authorization {:activity/create-activity {}}
    :pre [^{:error :invalid-activity-name}
          (valid-activity-name? db activity lifecycle-id)
+
+         ^{:error :invalid-activity-dates}
+         (valid-activity-dates? db lifecycle-id activity)
 
          ^{:error :conflicting-activities}
          (not (conflicting-activites? db activity lifecycle-id))
