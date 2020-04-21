@@ -59,8 +59,7 @@
            :payload {:activity-id (goog.math.Long/fromString (:activity params))}
            :success-message (tr [:activity :submit-results-success])
            :result-event common-controller/->Refresh}))
-  
-  
+
   Review
   (process-event [{status :status} {params :params :as app}]
     (t/fx app
@@ -69,3 +68,10 @@
            :payload {:activity-id (goog.math.Long/fromString (:activity params))
                      :status status}
            :result-event common-controller/->Refresh})))
+
+
+(defmethod common-controller/on-server-error :invalid-activity-dates [err app]
+  (let [error (-> err ex-data :error)]
+    ;; General error handler for when the client sends faulty data.
+    ;; Commands can fail requests with :error :bad-request to trigger this
+    (t/fx (snackbar-controller/open-snack-bar app (tr [:error error]) :warning))))
