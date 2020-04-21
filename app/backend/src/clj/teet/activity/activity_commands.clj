@@ -3,7 +3,8 @@
             [teet.meta.meta-model :as meta-model]
             [teet.project.project-db :as project-db]
             [teet.activity.activity-model :refer [all-tasks-completed?]]
-            [datomic.client.api :as d])
+            [datomic.client.api :as d]
+            [teet.activity.activity-db :as activity-db])
   (:import (java.util Date)))
 
 (defn valid-activity-name?
@@ -50,12 +51,12 @@
              (every? task-keywords tasks)))))
 
 (defn valid-activity-dates?
-  [db lifecycle-id {:activity/keys [estimated-start-date estimated-end-date] :as activity}]
-  (let [activity-dates (project-db/lifecycle-dates db lifecycle-id)
+  [db lifecycle-id {:activity/keys [estimated-start-date estimated-end-date]}]
+  (let [lifecycle-dates (project-db/lifecycle-dates db lifecycle-id)
         dates (filterv some? [estimated-end-date estimated-start-date])]
     (every? (fn [date]
-              (and (.after date (:thk.lifecycle/estimated-start-date activity-dates))
-                   (.before date (:thk.lifecycle/estimated-end-date activity-dates))))
+              (and (not (.before date (:thk.lifecycle/estimated-start-date lifecycle-dates)))
+                   (not (.after date (:thk.lifecycle/estimated-end-date lifecycle-dates)))))
             dates)))
 
 (defcommand :activity/create
@@ -104,12 +105,10 @@
    :payload {:keys [activity]}
    :project-id (project-db/activity-project-id db (:db/id activity))
    :authorization {:activity/edit-activity {:db/id (:db/id activity)}}
-   :pre [(valid-activity-name? db activity
-                               (ffirst (d/q '[:find ?lc
-                                              :in $ ?act
-                                              :where [?lc :thk.lifecycle/activities ?act]]
-                                            db
-                                            (:db/id activity))))]
+   :pre [^{:error :invalid-activity-dates}
+         (valid-activity-dates? db
+                                (activity-db/lifecycle-id-for-activity-id db (:db/id activity))
+                                activity)]
    :transact [(merge (select-keys activity
                                   [:activity/estimated-start-date
                                    :activity/estimated-end-date
@@ -127,7 +126,7 @@
 
 
 (defn check-tasks-are-complete [db activity-eid]
-  (let [activity (d/pull db '[:activity/name :activity/status {:activity/tasks [:task/status]}] activity-eid)]    
+  (let [activity (d/pull db '[:activity/name :activity/status {:activity/tasks [:task/status]}] activity-eid)]
     (and (not-empty activity)
          (:activity/name activity)
          (all-tasks-completed? activity))))
@@ -140,7 +139,7 @@
    :project-id (project-db/activity-project-id db activity-id)
    :pre [(check-tasks-are-complete db activity-id)]
    :transact [(merge
-               {:db/id activity-id               
+               {:db/id activity-id
                 :activity/status :in-review}
                (meta-model/modification-meta user))]})
 
@@ -157,7 +156,7 @@
            (= (:db/id user) project-owner))
          (#{:activity.status/canceled
             :activity.status/archived
-            :activity.status/completed} status)] 
+            :activity.status/completed} status)]
    :transact [(merge {:db/id activity-id
                       :activity/status status}
                      (meta-model/modification-meta user))]})
