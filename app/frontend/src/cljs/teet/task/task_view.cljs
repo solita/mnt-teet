@@ -87,10 +87,10 @@
    (when (task-model/reviewing? task)
      [when-authorized :task/review task
       [:div {:style {:display :flex :justify-content :space-between}}
-       [buttons/button-warning {:on-click (e! task-controller/->Review :task.status/rejected)}
-        (tr-enum :task.status/rejected)]
-       [buttons/button-primary {:on-click (e! task-controller/->Review :task.status/accepted)}
-        (tr-enum :task.status/accepted)]]])])
+       [buttons/button-warning {:on-click (e! task-controller/->Review :reject)}
+        (tr [:task :reject-review])]
+       [buttons/button-primary {:on-click (e! task-controller/->Review :accept)}
+        (tr [:task :accept-review])]]])])
 
 (defn- task-header
   [e! task]

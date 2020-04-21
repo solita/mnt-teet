@@ -52,7 +52,7 @@
 (def ^:const reviewing-statuses #{:task.status/reviewing})
 
 (def ^:const accepted-statuses #{:task.status/accepted})
-(def ^:const review-outcome-statuses #{:task.status/accepted :task.status/rejected})
+
 
 (defn- in-status [statuses task]
   (boolean (statuses (get-in task [:task/status :db/ident]))))
@@ -60,8 +60,6 @@
 (def reviewing? (partial in-status reviewing-statuses))
 (def waiting-for-review? (partial in-status waiting-for-review-statuses))
 (def completed? (partial in-status completed-statuses))
-(def rejected? (partial in-status rejected-statuses))
-(def accepted? (partial in-status accepted-statuses))
 (def in-progress? (partial in-status in-progress-statuses))
 
 (defn can-submit?
@@ -70,7 +68,7 @@
   [task]
   (and (not (waiting-for-review? task))
        (not (reviewing? task))
-       (not (accepted? task))))
+       (not (completed? task))))
 
 
 
