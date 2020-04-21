@@ -107,9 +107,9 @@
     [:span]))
 
 (defn task-page-content
-  [e! app {status :task/status :as task}]
+  [e! app {status :task/status :as task} pm?]
   [:div
-   (when (du/enum= status :task.status/waiting-for-review)
+   (when (and pm? (du/enum= status :task.status/waiting-for-review))
      [when-authorized :task/start-review task
       [start-review e!]])
    [task-header e! task]
@@ -218,7 +218,8 @@
 
 (defn task-page [e! {{:keys [add-document] :as _query} :query
                      {task-id :task :as _params} :params
-                     new-document :new-document :as app}
+                     new-document :new-document
+                     user :user :as app}
                  project
                  breadcrumbs]
   [:<>
@@ -234,4 +235,6 @@
      :breadcrumbs breadcrumbs}
 
     [task-page-content e! app
-     (project-model/task-by-id project task-id)]]])
+     (project-model/task-by-id project task-id)
+     (du/id= (:db/id user)
+             (:db/id (:thk.project/manager project)))]]])
