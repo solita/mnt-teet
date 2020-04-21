@@ -1,7 +1,10 @@
 (ns teet.activity.activity-view
   (:require [teet.ui.select :as select]
             [teet.ui.date-picker :as date-picker]
+            [reagent.core :as r]
+            [teet.authorization.authorization-check :refer [when-authorized]]
             [teet.localization :refer [tr tr-enum]]
+            [teet.ui.panels :as panels]
             [teet.ui.material-ui :refer [Grid]]
             [teet.ui.form :as form]
             [teet.ui.icons :as icons]
@@ -160,13 +163,39 @@
               (sort-by (comp task-model/task-group-order :db/ident first)
                        (group-by :task/group tasks)))])
 
+(defn submit-for-approval-button [e! params]
+  (r/with-let [clicked? (r/atom false)]
+    [:<>
+     [buttons/button-primary {:on-click #(reset! clicked? true)
+                              :style {:float :right}}
+      [icons/action-check-circle]
+      (tr [:activity :submit-for-approval])]
+     (when @clicked?
+       [panels/modal {:title (str (tr [:activity :submit-for-approval]) "?")
+                      :on-close #(reset! clicked? false)}
+        [:<>
+         [:div {:style {:padding "1rem"
+                        :margin-bottom "2rem"
+                        :background-color theme-colors/gray-lightest}}
+          (tr [:activity :submit-results-confirm])]
+         [:div {:style {:display :flex
+                        :justify-content :flex-end}}
+          [buttons/button-secondary {:on-click #(reset! clicked? false)}
+           (tr [:buttons :cancel])]
+          [buttons/button-primary {:on-click (e! activity-controller/->SubmitResults params)
+                                   :style {:margin-left "1rem"}}
+           (tr [:buttons :confirm])]]]])]))
+
 (defn activity-content
   [e! params project]
   (let [activity (project-model/activity-by-id project (:activity params))]
     [:<>
      [activity-header e! activity]
      [project-management (:thk.project/owner project) (:thk.project/manager project)]
-     [task-lists (:activity/tasks activity)]]))
+     [task-lists (:activity/tasks activity)]
+     [submit-for-approval-button e! params]
+     [when-authorized :activity/change-activity-status nil
+      [submit-for-approval-button e! params]]]))
 
 (defn activity-page [e! {:keys [params] :as app} project breadcrumbs]
   [project-navigator-view/project-navigator-with-content

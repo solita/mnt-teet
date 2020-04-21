@@ -28,7 +28,6 @@
   (some #(when (id= document-id (:db/id %)) %) documents))
 
 (def ^:const completed-statuses #{:task.status/accepted
-                                  ;; unused/obsolete statuses:
                                   :task.status/completed})
 (def ^:const in-progress-statuses #{:task.status/in-preparation
                                     :task.status/adjustment
@@ -45,7 +44,8 @@
                                 :task.status/submitted
                                 :task.status/reviewing
                                 :task.status/adjustment
-                                :task.status/accepted})
+                                :task.status/accepted
+                                :task.status/completed})
 
 
 (def ^:const waiting-for-review-statuses #{:task.status/waiting-for-review})

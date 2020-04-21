@@ -954,7 +954,17 @@
            :enum/attribute :activity/status}
           {:db/ident :notification.type/project-manager-assigned
            :enum/attribute :notification/type}]]}
+ 
+ {:db/ident :migration/activity-review-statuses-and-notifications
+  :txes [[{:db/ident :activity.status/in-review
+           :enum/attribute :activity/status}
+          {:db/ident :activity.status/archived
+           :enum/attribute :activity/status}
+          {:db/ident :notification.type/activity-accepted
+           :enum/attribute :notification/type}
+          {:db/ident :notification.type/activity-rejected
+           :enum/attribute :notification/type}]]}
 
  {:db/ident :migration/activity-in-preparation
   :txes [[{:db/ident :activity.status/in-preparation
-           :enum/attribute :activity/status}]]}]
+		     :enum/attribute :activity/status}]]}]

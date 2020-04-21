@@ -37,7 +37,7 @@
      assoc :task/files (task-db/files-for-task db task-id))))
 
 
-(defn activities-with-statuses
+(defn tasks-with-statuses
   [tasks]
   (map
     task-model/task-with-status
@@ -51,7 +51,7 @@
       project
       [:thk.project/lifecycles some?
        :thk.lifecycle/activities #(= activity-id (str (:db/id %)))]
-      update :activity/tasks activities-with-statuses)))
+      update :activity/tasks tasks-with-statuses)))
 
 (defquery :thk.project/fetch-project
   {:doc "Fetch project information"
