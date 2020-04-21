@@ -49,6 +49,7 @@
 
 
 (def ^:const waiting-for-review-statuses #{:task.status/waiting-for-review})
+(def ^:const reviewing-statuses #{:task.status/reviewing})
 
 (def ^:const accepted-statuses #{:task.status/accepted})
 (def ^:const review-outcome-statuses #{:task.status/accepted :task.status/rejected})
@@ -56,6 +57,7 @@
 (defn- in-status [statuses task]
   (boolean (statuses (get-in task [:task/status :db/ident]))))
 
+(def reviewing? (partial in-status reviewing-statuses))
 (def waiting-for-review? (partial in-status waiting-for-review-statuses))
 (def completed? (partial in-status completed-statuses))
 (def rejected? (partial in-status rejected-statuses))
@@ -67,6 +69,7 @@
   result files can be added and the task can be sent for review."
   [task]
   (and (not (waiting-for-review? task))
+       (not (reviewing? task))
        (not (accepted? task))))
 
 

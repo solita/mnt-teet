@@ -132,6 +132,16 @@
                 :target task-id
                 :type :notification.type/task-waiting-for-review})]})
 
+(defcommand :task/start-review
+  {:doc "Start review for task, sets status."
+   :context {:keys [db user]}
+   :payload {task-id :task-id}
+   :project-id (project-db/task-project-id db task-id)
+   :authorization {:task/review {:id task-id}}
+   :pre [(task-model/waiting-for-review? (d/pull db [:task/status] task-id))]
+   :transact [{:db/id task-id
+               :task/status :task.status/reviewing}]})
+
 (defcommand :task/review
   {:doc "Accept or reject review for task"
    :context {:keys [db user]}
@@ -139,7 +149,7 @@
              status :status}
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/review {:id task-id}}
-   :pre [(task-model/waiting-for-review? (d/pull db [:task/status] task-id))
+   :pre [(task-model/reviewing? (d/pull db [:task/status] task-id))
          (task-model/review-outcome-statuses status)]
    :transact [{:db/id task-id
                :task/status status}]})

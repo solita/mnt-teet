@@ -26,6 +26,7 @@
 (defrecord CloseAddDocumentDialog [])
 
 (defrecord SubmitResults []) ; submit task for review
+(defrecord StartReview []) ; change status to in review
 (defrecord Review [status]) ; review results
 
 (extend-protocol t/Event
@@ -36,6 +37,15 @@
            :command :task/submit
            :payload {:task-id (goog.math.Long/fromString (:task params))}
            :success-message (tr [:task :submit-results-success])
+           :result-event common-controller/->Refresh}))
+
+  StartReview
+  (process-event [_ {params :params :as app}]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :task/start-review
+           :payload {:task-id (goog.math.Long/fromString (:task params))}
+           :success-message (tr [:task :start-review-success])
            :result-event common-controller/->Refresh}))
 
   Review
