@@ -9,7 +9,8 @@
             [teet.user.user-model :as user-model]
             [teet.user.user-db :as user-db]
             [clojure.java.io :as io]
-            [clojure.set :as set])
+            [clojure.set :as set]
+            [teet.util.datomic :as du])
   (:import (java.util Date)))
 
 ;; Convenient shortcuts
@@ -206,15 +207,16 @@
 ;;
 (defn create-task [{:keys [user activity task]} & [global-test-data-key]]
   (local-login user)
-  (let [task-id (-> (local-command :task/create {:activity-id activity
+  (let [activity-entity (du/entity (db) activity)
+        task-id (-> (local-command :task/create {:activity-id activity
                                                  :task (merge {:task/send-to-thk? false
                                                                :task/type :task.type/design-requirements
                                                                :task/group :task.group/base-data
                                                                :db/id "new-id"
                                                                :task/description "Design requirements for testing."
                                                                :task/assignee {:user/id (second user)}
-                                                               :task/estimated-start-date (Date.)
-                                                               :task/estimated-end-date (Date.)}
+                                                               :task/estimated-start-date (:activity/estimated-start-date activity-entity)
+                                                               :task/estimated-end-date (:activity/estimated-end-date activity-entity)}
                                                               task)})
                     :tempids
                     (get "new-id"))]
