@@ -236,5 +236,5 @@
 
     [task-page-content e! app
      (project-model/task-by-id project task-id)
-     (du/id= (:db/id user)
-             (:db/id (:thk.project/manager project)))]]])
+     (= (:user/id user)
+        (:user/id (:thk.project/manager project)))]]])

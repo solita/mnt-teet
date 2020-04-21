@@ -5,7 +5,8 @@
             #?(:cljs [teet.ui.project-context :as project-context])
             #?(:cljs [teet.ui.query :as query])
             [teet.util.collection :as cu]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [teet.log :as log]))
 
 (def authorization-rules
   (delay #?(:cljs (-> js/window
