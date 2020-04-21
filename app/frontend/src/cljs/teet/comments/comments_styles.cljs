@@ -25,7 +25,7 @@
            {:background-color unresolved-bg-color}
 
            :comment.status/resolved
-           {:background-color theme-colors/gray-lighter}
+           {:background-color theme-colors/gray-lightest}
 
            {})))
 
@@ -94,7 +94,10 @@
 
 (defn unresolved-comments
   []
-  {:background-color unresolved-bg-color
+  {:display :flex
+   :align-items :center
+   :justify-content :space-between
+   :background-color unresolved-bg-color
    :padding "0.5rem 1rem 0.5rem 1rem"
    :color theme-colors/blue
    :font-weight :bold

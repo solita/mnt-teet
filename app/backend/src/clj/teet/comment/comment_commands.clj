@@ -5,6 +5,7 @@
             teet.file.file-spec
             [teet.meta.meta-model :refer [creation-meta modification-meta deletion-tx]]
             [teet.meta.meta-query :as meta-query]
+            [teet.comment.comment-db :as comment-db]
             [teet.comment.comment-model :as comment-model]
             [teet.project.project-db :as project-db]
             [teet.authorization.authorization-check :as authorization-check]
@@ -179,12 +180,29 @@
    :authorization {:project/delete-comments {:db/id comment-id}}
    :transact [(deletion-tx user comment-id)]})
 
+(defn- comment-status-tx [user id status]
+  (merge {:db/id id
+          :comment/status status}
+         (modification-meta user)))
+
 (defcommand :comment/set-status
   {:doc "Toggle the tracking status of the comment"
    :context {:keys [db user]}
    :payload {comment-id :db/id status :comment/status}
    :project-id (get-project-id-of-comment db comment-id)
    :authorization {:project/track-comment-status {:db/id comment-id}}
-   :transact [(merge {:db/id comment-id
-                      :comment/status status}
-                     (modification-meta user))]})
+   :transact [(comment-status-tx user comment-id status)]})
+
+(defcommand :comment/resolve-comments-of-entity
+  {:doc "Resolve multiple comments"
+   :context {:keys [db user]}
+   :payload {:keys [entity-id entity-type]}
+   :project-id (project-db/entity-project-id db entity-type entity-id)
+   :authorization {:project/track-comment-status {}}
+   :transact (into []
+                   (for [{id :db/id} (comment-db/comments-of-entity db
+                                                                    entity-id
+                                                                    entity-type
+                                                                    nil
+                                                                    '[:db/id])]
+                     (comment-status-tx user id :comment.status/resolved)))})

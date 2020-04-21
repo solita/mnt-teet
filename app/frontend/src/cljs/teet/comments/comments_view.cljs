@@ -209,7 +209,15 @@
 
 (defn unresolved-comments-info [_e! unresolved-comments]
   [:div {:class (<class comments-styles/unresolved-comments)}
-   (tr [:comment :unresolved-count] {:unresolved-count (count unresolved-comments)})])
+   (tr [:comment :unresolved-count] {:unresolved-count (count unresolved-comments)})
+   [when-authorized :comment/resolve-comments-of-entity
+    {}
+    [buttons/button-text {:color :primary
+                          :end-icon (r/as-element [icons/action-check-circle-outline])
+                          #_:on-click #_(e! (comments-controller/->SetCommentStatus comment-id
+                                                                                    :comment.status/resolved
+                                                                                    commented-entity))}
+     (tr [:comment :resolve-all])]]])
 
 (defn comment-list
   [{:keys [e! quote-comment! commented-entity-id focused-comment]} comments]

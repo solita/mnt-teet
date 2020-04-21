@@ -17,3 +17,7 @@
 (defn unresolved? [comment]
   (= :comment.status/unresolved
      (-> comment :comment/status :db/ident)))
+
+(defn resolved? [comment]
+  (= :comment.status/resolved
+     (-> comment :comment/status :db/ident)))

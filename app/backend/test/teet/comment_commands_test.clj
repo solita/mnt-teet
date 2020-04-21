@@ -2,6 +2,7 @@
   (:require [clojure.test :refer :all]
             [datomic.client.api :as d]
             teet.comment.comment-commands
+            [teet.comment.comment-model :as comment-model]
             teet.project.project-commands
             [teet.test.utils :as tu]
             [teet.util.collection :as cu]
@@ -119,7 +120,60 @@
                 (-> resolved-comment :comment/status :db/ident))))
        (testing "the comment is marked as having been modified"
          (is (contains? resolved-comment :meta/modifier))
-         (is (contains? resolved-comment :meta/modified-at)))))))
+         (is (contains? resolved-comment :meta/modified-at))))))
+
+  (testing "Project manager can resolve all comments of an entity at once:"
+    ;; Create a new task for multi resolve
+    (let [task-id (tu/create-task {:user tu/mock-user-manager
+                                   :activity (tu/->db-id "p1-lc1-act1")}
+                                  :multi-resolve-task-id)]
+      (is (some? task-id)))
+
+    ;; Project manager adds 10 comments ...
+    (dotimes [n 3]
+      (tu/create-comment {:user tu/mock-user-manager
+                          :entity-type :task
+                          :entity-id (tu/get-data :multi-resolve-task-id)
+                          :comment {:comment (str "Tracked comment number " n)
+                                    :track? true}}
+                         (keyword (str "tracked-comment-" n))))
+
+    (testing "before resolving all comments of task, the tracked comments are unresolved"
+      (let [task-comments (tu/local-query tu/mock-user-manager :comment/fetch-comments
+                                          {:db/id (tu/get-data :multi-resolve-task-id)
+                                           :for :task})]
+        (is (= 3 (count (filter comment-model/unresolved? task-comments))))))
+
+    (testing "after resolving all comments of task, the tracked comments are resolved"
+      (tu/local-command tu/mock-user-manager
+                        :comment/resolve-comments-of-entity
+                        {:entity-id (tu/get-data :multi-resolve-task-id)
+                         :entity-type :task})
+      (let [task-comments (tu/local-query tu/mock-user-manager :comment/fetch-comments
+                                          {:db/id (tu/get-data :multi-resolve-task-id)
+                                           :for :task})]
+        (is (= 3 (count (filter comment-model/resolved? task-comments)))))))
+
+  (testing "External consultant cannot resolve all comments of an entity at once"
+    ;; Create a new task for multi resolve
+    (let [task-id (tu/create-task {:user tu/mock-user-manager
+                                   :activity (tu/->db-id "p1-lc1-act1")}
+                                  :external-multi-resolve-task-id)]
+      (is (some? task-id)))
+
+    (dotimes [n 3]
+      (tu/create-comment {:user tu/mock-user-carla-consultant
+                          :entity-type :task
+                          :entity-id (tu/get-data :external-multi-resolve-task-id)
+                          :comment {:comment (str "Tracked comment number " n)
+                                    :track? true}}
+                         (keyword (str "external-tracked-comment-" n))))
+
+    (is (thrown? Exception
+                 (tu/local-command tu/mock-user-carla-consultant
+                                   :comment/resolve-comments-of-entity
+                                   {:entity-id (tu/get-data :external-multi-resolve-task-id)
+                                    :entity-type :task})))))
 
 (deftest comment-on-file-notification
   ;; Give Carla external consultant to p1
