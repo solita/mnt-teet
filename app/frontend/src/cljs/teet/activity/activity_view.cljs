@@ -2,7 +2,7 @@
   (:require [teet.ui.select :as select]
             [teet.ui.date-picker :as date-picker]
             [reagent.core :as r]
-            [teet.authorization.authorization-check :refer [when-authorized]]
+            [teet.authorization.authorization-check :refer [authorized? when-authorized]]
             [teet.localization :refer [tr tr-enum]]
             [teet.ui.panels :as panels]
             [teet.ui.material-ui :refer [Grid]]
@@ -24,7 +24,9 @@
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.url :as url]
             [teet.util.collection :as cu]
-            [teet.project.task-model :as task-model]))
+            [teet.project.task-model :as task-model]
+            [teet.app-state]
+            [taoensso.timbre :as log]))
 
 (defn task-selection [{:keys [e! on-change selected activity-name]} task-groups task-types]
   [:div {:style {:max-height "70vh" :overflow-y :scroll}}
@@ -163,28 +165,41 @@
               (sort-by (comp task-model/task-group-order :db/ident first)
                        (group-by :task/group tasks)))])
 
-(defn submit-for-approval-button [e! params]
+(defn approvals-button [e! params button-kw confirm-kw event-fn]
   (r/with-let [clicked? (r/atom false)]
     [:<>
      [buttons/button-primary {:on-click #(reset! clicked? true)
                               :style {:float :right}}
       [icons/action-check-circle]
-      (tr [:activity :submit-for-approval])]
+      (tr [:activity button-kw])]
      (when @clicked?
-       [panels/modal {:title (str (tr [:activity :submit-for-approval]) "?")
+       [panels/modal {:title (str (tr [:activity button-kw]) "?")
                       :on-close #(reset! clicked? false)}
         [:<>
          [:div {:style {:padding "1rem"
                         :margin-bottom "2rem"
                         :background-color theme-colors/gray-lightest}}
-          (tr [:activity :submit-results-confirm])]
+          (tr [:activity confirm-kw])]
          [:div {:style {:display :flex
                         :justify-content :flex-end}}
           [buttons/button-secondary {:on-click #(reset! clicked? false)}
            (tr [:buttons :cancel])]
-          [buttons/button-primary {:on-click (e! activity-controller/->SubmitResults params)
+          [buttons/button-primary {:on-click (e! event-fn params)
                                    :style {:margin-left "1rem"}}
            (tr [:buttons :confirm])]]]])]))
+
+(defn approve-button [e! params]
+  (approvals-button e! params :approve-activity :approve-activity-confirm activity-controller/->SubmitResults))
+
+(defn submit-for-approval-button [e! params]
+  (approvals-button e! params :submit-for-approval :submit-results-confirm activity-controller/->ApproveResults))
+
+(defn all-tasks-completed? [activity]
+  (let [statuses (->> activity :activity/tasks (mapv (comp :db/ident :task/status)))
+        all-complete? (every? task-model/completed-statuses statuses)]
+    (log/debug "all-complete? ->" all-complete? "because statuses=" statuses)
+    all-complete?))
+
 
 (defn activity-content
   [e! params project]
@@ -192,10 +207,13 @@
     [:<>
      [activity-header e! activity]
      [project-management (:thk.project/owner project) (:thk.project/manager project)]
-     [task-lists (:activity/tasks activity)]
-     [submit-for-approval-button e! params]
-     [when-authorized :activity/change-activity-status nil
-      [submit-for-approval-button e! params]]]))
+     [task-lists (:activity/tasks activity)]     
+     (when (and (authorized? @teet.app-state/user :activity/change-activity-status nil)
+                (all-tasks-completed? activity)) 
+       [submit-for-approval-button e! params])
+     (when (and (authorized? @teet.app-state/user :activity/change-activity-status nil)
+                (-> activity :activity/status :db/ident (= :activity.status/in-review))) 
+       [approve-button e! params])]))
 
 (defn activity-page [e! {:keys [params] :as app} project breadcrumbs]
   [project-navigator-view/project-navigator-with-content
