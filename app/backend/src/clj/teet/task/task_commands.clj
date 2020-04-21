@@ -2,6 +2,7 @@
   (:require [datomic.client.api :as d]
             [teet.db-api.core :as db-api :refer [defcommand]]
             [teet.project.project-db :as project-db]
+            [teet.activity.activity-db :as activity-db]
             [teet.meta.meta-model :as meta-model]
             teet.task.task-spec
             [teet.util.collection :as uc]
@@ -60,12 +61,23 @@
        :type :notification.type/task-assigned})
     {}))
 
+(defn valid-task-dates?
+  [db activity-id {:task/keys [actual-end-date actual-start-date estimated-end-date estimated-start-date] :as task}]
+  (let [activity-dates (activity-db/activity-date-range db activity-id)
+        dates (filterv some? [actual-end-date actual-start-date estimated-end-date estimated-start-date])]
+    (every? (fn [date]
+              (and (not (.before date (:activity/estimated-start-date activity-dates)))
+                   (not (.after date (:activity/estimated-end-date activity-dates)))))
+            dates)))
+
 (defcommand :task/update
   {:doc "Update basic task information for existing task."
    :context {:keys [user db]} ; bindings from context
    :payload {id :db/id :as task} ; bindings from payload
    :project-id (project-db/task-project-id db id)
-   :pre [(not (new? task))]
+   :pre [^{:error :invalid-task-dates}
+         (valid-task-dates? db (task-db/activity-for-task-id db id) task)
+         (not (new? task))]
    :authorization {:task/task-information {:db/id id
                                            :link :task/assignee}}  ; auth checks
    :transact (let [task* (du/entity db id)
@@ -73,13 +85,13 @@
                    old-assignee-id (get-in task* [:task/assignee :user/id])
                    assign? (not= new-assignee-id old-assignee-id)]
                [(merge
-                 (when (and (not old-assignee-id)
-                            new-assignee-id)
-                   {:task/status :task.status/in-progress})
-                 (-> task
-                     (select-update-keys (send-to-thk? db id))
-                     uc/without-nils)
-                 (meta-model/modification-meta user))
+                  (when (and (not old-assignee-id)
+                             new-assignee-id)
+                    {:task/status :task.status/in-progress})
+                  (-> task
+                      (select-update-keys (send-to-thk? db id))
+                      uc/without-nils)
+                  (meta-model/modification-meta user))
                 (if assign?
                   (assignment-notification-tx user task)
                   {})
@@ -102,7 +114,9 @@
              task :task :as payload}
    :project-id (project-db/activity-project-id db activity-id)
    :pre [(new? task)
-         (valid-thk-send? db task)]
+         (valid-thk-send? db task)
+         ^{:error :invalid-task-dates}
+         (valid-task-dates? db activity-id task)]
    :authorization {:task/create-task {}
                    :activity/edit-activity {:db/id activity-id}}
    :transact [(merge

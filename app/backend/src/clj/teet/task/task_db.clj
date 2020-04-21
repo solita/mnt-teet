@@ -1,7 +1,12 @@
 (ns teet.task.task-db
   "Task related queries"
-  (:require [datomic.client.api :as d]))
+  (:require [datomic.client.api :as d]
+            [teet.util.datomic :as du]))
 
+(defn activity-for-task-id
+  [db task-id]
+  (let [task (du/entity db task-id)]
+    (get-in task [:activity/_tasks 0 :db/id])))
 
 (defn files-for-task
   "Returns files for a given task. Returns latest versions of files as vector
