@@ -149,13 +149,6 @@
                     (tr-enum status))])]]))
           files)]])
 
-(defn- file-status [e! file]
-  [select/select-enum {:e! e!
-                       :show-label? false
-                       :value (:file/status file)
-                       :attribute :file/status
-                       :on-change (e! file-controller/->UpdateFileStatus (:db/id file))}])
-
 (defn- labeled-data [[label data]]
   [:div {:class (<class common-styles/inline-block)}
    [:div [:b label]]
@@ -200,7 +193,8 @@
                ["" [url/Link {:page :file
                               :params {:file (:db/id latest-file)}}
                     (tr [:file :switch-to-latest-version])]]
-               [(tr [:fields :file/status]) [file-status e! file]])])]
+               [(tr [:fields :file/status])
+                (tr-enum (:file/status file))])])]
 
      ;; preview block (placeholder for now)
      [:div {:class (<class preview-style)}
