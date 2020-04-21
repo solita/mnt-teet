@@ -2,7 +2,8 @@
   (:require [herb.core :refer [<class]]
             [reagent.core :as r]
             [tuck.core :as t]
-            [teet.authorization.authorization-check :refer [when-authorized]]
+            [teet.app-state :as app-state]
+            [teet.authorization.authorization-check :as authorization-check :refer [when-authorized]]
             [teet.comment.comment-model :as comment-model]
             teet.comment.comment-spec
             [teet.comments.comments-controller :as comments-controller]
@@ -177,7 +178,7 @@
                (when focused?
                  {:ref (fn [el]
                          (when el
-                           (.scrollIntoViewIfNeeded el)))}))
+                           (animate/focus! el)))}))
    [:div {:class [(<class common-styles/space-between-center) (<class common-styles/margin-bottom 0)]}
     [:span
      [typography/SectionHeading
@@ -319,8 +320,12 @@
           ^{:attribute :comment/visibility}
           [select/select-enum {:e! e! :attribute :comment/visibility}]
 
-          ^{:attribute :comment/track?}
-          [select/checkbox {}]
+          ;; TODO: when-authorized doesn't play well with form
+          (when (authorization-check/authorized? @app-state/user
+                                                 :project/track-comment-status
+                                                 {})
+            ^{:attribute :comment/track?}
+            [select/checkbox {}])
 
           ^{:attribute :comment/files}
           [attached-images-field {:e! e!
