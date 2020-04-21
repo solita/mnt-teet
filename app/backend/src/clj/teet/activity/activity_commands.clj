@@ -63,10 +63,11 @@
          ^{:error :invalid-tasks}
          (valid-tasks? db (map second tasks))]
    :transact [(merge
-                {:db/id "new-activity"}
-                (select-keys activity [:activity/name :activity/status
-                                       :activity/estimated-start-date
-                                       :activity/estimated-end-date])
+               {:db/id "new-activity"
+                :activity/status :activity.status/in-preparation}
+               (select-keys activity [:activity/name
+                                      :activity/estimated-start-date
+                                      :activity/estimated-end-date])
                 (when (seq tasks)
                   {:activity/tasks
                    (vec
@@ -75,7 +76,8 @@
                                           (name task-group) "-"
                                           (name task-type))
                               :task/estimated-end-date (:activity/estimated-end-date activity)
-                              :task/status :task.status/in-preparation
+                              :task/estimated-start-date (:activity/estimated-start-date activity)
+                              :task/status :task.status/not-started
                               :task/group task-group
                               :task/type task-type}
                              (meta-model/creation-meta user))))})

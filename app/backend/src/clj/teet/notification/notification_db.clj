@@ -23,20 +23,50 @@
           :notification/type type}
          (meta-model/creation-meta from)))
 
+(def notification-keys [:db/id :notification/status
+                        :notification/target :notification/type
+                        :meta/created-at :meta/creator])
+
 (defn unread-notifications
   "Return unread notifications for user"
   [db user]
   ;; TODO
-  (map first
-       (d/q '[:find (pull ?notification [:db/id :notification/status
-                                         :notification/target :notification/type
-                                         :meta/created-at :meta/creator])
-              :in $ ?user
+  (mapv first
+       (d/q '[:find (pull ?notification notification-keys)
+              :in $ ?user notification-keys
               :where
               [?notification :notification/receiver ?user]
               [?notification :notification/status :notification.status/unread]]
-            db
-            (:db/id user))))
+            db (user-model/user-ref user) notification-keys)))
+
+(defn user-notifications
+  "Return notifications for user. Returns all unread notifications
+  even if there are more than `limit`.
+  If there are less than `limit` of unread notifications, adds
+  newest acknowledged notifications upto `limit`."
+  [db user limit]
+  (let [unreads (unread-notifications db user)
+        notification-ids
+        (when (< (count unreads) limit)
+          (->> (d/q '[:find ?n ?t
+                      :where
+                      [?n :notification/receiver ?user]
+                      [?n :notification/status :notification.status/acknowledged]
+                      [?n :meta/created-at ?t]
+                      :in $ ?user]
+                    db (user-model/user-ref user))
+               (sort-by second)
+               (take (- limit (count unreads)))
+               (map first)
+               reverse))]
+    (into unreads
+          (->>
+           (d/q '[:find (pull ?n notification-keys)
+                  :in $ notification-keys [?n ...]]
+                db notification-keys notification-ids)
+           (mapv first)
+           (sort-by :meta/created-at)
+           reverse))))
 
 (defn navigation-info
   "Fetch notification type and target for user's notification."

@@ -16,6 +16,18 @@
   #?(:clj (= id1 id2)
      :cljs (= (str id1) (str id2))))
 
+(defn enum=
+  "Compare two enum values.
+  Enum may be a keyword or a map containing :db/ident."
+  [e1 e2]
+  (let [v1 (if (keyword? e1)
+             e1
+             (:db/ident e1))
+        v2 (if (keyword e2)
+             e2
+             (:db/ident e2))]
+    (= v1 v2)))
+
 (defn changed-entity-ids
   "Returns all :db/id values of entities that were \"changed\" by the given transaction."
   [tx-result]
@@ -40,3 +52,53 @@
               :when (and (not= k :db/id)
                          (contains? keys-to-retract k))]
           [:db/retract id k v])))))
+
+#?(:clj
+   (do
+     (declare entity)
+     (defn- transform-entity-value [db val]
+       (cond
+         (and (map? val)
+              (contains? val :db/id))
+         (entity db (:db/id val))
+
+         (vector? val)
+         (mapv (partial transform-entity-value db) val)
+
+         :else
+         val))
+
+     (defn- fetch-entity-attr! [db eid fetched-attrs attr default-value]
+       (let [v (get
+                (swap! fetched-attrs
+                       (fn [fetched-attrs]
+                         (if (contains? fetched-attrs attr)
+                           fetched-attrs
+                           (assoc fetched-attrs attr
+                                  (transform-entity-value
+                                   db (get (d/pull db [attr] eid)
+                                           attr ::not-found))))))
+                             attr)]
+                      (if (not= ::not-found v)
+                        v
+                        default-value)))
+     (deftype Entity [db eid fetched-attrs]
+       java.lang.Object
+       (toString [_]
+         (str "#<Entity, eid: " eid ">"))
+
+       clojure.lang.ILookup
+       (valAt [_ kw]
+         (assert (keyword? kw))
+         (fetch-entity-attr! db eid fetched-attrs kw nil))
+       (valAt [_ kw default-value]
+         (assert (keyword? kw))
+         (fetch-entity-attr! db eid fetched-attrs kw default-value)))
+     (defmethod print-method Entity [entity writer]
+       (print-simple entity writer))
+     (defn entity
+       "Returns a navigable entity that lazily fetches attributes."
+       [db eid]
+       (Entity. db eid (atom (if (number? eid)
+                               {:db/id eid}
+                               {}))))))

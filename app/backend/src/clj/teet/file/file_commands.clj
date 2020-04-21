@@ -59,7 +59,8 @@
    :context {:keys [conn user db]}
    :payload {:keys [task-id attachment? file previous-version-id]}
    :project-id (project-db/task-project-id db task-id)
-   :authorization {:document/upload-document {:db/id task-id}}}
+   :authorization {:document/upload-document {:db/id task-id
+                                              :link :task/assignee}}}
   (let [file (file-model/type-by-suffix file)]
     (or (file-model/validate-file file)
         (let [old-file (when previous-version-id
@@ -68,6 +69,7 @@
               res (tx [{:db/id (or task-id "new-task")
                         :task/files [(merge (select-keys file file-keys)
                                             {:db/id "new-file"
+                                             :file/status :file.status/draft
                                              :file/version version}
                                             (when old-file
                                               {:file/previous-version (:db/id old-file)})

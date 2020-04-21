@@ -1,4 +1,5 @@
-(ns teet.theme.theme-colors)
+(ns teet.theme.theme-colors
+  (:require [garden.color :refer [lighten]]))
 
 (defn primary-alpha [alpha]
   (str "rgb(4, 30, 66, " alpha ")"))
@@ -11,6 +12,7 @@
   (str "rgb(0, 94, 135, " alpha ")"))
 (def blue-light "#007BAF")
 (def blue-lighter "#AAE1F8")
+(def blue-lightest (lighten blue-lighter 10))
 (def orange "#FF8000")
 
 ;; Grayscale

@@ -69,7 +69,7 @@
 
         id (ensure-user! conn person-id given_name family_name)
         db (d/db conn)
-        roles (user-db/user-roles db [:user-id id])
+        roles (user-db/user-roles db [:user/id id])
         response {:status 302
                   :headers {"Location"
                             (str (environment/config-value :base-url)
