@@ -68,6 +68,7 @@
               res (tx [{:db/id (or task-id "new-task")
                         :task/files [(merge (select-keys file file-keys)
                                             {:db/id "new-file"
+                                             :file/status :file.status/draft
                                              :file/version version}
                                             (when old-file
                                               {:file/previous-version (:db/id old-file)})
