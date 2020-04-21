@@ -24,7 +24,8 @@
   :add-images "Lisan pildid",
   :edited "Muudetud {date}",
   :resolve nil,
-  :unresolve nil},
+  :unresolve nil,
+  :unresolved-count nil},
  :common
  {:hide-menu "Peidan menüü",
   :send-feedback "Saadan tagasisidet",

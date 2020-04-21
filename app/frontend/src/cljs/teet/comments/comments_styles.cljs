@@ -13,6 +13,8 @@
          (when focused?
            {:animation [[focus-animation "1.5s"]]})))
 
+(def unresolved-bg-color (theme-colors/blue-alpha 0.2))
+
 (defn comment-contents
   [tracked? status]
   (merge {}
@@ -20,7 +22,7 @@
            {:padding "0.5rem"})
          (case status
            :comment.status/unresolved
-           {:background-color (theme-colors/blue-alpha 0.2)}
+           {:background-color unresolved-bg-color}
 
            :comment.status/resolved
            {:background-color theme-colors/gray-lighter}
@@ -89,3 +91,9 @@
   {:color theme-colors/gray-light
    :font-size "0.75rem"
    :padding-left "0.5rem"})
+
+(defn unresolved-comments
+  []
+  {:background-color unresolved-bg-color
+   :padding "0.5rem 1rem 0.5rem 1rem"
+   :margin-bottom "0.5rem"})

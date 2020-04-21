@@ -207,19 +207,27 @@
       (tr [:buttons :delete])]]]
    [attachments {:files files :comment-id id}]])
 
+(defn unresolved-comments-info [_e! unresolved-comments]
+  [:div {:class (<class comments-styles/unresolved-comments)}
+   (tr [:comment :unresolved-count] {:unresolved-count (count unresolved-comments)})])
+
 (defn comment-list
   [{:keys [e! quote-comment! commented-entity-id focused-comment]} comments]
-  [itemlist/ItemList {}
-   (doall
-    (for [{id :db/id :as comment-entity} comments
-          :let [focused? (= (str id) focused-comment)]]
-      (if (nil? comment-entity)
-        ;; New comment was just added but hasn't been refetched yet, show skeleton
-        ^{:key "loading-comment"}
-        [comment-skeleton 1]
+  (let [unresolved-comments (filterv comment-model/unresolved? comments)]
+    [:<>
+     (when (seq unresolved-comments)
+       [unresolved-comments-info e! unresolved-comments])
+     [itemlist/ItemList {}
+      (doall
+       (for [{id :db/id :as comment-entity} comments
+             :let [focused? (= (str id) focused-comment)]]
+         (if (nil? comment-entity)
+           ;; New comment was just added but hasn't been refetched yet, show skeleton
+           ^{:key "loading-comment"}
+           [comment-skeleton 1]
 
-        ^{:key (str id)}
-        [comment-entry e! comment-entity commented-entity-id quote-comment! focused?])))])
+           ^{:key (str id)}
+           [comment-entry e! comment-entity commented-entity-id quote-comment! focused?])))]]))
 
 (defn- quote-comment-fn
   "An ad hoc event that merges the quote at the end of current new

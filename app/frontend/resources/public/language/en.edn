@@ -24,7 +24,8 @@
   :add-images "Add images",
   :edited "Edited {date}",
   :resolve "Resolve",
-  :unresolve "Unresolve"},
+  :unresolve "Unresolve",
+  :unresolved-count "{unresolved-count} unresolved comments"},
  :common
  {:hide-menu "Hide menu",
   :send-feedback "Send feedback",

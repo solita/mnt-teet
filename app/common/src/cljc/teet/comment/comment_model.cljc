@@ -13,3 +13,7 @@
 
 (defn tracked? [comment]
   (boolean (tracked-statuses (-> comment :comment/status :db/ident))))
+
+(defn unresolved? [comment]
+  (= :comment.status/unresolved
+     (-> comment :comment/status :db/ident)))
