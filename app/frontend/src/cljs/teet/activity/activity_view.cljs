@@ -25,6 +25,7 @@
             [teet.ui.url :as url]
             [teet.util.collection :as cu]
             [teet.project.task-model :as task-model]
+            [teet.activity.activity-model :as activity-model]
             [teet.app-state]
             [taoensso.timbre :as log]))
 
@@ -189,17 +190,10 @@
            (tr [:buttons :confirm])]]]])]))
 
 (defn approve-button [e! params]
-  (approvals-button e! params :approve-activity :approve-activity-confirm activity-controller/->SubmitResults))
+  (approvals-button e! params :approve-activity :approve-activity-confirm activity-controller/->Review))
 
 (defn submit-for-approval-button [e! params]
-  (approvals-button e! params :submit-for-approval :submit-results-confirm activity-controller/->ApproveResults))
-
-(defn all-tasks-completed? [activity]
-  (let [statuses (->> activity :activity/tasks (mapv (comp :db/ident :task/status)))
-        all-complete? (every? task-model/completed-statuses statuses)]
-    (log/debug "all-complete? ->" all-complete? "because statuses=" statuses)
-    all-complete?))
-
+  (approvals-button e! params :submit-for-approval :submit-results-confirm activity-controller/->SubmitResults))
 
 (defn activity-content
   [e! params project]
@@ -209,7 +203,7 @@
      [project-management (:thk.project/owner project) (:thk.project/manager project)]
      [task-lists (:activity/tasks activity)]     
      (when (and (authorized? @teet.app-state/user :activity/change-activity-status nil)
-                (all-tasks-completed? activity)) 
+                (activity-model/all-tasks-completed? activity)) 
        [submit-for-approval-button e! params])
      (when (and (authorized? @teet.app-state/user :activity/change-activity-status nil)
                 (-> activity :activity/status :db/ident (= :activity.status/in-review))) 
