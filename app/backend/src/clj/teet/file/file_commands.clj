@@ -59,7 +59,8 @@
    :context {:keys [conn user db]}
    :payload {:keys [task-id attachment? file previous-version-id]}
    :project-id (project-db/task-project-id db task-id)
-   :authorization {:document/upload-document {:db/id task-id}}}
+   :authorization {:document/upload-document {:db/id task-id
+                                              :link :task/assignee}}}
   (let [file (file-model/type-by-suffix file)]
     (or (file-model/validate-file file)
         (let [old-file (when previous-version-id
