@@ -156,12 +156,15 @@
                                                              :as options#}]]
                                          (authorization-check/authorized?
                                           ~-user functionality#
-                                          {:access access#
-                                           :project-id ~-proj-id
-                                           :entity (when (or entity-id# eid#)
-                                                     (apply meta-query/entity-meta ~-db (or entity-id# eid#)
-                                                            (when link#
-                                                              [link#])))}))
+                                          (merge
+                                           (when link#
+                                             {:link link#})
+                                           {:access access#
+                                            :project-id ~-proj-id
+                                            :entity (when (or entity-id# eid#)
+                                                      (apply meta-query/entity-meta ~-db (or entity-id# eid#)
+                                                             (when link#
+                                                               [link#])))})))
                                        ~authorization)
                        (log/warn "Failed to authorize command " ~request-name " for user " ~-user)
                        (throw (ex-info "Request authorization failed"
