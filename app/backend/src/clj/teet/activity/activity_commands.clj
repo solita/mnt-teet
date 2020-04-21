@@ -125,16 +125,18 @@
    :context {:keys [conn user db]}
    :payload {:keys [activity-id]}
    :authorization {:activity/change-activity-status {}}
-   :pre [(check-tasks-are-complete db (:db/id activity))]
-   :transact [(merge (select-keys activity
-                                  [:db/id])                     
-                     {:activity/status :in-review}
-                     (meta-model/modification-meta user))]})
+   :project-id (project-db/activity-project-id db activity-id)
+   :pre [(check-tasks-are-complete db activity-id)]
+   :transact [(merge
+               {:db/id activity-id               
+                :activity/status :in-review}
+               (meta-model/modification-meta user))]})
 
 (defcommand :activity/review
   {:doc "Submit activity for review, when tasks are complete"
    :context {:keys [conn user db]}
    :payload {:keys [activity-id status]}
+   :project-id (project-db/activity-project-id db activity-id)
    :authorization {:activity/change-activity-status {}}
    ;; precondition checks that 1. user is project owner, 2. status is one of the permissible review outcomes
    :pre [(let [project-id (project-db/activity-project-id db activity-id)
@@ -144,7 +146,6 @@
          (#{:activity.status/canceled
             :activity.status/archived
             :activity.status/completed} status)] 
-   :transact [(merge (select-keys activity
-                                  [:db/id])                     
-                     {:activity/status status}
+   :transact [(merge {:db/id activity-id
+                      :activity/status status}
                      (meta-model/modification-meta user))]})
