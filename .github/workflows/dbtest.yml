@@ -11,6 +11,7 @@ jobs:
         run: |
           curl -o datomic-cli.zip https://datomic-releases-1fc2183a.s3.amazonaws.com/tools/datomic-cli/datomic-cli-0.10.81.zip
           unzip datomic-cli.zip
+          chmod a+x datomic-cli/datomic
       - name: start datomic proxy
         run: |
           ./datomic-cli/datomic client access ${{ secrets.DATOMIC_NAME }} --region ${{ secrets.DATOMIC_REGION }} &
