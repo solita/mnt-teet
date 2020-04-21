@@ -42,7 +42,7 @@
                       [select/checkbox {:label (tr-enum t)
                                         :value (boolean (selected [(:db/ident g) id]))
                                         :on-change #(on-change
-                                                     (cu/toggle selected [(:db/ident g) id]))}]])
+                                                      (cu/toggle selected [(:db/ident g) id]))}]])
                    (filter #(= (:db/ident g) (:enum/valid-for %)) task-types))]])
          (filter #(= (:db/ident activity-name)
                      (:enum/valid-for %))
@@ -53,7 +53,7 @@
   [select/with-enum-values {:e! e! :attribute :task/type}
    [task-selection opts task-groups]])
 
-(defn create-activity-form [e! activity lifecycle-type]
+(defn create-activity-form [e! activity lifecycle-type {:keys [max-date min-date]}]
   [form/form2 {:e! e!
                :value activity
                :on-change-event activity-controller/->UpdateActivityForm
@@ -68,6 +68,8 @@
 
      [form/field {:attribute [:activity/estimated-start-date :activity/estimated-end-date]}
       [date-picker/date-range-input {:row? false
+                                     :max-date max-date
+                                     :min-date min-date
                                      :start-label (tr [:fields :activity/estimated-start-date])
                                      :end-label (tr [:fields :activity/estimated-end-date])}]]]
     [Grid {:item true :xs 8}
@@ -75,14 +77,14 @@
                                :attribute :task/group}
       [task-groups-and-tasks {:e! e!
                               :on-change #(e! (activity-controller/->UpdateActivityForm
-                                               {:selected-tasks %}))
+                                                {:selected-tasks %}))
                               :selected (or (:selected-tasks activity) #{})}]]]
 
     [Grid {:item true :xs 12}
      [:div {:style {:display :flex :justify-content :flex-end}}
       [form/footer2]]]]])
 
-(defn edit-activity-form [e! activity]
+(defn edit-activity-form [e! activity {:keys [max-date min-date]}]
   [form/form {:e! e!
               :value activity
               :on-change-event activity-controller/->UpdateActivityForm
@@ -93,15 +95,23 @@
 
    ^{:attribute [:activity/estimated-start-date :activity/estimated-end-date]}
    [date-picker/date-range-input {:start-label (tr [:fields :activity/estimated-start-date])
+                                  :max-date max-date
+                                  :min-date min-date
                                   :end-label (tr [:fields :activity/estimated-end-date])}]])
 
 (defmethod project-navigator-view/project-navigator-dialog :edit-activity
-  [{:keys [e! app]} _dialog]
-  [edit-activity-form e! (:edit-activity-data app)])
+  [{:keys [e! app project]} _dialog]
+  (let [lifecycle-id (get-in app [:stepper :lifecycle])
+        lifecycle (project-model/lifecycle-by-id project lifecycle-id)]
+    [edit-activity-form e! (:edit-activity-data app) {:min-date (:thk.lifecycle/estimated-start-date lifecycle)
+                                                      :max-date (:thk.lifecycle/estimated-end-date lifecycle)}]))
 
 (defmethod project-navigator-view/project-navigator-dialog :new-activity
-  [{:keys [e! app]} dialog]
-  [create-activity-form e! (:edit-activity-data app) (:lifecycle-type dialog)])
+  [{:keys [e! app project]} dialog]
+  (let [lifecycle-id (get-in app [:stepper :lifecycle])
+        lifecycle (project-model/lifecycle-by-id project lifecycle-id)]
+    [create-activity-form e! (:edit-activity-data app) (:lifecycle-type dialog) {:min-date (:thk.lifecycle/estimated-start-date lifecycle)
+                                                                                 :max-date (:thk.lifecycle/estimated-end-date lifecycle)}]))
 
 (defn project-management
   [owner manager]
@@ -155,7 +165,7 @@
 (defn task-group
   [[group tasks]]
   [:div {:class (<class common-styles/margin-bottom 1)}
-   [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}  (tr-enum group)]
+   [typography/Heading2 {:class (<class common-styles/margin-bottom 1)} (tr-enum group)]
    [:div
     (util/mapc task-row tasks)]])
 
