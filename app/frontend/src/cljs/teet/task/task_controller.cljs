@@ -5,7 +5,8 @@
             [teet.localization :refer [tr]]
             [teet.file.file-controller]
             [teet.common.common-controller :as common-controller]
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [teet.snackbar.snackbar-controller :as snackbar-controller]))
 
 (defrecord UploadDocuments [files])
 (defrecord UpdateTask [task updated-task]) ; update task info to database
@@ -192,6 +193,12 @@
   UpdateTaskForm
   (process-event [{form-data :form-data} app]
     (update-in app [:route :project :add-task] merge form-data)))
+
+(defmethod common-controller/on-server-error :invalid-task-dates [err app]
+  (let [error (-> err ex-data :error)]
+    ;; General error handler for when the client sends faulty data.
+    ;; Commands can fail requests with :error :bad-request to trigger this
+    (t/fx (snackbar-controller/open-snack-bar app (tr [:error error]) :warning))))
 
 (defn document-page-url [{{:keys [project activity task]} :params} doc]
   (str "#/projects/" project "/" activity "/" task "/" (:db/id doc)))
