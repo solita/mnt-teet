@@ -6,11 +6,11 @@
             [teet.project.task-model :as task-model]))
 
 (defrecord DeleteComment [comment-id commented-entity])
-(defrecord DeleteCommentResult [commented-entity])
+(defrecord QueryEntityComments [commented-entity])
 
 (defrecord UpdateFileNewCommentForm [form-data])            ; update new comment on selected file
 (defrecord UpdateNewCommentForm [form-data])                ; update new comment form data
-(defrecord CommentOnEntity [entity-type entity-id comment files visibility])
+(defrecord CommentOnEntity [entity-type entity-id comment files visibility track?])
 (defrecord ClearCommentField [])
 (defrecord CommentAddSuccess [entity-id])
 
@@ -19,6 +19,9 @@
 (defrecord CancelCommentEdit [])
 (defrecord SaveEditCommentForm [])
 (defrecord SaveEditCommentSuccess [])
+
+(defrecord SetCommentStatus [comment-id status commented-entity])
+(defrecord SetCommentStatusResult [commented-entity])
 
 (defn comments-query [commented-entity]
   {:tuck.effect/type :query
@@ -48,7 +51,7 @@
                        documents))))
 
   CommentOnEntity
-  (process-event [{:keys [entity-type entity-id comment files visibility]} app]
+  (process-event [{:keys [entity-type entity-id comment files visibility track?]} app]
     (assert (some? visibility))
     (t/fx app
           {:tuck.effect/type :command!
@@ -57,7 +60,8 @@
                      :entity-type entity-type
                      :comment comment
                      :visibility visibility
-                     :files (mapv :db/id files)}
+                     :files (mapv :db/id files)
+                     :track? track?}
            :result-event (partial ->CommentAddSuccess entity-id)}))
 
   CommentAddSuccess
@@ -79,9 +83,9 @@
            :command          :comment/delete-comment
            :payload          {:comment-id comment-id}
            :success-message (tr [:notifications :comment-deleted])
-           :result-event     (partial ->DeleteCommentResult commented-entity)}))
+           :result-event     (partial ->QueryEntityComments commented-entity)}))
 
-  DeleteCommentResult
+  QueryEntityComments
   (process-event [{:keys [commented-entity]} app]
     (t/fx app
           (comments-query commented-entity)))
@@ -129,4 +133,13 @@
       (t/fx (-> app
                 (dissoc :edit-comment-data)
                 (update :stepper dissoc :dialog))
-            (comments-query commented-entity)))))
+            (comments-query commented-entity))))
+
+  SetCommentStatus
+  (process-event [{:keys [comment-id status commented-entity]} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :comment/set-status
+           :payload {:db/id comment-id
+                     :comment/status status}
+           :result-event (partial ->QueryEntityComments commented-entity)})))

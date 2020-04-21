@@ -27,8 +27,8 @@
            ^{:key (:db/id t)}
            {:status (cond
                       (task-model/completed? t) :success
-                      (task-model/rejected? t) :fail
-                      (task-model/in-progress? t) :in-progress
+                      ;;(task-model/rejected? t) :fail
+                      ;(task-model/in-progress? t) :in-progress
                       :else :unknown)
             :link (routes/url-for {:page :activity-task
                                    :params {:project id

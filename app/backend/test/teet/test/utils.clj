@@ -54,10 +54,10 @@
                                         ; :user/organization "Maanteeamet"
     }])
 
-(def mock-user-manager [:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"])
-(def mock-user-carla-consultant [:user/id #uuid "ccbedb7b-ab30-405c-b389-292cdfe85271"])
-(def mock-user-boss [:user/id #uuid "fa8af5b7-df45-41ba-93d0-603c543c880d"])
-(def mock-user-edna-consultant [:user/id #uuid "008af5b7-0f45-01ba-03d0-003c111c8f00"])
+(def mock-user-manager [:user/id manager-id])
+(def mock-user-carla-consultant [:user/id external-consultant-id])
+(def mock-user-boss [:user/id boss-id])
+(def mock-user-edna-consultant [:user/id internal-consultant-id])
 
 
 ;;
@@ -166,6 +166,9 @@
   [user-ref]
   (reset! logged-in-user-ref user-ref)
   (log/info "Locally logged in as " user-ref))
+
+(defn local-logout []
+  (reset! logged-in-user-ref nil))
 
 (defn- action-ctx
   "A valid datomic reference must be obtainable from `user` with `user-model/user-ref`"

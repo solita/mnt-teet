@@ -82,16 +82,6 @@
            :task-id t-id
            :file (d/pull (:db-after res) '[*] file-id)}))))
 
-(defcommand :file/update-status
-  {:doc "Update status of a file"
-   :context {:keys [user db]}
-   :payload {:keys [file-id status]}
-   :project-id (project-db/file-project-id db file-id)
-   :authorization {:document/update-document-status {:db/id file-id}}
-   :transact [(merge {:db/id file-id
-                      :file/status status}
-                     (modification-meta user))]})
-
 (defcommand :file/delete
   {:doc "Delete file"
    :context {:keys [user db]}
@@ -99,12 +89,3 @@
    :project-id (project-db/file-project-id db file-id)
    :authorization {:document/delete-document {:db/id file-id}}
    :transact [(deletion-tx user file-id)]})
-
-
-#_(defmethod db-api/command! :document/delete-file [{conn :conn
-                                                   user :user}
-                                                  {:keys [file-id]}]
-  (d/transact
-   conn
-    {:tx-data [(deletion-tx user file-id)]})
-  :ok)

@@ -23,7 +23,8 @@
             [teet.ui.file-upload :as file-upload]
             [teet.log :as log]
             [teet.common.common-controller :as common-controller]
-            [teet.ui.panels :as panels]))
+            [teet.ui.panels :as panels]
+            [teet.util.datomic :as du]))
 
 (defn- file-column-style
   ([basis]
@@ -149,13 +150,6 @@
                     (tr-enum status))])]]))
           files)]])
 
-(defn- file-status [e! file]
-  [select/select-enum {:e! e!
-                       :show-label? false
-                       :value (:file/status file)
-                       :attribute :file/status
-                       :on-change (e! file-controller/->UpdateFileStatus (:db/id file))}])
-
 (defn- labeled-data [[label data]]
   [:div {:class (<class common-styles/inline-block)}
    [:div [:b label]]
@@ -200,7 +194,8 @@
                ["" [url/Link {:page :file
                               :params {:file (:db/id latest-file)}}
                     (tr [:file :switch-to-latest-version])]]
-               [(tr [:fields :file/status]) [file-status e! file]])])]
+               [(tr [:fields :file/status])
+                (tr-enum (:file/status file))])])]
 
      ;; preview block (placeholder for now)
      [:div {:class (<class preview-style)}
@@ -217,11 +212,13 @@
       (if replacement-upload-progress
         [LinearProgress {:variant :determinate
                          :value replacement-upload-progress}]
-        [file-upload/FileUploadButton {:on-drop (e! file-controller/->UploadNewVersion file)
-                                       :color :secondary
-                                       :icon [icons/file-cloud-upload]
-                                       :multiple? false}
-         (tr [:file :upload-new-version])])
+        [:<>
+         (when (du/enum= :file.status/draft (:file/status (or latest-file file)))
+           [file-upload/FileUploadButton {:on-drop (e! file-controller/->UploadNewVersion file)
+                                          :color :secondary
+                                          :icon [icons/file-cloud-upload]
+                                          :multiple? false}
+            (tr [:file :upload-new-version])])])
       [buttons/button-primary {:element "a"
                                :href (common-controller/query-url :file/download-file
                                                                   {:file-id (:db/id file)})

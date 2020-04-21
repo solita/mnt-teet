@@ -7,7 +7,9 @@
             [teet.util.collection :as uc]
             [teet.notification.notification-db :as notification-db]
             [teet.project.task-model :as task-model]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [clojure.spec.alpha :as s]
+            [teet.task.task-db :as task-db]))
 
 (defn- send-to-thk? [db task-id]
   (:task/send-to-thk? (d/pull db [:task/send-to-thk?] task-id)))
@@ -142,14 +144,36 @@
    :transact [{:db/id task-id
                :task/status :task.status/reviewing}]})
 
+(s/def ::task-id integer?)
+(s/def ::result #{:accept :reject})
+
 (defcommand :task/review
-  {:doc "Accept or reject review for task"
+  {:spec (s/keys :req-un [::task-id ::result])
+   :doc "Accept or reject review for task"
    :context {:keys [db user]}
    :payload {task-id :task-id
-             status :status}
+             result :result}
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/review {:id task-id}}
-   :pre [(task-model/reviewing? (d/pull db [:task/status] task-id))
-         (task-model/review-outcome-statuses status)]
-   :transact [{:db/id task-id
-               :task/status status}]})
+   :pre [(task-model/reviewing? (d/pull db [:task/status] task-id))]
+   :transact
+   (case result
+     ;; Accept: mark as completed and finalize files
+     :accept (into
+              [{:db/id task-id
+                :task/status :task.status/completed}]
+
+              ;; Mark all latest versions as final
+              (for [{id :db/id} (task-db/files-for-task db task-id)]
+                {:db/id id
+                 :file/status :file.status/final}))
+
+     ;; Reject: mark as in-progress and notify assignee
+     :reject [{:db/id task-id
+               :task/status :task.status/in-progress}
+              (notification-db/notification-tx
+               {:from user
+                :to (get-in (du/entity db task-id)
+                            [:task/assignee :db/id])
+                :type :notification.type/task-review-rejected
+                :target task-id})])})
