@@ -37,7 +37,8 @@
 (defn- participants
   "Returns all participants (excluding `except-user`) in the comment thread.
 
-  The project manager is always considered to be participant.
+  The project manager is always considered to be a participant.
+  For comments on files, the file creator is always considered to be a participant.
 
   If internal? is true, returns only participants allowed to
   read internal comments."
@@ -55,17 +56,21 @@
                                  #{})
                                (ffirst (d/q query
                                             db entity-id)))
-                           (:db/id (du/entity db (user-model/user-ref except-user))))]
+                           (:db/id (du/entity db (user-model/user-ref except-user))))
+        participants (if (= entity-type :file)
+                       (conj participants
+                             (get-in (du/entity db entity-id)
+                                     [:meta/creator :db/id]))
+                       participants)]
     (if internal?
       ;; Filter to participants who can view internal comments
-      (let []
-        (into #{}
-              (filter (fn [participant]
-                        (authorization-check/authorized?
-                         {:user/permissions (permission-db/user-permissions db participant)}
-                         :project/view-internal-comments
-                         {:project-id project-id}))
-                      participants)))
+      (into #{}
+            (filter (fn [participant]
+                      (authorization-check/authorized?
+                       {:user/permissions (permission-db/user-permissions db participant)}
+                       :project/view-internal-comments
+                       {:project-id project-id}))
+                    participants))
       ;; Return all participants
       participants)))
 
