@@ -275,10 +275,10 @@
                                       (< (.-date day) end)
                                       true)
                                     (if min-date
-                                      (< min-date (.-date day))
+                                      (<= min-date (.-date day))
                                       true)
                                     (if max-date
-                                      (< (.-date day) max-date)
+                                      (<= (.-date day) max-date)
                                       true)))}]]
      [Grid {:item true :xs element-size}
       [date-input {:value end
@@ -294,8 +294,8 @@
                                       (< start (.-date day))
                                       true)
                                     (if min-date
-                                      (< min-date (.-date day))
+                                      (<= min-date (.-date day))
                                       true)
                                     (if max-date
-                                      (< (.-date day) max-date)
+                                      (<= (.-date day) max-date)
                                       true)))}]]]))
