@@ -11,8 +11,6 @@
 
 (s/def :activity/activity (s/keys))
 
-(s/def :activity/update (s/keys :req [:activity/status]))
-
 (s/def ::activity
   (s/keys :req [:activity/name
                 :activity/estimated-start-date
