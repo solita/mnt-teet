@@ -360,7 +360,11 @@
           {:db/ident :comment/visibility
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
-           :db/doc "Indicator of special visibility, is the comment visible only internally or for external consultants as well"}]
+           :db/doc "Indicator of special visibility, is the comment visible only internally or for external consultants as well"}
+          {:db/ident :comment/status
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Status of the comment, unresolved/resolved/untracked"}]
 
          ;; Land acquisition
          [{:db/ident :land-acquisition/project
@@ -688,6 +692,11 @@
           ;; comment visibility
           {:db/ident :comment.visibility/all :enum/attribute :comment/visibility}
           {:db/ident :comment.visibility/internal :enum/attribute :comment/visibility}
+          ;; comment status
+          {:db/ident :comment.status/unresolved :enum/attribute :comment/status}
+          {:db/ident :comment.status/resolved :enum/attribute :comment/status}
+          {:db/ident :comment.status/untracked :enum/attribute :comment/status}
+
           ;; notification types
           {:db/ident :notification.type/task-review-rejected :enum/attribute :notification/type}
           {:db/ident :notification.type/activity-rejected :enum/attribute :notification/type}
