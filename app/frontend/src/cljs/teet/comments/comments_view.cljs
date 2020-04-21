@@ -142,21 +142,23 @@
    (when (comment-model/tracked? comment-entity)
      [:div {:class (<class comments-styles/comment-status (:db/ident status))}
       (tr [:enum (:db/ident status)])
-      (case (:db/ident status)
-        :comment.status/unresolved
-        [buttons/button-text {:color :primary
-                              :end-icon (r/as-element [icons/action-check-circle-outline])
-                              :on-click #(e! (comments-controller/->SetCommentStatus comment-id
-                                                                                     :comment.status/resolved
-                                                                                     commented-entity))}
-         (tr [:comment :resolve])]
+      [when-authorized :comment/set-status
+       comment-entity
+       (case (:db/ident status)
+         :comment.status/unresolved
+         [buttons/button-text {:color :primary
+                               :end-icon (r/as-element [icons/action-check-circle-outline])
+                               :on-click #(e! (comments-controller/->SetCommentStatus comment-id
+                                                                                      :comment.status/resolved
+                                                                                      commented-entity))}
+          (tr [:comment :resolve])]
 
-        :comment.status/resolved
-        [buttons/button-text {:end-icon (r/as-element [icons/content-block])
-                              :on-click #(e! (comments-controller/->SetCommentStatus comment-id
-                                                                                     :comment.status/unresolved
-                                                                                     commented-entity))}
-         (tr [:comment :unresolve])])])
+         :comment.status/resolved
+         [buttons/button-text {:end-icon (r/as-element [icons/content-block])
+                               :on-click #(e! (comments-controller/->SetCommentStatus comment-id
+                                                                                      :comment.status/unresolved
+                                                                                      commented-entity))}
+          (tr [:comment :unresolve])])]])
 
    [typography/Text
     comment
