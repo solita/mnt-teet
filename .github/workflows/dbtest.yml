@@ -1,0 +1,16 @@
+name: dbtest
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: install datomic cli
+        run: |
+          curl -o datomic-cli.zip https://datomic-releases-1fc2183a.s3.amazonaws.com/tools/datomic-cli/datomic-cli-0.10.81.zip
+          unzip -l datomic-cli.zip
+      - name: start datomic proxy
+        run: |
+          ./datomic-cli/datomic client access ${{ secrets.DATOMIC_NAME }} --region ${{ secrets.DATOMIC_REGION }}
