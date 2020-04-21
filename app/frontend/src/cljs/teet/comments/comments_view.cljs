@@ -3,6 +3,7 @@
             [reagent.core :as r]
             [tuck.core :as t]
             [teet.authorization.authorization-check :refer [when-authorized]]
+            [teet.comment.comment-model :as comment-model]
             teet.comment.comment-spec
             [teet.comments.comments-controller :as comments-controller]
             [teet.comments.comments-styles :as comments-styles]
@@ -128,9 +129,32 @@
                         :on-click #(e! (comments-controller/->OpenEditCommentDialog comment-entity commented-entity))}
    (tr [:buttons :edit])])
 
+(defn- comment-contents-and-status
+  [e!
+   {:meta/keys [modified-at]
+    :comment/keys [comment status]
+    :as comment-entity}]
+  [:div {:class (<class comments-styles/comment-contents
+                        (comment-model/tracked? comment-entity))}
+   (when (comment-model/tracked? comment-entity)
+     [:div {:class (<class comments-styles/comment-status)}
+      (tr [:enum (:db/ident status)])
+      (if (= (:db/id status) :comment.status/unresolved)
+        [buttons/button-text {:size :small
+                              :color :primary
+                              :end-icon (r/as-element [icons/action-check-circle-outline])}
+         "Resolve"]
+        [buttons/button-text {:size :small
+                              :end-icon (r/as-element [icons/content-block])}])])
+   [typography/Text
+    comment
+    (when modified-at
+      [:span {:class (<class comments-styles/data)}
+       (tr [:comment :edited]
+           {:date (format/date modified-at)})])]])
+
 (defn- comment-entry [e! {id :db/id
                           :comment/keys [author comment timestamp files visibility]
-                          :meta/keys [modified-at]
                           :as comment-entity}
                       commented-entity
                       quote-comment!
@@ -155,12 +179,7 @@
       (tr [:comment :quote])]]
     [:span {:class (<class comments-styles/data)}
      (tr [:enum (:db/ident visibility)])]]
-   [typography/Text
-    comment
-    (when modified-at
-      [:span {:class (<class comments-styles/data)}
-       (tr [:comment :edited]
-           {:date (format/date modified-at)})])]
+   [comment-contents-and-status e! comment-entity]
    [:div
     [when-authorized :comment/update
      comment-entity
@@ -269,10 +288,10 @@
          [form/form {:e! e!
                      :value @comment-form
                      :on-change-event ->UpdateCommentForm
-                     :save-event #(let [{:comment/keys [comment files visibility]} @comment-form]
+                     :save-event #(let [{:comment/keys [comment files visibility track?]} @comment-form]
                                     (reset! comment-form {})
                                     (comments-controller/->CommentOnEntity
-                                     entity-type entity-id comment files visibility))
+                                     entity-type entity-id comment files visibility track?))
                      :footer new-comment-footer
                      :spec :task/new-comment-form}
           ^{:attribute :comment/comment}
@@ -285,6 +304,9 @@
 
           ^{:attribute :comment/visibility}
           [select/select-enum {:e! e! :attribute :comment/visibility}]
+
+          ^{:attribute :comment/track?}
+          [select/checkbox {}]
 
           ^{:attribute :comment/files}
           [attached-images-field {:e! e!

@@ -13,6 +13,22 @@
          (when focused?
            {:animation [[focus-animation "1.5s"]]})))
 
+(defn comment-contents
+  [tracked?]
+  (merge {}
+         (when tracked?
+           {:padding "0.5rem"
+            :background-color (theme-colors/blue-alpha 0.2)})))
+
+(defn comment-status
+  []
+  {:color theme-colors/blue
+   :margin-bottom "0.5rem"
+   :font-weight :bold
+   :display :flex
+   :align-items :center
+   :justify-content :space-between})
+
 (defn comment-buttons-style
   []
   {:background-color theme-colors/gray-lightest
