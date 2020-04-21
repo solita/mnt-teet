@@ -164,3 +164,13 @@
    :project-id (get-project-id-of-comment db comment-id)
    :authorization {:project/delete-comments {:db/id comment-id}}
    :transact [(deletion-tx user comment-id)]})
+
+(defcommand :comment/set-status
+  {:doc "Toggle the tracking status of the comment"
+   :context {:keys [db user]}
+   :payload {comment-id :db/id status :comment/status}
+   :project-id (get-project-id-of-comment db comment-id)
+   :authorization {:project/track-comment-status {:db/id comment-id}}
+   :transact [(merge {:db/id comment-id
+                      :comment/status status}
+                     (modification-meta user))]})

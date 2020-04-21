@@ -40,16 +40,24 @@
       (is (some? external-comment-id)))))
 
 (deftest comment-status-tracking
-  (let [task-id (tu/create-task {:user tu/mock-user-boss
+  ;; Grant access to project manager
+  (tu/local-command tu/mock-user-boss
+                    :thk.project/add-permission
+                    {:project-id (tu/->db-id "p1")
+                     :user {:user/id tu/manager-id}
+                     :role :manager})
+
+  ;; Create a task for commenting
+  (let [task-id (tu/create-task {:user tu/mock-user-manager
                                  :activity (tu/->db-id "p1-lc1-act1")}
                                 :task-id)]
     (is (some? task-id)))
 
-  (testing "Boss can choose to track the status of their comments"
-    (tu/create-comment {:user tu/mock-user-boss
+  (testing "Project manager can choose to track the status of their comments"
+    (tu/create-comment {:user tu/mock-user-manager
                         :entity-type :task
                         :entity-id (tu/get-data :task-id)
-                        :comment {:comment "Boss's comment"
+                        :comment {:comment "Pm's comment"
                                   :track? true}}
                        :tracked-comment-id)
     (is (some? (tu/get-data :tracked-comment-id)))
@@ -61,6 +69,7 @@
              :comment.status/unresolved))))
 
   (testing "External consultant cannot track the comment status"
+    ;; Boss invites external consultant Edna to the project.
     (tu/local-command tu/mock-user-boss
                       :thk.project/add-permission
                       {:project-id (tu/->db-id "p1")
@@ -82,4 +91,30 @@
                                                 :for :task})
                                (cu/find-by-id (tu/get-data :ednas-comment-id)))]
       (is (= :comment.status/untracked
-             (-> created-comment :comment/status :db/ident))))))
+             (-> created-comment :comment/status :db/ident)))))
+
+  (testing "Project manager can resolve and unresolve a comment:"
+    ;; Only valid test statuses are allowed
+    (testing "Only valid test statuses are allowed"
+      (is (thrown? Exception
+                   (tu/local-command tu/mock-user-manager
+                                     :comment/set-status
+                                     {:db/id (tu/get-data :tracked-comment-id)
+                                      :comment/status :not-a-valid-status}))))
+
+    (testing "When comment is resolved successfully"
+      (tu/local-command tu/mock-user-manager
+                        :comment/set-status
+                        {:db/id (tu/get-data :tracked-comment-id)
+                         :comment/status :comment.status/resolved})
+
+     (let [resolved-comment (->> (tu/local-query tu/mock-user-manager :comment/fetch-comments
+                                                 {:db/id (tu/get-data :task-id)
+                                                  :for :task})
+                                 (cu/find-by-id (tu/get-data :tracked-comment-id)))]
+       (testing "the comment is status has changed"
+         (is (= :comment.status/resolved
+                (-> resolved-comment :comment/status :db/ident))))
+       (testing "the comment is marked as having been modified"
+         (is (contains? resolved-comment :meta/modifier))
+         (is (contains? resolved-comment :meta/modified-at)))))))

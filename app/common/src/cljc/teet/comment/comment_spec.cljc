@@ -13,3 +13,6 @@
 (s/def :comment/update (s/keys :req [:db/id
                                      :comment/comment
                                      :comment/visibility]))
+
+(s/def :comment/set-status (s/keys :req [:db/id
+                                         :comment/status]))
