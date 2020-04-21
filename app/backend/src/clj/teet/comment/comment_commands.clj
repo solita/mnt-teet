@@ -73,7 +73,7 @@
 (defcommand :comment/create
   {:doc "Create a new comment and add it to an entity"
    :context {:keys [db user]}
-   :payload {:keys [entity-id entity-type comment files visibility track?] :as payload}
+   :payload {:keys [entity-id entity-type comment files visibility track?]}
    :project-id (project-db/entity-project-id db entity-type entity-id)
    :authorization {:project/write-comments {:db/id entity-id}}
    :transact

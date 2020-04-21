@@ -1,5 +1,7 @@
 (ns ^:db teet.comment-commands-test
   (:require [clojure.test :refer :all]
+            teet.comment.comment-commands
+            teet.project.project-commands
             [teet.test.utils :as tu]
             [teet.util.collection :as cu]))
 
@@ -17,12 +19,25 @@
                         :comment {:comment/comment "Boss comment"}}
                        :boss-comment-id)
     (is (some? (tu/get-data :boss-comment-id))))
+
   (testing "External consultant can't comment the task as they don't have proper authorization"
     (is (thrown? Exception
                  (tu/create-comment {:user tu/mock-user-edna-consultant
                                      :entity-type :task
                                      :entity-id (tu/get-data :task-id)
-                                     :comment {:comment/comment "Boss comment"}})))))
+                                     :comment {:comment/comment "Boss comment"}}))))
+
+  (testing "External consultant can comment the task after being invited to the project"
+    (tu/local-command tu/mock-user-boss
+                      :thk.project/add-permission
+                      {:project-id (tu/->db-id "p1")
+                       :user {:user/id tu/external-consultant-id}
+                       :role :external-consultant})
+    (let [external-comment-id (tu/create-comment {:user tu/mock-user-carla-consultant
+                                                  :entity-type :task
+                                                  :entity-id (tu/get-data :task-id)
+                                                  :comment {:comment/comment "Consultant comment"}})]
+      (is (some? external-comment-id)))))
 
 (deftest comment-status-tracking
   (let [task-id (tu/create-task {:user tu/mock-user-boss

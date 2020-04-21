@@ -62,6 +62,7 @@
  {:admin :full,
   :manager :full,
   :internal-consultant :full,
+  :external-consultant :full,
   :authenticated-guest :link},
  :document/edit-comment
  {:admin :full,
