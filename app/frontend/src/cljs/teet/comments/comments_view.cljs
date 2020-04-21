@@ -2,7 +2,9 @@
   (:require [herb.core :refer [<class]]
             [reagent.core :as r]
             [tuck.core :as t]
-            [teet.authorization.authorization-check :refer [when-authorized]]
+            [teet.app-state :as app-state]
+            [teet.authorization.authorization-check :as authorization-check :refer [when-authorized]]
+            [teet.comment.comment-model :as comment-model]
             teet.comment.comment-spec
             [teet.comments.comments-controller :as comments-controller]
             [teet.comments.comments-styles :as comments-styles]
@@ -128,9 +130,46 @@
                         :on-click #(e! (comments-controller/->OpenEditCommentDialog comment-entity commented-entity))}
    (tr [:buttons :edit])])
 
+(defn- comment-contents-and-status
+  [e!
+   {:meta/keys [modified-at]
+    :comment/keys [comment status]
+    comment-id :db/id
+    :as comment-entity}
+   commented-entity]
+  [:div {:class (<class comments-styles/comment-contents
+                        (comment-model/tracked? comment-entity)
+                        (:db/ident status))}
+   (when (comment-model/tracked? comment-entity)
+     [:div {:class (<class comments-styles/comment-status (:db/ident status))}
+      (tr [:enum (:db/ident status)])
+      [when-authorized :comment/set-status
+       comment-entity
+       (case (:db/ident status)
+         :comment.status/unresolved
+         [buttons/button-text {:color :primary
+                               :end-icon (r/as-element [icons/action-check-circle-outline])
+                               :on-click #(e! (comments-controller/->SetCommentStatus comment-id
+                                                                                      :comment.status/resolved
+                                                                                      commented-entity))}
+          (tr [:comment :resolve])]
+
+         :comment.status/resolved
+         [buttons/button-text {:end-icon (r/as-element [icons/content-block])
+                               :on-click #(e! (comments-controller/->SetCommentStatus comment-id
+                                                                                      :comment.status/unresolved
+                                                                                      commented-entity))}
+          (tr [:comment :unresolve])])]])
+
+   [typography/Text
+    comment
+    (when modified-at
+      [:span {:class (<class comments-styles/data)}
+       (tr [:comment :edited]
+           {:date (format/date modified-at)})])]])
+
 (defn- comment-entry [e! {id :db/id
                           :comment/keys [author comment timestamp files visibility]
-                          :meta/keys [modified-at]
                           :as comment-entity}
                       commented-entity
                       quote-comment!
@@ -139,7 +178,7 @@
                (when focused?
                  {:ref (fn [el]
                          (when el
-                           (.scrollIntoViewIfNeeded el)))}))
+                           (animate/focus! el)))}))
    [:div {:class [(<class common-styles/space-between-center) (<class common-styles/margin-bottom 0)]}
     [:span
      [typography/SectionHeading
@@ -155,12 +194,7 @@
       (tr [:comment :quote])]]
     [:span {:class (<class comments-styles/data)}
      (tr [:enum (:db/ident visibility)])]]
-   [typography/Text
-    comment
-    (when modified-at
-      [:span {:class (<class comments-styles/data)}
-       (tr [:comment :edited]
-           {:date (format/date modified-at)})])]
+   [comment-contents-and-status e! comment-entity commented-entity]
    [:div
     [when-authorized :comment/update
      comment-entity
@@ -173,19 +207,27 @@
       (tr [:buttons :delete])]]]
    [attachments {:files files :comment-id id}]])
 
+(defn unresolved-comments-info [_e! unresolved-comments]
+  [:div {:class (<class comments-styles/unresolved-comments)}
+   (tr [:comment :unresolved-count] {:unresolved-count (count unresolved-comments)})])
+
 (defn comment-list
   [{:keys [e! quote-comment! commented-entity-id focused-comment]} comments]
-  [itemlist/ItemList {}
-   (doall
-    (for [{id :db/id :as comment-entity} comments
-          :let [focused? (= (str id) focused-comment)]]
-      (if (nil? comment-entity)
-        ;; New comment was just added but hasn't been refetched yet, show skeleton
-        ^{:key "loading-comment"}
-        [comment-skeleton 1]
+  (let [unresolved-comments (filterv comment-model/unresolved? comments)]
+    [:<>
+     (when (seq unresolved-comments)
+       [unresolved-comments-info e! unresolved-comments])
+     [itemlist/ItemList {}
+      (doall
+       (for [{id :db/id :as comment-entity} comments
+             :let [focused? (= (str id) focused-comment)]]
+         (if (nil? comment-entity)
+           ;; New comment was just added but hasn't been refetched yet, show skeleton
+           ^{:key "loading-comment"}
+           [comment-skeleton 1]
 
-        ^{:key (str id)}
-        [comment-entry e! comment-entity commented-entity-id quote-comment! focused?])))])
+           ^{:key (str id)}
+           [comment-entry e! comment-entity commented-entity-id quote-comment! focused?])))]]))
 
 (defn- quote-comment-fn
   "An ad hoc event that merges the quote at the end of current new
@@ -269,10 +311,10 @@
          [form/form {:e! e!
                      :value @comment-form
                      :on-change-event ->UpdateCommentForm
-                     :save-event #(let [{:comment/keys [comment files visibility]} @comment-form]
+                     :save-event #(let [{:comment/keys [comment files visibility track?]} @comment-form]
                                     (reset! comment-form {})
                                     (comments-controller/->CommentOnEntity
-                                     entity-type entity-id comment files visibility))
+                                     entity-type entity-id comment files visibility track?))
                      :footer new-comment-footer
                      :spec :task/new-comment-form}
           ^{:attribute :comment/comment}
@@ -285,6 +327,13 @@
 
           ^{:attribute :comment/visibility}
           [select/select-enum {:e! e! :attribute :comment/visibility}]
+
+          ;; TODO: when-authorized doesn't play well with form
+          (when (authorization-check/authorized? @app-state/user
+                                                 :project/track-comment-status
+                                                 {})
+            ^{:attribute :comment/track?}
+            [select/checkbox {}])
 
           ^{:attribute :comment/files}
           [attached-images-field {:e! e!
