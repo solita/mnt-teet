@@ -240,3 +240,11 @@
     (if global-test-data-key
       (store-data! global-test-data-key comment-id)
       comment-id)))
+
+(defn complete-task [{:keys [user task-id] :as params}]
+  (local-login user)
+  (let [ret1 (local-command :task/submit params)
+        ret2 (local-command :task/start-review params)
+        ret3 (local-command :task/review (merge params {:result :accept}))]
+    [ret1 ret2 ret3]))
+
