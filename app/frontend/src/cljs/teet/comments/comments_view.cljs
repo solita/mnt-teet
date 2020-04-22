@@ -174,7 +174,8 @@
                       commented-entity
                       quote-comment!
                       focused?]
-  [:div (merge {:class (<class comments-styles/comment-entry focused?)}
+  [:div (merge {:id (comments-controller/comment-dom-id id)
+                :class (<class comments-styles/comment-entry focused?)}
                (when focused?
                  {:ref (fn [el]
                          (when el
@@ -210,6 +211,8 @@
 (defn unresolved-comments-info [e! commented-entity unresolved-comments]
   [:div {:class (<class comments-styles/unresolved-comments)}
    (tr [:comment :unresolved-count] {:unresolved-count (count unresolved-comments)})
+   [buttons/link-button {:on-click #(e! (comments-controller/->FocusOnComment (-> unresolved-comments first :db/id)))}
+    (tr [:comment :open-latest-unresolved])]
    [when-authorized :comment/resolve-comments-of-entity
     {}
     [buttons/button-text {:color :primary

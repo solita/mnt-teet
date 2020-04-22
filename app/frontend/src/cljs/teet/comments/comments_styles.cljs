@@ -98,7 +98,7 @@
    :align-items :center
    :justify-content :space-between
    :background-color unresolved-bg-color
-   :padding "0.5rem 1rem 0.5rem 1rem"
+   :padding "0 1rem 0 1rem"
    :color theme-colors/blue
    :font-weight :bold
    :margin-bottom "0.5rem"})
