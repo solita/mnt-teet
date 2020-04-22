@@ -167,7 +167,7 @@
            ;; 3
            (= (->> activity-id (d/pull db '[:activity/status]) :activity/status :db/ident)
               :activity.status/in-review))
-         ;; 2
+         ;; 2         
          (#{:activity.status/canceled
             :activity.status/archived
             :activity.status/completed} status)]
