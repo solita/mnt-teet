@@ -167,7 +167,7 @@
            ;; 3
            (= (->> activity-id (d/pull db '[:activity/status]) :activity/status :db/ident)
               :activity.status/in-review))
-         ;; 2
+         ;; 2         
          (#{:activity.status/canceled
             :activity.status/archived
             :activity.status/completed} status)]
@@ -178,7 +178,7 @@
                {:from user
                 :to (get-in (du/entity db (project-db/activity-project-id db activity-id))
                             [:thk.project/manager :db/id])
-                :type (if (= status (:activity.status/completed))
+                :type (if (= status :activity.status/completed)
                         :notification.type/activity-accepted
                         ;; else archived or canceled (ensured by pre-check)                        
                         :notification.type/activity-rejected)
