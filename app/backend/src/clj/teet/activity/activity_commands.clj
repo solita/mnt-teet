@@ -5,7 +5,7 @@
             [teet.project.project-db :as project-db]
             [teet.activity.activity-model :refer [all-tasks-completed?]]
             [teet.notification.notification-db :as notification-db]
-            [datomic.client.api :as d]            
+            [datomic.client.api :as d]
             [teet.activity.activity-db :as activity-db])
   (:import (java.util Date)))
 
@@ -178,9 +178,8 @@
                {:from user
                 :to (get-in (du/entity db (project-db/activity-project-id db activity-id))
                             [:thk.project/manager :db/id])
-                :type (if (= status (:activity.status/completed))
+                :type (if (= status :activity.status/completed)
                         :notification.type/activity-accepted
-                        ;; else archived or canceled (ensured by pre-check)                        
+                        ;; else archived or canceled (ensured by pre-check)
                         :notification.type/activity-rejected)
                 :target activity-id})]})
-
