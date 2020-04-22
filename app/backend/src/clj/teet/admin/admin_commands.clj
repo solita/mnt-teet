@@ -1,10 +1,8 @@
 (ns teet.admin.admin-commands
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
-            [teet.user.user-roles :as user-roles]
             [teet.environment :as environment]
             [clojure.string :refer [blank? starts-with?]]
             [teet.integration.x-road]
-            [taoensso.timbre :as log]
             teet.user.user-spec))
 
 (defn- new-user []
