@@ -21,7 +21,7 @@
 (defrecord SaveEditCommentSuccess [])
 
 (defrecord SetCommentStatus [comment-id status commented-entity])
-(defrecord SetCommentStatusResult [commented-entity])
+(defrecord ResolveCommentsOfEntity [entity-id entity-type])
 
 (defn comments-query [commented-entity]
   {:tuck.effect/type :query
@@ -142,4 +142,14 @@
            :command :comment/set-status
            :payload {:db/id comment-id
                      :comment/status status}
-           :result-event (partial ->QueryEntityComments commented-entity)})))
+           :result-event (partial ->QueryEntityComments commented-entity)}))
+
+  ResolveCommentsOfEntity
+  (process-event [{:keys [entity-id entity-type]} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :comment/resolve-comments-of-entity
+           :payload {:entity-id entity-id
+                     :entity-type entity-type}
+           :result-event (partial ->QueryEntityComments {:db/id entity-id
+                                                         :for entity-type})})))
