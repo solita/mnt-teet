@@ -3,7 +3,11 @@
             [tuck.core :as t]
             tuck.effect
             [teet.localization :refer [tr]]
-            [teet.project.task-model :as task-model]))
+            [teet.project.task-model :as task-model]
+            [teet.ui.animate :as animate]))
+
+(defn comment-dom-id [id]
+  (str "comment-" id))
 
 (defrecord DeleteComment [comment-id commented-entity])
 (defrecord QueryEntityComments [commented-entity])
@@ -22,6 +26,8 @@
 
 (defrecord SetCommentStatus [comment-id status commented-entity])
 (defrecord ResolveCommentsOfEntity [entity-id entity-type])
+
+(defrecord FocusOnComment [comment-id])
 
 (defn comments-query [commented-entity]
   {:tuck.effect/type :query
@@ -142,7 +148,8 @@
            :command :comment/set-status
            :payload {:db/id comment-id
                      :comment/status status}
-           :result-event (partial ->QueryEntityComments commented-entity)}))
+           :result-event (partial ->QueryEntityComments commented-entity)
+           :success-message (tr [:notifications :comment-status-changed])}))
 
   ResolveCommentsOfEntity
   (process-event [{:keys [entity-id entity-type]} app]
@@ -152,4 +159,11 @@
            :payload {:entity-id entity-id
                      :entity-type entity-type}
            :result-event (partial ->QueryEntityComments {:db/id entity-id
-                                                         :for entity-type})})))
+                                                         :for entity-type})
+           :success-message (tr [:notifications :comments-resolved])}))
+
+  FocusOnComment
+  (process-event [{:keys [comment-id]} {:keys [page params query] :as app}]
+    (animate/scroll-into-view-by-id! (comment-dom-id comment-id)
+                                     {:behavior :smooth})
+    app))
