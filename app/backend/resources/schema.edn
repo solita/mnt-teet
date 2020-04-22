@@ -338,7 +338,12 @@
           {:db/ident :file/previous-version
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
-           :db/doc "Reference to the previous version of this file that this file supersedes."}]
+           :db/doc "Reference to the previous version of this file that this file supersedes."}
+          {:db/ident :file/group-number
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one
+           :db/doc "File group number from name metadata"}
+          ]
 
          ;; Comment
          [{:db/ident :comment/comment
