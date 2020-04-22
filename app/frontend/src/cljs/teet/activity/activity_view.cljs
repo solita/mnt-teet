@@ -202,23 +202,33 @@
 (defn approve-button [e! params]
   (approvals-button e! params :approve-activity :approve-activity-confirm activity-controller/->Review))
 
+(defn reject-button [e! params]
+  (approvals-button e! params :reject-activity :reject-activity-confirm activity-controller/->Review))
+
 (defn submit-for-approval-button [e! params]
   (approvals-button e! params :submit-for-approval :submit-results-confirm activity-controller/->SubmitResults))
 
 (defn activity-content
   [e! params project]
-  (let [activity (project-model/activity-by-id project (:activity params))]
+  (let [activity (project-model/activity-by-id project (:activity params))
+        not-reviewed-status? (complement activity-model/reviewed-statuses)]
     [:<>
      [activity-header e! activity]
      [project-management (:thk.project/owner project) (:thk.project/manager project)]
      [task-lists (:activity/tasks activity)]
      ;; FIXME change to match backend: check for project owner
-     (when (and (authorized? @teet.app-state/user :activity/change-activity-status nil)
-                (activity-model/all-tasks-completed? activity))
+     (if (and (authorized? @teet.app-state/user :activity/change-activity-status nil)
+              (activity-model/all-tasks-completed? activity)
+              (-> activity :activity/status :db/ident not-reviewed-status?))
        [submit-for-approval-button e! params])
+     (log/debug "approval buttons showing?" (authorized? @teet.app-state/user :activity/change-activity-status nil)
+                (-> activity :activity/status :db/ident))
+
      (when (and (authorized? @teet.app-state/user :activity/change-activity-status nil)
                 (-> activity :activity/status :db/ident (= :activity.status/in-review)))
-       [approve-button e! params])
+       [approve-button e! (assoc params  :status :activity.status/completed)]
+       [reject-button e! (assoc params :status :activity.status/canceled)]
+       [reject-button e! (assoc params :status :activity.status/archived)])
      ;; FIXME add "Note: All tasks need to be completed first" from Figma
      ]))
 

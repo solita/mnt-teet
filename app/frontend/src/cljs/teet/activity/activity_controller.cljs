@@ -61,12 +61,12 @@
            :result-event common-controller/->Refresh}))
 
   Review
-  (process-event [{status :status} {params :params :as app}]
+  (process-event [_ {params :params :as app}]
     (t/fx app
           {:tuck.effect/type :command!
            :command :activity/review
            :payload {:activity-id (goog.math.Long/fromString (:activity params))
-                     :status status}
+                     :status (:status params)}
            :result-event common-controller/->Refresh})))
 
 
