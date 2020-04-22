@@ -104,5 +104,8 @@
       (comment-navigation-info db (:db/id target))
 
       :notification.type/project-manager-assigned
-      (project-navigation-info db (:db/id target)))
+      (project-navigation-info db (:db/id target))
+
+      ;; FIXME: implement activity navigation info
+      )
     (db-api/bad-request! "No such notification")))

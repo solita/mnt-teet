@@ -1,8 +1,10 @@
 (ns teet.activity.activity-commands
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
             [teet.meta.meta-model :as meta-model]
+            [teet.util.datomic :as du]
             [teet.project.project-db :as project-db]
             [teet.activity.activity-model :refer [all-tasks-completed?]]
+            [teet.notification.notification-db :as notification-db]
             [datomic.client.api :as d]            
             [teet.activity.activity-db :as activity-db])
   (:import (java.util Date)))
@@ -142,7 +144,13 @@
    :transact [(merge
                {:db/id activity-id
                 :activity/status :activity.status/in-review}
-               (meta-model/modification-meta user))]})
+               (meta-model/modification-meta user))
+              (notification-db/notification-tx
+               {:from user
+                :to (get-in (du/entity db (project-db/activity-project-id db activity-id))
+                            [:thk.project/owner :db/id])
+                :type :notification.type/activity-waiting-for-review
+                :target activity-id})]})
 
 (defcommand :activity/review
   {:doc "Submit activity for review, when tasks are complete"
@@ -165,5 +173,14 @@
             :activity.status/completed} status)]
    :transact [(merge {:db/id activity-id
                       :activity/status status}
-                     (meta-model/modification-meta user))]})
+                     (meta-model/modification-meta user))
+              (notification-db/notification-tx
+               {:from user
+                :to (get-in (du/entity db (project-db/activity-project-id db activity-id))
+                            [:thk.project/manager :db/id])
+                :type (if (= status (:activity.status/completed))
+                        :notification.type/activity-accepted
+                        ;; else archived or canceled (ensured by pre-check)                        
+                        :notification.type/activity-rejected)
+                :target activity-id})]})
 

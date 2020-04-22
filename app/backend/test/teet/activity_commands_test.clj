@@ -30,9 +30,9 @@
   
   (let [task-id (tu/create-task {:user tu/mock-user-manager :activity (act1-id)})]    
     (is (number? task-id))
+    
     (tu/complete-task {:user tu/mock-user-manager
-                       :task-id task-id})
-    )
+                       :task-id task-id}))
 
   (testing "activity submission happy path yields expected status changes"
     (is (= :activity.status/in-progress (act1-status)))

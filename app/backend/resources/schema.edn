@@ -713,4 +713,7 @@
 
  {:db/ident :migration/comment-status-notifications
   :txes [[{:db/ident :notification.type/comment-resolved :enum/attribute :notification/type}
-          {:db/ident :notification.type/comment-unresolved :enum/attribute :notification/type}]]}]
+          {:db/ident :notification.type/comment-unresolved :enum/attribute :notification/type}]]}
+
+ {:db/ident :migration/activity-waiting-notification
+  :txes [[{:db/ident :notification.type/activity-waiting-for-review :enum/attribute :notification/type}]]}]

@@ -212,12 +212,15 @@
      [activity-header e! activity]
      [project-management (:thk.project/owner project) (:thk.project/manager project)]
      [task-lists (:activity/tasks activity)]
+     ;; FIXME change to match backend: check for project owner
      (when (and (authorized? @teet.app-state/user :activity/change-activity-status nil)
                 (activity-model/all-tasks-completed? activity))
        [submit-for-approval-button e! params])
      (when (and (authorized? @teet.app-state/user :activity/change-activity-status nil)
                 (-> activity :activity/status :db/ident (= :activity.status/in-review)))
-       [approve-button e! params])]))
+       [approve-button e! params])
+     ;; FIXME add "Note: All tasks need to be completed first" from Figma
+     ]))
 
 (defn activity-page [e! {:keys [params] :as app} project breadcrumbs]
   [project-navigator-view/project-navigator-with-content

@@ -55,7 +55,7 @@
   (process-event [_ {params :params :as app}]
     (t/fx app
           {:tuck.effect/type :command!
-           :command :activity/submit
+           :command :activity/submit-for-review
            :payload {:activity-id (goog.math.Long/fromString (:activity params))}
            :success-message (tr [:activity :submit-results-success])
            :result-event common-controller/->Refresh}))

@@ -55,6 +55,8 @@
     :notification.type/project-manager-assigned
     [icons/action-work]
 
+    ;; FIXME: implement activity icon
+    
     [icons/navigation-more-horiz]))
 
 (defn notification-menu-style
