@@ -8,7 +8,8 @@
             [teet.localization :refer [tr]]
             [teet.ui.form :as form]
             [teet.ui.typography :as typography]
-            teet.user.user-spec))
+            teet.user.user-spec
+            [teet.ui.select :as select]))
 
 (defn- create-user-form [e! form]
   [:div
@@ -20,7 +21,14 @@
                :value form
                :spec :admin/create-user}
     ^{:attribute :user/person-id}
-    [TextField {:variant "outlined"}]]])
+    [TextField {:variant "outlined"}]
+
+    ^{:attribute :user/add-global-permission}
+    [select/form-select {:format-item #(if % (name %) "- no global permission -")
+                         :items [nil
+                                 :admin :manager
+                                 :internal-consultant
+                                 :external-consultant]}]]])
 
 (defn admin-page [e! {admin :admin} users]
   [:div

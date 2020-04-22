@@ -41,4 +41,8 @@
    :transact [;; (log/info "admin/create-user: current user" (:user/person-id user))
               (merge (new-user)
                      (select-keys user-data [:user/person-id])
+                     (when-let [p (:user/add-global-permission user-data)]
+                       {:user/permissions [{:db/id "new-permission"
+                                            :permission/role p
+                                            :permission/valid-from (java.util.Date.)}]})
                      #_(user-data-from-xroad (:user/person-id user-data) (:user/person-id user)))]})

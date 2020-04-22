@@ -240,6 +240,8 @@
   :common {"name" "Nimi", "description" "Kirjeldus"},
   :land-acquisition/pos-number "POS#",
   :document/sub-category "Dokumendi alamtüüp",
+  :user/add-global-permission
+  "Lisage globaalne roll (kehtib kõigi projektide kohta)",
   :activity/estimated-end-date "Eeldatav lõppkuupäev",
   :user/given-name "Eesnimi",
   :user/person-id "Isikukood",
