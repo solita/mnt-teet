@@ -18,8 +18,7 @@
   "Kiinistamata eraomand" "Unregistered private property",
   "Omand väljaselgitamisel" "Property on identification"},
  :comment
- {:open-latest-unresolved "Open latest",
-  :save "Save comment",
+ {:save "Save comment",
   :comment-as "Commenting as {name}",
   :unresolved-count "{unresolved-count} unresolved comments",
   :edited "Edited {date}",
@@ -27,7 +26,8 @@
   :quote "Quote",
   :resolve "Resolve",
   :unresolve "Unresolve",
-  :add-images "Add images"},
+  :add-images "Add images",
+  :open-latest-unresolved "Open latest"},
  :common
  {:hide-menu "Hide menu",
   :send-feedback "Send feedback",
@@ -120,6 +120,7 @@
   :document.sub-category/geological-basis "Geological basis",
   :activity.name/land-acquisition "Land acquisition",
   :land-acquisition.impact/undecided "Undecided",
+  :notification.type/comment-resolved "Comment resolved",
   :task.type/terms-of-reference "Terms of reference",
   :thk.task-type/road-safety-audit "Road safety audit",
   :document.sub-category/laboratory-certificate
@@ -173,6 +174,7 @@
   :thk.task-type/study "Study",
   :document.sub-category/explanatory-letter "Explanatory letter ",
   :task.type/cleanup "Registering state estate",
+  :notification.type/comment-unresolved "Comment unresolved",
   :activity.status/completed "Completed",
   :activity.name/preliminary-design "Preliminary design",
   :task.status/in-progress "In progress",
