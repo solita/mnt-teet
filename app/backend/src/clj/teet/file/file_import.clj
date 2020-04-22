@@ -36,27 +36,17 @@
          :default-path [:project]}}
   (let [[_ file-id-part] (re-find #"^(\d+)-.*$" (:file-key fd))
         file-id (Long/parseLong file-id-part)
-        result
-        (d/pull (d/db conn)
-                '[{:document/_files
-                   [{:task/_documents
-                     [{:activity/_tasks
-                       [{:thk.lifecycle/_activities
-                         [{:thk.project/_lifecycles
-                           [:thk.project/id :db/id :thk.project/name]}]}]}]}]}]
-                file-id)
-
-        {id :db/id :as project}
-        (get-in result [:document/_files 0
-                        :task/_documents 0
-                        :activity/_tasks 0
-                        :thk.lifecycle/_activities 0
-                        :thk.project/_lifecycles 0])]
-    (when-not id
+        file (du/entity (d/db conn) file-id)
+        project-id (get-in file [:task/_files 0
+                                 :activity/_tasks 0
+                                 :thk.lifecycle/_activities 0
+                                 :thk.project/_lifecycles 0
+                                 :db/id])]
+    (when-not project-id
       (throw (ex-info "Unable to determine project for uploaded file"
                       {:file-descriptor fd})))
-    (log/info "Uploaded file" (:file-key fd) "belongs to project" (:thk.project/name project))
-    (:db/id project)))
+    (log/info "Uploaded file" (:file-key fd) "belongs to project" project-id)
+    project-id))
 
 (defn import-uploaded-file [event]
   (ctx-> {:event event
