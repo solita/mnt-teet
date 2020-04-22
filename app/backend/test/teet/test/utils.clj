@@ -78,6 +78,11 @@
   []
   (d/db (connection)))
 
+(defn entity
+  "Returns navigable entity from the current db."
+  [eid]
+  (du/entity (db) eid))
+
 (defn tx
   "Transact the given tx-data maps. Can only be called within tests using with-db fixture."
   [& tx-data]
@@ -247,4 +252,3 @@
         ret2 (local-command :task/start-review params)
         ret3 (local-command :task/review (merge params {:result :accept}))]
     [ret1 ret2 ret3]))
-
