@@ -239,6 +239,8 @@
   :common {"name" "Name", "description" "Description"},
   :land-acquisition/pos-number "POS#",
   :document/sub-category "Document subtype",
+  :user/add-global-permission
+  "Add global role (applies to all projects)",
   :activity/estimated-end-date "Estimated end date",
   :user/given-name "Given name",
   :user/person-id "Person ID",
