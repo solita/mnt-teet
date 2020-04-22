@@ -185,13 +185,28 @@
           :comment/status status}
          (modification-meta user)))
 
+(def ^:private status->notification
+  {:comment.status/unresolved :notification.type/comment-unresolved
+   :comment.status/resolved   :notification.type/comment-resolved})
+
 (defcommand :comment/set-status
   {:doc "Toggle the tracking status of the comment"
    :context {:keys [db user]}
    :payload {comment-id :db/id status :comment/status}
    :project-id (get-project-id-of-comment db comment-id)
    :authorization {:project/track-comment-status {:db/id comment-id}}
-   :transact [(comment-status-tx user comment-id status)]})
+   :transact (let [[entity-type entity-id] (comment-parent-entity db comment-id)
+                   visibility (get-in (du/entity db comment-id)
+                                      [:comment/visibility :db/ident])]
+               (into [(comment-status-tx user comment-id status)]
+                     (map #(notification-db/notification-tx
+                            {:from user
+                             :to %
+                             :type (status->notification status)
+                             :target comment-id}))
+                     (participants db entity-type entity-id
+                                   (= visibility :comment.visibility/internal)
+                                   user)))})
 
 (defcommand :comment/resolve-comments-of-entity
   {:doc "Resolve multiple comments"

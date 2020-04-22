@@ -18,7 +18,9 @@
             [teet.map.map-controller :as map-controller]
             [teet.ui.form :as form]
             [teet.common.common-controller :as common-controller]
-            [teet.ui.select :as select]))
+            [teet.ui.select :as select]
+            [cljs-time.core :as time]
+            [cljs-time.coerce :as c]))
 
 (defn cadastral-unit-style
   [selected?]
@@ -117,35 +119,83 @@
              :class (<class common-styles/gray-text)}
       (tr-enum impact)]]))
 
+(defn cadastral-unit-container-style
+  []
+  ^{:pseudo {:first-of-type {:border-top "1px solid white"}}}
+  {:border-left "1px solid white"
+   :display :flex
+   :position :relative
+   :flex 1
+   :flex-direction :column
+   :margin-left "15px"})
+
+(defn cadastral-unit-quality-style
+  [quality]
+  {:position :absolute
+   :left "-15px"
+   :top "50%"
+   :transform "translateY(-50%)"
+   :color (if (= quality :bad)
+            theme-colors/red
+            theme-colors/orange)})
+
 (defn cadastral-unit
-  [e! {:keys [TUNNUS KINNISTU selected?] :as unit}]
+  [e! {:keys [TUNNUS KINNISTU MOOTVIIS MUUDET selected?] :as unit}]
   ^{:key (str TUNNUS)}
-  [:div {:style {:display :flex
-                 :flex 1
-                 :flex-direction :column}}
-   [ButtonBase {:on-mouse-enter (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" true unit)
-                :on-mouse-leave (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" false unit)
-                :on-click (e! land-controller/->ToggleLandUnit unit)
-                :class (<class cadastral-unit-style selected?)}
-    [typography/SectionHeading {:style {:text-align :left}} (:L_AADRESS unit)]
-    [:div {:style {:display :flex
-                   :width "100%"
-                   :justify-content :space-between}}
-     [acquisition-impact-status (get-in unit [:land-acquisition :land-acquisition/impact])]
-     [:span {:class (<class common-styles/gray-text)}
-      (tr [:land :estate]) " " KINNISTU]]]
-   [Collapse
-    {:in selected?
-     :mount-on-enter true}
-    [cadastral-unit-form e! unit]]])
+  (let [quality-date (time/date-time 2018 01 01)            ;;Arbitrary date before which data quality is bad
+        quality (cond
+                  (and (= MOOTVIIS "mõõdistatud, L-EST")
+                       (not (time/before? (c/from-string MUUDET) quality-date)))
+                  :good
+                  (and (= MOOTVIIS "mõõdistatud, L-EST")
+                       (time/before? (c/from-string MUUDET) quality-date))
+                  :not-so-good
+                  :else
+                  :bad)]
+    [:div {:class (<class cadastral-unit-container-style)}
+     [:div {:class (<class cadastral-unit-quality-style quality)}
+      [:span {:title (str MOOTVIIS " – " MUUDET)} (case quality
+                                                    :bad "!!!"
+                                                    :not-so-good "!"
+                                                    "")]]
+     [ButtonBase {:on-mouse-enter (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" true unit)
+                  :on-mouse-leave (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" false unit)
+                  :on-click (e! land-controller/->ToggleLandUnit unit)
+                  :class (<class cadastral-unit-style selected?)}
+      [typography/SectionHeading {:style {:text-align :left}} (:L_AADRESS unit)]
+      [:div {:style {:display :flex
+                     :width "100%"
+                     :justify-content :space-between}}
+       [acquisition-impact-status (get-in unit [:land-acquisition :land-acquisition/impact])]
+       [:span {:class (<class common-styles/gray-text)}
+        (tr [:land :estate]) " " KINNISTU]]]
+     [Collapse
+      {:in selected?
+       :mount-on-enter true}
+      [cadastral-unit-form e! unit]]]))
+
+(defn cadastral-heading-container-style
+  []
+  (let [bg-color theme-colors/gray]
+    ^{:pseudo {:before {:content "''"
+                        :width 0
+                        :height 0
+                        :border-bottom "15px solid transparent"
+                        :border-left (str "15px solid " bg-color)
+                        :position :absolute
+                        :bottom "-15px"
+                        :transform "rotate(90deg)"
+                        :left 0}}}
+    {:background-color bg-color
+     :position :relative
+     :padding "0.5rem"
+     :color theme-colors/white}))
 
 (defn cadastral-group
   [e! [group units]]
   ^{:key (str group)}
   [:div {:style {:margin-bottom "2rem"}}
-   [:div.heading {:style {:background-color theme-colors/gray
-                          :padding "0.5rem"
-                          :color theme-colors/white}}
+   [:div.heading {:class (<class cadastral-heading-container-style)}
     [typography/SectionHeading (tr [:cadastral-group group])]
     [:span (count units) " " (if (= 1 (count units))
                            (tr [:land :unit])
@@ -166,29 +216,31 @@
                  :on-change on-change}]]))
 
 (defn cadastral-groups
-  [e! project units]
-  (let [land-acquisitions (into {}
-                                (map
-                                  (juxt :land-acquisition/cadastral-unit
-                                        #(update % :land-acquisition/impact :db/ident)))
-                                (:land-acquisitions project))
-        ids (:thk.project/filtered-cadastral-units project) ;; set by the cadastral search field
-        units (map (fn [unit]
-                     (assoc unit :land-acquisition (get land-acquisitions (:teet-id unit))))
-                   units)
-        units (if (empty? ids)
-                units
-                (filter #(ids (:teet-id %)) units))
-        grouped (if (empty? units)
+  [e! _ _]
+  (e! (land-controller/->SearchOnChange ""))
+  (fn [e! project units]
+    (let [land-acquisitions (into {}
+                                  (map
+                                    (juxt :land-acquisition/cadastral-unit
+                                          #(update % :land-acquisition/impact :db/ident)))
+                                  (:land-acquisitions project))
+          ids (:thk.project/filtered-cadastral-units project) ;; set by the cadastral search field
+          units (map (fn [unit]
+                       (assoc unit :land-acquisition (get land-acquisitions (:teet-id unit))))
+                     units)
+          units (if (empty? ids)
                   []
-                  (->> units
-                       (group-by :OMVORM)))]
-    [:<>
-     [:div
-      (when (:land-acquisitions project)
-        (mapc
-          (r/partial cadastral-group e!)
-          grouped))]]))
+                  (filter #(ids (:teet-id %)) units))
+          grouped (if (empty? units)
+                    []
+                    (->> units
+                         (group-by :OMVORM)))]
+      [:<>
+       [:div
+        (when (:land-acquisitions project)
+          (mapc
+            (r/partial cadastral-group e!)
+            grouped))]])))
 
 (defn related-cadastral-units-info
   [e! _app project]
