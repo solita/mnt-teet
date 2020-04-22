@@ -211,12 +211,12 @@
     [:<>
      [activity-header e! activity]
      [project-management (:thk.project/owner project) (:thk.project/manager project)]
-     [task-lists (:activity/tasks activity)]     
+     [task-lists (:activity/tasks activity)]
      (when (and (authorized? @teet.app-state/user :activity/change-activity-status nil)
-                (activity-model/all-tasks-completed? activity)) 
+                (activity-model/all-tasks-completed? activity))
        [submit-for-approval-button e! params])
      (when (and (authorized? @teet.app-state/user :activity/change-activity-status nil)
-                (-> activity :activity/status :db/ident (= :activity.status/in-review))) 
+                (-> activity :activity/status :db/ident (= :activity.status/in-review)))
        [approve-button e! params])]))
 
 (defn activity-page [e! {:keys [params] :as app} project breadcrumbs]
