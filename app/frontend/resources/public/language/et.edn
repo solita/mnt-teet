@@ -282,7 +282,8 @@
   :filter-label "Filtreerin üksused",
   :unit "ühik",
   :units "ühikut",
-  :land-acquisition-saved "Maa omandamine edukalt salvestatud"},
+  :land-acquisition-saved "Maa omandamine edukalt salvestatud",
+  :unreliable "Usaldamatud andmed"},
  :login {:login "Sisenen", :password "Salasõna", :username "Kasutaja"},
  :map
  {:clear-selections "Tühjendan valikud",

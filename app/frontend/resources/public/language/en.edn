@@ -281,7 +281,8 @@
   :filter-label "Filter units",
   :unit "unit",
   :units "units",
-  :land-acquisition-saved "Land acquisition saved successfully"},
+  :land-acquisition-saved "Land acquisition saved successfully",
+  :unreliable "Unreliable data"},
  :login {:login "Login", :password "Password", :username "Username"},
  :map
  {:clear-selections "Clear selections",

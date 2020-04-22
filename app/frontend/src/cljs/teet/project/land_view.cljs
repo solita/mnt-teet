@@ -64,7 +64,7 @@
   {:display :flex})
 
 (defn cadastral-unit-form
-  [e! {:keys [PINDALA] :as unit}]
+  [e! {:keys [PINDALA] :as unit} quality]
   (r/with-let [[impact-form update-impact-form]
                (common-controller/internal-state (merge
                                                    {:land-acquisition/impact :land-acquisition.impact/undecided}
@@ -88,16 +88,15 @@
           [TextField {:type :number}])
         (when show-extra-fields?
           ^{:attribute :land-acquisition/area-to-obtain
-            :container-class (<class area-to-obtain-class)
-            :adornment [:div {:style {:flex-basis "50%"
-                                      :flex-shrink 0
-                                      :margin-left "0.5rem"
-                                      :display :flex
-                                      :align-items :center}}
-                        (if-let [area (:land-acquisition/area-to-obtain @impact-form)]
-                          [:span (tr [:land :net-area-balance] {:area (- PINDALA area)})]
-                          [:span (tr [:land :total-area] {:area PINDALA})])]}
-          [TextField {:type :number}])]])))
+            :adornment (let [area (:land-acquisition/area-to-obtain @impact-form)]
+                         [:div
+                          [:p (tr [:land :total-area] {:area PINDALA})
+                           (case quality
+                             :bad [:span {:style {:color theme-colors/red}} " !!! " (tr [:land :unreliable])]
+                             :not-so-good [:span {:style {:color theme-colors/orange}} " ! " (tr [:land :unreliable])]
+                             nil)]
+                          [:span (tr [:land :net-area-balance] {:area (- PINDALA area)})]])}
+          [TextField {:type :number :input-style {:width "50%"}}])]])))
 
 (defn acquisition-impact-status
   [impact]
@@ -172,7 +171,7 @@
      [Collapse
       {:in selected?
        :mount-on-enter true}
-      [cadastral-unit-form e! unit]]]))
+      [cadastral-unit-form e! unit quality]]]))
 
 (defn cadastral-heading-container-style
   []
