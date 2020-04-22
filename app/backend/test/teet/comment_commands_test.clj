@@ -118,6 +118,7 @@
        (testing "the comment is status has changed"
          (is (= :comment.status/resolved
                 (-> resolved-comment :comment/status :db/ident))))
+
        (testing "the comment is marked as having been modified"
          (is (contains? resolved-comment :meta/modifier))
          (is (contains? resolved-comment :meta/modified-at))))))
@@ -129,7 +130,7 @@
                                   :multi-resolve-task-id)]
       (is (some? task-id)))
 
-    ;; Project manager adds 10 comments ...
+    ;; Project manager adds 3 tracked comments ...
     (dotimes [n 3]
       (tu/create-comment {:user tu/mock-user-manager
                           :entity-type :task
@@ -138,13 +139,21 @@
                                     :track? true}}
                          (keyword (str "tracked-comment-" n))))
 
+    ;; ... and 1 untracked one.
+    (tu/create-comment {:user tu/mock-user-manager
+                        :entity-type :task
+                        :entity-id (tu/get-data :multi-resolve-task-id)
+                        :comment {:comment (str "This one is NOT tracked")
+                                  :track? false}}
+                       :untracked-comment)
+
     (testing "before resolving all comments of task, the tracked comments are unresolved"
       (let [task-comments (tu/local-query tu/mock-user-manager :comment/fetch-comments
                                           {:db/id (tu/get-data :multi-resolve-task-id)
                                            :for :task})]
         (is (= 3 (count (filter comment-model/unresolved? task-comments))))))
 
-    (testing "after resolving all comments of task, the tracked comments are resolved"
+    (testing "after resolving all comments of task"
       (tu/local-command tu/mock-user-manager
                         :comment/resolve-comments-of-entity
                         {:entity-id (tu/get-data :multi-resolve-task-id)
@@ -152,7 +161,12 @@
       (let [task-comments (tu/local-query tu/mock-user-manager :comment/fetch-comments
                                           {:db/id (tu/get-data :multi-resolve-task-id)
                                            :for :task})]
-        (is (= 3 (count (filter comment-model/resolved? task-comments)))))))
+        (testing "the tracked comments are resolved"
+          (is (= 3 (count (filter comment-model/resolved? task-comments)))))
+
+
+        (testing "untracked comments remain untracked"
+          (is (= 1 (count (filter comment-model/untracked? task-comments))))))))
 
   (testing "External consultant cannot resolve all comments of an entity at once"
     ;; Create a new task for multi resolve

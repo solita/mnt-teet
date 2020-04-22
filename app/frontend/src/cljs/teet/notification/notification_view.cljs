@@ -45,6 +45,13 @@
     :notification.type/comment-created
     [icons/communication-comment]
 
+    :notification.type/comment-resolved
+    [icons/action-check-circle-outline]
+
+    :notification.type/comment-unresolved
+    [icons/content-block]
+
+
     :notification.type/project-manager-assigned
     [icons/action-work]
 
