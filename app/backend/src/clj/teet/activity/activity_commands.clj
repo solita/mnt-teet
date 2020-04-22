@@ -135,8 +135,9 @@
   {:doc "Submit activity for review, when tasks are complete"
    :context {:keys [conn user db]}
    :payload {:keys [activity-id]}
-   :authorization {:activity/change-activity-status {}}
    :project-id (project-db/activity-project-id db activity-id)
+   :authorization {:task/submit-results {:eid (project-db/activity-project-id db activity-id)
+                                         :link :thk.project/manager}}
    :pre [(check-tasks-are-complete db activity-id)]
    :transact [(merge
                {:db/id activity-id

@@ -6,7 +6,7 @@
             [teet.util.collection :as cu]
             [teet.util.datomic :as du]))
 
-(use-fixtures :once tu/with-environment (tu/with-db) tu/with-global-data)
+(use-fixtures :each tu/with-environment (tu/with-db) tu/with-global-data)
 
 
 (defn act1-id []
@@ -22,16 +22,36 @@
                      :user {:user/id tu/manager-id}
                      :role :manager})
 
+  (tu/local-command tu/mock-user-boss
+                    :thk.project/add-permission
+                    {:project-id (tu/->db-id "p1")
+                     :user {:user/id tu/internal-consultant-id}
+                     :role :internal-consultant})
+  
   (let [task-id (tu/create-task {:user tu/mock-user-manager :activity (act1-id)})]    
     (is (number? task-id))
     (tu/complete-task {:user tu/mock-user-manager
                        :task-id task-id})
-    (is (= :activity.status/in-progress (act1-status))))
+    )
 
   (testing "activity submission happy path yields expected status changes"
-    (tu/local-command :activity/submit-for-review {:activity-id (act1-id) :user tu/mock-user-manager})
+    (is (= :activity.status/in-progress (act1-status)))
+    (tu/local-login tu/mock-user-carla-consultant)
+    (is (thrown? Exception
+                 (tu/local-command :activity/submit-for-review {:activity-id (act1-id)})))
+    (is (= :activity.status/in-progress (act1-status)))
+    ;; project manager required for submission
+    (tu/local-login tu/mock-user-manager)
+    (tu/local-command :activity/submit-for-review {:activity-id (act1-id)})    
     (is (= :activity.status/in-review (act1-status)))
-    (tu/local-command :activity/review {:activity-id (act1-id) :user tu/mock-user-manager :status :activity.status/completed})
+    (tu/local-login tu/mock-user-edna-consultant)
+    (is (thrown? Exception
+                 (tu/local-command :activity/review {:activity-id (act1-id) :status :activity.status/completed})))
+    ;; project owner is required for review
+    (tu/local-login tu/mock-user-manager)
+    (is (= :activity.status/in-review (act1-status)))
+    (tu/local-login tu/mock-user-manager)
+    (tu/local-command :activity/review {:activity-id (act1-id) :status :activity.status/completed})
     (is (= :activity.status/completed (act1-status)))))
 
 
