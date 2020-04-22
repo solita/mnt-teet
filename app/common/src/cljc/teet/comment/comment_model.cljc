@@ -9,10 +9,12 @@
       (throw (ex-info "Don't know what the comment attribute is for entity type"
                       {:entity-type entity-type}))))
 
-(def ^:private tracked-statuses #{:comment.status/unresolved :comment.status/resolved})
+(def tracked-statuses #{:comment.status/unresolved :comment.status/resolved})
 
 (defn tracked? [comment]
   (boolean (tracked-statuses (-> comment :comment/status :db/ident))))
+
+(def untracked? (complement tracked?))
 
 (defn unresolved? [comment]
   (= :comment.status/unresolved
