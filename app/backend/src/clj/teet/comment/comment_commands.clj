@@ -185,13 +185,38 @@
           :comment/status status}
          (modification-meta user)))
 
+(def ^:private status->notification
+  {:comment.status/unresolved :notification.type/comment-unresolved
+   :comment.status/resolved   :notification.type/comment-resolved})
+
+(defn- get-comment-status-update-txs
+  "Return the comment status notification itself along with
+  notifications of the update"
+  [db user id status]
+  (let [[entity-type entity-id] (comment-parent-entity db id)
+        visibility (get-in (du/entity db id)
+                           [:comment/visibility :db/ident])]
+           ;; The comment status update itself
+    (into [(comment-status-tx user id status)]
+
+          ;; Notifications of the status update
+          (when (comment-model/tracked-statuses status)
+            (map #(notification-db/notification-tx
+                   {:from user
+                    :to %
+                    :type (status->notification status)
+                    :target id})
+                 (participants db entity-type entity-id
+                               (= visibility :comment.visibility/internal)
+                               user))))))
+
 (defcommand :comment/set-status
   {:doc "Toggle the tracking status of the comment"
    :context {:keys [db user]}
    :payload {comment-id :db/id status :comment/status}
    :project-id (get-project-id-of-comment db comment-id)
    :authorization {:project/track-comment-status {:db/id comment-id}}
-   :transact [(comment-status-tx user comment-id status)]})
+   :transact (get-comment-status-update-txs db user comment-id status)})
 
 (defcommand :comment/resolve-comments-of-entity
   {:doc "Resolve multiple comments"
@@ -200,9 +225,11 @@
    :project-id (project-db/entity-project-id db entity-type entity-id)
    :authorization {:project/track-comment-status {}}
    :transact (into []
-                   (for [{id :db/id} (comment-db/comments-of-entity db
-                                                                    entity-id
-                                                                    entity-type
-                                                                    nil
-                                                                    '[:db/id])]
-                     (comment-status-tx user id :comment.status/resolved)))})
+                   (->> (comment-db/comments-of-entity db
+                                                       entity-id
+                                                       entity-type
+                                                       nil
+                                                       '[:db/id :comment/status])
+                        (filter comment-model/tracked?)
+                        (map :db/id)
+                        (mapcat #(get-comment-status-update-txs db user % :comment.status/resolved))))})

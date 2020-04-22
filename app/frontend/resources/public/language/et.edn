@@ -18,8 +18,7 @@
   "Kiinistamata eraomand" "Kinnistamata eraomand",
   "Omand väljaselgitamisel" "Omand väljaselgitamisel"},
  :comment
- {:open-latest-unresolved nil,
-  :save "Salvestan kommentaari",
+ {:save "Salvestan kommentaari",
   :comment-as "Kommenteerimine kui {name}",
   :unresolved-count nil,
   :edited "Muudetud {date}",
@@ -27,7 +26,8 @@
   :quote "Tsiteerin",
   :resolve nil,
   :unresolve nil,
-  :add-images "Lisan pildid"},
+  :add-images "Lisan pildid",
+  :open-latest-unresolved nil},
  :common
  {:hide-menu "Peidan menüü",
   :send-feedback "Saadan tagasisidet",
@@ -124,6 +124,7 @@
   :document.sub-category/geological-basis "Geoalus",
   :activity.name/land-acquisition "Maade omandamine",
   :land-acquisition.impact/undecided "Otsus puudub",
+  :notification.type/comment-resolved nil,
   :task.type/terms-of-reference "Lähteülesanne",
   :thk.task-type/road-safety-audit
   "Liiklusohutuse audit (eelprojekt, põhiprojekt)",
@@ -175,6 +176,7 @@
   :thk.task-type/study "Uuring",
   :document.sub-category/explanatory-letter "Seletuskiri",
   :task.type/cleanup "Riigivara registrisse kandmine",
+  :notification.type/comment-unresolved nil,
   :activity.status/completed "Valmis",
   :activity.name/preliminary-design "Eelprojekt",
   :task.status/in-progress "Tegemisel",
@@ -280,7 +282,8 @@
   :filter-label "Filtreerin üksused",
   :unit "ühik",
   :units "ühikut",
-  :land-acquisition-saved "Maa omandamine edukalt salvestatud"},
+  :land-acquisition-saved "Maa omandamine edukalt salvestatud",
+  :unreliable "Usaldamatud andmed"},
  :login {:login "Sisenen", :password "Salasõna", :username "Kasutaja"},
  :map
  {:clear-selections "Tühjendan valikud",

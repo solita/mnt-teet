@@ -709,4 +709,8 @@
           {:db/ident :notification.type/activity-accepted :enum/attribute :notification/type}
           {:db/ident :notification.type/comment-created :enum/attribute :notification/type}
           {:db/ident :notification.type/project-manager-assigned :enum/attribute :notification/type}
-          {:db/ident :notification.type/task-assigned :enum/attribute :notification/type}]]}]
+          {:db/ident :notification.type/task-assigned :enum/attribute :notification/type}]]}
+
+ {:db/ident :migration/comment-status-notifications
+  :txes [[{:db/ident :notification.type/comment-resolved :enum/attribute :notification/type}
+          {:db/ident :notification.type/comment-unresolved :enum/attribute :notification/type}]]}]

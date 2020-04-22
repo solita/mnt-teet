@@ -97,6 +97,12 @@
       :notification.type/comment-created
       (comment-navigation-info db (:db/id target))
 
+      :notification.type/comment-resolved
+      (comment-navigation-info db (:db/id target))
+
+      :notification.type/comment-unresolved
+      (comment-navigation-info db (:db/id target))
+
       :notification.type/project-manager-assigned
       (project-navigation-info db (:db/id target)))
     (db-api/bad-request! "No such notification")))
