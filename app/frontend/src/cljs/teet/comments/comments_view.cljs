@@ -174,7 +174,8 @@
                       commented-entity
                       quote-comment!
                       focused?]
-  [:div (merge {:class (<class comments-styles/comment-entry focused?)}
+  [:div (merge {:id (comments-controller/comment-dom-id id)
+                :class (<class comments-styles/comment-entry focused?)}
                (when focused?
                  {:ref (fn [el]
                          (when el
@@ -207,24 +208,26 @@
       (tr [:buttons :delete])]]]
    [attachments {:files files :comment-id id}]])
 
-(defn unresolved-comments-info [_e! unresolved-comments]
+(defn unresolved-comments-info [e! commented-entity unresolved-comments]
   [:div {:class (<class comments-styles/unresolved-comments)}
    (tr [:comment :unresolved-count] {:unresolved-count (count unresolved-comments)})
+   [buttons/link-button {:on-click #(e! (comments-controller/->FocusOnComment (-> unresolved-comments first :db/id)))}
+    (tr [:comment :open-latest-unresolved])]
    [when-authorized :comment/resolve-comments-of-entity
     {}
     [buttons/button-text {:color :primary
                           :end-icon (r/as-element [icons/action-check-circle-outline])
-                          #_:on-click #_(e! (comments-controller/->SetCommentStatus comment-id
-                                                                                    :comment.status/resolved
-                                                                                    commented-entity))}
+                          :on-click #(e! (comments-controller/->ResolveCommentsOfEntity
+                                          (:db/id commented-entity)
+                                          (:for commented-entity)))}
      (tr [:comment :resolve-all])]]])
 
 (defn comment-list
-  [{:keys [e! quote-comment! commented-entity-id focused-comment]} comments]
+  [{:keys [e! quote-comment! commented-entity focused-comment]} comments]
   (let [unresolved-comments (filterv comment-model/unresolved? comments)]
     [:<>
      (when (seq unresolved-comments)
-       [unresolved-comments-info e! unresolved-comments])
+       [unresolved-comments-info e! commented-entity unresolved-comments])
      [itemlist/ItemList {}
       (doall
        (for [{id :db/id :as comment-entity} comments
@@ -235,7 +238,7 @@
            [comment-skeleton 1]
 
            ^{:key (str id)}
-           [comment-entry e! comment-entity commented-entity-id quote-comment! focused?])))]]))
+           [comment-entry e! comment-entity commented-entity quote-comment! focused?])))]]))
 
 (defn- quote-comment-fn
   "An ad hoc event that merges the quote at the end of current new
@@ -308,8 +311,8 @@
                      :simple-view [comment-list {:e! e!
                                                  :quote-comment! #(e! ((quote-comment-fn comment-form)
                                                                        (str %1 ": \"" %2 "\"")))
-                                                 :commented-entity-id {:db/id entity-id
-                                                                       :for   entity-type}
+                                                 :commented-entity {:db/id entity-id
+                                                                    :for   entity-type}
                                                  :focused-comment (get-in app [:query :focus-on])}]
                      :refresh (count comments)}]
        (when (and show-comment-form?
