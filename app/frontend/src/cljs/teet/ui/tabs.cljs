@@ -42,8 +42,8 @@
                           label)]
                        (when badge
                          [:div {:style {:position :absolute
-                                        :top -10
-                                        :right 0}}
+                                        :top "-15px"
+                                        :right "-5px"}}
                           badge])])})))]))
 
 
