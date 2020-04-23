@@ -43,7 +43,7 @@
 
 (defn project-details
   [e! {:thk.project/keys [estimated-start-date estimated-end-date road-nr
-                           carriageway repair-method procurement-nr id] :as project}]
+                          carriageway repair-method procurement-nr id] :as project}]
   (let [project-name (project-model/get-column project :thk.project/project-name)
         [start-km end-km] (project-model/get-column project :thk.project/effective-km-range)]
     [:div
@@ -242,6 +242,12 @@
                                    [permission-information e! project selected-person]
                                    [add-user-form e! add-participant (:db/id project)])}]))
 
+(defn information-missing-icon
+  []
+  [icons/av-new-releases
+   {:font-size :small
+    :style {:color theme-colors/warning}}])
+
 
 (defn people-tab [e! {query :query :as _app} {:thk.project/keys [manager owner permitted-users] :as project}]
   [:div
@@ -254,7 +260,9 @@
       [buttons/button-secondary {:on-click (e! project-controller/->OpenEditProjectDialog)
                                  :size :small}
        (tr [:buttons :edit])]]]
-    [itemlist/gray-bg-list [{:primary-text (str (:user/given-name manager) " " (:user/family-name manager))
+    [itemlist/gray-bg-list [{:primary-text (if manager
+                                             (str (:user/given-name manager) " " (:user/family-name manager))
+                                             [information-missing-icon])
                              :secondary-text (tr [:roles :manager])}
                             {:primary-text (str (:user/given-name owner) " " (:user/family-name owner))
                              :secondary-text (tr [:roles :owner])}]]]
@@ -314,9 +322,7 @@
     :component people-tab
     :badge (fn [project]
              (when-not (:thk.project/manager project)
-               [Badge {:badge-content (r/as-element [icons/av-new-releases
-                                                     {:font-size :small
-                                                      :color :error}])}]))
+               [Badge {:badge-content (r/as-element [information-missing-icon])}]))
     :layers #{:thk-project}}
    {:label [:project :tabs :details]
     :value "details"
@@ -352,9 +358,9 @@
   (when-not (:basic-information-form project)
     (e! (project-controller/->UpdateBasicInformationForm
           (cu/without-nils {:thk.project/project-name (or (:thk.project/project-name project) (:thk.project/name project))
-                            :thk.project/km-range     (-> project
-                                                          (project-model/get-column :thk.project/effective-km-range)
-                                                          project-setup-view/format-range)
+                            :thk.project/km-range (-> project
+                                                      (project-model/get-column :thk.project/effective-km-range)
+                                                      project-setup-view/format-range)
                             :thk.project/owner (:thk.project/owner project)
                             :thk.project/manager (:thk.project/manager project)}))))
   (fn [e! {form :basic-information-form :as project}]
@@ -466,9 +472,9 @@
   (when-not (:basic-information-form project)
     (e! (project-controller/->InitializeBasicInformationForm
           (cu/without-nils {:thk.project/project-name (:thk.project/name project)
-                            :thk.project/km-range     (-> project
-                                                          (project-model/get-column :thk.project/effective-km-range)
-                                                          project-setup-view/format-range)
+                            :thk.project/km-range (-> project
+                                                      (project-model/get-column :thk.project/effective-km-range)
+                                                      project-setup-view/format-range)
                             :thk.project/owner (:thk.project/owner project)
                             :thk.project/manager (:thk.project/manager project)}))))
   (fn [e! {form :basic-information-form :as project}]
