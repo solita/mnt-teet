@@ -34,57 +34,6 @@
                         :permission/projects [project-eid]}
                        (creation-meta user))]})
 
-(defcommand :thk.project/initialize!
-  {:doc "Initialize project state. Sets project basic information and linked restrictions
-and cadastral units"
-   :context {conn :conn
-             user :user}
-   :payload {:thk.project/keys [id owner manager project-name custom-start-m custom-end-m
-                                m-range-change-reason
-                                related-restrictions
-                                related-cadastral-units]}
-   :project-id [:thk.project/id id]
-   :authorization {:project/project-setup {:link :thk.project/owner}}}
-  (let [project-in-datomic (d/pull (d/db conn)
-                                   [:thk.project/owner :thk.project/estimated-start-date :thk.project/estimated-end-date]
-                                   [:thk.project/id id])]
-    (if (project-model/initialized? project-in-datomic)
-      (db-api/fail! {:error :project-already-initialized
-                     :msg (str "Project " id " is already initialized")
-                     :status 409})
-      (let [{db :db-after}
-            (tx [(merge {:thk.project/id id
-                         :thk.project/owner [:user/id (:user/id owner)]}
-                        (when-not (str/blank? project-name)
-                          {:thk.project/project-name project-name})
-                        (when manager
-                          {:thk.project/manager [:user/id (:user/id manager)]})
-                        (when custom-start-m
-                          {:thk.project/custom-start-m custom-start-m})
-                        (when custom-end-m
-                          {:thk.project/custom-end-m custom-end-m})
-                        (when m-range-change-reason
-                          {:thk.project/m-range-change-reason m-range-change-reason})
-                        (when related-restrictions
-                          {:thk.project/related-restrictions related-restrictions})
-                        (when related-cadastral-units
-                          {:thk.project/related-cadastral-units related-cadastral-units})
-                        (modification-meta user))
-                 ;; If setting project manager to some other user, send notification to them
-                 (when (and manager
-                            (not= (:user/id user) (:user/id manager)))
-                   (manager-notification-tx [:thk.project/id id] user manager))])]
-        (project-geometry/update-project-geometries!
-         (environment/config-map {:api-url [:api-url]
-                                  :api-shared-secret [:auth :jwt-secret]
-                                  :wfs-url [:road-registry :wfs-url]})
-         [(d/pull db '[:db/id :thk.project/name
-                       :thk.project/road-nr :thk.project/carriageway
-                       :thk.project/start-m :thk.project/end-m
-                       :thk.project/custom-start-m :thk.project/custom-end-m]
-                  [:thk.project/id id])]))))
-  :ok)
-
 (defcommand :thk.project/update
   {:doc "Edit project basic info"
    :context {:keys [conn db user]}
