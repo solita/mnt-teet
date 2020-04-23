@@ -15,8 +15,6 @@ phases:
       java: corretto8
     commands:
       - echo Add Datomic deps
-      - mkdir ~/.m2
-      - mkdir ~/.m2/repository
       - aws s3 cp s3://teet-dev-build/datomic-deps.tar.gz /tmp/datomic-deps.tar.gz
       - tar zxf /tmp/datomic-deps.tar.gz -C ~/.m2/repository
       - echo Download Clojure CLI tool
