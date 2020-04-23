@@ -67,7 +67,7 @@
      [:div {:class (<class file-column-style 10)}
       [:span suffix]]
      [:div {:class (<class file-column-style 10)}
-      [:span version]]
+      [:span (str "V" version)]]
      [:div {:class (<class file-column-style 13)}
       [:span status]]
      [:div {:class (<class file-column-style 13 :flex-end)}
