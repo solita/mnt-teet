@@ -236,10 +236,9 @@
                          (group-by :OMVORM)))]
       [:<>
        [:div
-        (when (:land-acquisitions project)
-          (mapc
-            (r/partial cadastral-group e!)
-            grouped))]])))
+        (mapc
+          (r/partial cadastral-group e!)
+          grouped)]])))
 
 (defn related-cadastral-units-info
   [e! _app project]
@@ -253,7 +252,7 @@
        [:div {:style {:margin-top "1rem"}
               :class (<class common-styles/heading-and-button-style)}
         [typography/Heading2 (tr [:project :cadastral-units-tab])]
-        [buttons/button-secondary {:href (url/set-query-param :tab "data" :configure "cadastral-units")}
+        [buttons/button-secondary {:href (url/set-query-param :configure "cadastral-units")}
          (tr [:buttons :edit])]]
        [filter-units e! (:land-acquisition-filters project)]
        ;; Todo add skeleton

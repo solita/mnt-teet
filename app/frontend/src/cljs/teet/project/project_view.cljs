@@ -285,26 +285,17 @@
   [:<>
    [project-details e! project]])
 
-(defn data-tab
+(defn restriction-tab
   [_e! {{project-id :project} :params :as _app} project]
   [:div
    [:div {:class (<class common-styles/heading-and-button-style)}
     [typography/Heading2 "Restrictions"]
     [buttons/button-secondary {:component "a"
-                               :href (str "/#/projects/" project-id "?tab=data&configure=restrictions")
+                               :href (str "/#/projects/" project-id "?tab=restrictions&configure=restrictions")
                                :size :small}
      (tr [:buttons :edit])]]
    [itemlist/gray-bg-list [{:secondary-text (tr [:data-tab :restriction-count]
-                                                {:count (count (:thk.project/related-restrictions project))})}]]
-
-   [:div {:class (<class common-styles/heading-and-button-style)}
-    [typography/Heading2 "Cadastral units"]
-    [buttons/button-secondary {:component "a"
-                               :href (str "/#/projects/" project-id "?tab=data&configure=cadastral-units")
-                               :size :small}
-     (tr [:buttons :edit])]]
-   [itemlist/gray-bg-list [{:secondary-text (tr [:data-tab :cadastral-unit-count]
-                                                {:count (count (:thk.project/related-cadastral-units project))})}]]])
+                                                {:count (count (:thk.project/related-restrictions project))})}]]])
 
 (defn activities-tab-footer [_e! _app project]
   [:div {:class (<class project-style/activities-tab-footer)}
@@ -328,9 +319,9 @@
     :value "details"
     :component details-tab
     :layers #{:thk-project}}
-   {:label [:project :tabs :data]
-    :value "data"
-    :component data-tab
+   {:label [:project :tabs :restrictions]
+    :value "restrictions"
+    :component restriction-tab
     :layers #{:thk-project}}
    {:label [:project :tabs :land]
     :value "land"
@@ -351,7 +342,9 @@
          project-tabs-layout)])
 
 (defn- project-tab [e! app project]
-  [(:component (selected-project-tab app)) e! app project])
+  (let [selected-tab (selected-project-tab app)]
+    ^{:key (:value selected-tab)}
+    [(:component selected-tab) e! app project]))
 
 (defn edit-project-management
   [e! project]
@@ -428,6 +421,7 @@
   [e! {{configure :configure} :query :as app} project breadcrumbs]
   (cond
     (= configure "restrictions")
+    ^{:key "Restrictions"}
     [project-page-structure e! app project breadcrumbs
      {:header [:div {:class (<class project-style/project-view-header)}
                [typography/Heading1 {:style {:margin-bottom 0}} (tr [:search-area :select-relevant-restrictions])]]
@@ -444,6 +438,7 @@
                                (:thk.project/id project))}
                 (tr [:buttons :save])]]}]
     (= configure "cadastral-units")
+    ^{:key "Cadastral units"}
     [project-page-structure e! app project breadcrumbs
      {:header [:div {:class (<class project-style/project-view-header)}
                [typography/Heading1 {:style {:margin-bottom 0}} (tr [:search-area :select-relevant-cadastral-units])]]
@@ -460,6 +455,7 @@
                                (:thk.project/id project))}
                 (tr [:buttons :save])]]}]
     :else
+    ^{:key "Project view "}
     [project-page-structure e! app project breadcrumbs
      (merge {:header [project-tabs e! app project]
              :body [project-tab e! app project]
