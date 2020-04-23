@@ -33,6 +33,9 @@
                         :permission/projects [project-eid]}
                        (creation-meta user))]})
 
+(defn- project-custom-m-range [db project-eid]
+  (d/pull db '[:thk.project/custom-start-m :thk.project/custom-end-m] project-eid))
+
 (defcommand :thk.project/update
   {:doc "Edit project basic info"
    :context {:keys [conn db user]}
@@ -43,7 +46,8 @@
   (let [current-manager-id (get-in (du/entity db [:thk.project/id id])
                                    [:thk.project/manager :user/id])
         new-manager (:thk.project/manager project-form)
-        {db :db-after} (tx [(merge (cu/without-nils
+        {db-before :db-before
+         db :db-after} (tx [(merge (cu/without-nils
                                     (select-keys project-form
                                                  [:thk.project/id
                                                   :thk.project/owner
@@ -57,7 +61,8 @@
                                       (not= (:user/id new-manager) current-manager-id))
                              [(manager-notification-tx [:thk.project/id id] user new-manager)
                               (manager-permission-tx [:thk.project/id id] user new-manager)]))]
-    (when (or (:thk.project/custom-start-m project-form) (:thk.project/custom-end-m project-form))
+    (when (not= (project-custom-m-range db-before [:thk.project/id id])
+                (project-custom-m-range db [:thk.project/id id]))
       (project-geometry/update-project-geometries!
        (environment/config-map {:api-url [:api-url]
                                  :api-shared-secret [:auth :jwt-secret]
