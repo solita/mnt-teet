@@ -1,7 +1,6 @@
 (ns teet.project.project-commands
   (:require [teet.db-api.core :as db-api :refer [defcommand tx]]
             [datomic.client.api :as d]
-            [teet.project.project-model :as project-model]
             [teet.permission.permission-db :as permission-db]
             [clojure.string :as str]
             [teet.project.project-geometry :as project-geometry]
@@ -34,67 +33,8 @@
                         :permission/projects [project-eid]}
                        (creation-meta user))]})
 
-(defcommand :thk.project/initialize!
-  {:doc "Initialize project state. Sets project basic information and linked restrictions
-and cadastral units"
-   :context {conn :conn
-             user :user}
-   :payload {:thk.project/keys [id owner manager project-name custom-start-m custom-end-m
-                                m-range-change-reason
-                                related-restrictions
-                                related-cadastral-units]}
-   :project-id [:thk.project/id id]
-   :authorization {:project/project-setup {:link :thk.project/owner}}}
-  (let [project-in-datomic (d/pull (d/db conn)
-                                   [:thk.project/owner :thk.project/estimated-start-date :thk.project/estimated-end-date]
-                                   [:thk.project/id id])]
-    (if (project-model/initialized? project-in-datomic)
-      (db-api/fail! {:error :project-already-initialized
-                     :msg (str "Project " id " is already initialized")
-                     :status 409})
-      (let [{db :db-after}
-            (tx [(merge {:thk.project/id id
-                         :thk.project/owner [:user/id (:user/id owner)]}
-                        (when-not (str/blank? project-name)
-                          {:thk.project/project-name project-name})
-                        (when manager
-                          {:thk.project/manager [:user/id (:user/id manager)]})
-                        (when custom-start-m
-                          {:thk.project/custom-start-m custom-start-m})
-                        (when custom-end-m
-                          {:thk.project/custom-end-m custom-end-m})
-                        (when m-range-change-reason
-                          {:thk.project/m-range-change-reason m-range-change-reason})
-                        (when related-restrictions
-                          {:thk.project/related-restrictions related-restrictions})
-                        (when related-cadastral-units
-                          {:thk.project/related-cadastral-units related-cadastral-units})
-                        (modification-meta user))
-                 ;; If setting project manager to some other user, send notification to them
-                 (when (and manager
-                            (not= (:user/id user) (:user/id manager)))
-                   (manager-notification-tx [:thk.project/id id] user manager))])]
-        (project-geometry/update-project-geometries!
-         (environment/config-map {:api-url [:api-url]
-                                  :api-shared-secret [:auth :jwt-secret]
-                                  :wfs-url [:road-registry :wfs-url]})
-         [(d/pull db '[:db/id :thk.project/name
-                       :thk.project/road-nr :thk.project/carriageway
-                       :thk.project/start-m :thk.project/end-m
-                       :thk.project/custom-start-m :thk.project/custom-end-m]
-                  [:thk.project/id id])]))))
-  :ok)
-
-(defcommand :thk.project/skip-setup
-  {:doc "Mark project setup as skipped"
-   :context {conn :conn
-             user :user}
-   :payload {project-id :thk.project/id}
-   :project-id [:thk.project/id project-id]
-   :authorization {:project/project-setup {:link :thk.project/owner}}
-   :transact [(merge {:thk.project/id project-id
-                      :thk.project/setup-skipped? true}
-                     (modification-meta user))]})
+(defn- project-custom-m-range [db project-eid]
+  (d/pull db '[:thk.project/custom-start-m :thk.project/custom-end-m] project-eid))
 
 (defcommand :thk.project/update
   {:doc "Edit project basic info"
@@ -106,7 +46,8 @@ and cadastral units"
   (let [current-manager-id (get-in (du/entity db [:thk.project/id id])
                                    [:thk.project/manager :user/id])
         new-manager (:thk.project/manager project-form)
-        {db :db-after} (tx [(merge (cu/without-nils
+        {db-before :db-before
+         db :db-after} (tx [(merge (cu/without-nils
                                     (select-keys project-form
                                                  [:thk.project/id
                                                   :thk.project/owner
@@ -120,7 +61,8 @@ and cadastral units"
                                       (not= (:user/id new-manager) current-manager-id))
                              [(manager-notification-tx [:thk.project/id id] user new-manager)
                               (manager-permission-tx [:thk.project/id id] user new-manager)]))]
-    (when (or (:thk.project/custom-start-m project-form) (:thk.project/custom-end-m project-form))
+    (when (not= (project-custom-m-range db-before [:thk.project/id id])
+                (project-custom-m-range db [:thk.project/id id]))
       (project-geometry/update-project-geometries!
        (environment/config-map {:api-url [:api-url]
                                  :api-shared-secret [:auth :jwt-secret]
@@ -131,17 +73,6 @@ and cadastral units"
                       :thk.project/custom-start-m :thk.project/custom-end-m]
                  [:thk.project/id id])]))
     :ok))
-
-(defcommand :thk.project/continue-setup
-  {:doc "Undo project setup skip"
-   :context {conn :conn
-             user :user}
-   :payload {project-id :thk.project/id}
-   :project-id [:thk.project/id project-id]
-   :authorization {:project/project-setup {:link :thk.project/owner}}
-   :transact [(merge {:thk.project/id project-id
-                      :thk.project/setup-skipped? false}
-                     (modification-meta user))]})
 
 (defcommand :thk.project/revoke-permission
   ;; Options
@@ -156,7 +87,7 @@ and cadastral units"
 
 (defn- update-related-entities-tx
   "Return transaction data to update related map features"
-  [db user project-eid datasource-feature-ids link-attribute-kw]
+  [db project-eid datasource-feature-ids link-attribute-kw]
   (let [current-entities-in-db (set
                                  (link-attribute-kw
                                    (d/pull db
@@ -164,7 +95,7 @@ and cadastral units"
                                            project-eid)))
         to-be-removed (set/difference current-entities-in-db datasource-feature-ids)
         to-be-added (set/difference datasource-feature-ids current-entities-in-db)]
-    (into [(meta-model/tx-meta user)]
+    (into []
           (concat
             (for [id-to-remove to-be-removed]
               [:db/retract project-eid
@@ -180,7 +111,7 @@ and cadastral units"
    :project-id [:thk.project/id project-id]
    :authorization {:project/project-info {:eid [:thk.project/id project-id]
                                           :link :thk.project/owner}}
-   :transact (update-related-entities-tx db user [:thk.project/id project-id] restrictions :thk.project/related-restrictions)})
+   :transact (update-related-entities-tx db [:thk.project/id project-id] restrictions :thk.project/related-restrictions)})
 
 (defcommand :thk.project/update-cadastral-units
   {:doc "Update project related cadastral-units"
@@ -189,7 +120,7 @@ and cadastral units"
    :project-id [:thk.project/id project-id]
    :authorization {:project/project-info {:eid [:thk.project/id project-id]
                                           :link :thk.project/owner}}
-   :transact (update-related-entities-tx db user [:thk.project/id project-id] cadastral-units :thk.project/related-cadastral-units)})
+   :transact (update-related-entities-tx db [:thk.project/id project-id] cadastral-units :thk.project/related-cadastral-units)})
 
 (defcommand :thk.project/add-permission
   {:doc "Add permission to project"
