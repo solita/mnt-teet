@@ -14,6 +14,7 @@
 (defrecord UpdateFilteredUnitIDs [ids])
 (defrecord SubmitLandPurchaseForm [form-data cadastral-id])
 (defrecord FetchLandAcquisitions [project-id])
+(defrecord LandAcquisitionFetchSuccess [result])
 
 (defn toggle-selected-unit
   [id cad-units]
@@ -77,7 +78,14 @@
           {:tuck.effect/type :query
            :query :land/fetch-land-acquisitions
            :args {:project-id project-id}
-           :result-path [:route :project :land-acquisitions]}))
+           :result-event ->LandAcquisitionFetchSuccess}))
+
+  LandAcquisitionFetchSuccess
+  (process-event
+    [{result :result} app]
+    (-> app
+        (update-in [:route :project] merge result)
+        (update-in [:route :project] dissoc :thk.project/related-cadastral-units-info)))
 
   SubmitLandPurchaseForm
   (process-event [{:keys [form-data cadastral-id]} app]
