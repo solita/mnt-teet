@@ -1,7 +1,6 @@
 (ns teet.project.project-commands
   (:require [teet.db-api.core :as db-api :refer [defcommand tx]]
             [datomic.client.api :as d]
-            [teet.project.project-model :as project-model]
             [teet.permission.permission-db :as permission-db]
             [clojure.string :as str]
             [teet.project.project-geometry :as project-geometry]
