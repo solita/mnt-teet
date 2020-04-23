@@ -5,20 +5,20 @@
             [teet.integration.x-road :as x-road]))
 
 (defquery :land/fetch-land-acquisitions
-  {:doc "Fetch all land acquisitions related to proejct"
+  {:doc "Fetch all land acquisitions and related cadastral units from a project"
    :context {db :db}
    :args {project-id :project-id
           units :units}
    :project-id [:thk.project/id project-id]
    :authorization {}}
-  (let [land-acquisitions (d/q '[:find (pull ?e [*])
-                                 :in $ ?project-id
-                                 :where [?e :land-acquisition/project ?project-id]]
-                               db
-                               [:thk.project/id project-id])]
-    (mapv
-      first
-      land-acquisitions)))
+  (let [land-acquisitions (mapv first (d/q '[:find (pull ?e [*])
+                                       :in $ ?project-id
+                                       :where [?e :land-acquisition/project ?project-id]]
+                                     db
+                                     [:thk.project/id project-id]))
+        related-cadastral-units (d/pull db '[:thk.project/related-cadastral-units] [:thk.project/id project-id])]
+    (merge related-cadastral-units
+           {:land-acquisitions land-acquisitions})))
 
 (defn- project-cadastral-unit-estates [db api-url api-shared-secret project-id]
   (let [ctx {:api-url api-url
