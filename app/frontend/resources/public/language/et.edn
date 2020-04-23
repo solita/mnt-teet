@@ -341,7 +341,7 @@
   {:activities "Tegevused",
    :people "Inimesed",
    :details "Üksikasjad",
-   :data "Andmed",
+   :restrictions "Kitsendused",
    :land "Katastriüksused"},
   :edit-activity "Muudan tegevust",
   :restrictions-tab "Kitsendused",
