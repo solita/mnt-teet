@@ -87,7 +87,7 @@
 
 (defn- update-related-entities-tx
   "Return transaction data to update related map features"
-  [db user project-eid datasource-feature-ids link-attribute-kw]
+  [db project-eid datasource-feature-ids link-attribute-kw]
   (let [current-entities-in-db (set
                                  (link-attribute-kw
                                    (d/pull db
@@ -111,7 +111,7 @@
    :project-id [:thk.project/id project-id]
    :authorization {:project/project-info {:eid [:thk.project/id project-id]
                                           :link :thk.project/owner}}
-   :transact (update-related-entities-tx db user [:thk.project/id project-id] restrictions :thk.project/related-restrictions)})
+   :transact (update-related-entities-tx db [:thk.project/id project-id] restrictions :thk.project/related-restrictions)})
 
 (defcommand :thk.project/update-cadastral-units
   {:doc "Update project related cadastral-units"
@@ -120,7 +120,7 @@
    :project-id [:thk.project/id project-id]
    :authorization {:project/project-info {:eid [:thk.project/id project-id]
                                           :link :thk.project/owner}}
-   :transact (update-related-entities-tx db user [:thk.project/id project-id] cadastral-units :thk.project/related-cadastral-units)})
+   :transact (update-related-entities-tx db [:thk.project/id project-id] cadastral-units :thk.project/related-cadastral-units)})
 
 (defcommand :thk.project/add-permission
   {:doc "Add permission to project"
