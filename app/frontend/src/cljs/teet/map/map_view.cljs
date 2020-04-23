@@ -110,7 +110,9 @@
                   (tr [:map :layers :layer]))
              "")]
           [:div {:class (<class map-styles/edit-layer-options)}
-           [layer-filters-form e! edit-layer map-data]]
+           (when type
+             ^{:key (str type)}
+             [layer-filters-form e! edit-layer map-data])]
           [:div.edit-layer-buttons {:class (<class map-styles/layer-edit-button-container-style)}
            (if new?
              [buttons/button-secondary {:on-click (e! map-controller/->CancelLayer)}
