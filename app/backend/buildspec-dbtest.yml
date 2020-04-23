@@ -16,7 +16,7 @@ phases:
     commands:
       - echo Add Datomic deps
       - aws s3 cp s3://teet-dev-build/datomic-deps.tar.gz deps.tar.gz
-      - tar zxf deps.tar.gz -C ~/.m2/repository
+      - tar zxf deps.tar.gz -C ~
       - echo Download Clojure CLI tool
       - curl -o /tmp/install-clojure.sh https://download.clojure.org/install/linux-install-1.10.1.536.sh
       - bash /tmp/install-clojure.sh
