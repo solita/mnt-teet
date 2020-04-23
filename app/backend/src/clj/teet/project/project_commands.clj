@@ -25,6 +25,15 @@
     :target project-eid
     :type :notification.type/project-manager-assigned}))
 
+(defn- manager-permission-tx [project-eid user manager]
+  {:user/id (:user/id manager)
+   :user/permissions [(merge
+                       {:db/id "new-manager-permission"
+                        :permission/valid-from (java.util.Date.)
+                        :permission/role :manager
+                        :permission/projects [project-eid]}
+                       (creation-meta user))]})
+
 (defcommand :thk.project/initialize!
   {:doc "Initialize project state. Sets project basic information and linked restrictions
 and cadastral units"
@@ -106,11 +115,11 @@ and cadastral units"
                                                   :thk.project/project-name
                                                   :thk.project/custom-start-m
                                                   :thk.project/custom-end-m]))
-                                   (modification-meta user))
-                            (if (and new-manager
-                                     (not= (:user/id new-manager) current-manager-id))
-                              (manager-notification-tx [:thk.project/id id] user new-manager)
-                              {})])]
+                                   (modification-meta user))]
+                           (when (and new-manager
+                                      (not= (:user/id new-manager) current-manager-id))
+                             [(manager-notification-tx [:thk.project/id id] user new-manager)
+                              (manager-permission-tx [:thk.project/id id] user new-manager)]))]
     (when (or (:thk.project/custom-start-m project-form) (:thk.project/custom-end-m project-form))
       (project-geometry/update-project-geometries!
        (environment/config-map {:api-url [:api-url]

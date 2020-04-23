@@ -23,17 +23,20 @@
         (is (= (second tu/mock-user-edna-consultant)
                (current-manager))))
 
-      ;; FIXME: functionality not ready yet
-      #_(testing "gives new pm permission"
+
+      (testing "gives the new pm permission"
         (let [permissions (d/q '[:find (pull ?p [:permission/valid-from])
                                  :where
                                  [?user :user/permissions ?p]
                                  [?p :permission/role :manager]
                                  [?p :permission/projects ?project]
+                                 [?p :permission/valid-from ?valid-from]
+                                 [(.before ?valid-from ?now)]
+                                 [(missing? $ ?p :permission/valid-until)]
                                  :in
-                                 $ ?user ?project]
+                                 $ ?user ?project ?now]
                                (tu/db)
                                tu/mock-user-edna-consultant
-                               [:thk.project/id "11111"])]
-          (is (seq permissions) "permission is present"))
-        ))))
+                               [:thk.project/id "11111"]
+                               (java.util.Date.))]
+          (is (seq permissions) "permission is present"))))))
