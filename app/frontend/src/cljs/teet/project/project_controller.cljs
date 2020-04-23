@@ -89,7 +89,6 @@
 
 (defrecord NavigateToStep [step])
 
-(defrecord SaveProjectSetup [])
 (defrecord InitializeBasicInformationForm [form-data])
 (defrecord UpdateBasicInformationForm [form-data])
 (defrecord ProjectGeometryFetchSuccess [result])
@@ -124,8 +123,6 @@
 
 (defrecord OpenEditTaskDialog [task-id])
 (defrecord OpenEditActivityDialog [activity-id])
-(defrecord ContinueProjectSetup [project-id])
-(defrecord SkipProjectSetup [project-id])
 
 (defrecord DeleteActivity [activity-id])
 (defrecord DeleteActivityResult [response])
@@ -176,20 +173,6 @@
        (partial ->FetchFeatureCandidatesResponse :restrictions)
        "cadastral-units"
        (partial ->FetchFeatureCandidatesResponse :cadastral-units))}))
-
-(defn navigate-to-next-step-event
-  "Given `current-step`, navigates to next step in `steps`"
-  [steps {:keys [step-number] :as _current-step}]
-  {:pre [(<= step-number (count steps))]}
-  (if (= step-number (count steps))
-    ;; At the last step, return save event
-    ->SaveProjectSetup
-
-    ;; Otherwise navigate to next step
-    (let [step-label (-> (get steps step-number) :step-label name)]
-      (fn []
-        (->NavigateToStep step-label)))))
-
 
 (defn- update-related-features [features-path features-geojson-path feature-candidates-geojson-path
                                 app new-features]
@@ -345,22 +328,6 @@
                         (first (filter #(= (:teet-id %) (:map/teet-id p)) restriction-candidates)))]
       (toggle-restriction app restriction)))
 
-  ContinueProjectSetup
-  (process-event [{project-id :project-id} app]
-    (t/fx app
-          {:tuck.effect/type :command!
-           :command          :thk.project/continue-setup
-           :payload          {:thk.project/id project-id}
-           :result-event     common-controller/->Refresh}))
-
-  SkipProjectSetup
-  (process-event [{project-id :project-id} app]
-    (t/fx app
-          {:tuck.effect/type :command!
-           :command          :thk.project/skip-setup
-           :payload          {:thk.project/id project-id}
-           :result-event     common-controller/->Refresh}))
-
   DeleteActivity
   (process-event [{activity-id :activity-id} app]
     (t/fx app
@@ -412,34 +379,6 @@
            :params           params
            :query            (dissoc query :edit)}
           common-controller/refresh-fx))
-
-  SaveProjectSetup
-  (process-event [_ app]
-    (let [{:thk.project/keys [id name] :as project} (get-in app [:route :project])
-          {:thk.project/keys [project-name owner manager km-range m-range-change-reason]}
-          (get-in app [:route :project :basic-information-form])
-          [start-km end-km :as custom-km-range] (mapv road-model/parse-km km-range)
-          checked-restrictions (not-empty (get-in app [:route :project :checked-restrictions]))
-          checked-cadastral-units (not-empty (get-in app [:route :project :checked-cadastral-units]))]
-      (t/fx app {:tuck.effect/type :command!
-                 :command          :thk.project/initialize!
-                 :payload          (merge {:thk.project/id      id
-                                           :thk.project/owner   owner
-                                           :thk.project/manager manager}
-                                          (when (not= name project-name)
-                                            {:thk.project/project-name project-name})
-                                          (when (not= custom-km-range
-                                                      (project-model/get-column project :thk.project/effective-km-range))
-                                            {:thk.project/m-range-change-reason m-range-change-reason
-                                             :thk.project/custom-start-m        (road-model/km->m start-km)
-                                             :thk.project/custom-end-m          (road-model/km->m end-km)})
-                                          (when checked-restrictions
-                                            {:thk.project/related-restrictions (map :teet-id
-                                                                                    checked-restrictions)})
-                                          (when checked-cadastral-units
-                                            {:thk.project/related-cadastral-units (map :teet-id
-                                                                                       checked-cadastral-units)}))
-                 :result-event     common-controller/->Refresh})))
 
   UpdateProjectRestrictions
   (process-event [{restrictions :restrictions

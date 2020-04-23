@@ -362,18 +362,7 @@
      [select/select-user {:e! e! :attribute :thk.project/manager}]]))
 
 
-(defn- setup-incomplete-footer
-  [e! project]
-  [:div {:class (<class project-style/wizard-footer)}
-   [:div
-    [:p {:style {:color theme-colors/gray}}
-     (tr [:project :wizard :project-setup])]
-    [:span {:class (<class common-styles/warning-text)}
-     (tr [:project :wizard :setup-incomplete])]]
 
-   [buttons/button-primary {:type :submit
-                            :on-click #(e! (project-controller/->ContinueProjectSetup (:thk.project/id project)))}
-    (tr [:buttons :continue])]])
 
 (defn change-restrictions-view
   [e! app project]
@@ -419,7 +408,7 @@
         :on-mouse-enter (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" true)
         :on-mouse-leave (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" false)}])))
 
-(defn- initialized-project-view
+(defn- project-view
   "The project view shown for initialized projects."
   [e! {{configure :configure} :query :as app} project breadcrumbs]
   (cond
@@ -460,16 +449,8 @@
      (merge {:header [project-tabs e! app]
              :body [project-tab e! app project]
              :map-settings {:layers #{:thk-project :surveys}}}
-            (if (:thk.project/setup-skipped? project)
-              {:footer [setup-incomplete-footer e! project]}
-              (when-let [tab-footer (:footer (selected-project-tab app))]
-                {:footer [tab-footer e! app project]})))]))
-
-(defn- project-setup-view
-  "The project setup wizard that is shown for uninitialized projects."
-  [e! app project breadcrumbs]
-  [project-page-structure e! app project breadcrumbs
-   (project-setup-view/view-settings e! app project)])
+            (when-let [tab-footer (:footer (selected-project-tab app))]
+              {:footer [tab-footer e! app project]}))]))
 
 (defn edit-project-details
   [e! project]
@@ -537,6 +518,4 @@
    {:project-id (:db/id project)}
    [:<>
     [project-page-modals e! app project]
-    (if (or (:thk.project/setup-skipped? project) (project-model/initialized? project))
-      [initialized-project-view e! app project breadcrumbs]
-      [project-setup-view e! app project breadcrumbs])]])
+    [project-view e! app project breadcrumbs]]])

@@ -85,17 +85,6 @@ and cadastral units"
                   [:thk.project/id id])]))))
   :ok)
 
-(defcommand :thk.project/skip-setup
-  {:doc "Mark project setup as skipped"
-   :context {conn :conn
-             user :user}
-   :payload {project-id :thk.project/id}
-   :project-id [:thk.project/id project-id]
-   :authorization {:project/project-setup {:link :thk.project/owner}}
-   :transact [(merge {:thk.project/id project-id
-                      :thk.project/setup-skipped? true}
-                     (modification-meta user))]})
-
 (defcommand :thk.project/update
   {:doc "Edit project basic info"
    :context {:keys [conn db user]}
@@ -132,17 +121,6 @@ and cadastral units"
                  [:thk.project/id id])]))
     :ok))
 
-(defcommand :thk.project/continue-setup
-  {:doc "Undo project setup skip"
-   :context {conn :conn
-             user :user}
-   :payload {project-id :thk.project/id}
-   :project-id [:thk.project/id project-id]
-   :authorization {:project/project-setup {:link :thk.project/owner}}
-   :transact [(merge {:thk.project/id project-id
-                      :thk.project/setup-skipped? false}
-                     (modification-meta user))]})
-
 (defcommand :thk.project/revoke-permission
   ;; Options
   {:doc "Revoke a permission by setting its validity to end now."
@@ -164,7 +142,7 @@ and cadastral units"
                                            project-eid)))
         to-be-removed (set/difference current-entities-in-db datasource-feature-ids)
         to-be-added (set/difference datasource-feature-ids current-entities-in-db)]
-    (into [(meta-model/tx-meta user)]
+    (into []
           (concat
             (for [id-to-remove to-be-removed]
               [:db/retract project-eid
