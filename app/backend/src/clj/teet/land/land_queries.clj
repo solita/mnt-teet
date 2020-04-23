@@ -12,10 +12,10 @@
    :project-id [:thk.project/id project-id]
    :authorization {}}
   (let [land-acquisitions (d/q '[:find (pull ?e [*])
-                                 :in $
+                                 :in $ ?project-id
                                  :where [?e :land-acquisition/project ?project-id]]
                                db
-                               project-id)]
+                               [:thk.project/id project-id])]
     (mapv
       first
       land-acquisitions)))
