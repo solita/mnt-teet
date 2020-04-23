@@ -22,7 +22,7 @@
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Paper Link]]
+            [teet.ui.material-ui :refer [Paper Link Badge]]
             [teet.ui.panels :as panels]
             [teet.ui.project-context :as project-context]
             [teet.ui.select :as select]
@@ -312,6 +312,11 @@
    {:label [:project :tabs :people]
     :value "people"
     :component people-tab
+    :badge (fn [project]
+             (when-not (:thk.project/manager project)
+               [Badge {:badge-content (r/as-element [icons/av-new-releases
+                                                     {:font-size :small
+                                                      :color :error}])}]))
     :layers #{:thk-project}}
    {:label [:project :tabs :details]
     :value "details"
@@ -330,10 +335,14 @@
     (cu/find-first #(= tab (:value %)) project-tabs-layout)
     (first project-tabs-layout)))
 
-(defn- project-tabs [e! app]
+(defn- project-tabs [e! app project]
   [tabs/tabs {:e! e!
               :selected-tab (:value (selected-project-tab app))}
-   project-tabs-layout])
+   (mapv (fn [{badge :badge :as tab}]
+           (if badge
+             (assoc tab :badge (badge project))
+             tab))
+         project-tabs-layout)])
 
 (defn- project-tab [e! app project]
   [(:component (selected-project-tab app)) e! app project])
@@ -446,7 +455,7 @@
                 (tr [:buttons :save])]]}]
     :else
     [project-page-structure e! app project breadcrumbs
-     (merge {:header [project-tabs e! app]
+     (merge {:header [project-tabs e! app project]
              :body [project-tab e! app project]
              :map-settings {:layers #{:thk-project :surveys}}}
             (when-let [tab-footer (:footer (selected-project-tab app))]

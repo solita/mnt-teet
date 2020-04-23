@@ -5,7 +5,7 @@
             [teet.localization :refer [tr]]
             [teet.comments.comments-view :as comments-view]
             [teet.comments.comments-controller :as comments-controller]
-            [reagent.core :as reagent]
+            [reagent.core :as r]
             [teet.ui.typography :as typography]
             [teet.ui.common :as common]
             [herb.core :refer [<class]]
@@ -31,17 +31,25 @@
                         (let [tab (index->tab v)]
                           (e! (common-controller/->SetQueryParam :tab (:value tab)))))}
      (doall
-      (for [{:keys [value label]} tabs]
+      (for [{:keys [value label badge]} tabs]
         (Tab {:key value
               :disable-ripple true
-              :label (if (vector? label)
-                       (tr label)
-                       label)})))]))
+              :label (r/as-element
+                      [:div {:style {:position :relative}}
+                       [:span
+                        (if (vector? label)
+                          (tr label)
+                          label)]
+                       (when badge
+                         [:div {:style {:position :absolute
+                                        :top -10
+                                        :right 0}}
+                          badge])])})))]))
 
 
 (defn details-and-comments-tabs
   [{:keys [e!]}]
-  (reagent/create-class
+  (r/create-class
     {:component-will-unmount #(e! (comments-controller/->ClearCommentField))
      :reagent-render
      (fn [{:keys [app] :as opts} details]
