@@ -34,6 +34,7 @@
                          :where
                          [?a :activity/name ?name]
                          [?lc :thk.lifecycle/activities ?a]
+                         [(missing? $ ?a :meta/deleted?)]   ;; Don't take in to account deleted activities
                          [(get-else $ ?a :activity/actual-end-date ?time) ?end-date]
                          [(>= ?end-date ?time)]]
                     db
