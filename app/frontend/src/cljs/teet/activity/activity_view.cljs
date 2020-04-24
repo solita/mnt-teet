@@ -212,10 +212,9 @@
      [activity-header e! activity]
      [project-management (:thk.project/owner project) (:thk.project/manager project)]
      [task-lists (:activity/tasks activity)]
-     ;; FIXME change to match backend: check for project owner
-     (when (and (authorized? @teet.app-state/user :activity/change-activity-status nil)
-                (activity-model/all-tasks-completed? activity))
-       [submit-for-approval-button e! params])
+     (when (activity-model/all-tasks-completed? activity)
+       [when-authorized :activity/change-activity-status activity
+        [submit-for-approval-button e! params]])
      (when (and (authorized? @teet.app-state/user :activity/change-activity-status nil)
                 (-> activity :activity/status :db/ident (= :activity.status/in-review)))
        [approve-button e! params])
