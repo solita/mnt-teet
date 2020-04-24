@@ -4,14 +4,25 @@
             [teet.file.file-storage :as file-storage]
             [datomic.client.api :as d]
             [teet.project.project-db :as project-db]
-            [teet.file.file-db :as file-db]))
+            [teet.file.file-db :as file-db]
+            [teet.file.filename-metadata :as filename-metadata])
+  (:import (java.net URLEncoder)))
 
-(defn- url-for-file [db file-id]
+
+(defn- url-for-file [db file-id with-metadata?]
   (let [file-name (:file/name (d/pull db '[:file/name] file-id))
         s3-file-name (str file-id "-" file-name)]
     ^{:format :raw}
     {:status 302
-     :headers {"Location" (file-storage/download-url s3-file-name)}}))
+     :headers {"Location" (file-storage/download-url
+                           (when with-metadata?
+                             ;; Get file metadata for downloads
+                             (str "attachment; filename="
+                                  (->> file-id
+                                       (file-db/file-metadata db)
+                                       filename-metadata/metadata->filename
+                                       URLEncoder/encode)))
+                           s3-file-name)}}))
 
 (defquery :file/download-file
   {:doc "Get a download link to the given file"
@@ -19,7 +30,7 @@
    :args {file-id :file-id}
    :project-id (project-db/file-project-id db file-id)
    :authorization {:document/view-document {:db/id file-id}}}
-  (url-for-file db file-id))
+  (url-for-file db file-id true))
 
 
 
@@ -33,4 +44,4 @@
    :project-id (when comment-id
                  (project-db/comment-project-id db comment-id))
    :authorization {:document/view-document {:db/id comment-id}}}
-  (url-for-file db file-id))
+  (url-for-file db file-id false))

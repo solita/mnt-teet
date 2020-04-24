@@ -2,6 +2,7 @@
   "Date picker component"
   (:require [reagent.core :refer [atom] :as r]
             [cljs-time.core :as t]
+            [cljs-time.coerce :as c]
             [teet.ui.icons :as icons]
             [cljs-time.format :as tf]
             [teet.localization :as localization :refer [tr]]
@@ -105,8 +106,10 @@
    :month        month to show (defaults to current) (0 - 11)
    :on-change    callback to set new selected date
    :selectable?  fn to call for each date to check if it should be selectable"
-  [{:keys [value on-change selectable?] :as _opts}]
-  (r/with-let [now (or value (t/now))
+  [{:keys [value on-change selectable? min-date] :as _opts}]
+  (r/with-let [now (or value (if (t/after? (c/from-date min-date) (t/now))
+                               (c/from-date min-date)
+                               (t/now)))
                showing (atom [(.getYear now) (.getMonth now)])]
     (let [{:keys [months days today]} (get locale @localization/selected-language)
           [year month] @showing
@@ -209,7 +212,7 @@
 
 (defn date-input
   "Combined text field and date picker component"
-  [{:keys [label error value on-change selectable? required end start]}]
+  [{:keys [label error value on-change selectable? required end start min-date]}]
   (r/with-let [txt (r/atom (some-> value goog.date.Date. unparse-opt))
                open? (r/atom false)
                ref (atom nil)
@@ -245,6 +248,7 @@
         [ClickAwayListener {:on-click-away close-input}
          [date-picker {:value (when value
                                 (goog.date.Date. value))
+                       :min-date min-date
                        :on-change (fn [^goog.date.Date d]
                                     (reset! txt (unparse-opt d))
                                     (on-change (some-> d .-date))
@@ -254,7 +258,7 @@
 
 (defn date-range-input
   "combine two date-inputs to provide a consistent date-range-picker"
-  [{:keys [error value on-change start-label end-label required row?]
+  [{:keys [error value on-change start-label end-label required row? min-date max-date]
     :or {row? true}}]
   (let [[start end] value
         element-size (if row?
@@ -267,21 +271,37 @@
                    :error (and error (nil? start))
                    :label start-label
                    :end end
+                   :min-date min-date
                    :on-change (fn [start]
                                 (on-change [start end]))
                    :selectable? (fn [day]
-                                  (if end
-                                    (< (.-date day) end)
-                                    true))}]]
+                                  (and
+                                    (if end
+                                      (< (.-date day) end)
+                                      true)
+                                    (if min-date
+                                      (<= min-date (.-date day))
+                                      true)
+                                    (if max-date
+                                      (<= (.-date day) max-date)
+                                      true)))}]]
      [Grid {:item true :xs element-size}
       [date-input {:value end
                    :required required
                    :error (and error (nil? end))
                    :label end-label
                    :start start
+                   :min-date (or start min-date)
                    :on-change (fn [end]
                                 (on-change [start end]))
                    :selectable? (fn [day]
-                                  (if start
-                                    (< start (.-date day))
-                                    true))}]]]))
+                                  (and
+                                    (if start
+                                      (< start (.-date day))
+                                      true)
+                                    (if min-date
+                                      (<= min-date (.-date day))
+                                      true)
+                                    (if max-date
+                                      (<= (.-date day) max-date)
+                                      true)))}]]]))

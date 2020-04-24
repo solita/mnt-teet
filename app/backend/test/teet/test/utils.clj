@@ -9,7 +9,8 @@
             [teet.user.user-model :as user-model]
             [teet.user.user-db :as user-db]
             [clojure.java.io :as io]
-            [clojure.set :as set])
+            [clojure.set :as set]
+            [teet.util.datomic :as du])
   (:import (java.util Date)))
 
 ;; Convenient shortcuts
@@ -53,10 +54,10 @@
                                         ; :user/organization "Maanteeamet"
     }])
 
-(def mock-user-manager [:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"])
-(def mock-user-carla-consultant [:user/id #uuid "ccbedb7b-ab30-405c-b389-292cdfe85271"])
-(def mock-user-boss [:user/id #uuid "fa8af5b7-df45-41ba-93d0-603c543c880d"])
-(def mock-user-edna-consultant [:user/id #uuid "008af5b7-0f45-01ba-03d0-003c111c8f00"])
+(def mock-user-manager [:user/id manager-id])
+(def mock-user-carla-consultant [:user/id external-consultant-id])
+(def mock-user-boss [:user/id boss-id])
+(def mock-user-edna-consultant [:user/id internal-consultant-id])
 
 
 ;;
@@ -77,6 +78,11 @@
   []
   (d/db (connection)))
 
+(defn entity
+  "Returns navigable entity from the current db."
+  [eid]
+  (du/entity (db) eid))
+
 (defn tx
   "Transact the given tx-data maps. Can only be called within tests using with-db fixture."
   [& tx-data]
@@ -88,12 +94,37 @@
       (throw (ex-info "No db id found for data-fixture-temp-id"
                       {:temp-id data-fixture-temp-id}))))
 
+(defn- datomic-client-env
+  "Get Datomic client info from environment variables (running in CI)"
+  []
+  (let [region (System/getenv "DATOMIC_REGION")
+        system (System/getenv "DATOMIC_SYSTEM")]
+    (when (and region system)
+      {:server-type :ion
+       :region region
+       :system system
+       :query-group system
+       :endpoint (str "http://entry." system "." region ".datomic.net:8182/")
+       :proxy-port 8182})))
+
+
 (defn with-environment [f]
-  (log/info "Loading local config.")
-  (environment/load-local-config!)
-  (f)
-  (log/info "Reloading local config.")
-  (environment/load-local-config!))
+  (let [client (datomic-client-env)]
+    (if client
+      (do
+        (log/info "Using environment client.")
+        (swap! environment/config
+               #(-> %
+                    (assoc-in [:datomic :client] client)
+                    (assoc-in [:document-storage :bucket-name]
+                              (System/getenv "DOCUMENT_BUCKET")))))
+      (do
+        (log/info "Loading local config.")
+        (environment/load-local-config!)))
+    (f)
+    (when-not client
+      (log/info "Reloading local config.")
+      (environment/load-local-config!))))
 
 (defn with-db
   ([] (with-db {}))
@@ -166,6 +197,9 @@
   (reset! logged-in-user-ref user-ref)
   (log/info "Locally logged in as " user-ref))
 
+(defn local-logout []
+  (reset! logged-in-user-ref nil))
+
 (defn- action-ctx
   "A valid datomic reference must be obtainable from `user` with `user-model/user-ref`"
   [user]
@@ -206,15 +240,16 @@
 ;;
 (defn create-task [{:keys [user activity task]} & [global-test-data-key]]
   (local-login user)
-  (let [task-id (-> (local-command :task/create {:activity-id activity
+  (let [activity-entity (du/entity (db) activity)
+        task-id (-> (local-command :task/create {:activity-id activity
                                                  :task (merge {:task/send-to-thk? false
                                                                :task/type :task.type/design-requirements
                                                                :task/group :task.group/base-data
                                                                :db/id "new-id"
                                                                :task/description "Design requirements for testing."
                                                                :task/assignee {:user/id (second user)}
-                                                               :task/estimated-start-date (Date.)
-                                                               :task/estimated-end-date (Date.)}
+                                                               :task/estimated-start-date (:activity/estimated-start-date activity-entity)
+                                                               :task/estimated-end-date (:activity/estimated-end-date activity-entity)}
                                                               task)})
                     :tempids
                     (get "new-id"))]
@@ -235,3 +270,10 @@
     (if global-test-data-key
       (store-data! global-test-data-key comment-id)
       comment-id)))
+
+(defn complete-task [{:keys [user task-id] :as params}]
+  (local-login user)
+  (let [ret1 (local-command :task/submit params)
+        ret2 (local-command :task/start-review params)
+        ret3 (local-command :task/review (merge params {:result :accept}))]
+    [ret1 ret2 ret3]))

@@ -1,10 +1,8 @@
 (ns teet.admin.admin-commands
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
-            [teet.user.user-roles :as user-roles]
             [teet.environment :as environment]
             [clojure.string :refer [blank? starts-with?]]
             [teet.integration.x-road]
-            [taoensso.timbre :as log]
             teet.user.user-spec))
 
 (defn- new-user []
@@ -18,8 +16,8 @@
 
 (defn user-data-from-xroad [new-user-eid current-user-eid]
   (let [xroad-url (environment/config-value :xroad-query-url)
-        xroad-instance-id (environment/config-value :xroad-instance-id)        
-        resp (teet.integration.x-road/perform-rr442-request xroad-url 
+        xroad-instance-id (environment/config-value :xroad-instance-id)
+        resp (teet.integration.x-road/perform-rr442-request xroad-url
                                                             {:instance-id xroad-instance-id
                                                              :requesting-eid (ensure-ee-prefix current-user-eid)
                                                              :subject-eid new-user-eid})
@@ -42,5 +40,9 @@
    :authorization {:admin/add-user {}}
    :transact [;; (log/info "admin/create-user: current user" (:user/person-id user))
               (merge (new-user)
-                     (select-keys user-data [:user/id :user/person-id :user/roles])
-                     (user-data-from-xroad (:user/person-id user-data) (:user/person-id user)))]})
+                     (select-keys user-data [:user/person-id])
+                     (when-let [p (:user/add-global-permission user-data)]
+                       {:user/permissions [{:db/id "new-permission"
+                                            :permission/role p
+                                            :permission/valid-from (java.util.Date.)}]})
+                     #_(user-data-from-xroad (:user/person-id user-data) (:user/person-id user)))]})

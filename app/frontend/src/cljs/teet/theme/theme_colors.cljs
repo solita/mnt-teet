@@ -8,6 +8,8 @@
 ;; Main colors
 (def blue-dark "#004665")
 (def blue "#005E87")
+(defn blue-alpha [alpha]
+  (str "rgb(0, 94, 135, " alpha ")"))
 (def blue-light "#007BAF")
 (def blue-lighter "#AAE1F8")
 (def blue-lightest (lighten blue-lighter 10))

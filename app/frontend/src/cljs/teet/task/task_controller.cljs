@@ -5,7 +5,8 @@
             [teet.localization :refer [tr]]
             [teet.file.file-controller]
             [teet.common.common-controller :as common-controller]
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [teet.snackbar.snackbar-controller :as snackbar-controller]))
 
 (defrecord UploadDocuments [files])
 (defrecord UpdateTask [task updated-task]) ; update task info to database
@@ -26,7 +27,8 @@
 (defrecord CloseAddDocumentDialog [])
 
 (defrecord SubmitResults []) ; submit task for review
-(defrecord Review [status]) ; review results
+(defrecord StartReview []) ; change status to in review
+(defrecord Review [result]) ; review results
 
 (extend-protocol t/Event
   SubmitResults
@@ -38,13 +40,22 @@
            :success-message (tr [:task :submit-results-success])
            :result-event common-controller/->Refresh}))
 
+  StartReview
+  (process-event [_ {params :params :as app}]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :task/start-review
+           :payload {:task-id (goog.math.Long/fromString (:task params))}
+           :success-message (tr [:task :start-review-success])
+           :result-event common-controller/->Refresh}))
+
   Review
-  (process-event [{status :status} {params :params :as app}]
+  (process-event [{result :result} {params :params :as app}]
     (t/fx app
           {:tuck.effect/type :command!
            :command :task/review
            :payload {:task-id (goog.math.Long/fromString (:task params))
-                     :status status}
+                     :result result}
            :result-event common-controller/->Refresh}))
 
   OpenEditModal
@@ -182,6 +193,12 @@
   UpdateTaskForm
   (process-event [{form-data :form-data} app]
     (update-in app [:route :project :add-task] merge form-data)))
+
+(defmethod common-controller/on-server-error :invalid-task-dates [err app]
+  (let [error (-> err ex-data :error)]
+    ;; General error handler for when the client sends faulty data.
+    ;; Commands can fail requests with :error :bad-request to trigger this
+    (t/fx (snackbar-controller/open-snack-bar app (tr [:error error]) :warning))))
 
 (defn document-page-url [{{:keys [project activity task]} :params} doc]
   (str "#/projects/" project "/" activity "/" task "/" (:db/id doc)))

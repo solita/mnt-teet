@@ -2,7 +2,8 @@
   (:require [teet.db-api.core :as db-api :refer [defquery]]
             [teet.notification.notification-db :as notification-db]
             [datomic.client.api :as d]
-            [teet.comment.comment-model :as comment-model]))
+            [teet.comment.comment-model :as comment-model]
+            [teet.util.datomic :as du]))
 
 (defquery :notification/unread-notifications
   {:doc "Fetch unread notifications for user, sorted by most recent first."
@@ -67,7 +68,7 @@
             [entity-type entity-id]))
         comment-model/entity-comment-attribute))
 
-(defn comment-navigation-info [db comment-id]
+(defn- comment-navigation-info [db comment-id]
   (if-let [[entity-type entity-id] (comment-parent db comment-id)]
     (merge
      (case entity-type
@@ -76,6 +77,10 @@
      {:query {:tab "comments"
               :focus-on (str comment-id)}})
     (db-api/bad-request! "No such comment")))
+
+(defn- project-navigation-info [db project-id]
+  {:page :project
+   :params {:project (str (:thk.project/id (du/entity db project-id)))}})
 
 (defquery :notification/navigate
   {:doc "Fetch navigation info for notification."
@@ -90,5 +95,17 @@
       (task-navigation-info db (:db/id target))
 
       :notification.type/comment-created
-      (comment-navigation-info db (:db/id target)))
+      (comment-navigation-info db (:db/id target))
+
+      :notification.type/comment-resolved
+      (comment-navigation-info db (:db/id target))
+
+      :notification.type/comment-unresolved
+      (comment-navigation-info db (:db/id target))
+
+      :notification.type/project-manager-assigned
+      (project-navigation-info db (:db/id target))
+
+      ;; FIXME: implement activity navigation info
+      )
     (db-api/bad-request! "No such notification")))

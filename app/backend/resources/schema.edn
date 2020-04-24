@@ -1,241 +1,54 @@
-[{:db/ident :migration/workflow-initial
-  :txes [;; Workflow entity
-         [{:db/ident :workflow/name
+[{:db/ident :migration/baseline-2020
+  :txes [
+         ;; Transaction metadata
+         [{:db/ident :tx/author
+           :db/valueType :db.type/uuid
+           :db/cardinality :db.cardinality/one
+           :db/doc "Id of the user who made this transaction"}
+          {:db/ident :integration/source-uri
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
-           :db/doc "Name of this workflow"}
+           :db/doc "URI of data imported by integration transaction"}]
 
-          {:db/ident :thk/id
-           :db/valueType :db.type/string
+         ;; enumerations
+         [{:db/ident :enum/attribute
+           :db/doc "Correlates different enum values by keyword"
+           :db/valueType :db.type/keyword
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :enum/valid-for
+           :db/valueType :db.type/keyword
            :db/cardinality :db.cardinality/one
-           :db/doc "The THK projet id a workflow is associated with"}
+           :db/doc "Indicates for which parent value this selection is valid for"}]
 
-          {:db/ident :workflow/due-date
+         ;; common metadata fields
+         [{:db/ident :meta/creator
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Original creator of entity"}
+          {:db/ident :meta/created-at
            :db/valueType :db.type/instant
            :db/cardinality :db.cardinality/one
-           :db/doc "The planned due date"}
-
-          {:db/ident :workflow/phases
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/many}]
-
-         ;; Task
-         [{:db/ident :task/name
-           :db/valueType :db.type/string
-           :db/cardinality :db.cardinality/one}
-
-          {:db/ident :task/description
-           :db/valueType :db.type/string
-           :db/cardinality :db.cardinality/one}
-
-          {:db/ident :task/assignee
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/one}
-
-          {:db/ident :task/status
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/one}]
-
-         ;; Task status
-         [{:db/ident :task.status/timestamp
+           :db/doc "Timestamp of creation"}
+          {:db/ident :meta/modified-at
            :db/valueType :db.type/instant
            :db/cardinality :db.cardinality/one
-           :db/doc "When this status update was made"}
-
-          {:db/ident :task.status/status
+           :db/doc "Timestamp of last modification"}
+          {:db/ident :meta/modifier
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
-           :db/doc "Status in this status update, references :task.status/* enum values"}
-
-          {:db/ident :task.status/user
-           :db/valueType :db.type/ref
+           :db/doc "Ref to user entity who last modified"}
+          {:db/ident :meta/deleted?
+           :db/valueType :db.type/boolean
            :db/cardinality :db.cardinality/one
-           :db/doc "Reference to the user who made this status update"}
+           :db/doc "If true this entity will not be shown in UI except for special admin functionality."}]
 
-          {:db/ident :task.status/comment
-           :db/valueType :db.type/string
-           :db/cardinality :db.cardinality/one
-           :db/doc "Text comment in status update"}]
-
-         ;; Task status types
-         [{:db/ident :task.status/not-started}
-          {:db/ident :task.status/in-progress}
-          {:db/ident :task.status/completed}
-          {:db/ident :task.status/accepted}
-          {:db/ident :task.status/rejected}]]}
-
- {:db/ident :document/document-entity
-  :txes [[{:db/ident :document/name
-           :db/valueType :db.type/string
-           :db/cardinality :db.cardinality/one
-           :db/doc "Name of the document"}
-
-          {:db/ident :document/size
-           :db/valueType :db.type/long
-           :db/cardinality :db.cardinality/one
-           :db/doc "Size of the document in bytes"}
-
-          {:db/ident :document/type
-           :db/valueType :db.type/string
-           :db/cardinality :db.cardinality/one
-           :db/doc "MIME type of the document"}]]}
-
- {:db/ident :document/task-link
-  :txes [[{:db/ident :task/documents
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/many
-           :db/doc "Documents attached to a task"}]]}
-
- {:db/ident :comments-for-task
-  :txes [[{:db/ident :comment/comment
-           :db/doc "Text of the comment"
-           :db/valueType :db.type/string
-           :db/cardinality :db.cardinality/one}
-          {:db/ident :comment/author
-           :db/doc "Author of the comment"
-           :db/cardinality :db.cardinality/one
-           :db/valueType :db.type/ref}
-          {:db/ident :comment/timestamp
-           :db/doc "When to comment was made"
-           :db/cardinality :db.cardinality/one
-           :db/valueType :db.type/instant}
-
-          ;; Add task comments
-          {:db/ident :task/comments
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/many
-           :db/doc "Comments for the task"}]]}
-
- {:db/ident :user-info
-  :txes [[{:db/ident :user/id
+         ;; user
+         [{:db/ident :user/id
            :db/doc "UUID of user information. Links to external source."
            :db/valueType :db.type/uuid
            :db/cardinality :db.cardinality/one
-           :db/unique :db.unique/identity}]]}
-
-
- {:db/ident :enum-attribute
-  :txes [[{:db/ident :enum/attribute
-           :db/doc "Correlates different enum values by keyword"
-           :db/valueType :db.type/keyword
-           :db/cardinality :db.cardinality/one}]]}
-
- {:db/ident :migration/activity-task-definition
-  :txes [[;; Task type
-          {:db/ident :task.type/topogeodesy :enum/attribute :task/type}
-          {:db/ident :task.type/geology :enum/attribute :task/type}
-          {:db/ident :task.type/traffic-study :enum/attribute :task/type}
-          {:db/ident :task.type/eia-pre-assessment :enum/attribute :task/type}
-          {:db/ident :task.type/animal-study :enum/attribute :task/type}
-          {:db/ident :task.type/archeological-study :enum/attribute :task/type}
-          {:db/ident :task.type/other :enum/attribute :task/type}
-
-          ;; Task type ref
-          {:db/ident :task/type
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/one
-           :db/doc "Task type enum ref"}]]}
-
-
- {:db/ident :migration/document-files
-  :txes [[{:db/ident :document/description
-           :db/valueType :db.type/string
-           :db/cardinality :db.cardinality/one
-           :db/doc "Description of the document"}
-
-          {:db/ident :document/status
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/one
-           :db/doc "Link to document status enum"}
-
-          {:db/ident :document.status/draft :enum/attribute :document/status}
-          {:db/ident :document.status/final :enum/attribute :document/status}
-
-          {:db/ident :document/files
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/many
-           :db/doc "Links to actual file attachments"}
-
-          ;; Actual file attachment info
-          {:db/ident :file/name
-            :db/valueType :db.type/string
-            :db/cardinality :db.cardinality/one
-            :db/doc "Name of the file"}
-
-           {:db/ident :file/size
-            :db/valueType :db.type/long
-            :db/cardinality :db.cardinality/one
-            :db/doc "Size of the file in bytes"}
-
-           {:db/ident :file/type
-            :db/valueType :db.type/string
-            :db/cardinality :db.cardinality/one
-            :db/doc "MIME type of the file"}]]}
-
- {:db/ident :migration/document-comments
-  :txes [[{:db/ident :document/comments
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/many
-           :db/doc "Comments for the document"}]]}
-
- {:db/ident :migration/tx-author
-  :txes [[{:db/ident :tx/author
-           :db/valueType :db.type/uuid
-           :db/cardinality :db.cardinality/one
-           :db/doc "Id of the user who made this transaction"}]]}
-
- {:db/ident :migration/file-author-and-time
-  :txes [[{:db/ident :file/author
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/one
-           :db/doc "User who uploaded this file"}
-          {:db/ident :file/timestamp
-           :db/valueType :db.type/instant
-           :db/cardinality :db.cardinality/one
-           :db/doc "Timestamp of when this file upload was started"}]]}
-
-
- {:db/ident :migration/task-status-enum
-  :txes [[{:db/ident :task.status/not-started
-           :enum/attribute :task/status}
-          {:db/ident :task.status/in-progress
-           :enum/attribute :task/status}
-          {:db/ident :task.status/completed
-           :enum/attribute :task/status}
-          {:db/ident :task.status/accepted
-           :enum/attribute :task/status}
-          {:db/ident :task.status/rejected
-           :enum/attribute :task/status}]]}
-
-  {:db/ident :migration/task-status-enum-2
-  :txes [[{:db/ident :task.status/in-preparation
-           :enum/attribute :task/status}
-          {:db/ident :task.status/assigned
-           :enum/attribute :task/status}
-          {:db/ident :task.status/submitted
-           :enum/attribute :task/status}
-          {:db/ident :task.status/reviewing
-           :enum/attribute :task/status}
-          {:db/ident :task.status/adjustment
-           :enum/attribute :task/status}
-          {:db/ident :task.status/canceled
-           :enum/attribute :task/status}]]}
-
- {:db/ident :migration/task-modified
-  :txes [[{:db/ident :task/modified
-           :db/valueType :db.type/instant
-           :db/cardinality :db.cardinality/one
-           :db/doc "Last modification timestamp"}]]}
-
- {:db/ident :migration/document-modified
-  :txes [[{:db/ident :document/modified
-           :db/valueType :db.type/instant
-           :db/cardinality :db.cardinality/one
-           :db/doc "Last modification timestamp for document"}]]}
-
-
- {:db/ident :migration/user-info
-  :txes [[{:db/ident :user/roles
+           :db/unique :db.unique/identity}
+          {:db/ident :user/roles
            :db/valueType :db.type/keyword
            :db/cardinality :db.cardinality/many
            :db/doc "User roles"}
@@ -255,186 +68,14 @@
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
            :db/doc "User's Estonian person ID"
-           :db/unique :db.unique/identity}]]}
- {:db/ident :migration/thk-project-info
-  :txes     [[{:db/ident       :thk.project/id
-               :db/valueType   :db.type/string
-               :db/cardinality :db.cardinality/one
-               :db/doc         "THK project id"
-               :db/unique      :db.unique/identity}
-              {:db/ident :thk.project/name
-               :db/valueType :db.type/string
-               :db/cardinality :db.cardinality/one}
-              {:db/ident :thk.project/road-nr
-               :db/valueType :db.type/long
-               :db/cardinality :db.cardinality/one}
-              {:db/ident :thk.project/bridge-nr
-               :db/valueType :db.type/long
-               :db/cardinality :db.cardinality/one}
-              {:db/ident :thk.project/end-m
-               :db/valueType :db.type/long
-               :db/cardinality :db.cardinality/one}
-              {:db/ident :thk.project/start-m
-               :db/valueType :db.type/long
-               :db/cardinality :db.cardinality/one}
-              {:db/ident :thk.project/carriageway
-               :db/valueType :db.type/long
-               :db/cardinality :db.cardinality/one}
-              {:db/ident :thk.project/estimated-start-date
-               :db/valueType :db.type/instant
-               :db/cardinality :db.cardinality/one}
-              {:db/ident :thk.project/estimated-end-date
-               :db/valueType :db.type/instant
-               :db/cardinality :db.cardinality/one}
-              {:db/ident :thk.project/procurement-nr
-               :db/valueType :db.type/string
-               :db/doc "Procurement.ProcurementNo. Can contain text"
-               :db/cardinality :db.cardinality/one}
-              {:db/ident :thk.project/procurement-id
-               :db/valueType :db.type/long
-               :db/doc  "Procurement.ID/hanke_id"
-               :db/cardinality :db.cardinality/one}]]}
-
- {:db/ident :migration/integration-source-uri
-  :txes     [[{:db/ident :integration/source-uri
-               :db/valueType :db.type/string
-               :db/cardinality :db.cardinality/one
-               :db/doc "URI of data imported by integration transaction"}]]}
-
- {:db/ident :migration/project-activities
-  :txes     [[{:db/ident       :activity/modified
-               :db/valueType   :db.type/instant
-               :db/cardinality :db.cardinality/one
-               :db/doc         "Last modification timestamp for activity"}
-
-              {:db/ident       :activity/estimated-start-date
-               :db/valueType   :db.type/instant
-               :db/cardinality :db.cardinality/one}
-
-              {:db/ident       :activity/estimated-end-date
-               :db/valueType   :db.type/instant
-               :db/cardinality :db.cardinality/one}
-
-              {:db/ident       :activity/actual-start-date
-               :db/valueType   :db.type/instant
-               :db/cardinality :db.cardinality/one}
-
-              {:db/ident       :activity/actual-end-date
-               :db/valueType   :db.type/instant
-               :db/cardinality :db.cardinality/one}
-
-              {:db/ident       :activity/tasks
-               :db/valueType   :db.type/ref
-               :db/cardinality :db.cardinality/many}]
-
-             [;; activity names
-              {:db/ident :activity.name/pre-design :enum/attribute :activity/name}
-              {:db/ident :activity.name/preliminary-design :enum/attribute :activity/name}
-              {:db/ident :activity.name/detailed-design :enum/attribute :activity/name}
-              {:db/ident :activity.name/land-acquisition :enum/attribute :activity/name}
-              {:db/ident :activity.name/construction :enum/attribute :activity/name}
-              {:db/ident :activity.name/other :enum/attribute :activity/name}
-
-              ;; activity statuses
-              {:db/ident :activity.status/in-progress :enum/attribute :activity/status}
-              {:db/ident :activity.status/research :enum/attribute :activity/status}
-              {:db/ident :activity.status/completed :enum/attribute :activity/status}
-              {:db/ident :activity.status/valid :enum/attribute :activity/status}
-              {:db/ident :activity.status/canceled :enum/attribute :activity/status}
-              {:db/ident :activity.status/expired :enum/attribute :activity/status}
-              {:db/ident :activity.status/other :enum/attribute :activity/status}
-
-              ;; activity name ref
-              {:db/ident       :activity/name
-               :db/valueType   :db.type/ref
-               :db/cardinality :db.cardinality/one
-               :db/doc         "Activity name enum ref"}
-
-              ;; activity status ref
-              {:db/ident       :activity/status
-               :db/valueType   :db.type/ref
-               :db/cardinality :db.cardinality/one
-               :db/doc         "Activity status enum ref"}]]}
-
- {:db/ident :migration/initialize-project
-  :txes     [[{:db/ident       :thk.project/custom-name
-               :db/cardinality :db.cardinality/one
-               :db/valueType   :db.type/string
-               :db/doc         "Custom name given to project in project initialization"}
-
-              {:db/ident       :thk.project/owner
-               :db/cardinality :db.cardinality/one
-               :db/valueType   :db.type/ref
-               :db/doc         "User who owns this project"}]]}
-
- {:db/ident :migration/project-lifecycle
-  :txes     [[{:db/ident       :thk.lifecycle/estimated-start-date
-               :db/cardinality :db.cardinality/one
-               :db/valueType   :db.type/instant
-               :db/doc         "Estimated start date for lifecycle"}
-              {:db/ident       :thk.lifecycle/estimated-end-date
-               :db/cardinality :db.cardinality/one
-               :db/valueType   :db.type/instant
-               :db/doc         "Estimated end date for lifecycle"}
-              {:db/ident       :thk.lifecycle/activities
-               :db/cardinality :db.cardinality/many
-               :db/valueType   :db.type/ref
-               :db/doc         "Activies performed in this lifecycle"}
-              {:db/ident       :thk.lifecycle/type
-               :db/cardinality :db.cardinality/one
-               :db/valueType   :db.type/ref
-               :db/doc         "Type of the lifecycle. f.ex Construction/Design"}]
-
-             [{:db/ident :thk.lifecycle-type/design :enum/attribute :thk.lifecycle/type}
-              {:db/ident :thk.lifecycle-type/construction :enum/attribute :thk.lifecycle/type}]]}
-
- {:db/ident :migration/project-lifecycles
-  :txes [[{:db/ident :thk.project/lifecycles
-           :db/cardinality :db.cardinality/many
+           :db/unique :db.unique/identity}
+          {:db/ident :user/permissions
            :db/valueType :db.type/ref
-           :db/doc "Lifecycles in this project"}]]}
+           :db/cardinality :db.cardinality/many
+           :db/doc "Permissions that have been granted to this user"}]
 
- {:db/ident :migration/project-name
-  :txes [[{:db/id :thk.project/custom-name
-           :db/ident :thk.project/project-name}]]}
-
- {:db/ident :migration/project-manager
-  :txes [[{:db/ident       :thk.project/manager
-           :db/cardinality :db.cardinality/one
-           :db/valueType   :db.type/ref
-           :db/doc         "User who manages this project"}]]}
-
- {:db/ident :migration/deletion-annotation
-  :txes     [[{:db/ident       :deletion/eid
-               :db/cardinality :db.cardinality/many
-               :db/valueType   :db.type/long
-               :db/doc         "IDs of entities retracted in this transaction"}]]}
-
- {:db/ident :migration/task-author
-  :txes     [[{:db/ident       :task/author
-               :db/cardinality :db.cardinality/one
-               :db/valueType   :db.type/ref
-               :db/doc         "Author of the task"}]]}
-
- {:db/ident :migration/thk-project-lifecycle-phase-id
-  :txes [[{:db/ident :thk.lifecycle/id
-           :db/valueType :db.type/string
-           :db/cardinality :db.cardinality/one
-           :db/unique :db.unique/identity}]]}
-
- {:db/ident :migration/thk-project-meter-range-changed
-  :txes [[{:db/ident :thk.project/m-range-change-reason
-           :db/valueType :db.type/string
-           :db/cardinality :db.cardinality/one}
-          {:db/ident :thk.project/custom-end-m
-           :db/valueType :db.type/long
-           :db/cardinality :db.cardinality/one}
-          {:db/ident :thk.project/custom-start-m
-           :db/valueType :db.type/long
-           :db/cardinality :db.cardinality/one}]]}
-
- {:db/ident :migration/permission-entity
-  :txes [[{:db/ident :permission/role
+         ;; permission
+         [{:db/ident :permission/role
            :db/valueType :db.type/keyword
            :db/cardinality :db.cardinality/one
            :db/doc "The role of this permission, like. :admin"}
@@ -457,243 +98,228 @@
           {:db/ident :permission/valid-until
            :db/valueType :db.type/instant
            :db/cardinality :db.cardinality/one
-           :db/doc "Last time this permission is valid, indefinite if not specified."}
+           :db/doc "Last time this permission is valid, indefinite if not specified."}]
 
-          {:db/ident :user/permissions
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/many
-           :db/doc "Permissions that have been granted to this user"}]]}
-
- {:db/ident :migration/thk-project-related-restrictions
-  :txes     [[{:db/ident       :thk.project/related-restrictions
-               :db/valueType   :db.type/string
-               :db/cardinality :db.cardinality/many
-               :db/doc         "Restrictions related to the THK project"}]]}
-
-{:db/ident :migration/meta-data
-  :txes [[{:db/ident :meta/creator
-           :db/valueType :db.type/ref
+         ;; THK project
+         [{:db/ident       :thk.project/id
+           :db/valueType   :db.type/string
            :db/cardinality :db.cardinality/one
-           :db/doc "Original creator of entity"}
-          {:db/ident :meta/created-at
-           :db/valueType :db.type/instant
-           :db/cardinality :db.cardinality/one
-           :db/doc "Timestamp of creation"}
-          {:db/ident :meta/modified-at
-           :db/valueType :db.type/instant
-           :db/cardinality :db.cardinality/one
-           :db/doc "Timestamp of last modification"}
-          {:db/ident :meta/modifier
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/one
-           :db/doc "Ref to user entity who last modified"}
-          {:db/ident :meta/deleted?
-           :db/valueType :db.type/boolean
-           :db/cardinality :db.cardinality/one
-           :db/doc "If true this entity will not be shown in UI except for special admin functionality."}]]}
-
- {:db/ident :migration/thk-project-related-cadastral-units
-  :txes     [[{:db/ident       :thk.project/related-cadastral-units
-               :db/valueType   :db.type/string
-               :db/cardinality :db.cardinality/many
-               :db/doc         "Cadastral units related to the THK project"}]]}
-
- {:db/ident :migration/file-comments
-  :txes [[{:db/ident :file/comments
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/many
-           :db/doc "Comments for the file"}]]}
-
- {:db/ident :migration/skip-project-setup
-  :txes [[{:db/ident :thk.project/setup-skipped?
-           :db/valueType :db.type/boolean
-           :db/cardinality :db.cardinality/one
-           :db/doc "This value is set to the project when someone skips project initialization."}]]}
-
- {:db/ident :migration/thk-activity-id
-  :txes [[{:db/ident :thk.activity/id
+           :db/doc         "THK project id"
+           :db/unique      :db.unique/identity}
+          {:db/ident :thk.project/name
            :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :thk.project/road-nr
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :thk.project/bridge-nr
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :thk.project/end-m
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :thk.project/start-m
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :thk.project/carriageway
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :thk.project/estimated-start-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :thk.project/estimated-end-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :thk.project/procurement-nr
+           :db/valueType :db.type/string
+           :db/doc "Procurement.ProcurementNo. Can contain text"
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :thk.project/procurement-id
+           :db/valueType :db.type/long
+           :db/doc  "Procurement.ID/hanke_id"
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :thk.project/project-name
            :db/cardinality :db.cardinality/one
-           :db/unique :db.unique/identity
-           :db/doc "Unique activity id in THK"}]]}
+           :db/valueType   :db.type/string
+           :db/doc         "Custom name given to project in project initialization"}
 
- {:db/ident :migration/thk-integration-info-fields
-  :txes [[{:db/ident :thk.project/integration-info
+          {:db/ident       :thk.project/owner
+           :db/cardinality :db.cardinality/one
+           :db/valueType   :db.type/ref
+           :db/doc         "User who owns this project"}
+          {:db/ident :thk.project/lifecycles
+           :db/cardinality :db.cardinality/many
+           :db/valueType :db.type/ref
+           :db/doc "Lifecycles in this project"}
+
+          {:db/ident       :thk.project/manager
+           :db/cardinality :db.cardinality/one
+           :db/valueType   :db.type/ref
+           :db/doc         "User who manages this project"}
+          {:db/ident :thk.project/m-range-change-reason
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :thk.project/custom-end-m
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :thk.project/custom-start-m
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one}
+          {:db/ident       :thk.project/related-restrictions
+           :db/valueType   :db.type/string
+           :db/cardinality :db.cardinality/many
+           :db/doc         "Restrictions related to the THK project"}
+          {:db/ident       :thk.project/related-cadastral-units
+           :db/valueType   :db.type/string
+           :db/cardinality :db.cardinality/many
+           :db/doc         "Cadastral units related to the THK project"}
+
+          {:db/ident :thk.project/integration-info
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
            :db/doc "EDN key/value map of THK information in CSV that TEET does not use. Needed for passing back to THK."}
+          {:db/ident :thk.project/region-name
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Name of the region this project is located in"}
+          {:db/ident :thk.project/repair-method
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Project repair method as shown in THK csv."}]
+
+         ;; THK lifecycle
+         [{:db/ident       :thk.lifecycle/estimated-start-date
+           :db/cardinality :db.cardinality/one
+           :db/valueType   :db.type/instant
+           :db/doc         "Estimated start date for lifecycle"}
+          {:db/ident       :thk.lifecycle/estimated-end-date
+           :db/cardinality :db.cardinality/one
+           :db/valueType   :db.type/instant
+           :db/doc         "Estimated end date for lifecycle"}
+          {:db/ident       :thk.lifecycle/activities
+           :db/cardinality :db.cardinality/many
+           :db/valueType   :db.type/ref
+           :db/doc         "Activies performed in this lifecycle"}
+          {:db/ident       :thk.lifecycle/type
+           :db/cardinality :db.cardinality/one
+           :db/valueType   :db.type/ref
+           :db/doc         "Type of the lifecycle. f.ex Construction/Design"}
+          {:db/ident :thk.lifecycle/id
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/unique :db.unique/identity}
           {:db/ident :thk.lifecycle/integration-info
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
-           :db/doc "EDN key/value map of THK information in CSV that TEET does not use. Needed for passing back to THK."}
+           :db/doc "EDN key/value map of THK information in CSV that TEET does not use. Needed for passing back to THK."}]
+
+         ;; Activity
+         [{:db/ident       :activity/estimated-start-date
+           :db/valueType   :db.type/instant
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident       :activity/estimated-end-date
+           :db/valueType   :db.type/instant
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident       :activity/actual-start-date
+           :db/valueType   :db.type/instant
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident       :activity/actual-end-date
+           :db/valueType   :db.type/instant
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident       :activity/tasks
+           :db/valueType   :db.type/ref
+           :db/cardinality :db.cardinality/many}
+          {:db/ident       :activity/name
+           :db/valueType   :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc         "Activity name enum ref"}
+          {:db/ident       :activity/status
+           :db/valueType   :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc         "Activity status enum ref"}
           {:db/ident :activity/integration-info
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
-           :db/doc "EDN key/value map of THK information in CSV that TEET does not use. Needed for passing back to THK."}]]}
-
- {:db/ident :migration/sub-category-valid-for
-  :txes [[{:db/ident :enum/valid-for
-           :db/valueType :db.type/keyword
-           :db/cardinality :db.cardinality/one
-           :db/doc "Indicates for which parent value this selection is valid for"}]]}
-
- {:db/ident :migration/document-extra-fields
-  :txes [[{:db/ident :document/category
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/one
-           :db/doc "Ref of the document/result category. This is refered to in metadatamodel as type f.ex: Source documentation"}
-          {:db/ident :document.category/source-doc :enum/attribute :document/category}
-          {:db/ident :document.category/project-doc :enum/attribute :document/category}
-          {:db/ident :document.category/as-built-doc :enum/attribute :document/category}
-          {:db/ident :document.category/maintenance-doc :enum/attribute :document/category}
-
-          {:db/ident :document/sub-category
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/one
-           :db/doc "Ref to the subcategory for a document/result"}
-
-          ;; Source documentation sub categories
-          {:db/ident :document.sub-category/design-requirements :enum/attribute :document/sub-category
-           :enum/valid-for :document.category/source-doc}
-          {:db/ident :document.sub-category/terms-of-reference :enum/attribute :document/sub-category
-           :enum/valid-for :document.category/source-doc}
-          {:db/ident :document.sub-category/procurement-specification :enum/attribute :document/sub-category
-           :enum/valid-for :document.category/source-doc}
-          ;; Project documentation sub categories
-          {:db/ident :document.sub-category/report :enum/attribute :document/sub-category
-           :enum/valid-for :document.category/project-doc}
-          {:db/ident :document.sub-category/drawing :enum/attribute :document/sub-category
-           :enum/valid-for :document.category/project-doc}
-          {:db/ident :document.sub-category/explanatory-letter :enum/attribute :document/sub-category
-           :enum/valid-for :document.category/project-doc}
-          {:db/ident :document.sub-category/geological-basis :enum/attribute :document/sub-category
-           :enum/valid-for :document.category/project-doc}
-          {:db/ident :document.sub-category/no-objection-letters :enum/attribute :document/sub-category
-           :enum/valid-for :document.category/project-doc}
-          {:db/ident :document.sub-category/drill-posts :enum/attribute :document/sub-category
-           :enum/valid-for :document.category/project-doc}
-          {:db/ident :document.sub-category/laboratory-certificate :enum/attribute :document/sub-category
-           :enum/valid-for :document.category/project-doc}
-          {:db/ident :document.sub-category/study-plan :enum/attribute :document/sub-category
-           :enum/valid-for :document.category/project-doc}
-          {:db/ident :document.sub-category/table-of-content :enum/attribute :document/sub-category
-           :enum/valid-for :document.category/project-doc}
-          {:db/ident :document.sub-category/calculation-report :enum/attribute :document/sub-category
-           :enum/valid-for :document.category/project-doc}
-          {:db/ident :document.sub-category/photo :enum/attribute :document/sub-category
-           :enum/valid-for :document.category/project-doc}
-          {:db/ident :document.sub-category/rsa-exception-report :enum/attribute :document/sub-category
-           :enum/valid-for :document.category/project-doc}
-          {:db/ident :document.sub-category/presentation :enum/attribute :document/sub-category
-           :enum/valid-for :document.category/project-doc}]]}
-
- {:db/ident :migration/document-author
-  :txes [[{:db/ident :document/author
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/one
-           :db/doc "References document author"}]]}
-
- {:db/ident :migration/project-region
-  :txes [[{:db/ident :thk.project/region-name
+           :db/doc "EDN key/value map of THK information in CSV that TEET does not use. Needed for passing back to THK."}
+          {:db/ident :thk.activity/id
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
-           :db/doc "Name of the region this project is located in"}]
-         teet.migration.project-region/extract-region-from-integration-info]}
+           :db/unique :db.unique/identity
+           :db/doc "Unique activity id in THK"}]
 
- {:db/ident :migration/project-repair-method
-  :txes [[{:db/ident :thk.project/repair-method
+         ;; Task
+         [{:db/ident :task/name
            :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :task/type
+           :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
-           :db/doc "Project repair method as shown in THK csv."}]]}
-
- {:db/ident :migration/activity-name-addition
-  :txes [[{:db/ident :activity.name/design-requirements
-           :enum/attribute :activity/name
-           :enum/valid-for :thk.lifecycle-type/design}
-          {:db/ident :activity.name/pre-design
-           :enum/attribute :activity/name
-           :enum/valid-for :thk.lifecycle-type/design}
-          {:db/ident :activity.name/preliminary-design
-           :enum/attribute :activity/name
-           :enum/valid-for :thk.lifecycle-type/design}
-          {:db/ident :activity.name/detailed-design
-           :enum/attribute :activity/name
-           :enum/valid-for :thk.lifecycle-type/design}
-          {:db/ident :activity.name/land-acquisition
-           :enum/attribute :activity/name
-           :enum/valid-for :thk.lifecycle-type/design}]]}
-
- {:db/ident :migration/document-status-2
-  :txes [[{:db/ident :document.status/updated :enum/attribute :document/status}
-          {:db/ident :document.status/ready :enum/attribute :document/status}
-          {:db/ident :document.status/invalid :enum/attribute :document/status}
-          {:db/ident :document.status/approved :enum/attribute :document/status}]]}
-
-
- {:db/ident :migration/tasks-and-task-groups
-  :txes [;; Remove previously existing task types
-         teet.migration.enum-values/remove-old-task-types
-         [;; task group enum
-          {:db/ident :task/group
+           :db/doc "Task type enum ref"}
+          {:db/ident :task/description
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :task/assignee
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one}
-
-          ;; new task group enum values
-          {:db/ident :task.group/base-data :enum/attribute :task/group}
-          {:db/ident :task.group/study :enum/attribute :task/group}
-          {:db/ident :task.group/design :enum/attribute :task/group}
-          {:db/ident :task.group/design-approval :enum/attribute :task/group}
-          {:db/ident :task.group/land-purchase :enum/attribute :task/group}
-
-          ;; Task types for different task groups
-          {:db/ident :task.type/design-requirements :enum/attribute :task/type :enum/valid-for :task.group/base-data}
-          {:db/ident :task.type/terms-of-reference :enum/attribute :task/type :enum/valid-for :task.group/base-data}
-          {:db/ident :task.type/data :enum/attribute :task/type :enum/valid-for :task.group/base-data}
-          {:db/ident :task.type/geological-study :enum/attribute :task/type :enum/valid-for :task.group/study}
-          {:db/ident :task.type/traffic-study :enum/attribute :task/type :enum/valid-for :task.group/study}
-          {:db/ident :task.type/flora-and-fauna-study :enum/attribute :task/type :enum/valid-for :task.group/study}
-          {:db/ident :task.type/archeological-study :enum/attribute :task/type :enum/valid-for :task.group/study}
-          {:db/ident :task.type/topogeodesy :enum/attribute :task/type :enum/valid-for :task.group/study}
-          {:db/ident :task.type/noise-study :enum/attribute :task/type :enum/valid-for :task.group/study}
-          {:db/ident :task.type/eia-pre-assessment :enum/attribute :task/type :enum/valid-for :task.group/study}
-          {:db/ident :task.type/environmental-impact-assessment :enum/attribute :task/type :enum/valid-for :task.group/study}
-          {:db/ident :task.type/feasibility-study :enum/attribute :task/type :enum/valid-for :task.group/study}
-          {:db/ident :task.type/road :enum/attribute :task/type :enum/valid-for :task.group/design}
-          {:db/ident :task.type/railroad :enum/attribute :task/type :enum/valid-for :task.group/design}
-          {:db/ident :task.type/drainage :enum/attribute :task/type :enum/valid-for :task.group/design}
-          {:db/ident :task.type/landscaping :enum/attribute :task/type :enum/valid-for :task.group/design}
-          {:db/ident :task.type/lighting :enum/attribute :task/type :enum/valid-for :task.group/design}
-          {:db/ident :task.type/equipment :enum/attribute :task/type :enum/valid-for :task.group/design}
-          {:db/ident :task.type/structures :enum/attribute :task/type :enum/valid-for :task.group/design}
-          {:db/ident :task.type/utilities :enum/attribute :task/type :enum/valid-for :task.group/design}
-          {:db/ident :task.type/buildings :enum/attribute :task/type :enum/valid-for :task.group/design}
-          {:db/ident :task.type/acceptances :enum/attribute :task/type :enum/valid-for :task.group/design-approval}
-          {:db/ident :task.type/design-road-safety-audit :enum/attribute :task/type :enum/valid-for :task.group/design-approval}
-          {:db/ident :task.type/third-party-review :enum/attribute :task/type :enum/valid-for :task.group/design-approval}
-          {:db/ident :task.type/land-owners :enum/attribute :task/type :enum/valid-for :task.group/design-approval}
-          {:db/ident :task.type/allotment-plan :enum/attribute :task/type :enum/valid-for :task.group/land-purchase}
-          {:db/ident :task.type/property-valuation :enum/attribute :task/type :enum/valid-for :task.group/land-purchase}
-          {:db/ident :task.type/preliminary-agreements :enum/attribute :task/type :enum/valid-for :task.group/land-purchase}
-          {:db/ident :task.type/cadastral-works :enum/attribute :task/type :enum/valid-for :task.group/land-purchase}
-          {:db/ident :task.type/purchase-agreements :enum/attribute :task/type :enum/valid-for :task.group/land-purchase}
-          {:db/ident :task.type/cleanup :enum/attribute :task/type :enum/valid-for :task.group/land-purchase}
-          {:db/ident :task.type/other :enum/attribute :task/type}
-
-
+          {:db/ident :task/status
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :task/comments
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "Comments for the task"}
+          {:db/ident :task/group
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Task group enum ref"}
           {:db/ident :task/files
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/many
-           :db/doc "File results for this task"}]
+           :db/doc "File results for this task"}
+          {:db/ident :task/estimated-start-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :task/estimated-end-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :task/actual-start-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :task/actual-end-date
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :task/send-to-thk?
+           :db/valueType :db.type/boolean
+           :db/cardinality :db.cardinality/one
+           :db/doc "If true, send this task to THK. Task type must have THK task type mapped."}]
 
-         ;; File versioning and status support
-         [{:db/ident :file/status
+         ;; File
+         [{:db/ident :file/name
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Name of the file"}
+
+          {:db/ident :file/size
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one
+           :db/doc "Size of the file in bytes"}
+
+          {:db/ident :file/type
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "MIME type of the file"}
+          {:db/ident :file/comments
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "Comments for the file"}
+          {:db/ident :file/status
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
            :db/doc "Reference to file status"}
-
-          {:db/ident :file.status/draft :enum/attribute :file/status}
-          {:db/ident :file.status/final :enum/attribute :file/status}
-
           {:db/ident :file/version
            :db/valueType :db.type/long
            :db/cardinality :db.cardinality/one
@@ -707,78 +333,41 @@
           {:db/ident :file/previous-version
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
-           :db/doc "Reference to the previous version of this file that this file supersedes."}]]}
-
- {:db/ident :migration/task-times
-  :txes [[{:db/ident :task/estimated-start-date
-           :db/valueType :db.type/instant
-           :db/cardinality :db.cardinality/one}
-          {:db/ident :task/estimated-end-date
-           :db/valueType :db.type/instant
-           :db/cardinality :db.cardinality/one}
-          {:db/ident :task/actual-start-date
-           :db/valueType :db.type/instant
-           :db/cardinality :db.cardinality/one}
-          {:db/ident :task/actual-end-date
-           :db/valueType :db.type/instant
-           :db/cardinality :db.cardinality/one}]]}
-
-
- {:db/ident :migration/thk-task-types
-  :txes [[{:db/ident :thk/task-type
-           :db/valueType :db.type/ref
+           :db/doc "Reference to the previous version of this file that this file supersedes."}
+          {:db/ident :file/group-number
+           :db/valueType :db.type/long
            :db/cardinality :db.cardinality/one
-           :db/doc "The THK type associated of a task when sending to THK. Tasks without this attribute are not sent."}
+           :db/doc "File group number from name metadata"}
+          ]
 
-          {:db/ident :thk/code
+         ;; Comment
+         [{:db/ident :comment/comment
+           :db/doc "Text of the comment"
            :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :comment/author
+           :db/doc "Author of the comment"
            :db/cardinality :db.cardinality/one
-           :db/doc "The code value in THK for the selection, used for mapping in CSV"}
-
-          {:db/ident :task/send-to-thk?
-           :db/valueType :db.type/boolean
+           :db/valueType :db.type/ref}
+          {:db/ident :comment/timestamp
+           :db/doc "When to comment was made"
            :db/cardinality :db.cardinality/one
-           :db/doc "If true, send this task to THK. Task type must have THK task type mapped."}]
-
-         ;; Create the THK task types
-         [{:db/ident :thk.task-type/design-requirements :thk/code "4014"}
-          {:db/ident :thk.task-type/study :thk/code "4001"}
-          {:db/ident :thk.task-type/environmental-impact-assessment :thk/code "4002"}
-          {:db/ident :thk.task-type/third-party-review :thk/code "4010"}
-          {:db/ident :thk.task-type/road-safety-audit :thk/code "4011"}
-          {:db/ident :thk.task-type/building-permit :thk/code "4015"}]
-
-         ;; Assign THK task types to THK
-         [{:db/ident :task.type/design-requirements :thk/task-type :thk.task-type/design-requirements}
-          {:db/ident :task.type/geological-study :thk/task-type :thk.task-type/study}
-          {:db/ident :task.type/traffic-study :thk/task-type :thk.task-type/study}
-          {:db/ident :task.type/flora-and-fauna-study :thk/task-type :thk.task-type/study}
-          {:db/ident :task.type/archeological-study :thk/task-type :thk.task-type/study}
-          {:db/ident :task.type/topogeodesy :thk/task-type :thk.task-type/study}
-          {:db/ident :task.type/noise-study :thk/task-type :thk.task-type/study}
-          {:db/ident :task.type/eia-pre-assessment :thk/task-type :thk.task-type/environmental-impact-assessment}
-          {:db/ident :task.type/environmental-impact-assessment :thk/task-type :thk.task-type/environmental-impact-assessment}
-          {:db/ident :task.type/feasibility-study :thk/task-type :thk.task-type/study}
-          {:db/ident :task.type/other :thk/task-type :thk.task-type/study}
-          {:db/ident :task.type/third-party-review :thk/task-type :thk.task-type/third-party-review}
-          {:db/ident :task.type/design-road-safety-audit :thk/task-type :thk.task-type/road-safety-audit}
-
-          ;; Building permit is a new task type
-          {:db/ident :task.type/building-permit
-           :enum/attribute :task/type :enum/valid-for :task.group/design-approval
-           :thk/task-type :thk.task-type/building-permit}]]}
-
- {:db/ident :migration/comment-images
-  :txes [[{:db/ident :comment/files
+           :db/valueType :db.type/instant}
+          {:db/ident :comment/files
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/many
-           :db/doc "Image files attached to a comment"}]]}
+           :db/doc "Image files attached to a comment"}
+          {:db/ident :comment/visibility
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Indicator of special visibility, is the comment visible only internally or for external consultants as well"}
+          {:db/ident :comment/status
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Status of the comment, unresolved/resolved/untracked"}]
 
- {:db/ident :migration/remove-activity-type-design-req
-  :txes [[[:db/retractEntity :activity.name/design-requirements]]]}
-
- {:db/ident :migration/land-acquisition
-  :txes [[{:db/ident :land-acquisition/project
+         ;; Land acquisition
+         [{:db/ident :land-acquisition/project
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
            :db/doc "The project in which this land acquisition decision is made in"}
@@ -804,29 +393,13 @@
 
           {:db/ident :land-acquisition/area-to-obtain
            :db/cardinality :db.cardinality/one
-           :db/valueType :db.type/long}]]}
+           :db/valueType :db.type/long}]
 
- {:db/ident :migration/comment-visibility
-  :txes [[{:db/ident :comment/visibility
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/one
-           :db/doc "Indicator of special visibility, is the comment visible only internally or for external consultants as well"}
-
-          {:db/ident :comment.visibility/all
-           :enum/attribute :comment/visibility}
-          {:db/ident :comment.visibility/internal
-           :enum/attribute :comment/visibility}]]}
-
- {:db/ident :migration/notification
-  :txes [[{:db/ident :notification/type
+         ;; notification
+         [{:db/ident :notification/type
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
            :db/doc "Type of notification, references :notification.type/* enum values"}
-
-          ;; Just an example notification type
-          {:db/ident :notification.type/comment-created
-           :enum/attribute :notification/type}
-
           {:db/ident :notification/receiver
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
@@ -842,14 +415,300 @@
           ;; Notification status types
           {:db/ident :notification.status/unread
            :enum/attribute :notification/status}
-          {:db/ident :notification.status/acknowledged}]]}
+          {:db/ident :notification.status/acknowledged}]
 
- {:db/ident :migration/task-waiting-for-review-status
-  :txes [[{:db/ident :task.status/waiting-for-review
-           :enum/attribute :task/status}
-          {:db/ident :notification.type/task-waiting-for-review
-           :enum/attribute :notification/type}]]}
 
- {:db/ident :migration/task-assigned-notification-type
-  :txes [[{:db/ident :notification.type/task-assigned
-           :enum/attribute :notification/type}]]}]
+
+         ;; THK task type & codes
+         [{:db/ident :thk/task-type
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "The THK type associated of a task when sending to THK. Tasks without this attribute are not sent."}
+
+          {:db/ident :thk/code
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "The code value in THK for the selection, used for mapping in CSV"}
+
+          {:db/ident :filename/code
+           :db/doc "Short code in filename that is mapped to this enum value"
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}]
+
+         ;; Create the THK task types
+         [{:db/ident :thk.task-type/design-requirements :thk/code "4014"}
+          {:db/ident :thk.task-type/study :thk/code "4001"}
+          {:db/ident :thk.task-type/environmental-impact-assessment :thk/code "4002"}
+          {:db/ident :thk.task-type/third-party-review :thk/code "4010"}
+          {:db/ident :thk.task-type/road-safety-audit :thk/code "4011"}
+          {:db/ident :thk.task-type/building-permit :thk/code "4015"}]
+
+         ;; enumeration values
+         [ ;; lifecycle types
+          {:db/ident :thk.lifecycle-type/design :enum/attribute :thk.lifecycle/type}
+          {:db/ident :thk.lifecycle-type/construction :enum/attribute :thk.lifecycle/type}
+          {:db/ident :thk.lifecycle-type/maintenance :enum/attribute :thk.lifecycle/type}
+
+          ;; activity names
+          {:db/ident :activity.name/pre-design,
+           :enum/attribute :activity/name,
+           :enum/valid-for :thk.lifecycle-type/design,
+           :filename/code "ES"}
+          {:db/ident :activity.name/construction,
+           :enum/attribute :activity/name,
+           :filename/code "EH"}
+          {:db/ident :activity.name/detailed-design,
+           :enum/attribute :activity/name,
+           :enum/valid-for :thk.lifecycle-type/design,
+           :filename/code "PP"}
+          {:db/ident :activity.name/preliminary-design,
+           :enum/attribute :activity/name,
+           :enum/valid-for :thk.lifecycle-type/design,
+           :filename/code "EP"}
+          {:db/ident :activity.name/land-acquisition,
+           :enum/attribute :activity/name,
+           :enum/valid-for :thk.lifecycle-type/design,
+           :filename/code "MO"}
+          {:db/ident :activity.name/workshop-design,
+           :enum/attribute :activity/name,
+           :enum/valid-for :thk.lifecycle-type/construction,
+           :filename/code "TP"}
+
+          ;; activity status
+          {:db/ident :activity.status/in-preparation :enum/attribute :activity/status}
+          {:db/ident :activity.status/not-started :enum/attribute :activity/status}
+          {:db/ident :activity.status/in-progress :enum/attribute :activity/status}
+          {:db/ident :activity.status/in-review :enum/attribute :activity/status}
+          {:db/ident :activity.status/completed :enum/attribute :activity/status}
+          {:db/ident :activity.status/archived :enum/attribute :activity/status}
+          {:db/ident :activity.status/canceled :enum/attribute :activity/status}
+
+          ;; task types
+          {:db/ident :task.type/road,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/design,
+           :filename/code "TL"}
+          {:db/ident :task.type/feasibility-study,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/study,
+           :thk/task-type :thk.task-type/study,
+           :filename/code "TU"}
+          {:db/ident :task.type/plot-allocation-plan,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/land-purchase,
+           :filename/code "KY"}
+          {:db/ident :task.type/drainage,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/design,
+           :filename/code "DR"}
+          {:db/ident :task.type/eia-pre-assessment,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/study,
+           :thk/task-type :thk.task-type/environmental-impact-assessment,
+           :filename/code "KE"}
+          {:db/ident :task.type/archeological-study,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/study,
+           :thk/task-type :thk.task-type/study,
+           :filename/code "AU"}
+          {:db/ident :task.type/traffic-study,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/study,
+           :thk/task-type :thk.task-type/study,
+           :filename/code "LU"}
+          {:db/ident :task.type/cadastral-works,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/land-purchase,
+           :filename/code "MK"}
+          {:db/ident :task.type/other-facilities,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/design,
+           :filename/code "MR"}
+          {:db/ident :task.type/design-road-safety-audit,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/design-approval,
+           :thk/task-type :thk.task-type/road-safety-audit,
+           :filename/code "LA"}
+          {:db/ident :task.type/state-estate-registry,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/land-purchase,
+           :filename/code "RK"}
+          {:db/ident :task.type/environmental-impact-assessment,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/study,
+           :thk/task-type :thk.task-type/environmental-impact-assessment,
+           :filename/code "KH"}
+          {:db/ident :task.type/design-requirements,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/base-data,
+           :thk/task-type :thk.task-type/design-requirements,
+           :filename/code "PT"}
+          {:db/ident :task.type/terms-of-reference,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/base-data,
+           :filename/code "LY"}
+          {:db/ident :task.type/equipment,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/design,
+           :filename/code "EQ"}
+          {:db/ident :task.type/calculation,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/design-reports,
+           :filename/code "CC"}
+          {:db/ident :task.type/third-party-review,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/design-approval,
+           :thk/task-type :thk.task-type/third-party-review,
+           :filename/code "EK"}
+          {:db/ident :task.type/utilities,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/design,
+           :filename/code "TV"}
+          {:db/ident :task.type/technical-conditions,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/base-data,
+           :filename/code "TT"}
+          {:db/ident :task.type/buildings,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/design}
+          {:db/ident :task.type/property-valuation,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/land-purchase,
+           :filename/code "MH"}
+          {:db/ident :task.type/preliminary-agreements,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/land-purchase,
+           :filename/code "PA"}
+          {:db/ident :task.type/landscaping,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/design,
+           :filename/code "MA"}
+          {:db/ident :task.type/no-objection-coordination,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/design-approval,
+           :filename/code "KK"}
+          {:db/ident :task.type/funding-plan,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/design-reports,
+           :filename/code "RK"}
+          {:db/ident :task.type/structures,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/design,
+           :filename/code "TS"}
+          {:db/ident :task.type/railroad,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/design,
+           :filename/code "TR"}
+          {:db/ident :task.type/building-permit,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/design-approval,
+           :thk/task-type :thk.task-type/building-permit,
+           :filename/code "BP"}
+          {:db/ident :task.type/noise-study,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/study,
+           :thk/task-type :thk.task-type/study,
+           :filename/code "MU"}
+          {:db/ident :task.type/calculation-of-pavement,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/design-reports,
+           :filename/code "KA"}
+          {:db/ident :task.type/general-part,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/base-data,
+           :filename/code "AA"}
+          {:db/ident :task.type/data,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/base-data,
+           :filename/code "LA"}
+          {:db/ident :task.type/acceptances,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/design-approval}
+          {:db/ident :task.type/land-owners,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/design-approval,
+           :filename/code "MO"}
+          {:db/ident :task.type/geological-study,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/study,
+           :thk/task-type :thk.task-type/study,
+           :filename/code "GL"}
+          {:db/ident :task.type/allotment-plan,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/land-purchase}
+          {:db/ident :task.type/topogeodesy,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/study,
+           :thk/task-type :thk.task-type/study,
+           :filename/code "GD"}
+          {:db/ident :task.type/cleanup,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/land-purchase}
+          {:db/ident :task.type/cost-list,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/design-reports,
+           :filename/code "CL"}
+          {:db/ident :task.type/purchase-agreements,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/land-purchase,
+           :filename/code "LS"}
+          {:db/ident :task.type/flora-and-fauna-study,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/study,
+           :thk/task-type :thk.task-type/study,
+           :filename/code "FU"}
+          {:db/ident :task.type/site-plan,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/base-data,
+           :filename/code "AS"}
+          {:db/ident :task.type/other,
+           :enum/attribute :task/type,
+           :thk/task-type :thk.task-type/study,
+           :filename/code "ZZ"}
+          {:db/ident :task.type/lighting,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/design,
+           :filename/code "EL"}
+
+          ;; task status
+          {:db/ident :task.status/not-started :enum/attribute :task/status}
+          {:db/ident :task.status/in-progress :enum/attribute :task/status}
+          {:db/ident :task.status/waiting-for-review :enum/attribute :task/status}
+          {:db/ident :task.status/reviewing :enum/attribute :task/status}
+          {:db/ident :task.status/completed :enum/attribute :task/status}
+
+          ;; task groups
+          {:db/ident :task.group/base-data :enum/attribute :task/group}
+          {:db/ident :task.group/land-purchase :enum/attribute :task/group}
+          {:db/ident :task.group/design-reports :enum/attribute :task/group}
+          {:db/ident :task.group/study :enum/attribute :task/group}
+          {:db/ident :task.group/design :enum/attribute :task/group}
+          {:db/ident :task.group/design-approval :enum/attribute :task/group}
+
+          ;; file status
+          {:db/ident :file.status/draft :enum/attribute :file/status}
+          {:db/ident :file.status/final :enum/attribute :file/status}
+
+          ;; comment visibility
+          {:db/ident :comment.visibility/all :enum/attribute :comment/visibility}
+          {:db/ident :comment.visibility/internal :enum/attribute :comment/visibility}
+          ;; comment status
+          {:db/ident :comment.status/unresolved :enum/attribute :comment/status}
+          {:db/ident :comment.status/resolved :enum/attribute :comment/status}
+          {:db/ident :comment.status/untracked :enum/attribute :comment/status}
+
+          ;; notification types
+          {:db/ident :notification.type/task-review-rejected :enum/attribute :notification/type}
+          {:db/ident :notification.type/activity-rejected :enum/attribute :notification/type}
+          {:db/ident :notification.type/task-waiting-for-review :enum/attribute :notification/type}
+          {:db/ident :notification.type/activity-accepted :enum/attribute :notification/type}
+          {:db/ident :notification.type/comment-created :enum/attribute :notification/type}
+          {:db/ident :notification.type/project-manager-assigned :enum/attribute :notification/type}
+          {:db/ident :notification.type/task-assigned :enum/attribute :notification/type}]]}
+
+ {:db/ident :migration/comment-status-notifications
+  :txes [[{:db/ident :notification.type/comment-resolved :enum/attribute :notification/type}
+          {:db/ident :notification.type/comment-unresolved :enum/attribute :notification/type}]]}
+
+ {:db/ident :migration/activity-waiting-notification
+  :txes [[{:db/ident :notification.type/activity-waiting-for-review :enum/attribute :notification/type}]]}]

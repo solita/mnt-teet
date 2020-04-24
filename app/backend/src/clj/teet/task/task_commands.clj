@@ -2,11 +2,15 @@
   (:require [datomic.client.api :as d]
             [teet.db-api.core :as db-api :refer [defcommand]]
             [teet.project.project-db :as project-db]
+            [teet.activity.activity-db :as activity-db]
             [teet.meta.meta-model :as meta-model]
             teet.task.task-spec
             [teet.util.collection :as uc]
             [teet.notification.notification-db :as notification-db]
-            [teet.project.task-model :as task-model]))
+            [teet.project.task-model :as task-model]
+            [teet.util.datomic :as du]
+            [clojure.spec.alpha :as s]
+            [teet.task.task-db :as task-db]))
 
 (defn- send-to-thk? [db task-id]
   (:task/send-to-thk? (d/pull db [:task/send-to-thk?] task-id)))
@@ -22,7 +26,7 @@
    :transact [(meta-model/deletion-tx user task-id)]})
 
 (def ^:private always-selected-keys
-  [:db/id :task/description :task/status :task/assignee
+  [:db/id :task/description :task/assignee
    :task/estimated-start-date :task/estimated-end-date])
 
 (def ^:private thk-provided-keys
@@ -57,23 +61,45 @@
        :type :notification.type/task-assigned})
     {}))
 
+(defn valid-task-dates?
+  [db activity-id {:task/keys [actual-end-date actual-start-date estimated-end-date estimated-start-date] :as task}]
+  (let [activity-dates (activity-db/activity-date-range db activity-id)
+        dates (filterv some? [actual-end-date actual-start-date estimated-end-date estimated-start-date])]
+    (every? (fn [date]
+              (and (not (.before date (:activity/estimated-start-date activity-dates)))
+                   (not (.after date (:activity/estimated-end-date activity-dates)))))
+            dates)))
+
 (defcommand :task/update
   {:doc "Update basic task information for existing task."
    :context {:keys [user db]} ; bindings from context
    :payload {id :db/id :as task} ; bindings from payload
    :project-id (project-db/task-project-id db id)
-   :pre [(not (new? task))]
+   :pre [^{:error :invalid-task-dates}
+         (valid-task-dates? db (task-db/activity-for-task-id db id) task)
+         (not (new? task))]
    :authorization {:task/task-information {:db/id id
                                            :link :task/assignee}}  ; auth checks
-   :transact (let [new-assignee-id (get-in task [:task/assignee :user/id])
-                   old-assignee-id (get-in (d/pull db '[{:task/assignee [:user/id]}] id) [:task/assignee :user/id])]
-               [(merge (-> task
-                           (select-update-keys (send-to-thk? db id))
-                           uc/without-nils)
-                       (meta-model/modification-meta user))
-                (if (= new-assignee-id old-assignee-id)
-                  {}
-                  (assignment-notification-tx user task))])})
+   :transact (let [task* (du/entity db id)
+                   new-assignee-id (get-in task [:task/assignee :user/id])
+                   old-assignee-id (get-in task* [:task/assignee :user/id])
+                   assign? (not= new-assignee-id old-assignee-id)]
+               [(merge
+                  (when (and (not old-assignee-id)
+                             new-assignee-id)
+                    {:task/status :task.status/in-progress})
+                  (-> task
+                      (select-update-keys (send-to-thk? db id))
+                      uc/without-nils)
+                  (meta-model/modification-meta user))
+                (if assign?
+                  (assignment-notification-tx user task)
+                  {})
+                (if assign?
+                  ;; If assigning, set activity status to in-progress
+                  {:db/id (get-in task* [:activity/_tasks 0 :db/id])
+                   :activity/status :activity.status/in-progress}
+                  {})])})
 
 (def ^:private task-create-keys
   (into (concat always-selected-keys
@@ -88,16 +114,23 @@
              task :task :as payload}
    :project-id (project-db/activity-project-id db activity-id)
    :pre [(new? task)
-         (valid-thk-send? db task)]
+         (valid-thk-send? db task)
+         ^{:error :invalid-task-dates}
+         (valid-task-dates? db activity-id task)]
    :authorization {:task/create-task {}
                    :activity/edit-activity {:db/id activity-id}}
-   :transact [(merge {:db/id activity-id
-                      :activity/tasks
-                      [(merge (-> task
-                                  (select-keys task-create-keys))
-                              (when (seq? (:task/assignee task))
-                                {:task/assignee [:user/id (:user/id (:task/assignee task))]})
-                              (meta-model/creation-meta user))]})
+   :transact [(merge
+               (when (:task/assignee task)
+                 {:activity/status :activity.status/in-progress})
+               {:db/id activity-id
+                :activity/tasks
+                [(merge (-> task
+                            (select-keys task-create-keys))
+                        (if (seq? (:task/assignee task))
+                          {:task/status :task.status/in-progress
+                           :task/assignee [:user/id (:user/id (:task/assignee task))]}
+                          {:task/status :task.status/not-started})
+                        (meta-model/creation-meta user))]})
               (assignment-notification-tx user task)]})
 
 (defcommand :task/submit
@@ -115,14 +148,46 @@
                 :target task-id
                 :type :notification.type/task-waiting-for-review})]})
 
-(defcommand :task/review
-  {:doc "Accept or reject review for task"
+(defcommand :task/start-review
+  {:doc "Start review for task, sets status."
    :context {:keys [db user]}
-   :payload {task-id :task-id
-             status :status}
+   :payload {task-id :task-id}
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/review {:id task-id}}
-   :pre [(task-model/waiting-for-review? (d/pull db [:task/status] task-id))
-         (task-model/review-outcome-statuses status)]
+   :pre [(task-model/waiting-for-review? (d/pull db [:task/status] task-id))]
    :transact [{:db/id task-id
-               :task/status status}]})
+               :task/status :task.status/reviewing}]})
+
+(s/def ::task-id integer?)
+(s/def ::result #{:accept :reject})
+
+(defcommand :task/review
+  {:spec (s/keys :req-un [::task-id ::result])
+   :doc "Accept or reject review for task"
+   :context {:keys [db user]}
+   :payload {task-id :task-id
+             result :result}
+   :project-id (project-db/task-project-id db task-id)
+   :authorization {:task/review {:id task-id}}
+   :pre [(task-model/reviewing? (d/pull db [:task/status] task-id))]
+   :transact
+   (case result
+     ;; Accept: mark as completed and finalize files
+     :accept (into
+              [{:db/id task-id
+                :task/status :task.status/completed}]
+
+              ;; Mark all latest versions as final
+              (for [{id :db/id} (task-db/files-for-task db task-id)]
+                {:db/id id
+                 :file/status :file.status/final}))
+
+     ;; Reject: mark as in-progress and notify assignee
+     :reject [{:db/id task-id
+               :task/status :task.status/in-progress}
+              (notification-db/notification-tx
+               {:from user
+                :to (get-in (du/entity db task-id)
+                            [:task/assignee :db/id])
+                :type :notification.type/task-review-rejected
+                :target task-id})])})

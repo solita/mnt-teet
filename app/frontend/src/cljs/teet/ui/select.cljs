@@ -273,12 +273,17 @@
                  :show-empty-selection? true}
                 (if extra-selection
                   {:items (conj @selectable-users extra-selection)
-                   :format-item (fn [user]
+                   :format-item (fn [{:user/keys [family-name person-id] :as user}]
                                   (if (= user extra-selection)
                                     extra-selection-label
-                                    (user-info/user-name-and-email user)))}
+                                    (if family-name
+                                      (user-info/user-name-and-email user)
+                                      (str person-id))))}
                   {:items @selectable-users
-                   :format-item user-info/user-name-and-email}))])
+                   :format-item (fn [{:user/keys [family-name person-id] :as user}]
+                                  (if family-name
+                                    (user-info/user-name-and-email user)
+                                    (str person-id)))}))])
 
 (defn radio [{:keys [value items format-item on-change]}]
   (let [item->value (zipmap items (map str (range)))]

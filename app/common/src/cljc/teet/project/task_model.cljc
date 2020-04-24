@@ -27,47 +27,20 @@
 (defn document-by-id [{documents :task/documents} document-id]
   (some #(when (id= document-id (:db/id %)) %) documents))
 
-(def ^:const completed-statuses #{:task.status/accepted
-                                  ;; unused/obsolete statuses:
-                                  :task.status/completed})
-(def ^:const in-progress-statuses #{:task.status/in-preparation
-                                    :task.status/adjustment
-                                    :task.status/reviewing
-                                    ;; unused/obsolete statuses:
-                                    :task.status/in-progress})
-(def ^:const rejected-statuses #{:task.status/canceled
-                                 ;; unused/obsolete statuses:
-                                 :task.status/rejected})
+(defn- in-status [status task]
+  (boolean (= status (get-in task [:task/status :db/ident]))))
 
-;; statuses excluding obsoleted ones, that should be selectable in status changes
-(def ^:const current-statuses #{:task.status/canceled
-                                :task.status/assigned
-                                :task.status/submitted
-                                :task.status/reviewing
-                                :task.status/adjustment
-                                :task.status/accepted})
-
-
-(def ^:const waiting-for-review-statuses #{:task.status/waiting-for-review})
-
-(def ^:const accepted-statuses #{:task.status/accepted})
-(def ^:const review-outcome-statuses #{:task.status/accepted :task.status/rejected})
-
-(defn- in-status [statuses task]
-  (boolean (statuses (get-in task [:task/status :db/ident]))))
-
-(def waiting-for-review? (partial in-status waiting-for-review-statuses))
-(def completed? (partial in-status completed-statuses))
-(def rejected? (partial in-status rejected-statuses))
-(def accepted? (partial in-status accepted-statuses))
-(def in-progress? (partial in-status in-progress-statuses))
+(def reviewing? (partial in-status :task.status/reviewing))
+(def waiting-for-review? (partial in-status :task.status/waiting-for-review))
+(def completed? (partial in-status :task.status/completed))
 
 (defn can-submit?
   "Determine if the task results can be submitted. If true, task
   result files can be added and the task can be sent for review."
   [task]
   (and (not (waiting-for-review? task))
-       (not (accepted? task))))
+       (not (reviewing? task))
+       (not (completed? task))))
 
 
 

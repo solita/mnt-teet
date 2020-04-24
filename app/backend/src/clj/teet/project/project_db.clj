@@ -107,6 +107,11 @@
                                                             :user/family-name]}]}]}]}])
           eid))
 
+(defn lifecycle-dates
+  [db lifecycle-id]
+  (d/pull db
+          '[:thk.lifecycle/estimated-start-date :thk.lifecycle/estimated-end-date]
+          lifecycle-id))
 
 (defn entity-project-id [db entity-type entity-id]
   (case entity-type

@@ -4,14 +4,17 @@
             [teet.util.collection :as cu]
             [teet.localization :refer [tr]]
             [teet.map.map-controller :as map-controller]
-            [goog.math.Long]))
+            [goog.math.Long]
+            [cljs-time.core :as time]
+            [cljs-time.coerce :as c]))
 
 (defrecord SetCadastralInfo [response])
 (defrecord ToggleLandUnit [unit])
-(defrecord SearchOnChange [value])
+(defrecord SearchOnChange [attribute value])
 (defrecord UpdateFilteredUnitIDs [ids])
 (defrecord SubmitLandPurchaseForm [form-data cadastral-id])
 (defrecord FetchLandAcquisitions [project-id])
+(defrecord LandAcquisitionFetchSuccess [result])
 
 (defn toggle-selected-unit
   [id cad-units]
@@ -43,22 +46,30 @@
                  (partial toggle-selected-unit (:teet-id unit)))))
 
   UpdateFilteredUnitIDs
-  (process-event [{ids :ids} app]
-    (assoc-in app [:route :project :thk.project/filtered-cadastral-units] ids))
+  (process-event [_ app]
+    (let [quality (get-in app [:route :project :land-acquisition-filters :quality :value])
+          text (get-in app [:route :project :land-acquisition-filters :name-search-value])
+          units (get-in app [:route :project :thk.project/related-cadastral-units-info :results])
+          filtered-ids (->> units
+                            (filter (fn [unit]
+                                      (and
+                                        (str/includes? (str/lower-case (get unit :L_AADRESS)) text)
+                                        (if quality
+                                          (= (:quality unit) quality)
+                                          true))))
+                            (mapv :teet-id)
+                            set)]
+      (assoc-in app [:route :project :thk.project/filtered-cadastral-units] filtered-ids)))
 
   SearchOnChange
   (process-event
-    [{value :value} app]
-    (let [units (get-in app [:route :project :thk.project/related-cadastral-units-info :results])
-          filtered-ids (->> units
-                           (filter #(str/includes? (str/lower-case (get % :L_AADRESS)) value))
-                           (mapv :teet-id)
-                            set)]
-      (t/fx (assoc-in app [:route :project :cadastral-search-value] value)
-            {:tuck.effect/type :debounce
-             :timeout 600
-             :id :change-cadastral-search
-             :event #(->UpdateFilteredUnitIDs filtered-ids)})))
+    [{attribute :attribute
+      value :value} app]
+    (t/fx (assoc-in app [:route :project :land-acquisition-filters attribute] value)
+          {:tuck.effect/type :debounce
+           :timeout 600
+           :id :change-cadastral-search
+           :event ->UpdateFilteredUnitIDs}))
 
   FetchLandAcquisitions
   (process-event
@@ -67,7 +78,14 @@
           {:tuck.effect/type :query
            :query :land/fetch-land-acquisitions
            :args {:project-id project-id}
-           :result-path [:route :project :land-acquisitions]}))
+           :result-event ->LandAcquisitionFetchSuccess}))
+
+  LandAcquisitionFetchSuccess
+  (process-event
+    [{result :result} app]
+    (-> app
+        (update-in [:route :project] merge result)
+        (update-in [:route :project] dissoc :thk.project/related-cadastral-units-info)))
 
   SubmitLandPurchaseForm
   (process-event [{:keys [form-data cadastral-id]} app]
@@ -99,6 +117,17 @@
                       #(cu/map-keys keyword %))
                     ;;Assoc teet-id for showing hovers on map
                     (mapv
-                      #(assoc % :teet-id (str "2:" (:TUNNUS %)))))]
+                      #(assoc % :teet-id (str "2:" (:TUNNUS %))))
+                    (mapv
+                      (fn [{:keys [MOOTVIIS MUUDET] :as unit}]
+                        (assoc unit :quality (cond
+                                               (and (= MOOTVIIS "mõõdistatud, L-EST")
+                                                    (not (time/before? (c/from-string MUUDET) (time/date-time 2018 01 01))))
+                                               :good
+                                               (and (= MOOTVIIS "mõõdistatud, L-EST")
+                                                    (time/before? (c/from-string MUUDET) (time/date-time 2018 01 01)))
+                                               :questionable
+                                               :else
+                                               :bad)))))]
 
       (assoc-in app [:route page :thk.project/related-cadastral-units-info :results] data))))

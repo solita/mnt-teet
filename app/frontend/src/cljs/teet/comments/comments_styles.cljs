@@ -13,6 +13,33 @@
          (when focused?
            {:animation [[focus-animation "1.5s"]]})))
 
+(def unresolved-bg-color (theme-colors/blue-alpha 0.2))
+
+(defn comment-contents
+  [tracked? status]
+  (merge {}
+         (when tracked?
+           {:padding "0.5rem"})
+         (case status
+           :comment.status/unresolved
+           {:background-color unresolved-bg-color}
+
+           :comment.status/resolved
+           {:background-color theme-colors/gray-lightest}
+
+           {})))
+
+(defn comment-status
+  [status]
+  (merge {:color theme-colors/blue
+          :margin-bottom "0.5rem"
+          :font-weight :bold
+          :display :flex
+          :align-items :center
+          :justify-content :space-between}
+         (when (= status :comment.status/resolved)
+           {:color theme-colors/gray})))
+
 (defn comment-buttons-style
   []
   {:background-color theme-colors/gray-lightest
@@ -64,3 +91,14 @@
   {:color theme-colors/gray-light
    :font-size "0.75rem"
    :padding-left "0.5rem"})
+
+(defn unresolved-comments
+  []
+  {:display :flex
+   :align-items :center
+   :justify-content :space-between
+   :background-color unresolved-bg-color
+   :padding "0 1rem 0 1rem"
+   :color theme-colors/blue
+   :font-weight :bold
+   :margin-bottom "0.5rem"})

@@ -23,7 +23,8 @@
             [teet.ui.file-upload :as file-upload]
             [teet.log :as log]
             [teet.common.common-controller :as common-controller]
-            [teet.ui.panels :as panels]))
+            [teet.ui.panels :as panels]
+            [teet.util.datomic :as du]))
 
 (defn- file-column-style
   ([basis]
@@ -66,9 +67,9 @@
      [:div {:class (<class file-column-style 10)}
       [:span suffix]]
      [:div {:class (<class file-column-style 10)}
-      [:span version]]
+      [:span (str "V" version)]]
      [:div {:class (<class file-column-style 13)}
-      [:span status]]
+      [:span (tr-enum status)]]
      [:div {:class (<class file-column-style 13 :flex-end)}
       [url/Link {:class (<class file-row-icon-style)
                  :page :file
@@ -82,16 +83,18 @@
 
 (defn- other-version-row
   [{id :db/id
-    :file/keys [name version]
+    :file/keys [name version status]
     :meta/keys [created-at creator]
     :as _file}]
   [:div {:class [(<class common-styles/flex-row) (<class common-styles/margin-bottom 0.5)]}
-   [:div {:class (<class file-column-style 60)}
+   [:div {:class (<class file-column-style 55)}
     [url/Link {:page :file :params {:file id}}
      name]]
    [:div {:class (<class file-column-style 10 :center)}
     [:span (str "V" version)]]
-   [:div {:class (<class file-column-style 30 :flex-end)}
+   [:div {:class (<class file-column-style 10 :center)}
+    [:span (tr-enum status)]]
+   [:div {:class (<class file-column-style 25 :flex-end)}
     [:span (format/date created-at)]]])
 
 (defn file-table
@@ -149,13 +152,6 @@
                     (tr-enum status))])]]))
           files)]])
 
-(defn- file-status [e! file]
-  [select/select-enum {:e! e!
-                       :show-label? false
-                       :value (:file/status file)
-                       :attribute :file/status
-                       :on-change (e! file-controller/->UpdateFileStatus (:db/id file))}])
-
 (defn- labeled-data [[label data]]
   [:div {:class (<class common-styles/inline-block)}
    [:div [:b label]]
@@ -200,7 +196,8 @@
                ["" [url/Link {:page :file
                               :params {:file (:db/id latest-file)}}
                     (tr [:file :switch-to-latest-version])]]
-               [(tr [:fields :file/status]) [file-status e! file]])])]
+               [(tr [:fields :file/status])
+                (tr-enum (:file/status file))])])]
 
      ;; preview block (placeholder for now)
      [:div {:class (<class preview-style)}
@@ -217,11 +214,13 @@
       (if replacement-upload-progress
         [LinearProgress {:variant :determinate
                          :value replacement-upload-progress}]
-        [file-upload/FileUploadButton {:on-drop (e! file-controller/->UploadNewVersion file)
-                                       :color :secondary
-                                       :icon [icons/file-cloud-upload]
-                                       :multiple? false}
-         (tr [:file :upload-new-version])])
+        [:<>
+         (when (du/enum= :file.status/draft (:file/status (or latest-file file)))
+           [file-upload/FileUploadButton {:on-drop (e! file-controller/->UploadNewVersion file)
+                                          :color :secondary
+                                          :icon [icons/file-cloud-upload]
+                                          :multiple? false}
+            (tr [:file :upload-new-version])])])
       [buttons/button-primary {:element "a"
                                :href (common-controller/query-url :file/download-file
                                                                   {:file-id (:db/id file)})

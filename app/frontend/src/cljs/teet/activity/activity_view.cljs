@@ -1,7 +1,10 @@
 (ns teet.activity.activity-view
   (:require [teet.ui.select :as select]
             [teet.ui.date-picker :as date-picker]
+            [reagent.core :as r]
+            [teet.authorization.authorization-check :refer [authorized? when-authorized]]
             [teet.localization :refer [tr tr-enum]]
+            [teet.ui.panels :as panels]
             [teet.ui.material-ui :refer [Grid]]
             [teet.ui.form :as form]
             [teet.ui.icons :as icons]
@@ -21,7 +24,10 @@
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.url :as url]
             [teet.util.collection :as cu]
-            [teet.project.task-model :as task-model]))
+            [teet.project.task-model :as task-model]
+            [teet.activity.activity-model :as activity-model]
+            [teet.app-state]
+            [taoensso.timbre :as log]))
 
 (defn task-selection [{:keys [e! on-change selected activity-name]} task-groups task-types]
   [:div {:style {:max-height "70vh" :overflow-y :scroll}}
@@ -36,7 +42,7 @@
                       [select/checkbox {:label (tr-enum t)
                                         :value (boolean (selected [(:db/ident g) id]))
                                         :on-change #(on-change
-                                                     (cu/toggle selected [(:db/ident g) id]))}]])
+                                                      (cu/toggle selected [(:db/ident g) id]))}]])
                    (filter #(= (:db/ident g) (:enum/valid-for %)) task-types))]])
          (filter #(= (:db/ident activity-name)
                      (:enum/valid-for %))
@@ -47,7 +53,7 @@
   [select/with-enum-values {:e! e! :attribute :task/type}
    [task-selection opts task-groups]])
 
-(defn create-activity-form [e! activity lifecycle-type]
+(defn create-activity-form [e! activity lifecycle-type {:keys [max-date min-date]}]
   [form/form2 {:e! e!
                :value activity
                :on-change-event activity-controller/->UpdateActivityForm
@@ -60,11 +66,10 @@
      [form/field :activity/name
       [select/select-enum {:e! e! :attribute :activity/name :enum/valid-for lifecycle-type}]]
 
-     [form/field :activity/status
-      [select/select-enum {:e! e! :attribute :activity/status}]]
-
      [form/field {:attribute [:activity/estimated-start-date :activity/estimated-end-date]}
       [date-picker/date-range-input {:row? false
+                                     :max-date max-date
+                                     :min-date min-date
                                      :start-label (tr [:fields :activity/estimated-start-date])
                                      :end-label (tr [:fields :activity/estimated-end-date])}]]]
     [Grid {:item true :xs 8}
@@ -72,33 +77,47 @@
                                :attribute :task/group}
       [task-groups-and-tasks {:e! e!
                               :on-change #(e! (activity-controller/->UpdateActivityForm
-                                               {:selected-tasks %}))
+                                                {:selected-tasks %}))
                               :selected (or (:selected-tasks activity) #{})}]]]
 
     [Grid {:item true :xs 12}
      [:div {:style {:display :flex :justify-content :flex-end}}
       [form/footer2]]]]])
 
-(defn edit-activity-form [e! activity]
-  [form/form {:e! e!
-              :value activity
-              :on-change-event activity-controller/->UpdateActivityForm
-              :save-event activity-controller/->SaveActivityForm
-              :cancel-event project-controller/->CloseDialog
-              :delete (e! activity-controller/->DeleteActivity)
-              :spec :activity/new-activity-form}
+(defn edit-activity-form [e! activity {:keys [max-date min-date]}]
+  (let [half-an-hour-ago (- (.getTime (js/Date.)) (* 30 60 1000))
+        deletable? (and (= (get-in activity [:meta/creator :db/id])
+                           (:db/id @teet.app-state/user))
+                        (> (.getTime (:meta/created-at activity))
+                           half-an-hour-ago))]
+    [form/form {:e! e!
+                :value activity
+                :on-change-event activity-controller/->UpdateActivityForm
+                :save-event activity-controller/->SaveActivityForm
+                :cancel-event project-controller/->CloseDialog
+                :delete (when deletable?
+                          (activity-controller/->DeleteActivity (:db/id activity)))
+                :spec :activity/new-activity-form}
 
-   ^{:attribute [:activity/estimated-start-date :activity/estimated-end-date]}
-   [date-picker/date-range-input {:start-label (tr [:fields :activity/estimated-start-date])
-                                  :end-label (tr [:fields :activity/estimated-end-date])}]])
+     ^{:attribute [:activity/estimated-start-date :activity/estimated-end-date]}
+     [date-picker/date-range-input {:start-label (tr [:fields :activity/estimated-start-date])
+                                    :max-date max-date
+                                    :min-date min-date
+                                    :end-label (tr [:fields :activity/estimated-end-date])}]]))
 
 (defmethod project-navigator-view/project-navigator-dialog :edit-activity
-  [{:keys [e! app]} _dialog]
-  [edit-activity-form e! (:edit-activity-data app)])
+  [{:keys [e! app project]} _dialog]
+  (let [lifecycle-id (get-in app [:stepper :lifecycle])
+        lifecycle (project-model/lifecycle-by-id project lifecycle-id)]
+    [edit-activity-form e! (:edit-activity-data app) {:min-date (:thk.lifecycle/estimated-start-date lifecycle)
+                                                      :max-date (:thk.lifecycle/estimated-end-date lifecycle)}]))
 
 (defmethod project-navigator-view/project-navigator-dialog :new-activity
-  [{:keys [e! app]} dialog]
-  [create-activity-form e! (:edit-activity-data app) (:lifecycle-type dialog)])
+  [{:keys [e! app project]} dialog]
+  (let [lifecycle-id (get-in app [:stepper :lifecycle])
+        lifecycle (project-model/lifecycle-by-id project lifecycle-id)]
+    [create-activity-form e! (:edit-activity-data app) (:lifecycle-type dialog) {:min-date (:thk.lifecycle/estimated-start-date lifecycle)
+                                                                                 :max-date (:thk.lifecycle/estimated-end-date lifecycle)}]))
 
 (defn project-management
   [owner manager]
@@ -152,7 +171,7 @@
 (defn task-group
   [[group tasks]]
   [:div {:class (<class common-styles/margin-bottom 1)}
-   [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}  (tr-enum group)]
+   [typography/Heading2 {:class (<class common-styles/margin-bottom 1)} (tr-enum group)]
    [:div
     (util/mapc task-row tasks)]])
 
@@ -163,13 +182,51 @@
               (sort-by (comp task-model/task-group-order :db/ident first)
                        (group-by :task/group tasks)))])
 
+(defn approvals-button [e! params button-kw confirm-kw event-fn]
+  (r/with-let [clicked? (r/atom false)]
+    [:<>
+     [buttons/button-primary {:on-click #(reset! clicked? true)
+                              :style {:float :right}}
+      [icons/action-check-circle]
+      (tr [:activity button-kw])]
+     (when @clicked?
+       [panels/modal {:title (str (tr [:activity button-kw]) "?")
+                      :on-close #(reset! clicked? false)}
+        [:<>
+         [:div {:style {:padding "1rem"
+                        :margin-bottom "2rem"
+                        :background-color theme-colors/gray-lightest}}
+          (tr [:activity confirm-kw])]
+         [:div {:style {:display :flex
+                        :justify-content :flex-end}}
+          [buttons/button-secondary {:on-click #(reset! clicked? false)}
+           (tr [:buttons :cancel])]
+          [buttons/button-primary {:on-click (e! event-fn params)
+                                   :style {:margin-left "1rem"}}
+           (tr [:buttons :confirm])]]]])]))
+
+(defn approve-button [e! params]
+  (approvals-button e! params :approve-activity :approve-activity-confirm activity-controller/->Review))
+
+(defn submit-for-approval-button [e! params]
+  (approvals-button e! params :submit-for-approval :submit-results-confirm activity-controller/->SubmitResults))
+
 (defn activity-content
   [e! params project]
   (let [activity (project-model/activity-by-id project (:activity params))]
     [:<>
      [activity-header e! activity]
      [project-management (:thk.project/owner project) (:thk.project/manager project)]
-     [task-lists (:activity/tasks activity)]]))
+     [task-lists (:activity/tasks activity)]
+     ;; FIXME change to match backend: check for project owner
+     (when (and (authorized? @teet.app-state/user :activity/change-activity-status nil)
+                (activity-model/all-tasks-completed? activity))
+       [submit-for-approval-button e! params])
+     (when (and (authorized? @teet.app-state/user :activity/change-activity-status nil)
+                (-> activity :activity/status :db/ident (= :activity.status/in-review)))
+       [approve-button e! params])
+     ;; FIXME add "Note: All tasks need to be completed first" from Figma
+     ]))
 
 (defn activity-page [e! {:keys [params] :as app} project breadcrumbs]
   [project-navigator-view/project-navigator-with-content

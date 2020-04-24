@@ -10,8 +10,7 @@
         com.nimbusds/nimbus-jose-jwt {:mvn/version "7.8"
                                       :exclusions [net.minidev/json-smart]}
         net.minidev/json-smart {:mvn/version "2.3"}}
- :mvn/repos {;; geotools in boundless
-             "boundless" {:url "https://repo.boundlessgeo.com/main/"}
+ :mvn/repos {"geotools" {:url "https://repo.osgeo.org/repository/release/"}
              ;; jgridshift library in osgeo
              "osgeo" {:url "https://download.osgeo.org/webdav/geotools/"}}
 

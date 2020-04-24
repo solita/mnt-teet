@@ -2,7 +2,8 @@
   "Export project lifecycle and activity data to THK"
   (:require [datomic.client.api :as d]
             [teet.thk.thk-mapping :as thk-mapping]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.meta.meta-query :as meta-query]))
 
 (defn- all-projects [db]
   (d/q '[:find (pull ?e [*
@@ -43,7 +44,7 @@
   (let [db (d/db connection)
         projects (->> db
                       all-projects
-
+                      (meta-query/without-deleted db)
                       ;; Take the pulled map from each result
                       (map first)
 
