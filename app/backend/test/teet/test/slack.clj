@@ -75,11 +75,4 @@
                                                (str "\n\n*Errors*\n"
                                                     (list-tests errors))))}}]})}))))
 
-(let [out (io/writer (io/file "test.out"))]
-  (defn r [m]
-    (.write out (str "TYPE: " (:type m) "\n"
-                     (pr-str m) "\n"
-                     "-----------------------\n"
-                      ))))
-
-(def report [slack r])
+(def report [slack])
