@@ -26,9 +26,6 @@ phases:
     commands:
       - cd $BACKEND
       - clojure -A:db-test
-  post_build:
-    commands:
-      - NOTIFY_ON_SUCCESS=0 && bash ../../ci/scripts/slack.bash Database tests $CODEBUILD_RESOLVED_SOURCE_VERSION
 cache:
   paths:
     - '/root/.m2/**/*'

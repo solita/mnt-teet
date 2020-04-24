@@ -49,11 +49,13 @@
            :test {:main-opts ["-m" "kaocha.runner" "--skip-meta" "db"]
                   :extra-deps {lambdaisland/kaocha {:mvn/version "0.0-529"}}
                   :extra-paths ["test"]}
-           :db-test {:main-opts ["-m" "kaocha.runner" "--focus-meta" "db"]
-                     :extra-deps {lambdaisland/kaocha {:mvn/version "0.0-529"}}
+           :db-test {:main-opts ["-m" "kaocha.runner"
+                                 "--focus-meta" "db"
+                                 "--reporter" "teet.test.slack/report"]
+                     :extra-deps {lambdaisland/kaocha {:mvn/version "1.0-612"}}
                      :extra-paths ["test"]}
            :test-all {:main-opts ["-m" "kaocha.runner"]
-                      :extra-deps {lambdaisland/kaocha {:mvn/version "0.0-529"}}
+                      :extra-deps {lambdaisland/kaocha {:mvn/version "1.0-612"}}
                       :extra-paths ["test"]}
            :authorizations {:main-opts ["-m" "teet.authorization"]
                             :extra-paths ["src/build"]
