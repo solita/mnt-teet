@@ -119,11 +119,22 @@
                                    :db/id])
                      (meta-model/modification-meta user))]})
 
+(defn user-can-delete-activity?
+  [db activity-id user]
+  (let [half-an-hour-ago (- (.getTime (Date.)) (* 30 60 1000))
+        activity (d/pull db '[:meta/creator :meta/created-at] activity-id)]
+    (and (= (get-in activity [:meta/creator :db/id])
+            (:db/id user))
+         (> (.getTime (:meta/created-at activity))
+            half-an-hour-ago))))
+
 (defcommand :activity/delete
   {:doc "Mark an activity as deleted"
    :context {db :db
              user :user}
    :payload {activity-id :db/id}
+   :pre [^{:error :can-not-delete}
+         (user-can-delete-activity? db activity-id user)]
    :project-id (project-db/activity-project-id db activity-id)
    :authorization {:activity/delete-activity {}}
    :transact [(meta-model/deletion-tx user activity-id)]})
