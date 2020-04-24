@@ -21,9 +21,7 @@ phases:
       - unzip /tmp/datomic-cli.zip -d /tmp
       - chmod a+x /tmp/datomic-cli/datomic
       - echo Start datomic proxy
-      - /tmp/datomic-cli/datomic client access teetlocaldev --region eu-west-1
-    finally:
-      - cat /tmp/clojure*.edn
+      - nohup /tmp/datomic-cli/datomic client access teetlocaldev --region eu-west-1 & disown $!
   build:
     commands:
       - cd $BACKEND
