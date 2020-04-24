@@ -20,12 +20,6 @@ phases:
       - echo Download Clojure CLI tool
       - curl -o /tmp/install-clojure.sh https://download.clojure.org/install/linux-install-1.10.1.536.sh
       - bash /tmp/install-clojure.sh
-      - echo Install Datomic cli
-      - curl -o /tmp/datomic-cli.zip https://datomic-releases-1fc2183a.s3.amazonaws.com/tools/datomic-cli/datomic-cli-0.10.81.zip
-      - unzip /tmp/datomic-cli.zip -d /tmp
-      - chmod a+x /tmp/datomic-cli/datomic
-      - echo Start datomic proxy
-      - /tmp/datomic-cli/datomic client access teetlocaldev --region eu-west-1 & 
   build:
     commands:
       - cd $BACKEND

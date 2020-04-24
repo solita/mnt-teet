@@ -94,12 +94,32 @@
       (throw (ex-info "No db id found for data-fixture-temp-id"
                       {:temp-id data-fixture-temp-id}))))
 
+(defn- datomic-client-env
+  "Get Datomic client info from environment variables (running in CI)"
+  []
+  (let [region (System/getenv "DATOMIC_REGION")
+        system (System/getenv "DATOMIC_SYSTEM")]
+    (when (and region system)
+      {:server-type :ion
+       :region region
+       :system system
+       :query-group system
+       :endpoint (str "http://entry." system "." region ".datomic.net:8182/")})))
+
+
 (defn with-environment [f]
-  (log/info "Loading local config.")
-  (environment/load-local-config!)
-  (f)
-  (log/info "Reloading local config.")
-  (environment/load-local-config!))
+  (let [client (datomic-client-env)]
+    (if client
+      (do
+        (log/info "Using environment client.")
+        (swap! environment/config assoc-in [:datomic :client] client))
+      (do
+        (log/info "Loading local config.")
+        (environment/load-local-config!)))
+    (f)
+    (when-not client
+      (log/info "Reloading local config.")
+      (environment/load-local-config!))))
 
 (defn with-db
   ([] (with-db {}))
