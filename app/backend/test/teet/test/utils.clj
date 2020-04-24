@@ -113,7 +113,11 @@
     (if client
       (do
         (log/info "Using environment client.")
-        (swap! environment/config assoc-in [:datomic :client] client))
+        (swap! environment/config
+               #(-> %
+                    (assoc-in [:datomic :client] client)
+                    (assoc-in [:document-storage :bucket-name]
+                              (System/getenv "DOCUMENT_BUCKET")))))
       (do
         (log/info "Loading local config.")
         (environment/load-local-config!)))
