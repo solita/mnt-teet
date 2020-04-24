@@ -85,19 +85,25 @@
       [form/footer2]]]]])
 
 (defn edit-activity-form [e! activity {:keys [max-date min-date]}]
-  [form/form {:e! e!
-              :value activity
-              :on-change-event activity-controller/->UpdateActivityForm
-              :save-event activity-controller/->SaveActivityForm
-              :cancel-event project-controller/->CloseDialog
-              :delete (e! activity-controller/->DeleteActivity)
-              :spec :activity/new-activity-form}
+  (let [half-an-hour-ago (- (.getTime (js/Date.)) (* 30 60 1000))
+        deletable? (and (= (get-in activity [:meta/creator :db/id])
+                           (:db/id @teet.app-state/user))
+                        (> (.getTime (:meta/created-at activity))
+                           half-an-hour-ago))]
+    [form/form {:e! e!
+                :value activity
+                :on-change-event activity-controller/->UpdateActivityForm
+                :save-event activity-controller/->SaveActivityForm
+                :cancel-event project-controller/->CloseDialog
+                :delete (when deletable?
+                          (activity-controller/->DeleteActivity (:db/id activity)))
+                :spec :activity/new-activity-form}
 
-   ^{:attribute [:activity/estimated-start-date :activity/estimated-end-date]}
-   [date-picker/date-range-input {:start-label (tr [:fields :activity/estimated-start-date])
-                                  :max-date max-date
-                                  :min-date min-date
-                                  :end-label (tr [:fields :activity/estimated-end-date])}]])
+     ^{:attribute [:activity/estimated-start-date :activity/estimated-end-date]}
+     [date-picker/date-range-input {:start-label (tr [:fields :activity/estimated-start-date])
+                                    :max-date max-date
+                                    :min-date min-date
+                                    :end-label (tr [:fields :activity/estimated-end-date])}]]))
 
 (defmethod project-navigator-view/project-navigator-dialog :edit-activity
   [{:keys [e! app project]} _dialog]
