@@ -71,12 +71,13 @@
 (defn navigation-info
   "Fetch notification type and target for user's notification."
   [db user notification-id]
-  (ffirst (d/q '[:find (pull ?notification [:notification/target :notification/type])
-                 :where [?notification :notification/receiver ?user]
-                 :in $ ?notification ?user]
-               db
-               notification-id
-               (user-model/user-ref user))))
+  (ffirst
+   (d/q '[:find (pull ?notification [:notification/target :notification/type])
+          :where [?notification :notification/receiver ?user]
+          :in $ ?notification ?user]
+        db
+        notification-id
+        (user-model/user-ref user))))
 
 (defn user-notification? [db user notification-id]
   (boolean
