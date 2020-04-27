@@ -71,6 +71,7 @@
 (defn connection
   "Returns the current connection. Can only be called within tests using with-db fixture."
   []
+  (Thread/sleep 100)
   *connection*)
 
 (defn db
