@@ -123,10 +123,6 @@
       (some #(when (id= activity-id (:db/id %)) %) activities))
     lifecycles))
 
-(defn initialized?
-  [project]
-  (contains? project :thk.project/owner))
-
 (def project-files-xf
   (comp
    (mapcat :thk.project/lifecycles)

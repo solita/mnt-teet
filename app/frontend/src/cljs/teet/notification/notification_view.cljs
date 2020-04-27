@@ -36,27 +36,14 @@
 
 (defn- notification-icon [type]
   (case (:db/ident type)
-    :notification.type/task-waiting-for-review
-    [icons/action-assignment]
-
-    :notification.type/task-assigned
-    [icons/action-assignment-ind]
-
-    :notification.type/comment-created
-    [icons/communication-comment]
-
-    :notification.type/comment-resolved
-    [icons/action-check-circle-outline]
-
-    :notification.type/comment-unresolved
-    [icons/content-block]
-
-
-    :notification.type/project-manager-assigned
-    [icons/action-work]
-
-    ;; FIXME: implement activity icon
-    
+    :notification.type/task-waiting-for-review [icons/action-assignment]
+    :notification.type/task-assigned [icons/action-assignment-ind]
+    :notification.type/comment-created [icons/communication-comment]
+    :notification.type/comment-resolved [icons/action-check-circle-outline]
+    :notification.type/comment-unresolved [icons/content-block]
+    :notification.type/project-manager-assigned [icons/action-work]
+    :notification.type/activity-accepted [icons/action-thumb-up]
+    :notification.type/activity-rejected [icons/action-thumb-down]
     [icons/navigation-more-horiz]))
 
 (defn notification-menu-style

@@ -22,7 +22,7 @@
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Paper Link]]
+            [teet.ui.material-ui :refer [Paper Link Badge]]
             [teet.ui.panels :as panels]
             [teet.ui.project-context :as project-context]
             [teet.ui.select :as select]
@@ -43,7 +43,7 @@
 
 (defn project-details
   [e! {:thk.project/keys [estimated-start-date estimated-end-date road-nr
-                           carriageway repair-method procurement-nr id] :as project}]
+                          carriageway repair-method procurement-nr id] :as project}]
   (let [project-name (project-model/get-column project :thk.project/project-name)
         [start-km end-km] (project-model/get-column project :thk.project/effective-km-range)]
     [:div
@@ -242,6 +242,12 @@
                                    [permission-information e! project selected-person]
                                    [add-user-form e! add-participant (:db/id project)])}]))
 
+(defn information-missing-icon
+  []
+  [icons/av-new-releases
+   {:font-size :small
+    :style {:color theme-colors/warning}}])
+
 
 (defn people-tab [e! {query :query :as _app} {:thk.project/keys [manager owner permitted-users] :as project}]
   [:div
@@ -254,7 +260,9 @@
       [buttons/button-secondary {:on-click (e! project-controller/->OpenEditProjectDialog)
                                  :size :small}
        (tr [:buttons :edit])]]]
-    [itemlist/gray-bg-list [{:primary-text (str (:user/given-name manager) " " (:user/family-name manager))
+    [itemlist/gray-bg-list [{:primary-text (if manager
+                                             (str (:user/given-name manager) " " (:user/family-name manager))
+                                             [information-missing-icon])
                              :secondary-text (tr [:roles :manager])}
                             {:primary-text (str (:user/given-name owner) " " (:user/family-name owner))
                              :secondary-text (tr [:roles :owner])}]]]
@@ -277,26 +285,17 @@
   [:<>
    [project-details e! project]])
 
-(defn data-tab
+(defn restriction-tab
   [_e! {{project-id :project} :params :as _app} project]
   [:div
    [:div {:class (<class common-styles/heading-and-button-style)}
     [typography/Heading2 "Restrictions"]
     [buttons/button-secondary {:component "a"
-                               :href (str "/#/projects/" project-id "?tab=data&configure=restrictions")
+                               :href (str "/#/projects/" project-id "?tab=restrictions&configure=restrictions")
                                :size :small}
      (tr [:buttons :edit])]]
    [itemlist/gray-bg-list [{:secondary-text (tr [:data-tab :restriction-count]
-                                                {:count (count (:thk.project/related-restrictions project))})}]]
-
-   [:div {:class (<class common-styles/heading-and-button-style)}
-    [typography/Heading2 "Cadastral units"]
-    [buttons/button-secondary {:component "a"
-                               :href (str "/#/projects/" project-id "?tab=data&configure=cadastral-units")
-                               :size :small}
-     (tr [:buttons :edit])]]
-   [itemlist/gray-bg-list [{:secondary-text (tr [:data-tab :cadastral-unit-count]
-                                                {:count (count (:thk.project/related-cadastral-units project))})}]]])
+                                                {:count (count (:thk.project/related-restrictions project))})}]]])
 
 (defn activities-tab-footer [_e! _app project]
   [:div {:class (<class project-style/activities-tab-footer)}
@@ -312,14 +311,17 @@
    {:label [:project :tabs :people]
     :value "people"
     :component people-tab
+    :badge (fn [project]
+             (when-not (:thk.project/manager project)
+               [Badge {:badge-content (r/as-element [information-missing-icon])}]))
     :layers #{:thk-project}}
    {:label [:project :tabs :details]
     :value "details"
     :component details-tab
     :layers #{:thk-project}}
-   {:label [:project :tabs :data]
-    :value "data"
-    :component data-tab
+   {:label [:project :tabs :restrictions]
+    :value "restrictions"
+    :component restriction-tab
     :layers #{:thk-project}}
    {:label [:project :tabs :land]
     :value "land"
@@ -330,22 +332,28 @@
     (cu/find-first #(= tab (:value %)) project-tabs-layout)
     (first project-tabs-layout)))
 
-(defn- project-tabs [e! app]
+(defn- project-tabs [e! app project]
   [tabs/tabs {:e! e!
               :selected-tab (:value (selected-project-tab app))}
-   project-tabs-layout])
+   (mapv (fn [{badge :badge :as tab}]
+           (if badge
+             (assoc tab :badge (badge project))
+             tab))
+         project-tabs-layout)])
 
 (defn- project-tab [e! app project]
-  [(:component (selected-project-tab app)) e! app project])
+  (let [selected-tab (selected-project-tab app)]
+    ^{:key (:value selected-tab)}
+    [(:component selected-tab) e! app project]))
 
 (defn edit-project-management
   [e! project]
   (when-not (:basic-information-form project)
     (e! (project-controller/->UpdateBasicInformationForm
           (cu/without-nils {:thk.project/project-name (or (:thk.project/project-name project) (:thk.project/name project))
-                            :thk.project/km-range     (-> project
-                                                          (project-model/get-column :thk.project/effective-km-range)
-                                                          project-setup-view/format-range)
+                            :thk.project/km-range (-> project
+                                                      (project-model/get-column :thk.project/effective-km-range)
+                                                      project-setup-view/format-range)
                             :thk.project/owner (:thk.project/owner project)
                             :thk.project/manager (:thk.project/manager project)}))))
   (fn [e! {form :basic-information-form :as project}]
@@ -362,18 +370,7 @@
      [select/select-user {:e! e! :attribute :thk.project/manager}]]))
 
 
-(defn- setup-incomplete-footer
-  [e! project]
-  [:div {:class (<class project-style/wizard-footer)}
-   [:div
-    [:p {:style {:color theme-colors/gray}}
-     (tr [:project :wizard :project-setup])]
-    [:span {:class (<class common-styles/warning-text)}
-     (tr [:project :wizard :setup-incomplete])]]
 
-   [buttons/button-primary {:type :submit
-                            :on-click #(e! (project-controller/->ContinueProjectSetup (:thk.project/id project)))}
-    (tr [:buttons :continue])]])
 
 (defn change-restrictions-view
   [e! app project]
@@ -419,11 +416,12 @@
         :on-mouse-enter (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" true)
         :on-mouse-leave (e! project-controller/->FeatureMouseOvers "related-cadastral-unit-candidates" false)}])))
 
-(defn- initialized-project-view
+(defn- project-view
   "The project view shown for initialized projects."
   [e! {{configure :configure} :query :as app} project breadcrumbs]
   (cond
     (= configure "restrictions")
+    ^{:key "Restrictions"}
     [project-page-structure e! app project breadcrumbs
      {:header [:div {:class (<class project-style/project-view-header)}
                [typography/Heading1 {:style {:margin-bottom 0}} (tr [:search-area :select-relevant-restrictions])]]
@@ -440,6 +438,7 @@
                                (:thk.project/id project))}
                 (tr [:buttons :save])]]}]
     (= configure "cadastral-units")
+    ^{:key "Cadastral units"}
     [project-page-structure e! app project breadcrumbs
      {:header [:div {:class (<class project-style/project-view-header)}
                [typography/Heading1 {:style {:margin-bottom 0}} (tr [:search-area :select-relevant-cadastral-units])]]
@@ -456,29 +455,22 @@
                                (:thk.project/id project))}
                 (tr [:buttons :save])]]}]
     :else
+    ^{:key "Project view "}
     [project-page-structure e! app project breadcrumbs
-     (merge {:header [project-tabs e! app]
+     (merge {:header [project-tabs e! app project]
              :body [project-tab e! app project]
              :map-settings {:layers #{:thk-project :surveys}}}
-            (if (:thk.project/setup-skipped? project)
-              {:footer [setup-incomplete-footer e! project]}
-              (when-let [tab-footer (:footer (selected-project-tab app))]
-                {:footer [tab-footer e! app project]})))]))
-
-(defn- project-setup-view
-  "The project setup wizard that is shown for uninitialized projects."
-  [e! app project breadcrumbs]
-  [project-page-structure e! app project breadcrumbs
-   (project-setup-view/view-settings e! app project)])
+            (when-let [tab-footer (:footer (selected-project-tab app))]
+              {:footer [tab-footer e! app project]}))]))
 
 (defn edit-project-details
   [e! project]
   (when-not (:basic-information-form project)
     (e! (project-controller/->InitializeBasicInformationForm
           (cu/without-nils {:thk.project/project-name (:thk.project/name project)
-                            :thk.project/km-range     (-> project
-                                                          (project-model/get-column :thk.project/effective-km-range)
-                                                          project-setup-view/format-range)
+                            :thk.project/km-range (-> project
+                                                      (project-model/get-column :thk.project/effective-km-range)
+                                                      project-setup-view/format-range)
                             :thk.project/owner (:thk.project/owner project)
                             :thk.project/manager (:thk.project/manager project)}))))
   (fn [e! {form :basic-information-form :as project}]
@@ -537,6 +529,4 @@
    {:project-id (:db/id project)}
    [:<>
     [project-page-modals e! app project]
-    (if (or (:thk.project/setup-skipped? project) (project-model/initialized? project))
-      [initialized-project-view e! app project breadcrumbs]
-      [project-setup-view e! app project breadcrumbs])]])
+    [project-view e! app project breadcrumbs]]])

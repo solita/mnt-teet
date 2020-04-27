@@ -67,9 +67,9 @@
      [:div {:class (<class file-column-style 10)}
       [:span suffix]]
      [:div {:class (<class file-column-style 10)}
-      [:span version]]
+      [:span (str "V" version)]]
      [:div {:class (<class file-column-style 13)}
-      [:span status]]
+      [:span (tr-enum status)]]
      [:div {:class (<class file-column-style 13 :flex-end)}
       [url/Link {:class (<class file-row-icon-style)
                  :page :file
@@ -83,16 +83,18 @@
 
 (defn- other-version-row
   [{id :db/id
-    :file/keys [name version]
+    :file/keys [name version status]
     :meta/keys [created-at creator]
     :as _file}]
   [:div {:class [(<class common-styles/flex-row) (<class common-styles/margin-bottom 0.5)]}
-   [:div {:class (<class file-column-style 60)}
+   [:div {:class (<class file-column-style 55)}
     [url/Link {:page :file :params {:file id}}
      name]]
    [:div {:class (<class file-column-style 10 :center)}
     [:span (str "V" version)]]
-   [:div {:class (<class file-column-style 30 :flex-end)}
+   [:div {:class (<class file-column-style 10 :center)}
+    [:span (tr-enum status)]]
+   [:div {:class (<class file-column-style 25 :flex-end)}
     [:span (format/date created-at)]]])
 
 (defn file-table

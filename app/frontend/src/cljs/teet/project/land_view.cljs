@@ -93,7 +93,7 @@
                           [:p (tr [:land :total-area] {:area PINDALA})
                            (case quality
                              :bad [:span {:style {:color theme-colors/red}} " !!! " (tr [:land :unreliable])]
-                             :not-so-good [:span {:style {:color theme-colors/orange}} " ! " (tr [:land :unreliable])]
+                             :questionable [:span {:style {:color theme-colors/orange}} " ! " (tr [:land :unreliable])]
                              nil)]
                           [:span (tr [:land :net-area-balance] {:area (- PINDALA area)})]])}
           [TextField {:type :number :input-style {:width "50%"}}])]])))
@@ -139,39 +139,29 @@
             theme-colors/orange)})
 
 (defn cadastral-unit
-  [e! {:keys [TUNNUS KINNISTU MOOTVIIS MUUDET selected?] :as unit}]
-  ^{:key (str TUNNUS)}
-  (let [quality-date (time/date-time 2018 01 01)            ;;Arbitrary date before which data quality is bad
-        quality (cond
-                  (and (= MOOTVIIS "mõõdistatud, L-EST")
-                       (not (time/before? (c/from-string MUUDET) quality-date)))
-                  :good
-                  (and (= MOOTVIIS "mõõdistatud, L-EST")
-                       (time/before? (c/from-string MUUDET) quality-date))
-                  :not-so-good
-                  :else
-                  :bad)]
-    [:div {:class (<class cadastral-unit-container-style)}
-     [:div {:class (<class cadastral-unit-quality-style quality)}
-      [:span {:title (str MOOTVIIS " – " MUUDET)} (case quality
-                                                    :bad "!!!"
-                                                    :not-so-good "!"
-                                                    "")]]
-     [ButtonBase {:on-mouse-enter (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" true unit)
-                  :on-mouse-leave (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" false unit)
-                  :on-click (e! land-controller/->ToggleLandUnit unit)
-                  :class (<class cadastral-unit-style selected?)}
-      [typography/SectionHeading {:style {:text-align :left}} (:L_AADRESS unit)]
-      [:div {:style {:display :flex
-                     :width "100%"
-                     :justify-content :space-between}}
-       [acquisition-impact-status (get-in unit [:land-acquisition :land-acquisition/impact])]
-       [:span {:class (<class common-styles/gray-text)}
-        (tr [:land :estate]) " " KINNISTU]]]
-     [Collapse
-      {:in selected?
-       :mount-on-enter true}
-      [cadastral-unit-form e! unit quality]]]))
+  [e! {:keys [TUNNUS KINNISTU MOOTVIIS MUUDET quality selected?] :as unit}]
+  ^{:key (str TUNNUS)} ;;Arbitrary date before which data quality is bad]
+  [:div {:class (<class cadastral-unit-container-style)}
+   [:div {:class (<class cadastral-unit-quality-style quality)}
+    [:span {:title (str MOOTVIIS " – " MUUDET)} (case quality
+                                                  :bad "!!!"
+                                                  :questionable "!"
+                                                  "")]]
+   [ButtonBase {:on-mouse-enter (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" true unit)
+                :on-mouse-leave (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" false unit)
+                :on-click (e! land-controller/->ToggleLandUnit unit)
+                :class (<class cadastral-unit-style selected?)}
+    [typography/SectionHeading {:style {:text-align :left}} (:L_AADRESS unit)]
+    [:div {:style {:display :flex
+                   :width "100%"
+                   :justify-content :space-between}}
+     [acquisition-impact-status (get-in unit [:land-acquisition :land-acquisition/impact])]
+     [:span {:class (<class common-styles/gray-text)}
+      (tr [:land :estate]) " " KINNISTU]]]
+   [Collapse
+    {:in selected?
+     :mount-on-enter true}
+    [cadastral-unit-form e! unit quality]]])
 
 (defn cadastral-heading-container-style
   []
@@ -205,18 +195,28 @@
       (r/partial cadastral-unit e!)
       units)]])
 
-(defn search-field
-  [e! cadastral-search-value]
+(defn filter-units
+  [e! {:keys [name-search-value quality]}]
   (r/with-let [on-change (fn [e]
-                           (e! (land-controller/->SearchOnChange (-> e .-target .-value))))]
+                           (e! (land-controller/->SearchOnChange :name-search-value (-> e .-target .-value))))]
     [:div {:style {:margin-bottom "1rem"}}
      [TextField {:label (tr [:land :filter-label])
-                 :value cadastral-search-value
-                 :on-change on-change}]]))
+                 :value name-search-value
+                 :on-change on-change}]
+     [select/form-select
+      {:label (tr [:land :filter :quality])
+       :name "Quality"
+       :value quality
+       :items [{:value nil :label (tr [:land :quality :any])}
+               {:value :good :label (tr [:land :quality :good])}
+               {:value :bad :label (tr [:land :quality :bad])}
+               {:value :questionable :label (tr [:land :quality :questionable])}]
+       :on-change (fn [val]
+                    (e! (land-controller/->SearchOnChange :quality val)))}]]))
 
 (defn cadastral-groups
   [e! _ _]
-  (e! (land-controller/->SearchOnChange ""))
+  (e! (land-controller/->SearchOnChange :name-search-value ""))
   (fn [e! project units]
     (let [land-acquisitions (into {}
                                   (map
@@ -236,10 +236,9 @@
                          (group-by :OMVORM)))]
       [:<>
        [:div
-        (when (:land-acquisitions project)
-          (mapc
-            (r/partial cadastral-group e!)
-            grouped))]])))
+        (mapc
+          (r/partial cadastral-group e!)
+          grouped)]])))
 
 (defn related-cadastral-units-info
   [e! _app project]
@@ -253,9 +252,9 @@
        [:div {:style {:margin-top "1rem"}
               :class (<class common-styles/heading-and-button-style)}
         [typography/Heading2 (tr [:project :cadastral-units-tab])]
-        [buttons/button-secondary {:href (url/set-query-param :tab "data" :configure "cadastral-units")}
+        [buttons/button-secondary {:href (url/set-query-param :configure "cadastral-units")}
          (tr [:buttons :edit])]]
-       [search-field e! (:cadastral-search-value project)]
+       [filter-units e! (:land-acquisition-filters project)]
        ;; Todo add skeleton
        [postgrest-query/query {:endpoint api-url
                                :state (:thk.project/related-cadastral-units-info project)
@@ -264,4 +263,4 @@
                                :where {"id" [:in related-ids]
                                        "datasource_id" [:= datasource-id]}
                                :select ["properties"]}
-        [cadastral-groups e! (dissoc project :cadastral-search-value)]]])))
+        [cadastral-groups e! (dissoc project :land-acquisition-filters)]]])))

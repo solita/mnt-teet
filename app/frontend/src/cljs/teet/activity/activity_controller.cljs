@@ -15,7 +15,7 @@
 (defrecord UpdateActivityForm [form-data])
 (defrecord SaveActivityForm [])
 (defrecord SaveActivityResponse [response])
-(defrecord DeleteActivity [])
+(defrecord DeleteActivity [activity-id])
 (defrecord DeleteActivityResponse [response])
 
 (defrecord SubmitResults []) ; submit activity for review
@@ -30,7 +30,6 @@
   SaveActivityForm
   (process-event [_ {:keys [edit-activity-data] :as app}]
     (let [new? (nil? (:db/id edit-activity-data))]
-      (log/info "Save activity: " edit-activity-data)
       (t/fx app
             {:tuck.effect/type :command!
              ;; create/update
@@ -59,6 +58,27 @@
            :payload {:activity-id (goog.math.Long/fromString (:activity params))}
            :success-message (tr [:activity :submit-results-success])
            :result-event common-controller/->Refresh}))
+
+  DeleteActivityResponse
+  (process-event
+    [_ {:keys [params query] :as app}]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page :project
+           :params (dissoc params :activity)
+           :query query}
+          common-controller/refresh-fx))
+
+  DeleteActivity
+  (process-event
+    [{activity-id :activity-id} app]
+    (println "IN DELETE:" activity-id)
+    (t/fx (update-in app [:stepper] dissoc :dialog)
+          {:tuck.effect/type :command!
+           :command :activity/delete
+           :payload {:db/id activity-id}
+           :success-message (tr [:notifications :activity-deleted])
+           :result-event ->DeleteActivityResponse}))
 
   Review
   (process-event [_ {params :params :as app}]

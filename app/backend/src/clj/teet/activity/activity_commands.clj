@@ -6,7 +6,8 @@
             [teet.activity.activity-model :refer [all-tasks-completed?]]
             [teet.notification.notification-db :as notification-db]
             [datomic.client.api :as d]
-            [teet.activity.activity-db :as activity-db])
+            [teet.activity.activity-db :as activity-db]
+            [clojure.spec.alpha :as s])
   (:import (java.util Date)))
 
 (defn valid-activity-name?
@@ -33,6 +34,7 @@
                          :where
                          [?a :activity/name ?name]
                          [?lc :thk.lifecycle/activities ?a]
+                         [(missing? $ ?a :meta/deleted?)]   ;; Don't take in to account deleted activities
                          [(get-else $ ?a :activity/actual-end-date ?time) ?end-date]
                          [(>= ?end-date ?time)]]
                     db
@@ -117,11 +119,22 @@
                                    :db/id])
                      (meta-model/modification-meta user))]})
 
+(defn user-can-delete-activity?
+  [db activity-id user]
+  (let [half-an-hour-ago (- (.getTime (Date.)) (* 30 60 1000))
+        activity (d/pull db '[:meta/creator :meta/created-at] activity-id)]
+    (and (= (get-in activity [:meta/creator :db/id])
+            (:db/id user))
+         (> (.getTime (:meta/created-at activity))
+            half-an-hour-ago))))
+
 (defcommand :activity/delete
   {:doc "Mark an activity as deleted"
    :context {db :db
              user :user}
    :payload {activity-id :db/id}
+   :pre [^{:error :can-not-delete}
+         (user-can-delete-activity? db activity-id user)]
    :project-id (project-db/activity-project-id db activity-id)
    :authorization {:activity/delete-activity {}}
    :transact [(meta-model/deletion-tx user activity-id)]})
@@ -152,25 +165,26 @@
                 :type :notification.type/activity-waiting-for-review
                 :target activity-id})]})
 
+(s/def ::activity-id integer?)
+(s/def ::status #{:activity.status/canceled
+                  :activity.status/archived
+                  :activity.status/completed})
+
 (defcommand :activity/review
-  {:doc "Submit activity for review, when tasks are complete"
+  {:doc "Submit review result for activity"
+   :spec (s/and (s/keys :req-un [::activity-id ::status]))
    :context {:keys [conn user db]}
    :payload {:keys [activity-id status]}
    :project-id (project-db/activity-project-id db activity-id)
-   :authorization {:activity/change-activity-status {}}
-   ;; precondition checks that 1. user is project owner, 2. new status is one of the permissible review outcomes 3. pre-existing status was :in-review
-   :pre [(let [project-id (project-db/activity-project-id db activity-id)
-               project-owner (project-db/project-owner db project-id)]
-           ;; could this also be implemented with a :link authorization check?
-           ;; 1
-           (= (:db/id user) project-owner)
-           ;; 3
-           (= (->> activity-id (d/pull db '[:activity/status]) :activity/status :db/ident)
-              :activity.status/in-review))
-         ;; 2         
-         (#{:activity.status/canceled
-            :activity.status/archived
-            :activity.status/completed} status)]
+
+   ;; Require change activity status, link checks for project owner
+   :authorization {:activity/change-activity-status
+                   {:id (project-db/activity-project-id db activity-id)
+                    :link :thk.project/owner}}
+   :pre [^{:error :invalid-activity-status}
+         (= :activity.status/in-review
+            (get-in (du/entity db activity-id)
+                    [:activity/status :db/ident]))]
    :transact [(merge {:db/id activity-id
                       :activity/status status}
                      (meta-model/modification-meta user))

@@ -84,7 +84,7 @@
 (defmacro defrequest*
   "Do not call directly. Use defcommand and defquery."
   [request-type request-name
-   {:keys [payload args context unauthenticated? authorization project-id transact
+   {:keys [spec payload args context unauthenticated? authorization project-id transact
            config] :as options}
    & body]
 
@@ -119,6 +119,8 @@
     `(do (register-permissions! ~request-name
                                 ~request-type
                                 ~prepared-permissions)
+         ~(when spec
+            `(clojure.spec.alpha/def ~request-name ~spec))
          (defmethod ~(case request-type
                        :command 'teet.db-api.core/command!
                        :query 'teet.db-api.core/query)
@@ -288,14 +290,20 @@
   `(defrequest* :query ~query-name ~options ~@body))
 
 (defn tx
-  "Execute Datomic transaction inside defcommand. Automatically adds transaction info to the tx-data."
-  [tx-data]
+  "Execute Datomic transaction inside defcommand. Automatically adds transaction info to the tx-data.
+
+  tx-data must be a vector of datomic transaction data (maps or vectors).
+  More tx data can vectors can be added and will be concatenated to the first.
+  Nil entries in more-tx-data will be filtered out, making it more convenient
+  to include optional transactions that depend on some condition with `when`.
+  "
+  [tx-data & more-tx-data]
   (assert (vector? tx-data) "tx-data must be a vector!")
   (let [{:keys [user conn]} *request-ctx*
         command *request-name*]
     (assert *request-name* "tx can only be called within defcommand")
     (log/info "tx  command: " command ", user: " user)
-    (d/transact conn {:tx-data (conj tx-data
+    (d/transact conn {:tx-data (conj (into tx-data
+                                           (mapcat #(remove nil? %) more-tx-data))
                                      {:db/id "datomic.tx"
-                                      ;; PENDING: add the command being run
                                       :tx/author (:user/id user)})})))

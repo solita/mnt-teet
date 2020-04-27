@@ -20,8 +20,3 @@
   (assoc (modification-meta user)
     :meta/deleted? true
     :db/id id))
-
-(defn tx-meta
-  [user]
-  {:db/id "datomic.tx"
-   :tx/author (user-model/user-ref user)})

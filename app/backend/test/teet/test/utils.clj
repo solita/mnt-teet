@@ -78,6 +78,11 @@
   []
   (d/db (connection)))
 
+(defn entity
+  "Returns navigable entity from the current db."
+  [eid]
+  (du/entity (db) eid))
+
 (defn tx
   "Transact the given tx-data maps. Can only be called within tests using with-db fixture."
   [& tx-data]
@@ -89,12 +94,37 @@
       (throw (ex-info "No db id found for data-fixture-temp-id"
                       {:temp-id data-fixture-temp-id}))))
 
+(defn- datomic-client-env
+  "Get Datomic client info from environment variables (running in CI)"
+  []
+  (let [region (System/getenv "DATOMIC_REGION")
+        system (System/getenv "DATOMIC_SYSTEM")]
+    (when (and region system)
+      {:server-type :ion
+       :region region
+       :system system
+       :query-group system
+       :endpoint (str "http://entry." system "." region ".datomic.net:8182/")
+       :proxy-port 8182})))
+
+
 (defn with-environment [f]
-  (log/info "Loading local config.")
-  (environment/load-local-config!)
-  (f)
-  (log/info "Reloading local config.")
-  (environment/load-local-config!))
+  (let [client (datomic-client-env)]
+    (if client
+      (do
+        (log/info "Using environment client.")
+        (swap! environment/config
+               #(-> %
+                    (assoc-in [:datomic :client] client)
+                    (assoc-in [:document-storage :bucket-name]
+                              (System/getenv "DOCUMENT_BUCKET")))))
+      (do
+        (log/info "Loading local config.")
+        (environment/load-local-config!)))
+    (f)
+    (when-not client
+      (log/info "Reloading local config.")
+      (environment/load-local-config!))))
 
 (defn with-db
   ([] (with-db {}))
@@ -247,4 +277,3 @@
         ret2 (local-command :task/start-review params)
         ret3 (local-command :task/review (merge params {:result :accept}))]
     [ret1 ret2 ret3]))
-
