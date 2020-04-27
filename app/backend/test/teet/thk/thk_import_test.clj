@@ -46,7 +46,8 @@
   (:file (thk-integration-ion/csv->file {:csv csv})))
 
 (defn export-csv []
-  (let [[header & rows :as csv-data] (thk-export/export-thk-projects (tu/connection))
+  (let [[header & rows :as csv-data]
+        (thk-export/export-thk-projects (tu/connection))
         rows (mapv #(zipmap header %) rows)]
     (tu/store-data! :export-rows rows)
     (tu/store-data! :export-csv csv-data)
