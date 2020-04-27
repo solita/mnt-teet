@@ -36,7 +36,7 @@
 
  :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
              ;;"teet-dev-files" {:url "s3://teet-dev-files/maven"}
-             "datomic-cloud" {:url "s3://datomic-releases-1fc2183a/maven/releases?region-us-east-1"}
+             "datomic-cloud" {:url "s3://datomic-releases-1fc2183a/maven/releases"}
 
              }
  :paths ["src/clj" "../common/src/cljc" "../common/src/clj" "resources"
