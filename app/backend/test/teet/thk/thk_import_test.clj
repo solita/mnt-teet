@@ -33,11 +33,14 @@
 (defn import-csv!
   ([] (import-csv! (.getBytes test-csv)))
   ([csv-data]
-   (let [projects (thk-import/parse-thk-export-csv
+   (let [conn (tu/connection)
+         projects (thk-import/parse-thk-export-csv
                    (java.io.ByteArrayInputStream.
-                    csv-data))]
+                    csv-data))
+         import-result (thk-import/import-thk-projects! conn "test://test-csv" projects)]
      (tu/store-data! :projects-csv projects)
-     (thk-import/import-thk-projects! (tu/connection) "test://test-csv" projects))))
+     (d/sync conn (get-in import-result [:db-after :t]))
+     import-result)))
 
 (defn ->csv-data [csv]
   (:file (thk-integration-ion/csv->file {:csv csv})))
