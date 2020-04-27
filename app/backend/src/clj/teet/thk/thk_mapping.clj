@@ -204,7 +204,7 @@
 
    ;; Phase/lifecycle fields
    "phase_id" {:attribute :thk.lifecycle/id}
-   "phase_teetid" {:attribute :db/id
+   "phase_teetid" {:attribute :lifecycle-db-id
                    :parse ->int}
    "phase_typefk" {:attribute :phase/typefk}
    "phase_shortname" {:attribute :thk.lifecycle/type
@@ -224,7 +224,7 @@
    "activity_id" {:attribute :thk.activity/id
                   ;; Tasks sent to THK have activity id as well
                   :task {:attribute :thk.activity/id}}
-   "activity_teetid" {:attribute :db/id
+   "activity_teetid" {:attribute :activity-db-id
                       :parse ->int}
    "activity_taskid" {:attribute :activity/task-id
                       :parse ->int

@@ -42,7 +42,7 @@
 (defn integration-info [row fields]
   (pr-str (select-keys row fields)))
 
-(defn project-datomic-attributes [[project-id rows]]
+(defn project-datomic-attributes [db [project-id rows]]
   (let [prj (first rows)
         phases (group-by :thk.lifecycle/id rows)
         phase-est-starts (keep :thk.lifecycle/estimated-start-date rows)
@@ -96,30 +96,36 @@
                         :task/actual-end-date (:activity/actual-end-date activity)})
 
                       ;; This is an activity
-                      (merge
-                       (cu/without-nils
-                        (select-keys activity #{:thk.activity/id
-                                                :activity/estimated-start-date
-                                                :activity/estimated-end-date
-                                                :activity/name
-                                                :activity/status}))
-                       {:db/id (str "act-" id)
-                        :activity/integration-info (integration-info
-                                                    activity
-                                                    thk-mapping/activity-integration-info-fields)})))}))))}))))
+                      (let [{thk-id :thk.activity/id
+                             teet-id :activity-db-id} activity]
+                        (log/info "Received activity with THK id " thk-id
+                                  (if teet-id
+                                    (str "having TEET id " teet-id)
+                                    "without TEET id => creating new activity"))
+                        (merge
+                         (cu/without-nils
+                          (select-keys activity #{:thk.activity/id
+                                                  :activity/estimated-start-date
+                                                  :activity/estimated-end-date
+                                                  :activity/name
+                                                  :activity/status}))
+                         {:db/id (or teet-id (str "act-" id))
+                          :activity/integration-info (integration-info
+                                                      activity
+                                                      thk-mapping/activity-integration-info-fields)}))))}))))}))))
 
 (defn teet-project? [[_ [p1 & _]]]
   (and p1
        (:thk.project/start-m p1)
        (not (excluded-project-types (:object/groupname p1)))))
 
-(defn- thk-project-tx [url projects-csv]
+(defn- thk-project-tx [db url projects-csv]
   (into [{:db/id "datomic.tx"
           :integration/source-uri url}]
         (for [prj projects-csv
               :when (teet-project? prj)
               :let [{:thk.project/keys [id lifecycles] :as project}
-                    (project-datomic-attributes prj)]]
+                    (project-datomic-attributes db prj)]]
           (do
             (log/info "THK project " id
                       "has" (count lifecycles) "lifecycles (ids: "
@@ -164,5 +170,6 @@
     #_(when (seq duplicate-lifecycle-id-projects)
       (throw (ex-info "Duplicate lifecycle ids exist"
                       {:projects-with-duplicate-lifecycle-ids duplicate-lifecycle-id-projects})))
-    (d/transact connection
-                {:tx-data (thk-project-tx url projects)})))
+    (let [db (d/db connection)]
+      (d/transact connection
+                  {:tx-data (thk-project-tx db url projects)}))))

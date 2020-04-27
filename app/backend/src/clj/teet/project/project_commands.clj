@@ -168,7 +168,7 @@
    :payload {geometry :geometry
              geometry-label :geometry-label
              id :project-db-id}
-   :spec (s/keys :req-un [:geometry])
+   :spec (s/keys :req-un [::geometry])
    :project-id [:thk.project/id id]
    :authorization {:project/project-info {:eid [:thk.project/id id]
                                           :link :thk.project/owner}}
@@ -187,7 +187,7 @@
    :context {:keys [user]}
    :payload {entity-id :entity-id
              geometry-id :geometry-id}
-   :spec (s/keys :req-un [:entity-id :geometry-id])
+   :spec (s/keys :req-un [::entity-id ::geometry-id])
    :project-id [:thk.project/id entity-id]
    :authorization {:project/project-info {:eid [:thk.project/id entity-id]
                                           :link :thk.project/owner}}
