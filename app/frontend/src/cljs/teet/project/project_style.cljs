@@ -109,6 +109,7 @@
     :top "25px"
     :bottom "25px"
     :width (str (project-panel-width) "px")
+    :min-width "470px"
     :max-width "500px"
     :display :flex
     :flex-direction :column}))
