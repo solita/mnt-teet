@@ -37,7 +37,7 @@
   (assoc ctx :csv
          (thk-import/parse-thk-export-csv file)))
 
-(defn- csv->file [{csv :csv :as ctx}]
+(defn csv->file [{csv :csv :as ctx}]
   (with-open [baos (java.io.ByteArrayOutputStream.)
               writer (java.io.OutputStreamWriter. baos "UTF-8")]
     ;; Write UTF-8 byte order mark
