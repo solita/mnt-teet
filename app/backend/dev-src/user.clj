@@ -232,6 +232,14 @@
     #(q '[:find ?e :where [?e :db/ident :task.status/accepted]] (db))
     1 1 TimeUnit/MINUTES))
 
+(defn reset-activity-status [act-id]
+  ;; when testing submit / approve workflow this lets you walk back the status
+  (let [status-res (d/pull (db) '[:activity/status] act-id)
+        curr-status (-> status-res :activity/status :db/ident)]
+    (tx
+     {:db/id act-id
+      :activity/status :activity.status/in-progress})))
+
 
 ;;
 ;; Commands and queries from the REPL
