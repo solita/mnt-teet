@@ -182,50 +182,69 @@
               (sort-by (comp task-model/task-group-order :db/ident first)
                        (group-by :task/group tasks)))])
 
-(defn approvals-button [e! params button-kw confirm-kw event-fn]
+(defn approvals-button [e! params button-kw confirm-kw icon event-fn]
   (r/with-let [clicked? (r/atom false)]
     [:<>
      [buttons/button-primary {:on-click #(reset! clicked? true)
                               :style {:float :right}}
-      [icons/action-check-circle]
-      (tr [:activity button-kw])]
+      [icon]
+      (tr [:activity-approval button-kw])]
      (when @clicked?
-       [panels/modal {:title (str (tr [:activity button-kw]) "?")
+       [panels/modal {:title (str (tr [:activity-approval button-kw]) "?")
                       :on-close #(reset! clicked? false)}
         [:<>
          [:div {:style {:padding "1rem"
                         :margin-bottom "2rem"
                         :background-color theme-colors/gray-lightest}}
-          (tr [:activity confirm-kw])]
+          (tr [:activity-approval confirm-kw])]
          [:div {:style {:display :flex
                         :justify-content :flex-end}}
           [buttons/button-secondary {:on-click #(reset! clicked? false)}
            (tr [:buttons :cancel])]
-          [buttons/button-primary {:on-click (e! event-fn params)
+          (log/debug "approvals-button: params" params)
+          [buttons/button-primary {:on-click #(do (reset! clicked? false)
+                                                  (log/debug "on click: params" params)
+                                                  ((e! event-fn params)))
+                                   
                                    :style {:margin-left "1rem"}}
            (tr [:buttons :confirm])]]]])]))
 
 (defn approve-button [e! params]
-  (approvals-button e! params :approve-activity :approve-activity-confirm activity-controller/->Review))
+  (approvals-button e! params (:status params) :approve-activity-confirm icons/action-check-circle activity-controller/->Review))
+
+(defn reject-button [e! params]
+  (approvals-button e! params (:status params) :reject-activity-confirm icons/navigation-cancel activity-controller/->Review))
 
 (defn submit-for-approval-button [e! params]
-  (approvals-button e! params :submit-for-approval :submit-results-confirm activity-controller/->SubmitResults))
+  (approvals-button e! params :submit-for-approval :submit-results-confirm icons/action-check-circle activity-controller/->SubmitResults))
 
 (defn activity-content
   [e! params project]
-  (let [activity (project-model/activity-by-id project (:activity params))]
+  (let [activity (project-model/activity-by-id project (:activity params))
+        not-reviewed-status? (complement activity-model/reviewed-statuses)
+        status (-> activity :activity/status :db/ident)
+        tasks-complete? (activity-model/all-tasks-completed? activity)]
     [:<>
      [activity-header e! activity]
      [project-management (:thk.project/owner project) (:thk.project/manager project)]
      [task-lists (:activity/tasks activity)]
-     (when (activity-model/all-tasks-completed? activity)
-       [when-authorized :activity/change-activity-status activity
-        [submit-for-approval-button e! params]])
+     ;; fixme: [when-authorized[ doesn't work here, why?
+     (if (and (authorized? @teet.app-state/user :activity/change-activity-status activity)
+              tasks-complete?
+              (-> project :thk.project/manager :user/id) (-> @teet.app-state/user :user/id)
+              (-> activity :activity/status :db/ident not-reviewed-status?))
+       (when (not= status :activity.status/in-review)
+         [submit-for-approval-button e! params])
+       (when-not tasks-complete?
+         [:div (tr [:activity :note-all-tasks-need-to-be-completed])]))
+
      (when (and (authorized? @teet.app-state/user :activity/change-activity-status nil)
-                (-> activity :activity/status :db/ident (= :activity.status/in-review)))
-       [approve-button e! params])
-     ;; FIXME add "Note: All tasks need to be completed first" from Figma
-     ]))
+                (-> project :thk.project/owner :user/id) (-> @teet.app-state/user :user/id)
+                (= status :activity.status/in-review))
+       [:div
+        [approve-button e! (assoc params :status :activity.status/completed)]
+        [reject-button e! (assoc params :status :activity.status/canceled)]
+        [reject-button e! (assoc params :status :activity.status/archived)]])]))
 
 (defn activity-page [e! {:keys [params] :as app} project breadcrumbs]
   [project-navigator-view/project-navigator-with-content
