@@ -2,7 +2,8 @@
  {:note-all-tasks-need-to-be-completed
   "Note: All tasks must be completed before activity can be submitted for review"},
  :activity-approval
- {:approve-activity-confirm
+ {:submit-for-approval "Submit activity for approval",
+  :approve-activity-confirm
   "Activity status will be set to Completed.",
   :activity.status/completed "Approve this activity",
   :reject-activity-confirm "Activity status will be updated.",
