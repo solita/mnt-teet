@@ -57,13 +57,13 @@
                     db (user-model/user-ref user))
                (sort-by second)
                (take (- limit (count unreads)))
-               (map first)
+               (mapv first)
                reverse))]
     (into unreads
           (->>
            (d/q '[:find (pull ?n notification-keys)
                   :in $ notification-keys [?n ...]]
-                db notification-keys notification-ids)
+                db notification-keys (or notification-ids []))
            (mapv first)
            (sort-by :meta/created-at)
            reverse))))
