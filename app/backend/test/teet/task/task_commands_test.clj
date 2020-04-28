@@ -7,7 +7,7 @@
   (:import (java.util Date)))
 
 (t/use-fixtures
-  :once
+  :each
   tu/with-environment
   (tu/with-db))
 

@@ -57,6 +57,8 @@
      (for [project projects
            lifecycle (:thk.project/lifecycles project)
            activity (:thk.lifecycle/activities lifecycle)
+
+           ;; THK only has activities, so activities and tasks under it are sent as activity rows
            activity-or-task (into [activity] (tasks-to-send db (:db/id activity)))
            :let [data (merge project lifecycle activity
                              (read-integration-info (:thk.project/integration-info project))

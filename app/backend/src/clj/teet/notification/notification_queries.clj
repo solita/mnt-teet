@@ -97,22 +97,22 @@
    :args {:keys [notification-id]}
    :project-id nil
    :authorization {}}
-  (if-let [{:notification/keys [type target]} (notification-db/navigation-info db user notification-id)]
+  (if-let [{:notification/keys [type target]}
+           (notification-db/navigation-info db user notification-id)]
     ;; FIXME: something more elegant? a multimethod?
     (case (:db/ident type)
-      (:notification.type/task-waiting-for-review :notification.type/task-assigned)
+      (:notification.type/task-waiting-for-review
+       :notification.type/task-assigned)
       (task-navigation-info db (:db/id target))
 
-      (:notification.type/activity-waiting-for-review :notification.type/activity-accepted :notification.type/activity-rejected)
+      (:notification.type/activity-waiting-for-review
+       :notification.type/activity-accepted
+       :notification.type/activity-rejected)
       (activity-navigation-info db (:db/id target))
-
-      :notification.type/comment-created
-      (comment-navigation-info db (:db/id target))
-
-      :notification.type/comment-resolved
-      (comment-navigation-info db (:db/id target))
-
-      :notification.type/comment-unresolved
+      
+      (:notification.type/comment-created
+       :notification.type/comment-resolved
+       :notification.type/comment-unresolved)
       (comment-navigation-info db (:db/id target))
 
       :notification.type/project-manager-assigned

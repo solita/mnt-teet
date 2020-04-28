@@ -75,4 +75,4 @@
                                                (str "\n\n*Errors*\n"
                                                     (list-tests errors))))}}]})}))))
 
-(def report [slack])
+(def report [slack report/doc report/result])

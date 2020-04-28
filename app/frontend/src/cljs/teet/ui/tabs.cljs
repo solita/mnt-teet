@@ -71,13 +71,13 @@
             [:div {:style {:margin "1rem 0 1rem 0"}}
              [:div {:style {:display :inline-block}}            ;;TODO cleanup inline-styles and html structure
               (if (= (:tab query) "comments")
-                [Link {:href (url/remove-query-param :tab)} "Details"]
-                [typography/SectionHeading "Details"])]
+                [Link {:href (url/remove-query-param :tab)} (tr [:project :tabs :details])]
+                [typography/SectionHeading (tr [:project :tabs :details])])]
              [:div {:style {:display :inline-block
                             :margin-left "2rem"}}
               (if (= (:tab query) "comments")
-                [typography/SectionHeading "Comments"]
-                [Link {:href (url/set-query-param :tab "comments")} "Comments"])]]
+                [typography/SectionHeading (tr [:document :comments])]
+                [Link {:href (url/set-query-param :tab "comments")} (tr [:document :comments])])]]
             (if (= (:tab query) "comments")                     ;;TODO LOAD comments on render and
               comments-component
               (with-meta
