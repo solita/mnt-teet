@@ -236,7 +236,7 @@
        (when (not= status :activity.status/in-review)
          [submit-for-approval-button e! params])
        (when-not tasks-complete?
-         [:div (tr [:note-all-tasks-need-to-be-completed])]))
+         [:div (tr [:activity :note-all-tasks-need-to-be-completed])]))
 
      (when (and (authorized? @teet.app-state/user :activity/change-activity-status nil)
                 (-> project :thk.project/owner :user/id) (-> @teet.app-state/user :user/id)
