@@ -2,7 +2,8 @@
  {:note-all-tasks-need-to-be-completed
   "Note: All tasks must be completed before activity can be submitted for review"},
  :activity-approval
- {:approve-activity-confirm "Activity status will be set to Completed.",
+ {:approve-activity-confirm
+  "Activity status will be set to Completed.",
   :activity.status/completed "Approve this activity",
   :reject-activity-confirm "Activity status will be updated.",
   :activity.status/archived "Archive this activity",
@@ -179,7 +180,8 @@
   :thk.task-type/environmental-impact-assessment
   "Environmental Impact Assessment (EIA)",
   :document.sub-category/drill-posts "Drill posts",
-  :notification.type/activity-waiting-for-review  "Activity waiting for review",
+  :notification.type/activity-waiting-for-review
+  "Activity waiting for review",
   :activity.status/in-progress "In progress",
   :land-acquisition.impact/purchase-needed "Purchase needed",
   :task.status/assigned "Assigned",
