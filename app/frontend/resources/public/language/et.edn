@@ -2,10 +2,12 @@
  {:note-all-tasks-need-to-be-completed
   "Kõik ülesanded peavad olema lõpetatud ennem kui tegevuse saab ülevaatamiseks saata"},
  :activity-approval
- {:approve-activity-confirm "Tegevuse staatus märgitakse lõpetatuks",
+ {:submit-for-approval "Esitan tegevuse",
+  :approve-activity-confirm "Tegevuse staatus märgitakse lõpetatuks",
   :activity.status/completed "Kinnitan tegevuse",
   :reject-activity-confirm "Tegevuse staatus uuendatakse",
-  :activity.status/archived "Arhiveerin tegevuse",
+  :activity.status/archived
+  "[:activity-approval :activity.status/archived]",
   :activity.status/canceled "Katkestan tegevuse"},
  :admin {:title "Admin", :create-user "Lisan kasutaja"},
  :buttons
