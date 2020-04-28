@@ -106,6 +106,7 @@
   :task.type/geological-study "Geoloogiline uuring",
   :activity.status/in-review "Ülevaatamisel",
   :task.type/property-valuation "Hindamine",
+  :notification.type/task-assigned "Määratud ülesanne",
   :file.status/ready "Valmis",
   :activity.name/detailed-design "Põhiprojekt",
   :activity.status/expired "Aegunud",
@@ -189,6 +190,8 @@
   :notification.type/project-manager-assigned
   "Olete määratud projektijuhiks",
   :task.type/geology "Geoloogia",
+  :notification.type/task-review-rejected
+  "Ülesande ülevaade lükati tagasi",
   :task.status/in-preparation "Ettevalmistamisel",
   :document.category/as-built-doc "Täitedokumentatsioon",
   :task.type/cadastral-works "Maakorraldustööd",

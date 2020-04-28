@@ -104,6 +104,7 @@
   :task.type/geological-study "Geological study",
   :activity.status/in-review "In review",
   :task.type/property-valuation "Property valuation",
+  :notification.type/task-assigned "Task assigned",
   :file.status/ready "Ready",
   :activity.name/detailed-design "Detailed design",
   :activity.status/expired "Expired",
@@ -187,6 +188,7 @@
   :notification.type/project-manager-assigned
   "You have been assigned as project manager",
   :task.type/geology "Geology",
+  :notification.type/task-review-rejected "Task review rejected",
   :task.status/in-preparation "In preparation",
   :document.category/as-built-doc "Construction documentation",
   :task.type/cadastral-works "Cadastral works",
