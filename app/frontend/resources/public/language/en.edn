@@ -2,7 +2,7 @@
  {:note-all-tasks-need-to-be-completed
   "Note: All tasks must be completed before activity can be submitted for review"},
  :activity-approval
- {:approve-activity-confirm "Actiity status will be set to Completed.",
+ {:approve-activity-confirm "Activity status will be set to Completed.",
   :activity.status/completed "Approve this activity",
   :reject-activity-confirm "Activity status will be updated.",
   :activity.status/archived "Archive this activity",
@@ -103,6 +103,7 @@
   :task.type/geological-study "Geological study",
   :activity.status/in-review "In review",
   :task.type/property-valuation "Property valuation",
+  :notification.type/task-assigned "Task assigned",
   :file.status/ready "Ready",
   :activity.name/detailed-design "Detailed design",
   :activity.status/expired "Expired",
@@ -125,6 +126,7 @@
   :task.type/animal-study "Animal study",
   :activity.name/pre-design "Pre design",
   :document.sub-category/no-objection-letters "No-objection letters",
+  :task.status/waiting-for-review "Waiting for review",
   :thk.lifecycle-type/design "Design",
   :document.sub-category/rsa-exception-report "RSA Exeption Report",
   :task.type/flora-and-fauna-study "Flora and fauna study",
@@ -177,14 +179,14 @@
   :thk.task-type/environmental-impact-assessment
   "Environmental Impact Assessment (EIA)",
   :document.sub-category/drill-posts "Drill posts",
-  :notification.type/activity-waiting-for-review
-  "Actiity waiting for review",
+  :notification.type/activity-waiting-for-review  "Activity waiting for review",
   :activity.status/in-progress "In progress",
   :land-acquisition.impact/purchase-needed "Purchase needed",
   :task.status/assigned "Assigned",
   :notification.type/project-manager-assigned
   "You have been assigned as project manager",
   :task.type/geology "Geology",
+  :notification.type/task-review-rejected "Task review rejected",
   :task.status/in-preparation "In preparation",
   :document.category/as-built-doc "Construction documentation",
   :task.type/cadastral-works "Cadastral works",
@@ -436,6 +438,8 @@
   :edit-document "Edit document",
   :create-success-notification "Task created successfully",
   :start-review-success "Review started",
+  :accept-review "Accept review",
+  :reject-review "Reject review",
   :documents "Documents",
   :add-document "Add document",
   :submit-results "Submit results",
