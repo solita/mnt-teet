@@ -38,6 +38,7 @@
   (case (:db/ident type)
     :notification.type/task-waiting-for-review [icons/action-assignment]
     :notification.type/task-assigned [icons/action-assignment-ind]
+    :notification.type/activity-waiting-for-review [icons/action-assignment]
     :notification.type/comment-created [icons/communication-comment]
     :notification.type/comment-resolved [icons/action-check-circle-outline]
     :notification.type/comment-unresolved [icons/content-block]

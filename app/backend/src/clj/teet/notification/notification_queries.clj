@@ -1,6 +1,7 @@
 (ns teet.notification.notification-queries
   (:require [teet.db-api.core :as db-api :refer [defquery]]
             [teet.notification.notification-db :as notification-db]
+            [teet.project.project-db :as project-db]
             [datomic.client.api :as d]
             [teet.comment.comment-model :as comment-model]
             [teet.util.datomic :as du]))
@@ -37,6 +38,14 @@
      :params {:project (str project)
               :activity (str activity)
               :task (str task-id)}}))
+
+(defn activity-navigation-info [db activity-id]
+  (let [proj-id (project-db/activity-project-id db activity-id)
+        proj (project-db/project-by-id db proj-id)]
+    {:page :activity
+     :params {
+              :project (str (:thk.project/id proj))
+              :activity (str activity-id)}}))
 
 (defn- file-navigation-info [db file-id]
   (let [[project activity task]
@@ -94,6 +103,9 @@
       (:notification.type/task-waiting-for-review :notification.type/task-assigned)
       (task-navigation-info db (:db/id target))
 
+      (:notification.type/activity-waiting-for-review :notification.type/activity-accepted :notification.type/activity-rejected)
+      (activity-navigation-info db (:db/id target))
+
       :notification.type/comment-created
       (comment-navigation-info db (:db/id target))
 
@@ -104,8 +116,5 @@
       (comment-navigation-info db (:db/id target))
 
       :notification.type/project-manager-assigned
-      (project-navigation-info db (:db/id target))
-
-      ;; FIXME: implement activity navigation info
-      )
+      (project-navigation-info db (:db/id target)))
     (db-api/bad-request! "No such notification")))
