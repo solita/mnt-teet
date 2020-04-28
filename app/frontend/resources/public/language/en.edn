@@ -1,4 +1,14 @@
-{:admin {:title "Admin", :create-user "Add user"},
+{:activity
+ {:note-all-tasks-need-to-be-completed
+  "Note: All tasks must be completed before activity can be submitted for review"},
+ :activity-approval
+ {:approve-activity-confirm
+  "Activity status will be set to Completed.",
+  :activity.status/completed "Approve this activity",
+  :reject-activity-confirm "Activity status will be updated.",
+  :activity.status/archived "Archive this activity",
+  :activity.status/canceled "Cancel this activity"},
+ :admin {:title "Admin", :create-user "Add user"},
  :buttons
  {:cancel "Cancel",
   :save "Save",
@@ -73,6 +83,8 @@
   :task.type/utilities "Utilities",
   :task.type/eia-assessment "Environmental Impact Assessment (EIA)",
   :task.type/site-plan "Sitiation plan",
+  :notification.type/activity-accepted
+  "Activity has been accepted by project owner",
   :task.type/other "Other",
   :document.category/maintenance-doc "Maintenance documentation",
   :document.category/source-doc "Source documentation",
@@ -114,6 +126,7 @@
   :task.type/animal-study "Animal study",
   :activity.name/pre-design "Pre design",
   :document.sub-category/no-objection-letters "No-objection letters",
+  :task.status/waiting-for-review "Waiting for review",
   :thk.lifecycle-type/design "Design",
   :document.sub-category/rsa-exception-report "RSA Exeption Report",
   :task.type/flora-and-fauna-study "Flora and fauna study",
@@ -166,6 +179,8 @@
   :thk.task-type/environmental-impact-assessment
   "Environmental Impact Assessment (EIA)",
   :document.sub-category/drill-posts "Drill posts",
+  :notification.type/activity-waiting-for-review
+  "Activity waiting for review",
   :activity.status/in-progress "In progress",
   :land-acquisition.impact/purchase-needed "Purchase needed",
   :task.status/assigned "Assigned",
@@ -176,6 +191,8 @@
   :document.category/as-built-doc "Construction documentation",
   :task.type/cadastral-works "Cadastral works",
   :activity.status/other "Other",
+  :notification.type/activity-rejected
+  "Activity has been archived or cancelled by project owner",
   :task.type/technical-conditions "Technical conditions",
   :task.type/no-objection-coordination "No-objection co-ordination",
   :task.type/landscaping "Landscaping",
@@ -421,6 +438,8 @@
   :edit-document "Edit document",
   :create-success-notification "Task created successfully",
   :start-review-success "Review started",
+  :accept-review "Accept review",
+  :reject-review "Reject review",
   :documents "Documents",
   :add-document "Add document",
   :submit-results "Submit results",
