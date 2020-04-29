@@ -2,8 +2,9 @@
   (:require [teet.project.task-model :as task-model]))
 
 (defn all-tasks-completed? [activity]
-  (every? task-model/completed?
-          (:activity/tasks activity)))
+  (and (not-empty (:activity/tasks activity))
+       (every? task-model/completed?
+                (:activity/tasks activity))))
 
 (def reviewed-statuses #{:activity.status/canceled
                          :activity.status/archived
