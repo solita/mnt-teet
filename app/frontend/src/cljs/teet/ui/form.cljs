@@ -385,7 +385,6 @@
                                        v))
                current-fields (atom {})
                validate (fn [value fields]
-                          (println "FORMIN VALUE: " value)
                           (let [invalid-attrs (validate-form spec value fields)
                                 valid? (and (empty? invalid-attrs)
                                             (or (nil? spec) (s/valid? spec value)))]
