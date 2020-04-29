@@ -2,7 +2,7 @@
   "Common container for forms"
   (:require [reagent.core :as r]
             [teet.ui.material-ui :refer [Grid]]
-            [teet.ui.text-field :refer [TextField ]]
+            [teet.ui.text-field :refer [TextField]]
             [teet.ui.util :as util]
             [teet.localization :refer [tr]]
             [goog.object :as gobj]
@@ -12,7 +12,8 @@
             [teet.theme.theme-colors :as theme-colors]
             [tuck.core :as t]
             [teet.log :as log]
-            [teet.ui.context :as context]))
+            [teet.ui.context :as context]
+            [clojure.set :as set]))
 
 (def default-value
   "Mapping of component to default value. Some components don't want nil as the value (like text area)."
@@ -41,6 +42,9 @@
       :else
       (update-in field [1 :on-change] (fn [on-change]
                                         (fn [value]
+                                          (println "VALIDATE ATRRIBUTE : " validate-attribute-fn)
+                                          (.log js/console "validate attribute: " validate-attribute-fn)
+                                          (println "value : " value)
                                           (validate-attribute-fn attribute (on-change value))))))))
 
 (defn- contains-predicate
@@ -58,6 +62,9 @@
 (defn- missing-attributes
   "Return missing attribuets based on spec"
   [spec value]
+  (println "spec: " spec)
+  (println "value: " value)
+  (println (:cljs.spec.alpha/problems (s/explain-data spec value)))
   (into #{}
         (when spec
           (for [{:keys [pred] :as _problem} (:cljs.spec.alpha/problems (s/explain-data spec value))
@@ -120,6 +127,27 @@
      (not-empty (clojure.set/intersection required-fields (set attribute)))
      (required-fields attribute))))
 
+(defn validate-attribute-fn
+  [invalid-attributes validate-field field value]
+  (swap! invalid-attributes
+         (fn [fields]
+           (println "Validate-field: " validate-field)
+           (if (and validate-field (validate-field value))
+             ;; If custom validation fails then mark all fields as invalid
+             (set/union fields (if (vector? field)
+                                 (set fields)
+                                 #{field}))
+             ;; otherwise check each attributes spec
+             (reduce
+               (fn [fields [field value]]
+                 (if (valid-attribute? field value)
+                   (disj fields field)
+                   (conj fields field)))
+               fields
+               (if (vector? field)
+                 (zipmap field value)
+                 {field value}))))))
+
 (defn form
   "Simple grid based form container."
   [{:keys [e! ;; Tuck event handle
@@ -152,15 +180,6 @@
                                               (zipmap field value)
                                               {field v})))
                                        v))
-               validate-attribute-fn (fn [validate-field field value]
-                                       (swap! invalid-attributes
-                                              (fn [fields]
-                                                (if (and
-                                                     (or (nil? validate-field)
-                                                         (nil? (validate-field value)))
-                                                     (valid-attribute? field value))
-                                                  (disj fields field)
-                                                  (conj fields field)))))
                validate (fn [value fields]
                           (let [invalid-attrs (into (missing-attributes spec value)
                                                     (for [{attr :attribute
@@ -232,7 +251,7 @@
                         [:div {:class container-class}
                          (add-validation
                            (update field 1 merge opts)
-                           (partial validate-attribute-fn validate-field) attribute)
+                           (partial validate-attribute-fn invalid-attributes validate-field) attribute)
                          (when adornment
                            adornment)]])))))]]
      (when (and footer
@@ -248,8 +267,7 @@
 
 (defn- field*
   [field-info field
-   {:keys [value update-attribute-fn invalid-attributes required-fields
-           validate-attribute-fn current-fields]}]
+   {:keys [value update-attribute-fn invalid-attributes required-fields current-fields]}]
   (let [{:keys [attribute]
          validate-field :validate
          :as field-info} (if (map? field-info)
@@ -277,6 +295,8 @@
                                       {:meta field-info})))
               error-text (and validate-field
                               (validate-field value))
+              _ (println "invalid attributes" @invalid-attributes)
+              _ (println "attribute " attribute)
               opts {:value value
                     :on-change (r/partial update-attribute-fn attribute)
                     :label (tr [:fields attribute])
@@ -285,7 +305,7 @@
                     :required (required-field? attribute required-fields)}]
           (add-validation
            (update field 1 merge opts)
-           (partial validate-attribute-fn validate-field) attribute)))})))
+           (partial validate-attribute-fn invalid-attributes validate-field) attribute)))})))
 
 (defn field
   "Form component in form2. Field-info is the attribute
@@ -327,15 +347,6 @@
                                               (zipmap field value)
                                               {field v})))
                                        v))
-               validate-attribute-fn (fn [validate-field field value]
-                                       (swap! invalid-attributes
-                                              (fn [fields]
-                                                (if (and
-                                                     (or (nil? validate-field)
-                                                         (nil? (validate-field value)))
-                                                     (valid-attribute? field value))
-                                                  (disj fields field)
-                                                  (conj fields field)))))
                current-fields (atom {})
                validate (fn [value fields]
                           (let [invalid-attrs (into (missing-attributes spec value)
@@ -363,7 +374,6 @@
 
                ctx {:invalid-attributes invalid-attributes
                     :update-attribute-fn update-attribute-fn
-                    :validate-attribute-fn validate-attribute-fn
                     :validate validate
                     :submit! submit!
                     :required-fields required-fields

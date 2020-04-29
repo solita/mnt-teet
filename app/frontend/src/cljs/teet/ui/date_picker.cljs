@@ -212,7 +212,7 @@
 
 (defn date-input
   "Combined text field and date picker component"
-  [{:keys [label error value on-change selectable? required end start min-date]}]
+  [{:keys [label error value on-change selectable? required end start min-date max-date]}]
   (r/with-let [txt (r/atom (some-> value goog.date.Date. unparse-opt))
                open? (r/atom false)
                ref (atom nil)
@@ -222,11 +222,14 @@
                             (reset! open? true))
                set-ref (fn [el]
                          (reset! ref el))]
-    (let [on-change-text (fn [e]
+    (let [_ (println "ERROR: " error)
+          on-change-text (fn [e]
                            (let [v (-> e .-target .-value)]
                              (reset! txt v)
                              (if-let [^goog.date.Date d (parse-opt v)]
-                               (if (date-in-range? {:start start :end end :date d})
+                               (if (and
+                                     (date-in-range? {:start min-date :end max-date :date d})
+                                     (date-in-range? {:start start :end end :date d}))
                                  (on-change (.-date d))
                                  (on-change nil))
                                (on-change nil))))]
@@ -260,6 +263,7 @@
   "combine two date-inputs to provide a consistent date-range-picker"
   [{:keys [error value on-change start-label end-label required row? min-date max-date]
     :or {row? true}}]
+  (println "DaTE RANGE ERROR " error)
   (let [[start end] value
         element-size (if row?
                        6
@@ -272,6 +276,7 @@
                    :label start-label
                    :end end
                    :min-date min-date
+                   :max-date (or end max-date)
                    :on-change (fn [start]
                                 (on-change [start end]))
                    :selectable? (fn [day]
@@ -292,6 +297,7 @@
                    :label end-label
                    :start start
                    :min-date (or start min-date)
+                   :max-date max-date
                    :on-change (fn [end]
                                 (on-change [start end]))
                    :selectable? (fn [day]
