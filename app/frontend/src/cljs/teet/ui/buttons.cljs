@@ -32,10 +32,23 @@
   {:background-color (str theme-colors/error " !important")
    :color            (str theme-colors/white " !important")})
 
+(defn- green-button-style
+  "The styles are with !important because material ui css loading order makes it hard to override them normally"
+  []
+  ^{:pseudo {:hover {:background-color (str theme-colors/green-dark " !important")}
+             :focus (str theme-colors/focus-style " !important")}}
+  {:background-color (str theme-colors/green " !important")
+   :color            (str theme-colors/white " !important")})
+
 (defn- button-text-warning-style
   []
   ^{:pseudo {:focus (str theme-colors/focus-style " !important")}}
   {:color (str theme-colors/red " !important")})
+
+(defn- button-text-green-style
+  []
+  ^{:pseudo {:focus (str theme-colors/focus-style " !important")}}
+  {:color (str theme-colors/green " !important")})
 
 
 (def button-text
@@ -46,6 +59,11 @@
   (util/make-component Button {:variant        :text
                                :disable-ripple true
                                :class          (<class button-text-warning-style)}))
+
+(def button-text-green
+  (util/make-component Button {:variant        :text
+                               :disable-ripple true
+                               :class          (<class button-text-green-style)}))
 
 (def button-primary
   (util/make-component Button {:variant        :contained
@@ -61,6 +79,11 @@
   (util/make-component Button {:variant        :contained
                                :disable-ripple true
                                :class          (<class warn-button-style)}))
+
+(def button-green
+  (util/make-component Button {:variant        :contained
+                               :disable-ripple true
+                               :class          (<class green-button-style)}))
 
 (def rect-primary
   (util/make-component Button {:variant        :outlined
