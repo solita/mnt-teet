@@ -62,9 +62,6 @@
 (defn- missing-attributes
   "Return missing attribuets based on spec"
   [spec value]
-  (println "spec: " spec)
-  (println "value: " value)
-  (println (:cljs.spec.alpha/problems (s/explain-data spec value)))
   (into #{}
         (when spec
           (for [{:keys [pred] :as _problem} (:cljs.spec.alpha/problems (s/explain-data spec value))
@@ -127,26 +124,61 @@
      (not-empty (clojure.set/intersection required-fields (set attribute)))
      (required-fields attribute))))
 
+(defn validate-attribute
+  "Given custom field validation, a field (keyword or vector of keywords) and
+  a value. Returns possibly empty set of invalid attribute keywords."
+  [validate-field field value]
+  (if (and validate-field (validate-field value))
+    ;; If custom validation fails then mark all fields as invalid
+    (if (vector? field)
+      (set field)
+      #{field})
+    ;; otherwise check each attributes spec
+    (reduce
+     (fn [fields [field value]]
+       (if (valid-attribute? field value)
+         (disj fields field)
+         (conj fields field)))
+     #{}
+     (if (vector? field)
+       (zipmap field value)
+       {field value}))))
+
+
+(defn validate-form
+  "Validate whole form value.
+  Spec is the spec for the whole form value (eg. s/keys).
+  Value is the current form value map.
+  Fields is collection of fields descriptions in the form, containing
+  :attribute and optional :validate function.
+
+  Returns possibly empty set of missing or invalid attribute keywords."
+  [spec value fields]
+  (reduce set/union
+          (missing-attributes spec value)
+          (map (fn [{:keys [attribute validate]}]
+                 (validate-attribute
+                  validate
+                  attribute
+                  (if (vector? attribute)
+                    ((apply juxt attribute) value)
+                    (get value attribute))))
+               fields)))
+
 (defn validate-attribute-fn
+  "Validate attribute and set the form invalid-attributes atom."
   [invalid-attributes validate-field field value]
   (swap! invalid-attributes
          (fn [fields]
-           (println "Validate-field: " validate-field)
-           (if (and validate-field (validate-field value))
-             ;; If custom validation fails then mark all fields as invalid
-             (set/union fields (if (vector? field)
-                                 (set fields)
-                                 #{field}))
-             ;; otherwise check each attributes spec
-             (reduce
-               (fn [fields [field value]]
-                 (if (valid-attribute? field value)
-                   (disj fields field)
-                   (conj fields field)))
-               fields
-               (if (vector? field)
-                 (zipmap field value)
-                 {field value}))))))
+           (let [before fields
+                 after
+                 (set/union (set/difference fields
+                                            (if (vector? field)
+                                              (set field)
+                                              #{field}))
+                            (validate-attribute validate-field field value))]
+             (println "validate " field " from " before " => " after)
+             after))))
 
 (defn form
   "Simple grid based form container."
@@ -295,12 +327,16 @@
                                       {:meta field-info})))
               error-text (and validate-field
                               (validate-field value))
-              _ (println "invalid attributes" @invalid-attributes)
-              _ (println "attribute " attribute)
+              error? (boolean
+                      (or error-text
+                          (some @invalid-attributes
+                                (if (vector? attribute)
+                                  attribute
+                                  [attribute]))))
               opts {:value value
                     :on-change (r/partial update-attribute-fn attribute)
                     :label (tr [:fields attribute])
-                    :error (boolean (or error-text (@invalid-attributes attribute)))
+                    :error error?
                     :error-text error-text
                     :required (required-field? attribute required-fields)}]
           (add-validation
@@ -349,15 +385,8 @@
                                        v))
                current-fields (atom {})
                validate (fn [value fields]
-                          (let [invalid-attrs (into (missing-attributes spec value)
-                                                    (for [{attr :attribute
-                                                           validate-field :validate} (vals fields)
-                                                          :let [validation-error
-                                                                (and validate-field
-                                                                     (validate-field (get value attr)))]
-                                                          :when (or validation-error
-                                                                    (not (valid-attribute? attr (get value attr))))]
-                                                      attr))
+                          (println "FORMIN VALUE: " value)
+                          (let [invalid-attrs (validate-form spec value fields)
                                 valid? (and (empty? invalid-attrs)
                                             (or (nil? spec) (s/valid? spec value)))]
                             (log/info "VALIDATE invalid: " invalid-attrs " valid? " valid?
@@ -382,7 +411,8 @@
                     :footer {:cancel    (when cancel-event
                                           (r/partial e! (cancel-event)))
                              :validate  (when save-event
-                                          #(validate value @current-fields))
+                                          (fn [value]
+                                            (validate value @current-fields)))
                              :disabled? (boolean in-progress?)
                              :delete (when delete
                                        #(e! delete))}}]
@@ -401,5 +431,8 @@
 (defn footer2 []
   (context/consume
    :form
-   (fn [{footer :footer}]
-     [form-footer footer])))
+   (fn [{:keys [value footer]}]
+     [form-footer (update footer :validate
+                          (fn [validate]
+                            (when validate
+                              #(validate value))))])))
