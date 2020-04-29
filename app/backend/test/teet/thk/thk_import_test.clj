@@ -8,7 +8,8 @@
             [teet.util.datomic :as du]
             [teet.thk.thk-integration-ion :as thk-integration-ion]
             [teet.util.collection :as cu]
-            [teet.thk.thk-mapping :as thk-mapping]))
+            [teet.thk.thk-mapping :as thk-mapping]
+            [clojure.java.io :as io]))
 
 (use-fixtures :each
   tu/with-global-data
@@ -52,6 +53,24 @@
     (tu/store-data! :export-rows rows)
     (tu/store-data! :export-csv csv-data)
     rows))
+
+(defn- lc->act->task []
+  ;; pull lifecycle/activity/task hierarchy with ids
+  (into #{}
+        (map (fn [lc]
+               (-> lc first
+                   (update :thk.lifecycle/activities
+                           (fn [acts]
+                             (into #{}
+                                   (map (fn [act]
+                                          {:activity-id (:db/id act)
+                                           :task-ids (into #{} (map :db/id) (:activity/tasks act))}))
+                                   acts))))))
+        (d/q '[:find (pull ?lc [:db/id
+                                {:thk.lifecycle/activities
+                                 [:db/id
+                                  {:activity/tasks [:db/id]}]}])
+               :where [?lc :thk.lifecycle/id _]] (tu/db))))
 
 (deftest thk<->teet-import-export
   (testing "Initially there are no projects"
@@ -148,6 +167,17 @@
       (is (= (get task-row "activity_taskid") (str (tu/get-data :task-id))))
       (is (= (get task-row "activity_teetid") (str (tu/get-data :act-id)))))))
 
+(defn set-csv-column [csv row-test-column row-test-value set-col set-val]
+  (let [test-col-idx (cu/find-idx #(= row-test-column %) thk-mapping/csv-column-names)
+        set-col-idx (cu/find-idx #(= set-col %) thk-mapping/csv-column-names)]
+
+    (mapv (fn [row]
+            (if-not (= (nth row test-col-idx) row-test-value)
+              row
+              (do (println "SETTING FOR ROW: " row)
+                (assoc row set-col-idx set-val))))
+          csv)))
+
 (deftest activity-id-round-trip
   (import-csv!)
 
@@ -177,21 +207,47 @@
 
   (testing "Importing again with THK id sets id"
     (let [csv (tu/get-data :export-csv)
-          activity-id-col (cu/find-idx #(= "activity_id" %)
-                                       thk-mapping/csv-column-names)
-          activity-teetid-col (cu/find-idx #(= "activity_teetid" %)
-                                            thk-mapping/csv-column-names)
           act-teet-id (str (tu/get-data :act-id))
-          csv-with-id (mapv (fn [row]
-                              (if-not (= (nth row activity-teetid-col) act-teet-id)
-                                row
-                                (assoc row activity-id-col "99999"))) csv)
+          csv-with-id (set-csv-column csv
+                                      "activity_teetid" act-teet-id
+                                      "activity_id" "99999")
           csv-data (->csv-data csv-with-id)
-          activity-count #(count (first
-                                  (d/q '[:find ?n :where [_ :activity/name ?n]] (tu/db))))
-          activity-count-before (activity-count)]
+          lc->act->task-before (lc->act->task)]
+      (println "BEF:" lc->act->task-before)
       (import-csv! csv-data)
-      (is (= activity-count-before (activity-count))
-          "activity count hasn't changed")
+      (is (= lc->act->task-before (lc->act->task))
+          "lifecycle/activity/task counts hasn't changed")
       (is (= "99999" (-> :act-id tu/get-data tu/entity :thk.activity/id))
-          "existing activity has the THK id"))))
+          "existing activity has the THK id")))
+
+  (testing "Roundtrip task keeps same lifecycle/activity/task hierarchy"
+    ;; TEET-517 test level violation, task shouldn't be directly linked to
+    ;; lifecycle, it should only be under activity
+    (tu/store-data!
+     :task-id
+     (get-in (tu/tx {:db/id (-> :act-id tu/get-data tu/entity :db/id)
+                     :activity/tasks [{:db/id "new-task"
+                                       :task/type :task.type/third-party-review
+                                       :task/send-to-thk? true
+                                       :task/estimated-start-date #inst "2020-04-15T14:00:39.855-00:00"
+                                       :task/estimated-end-date  #inst "2020-06-25T14:00:39.855-00:00"}]})
+             [:tempids "new-task"]))
+    (export-csv)
+    (let [csv-with-task-id (set-csv-column (tu/get-data :export-csv)
+                                           ;; when taskid is our created task
+                                           "activity_taskid" (str (tu/get-data :task-id))
+                                           ;; mock THK generated activity id
+                                           "activity_id" "99887")
+          hierarchy-before (lc->act->task)]
+      (io/copy (java.io.ByteArrayInputStream. (->csv-data csv-with-task-id))
+               (io/file "testi.csv"))
+      (import-csv! (->csv-data csv-with-task-id))
+      (is (= hierarchy-before (lc->act->task)) "hierarchy hasn't changed")
+      (let [lifecycle-tasks (mapv first
+                                  (d/q '[:find (pull ?task [*])
+                                         :where
+                                         [_ :thk.lifecycle/activities ?task]
+                                         [?task :task/type _]] (tu/db)))]
+        (is (empty? lifecycle-tasks)))
+      (is (= "99887" (-> :task-id tu/get-data tu/entity :thk.activity/id))
+          "Task activity id has been set"))))
