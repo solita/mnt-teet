@@ -139,3 +139,18 @@ $$ LANGUAGE SQL SECURITY DEFINER;
 GRANT teet_backend TO authenticator;
 GRANT USAGE ON SCHEMA teet TO teet_backend;
 GRANT EXECUTE ON FUNCTION teet.store_entity_info(text,entity_type,text,text) TO teet_backend;
+
+CREATE OR REPLACE FUNCTION teet.gml_entity_search_area(entity_id BIGINT, distance INTEGER)
+RETURNS TEXT
+AS $$
+SELECT ST_AsGML(ST_FlipCoordinates(ST_Collect(x.geometry)))
+  FROM (SELECT geometry
+          FROM teet.entity_feature ef
+         WHERE ef.entity_id=$1 AND type = 'search-area'
+         UNION
+        SELECT ST_Buffer(e.geometry, $2)
+          FROM teet.entity e
+         WHERE e.id=$1) x;
+$$ LANGUAGE SQL SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION teet.gml_entity_search_area(BIGINT,INTEGER) TO teet_backend;
