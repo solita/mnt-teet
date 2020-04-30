@@ -190,7 +190,6 @@
                         {:connect-timeout 10000
                          :query-params query-params
                          :as :stream})]
-       (def response* response)
        (if error
          (throw (ex-info "Unable to fetch road parts from WFS"
                          {:status 500
@@ -199,7 +198,6 @@
                           :query-params query-params}
                          error))
          (let [zx (-> body xml/parse zip/xml-zip)]
-           (def zx* zx)
            (read-feature-collection zx
                                     (:TYPENAME query-params)
                                     (or parse-feature parse-road-part))))))))
