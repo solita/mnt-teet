@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eu
 
-clojure -m figwheel.main -O advanced -bo prod
+clojure -m figwheel.main -O whitespace -bo prod
 
 branch="$CODEBUILD_SOURCE_VERSION"
 #`git branch | grep "*" | cut -f2 -d' '`
