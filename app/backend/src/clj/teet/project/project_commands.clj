@@ -65,8 +65,8 @@
                 (project-custom-m-range db [:thk.project/id id]))
       (project-geometry/update-project-geometries!
        (environment/config-map {:api-url [:api-url]
-                                 :api-shared-secret [:auth :jwt-secret]
-                                 :wfs-url [:road-registry :wfs-url]})
+                                :api-secret [:auth :jwt-secret]
+                                :wfs-url [:road-registry :wfs-url]})
         [(d/pull db '[:db/id :thk.project/name
                       :thk.project/road-nr :thk.project/carriageway
                       :thk.project/start-m :thk.project/end-m

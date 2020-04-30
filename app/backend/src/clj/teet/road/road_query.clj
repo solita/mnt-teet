@@ -296,7 +296,7 @@
    "ms:n_tolm"
    "ms:n_tahispostid"])
 
-(defn fetch-all-intersecting-object
+(defn fetch-all-intersecting-objects
   "Returns all intersecting objects.
   Returns a map containing the typename and the objects of that type."
   [config gml-geometry]

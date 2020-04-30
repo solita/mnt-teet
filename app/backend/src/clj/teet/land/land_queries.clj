@@ -20,9 +20,9 @@
     (merge related-cadastral-units
            {:land-acquisitions land-acquisitions})))
 
-(defn- project-cadastral-unit-estates [db api-url api-shared-secret project-id]
+(defn- project-cadastral-unit-estates [db api-url api-secret project-id]
   (let [ctx {:api-url api-url
-             :api-shared-secret api-shared-secret}]
+             :api-secret api-secret}]
     (-> (d/pull db '[:thk.project/related-cadastral-units] [:thk.project/id project-id])
         :thk.project/related-cadastral-units
         (as-> units
@@ -43,7 +43,7 @@ Then it will query X-road for the estate information."
    :config {xroad-instance [:xroad-instance-id]
             xroad-url [:xroad-query-url]
             api-url [:api-url]
-            api-shared-secret [:auth :jwt-secret]}
+            api-secret [:auth :jwt-secret]}
    :authorization {:land/view-cadastral-data {:eid [:thk.project/id id]
                                               :link :thk.project/owner}}}
   (into {}
@@ -55,4 +55,4 @@ Then it will query X-road for the estate information."
                                                                   :requesting-eid (str "EE" (:user/person-id user))})))
 
         ;; Fetch unique estate numbers for project's related cadastral units
-        (project-cadastral-unit-estates db api-url api-shared-secret id)))
+        (project-cadastral-unit-estates db api-url api-secret id)))

@@ -8,14 +8,14 @@
             [teet.road.road-query :as road-query]
             [teet.util.geo :as geo]))
 
-(defn- valid-api-info? [{:keys [api-url api-shared-secret]}]
+(defn- valid-api-info? [{:keys [api-url api-secret]}]
   (and (not (str/blank? api-url))
-       (not (str/blank? api-shared-secret))))
+       (not (str/blank? api-secret))))
 
 (defn update-project-geometries!
   "Update project geometries in PostgreSQL.
   Calls store_entity_info in PostgREST API."
-  [{:keys [api-url api-shared-secret wfs-url] :as api} projects]
+  [{:keys [api-url api-secret wfs-url] :as api} projects]
   {:pre [(valid-api-info? api)]}
   (let [road-part-cache (atom {})
         request-body (for [{id :db/id
@@ -42,7 +42,7 @@
                        {:headers {"Content-Type" "application/json"
                                   "Authorization"
                                   (str "Bearer "
-                                       (jwt-token/create-backend-token api-shared-secret))}
+                                       (jwt-token/create-backend-token api-secret))}
                         :body (cheshire/encode request-body)})]
         (when-not (= 200 (:status response))
           (throw (ex-info "Update project geometries failed"

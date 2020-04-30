@@ -12,7 +12,8 @@
             [dk.ative.docjure.spreadsheet :as spreadsheet]
             [ring.util.io :as ring-io]
             [teet.environment :as environment]
-            [teet.gis.features :as features]))
+            [teet.gis.features :as features]
+            [teet.road.road-query :as road-query]))
 
 (defquery :thk.project/db-id->thk-id
   {:doc "Fetch THK project id for given entity :db/id"
@@ -100,13 +101,16 @@
   {:status 200
    :headers {"Content-Disposition" (str "attachment; filename=THK" id "-related.xlsx")}
    :body (let [ctx (environment/config-map {:api-url [:api-url]
-                                            :api-shared-secret [:auth :jwt-secret]})
+                                            :api-secret [:auth :jwt-secret]})
                project (d/pull db '[:thk.project/related-cadastral-units
                                     :thk.project/related-restrictions]
                                [:thk.project/id id])
                {:thk.project/keys [related-cadastral-units
                                    related-restrictions]}
-               (cu/map-vals (partial features/geojson-features-by-id ctx) project)]
+               (cu/map-vals (partial features/geojson-features-by-id ctx) project)
+
+               road-objects (road-query/fetch-all-intersecting-objects
+                             )]
 
            (ring-io/piped-input-stream
             (fn [out]

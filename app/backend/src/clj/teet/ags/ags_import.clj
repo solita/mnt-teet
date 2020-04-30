@@ -88,7 +88,7 @@
    (for [{entity-id :db/id
           features :features} files]
      (entity-features/upsert-entity-features! {:api-url api-url
-                                              :api-secret api-secret}
+                                               :api-secret api-secret}
                                               entity-id
                                               features))))
 
