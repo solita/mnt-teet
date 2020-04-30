@@ -1,17 +1,24 @@
 (ns teet.road.road-query
-  "Query road geometry from Teeregister"
+  "Query road geometry and road objects from Teeregister"
   (:require [org.httpkit.client :as client]
             [clojure.string :as str]
             [clojure.xml :as xml]
             [clojure.zip :as zip]
+            [clojure.data.zip :as dz]
             [clojure.data.zip.xml :as z]
             [hiccup.core :as hiccup]
-            [teet.util.geo :as geo]))
+            [teet.util.geo :as geo]
+            [teet.util.collection :as cu]))
 
 (defn- ogc-filter [content]
   (hiccup/html
-   [:Filter {:xmlns "http://www.opengis.net/ogc"}
+   [:Filter {:xmlns "http://www.opengis.net/ogc"
+             :xmlns:gml "http://www.opengis.net/gml"}
     content]))
+
+(defn- raw [xml]
+  (reify hiccup.compiler/HtmlRenderer
+    (render-html [_] xml)))
 
 (defn- query-by-road-and-carriageway [road carriageway]
   (ogc-filter
@@ -45,26 +52,32 @@
         (partition 2 pos)
         (map reverse pos))))
 
-(defn- read-feature-collection [feature-collection]
+(defn- parse-road-part [teeosa]
+  (z/xml1->
+   teeosa :ms:teeosa
+   (fn [road-part]
+     (let [prop (fn [name parse]
+                  (z/xml1-> road-part name z/text parse))
+           start-m (prop :ms:m_aadress ->int)
+           length (prop :ms:pikkus ->int)]
+       {:road (prop :ms:tee_number ->int)
+        :carriageway (prop :ms:soidutee_nr ->int)
+        :name (prop :ms:nimi str)
+        :sequence-nr (prop :ms:jrknr ->int)
+        :start-m start-m
+        :end-m (+ start-m length)
+        :length length
+        :geometry (z/xml-> road-part :ms:msGeometry read-geometry-linestring)}))))
+
+(defn- read-feature-collection
+  [feature-collection typename parse-feature]
   (sort-by
    :sequence-nr
    (z/xml->
     feature-collection
     :gml:featureMember
-    :ms:teeosa
-    (fn [road-part]
-      (let [prop (fn [name parse]
-                   (z/xml1-> road-part name z/text parse))
-            start-m (prop :ms:m_aadress ->int)
-            length (prop :ms:pikkus ->int)]
-        {:road (prop :ms:tee_number ->int)
-         :carriageway (prop :ms:soidutee_nr ->int)
-         :name (prop :ms:nimi str)
-         :sequence-nr (prop :ms:jrknr ->int)
-         :start-m start-m
-         :end-m (+ start-m length)
-         :length length
-         :geometry (z/xml-> road-part :ms:msGeometry read-geometry-linestring)})))))
+    (keyword typename)
+    parse-feature)))
 
 (defn extract-part
   "Extract a linestring geometry for a part of the road.
@@ -165,18 +178,19 @@
   (cached
    cache-atom
    query-params
-   (fn [query-params]
-     (let [{:keys [error body]}
+   (fn [{::keys [parse-feature] :as  query-params}]
+     (let [query-params (merge {:SERVICE "WFS"
+                                :REQUEST "GetFeature"
+                                :VERSION "1.1.0"
+                                :TYPENAME "ms:teeosa"
+                                :SRSNAME "urn:ogc:def:crs:EPSG::3301"}
+                               (dissoc query-params ::parse-feature))
+           {:keys [error body] :as response}
            @(client/get wfs-url
                         {:connect-timeout 10000
-                         :query-params (merge
-                                        {:SERVICE "WFS"
-                                         :REQUEST "GetFeature"
-                                         :VERSION "1.1.0"
-                                         :TYPENAME "ms:teeosa"
-                                         :SRSNAME "urn:ogc:def:crs:EPSG::3301"}
-                                        query-params)
+                         :query-params query-params
                          :as :stream})]
+       (def response* response)
        (if error
          (throw (ex-info "Unable to fetch road parts from WFS"
                          {:status 500
@@ -184,8 +198,11 @@
                           :wfs-url wfs-url
                           :query-params query-params}
                          error))
-         (-> body xml/parse zip/xml-zip
-             read-feature-collection))))))
+         (let [zx (-> body xml/parse zip/xml-zip)]
+           (def zx* zx)
+           (read-feature-collection zx
+                                    (:TYPENAME query-params)
+                                    (or parse-feature parse-road-part))))))))
 
 (defn fetch-road-parts [config road-nr carriageway-nr]
   (wfs-request config {:FILTER (query-by-road-and-carriageway road-nr carriageway-nr)}))
@@ -212,3 +229,80 @@
   [config road-nr carriageway-nr start-m end-m]
   (extract-road-geometry (fetch-road-parts config road-nr carriageway-nr)
                          start-m end-m))
+
+(defn- parse-feature
+  "Parse any WFS feature member"
+  [f]
+  (into {:geometry (z/xml1-> f :ms:msGeometry
+                             #(-> % zip/node :content first))}
+        (keep (fn [child]
+                (let [{:keys [tag attrs content]} (zip/node child)
+                      tag-name (name tag)]
+                  ;; Teeregister fields, take the content value
+                  (when (and (not= tag :ms:msGeometry)
+                             (str/starts-with? tag-name "ms:"))
+                    [tag (str/join " " content)]))))
+        (dz/children f))
+  ;{:geometry (z/xml1-> f :ms:msGeometry zip/node)}
+  ;(zip/node f)
+  )
+
+(defn fetch-intersecting-objects-of-type
+  "Fetch road objects for given typename intersecting the given area."
+  [config typename gml-geometry]
+  (wfs-request config
+               {:TYPENAME typename
+                :FILTER (ogc-filter [:Intersects
+                                     [:PropertyName "msGeometry"]
+                                     (raw gml-geometry)])
+                ::parse-feature parse-feature}))
+
+(def road-object-types
+  ["ms:n_bussipeatus"
+   "ms:n_kandur"
+   "ms:n_liiklussolm"
+   "ms:n_mahasoit"
+   "ms:n_rdtyl"
+   "ms:n_ristmik"
+   "ms:n_parkla"
+   "ms:n_seade"
+   "ms:n_truup"
+   "ms:n_katlai"
+   "ms:n_piire"
+   "ms:n_loomatoke"
+   "ms:n_lumekaitse_hekk"
+   "ms:n_murasein"
+   "ms:n_valgustus"
+   "ms:n_sild"
+   "ms:n_vork"
+   "ms:n_ylek"
+   "ms:n_kiiruspiirang"
+   "ms:n_defekt"
+   "ms:n_hoole"
+   "ms:n_kandevoime"
+   "ms:n_kate"
+   "ms:n_katend"
+   "ms:n_kergliiklustee"
+   "ms:n_kruusateede_seisukord"
+   "ms:n_kulmakerked"
+   "ms:n_liigitus"
+   "ms:n_liiklussagedus"
+   "ms:n_pindam"
+   "ms:n_rvteed"
+   "ms:n_rooprm"
+   "ms:n_roobas"
+   "ms:n_tasas"
+   "ms:n_tekstuur"
+   "ms:n_tolm"
+   "ms:n_tahispostid"])
+
+(defn fetch-all-intersecting-object
+  "Returns all intersecting objects.
+  Returns a map containing the typename and the objects of that type."
+  [config gml-geometry]
+  (into {}
+        (filter
+         (comp seq second)
+         (pmap (fn [type]
+                 [(keyword type) (fetch-intersecting-objects-of-type config type gml-geometry)])
+               road-object-types))))
