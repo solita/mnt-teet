@@ -61,14 +61,14 @@
 
   SaveDrawnArea
   (process-event [{area :area} app]
-    (let [project-id (get-in app [:route :project :db/id])]
+    (let [project-id (get-in app [:params :project])]
       (openlayers/disable-draw!)
       (t/fx (update-in app [:map :search-area] dissoc :drawing? :unsaved-drawing)
             {:tuck.effect/type :command!
              :command :thk.project/add-search-geometry
              :payload {:geometry area
                        :geometry-label "Area"
-                       :project-db-id project-id}
+                       :thk.project/id project-id}
              :result-event ->SaveDrawnAreaSuccess})))
 
   FetchDrawnAreas

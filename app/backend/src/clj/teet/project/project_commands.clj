@@ -164,22 +164,23 @@
 
 (defcommand :thk.project/add-search-geometry
   {:doc "Add a new geometry to use in the related restriction search"
-   :context {:keys [user]}
+   :context {:keys [user db]}
    :payload {geometry :geometry
              geometry-label :geometry-label
-             id :project-db-id}
+             id :thk.project/id}
    :spec (s/keys :req-un [::geometry])
    :project-id [:thk.project/id id]
    :authorization {:project/project-info {:eid [:thk.project/id id]
                                           :link :thk.project/owner}}
-   :pre [(number? id)]}
+   :pre [(string? id)]}
   (let [config (environment/config-map {:api-url [:api-url]
                                         :api-secret [:auth :jwt-secret]})
+        entity-id (:db/id (du/entity db [:thk.project/id id]))
         features [{:label geometry-label
                    :id (str (UUID/randomUUID))
                    :geometry geometry
                    :type "search-area"}]]
-    (entity-features/upsert-entity-features! config id features)))
+    (entity-features/upsert-entity-features! config entity-id features)))
 
 
 (defcommand :thk.project/delete-search-geometry
