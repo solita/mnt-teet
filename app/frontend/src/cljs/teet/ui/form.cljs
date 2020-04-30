@@ -57,7 +57,7 @@
        (nth (nth pred 2) 2)))
 
 (defn- missing-attributes
-  "Return missing attribuets based on spec"
+  "Return missing attributes based on spec"
   [spec value]
   (into #{}
         (when spec
