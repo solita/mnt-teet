@@ -13,7 +13,9 @@
             [ring.util.io :as ring-io]
             [teet.environment :as environment]
             [teet.gis.features :as features]
-            [teet.road.road-query :as road-query]))
+            [teet.road.road-query :as road-query]
+            [teet.gis.entity-features :as entity-features]
+            [teet.log :as log]))
 
 (defquery :thk.project/db-id->thk-id
   {:doc "Fetch THK project id for given entity :db/id"
@@ -80,15 +82,29 @@
 
 
 
-
-(defn- feature-collection->sheet-data [feature-collection]
-  (let [feature-props (->> feature-collection
-                           :features
-                           (map :properties))
-        headers (sort (keys (first feature-props)))]
+(defn- maps->sheet [maps]
+  (let [headers (sort (reduce into #{}
+                              (map keys maps)))]
     (into [(mapv name headers)]
           (map (apply juxt headers))
-          feature-props)))
+          maps)))
+
+(defn- feature-collection->sheet-data [feature-collection]
+  (->> feature-collection
+       :features
+       (map :properties)
+       maps->sheet))
+
+(defn- road-object-sheets [ctx entity-id]
+  (let [gml-geometry
+        ;; PENDING: configure distance?
+        (entity-features/entity-search-area-gml ctx entity-id 200)
+        road-objects (road-query/fetch-all-intersecting-objects ctx gml-geometry)]
+    (mapcat
+     (fn [[type objects]]
+       [(subs (name type) 3) ;; remove "ms:" from beginning
+        (maps->sheet (map #(dissoc % :geometry) objects))])
+     road-objects)))
 
 (defquery :thk.project/download-related-info
   {:doc "Download restrictions and cadastral units data as Excel."
@@ -101,24 +117,34 @@
   {:status 200
    :headers {"Content-Disposition" (str "attachment; filename=THK" id "-related.xlsx")}
    :body (let [ctx (environment/config-map {:api-url [:api-url]
-                                            :api-secret [:auth :jwt-secret]})
-               project (d/pull db '[:thk.project/related-cadastral-units
-                                    :thk.project/related-restrictions]
-                               [:thk.project/id id])
-               {:thk.project/keys [related-cadastral-units
-                                   related-restrictions]}
-               (cu/map-vals (partial features/geojson-features-by-id ctx) project)
+                                            :api-secret [:auth :jwt-secret]
+                                            :wfs-url [:road-registry :wfs-url]})
+               {id :db/id :as project}
+               (d/pull db '[:db/id
+                            :thk.project/related-cadastral-units
+                            :thk.project/related-restrictions]
+                       [:thk.project/id id])
 
-               ;road-objects (road-query/fetch-all-intersecting-objects)
-               ]
+               related-cadastral-units (features/geojson-features-by-id
+                                        ctx
+                                        (:thk.project/related-cadastral-units project))
+               related-restrictions (features/geojson-features-by-id
+                                     ctx
+                                     (:thk.project/related-restrictions project))
+
+               road-object-sheets (road-object-sheets ctx id)]
 
            (ring-io/piped-input-stream
             (fn [out]
-              (spreadsheet/save-workbook-into-stream!
-               out
-               (spreadsheet/create-workbook
-                "restrictions" (feature-collection->sheet-data related-restrictions)
-                "cadastral-units" (feature-collection->sheet-data related-cadastral-units))))))})
+              (try
+               (spreadsheet/save-workbook-into-stream!
+                out
+                (apply spreadsheet/create-workbook
+                       "restrictions" (feature-collection->sheet-data related-restrictions)
+                       "cadastral-units" (feature-collection->sheet-data related-cadastral-units)
+                       road-object-sheets))
+               (catch Throwable t
+                 (log/error t "Failed to export Excel"))))))})
 
 
 (defquery :thk.project/listing
