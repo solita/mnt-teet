@@ -2,7 +2,7 @@
   "Common container for forms"
   (:require [reagent.core :as r]
             [teet.ui.material-ui :refer [Grid]]
-            [teet.ui.text-field :refer [TextField ]]
+            [teet.ui.text-field :refer [TextField]]
             [teet.ui.util :as util]
             [teet.localization :refer [tr]]
             [goog.object :as gobj]
@@ -12,7 +12,8 @@
             [teet.theme.theme-colors :as theme-colors]
             [tuck.core :as t]
             [teet.log :as log]
-            [teet.ui.context :as context]))
+            [teet.ui.context :as context]
+            [clojure.set :as set]))
 
 (def default-value
   "Mapping of component to default value. Some components don't want nil as the value (like text area)."
@@ -56,7 +57,7 @@
        (nth (nth pred 2) 2)))
 
 (defn- missing-attributes
-  "Return missing attribuets based on spec"
+  "Return missing attributes based on spec"
   [spec value]
   (into #{}
         (when spec
@@ -120,136 +121,80 @@
      (not-empty (clojure.set/intersection required-fields (set attribute)))
      (required-fields attribute))))
 
-(defn form
-  "Simple grid based form container."
-  [{:keys [e! ;; Tuck event handle
-           on-change-event ;; Input change callback
-           cancel-event    ;; Form cancel callback
-           save-event      ;; Form submit callback
-           value           ;; Current value of the form
+(defn validate-attribute
+  "Given custom field validation, a field (keyword or vector of keywords) and
+  a value. Returns possibly empty set of invalid attribute keywords."
+  [validate-field field value]
+  (if (and validate-field (validate-field value))
+    ;; If custom validation fails then mark all fields as invalid
+    (if (vector? field)
+      (set field)
+      #{field})
+    ;; otherwise check each attributes spec
+    (reduce
+     (fn [fields [field value]]
+       (if (valid-attribute? field value)
+         (disj fields field)
+         (conj fields field)))
+     #{}
+     (if (vector? field)
+       (zipmap field value)
+       {field value}))))
 
-           in-progress?    ;; Submit in progess?
-           spec            ;; Spec for validating form fields
-           class           ;; CSS class for the form
-           footer          ;; Form footer component fn
-           spacing         ;; Form grid spacing
-           step            ;; Current form step
-           id              ;; Id for the form element
-           delete          ;; Delete function
-           ]
-    :or {class (<class form-bg)
-         footer form-footer
-         spacing 3}}
-   & fields]
-  (r/with-let [invalid-attributes (r/atom #{})
-               update-attribute-fn (fn [field value]
-                                     (let [v (if (and (not (boolean? value))
-                                                      (gobj/containsKey value "target"))
-                                               (gobj/getValueByKeys value "target" "value")
-                                               value)]
-                                       (e! (on-change-event
+
+(defn attribute-value
+  "Return the value of the attribute in the form."
+  ([form-value attribute] (attribute-value form-value attribute nil))
+  ([form-value attribute not-found]
+   (cond
+     (keyword? attribute)
+     (get form-value attribute not-found)
+
+     (vector? attribute)
+     (mapv #(get form-value % not-found) attribute)
+
+     :else
+     (throw (ex-info "Attribute must be keyword or vector of keywords"
+                     {:invalid-attribute attribute
+                      :form-value form-value})))))
+
+(defn validate-form
+  "Validate whole form value.
+  Spec is the spec for the whole form value (eg. s/keys).
+  Value is the current form value map.
+  Fields is collection of fields descriptions in the form, containing
+  :attribute and optional :validate function.
+
+  Returns possibly empty set of missing or invalid attribute keywords."
+  [spec value fields]
+  (reduce set/union
+          (missing-attributes spec value)
+          (keep (fn [{:keys [attribute validate]}]
+                  (let [attr-value (attribute-value value attribute ::no-value)]
+                    (when (not= attr-value ::no-value)
+                      (validate-attribute validate attribute attr-value))))
+                fields)))
+
+(defn validate-attribute-fn
+  "Validate attribute and set the form invalid-attributes atom."
+  [invalid-attributes validate-field field value]
+  (swap! invalid-attributes
+         (fn [fields]
+           (let [before fields
+                 after
+                 (set/union (set/difference fields
                                             (if (vector? field)
-                                              (zipmap field value)
-                                              {field v})))
-                                       v))
-               validate-attribute-fn (fn [validate-field field value]
-                                       (swap! invalid-attributes
-                                              (fn [fields]
-                                                (if (and
-                                                     (or (nil? validate-field)
-                                                         (nil? (validate-field value)))
-                                                     (valid-attribute? field value))
-                                                  (disj fields field)
-                                                  (conj fields field)))))
-               validate (fn [value fields]
-                          (let [invalid-attrs (into (missing-attributes spec value)
-                                                    (for [{attr :attribute
-                                                           validate-field :validate} (map meta fields)
-                                                          :let [validation-error
-                                                                (and validate-field
-                                                                     (validate-field (get value attr)))]
-                                                          :when (or validation-error
-                                                                    (not (valid-attribute? attr (get value attr))))]
-                                                      attr))
-                                valid? (and (empty? invalid-attrs)
-                                            (or (nil? spec) (s/valid? spec value)))]
-                            (log/info "VALIDATE invalid: " invalid-attrs " valid? " valid?
-                                      (s/explain-str spec value))
-                            (reset! invalid-attributes invalid-attrs)
-                            valid?))
-               submit! (fn [e! save-event value fields e]
-                         (.preventDefault e)
-                         (when (validate value fields)
-                           (e! (save-event))))
+                                              (set field)
+                                              #{field}))
+                            (validate-attribute validate-field field value))]
+             (println "validate " field " from " before " => " after)
+             after))))
 
-               ;; Determine required fields by getting missing attributes of an empty map
-               required-fields (missing-attributes spec {})
-               _ (log/debug "required-fields:" required-fields)]
-    [:form (merge {:on-submit #(submit! e! save-event value fields %)
-                   :style {:flex 1
-                           :display :flex
-                           :flex-direction :column
-                           :justify-content :space-between
-                           :overflow :hidden}}
-                  (when id
-                    {:id id}))
-     [:div {:class class}
-      [Grid {:container true
-             :spacing spacing}
-       (util/with-keys
-         (->> fields
-              (remove (partial hide-field? step))
-              (map (fn [field]
-                     (assert (vector? field) "Field must be a hiccup vector")
-                     (assert (map? (second field)) "First argument to field must be an options map")
-                     (let [{:keys [xs lg md attribute adornment container-class]
-                            validate-field :validate :as field-meta} (meta field)
-                           value (cond
-                                   (keyword? attribute)
-                                   (get value attribute (default-value (first field)))
 
-                                   (vector? attribute)
-                                   (mapv #(get value % (default-value (first field))) attribute)
-
-                                   :else
-                                   (throw (ex-info "All form fields must have :attribute meta key (keyword or vector of keywords)"
-                                                   {:meta field-meta})))
-                           error-text (and validate-field
-                                           (validate-field value))
-                           opts {:value value
-                                 :on-change (r/partial update-attribute-fn attribute)
-                                 :label (tr [:fields attribute])
-                                 :error (boolean (or error-text (@invalid-attributes attribute)))
-                                 :error-text error-text
-                                 :required (required-field? attribute required-fields)}
-                           ;; _ (log/debug "determining required-ness for" attribute " - " required-fields "says" (boolean (required-fields attribute)))
-                           ]
-                       [Grid (merge {:item true :xs (or xs 12)}
-                                    (when lg
-                                      {:lg lg})
-                                    (when md
-                                      {:md md}))
-                        [:div {:class container-class}
-                         (add-validation
-                           (update field 1 merge opts)
-                           (partial validate-attribute-fn validate-field) attribute)
-                         (when adornment
-                           adornment)]])))))]]
-     (when (and footer
-                (or cancel-event save-event))
-       [footer (merge
-                 {:cancel    (when cancel-event
-                               (r/partial e! (cancel-event)))
-                  :validate  (when save-event
-                               #(validate value fields))
-                  :disabled? (boolean in-progress?)}
-                 (when delete
-                   {:delete #(e! delete)}))])]))
 
 (defn- field*
   [field-info field
-   {:keys [value update-attribute-fn invalid-attributes required-fields
-           validate-attribute-fn current-fields]}]
+   {:keys [update-attribute-fn invalid-attributes required-fields current-fields]}]
   (let [{:keys [attribute]
          validate-field :validate
          :as field-info} (if (map? field-info)
@@ -265,27 +210,25 @@
         (swap! current-fields dissoc attribute))
       :reagent-render
       (fn [_ _ {:keys [value]}]
-        (let [value (cond
-                      (keyword? attribute)
-                      (get value attribute (default-value (first field)))
-
-                      (vector? attribute)
-                      (mapv #(get value % (default-value (first field))) attribute)
-
-                      :else
-                      (throw (ex-info "All form fields must have :attribute key (keyword or vector of keywords)"
-                                      {:meta field-info})))
+        (let [value (attribute-value value attribute
+                                     (default-value (first field)))
               error-text (and validate-field
                               (validate-field value))
+              error? (boolean
+                      (or error-text
+                          (some @invalid-attributes
+                                (if (vector? attribute)
+                                  attribute
+                                  [attribute]))))
               opts {:value value
                     :on-change (r/partial update-attribute-fn attribute)
                     :label (tr [:fields attribute])
-                    :error (boolean (or error-text (@invalid-attributes attribute)))
+                    :error error?
                     :error-text error-text
                     :required (required-field? attribute required-fields)}]
           (add-validation
            (update field 1 merge opts)
-           (partial validate-attribute-fn validate-field) attribute)))})))
+           (partial validate-attribute-fn invalid-attributes validate-field) attribute)))})))
 
 (defn field
   "Form component in form2. Field-info is the attribute
@@ -302,6 +245,20 @@
    :form
    [field* field-info field]))
 
+(defn- update-attribute-fn
+  "Return a function for updating attribute values by dispatching change events."
+  [e! on-change-event]
+   (fn [field value]
+     (let [v (if (and (not (boolean? value))
+                      (gobj/containsKey value "target"))
+               (gobj/getValueByKeys value "target" "value")
+               value)]
+       (e! (on-change-event
+            (if (vector? field)
+              (zipmap field value)
+              {field v})))
+       v)))
+
 (defn form2
   "Simple context based form container."
   [{:keys [e! ;; Tuck event handle
@@ -317,36 +274,11 @@
            ]}
    & children]
   (r/with-let [invalid-attributes (r/atom #{})
-               update-attribute-fn (fn [field value]
-                                     (let [v (if (and (not (boolean? value))
-                                                      (gobj/containsKey value "target"))
-                                               (gobj/getValueByKeys value "target" "value")
-                                               value)]
-                                       (e! (on-change-event
-                                            (if (vector? field)
-                                              (zipmap field value)
-                                              {field v})))
-                                       v))
-               validate-attribute-fn (fn [validate-field field value]
-                                       (swap! invalid-attributes
-                                              (fn [fields]
-                                                (if (and
-                                                     (or (nil? validate-field)
-                                                         (nil? (validate-field value)))
-                                                     (valid-attribute? field value))
-                                                  (disj fields field)
-                                                  (conj fields field)))))
+               update-attribute-fn (update-attribute-fn e! on-change-event)
                current-fields (atom {})
                validate (fn [value fields]
-                          (let [invalid-attrs (into (missing-attributes spec value)
-                                                    (for [{attr :attribute
-                                                           validate-field :validate} (vals fields)
-                                                          :let [validation-error
-                                                                (and validate-field
-                                                                     (validate-field (get value attr)))]
-                                                          :when (or validation-error
-                                                                    (not (valid-attribute? attr (get value attr))))]
-                                                      attr))
+                          (let [invalid-attrs (validate-form spec value
+                                                             (vals fields))
                                 valid? (and (empty? invalid-attrs)
                                             (or (nil? spec) (s/valid? spec value)))]
                             (log/info "VALIDATE invalid: " invalid-attrs " valid? " valid?
@@ -363,7 +295,6 @@
 
                ctx {:invalid-attributes invalid-attributes
                     :update-attribute-fn update-attribute-fn
-                    :validate-attribute-fn validate-attribute-fn
                     :validate validate
                     :submit! submit!
                     :required-fields required-fields
@@ -372,7 +303,8 @@
                     :footer {:cancel    (when cancel-event
                                           (r/partial e! (cancel-event)))
                              :validate  (when save-event
-                                          #(validate value @current-fields))
+                                          (fn [value]
+                                            (validate value @current-fields)))
                              :disabled? (boolean in-progress?)
                              :delete (when delete
                                        #(e! delete))}}]
@@ -388,8 +320,49 @@
       :form (assoc ctx :value value)
       [:<> (util/with-keys children)])]))
 
-(defn footer2 []
-  (context/consume
-   :form
-   (fn [{footer :footer}]
-     [form-footer footer])))
+(defn footer2
+  ([] (footer2 form-footer))
+  ([footer-component]
+   (context/consume
+    :form
+    (fn [{:keys [value footer]}]
+      [footer-component (update footer :validate
+                                (fn [validate]
+                                  (when validate
+                                    #(validate value))))]))))
+
+(defn form
+  "Simple grid based form container."
+  [{:keys [class    ; CSS class for the form
+           footer   ; Form footer component fn
+           spacing  ; Form grid spacing
+           step     ; Current form step (unused?)
+           cancel-event
+           save-event]
+    :as opts
+    :or {class (<class form-bg)
+         footer form-footer
+         spacing 3}}
+   & fields]
+  [form2 opts
+   [:div {:class class}
+    [Grid {:container true
+           :spacing spacing}
+     (util/with-keys
+       (->> fields
+            (remove (partial hide-field? step))
+            (map (fn [form-field]
+                   (let [{:keys [xs lg md adornment container-class] :as field-meta}
+                         (meta form-field)]
+                     [Grid (merge {:item true :xs (or xs 12)}
+                                  (when lg
+                                    {:lg lg})
+                                  (when md
+                                    {:md md}))
+                      [:div {:class container-class}
+                       [field field-meta form-field]
+                       (when adornment
+                         adornment)]])))))]]
+   (when (and footer
+              (or cancel-event save-event))
+     [footer2 footer])])

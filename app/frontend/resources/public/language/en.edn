@@ -1,6 +1,7 @@
 {:activity
  {:note-all-tasks-need-to-be-completed
-  "Note: All tasks must be completed before activity can be submitted for review"},
+  "Note: All tasks must be completed before activity can be submitted for review",
+  :status "Status"},
  :activity-approval
  {:submit-for-approval "Submit activity for approval",
   :approve-activity-confirm
@@ -71,6 +72,7 @@
  :data-tab
  {:restriction-count "Currently showing {count} restrictions",
   :cadastral-unit-count "Currently showing {count} cadastral units"},
+ :date-range {:error-text "Possible dates: {start} – {end}"},
  :document
  {:comments "Comments",
   :new-comment "New comment",

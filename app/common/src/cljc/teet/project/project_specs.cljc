@@ -11,6 +11,9 @@
 
 (s/def :activity/activity (s/keys))
 
+(s/def :activity/estimated-start-date inst?)
+(s/def :activity/estimated-end-date inst?)
+
 (s/def ::activity
   (s/keys :req [:activity/name
                 :activity/estimated-start-date
