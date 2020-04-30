@@ -280,7 +280,8 @@
                update-attribute-fn (update-attribute-fn e! on-change-event)
                current-fields (atom {})
                validate (fn [value fields]
-                          (let [invalid-attrs (validate-form spec value fields)
+                          (let [invalid-attrs (validate-form spec value
+                                                             (vals fields))
                                 valid? (and (empty? invalid-attrs)
                                             (or (nil? spec) (s/valid? spec value)))]
                             (log/info "VALIDATE invalid: " invalid-attrs " valid? " valid?
