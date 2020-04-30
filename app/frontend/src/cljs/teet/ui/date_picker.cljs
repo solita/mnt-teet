@@ -222,8 +222,7 @@
                             (reset! open? true))
                set-ref (fn [el]
                          (reset! ref el))]
-    (let [_ (println "ERROR: " error)
-          on-change-text (fn [e]
+    (let [on-change-text (fn [e]
                            (let [v (-> e .-target .-value)]
                              (reset! txt v)
                              (if-let [^goog.date.Date d (parse-opt v)]
