@@ -263,7 +263,6 @@
   "combine two date-inputs to provide a consistent date-range-picker"
   [{:keys [error value on-change start-label end-label required row? min-date max-date]
     :or {row? true}}]
-  (println "DaTE RANGE ERROR " error)
   (let [[start end] value
         element-size (if row?
                        6
