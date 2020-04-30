@@ -145,6 +145,22 @@
        {field value}))))
 
 
+(defn attribute-value
+  "Return the value of the attribute in the form."
+  ([form-value attribute] (attribute-value form-value attribute nil))
+  ([form-value attribute not-found]
+   (cond
+     (keyword? attribute)
+     (get form-value attribute not-found)
+
+     (vector? attribute)
+     (mapv #(get form-value % not-found) attribute)
+
+     :else
+     (throw (ex-info "Attribute must be keyword or vector of keywords"
+                     {:invalid-attribute attribute
+                      :form-value form-value})))))
+
 (defn validate-form
   "Validate whole form value.
   Spec is the spec for the whole form value (eg. s/keys).
@@ -156,14 +172,11 @@
   [spec value fields]
   (reduce set/union
           (missing-attributes spec value)
-          (map (fn [{:keys [attribute validate]}]
-                 (validate-attribute
-                  validate
-                  attribute
-                  (if (vector? attribute)
-                    ((apply juxt attribute) value)
-                    (get value attribute))))
-               fields)))
+          (keep (fn [{:keys [attribute validate]}]
+                  (let [attr-value (attribute-value value attribute ::no-value)]
+                    (when (not= attr-value ::no-value)
+                      (validate-attribute validate attribute attr-value))))
+                fields)))
 
 (defn validate-attribute-fn
   "Validate attribute and set the form invalid-attributes atom."
@@ -184,7 +197,7 @@
 
 (defn- field*
   [field-info field
-   {:keys [value update-attribute-fn invalid-attributes required-fields current-fields]}]
+   {:keys [update-attribute-fn invalid-attributes required-fields current-fields]}]
   (let [{:keys [attribute]
          validate-field :validate
          :as field-info} (if (map? field-info)
@@ -200,16 +213,8 @@
         (swap! current-fields dissoc attribute))
       :reagent-render
       (fn [_ _ {:keys [value]}]
-        (let [value (cond
-                      (keyword? attribute)
-                      (get value attribute (default-value (first field)))
-
-                      (vector? attribute)
-                      (mapv #(get value % (default-value (first field))) attribute)
-
-                      :else
-                      (throw (ex-info "All form fields must have :attribute key (keyword or vector of keywords)"
-                                      {:meta field-info})))
+        (let [value (attribute-value value attribute
+                                     (default-value (first field)))
               error-text (and validate-field
                               (validate-field value))
               error? (boolean
@@ -349,7 +354,7 @@
        (->> fields
             (remove (partial hide-field? step))
             (map (fn [form-field]
-                   (let [{:keys [xs lg adornment container-class] :as field-meta}
+                   (let [{:keys [xs lg md adornment container-class] :as field-meta}
                          (meta form-field)]
                      [Grid (merge {:item true :xs (or xs 12)}
                                   (when lg
