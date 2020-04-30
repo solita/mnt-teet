@@ -42,9 +42,6 @@
       :else
       (update-in field [1 :on-change] (fn [on-change]
                                         (fn [value]
-                                          (println "VALIDATE ATRRIBUTE : " validate-attribute-fn)
-                                          (.log js/console "validate attribute: " validate-attribute-fn)
-                                          (println "value : " value)
                                           (validate-attribute-fn attribute (on-change value))))))))
 
 (defn- contains-predicate
