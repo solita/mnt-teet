@@ -10,7 +10,8 @@
                                          Button Grid]]
             [teet.ui.text-field :refer [TextField]]
             [teet.theme.theme-colors :as colors]
-            [herb.core :refer [<class]]))
+            [herb.core :refer [<class]]
+            [teet.ui.format :as format]))
 
 (defn- date-seq [first-date last-date]
   (when-not (t/after? first-date last-date)
@@ -212,7 +213,7 @@
 
 (defn date-input
   "Combined text field and date picker component"
-  [{:keys [label error value on-change selectable? required end start min-date max-date]}]
+  [{:keys [label error value on-change selectable? required end start min-date max-date error-text]}]
   (r/with-let [txt (r/atom (some-> value goog.date.Date. unparse-opt))
                open? (r/atom false)
                ref (atom nil)
@@ -237,6 +238,7 @@
                    :value (or @txt "")
                    :ref set-ref
                    :error error
+                   :error-text error-text
                    :required required
                    :variant "outlined"
                    :full-width true
@@ -265,7 +267,9 @@
   (let [[start end] value
         element-size (if row?
                        6
-                       12)]
+                       12)
+        max (or end max-date)
+        min (or start min-date)]
     [Grid {:container true :spacing 1}
      [Grid {:item true :xs element-size}
       [date-input {:value start
@@ -273,6 +277,8 @@
                    :error (and error (nil? start))
                    :label start-label
                    :end end
+                   :error-text (tr [:date-range :error-text] {:start (format/date min-date)
+                                                              :end (format/date max)})
                    :min-date min-date
                    :max-date (or end max-date)
                    :on-change (fn [start]
@@ -294,6 +300,8 @@
                    :error (and error (nil? end))
                    :label end-label
                    :start start
+                   :error-text (tr [:date-range :error-text] {:start (format/date min)
+                                                              :end (format/date max-date)})
                    :min-date (or start min-date)
                    :max-date max-date
                    :on-change (fn [end]

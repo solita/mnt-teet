@@ -1,6 +1,7 @@
 {:activity
  {:note-all-tasks-need-to-be-completed
-  "Kõik ülesanded peavad olema lõpetatud ennem kui tegevuse saab ülevaatamiseks saata"},
+  "Kõik ülesanded peavad olema lõpetatud ennem kui tegevuse saab ülevaatamiseks saata",
+  :status "Olek"},
  :activity-approval
  {:submit-for-approval "Esitan tegevuse",
   :approve-activity-confirm "Tegevuse staatus märgitakse lõpetatuks",
@@ -71,6 +72,7 @@
  :data-tab
  {:restriction-count "Praegu kuvatakse {count} kitsendus(t)",
   :cadastral-unit-count "Praegu kuvatakse {count} katastriüksus(t)"},
+ :date-range {:error-text "Võimalikud kuupäevad: {start} – {end}"},
  :document
  {:comments "Märkused",
   :new-comment "Uus märkus",
