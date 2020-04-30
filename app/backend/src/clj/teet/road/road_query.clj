@@ -236,16 +236,13 @@
   (into {:geometry (z/xml1-> f :ms:msGeometry
                              #(-> % zip/node :content first))}
         (keep (fn [child]
-                (let [{:keys [tag attrs content]} (zip/node child)
+                (let [{:keys [tag content]} (zip/node child)
                       tag-name (name tag)]
                   ;; Teeregister fields, take the content value
                   (when (and (not= tag :ms:msGeometry)
                              (str/starts-with? tag-name "ms:"))
                     [tag (str/join " " content)]))))
-        (dz/children f))
-  ;{:geometry (z/xml1-> f :ms:msGeometry zip/node)}
-  ;(zip/node f)
-  )
+        (dz/children f)))
 
 (defn fetch-intersecting-objects-of-type
   "Fetch road objects for given typename intersecting the given area."
