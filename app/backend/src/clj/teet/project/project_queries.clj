@@ -109,8 +109,8 @@
                                    related-restrictions]}
                (cu/map-vals (partial features/geojson-features-by-id ctx) project)
 
-               road-objects (road-query/fetch-all-intersecting-objects
-                             )]
+               ;road-objects (road-query/fetch-all-intersecting-objects)
+               ]
 
            (ring-io/piped-input-stream
             (fn [out]
