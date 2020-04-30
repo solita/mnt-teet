@@ -16,4 +16,4 @@
   #?(:cljs (js/parseFloat km)
      :clj (Double/parseDouble km)))
 
-(def default-road-buffer-meters "200")
+(def default-road-buffer-meters 200)

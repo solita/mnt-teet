@@ -15,7 +15,8 @@
             [teet.gis.features :as features]
             [teet.road.road-query :as road-query]
             [teet.gis.entity-features :as entity-features]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.road.road-model :as road-model]))
 
 (defquery :thk.project/db-id->thk-id
   {:doc "Fetch THK project id for given entity :db/id"
@@ -97,8 +98,7 @@
 
 (defn- road-object-sheets [ctx entity-id]
   (let [gml-geometry
-        ;; PENDING: configure distance?
-        (entity-features/entity-search-area-gml ctx entity-id 200)
+        (entity-features/entity-search-area-gml ctx entity-id road-model/default-road-buffer-meters)
         road-objects (road-query/fetch-all-intersecting-objects ctx gml-geometry)]
     (mapcat
      (fn [[type objects]]
