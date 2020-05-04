@@ -225,17 +225,14 @@
 
 (defn- create-data-layers [ctx layers]
   (log/info "Create data layers: " layers)
-  (let [dl
-        (reduce merge {}
-                (map-indexed
-                 (fn [i {:keys [id] :as layer}]
-                   (map-layers/create-data-layer
-                    ctx
-                    (merge {:id (or id (keyword (str "data-layer-" i)))}
-                           layer)))
-                 layers))]
-    (log/info "DATA LAYERS: " (keys dl))
-    dl))
+  (reduce merge {}
+          (map-indexed
+           (fn [i {:keys [id] :as layer}]
+             (map-layers/create-data-layer
+              ctx
+              (merge {:id (or id (keyword (str "data-layer-" i)))}
+                     layer)))
+           layers)))
 
 (defn map-view [e! {:keys [config height class layer-controls?] :or {height "100%"} :as opts}
                 {:keys [background-layer] :as map-data
