@@ -119,16 +119,19 @@
     [create-activity-form e! (:edit-activity-data app) (:lifecycle-type dialog) {:min-date (:thk.lifecycle/estimated-start-date lifecycle)
                                                                                  :max-date (:thk.lifecycle/estimated-end-date lifecycle)}]))
 
-(defn project-management
-  [owner manager]
+(defn project-management-and-status
+  [owner manager status]
   [:div {:style {:display :flex}
          :class (<class common-styles/margin-bottom 1)}
    [:div {:style {:margin-right "2rem"}}
     [typography/SectionHeading (tr [:roles :owner])]
     [:span (user-model/user-name owner)]]
-   [:div
+   [:div {:style {:margin-right "3rem"}}
     [typography/SectionHeading (tr [:roles :manager])]
-    [:span (user-model/user-name manager)]]])
+    [:span (user-model/user-name manager)]]
+   [:div 
+    [typography/SectionHeading (tr [:activity :status])]
+    [:span (tr-enum status)]]])
 
 (defn activity-header
   [e! activity]
@@ -182,10 +185,10 @@
               (sort-by (comp task-model/task-group-order :db/ident first)
                        (group-by :task/group tasks)))])
 
-(defn approvals-button [e! params button-kw confirm-kw icon event-fn]
+(defn approvals-button [e! params button-kw confirm-kw icon button-component event-fn]
   (r/with-let [clicked? (r/atom false)]
     [:<>
-     [buttons/button-primary {:on-click #(reset! clicked? true)
+     [button-component {:on-click #(reset! clicked? true)
                               :style {:float :right}}
       [icon]
       (tr [:activity-approval button-kw])]
@@ -210,13 +213,13 @@
            (tr [:buttons :confirm])]]]])]))
 
 (defn approve-button [e! params]
-  (approvals-button e! params (:status params) :approve-activity-confirm icons/action-check-circle activity-controller/->Review))
+  (approvals-button e! params (:status params) :approve-activity-confirm icons/action-check-circle buttons/button-green activity-controller/->Review))
 
 (defn reject-button [e! params]
-  (approvals-button e! params (:status params) :reject-activity-confirm icons/navigation-cancel activity-controller/->Review))
+  (approvals-button e! params (:status params) :reject-activity-confirm icons/navigation-cancel buttons/button-warning activity-controller/->Review))
 
 (defn submit-for-approval-button [e! params]
-  (approvals-button e! params :submit-for-approval :submit-results-confirm icons/action-check-circle activity-controller/->SubmitResults))
+  (approvals-button e! params :submit-for-approval :submit-results-confirm icons/action-check-circle buttons/button-green activity-controller/->SubmitResults))
 
 (defn activity-content
   [e! params project]
@@ -226,7 +229,7 @@
         tasks-complete? (activity-model/all-tasks-completed? activity)]
     [:<>
      [activity-header e! activity]
-     [project-management (:thk.project/owner project) (:thk.project/manager project)]
+     [project-management-and-status (:thk.project/owner project) (:thk.project/manager project) (:activity/status activity)]
      [task-lists (:activity/tasks activity)]
      ;; fixme: [when-authorized[ doesn't work here, why?
      (if (and (authorized? @teet.app-state/user :activity/change-activity-status activity)
@@ -242,9 +245,9 @@
                 (-> project :thk.project/owner :user/id) (-> @teet.app-state/user :user/id)
                 (= status :activity.status/in-review))
        [:div
-        [approve-button e! (assoc params :status :activity.status/completed)]
-        [reject-button e! (assoc params :status :activity.status/canceled)]
-        [reject-button e! (assoc params :status :activity.status/archived)]])]))
+        [reject-button e! (assoc params :status :activity.status/archived)]
+        [reject-button e! (assoc params :status :activity.status/canceled)]       
+        [approve-button e! (assoc params :status :activity.status/completed)]])]))
 
 (defn activity-page [e! {:keys [params] :as app} project breadcrumbs]
   [project-navigator-view/project-navigator-with-content

@@ -28,6 +28,7 @@
 (def green "#008936")
 (def red "#D73E3E")
 (def red-dark "#BE2525")
+(def green-dark "#25BE25")
 (def yellow "#F2C94C")
 
 (def primary blue)
