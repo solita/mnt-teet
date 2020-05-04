@@ -338,7 +338,9 @@
    :land-surveys "Maa uuring",
    :layer "kiht",
    :no-filters "Filtrid puuduvad",
-   :teeregister "Teeregistri kaardikihid"}},
+   :teeregister "Teeregistri kaardikihid"},
+  :display "Kaardinäitus",
+  :aerial-view "Õhuvaade"},
  :notifications
  {:no-unread-notifications "Uusi teavitusi ei ole",
   :task-status-updated "Ülesande staatus edukalt värskendatud",
@@ -376,6 +378,7 @@
    :people "Inimesed",
    :details "Üksikasjad",
    :restrictions "Kitsendused",
+   :road-objects "Teeobjektid",
    :land "Katastriüksused"},
   :edit-activity "Muudan tegevust",
   :restrictions-tab "Kitsendused",

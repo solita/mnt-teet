@@ -336,7 +336,9 @@
    :land-surveys "Land surveys",
    :layer "layer",
    :no-filters "No filters available.",
-   :teeregister "Road registry layers"}},
+   :teeregister "Road registry layers"},
+  :display "Map display",
+  :aerial-view "Aerial view"},
  :notifications
  {:no-unread-notifications "No unread notifications",
   :task-status-updated "Task status updated successfully",
@@ -373,6 +375,7 @@
    :people "People",
    :details "Details",
    :restrictions "Restrictions",
+   :road-objects "Road objects",
    :land "Cadastral units"},
   :edit-activity "Edit activity",
   :restrictions-tab "Restrictions",

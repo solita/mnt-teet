@@ -327,7 +327,7 @@
    {:label [:project :tabs :land]
     :value "land"
     :component land-tab/related-cadastral-units-info}
-   {:label [:projects :tabs :road-objects]
+   {:label [:project :tabs :road-objects]
     :value "road"
     :component road-view/road-objects-tab}])
 
