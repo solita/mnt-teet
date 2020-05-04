@@ -16,7 +16,7 @@
             [teet.ui.buttons :as buttons]
             [teet.ui.panels :as panels]
             [teet.map.map-layers :as map-layers]
-            [teet.ui.util :as util]
+            [teet.ui.util :as util :refer [mapc]]
             [teet.util.collection :as cu]
             [teet.ui.common :as common]
             [teet.ui.query :as query]
@@ -100,7 +100,7 @@
 (defn- wms-layer-selector [toggle-layer! selected layers]
   [:div
    (doall
-    (for [{:keys [name title layers]} layers
+    (for [{:keys [name title layers] :as layer} layers
           :let [selected? (contains? selected name)]]
       ^{:key name}
       [:div
@@ -111,7 +111,7 @@
            [wms-layer-selector toggle-layer! selected layers]]]
 
          [select/checkbox {:value selected?
-                           :on-change #(toggle-layer! name)
+                           :on-change #(toggle-layer! layer)
                            :label title}])]))])
 
 (defn- wms-layer-selector* [e! layer-opts {:keys [wms-url layers]}]
@@ -119,14 +119,18 @@
     [wms-layer-selector
      #(e! (map-controller/->UpdateLayer
            {:wms-url wms-url
-            :selected (cu/toggle selected %)}))
+            :layer-info (assoc (:layer-info layer-opts)
+                               (:name %) (select-keys % [:title :legend-url]))
+            :selected (cu/toggle selected (:name %))}))
      selected
      layers]))
 
 (defmethod layer-filters-form :teeregister
-  [e! layer _map-data]
+  [e! layer map-data]
   [query/query {:e! e!
                 :args {}
+                :state-path [:map :teeregister-layers]
+                :state (:teeregister-layers map-data)
                 :query :road/wms-layers
                 :simple-view [wms-layer-selector* e! layer]}])
 
@@ -134,6 +138,23 @@
   [_ _ _]
   (tr [:map :layers :no-filters]))
 
+(defmulti layer-legend (fn [layer _map-data] (:type layer)))
+
+(defmethod layer-legend :teeregister
+  [{:keys [selected layer-info]} _]
+  [:div
+   (doall
+    (for [layer selected
+          :let [{:keys [title legend-url]} (get layer-info layer)]
+          :when legend-url]
+      ^{:key layer}
+      [:div
+       [:div title]
+       [:img {:src legend-url}]]))])
+
+(defmethod layer-legend :default
+  [_ _]
+  [:span])
 (defn edit-layer-dialog [e! {:keys [new? type] :as edit-layer} map-data]
   [panels/modal {:disable-content-wrapper? true
                  :on-close (e! map-controller/->CancelLayer)}
@@ -201,19 +222,28 @@
        :class (<class map-styles/add-layer-button)}
       [icons/content-add-circle]]]]])
 
-(defn map-control-buttons [e! {:keys [background-layer] :as _map-data
+(defn map-control-buttons [e! {:keys [background-layer layers] :as _map-data
                                :or   {background-layer "kaart"}}]
-  [:div {:class (<class map-styles/map-control-buttons)}
-   [Fab (merge
-          {:size     :small
-           :class    (<class map-styles/map-control-button)
-           :on-click (e! map-controller/->SetBackgroundLayer
-                         (case background-layer
-                           "kaart" "foto"
-                           "foto" "kaart"))}
-          (when (= background-layer "foto")
-            {:color :primary}))
-    [icons/maps-satellite]]])
+  (r/with-let [open? (r/atom false)]
+    [:div {:class (<class map-styles/map-control-buttons)}
+     (when @open?
+       [:div {:class (<class map-styles/map-legend-box)}
+        [:div {:class (<class map-styles/map-legend-header)}]
+        [select/checkbox {:value (= background-layer "foto")
+                          :on-change (e! map-controller/->SetBackgroundLayer
+                                         (case background-layer
+                                           "kaart" "foto"
+                                           "foto" "kaart"))
+                          :label (tr [:map :aerial-view])}]
+        ;; Show legend
+        (mapc layer-legend layers)])
+     [Fab (merge
+           {:size     :small
+            :class    (<class map-styles/map-control-button)
+            :on-click #(swap! open? not)}
+           (when (= background-layer "foto")
+             {:color :primary}))
+      [icons/maps-layers]]]))
 
 (defn map-container-style
   []
