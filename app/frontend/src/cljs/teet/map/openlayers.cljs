@@ -598,6 +598,7 @@
     (doseq [[key [layer _]] geometry-layers
             :when (nil? (get geometries key))]
       (log/debug "REMOVING MAP LAYER " (name key) " => " layer)
+      (aset js/window "POISTUVA" layer)
       (.removeLayer ol3 layer))
 
     ;; For each current layer, update layer geometries

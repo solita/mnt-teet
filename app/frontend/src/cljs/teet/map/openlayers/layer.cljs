@@ -35,5 +35,6 @@ sen lisätä se itse ol3 karttaan (addLayer)")
   (paivita [this ol3 ol-layer aiempi-paivitystieto]
     (.log js/console "PÄIVITÄ OPENLAYERS TASO")
     (when (nil? aiempi-paivitystieto)
+      (.log js/console " -> LISÄTÄÄN LAYER")
       (.addLayer ol3 layer))
     [layer :ok]))

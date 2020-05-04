@@ -2,9 +2,11 @@
   (:require [teet.map.openlayers.mvt :as mvt]
             [teet.map.openlayers.geojson :as geojson]
             [teet.map.openlayers :as openlayers]
+            [teet.map.openlayers.layer :as layer]
             [clojure.string :as str]
             [teet.map.map-features :as map-features]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [ol.source.ImageWMS]))
 
 (def ^:const default-projection "EPSG:3301")
 
@@ -140,6 +142,27 @@
     (mvt-for-datasource-ids api-url "cadastral-units-" datasource-ids
                             map-features/cadastral-unit-style
                             {:max-resolution cadastral-unit-resolution})))
+
+(def create-wms-layer
+  (memoize
+   (fn [wms-url layer]
+     (let [name (str "teeregister-" layer)
+           layer (ol.layer.Image.
+                  #js {:source
+                       (ol.source.ImageWMS.
+                        #js {:url wms-url
+                             ;; Teeregister doesn't return images for EPSG:3301
+                             :projection "EPSG:4326"
+                             :params #js {:LAYERS layer
+                                          :FORMAT "image/png"}})})]
+       (.set layer "teet-source" name)
+       [name (layer/->OpenLayersTaso layer)]))))
+
+(defmethod create-data-layer :teeregister
+  [_ctx {:keys [wms-url selected]}]
+  (into {}
+        (map (partial create-wms-layer wms-url))
+        selected))
 
 (defmethod create-data-layer :default [_ {type :type}]
   (log/warn "Unsupported data layer type: " type)

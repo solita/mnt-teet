@@ -336,7 +336,7 @@
    :land-surveys "Land surveys",
    :layer "layer",
    :no-filters "No filters available.",
-   :teeregister nil}},
+   :teeregister "Road registry layers"}},
  :notifications
  {:no-unread-notifications "No unread notifications",
   :task-status-updated "Task status updated successfully",
