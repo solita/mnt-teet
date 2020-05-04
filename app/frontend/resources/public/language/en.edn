@@ -1,6 +1,7 @@
 {:activity
  {:note-all-tasks-need-to-be-completed
   "Note: All tasks must be completed before activity can be submitted for review",
+  :waiting-for-submission "Results have not yet been submitted",
   :status "Status"},
  :activity-approval
  {:submit-for-approval "Submit activity for approval",
@@ -334,7 +335,8 @@
    :cadastral-units "Cadastral units",
    :land-surveys "Land surveys",
    :layer "layer",
-   :no-filters "No filters available."}},
+   :no-filters "No filters available.",
+   :teeregister nil}},
  :notifications
  {:no-unread-notifications "No unread notifications",
   :task-status-updated "Task status updated successfully",

@@ -1,14 +1,14 @@
 {:activity
  {:note-all-tasks-need-to-be-completed
-  "Kõik ülesanded peavad olema lõpetatud ennem kui tegevuse saab ülevaatamiseks saata",
+  "Kõik ülesanded peavad olema lõpetatud enne kui tegevuse saab ülevaatamiseks saata",
+  :waiting-for-submission "Tulemusi ei ole veel esitatud",
   :status "Olek"},
  :activity-approval
  {:submit-for-approval "Esitan tegevuse",
   :approve-activity-confirm "Tegevuse staatus märgitakse lõpetatuks",
   :activity.status/completed "Kinnitan tegevuse",
   :reject-activity-confirm "Tegevuse staatus uuendatakse",
-  :activity.status/archived
-  "[:activity-approval :activity.status/archived]",
+  :activity.status/archived "Arhiveerin tegevuse",
   :activity.status/canceled "Katkestan tegevuse"},
  :admin {:title "Admin", :create-user "Lisan kasutaja"},
  :buttons
@@ -337,7 +337,8 @@
    :cadastral-units "Katastriüksused",
    :land-surveys "Maa uuring",
    :layer "kiht",
-   :no-filters "Filtrid puuduvad"}},
+   :no-filters "Filtrid puuduvad",
+   :teeregister "Teeregistri kaardikihid"}},
  :notifications
  {:no-unread-notifications "Uusi teavitusi ei ole",
   :task-status-updated "Ülesande staatus edukalt värskendatud",
