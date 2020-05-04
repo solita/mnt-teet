@@ -121,7 +121,7 @@
 
 
 (defn d-cadastral-unit* [k-xml]
-  {:ads_oid (z/xml1-> k-xml :a:KinnistuKatastriyksus :a:aadressobjekt :a:ads_oid z/text)
+  {:ads_oid (z/xml1-> k-xml :a:aadressobjekt :a:ads_oid z/text)
    :katastritunnus (z/xml1-> k-xml :a:KinnistuKatastriyksus :a:katastritunnus z/text)
    :katastriyksuse_aadress (z/xml1-> k-xml :a:KinnistuKatastriyksus :a:katastriyksuse_aadress z/text)
    :pindala (z/xml1-> k-xml :a:KinnistuKatastriyksus :a:pindala z/text)
@@ -129,7 +129,7 @@
 
 (defn d-cadastral-units [kdr-xml]
   ;;; kdr = Kinnistu_DetailamdResponse from inside the soap body
-  (let [k-data-seq (z/xml-> kdr-xml :jagu1 :a:Jagu1 :a:katastriyksused)]
+  (let [k-data-seq (z/xml-> kdr-xml :jagu1 :a:Jagu1 :a:katastriyksused :a:KinnistuKatastriyksus)]
     {:katastriyksus (mapv d-cadastral-unit* k-data-seq)}))
 
 (defn d-property-owners [kdr-xml]
