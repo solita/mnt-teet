@@ -231,7 +231,7 @@
      [activity-header e! activity]
      [project-management-and-status (:thk.project/owner project) (:thk.project/manager project) (:activity/status activity)]
      [task-lists (:activity/tasks activity)]
-     ;; fixme: [when-authorized[ doesn't work here, why?
+     ;; fixme: [when-authorized] doesn't work here, why?
      (if (and (authorized? @teet.app-state/user :activity/change-activity-status activity)
               tasks-complete?
               (-> project :thk.project/manager :user/id) (-> @teet.app-state/user :user/id)
@@ -242,12 +242,15 @@
          [:div (tr [:activity :note-all-tasks-need-to-be-completed])]))
 
      (when (and (authorized? @teet.app-state/user :activity/change-activity-status nil)
-                (-> project :thk.project/owner :user/id) (-> @teet.app-state/user :user/id)
-                (= status :activity.status/in-review))
-       [:div
-        [reject-button e! (assoc params :status :activity.status/archived)]
-        [reject-button e! (assoc params :status :activity.status/canceled)]       
-        [approve-button e! (assoc params :status :activity.status/completed)]])]))
+                (-> project :thk.project/owner :user/id) (-> @teet.app-state/user :user/id))
+       (if (= status :activity.status/in-review)
+           [:div
+            [reject-button e! (assoc params :status :activity.status/archived)]
+            [reject-button e! (assoc params :status :activity.status/canceled)]       
+            [approve-button e! (assoc params :status :activity.status/completed)]]
+           ;; else
+           (when not-reviewed-status?
+             [:div (tr [:activity :waiting-for-submission])])))]))
 
 (defn activity-page [e! {:keys [params] :as app} project breadcrumbs]
   [project-navigator-view/project-navigator-with-content
