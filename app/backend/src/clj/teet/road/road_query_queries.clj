@@ -3,7 +3,10 @@
   (:require [teet.db-api.core :as db-api :refer [defquery]]
             [teet.road.road-query :as road-query]
             [teet.environment :as environment]
-            [teet.util.geo :as geo]))
+            [teet.util.geo :as geo]
+            [teet.gis.entity-features :as entity-features]
+            [teet.road.road-model :as road-model]
+            [teet.util.datomic :as du]))
 
 (defonce cache-options
   ;; For local development use:
@@ -84,3 +87,18 @@
   (let [config (tr-config)]
     {:wms-url (:wms-url config)
      :layers (fetch-wms-layers* config)}))
+
+(defquery :road/project-intersecting-objects
+  {:doc "Fetch all road objects intersecting with project search area"
+   :context {db :db}
+   :args {:thk.project/keys [id]}
+   :project-id [:thk.project/id id]
+   :authorization {:project/project-info {:eid [:thk.project/id id]
+                                          :link :thk.project/owner}}}
+  (let [entity-id (:db/id (du/entity db [:thk.project/id id]))
+        ctx (environment/config-map {:api-url [:api-url]
+                                     :api-secret [:auth :jwt-secret]
+                                     :wfs-url [:road-registry :wfs-url]})
+        search-area (entity-features/entity-search-area-gml
+                     ctx entity-id road-model/default-road-buffer-meters)]
+    (road-query/fetch-all-intersecting-objects ctx search-area)))

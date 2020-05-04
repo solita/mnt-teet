@@ -12,6 +12,7 @@
             [teet.project.project-info :as project-info]
             [teet.project.project-navigator-view :as project-navigator-view]
             [teet.project.project-timeline-view :as project-timeline-view]
+            [teet.project.road-view :as road-view]
             teet.task.task-spec
             [teet.ui.breadcrumbs :as breadcrumbs]
             [teet.ui.buttons :as buttons]
@@ -325,7 +326,10 @@
     :layers #{:thk-project}}
    {:label [:project :tabs :land]
     :value "land"
-    :component land-tab/related-cadastral-units-info}])
+    :component land-tab/related-cadastral-units-info}
+   {:label [:projects :tabs :road-objects]
+    :value "road"
+    :component road-view/road-objects-tab}])
 
 (defn selected-project-tab [{{:keys [tab]} :query :as _app}]
   (if tab
