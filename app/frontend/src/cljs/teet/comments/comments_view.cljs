@@ -298,7 +298,10 @@
            show-comment-form?]
     :or {show-comment-form? true}}]
   (r/with-let [[comment-form ->UpdateCommentForm]
-               (common-controller/internal-state {} {:merge? true})]
+               (common-controller/internal-state (if (= entity-type :file)
+                                                   {:comment/track? true}
+                                                   {})
+                                                 {:merge? true})]
     (let [comments (get-in app [:comments-for-entity entity-id])]
       [layout/section
        [query/query {:e! e!

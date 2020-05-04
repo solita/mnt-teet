@@ -326,6 +326,7 @@
     {:name name
      :title title
      :queryable? (= "1" (z/xml1-> node (z/attr :queryable)))
+     :legend-url (z/xml1-> node :Style :LegendURL :OnlineResource (z/attr :xlink:href))
      :layers (z/xml-> node dz/children :Layer parse-wms-layer)}))
 
 (defn fetch-wms-layers [config]

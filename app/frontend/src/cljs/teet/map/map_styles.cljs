@@ -22,6 +22,9 @@
 (defn map-layer-controls []
   (map-controls {:position :bottom}))
 
+(defn map-legend-controls []
+  (map-controls {:position :top}))
+
 (defn map-layer-controls-body []
   {:padding "0.5rem"})
 
@@ -80,10 +83,19 @@
   []
   {:position :absolute
    :display  :flex
-   :flex-direction :column
+   :flex-direction :row
    :top      "20px"
    :right    "25px"
    :z-index  999})
+
+(defn map-legend-header []
+  {:background-color theme-colors/gray-lighter
+   :font-weight :bold})
+
+(defn map-legend-box []
+  {:background-color theme-colors/gray-lightest
+   :margin "0.5rem"
+   :padding "0.5rem"})
 
 (defn map-control-button
   []

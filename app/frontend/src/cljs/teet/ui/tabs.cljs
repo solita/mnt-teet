@@ -27,6 +27,8 @@
     [Tabs {:value (::index (value->tab selected-tab))
            :textColor "primary"
            :class class
+           :scroll-buttons :auto
+           :variant :scrollable
            :on-change (fn [_ v]
                         (let [tab (index->tab v)]
                           (e! (common-controller/->SetQueryParam :tab (:value tab)))))}
