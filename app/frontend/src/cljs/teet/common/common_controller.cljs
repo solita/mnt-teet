@@ -390,7 +390,6 @@
   [e!]
   (-> (fetch-deploy-status)
       (.then (fn [{:strs [commit status]}]
-               (log/debug "Polled commit " commit)
                (when (and (some? commit)
                           (nil? @version-seen-on-startup))
                  (reset! version-seen-on-startup commit))
