@@ -7,13 +7,13 @@
   "Format date in human readable locale specific format, eg. dd.MM.yyyy"
   [date]
   (when date
-    (.toLocaleDateString date)))
+    (.toLocaleDateString date "et-EE")))
 
 (defn date-time
   "Format date and time in human readable locale specific format."
   [date]
   (when date
-    (.toLocaleString date)))
+    (.toLocaleString date "et-EE")))
 
 (defn file-size [b]
   (let [kb (/ b 1024)]
