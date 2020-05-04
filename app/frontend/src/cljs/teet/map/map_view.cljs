@@ -18,7 +18,9 @@
             [teet.map.map-layers :as map-layers]
             [teet.ui.util :as util]
             [teet.util.collection :as cu]
-            [teet.ui.common :as common]))
+            [teet.ui.common :as common]
+            [teet.ui.query :as query]
+            [teet.ui.select :as select]))
 
 (def default-extent [20 50 30 60])
 
@@ -59,7 +61,8 @@
 (def ^:private layer-types [:projects
                             :restrictions
                             :cadastral-units
-                            :land-surveys])
+                            :land-surveys
+                            :teeregister])
 
 
 (defmulti layer-filters-form
@@ -93,6 +96,39 @@
                                            (:datasources map-data))}))
   (fn [_ _ _]
     (tr [:map :layers :no-filters])))
+
+(defn- wms-layer-selector [toggle-layer! selected layers]
+  [:div
+   (doall
+    (for [{:keys [name title layers]} layers
+          :let [selected? (contains? selected name)]]
+      ^{:key name}
+      [:div
+       (if (seq layers)
+         [:div
+          [:b title]
+          [:div {:style {:margin-left "1rem"}}
+           [wms-layer-selector toggle-layer! selected layers]]]
+
+         [select/checkbox {:value selected?
+                           :on-change #(toggle-layer! name)
+                           :label title}])]))])
+
+(defn- wms-layer-selector* [e! layer-opts {:keys [wms-url layers]}]
+  (let [selected (or (:selected layer-opts) #{})]
+    [wms-layer-selector
+     #(e! (map-controller/->UpdateLayer
+           {:wms-url wms-url
+            :selected (cu/toggle selected %)}))
+     selected
+     layers]))
+
+(defmethod layer-filters-form :teeregister
+  [e! layer _map-data]
+  [query/query {:e! e!
+                :args {}
+                :query :road/wms-layers
+                :simple-view [wms-layer-selector* e! layer]}])
 
 (defmethod layer-filters-form :default
   [_ _ _]
@@ -189,14 +225,17 @@
 
 (defn- create-data-layers [ctx layers]
   (log/info "Create data layers: " layers)
-  (reduce merge {}
-          (map-indexed
-           (fn [i {:keys [id] :as layer}]
-             (map-layers/create-data-layer
-              ctx
-              (merge {:id (or id (keyword (str "data-layer-" i)))}
-                     layer)))
-           layers)))
+  (let [dl
+        (reduce merge {}
+                (map-indexed
+                 (fn [i {:keys [id] :as layer}]
+                   (map-layers/create-data-layer
+                    ctx
+                    (merge {:id (or id (keyword (str "data-layer-" i)))}
+                           layer)))
+                 layers))]
+    (log/info "DATA LAYERS: " (keys dl))
+    dl))
 
 (defn map-view [e! {:keys [config height class layer-controls?] :or {height "100%"} :as opts}
                 {:keys [background-layer] :as map-data

@@ -301,3 +301,33 @@
          (pmap (fn [type]
                  [(keyword type) (fetch-intersecting-objects-of-type config type gml-geometry)])
                road-object-types))))
+
+(defn fetch-wms-capabilities
+  "Fetch WMS capabilities XML. Returns XML zipper."
+  [{wms-url :wms-url}]
+  (let [{:keys [status body] :as response}
+        @(client/get wms-url
+                     {:as :stream
+                      :query-params {:version "1.3.0"
+                                     :request "GetCapabilities"
+                                     :service "WMS"}})]
+    (if (not= status 200)
+      (throw (ex-info "Unable to fetch WMS capabilities"
+                      {:wms-url wms-url
+                       :response response}))
+      (-> body xml/parse zip/xml-zip))))
+
+(defn- text-of [node child-element]
+  (z/xml1-> node child-element z/text))
+
+(defn- parse-wms-layer [node]
+  (let [name (text-of node :Name)
+        title (text-of node :Title)]
+    {:name name
+     :title title
+     :queryable? (= "1" (z/xml1-> node (z/attr :queryable)))
+     :layers (z/xml-> node dz/children :Layer parse-wms-layer)}))
+
+(defn fetch-wms-layers [config]
+  (let [c (fetch-wms-capabilities config)]
+    (z/xml-> c :Capability :Layer parse-wms-layer)))
