@@ -219,7 +219,7 @@
 (defn perform-kinnistu-d-request
   "query-params map should kave keys :instance-id, :reg-nr and :requesting-eid"
   [url query-params]
-  
+
   (let [req (kr-kinnistu-d-request-xml query-params)
         resp-atom (htclient/post url {:body req
                                       :as :stream
