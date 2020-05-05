@@ -46,7 +46,8 @@
                           project-layers/related-restrictions
                           project-layers/related-cadastral-units
                           project-layers/selected-cadastral-units
-                          project-layers/selected-restrictions]))
+                          project-layers/selected-restrictions
+                          project-layers/highlighted-road-objects]))
        :overlays (into []
                        (concat
                          (for [[_ {:keys [coordinate content-data]}] (:overlays project)]

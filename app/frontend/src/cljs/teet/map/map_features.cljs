@@ -257,3 +257,12 @@
                 #js {:fill (ol.style.Fill. #js {:color "red"})
                      :stroke (ol.style.Stroke. #js {:color "black"})
                      :radius 5})}))
+
+(defn highlighted-road-object-style
+  "Show highlighted road object"
+  [^ol.render.Feature _feature _res]
+  (ol.style.Style.
+   #js {:stroke (ol.style.Stroke. #js {:color "#ffffff"
+                                       :width 2})
+        :fill (ol.style.Fill. #js {:cursor :pointer
+                                   :color "#ff30aa"})}))

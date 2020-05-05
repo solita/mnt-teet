@@ -8,7 +8,8 @@
             [clojure.data.zip.xml :as z]
             [hiccup.core :as hiccup]
             [teet.util.geo :as geo]
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [teet.log :as log]))
 
 (defn- ogc-filter [content]
   (hiccup/html
@@ -228,11 +229,36 @@
   (extract-road-geometry (fetch-road-parts config road-nr carriageway-nr)
                          start-m end-m))
 
+(defn- flipc [[c1 c2]]
+  [c2 c1])
+
+(defn- split-positions [pos-list-str]
+  (partition 2
+             (map #(Double/parseDouble %)
+                  (str/split pos-list-str #" "))))
+
+(defn- gml->geojson [node]
+  (or (z/xml1-> node :gml:LineString :gml:posList z/text
+                (fn [positions]
+                  {:type "LineString"
+                   :coordinates
+                   (mapv flipc (split-positions positions))}))
+      (z/xml1-> node :gml:Point :gml:pos z/text
+                (fn [pos]
+                  {:type "Point"
+                   :coordinates (flipc (first (split-positions pos)))}))
+      (do
+        (log/warn "Unknown geometry from Teeregister: "
+                  (zip/node node))
+        nil)))
+
+(comment #(with-out-str
+            (-> % zip/node :content first
+                xml/emit-element)))
 (defn- parse-feature
   "Parse any WFS feature member"
   [f]
-  (into {:geometry (z/xml1-> f :ms:msGeometry
-                             #(-> % zip/node :content first))}
+  (into {:geometry (z/xml1-> f :ms:msGeometry gml->geojson)}
         (keep (fn [child]
                 (let [{:keys [tag content]} (zip/node child)
                       tag-name (name tag)]
@@ -299,23 +325,32 @@
         (filter
          (comp seq second)
          (pmap (fn [type]
-                 [(keyword type) (fetch-intersecting-objects-of-type config type gml-geometry)])
+                 [type (fetch-intersecting-objects-of-type config type gml-geometry)])
                road-object-types))))
+
+(defn- fetch-capabilities [url service]
+  (let [{:keys [status body] :as response}
+        @(client/get url
+                     {:as :stream
+                      :query-params {:version "1.3.0"
+                                     :request "GetCapabilities"
+                                     :service service}})]
+    (if (not= status 200)
+      (throw (ex-info "Unable to fetch WMS capabilities"
+                      {:url url
+                       :service service
+                       :response response}))
+      (-> body xml/parse zip/xml-zip))))
 
 (defn fetch-wms-capabilities
   "Fetch WMS capabilities XML. Returns XML zipper."
   [{wms-url :wms-url}]
-  (let [{:keys [status body] :as response}
-        @(client/get wms-url
-                     {:as :stream
-                      :query-params {:version "1.3.0"
-                                     :request "GetCapabilities"
-                                     :service "WMS"}})]
-    (if (not= status 200)
-      (throw (ex-info "Unable to fetch WMS capabilities"
-                      {:wms-url wms-url
-                       :response response}))
-      (-> body xml/parse zip/xml-zip))))
+  (fetch-capabilities wms-url "WMS"))
+
+(defn fetch-wfs-capabilities
+  "Fetch WFS capabilities XML. Returns XML zipper."
+  [{wfs-url :wfs-url}]
+  (fetch-capabilities wfs-url "WFS"))
 
 (defn- text-of [node child-element]
   (z/xml1-> node child-element z/text))
@@ -332,3 +367,11 @@
 (defn fetch-wms-layers [config]
   (let [c (fetch-wms-capabilities config)]
     (z/xml-> c :Capability :Layer parse-wms-layer)))
+
+(defn- parse-wfs-feature-type [ft]
+  {:name (text-of ft :Name)
+   :title (text-of ft :Title)})
+
+(defn fetch-wfs-feature-types [config]
+  (let [c (fetch-wfs-capabilities config)]
+    (z/xml-> c :FeatureTypeList :FeatureType parse-wfs-feature-type)))

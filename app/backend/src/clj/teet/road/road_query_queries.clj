@@ -6,7 +6,8 @@
             [teet.util.geo :as geo]
             [teet.gis.entity-features :as entity-features]
             [teet.road.road-model :as road-model]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.util.collection :as cu]))
 
 (defonce cache-options
   ;; For local development use:
@@ -76,7 +77,13 @@
          (sort-by :distance)
          first)))
 
-(def ^:private fetch-wms-layers* (memoize road-query/fetch-wms-layers))
+(def ^:private fetch-wms-layers*
+  (comp (memoize road-query/fetch-wms-layers)
+        #(select-keys % [:wms-url])))
+
+(def ^:private fetch-wfs-feature-types*
+  (comp (memoize road-query/fetch-wfs-feature-types)
+        #(select-keys % [:wfs-url])))
 
 (defquery :road/wms-layers
   {:doc "Fetch the Teeregister WMS layers that can be shown"
@@ -87,6 +94,16 @@
   (let [config (tr-config)]
     {:wms-url (:wms-url config)
      :layers (fetch-wms-layers* config)}))
+
+(defquery :road/wfs-feature-types
+  {:doc "Fetch the Teeregister WFS feature types that can be queried"
+   :context _
+   :args _
+   :project-id nil
+   :authorization {}}
+  (let [config (tr-config)]
+    {:wfs-url (:wfs-url config)
+     :feature-types (fetch-wfs-feature-types* config)}))
 
 (defquery :road/project-intersecting-objects
   {:doc "Fetch all road objects intersecting with project search area"
@@ -100,5 +117,10 @@
                                      :api-secret [:auth :jwt-secret]
                                      :wfs-url [:road-registry :wfs-url]})
         search-area (entity-features/entity-search-area-gml
-                     ctx entity-id road-model/default-road-buffer-meters)]
-    (road-query/fetch-all-intersecting-objects ctx search-area)))
+                     ctx entity-id road-model/default-road-buffer-meters)
+        feature-types (fetch-wfs-feature-types* ctx)]
+    (into {}
+          (map (fn [[type objects]]
+                 [type {:feature-type (cu/find-first #(= (:name %) type) feature-types)
+                        :objects objects}]))
+          (road-query/fetch-all-intersecting-objects ctx search-area))))

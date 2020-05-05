@@ -4,7 +4,9 @@
             [reagent.core :as r]
             [teet.ui.typography :as typography]
             [teet.ui.util :refer [mapc]]
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [clojure.string :as str]
+            [teet.project.road-controller :as road-controller]))
 
 (defn road-object [{:keys [open toggle]} object]
   [:div
@@ -12,12 +14,20 @@
     "road object"]
    (when (open object)
      [:div {:style {:margin-left "1rem"}}
-      (pr-str object)])])
+      (mapc (fn [[key value]]
+              (let [name (name key)]
+                [:div
+                 [:b (str (if (str/starts-with? name "ms:")
+                            (subs name 3)
+                            name) ": ")]
+                 (str value)]))
+            (filter #(not= :geometry (first %))
+                    object))])])
 
 (defn road-objects [{:keys [open toggle] :as opts} type objects]
   [:div
    [typography/Heading3 {:on-click #(toggle type)}
-    (str type) " " (count objects)]
+    (:title type) " " (count objects)]
    (when (open type)
      [:div {:style {:margin-left "1rem"}}
       (mapc (r/partial road-object opts) objects)])])
@@ -25,11 +35,16 @@
 (defn road-objects-listing [e! objs-by-type]
   (r/with-let [open (r/atom #{})]
     [:<>
-     (mapc (fn [[type objects]]
+     (mapc (fn [[type {:keys [feature-type objects]}]]
              ^{:key (str type)}
              [road-objects {:open @open
-                            :toggle #(swap! open cu/toggle %)}
-              type objects])
+                            :toggle (fn [object]
+                                      (when (and (map? object)
+                                                 (contains? object :geometry))
+                                        (e! (road-controller/->HighlightRoadObject
+                                             (:geometry object))))
+                                      (swap! open cu/toggle object))}
+              feature-type objects])
            objs-by-type)]))
 
 (defn road-objects-tab [e! _app project]

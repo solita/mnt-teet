@@ -227,3 +227,19 @@
         layers))
     {}
     (project-model/project-files project)))
+
+(defn highlighted-road-objects [{{geometries :road/highlight-geometries} :project
+                                 {query :query} :app}]
+  (when (and (= "road" (:tab query))
+             (seq geometries))
+    {:higlighted-road-objects
+     (map-layers/geojson-data-layer
+      "highlighted-road-objects"
+      #js {:type "FeatureCollection"
+           :features (into-array
+                      (for [geom geometries]
+                        #js {:type "Feature"
+                             :properties #js {}
+                             :geometry (clj->js geom)}))}
+      map-features/highlighted-road-object-style
+      {})}))
