@@ -155,16 +155,36 @@
               :omandiosa_suurus (omandi-get ox :a:omandiosa_suurus)})
            owner-xml-seq)}))
 
+(defn d-jagu34* [key children]
+  (let [leaf? (fn [m] (->> m
+                           :content
+                           (every? (complement map?))))
+        leaves (filterv leaf? children)
+        subs (filterv (complement leaf?) children)
+        tag-without-prefix #(some->> %
+                             :tag
+                             name
+                             (partition-by (partial = \:))
+                             last
+                             clojure.string/join
+                             keyword)
+        joined-content (comp (partial clojure.string/join "\n") :content)
+        recursed-map (apply merge
+                            (mapv (fn [s]
+                                    (d-jagu34* (tag-without-prefix s) (:content s))) subs))
+        leaves-map (into {} (mapv
+                      (juxt tag-without-prefix joined-content)
+                      leaves))]
+    
+    {key
+     (merge recursed-map
+            leaves-map)}))
 
 (defn d-jagu34 [k-xml p1 p2]
-  (let [j3-seq (z/xml-> k-xml p1 p2)]
-    {p1
-     (into [] (for [j3 j3-seq]
-                {:kande_alguskuupaev (z/xml1-> j3 :a:kande_alguskuupaev z/text)
-                 :kande_liik (z/xml1-> j3 :a:kande_liik z/text)
-                 :kande_liik_tekst (z/xml1-> j3 :a:kande_liik_tekst z/text)
-                 :registriosa_nr (z/xml1-> j3 :a:registriosa_nr z/text)
-                 :oiguse_liik_tekst (z/xml1-> j3 :a:oiguse_liik_tekst z/text)}))}))
+  (let [children (-> (z/xml-> k-xml p1 p2 clojure.zip/children))]
+    (d-jagu34* p1 children)))
+
+
 
 
 (defn kinnistu-d-parse-response [xml-string]
