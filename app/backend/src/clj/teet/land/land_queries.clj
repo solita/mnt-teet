@@ -2,7 +2,9 @@
   (:require [teet.db-api.core :refer [defquery]]
             [teet.gis.features :as features]
             [datomic.client.api :as d]
-            [teet.integration.x-road :as x-road]))
+            [teet.integration.x-road :as x-road]
+            [clj-time.core :as time]
+            [clj-time.coerce :as c]))
 
 (defquery :land/fetch-land-acquisitions
   {:doc "Fetch all land acquisitions and related cadastral units from a project"
@@ -20,16 +22,34 @@
     (merge related-cadastral-units
            {:land-acquisitions land-acquisitions})))
 
-(defn- project-cadastral-unit-estates [db api-url api-secret project-id]
+(defn- project-cadastral-units [db api-url api-secret project-id]
   (let [ctx {:api-url api-url
              :api-secret api-secret}]
     (-> (d/pull db '[:thk.project/related-cadastral-units] [:thk.project/id project-id])
         :thk.project/related-cadastral-units
         (as-> units
             (features/geojson-features-by-id ctx units)
-          (map (comp :KINNISTU :properties) (:features units)))
-        distinct)))
+          (map :properties
+               (:features units))))))
 
+
+(defquery :land/estate-info
+  {:doc "Fetch estate info from x-road"
+   :context {:keys [user]}
+   :args {estate-id :estate-id
+          project-id :thk.project/id}
+   :project-id [:thk.project/id project-id]
+   :config {xroad-instance [:xroad-instance-id]
+            xroad-url [:xroad-query-url]}
+   :authorization {:land/view-cadastral-data {:eid [:thk.project/id project-id]
+                                              :link :thk.project/owner}}}
+  (assoc
+    (x-road/perform-kinnistu-d-request
+      xroad-url
+      {:instance-id xroad-instance
+       :registriosa-nr estate-id
+       :requesting-eid (str "EE" (:user/person-id user))})
+    :estate-id estate-id))
 
 (defquery :land/related-project-estates
   {:doc "Fetch estates that are related to a given project's cadastral units.
@@ -46,13 +66,21 @@ Then it will query X-road for the estate information."
             api-secret [:auth :jwt-secret]}
    :authorization {:land/view-cadastral-data {:eid [:thk.project/id id]
                                               :link :thk.project/owner}}}
-  (into {}
+  (let [units (project-cadastral-units db api-url api-secret id)
+        estates (into #{}
+                      (map :KINNISTU)
+                      units)]
+    {:estates estates
+     :units (mapv
+              (fn [{:keys [MOOTVIIS MUUDET] :as unit}]
+                (assoc unit :quality (cond
+                                       (and (= MOOTVIIS "mõõdistatud, L-EST")
+                                            (not (time/before? (c/from-string MUUDET) (time/date-time 2018 01 01))))
+                                       :good
+                                       (and (= MOOTVIIS "mõõdistatud, L-EST")
+                                            (time/before? (c/from-string MUUDET) (time/date-time 2018 01 01)))
+                                       :questionable
+                                       :else
+                                       :bad)))
+              units)}))
 
-        ;; Fetch the X-road estate info for each estate number
-        (map (juxt identity
-                   #(x-road/perform-kinnistu-d-request xroad-url {:instance-id xroad-instance
-                                                                  :registriosa-nr %
-                                                                  :requesting-eid (str "EE" (:user/person-id user))})))
-
-        ;; Fetch unique estate numbers for project's related cadastral units
-        (project-cadastral-unit-estates db api-url api-secret id)))
