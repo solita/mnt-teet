@@ -155,7 +155,7 @@
               :omandiosa_suurus (omandi-get ox :a:omandiosa_suurus)})
            owner-xml-seq)}))
 
-(defn d-jagu34* [key children]
+(defn d-jagu34* [key children sequential-vals?]
   (let [leaf? (fn [m] (->> m
                            :content
                            (every? (complement map?))))
@@ -171,18 +171,24 @@
         joined-content (comp (partial clojure.string/join "\n") :content)
         recursed-map (apply merge
                             (mapv (fn [s]
-                                    (d-jagu34* (tag-without-prefix s) (:content s))) subs))
+                                    (d-jagu34* (tag-without-prefix s) (:content s) true)) subs))
         leaves-map (into {} (mapv
                       (juxt tag-without-prefix joined-content)
-                      leaves))]
+                      leaves))
+        maybe-vectorise (if sequential-vals?
+                          (fn [val] [val])
+                          identity)]
     
-    {key
-     (merge recursed-map
-            leaves-map)}))
+    {key (maybe-vectorise
+          (merge recursed-map
+                 leaves-map))}))
 
 (defn d-jagu34 [k-xml p1 p2]
-  (let [children (-> (z/xml-> k-xml p1 p2 clojure.zip/children))]
-    (d-jagu34* p1 children)))
+  (let [;; children will have eg subtree Jagu3  elements (from under the containing jagu3 element)
+        children (z/xml-> k-xml p1 clojure.zip/children)
+        jagu-maps (mapv #(d-jagu34* p1 (:content %) false)
+                        children)]
+    {p1 (mapv p1 jagu-maps)}))
 
 
 
