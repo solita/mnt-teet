@@ -15,6 +15,11 @@
 (defrecord SubmitLandPurchaseForm [form-data cadastral-id])
 (defrecord FetchLandAcquisitions [project-id])
 (defrecord LandAcquisitionFetchSuccess [result])
+(defrecord FetchEstateInfos [estate-ids])
+(defrecord FetchEstateResponse [response])
+(defrecord FetchRelatedEstatesResponse [response])
+(defrecord FetchRelatedEstates [])
+
 
 (defn toggle-selected-unit
   [id cad-units]
@@ -42,14 +47,14 @@
               (.set feature "selected" true)
               (.set feature "selected" false)))))
       (update-in app
-                 [:route :project :thk.project/related-cadastral-units-info :results]
+                 [:route :project :land/units]
                  (partial toggle-selected-unit (:teet-id unit)))))
 
   UpdateFilteredUnitIDs
   (process-event [_ app]
     (let [quality (get-in app [:route :project :land-acquisition-filters :quality :value])
-          text (get-in app [:route :project :land-acquisition-filters :name-search-value])
-          units (get-in app [:route :project :thk.project/related-cadastral-units-info :results])
+          text (str/lower-case (get-in app [:route :project :land-acquisition-filters :name-search-value]))
+          units (get-in app [:route :project :land/units])
           filtered-ids (->> units
                             (filter (fn [unit]
                                       (and
@@ -59,7 +64,7 @@
                                           true))))
                             (mapv :teet-id)
                             set)]
-      (assoc-in app [:route :project :thk.project/filtered-cadastral-units] filtered-ids)))
+      (assoc-in app [:route :project :land/filtered-unit-ids] filtered-ids)))
 
   SearchOnChange
   (process-event
@@ -130,4 +135,51 @@
                                                :else
                                                :bad)))))]
 
-      (assoc-in app [:route page :thk.project/related-cadastral-units-info :results] data))))
+      (assoc-in app [:route page :thk.project/related-cadastral-units-info :results] data)))
+
+
+  FetchRelatedEstates
+  (process-event [_ {:keys [params] :as app}]
+    (let [project-id (:project params)
+          fetched (get-in app [:route :project :fetched-estates-count])
+          estates-count (count (get-in app [:route :project :land/related-estate-ids]))]
+      (if (= fetched estates-count)
+        app
+        (t/fx (update-in app [:route :project] dissoc :land/related-estates)
+              {:tuck.effect/type :query
+               :query :land/related-project-estates
+               :args {:thk.project/id project-id}
+               :result-event ->FetchRelatedEstatesResponse}))))
+
+  FetchRelatedEstatesResponse
+  (process-event [{{:keys [estates units]} :response} app]
+    (t/fx (-> app
+              (assoc-in [:route :project :land/related-estate-ids] estates)
+              (assoc-in [:route :project :fetched-estates-count] 0)
+              (assoc-in [:route :project :land/units] units))
+          (fn [e!]
+            (e! (->FetchEstateInfos estates)))))
+
+  FetchEstateResponse
+  (process-event [{:keys [response]} app]
+    (-> app
+        (update-in [:route :project :land/units]
+                   (fn [units]
+                     (mapv
+                       #(if (= (:KINNISTU %) (:estate-id response))
+                          (assoc % :estate response)
+                          %)
+                       units))
+                   response)
+        (update-in [:route :project :fetched-estates-count] inc)))
+
+  FetchEstateInfos
+  (process-event [{estate-ids :estate-ids} {:keys [params] :as app}]
+    (let [project-id (:project params)]
+      (apply t/fx app
+             (for [estate-id estate-ids]
+               {:tuck.effect/type :query
+                :query :land/estate-info
+                :args {:estate-id estate-id
+                       :thk.project/id project-id}
+                :result-event ->FetchEstateResponse})))))

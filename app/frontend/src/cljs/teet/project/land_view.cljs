@@ -6,21 +6,17 @@
             [teet.localization :refer [tr tr-enum]]
             [teet.ui.util :refer [mapc]]
             [reagent.core :as r]
-            [teet.ui.material-ui :refer [ButtonBase Collapse]]
+            [teet.ui.material-ui :refer [ButtonBase Collapse LinearProgress]]
             [teet.ui.text-field :refer [TextField]]
             [teet.project.land-controller :as land-controller]
-            [postgrest-ui.components.query :as postgrest-query]
             [teet.theme.theme-colors :as theme-colors]
             [garden.color :refer [darken]]
             [teet.ui.url :as url]
             [teet.land.land-specs]
             [teet.project.project-controller :as project-controller]
-            [teet.map.map-controller :as map-controller]
             [teet.ui.form :as form]
             [teet.common.common-controller :as common-controller]
-            [teet.ui.select :as select]
-            [cljs-time.core :as time]
-            [cljs-time.coerce :as c]))
+            [teet.ui.select :as select]))
 
 (defn cadastral-unit-style
   [selected?]
@@ -125,8 +121,7 @@
    :display :flex
    :position :relative
    :flex 1
-   :flex-direction :column
-   :margin-left "15px"})
+   :flex-direction :column})
 
 (defn cadastral-unit-quality-style
   [quality]
@@ -164,36 +159,55 @@
     [cadastral-unit-form e! unit quality]]])
 
 (defn cadastral-heading-container-style
-  []
-  (let [bg-color theme-colors/gray]
-    ^{:pseudo {:before {:content "''"
-                        :width 0
-                        :height 0
-                        :border-bottom "15px solid transparent"
-                        :border-left (str "15px solid " bg-color)
-                        :position :absolute
-                        :bottom "-15px"
-                        :transform "rotate(90deg)"
-                        :left 0}}}
-    {:background-color bg-color
-     :position :relative
-     :padding "0.5rem"
-     :color theme-colors/white}))
+  [bg-color]
+  ^{:pseudo {:before {:content "''"
+                      :width 0
+                      :height 0
+                      :border-bottom "15px solid transparent"
+                      :border-left (str "15px solid " bg-color)
+                      :position :absolute
+                      :bottom "-15px"
+                      :transform "rotate(90deg)"
+                      :left 0}}}
+  {:background-color bg-color
+   :position :relative
+   :padding "0.5rem"
+   :color theme-colors/white})
 
-(defn cadastral-group
-  [e! [group units]]
-  ^{:key (str group)}
+(defn estate-group
+  [e! [estate-id units]]
+  ^{:key (str estate-id)}
+  [:div
+   [:div.heading {:class (<class cadastral-heading-container-style theme-colors/gray)}
+    [typography/SectionHeading estate-id]
+    [:span (count units) " " (if (= 1 (count units))
+                               (tr [:land :unit])
+                               (tr [:land :units]))]]
+   [:div {:style {:display :flex
+                  :flex-direction :column
+                  :margin-left "15px"}}
+    (mapc
+      (r/partial cadastral-unit e!)
+      units)]])
+
+(defn owner-group
+  [e! [owner units]]
+  ^{:key (str owner)}
   [:div {:style {:margin-bottom "2rem"}}
-   [:div.heading {:class (<class cadastral-heading-container-style)}
-    [typography/SectionHeading (tr [:cadastral-group group])]
+   [:div.heading {:class (<class cadastral-heading-container-style theme-colors/gray-dark)}
+    [typography/SectionHeading (count owner) " owners"]
     [:span (count units) " " (if (= 1 (count units))
                            (tr [:land :unit])
                            (tr [:land :units]))]]
    [:div {:style {:display :flex
-                  :flex-direction :column}}
+                  :flex-direction :column
+                  :margin-left "15px"}}
     (mapc
-      (r/partial cadastral-unit e!)
-      units)]])
+      (r/partial estate-group e!)
+      (group-by
+        (fn [unit]
+          (get-in unit [:estate :estate-id]))
+        units))]])
 
 (defn filter-units
   [e! {:keys [name-search-value quality]}]
@@ -223,44 +237,47 @@
                                     (juxt :land-acquisition/cadastral-unit
                                           #(update % :land-acquisition/impact :db/ident)))
                                   (:land-acquisitions project))
-          ids (:thk.project/filtered-cadastral-units project) ;; set by the cadastral search field
+          ids (:land/filtered-unit-ids project) ;; set by the cadastral search field
           units (map (fn [unit]
                        (assoc unit :land-acquisition (get land-acquisitions (:teet-id unit))))
                      units)
           units (if (empty? ids)
                   []
                   (filter #(ids (:teet-id %)) units))
-          grouped (if (empty? units)
-                    []
-                    (->> units
-                         (group-by :OMVORM)))]
-      [:<>
-       [:div
-        (mapc
-          (r/partial cadastral-group e!)
-          grouped)]])))
+          grouped (group-by
+                    (fn [unit]
+                      (into #{}
+                            (map
+                              (fn [owner]
+                                (if (:r_kood owner)
+                                  (select-keys owner [:r_kood :r_riik])
+                                  (select-keys owner [:isiku_tyyp :nimi]))))
+                            (get-in unit [:estate :omandiosad])))
+                    units)]
+      [:div
+       (mapc
+         (r/partial owner-group e!)
+         grouped)])))
+
 
 (defn related-cadastral-units-info
   [e! _app project]
+  (e! (land-controller/->FetchRelatedEstates))
   (e! (land-controller/->FetchLandAcquisitions (:thk.project/id project)))
-  (fn [e! app project]
-    (let [related-ids (map #(subs % 2)
-                           (:thk.project/related-cadastral-units project))
-          api-url (get-in app [:config :api-url])
-          datasource-id (map-controller/datasource-id-by-name app "cadastral-units")]
+  (fn [e! _app project]
+    (let [fetched-count (:fetched-estates-count project)
+          related-estate-count (count (:land/related-estate-ids project))]
       [:div
        [:div {:style {:margin-top "1rem"}
               :class (<class common-styles/heading-and-button-style)}
         [typography/Heading2 (tr [:project :cadastral-units-tab])]
         [buttons/button-secondary {:href (url/set-query-param :configure "cadastral-units")}
          (tr [:buttons :edit])]]
-       [filter-units e! (:land-acquisition-filters project)]
-       ;; Todo add skeleton
-       [postgrest-query/query {:endpoint api-url
-                               :state (:thk.project/related-cadastral-units-info project)
-                               :set-state! (e! land-controller/->SetCadastralInfo)
-                               :table "feature"
-                               :where {"id" [:in related-ids]
-                                       "datasource_id" [:= datasource-id]}
-                               :select ["properties"]}
-        [cadastral-groups e! (dissoc project :land-acquisition-filters)]]])))
+       (if (not= fetched-count related-estate-count)
+         [:div
+          [:p (tr [:land :fetching-land-units]) " " (str fetched-count " / " related-estate-count)]
+          [LinearProgress {:variant :determinate
+                           :value (* 100 (/ fetched-count related-estate-count))}]]
+         [:div
+          [filter-units e! (:land-acquisition-filters project)]
+          [cadastral-groups e! (dissoc project :land-acquisition-filters) (:land/units project)]])])))
