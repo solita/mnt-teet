@@ -192,6 +192,37 @@
 
 
 
+(def jagu34-summary-fields [:kande_liik_tekst
+                            :kande_kehtivus
+                            :kande_tekst
+                            :oiguse_seisund_tekst])
+
+(defn summary-jagu34-only [k-resp]
+  ;; keeps only jagu34-summary-fields in the maps the maps in the seq under :jagu3 and :jagu4.
+  (let [map-fn (fn [ms]
+                 (map #(select-keys % jagu34-summary-fields)
+                      ms))]
+    (-> k-resp
+        (update :jagu3 map-fn)
+        (update :jagu4 map-fn))))
+
+(defn active-jagu34-only [k-resp]
+  ;; prunes "lopetatud" records from the maps in the seq under :jagu3 and :jagu4.
+  ;; {:jagu3 [... {:oiguse_seisund "L", ..} ...]
+  (let [filter-fn #(filter (comp (partial not= "L") :oiguse_seisund) %)]
+    (-> k-resp
+        (update :jagu3 filter-fn)
+        (update :jagu4 filter-fn))))
+
+(defn parse-kande-tekst [kande-tekst-str]
+  (let [row-seq (-> kande-tekst-str
+                    (.getBytes "UTF-8")
+                    io/input-stream
+                    xml/parse
+                    clojure.zip/xml-zip (z/xml-> :table :tr))]
+    (for [row row-seq]
+      (mapv z/text (z/xml-> row :td)))))
+
 
 (defn kinnistu-d-parse-response [xml-string]
   (let [xml (xml/parse (io/input-stream
