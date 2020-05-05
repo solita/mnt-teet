@@ -322,7 +322,8 @@
   :quality
   {:any "Any", :bad "Bad", :questionable "Questionable", :good "Good"},
   :filter-label "Filter units",
-  :units "units"},
+  :units "units",
+  :fetching-land-units "Fetching land units"},
  :login {:login "Login", :password "Password", :username "Username"},
  :map
  {:clear-selections "Clear selections",
