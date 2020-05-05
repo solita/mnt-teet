@@ -159,7 +159,7 @@
     [cadastral-unit-form e! unit quality]]])
 
 (defn cadastral-heading-container-style
-  [bg-color]
+  [bg-color font-color]
   ^{:pseudo {:before {:content "''"
                       :width 0
                       :height 0
@@ -172,14 +172,19 @@
   {:background-color bg-color
    :position :relative
    :padding "0.5rem"
-   :color theme-colors/white})
+   :color font-color})
+
+(defn estate-group-style
+  []
+  ^{:pseudo {:first-of-type {:border-top "1px solid white"}}}
+  {:border-left "1px solid white"})
 
 (defn estate-group
   [e! [estate-id units]]
   ^{:key (str estate-id)}
-  [:div
-   [:div.heading {:class (<class cadastral-heading-container-style theme-colors/gray)}
-    [typography/SectionHeading estate-id]
+  [:div {:class (<class estate-group-style)}
+   [:div.heading {:class (<class cadastral-heading-container-style theme-colors/gray-lighter :inherit)}
+    [typography/SectionHeading "Estate " estate-id]
     [:span (count units) " " (if (= 1 (count units))
                                (tr [:land :unit])
                                (tr [:land :units]))]]
@@ -194,11 +199,14 @@
   [e! [owner units]]
   ^{:key (str owner)}
   [:div {:style {:margin-bottom "2rem"}}
-   [:div.heading {:class (<class cadastral-heading-container-style theme-colors/gray-dark)}
-    [typography/SectionHeading (count owner) " owners"]
-    [:span (count units) " " (if (= 1 (count units))
-                           (tr [:land :unit])
-                           (tr [:land :units]))]]
+   (let [owners (get-in (first units) [:estate :omandiosad])]
+     [:div.heading {:class (<class cadastral-heading-container-style theme-colors/gray theme-colors/white)}
+      [typography/SectionHeading (if (not= (count owners) 1)
+                                   (str (count owners) " owners")
+                                   (:nimi (first owners)))]
+      [:span (count units) " " (if (= 1 (count units))
+                                 (tr [:land :unit])
+                                 (tr [:land :units]))]])
    [:div {:style {:display :flex
                   :flex-direction :column
                   :margin-left "15px"}}
