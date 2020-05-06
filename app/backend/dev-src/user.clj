@@ -236,7 +236,7 @@
   ;; when testing submit / approve workflow this lets you walk back the status
   (let [status-res (d/pull (db) '[:activity/status] act-id)
         curr-status (-> status-res :activity/status :db/ident)]
-    (when (curr-status)
+    (when curr-status
       (tx
        {:db/id act-id
         :activity/status :activity.status/in-progress}))))
