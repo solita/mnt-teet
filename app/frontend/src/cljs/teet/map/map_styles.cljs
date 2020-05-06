@@ -95,7 +95,9 @@
 (defn map-legend-box []
   {:background-color theme-colors/gray-lightest
    :margin "0.5rem"
-   :padding "0.5rem"})
+   :padding "0.5rem"
+   :max-height "50vh"
+   :overflow-y :scroll})
 
 (defn map-control-button
   []
