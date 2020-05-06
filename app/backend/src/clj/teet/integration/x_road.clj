@@ -79,7 +79,8 @@
         {:status :error
          :result msg}))))
 
-(defn kr-kinnistu-d-request-xml [{:keys [instance-id registriosa-nr requesting-eid]}]
+(defn kr-kinnistu-d-request-xml [{:keys [instance-id client-subsystem-id
+                                         registriosa-nr requesting-eid]}]
   ;; xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
   ;; xmlns:xro="http://x-road.eu/xsd/xroad.xsd"
   ;; xmlns:iden="http://x-road.eu/xsd/identifiers"
@@ -99,7 +100,10 @@
            [:id:xRoadInstance instance-id]
            [:id:memberClass "GOV"]
            [:id:memberCode "70001490"]
-           [:id:subsystemCode "generic-consumer"]]
+           [:id:subsystemCode (if client-subsystem-id
+                                client-subsystem-id
+                                (do (log/warn "x-road kr client subsystem id unconfigured, defaulting to generic-consumer")
+                                    "generic-consumer"))]]
           [:xrd:service {:id:objectType "SERVICE"}
            [:id:xRoadInstance instance-id]
            [:id:memberClass "GOV"]

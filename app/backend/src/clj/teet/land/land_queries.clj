@@ -40,13 +40,15 @@
           project-id :thk.project/id}
    :project-id [:thk.project/id project-id]
    :config {xroad-instance [:xroad-instance-id]
-            xroad-url [:xroad-query-url]}
+            xroad-url [:xroad-query-url]
+            xroad-subsystem [:xroad-kr-subsystem-id]}
    :authorization {:land/view-cadastral-data {:eid [:thk.project/id project-id]
                                               :link :thk.project/owner}}}
   (assoc
     (x-road/perform-kinnistu-d-request
       xroad-url
-      {:instance-id xroad-instance
+      {:xroad-kr-subsystem-id xroad-subsystem
+       :instance-id xroad-instance
        :registriosa-nr estate-id
        :requesting-eid (str "EE" (:user/person-id user))})
     :estate-id estate-id))
