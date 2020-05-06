@@ -183,7 +183,7 @@
           (merge recursed-map
                  leaves-map))}))
 
-(defn d-jagu34 [k-xml p1 p2]
+(defn d-jagu34 [k-xml p1]
   (let [;; children will have eg subtree Jagu3  elements (from under the containing jagu3 element)
         children (z/xml-> k-xml p1 clojure.zip/children)
         jagu-maps (mapv #(d-jagu34* p1 (:content %) false)
@@ -240,8 +240,8 @@
         (merge {:status :ok}
                (d-cadastral-units d-response)
                (d-property-owners d-response)
-               (d-jagu34 d-response :jagu3 :a:Jagu3)
-               (d-jagu34 d-response :jagu4 :a:Jagu4))
+               (d-jagu34 d-response :jagu3)
+               (d-jagu34 d-response :jagu4))
         ;; else
         (do
           (log/error "property register non-ok status string:" d-status)
