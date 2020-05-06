@@ -218,15 +218,28 @@
   ;; parse-kande-tekst util
   (mapv str (z/xml-> cell clojure.data.zip/descendants clojure.zip/node string?)))
 
+(defn unexceptional-xml-parse [input]
+  (try
+    (xml/parse input)
+    (catch Exception e
+      ;; caller has to log error about input resulting in nil parse
+      nil)))
+
 (defn parse-kande-tekst [kande-tekst-str]
-  (when (not (clojure.string/blank? kande-tekst-str))
+  ;; this assumes, like in all cases seen during development, that
+  ;; kande_tekst field always contains a xhtml table with 2 columns,
+  ;; with cells containing plain text interspersed with <br> elements
+  (when (not (clojure.string/blank? kande-tekst-str))    
     (let [row-seq (-> kande-tekst-str
                       (.getBytes "UTF-8")
                       io/input-stream
-                      xml/parse
-                      clojure.zip/xml-zip (z/xml-> :table :tr))]
-      (for [row row-seq]        
-        (mapv cell-to-text (z/xml-> row :td))))))
+                      unexceptional-xml-parse
+                      clojure.zip/xml-zip (z/xml-> :table :tr))
+          parsed (for [row row-seq]        
+                   (mapv cell-to-text (z/xml-> row :td)))]
+      (when (or (empty? parsed)
+                (not= 2 (count (first parsed))))
+        (log/error "couldn't parse non-empty kande_tekst without table:" kande-tekst-str)))))
 
 
 (defn kinnistu-d-parse-response [xml-string]
