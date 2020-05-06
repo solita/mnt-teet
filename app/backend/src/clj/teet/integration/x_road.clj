@@ -156,6 +156,8 @@
            owner-xml-seq)}))
 
 (defn d-jagu34* [key children sequential-vals?]
+  ;; This is the recursive part of the parsing
+  ;; 
   (let [leaf? (fn [m] (->> m
                            :content
                            (every? (complement map?))))
@@ -169,7 +171,7 @@
                              clojure.string/join
                              keyword)
         joined-content (comp (partial clojure.string/join "\n") :content)
-        recursed-map (apply merge
+        recursed-map (apply (partial merge-with concat)
                             (mapv (fn [s]
                                     (d-jagu34* (tag-without-prefix s) (:content s) true)) subs))
         leaves-map (into {} (mapv
@@ -177,8 +179,7 @@
                       leaves))
         maybe-vectorise (if sequential-vals?
                           (fn [val] [val])
-                          identity)]
-    
+                          identity)]    
     {key (maybe-vectorise
           (merge recursed-map
                  leaves-map))}))
@@ -191,7 +192,7 @@
     {p1 (mapv p1 jagu-maps)}))
 
 
-
+h
 (def jagu34-summary-fields [:kande_liik_tekst
                             :kande_kehtivus
                             :kande_tekst
