@@ -156,8 +156,25 @@
            owner-xml-seq)}))
 
 (defn d-jagu34* [key children sequential-vals?]
-  ;; This is the recursive part of the parsing
-  ;; 
+  ;; This is the recursive part of the parsing. 
+  ;; the sequential-vals and maybe-vectorise business is about
+  ;; getting the recursive subelements into a form that will be
+  ;; handled suitably by (merge-with concat map1 map2 .. ), so we get eg this nested
+  ;; structure right:
+  
+  ;; {:koormatise_rahaline_vaartus "0",
+  ;;  :kande_alusdokumendid
+  ;;  [{:Kinnistamisavaldus
+  ;;    ({:aasta "0",
+  ;;       [...]
+  ;;      :tehingu_nr ""}
+  ;;     {:aasta "2006",
+  ;;      :avalduse_esitaja_liik "notar",
+  ;;      [...]
+  ;;
+  ;; (possibly it would be better done with postwalk-ing the xml tree, maybe next iteration)
+
+  
   (let [leaf? (fn [m] (->> m
                            :content
                            (every? (complement map?))))
@@ -177,9 +194,13 @@
         leaves-map (into {} (mapv
                       (juxt tag-without-prefix joined-content)
                       leaves))
+        ;; maybe-vectorise will be false on topmost call, and true in all recursive calls,
+        ;; because we know we won't need to merge the top level data with other maps.
+        ;; otherwise we defensively vectorise all structured (non-string) children so
+        ;; they can be merged with merge-with concat
         maybe-vectorise (if sequential-vals?
                           (fn [val] [val])
-                          identity)]    
+                          identity)]
     {key (maybe-vectorise
           (merge recursed-map
                  leaves-map))}))
@@ -192,7 +213,6 @@
     {p1 (mapv p1 jagu-maps)}))
 
 
-h
 (def jagu34-summary-fields [:kande_liik_tekst
                             :kande_kehtivus
                             :kande_tekst
