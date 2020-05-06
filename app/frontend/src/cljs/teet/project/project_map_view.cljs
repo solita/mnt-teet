@@ -28,7 +28,8 @@
      ;; Add window width as key to force map rerender when window width changes.
      ^{:key (str @common/window-width)}
      [map-view/map-view e!
-      {:class (<class map-style)
+      {:layer-controls? true
+       :class (<class map-style)
        :config (:config app)
        :layers (let [opts {:e! e!
                            :app app
