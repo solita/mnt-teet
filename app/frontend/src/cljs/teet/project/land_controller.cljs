@@ -6,7 +6,9 @@
             [teet.map.map-controller :as map-controller]
             [goog.math.Long]
             [cljs-time.core :as time]
-            [cljs-time.coerce :as c]))
+            [cljs-time.coerce :as c]
+            [teet.common.common-controller :as common-controller]
+            [teet.snackbar.snackbar-controller :as snackbar-controller]))
 
 (defrecord SetCadastralInfo [response])
 (defrecord ToggleLandUnit [unit])
@@ -15,7 +17,7 @@
 (defrecord SubmitLandPurchaseForm [form-data cadastral-id])
 (defrecord FetchLandAcquisitions [project-id])
 (defrecord LandAcquisitionFetchSuccess [result])
-(defrecord FetchEstateInfos [estate-ids])
+(defrecord FetchEstateInfos [estate-ids retry-count])
 (defrecord FetchEstateResponse [response])
 (defrecord FetchRelatedEstatesResponse [response])
 (defrecord FetchRelatedEstates [])
@@ -156,9 +158,10 @@
     (t/fx (-> app
               (assoc-in [:route :project :land/related-estate-ids] estates)
               (assoc-in [:route :project :fetched-estates-count] 0)
-              (assoc-in [:route :project :land/units] units))
+              (assoc-in [:route :project :land/units] units)
+              (assoc-in [:route :project :land/estate-info-failure] false))
           (fn [e!]
-            (e! (->FetchEstateInfos estates)))))
+            (e! (->FetchEstateInfos estates 1)))))
 
   FetchEstateResponse
   (process-event [{:keys [response]} app]
@@ -174,12 +177,25 @@
         (update-in [:route :project :fetched-estates-count] inc)))
 
   FetchEstateInfos
-  (process-event [{estate-ids :estate-ids} {:keys [params] :as app}]
+  (process-event [{estate-ids :estate-ids
+                   retry-count :retry-count} {:keys [params] :as app}]
     (let [project-id (:project params)]
       (apply t/fx app
              (for [estate-id estate-ids]
-               {:tuck.effect/type :query
-                :query :land/estate-info
-                :args {:estate-id estate-id
-                       :thk.project/id project-id}
-                :result-event ->FetchEstateResponse})))))
+               (merge {:tuck.effect/type :query
+                       :query :land/estate-info
+                       :args {:estate-id estate-id
+                              :thk.project/id project-id}
+                       :result-event ->FetchEstateResponse
+                       :error-event (fn [error]
+                                      (if (= (:error (ex-data error)) :request-timeout)
+                                        (if (pos? retry-count)
+                                          (->FetchEstateInfos [estate-id] (dec retry-count))
+                                          (common-controller/->ResponseError (ex-info "x road failed to respond" {:error :invalid-x-road-response})))
+                                        (common-controller/->ResponseError error)))}))))))
+
+(defmethod common-controller/on-server-error :invalid-x-road-response [err app]
+  (let [error (-> err ex-data :error)]
+    (if (get-in app [:route :project :land/estate-info-failure])
+      nil
+      (t/fx (snackbar-controller/open-snack-bar (assoc-in app [:route :project :land/estate-info-failure] true) (tr [:error error]) :warning)))))
