@@ -2,6 +2,7 @@
   (:require [clojure.xml :as xml]
             [clojure.data.zip.xml :as z]
             [clojure.zip]
+            [clojure.data.zip]
             [clojure.string]
             [hiccup.core :as hiccup]
             [org.httpkit.client :as htclient]
@@ -242,7 +243,7 @@
 (defn unexceptional-xml-parse [input]
   (try
     (xml/parse input)
-    (catch Exception e
+    (catch Exception _
       ;; caller has to log error about input resulting in nil parse
       nil)))
 
