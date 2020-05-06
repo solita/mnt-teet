@@ -214,14 +214,19 @@
         (update :jagu3 filter-fn)
         (update :jagu4 filter-fn))))
 
+(defn cell-to-text [cell]
+  ;; parse-kande-tekst util
+  (mapv str (z/xml-> cell clojure.data.zip/descendants clojure.zip/node string?)))
+
 (defn parse-kande-tekst [kande-tekst-str]
-  (let [row-seq (-> kande-tekst-str
-                    (.getBytes "UTF-8")
-                    io/input-stream
-                    xml/parse
-                    clojure.zip/xml-zip (z/xml-> :table :tr))]
-    (for [row row-seq]
-      (mapv z/text (z/xml-> row :td)))))
+  (when (not (clojure.string/blank? kande-tekst-str))
+    (let [row-seq (-> kande-tekst-str
+                      (.getBytes "UTF-8")
+                      io/input-stream
+                      xml/parse
+                      clojure.zip/xml-zip (z/xml-> :table :tr))]
+      (for [row row-seq]        
+        (mapv cell-to-text (z/xml-> row :td))))))
 
 
 (defn kinnistu-d-parse-response [xml-string]
@@ -260,6 +265,7 @@
            :fault "empty response"})))))
 
 (defn unpeel-multipart [ht-resp]
+  ;; Kludge to decode multipart/related, as this is not supported by the HTTP client lib
   (let [c-type (:content-type (:headers ht-resp))
         multipart-match (re-find #"multipart/related;.*boundary=\"([^\"]+)\"" c-type)
         body (slurp (:body ht-resp))
