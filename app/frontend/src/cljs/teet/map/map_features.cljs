@@ -263,6 +263,6 @@
   [^ol.render.Feature _feature _res]
   (ol.style.Style.
    #js {:stroke (ol.style.Stroke. #js {:color "#ffffff"
-                                       :width 2})
+                                       :width 20})
         :fill (ol.style.Fill. #js {:cursor :pointer
                                    :color "#ff30aa"})}))
