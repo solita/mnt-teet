@@ -250,4 +250,5 @@
                                          [?task :task/type _]] (tu/db)))]
         (is (empty? lifecycle-tasks)))
       (is (= "99887" (-> :task-id tu/get-data tu/entity :thk.activity/id))
-          "Task activity id has been set"))))
+          "Task activity id has been set")
+      (io/delete-file "testi.csv"))))

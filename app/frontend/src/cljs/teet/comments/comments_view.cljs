@@ -291,6 +291,11 @@
                                                              files)}))}))}
        (tr [:comment :add-images])]])])
 
+(defn- form-defaults [entity-type]
+  (get {:file {:comment/track? true}}
+       entity-type
+       {}))
+
 (defn lazy-comments
   [{:keys [e! app
            entity-type
@@ -298,9 +303,7 @@
            show-comment-form?]
     :or {show-comment-form? true}}]
   (r/with-let [[comment-form ->UpdateCommentForm]
-               (common-controller/internal-state (if (= entity-type :file)
-                                                   {:comment/track? true}
-                                                   {})
+               (common-controller/internal-state (form-defaults entity-type)
                                                  {:merge? true})]
     (let [comments (get-in app [:comments-for-entity entity-id])]
       [layout/section
@@ -326,7 +329,7 @@
                      :value @comment-form
                      :on-change-event ->UpdateCommentForm
                      :save-event #(let [{:comment/keys [comment files visibility track?]} @comment-form]
-                                    (reset! comment-form {})
+                                    (reset! comment-form (form-defaults entity-type))
                                     (comments-controller/->CommentOnEntity
                                      entity-type entity-id comment files visibility track?))
                      :footer new-comment-footer
