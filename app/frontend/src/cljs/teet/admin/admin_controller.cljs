@@ -1,5 +1,6 @@
 (ns teet.admin.admin-controller
-  (:require [tuck.core :as t]
+  (:require [clojure.string :as str]
+            [tuck.core :as t]
             [teet.common.common-controller :as common-controller]))
 
 (defrecord CreateUser [])
@@ -7,6 +8,13 @@
 (defrecord SaveUser [])
 (defrecord SaveUserResponse [response])
 (defrecord CancelUser [])
+
+(defn- ensure-starts-with-double-e
+  "If the person id doesn't start with EE, prepend it"
+  [person-id]
+  (if (str/starts-with? person-id "EE")
+    person-id
+    (str "EE" person-id)))
 
 (extend-protocol t/Event
   CreateUser
@@ -22,7 +30,8 @@
     (t/fx app
           {:tuck.effect/type :command!
            :command :admin/create-user
-           :payload (get-in app [:admin :create-user])
+           :payload (-> (get-in app [:admin :create-user])
+                        (update :user/person-id ensure-starts-with-double-e))
            :result-event ->SaveUserResponse}))
 
   SaveUserResponse
