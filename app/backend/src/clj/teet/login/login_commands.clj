@@ -7,24 +7,57 @@
             [teet.user.user-db :as user-db]))
 
 
+(defn- new-user-tx [person-id given-name family-name]
+  {:user/id (java.util.UUID/randomUUID)
+   :user/person-id person-id
+   :user/given-name given-name
+   :user/family-name family-name})
+
+(defn- add-user!
+  "Transacts a new user to Datomic. Returns the user's UUID."
+  [conn person-id given-name family-name]
+  (let [tx (new-user-tx person-id given-name family-name)]
+    (d/transact conn {:tx-data [tx]})
+    (:user/id tx)))
+
+(defn- update-user-tx
+  "Returns transaction data for updating the user's given name or family
+  name if they don't match those found in the claims."
+  [{db-given-name :user/given-name
+    db-family-name :user/family-name
+    user-id :user/id}
+   given-name family-name]
+  (when-let [changes (merge nil
+                            (when (not= db-given-name given-name)
+                              {:user/given-name given-name})
+                            (when (not= db-family-name family-name)
+                              {:user/family-name family-name}))]
+    (assoc changes :user/id user-id)))
+
+(defn- ensure-user-data!
+  "Updates user's given name or family name if they're not up to date
+  with those in the claims."
+  [conn user-in-db given-name family-name]
+  (when-let [tx (update-user-tx user-in-db given-name family-name)]
+    (log/info "Updating user data in db to match the data in claims")
+    (d/transact conn {:tx-data [tx]})))
+
 (defn ensure-user!
   "Make sure that the given user exists in the database.
-  If user does not exist, creates it.
+  If user does not exist, creates it. If the data from claims doesn't
+  match the data in db, the db data is updated.
 
   Returns user id (uuid)."
 
   [conn person-id given-name family-name]
   (log/info "Ensure user: " person-id given-name family-name)
-  (if-let [id (-> conn d/db
-                  (d/pull '[:user/id] [:user/person-id person-id])
-                  :user/id)]
-    id
-    (let [new-id (java.util.UUID/randomUUID)]
-      (d/transact conn {:tx-data [{:user/id new-id
-                                   :user/person-id person-id
-                                   :user/given-name given-name
-                                   :user/family-name family-name}]})
-      new-id)))
+  (let [user-in-db (-> conn d/db
+                       (d/pull '[:user/id :user/given-name :user/family-name]
+                               [:user/person-id person-id]))]
+    (if-let [user-id (:user/id user-in-db)]
+      (do (ensure-user-data! conn user-in-db given-name family-name)
+          user-id)
+      (add-user! conn person-id given-name family-name))))
 
 
 
