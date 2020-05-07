@@ -197,5 +197,5 @@
 (defmethod common-controller/on-server-error :invalid-x-road-response [err app]
   (let [error (-> err ex-data :error)]
     (if (get-in app [:route :project :land/estate-info-failure])
-      nil
+      app
       (t/fx (snackbar-controller/open-snack-bar (assoc-in app [:route :project :land/estate-info-failure] true) (tr [:error error]) :warning)))))
