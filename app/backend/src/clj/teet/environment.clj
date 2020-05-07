@@ -81,16 +81,16 @@
 
 (defn load-local-config!
   "Load local development configuration from outside repository"
-  []
-  (let [file (io/file ".." ".." ".." "mnt-teet-private" "config.edn")]
-    (when (.exists file)
-      (log/info "Loading local config file: " file)
-      (reset! config (merge-with (fn [a b]
-                                   (if (and (map? a) (map? b))
-                                     (merge a b)
-                                     b))
-                                 init-config
-                                 (read-string (slurp file)))))))
+  ([] (load-local-config! (io/file ".." ".." ".." "mnt-teet-private" "config.edn")))
+  ([file]
+   (when (.exists file)
+     (log/info "Loading local config file: " file)
+     (reset! config (merge-with (fn [a b]
+                                  (if (and (map? a) (map? b))
+                                    (merge a b)
+                                    b))
+                                init-config
+                                (read-string (slurp file)))))))
 
 (defn db-name []
   (-> @config
