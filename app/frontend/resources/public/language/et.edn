@@ -325,6 +325,8 @@
   {:any "Kõik", :bad "Halb", :questionable "Küsitav", :good "Hea"},
   :filter-label "Filtreerin üksused",
   :units "ühikut",
+  :estate-info-fetch-failure
+  "Xroad-ist ei õnnestunud teavet hankida. Proovige uuesti ja kui tõrge püsib, pöörduge süsteemi administraatori poole.",
   :fetching-land-units "Maaüksuste toomine"},
  :login {:login "Sisenen", :password "Salasõna", :username "Kasutaja"},
  :map

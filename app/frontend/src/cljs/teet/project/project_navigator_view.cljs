@@ -341,7 +341,8 @@
      {:project-id (:db/id project)}
      [:div {:class (<class project-style/page-container)}
       [breadcrumbs/breadcrumbs breadcrumbs]
-      [typography/Heading1 (:thk.project/name project)]
+      [typography/Heading1 (or (:thk.project/project-name project)
+                               (:thk.project/name project))]
       [project-navigator-dialogs opts]
       [Paper {:class (<class task-style/task-page-paper-style)}
        [Grid {:container true

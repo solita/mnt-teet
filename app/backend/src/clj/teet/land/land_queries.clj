@@ -40,16 +40,22 @@
           project-id :thk.project/id}
    :project-id [:thk.project/id project-id]
    :config {xroad-instance [:xroad-instance-id]
-            xroad-url [:xroad-query-url]}
+            xroad-url [:xroad-query-url]
+            xroad-subsystem [:xroad-kr-subsystem-id]}
    :authorization {:land/view-cadastral-data {:eid [:thk.project/id project-id]
                                               :link :thk.project/owner}}}
-  (assoc
-    (x-road/perform-kinnistu-d-request
-      xroad-url
-      {:instance-id xroad-instance
-       :registriosa-nr estate-id
-       :requesting-eid (str "EE" (:user/person-id user))})
-    :estate-id estate-id))
+  (let [x-road-response (x-road/perform-kinnistu-d-request
+                          xroad-url
+                          {:xroad-kr-subsystem-id xroad-subsystem
+                           :instance-id xroad-instance
+                           :registriosa-nr estate-id
+                           :requesting-eid (str "EE" (:user/person-id user))})]
+    (if (= (:status x-road-response) :error)
+      (throw (ex-info "Invalid xroad response" {:error :invalid-x-road-response
+                                                :response x-road-response}))
+      (assoc
+        x-road-response
+        :estate-id estate-id))))
 
 (defquery :land/related-project-estates
   {:doc "Fetch estates that are related to a given project's cadastral units.

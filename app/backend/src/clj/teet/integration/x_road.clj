@@ -2,6 +2,7 @@
   (:require [clojure.xml :as xml]
             [clojure.data.zip.xml :as z]
             [clojure.zip]
+            [clojure.data.zip]
             [clojure.string]
             [hiccup.core :as hiccup]
             [org.httpkit.client :as htclient]
@@ -79,7 +80,8 @@
         {:status :error
          :result msg}))))
 
-(defn kr-kinnistu-d-request-xml [{:keys [instance-id registriosa-nr requesting-eid]}]
+(defn kr-kinnistu-d-request-xml [{:keys [instance-id client-subsystem-id
+                                         registriosa-nr requesting-eid]}]
   ;; xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
   ;; xmlns:xro="http://x-road.eu/xsd/xroad.xsd"
   ;; xmlns:iden="http://x-road.eu/xsd/identifiers"
@@ -99,7 +101,10 @@
            [:id:xRoadInstance instance-id]
            [:id:memberClass "GOV"]
            [:id:memberCode "70001490"]
-           [:id:subsystemCode "generic-consumer"]]
+           [:id:subsystemCode (if client-subsystem-id
+                                client-subsystem-id
+                                (do (log/warn "x-road kr client subsystem id unconfigured, defaulting to generic-consumer")
+                                    "generic-consumer"))]]
           [:xrd:service {:id:objectType "SERVICE"}
            [:id:xRoadInstance instance-id]
            [:id:memberClass "GOV"]
@@ -155,16 +160,112 @@
               :omandiosa_suurus (omandi-get ox :a:omandiosa_suurus)})
            owner-xml-seq)}))
 
+(defn d-jagu34* [key children sequential-vals?]
+  ;; This is the recursive part of the parsing. 
+  ;; the sequential-vals and maybe-vectorise business is about
+  ;; getting the recursive subelements into a form that will be
+  ;; handled suitably by (merge-with concat map1 map2 .. ), so we get eg this nested
+  ;; structure right:
+  
+  ;; {:koormatise_rahaline_vaartus "0",
+  ;;  :kande_alusdokumendid
+  ;;  [{:Kinnistamisavaldus
+  ;;    ({:aasta "0",
+  ;;       [...]
+  ;;      :tehingu_nr ""}
+  ;;     {:aasta "2006",
+  ;;      :avalduse_esitaja_liik "notar",
+  ;;      [...]
+  ;;
+  ;; (possibly it would be better done with postwalk-ing the xml tree, maybe next iteration)
 
-(defn d-jagu34 [k-xml p1 p2]
-  (let [j3-seq (z/xml-> k-xml p1 p2)]
-    {p1
-     (into [] (for [j3 j3-seq]
-                {:kande_alguskuupaev (z/xml1-> j3 :a:kande_alguskuupaev z/text)
-                 :kande_liik (z/xml1-> j3 :a:kande_liik z/text)
-                 :kande_liik_tekst (z/xml1-> j3 :a:kande_liik_tekst z/text)
-                 :registriosa_nr (z/xml1-> j3 :a:registriosa_nr z/text)
-                 :oiguse_liik_tekst (z/xml1-> j3 :a:oiguse_liik_tekst z/text)}))}))
+  
+  (let [leaf? (fn [m] (->> m
+                           :content
+                           (every? (complement map?))))
+        leaves (filterv leaf? children)
+        subs (filterv (complement leaf?) children)
+        tag-without-prefix #(some->> %
+                             :tag
+                             name
+                             (partition-by (partial = \:))
+                             last
+                             clojure.string/join
+                             keyword)
+        joined-content (comp (partial clojure.string/join "\n") :content)
+        recursed-map (apply (partial merge-with concat)
+                            (mapv (fn [s]
+                                    (d-jagu34* (tag-without-prefix s) (:content s) true)) subs))
+        leaves-map (into {} (mapv
+                      (juxt tag-without-prefix joined-content)
+                      leaves))
+        ;; maybe-vectorise will be false on topmost call, and true in all recursive calls,
+        ;; because we know we won't need to merge the top level data with other maps.
+        ;; otherwise we defensively vectorise all structured (non-string) children so
+        ;; they can be merged with merge-with concat
+        maybe-vectorise (if sequential-vals?
+                          (fn [val] [val])
+                          identity)]
+    {key (maybe-vectorise
+          (merge recursed-map
+                 leaves-map))}))
+
+(defn d-jagu34 [k-xml p1]
+  (let [;; children will have eg subtree Jagu3  elements (from under the containing jagu3 element)
+        children (z/xml-> k-xml p1 clojure.zip/children)
+        jagu-maps (mapv #(d-jagu34* p1 (:content %) false)
+                        children)]
+    {p1 (mapv p1 jagu-maps)}))
+
+
+(def jagu34-summary-fields [:kande_liik_tekst
+                            :kande_kehtivus
+                            :kande_tekst
+                            :oiguse_seisund_tekst])
+
+(defn summary-jagu34-only [k-resp]
+  ;; keeps only jagu34-summary-fields in the maps the maps in the seq under :jagu3 and :jagu4.
+  (let [map-fn (fn [ms]
+                 (map #(select-keys % jagu34-summary-fields)
+                      ms))]
+    (-> k-resp
+        (update :jagu3 map-fn)
+        (update :jagu4 map-fn))))
+
+(defn active-jagu34-only [k-resp]
+  ;; prunes "lopetatud" records from the maps in the seq under :jagu3 and :jagu4.
+  ;; {:jagu3 [... {:oiguse_seisund "L", ..} ...]
+  (let [filter-fn #(filter (comp (partial not= "L") :oiguse_seisund) %)]
+    (-> k-resp
+        (update :jagu3 filter-fn)
+        (update :jagu4 filter-fn))))
+
+(defn cell-to-text [cell]
+  ;; parse-kande-tekst util
+  (mapv str (z/xml-> cell clojure.data.zip/descendants clojure.zip/node string?)))
+
+(defn unexceptional-xml-parse [input]
+  (try
+    (xml/parse input)
+    (catch Exception _
+      ;; caller has to log error about input resulting in nil parse
+      nil)))
+
+(defn parse-kande-tekst [kande-tekst-str]
+  ;; this assumes, like in all cases seen during development, that
+  ;; kande_tekst field always contains a xhtml table with 2 columns,
+  ;; with cells containing plain text interspersed with <br> elements
+  (when (not (clojure.string/blank? kande-tekst-str))    
+    (let [row-seq (-> kande-tekst-str
+                      (.getBytes "UTF-8")
+                      io/input-stream
+                      unexceptional-xml-parse
+                      clojure.zip/xml-zip (z/xml-> :table :tr))
+          parsed (for [row row-seq]        
+                   (mapv cell-to-text (z/xml-> row :td)))]
+      (when (or (empty? parsed)
+                (not= 2 (count (first parsed))))
+        (log/error "couldn't parse non-empty kande_tekst without table:" kande-tekst-str)))))
 
 
 (defn kinnistu-d-parse-response [xml-string]
@@ -183,8 +284,8 @@
         (merge {:status :ok}
                (d-cadastral-units d-response)
                (d-property-owners d-response)
-               (d-jagu34 d-response :jagu3 :a:Jagu3)
-               (d-jagu34 d-response :jagu4 :a:Jagu4))
+               (d-jagu34 d-response :jagu3)
+               (d-jagu34 d-response :jagu4))
         ;; else
         (do
           (log/error "property register non-ok status string:" d-status)
@@ -203,6 +304,7 @@
            :fault "empty response"})))))
 
 (defn unpeel-multipart [ht-resp]
+  ;; Kludge to decode multipart/related, as this is not supported by the HTTP client lib
   (let [c-type (:content-type (:headers ht-resp))
         multipart-match (re-find #"multipart/related;.*boundary=\"([^\"]+)\"" c-type)
         body (slurp (:body ht-resp))

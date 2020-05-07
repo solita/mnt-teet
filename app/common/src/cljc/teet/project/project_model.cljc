@@ -253,3 +253,9 @@
              :activity/tasks some?
              :task/files (fn [file]
                            (cu/find-> file :versions #(id= file-id (:db/id %))))))
+
+(defn has-related-info?
+  "Does the project have related cadastral units or restrictions?"
+  [{:thk.project/keys [related-restrictions related-cadastral-units] :as _project}]
+  (or (seq related-restrictions)
+      (seq related-cadastral-units)))

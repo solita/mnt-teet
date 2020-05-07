@@ -281,11 +281,16 @@
         [typography/Heading2 (tr [:project :cadastral-units-tab])]
         [buttons/button-secondary {:href (url/set-query-param :configure "cadastral-units")}
          (tr [:buttons :edit])]]
-       (if (not= fetched-count related-estate-count)
+       (if (:land/estate-info-failure project)
          [:div
-          [:p (tr [:land :fetching-land-units]) " " (str fetched-count " / " related-estate-count)]
-          [LinearProgress {:variant :determinate
-                           :value (* 100 (/ fetched-count related-estate-count))}]]
-         [:div
-          [filter-units e! (:land-acquisition-filters project)]
-          [cadastral-groups e! (dissoc project :land-acquisition-filters) (:land/units project)]])])))
+          [:p (tr [:land :estate-info-fetch-failure])]
+          [buttons/button-primary {:on-click (e! land-controller/->FetchRelatedEstates)}
+           "Try again"]]
+         (if (not= fetched-count related-estate-count)
+           [:div
+            [:p (tr [:land :fetching-land-units]) " " (str fetched-count " / " related-estate-count)]
+            [LinearProgress {:variant :determinate
+                             :value (* 100 (/ fetched-count related-estate-count))}]]
+           [:div
+            [filter-units e! (:land-acquisition-filters project)]
+            [cadastral-groups e! (dissoc project :land-acquisition-filters) (:land/units project)]]))])))

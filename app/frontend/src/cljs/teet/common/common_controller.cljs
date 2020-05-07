@@ -179,7 +179,6 @@
     (on-server-error err app)))
 
 (defn check-response-status [response]
-  (swap! in-flight-requests dec)
   (let [status (.-status response)]
     (case status
       401
@@ -189,7 +188,9 @@
       (throw (ex-info "Unauthorized to access this resource" {:error :forbidden-resource}))
 
       200
-      response
+      (do
+        (swap! in-flight-requests dec)
+        response)
 
       (throw (ex-info "Request failure"
                       {:error (or (some-> response
@@ -200,6 +201,7 @@
 
 (defn catch-response-error [e! error-event]
   (fn [err]
+    (swap! in-flight-requests dec)
     (e! (if error-event
           (error-event err)
           (->ResponseError err)))
