@@ -79,30 +79,41 @@
        {"44422" {:land-purchase/decision :land-purchase.decision/not-needed}}}}}}})
 
 (defn estate-group-form
-  [e! {:keys [estate-id] :as estate}]
-  (r/with-let [[estate-form update-estate-form] (common-controller/internal-state {} {:merge? true})]
-    [:div
-     [form/form {:e! e!
-                 :value @estate-form
-                 :on-change-event update-estate-form
-                 :save-event #(land-controller/->SubmitEstateCompensationForm @estate-form)
-                 :cancel-event #(land-controller/->ToggleOpenEstate estate-id)
-                 :footer impact-form-footer
-                 :class (<class estate-compensation-form)}
-      ^{:attribute :estate-procedure/pos}
-      [TextField {:type :number}]
-      ^{:attribute :estate-procedure/type}
+  [e! {:keys [estate-id] :as estate} on-change form-data]
+  [:div
+   [form/form {:e! e!
+               :value form-data
+               :on-change-event on-change
+               :save-event #(land-controller/->SubmitEstateCompensationForm form-data)
+               :cancel-event #(land-controller/->ToggleOpenEstate estate-id)
+               :footer impact-form-footer
+               :class (<class estate-compensation-form)}
+    ^{:attribute :estate-procedure/pos}
+    [TextField {:type :number}]
+
+
+    ^{:attribute :estate-procedure/type}
+    [select/select-enum {:e! e!
+                         :attribute :estate-procedure/type
+                         :show-empty-selection? true}]
+
+    (when (= (:estate-procedure/type form-data) :estate-procedure.type/urgent)
+      ^{:attribute :estate-procedure/urgent-bonus}
+      [TextField {:type :number}])
+
+    (when (= (:estate-procedure/type form-data) :estate-procedure.type/acquisition-negotiation)
+      ^{:attribute :estate-compensation/reason}
       [select/select-enum {:e! e!
-                           :attribute :estate-procedure/type
-                           :show-empty-selection? false}]
+                           :attribute :estate-compensation/reason
+                           :show-empty-selection? false}])
 
-
-
+    (when (= (:estate-procedure/type form-data) :estate-procedure.type/urgent)
       ^{:attribute :estate-procedure/motivation-bonus}
-      [TextField {:type :number}]
+      [TextField {:type :number}])
 
-      ^{:attribute :estate-procedure/motivation-bonus}
-      [TextField {:type :number}]]]))
+    (when (= (:estate-procedure/type form-data) :estate-procedure.type/urgent)
+      ^{:attribute :estate-procedure/third-party-compensations}
+      [TextField {:type :number}])]])
 
 
 (defn cadastral-unit-form
@@ -237,7 +248,7 @@
    :padding "0.5rem"})
 
 (defn estate-group
-  [e! open-estates owner-set cadastral-forms [estate-id units]]
+  [e! open-estates owner-set cadastral-forms estate-forms [estate-id units]]
   ^{:key (str estate-id)}
   [:div {:class (<class estate-group-style)}
    (let [estate (:estate (first units))]
@@ -252,7 +263,7 @@
       [Collapse
        {:in (boolean (open-estates estate-id))
         :mount-on-enter true}
-       [estate-group-form e! estate]]])
+       [estate-group-form e! estate (r/partial land-controller/->UpdateEstateForm owner-set estate-id) (get estate-forms estate-id)]]])
    [:div {:class (<class plot-group-container)}
     (mapc
      (r/partial cadastral-unit e!
@@ -268,7 +279,7 @@
    "foo"])
 
 (defn owner-group
-  [e! open-estates owner-compensation-form cadastral-forms [owner units]]
+  [e! open-estates owner-compensation-form cadastral-forms estate-forms [owner units]]
   ^{:key (str owner)}
   [:div {:style {:margin-bottom "2rem"}}
    (let [owners (get-in (first units) [:estate :omandiosad])]
@@ -289,7 +300,7 @@
    [:div {:class (<class plot-group-container)}
     (mapc
      (fn [unit-group]
-       [estate-group e! open-estates owner cadastral-forms unit-group])
+       [estate-group e! open-estates owner cadastral-forms estate-forms unit-group])
      (group-by
       (fn [unit]
         (get-in unit [:estate :estate-id]))
@@ -347,6 +358,7 @@
            (or (:land/open-estates project) #{})
            (get-in project [:land/forms owner :land/owner-compensation-form])
            (get-in project [:land/forms owner :land/cadastral-forms])
+           (get-in project [:land/forms owner :land/estate-forms])
            group])
         grouped)])))
 
