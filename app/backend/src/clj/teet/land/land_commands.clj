@@ -58,3 +58,15 @@
               :land-acquisition/pos-number pos-number}
              (meta-model/modification-meta user)))]})
 
+
+(defcommand :land/create-estate-compensation
+  {:doc "Create a new compensation for estate"
+   :context {conn :conn
+             user :user
+             db :db}
+   :payload {:estate-compensation/keys [pos procedure compensation]
+             :thk.project/keys [id] :as payload}
+   :project-id [:thk.project/id id]
+   :authorization {}}
+  (println payload))
+
