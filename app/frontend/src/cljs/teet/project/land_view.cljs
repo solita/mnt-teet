@@ -16,7 +16,8 @@
             [teet.project.project-controller :as project-controller]
             [teet.ui.form :as form]
             [teet.common.common-controller :as common-controller]
-            [teet.ui.select :as select]))
+            [teet.ui.select :as select]
+            [teet.log :as log]))
 
 (defn cadastral-unit-style
   [selected?]
@@ -105,40 +106,36 @@
 
 
 (defn cadastral-unit-form
-  [e! {:keys [PINDALA] :as unit} quality]
-  (r/with-let [[impact-form update-impact-form]
-               (common-controller/internal-state (merge
-                                                   {:land-acquisition/impact :land-acquisition.impact/undecided}
-                                                   (:land-acquisition unit))
-                                                 {:merge? true})]
-    (let [show-extra-fields? (= (:land-acquisition/impact @impact-form) :land-acquisition.impact/purchase-needed)]
-      [:div
-       [form/form {:e! e!
-                   :value @impact-form
-                   :on-change-event update-impact-form
-                   :save-event #(land-controller/->SubmitLandPurchaseForm @impact-form (:teet-id unit))
-                   :spec :land-acquisition/form
-                   :cancel-event #(land-controller/->ToggleLandUnit unit)
-                   :footer impact-form-footer
-                   :class (<class impact-form-style)}
-        ^{:attribute :land-acquisition/impact}
-        [select/select-enum {:e! e!
-                             :attribute :land-acquisition/impact
-                             :show-empty-selection? false}]
-        (when show-extra-fields?
-          ^{:attribute :land-acquisition/pos-number :xs 6}
-          [TextField {:type :number}])
-        (when show-extra-fields?
-          ^{:attribute :land-acquisition/area-to-obtain
-            :adornment (let [area (:land-acquisition/area-to-obtain @impact-form)]
-                         [:div
-                          [:p (tr [:land :total-area] {:area PINDALA})
-                           (case quality
-                             :bad [:span {:style {:color theme-colors/red}} " !!! " (tr [:land :unreliable])]
-                             :questionable [:span {:style {:color theme-colors/orange}} " ! " (tr [:land :unreliable])]
-                             nil)]
-                          [:span (tr [:land :net-area-balance] {:area (- PINDALA area)})]])}
-          [TextField {:type :number :input-style {:width "50%"}}])]])))
+  [e! {:keys [TUNNUS PINDALA] :as unit} quality on-change-event form-data]
+  (let [show-extra-fields? (= (:land-acquisition/impact form-data) :land-acquisition.impact/purchase-needed)]
+    [:div
+     [form/form {:e! e!
+                 :value form-data ;@impact-form
+                 :on-change-event (fn [form-data]
+                                    (on-change-event TUNNUS form-data)) ; update-impact-form
+                 :save-event #(land-controller/->SubmitLandPurchaseForm form-data (:teet-id unit))
+                 :spec :land-acquisition/form
+                 :cancel-event #(land-controller/->ToggleLandUnit unit)
+                 :footer impact-form-footer
+                 :class (<class impact-form-style)}
+      ^{:attribute :land-acquisition/impact}
+      [select/select-enum {:e! e!
+                           :attribute :land-acquisition/impact
+                           :show-empty-selection? false}]
+      (when show-extra-fields?
+        ^{:attribute :land-acquisition/pos-number :xs 6}
+        [TextField {:type :number}])
+      (when show-extra-fields?
+        ^{:attribute :land-acquisition/area-to-obtain
+          :adornment (let [area (:land-acquisition/area-to-obtain form-data)]
+                       [:div
+                        [:p (tr [:land :total-area] {:area PINDALA})
+                         (case quality
+                           :bad [:span {:style {:color theme-colors/red}} " !!! " (tr [:land :unreliable])]
+                           :questionable [:span {:style {:color theme-colors/orange}} " ! " (tr [:land :unreliable])]
+                           nil)]
+                        [:span (tr [:land :net-area-balance] {:area (- PINDALA area)})]])}
+        [TextField {:type :number :input-style {:width "50%"}}])]]))
 
 (defn acquisition-impact-status
   [impact]
@@ -181,7 +178,7 @@
 
 
 (defn cadastral-unit
-  [e! {:keys [TUNNUS KINNISTU MOOTVIIS MUUDET quality selected?] :as unit}]
+  [e! update-cadastral-form-event cadastral-forms {:keys [TUNNUS KINNISTU MOOTVIIS MUUDET quality selected?] :as unit}]
   ^{:key (str TUNNUS)} ;;Arbitrary date before which data quality is bad]
   [:div {:class (<class cadastral-unit-container-style)}
    [:div {:class (<class cadastral-unit-quality-style quality)}
@@ -201,7 +198,9 @@
    [Collapse
     {:in selected?
      :mount-on-enter true}
-    [cadastral-unit-form e! unit quality]]])
+    [cadastral-unit-form e! unit quality
+     update-cadastral-form-event
+     (get cadastral-forms TUNNUS)]]])
 
 (defn cadastral-heading-container-style
   [bg-color font-color]
@@ -238,7 +237,7 @@
    :padding "0.5rem"})
 
 (defn estate-group
-  [e! open-estates [estate-id units]]
+  [e! open-estates owner-set cadastral-forms [estate-id units]]
   ^{:key (str estate-id)}
   [:div {:class (<class estate-group-style)}
    (let [estate (:estate (first units))]
@@ -256,7 +255,9 @@
        [estate-group-form e! estate]]])
    [:div {:class (<class plot-group-container)}
     (mapc
-      (r/partial cadastral-unit e!)
+     (r/partial cadastral-unit e!
+                (r/partial land-controller/->UpdateCadastralForm owner-set)
+                cadastral-forms)
       units)]])
 
 (defn owner-form
@@ -267,7 +268,7 @@
    "foo"])
 
 (defn owner-group
-  [e! open-estates owner-compensation-form [owner units]]
+  [e! open-estates owner-compensation-form cadastral-forms [owner units]]
   ^{:key (str owner)}
   [:div {:style {:margin-bottom "2rem"}}
    (let [owners (get-in (first units) [:estate :omandiosad])]
@@ -287,11 +288,12 @@
        [owner-form e! owner owner-compensation-form]]])
    [:div {:class (<class plot-group-container)}
     (mapc
-      (r/partial estate-group e! open-estates)
-      (group-by
-        (fn [unit]
-          (get-in unit [:estate :estate-id]))
-        units))]])
+     (fn [unit-group]
+       [estate-group e! open-estates owner cadastral-forms unit-group])
+     (group-by
+      (fn [unit]
+        (get-in unit [:estate :estate-id]))
+      units))]])
 
 (defn filter-units
   [e! {:keys [name-search-value quality]}]
@@ -340,10 +342,13 @@
                     units)]
       [:div
        (mapc
-        (r/partial owner-group e!
-                   (or (:land/open-estates project) #{})
-                   (get-in project [:land/forms owner-group :land/owner-compensation-form]))
-         grouped)])))
+        (fn [[owner _units :as group]]
+          [owner-group e!
+           (or (:land/open-estates project) #{})
+           (get-in project [:land/forms owner :land/owner-compensation-form])
+           (get-in project [:land/forms owner :land/cadastral-forms])
+           group])
+        grouped)])))
 
 
 (defn related-cadastral-units-info
