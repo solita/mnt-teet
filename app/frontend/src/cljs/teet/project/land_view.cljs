@@ -105,6 +105,9 @@
      [:div
       [form/field :estate-procedure/pos
        [TextField {:type :number}]]
+      [form/field :estate-procedure/type
+       [select/select-enum {:e! e!
+                            :attribute :estate-procedure/type}]]
       [field-with-title "Motivation bonus" :estate-procedure/motivation-bonus :number]
 
       [form/many {:attribute :estate-procedure/third-party-compensations
