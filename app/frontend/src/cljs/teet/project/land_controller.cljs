@@ -21,6 +21,8 @@
 (defrecord FetchEstateResponse [response])
 (defrecord FetchRelatedEstatesResponse [response])
 (defrecord FetchRelatedEstates [])
+(defrecord ToggleOpenEstate [estate-id])
+(defrecord SubmitEstateCompensationForm [form-data])
 
 
 (defn toggle-selected-unit
@@ -51,6 +53,10 @@
       (update-in app
                  [:route :project :land/units]
                  (partial toggle-selected-unit (:teet-id unit)))))
+
+  ToggleOpenEstate
+  (process-event [{estate-id :estate-id} app]
+    (update-in app [:route :project :land/open-estates] cu/toggle estate-id))
 
   UpdateFilteredUnitIDs
   (process-event [_ app]
@@ -112,6 +118,19 @@
                              (when pos-number
                                {:land-acquisition/pos-number (js/parseFloat pos-number)}))
              :result-event (partial ->FetchLandAcquisitions project-id)})))
+
+  SubmitEstateCompensationForm
+  (process-event [{:keys [form-data]} app]
+    (let [project-id (get-in app [:params :project])]
+      (t/fx app
+            {:tuck.effect/type :command!
+             :command :land/create-estate-compensation
+             :success-message "Foo! ✅"                      ;;todo proper message
+             :payload (merge
+                        form-data                           ;; TODO add select keys
+                        {:thk.project/id project-id})
+             :result-event (partial ->FetchLandAcquisitions project-id) ;;TODO fetch esate compensations
+             })))
 
   SetCadastralInfo
   (process-event [{response :response} app]

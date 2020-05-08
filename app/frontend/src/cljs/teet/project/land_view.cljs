@@ -55,9 +55,37 @@
                             :on-click validate}
     (tr [:buttons :save])]])
 
-(defn area-to-obtain-class
+(defn estate-compensation-form
   []
-  {:display :flex})
+  {:background-color :inherit
+   :padding "1.5rem"})
+
+(defn estate-group-form
+  [e! {:keys [estate-id] :as estate}]
+  (r/with-let [[estate-form update-estate-form] (common-controller/internal-state {:merge? true})]
+    [:div
+     [form/form {:e! e!
+                 :value @estate-form
+                 :on-change-event update-estate-form
+                 :save-event #(land-controller/->SubmitEstateCompensationForm @estate-form)
+                 :cancel-event #(land-controller/->ToggleOpenEstate estate-id)
+                 :footer impact-form-footer
+                 :class (<class estate-compensation-form)}
+      ^{:attribute :estate-procedure/pos}
+      [TextField {:type :number}]
+      ^{:attribute :estate-procedure/type}
+      [select/select-enum {:e! e!
+                           :attribute :estate-procedure/type
+                           :show-empty-selection? false}]
+
+
+
+      ^{:attribute :estate-procedure/motivation-bonus}
+      [TextField {:type :number}]
+
+      ^{:attribute :estate-procedure/motivation-bonus}
+      [TextField {:type :number}]]]))
+
 
 (defn cadastral-unit-form
   [e! {:keys [PINDALA] :as unit} quality]
@@ -133,6 +161,7 @@
             theme-colors/red
             theme-colors/orange)})
 
+
 (defn cadastral-unit
   [e! {:keys [TUNNUS KINNISTU MOOTVIIS MUUDET quality selected?] :as unit}]
   ^{:key (str TUNNUS)} ;;Arbitrary date before which data quality is bad]
@@ -147,9 +176,7 @@
                 :on-click (e! land-controller/->ToggleLandUnit unit)
                 :class (<class cadastral-unit-style selected?)}
     [typography/SectionHeading {:style {:text-align :left}} (:L_AADRESS unit)]
-    [:div {:style {:display :flex
-                   :width "100%"
-                   :justify-content :space-between}}
+    [:div {:class (<class common-styles/space-between-center)}
      [acquisition-impact-status (get-in unit [:land-acquisition :land-acquisition/impact])]
      [:span {:class (<class common-styles/gray-text)}
       (tr [:land :estate]) " " KINNISTU]]]
@@ -171,7 +198,6 @@
                       :left 0}}}
   {:background-color bg-color
    :position :relative
-   :padding "0.5rem"
    :color font-color})
 
 (defn estate-group-style
@@ -179,39 +205,58 @@
   ^{:pseudo {:first-of-type {:border-top "1px solid white"}}}
   {:border-left "1px solid white"})
 
+(defn plot-group-container
+  []
+  {:display :flex
+   :flex-direction :column
+   :margin-left "15px"})
+
+(defn land-button-group-style
+  []
+  {:width "100%"
+   :justify-content :space-between
+   :flex-direction :column
+   :align-items :flex-start
+   :padding "0.5rem"})
+
 (defn estate-group
-  [e! [estate-id units]]
+  [e! open-estates [estate-id units]]
   ^{:key (str estate-id)}
   [:div {:class (<class estate-group-style)}
-   [:div.heading {:class (<class cadastral-heading-container-style theme-colors/gray-lighter :inherit)}
-    [typography/SectionHeading "Estate " estate-id]
-    [:span (count units) " " (if (= 1 (count units))
-                               (tr [:land :unit])
-                               (tr [:land :units]))]]
-   [:div {:style {:display :flex
-                  :flex-direction :column
-                  :margin-left "15px"}}
+   (let [estate (:estate (first units))]
+     [:div.heading {:class (<class cadastral-heading-container-style theme-colors/gray-lighter :inherit)}
+      [ButtonBase {:class (<class land-button-group-style)
+                   :on-click (e! land-controller/->ToggleOpenEstate estate-id)}
+
+       [typography/SectionHeading "Estate " estate-id]
+       [:span (count units) " " (if (= 1 (count units))
+                                  (tr [:land :unit])
+                                  (tr [:land :units]))]]
+      [Collapse
+       {:in (boolean (open-estates estate-id))
+        :mount-on-enter true}
+       [estate-group-form e! estate]]])
+   [:div {:class (<class plot-group-container)}
     (mapc
       (r/partial cadastral-unit e!)
       units)]])
 
 (defn owner-group
-  [e! [owner units]]
+  [e! open-estates [owner units]]
   ^{:key (str owner)}
   [:div {:style {:margin-bottom "2rem"}}
    (let [owners (get-in (first units) [:estate :omandiosad])]
-     [:div.heading {:class (<class cadastral-heading-container-style theme-colors/gray theme-colors/white)}
+     [:div.heading {:style {:padding "0.5rem"}
+                    :class (<class cadastral-heading-container-style theme-colors/gray theme-colors/white)}
       [typography/SectionHeading (if (not= (count owners) 1)
                                    (str (count owners) " owners")
                                    (:nimi (first owners)))]
       [:span (count units) " " (if (= 1 (count units))
                                  (tr [:land :unit])
                                  (tr [:land :units]))]])
-   [:div {:style {:display :flex
-                  :flex-direction :column
-                  :margin-left "15px"}}
+   [:div {:class (<class plot-group-container)}
     (mapc
-      (r/partial estate-group e!)
+      (r/partial estate-group e! open-estates)
       (group-by
         (fn [unit]
           (get-in unit [:estate :estate-id]))
@@ -264,7 +309,7 @@
                     units)]
       [:div
        (mapc
-         (r/partial owner-group e!)
+         (r/partial owner-group e! (or (:land/open-estates project) #{}))
          grouped)])))
 
 
