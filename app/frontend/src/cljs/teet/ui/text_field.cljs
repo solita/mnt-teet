@@ -6,7 +6,7 @@
             [teet.common.common-styles :as common-styles]))
 
 (defn- input-field-style
-  [error multiline start-icon?]
+  [error multiline read-only? start-icon?]
   (merge
     ^{:pseudo {:invalid {:box-shadow "inherit"
                          :outline "inherit"}
@@ -21,7 +21,9 @@
     (when multiline
       {:resize :vertical})
     (when start-icon?
-      {:padding-left "2.5rem"})))
+      {:padding-left "2.5rem"})
+    (when read-only?
+      {:color :inherit})))
 
 (defn- label-text-style
   []
@@ -49,10 +51,10 @@
 
 (defn TextField
   [{:keys [label id type ref error style value
-           on-change input-button-icon
+           on-change input-button-icon read-only?
            placeholder input-button-click required input-style
            multiline on-blur error-text input-class start-icon
-           maxrows rows auto-complete step] :as _props
+           maxrows rows auto-complete step hide-label?] :as _props
     :or {rows 2}} & _children]
   (let [element (if multiline
                   :textarea
@@ -60,9 +62,10 @@
     [:label {:for id
              :style style
              :class (<class label-style)}
-     [:span {:class (<class label-text-style)}
-      label (when required
-              [common/required-astrix])]
+     (when-not hide-label?
+       [:span {:class (<class label-text-style)}
+                label (when required
+                        [common/required-astrix])])
      [:div {:style {:position :relative}}
       (when start-icon
         [start-icon {:color :primary
@@ -75,10 +78,12 @@
                        :style input-style
                        :on-blur on-blur
                        :placeholder placeholder
-                       :class (herb/join (<class input-field-style error multiline
+                       :class (herb/join (<class input-field-style error multiline read-only?
                                                  (boolean start-icon))
                                          input-class)
                        :on-change on-change}
+                      (when read-only?
+                        {:disabled true})
                       (when multiline
                         {:rows rows
                          :maxrows maxrows})

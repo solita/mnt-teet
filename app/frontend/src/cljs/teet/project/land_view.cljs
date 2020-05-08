@@ -6,7 +6,7 @@
             [teet.localization :refer [tr tr-enum]]
             [teet.ui.util :refer [mapc]]
             [reagent.core :as r]
-            [teet.ui.material-ui :refer [ButtonBase Collapse LinearProgress]]
+            [teet.ui.material-ui :refer [ButtonBase Collapse LinearProgress Grid]]
             [teet.ui.text-field :refer [TextField]]
             [teet.project.land-controller :as land-controller]
             [teet.theme.theme-colors :as theme-colors]
@@ -78,42 +78,34 @@
        ;; plot number and form maps
        {"44422" {:land-purchase/decision :land-purchase.decision/not-needed}}}}}}})
 
+(defn field-with-title
+  [title field-name field-type]
+  [Grid {:container true :spacing 3}
+   [Grid {:item true :xs 12
+          :spacing 0}
+    [typography/BoldGreyText title]]
+
+   [Grid {:item true :xs 6}
+    [TextField {:read-only? true :value title}]]
+   [Grid {:item true :xs 6}
+    [form/field field-name
+     [TextField {:type field-type
+                 :hide-label? true}]]]])
+
 (defn estate-group-form
   [e! {:keys [estate-id] :as estate} on-change form-data]
   [:div
-   [form/form {:e! e!
+   [form/form2 {:e! e!
                :value form-data
                :on-change-event on-change
                :save-event #(land-controller/->SubmitEstateCompensationForm form-data)
                :cancel-event #(land-controller/->ToggleOpenEstate estate-id)
-               :footer impact-form-footer
-               :class (<class estate-compensation-form)}
-    ^{:attribute :estate-procedure/pos}
-    [TextField {:type :number}]
-
-
-    ^{:attribute :estate-procedure/type}
-    [select/select-enum {:e! e!
-                         :attribute :estate-procedure/type
-                         :show-empty-selection? true}]
-
-    (when (= (:estate-procedure/type form-data) :estate-procedure.type/urgent)
-      ^{:attribute :estate-procedure/urgent-bonus}
-      [TextField {:type :number}])
-
-    (when (= (:estate-procedure/type form-data) :estate-procedure.type/acquisition-negotiation)
-      ^{:attribute :estate-compensation/reason}
-      [select/select-enum {:e! e!
-                           :attribute :estate-compensation/reason
-                           :show-empty-selection? false}])
-
-    (when (= (:estate-procedure/type form-data) :estate-procedure.type/urgent)
-      ^{:attribute :estate-procedure/motivation-bonus}
-      [TextField {:type :number}])
-
-    (when (= (:estate-procedure/type form-data) :estate-procedure.type/urgent)
-      ^{:attribute :estate-procedure/third-party-compensations}
-      [TextField {:type :number}])]])
+               :footer impact-form-footer}
+    [:div {:class (<class estate-compensation-form)}
+     [:div
+      [form/field :estate-procedure/pos
+       [TextField {:type :number}]]
+      [field-with-title "Motivation bonus" :estate-procedure/motivation-bonus :number]]]]])
 
 
 (defn cadastral-unit-form
