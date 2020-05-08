@@ -260,9 +260,19 @@
 
 (defn highlighted-road-object-style
   "Show highlighted road object"
-  [^ol.render.Feature _feature _res]
-  (ol.style.Style.
-   #js {:stroke (ol.style.Stroke. #js {:color "#ffffff"
-                                       :width 20})
-        :fill (ol.style.Fill. #js {:cursor :pointer
-                                   :color "#ff30aa"})}))
+  [^ol.render.Feature feature _res]
+  (let [type (-> feature .getGeometry .getType)]
+    (if (= type "Point")
+      ;; Show a circle indicating feature position
+      (ol.style.Style.
+       #js {:image (ol.style.Circle.
+                    #js {:fill (ol.style.Fill. #js {:color "#ff30aa"})
+                         :stroke (ol.style.Stroke. #js {:color "#ffffff"})
+                         :radius 20})})
+
+      ;; Stroke the linestring
+      (ol.style.Style.
+       #js {:stroke (ol.style.Stroke. #js {:color "#ffffff"
+                                           :width 20})
+            :fill (ol.style.Fill. #js {:cursor :pointer
+                                       :color "#ff30aa"})}))))

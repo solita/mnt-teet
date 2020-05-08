@@ -242,4 +242,5 @@
                              :properties #js {}
                              :geometry (clj->js geom)}))}
       map-features/highlighted-road-object-style
-      {})}))
+      {:z-index 999
+       :opacity 0.7})}))
