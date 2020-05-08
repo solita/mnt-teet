@@ -711,4 +711,63 @@
           {:db/ident :notification.type/comment-unresolved :enum/attribute :notification/type}]]}
 
  {:db/ident :migration/activity-waiting-notification
-  :txes [[{:db/ident :notification.type/activity-waiting-for-review :enum/attribute :notification/type}]]}]
+  :txes [[{:db/ident :notification.type/activity-waiting-for-review :enum/attribute :notification/type}]]}
+
+
+ {:db/ident :migration/estate-procedure
+    :txes [[{:db/ident :estate-procedure/type
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one}
+          ;; types of procedures
+          {:db/ident :estate-procedure.type/urgent
+           :enum/attribute :estate-procedure/type}
+          {:db/ident :estate-procedure.type/expropriation
+           :enum/attribute :estate-procedure/type}
+          {:db/ident :estate-procedure.type/property-trading
+           :enum/attribute :estate-procedure/type}
+          {:db/ident :estate-procedure.type/acquisition-negotiation
+           :enum/attribute :estate-procedure/type}
+          {:db/ident :estate-procedure.type/property-rights
+           :enum/attribute :estate-procedure/type}
+
+          {:db/ident :estate-procedure/pos
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :estate-procedure/urgent-bonus
+           :db/valueType :db.type/bigdec
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :estate-procedure/motivation-bonus
+           :db/valueType :db.type/bigdec
+           :db/cardinality :db.cardinality/one}
+          {:db/doc "Refers to estate-compensation entities"
+           :db/ident :estate-procedure/third-party-compensations
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many}
+
+          ;; estate compensation
+          {:db/ident :estate-compensation/description
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :estate-compensation/reason
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :estate-compensation/amount
+           :db/valueType :db.type/bigdec
+           :db/cardinality :db.cardinality/one}
+
+          {:db/ident :estate-compensation.reason/increase-of-journey
+           :enum/attribute :estate-compensation/reason}
+          {:db/ident :estate-compensation.reason/road-area
+           :enum/attribute :estate-compensation/reason}
+          {:db/ident :estate-compensation.reason/forest
+           :enum/attribute :estate-compensation/reason}
+          {:db/ident :estate-compensation.reason/loss-of-living-space
+           :enum/attribute :estate-compensation/reason}
+          {:db/ident :estate-compensation.reason/crops
+           :enum/attribute :estate-compensation/reason}
+          {:db/ident :estate-compensation.reason/premature-ending-of-agricultural-agreement
+           :enum/attribute :estate-compensation/reason}
+          {:db/ident :estate-compensation.reason/other
+           :enum/attribute :estate-compensation/reason}]]}]
+
+
