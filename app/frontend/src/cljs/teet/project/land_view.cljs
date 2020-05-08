@@ -62,7 +62,7 @@
 
 (defn estate-group-form
   [e! {:keys [estate-id] :as estate}]
-  (r/with-let [[estate-form update-estate-form] (common-controller/internal-state {:merge? true})]
+  (r/with-let [[estate-form update-estate-form] (common-controller/internal-state {} {:merge? true})]
     [:div
      [form/form {:e! e!
                  :value @estate-form
