@@ -194,7 +194,8 @@
 
 (defn- field*
   [field-info field
-   {:keys [update-attribute-fn invalid-attributes required-fields current-fields]}]
+   {:keys [invalid-attributes required-fields current-fields] :as ctx}]
+
   (let [{:keys [attribute]
          validate-field :validate
          :as field-info} (if (map? field-info)
@@ -209,7 +210,7 @@
       (fn [_]
         (swap! current-fields dissoc attribute))
       :reagent-render
-      (fn [_ _ {:keys [value]}]
+      (fn [_ _ {:keys [update-attribute-fn value]}]
         (let [value (attribute-value value attribute
                                      (default-value (first field)))
               error-text (and validate-field
@@ -245,18 +246,70 @@
    :form
    [field* field-info field]))
 
+(defn- change-event-value
+  "Extract value for a change event.
+  If value is React event, extract the target value.
+  Otherwise pass value as is."
+  [value]
+  (if (and (not (boolean? value))
+           (gobj/containsKey value "target"))
+    (gobj/getValueByKeys value "target" "value")
+    value))
+
+(defn- many-container [{:keys [attribute before after]} body
+                       {update-parent-fn :update-attribute-fn
+                        form-value :value :as form-ctx}]
+  (let [parent-value (get form-value attribute)]
+    (log/info "Many-container, parent-value: " parent-value ", count=" (count parent-value))
+    [:<>
+     before
+     (for [i (range (count parent-value))
+           :let [value (nth parent-value i)]]
+       ^{:key (str "many-" i)} ; PENDING: could use configurable key from value map
+       (context/provide
+        :form
+        (assoc form-ctx
+               :parent-value parent-value ;; Force rerender of children
+               :value value
+               :many-index i
+               :update-attribute-fn
+               (fn [field value]
+                 (let [value (change-event-value value)]
+                   (update-parent-fn
+                    attribute
+                    (assoc-in parent-value [i field] value)))))
+        body))
+
+     after]))
+
+(defn many
+  "Vector of item field container. The body is repeated for each entry in the
+  value."
+  ;; FIXME: document opts
+  [opts body]
+  (context/consume :form [many-container opts body]))
+
+(defn- many-remove-container [on-remove button-child {idx :many-index}]
+  (assoc-in button-child [1 :on-click]
+            #(on-remove idx)))
+
+(defn many-remove
+  "Inside a many body, this component will render given child component
+  with an on-click handler that calls on-remove with the index to remove."
+  [on-remove button-child]
+  (context/consume :form [many-remove-container on-remove button-child]))
+
 (defn- update-attribute-fn
   "Return a function for updating attribute values by dispatching change events."
   [e! on-change-event]
    (fn [field value]
-     (let [v (if (and (not (boolean? value))
-                      (gobj/containsKey value "target"))
-               (gobj/getValueByKeys value "target" "value")
-               value)]
+     (let [v (change-event-value value)]
        (e! (on-change-event
             (if (vector? field)
               (zipmap field value)
-              {field v})))
+              (do
+                (log/info "update-attribute-fn " {field v})
+                {field v}))))
        v)))
 
 (defn form2

@@ -105,7 +105,30 @@
      [:div
       [form/field :estate-procedure/pos
        [TextField {:type :number}]]
-      [field-with-title "Motivation bonus" :estate-procedure/motivation-bonus :number]]]]])
+      [field-with-title "Motivation bonus" :estate-procedure/motivation-bonus :number]
+
+      [form/many {:attribute :estate-procedure/third-party-compensations
+                  :after [buttons/link-button
+                          {:on-click #(e! (on-change
+                                           (update form-data
+                                                   :estate-procedure/third-party-compensations
+                                                   (fnil conj []) {})))}
+                          "+ add compensation"]}
+       [Grid {:container true}
+        [Grid {:item true :xs 5}
+         [form/field {:attribute :estate-compensation/description}
+          [TextField {}]]]
+        [Grid {:item true :xs 5}
+         [form/field {:attribute :estate-compensation/amount}
+          [TextField {:type :number}]]]
+        [Grid {:item true :xs 2}
+         [form/many-remove #(e! (on-change
+                                 (update form-data
+                                         :estate-procedure/third-party-compensations
+                                         (fn [items]
+                                           (into (subvec items 0 %)
+                                                 (subvec items (inc %)))))))
+          [buttons/link-button {} "X"]]]]]]]]])
 
 
 (defn cadastral-unit-form
