@@ -237,16 +237,17 @@
   :build-time "Last build happened at",
   :version "Version"},
  :error
- {:permission-already-granted
+ {:authorization-failure "Session expired. Please login again.",
+  :invalid-task-dates "Check task dates",
+  :server-error "Server error.",
+  :invalid-x-road-response "Invalid response from X-road",
+  :permission-already-granted
   "Permission for this user is already granted",
-  :authorization-failure "Session expired. Please login again.",
-  :request-timeout "The server did not respond.",
-  :bad-request "Bad request",
   :conflicting-activities
   "Only one activity of a type can be active at the same time.",
-  :server-error "Server error.",
+  :request-timeout "The server did not respond.",
   :invalid-activity-dates "Check activity dates",
-  :invalid-task-dates "Check task dates"},
+  :bad-request "Bad request"},
  :fields
  {:comment/visibility "Visibility",
   :task/send-to-thk? "Send to THK",
@@ -411,7 +412,7 @@
    :repair-method "Repair method",
    :carriageway "Carriageway"},
   :activities "Project activities",
-  :cadastral-units-tab "Cadastral units",
+  :cadastral-units-tab "Lands",
   :activities-tab "Activities"},
  :project-groups {:title "Project groups"},
  :projects
