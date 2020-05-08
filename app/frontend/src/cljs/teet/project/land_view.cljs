@@ -109,7 +109,8 @@
   (r/with-let [[impact-form update-impact-form]
                (common-controller/internal-state (merge
                                                    {:land-acquisition/impact :land-acquisition.impact/undecided}
-                                                   (:land-acquisition unit)) {:merge? true})]
+                                                   (:land-acquisition unit))
+                                                 {:merge? true})]
     (let [show-extra-fields? (= (:land-acquisition/impact @impact-form) :land-acquisition.impact/purchase-needed)]
       [:div
        [form/form {:e! e!
@@ -258,19 +259,30 @@
       (r/partial cadastral-unit e!)
       units)]])
 
+(defn owner-form
+  [e! {}]
+  [:div
+   "foo"])
+
 (defn owner-group
   [e! open-estates [owner units]]
   ^{:key (str owner)}
   [:div {:style {:margin-bottom "2rem"}}
    (let [owners (get-in (first units) [:estate :omandiosad])]
-     [:div.heading {:style {:padding "0.5rem"}
-                    :class (<class cadastral-heading-container-style theme-colors/gray theme-colors/white)}
-      [typography/SectionHeading (if (not= (count owners) 1)
-                                   (str (count owners) " owners")
-                                   (:nimi (first owners)))]
-      [:span (count units) " " (if (= 1 (count units))
-                                 (tr [:land :unit])
-                                 (tr [:land :units]))]])
+     [:div.heading {:class (<class cadastral-heading-container-style theme-colors/gray theme-colors/white)}
+
+      [ButtonBase {:class (<class land-button-group-style)
+                   :on-click #(println "Toggle collapse with form")}
+       [typography/SectionHeading (if (not= (count owners) 1)
+                                    (str (count owners) " owners")
+                                    (:nimi (first owners)))]
+       [:span (count units) " " (if (= 1 (count units))
+                                  (tr [:land :unit])
+                                  (tr [:land :units]))]]
+      [Collapse
+       {:in true
+        :moun-on-enter true}
+       [owner-form]]])
    [:div {:class (<class plot-group-container)}
     (mapc
       (r/partial estate-group e! open-estates)
