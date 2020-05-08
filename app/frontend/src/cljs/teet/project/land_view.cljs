@@ -60,6 +60,23 @@
   {:background-color :inherit
    :padding "1.5rem"})
 
+(comment
+  ;; FIXME: app state hierarchy
+  {:route
+   {:project
+    {:land/form
+     {#{"own1" "own2"} ;; set of owners as key
+      {:land/owner-compensation-form {:some-owner-comp-keys "value"}
+
+       ;; map containing all estate forms for this owner set
+       :land/estate-forms
+       {;; estate id and form map
+        "123123" {:estate-procedure/motivation-bonus 420}}
+
+       :land/plot-forms
+       ;; plot number and form maps
+       {"44422" {:land-purchase/decision :land-purchase.decision/not-needed}}}}}}})
+
 (defn estate-group-form
   [e! {:keys [estate-id] :as estate}]
   (r/with-let [[estate-form update-estate-form] (common-controller/internal-state {} {:merge? true})]
