@@ -261,12 +261,13 @@
 
 (defn owner-form
   [e! owner-set owner-compensation-form]
-  [:div "foo"]
+  [:div "owner set: " (pr-str owner-set)
+   "comp form: " (pr-str owner-compensation-form)]
   #_[form/form2 {:on-change (e! (partial ))}
    "foo"])
 
 (defn owner-group
-  [e! open-estates [owner units]]
+  [e! open-estates owner-compensation-form [owner units]]
   ^{:key (str owner)}
   [:div {:style {:margin-bottom "2rem"}}
    (let [owners (get-in (first units) [:estate :omandiosad])]
@@ -283,8 +284,7 @@
       [Collapse
        {:in true
         :moun-on-enter true}
-       [owner-form e! owner {} ;; FIXME: pass from app state
-        ]]])
+       [owner-form e! owner owner-compensation-form]]])
    [:div {:class (<class plot-group-container)}
     (mapc
       (r/partial estate-group e! open-estates)
@@ -340,7 +340,9 @@
                     units)]
       [:div
        (mapc
-         (r/partial owner-group e! (or (:land/open-estates project) #{}))
+        (r/partial owner-group e!
+                   (or (:land/open-estates project) #{})
+                   (get-in project [:land/forms owner-group :land/owner-compensation-form]))
          grouped)])))
 
 
