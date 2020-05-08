@@ -64,16 +64,16 @@
   ;; FIXME: app state hierarchy
   {:route
    {:project
-    {:land/form
+    {:land/forms
      {#{"own1" "own2"} ;; set of owners as key
       {:land/owner-compensation-form {:some-owner-comp-keys "value"}
 
        ;; map containing all estate forms for this owner set
        :land/estate-forms
        {;; estate id and form map
-        "123123" {:estate-procedure/motivation-bonus 420}}
+         "123123" {:estate-procedure/motivation-bonus 420}}
 
-       :land/plot-forms
+       :land/cadastral-forms
        ;; plot number and form maps
        {"44422" {:land-purchase/decision :land-purchase.decision/not-needed}}}}}}})
 
@@ -260,8 +260,9 @@
       units)]])
 
 (defn owner-form
-  [e! {}]
-  [:div
+  [e! owner-set owner-compensation-form]
+  [:div "foo"]
+  #_[form/form2 {:on-change (e! (partial ))}
    "foo"])
 
 (defn owner-group
@@ -282,7 +283,8 @@
       [Collapse
        {:in true
         :moun-on-enter true}
-       [owner-form]]])
+       [owner-form e! owner {} ;; FIXME: pass from app state
+        ]]])
    [:div {:class (<class plot-group-container)}
     (mapc
       (r/partial estate-group e! open-estates)

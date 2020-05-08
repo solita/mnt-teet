@@ -24,6 +24,10 @@
 (defrecord ToggleOpenEstate [estate-id])
 (defrecord SubmitEstateCompensationForm [form-data])
 
+(defrecord UpdateOwnerCompensationForm [owner-set form-data])
+(defrecord UpdateEstateForm [owner-set estate-id form-data])
+(defrecord UpdateCadastralForm [owner-set cadastral-id form-data])
+
 
 (defn toggle-selected-unit
   [id cad-units]
@@ -212,6 +216,29 @@
                                           (->FetchEstateInfos [estate-id] (dec retry-count))
                                           (common-controller/->ResponseError (ex-info "x road failed to respond" {:error :invalid-x-road-response})))
                                         (common-controller/->ResponseError error)))}))))))
+
+;; Events for updating different forms in land purchase
+(extend-protocol t/Event
+  UpdateOwnerCompensationForm
+  (process-event [{:keys [owner-set form-data]} app]
+    (common-controller/update-page-state
+     app
+     [:land/forms owner-set :land/owner-compensation-form]
+     merge form-data))
+
+  UpdateEstateForm
+  (process-event [{:keys [owner-set estate-id form-data]} app]
+    (common-controller/update-page-state
+     app
+     [:land/forms owner-set :land/estate-forms estate-id]
+     merge form-data))
+
+  UpdateCadastralForm
+  (process-event [{:keys [owner-set cadastral-id form-data]} app]
+    (common-controller/update-page-state
+     app
+     [:land/forms owner-set :land/cadastral-forms cadastral-id]
+     merge form-data)))
 
 (defmethod common-controller/on-server-error :invalid-x-road-response [err app]
   (let [error (-> err ex-data :error)]
