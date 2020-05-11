@@ -7,7 +7,7 @@
             [teet.localization :refer [tr]]
             [teet.map.map-controller :as map-controller]
             [teet.ui.container :as container]
-            [teet.ui.material-ui :refer [Fab Button Grid Link Checkbox]]
+            [teet.ui.material-ui :refer [Fab Button Grid Checkbox]]
             [teet.ui.typography :as typography]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
@@ -20,7 +20,8 @@
             [teet.util.collection :as cu]
             [teet.ui.common :as common]
             [teet.ui.query :as query]
-            [teet.ui.select :as select]))
+            [teet.ui.select :as select]
+            [clojure.string :as str]))
 
 (def default-extent [20 50 30 60])
 
@@ -223,18 +224,19 @@
       [icons/content-add-circle]]]]])
 
 (defn map-control-buttons [e! {:keys [background-layer layers] :as _map-data
-                               :or   {background-layer "kaart"}}]
+                               :or   {background-layer ["kaart"]}}]
   (r/with-let [open? (r/atom false)]
     [:div {:class (<class map-styles/map-control-buttons)}
      (when @open?
        [:div {:class (<class map-styles/map-legend-box)}
         [:div {:class (<class map-styles/map-legend-header)}]
-        [select/checkbox {:value (= background-layer "foto")
-                          :on-change (e! map-controller/->SetBackgroundLayer
-                                         (case background-layer
-                                           "kaart" "foto"
-                                           "foto" "kaart"))
-                          :label (tr [:map :aerial-view])}]
+        [Button {:start-icon (r/as-element [icons/maps-map])
+                 :on-click (e! map-controller/->SetBackgroundLayer
+                               (case background-layer
+                                 ["kaart"] ["foto"]
+                                 ["foto"]
+                                 ["foto" "hybriid"] ["kaart"]))}
+         (last background-layer)]
         ;; Show legend
         (mapc layer-legend layers)])
      [Fab (merge
@@ -266,7 +268,7 @@
 
 (defn map-view [e! {:keys [config height class layer-controls?] :or {height "100%"} :as opts}
                 {:keys [background-layer] :as map-data
-                 :or   {background-layer "kaart"}}]
+                 :or   {background-layer ["kaart"]}}]
   (r/with-let [current-tool (volatile! (get-in map-data [:tool]))
                current-zoom (volatile! nil)
                current-res (volatile! nil)
@@ -363,7 +365,11 @@
                      0)
 
          ;; Show "foto" or "kaart" background layer from Maa-amet
-         :layers [{:type :maa-amet :layer background-layer :default true}]
+         :layers (vec
+                  (map-indexed (fn [i layer]
+                                 {:type :maa-amet :layer layer :default true
+                                  :z-index i})
+                               background-layer))
          #_(vec
              (for [layer ["BAASKAART" "MAANTEED" "pohi_vr2"]]
                {:type :wms :url "http://kaart.maaamet.ee/wms/alus?"

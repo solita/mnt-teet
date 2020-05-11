@@ -29,10 +29,12 @@
 (defmulti create-background-layer :type)
 
 ;https://tiles.maaamet.ee/tm/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=foto&STYLE=default&FORMAT=image/jpeg&TILEMATRIXSET=LEST&TILEMATRIX=13&TILEROW=3380&TILECOL=4071
-(defmethod create-background-layer :maa-amet [{:keys [url layer default matrix-set style]
-                                               :or {url "https://tiles.maaamet.ee/tm/wmts"
-                                                    matrix-set "LEST"
-                                                    style "default"}}]
+(defmethod create-background-layer :maa-amet
+  [{:keys [url layer default matrix-set style z-index]
+    :or {url "https://tiles.maaamet.ee/tm/wmts"
+         matrix-set "LEST"
+         style "default"
+         z-index 0}}]
   (log/info "Creating Maa-amet background map: " layer)
   (doto (ol.layer.Tile.
          #js {:source
@@ -46,6 +48,7 @@
                                     :tileGrid     (maa-amet-tilegrid)
                                     :style        style
                                     :wrapX        true})})
+    (.setZIndex z-index)
     (.setVisible default)))
 
 (defmethod create-background-layer :wms [{:keys [url layer style default] :as params}]
