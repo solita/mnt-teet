@@ -7,7 +7,12 @@
    :args _
    :project-id nil
    :authorization {:admin/add-user {}}}
-  {:query '[:find (pull ?e [*])
+  {:query '[:find (pull ?e [*
+                            {:user/permissions
+                             [*
+                              {:permission/projects
+                               [:thk.project/name
+                                :thk.project/id]}]}])
             :where [?e :user/id _]]
    :args [db]
    :result-fn (partial mapv first)})
