@@ -6,7 +6,10 @@
             [teet.ui.util :refer [mapc]]
             [teet.util.collection :as cu]
             [clojure.string :as str]
-            [teet.project.road-controller :as road-controller]))
+            [teet.project.road-controller :as road-controller]
+            [teet.map.openlayers :as openlayers]
+            [teet.project.project-map-view :as project-map-view]
+            [teet.map.map-view :as map-view]))
 
 (defn road-object [{:keys [open toggle]} label {oid :ms:oid :as object}]
   [:div
@@ -47,10 +50,41 @@
               feature-type objects])
            objs-by-type)]))
 
-(defn road-objects-tab [e! _app project]
-  []
+(defn- road-info-result [{:keys [road-part objects]}]
+  (let [{:keys [road carriageway sequence-nr start-m end-m name]} road-part]
+    [:div {:style {:height "195px" :overflow-y :scroll}}
+     [:div
+      [:b (str road " " carriageway " " sequence-nr "  " start-m " - " end-m
+               " (" name ")")]
+      #_(mapc (fn [[type objects]]
+              [:div
+               [:b type " " (count objects)]])
+            objects)]]))
+
+(defn- road-info [e! point]
   [query/query
    {:e! e!
-    :query :road/project-intersecting-objects
-    :args (select-keys project [:thk.project/id])
-    :simple-view [road-objects-listing e!]}])
+    :query :road/road-properties-for-coordinate
+    :args {:coordinate point}
+    :simple-view [road-info-result]}])
+
+(defn road-objects-tab [e! _app project]
+  []
+  (r/with-let [remove-handler!
+               (openlayers/set-click-handler!
+                #(project-map-view/register-overlay!
+                  :road-at-coordinate
+                  {:coordinate (:location %)
+                   :content [map-view/overlay {:width 200
+                                               :height 200
+                                               :single-line? false}
+                             [road-info e! (:location %)]]}))]
+    [:<>
+     [query/query
+      {:e! e!
+       :query :road/project-intersecting-objects
+       :args (select-keys project [:thk.project/id])
+       :simple-view [road-objects-listing e!]}]]
+    (finally
+      (remove-handler!)
+      (project-map-view/remove-overlay! :road-at-coordinate))))

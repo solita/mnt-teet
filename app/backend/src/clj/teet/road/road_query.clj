@@ -21,15 +21,27 @@
   (reify hiccup.compiler/HtmlRenderer
     (render-html [_] xml)))
 
+(defn- query-by-values [values]
+  (into [:And]
+        (map (fn [[key value]]
+               (let [[op value] (if (vector? value)
+                                  [(case (first value)
+                                     :> :PropertyIsGreaterThan
+                                     :>= :PropertyIsGreaterThanOrEqualTo
+                                     :< :PropertyIsLessThan
+                                     :<= :PropertyIsLessThanOrEqualTo
+                                     := :PropertyIsEqualTo)
+                                   (second value)]
+                                  [:PropertyIsEqualTo value])]
+                 [op
+                  [:PropertyName (if (keyword? key)
+                                   (name key) key)]
+                  [:Literal value]])))
+        values))
+
 (defn- query-by-road-and-carriageway [road carriageway]
   (ogc-filter
-   [:And
-    [:PropertyIsEqualTo
-     [:PropertyName "tee_number"]
-     [:Literal road]]
-    [:PropertyIsEqualTo
-     [:PropertyName "soidutee_nr"]
-     [:Literal carriageway]]]))
+   (query-by-values {:tee_number road :soidutee_nr carriageway})))
 
 (defn- query-by-coordinate [[x y] distance-m]
   (ogc-filter
@@ -61,7 +73,8 @@
                   (z/xml1-> road-part name z/text parse))
            start-m (prop :ms:m_aadress ->int)
            length (prop :ms:pikkus ->int)]
-       {:road (prop :ms:tee_number ->int)
+       {:oid (prop :ms:oid identity)
+        :road (prop :ms:tee_number ->int)
         :carriageway (prop :ms:soidutee_nr ->int)
         :name (prop :ms:nimi str)
         :sequence-nr (prop :ms:jrknr ->int)
@@ -278,6 +291,31 @@
                                      (raw gml-geometry)])
                 ::parse-feature parse-feature}))
 
+(defn fetch-objects-of-type-for-road
+  "Fetch road object for given typename that are within the road part"
+  [config typename {:keys [road carriageway sequence-nr start-m end-m]}]
+  (log/info "Fetch " typename " objects, road: " road ", carriageway: " carriageway ", sequence-nr: " sequence-nr ", meters: " start-m " - " end-m)
+  (wfs-request config
+               {:TYPENAME typename
+                :FILTER (ogc-filter
+                         [:And
+                          (query-by-values {:tee_number road
+                                            :soidutee_nr carriageway})
+                          [:Or
+                           ;; In the first part
+                           (query-by-values {:algteeosa sequence-nr
+                                             :algteeosa_meeter [:<= start-m]})
+
+                           ;; Between first and second part
+                           (query-by-values {:algteeosa [:> sequence-nr]
+                                             :loppteeosa [:< sequence-nr]})
+
+                           ;; In the last part
+                           (query-by-values {:loppteeosa sequence-nr
+                                             :loppteeosa_meeter [:>= end-m]})]])
+                ::parse-feature parse-feature}))
+
+
 (def road-object-types
   ["ms:n_bussipeatus"
    "ms:n_kandur"
@@ -326,6 +364,15 @@
          (comp seq second)
          (pmap (fn [type]
                  [type (fetch-intersecting-objects-of-type config type gml-geometry)])
+               road-object-types))))
+
+(defn fetch-all-objects-for-road
+  [config road-part]
+  (into {}
+        (filter
+         (comp seq second)
+         (pmap (fn [type]
+                 [type (fetch-objects-of-type-for-road config type road-part)])
                road-object-types))))
 
 (defn- fetch-capabilities [url service]
