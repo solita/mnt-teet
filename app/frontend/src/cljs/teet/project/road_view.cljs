@@ -8,10 +8,10 @@
             [clojure.string :as str]
             [teet.project.road-controller :as road-controller]))
 
-(defn road-object [{:keys [open toggle]} object]
+(defn road-object [{:keys [open toggle]} label {oid :ms:oid :as object}]
   [:div
    [typography/Heading3 {:on-click #(toggle object)}
-    "road object"]
+    (str label " " oid)]
    (when (open object)
      [:div {:style {:margin-left "1rem"}}
       (mapc (fn [[key value]]
@@ -30,7 +30,7 @@
     (:title type) " " (count objects)]
    (when (open type)
      [:div {:style {:margin-left "1rem"}}
-      (mapc (r/partial road-object opts) objects)])])
+      (mapc (r/partial road-object opts (:title type)) objects)])])
 
 (defn road-objects-listing [e! objs-by-type]
   (r/with-let [open (r/atom #{})]
