@@ -13,7 +13,7 @@
 (defrecord SetCadastralInfo [response])
 (defrecord ToggleLandUnit [unit])
 (defrecord SearchOnChange [attribute value])
-(defrecord UpdateFilteredUnitIDs [ids])
+(defrecord UpdateFilteredUnitIDs [attribute ids])
 (defrecord SubmitLandPurchaseForm [form-data cadastral-id])
 (defrecord FetchLandAcquisitions [project-id])
 (defrecord LandAcquisitionFetchSuccess [result])
@@ -37,6 +37,33 @@
                                      id)
                                   (not (:selected? unit)))))
     cad-units))
+
+
+(defn my-includes? [s substr]
+  ;; like str/includes except case is ignored, substr is whitespace-trimmed first and nil haystack returns true
+  (if (str/blank? s)
+    false
+    (str/includes? (str/trim (str/lower-case s)) (str/lower-case substr))))
+
+(defn any-includes? [s-seq substr]
+  (some #(my-includes? % substr) s-seq))
+
+(defn owner-filter-fn [query unit]
+  (let [owners (get-in unit [:estate :omandiosad])
+        match? (fn [owner]                   
+                 (let [fvals (vals (select-keys owner [:nimi :eesnimi :r_kood]))]
+                   (println "any-includes?" fvals query)
+                   (any-includes? fvals query)))]
+    
+    (if (and (not-empty owners)
+             (some match? owners))
+      (do
+        (println "owner filter: TRUE for " (mapv (juxt :nimi :eesnimi) owners) "queried for" query)
+        ;; (println "owners:" owners)
+        true)
+      (do
+        (println "owner filter: FALSE for " (mapv (juxt :nimi :eesnimi) owners) "queried for" query)
+        false))))
 
 (extend-protocol t/Event
 
@@ -63,30 +90,49 @@
     (update-in app [:route :project :land/open-estates] cu/toggle estate-id))
 
   UpdateFilteredUnitIDs
-  (process-event [_ app]
-    (let [quality (get-in app [:route :project :land-acquisition-filters :quality :value])
-          text (str/lower-case (get-in app [:route :project :land-acquisition-filters :name-search-value]))
+  (process-event [{attribute :attribute value :value} app]
+    (.log js/console "UFUI: a" (pr-str attribute) "v" (pr-str value))
+    (let [f-value #(get-in app [:route :project :land-acquisition-filters %])
+          f-vvalue #(:value f-value %)
+          filters [(fn est [unit] ; name-search filter (estate address really)
+                     #_(println "l_aadress" (:L_AADRESS unit))
+                     (let [r  (my-includes? (or (:L_AADRESS unit) "") (f-value :name-search-value))]
+                       #_(println "aaddress match?" (boolean r) (f-value :name-search-value))
+                       r))
+                   (partial owner-filter-fn (f-value :owner-search-value))
+                   (fn cad [unit] ;; cadastral
+                     (my-includes? (:TUNNUS unit) (f-value :cadastral-search-value)))
+                   (fn quality [unit] ; quality filter
+                     (if-let [q (f-vvalue :quality)]
+                       (= q (:quality unit))
+                       true))
+                   (fn impact [unit] ; impact filter
+                     (if-let [q (f-vvalue :impact)]
+                       (= q (:impact unit))
+                       true))
+                   (fn process [unit] ; process filter
+                     (if-let [q (f-vvalue :process)]
+                       (= q (:process unit))
+                       true))]
+          ;; text (str/lower-case (get-in app [:route :project :land-acquisition-filters attribute]))
           units (get-in app [:route :project :land/units])
           filtered-ids (->> units
-                            (filter (fn [unit]
-                                      (and
-                                        (str/includes? (str/lower-case (get unit :L_AADRESS)) text)
-                                        (if quality
-                                          (= (:quality unit) quality)
-                                          true))))
+                            (filterv (apply every-pred filters))
                             (mapv :teet-id)
                             set)]
+      (.log js/console "filter result:" (count filtered-ids) "of" (count units))
       (assoc-in app [:route :project :land/filtered-unit-ids] filtered-ids)))
 
   SearchOnChange
   (process-event
     [{attribute :attribute
       value :value} app]
+    (println "SearchOnChange" attribute value)
     (t/fx (assoc-in app [:route :project :land-acquisition-filters attribute] value)
           {:tuck.effect/type :debounce
            :timeout 600
            :id :change-cadastral-search
-           :event ->UpdateFilteredUnitIDs}))
+           :event #(->UpdateFilteredUnitIDs attribute value)}))
 
   FetchLandAcquisitions
   (process-event

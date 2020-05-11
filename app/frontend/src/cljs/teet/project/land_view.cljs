@@ -325,13 +325,29 @@
       units))]])
 
 (defn filter-units
-  [e! {:keys [name-search-value quality]}]
-  (r/with-let [on-change (fn [e]
-                           (e! (land-controller/->SearchOnChange :name-search-value (-> e .-target .-value))))]
+  [e! {:keys [name-search-value quality] :as filter-params}]
+  ;; filter-params will come from appdb :land-acquisition-filters key
+  (r/with-let [on-change (fn [e field]
+                           (e! (land-controller/->SearchOnChange field (-> e .-target .-value))))]
+    ;; TEET-514:
+    ;; add filter fields for ower, estate id, cadastral unit nr, process, impact
+    
     [:div {:style {:margin-bottom "1rem"}}
-     [TextField {:label (tr [:land :filter-label])
+     [TextField {:label (tr [:land :filter-label]) ;; estate address
                  :value name-search-value
-                 :on-change on-change}]
+                 :on-change #(on-change % :name-search-value)}]
+     [TextField {:label (tr [:land :owner-filter-label])
+                 :value (:owner-search-value filter-params)
+                 :on-change #(on-change % :owner-search-value)}]
+     [TextField {:label (tr [:land :cadastral-filter-label])
+                 :value (:cadastral-search-value filter-params)
+                 :on-change #(on-change % :cadastral-search-value)}]
+     [TextField {:label (tr [:land :impact-filter-label])
+                 :value (:impact-search-value filter-params)
+                 :on-change #(on-change % :impact-search-value)}]
+     [TextField {:label (tr [:land :process-filter-label])
+                 :value (:process-search-value filter-params)
+                 :on-change #(on-change % :process-search-value)}]
      [select/form-select
       {:label (tr [:land :filter :quality])
        :name "Quality"
@@ -339,6 +355,17 @@
        :items [{:value nil :label (tr [:land :quality :any])}
                {:value :good :label (tr [:land :quality :good])}
                {:value :bad :label (tr [:land :quality :bad])}
+               {:value :questionable :label (tr [:land :quality :questionable])}]
+       :on-change (fn [val]
+                    (e! (land-controller/->SearchOnChange :quality val)))}]
+     ;; TBD: process & impact selects, choices from the enum schema
+     [select/form-select
+      {:label (tr [:land :filter :quality])
+       :name "Process"
+       :value process
+       :items [{:value nil :label (tr [:land :quality :any])}
+               {:value :heavy :label (tr [:land :quality :heavy])}
+               {:value :light :label (tr [:land :quality :light])}
                {:value :questionable :label (tr [:land :quality :questionable])}]
        :on-change (fn [val]
                     (e! (land-controller/->SearchOnChange :quality val)))}]]))
@@ -405,5 +432,8 @@
             [LinearProgress {:variant :determinate
                              :value (* 100 (/ fetched-count related-estate-count))}]]
            [:div
+            
             [filter-units e! (:land-acquisition-filters project)]
             [cadastral-groups e! (dissoc project :land-acquisition-filters) (:land/units project)]]))])))
+
+
