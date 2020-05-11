@@ -12,6 +12,20 @@
   []
   {:flex 1})
 
+(defonce named-overlays (r/atom {}))
+
+(defn remove-overlay! [name]
+  (swap! named-overlays dissoc name))
+
+(defn register-overlay!
+  "Adds a overlay with name. Overlay must be map of
+  coordinate and content.
+  Returns functions for removing the overlay for easy use with
+  r/with-let."
+  [name overlay]
+  (swap! named-overlays assoc name overlay)
+  #(remove-overlay! name))
+
 (defn project-map [e! {:keys [map page] :as app} project]
   (r/with-let [overlays (r/atom [])
                fitted-atom (atom false)
@@ -60,5 +74,6 @@
                                       [itemlist/ItemList {}
                                        (for [[k v] content-data]
                                          [itemlist/Item {:label k} v])]]})
-                         @overlays))}
+                         @overlays
+                         (remove nil? (vals @named-overlays))))}
       map]]))

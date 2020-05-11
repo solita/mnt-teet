@@ -63,6 +63,14 @@
    :authorization {}}
   (road-query/fetch-road-parts-by-coordinate (tr-config) coordinate distance))
 
+(defn- closest-road-part-for-coordinate [config coordinate]
+  (let [parts (road-query/fetch-road-parts-by-coordinate config coordinate 200)]
+    (->> parts
+         (map (fn [{g :geometry :as part}]
+                (assoc part :distance (apply min (map #(geo/distance coordinate %) g)))))
+         (sort-by :distance)
+         first)))
+
 (defquery :road/closest-road-part-for-coordinate
   {:doc "Fetch the closest road part for clicked coordinate"
    :context _
@@ -70,12 +78,23 @@
    :pre [(geo/point? coordinate)]
    :project-id nil
    :authorization {}}
-  (let [parts (road-query/fetch-road-parts-by-coordinate (tr-config) coordinate 200)]
-    (->> parts
-         (map (fn [{g :geometry :as part}]
-                (assoc part :distance (apply min (map #(geo/distance coordinate %) g)))))
-         (sort-by :distance)
-         first)))
+  (closest-road-part-for-coordinate (tr-config) coordinate))
+
+(defn road-properties [coordinate]
+  (let [config (tr-config)
+        road-part (closest-road-part-for-coordinate config coordinate)]
+    {:road-part road-part
+     ;:objects (road-query/fetch-all-objects-for-road config road-part)
+     }))
+
+(defquery :road/road-properties-for-coordinate
+  {:doc "Fetch the closest road part and road objects for clicked coordinate"
+   :context _
+   :args {:keys [coordinate]}
+   :pre [(geo/point? coordinate)]
+   :project-id nil
+   :authorization {}}
+  (road-properties coordinate))
 
 (def ^:private fetch-wms-layers*
   (comp (memoize road-query/fetch-wms-layers)
