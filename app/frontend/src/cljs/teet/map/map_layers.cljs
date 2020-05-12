@@ -143,10 +143,11 @@
                             map-features/cadastral-unit-style
                             {:max-resolution cadastral-unit-resolution})))
 
-(def create-wms-layer
+(defn create-wms-layer
+  [prefix]
   (memoize
    (fn [wms-url layer]
-     (let [name (str "teeregister-" layer)
+     (let [name (str prefix layer)
            layer (ol.layer.Image.
                   #js {:source
                        (ol.source.ImageWMS.
@@ -161,7 +162,13 @@
 (defmethod create-data-layer :teeregister
   [_ctx {:keys [wms-url selected]}]
   (into {}
-        (map (partial create-wms-layer wms-url))
+        (map (partial (create-wms-layer "teeregister-") wms-url))
+        selected))
+
+(defmethod create-data-layer :eelis
+  [_ctx {:keys [wms-url selected]}]
+  (into {}
+        (map (partial (create-wms-layer "eelis-") wms-url))
         selected))
 
 (defmethod create-data-layer :default [_ {type :type}]

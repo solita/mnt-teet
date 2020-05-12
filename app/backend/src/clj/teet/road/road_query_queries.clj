@@ -124,6 +124,17 @@
     {:wfs-url (:wfs-url config)
      :feature-types (fetch-wfs-feature-types* config)}))
 
+;; PENDING: reorganize map queries to other ns, this isn't about roads as such
+(defquery :road/eelis-wms-layers
+  {:doc "Fetch the EELIS WMS layers"
+   :context _
+   :args _
+   :project-id nil
+   :config {wms-url [:eelis :wms-url]}
+   :authorization {}}
+  {:wms-url wms-url
+   :layers (fetch-wms-layers* {:wms-url wms-url})})
+
 (defquery :road/project-intersecting-objects
   {:doc "Fetch all road objects intersecting with project search area"
    :context {db :db}

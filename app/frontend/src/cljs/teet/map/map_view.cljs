@@ -63,7 +63,8 @@
                             :restrictions
                             :cadastral-units
                             :land-surveys
-                            :teeregister])
+                            :teeregister
+                            :eelis])
 
 
 (defmulti layer-filters-form
@@ -135,14 +136,24 @@
                 :query :road/wms-layers
                 :simple-view [wms-layer-selector* e! layer]}])
 
+(defmethod layer-filters-form :eelis
+  [e! layer map-data]
+  [query/query {:e! e!
+                :args {}
+                :state-path [:map :eelis-layers]
+                :state (:eelis-layers map-data)
+                :query :road/eelis-wms-layers
+                :simple-view [wms-layer-selector* e! layer]}])
+
+
+
 (defmethod layer-filters-form :default
   [_ _ _]
   (tr [:map :layers :no-filters]))
 
 (defmulti layer-legend (fn [layer _map-data] (:type layer)))
 
-(defmethod layer-legend :teeregister
-  [{:keys [selected layer-info]} _]
+(defn- wms-legend [{:keys [selected layer-info]}]
   [:div
    (doall
     (for [layer selected
@@ -152,6 +163,14 @@
       [:div
        [:div title]
        [:img {:src legend-url}]]))])
+
+(defmethod layer-legend :teeregister
+  [layer _]
+  (wms-legend layer))
+
+(defmethod layer-legend :eelis
+  [layer _]
+  (wms-legend layer))
 
 (defmethod layer-legend :default
   [_ _]
