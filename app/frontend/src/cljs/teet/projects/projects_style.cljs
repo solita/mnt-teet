@@ -28,4 +28,4 @@
   []
   {:padding "1.5rem"
    :overflow-x :scroll
-   :min-width "1400px"})
+   :min-width "1800px"})
