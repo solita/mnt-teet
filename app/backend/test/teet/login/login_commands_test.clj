@@ -1,4 +1,4 @@
-(ns teet.login.login-commands-test
+(ns ^:db teet.login.login-commands-test
   (:require [clojure.test :refer [deftest use-fixtures is testing]]
             [teet.util.datomic :as du]
             [teet.test.utils :as tu]
