@@ -713,9 +713,8 @@
  {:db/ident :migration/activity-waiting-notification
   :txes [[{:db/ident :notification.type/activity-waiting-for-review :enum/attribute :notification/type}]]}
 
-
  {:db/ident :migration/estate-procedure
-    :txes [[{:db/ident :estate-procedure/type
+  :txes [[{:db/ident :estate-procedure/type
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one}
           ;; types of procedures
@@ -768,6 +767,8 @@
           {:db/ident :estate-compensation.reason/premature-ending-of-agricultural-agreement
            :enum/attribute :estate-compensation/reason}
           {:db/ident :estate-compensation.reason/other
-           :enum/attribute :estate-compensation/reason}]]}]
+           :enum/attribute :estate-compensation/reason}]]}
 
-
+ ;; TEET-539 Retract acceptanses as a duplicate to No-objection co-ordination
+ {:db/ident :migration/retract-acceptances
+  :txes [[[:db/retractEntity [:db/ident :task.type/acceptances]]]]}]
