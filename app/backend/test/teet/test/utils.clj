@@ -278,3 +278,11 @@
         ret2 (local-command :task/start-review params)
         ret3 (local-command :task/review (merge params {:result :accept}))]
     [ret1 ret2 ret3]))
+
+(defn give-admin-permission
+  [user-id]
+  (tx {:user/id          user-id
+       :user/permissions [{:db/id                 "new-permission"
+                           :user/roles :admin
+                           :permission/role       :admin
+                           :permission/valid-from (Date.)}]}))

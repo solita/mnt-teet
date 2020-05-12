@@ -1,9 +1,9 @@
 (ns teet.activity.activity-commands
-  (:require [teet.db-api.core :as db-api :refer [defcommand]]
+  (:require [teet.activity.activity-model :as activity-model]
+            [teet.db-api.core :as db-api :refer [defcommand]]
             [teet.meta.meta-model :as meta-model]
             [teet.util.datomic :as du]
             [teet.project.project-db :as project-db]
-            [teet.activity.activity-model :refer [all-tasks-completed?]]
             [teet.notification.notification-db :as notification-db]
             [datomic.client.api :as d]
             [teet.activity.activity-db :as activity-db]
@@ -42,17 +42,30 @@
                     lifecycle-id
                     (Date.))))))
 
-(defn valid-tasks? [db tasks]
+(defn- keyword-pair? [kw-pair]
+  (and (= (count kw-pair) 2)
+       (every? keyword? kw-pair)))
+
+(defn- valid-task-types? [db tasks]
+  (let [task-keywords (into #{}
+                            (map first)
+                            (d/q '[:find ?id
+                                   :where
+                                   [?kw :enum/attribute :task/type]
+                                   [?kw :db/ident ?id]]
+                                 db))]
+    (every? task-keywords
+            (map second tasks))))
+
+(defn- valid-task-groups-for-activity? [activity-name tasks]
+  (every? (get activity-model/activity-name->task-groups activity-name #{})
+          (map first tasks)))
+
+(defn valid-tasks? [db activity-name tasks]
   (or (empty? tasks)
-      (and (every? keyword? tasks)
-           (let [task-keywords (into #{}
-                                     (map first)
-                                     (d/q '[:find ?id
-                                            :where
-                                            [?kw :enum/attribute :task/type]
-                                            [?kw :db/ident ?id]]
-                                          db))]
-             (every? task-keywords tasks)))))
+      (and (every? keyword-pair? tasks)
+           (valid-task-types? db tasks)
+           (valid-task-groups-for-activity? activity-name tasks))))
 
 (defn valid-activity-dates?
   [db lifecycle-id {:activity/keys [estimated-start-date estimated-end-date]}]
@@ -79,7 +92,7 @@
          (not (conflicting-activites? db activity lifecycle-id))
 
          ^{:error :invalid-tasks}
-         (valid-tasks? db (map second tasks))]
+         (valid-tasks? db (:activity/name activity) tasks)]
    :transact [(merge
                {:db/id "new-activity"
                 :activity/status :activity.status/in-preparation}
@@ -120,6 +133,7 @@
                      (meta-model/modification-meta user))]})
 
 (defn user-can-delete-activity?
+  "A user can delete an activity if they created it less than half an hour ago."
   [db activity-id user]
   (let [half-an-hour-ago (- (.getTime (Date.)) (* 30 60 1000))
         activity (d/pull db '[:meta/creator :meta/created-at] activity-id)]
@@ -144,7 +158,7 @@
   (let [activity (d/pull db '[:activity/name :activity/status {:activity/tasks [:task/status]}] activity-eid)]
     (and (not-empty activity)
          (:activity/name activity)
-         (all-tasks-completed? activity))))
+         (activity-model/all-tasks-completed? activity))))
 
 (defcommand :activity/submit-for-review
   {:doc "Submit activity for review, when tasks are complete"

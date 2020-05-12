@@ -72,3 +72,31 @@
       (tu/local-command :activity/review {:activity-id *actid :user tu/mock-user-manager :status :activity.status/completed})
 
       (println (= :completed (->> *actid (d/pull (tu/db) '[:activity/status] ) :activity/status :db/ident ))))))
+
+(deftest new-activity
+  (testing "Can't create activity if an activity of the same type already exists in the lifecycle"
+    (is (thrown? Exception
+                 (tu/local-command tu/mock-user-boss
+                                   :activity/create
+                                   {:activity {:activity/estimated-start-date #inst "2020-04-06T21:00:00.000-00:00"
+                                               :activity/estimated-end-date #inst "2020-04-12T21:00:00.000-00:00"
+                                               :activity/name :activity.name/land-acquisition}
+                                    :tasks [[:task.group/base-data :task.type/general-part]]
+                                    :lifecycle-id (tu/->db-id "p1-lc1")}))))
+
+  (testing "Can't add incompatible tasks to new activity"
+    (is (thrown? Exception
+                 (tu/local-command tu/mock-user-boss
+                                   :activity/create
+                                   {:activity {:activity/estimated-start-date #inst "2020-04-06T21:00:00.000-00:00"
+                                               :activity/estimated-end-date #inst "2020-04-12T21:00:00.000-00:00"
+                                               :activity/name :activity.name/land-acquisition}
+                                    :tasks [[:task.group/base-data :task.type/general-part]]
+                                    :lifecycle-id (tu/->db-id "p3-lc1")})))
+    (is (tu/local-command tu/mock-user-boss
+                          :activity/create
+                          {:activity {:activity/estimated-start-date #inst "2020-04-12T21:00:00.000-00:00"
+                                      :activity/estimated-end-date #inst "2020-04-13T21:00:00.000-00:00"
+                                      :activity/name :activity.name/land-acquisition}
+                           :tasks [[:task.group/land-purchase :task.type/land-owners]]
+                           :lifecycle-id (tu/->db-id "p3-lc1")}))))

@@ -29,6 +29,12 @@
             [teet.app-state]
             [taoensso.timbre :as log]))
 
+(defn- task-groups-for-activity [activity-name task-groups]
+  (filter (comp (get activity-model/activity-name->task-groups activity-name #{})
+                :db/ident)
+          (sort-by (comp task-model/task-group-order :db/ident)
+                   task-groups)))
+
 (defn task-selection [{:keys [e! on-change selected activity-name]} task-groups task-types]
   [:div {:style {:max-height "70vh" :overflow-y :scroll}}
    (mapc (fn [g]
@@ -44,10 +50,7 @@
                                         :on-change #(on-change
                                                       (cu/toggle selected [(:db/ident g) id]))}]])
                    (filter #(= (:db/ident g) (:enum/valid-for %)) task-types))]])
-         (filter #(= (:db/ident activity-name)
-                     (:enum/valid-for %))
-                 (sort-by (comp task-model/task-group-order :db/ident)
-                          task-groups)))])
+         (task-groups-for-activity activity-name task-groups))])
 
 (defn- task-groups-and-tasks [{e! :e! :as opts} task-groups]
   [select/with-enum-values {:e! e! :attribute :task/type}
@@ -77,7 +80,8 @@
                                :attribute :task/group}
       [task-groups-and-tasks {:e! e!
                               :on-change #(e! (activity-controller/->UpdateActivityForm
-                                                {:selected-tasks %}))
+                                               {:selected-tasks %}))
+                              :activity-name (:activity/name activity)
                               :selected (or (:selected-tasks activity) #{})}]]]
 
     [Grid {:item true :xs 12}
@@ -129,7 +133,7 @@
    [:div {:style {:margin-right "3rem"}}
     [typography/SectionHeading (tr [:roles :manager])]
     [:span (user-model/user-name manager)]]
-   [:div 
+   [:div
     [typography/SectionHeading (tr [:activity :status])]
     [:span (tr-enum status)]]])
 
@@ -208,7 +212,7 @@
           [buttons/button-primary {:on-click #(do (reset! clicked? false)
                                                   (log/debug "on click: params" params)
                                                   ((e! event-fn params)))
-                                   
+
                                    :style {:margin-left "1rem"}}
            (tr [:buttons :confirm])]]]])]))
 
@@ -246,7 +250,7 @@
        (if (= status :activity.status/in-review)
            [:div
             [reject-button e! (assoc params :status :activity.status/archived)]
-            [reject-button e! (assoc params :status :activity.status/canceled)]       
+            [reject-button e! (assoc params :status :activity.status/canceled)]
             [approve-button e! (assoc params :status :activity.status/completed)]]
            ;; else
            (when not-reviewed-status?
