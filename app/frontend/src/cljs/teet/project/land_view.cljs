@@ -345,14 +345,15 @@
      [TextField {:label (tr [:land :cadastral-filter-label])
                  :value (:cadastral-search-value filter-params)
                  :on-change #(on-change % :cadastral-search-value)}]
+    
      [select/select-enum {:e! e!
                           :attribute :land-acquisition/impact
                           :show-empty-selection? true
                           :value impact-search-value
-                          :on-change #(on-change % :impact-search-value)}]
+                          :on-change #(on-change % :impact)}]
      ;; this isn't implemented yet (as of 2020-05-12)
      #_[select/select-enum {:e! e!
-                          :attribute :land-acquisition/process
+                            :attribute :land-acquisition/process
                           :show-empty-selection? false
                           :on-change #(on-change % :process-search-value)}]
      [select/form-select

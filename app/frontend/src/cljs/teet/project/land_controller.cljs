@@ -93,9 +93,9 @@
 
   UpdateFilteredUnitIDs
   (process-event [{attribute :attribute value :value} app]
-    (.log js/console "UFUI: a" (pr-str attribute) "v" (pr-str value))
+    ;; (.log js/console "UFUI: a" (pr-str attribute) "v" (pr-str value))
     (let [f-value #(get-in app [:route :project :land-acquisition-filters %])
-          f-vvalue #(:value f-value %)
+          f-select-value #(:value (f-value %)) ;; use f-select-value with form-select, but not with select-enum
           filters [(fn est [unit] ; name-search filter (estate address really)
                      #_(println "l_aadress" (:L_AADRESS unit))
                      (let [r  (field-includes? (or (:L_AADRESS unit) "") (f-value :estate-search-value))]
@@ -104,16 +104,18 @@
                    (partial owner-filter-fn (f-value :owner-search-value))
                    (fn cad [unit] ;; cadastral
                      (field-includes? (:TUNNUS unit) (f-value :cadastral-search-value)))
-                   (fn quality [unit] ; quality filter
-                     (if-let [q (f-vvalue :quality)]
+                   (fn quality [unit] ; quality filter                     
+                     (if-let [q (f-select-value :quality)]
                        (= q (:quality unit))
                        true))
-                   (fn impact [unit] ; impact filter
-                     (if-let [q (f-vvalue :impact)]
-                       (= q (:impact unit))
+                   (fn impact [unit] ; impact filter                     
+                     (if-let [q (when (:impact unit)  (f-value :impact))]
+                       (do
+                         ;; (println "compare impact" q (:impact unit) unit)
+                         (= q (:impact unit)))
                        true))
-                   (fn process [unit] ; process filter
-                     (if-let [q (f-vvalue :process)]
+                   #_(fn process [unit] ; process filter ;; waiting for process status to be added
+                     (if-let [q (f-select-value :process)]
                        (= q (:process unit))
                        true))]
           ;; text (str/lower-case (get-in app [:route :project :land-acquisition-filters attribute]))
