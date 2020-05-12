@@ -325,29 +325,36 @@
       units))]])
 
 (defn filter-units
-  [e! {:keys [name-search-value quality] :as filter-params}]
+  [e! {:keys [estate-search-value quality impact-search-value] :as filter-params}]
   ;; filter-params will come from appdb :land-acquisition-filters key
-  (r/with-let [on-change (fn [e field]
-                           (e! (land-controller/->SearchOnChange field (-> e .-target .-value))))]
-    ;; TEET-514:
-    ;; add filter fields for ower, estate id, cadastral unit nr, process, impact
-    
+  ;; (println "filter-params:" filter-params)
+  (r/with-let [on-change (fn [kw-or-e field]
+                           (println "on-change got" kw-or-e)
+                           ;; select-enum gives us the kw straight, textfields pass event
+                           (let [value (if (keyword? kw-or-e)
+                                           kw-or-e
+                                           (-> kw-or-e .-target .-value))]
+                             (e! (land-controller/->SearchOnChange field value))))]
     [:div {:style {:margin-bottom "1rem"}}
      [TextField {:label (tr [:land :filter-label]) ;; estate address
-                 :value name-search-value
-                 :on-change #(on-change % :name-search-value)}]
+                 :value estate-search-value
+                 :on-change #(on-change % :estate-search-value)}]
      [TextField {:label (tr [:land :owner-filter-label])
                  :value (:owner-search-value filter-params)
                  :on-change #(on-change % :owner-search-value)}]
      [TextField {:label (tr [:land :cadastral-filter-label])
                  :value (:cadastral-search-value filter-params)
                  :on-change #(on-change % :cadastral-search-value)}]
-     [TextField {:label (tr [:land :impact-filter-label])
-                 :value (:impact-search-value filter-params)
-                 :on-change #(on-change % :impact-search-value)}]
-     [TextField {:label (tr [:land :process-filter-label])
-                 :value (:process-search-value filter-params)
-                 :on-change #(on-change % :process-search-value)}]
+     [select/select-enum {:e! e!
+                          :attribute :land-acquisition/impact
+                          :show-empty-selection? true
+                          :value impact-search-value
+                          :on-change #(on-change % :impact-search-value)}]
+     ;; this isn't implemented yet (as of 2020-05-12)
+     #_[select/select-enum {:e! e!
+                          :attribute :land-acquisition/process
+                          :show-empty-selection? false
+                          :on-change #(on-change % :process-search-value)}]
      [select/form-select
       {:label (tr [:land :filter :quality])
        :name "Quality"
@@ -357,22 +364,11 @@
                {:value :bad :label (tr [:land :quality :bad])}
                {:value :questionable :label (tr [:land :quality :questionable])}]
        :on-change (fn [val]
-                    (e! (land-controller/->SearchOnChange :quality val)))}]
-     ;; TBD: process & impact selects, choices from the enum schema
-     [select/form-select
-      {:label (tr [:land :filter :quality])
-       :name "Process"
-       :value process
-       :items [{:value nil :label (tr [:land :quality :any])}
-               {:value :heavy :label (tr [:land :quality :heavy])}
-               {:value :light :label (tr [:land :quality :light])}
-               {:value :questionable :label (tr [:land :quality :questionable])}]
-       :on-change (fn [val]
                     (e! (land-controller/->SearchOnChange :quality val)))}]]))
 
 (defn cadastral-groups
   [e! _ _]
-  (e! (land-controller/->SearchOnChange :name-search-value ""))
+  (e! (land-controller/->SearchOnChange :estate-search-value ""))
   (fn [e! project units]
     (let [land-acquisitions (into {}
                                   (map

@@ -98,8 +98,8 @@
           f-vvalue #(:value f-value %)
           filters [(fn est [unit] ; name-search filter (estate address really)
                      #_(println "l_aadress" (:L_AADRESS unit))
-                     (let [r  (field-includes? (or (:L_AADRESS unit) "") (f-value :name-search-value))]
-                       #_(println "aaddress match?" (boolean r) (f-value :name-search-value))
+                     (let [r  (field-includes? (or (:L_AADRESS unit) "") (f-value :estate-search-value))]
+                       #_(println "aaddress match?" (boolean r) (f-value :estate-search-value))
                        r))
                    (partial owner-filter-fn (f-value :owner-search-value))
                    (fn cad [unit] ;; cadastral
