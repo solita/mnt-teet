@@ -12,7 +12,10 @@
 
 
 (deftest commenting-tasks-requires-authorization
-  (let [task-id (tu/create-task {:user tu/mock-user-boss :activity (tu/->db-id "p1-lc1-act1")} :task-id)]
+  (let [task-id (tu/create-task {:user tu/mock-user-boss
+                                 :activity (tu/->db-id "p1-lc1-act1")
+                                 :task {:task/type :task.type/plot-allocation-plan}}
+                                :task-id)]
     (is (some? task-id)))
 
   (testing "Boss can comment the task they created"
@@ -52,7 +55,8 @@
 
   ;; Create a task for commenting
   (let [task-id (tu/create-task {:user tu/mock-user-manager
-                                 :activity (tu/->db-id "p1-lc1-act1")}
+                                 :activity (tu/->db-id "p1-lc1-act1")
+                                 :task {:task/type :task.type/plot-allocation-plan}}
                                 :task-id)]
     (is (some? task-id)))
 
@@ -126,7 +130,8 @@
   (testing "Project manager can resolve all comments of an entity at once:"
     ;; Create a new task for multi resolve
     (let [task-id (tu/create-task {:user tu/mock-user-manager
-                                   :activity (tu/->db-id "p1-lc1-act1")}
+                                   :activity (tu/->db-id "p1-lc1-act1")
+                                   :task {:task/type :task.type/plot-allocation-plan}}
                                   :multi-resolve-task-id)]
       (is (some? task-id)))
 
@@ -171,7 +176,8 @@
   (testing "External consultant cannot resolve all comments of an entity at once"
     ;; Create a new task for multi resolve
     (let [task-id (tu/create-task {:user tu/mock-user-manager
-                                   :activity (tu/->db-id "p1-lc1-act1")}
+                                   :activity (tu/->db-id "p1-lc1-act1")
+                                   :task {:task/type :task.type/plot-allocation-plan}}
                                   :external-multi-resolve-task-id)]
       (is (some? task-id)))
 
@@ -200,7 +206,7 @@
   ;; Create task in first activity
   (tu/create-task {:user tu/mock-user-boss
                    :activity (tu/->db-id "p1-lc1-act1")
-                   :task {:task/type :task.type/land-owners
+                   :task {:task/type :task.type/plot-allocation-plan
                           :task/assignee {:user/id (second tu/mock-user-carla-consultant)}}} :task-id)
   ;; Create new file
   (is (= (second tu/mock-user-carla-consultant)
