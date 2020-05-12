@@ -76,7 +76,9 @@
                             (assoc-in [:thk :export-dir] (ssm-param-default [:thk :teet-to-thk :unprocesseddir] nil))
                             (assoc-in [:road-registry]
                                       {:wfs-url (ssm-param-default [:road-registry :wfs-url] nil)
-                                       :wms-url (ssm-param-default [:road-registry :wms-url] nil)}))]
+                                       :wms-url (ssm-param-default [:road-registry :wms-url] nil)})
+                            (assoc-in [:eelis]
+                                      {:wms-url (ssm-param-default [:eelis :wms-url] nil)}))]
              config))))
 
 (defn load-local-config!
