@@ -39,30 +39,32 @@
     cad-units))
 
 
-(defn my-includes? [s substr]
-  ;; like str/includes except case is ignored, substr is whitespace-trimmed first and nil haystack returns true
+(defn field-includes? [s substr]
+  ;; like str/includes?, but:
+  ;; case is ignored, substr is whitespace-trimmed first and nil/"" are handled to suit our needs
+
   (if (str/blank? s)
     false
-    (str/includes? (str/trim (str/lower-case s)) (str/lower-case substr))))
+    (str/includes? (str/trim (str/lower-case s)) (str/lower-case (or substr "")))))
 
 (defn any-includes? [s-seq substr]
-  (some #(my-includes? % substr) s-seq))
+  (some #(field-includes? % substr) s-seq))
 
 (defn owner-filter-fn [query unit]
   (let [owners (get-in unit [:estate :omandiosad])
         match? (fn [owner]                   
                  (let [fvals (vals (select-keys owner [:nimi :eesnimi :r_kood]))]
-                   (println "any-includes?" fvals query)
+                   ;; (println "any-includes?" fvals query)
                    (any-includes? fvals query)))]
     
     (if (and (not-empty owners)
              (some match? owners))
       (do
-        (println "owner filter: TRUE for " (mapv (juxt :nimi :eesnimi) owners) "queried for" query)
+        ;; (println "owner filter: TRUE for " (mapv (juxt :nimi :eesnimi) owners) "queried for" query)
         ;; (println "owners:" owners)
         true)
       (do
-        (println "owner filter: FALSE for " (mapv (juxt :nimi :eesnimi) owners) "queried for" query)
+        ;; (println "owner filter: FALSE for " (mapv (juxt :nimi :eesnimi) owners) "queried for" query)
         false))))
 
 (extend-protocol t/Event
@@ -96,12 +98,12 @@
           f-vvalue #(:value f-value %)
           filters [(fn est [unit] ; name-search filter (estate address really)
                      #_(println "l_aadress" (:L_AADRESS unit))
-                     (let [r  (my-includes? (or (:L_AADRESS unit) "") (f-value :name-search-value))]
+                     (let [r  (field-includes? (or (:L_AADRESS unit) "") (f-value :name-search-value))]
                        #_(println "aaddress match?" (boolean r) (f-value :name-search-value))
                        r))
                    (partial owner-filter-fn (f-value :owner-search-value))
                    (fn cad [unit] ;; cadastral
-                     (my-includes? (:TUNNUS unit) (f-value :cadastral-search-value)))
+                     (field-includes? (:TUNNUS unit) (f-value :cadastral-search-value)))
                    (fn quality [unit] ; quality filter
                      (if-let [q (f-vvalue :quality)]
                        (= q (:quality unit))
@@ -127,7 +129,7 @@
   (process-event
     [{attribute :attribute
       value :value} app]
-    (println "SearchOnChange" attribute value)
+    ;; (println "SearchOnChange" attribute value)
     (t/fx (assoc-in app [:route :project :land-acquisition-filters attribute] value)
           {:tuck.effect/type :debounce
            :timeout 600
