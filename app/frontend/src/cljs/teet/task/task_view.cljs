@@ -2,6 +2,7 @@
   "View for a workflow task"
   (:require [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
+            [teet.activity.activity-model :as activity-model]
             [teet.authorization.authorization-check :refer [when-authorized]]
             [teet.common.common-controller :as common-controller]
             [teet.common.common-styles :as common-styles]
@@ -138,7 +139,10 @@
                         :value   upload-progress}])]))
 
 
-(defn task-form [_e! {:keys [initialization-fn]} {:keys [max-date min-date]}]
+(defn task-form [_e!
+                 {:keys [initialization-fn]}
+                 activity
+                 {:keys [max-date min-date]}]
   ;;Task definition (under project activity)
   ;; Task type (a predefined list of tasks: topogeodeesia, geoloogia, liiklusuuring, KMH eelhinnang, loomastikuuuring, arheoloogiline uuring, muu)
   ;; Description (short description of the task for clarification, 255char, in case more detailed description is needed, it will be uploaded as a file under the task)
@@ -153,7 +157,11 @@
                 :save-event task-controller/->SaveTaskForm
                 :spec :task/new-task-form}
      ^{:xs 6 :attribute :task/group}
-     [select/select-enum {:e! e! :attribute :task/group}]
+     [select/select-enum {:e! e!
+                          :attribute :task/group
+                          :values-filter (get activity-model/activity-name->task-groups
+                                              (-> activity :activity/name :db/ident)
+                                              #{})}]
      ^{:xs 6 :attribute :task/type}
      [select/select-enum {:e! e! :attribute :task/type
                           :enum/valid-for (:task/group task)
@@ -221,8 +229,9 @@
   (let [activity-id (get-in app [:params :activity])
         activity (project-model/activity-by-id project activity-id)]
     (println "ACTIVITY " activity)
-    [task-form e! (:edit-task-data app) {:max-date (:activity/estimated-end-date activity)
-                                         :min-date (:activity/estimated-start-date activity)}]))
+    [task-form e! (:edit-task-data app) activity
+     {:max-date (:activity/estimated-end-date activity)
+      :min-date (:activity/estimated-start-date activity)}]))
 
 (defmethod project-navigator-view/project-navigator-dialog :edit-task
   [{:keys [e! app project] :as _opts}  _dialog]
