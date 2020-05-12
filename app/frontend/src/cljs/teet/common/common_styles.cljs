@@ -72,7 +72,8 @@
            [:body :html {:height "100%"}]
            [:p {:margin 0}]
            [:#teet-frontend {:height "100%"}]
-           [:input :select :textarea :button {:font-family :inherit}])
+           [:input :select :textarea :button {:font-family :inherit}]
+           ["input::-webkit-outer-spin-button" "input::-webkit-inner-spin-button" {"-webkit-appearance" "none" :margin 0}])
 
 (defn header-with-actions []
   {:margin-top "2rem"

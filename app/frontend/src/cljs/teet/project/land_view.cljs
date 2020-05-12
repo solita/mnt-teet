@@ -79,18 +79,19 @@
        {"44422" {:land-purchase/decision :land-purchase.decision/not-needed}}}}}}})
 
 (defn field-with-title
-  [title field-name field-type]
-  [Grid {:container true :spacing 3}
-   [Grid {:item true :xs 12
-          :spacing 0}
-    [typography/BoldGreyText title]]
-
-   [Grid {:item true :xs 6}
-    [TextField {:read-only? true :value title}]]
-   [Grid {:item true :xs 6}
-    [form/field field-name
-     [TextField {:type field-type
-                 :hide-label? true}]]]])
+  [{:keys [title field-name field-type end-icon placeholder]}]
+  [:<>
+   [typography/BoldGreyText title]
+   [Grid {:container true :spacing 3}
+    [Grid {:item true :xs 6}
+     [TextField {:read-only? true :value title}]]
+    [Grid {:item true :xs 6}
+     [form/field field-name
+      [TextField (merge {:type field-type
+                         :placeholder placeholder
+                         :hide-label? true}
+                        (when end-icon
+                          {:end-icon end-icon}))]]]]])
 
 (defn estate-group-form
   [e! {:keys [estate-id] :as estate} on-change form-data]

@@ -32,6 +32,7 @@
    :padding "10px 13px"
    :width "100%"
    :cursor :pointer
+   :max-height "41px"
    :font-size "1rem"
    :background-image select-bg-caret-down
    :background-repeat "no-repeat"
@@ -42,7 +43,7 @@
   []
   {:font-size "1rem"})
 
-(defn form-select [{:keys [label name id items on-change value format-item
+(defn form-select [{:keys [label name id items on-change value format-item label-element
                            show-label? show-empty-selection? error error-text required]
                         :or {format-item :label
                              show-label? true}}]
@@ -55,8 +56,10 @@
     [:label {:for id
              :class (<class select-label-style)}
      (when show-label?
-       [:span label (when required
-                      [common/required-astrix])])
+       (if label-element
+         [label-element label (when required [common/required-astrix])]
+         [:span label (when required
+                        [common/required-astrix])]))
      [:div {:style {:position :relative}}
       [:select
        {:value (or (option-idx value) "")
@@ -131,9 +134,12 @@
 (defn select-with-action
   [{:keys [label id name value items format-item on-change
            required? show-empty-selection?
-           container-class select-class]
+           container-class select-class label-element]
     :or {format-item :label}}]
-  (let [option-idx (zipmap items (range))
+  (let [label-element (if label-element
+                        label-element
+                        :span)
+        option-idx (zipmap items (range))
         change-value (fn [e]
                        (let [val (-> e .-target .-value)]
                          (if (= val "")
@@ -141,7 +147,7 @@
                            (on-change (nth items (int val))))))]
     [:div {:class container-class}
      [:label {:html-for id}
-      (str label ":")
+      [label-element (str label ":")]
       [:select
        {:value (or (option-idx value) "")
         :name name
@@ -195,7 +201,7 @@
 
 (defn select-enum
   "Select an enum value based on attribute. Automatically fetches enum values from database."
-  [{:keys [e! attribute required tiny-select? show-label? show-empty-selection?]
+  [{:keys [e! attribute required tiny-select? show-label? label-element show-empty-selection?]
     :or {show-label? true
          show-empty-selection? true}}]
   (when-not (contains? @enum-values attribute)
@@ -229,6 +235,7 @@
       [select-comp {:label (tr [:fields attribute])
                     :name name
                     :id id
+                    :label-element label-element
                     :container-class container-class
                     :show-label? show-label?
                     :error (boolean error)
