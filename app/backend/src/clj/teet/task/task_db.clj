@@ -1,6 +1,7 @@
 (ns teet.task.task-db
   "Task related queries"
   (:require [datomic.client.api :as d]
+            [teet.activity.activity-model :as activity-model]
             [teet.util.datomic :as du]))
 
 (defn activity-for-task-id
@@ -37,3 +38,10 @@
            :when latest-version]
        (assoc latest-version
               :versions previous-versions)))))
+
+(defn valid-task-for-activity? [db activity-id {task-type :task/type :as _task}]
+  (boolean ((get activity-model/activity-name->task-groups
+                 (-> (du/entity db activity-id)
+                     :activity/name :db/ident)
+                 #{})
+            (:enum/valid-for (du/entity db [:db/ident task-type])))))

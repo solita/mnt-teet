@@ -116,7 +116,9 @@
    :pre [(new? task)
          (valid-thk-send? db task)
          ^{:error :invalid-task-dates}
-         (valid-task-dates? db activity-id task)]
+         (valid-task-dates? db activity-id task)
+         ^{:error :invalid-task-for-activity}
+         (task-db/valid-task-for-activity? db activity-id task)]
    :authorization {:task/create-task {}
                    :activity/edit-activity {:db/id activity-id}}
    :transact [(merge

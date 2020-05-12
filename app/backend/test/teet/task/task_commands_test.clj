@@ -19,7 +19,7 @@
                  :task/create
                  {:activity-id activity-id
                   :task {:db/id "new-task"
-                         :task/type :task.type/acceptances
+                         :task/type :task.type/plot-allocation-plan
                          :task/assignee {:user/id (second tu/mock-user-edna-consultant)}
                          :task/estimated-start-date (:activity/estimated-start-date activity-entity)
                          :task/estimated-end-date (:activity/estimated-end-date activity-entity)}})
@@ -38,7 +38,7 @@
                      :task/create
                      {:activity-id activity-id
                       :task {:db/id "new-task"
-                             :task/type :task.type/acceptances
+                             :task/type :task.type/plot-allocation-plan
                              :task/assignee {:user/id (second tu/mock-user-edna-consultant)}
                              :task/estimated-start-date before-start-date
                              :task/estimated-end-date (:activity/estimated-end-date activity-entity)}}))))
@@ -48,7 +48,7 @@
                      :task/create
                      {:activity-id activity-id
                       :task {:db/id "new-task"
-                             :task/type :task.type/acceptances
+                             :task/type :task.type/plot-allocation-plan
                              :task/assignee {:user/id (second tu/mock-user-edna-consultant)}
                              :task/estimated-start-date (:activity/estiated-start-date activity-entity)
                              :task/estimated-end-date after-end-date}}))))))
@@ -62,7 +62,7 @@
          :task/create
          {:activity-id activity-id
           :task {:db/id "new-task"
-                 :task/type :task.type/acceptances
+                 :task/type :task.type/plot-allocation-plan
                  :task/assignee {:user/id (second tu/mock-user-edna-consultant)}
                  :task/estimated-start-date (:activity/estimated-start-date activity-entity)
                  :task/estimated-end-date (:activity/estimated-end-date activity-entity)}})
@@ -96,3 +96,18 @@
                              :project "11111"}}
                    nav-info)
                 "navigation info is for the task page")))))))
+
+(deftest task-type-must-be-allowed-for-the-parent-activity
+  (tu/local-login tu/mock-user-boss)
+  (testing "Benjamin cannot create a feasibility study task for a land acquisition activity"
+    (let [activity-id (tu/->db-id "p1-lc1-act1")
+          activity-entity (du/entity (tu/db) activity-id)]
+      (is (thrown? Exception
+                   (tu/local-command
+                    :task/create
+                    {:activity-id activity-id
+                     :task {:db/id "new-task"
+                            :task/type :task.type/feasibility-study
+                            :task/assignee {:user/id (second tu/mock-user-edna-consultant)}
+                            :task/estimated-start-date (:activity/estimated-start-date activity-entity)
+                            :task/estimated-end-date (:activity/estimated-end-date activity-entity)}}))))))
