@@ -6,7 +6,8 @@
 (defn get-spec [spec]
   (try
     (s/describe spec)
-    (catch Exception _
+    (catch #?(:clj Exception
+              :cljs js/Error) _
       nil)))
 
 (defn keys-of
