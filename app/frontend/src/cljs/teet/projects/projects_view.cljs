@@ -126,5 +126,5 @@
      (:map app)]))
 
 (defn projects-list-page [e! app projects _breadcrumbs]
-  [:div {:style {:padding "1.5rem"}}
+  [:div {:class (<class projects-style/projects-table-container)}
    [projects-listing e! app projects]])

@@ -23,3 +23,9 @@
   []
   {:margin 0
    :padding-left "18px"})
+
+(defn projects-table-container
+  []
+  {:padding "1.5rem"
+   :overflow-x :scroll
+   :min-width "1400px"})
