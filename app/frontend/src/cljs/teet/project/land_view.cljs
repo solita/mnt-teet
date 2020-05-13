@@ -135,14 +135,32 @@
           [buttons/link-button {} "X"]]]]]]]]])
 
 
+;; TEET-519 notes
+;; 
+;; - as starting point appdb can be empty if no saved impact/process data exist yet
+
+
 (defn cadastral-unit-form
   [e! {:keys [TUNNUS PINDALA] :as unit} quality on-change-event form-data]
+  ;; - form-data is a leaf map from a nested structure along the lines of 
+  ;; (-> appdb :route :project :land/forms
+  ;;     (get #{{:isiku_tyyp "Avalik-õiguslik juriidiline isik", :nimi "Eesti Vabariik"}})
+  ;;     :land/cadastral-forms (get "50101:001:0553"))
+  ;; yielding: {:land-acquisition/impact :land-acquisition.impact/purchase-not-needed}
+  ;;
+  ;; - on save/update, controller SubmitLandPurchaesForm event is called.
+
   (let [show-extra-fields? (= (:land-acquisition/impact form-data) :land-acquisition.impact/purchase-needed)]
+    (def *fd form-data)
+    (def *u unit)
+    (if show-extra-fields?
+      (println "cuf: showing extra fields")
+      (println "cuf: impact / fd-some?" (:land-acquisition/impact form-data) (some? form-data)))
     [:div
      [form/form {:e! e!
-                 :value form-data ;@impact-form
+                 :value form-data
                  :on-change-event (fn [form-data]
-                                    (on-change-event TUNNUS form-data)) ; update-impact-form
+                                    (on-change-event TUNNUS form-data))
                  :save-event #(land-controller/->SubmitLandPurchaseForm form-data (:teet-id unit))
                  :spec :land-acquisition/form
                  :cancel-event #(land-controller/->ToggleLandUnit unit)
@@ -154,8 +172,11 @@
                            :show-empty-selection? false}]
       (when show-extra-fields?
         ^{:attribute :land-acquisition/pos-number :xs 6}
-        [TextField {:type :number}])
-      (when show-extra-fields?
+        [TextField {:type :number}]
+        ^{:attribute :land-acquisition/pos-number :xs 6}        
+        [select/select-enum {:e! e!
+                           :attribute :land-acquisition/status
+                           :show-empty-selection? true}]
         ^{:attribute :land-acquisition/area-to-obtain
           :adornment (let [area (:land-acquisition/area-to-obtain form-data)]
                        [:div
@@ -164,8 +185,8 @@
                            :bad [:span {:style {:color theme-colors/red}} " !!! " (tr [:land :unreliable])]
                            :questionable [:span {:style {:color theme-colors/orange}} " ! " (tr [:land :unreliable])]
                            nil)]
-                        [:span (tr [:land :net-area-balance] {:area (- PINDALA area)})]])}
-        [TextField {:type :number :input-style {:width "50%"}}])]]))
+                        [:span (tr [:land :net-area-balance] {:area (- PINDALA area)})]])})
+      [TextField {:type :number :input-style {:width "50%"}}]]]))
 
 (defn acquisition-impact-status
   [impact]
@@ -210,6 +231,8 @@
 (defn cadastral-unit
   [e! update-cadastral-form-event cadastral-forms {:keys [TUNNUS KINNISTU MOOTVIIS MUUDET quality selected?] :as unit}]
   ^{:key (str TUNNUS)} ;;Arbitrary date before which data quality is bad]
+  (println "cadastral-forms some?" (some? cadastral-forms))
+  (def *cf cadastral-forms)
   [:div {:class (<class cadastral-unit-container-style)}
    [:div {:class (<class cadastral-unit-quality-style quality)}
     [:span {:title (str MOOTVIIS " – " MUUDET)} (case quality
