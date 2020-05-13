@@ -84,15 +84,22 @@
   [:<>
    [typography/BoldGreyText title]
    [Grid {:container true :spacing 3}
-    [Grid {:item true :xs 6}
+    [Grid {:item true :xs 8}
      [TextField {:read-only? true :value title}]]
-    [Grid {:item true :xs 6}
+    [Grid {:item true :xs 4}
      [form/field field-name
       [TextField (merge {:type field-type
                          :placeholder placeholder
                          :hide-label? true}
                         (when end-icon
                           {:end-icon end-icon}))]]]]])
+
+(defn- owner-process-fee-field [{:keys [on-change value]}]
+  (let [{:keys [owner? recipient]} value]
+    (if (nil? owner?)
+      [TextField {:on-change #(on-change (assoc value :recipient (-> % .-target .-value)))
+                  :value recipient}]
+      [TextField {:read-only? true :value recipient}])))
 
 (defn estate-group-form
   [e! _ on-change form-data]
@@ -104,7 +111,12 @@
                      (update :estate-procedure/land-exchanges
                              #(if (empty? %) [{}] %)))))
   (fn [e! {:keys [estate-id] :as estate} on-change form-data]
-    (let [procedure-type (:estate-procedure/type form-data)]
+    (let [procedure-type (:estate-procedure/type form-data)
+          add-row! (fn [field]
+                     (e! (on-change
+                          (update form-data
+                                  field
+                                  (fnil conj []) {}))))]
       [:div
        [form/form2 {:e! e!
                     :value form-data
@@ -120,6 +132,21 @@
            [select/select-enum {:e! e!
                                 :label-element typography/BoldGreyText
                                 :attribute :estate-procedure/type}]]
+          (when (= procedure-type :estate-procedure.type/acquisition-negotiation)
+            [form/many {:attribute :estate-procedure/process-fees
+                        :before [typography/BoldGreyText (tr [:fields :estate-procedure/process-fees])]
+                        :after [buttons/link-button
+                                {:on-click #(add-row! :estate-procedure/process-fees)}
+                                "+ add owner"]}
+             [Grid {:container true :spacing 3}
+              [Grid {:item true :xs 8}
+               [form/field :process-fee-recipient
+                [owner-process-fee-field {}]]]
+              [Grid {:item true :xs 4}
+               [form/field :process-fee/fee
+                [TextField {:type :number :placeholder "0"
+                            :hide-label? true
+                            :end-icon text-field/euro-end-icon}]]]]])
           (when (#{:estate-procedure.type/urgent :estate-procedure.type/acquisition-negotiation}
                  procedure-type)
             [field-with-title {:title "Motivation bonus"
@@ -140,18 +167,15 @@
             [form/many {:attribute :estate-procedure/compensations
                         :before [typography/BoldGreyText (tr [:fields :estate-procedure/compensations])]
                         :after [buttons/link-button
-                                {:on-click #(e! (on-change
-                                                  (update form-data
-                                                          :estate-procedure/compensations
-                                                          (fnil conj []) {})))}
+                                {:on-click #(add-row! :estate-procedure/compensations)}
                                 "+ add compensation"]}
              [Grid {:container true :spacing 3}
-              [Grid {:item true :xs 6}
+              [Grid {:item true :xs 8}
                [form/field {:attribute :estate-compensation/reason}
                 [select/select-enum {:e! e!
                                      :show-label? false
                                      :attribute :estate-compensation/reason}]]]
-              [Grid {:item true :xs 6}
+              [Grid {:item true :xs 4}
                [form/field {:attribute :estate-compensation/amount}
                 [TextField {:hide-label? true
                             :placeholder 0
@@ -161,16 +185,13 @@
           [form/many {:attribute :estate-procedure/third-party-compensations
                       :before [typography/BoldGreyText (tr [:fields :estate-procedure/third-party-compensations])]
                       :after [buttons/link-button
-                              {:on-click #(e! (on-change
-                                                (update form-data
-                                                        :estate-procedure/third-party-compensations
-                                                        (fnil conj []) {})))}
+                              {:on-click #(add-row! :estate-procedure/third-party-compensations)}
                               "+ add compensation"]}
            [Grid {:container true :spacing 3}
-            [Grid {:item true :xs 6}
+            [Grid {:item true :xs 8}
              [form/field {:attribute :estate-compensation/description}
               [TextField {:hide-label? true}]]]
-            [Grid {:item true :xs 6}
+            [Grid {:item true :xs 4}
              [form/field {:attribute :estate-compensation/amount}
               [TextField {:type :number
                           :placeholder 0
@@ -181,11 +202,11 @@
                              :justify-content :center
                              :align-items :center}}
                [form/many-remove #(e! (on-change
-                                        (update form-data
-                                                :estate-procedure/third-party-compensations
-                                                (fn [items]
-                                                  (into (subvec items 0 %)
-                                                        (subvec items (inc %)))))))
+                                       (update form-data
+                                               :estate-procedure/third-party-compensations
+                                               (fn [items]
+                                                 (into (subvec items 0 %)
+                                                       (subvec items (inc %)))))))
                 [buttons/link-button {} "X"]]]]]
 
           (when (= (:estate-procedure/type form-data) :estate-procedure.type/property-trading)
