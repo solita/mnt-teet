@@ -104,14 +104,15 @@
    "file/type"       [(juxt :file/type :file/name) <]
    "file/status"     [(juxt :file/status :file/name) <]})
 
-(def ^:private sort-items
+(defn- sort-items
+  []
   (mapv #(assoc % :label (tr (conj [:file :sort-by (-> % :value keyword)])))
         [{:value "meta/created-at"}
          {:value "file/name"}
          {:value "file/type"}
          {:value "file/status"}]))
 
-(defn- file-filter-and-sorter [filter-atom sort-by-atom]
+(defn- file-filter-and-sorter [filter-atom sort-by-atom items]
   [:div {:class (<class file-style/filter-sorter)}
    [TextField {:value @filter-atom
                :start-icon icons/action-search
@@ -121,7 +122,7 @@
      :name "file-sort"
      :show-label? false
      :value @sort-by-atom
-     :items sort-items
+     :items items
      :on-change #(reset! sort-by-atom %)}]])
 
 (defn- filter-predicate
@@ -131,8 +132,8 @@
   (let [words (map str/lower-case
                    (str/split filter-value #"\s+"))]
     (fn [{file-name :file/name}]
-      (boolean (some #(str/includes? (str/lower-case file-name) %)
-                     words)))))
+      (boolean (every? #(str/includes? (str/lower-case file-name) %)
+                       words)))))
 
 (defn- filtered-by [filter-value files]
   (if (str/blank? filter-value)
@@ -140,18 +141,25 @@
     (let [filter-fn (filter-predicate filter-value)]
       (filter filter-fn files))))
 
+(defn- sorted-by [{:keys [value]} files]
+  (let [[sort-fn comparator] (sorters value)]
+    (sort-by sort-fn comparator files)))
+
 (defn file-table
   [files]
-  (r/with-let [filter-atom (r/atom "")
-               sort-by-atom (r/atom (first sort-items))]
-    (let [[sort-fn comparator] (sorters (:value @sort-by-atom))]
-      [:<>
-       [file-filter-and-sorter filter-atom sort-by-atom]
-       [:div
-        (->> files
-             (filtered-by @filter-atom)
-             (sort-by sort-fn comparator)
-             (mapc file-row))]])))
+  (r/with-let [items-for-sort-select (sort-items)
+               filter-atom (r/atom "")
+               sort-by-atom (r/atom (first items-for-sort-select))]
+    [:<>
+     [file-filter-and-sorter
+      filter-atom
+      sort-by-atom
+      items-for-sort-select]
+     [:div
+      (->> files
+           (filtered-by @filter-atom)
+           (sorted-by @sort-by-atom)
+           (mapc file-row))]]))
 
 (defn file-upload-button []
   [buttons/button-primary {:href (url/set-query-param :add-document 1)
