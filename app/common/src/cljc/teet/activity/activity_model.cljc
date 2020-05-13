@@ -12,7 +12,9 @@
 
 (def activity-name->task-groups
   {:activity.name/pre-design #{:task.group/base-data
-                               :task.group/study}
+                               :task.group/study
+                               :task.group/design
+                               :task.group/design-approval}
    :activity.name/preliminary-design #{:task.group/base-data
                                        :task.group/study
                                        :task.group/design
