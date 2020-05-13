@@ -201,7 +201,7 @@
 
 (defn select-enum
   "Select an enum value based on attribute. Automatically fetches enum values from database."
-  [{:keys [e! attribute required tiny-select? show-label? label-element show-empty-selection?]
+  [{:keys [e! attribute required tiny-select? show-label? label-element show-empty-selection? sort-fn]
     :or {show-label? true
          show-empty-selection? true}}]
   (when-not (contains? @enum-values attribute)
@@ -250,7 +250,7 @@
                                  ;; Otherwise pass the kw as value as is
                                  on-change)
                     :show-empty-selection? show-empty-selection?
-                    :items (sort-by tr* values)
+                    :items (sort-by (or sort-fn tr*) values)
                     :format-item tr*
                     :required required
                     :class class}])))

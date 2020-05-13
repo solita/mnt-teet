@@ -67,7 +67,10 @@
     [Grid {:item true :xs 4}
 
      [form/field :activity/name
-      [select/select-enum {:e! e! :attribute :activity/name :enum/valid-for lifecycle-type}]]
+      [select/select-enum {:e! e!
+                           :attribute :activity/name
+                           :sort-fn activity-model/activity-order
+                           :enum/valid-for lifecycle-type}]]
 
      [form/field {:attribute [:activity/estimated-start-date :activity/estimated-end-date]}
       [date-picker/date-range-input {:row? false

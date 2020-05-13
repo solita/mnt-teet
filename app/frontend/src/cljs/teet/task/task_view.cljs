@@ -159,6 +159,7 @@
      ^{:xs 6 :attribute :task/group}
      [select/select-enum {:e! e!
                           :attribute :task/group
+                          :sort-fn task-model/task-group-order
                           :values-filter (get activity-model/activity-name->task-groups
                                               (-> activity :activity/name :db/ident)
                                               #{})}]
