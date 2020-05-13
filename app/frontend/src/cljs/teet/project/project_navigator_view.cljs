@@ -7,7 +7,7 @@
             [teet.ui.project-context :as project-context]
             [teet.ui.url :as url]
             [teet.ui.util :refer [mapc]]
-            [teet.project.activity-model :as activity-model]
+            [teet.activity.activity-model :as activity-model]
             [teet.project.project-controller :as project-controller]
             [teet.localization :refer [tr tr-enum]]
             [reagent.core :as r]
