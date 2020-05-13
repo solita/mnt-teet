@@ -81,8 +81,19 @@
                 (cu/update-in-if-exists [:land-exchange/price-per-sqm] bigdec))))
         land-exchanges))
 
+(defn new-process-fees-tx
+  [process-fees]
+  (vec
+   (map-indexed
+    (fn [i pf]
+      (-> pf
+          (update :estate-process-fee/fee bigdec)
+          (assoc :db/id (str "new-process-fee-" i))))
+    process-fees)))
+
 (def common-procedure-updates
   [[:estate-procedure/pos #(Integer/parseInt %)]
+   [:estate-procedure/motivation-bonus bigdec]
    [:estate-procedure/compensations new-compensations-tx]
    [:estate-procedure/third-party-compensations new-compensations-tx]
    [:estate-procedure/land-exchanges new-land-exchange-txs]])
@@ -91,19 +102,30 @@
   [:estate-procedure/pos :estate-procedure/type :estate-procedure/estate-id])
 
 (def procedure-type-options
-  {:estate-procedure.type/urgent {:keys
-                                  [:estate-procedure/urgent-bonus
-                                   :estate-procedure/motivation-bonus :estate-procedure/third-party-compensations]}
-   :estate-procedure.type/acquisition-negotiation {:keys [:estate-procedure/pos :estate-procedure/compensations
-                                                          :estate-procedure/motivation-bonus
-                                                          :estate-procedure/third-party-compensations]}
-   :estate-procedure.type/expropriation {:keys [:estate-procedure/pos :estate-procedure/compensations
-                                                :estate-procedure/motivation-bonus
-                                                :estate-procedure/third-party-compensations]}
-   :estate-procedure.type/property-rights {:keys [:estate-procedure/pos :estate-procedure/compensations
-                                                  :estate-procedure/motivation-bonus :estate-procedure/third-party-compensations]}
-   :estate-procedure.type/property-trading {:keys [:estate-procedure/pos :estate-procedure/land-exchanges
-                                                   :estate-procedure/third-party-compensations]}})
+  {:estate-procedure.type/urgent
+   {:keys
+    [:estate-procedure/urgent-bonus
+     :estate-procedure/motivation-bonus :estate-procedure/third-party-compensations]}
+
+   :estate-procedure.type/acquisition-negotiation
+   {:keys [:estate-procedure/pos :estate-procedure/compensations
+           :estate-procedure/motivation-bonus
+           :estate-procedure/third-party-compensations
+           :estate-procedure/process-fees]
+    :updates [[:estate-procedure/process-fees new-process-fees-tx]]}
+
+   :estate-procedure.type/expropriation
+   {:keys [:estate-procedure/pos :estate-procedure/compensations
+           :estate-procedure/motivation-bonus
+           :estate-procedure/third-party-compensations]}
+
+   :estate-procedure.type/property-rights
+   {:keys [:estate-procedure/pos :estate-procedure/compensations
+           :estate-procedure/motivation-bonus :estate-procedure/third-party-compensations]}
+
+   :estate-procedure.type/property-trading
+   {:keys [:estate-procedure/pos :estate-procedure/land-exchanges
+           :estate-procedure/third-party-compensations]}})
 
 (defn estate-procedure-tx
   [procedure-form-data]
@@ -130,5 +152,7 @@
    :authorization {}
    :pre [(nil? (:db/id payload))]
    :transact
-   [(estate-procedure-tx payload)]})
-
+   [(let [tx-data (estate-procedure-tx payload)]
+      (def p* payload)
+      (def tx* tx-data)
+      tx-data)]})

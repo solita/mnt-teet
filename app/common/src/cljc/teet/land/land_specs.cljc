@@ -15,7 +15,8 @@
                 :estate-procedure/compensations
                 :estate-procedure/motivation-bonus
                 :estate-procedure/land-exchanges
-                :estate-procedure/third-party-compensations]))
+                :estate-procedure/third-party-compensations
+                :estate-procedure/process-fees]))
 
 (s/def :estate-procedure/compensation (s/keys :opt [:estate-compensation/amount
                                                     :estate-compensation/description

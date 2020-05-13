@@ -95,8 +95,8 @@
                           {:end-icon end-icon}))]]]]])
 
 (defn- owner-process-fee-field [{:keys [on-change value]}]
-  (let [{:keys [owner? recipient]} value]
-    (if (nil? owner?)
+  (let [{:keys [owner recipient]} value]
+    (if (nil? owner)
       [TextField {:on-change #(on-change (assoc value :recipient (-> % .-target .-value)))
                   :value recipient}]
       [TextField {:read-only? true :value recipient}])))
@@ -143,9 +143,10 @@
                [form/field :process-fee-recipient
                 [owner-process-fee-field {}]]]
               [Grid {:item true :xs 4}
-               [form/field :process-fee/fee
+               [form/field :estate-process-fee/fee
                 [TextField {:type :number :placeholder "0"
                             :hide-label? true
+                            :min 0
                             :end-icon text-field/euro-end-icon}]]]]])
           (when (#{:estate-procedure.type/urgent :estate-procedure.type/acquisition-negotiation}
                  procedure-type)
@@ -380,7 +381,8 @@
       [Collapse
        {:in (boolean (open-estates estate-id))
         :mount-on-enter true}
-       [estate-group-form e! estate (r/partial land-controller/->UpdateEstateForm owner-set estate-id) (get estate-forms estate-id)]]])
+       [estate-group-form e! estate
+        (r/partial land-controller/->UpdateEstateForm owner-set estate) (get estate-forms estate-id)]]])
    [:div {:class (<class plot-group-container)}
     (mapc
      (r/partial cadastral-unit e!
@@ -475,7 +477,7 @@
                             (map
                               (fn [owner]
                                 (if (:r_kood owner)
-                                  (select-keys owner [:r_kood :r_riik])
+                                  (select-keys owner [:r_kood :r_riik ])
                                   (select-keys owner [:isiku_tyyp :nimi]))))
                             (get-in unit [:estate :omandiosad])))
                     units)]

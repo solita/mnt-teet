@@ -23,7 +23,7 @@
 (defrecord ToggleOpenEstate [estate-id])
 (defrecord SubmitEstateCompensationForm [form-data estate-id])
 
-(defrecord UpdateEstateForm [owner-set estate-id form-data])
+(defrecord UpdateEstateForm [owner-set estate form-data])
 (defrecord UpdateCadastralForm [owner-set cadastral-id form-data])
 
 
@@ -64,6 +64,31 @@
       (do
         ;; (println "owner filter: FALSE for " (mapv (juxt :nimi :eesnimi) owners) "queried for" query)
         false))))
+
+(def owner-type-can-receive-process-fee #{"Füüsiline isik"
+                                          "Juriidiline isik"})
+(defn format-process-fees
+  "Format process fee rows for sending to server."
+  [form-data]
+  (cu/update-in-if-exists
+   form-data
+   [:estate-procedure/process-fees]
+   (fn [process-fees]
+     (vec
+      (for [{pfr :process-fee-recipient :as pf} process-fees]
+        (merge
+         (select-keys pf [:estate-process-fee/fee])
+         {:estate-process-fee/recipient (:recipient pfr)}
+         (when-let [owner (:owner pfr)]
+           ;; Owner of the estate, add person or business code
+           (case (:isiku_tyyp owner)
+             ;; Physical person
+             "Füüsiline isik"
+             {:estate-process-fee/person-id (str "EE" (:r_kood owner))}
+
+             ;; Legal entity with business id (but not public)
+             "Juriidiline isik"
+             {:estate-process-fee/business-id (str "EE" (:r_kood owner))}))))))))
 
 (extend-protocol t/Event
 
@@ -178,10 +203,11 @@
             {:tuck.effect/type :command!
              :command :land/create-estate-procedure
              :success-message "Foo! ✅"                      ;;todo proper message
-             :payload (merge
-                        form-data                           ;; TODO add select keys
-                        {:thk.project/id project-id
-                         :estate-procedure/estate-id estate-id})
+             :payload (-> form-data
+                          (merge ;; TODO add select keys
+                           {:thk.project/id project-id
+                            :estate-procedure/estate-id estate-id})
+                          format-process-fees)
              :result-event (partial ->FetchLandAcquisitions project-id) ;;TODO fetch esate compensations
              })))
 
@@ -239,14 +265,34 @@
                                           (common-controller/->ResponseError (ex-info "x road failed to respond" {:error :invalid-x-road-response})))
                                         (common-controller/->ResponseError error)))}))))))
 
+(defn- estate-owner-process-fees [{owners :omandiosad :as _estate}]
+  (vec
+   (keep (fn [owner]
+           (when (owner-type-can-receive-process-fee (:isiku_tyyp owner))
+             {:process-fee-recipient {:recipient
+                                      (str (:eesnimi owner) " " (:nimi owner))
+                                      :owner owner}}))
+         owners)))
+
 ;; Events for updating different forms in land purchase
 (extend-protocol t/Event
   UpdateEstateForm
-  (process-event [{:keys [owner-set estate-id form-data]} app]
+  (process-event [{:keys [owner-set estate form-data]} app]
     (common-controller/update-page-state
      app
-     [:land/forms owner-set :land/estate-forms estate-id]
-     merge form-data))
+     [:land/forms owner-set :land/estate-forms (:estate-id estate)]
+     (fn [old-data]
+       (let [computed
+             (cond
+               ;; When acquisition thru negotiation, automatically add
+               ;; process fee rows for all owners
+               (and (= :estate-procedure.type/acquisition-negotiation
+                       (:estate-procedure/type form-data))
+                    (not= :estate-procedure.type/acquisition-negotiation
+                          (:estate-procedure/type old-data))
+                    (not (contains? old-data :estate-procedure/process-fees)))
+               {:estate-procedure/process-fees (estate-owner-process-fees estate)})]
+         (merge old-data form-data computed)))))
 
   UpdateCadastralForm
   (process-event [{:keys [owner-set cadastral-id form-data]} app]
