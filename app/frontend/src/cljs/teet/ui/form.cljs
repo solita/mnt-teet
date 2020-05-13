@@ -193,7 +193,7 @@
 
 
 (defn- field*
-  [field-info field
+  [field-info _field
    {:keys [invalid-attributes required-fields current-fields] :as ctx}]
 
   (let [{:keys [attribute]
@@ -210,7 +210,7 @@
       (fn [_]
         (swap! current-fields dissoc attribute))
       :reagent-render
-      (fn [_ _ {:keys [update-attribute-fn value]}]
+      (fn [_ field {:keys [update-attribute-fn value]}]
         (let [value (attribute-value value attribute
                                      (default-value (first field)))
               error-text (and validate-field
