@@ -221,7 +221,13 @@
                          error))
          (let [zx (-> body unexceptional-xml-parse zip/xml-zip)]
            (if-not zx
-             (log/error "couldn't parse XML from WFS:" zx)
+             (do 
+               (log/error "couldn't parse XML from WFS:" zx)
+               (throw (ex-info "WFS response error"
+                         {:status 500
+                          :error :wfs-request-failed
+                          :wfs-url wfs-url
+                          :query-params query-params})))
              (read-feature-collection zx
                                       (:TYPENAME query-params)
                                       (or parse-feature parse-road-part)))))))))
@@ -400,7 +406,12 @@
                        :response response}))
       (if-let [parsed (unexceptional-xml-parse body)]
         (zip/xml-zip parsed)
-        (log/error "couldn't parse WMS capabilities xml:" body)))))
+        (do 
+          (log/error "couldn't parse WMS capabilities xml:" body)
+          (throw (ex-info "Unable parse capability query response from WFS"
+                          {:url url
+                           :service service
+                           :response response})))))))
 
 (defn fetch-wms-capabilities
   "Fetch WMS capabilities XML. Returns XML zipper."
