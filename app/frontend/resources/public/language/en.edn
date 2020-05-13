@@ -86,7 +86,7 @@
  {:activity.name/construction "Construction",
   :task.type/utilities "Utilities",
   :task.type/eia-assessment "Environmental Impact Assessment (EIA)",
-  :task.type/site-plan "Sitiation plan",
+  :task.type/site-plan "Situation plan",
   :notification.type/activity-accepted
   "Activity has been accepted by project owner",
   :task.type/other "Other",
@@ -149,7 +149,7 @@
   :notification.type/comment-resolved "Comment resolved",
   :task.type/terms-of-reference "Terms of reference",
   :thk.task-type/road-safety-audit "Road safety audit",
-  :task.type/calculation-of-pavement "Calculation of pavement",
+  :task.type/calculation-of-pavement "Pavement dimensioning",
   :document.sub-category/laboratory-certificate
   "Laboratory Certificate",
   :task.type/cost-list "Cost list",
@@ -166,7 +166,7 @@
   :task.type/equipment "Equipment",
   :task.type/structures "Structures",
   :activity.name/design-requirements "Design requirements",
-  :task.type/calculation "Calculation of pavement",
+  :task.type/calculation "Structural calculations",
   :task.type/design-road-safety-audit "Design road safety audit",
   :thk.task-type/third-party-review "3rd party review",
   :document.sub-category/photo "Photo",
@@ -204,7 +204,7 @@
   :activity.status/other "Other",
   :notification.type/activity-rejected
   "Activity has been archived or cancelled by project owner",
-  :task.type/technical-conditions "Technical conditions",
+  :task.type/technical-conditions "Terms of Reference",
   :estate-procedure.type/property-trading "Exchanging property",
   :estate-compensation.reason/loss-of-living-space
   "Loss of living space",
@@ -402,7 +402,7 @@
    :details "Details",
    :restrictions "Restrictions",
    :road-objects "Road objects",
-   :land "Cadastral units"},
+   :land "Land"},
   :edit-activity "Edit activity",
   :restrictions-tab "Restrictions",
   :download-related-info "Download related info",
