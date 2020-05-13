@@ -6,8 +6,9 @@
             [teet.localization :refer [tr tr-enum]]
             [teet.ui.util :refer [mapc]]
             [reagent.core :as r]
+            [teet.ui.icons :as icons]
             [teet.ui.material-ui :refer [ButtonBase Collapse LinearProgress Grid]]
-            [teet.ui.text-field :refer [TextField]]
+            [teet.ui.text-field :refer [TextField] :as text-field]
             [teet.project.land-controller :as land-controller]
             [teet.theme.theme-colors :as theme-colors]
             [garden.color :refer [darken]]
@@ -94,45 +95,121 @@
                           {:end-icon end-icon}))]]]]])
 
 (defn estate-group-form
-  [e! {:keys [estate-id] :as estate} on-change form-data]
-  [:div
-   [form/form2 {:e! e!
-               :value form-data
-               :on-change-event on-change
-               :save-event #(land-controller/->SubmitEstateCompensationForm form-data)
-               :cancel-event #(land-controller/->ToggleOpenEstate estate-id)
-               :footer impact-form-footer}
-    [:div {:class (<class estate-compensation-form)}
-     [:div
-      [form/field :estate-procedure/pos
-       [TextField {:type :number}]]
-      [form/field :estate-procedure/type
-       [select/select-enum {:e! e!
-                            :attribute :estate-procedure/type}]]
-      [field-with-title "Motivation bonus" :estate-procedure/motivation-bonus :number]
+  [e! _ on-change form-data]
+  (e! (on-change (-> form-data
+                     (update :estate-procedure/compensations
+                             #(if (empty? %) [{}] %))
+                     (update :estate-procedure/third-party-compensations
+                             #(if (empty? %) [{}] %))
+                     (update :estate-procedure/land-exchanges
+                             #(if (empty? %) [{}] %)))))
+  (fn [e! {:keys [estate-id] :as estate} on-change form-data]
+    (let [procedure-type (:estate-procedure/type form-data)]
+      [:div
+       [form/form2 {:e! e!
+                    :value form-data
+                    :on-change-event on-change
+                    :save-event #(land-controller/->SubmitEstateCompensationForm form-data estate-id)
+                    :cancel-event #(land-controller/->ToggleOpenEstate estate-id)}
+        [:div {:class (<class estate-compensation-form)}
+         [:div
+          [form/field :estate-procedure/pos
+           [TextField {:type :number
+                       :label-element typography/BoldGreyText}]]
+          [form/field :estate-procedure/type
+           [select/select-enum {:e! e!
+                                :label-element typography/BoldGreyText
+                                :attribute :estate-procedure/type}]]
+          (when (#{:estate-procedure.type/urgent :estate-procedure.type/acquisition-negotiation}
+                 procedure-type)
+            [field-with-title {:title "Motivation bonus"
+                               :field-name :estate-procedure/motivation-bonus
+                               :type :number
+                               :placeholder 0
+                               :end-icon text-field/euro-end-icon}])
 
-      [form/many {:attribute :estate-procedure/third-party-compensations
-                  :after [buttons/link-button
-                          {:on-click #(e! (on-change
-                                           (update form-data
-                                                   :estate-procedure/third-party-compensations
-                                                   (fnil conj []) {})))}
-                          "+ add compensation"]}
-       [Grid {:container true}
-        [Grid {:item true :xs 5}
-         [form/field {:attribute :estate-compensation/description}
-          [TextField {}]]]
-        [Grid {:item true :xs 5}
-         [form/field {:attribute :estate-compensation/amount}
-          [TextField {:type :number}]]]
-        [Grid {:item true :xs 2}
-         [form/many-remove #(e! (on-change
-                                 (update form-data
-                                         :estate-procedure/third-party-compensations
-                                         (fn [items]
-                                           (into (subvec items 0 %)
-                                                 (subvec items (inc %)))))))
-          [buttons/link-button {} "X"]]]]]]]]])
+          (when (#{:estate-procedure.type/urgent}
+                 procedure-type)
+            [field-with-title {:title "Urgent procedure bonus"
+                               :field-name :estate-procedure/urgent-bonus
+                               :type :number
+                               :placeholder 0
+                               :end-icon text-field/euro-end-icon}])
+
+          (when (#{:estate-procedure.type/acquisition-negotiation :estate-procedure.type/expropriation} procedure-type)
+            [form/many {:attribute :estate-procedure/compensations
+                        :before [typography/BoldGreyText (tr [:fields :estate-procedure/compensations])]
+                        :after [buttons/link-button
+                                {:on-click #(e! (on-change
+                                                  (update form-data
+                                                          :estate-procedure/compensations
+                                                          (fnil conj []) {})))}
+                                "+ add compensation"]}
+             [Grid {:container true :spacing 3}
+              [Grid {:item true :xs 6}
+               [form/field {:attribute :estate-compensation/reason}
+                [select/select-enum {:e! e!
+                                     :show-label? false
+                                     :attribute :estate-compensation/reason}]]]
+              [Grid {:item true :xs 6}
+               [form/field {:attribute :estate-compensation/amount}
+                [TextField {:hide-label? true
+                            :placeholder 0
+                            :end-icon text-field/euro-end-icon
+                            :type :number}]]]]])
+
+          [form/many {:attribute :estate-procedure/third-party-compensations
+                      :before [typography/BoldGreyText (tr [:fields :estate-procedure/third-party-compensations])]
+                      :after [buttons/link-button
+                              {:on-click #(e! (on-change
+                                                (update form-data
+                                                        :estate-procedure/third-party-compensations
+                                                        (fnil conj []) {})))}
+                              "+ add compensation"]}
+           [Grid {:container true :spacing 3}
+            [Grid {:item true :xs 6}
+             [form/field {:attribute :estate-compensation/description}
+              [TextField {:hide-label? true}]]]
+            [Grid {:item true :xs 6}
+             [form/field {:attribute :estate-compensation/amount}
+              [TextField {:type :number
+                          :placeholder 0
+                          :end-icon text-field/euro-end-icon
+                          :hide-label? true}]]]
+            #_[Grid {:item true :xs 2
+                     :style {:display :flex
+                             :justify-content :center
+                             :align-items :center}}
+               [form/many-remove #(e! (on-change
+                                        (update form-data
+                                                :estate-procedure/third-party-compensations
+                                                (fn [items]
+                                                  (into (subvec items 0 %)
+                                                        (subvec items (inc %)))))))
+                [buttons/link-button {} "X"]]]]]
+
+          (when (= (:estate-procedure/type form-data) :estate-procedure.type/property-trading)
+            [:div
+             [form/many {:before [typography/BoldGreyText (tr [:fields :estate-procedure/land-exchanges])]
+                         :attribute :estate-procedure/land-exchanges}
+              [Grid {:container true :spacing 3}
+               [Grid {:item true :xs 12}
+                [form/field {:attribute :land-exchange/cadastral-unit-id}
+                 [TextField {:hide-label? true
+                             :placeholder "Cadastral unit number"}]]]
+               [Grid {:item true :xs 6}
+                [form/field {:attribute :land-exchange/area}
+                 [TextField {:label-element typography/BoldGreyText
+                             :type :number
+                             :placeholder 0
+                             :end-icon text-field/sqm-end-icon}]]]
+               [Grid {:item true :xs 6}
+                [form/field {:attribute :land-exchange/price-per-sqm}
+                 [TextField {:type :number
+                             :placeholder 0
+                             :end-icon text-field/euro-end-icon
+                             :label-element typography/BoldGreyText}]]]]]])]
+         (form/footer2 form/form-footer)]]])))
 
 
 (defn cadastral-unit-form
@@ -224,7 +301,7 @@
     [:div {:class (<class common-styles/space-between-center)}
      [acquisition-impact-status (get-in unit [:land-acquisition :land-acquisition/impact])]
      [:span {:class (<class common-styles/gray-text)}
-      (tr [:land :estate]) " " KINNISTU]]]
+        TUNNUS]]]
    [Collapse
     {:in selected?
      :mount-on-enter true}
@@ -346,7 +423,7 @@
      [TextField {:label (tr [:land :cadastral-filter-label])
                  :value (:cadastral-search-value filter-params)
                  :on-change #(on-change % :cadastral-search-value)}]
-    
+
      [select/select-enum {:e! e!
                           :attribute :land-acquisition/impact
                           :show-empty-selection? true
@@ -430,7 +507,7 @@
             [LinearProgress {:variant :determinate
                              :value (* 100 (/ fetched-count related-estate-count))}]]
            [:div
-            
+
             [filter-units e! (:land-acquisition-filters project)]
             [cadastral-groups e! (dissoc project :land-acquisition-filters) (:land/units project)]]))])))
 
