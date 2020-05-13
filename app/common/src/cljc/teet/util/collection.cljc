@@ -151,3 +151,13 @@
   (into {}
         (for [[k v] m]
           [k (f v)])))
+
+(defn contains-in?
+  [m ks]
+  (not= ::absent (get-in m ks ::absent)))
+
+(defn update-in-if-exists
+  [m ks f & args]
+  (if (contains-in? m ks)
+    (apply (partial update-in m ks f) args)
+    m))

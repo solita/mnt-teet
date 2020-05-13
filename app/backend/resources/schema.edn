@@ -771,4 +771,35 @@
 
  ;; TEET-539 Retract acceptanses as a duplicate to No-objection co-ordination
  {:db/ident :migration/retract-acceptances
-  :txes [[[:db/retractEntity [:db/ident :task.type/acceptances]]]]}]
+  :txes [[[:db/retractEntity [:db/ident :task.type/acceptances]]]]}
+
+ {:db/ident :migration/estate-procedure2
+  :txes [[{:db/doc "Refers to land-exchange entities"
+           :db/ident :estate-procedure/land-exchanges
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many}
+
+          ;; Land exchange entity
+          {:db/ident :land-exchange/cadastral-unit-id
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :land-exchange/area
+           :db/valueType :db.type/bigdec
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :land-exchange/price-per-sqm
+           :db/valueType :db.type/bigdec
+           :db/cardinality :db.cardinality/one}]
+         ;changes to the estate-procedure entity
+         [{:db/doc "Refers to estate-compensation entities"
+           :db/ident :estate-procedure/compensations
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many}
+          {:db/ident :estate-procedure/project
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "The project in which this estate procedure is made in"}
+          {:db/ident :estate-procedure/estate-id
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Estate id to which the procedure is made for"}
+          ]]}]
