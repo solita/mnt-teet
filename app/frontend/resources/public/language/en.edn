@@ -341,12 +341,15 @@
   :land-acquisition-saved "Land acquisition saved successfully",
   :net-area-balance "Net balance {area} m2",
   :filter {:quality "Land data quality"},
+  :owner-filter-label "Owner",
+  :cadastral-filter-label "Cadastral",
   :quality
   {:any "Any", :bad "Bad", :questionable "Questionable", :good "Good"},
   :filter-label "Filter units",
   :units "units",
   :estate-info-fetch-failure
   "Couldn't fetch information from xroad. Please try again and if error persists contact system administrator.",
+  :estate-filter-label "Estate",
   :fetching-land-units "Fetching land units"},
  :login {:login "Login", :password "Password", :username "Username"},
  :map

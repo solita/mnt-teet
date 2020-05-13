@@ -344,12 +344,15 @@
   :land-acquisition-saved "Maa omandamine edukalt salvestatud",
   :net-area-balance "Netojääk {area} m2",
   :filter {:quality "Maa andmete kvaliteet"},
+  :owner-filter-label nil,
+  :cadastral-filter-label nil,
   :quality
   {:any "Kõik", :bad "Halb", :questionable "Küsitav", :good "Hea"},
   :filter-label "Filtreerin üksused",
   :units "ühikut",
   :estate-info-fetch-failure
   "X-teest ei õnnestunud teavet hankida. Palun proovi uuesti ja kui tõrge püsib, pöörduge süsteemi administraatori poole.",
+  :estate-filter-label nil,
   :fetching-land-units "Toon maade andmeid"},
  :login {:login "Sisenen", :password "Salasõna", :username "Kasutaja"},
  :map
