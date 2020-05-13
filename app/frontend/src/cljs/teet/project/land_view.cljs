@@ -335,7 +335,7 @@
    :flex-direction :column
    :margin-left "15px"})
 
-(defn land-button-group-style
+(defn group-style
   []
   {:width "100%"
    :justify-content :space-between
@@ -349,7 +349,7 @@
   [:div {:class (<class estate-group-style)}
    (let [estate (:estate (first units))]
      [:div.heading {:class (<class cadastral-heading-container-style theme-colors/gray-lighter :inherit)}
-      [ButtonBase {:class (<class land-button-group-style)
+      [ButtonBase {:class (<class group-style)
                    :on-click (e! land-controller/->ToggleOpenEstate estate-id)}
 
        [typography/SectionHeading "Estate " estate-id]
@@ -367,32 +367,19 @@
                 cadastral-forms)
       units)]])
 
-(defn owner-form
-  [e! owner-set owner-compensation-form]
-  [:div "owner set: " (pr-str owner-set)
-   "comp form: " (pr-str owner-compensation-form)]
-  #_[form/form2 {:on-change (e! (partial ))}
-   "foo"])
-
 (defn owner-group
   [e! open-estates owner-compensation-form cadastral-forms estate-forms [owner units]]
   ^{:key (str owner)}
   [:div {:style {:margin-bottom "2rem"}}
    (let [owners (get-in (first units) [:estate :omandiosad])]
      [:div.heading {:class (<class cadastral-heading-container-style theme-colors/gray theme-colors/white)}
-
-      [ButtonBase {:class (<class land-button-group-style)
-                   :on-click #(println "Toggle collapse with form")}
+      [:div {:class (<class group-style)}
        [typography/SectionHeading (if (not= (count owners) 1)
                                     (str (count owners) " owners")
                                     (:nimi (first owners)))]
        [:span (count units) " " (if (= 1 (count units))
                                   (tr [:land :unit])
-                                  (tr [:land :units]))]]
-      [Collapse
-       {:in true
-        :moun-on-enter true}
-       [owner-form e! owner owner-compensation-form]]])
+                                  (tr [:land :units]))]]])
    [:div {:class (<class plot-group-container)}
     (mapc
      (fn [unit-group]
@@ -510,5 +497,3 @@
 
             [filter-units e! (:land-acquisition-filters project)]
             [cadastral-groups e! (dissoc project :land-acquisition-filters) (:land/units project)]]))])))
-
-
