@@ -1,14 +1,11 @@
 (ns teet.project.project-model
   "Common project datamodel metadata."
   (:require [teet.user.user-model :as user-model]
-            #?@(:cljs ([teet.ui.format :as format]
-                       [clojure.string :as str]
-                       [cljs-time.core :as t]
+            #?@(:cljs ([clojure.string :as str]
                        goog.math.Long)
                 :clj ([clojure.string :as str]))
-            [teet.log :as log]
             [teet.util.datomic :refer [id=]]
-            [teet.project.activity-model :as activity-model]
+            [teet.activity.activity-model :as activity-model]
             [teet.project.task-model :as task-model]
             [clojure.spec.alpha :as s]
             [teet.util.collection :as cu]
