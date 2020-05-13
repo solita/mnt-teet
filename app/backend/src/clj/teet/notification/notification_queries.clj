@@ -4,7 +4,8 @@
             [teet.project.project-db :as project-db]
             [datomic.client.api :as d]
             [teet.comment.comment-model :as comment-model]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.comment.comment-db :as comment-db]))
 
 (defquery :notification/unread-notifications
   {:doc "Fetch unread notifications for user, sorted by most recent first."
@@ -64,21 +65,9 @@
               :task (str task)
               :file (str file-id)}}))
 
-(defn- comment-parent
-  "Returns [entity-type entity-id] for the parent of the given comment.
-  If parent is not found, returns nil."
-  [db comment-id]
-  (some (fn [[entity-type attr]]
-          (when-let [entity-id (ffirst
-                                (d/q [:find '?e
-                                      :where ['?e attr '?c]
-                                      :in '$ '?c]
-                                     db comment-id))]
-            [entity-type entity-id]))
-        comment-model/entity-comment-attribute))
 
 (defn- comment-navigation-info [db comment-id]
-  (if-let [[entity-type entity-id] (comment-parent db comment-id)]
+  (if-let [[entity-type entity-id] (comment-db/comment-parent db comment-id)]
     (merge
      (case entity-type
        :task (task-navigation-info db entity-id)
@@ -109,7 +98,7 @@
        :notification.type/activity-accepted
        :notification.type/activity-rejected)
       (activity-navigation-info db (:db/id target))
-      
+
       (:notification.type/comment-created
        :notification.type/comment-resolved
        :notification.type/comment-unresolved)

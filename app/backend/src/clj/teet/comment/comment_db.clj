@@ -2,9 +2,10 @@
   "Utilities for comment datomic queries"
   (:require [datomic.client.api :as d]
             [teet.meta.meta-query :as meta-query]
-            [teet.db-api.core :as db-api]))
+            [teet.db-api.core :as db-api]
+            [teet.comment.comment-model :as comment-model]))
 
-(def ^:private type->comments-attribute
+(def type->comments-attribute
   {:task :task/comments
    :file :file/comments})
 
@@ -35,3 +36,16 @@
              db entity-id)
         (map first)
         (meta-query/without-deleted db))))
+
+(defn comment-parent
+  "Returns [entity-type entity-id] for the parent of the given comment.
+  If parent is not found, returns nil."
+  [db comment-id]
+  (some (fn [[entity-type attr]]
+          (when-let [entity-id (ffirst
+                                (d/q [:find '?e
+                                      :where ['?e attr '?c]
+                                      :in '$ '?c]
+                                     db comment-id))]
+            [entity-type entity-id]))
+        comment-model/entity-comment-attribute))
