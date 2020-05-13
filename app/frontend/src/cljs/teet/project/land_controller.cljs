@@ -23,7 +23,6 @@
 (defrecord ToggleOpenEstate [estate-id])
 (defrecord SubmitEstateCompensationForm [form-data estate-id])
 
-(defrecord UpdateOwnerCompensationForm [owner-set form-data])
 (defrecord UpdateEstateForm [owner-set estate-id form-data])
 (defrecord UpdateCadastralForm [owner-set cadastral-id form-data])
 
@@ -242,13 +241,6 @@
 
 ;; Events for updating different forms in land purchase
 (extend-protocol t/Event
-  UpdateOwnerCompensationForm
-  (process-event [{:keys [owner-set form-data]} app]
-    (common-controller/update-page-state
-     app
-     [:land/forms owner-set :land/owner-compensation-form]
-     merge form-data))
-
   UpdateEstateForm
   (process-event [{:keys [owner-set estate-id form-data]} app]
     (common-controller/update-page-state
