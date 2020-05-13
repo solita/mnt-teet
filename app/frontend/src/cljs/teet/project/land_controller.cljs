@@ -10,7 +10,6 @@
             [teet.common.common-controller :as common-controller]
             [teet.snackbar.snackbar-controller :as snackbar-controller]))
 
-(defrecord SetCadastralInfo [response])
 (defrecord ToggleLandUnit [unit])
 (defrecord SearchOnChange [attribute value])
 (defrecord UpdateFilteredUnitIDs [attribute ids])
@@ -22,9 +21,8 @@
 (defrecord FetchRelatedEstatesResponse [response])
 (defrecord FetchRelatedEstates [])
 (defrecord ToggleOpenEstate [estate-id])
-(defrecord SubmitEstateCompensationForm [form-data])
+(defrecord SubmitEstateCompensationForm [form-data estate-id])
 
-(defrecord UpdateOwnerCompensationForm [owner-set form-data])
 (defrecord UpdateEstateForm [owner-set estate-id form-data])
 (defrecord UpdateCadastralForm [owner-set cadastral-id form-data])
 
@@ -52,11 +50,11 @@
 
 (defn owner-filter-fn [query unit]
   (let [owners (get-in unit [:estate :omandiosad])
-        match? (fn [owner]                   
+        match? (fn [owner]
                  (let [fvals (vals (select-keys owner [:nimi :eesnimi :r_kood]))]
                    ;; (println "any-includes?" fvals query)
                    (any-includes? fvals query)))]
-    
+
     (if (and (not-empty owners)
              (some match? owners))
       (do
@@ -102,11 +100,11 @@
                    (partial owner-filter-fn (f-value :owner-search-value))
                    (fn cad [unit] ;; cadastral
                      (field-includes? (:TUNNUS unit) (f-value :cadastral-search-value)))
-                   (fn quality [unit] ; quality filter                     
+                   (fn quality [unit] ; quality filter
                      (if-let [q (f-select-value :quality)]
                        (= q (:quality unit))
                        true))
-                   (fn impact [unit] ; impact filter                     
+                   (fn impact [unit] ; impact filter
                      (if-let [q (when (:impact unit)  (f-value :impact))]
                        (do
                          ;; (println "compare impact" q (:impact unit) unit)
@@ -172,44 +170,18 @@
              :result-event (partial ->FetchLandAcquisitions project-id)})))
 
   SubmitEstateCompensationForm
-  (process-event [{:keys [form-data]} app]
+  (process-event [{:keys [form-data estate-id]} app]
     (let [project-id (get-in app [:params :project])]
       (t/fx app
             {:tuck.effect/type :command!
-             :command :land/create-estate-compensation
+             :command :land/create-estate-procedure
              :success-message "Foo! ✅"                      ;;todo proper message
              :payload (merge
                         form-data                           ;; TODO add select keys
-                        {:thk.project/id project-id})
+                        {:thk.project/id project-id
+                         :estate-procedure/estate-id estate-id})
              :result-event (partial ->FetchLandAcquisitions project-id) ;;TODO fetch esate compensations
              })))
-
-  SetCadastralInfo
-  (process-event [{response :response} app]
-    (let [page (:page app)
-
-          data (->> response
-                    :results
-                    (mapv #(get % "properties"))
-                    (mapv
-                      #(cu/map-keys keyword %))
-                    ;;Assoc teet-id for showing hovers on map
-                    (mapv
-                      #(assoc % :teet-id (str "2:" (:TUNNUS %))))
-                    (mapv
-                      (fn [{:keys [MOOTVIIS MUUDET] :as unit}]
-                        (assoc unit :quality (cond
-                                               (and (= MOOTVIIS "mõõdistatud, L-EST")
-                                                    (not (time/before? (c/from-string MUUDET) (time/date-time 2018 01 01))))
-                                               :good
-                                               (and (= MOOTVIIS "mõõdistatud, L-EST")
-                                                    (time/before? (c/from-string MUUDET) (time/date-time 2018 01 01)))
-                                               :questionable
-                                               :else
-                                               :bad)))))]
-
-      (assoc-in app [:route page :thk.project/related-cadastral-units-info :results] data)))
-
 
   FetchRelatedEstates
   (process-event [_ {:keys [params] :as app}]
@@ -267,13 +239,6 @@
 
 ;; Events for updating different forms in land purchase
 (extend-protocol t/Event
-  UpdateOwnerCompensationForm
-  (process-event [{:keys [owner-set form-data]} app]
-    (common-controller/update-page-state
-     app
-     [:land/forms owner-set :land/owner-compensation-form]
-     merge form-data))
-
   UpdateEstateForm
   (process-event [{:keys [owner-set estate-id form-data]} app]
     (common-controller/update-page-state

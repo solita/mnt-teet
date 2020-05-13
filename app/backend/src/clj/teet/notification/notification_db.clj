@@ -2,7 +2,9 @@
   "Utilities for notifications"
   (:require [datomic.client.api :as d]
             [teet.meta.meta-model :as meta-model]
-            [teet.user.user-model :as user-model]))
+            [teet.user.user-model :as user-model]
+            [teet.util.datomic :as du]
+            [teet.comment.comment-db :as comment-db]))
 
 
 
@@ -88,3 +90,33 @@
          db
          (user-model/user-ref user)
          notification-id))))
+
+(defn similar-notifications
+  "Fetch notifications that should be acknowledged at the same time
+  as the given notification. Returns set of notification ids including
+  the given notification.
+
+  If the notification type is a comment, returns all unread notifications
+  for the user and the same target. Otherwise just returns the notification id."
+  [db notification-id]
+  (let [{:notification/keys [type target receiver]}
+        (d/pull db '[:notification/type
+                     :notification/target
+                     :notification/receiver] notification-id)]
+    (if (du/enum= type :notification.type/comment-created)
+      (let [[parent-type parent-id] (comment-db/comment-parent db (:db/id target))]
+        (into [notification-id]
+              (map first)
+              ;; Query all user's unread notifications that are for notifications
+              ;; of comments for the same parent
+              (d/q [:find '?id
+                    :where
+                    '[?id :notification/target ?target]
+                    '[?id :notification/receiver ?user]
+                    '[?id :notification/status :notification.status/unread]
+                    ['?parent-id (comment-db/type->comments-attribute parent-type) '?target]
+                    :in '$ '?user '?parent-id]
+                   db (:db/id receiver) parent-id)))
+
+      ;; Return just the given notification id
+      [notification-id])))

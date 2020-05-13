@@ -1,29 +1,28 @@
 (ns teet.file.file-view
-  (:require [teet.project.project-navigator-view :as project-navigator-view]
-            [teet.project.project-model :as project-model]
-            [teet.file.file-controller :as file-controller]
-            [teet.ui.buttons :as buttons]
-            [teet.ui.url :as url]
-            [teet.ui.icons :as icons]
-            [teet.localization :refer [tr tr-enum]]
-            [teet.ui.material-ui :refer [Grid Link LinearProgress Menu MenuItem]]
-            [teet.ui.typography :as typography]
-            [teet.ui.util :refer [mapc]]
+  (:require [clojure.string :as str]
             [herb.core :refer [<class]]
-            [teet.common.common-styles :as common-styles]
-            [clojure.string :as str]
-            [re-svg-icons.tabler-icons :as ti]
             [re-svg-icons.feather-icons :as fi]
-            [teet.ui.tabs :as tabs]
-            [teet.theme.theme-colors :as theme-colors]
+            [re-svg-icons.tabler-icons :as ti]
             [reagent.core :as r]
-            [teet.ui.select :as select]
-            [teet.user.user-model :as user-model]
-            [teet.ui.format :as format]
-            [teet.ui.file-upload :as file-upload]
-            [teet.log :as log]
             [teet.common.common-controller :as common-controller]
+            [teet.common.common-styles :as common-styles]
+            [teet.file.file-controller :as file-controller]
+            [teet.localization :refer [tr tr-enum]]
+            [teet.project.project-model :as project-model]
+            [teet.project.project-navigator-view :as project-navigator-view]
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.ui.buttons :as buttons]
+            [teet.ui.file-upload :as file-upload]
+            [teet.ui.format :as format]
+            [teet.ui.icons :as icons]
+            [teet.ui.material-ui :refer [Grid Link LinearProgress]]
             [teet.ui.panels :as panels]
+            [teet.ui.tabs :as tabs]
+            [teet.ui.text-field :refer [TextField]]
+            [teet.ui.typography :as typography]
+            [teet.ui.url :as url]
+            [teet.ui.util :refer [mapc]]
+            [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]))
 
 (defn- file-column-style
@@ -97,10 +96,38 @@
    [:div {:class (<class file-column-style 25 :flex-end)}
     [:span (format/date created-at)]]])
 
+(defn- file-filter [value-atom]
+  [:div {:class (<class common-styles/margin-bottom "1.5")}
+   [TextField {:style {:width "100%"}
+               :value @value-atom
+               :start-icon icons/action-search
+               :on-change #(reset! value-atom (-> % .-target .-value))}]])
+
+(defn- filter-predicate
+  "matches files whose name contains one of the whitespace separated
+  words, case insensitive"
+  [filter-value]
+  (let [words (map str/lower-case
+                   (str/split filter-value #"\s+"))]
+    (fn [{file-name :file/name}]
+      (boolean (some #(str/includes? (str/lower-case file-name) %)
+                     words)))))
+
+(defn- filtered-by [filter-value files]
+  (if (str/blank? filter-value)
+    files
+    (let [filter-fn (filter-predicate filter-value)]
+      (filter filter-fn files))))
+
 (defn file-table
   [files]
-  [:div
-   (mapc file-row files)])
+  (r/with-let [value-atom (r/atom "")]
+    [:<>
+     [file-filter value-atom]
+     [:div
+      (->> files
+           (filtered-by @value-atom)
+           (mapc file-row))]]))
 
 (defn file-upload-button []
   [buttons/button-primary {:href (url/set-query-param :add-document 1)
