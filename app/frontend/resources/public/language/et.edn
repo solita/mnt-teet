@@ -154,7 +154,7 @@
   :task.type/terms-of-reference "Lähteülesanne",
   :thk.task-type/road-safety-audit
   "Liiklusohutuse audit (eelprojekt, põhiprojekt)",
-  :task.type/calculation-of-pavement "Kattendiarvutus",
+  :task.type/calculation-of-pavement "Katendiarvutus",
   :document.sub-category/laboratory-certificate "Laboriprotokoll",
   :task.type/cost-list "Kululoend",
   :task.type/eia-pre-assessment "KMH eelhinnang",
@@ -406,7 +406,7 @@
    :details "Üksikasjad",
    :restrictions "Kitsendused",
    :road-objects "Teeobjektid",
-   :land "Katastriüksused"},
+   :land "Maad"},
   :edit-activity "Muudan tegevust",
   :restrictions-tab "Kitsendused",
   :download-related-info "Laen seotud andmed alla",
