@@ -273,8 +273,8 @@
         [TextField {:type :number}]
         ^{:attribute :land-acquisition/pos-number :xs 6}        
         [select/select-enum {:e! e!
-                           :attribute :land-acquisition/status
-                           :show-empty-selection? true}]
+                             :attribute :land-acquisition/status
+                             :show-empty-selection? true}]
         ^{:attribute :land-acquisition/area-to-obtain
           :adornment (let [area (:land-acquisition/area-to-obtain form-data)]
                        [:div
@@ -283,8 +283,8 @@
                            :bad [:span {:style {:color theme-colors/red}} " !!! " (tr [:land :unreliable])]
                            :questionable [:span {:style {:color theme-colors/orange}} " ! " (tr [:land :unreliable])]
                            nil)]
-                        [:span (tr [:land :net-area-balance] {:area (- PINDALA area)})]])})
-      [TextField {:type :number :input-style {:width "50%"}}]]]))
+                        [:span (tr [:land :net-area-balance] {:area (- PINDALA area)})]])}
+        [TextField {:type :number :input-style {:width "50%"}}])]]))
 
 (defn acquisition-impact-status
   [impact]
