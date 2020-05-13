@@ -802,4 +802,28 @@
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
            :db/doc "Estate id to which the procedure is made for"}
-          ]]}]
+          ]]}
+
+ {:db/ident :migration/estate-procedure3
+  :txes [[{:db/doc "Process fees payed out in land procedure"
+           :db/ident :estate-procedure/process-fees
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many}
+
+          {:db/ident :estate-process-fee/recipient
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Name of the fee recipient"}
+
+          {:db/ident :estate-process-fee/person-id
+           :db/cardinality :db.cardinality/one
+           :db/valueType :db.type/string
+           :db/doc "Person ID of fee recipient (if owner is physical person)"}
+          {:db/ident :estate-process-fee/business-id
+           :db/cardinality :db.cardinality/one
+           :db/valueType :db.type/string
+           :db/doc "Business ID of the fee recipient (if owner is legal person)"}
+          {:db/ident :estate-process-fee/fee
+           :db/cardinality :db.cardinality/one
+           :db/valueType :db.type/bigdec
+           :db/doc "Fee amount (€)"}]]}]
