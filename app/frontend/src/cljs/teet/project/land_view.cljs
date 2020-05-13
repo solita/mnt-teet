@@ -326,13 +326,37 @@
       units))]])
 
 (defn filter-units
-  [e! {:keys [name-search-value quality]}]
-  (r/with-let [on-change (fn [e]
-                           (e! (land-controller/->SearchOnChange :name-search-value (-> e .-target .-value))))]
+  [e! {:keys [estate-search-value quality impact-search-value] :as filter-params}]
+  ;; filter-params will come from appdb :land-acquisition-filters key
+  ;; (println "filter-params:" filter-params)
+  (r/with-let [on-change (fn [kw-or-e field]
+                           (println "on-change got" kw-or-e)
+                           ;; select-enum gives us the kw straight, textfields pass event
+                           (let [value (if (keyword? kw-or-e)
+                                           kw-or-e
+                                           (-> kw-or-e .-target .-value))]
+                             (e! (land-controller/->SearchOnChange field value))))]
     [:div {:style {:margin-bottom "1rem"}}
-     [TextField {:label (tr [:land :filter-label])
-                 :value name-search-value
-                 :on-change on-change}]
+     [TextField {:label (tr [:land :filter-label]) ;; estate address
+                 :value estate-search-value
+                 :on-change #(on-change % :estate-search-value)}]
+     [TextField {:label (tr [:land :owner-filter-label])
+                 :value (:owner-search-value filter-params)
+                 :on-change #(on-change % :owner-search-value)}]
+     [TextField {:label (tr [:land :cadastral-filter-label])
+                 :value (:cadastral-search-value filter-params)
+                 :on-change #(on-change % :cadastral-search-value)}]
+    
+     [select/select-enum {:e! e!
+                          :attribute :land-acquisition/impact
+                          :show-empty-selection? true
+                          :value impact-search-value
+                          :on-change #(on-change % :impact)}]
+     ;; this isn't implemented yet (as of 2020-05-12)
+     #_[select/select-enum {:e! e!
+                            :attribute :land-acquisition/process
+                          :show-empty-selection? false
+                          :on-change #(on-change % :process-search-value)}]
      [select/form-select
       {:label (tr [:land :filter :quality])
        :name "Quality"
@@ -346,7 +370,7 @@
 
 (defn cadastral-groups
   [e! _ _]
-  (e! (land-controller/->SearchOnChange :name-search-value ""))
+  (e! (land-controller/->SearchOnChange :estate-search-value ""))
   (fn [e! project units]
     (let [land-acquisitions (into {}
                                   (map
@@ -406,5 +430,8 @@
             [LinearProgress {:variant :determinate
                              :value (* 100 (/ fetched-count related-estate-count))}]]
            [:div
+            
             [filter-units e! (:land-acquisition-filters project)]
             [cadastral-groups e! (dissoc project :land-acquisition-filters) (:land/units project)]]))])))
+
+
