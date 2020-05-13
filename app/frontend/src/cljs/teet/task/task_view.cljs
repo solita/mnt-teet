@@ -164,7 +164,8 @@
                                               #{})}]
      ^{:xs 6 :attribute :task/type}
      [select/select-enum {:e! e! :attribute :task/type
-                          :enum/valid-for (:task/group task)
+                          :enum/valid-for (or (:task/group task)
+                                              :none-since-task-group-is-not-selected)
                           :full-value? true}]
 
      ;; Show "Send to THK" if task type has associated THK type
