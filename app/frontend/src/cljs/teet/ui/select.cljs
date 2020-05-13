@@ -147,7 +147,8 @@
                            (on-change (nth items (int val))))))]
     [:div {:class container-class}
      [:label {:html-for id}
-      [label-element (str label ":")]
+      (when label
+        [label-element (str label ":")])
       [:select
        {:value (or (option-idx value) "")
         :name name

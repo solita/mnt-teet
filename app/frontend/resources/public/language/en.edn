@@ -332,6 +332,11 @@
   :old-version "Old version",
   :switch-to-latest-version "Switch back to latest version",
   :edit "Edit file",
+  :sort-by
+  {:file/name "Sort by name",
+   :file/type "Sort by file type",
+   :file/status "Sort by status",
+   :meta/created-at "Sort by date"},
   :upload-info "Uploaded {date} by {author}"},
  :land
  {:total-area "Total area {area} m2",

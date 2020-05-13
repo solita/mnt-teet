@@ -335,6 +335,11 @@
   :old-version "Vana versioon",
   :switch-to-latest-version "Lülitan tagasi uusimale versioonile",
   :edit "Muudan faili",
+  :sort-by
+  {:file/name nil,
+   :file/type nil,
+   :file/status nil,
+   :meta/created-at nil},
   :upload-info "Üles laadinud {author} {date} "},
  :land
  {:total-area "Üldpind {area} m2",
