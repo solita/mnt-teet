@@ -337,7 +337,7 @@
                                            (-> kw-or-e .-target .-value))]
                              (e! (land-controller/->SearchOnChange field value))))]
     [:div {:style {:margin-bottom "1rem"}}
-     [TextField {:label (tr [:land :filter-label]) ;; estate address
+     [TextField {:label (tr [:land :estate-filter-label])
                  :value estate-search-value
                  :on-change #(on-change % :estate-search-value)}]
      [TextField {:label (tr [:land :owner-filter-label])
