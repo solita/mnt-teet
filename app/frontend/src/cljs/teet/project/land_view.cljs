@@ -18,7 +18,8 @@
             [teet.ui.form :as form]
             [teet.common.common-controller :as common-controller]
             [teet.ui.select :as select]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [clojure.string :as str]))
 
 (defn cadastral-unit-style
   [selected?]
@@ -137,7 +138,7 @@
                         :before [typography/BoldGreyText (tr [:fields :estate-procedure/process-fees])]
                         :after [buttons/link-button
                                 {:on-click #(add-row! :estate-procedure/process-fees)}
-                                "+ add owner"]}
+                                (tr [:land :add-owner])]}
              [Grid {:container true :spacing 3}
               [Grid {:item true :xs 8}
                [form/field :process-fee-recipient
@@ -150,7 +151,7 @@
                             :end-icon text-field/euro-end-icon}]]]]])
           (when (#{:estate-procedure.type/urgent :estate-procedure.type/acquisition-negotiation}
                  procedure-type)
-            [field-with-title {:title "Motivation bonus"
+            [field-with-title {:title (tr [:fields :estate-procedure/motivation-bonus])
                                :field-name :estate-procedure/motivation-bonus
                                :type :number
                                :placeholder 0
@@ -158,7 +159,7 @@
 
           (when (#{:estate-procedure.type/urgent}
                  procedure-type)
-            [field-with-title {:title "Urgent procedure bonus"
+            [field-with-title {:title (tr [:fields :estate-procedure/urgent-bonus])
                                :field-name :estate-procedure/urgent-bonus
                                :type :number
                                :placeholder 0
@@ -169,7 +170,7 @@
                         :before [typography/BoldGreyText (tr [:fields :estate-procedure/compensations])]
                         :after [buttons/link-button
                                 {:on-click #(add-row! :estate-procedure/compensations)}
-                                "+ add compensation"]}
+                                (tr [:land :add-compensation])]}
              [Grid {:container true :spacing 3}
               [Grid {:item true :xs 8}
                [form/field {:attribute :estate-compensation/reason}
@@ -187,7 +188,7 @@
                       :before [typography/BoldGreyText (tr [:fields :estate-procedure/third-party-compensations])]
                       :after [buttons/link-button
                               {:on-click #(add-row! :estate-procedure/third-party-compensations)}
-                              "+ add compensation"]}
+                              (tr [:land :add-compensation])]}
            [Grid {:container true :spacing 3}
             [Grid {:item true :xs 8}
              [form/field {:attribute :estate-compensation/description}
