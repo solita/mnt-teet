@@ -11,6 +11,13 @@
             [teet.util.collection :as cu]
             [teet.log :as log]))
 
+(defn unexceptional-xml-parse [input]
+  (try
+    (xml/parse input)
+    (catch Exception _
+      ;; caller has to log error about input resulting in nil parse
+      nil)))
+
 (defn- ogc-filter [content]
   (hiccup/html
    [:Filter {:xmlns "http://www.opengis.net/ogc"
@@ -199,6 +206,7 @@
                                 :TYPENAME "ms:teeosa"
                                 :SRSNAME "urn:ogc:def:crs:EPSG::3301"}
                                (dissoc query-params ::parse-feature))
+           _ (log/info "WFS request: url" wfs-url "query-params" query-params)
            {:keys [error body] :as response}
            @(client/get wfs-url
                         {:connect-timeout 10000
@@ -211,10 +219,19 @@
                           :wfs-url wfs-url
                           :query-params query-params}
                          error))
-         (let [zx (-> body xml/parse zip/xml-zip)]
-           (read-feature-collection zx
-                                    (:TYPENAME query-params)
-                                    (or parse-feature parse-road-part))))))))
+         (let [zx (-> body unexceptional-xml-parse zip/xml-zip)]
+           (if-not zx
+             (do
+               (log/error "couldn't parse XML from WFS:" zx)
+               (throw (ex-info "WFS response error"
+                         {:status 500
+                          :error :wfs-request-failed
+                          :wfs-url wfs-url
+                          :query-params query-params
+                          :response response})))
+             (read-feature-collection zx
+                                      (:TYPENAME query-params)
+                                      (or parse-feature parse-road-part)))))))))
 
 (defn fetch-road-parts [config road-nr carriageway-nr]
   (wfs-request config {:FILTER (query-by-road-and-carriageway road-nr carriageway-nr)}))
@@ -376,6 +393,7 @@
                road-object-types))))
 
 (defn- fetch-capabilities [url service]
+  (log/info "fetch" service "capabilities from" url)
   (let [{:keys [status body] :as response}
         @(client/get url
                      {:as :stream
@@ -387,7 +405,14 @@
                       {:url url
                        :service service
                        :response response}))
-      (-> body xml/parse zip/xml-zip))))
+      (if-let [parsed (unexceptional-xml-parse body)]
+        (zip/xml-zip parsed)
+        (do
+          (log/error "couldn't parse WMS capabilities xml:" body)
+          (throw (ex-info "Unable parse capability query response from WFS"
+                          {:url url
+                           :service service
+                           :response response})))))))
 
 (defn fetch-wms-capabilities
   "Fetch WMS capabilities XML. Returns XML zipper."
