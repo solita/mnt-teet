@@ -80,7 +80,7 @@
         {:status :error
          :result msg}))))
 
-(defn kr-kinnistu-d-request-xml [{:keys [instance-id client-subsystem-id
+(defn kr-kinnistu-d-request-xml [{:keys [instance-id xroad-kr-subsystem-id
                                          registriosa-nr requesting-eid]}]
   ;; xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
   ;; xmlns:xro="http://x-road.eu/xsd/xroad.xsd"
@@ -101,8 +101,8 @@
            [:id:xRoadInstance instance-id]
            [:id:memberClass "GOV"]
            [:id:memberCode "70001490"]
-           [:id:subsystemCode (if client-subsystem-id
-                                client-subsystem-id
+           [:id:subsystemCode (if xroad-kr-subsystem-id
+                                xroad-kr-subsystem-id
                                 (do (log/warn "x-road kr client subsystem id unconfigured, defaulting to generic-consumer")
                                     "generic-consumer"))]]
           [:xrd:service {:id:objectType "SERVICE"}
@@ -120,8 +120,7 @@
             [:kin:kande_kehtivus "1"]
             [:kin:kasutajanimi]
             [:kin:parool]
-            [:kin:registriosa_nr registriosa-nr]
-            ]]]]]
+            [:kin:registriosa_nr registriosa-nr]]]]]]
     (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (hiccup/html req-hic))))
 
 
@@ -161,12 +160,12 @@
            owner-xml-seq)}))
 
 (defn d-jagu34* [key children sequential-vals?]
-  ;; This is the recursive part of the parsing. 
+  ;; This is the recursive part of the parsing.
   ;; the sequential-vals and maybe-vectorise business is about
   ;; getting the recursive subelements into a form that will be
   ;; handled suitably by (merge-with concat map1 map2 .. ), so we get eg this nested
   ;; structure right:
-  
+
   ;; {:koormatise_rahaline_vaartus "0",
   ;;  :kande_alusdokumendid
   ;;  [{:Kinnistamisavaldus
@@ -179,7 +178,7 @@
   ;;
   ;; (possibly it would be better done with postwalk-ing the xml tree, maybe next iteration)
 
-  
+
   (let [leaf? (fn [m] (->> m
                            :content
                            (every? (complement map?))))
@@ -255,13 +254,13 @@
   ;; this assumes, like in all cases seen during development, that
   ;; kande_tekst field always contains a xhtml table with 2 columns,
   ;; with cells containing plain text interspersed with <br> elements
-  (when (not (clojure.string/blank? kande-tekst-str))    
+  (when (not (clojure.string/blank? kande-tekst-str))
     (let [row-seq (-> kande-tekst-str
                       (.getBytes "UTF-8")
                       io/input-stream
                       unexceptional-xml-parse
                       clojure.zip/xml-zip (z/xml-> :table :tr))
-          parsed (for [row row-seq]        
+          parsed (for [row row-seq]
                    (mapv cell-to-text (z/xml-> row :td)))]
       (when (or (empty? parsed)
                 (not= 2 (count (first parsed))))
