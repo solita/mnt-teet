@@ -6,9 +6,12 @@
 (defcommand :notification/acknowledge
   {:doc "Acknowledge a notification"
    :context {:keys [db user]}
-   :payload {id :notification-id}
+   :payload {notification-id :notification-id}
    :project-id nil
    :authorization {}
-   :pre [(notification-db/user-notification? db user id)]
-   :transact [{:db/id id
-               :notification/status :notification.status/acknowledged}]})
+   :pre [(notification-db/user-notification? db user notification-id)]
+   :transact
+   (vec
+    (for [id (notification-db/similar-notifications db notification-id)]
+      {:db/id id
+       :notification/status :notification.status/acknowledged}))})
