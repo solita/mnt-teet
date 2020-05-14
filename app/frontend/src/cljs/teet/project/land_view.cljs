@@ -495,28 +495,38 @@
 
 (defn related-cadastral-units-info
   [e! _app project]
-  (e! (land-controller/->FetchRelatedEstates))
-  (e! (land-controller/->FetchLandAcquisitions (:thk.project/id project)))
-  (fn [e! _app project]
-    (let [fetched-count (:fetched-estates-count project)
-          related-estate-count (count (:land/related-estate-ids project))]
-      [:div
-       [:div {:style {:margin-top "1rem"}
-              :class (<class common-styles/heading-and-button-style)}
-        [typography/Heading2 (tr [:project :cadastral-units-tab])]
-        [buttons/button-secondary {:href (url/set-query-param :configure "cadastral-units")}
-         (tr [:buttons :edit])]]
-       (if (:land/estate-info-failure project)
-         [:div
-          [:p (tr [:land :estate-info-fetch-failure])]
-          [buttons/button-primary {:on-click (e! land-controller/->FetchRelatedEstates)}
-           "Try again"]]
-         (if (not= fetched-count related-estate-count)
-           [:div
-            [:p (tr [:land :fetching-land-units]) " " (str fetched-count " / " related-estate-count)]
-            [LinearProgress {:variant :determinate
-                             :value (* 100 (/ fetched-count related-estate-count))}]]
-           [:div
 
-            [filter-units e! (:land-acquisition-filters project)]
-            [cadastral-groups e! (dissoc project :land-acquisition-filters) (:land/units project)]]))])))
+  (r/create-class
+    {:component-did-mount
+     (do
+       (e! (land-controller/->FetchRelatedEstates))
+       (e! (land-controller/->FetchLandAcquisitions (:thk.project/id project))))
+
+     :component-did-update (fn [this [_ _ _ _]]
+                             (let [[_ _ _ project] (r/argv this)]
+                               (when (nil? (:land/related-estate-ids project))
+                                 (e! (land-controller/->FetchRelatedEstates)))))
+     :reagent-render
+     (fn [e! _app project]
+       (let [fetched-count (:fetched-estates-count project)
+             related-estate-count (count (:land/related-estate-ids project))]
+         [:div
+          [:div {:style {:margin-top "1rem"}
+                 :class (<class common-styles/heading-and-button-style)}
+           [typography/Heading2 (tr [:project :cadastral-units-tab])]
+           [buttons/button-secondary {:href (url/set-query-param :configure "cadastral-units")}
+            (tr [:buttons :edit])]]
+          (if (:land/estate-info-failure project)
+            [:div
+             [:p (tr [:land :estate-info-fetch-failure])]
+             [buttons/button-primary {:on-click (e! land-controller/->FetchRelatedEstates)}
+              "Try again"]]
+            (if (not= fetched-count related-estate-count)
+              [:div
+               [:p (tr [:land :fetching-land-units]) " " (str fetched-count " / " related-estate-count)]
+               [LinearProgress {:variant :determinate
+                                :value (* 100 (/ fetched-count related-estate-count))}]]
+              [:div
+
+               [filter-units e! (:land-acquisition-filters project)]
+               [cadastral-groups e! (dissoc project :land-acquisition-filters) (:land/units project)]]))]))}))
