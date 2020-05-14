@@ -63,32 +63,35 @@
 (defn new-compensations-tx
   [compensations]
   (into []
-        (map-indexed
-          (fn [i compensation]
-            (-> (select-keys compensation (su/keys-of :estate-procedure/compensation))
-                (merge {:db/id (str "new-third-party-comp-" i)})
-                (cu/update-in-if-exists [:estate-compensation/amount] bigdec))))
+        (keep-indexed
+         (fn [i compensation]
+           (when (seq compensation)
+             (-> (select-keys compensation (su/keys-of :estate-procedure/compensation))
+                 (merge {:db/id (str "new-third-party-comp-" i)})
+                 (cu/update-in-if-exists [:estate-compensation/amount] bigdec)))))
         compensations))
 
 (defn new-land-exchange-txs
   [land-exchanges]
   (into []
-        (map-indexed
-          (fn [i exchange]
-            (-> (select-keys exchange (su/keys-of :estate-procedure/land-exchange))
-                (merge {:db/id (str "new-exchange-" i)})
-                (cu/update-in-if-exists [:land-exchange/area] bigdec)
-                (cu/update-in-if-exists [:land-exchange/price-per-sqm] bigdec))))
+        (keep-indexed
+         (fn [i exchange]
+           (when (seq exchange)
+             (-> (select-keys exchange (su/keys-of :estate-procedure/land-exchange))
+                 (merge {:db/id (str "new-exchange-" i)})
+                 (cu/update-in-if-exists [:land-exchange/area] bigdec)
+                 (cu/update-in-if-exists [:land-exchange/price-per-sqm] bigdec)))))
         land-exchanges))
 
 (defn new-process-fees-tx
   [process-fees]
   (vec
-   (map-indexed
+   (keep-indexed
     (fn [i pf]
-      (-> pf
-          (update :estate-process-fee/fee bigdec)
-          (assoc :db/id (str "new-process-fee-" i))))
+      (when (seq pf)
+        (-> pf
+            (update :estate-process-fee/fee bigdec)
+            (assoc :db/id (str "new-process-fee-" i)))))
     process-fees)))
 
 (def common-procedure-updates
