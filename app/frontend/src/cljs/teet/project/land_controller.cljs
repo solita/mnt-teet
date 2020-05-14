@@ -266,13 +266,18 @@
                                         (common-controller/->ResponseError error)))}))))))
 
 (defn- estate-owner-process-fees [{owners :omandiosad :as _estate}]
-  (vec
-   (keep (fn [owner]
-           (when (owner-type-can-receive-process-fee (:isiku_tyyp owner))
-             {:process-fee-recipient {:recipient
-                                      (str (:eesnimi owner) " " (:nimi owner))
-                                      :owner owner}}))
-         owners)))
+  (let [private-owners
+        (vec
+         (keep (fn [owner]
+                 (when (owner-type-can-receive-process-fee (:isiku_tyyp owner))
+                   {:process-fee-recipient {:recipient
+                                            (str (:eesnimi owner) " " (:nimi owner))
+                                            :owner owner}}))
+               owners))]
+    (if (empty? private-owners)
+      ;; Add single empty owner, if there are none
+      [{}]
+      private-owners)))
 
 ;; Events for updating different forms in land purchase
 (extend-protocol t/Event
