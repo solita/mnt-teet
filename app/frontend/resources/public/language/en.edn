@@ -83,7 +83,9 @@
   :invalid-file-type "file type is not valid",
   :deleted-notification "Document deleted successfully"},
  :enum
- {:activity.name/construction "Construction",
+ {:estate-procedure.type/acquisition-negotiation
+  "Acquisition negotiation",
+  :activity.name/construction "Construction",
   :task.type/utilities "Utilities",
   :task.type/eia-assessment "Environmental Impact Assessment (EIA)",
   :task.type/site-plan "Situation plan",
@@ -270,6 +272,7 @@
   :task/thk-type "THK type",
   :task/type "Task type",
   :task/actual-end-date "End date",
+  :estate-procedure/process-fees "Process fees",
   :thk.project/activity-status "Activity statuses",
   :task/assignee "Responsible person",
   :thk.project/owner-info "Owner",
@@ -283,6 +286,7 @@
   "Third party compensations",
   :project/participant "Participant",
   :activity/estimated-start-date "Estimated start date",
+  :estate-procedure/motivation-bonus "Motivation bonus",
   :task/modified "Modified",
   :file/number "Number",
   :task/status "Status",
@@ -307,6 +311,7 @@
   :thk.project/effective-km-range "Km range",
   :task/description "Description",
   :thk.project/region-name "Region",
+  :estate-procedure/urgent-bonus "Urgent bonus",
   :comment/comment "Comment",
   :file/timestamp "Upload date",
   :land-acquisition/area-to-obtain "Area to obtain",
@@ -341,7 +346,9 @@
  :land
  {:total-area "Total area {area} m2",
   :unreliable "Unreliable data",
+  :estate-compensation-success "Estate compensation saved",
   :unit "unit",
+  :add-compensation "+ Add compensation",
   :estate "Estate",
   :land-acquisition-saved "Land acquisition saved successfully",
   :net-area-balance "Net balance {area} m2",
@@ -355,7 +362,8 @@
   :estate-info-fetch-failure
   "Couldn't fetch information from xroad. Please try again and if error persists contact system administrator.",
   :estate-filter-label "Estate",
-  :fetching-land-units "Fetching land units"},
+  :fetching-land-units "Fetching land units",
+  :add-owner "+ Add owner"},
  :login {:login "Login", :password "Password", :username "Username"},
  :map
  {:clear-selections "Clear selections",
