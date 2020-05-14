@@ -3,7 +3,6 @@
             [teet.notification.notification-db :as notification-db]
             [teet.project.project-db :as project-db]
             [datomic.client.api :as d]
-            [teet.comment.comment-model :as comment-model]
             [teet.util.datomic :as du]
             [teet.comment.comment-db :as comment-db]))
 
