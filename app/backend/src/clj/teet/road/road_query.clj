@@ -219,19 +219,18 @@
                           :wfs-url wfs-url
                           :query-params query-params}
                          error))
-         (let [zx (-> body unexceptional-xml-parse zip/xml-zip)]
-           (if-not zx
-             (do
-               (log/error "couldn't parse XML from WFS:" zx)
-               (throw (ex-info "WFS response error"
-                         {:status 500
-                          :error :wfs-request-failed
-                          :wfs-url wfs-url
-                          :query-params query-params
-                          :response response})))
-             (read-feature-collection zx
-                                      (:TYPENAME query-params)
-                                      (or parse-feature parse-road-part)))))))))
+         (if-let [zx (some-> body unexceptional-xml-parse zip/xml-zip)]
+           (read-feature-collection zx
+                                    (:TYPENAME query-params)
+                                    (or parse-feature parse-road-part))
+           (do
+             (log/error "couldn't parse XML from WFS:" (slurp body))
+             (throw (ex-info "WFS response error"
+                             {:status 500
+                              :error :wfs-request-failed
+                              :wfs-url wfs-url
+                              :query-params query-params
+                              :response response})))))))))
 
 (defn fetch-road-parts [config road-nr carriageway-nr]
   (wfs-request config {:FILTER (query-by-road-and-carriageway road-nr carriageway-nr)}))
