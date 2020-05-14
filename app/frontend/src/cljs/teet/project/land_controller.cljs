@@ -75,7 +75,8 @@
    [:estate-procedure/process-fees]
    (fn [process-fees]
      (vec
-      (for [{pfr :process-fee-recipient :as pf} process-fees]
+      (for [{pfr :process-fee-recipient :as pf} process-fees
+            :when (seq pf)]
         (merge
          (select-keys pf [:estate-process-fee/fee])
          {:estate-process-fee/recipient (:recipient pfr)}
