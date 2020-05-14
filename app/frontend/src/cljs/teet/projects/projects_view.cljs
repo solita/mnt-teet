@@ -88,7 +88,7 @@
 
 (defn- filtered-by [value current-user all-projects]
 
-  (cond (= value "unassigned")
+  (cond (= value "unassigned-only")
         (filter (complement :thk.project/owner) all-projects)
 
         (= value "my-projects")
