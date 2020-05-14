@@ -453,7 +453,8 @@
  {:title "Projektid",
   :map-view "Kaart",
   :list-view "Projektide loetelu",
-  :unassigned-only "Määramata projektid",
+  :filters
+  {:my-projects nil, :all nil, :unassigned-only "Määramata projektid"},
   :no-activities "Ei mingeid tegevusi"},
  :roles
  {:internal-consultant "Sisemine konsultant",

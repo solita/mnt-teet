@@ -1,6 +1,10 @@
 (ns teet.user.user-model
-  (:require teet.user.user-spec
-            [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]
+            #?(:clj  [clj-time.core :as t]
+               :cljs [cljs-time.core :as t])
+            #?(:clj  [clj-time.coerce :as c]
+               :cljs [cljs-time.coerce :as c])
+            teet.user.user-spec))
 
 (def user-listing-attributes
   [:user/id
@@ -42,3 +46,30 @@
     :else
     (throw (ex-info "Not a valid user reference. Expected eid or user info map."
                     {:invalid-user-ref user}))))
+
+(defn permissions-valid-at
+  "Returns the user permissions that are valid during the given time."
+  [user timestamp]
+  (->> user
+       :user/permissions
+       (filter (fn [{:permission/keys [valid-from valid-until]}]
+                 (and valid-from
+                      (not (t/after? (c/from-date valid-from)
+                                     (c/from-date timestamp)))
+                      ;; If valid-until exists, it must not be before the timestamp
+                      (not (and valid-until
+                                (t/before? (c/from-date valid-until)
+                                           (c/from-date timestamp)))))))))
+
+(defn- permission->projects
+  [{:permission/keys [role projects]}]
+  (map #(-> %
+            (select-keys [:db/id])
+            (assoc :permission/role role))
+       projects))
+
+(defn projects-with-valid-permission-at
+  [user timestamp]
+  (->> (permissions-valid-at user timestamp)
+       (mapcat permission->projects)
+       (remove nil?)))

@@ -29,3 +29,8 @@
   {:padding "1.5rem"
    :overflow-x :scroll
    :min-width "1800px"})
+
+(defn after-title
+  []
+  ^{:combinators {[:descendant :p] {:margin "0.5rem"}}}
+  {:margin-left "2rem" :display :inline-block})

@@ -449,7 +449,10 @@
  {:title "Projects",
   :map-view "Map",
   :list-view "Project list",
-  :unassigned-only "Unassigned projects only",
+  :filters
+  {:my-projects "Projects assigned to me",
+   :all "All projects",
+   :unassigned-only "Unassigned projects only"},
   :no-activities "No activities"},
  :roles
  {:internal-consultant "Internal consultant",

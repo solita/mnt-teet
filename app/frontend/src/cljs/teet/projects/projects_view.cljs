@@ -1,26 +1,27 @@
 (ns teet.projects.projects-view
   "Projects view"
-  (:require [reagent.core :as r]
+  (:require [clojure.string :as str]
             [herb.core :refer [<class]]
-            [teet.search.search-interface :as search-interface]
-            [teet.ui.icons :as icons]
-            [teet.map.map-view :as map-view]
-            [teet.map.map-layers :as map-layers]
-            [teet.ui.util :as util :refer [mapc]]
-            [teet.map.map-features :as map-features]
-            [teet.theme.theme-spacing :as theme-spacing]
-            [teet.ui.material-ui :refer [FormControlLabel Checkbox]]
             postgrest-ui.elements
-            [teet.localization :as localization :refer [tr tr-enum]]
-            [teet.project.project-model :as project-model]
-            [teet.project.project-controller :as project-controller]
+            [teet.app-state :as app-state]
             [teet.common.common-styles :as common-styles]
+            [teet.localization :as localization :refer [tr tr-enum]]
+            [teet.map.map-features :as map-features]
+            [teet.map.map-layers :as map-layers]
+            [teet.map.map-view :as map-view]
+            [teet.project.project-controller :as project-controller]
+            [teet.project.project-model :as project-model]
+            [teet.projects.projects-style :as projects-style]
+            [teet.routes :as routes]
+            [teet.search.search-interface :as search-interface]
+            [teet.theme.theme-spacing :as theme-spacing]
             [teet.ui.format :as format]
+            [teet.ui.icons :as icons]
+            [teet.ui.material-ui :refer [Link]]
             [teet.ui.table :as table]
-            [teet.common.common-controller :as common-controller]
-            [clojure.string :as str]
             [teet.ui.typography :as typography]
-            [teet.projects.projects-style :as projects-style]))
+            [teet.ui.util :as util :refer [mapc]]
+            [teet.user.user-model :as user-model]))
 
 (defmethod search-interface/format-search-result :project
   [{:thk.project/keys [id] :as project}]
@@ -71,21 +72,52 @@
     ;; Default: stringify
     (str value)))
 
+(defn- user-participates-in-project?
+  "The user is considered participating in a project if they're the
+  manager or owner, or if they have a valid permission of any kind for
+  the project."
+  [user project]
+  (or (= (-> project :thk.project/owner :user/id)
+         (:user/id user))
+      (= (-> project :thk.project/manager :user/id)
+         (:user/id user))
+      ((->> (user-model/projects-with-valid-permission-at user (js/Date.))
+            (map :db/id)
+            set)
+       (:db/id project))))
+
+(defn- filtered-by [value current-user all-projects]
+
+  (cond (= value "unassigned")
+        (filter (complement :thk.project/owner) all-projects)
+
+        (= value "my-projects")
+        (filter (partial user-participates-in-project? current-user)
+                all-projects)
+
+        :else
+        all-projects))
+
+(defn filter-link [route my-filter current-filter]
+  (let [filter-text (tr [:projects :filters (keyword my-filter)])]
+    [typography/Text {:display "inline"}
+     (if (= my-filter current-filter)
+       filter-text
+       [Link {:href (routes/url-for (assoc-in route [:query :row-filter] my-filter))}
+        filter-text])]))
+
 (defn projects-listing [e! app all-projects]
-  (let [unassigned-only? (common-controller/query-param-boolean-atom app :unassigned)]
+  (let [row-filter (or (-> app :query :row-filter)
+                       "my-projects")
+        current-route (select-keys app [:page :params :query])]
     [:<>
-     [table/table {:after-title [:div {:style {:margin-left "2rem" :display :inline-block}}
-                                 [FormControlLabel
-                                  {:value "unassigned-only"
-                                   :label-placement :end
-                                   :label (tr [:projects :unassigned-only])
-                                   :control (r/as-element [Checkbox {:checked @unassigned-only?
-                                                                     :on-change #(swap! unassigned-only? not)}])}]]
+     [table/table {:after-title [:div {:class (<class projects-style/after-title)}
+                                 [filter-link current-route "my-projects" row-filter]
+                                 [filter-link current-route "all" row-filter]
+                                 [filter-link current-route "unassigned-only" row-filter]]
                    :on-row-click (comp (e! project-controller/->NavigateToProject) :thk.project/id)
                    :label (tr [:projects :title])
-                   :data (if @unassigned-only?
-                           (filter (complement :thk.project/owner) all-projects)
-                           all-projects)
+                   :data (filtered-by row-filter @app-state/user all-projects)
                    :columns project-model/project-listing-display-columns
                    :get-column project-model/get-column
                    :format-column format-column-value
