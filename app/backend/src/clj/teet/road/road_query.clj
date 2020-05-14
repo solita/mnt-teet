@@ -11,6 +11,8 @@
             [teet.util.collection :as cu]
             [teet.log :as log]))
 
+(declare parse-feature)
+
 (defn unexceptional-xml-parse [input]
   (try
     (xml/parse input)
@@ -195,6 +197,24 @@
         (swap! cache-atom assoc cache-key fetched-value))
       fetched-value)))
 
+(defn- handle-wfs-response [wfs-url typename request-delay parse-feature]
+  (let [{:keys [error body] :as response} @request-delay]
+    (if error
+      (throw (ex-info "Unable to fetch road parts from WFS"
+                      {:status 500
+                       :error :wfs-request-failed
+                       :wfs-url wfs-url}
+                      error))
+      (if-let [zx (some-> body unexceptional-xml-parse zip/xml-zip)]
+        (read-feature-collection zx
+                                 typename
+                                 (or parse-feature parse-road-part))
+        (throw (ex-info "WFS response error"
+                        {:status 500
+                         :error :wfs-request-failed
+                         :wfs-url wfs-url
+                         :response response}))))))
+
 (defn- wfs-request [{:keys [cache-atom wfs-url]} query-params]
   (cached
    cache-atom
@@ -206,31 +226,28 @@
                                 :TYPENAME "ms:teeosa"
                                 :SRSNAME "urn:ogc:def:crs:EPSG::3301"}
                                (dissoc query-params ::parse-feature))
-           _ (log/info "WFS request: url" wfs-url "query-params" query-params)
-           {:keys [error body] :as response}
-           @(client/get wfs-url
-                        {:connect-timeout 10000
-                         :query-params query-params
-                         :as :stream})]
-       (if error
-         (throw (ex-info "Unable to fetch road parts from WFS"
-                         {:status 500
-                          :error :wfs-request-failed
-                          :wfs-url wfs-url
-                          :query-params query-params}
-                         error))
-         (if-let [zx (some-> body unexceptional-xml-parse zip/xml-zip)]
-           (read-feature-collection zx
-                                    (:TYPENAME query-params)
-                                    (or parse-feature parse-road-part))
-           (do
-             (log/error "couldn't parse XML from WFS:" (slurp body))
-             (throw (ex-info "WFS response error"
-                             {:status 500
-                              :error :wfs-request-failed
-                              :wfs-url wfs-url
-                              :query-params query-params
-                              :response response})))))))))
+           request-delay (client/get wfs-url
+                                     {:connect-timeout 10000
+                                      :query-params query-params
+                                      :as :stream})]
+       (handle-wfs-response wfs-url (:TYPENAME query-params)
+                            request-delay (or parse-feature parse-road-part))))))
+
+(defn- wfs-get-feature [{:keys [wfs-url]} typename ogc-filter]
+  (let [payload [:wfs:GetFeature {:xmlns:wfs "http://www.opengis.net/wfs"
+                                  :xmlns:gml "http://www.opengis.net/gml"
+                                  :version "1.1.0"
+                                  :service "WFS"}
+                 [:wfs:Query {:typeName typename}
+                  [:Filter {:xmlns "http://www.opengis.net/ogc"}
+                   ogc-filter]]]
+        payload-xml (str "<?xml version=\"1.0\"?>\n"
+                         (hiccup/html payload))
+        request-delay (client/post wfs-url
+                                   {:as :stream
+                                    :body payload-xml
+                                    :headers {"Content-Type" "text/xml"}})]
+    (handle-wfs-response wfs-url typename request-delay parse-feature)))
 
 (defn fetch-road-parts [config road-nr carriageway-nr]
   (wfs-request config {:FILTER (query-by-road-and-carriageway road-nr carriageway-nr)}))
@@ -300,12 +317,11 @@
 (defn fetch-intersecting-objects-of-type
   "Fetch road objects for given typename intersecting the given area."
   [config typename gml-geometry]
-  (wfs-request config
-               {:TYPENAME typename
-                :FILTER (ogc-filter [:Intersects
-                                     [:PropertyName "msGeometry"]
-                                     (raw gml-geometry)])
-                ::parse-feature parse-feature}))
+  (wfs-get-feature config
+                   typename
+                   [:Intersects
+                    [:PropertyName "msGeometry"]
+                    (raw gml-geometry)]))
 
 (defn fetch-objects-of-type-for-road
   "Fetch road object for given typename that are within the road part"
