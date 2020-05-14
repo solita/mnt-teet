@@ -250,8 +250,7 @@
                  :class (<class impact-form-style)}
       ^{:attribute :land-acquisition/impact}
       [select/select-enum {:e! e!
-                           :attribute :land-acquisition/impact
-                           :show-empty-selection? false}]
+                           :attribute :land-acquisition/impact}]
       (when show-extra-fields?
         ^{:attribute :land-acquisition/pos-number :xs 6}
         [TextField {:type :number}])
@@ -367,7 +366,7 @@
    :padding "0.5rem"})
 
 (defn estate-group
-  [e! open-estates owner-set cadastral-forms estate-forms [estate-id units]]
+  [e! open-estates cadastral-forms estate-forms [estate-id units]]
   ^{:key (str estate-id)}
   [:div {:class (<class estate-group-style)}
    (let [estate (:estate (first units))]
@@ -383,16 +382,16 @@
        {:in (boolean (open-estates estate-id))
         :mount-on-enter true}
        [estate-group-form e! estate
-        (r/partial land-controller/->UpdateEstateForm owner-set estate) (get estate-forms estate-id)]]])
+        (r/partial land-controller/->UpdateEstateForm estate) (get estate-forms estate-id)]]])
    [:div {:class (<class plot-group-container)}
     (mapc
      (r/partial cadastral-unit e!
-                (r/partial land-controller/->UpdateCadastralForm owner-set)
+                land-controller/->UpdateCadastralForm
                 cadastral-forms)
       units)]])
 
 (defn owner-group
-  [e! open-estates owner-compensation-form cadastral-forms estate-forms [owner units]]
+  [e! open-estates cadastral-forms estate-forms [owner units]]
   ^{:key (str owner)}
   [:div {:style {:margin-bottom "2rem"}}
    (let [owners (get-in (first units) [:estate :omandiosad])]
@@ -407,7 +406,7 @@
    [:div {:class (<class plot-group-container)}
     (mapc
      (fn [unit-group]
-       [estate-group e! open-estates owner cadastral-forms estate-forms unit-group])
+       [estate-group e! open-estates cadastral-forms estate-forms unit-group])
      (group-by
       (fn [unit]
         (get-in unit [:estate :estate-id]))
@@ -487,9 +486,8 @@
         (fn [[owner _units :as group]]
           [owner-group e!
            (or (:land/open-estates project) #{})
-           (get-in project [:land/forms owner :land/owner-compensation-form])
-           (get-in project [:land/forms owner :land/cadastral-forms])
-           (get-in project [:land/forms owner :land/estate-forms])
+           (:land/cadastral-forms project)
+           (:land/estate-forms project)
            group])
         grouped)])))
 
@@ -500,7 +498,7 @@
   (r/create-class
     {:component-did-mount
      (do
-       (e! (land-controller/->FetchRelatedEstates))
+       (e! (land-controller/->FetchEstateCompensations (:thk.project/id project)))
        (e! (land-controller/->FetchLandAcquisitions (:thk.project/id project))))
 
      :component-did-update (fn [this [_ _ _ _]]

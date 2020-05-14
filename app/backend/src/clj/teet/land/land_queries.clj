@@ -4,7 +4,8 @@
             [datomic.client.api :as d]
             [teet.integration.x-road :as x-road]
             [clj-time.core :as time]
-            [clj-time.coerce :as c]))
+            [clj-time.coerce :as c]
+            [clojure.walk :as walk]))
 
 (defquery :land/fetch-land-acquisitions
   {:doc "Fetch all land acquisitions and related cadastral units from a project"
@@ -90,3 +91,40 @@ Then it will query X-road for the estate information."
                                        :bad)))
               units)}))
 
+
+(defn- compensation->form
+  "Format compensation to format suitable for frontend form.
+  Does following transformations:
+
+  - Stringify bigdec values.
+  - Turn enum maps with db/ident keyword to keywords"
+  [compensation]
+  (walk/prewalk
+   (fn [x]
+     (cond
+       (decimal? x) (str x)
+       (and (map? x) (contains? x :db/ident)) (:db/ident x)
+       :else x))
+   compensation))
+
+(defquery :land/fetch-estate-compensations
+  {:doc "Fetch estate compensations in a given project. Returns map with estate id as the key
+and the compensation info as the value."
+   :context {:keys [db user]}
+   :args {:thk.project/keys [id]}
+   :project-id [:thk.project/id id]
+   :authorization {:land/view-cadastral-data {:eid [:thk.project/id id]
+                                              :link :thk.project/owner}}}
+  (compensation->form
+   (into {}
+         (comp
+          (map first)
+          (map (fn [{estate-id :estate-procedure/estate-id :as compensation-form}]
+                 [estate-id compensation-form])))
+         (d/q '[:find (pull ?e [*
+                                {:estate-procedure/process-fees [*]}
+                                {:estate-procedure/third-party-compensations [*]}
+                                {:estate-procedure/land-exchanges [*]}])
+                :where [?e :estate-procedure/project ?p]
+                :in $ ?p]
+              db [:thk.project/id id]))))

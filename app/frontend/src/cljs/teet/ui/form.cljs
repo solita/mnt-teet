@@ -204,7 +204,6 @@
     (r/create-class
      {:component-did-mount
       (fn [_]
-        (log/info "form field for " attribute " mounted")
         (swap! current-fields assoc attribute field-info))
       :component-will-unmount
       (fn [_]
@@ -260,7 +259,6 @@
                        {update-parent-fn :update-attribute-fn
                         form-value :value :as form-ctx}]
   (let [parent-value (get form-value attribute)]
-    (log/info "Many-container, parent-value: " parent-value ", count=" (count parent-value))
     [:<>
      before
      (for [i (range (count parent-value))
@@ -307,9 +305,7 @@
        (e! (on-change-event
             (if (vector? field)
               (zipmap field value)
-              (do
-                (log/info "update-attribute-fn " {field v})
-                {field v}))))
+              {field v})))
        v)))
 
 (defn form2

@@ -90,7 +90,7 @@
     (fn [i pf]
       (when (seq pf)
         (-> pf
-            (update :estate-process-fee/fee bigdec)
+            (cu/update-in-if-exists [:estate-process-fee/fee] bigdec)
             (assoc :db/id (str "new-process-fee-" i)))))
     process-fees)))
 
