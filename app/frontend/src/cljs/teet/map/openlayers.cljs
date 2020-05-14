@@ -42,7 +42,7 @@
 
 
 (def ^{:doc "Initial resolution of ol3 view" :const true}
-  initial-resolution 1200)
+  initial-resolution 300)
 
 (def ^{:doc "Smallest possible zoom level allowed for the user to zoom out"
        :const true}

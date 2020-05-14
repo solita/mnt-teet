@@ -112,8 +112,7 @@
                     "geojson_entity_pins"
                     {"type" "project"}
                     map-features/project-pin-style
-                    {:min-resolution project-pin-resolution-threshold
-                     :fit-on-load? true})}))
+                    {:min-resolution project-pin-resolution-threshold})}))
 
 (defn- mvt-for-datasource-ids [api-url prefix datasource-ids style opts]
   (into {}
