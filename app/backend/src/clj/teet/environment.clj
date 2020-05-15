@@ -77,6 +77,9 @@
                             (assoc-in [:road-registry]
                                       {:wfs-url (ssm-param-default [:road-registry :wfs-url] nil)
                                        :wms-url (ssm-param-default [:road-registry :wms-url] nil)})
+                            (assoc-in [:xroad] {:query-url (ssm-param-default [:xroad-query-url] nil)
+                                                :instance-id (ssm-param-default [:xroad-instance-id] nil)
+                                                :kr-subsystem-id (ssm-param-default [:xroad-kr-subsystem-id] nil)})
                             (assoc-in [:eelis]
                                       {:wms-url (ssm-param-default [:eelis :wms-url] nil)}))]
              config))))
