@@ -33,4 +33,11 @@
 (defn after-title
   []
   ^{:combinators {[:descendant :p] {:margin "0.5rem"}}}
-  {:margin-left "2rem" :display :inline-block})
+  {:display :inline-block})
+
+(defn title
+  []
+  {:width "50%"
+   :display :flex
+   :flex-direction :row
+   :justify-content :space-between})
