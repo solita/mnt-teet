@@ -177,7 +177,8 @@
                 :to (get-in (du/entity db (project-db/activity-project-id db activity-id))
                             [:thk.project/owner :db/id])
                 :type :notification.type/activity-waiting-for-review
-                :target activity-id})]})
+                :target activity-id
+                :project (project-db/activity-project-id db activity-id)})]})
 
 (s/def ::activity-id integer?)
 (s/def ::status #{:activity.status/canceled
@@ -210,4 +211,5 @@
                         :notification.type/activity-accepted
                         ;; else archived or canceled (ensured by pre-check)
                         :notification.type/activity-rejected)
-                :target activity-id})]})
+                :target activity-id
+                :project (project-db/activity-project-id db activity-id)})]})
