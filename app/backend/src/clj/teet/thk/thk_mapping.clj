@@ -88,7 +88,7 @@
 
 
 (def object-integration-info-fields
-  #{:object/groupfk :object/groupshortname
+  #{:object/groupfk :object/groupname
     :object/regionfk :object/thkupdstamp
     :object/statusfk :object/statusname})
 
@@ -174,8 +174,8 @@
   {;; Object/project fields
    "object_id" {:attribute :thk.project/id}
    "object_groupfk" {:attribute :object/groupfk}
-   "object_groupshortname" {:attribute :object/groupshortname}
-   "object_groupname" {:attribute :thk.project/repair-method}
+   "object_groupshortname" {:attribute :thk.project/repair-method}
+   "object_groupname" {:attribute :object/groupname}
    "object_roadnr" {:attribute :thk.project/road-nr
                     :parse ->int}
    "object_carriageway" {:attribute :thk.project/carriageway

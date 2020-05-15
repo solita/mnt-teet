@@ -847,4 +847,7 @@
            :db/tupleAttrs [:estate-procedure/project :estate-procedure/estate-id]
            :db/cardinality :db.cardinality/one
            :db/unique :db.unique/identity
-           :db/doc "Ensure there is only one estate procedure form per project and estate id"}]]}]
+           :db/doc "Ensure there is only one estate procedure form per project and estate id"}]]}
+
+ {:db/ident :migration/repair-method-is-group-short-name
+  :txes [teet.migration.project-repair-method/fix-repair-method]}]
