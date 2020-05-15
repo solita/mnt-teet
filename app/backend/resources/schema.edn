@@ -826,4 +826,10 @@
           {:db/ident :estate-process-fee/fee
            :db/cardinality :db.cardinality/one
            :db/valueType :db.type/bigdec
-           :db/doc "Fee amount (€)"}]]}]
+           :db/doc "Fee amount (€)"}]]}
+
+ {:db/ident :migration/notification-project
+  :txes [[{:db/ident :notification/project
+           :db/doc "Project this notification is about (if any)"
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one}]]}]
