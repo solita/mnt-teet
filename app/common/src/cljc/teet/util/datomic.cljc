@@ -106,12 +106,16 @@
                                {}))))))
 
 (defn db-ids
-  "Recursively gather non-string :db/id values of form"
+  "Recursively gather non-string :db/id values of form.
+  Considers all maps that have a :db/id excluding enum references
+  (maps that contain :db/ident key)"
   [form]
   (cond
     (map? form)
-    (let [id (:db/id form ::not-found)
-          acc (if (and (not= ::not-found id)
+    (let [id (when (not (contains? form :db/ident))
+               (:db/id form ::not-found))
+          acc (if (and id
+                       (not= ::not-found id)
                        (not (string? id)))
                 #{id}
                 #{})]

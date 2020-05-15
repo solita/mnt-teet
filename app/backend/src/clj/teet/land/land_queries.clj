@@ -6,7 +6,8 @@
             [clj-time.core :as time]
             [clj-time.coerce :as c]
             [clojure.walk :as walk]
-            [teet.land.land-db :as land-db]))
+            [teet.land.land-db :as land-db]
+            [teet.util.collection :as cu]))
 
 (defquery :land/fetch-land-acquisitions
   {:doc "Fetch all land acquisitions and related cadastral units from a project"
@@ -100,13 +101,14 @@ Then it will query X-road for the estate information."
   - Stringify bigdec values.
   - Turn enum maps with db/ident keyword to keywords"
   [compensation]
-  (walk/prewalk
-   (fn [x]
-     (cond
-       (decimal? x) (str x)
-       (and (map? x) (contains? x :db/ident)) (:db/ident x)
-       :else x))
-   compensation))
+  (->> compensation
+       (cu/map-vals #(update % :estate-procedure/pos str))
+       (walk/prewalk
+        (fn [x]
+          (cond
+            (decimal? x) (str x)
+            (and (map? x) (contains? x :db/ident)) (:db/ident x)
+            :else x)))))
 
 (defquery :land/fetch-estate-compensations
   {:doc "Fetch estate compensations in a given project. Returns map with estate id as the key

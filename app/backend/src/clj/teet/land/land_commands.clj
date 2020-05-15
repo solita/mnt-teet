@@ -142,16 +142,18 @@
 
 (defn estate-procedure-tx
   [procedure-form-data]
-  (let [payload (su/select-by-spec :land/create-estate-procedure procedure-form-data)
+  (let [payload (su/select-by-spec :land/create-estate-procedure
+                                   procedure-form-data
+                                   #{:db/id})
         type (:estate-procedure/type payload)
         {:keys [keys updates]} (type procedure-type-options)]
     (merge
       (reduce
-        (fn [payload [path update-fn]]
-          (cu/update-in-if-exists payload [path] update-fn))
+       (fn [payload [path update-fn]]
+         (cu/update-in-if-exists payload [path] update-fn))
         (select-keys payload (concat common-procedure-keys keys))
         (concat common-procedure-updates updates))
-      {:db/id "new-estate"
+      {:db/id (or (:db/id procedure-form-data) "new-estate")
        :estate-procedure/project [:thk.project/id (:thk.project/id procedure-form-data)]})))
 
 
@@ -182,4 +184,8 @@
           (land-db/project-estate-procedure-by-id
            db [:thk.project/id id] procedure-id)
           payload)]
-   :transact (estate-procedure-tx payload)})
+   :transact [(let [tx-data
+                    (estate-procedure-tx payload)]
+                (def p* payload)
+                (def tx* tx-data)
+                tx-data)]})
