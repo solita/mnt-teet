@@ -401,6 +401,7 @@
   :restrictions-updated "Kitsendused edukalt värskendatud",
   :task-updated "Ülesanne edukalt värskendatud",
   :activity-deleted "Tegevus edukalt kustutatud",
+  :mark-all-read "Märgi kõik loetuks",
   :activity-updated "Tegevus edukalt värskendatud",
   :cadastral-units-updated "Katastriüksused edukalt värskendatud"},
  :page-title {:project-list "{name} projekt"},

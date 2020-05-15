@@ -2,6 +2,8 @@
   (:require [tuck.core :as t]))
 
 (defrecord Acknowledge [notification-id on-acknowledge])
+(defrecord AcknowledgeMany [notification-ids on-acknowledge])
+
 (defrecord AcknowledgeResult [on-acknowledge result])
 (defrecord NavigateTo [notification-id])
 (defrecord NavigateToResult [result])
@@ -14,6 +16,15 @@
           {:tuck.effect/type :command!
            :command :notification/acknowledge
            :payload {:notification-id id}
+           :result-event (partial ->AcknowledgeResult on-acknowledge)}))
+
+  AcknowledgeMany
+  (process-event [{ids :notification-ids
+                   on-acknowledge :on-acknowledge} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :notification/acknowledge-many
+           :payload {:notification-ids ids}
            :result-event (partial ->AcknowledgeResult on-acknowledge)}))
 
   AcknowledgeResult

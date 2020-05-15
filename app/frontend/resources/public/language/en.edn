@@ -398,6 +398,7 @@
   :restrictions-updated "Restrictions updated succesfully",
   :task-updated "Task edited successfully",
   :activity-deleted "Activity deleted successfully",
+  :mark-all-read "Mark all read",
   :activity-updated "Activity updated successfully",
   :cadastral-units-updated "Cadastral units updated successfully"},
  :page-title {:project-list "{name} project"},
