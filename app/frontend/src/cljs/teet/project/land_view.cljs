@@ -104,13 +104,6 @@
 
 (defn estate-group-form
   [e! _ on-change form-data]
-  (e! (on-change (-> form-data
-                     (update :estate-procedure/compensations
-                             #(if (empty? %) [{}] %))
-                     (update :estate-procedure/third-party-compensations
-                             #(if (empty? %) [{}] %))
-                     (update :estate-procedure/land-exchanges
-                             #(if (empty? %) [{}] %)))))
   (fn [e! {:keys [estate-id] :as estate} on-change form-data]
     (let [procedure-type (:estate-procedure/type form-data)
           add-row! (fn [field]
@@ -170,7 +163,8 @@
                         :before [typography/BoldGreyText (tr [:fields :estate-procedure/compensations])]
                         :after [buttons/link-button
                                 {:on-click #(add-row! :estate-procedure/compensations)}
-                                (tr [:land :add-compensation])]}
+                                (tr [:land :add-compensation])]
+                        :atleast-once? true}
              [Grid {:container true :spacing 3}
               [Grid {:item true :xs 8}
                [form/field {:attribute :estate-compensation/reason}
@@ -188,7 +182,8 @@
                       :before [typography/BoldGreyText (tr [:fields :estate-procedure/third-party-compensations])]
                       :after [buttons/link-button
                               {:on-click #(add-row! :estate-procedure/third-party-compensations)}
-                              (tr [:land :add-compensation])]}
+                              (tr [:land :add-compensation])]
+                      :atleast-once? true}
            [Grid {:container true :spacing 3}
             [Grid {:item true :xs 8}
              [form/field {:attribute :estate-compensation/description}
@@ -214,7 +209,8 @@
           (when (= (:estate-procedure/type form-data) :estate-procedure.type/property-trading)
             [:div
              [form/many {:before [typography/BoldGreyText (tr [:fields :estate-procedure/land-exchanges])]
-                         :attribute :estate-procedure/land-exchanges}
+                         :attribute :estate-procedure/land-exchanges
+                         :atleast-once? true}
               [Grid {:container true :spacing 3}
                [Grid {:item true :xs 12}
                 [form/field {:attribute :land-exchange/cadastral-unit-id}

@@ -255,13 +255,22 @@
     (gobj/getValueByKeys value "target" "value")
     value))
 
-(defn- many-container [{:keys [attribute before after]} body
+(defn- many-container [{:keys [attribute before after atleast-once?]} body
                        {update-parent-fn :update-attribute-fn
                         form-value :value :as form-ctx}]
-  (let [parent-value (get form-value attribute)]
+  (let [parent-value (get form-value attribute)
+        [parent-value row-count] (cond
+                                   (some? parent-value)
+                                   [parent-value (count parent-value)]
+
+                                   atleast-once?
+                                   [[{}] 1]
+
+                                   :else
+                                   [nil 0])]
     [:<>
      before
-     (for [i (range (count parent-value))
+     (for [i (range row-count)
            :let [value (nth parent-value i)]]
        ^{:key (str "many-" i)} ; PENDING: could use configurable key from value map
        (context/provide
