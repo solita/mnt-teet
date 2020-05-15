@@ -111,7 +111,8 @@
                        "my-projects")
         current-route (select-keys app [:page :params :query])]
     [:<>
-     [table/table {:after-title [:div {:class (<class projects-style/after-title)}
+     [table/table {:title-class (<class projects-style/title)
+                   :after-title [:div {:class (<class projects-style/after-title)}
                                  [filter-link current-route "my-projects" row-filter]
                                  [filter-link current-route "all" row-filter]
                                  [filter-link current-route "unassigned-only" row-filter]]

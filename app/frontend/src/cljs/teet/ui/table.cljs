@@ -133,14 +133,15 @@
                     filters))
           data))
 
-(defn table [{:keys [get-column data label after-title]
+(defn table [{:keys [get-column data label after-title title-class]
               :as opts}]
   (r/with-let [filters (r/atom {})
                clear-filters! #(reset! filters {})]
     (let [data (filtered-data (or get-column get) data @filters)]
       ^{:key "table-listing-panel"}
       [panels/panel-with-action
-       {:title [:<>
+       {:title [:div (when title-class
+                       {:class title-class})
                 (str label
                      (when-let [total (and (seq data)
                                            (count data))]
