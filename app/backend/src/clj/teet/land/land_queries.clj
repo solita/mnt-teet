@@ -42,9 +42,9 @@
    :args {estate-id :estate-id
           project-id :thk.project/id}
    :project-id [:thk.project/id project-id]
-   :config {xroad-instance [:xroad-instance-id]
-            xroad-url [:xroad-query-url]
-            xroad-subsystem [:xroad-kr-subsystem-id]}
+   :config {xroad-instance [:xroad :instance-id]
+            xroad-url [:xroad :query-url]
+            xroad-subsystem [:xroad :kr-subsystem-id]}
    :authorization {:land/view-cadastral-data {:eid [:thk.project/id project-id]
                                               :link :thk.project/owner}}}
   (let [x-road-response (x-road/perform-kinnistu-d-request
@@ -69,9 +69,7 @@ Then it will query X-road for the estate information."
    :context {:keys [db user]}
    :args {:thk.project/keys [id]}
    :project-id [:thk.project/id id]
-   :config {xroad-instance [:xroad-instance-id]
-            xroad-url [:xroad-query-url]
-            api-url [:api-url]
+   :config {api-url [:api-url]
             api-secret [:auth :jwt-secret]}
    :authorization {:land/view-cadastral-data {:eid [:thk.project/id id]
                                               :link :thk.project/owner}}}
