@@ -832,4 +832,19 @@
   :txes [[{:db/ident :notification/project
            :db/doc "Project this notification is about (if any)"
            :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/one}]]}]
+           :db/cardinality :db.cardinality/one}]]}
+
+ {:db/ident :migration/land-form-unique
+  :txes [[{:db/ident :land-acquisition/project+cadastral-unit
+           :db/valueType :db.type/tuple
+           :db/tupleAttrs [:land-acquisition/project :land-acquisition/cadastral-unit]
+           :db/cardinality :db.cardinality/one
+           :db/unique :db.unique/identity
+           :db/doc "Ensure there is only one land acqusition form per project and cadastral unit"}
+
+          {:db/ident :estate-procedure/project+estate-id
+           :db/valueType :db.type/tuple
+           :db/tupleAttrs [:estate-procedure/project :estate-procedure/estate-id]
+           :db/cardinality :db.cardinality/one
+           :db/unique :db.unique/identity
+           :db/doc "Ensure there is only one estate procedure form per project and estate id"}]]}]
