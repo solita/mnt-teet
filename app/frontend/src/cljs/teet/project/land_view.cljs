@@ -19,7 +19,8 @@
             [teet.common.common-controller :as common-controller]
             [teet.ui.select :as select]
             [teet.log :as log]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.util.datomic :as du]))
 
 (defn cadastral-unit-style
   [selected?]
@@ -232,14 +233,14 @@
 
 
 (defn cadastral-unit-form
-  [e! {:keys [TUNNUS PINDALA] :as unit} quality on-change-event form-data]
-  (let [show-extra-fields? (= (:land-acquisition/impact form-data) :land-acquisition.impact/purchase-needed)]
+  [e! {:keys [teet-id PINDALA] :as unit} quality on-change-event form-data]
+  (let [show-extra-fields? (du/enum= (:land-acquisition/impact form-data) :land-acquisition.impact/purchase-needed)]
     [:div
      [form/form {:e! e!
                  :value form-data ;@impact-form
                  :on-change-event (fn [form-data]
-                                    (on-change-event TUNNUS form-data)) ; update-impact-form
-                 :save-event #(land-controller/->SubmitLandPurchaseForm form-data (:teet-id unit))
+                                    (on-change-event teet-id form-data)) ; update-impact-form
+                 :save-event #(land-controller/->SubmitLandAcquisitionForm form-data (:teet-id unit))
                  :spec :land-acquisition/form
                  :cancel-event #(land-controller/->ToggleLandUnit unit)
                  :footer impact-form-footer
@@ -303,29 +304,31 @@
 
 
 (defn cadastral-unit
-  [e! update-cadastral-form-event cadastral-forms {:keys [TUNNUS KINNISTU MOOTVIIS MUUDET quality selected?] :as unit}]
+  [e! update-cadastral-form-event cadastral-forms {:keys [teet-id TUNNUS KINNISTU MOOTVIIS MUUDET quality selected?] :as unit}]
   ^{:key (str TUNNUS)} ;;Arbitrary date before which data quality is bad]
-  [:div {:class (<class cadastral-unit-container-style)}
-   [:div {:class (<class cadastral-unit-quality-style quality)}
-    [:span {:title (str MOOTVIIS " – " MUUDET)} (case quality
-                                                  :bad "!!!"
-                                                  :questionable "!"
-                                                  "")]]
-   [ButtonBase {:on-mouse-enter (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" true unit)
-                :on-mouse-leave (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" false unit)
-                :on-click (e! land-controller/->ToggleLandUnit unit)
-                :class (<class cadastral-unit-style selected?)}
-    [typography/SectionHeading {:style {:text-align :left}} (:L_AADRESS unit)]
-    [:div {:class (<class common-styles/space-between-center)}
-     [acquisition-impact-status (get-in unit [:land-acquisition :land-acquisition/impact])]
-     [:span {:class (<class common-styles/gray-text)}
+
+  (let [cadastral-form (get cadastral-forms teet-id)]
+    [:div {:class (<class cadastral-unit-container-style)}
+     [:div {:class (<class cadastral-unit-quality-style quality)}
+      [:span {:title (str MOOTVIIS " – " MUUDET)} (case quality
+                                                    :bad "!!!"
+                                                    :questionable "!"
+                                                    "")]]
+     [ButtonBase {:on-mouse-enter (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" true unit)
+                  :on-mouse-leave (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" false unit)
+                  :on-click (e! land-controller/->ToggleLandUnit unit)
+                  :class (<class cadastral-unit-style selected?)}
+      [typography/SectionHeading {:style {:text-align :left}} (:L_AADRESS unit)]
+      [:div {:class (<class common-styles/space-between-center)}
+       [acquisition-impact-status (get-in cadastral-form [:land-acquisition/impact :db/ident])]
+       [:span {:class (<class common-styles/gray-text)}
         TUNNUS]]]
-   [Collapse
-    {:in selected?
-     :mount-on-enter true}
-    [cadastral-unit-form e! unit quality
-     update-cadastral-form-event
-     (get cadastral-forms TUNNUS)]]])
+     [Collapse
+      {:in selected?
+       :mount-on-enter true}
+      [cadastral-unit-form e! unit quality
+       update-cadastral-form-event
+       cadastral-form]]]))
 
 (defn cadastral-heading-container-style
   [bg-color font-color]
@@ -409,14 +412,14 @@
       units))]])
 
 (defn filter-units
-  [e! {:keys [estate-search-value quality impact-search-value] :as filter-params}]
+  [e! {:keys [estate-search-value quality impact] :as filter-params}]
   ;; filter-params will come from appdb :land-acquisition-filters key
   ;; (println "filter-params:" filter-params)
   (r/with-let [on-change (fn [kw-or-e field]
                            (println "on-change got" kw-or-e)
                            ;; select-enum gives us the kw straight, textfields pass event
-                           (let [value (if (keyword? kw-or-e)
-                                           kw-or-e
+                           (let [value (if (or (keyword? kw-or-e) (nil? kw-or-e))
+                                         kw-or-e
                                            (-> kw-or-e .-target .-value))]
                              (e! (land-controller/->SearchOnChange field value))))]
     [:div {:style {:margin-bottom "1rem"}}
@@ -433,7 +436,7 @@
      [select/select-enum {:e! e!
                           :attribute :land-acquisition/impact
                           :show-empty-selection? true
-                          :value impact-search-value
+                          :value impact
                           :on-change #(on-change % :impact)}]
      ;; this isn't implemented yet (as of 2020-05-12)
      #_[select/select-enum {:e! e!
@@ -455,15 +458,7 @@
   [e! _ _]
   (e! (land-controller/->SearchOnChange :estate-search-value ""))
   (fn [e! project units]
-    (let [land-acquisitions (into {}
-                                  (map
-                                    (juxt :land-acquisition/cadastral-unit
-                                          #(update % :land-acquisition/impact :db/ident)))
-                                  (:land-acquisitions project))
-          ids (:land/filtered-unit-ids project) ;; set by the cadastral search field
-          units (map (fn [unit]
-                       (assoc unit :land-acquisition (get land-acquisitions (:teet-id unit))))
-                     units)
+    (let [ids (:land/filtered-unit-ids project) ;; set by the cadastral search field
           units (if (empty? ids)
                   []
                   (filter #(ids (:teet-id %)) units))
@@ -479,7 +474,7 @@
                     units)]
       [:div
        (mapc
-        (fn [[owner _units :as group]]
+        (fn [group]
           [owner-group e!
            (or (:land/open-estates project) #{})
            (:land/cadastral-forms project)

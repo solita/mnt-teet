@@ -12,8 +12,7 @@
 (defquery :land/fetch-land-acquisitions
   {:doc "Fetch all land acquisitions and related cadastral units from a project"
    :context {db :db}
-   :args {project-id :project-id
-          units :units}
+   :args {project-id :project-id}
    :project-id [:thk.project/id project-id]
    :authorization {}}
   (let [land-acquisitions (mapv first (d/q '[:find (pull ?e [*])
