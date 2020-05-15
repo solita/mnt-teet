@@ -5,7 +5,8 @@
             [teet.integration.x-road :as x-road]
             [clj-time.core :as time]
             [clj-time.coerce :as c]
-            [clojure.walk :as walk]))
+            [clojure.walk :as walk]
+            [teet.land.land-db :as land-db]))
 
 (defquery :land/fetch-land-acquisitions
   {:doc "Fetch all land acquisitions and related cadastral units from a project"
@@ -121,10 +122,4 @@ and the compensation info as the value."
           (map first)
           (map (fn [{estate-id :estate-procedure/estate-id :as compensation-form}]
                  [estate-id compensation-form])))
-         (d/q '[:find (pull ?e [*
-                                {:estate-procedure/process-fees [*]}
-                                {:estate-procedure/third-party-compensations [*]}
-                                {:estate-procedure/land-exchanges [*]}])
-                :where [?e :estate-procedure/project ?p]
-                :in $ ?p]
-              db [:thk.project/id id]))))
+         (land-db/project-estate-procedures db [:thk.project/id id]))))

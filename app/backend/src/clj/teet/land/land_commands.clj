@@ -4,7 +4,9 @@
             [teet.meta.meta-model :as meta-model]
             [teet.util.collection :as cu]
             [teet.util.spec :as su]
-            teet.land.land-specs))
+            teet.land.land-specs
+            [teet.util.datomic :as du]
+            [teet.land.land-db :as land-db]))
 
 
 (defcommand :land/create-land-acquisition
@@ -60,14 +62,20 @@
               :land-acquisition/pos-number pos-number}
              (meta-model/modification-meta user)))]})
 
+(defn- maybe-add-db-id [{existing-id :db/id :as data} new-id]
+  (if existing-id
+    data
+    (assoc data :db/id new-id)))
+
 (defn new-compensations-tx
   [compensations]
   (into []
         (keep-indexed
          (fn [i compensation]
            (when (seq compensation)
-             (-> (select-keys compensation (su/keys-of :estate-procedure/compensation))
-                 (merge {:db/id (str "new-third-party-comp-" i)})
+             (-> compensation
+                 (select-keys (su/keys-of :estate-procedure/compensation))
+                 (maybe-add-db-id (str "new-third-party-comp-" i))
                  (cu/update-in-if-exists [:estate-compensation/amount] bigdec)))))
         compensations))
 
@@ -77,8 +85,9 @@
         (keep-indexed
          (fn [i exchange]
            (when (seq exchange)
-             (-> (select-keys exchange (su/keys-of :estate-procedure/land-exchange))
-                 (merge {:db/id (str "new-exchange-" i)})
+             (-> exchange
+                 (select-keys (su/keys-of :estate-procedure/land-exchange))
+                 (maybe-add-db-id (str "new-exchange-" i))
                  (cu/update-in-if-exists [:land-exchange/area] bigdec)
                  (cu/update-in-if-exists [:land-exchange/price-per-sqm] bigdec)))))
         land-exchanges))
@@ -91,7 +100,7 @@
       (when (seq pf)
         (-> pf
             (cu/update-in-if-exists [:estate-process-fee/fee] bigdec)
-            (assoc :db/id (str "new-process-fee-" i)))))
+            (maybe-add-db-id (str "new-process-fee-" i)))))
     process-fees)))
 
 (def common-procedure-updates
@@ -107,6 +116,7 @@
 (def procedure-type-options
   {:estate-procedure.type/urgent
    {:keys
+
     [:estate-procedure/urgent-bonus
      :estate-procedure/motivation-bonus :estate-procedure/third-party-compensations]}
 
@@ -147,15 +157,29 @@
 
 (defcommand :land/create-estate-procedure
   {:doc "Create a new compensation for estate"
-   :context {conn :conn
-             user :user
-             db :db}
+   :context {:keys [db user]}
    :payload {:thk.project/keys [id] :as payload}
    :project-id [:thk.project/id id]
-   :authorization {}
-   :pre [(nil? (:db/id payload))]
+   :authorization {:land/edit-land-acquisition {:eid [:thk.project/id id]
+                                                :link :thk.project/owner}}
+   :pre [(empty? (du/db-ids payload))]
    :transact
    [(let [tx-data (estate-procedure-tx payload)]
       (def p* payload)
       (def tx* tx-data)
       tx-data)]})
+
+(defcommand :land/update-estate-procedure
+  {:doc "Update an existing estate procedure"
+   :context {:keys [user db]}
+   :payload {id :thk.project/id
+             procedure-id :db/id
+             :as payload}
+   :project-id [:thk.project/id id]
+   :authorization {:land/edit-land-acquisition {:eid [:thk.project/id id]
+                                                :link :thk.project/owner}}
+   :pre [(du/same-db-ids?
+          (land-db/project-estate-procedure-by-id
+           db [:thk.project/id id] procedure-id)
+          payload)]
+   :transact (estate-procedure-tx payload)})

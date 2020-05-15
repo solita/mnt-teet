@@ -1,7 +1,9 @@
 (ns teet.util.datomic
   "Datomic query/transaction utility functions."
   (:require [clojure.spec.alpha :as s]
-            #?(:clj [datomic.client.api :as d])))
+            [clojure.walk :as walk]
+            #?(:clj [datomic.client.api :as d])
+            [clojure.set :as set]))
 
 (s/def :db/ident keyword?)
 (s/def ::enum (s/or :keyword keyword?
@@ -102,3 +104,31 @@
        (Entity. db eid (atom (if (number? eid)
                                {:db/id eid}
                                {}))))))
+
+(defn db-ids
+  "Recursively gather non-string :db/id values of form"
+  [form]
+  (cond
+    (map? form)
+    (let [id (:db/id form ::not-found)
+          acc (if (and (not= ::not-found id)
+                       (not (string? id)))
+                #{id}
+                #{})]
+      (reduce set/union
+              acc
+              (map db-ids (vals form))))
+
+    (sequential? form)
+    (reduce set/union
+            #{}
+            (map db-ids form))
+
+    :else
+    #{}))
+
+(defn same-db-ids?
+  "Check if the two nested structures have same number :db/id values."
+  [left right]
+  (= (db-ids left)
+     (db-ids right)))
