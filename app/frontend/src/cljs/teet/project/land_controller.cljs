@@ -80,7 +80,7 @@
       (for [{pfr :process-fee-recipient :as pf} process-fees
             :when (seq pf)]
         (merge
-         (select-keys pf [:estate-process-fee/fee])
+         (select-keys pf [:db/id :estate-process-fee/fee])
          {:estate-process-fee/recipient (:recipient pfr)}
          (when-let [owner (:owner pfr)]
            ;; Owner of the estate, add person or business code
@@ -204,7 +204,9 @@
     (let [project-id (get-in app [:params :project])]
       (t/fx app
             {:tuck.effect/type :command!
-             :command :land/create-estate-procedure
+             :command (if (:db/id form-data)
+                        :land/update-estate-procedure
+                        :land/create-estate-procedure)
              :success-message (tr [:land :estate-compensation-success])
              :payload (-> form-data
                           (merge
