@@ -8,7 +8,8 @@
     (d/q {:query {:find '[(pull ?e [*
                                     {:estate-procedure/process-fees [*]}
                                     {:estate-procedure/third-party-compensations [*]}
-                                    {:estate-procedure/land-exchanges [*]}])]
+                                    {:estate-procedure/land-exchanges [*]}
+                                    {:estate-procedure/compensations [*]}])]
                   :where (into '[[?e :estate-procedure/project ?p]] where)
                   :in (into ['$ '?p] in)}
           :args (into [db project-eid] args)})))
