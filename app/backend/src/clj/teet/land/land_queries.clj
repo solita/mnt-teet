@@ -53,12 +53,12 @@
                            :instance-id xroad-instance
                            :registriosa-nr estate-id
                            :requesting-eid (str "EE" (:user/person-id user))})]
-    (if (= (:status x-road-response) :error)
-      (throw (ex-info "Invalid xroad response" {:error :invalid-x-road-response
-                                                :response x-road-response}))
+    (if (= (:status x-road-response) :ok)
       (assoc
         x-road-response
-        :estate-id estate-id))))
+        :estate-id estate-id)
+      (throw (ex-info "Invalid xroad response" {:error :invalid-x-road-response
+                                                :response x-road-response})))))
 
 (defquery :land/related-project-estates
   {:doc "Fetch estates that are related to a given project's cadastral units.
