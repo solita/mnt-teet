@@ -5,15 +5,14 @@
             [teet.localization :refer [tr]]
             [teet.map.map-controller :as map-controller]
             [goog.math.Long]
-            [cljs-time.core :as time]
-            [cljs-time.coerce :as c]
             [teet.common.common-controller :as common-controller]
-            [teet.snackbar.snackbar-controller :as snackbar-controller]))
+            [teet.snackbar.snackbar-controller :as snackbar-controller]
+            [teet.util.datomic :as du]))
 
 (defrecord ToggleLandUnit [unit])
 (defrecord SearchOnChange [attribute value])
 (defrecord UpdateFilteredUnitIDs [attribute ids])
-(defrecord SubmitLandPurchaseForm [form-data cadastral-id])
+(defrecord SubmitLandAcquisitionForm [form-data cadastral-id])
 (defrecord FetchLandAcquisitions [project-id])
 (defrecord LandAcquisitionFetchSuccess [result])
 (defrecord FetchEstateInfos [estate-ids retry-count])
@@ -135,11 +134,13 @@
                        (= q (:quality unit))
                        true))
                    (fn impact [unit] ; impact filter
-                     (if-let [q (when (:impact unit)  (f-value :impact))]
-                       (do
-                         ;; (println "compare impact" q (:impact unit) unit)
-                         (= q (:impact unit)))
-                       true))
+                     (let [unit-impact (get-in app [:route :project :land/cadastral-forms (:teet-id unit) :land-acquisition/impact])
+                           impact (if (nil? unit-impact)
+                                    :land-acquisition.impact/undecided
+                                    unit-impact)]
+                       (if (f-value :impact)
+                         (du/enum= (f-value :impact) impact)
+                         true)))
                    #_(fn process [unit] ; process filter ;; waiting for process status to be added
                      (if-let [q (f-select-value :process)]
                        (= q (:process unit))
@@ -176,11 +177,20 @@
   LandAcquisitionFetchSuccess
   (process-event
     [{result :result} app]
-    (-> app
-        (update-in [:route :project] merge result)
-        (update-in [:route :project] dissoc :thk.project/related-cadastral-units-info)))
+    (let [land-acquisitions (:land-acquisitions result)
+          related-cadastral-units (:thk.project/related-cadastral-units result)]
 
-  SubmitLandPurchaseForm
+      (-> app
+          (assoc-in [:route :project :thk.project/related-cadastral-units] related-cadastral-units)
+          (update-in [:route :project :land/cadastral-forms]
+                     (fn [cadastral-forms]
+                       (into (or cadastral-forms {})
+                             (for [{:land-acquisition/keys [cadastral-unit] :as form} land-acquisitions]
+                               [cadastral-unit form]))))
+          (update-in [:route :project] merge result)
+          (update-in [:route :project] dissoc :thk.project/related-cadastral-units-info))))
+
+  SubmitLandAcquisitionForm
   (process-event [{:keys [form-data cadastral-id]} app]
     (let [project-id (get-in app [:params :project])
           {:land-acquisition/keys [area-to-obtain pos-number]} form-data]
@@ -225,7 +235,6 @@
 
   FetchEstateCompensationsResponse
   (process-event [{response :response} app]
-    (def response* response)
     (common-controller/update-page-state
      app [:land/estate-forms]
      (fn [estate-forms]
