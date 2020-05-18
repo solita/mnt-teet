@@ -16,7 +16,8 @@
             [teet.road.road-query :as road-query]
             [teet.gis.entity-features :as entity-features]
             [teet.log :as log]
-            [teet.road.road-model :as road-model]))
+            [teet.road.road-model :as road-model]
+            [teet.user.user-model :as user-model]))
 
 (defquery :thk.project/db-id->thk-id
   {:doc "Fetch THK project id for given entity :db/id"
@@ -163,19 +164,85 @@
                    :where [?e :thk.project/id _]]
                  db project-model/project-list-with-status-attributes)))))
 
+(defmulti search-clause (fn [[field _value]] field))
+
+(defmethod search-clause :text [[_ text]]
+  (if (every? #(Character/isDigit %) text)
+    ;; Search by object id
+    {:where '[[?e :thk.project/id ?thk-project-id]]
+     :in {'?thk-project-id text}}
+    ;; Search by free text
+    {:where '[(or [?e :thk.project/project-name ?name]
+                  [?e :thk.project/name ?name])
+              [(.toLowerCase ^String ?name) ?lower-name]
+              [(.contains ?lower-name ?text)]]
+     :in {'?text text}}))
+
+(defmethod search-clause :road [[_ road]]
+  {:where '[[?e :thk.project/road-nr ?road]]
+   :in {'?road (Long/parseLong road)}})
+
+(defmethod search-clause :km [[_ km]]
+  {:where '[(or [?e :thk.project/custom-start-m ?start-m]
+                [?e :thk.project/start-m ?start-m])
+            [(<= ?start-m ?meters)]
+            (or [?e :thk.project/custom-end-m ?end-m]
+                [?e :thk.project/end-m ?end-m])
+            [(>= ?end-m ?meters)]]
+   :in {'?meters (-> km road-model/parse-km road-model/km->m)}})
+
+(defmethod search-clause :region [[_ region]]
+  {:where '[[?e :thk.project/region-name ?region-name]
+            [(.toLowerCase ^String ?region-name) ?lower-region-name]
+            [(.contains ?lower-region-name ?region)]]
+   :in {'?region (str/lower-case region)}})
+
+(defmethod search-clause :date [[_ date]]
+  {:where '[[?e :thk.project/estimated-start-date ?start-date]
+            [(<= ?start-date ?date)]
+            [?e :thk.project/estimated-end-date ?end-date]
+            [(>= ?end-date ?date)]]
+   :in {'?date date}})
+
+(defmethod search-clause :repair-method [[_ repair-method]]
+  {:where '[[?e :thk.project/repair-method ?repair-method]]
+   :in {'?repair-method repair-method}})
+
+(defmethod search-clause :owner [[_ owner]]
+  {:where '[[?e :thk.project/owner ?owner]]
+   :in {'?owner (user-model/user-ref owner)}})
+
+(defmethod search-clause :status [[_ status]]
+  ;; FIXME: status?
+  {:where []
+   :in {}})
+
 (defquery :thk.project/search
-  {:doc "Search for a project by text"
+  {:doc "Search for a projects"
    :context {db :db}
-   :args {:keys [text]}
+   :args payload
    :project-id nil
    :authorization {}}
-  {:query '[:find (pull ?e [:db/id :thk.project/project-name :thk.project/name :thk.project/id])
-            :where
-            (or [?e :thk.project/project-name ?name]
-                [?e :thk.project/name ?name])
-            [(.toLowerCase ^String ?name) ?lower-name]
-            [(.contains ?lower-name ?text)]
-            :in $ ?text]
-   :args [db (str/lower-case text)]
-   :result-fn (partial mapv
-                       #(-> % first (assoc :type :project)))})
+  (let [{:keys [where in]}
+        (reduce (fn [clauses-and-args search]
+                  (let [{:keys [where in]} (search-clause search)]
+                    (-> clauses-and-args
+                        (update :where concat where)
+                        (update :in merge in))))
+                {:where []
+                 :in {}}
+                payload)
+
+        arglist (seq in)
+        in (into '[$] (map first) arglist)
+        args (into [db] (map second) arglist)]
+    (mapv #(-> % first (assoc :type :project))
+          (d/q (let [q {:query {:find '[(pull ?e [:db/id
+                                                 :thk.project/project-name
+                                                 :thk.project/name
+                                                 :thk.project/id])]
+                               :where (into '[[?e :thk.project/id _]] where)
+                               :in in}
+                        :args args}]
+                 (log/info "Q: " q)
+                 q)))))

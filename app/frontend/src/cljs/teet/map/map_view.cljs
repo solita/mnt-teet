@@ -21,7 +21,10 @@
             [teet.ui.common :as common]
             [teet.ui.query :as query]
             [teet.ui.select :as select]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.ui.text-field :refer [TextField]]
+            [teet.ui.date-picker :as date-picker]
+            [teet.ui.form :as form]))
 
 (def default-extent [20 50 30 60])
 
@@ -145,7 +148,31 @@
                 :query :road/eelis-wms-layers
                 :simple-view [wms-layer-selector* e! layer]}])
 
+(defmethod layer-filters-form :projects
+  [e! layer _map-data]
+  [form/form {:e! e!
+              :on-change-event (e! map-controller/->UpdateLayer)
+              :value layer}
+   ^{:attribute :text :xs 6}
+   [TextField {:label (tr [:fields :thk.project/project-name])}]
 
+   ^{:attribute :road :xs 6}
+   [TextField {:label (tr [:fields :thk.project/road-nr])
+               :type :number}]
+
+   ^{:attribute :region :xs 6}
+   [TextField {:label (tr [:fields :thk.project/region-name])}]
+
+   ^{:attribute :km :xs 6}
+   [TextField {:label (tr [:project :information :km-range])
+               :type :number}]
+
+   ^{:attribute :date :xs 6}
+   [date-picker/date-input {:label (tr [:fields :thk.project/estimated-date-range])}]
+
+   ^{:attribute :owner :xs 6}
+   [select/select-user {:label (tr [:fields :thk.project/owner])
+                        :e! e!}]])
 
 (defmethod layer-filters-form :default
   [_ _ _]

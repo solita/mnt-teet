@@ -222,12 +222,14 @@
                                   [attribute]))))
               opts {:value value
                     :on-change (r/partial update-attribute-fn attribute)
-                    :label (tr [:fields attribute])
                     :error error?
                     :error-text error-text
                     :required (required-field? attribute required-fields)}]
           (add-validation
-           (update field 1 merge opts)
+           (update field 1 (fn [{label :label :as input-opts}]
+                             (merge input-opts opts
+                                    (when-not label
+                                      {:label (tr [:fields attribute])}))))
            (partial validate-attribute-fn invalid-attributes validate-field) attribute)))})))
 
 (defn field
@@ -324,7 +326,7 @@
            cancel-event    ;; Form cancel callback
            save-event      ;; Form submit callback
            value           ;; Current value of the form
-
+           disable-buttons?
            in-progress?    ;; Submit in progess?
            spec            ;; Spec for validating form fields
            id              ;; Id for the form element
@@ -363,7 +365,6 @@
                              :validate  (when save-event
                                           (fn [value]
                                             (validate value @current-fields)))
-                             :disabled? (boolean in-progress?)
                              :delete (when delete
                                        #(e! delete))}}]
     [:form (merge {:on-submit #(submit! e! save-event value @current-fields %)
@@ -375,8 +376,10 @@
                   (when id
                     {:id id}))
      (context/provide
-      :form (assoc ctx :value value)
-      [:<> (util/with-keys children)])]))
+       :form (-> ctx
+                 (assoc :value value)
+                 (assoc-in [:footer :disabled?] (or in-progress? disable-buttons?)))
+       [:<> (util/with-keys children)])]))
 
 (defn footer2
   ([] (footer2 form-footer))

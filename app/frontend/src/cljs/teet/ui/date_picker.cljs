@@ -108,14 +108,16 @@
    :on-change    callback to set new selected date
    :selectable?  fn to call for each date to check if it should be selectable"
   [{:keys [value on-change selectable? min-date] :as _opts}]
-  (r/with-let [now (or value (if (t/after? (c/from-date min-date) (t/now))
+  (r/with-let [now (or value (if (and min-date
+                                      (t/after? (c/from-date min-date) (t/now)))
                                (c/from-date min-date)
                                (t/now)))
                showing (atom [(.getYear now) (.getMonth now)])]
     (let [{:keys [months days today]} (get locale @localization/selected-language)
           [year month] @showing
           show-month (t/date-time year (inc month) 1)
-          date-in-current-month? #(same-month? show-month %)]
+          date-in-current-month? #(same-month? show-month %)
+          selectable? (or selectable? (constantly true))]
 
       [:div
        [:div {:style {:display :flex

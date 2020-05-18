@@ -101,132 +101,132 @@
       [TextField {:read-only? true :value recipient}])))
 
 (defn estate-group-form
-  [e! _ on-change form-data]
-  (fn [e! {:keys [estate-id] :as estate} on-change form-data]
-    (let [procedure-type (:estate-procedure/type form-data)
-          add-row! (fn [field]
-                     (e! (on-change
-                          (update form-data
-                                  field
-                                  (fnil conj []) {}))))]
-      [:div
-       [form/form2 {:e! e!
-                    :value form-data
-                    :on-change-event on-change
-                    :save-event #(land-controller/->SubmitEstateCompensationForm form-data estate-id)
-                    :cancel-event #(land-controller/->ToggleOpenEstate estate-id)}
-        [:div {:class (<class estate-compensation-form)}
-         [:div
-          [form/field :estate-procedure/pos
-           [TextField {:type :number
-                       :label-element typography/BoldGreyText}]]
-          [form/field :estate-procedure/type
-           [select/select-enum {:e! e!
-                                :label-element typography/BoldGreyText
-                                :attribute :estate-procedure/type}]]
-          (when (= procedure-type :estate-procedure.type/acquisition-negotiation)
-            [form/many {:attribute :estate-procedure/process-fees
-                        :before [typography/BoldGreyText (tr [:fields :estate-procedure/process-fees])]
-                        :after [buttons/link-button
-                                {:on-click #(add-row! :estate-procedure/process-fees)}
-                                (tr [:land :add-owner])]}
-             [Grid {:container true :spacing 3}
-              [Grid {:item true :xs 8}
-               [form/field :process-fee-recipient
-                [owner-process-fee-field {}]]]
-              [Grid {:item true :xs 4}
-               [form/field :estate-process-fee/fee
-                [TextField {:type :number :placeholder "0"
-                            :hide-label? true
-                            :min 0
-                            :end-icon text-field/euro-end-icon}]]]]])
-          (when (#{:estate-procedure.type/urgent :estate-procedure.type/acquisition-negotiation}
-                 procedure-type)
-            [field-with-title {:title (tr [:fields :estate-procedure/motivation-bonus])
-                               :field-name :estate-procedure/motivation-bonus
-                               :type :number
-                               :placeholder 0
-                               :end-icon text-field/euro-end-icon}])
-
-          (when (#{:estate-procedure.type/urgent}
-                 procedure-type)
-            [field-with-title {:title (tr [:fields :estate-procedure/urgent-bonus])
-                               :field-name :estate-procedure/urgent-bonus
-                               :type :number
-                               :placeholder 0
-                               :end-icon text-field/euro-end-icon}])
-
-          (when (#{:estate-procedure.type/acquisition-negotiation :estate-procedure.type/expropriation} procedure-type)
-            [form/many {:attribute :estate-procedure/compensations
-                        :before [typography/BoldGreyText (tr [:fields :estate-procedure/compensations])]
-                        :after [buttons/link-button
-                                {:on-click #(add-row! :estate-procedure/compensations)}
-                                (tr [:land :add-compensation])]
-                        :atleast-once? true}
-             [Grid {:container true :spacing 3}
-              [Grid {:item true :xs 8}
-               [form/field {:attribute :estate-compensation/reason}
-                [select/select-enum {:e! e!
-                                     :show-label? false
-                                     :attribute :estate-compensation/reason}]]]
-              [Grid {:item true :xs 4}
-               [form/field {:attribute :estate-compensation/amount}
-                [TextField {:hide-label? true
-                            :placeholder 0
-                            :end-icon text-field/euro-end-icon
-                            :type :number}]]]]])
-
-          [form/many {:attribute :estate-procedure/third-party-compensations
-                      :before [typography/BoldGreyText (tr [:fields :estate-procedure/third-party-compensations])]
+  [e! {:keys [estate-id]} on-change form-data]
+  (let [procedure-type (:estate-procedure/type form-data)
+        add-row! (fn [field]
+                   (e! (on-change
+                         (update form-data
+                                 field
+                                 (fnil conj []) {}))))]
+    [:div
+     [form/form2 {:e! e!
+                  :value form-data
+                  :on-change-event on-change
+                  :save-event #(land-controller/->SubmitEstateCompensationForm form-data estate-id)
+                  :cancel-event #(land-controller/->CancelEstateForm estate-id)
+                  :disable-buttons? (not (boolean (:saved-data form-data)))}
+      [:div {:class (<class estate-compensation-form)}
+       [:div
+        [form/field :estate-procedure/pos
+         [TextField {:type :number
+                     :label-element typography/BoldGreyText}]]
+        [form/field :estate-procedure/type
+         [select/select-enum {:e! e!
+                              :label-element typography/BoldGreyText
+                              :attribute :estate-procedure/type}]]
+        (when (= procedure-type :estate-procedure.type/acquisition-negotiation)
+          [form/many {:attribute :estate-procedure/process-fees
+                      :before [typography/BoldGreyText (tr [:fields :estate-procedure/process-fees])]
                       :after [buttons/link-button
-                              {:on-click #(add-row! :estate-procedure/third-party-compensations)}
+                              {:on-click #(add-row! :estate-procedure/process-fees)}
+                              (tr [:land :add-owner])]}
+           [Grid {:container true :spacing 3}
+            [Grid {:item true :xs 8}
+             [form/field :process-fee-recipient
+              [owner-process-fee-field {}]]]
+            [Grid {:item true :xs 4}
+             [form/field :estate-process-fee/fee
+              [TextField {:type :number :placeholder "0"
+                          :hide-label? true
+                          :min 0
+                          :end-icon text-field/euro-end-icon}]]]]])
+        (when (#{:estate-procedure.type/urgent :estate-procedure.type/acquisition-negotiation}
+               procedure-type)
+          [field-with-title {:title (tr [:fields :estate-procedure/motivation-bonus])
+                             :field-name :estate-procedure/motivation-bonus
+                             :type :number
+                             :placeholder 0
+                             :end-icon text-field/euro-end-icon}])
+
+        (when (#{:estate-procedure.type/urgent}
+               procedure-type)
+          [field-with-title {:title (tr [:fields :estate-procedure/urgent-bonus])
+                             :field-name :estate-procedure/urgent-bonus
+                             :type :number
+                             :placeholder 0
+                             :end-icon text-field/euro-end-icon}])
+
+        (when (#{:estate-procedure.type/acquisition-negotiation :estate-procedure.type/expropriation} procedure-type)
+          [form/many {:attribute :estate-procedure/compensations
+                      :before [typography/BoldGreyText (tr [:fields :estate-procedure/compensations])]
+                      :after [buttons/link-button
+                              {:on-click #(add-row! :estate-procedure/compensations)}
                               (tr [:land :add-compensation])]
                       :atleast-once? true}
            [Grid {:container true :spacing 3}
             [Grid {:item true :xs 8}
-             [form/field {:attribute :estate-compensation/description}
-              [TextField {:hide-label? true}]]]
+             [form/field {:attribute :estate-compensation/reason}
+              [select/select-enum {:e! e!
+                                   :show-label? false
+                                   :attribute :estate-compensation/reason}]]]
             [Grid {:item true :xs 4}
              [form/field {:attribute :estate-compensation/amount}
-              [TextField {:type :number
+              [TextField {:hide-label? true
                           :placeholder 0
                           :end-icon text-field/euro-end-icon
-                          :hide-label? true}]]]
-            #_[Grid {:item true :xs 2
-                     :style {:display :flex
-                             :justify-content :center
-                             :align-items :center}}
-               [form/many-remove #(e! (on-change
-                                       (update form-data
-                                               :estate-procedure/third-party-compensations
-                                               (fn [items]
-                                                 (into (subvec items 0 %)
-                                                       (subvec items (inc %)))))))
-                [buttons/link-button {} "X"]]]]]
+                          :type :number}]]]]])
 
-          (when (= (:estate-procedure/type form-data) :estate-procedure.type/property-trading)
-            [:div
-             [form/many {:before [typography/BoldGreyText (tr [:fields :estate-procedure/land-exchanges])]
-                         :attribute :estate-procedure/land-exchanges
-                         :atleast-once? true}
-              [Grid {:container true :spacing 3}
-               [Grid {:item true :xs 12}
-                [form/field {:attribute :land-exchange/cadastral-unit-id}
-                 [TextField {:hide-label? true
-                             :placeholder "Cadastral unit number"}]]]
-               [Grid {:item true :xs 6}
-                [form/field {:attribute :land-exchange/area}
-                 [TextField {:label-element typography/BoldGreyText
-                             :type :number
-                             :placeholder 0
-                             :end-icon text-field/sqm-end-icon}]]]
-               [Grid {:item true :xs 6}
-                [form/field {:attribute :land-exchange/price-per-sqm}
-                 [TextField {:type :number
-                             :placeholder 0
-                             :end-icon text-field/euro-end-icon
-                             :label-element typography/BoldGreyText}]]]]]])]
-         (form/footer2 form/form-footer)]]])))
+        [form/many {:attribute :estate-procedure/third-party-compensations
+                    :before [typography/BoldGreyText (tr [:fields :estate-procedure/third-party-compensations])]
+                    :after [buttons/link-button
+                            {:on-click #(add-row! :estate-procedure/third-party-compensations)}
+                            (tr [:land :add-compensation])]
+                    :atleast-once? true}
+         [Grid {:container true :spacing 3}
+          [Grid {:item true :xs 8}
+           [form/field {:attribute :estate-compensation/description}
+            [TextField {:hide-label? true}]]]
+          [Grid {:item true :xs 4}
+           [form/field {:attribute :estate-compensation/amount}
+            [TextField {:type :number
+                        :placeholder 0
+                        :end-icon text-field/euro-end-icon
+                        :hide-label? true}]]]
+          #_[Grid {:item true :xs 2
+                   :style {:display :flex
+                           :justify-content :center
+                           :align-items :center}}
+             [form/many-remove #(e! (on-change
+                                      (update form-data
+                                              :estate-procedure/third-party-compensations
+                                              (fn [items]
+                                                (into (subvec items 0 %)
+                                                      (subvec items (inc %)))))))
+              [buttons/link-button {} "X"]]]]]
+
+        (when (= (:estate-procedure/type form-data) :estate-procedure.type/property-trading)
+          [:div
+           [form/many {:before [typography/BoldGreyText (tr [:fields :estate-procedure/land-exchanges])]
+                       :attribute :estate-procedure/land-exchanges
+                       :atleast-once? true}
+            [Grid {:container true :spacing 3}
+             [Grid {:item true :xs 12}
+              [form/field {:attribute :land-exchange/cadastral-unit-id}
+               [TextField {:hide-label? true
+                           :placeholder (tr [:land :cadastral-unit-number])}]]]
+             [Grid {:item true :xs 6}
+              [form/field {:attribute :land-exchange/area}
+               [TextField {:label-element typography/BoldGreyText
+                           :type :number
+                           :placeholder 0
+                           :end-icon text-field/sqm-end-icon}]]]
+             [Grid {:item true :xs 6}
+              [form/field {:attribute :land-exchange/price-per-sqm}
+               [TextField {:type :number
+                           :placeholder 0
+                           :end-icon text-field/euro-end-icon
+                           :label-element typography/BoldGreyText}]]]]]])]
+       (form/footer2 form/form-footer)]]]))
 
 
 (defn cadastral-unit-form
@@ -379,7 +379,7 @@
       [ButtonBase {:class (<class group-style)
                    :on-click (e! land-controller/->ToggleOpenEstate estate-id)}
 
-       [typography/SectionHeading "Estate " estate-id]
+       [typography/SectionHeading (tr [:land :estate]) " " estate-id]
        [:span (count units) " " (if (= 1 (count units))
                                   (tr [:land :unit])
                                   (tr [:land :units]))]]
@@ -422,7 +422,6 @@
   ;; filter-params will come from appdb :land-acquisition-filters key
   ;; (println "filter-params:" filter-params)
   (r/with-let [on-change (fn [kw-or-e field]
-                           (println "on-change got" kw-or-e)
                            ;; select-enum gives us the kw straight, textfields pass event
                            (let [value (if (or (keyword? kw-or-e) (nil? kw-or-e))
                                          kw-or-e
@@ -440,6 +439,7 @@
                  :on-change #(on-change % :cadastral-search-value)}]
 
      [select/select-enum {:e! e!
+                          :empty-option-label (tr [:land :quality :any])
                           :attribute :land-acquisition/impact
                           :show-empty-selection? true
                           :value impact
