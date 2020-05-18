@@ -5,15 +5,14 @@
             [teet.localization :refer [tr]]
             [teet.map.map-controller :as map-controller]
             [goog.math.Long]
-            [cljs-time.core :as time]
-            [cljs-time.coerce :as c]
             [teet.common.common-controller :as common-controller]
-            [teet.snackbar.snackbar-controller :as snackbar-controller]))
+            [teet.snackbar.snackbar-controller :as snackbar-controller]
+            [teet.util.datomic :as du]))
 
 (defrecord ToggleLandUnit [unit])
 (defrecord SearchOnChange [attribute value])
 (defrecord UpdateFilteredUnitIDs [attribute ids])
-(defrecord SubmitLandPurchaseForm [form-data cadastral-id])
+(defrecord SubmitLandAcquisitionForm [form-data cadastral-id])
 (defrecord FetchLandAcquisitions [project-id])
 (defrecord LandAcquisitionFetchSuccess [result])
 (defrecord FetchEstateInfos [estate-ids retry-count])
@@ -22,9 +21,11 @@
 (defrecord FetchRelatedEstates [])
 (defrecord ToggleOpenEstate [estate-id])
 (defrecord SubmitEstateCompensationForm [form-data estate-id])
+(defrecord FetchEstateCompensations [project-id])
+(defrecord FetchEstateCompensationsResponse [response])
 
-(defrecord UpdateEstateForm [owner-set estate-id form-data])
-(defrecord UpdateCadastralForm [owner-set cadastral-id form-data])
+(defrecord UpdateEstateForm [estate form-data])
+(defrecord UpdateCadastralForm [cadastral-id form-data])
 
 
 (defn toggle-selected-unit
@@ -64,6 +65,32 @@
       (do
         ;; (println "owner filter: FALSE for " (mapv (juxt :nimi :eesnimi) owners) "queried for" query)
         false))))
+
+(def owner-type-can-receive-process-fee #{"Füüsiline isik"
+                                          "Juriidiline isik"})
+(defn format-process-fees
+  "Format process fee rows for sending to server."
+  [form-data]
+  (cu/update-in-if-exists
+   form-data
+   [:estate-procedure/process-fees]
+   (fn [process-fees]
+     (vec
+      (for [{pfr :process-fee-recipient :as pf} process-fees
+            :when (seq pf)]
+        (merge
+         (select-keys pf [:db/id :estate-process-fee/fee])
+         {:estate-process-fee/recipient (:recipient pfr)}
+         (when-let [owner (:owner pfr)]
+           ;; Owner of the estate, add person or business code
+           (case (:isiku_tyyp owner)
+             ;; Physical person
+             "Füüsiline isik"
+             {:estate-process-fee/person-id (str "EE" (:r_kood owner))}
+
+             ;; Legal entity with business id (but not public)
+             "Juriidiline isik"
+             {:estate-process-fee/business-id (str "EE" (:r_kood owner))}))))))))
 
 (extend-protocol t/Event
 
@@ -105,11 +132,13 @@
                        (= q (:quality unit))
                        true))
                    (fn impact [unit] ; impact filter
-                     (if-let [q (when (:impact unit)  (f-value :impact))]
-                       (do
-                         ;; (println "compare impact" q (:impact unit) unit)
-                         (= q (:impact unit)))
-                       true))
+                     (let [unit-impact (get-in app [:route :project :land/cadastral-forms (:teet-id unit) :land-acquisition/impact])
+                           impact (if (nil? unit-impact)
+                                    :land-acquisition.impact/undecided
+                                    unit-impact)]
+                       (if (f-value :impact)
+                         (du/enum= (f-value :impact) impact)
+                         true)))
                    #_(fn process [unit] ; process filter ;; waiting for process status to be added
                      (if-let [q (f-select-value :process)]
                        (= q (:process unit))
@@ -146,11 +175,20 @@
   LandAcquisitionFetchSuccess
   (process-event
     [{result :result} app]
-    (-> app
-        (update-in [:route :project] merge result)
-        (update-in [:route :project] dissoc :thk.project/related-cadastral-units-info)))
+    (let [land-acquisitions (:land-acquisitions result)
+          related-cadastral-units (:thk.project/related-cadastral-units result)]
 
-  SubmitLandPurchaseForm
+      (-> app
+          (assoc-in [:route :project :thk.project/related-cadastral-units] related-cadastral-units)
+          (update-in [:route :project :land/cadastral-forms]
+                     (fn [cadastral-forms]
+                       (into (or cadastral-forms {})
+                             (for [{:land-acquisition/keys [cadastral-unit] :as form} land-acquisitions]
+                               [cadastral-unit form]))))
+          (update-in [:route :project] merge result)
+          (update-in [:route :project] dissoc :thk.project/related-cadastral-units-info))))
+
+  SubmitLandAcquisitionForm
   (process-event [{:keys [form-data cadastral-id]} app]
     (let [project-id (get-in app [:params :project])
           {:land-acquisition/keys [area-to-obtain pos-number]} form-data]
@@ -174,15 +212,42 @@
     (let [project-id (get-in app [:params :project])]
       (t/fx app
             {:tuck.effect/type :command!
-             :command :land/create-estate-procedure
-             :success-message "Foo! ✅"                      ;;todo proper message
-             :payload (merge
-                        form-data                           ;; TODO add select keys
-                        {:thk.project/id project-id
-                         :estate-procedure/estate-id estate-id})
-             :result-event (partial ->FetchLandAcquisitions project-id) ;;TODO fetch esate compensations
-             })))
+             :command (if (:db/id form-data)
+                        :land/update-estate-procedure
+                        :land/create-estate-procedure)
+             :success-message (tr [:land :estate-compensation-success])
+             :payload (-> form-data
+                          (merge
+                           {:thk.project/id project-id
+                            :estate-procedure/estate-id estate-id})
+                          format-process-fees)
+             :result-event (partial ->FetchEstateCompensations project-id)})))
 
+  FetchEstateCompensations
+  (process-event [{project-id :project-id} app]
+    (t/fx app
+          {:tuck.effect/type :query
+           :query :land/fetch-estate-compensations
+           :args {:thk.project/id project-id}
+           :result-event ->FetchEstateCompensationsResponse}))
+
+  FetchEstateCompensationsResponse
+  (process-event [{response :response} app]
+    (common-controller/update-page-state
+     app [:land/estate-forms]
+     (fn [estate-forms]
+       (js/console.log "ESTATE FORMS: " (pr-str estate-forms))
+       (into (or estate-forms {})
+             (for [[estate-id form] response]
+               [estate-id
+                (cu/update-in-if-exists
+                 form [:estate-procedure/process-fees]
+                 (fn [process-fees]
+                   (mapv #(assoc % :process-fee-recipient
+                                 {:owner (or (:estate-process-fee/person-id %)
+                                             (:estate-process-fee/business-id %))
+                                  :recipient (:estate-process-fee/recipient %)})
+                         process-fees)))])))))
   FetchRelatedEstates
   (process-event [_ {:keys [params] :as app}]
     (let [project-id (:project params)
@@ -190,11 +255,13 @@
           estates-count (count (get-in app [:route :project :land/related-estate-ids]))]
       (if (= fetched estates-count)
         app
-        (t/fx (update-in app [:route :project] dissoc :land/related-estates)
-              {:tuck.effect/type :query
-               :query :land/related-project-estates
-               :args {:thk.project/id project-id}
-               :result-event ->FetchRelatedEstatesResponse}))))
+        (t/fx
+         ;; Set as empty vector while fetch, so UI doesn't trigger another fetch
+         (assoc-in app [:route :project :land/related-estate-ids] [])
+         {:tuck.effect/type :query
+          :query :land/related-project-estates
+          :args {:thk.project/id project-id}
+          :result-event ->FetchRelatedEstatesResponse}))))
 
   FetchRelatedEstatesResponse
   (process-event [{{:keys [estates units]} :response} app]
@@ -237,20 +304,45 @@
                                           (common-controller/->ResponseError (ex-info "x road failed to respond" {:error :invalid-x-road-response})))
                                         (common-controller/->ResponseError error)))}))))))
 
+(defn- estate-owner-process-fees [{owners :omandiosad :as _estate}]
+  (let [private-owners
+        (vec
+         (keep (fn [owner]
+                 (when (owner-type-can-receive-process-fee (:isiku_tyyp owner))
+                   {:process-fee-recipient {:recipient
+                                            (str (:eesnimi owner) " " (:nimi owner))
+                                            :owner owner}}))
+               owners))]
+    (if (empty? private-owners)
+      ;; Add single empty owner, if there are none
+      [{}]
+      private-owners)))
+
 ;; Events for updating different forms in land purchase
 (extend-protocol t/Event
   UpdateEstateForm
-  (process-event [{:keys [owner-set estate-id form-data]} app]
+  (process-event [{:keys [estate form-data]} app]
     (common-controller/update-page-state
      app
-     [:land/forms owner-set :land/estate-forms estate-id]
-     merge form-data))
+     [:land/estate-forms (:estate-id estate)]
+     (fn [old-data]
+       (let [computed
+             (cond
+               ;; When acquisition thru negotiation, automatically add
+               ;; process fee rows for all owners
+               (and (= :estate-procedure.type/acquisition-negotiation
+                       (:estate-procedure/type form-data))
+                    (not= :estate-procedure.type/acquisition-negotiation
+                          (:estate-procedure/type old-data))
+                    (not (contains? old-data :estate-procedure/process-fees)))
+               {:estate-procedure/process-fees (estate-owner-process-fees estate)})]
+         (merge old-data form-data computed)))))
 
   UpdateCadastralForm
-  (process-event [{:keys [owner-set cadastral-id form-data]} app]
+  (process-event [{:keys [cadastral-id form-data]} app]
     (common-controller/update-page-state
      app
-     [:land/forms owner-set :land/cadastral-forms cadastral-id]
+     [:land/cadastral-forms cadastral-id]
      merge form-data)))
 
 (defmethod common-controller/on-server-error :invalid-x-road-response [err app]

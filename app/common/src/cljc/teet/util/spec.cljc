@@ -34,17 +34,20 @@
   and selects keys on maps that are included in spec.
 
   Only selects namespaced keys, as everything in datomic is
-  namespaced."
-  [spec data]
-  (let [spec-keys (keys-of spec)]
-    (into {}
-          (map (fn [[key value]]
-                 (let [key-spec (get-spec key)]
-                   (if (and (coll? key-spec)
-                            (= 'coll-of (first key-spec)))
-                     [key (mapv #(select-by-spec (second key-spec) %) value)]
-                     [key value]))))
-          (select-keys data spec-keys))))
+  namespaced.
+
+  If keep-keys is given, also selects those keys in all levels."
+  ([spec data] (select-by-spec spec data #{}))
+  ([spec data keep-keys]
+   (let [spec-keys (into (keys-of spec) keep-keys)]
+     (into {}
+           (map (fn [[key value]]
+                  (let [key-spec (get-spec key)]
+                    (if (and (coll? key-spec)
+                             (= 'coll-of (first key-spec)))
+                      [key (mapv #(select-by-spec (second key-spec) % keep-keys) value)]
+                      [key value]))))
+           (select-keys data spec-keys)))))
 
 (comment
   (s/def ::foo (s/keys :req [::name ::bars]

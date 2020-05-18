@@ -1,5 +1,6 @@
 (ns teet.land.land-specs
-  (:require [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]
+            [clojure.string :as str]))
 
 (s/def :land-acquisition/form
   (s/keys :req [:land-acquisition/impact]))
@@ -15,7 +16,24 @@
                 :estate-procedure/compensations
                 :estate-procedure/motivation-bonus
                 :estate-procedure/land-exchanges
-                :estate-procedure/third-party-compensations]))
+                :estate-procedure/third-party-compensations
+                :estate-procedure/process-fees]))
+
+(s/def :land/estate-group-form
+  (s/keys :req [:estate-procedure/pos
+                :estate-procedure/type]))
+
+(defn non-empty-string? [s]
+  (and (string? s) (not (str/blank? s))))
+
+(s/def :estate-procedure/pos non-empty-string?)
+
+(s/def :estate-procedure/process-fees (s/coll-of :estate-procedure/process-fee))
+(s/def :estate-procedure/process-fee
+  (s/keys :req [:estate-process-fee/fee
+                :estate-process-fee/recipient]
+          :opt [:estate-process-fee/person-id
+                :estate-process-fee/business-id]))
 
 (s/def :estate-procedure/compensation (s/keys :opt [:estate-compensation/amount
                                                     :estate-compensation/description

@@ -4,30 +4,37 @@
             [teet.meta.meta-model :as meta-model]
             [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]
-            [teet.comment.comment-db :as comment-db]))
+            [teet.comment.comment-db :as comment-db]
+            [teet.project.project-model :as project-model]))
 
 
 
 (defn notification-tx
   "Return a notification transaction map."
-  [{:keys [from    ;; user whose action generated the notification
-           to      ;; user who receives the notification
-           target  ;; id of the entity targeted by the notification
-           type]}] ;; notification type
+  [{:keys [from       ; user whose action generated the notification
+           to         ; user who receives the notification
+           target     ; id of the entity targeted by the notification
+           type       ; notification type
+           project]}] ; project this notification is in context of
   {:pre [(user-model/user-ref from)
          (user-model/user-ref to)
          (keyword? type)
-         (some? target)]}
+         (some? target)
+         (or (nil? project) (project-model/project-ref project))]}
   (merge {:db/id (str "new-notification-" (str (java.util.UUID/randomUUID)))
           :notification/receiver (user-model/user-ref to)
           :notification/status :notification.status/unread
           :notification/target target
           :notification/type type}
+         (when project
+           {:notification/project (project-model/project-ref project)})
          (meta-model/creation-meta from)))
 
 (def notification-keys [:db/id :notification/status
                         :notification/target :notification/type
-                        :meta/created-at :meta/creator])
+                        :meta/created-at :meta/creator
+                        {:notification/project [:thk.project/id :thk.project/name
+                                                :thk.project/project-name]}])
 
 (defn unread-notifications
   "Return unread notifications for user"
@@ -40,6 +47,7 @@
               [?notification :notification/receiver ?user]
               [?notification :notification/status :notification.status/unread]]
             db (user-model/user-ref user) notification-keys)))
+
 
 (defn user-notifications
   "Return notifications for user. Returns all unread notifications

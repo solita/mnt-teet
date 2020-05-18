@@ -7,6 +7,7 @@
             [teet.common.common-controller :as common-controller]
             [teet.common.common-styles :as common-styles]
             [teet.file.file-controller :as file-controller]
+            [teet.file.file-style :as file-style]
             [teet.localization :refer [tr tr-enum]]
             [teet.project.project-model :as project-model]
             [teet.project.project-navigator-view :as project-navigator-view]
@@ -17,6 +18,7 @@
             [teet.ui.icons :as icons]
             [teet.ui.material-ui :refer [Grid Link LinearProgress]]
             [teet.ui.panels :as panels]
+            [teet.ui.select :as select]
             [teet.ui.tabs :as tabs]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.typography :as typography]
@@ -96,12 +98,32 @@
    [:div {:class (<class file-column-style 25 :flex-end)}
     [:span (format/date created-at)]]])
 
-(defn- file-filter [value-atom]
-  [:div {:class (<class common-styles/margin-bottom "1.5")}
-   [TextField {:style {:width "100%"}
-               :value @value-atom
+(def ^:private sorters
+  {"meta/created-at" [(juxt :meta/created-at :file/name) >]
+   "file/name"       [:file/name <]
+   "file/type"       [(juxt :file/type :file/name) <]
+   "file/status"     [(juxt :file/status :file/name) <]})
+
+(defn- sort-items
+  []
+  (mapv #(assoc % :label (tr (conj [:file :sort-by (-> % :value keyword)])))
+        [{:value "meta/created-at"}
+         {:value "file/name"}
+         {:value "file/type"}
+         {:value "file/status"}]))
+
+(defn- file-filter-and-sorter [filter-atom sort-by-atom items]
+  [:div {:class (<class file-style/filter-sorter)}
+   [TextField {:value @filter-atom
                :start-icon icons/action-search
-               :on-change #(reset! value-atom (-> % .-target .-value))}]])
+               :on-change #(reset! filter-atom (-> % .-target .-value))}]
+   [select/select-with-action
+    {:id "file-sort-select"
+     :name "file-sort"
+     :show-label? false
+     :value @sort-by-atom
+     :items items
+     :on-change #(reset! sort-by-atom %)}]])
 
 (defn- filter-predicate
   "matches files whose name contains one of the whitespace separated
@@ -110,8 +132,8 @@
   (let [words (map str/lower-case
                    (str/split filter-value #"\s+"))]
     (fn [{file-name :file/name}]
-      (boolean (some #(str/includes? (str/lower-case file-name) %)
-                     words)))))
+      (boolean (every? #(str/includes? (str/lower-case file-name) %)
+                       words)))))
 
 (defn- filtered-by [filter-value files]
   (if (str/blank? filter-value)
@@ -119,14 +141,24 @@
     (let [filter-fn (filter-predicate filter-value)]
       (filter filter-fn files))))
 
+(defn- sorted-by [{:keys [value]} files]
+  (let [[sort-fn comparator] (sorters value)]
+    (sort-by sort-fn comparator files)))
+
 (defn file-table
   [files]
-  (r/with-let [value-atom (r/atom "")]
+  (r/with-let [items-for-sort-select (sort-items)
+               filter-atom (r/atom "")
+               sort-by-atom (r/atom (first items-for-sort-select))]
     [:<>
-     [file-filter value-atom]
+     [file-filter-and-sorter
+      filter-atom
+      sort-by-atom
+      items-for-sort-select]
      [:div
       (->> files
-           (filtered-by @value-atom)
+           (filtered-by @filter-atom)
+           (sorted-by @sort-by-atom)
            (mapc file-row))]]))
 
 (defn file-upload-button []

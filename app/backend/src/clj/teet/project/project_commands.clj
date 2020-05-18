@@ -22,7 +22,8 @@
    {:from user
     :to manager
     :target project-eid
-    :type :notification.type/project-manager-assigned}))
+    :type :notification.type/project-manager-assigned
+    :project project-eid}))
 
 (defn- manager-permission-tx [project-eid user manager]
   {:user/id (:user/id manager)

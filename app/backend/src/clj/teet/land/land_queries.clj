@@ -4,13 +4,15 @@
             [datomic.client.api :as d]
             [teet.integration.x-road :as x-road]
             [clj-time.core :as time]
-            [clj-time.coerce :as c]))
+            [clj-time.coerce :as c]
+            [clojure.walk :as walk]
+            [teet.land.land-db :as land-db]
+            [teet.util.collection :as cu]))
 
 (defquery :land/fetch-land-acquisitions
   {:doc "Fetch all land acquisitions and related cadastral units from a project"
    :context {db :db}
-   :args {project-id :project-id
-          units :units}
+   :args {project-id :project-id}
    :project-id [:thk.project/id project-id]
    :authorization {}}
   (let [land-acquisitions (mapv first (d/q '[:find (pull ?e [*])
@@ -39,9 +41,9 @@
    :args {estate-id :estate-id
           project-id :thk.project/id}
    :project-id [:thk.project/id project-id]
-   :config {xroad-instance [:xroad-instance-id]
-            xroad-url [:xroad-query-url]
-            xroad-subsystem [:xroad-kr-subsystem-id]}
+   :config {xroad-instance [:xroad :instance-id]
+            xroad-url [:xroad :query-url]
+            xroad-subsystem [:xroad :kr-subsystem-id]}
    :authorization {:land/view-cadastral-data {:eid [:thk.project/id project-id]
                                               :link :thk.project/owner}}}
   (let [x-road-response (x-road/perform-kinnistu-d-request
@@ -50,12 +52,12 @@
                            :instance-id xroad-instance
                            :registriosa-nr estate-id
                            :requesting-eid (str "EE" (:user/person-id user))})]
-    (if (= (:status x-road-response) :error)
-      (throw (ex-info "Invalid xroad response" {:error :invalid-x-road-response
-                                                :response x-road-response}))
+    (if (= (:status x-road-response) :ok)
       (assoc
         x-road-response
-        :estate-id estate-id))))
+        :estate-id estate-id)
+      (throw (ex-info "Invalid xroad response" {:error :invalid-x-road-response
+                                                :response x-road-response})))))
 
 (defquery :land/related-project-estates
   {:doc "Fetch estates that are related to a given project's cadastral units.
@@ -66,9 +68,7 @@ Then it will query X-road for the estate information."
    :context {:keys [db user]}
    :args {:thk.project/keys [id]}
    :project-id [:thk.project/id id]
-   :config {xroad-instance [:xroad-instance-id]
-            xroad-url [:xroad-query-url]
-            api-url [:api-url]
+   :config {api-url [:api-url]
             api-secret [:auth :jwt-secret]}
    :authorization {:land/view-cadastral-data {:eid [:thk.project/id id]
                                               :link :thk.project/owner}}}
@@ -90,3 +90,35 @@ Then it will query X-road for the estate information."
                                        :bad)))
               units)}))
 
+
+(defn- compensation->form
+  "Format compensation to format suitable for frontend form.
+  Does following transformations:
+
+  - Stringify bigdec values.
+  - Turn enum maps with db/ident keyword to keywords"
+  [compensation]
+  (->> compensation
+       (cu/map-vals #(update % :estate-procedure/pos str))
+       (walk/prewalk
+        (fn [x]
+          (cond
+            (decimal? x) (str x)
+            (and (map? x) (contains? x :db/ident)) (:db/ident x)
+            :else x)))))
+
+(defquery :land/fetch-estate-compensations
+  {:doc "Fetch estate compensations in a given project. Returns map with estate id as the key
+and the compensation info as the value."
+   :context {:keys [db user]}
+   :args {:thk.project/keys [id]}
+   :project-id [:thk.project/id id]
+   :authorization {:land/view-cadastral-data {:eid [:thk.project/id id]
+                                              :link :thk.project/owner}}}
+  (compensation->form
+   (into {}
+         (comp
+          (map first)
+          (map (fn [{estate-id :estate-procedure/estate-id :as compensation-form}]
+                 [estate-id compensation-form])))
+         (land-db/project-estate-procedures db [:thk.project/id id]))))

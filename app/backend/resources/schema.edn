@@ -828,6 +828,30 @@
            :db/valueType :db.type/bigdec
            :db/doc "Fee amount (€)"}]]}
 
+ {:db/ident :migration/notification-project
+  :txes [[{:db/ident :notification/project
+           :db/doc "Project this notification is about (if any)"
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one}]]}
+
+ {:db/ident :migration/land-form-unique
+  :txes [[{:db/ident :land-acquisition/project+cadastral-unit
+           :db/valueType :db.type/tuple
+           :db/tupleAttrs [:land-acquisition/project :land-acquisition/cadastral-unit]
+           :db/cardinality :db.cardinality/one
+           :db/unique :db.unique/identity
+           :db/doc "Ensure there is only one land acqusition form per project and cadastral unit"}
+
+          {:db/ident :estate-procedure/project+estate-id
+           :db/valueType :db.type/tuple
+           :db/tupleAttrs [:estate-procedure/project :estate-procedure/estate-id]
+           :db/cardinality :db.cardinality/one
+           :db/unique :db.unique/identity
+           :db/doc "Ensure there is only one estate procedure form per project and estate id"}]]}
+
+ {:db/ident :migration/repair-method-is-group-short-name
+  :txes [teet.migration.project-repair-method/fix-repair-method]}
+
  {:db/ident :migration/land-acquisition-status
   :txes [[{:db/ident :land-acquisition/status
            :db/valueType :db.type/ref

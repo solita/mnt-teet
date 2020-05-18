@@ -256,3 +256,13 @@
   [{:thk.project/keys [related-restrictions related-cadastral-units] :as _project}]
   (or (seq related-restrictions)
       (seq related-cadastral-units)))
+
+(defn project-ref [p]
+  (cond
+    (integer? p) p
+    (and (vector? p)
+         (= :thk.project/id (first p))
+         (string? (second p))) p
+    :else
+    (throw (ex-info "Not a valid project ref. Expected db/id number or eid."
+                    {:invalid-project-ref p}))))

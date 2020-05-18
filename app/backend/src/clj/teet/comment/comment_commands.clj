@@ -110,7 +110,8 @@
                 {:from user
                  :to %
                  :type :notification.type/comment-created
-                 :target "new-comment"}))
+                 :target "new-comment"
+                 :project (project-db/entity-project-id db entity-type entity-id)}))
          (participants db entity-type entity-id
                        (= visibility :comment.visibility/internal)
                        user))})
@@ -205,7 +206,8 @@
                    {:from user
                     :to %
                     :type (status->notification status)
-                    :target id})
+                    :target id
+                    :project (project-db/entity-project-id db entity-type entity-id)})
                  (participants db entity-type entity-id
                                (= visibility :comment.visibility/internal)
                                user))))))
