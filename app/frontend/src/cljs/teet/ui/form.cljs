@@ -222,12 +222,14 @@
                                   [attribute]))))
               opts {:value value
                     :on-change (r/partial update-attribute-fn attribute)
-                    :label (tr [:fields attribute])
                     :error error?
                     :error-text error-text
                     :required (required-field? attribute required-fields)}]
           (add-validation
-           (update field 1 merge opts)
+           (update field 1 (fn [{label :label :as input-opts}]
+                             (merge input-opts opts
+                                    (when-not label
+                                      {:label (tr [:fields attribute])}))))
            (partial validate-attribute-fn invalid-attributes validate-field) attribute)))})))
 
 (defn field
