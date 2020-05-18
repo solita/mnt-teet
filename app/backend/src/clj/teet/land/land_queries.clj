@@ -78,7 +78,14 @@ Then it will query X-road for the estate information."
                       units)]
     {:estates estates
      :units (mapv
-              (fn [{:keys [MOOTVIIS MUUDET] :as unit}]
+             (comp
+              (fn [unit]
+                (walk/prewalk
+                 (fn [x]
+                   (if (and (map? x) (contains? x :db/ident))
+                     (:db/ident x)
+                     x))))
+              (fn [{:keys [MOOTVIIS MUUDET] :as unit}]               
                 (assoc unit :quality (cond
                                        (and (= MOOTVIIS "mõõdistatud, L-EST")
                                             (not (time/before? (c/from-string MUUDET) (time/date-time 2018 01 01))))
@@ -87,8 +94,8 @@ Then it will query X-road for the estate information."
                                             (time/before? (c/from-string MUUDET) (time/date-time 2018 01 01)))
                                        :questionable
                                        :else
-                                       :bad)))
-              units)}))
+                                       :bad))))
+             units)}))
 
 
 (defn- compensation->form

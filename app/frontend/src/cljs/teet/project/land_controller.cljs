@@ -7,7 +7,8 @@
             [goog.math.Long]
             [teet.common.common-controller :as common-controller]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [taoensso.timbre :as log]))
 
 (defrecord ToggleLandUnit [unit])
 (defrecord SearchOnChange [attribute value])
@@ -139,10 +140,12 @@
                        (if (f-value :impact)
                          (du/enum= (f-value :impact) impact)
                          true)))
-                   #_(fn process [unit] ; process filter ;; waiting for process status to be added
-                     (if-let [q (f-select-value :process)]
-                       (= q (:process unit))
-                       true))]
+                   (fn status [unit] ; status filter
+                     (let [unit-status (get-in app [:route :project :land/cadastral-forms (:teet-id unit) :land-acquisition/status])]
+                       (log/debug "status filter fn: unit-status" unit-status "f-status" (f-value :land-acquisition/status))
+                       (if-let [q (f-value :status)]
+                         (du/enum= q unit-status)
+                         true)))]
           ;; text (str/lower-case (get-in app [:route :project :land-acquisition-filters attribute]))
           units (get-in app [:route :project :land/units])
           filtered-ids (->> units

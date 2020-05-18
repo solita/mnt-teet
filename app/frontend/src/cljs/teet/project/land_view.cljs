@@ -277,6 +277,9 @@
                 :land-acquisition.impact/undecided
                 theme-colors/gray-lighter
                 theme-colors/gray-lighter)]
+    (assert (keyword? impact))
+    (when status
+      (assert keyword? status))
     [:div {:class (<class common-styles/flex-align-center)}
      [:div {:class (<class common-styles/status-circle-style color)
             :title impact}]
@@ -415,7 +418,7 @@
       units))]])
 
 (defn filter-units
-  [e! {:keys [estate-search-value quality impact] :as filter-params}]
+  [e! {:keys [estate-search-value quality status impact] :as filter-params}]
   ;; filter-params will come from appdb :land-acquisition-filters key
   ;; (println "filter-params:" filter-params)
   (r/with-let [on-change (fn [kw-or-e field]
@@ -442,10 +445,11 @@
                           :value impact
                           :on-change #(on-change % :impact)}]
      ;; this isn't implemented yet (as of 2020-05-12)
-     #_[select/select-enum {:e! e!
-                            :attribute :land-acquisition/process
-                          :show-empty-selection? false
-                          :on-change #(on-change % :process-search-value)}]
+     [select/select-enum {:e! e!
+                          :attribute :land-acquisition/status
+                          :value status
+                          :show-empty-selection? true
+                          :on-change #(on-change % :status)}]
      [select/form-select
       {:label (tr [:land :filter :quality])
        :name "Quality"
