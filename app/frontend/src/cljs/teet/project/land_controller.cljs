@@ -25,6 +25,7 @@
 (defrecord FetchEstateCompensationsResponse [response])
 
 (defrecord UpdateEstateForm [estate form-data])
+(defrecord CancelEstateForm [estate-id])
 (defrecord UpdateCadastralForm [cadastral-id form-data])
 
 
@@ -115,6 +116,16 @@
   ToggleOpenEstate
   (process-event [{estate-id :estate-id} app]
     (update-in app [:route :project :land/open-estates] cu/toggle estate-id))
+
+
+  CancelEstateForm
+  (process-event [{estate-id :estate-id} app]
+    (-> app
+        (update-in [:route :project :land/estate-forms estate-id] (fn [form-data]
+                                                                    (if-let [saved (:saved-data form-data)]
+                                                                      saved
+                                                                      form-data)))
+        (update-in [:route :project :land/open-estates] cu/toggle estate-id)))
 
   UpdateFilteredUnitIDs
   (process-event [{attribute :attribute value :value} app]
@@ -338,7 +349,9 @@
                           (:estate-procedure/type old-data))
                     (not (contains? old-data :estate-procedure/process-fees)))
                {:estate-procedure/process-fees (estate-owner-process-fees estate)})]
-         (merge old-data form-data computed)))))
+         (merge old-data form-data computed (when (not (:saved-data old-data)) {:saved-data (if old-data
+                                                                                              (dissoc old-data :saved-data)
+                                                                                              {})}))))))
 
   UpdateCadastralForm
   (process-event [{:keys [cadastral-id form-data]} app]
