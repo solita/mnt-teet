@@ -151,6 +151,7 @@
                   #js {:source
                        (ol.source.ImageWMS.
                         #js {:url wms-url
+                             :ratio 1
                              ;; Teeregister doesn't return images for EPSG:3301
                              :projection "EPSG:4326"
                              :params #js {:LAYERS layer
