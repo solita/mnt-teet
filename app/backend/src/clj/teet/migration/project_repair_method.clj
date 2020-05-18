@@ -1,5 +1,6 @@
 (ns teet.migration.project-repair-method
-  (:require [datomic.client.api :as d]))
+  (:require [datomic.client.api :as d]
+            [clojure.string :as str]))
 
 ;; Fix repair method, previously we took the groupname as repair method
 ;; and stored short name to integration info.
@@ -13,7 +14,8 @@
                              :where [?p :thk.project/id _]]
                            (d/db conn)))
         parse #(binding [*read-eval* false]
-                 (read-string %))]
+                 (when-not (str/blank? %)
+                   (read-string %)))]
 
     (d/transact
      conn
