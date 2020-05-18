@@ -6,7 +6,8 @@
             [clojure.string :as str]
             [teet.map.map-features :as map-features]
             [teet.log :as log]
-            [ol.source.ImageWMS]))
+            [ol.layer.Tile]
+            [ol.source.TileWMS]))
 
 (def ^:const default-projection "EPSG:3301")
 
@@ -149,11 +150,12 @@
   (memoize
    (fn [wms-url layer]
      (let [name (str prefix layer)
-           layer (ol.layer.Image.
+           layer (ol.layer.Tile.
                   #js {:source
-                       (ol.source.ImageWMS.
+                       (ol.source.TileWMS.
                         #js {:url wms-url
                              :ratio 1
+                             :hidpi false
                              ;; Teeregister doesn't return images for EPSG:3301
                              :projection "EPSG:4326"
                              :params #js {:LAYERS layer
