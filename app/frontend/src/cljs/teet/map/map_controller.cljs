@@ -260,17 +260,26 @@
   [app {:keys [id type] :as layer}]
   (cond
     (= type :projects)
-    (t/fx app
-          {:tuck.effect/type :query
-           :query :thk.project/search
-           :args (into {}
-                       (keep (fn [[key val]]
-                               (when-not (or (nil? val)
-                                             (and (string? val)
-                                                  (str/blank? val)))
-                                 [key val])))
-                       (select-keys layer [:text :road :km :region :date]))
-           :result-event (partial ->LayerInfoResponse id :projects)})
+    (let [filters (into {}
+                        (keep (fn [[key val]]
+                                (when-not (or (nil? val)
+                                              (and (string? val)
+                                                   (str/blank? val)))
+                                  [key val])))
+                        (select-keys layer [:text :road :km :region :date]))]
+
+      (t/fx app
+            (fn [e!]
+              (e! (->LayerInfoResponse id :projects
+                                       (when (seq filters)
+                                         []
+                                         nil))))
+
+            (when (seq filters)
+              {:tuck.effect/type :query
+               :query :thk.project/search
+               :args filters
+               :result-event (partial ->LayerInfoResponse id :projects)})))
 
     :else
     app))

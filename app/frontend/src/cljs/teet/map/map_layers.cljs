@@ -102,7 +102,7 @@
   [ctx {projects :projects}]
   (let [api-url (get-in ctx [:config :api-url])
         entity-query-options
-        (if (seq projects)
+        (if (vector? projects)
           ;; Have fetched projects, show only them
           {"ids" (str "{" (str/join "," (map :db/id projects)) "}")}
           ;; Show all projects

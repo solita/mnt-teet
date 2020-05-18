@@ -154,22 +154,25 @@
               :on-change-event (e! map-controller/->UpdateLayer)
               :value layer}
    ^{:attribute :text :xs 6}
-   [TextField {:label "FOO"}]
+   [TextField {:label (tr [:fields :thk.project/project-name])}]
 
    ^{:attribute :road :xs 6}
-   [TextField {:type :number}]
+   [TextField {:label (tr [:fields :thk.project/road-nr])
+               :type :number}]
 
    ^{:attribute :region :xs 6}
-   [TextField {}]
+   [TextField {:label (tr [:fields :thk.project/region-name])}]
 
    ^{:attribute :km :xs 6}
-   [TextField {:type :number}]
+   [TextField {:label (tr [:project :information :km-range])
+               :type :number}]
 
    ^{:attribute :date :xs 6}
-   [date-picker/date-input {}]
+   [date-picker/date-input {:label (tr [:fields :thk.project/estimated-date-range])}]
 
    ^{:attribute :owner :xs 6}
-   [select/select-user {:e! e!}]])
+   [select/select-user {:label (tr [:fields :thk.project/owner])
+                        :e! e!}]])
 
 (defmethod layer-filters-form :default
   [_ _ _]
