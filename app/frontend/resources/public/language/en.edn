@@ -266,7 +266,7 @@
   :bad-request "Bad request"},
  :fields
  {:comment/visibility "Visibility",
-  :task/send-to-thk? "Send to THK",
+  :task/send-to-thk? "Separate contract (in THK)",
   :thk.project/manager "Manager",
   :thk.project/project-name "Name",
   :task/thk-type "THK type",
@@ -355,11 +355,15 @@
   :estate "Estate",
   :land-acquisition-saved "Land acquisition saved successfully",
   :net-area-balance "Net balance {area} m2",
+  :cadastral-unit-number "Cadastral unit number",
   :filter {:quality "Land data quality"},
   :owner-filter-label "Owner",
   :cadastral-filter-label "Cadastral",
   :quality
-  {:any "Any", :bad "Bad", :questionable "Questionable", :good "Good"},
+  {:any "Any",
+   :bad "Bad",
+   :questionable "Questionable",
+   :good "Good (L-Est)"},
   :filter-label "Filter units",
   :units "units",
   :estate-info-fetch-failure
@@ -462,7 +466,7 @@
   :map-view "Map",
   :list-view "Project list",
   :filters
-  {:my-projects "Projects assigned to me",
+  {:my-projects "My projects",
    :all "All projects",
    :unassigned-only "Unassigned projects only"},
   :no-activities "No activities"},
