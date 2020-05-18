@@ -1,6 +1,7 @@
 (ns teet.migration.project-repair-method
   (:require [datomic.client.api :as d]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.util.collection :as cu]))
 
 ;; Fix repair method, previously we took the groupname as repair method
 ;; and stored short name to integration info.
@@ -25,6 +26,7 @@
                            info (pr-str (assoc old-info
                                                :object/groupname repair-method))
                            repair-method (get old-info :object/groupshortname)]]
-                 {:db/id id
-                  :thk.project/integration-info info
-                  :thk.project/repair-method repair-method})})))
+                 (cu/without-nils
+                  {:db/id id
+                   :thk.project/integration-info info
+                   :thk.project/repair-method repair-method}))})))
