@@ -24,7 +24,8 @@
     (when start-icon?
       {:padding-left "2.5rem"})
     (when read-only?
-      {:color :inherit})
+      {:color :inherit
+       :background-color theme-colors/gray-lighter})
     (when (= type :number)
       {"-moz-appearance" "textfield"})))
 
