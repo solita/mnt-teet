@@ -44,7 +44,7 @@
   {:font-size "1rem"})
 
 (defn form-select [{:keys [label name id items on-change value format-item label-element
-                           show-label? show-empty-selection? error error-text required]
+                           show-label? show-empty-selection? error error-text required empty-selection-label]
                         :or {format-item :label
                              show-label? true}}]
   (let [option-idx (zipmap items (range))
@@ -70,7 +70,7 @@
         :on-change (fn [e]
                      (change-value e))}
        (when show-empty-selection?
-         [:option {:value ""}])
+         [:option {:value "" :label empty-selection-label}])
        (doall
         (map-indexed
          (fn [i item]
@@ -133,7 +133,7 @@
 
 (defn select-with-action
   [{:keys [label id name value items format-item on-change
-           required? show-empty-selection?
+           required? show-empty-selection? empty-selection-label
            container-class select-class label-element]
     :or {format-item :label}}]
   (let [label-element (if label-element
@@ -161,6 +161,7 @@
                             select-class))}
        (when show-empty-selection?
          [:option {:value ""
+                   :label empty-selection-label
                    :class (<class select-opt)}])
        (doall
          (map-indexed
@@ -202,7 +203,7 @@
 
 (defn select-enum
   "Select an enum value based on attribute. Automatically fetches enum values from database."
-  [{:keys [e! attribute required tiny-select? show-label? label-element show-empty-selection? sort-fn]
+  [{:keys [e! attribute required tiny-select? show-label? label-element show-empty-selection? empty-selection-label sort-fn]
     :or {show-label? true
          show-empty-selection? true}}]
   (when-not (contains? @enum-values attribute)
@@ -237,6 +238,7 @@
                     :name name
                     :id id
                     :label-element label-element
+                    :empty-selection-label empty-selection-label
                     :container-class container-class
                     :show-label? show-label?
                     :error (boolean error)
