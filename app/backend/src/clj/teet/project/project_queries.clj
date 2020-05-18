@@ -163,19 +163,39 @@
                    :where [?e :thk.project/id _]]
                  db project-model/project-list-with-status-attributes)))))
 
-(defquery :thk.project/search
-  {:doc "Search for a project by text"
-   :context {db :db}
-   :args {:keys [text]}
-   :project-id nil
-   :authorization {}}
-  {:query '[:find (pull ?e [:db/id :thk.project/project-name :thk.project/name :thk.project/id])
-            :where
-            (or [?e :thk.project/project-name ?name]
+(defmulti search-clause (fn [[field _value]] field))
+
+(defmethod search-clause :text [[_ text]]
+  {:where '[(or [?e :thk.project/project-name ?name]
                 [?e :thk.project/name ?name])
             [(.toLowerCase ^String ?name) ?lower-name]
-            [(.contains ?lower-name ?text)]
-            :in $ ?text]
-   :args [db (str/lower-case text)]
-   :result-fn (partial mapv
-                       #(-> % first (assoc :type :project)))})
+            [(.contains ?lower-name ?text)]]
+   :in {'?text text}})
+
+(defquery :thk.project/search
+  {:doc "Search for a projects"
+   :context {db :db}
+   :args payload
+   :project-id nil
+   :authorization {}}
+  (let [{:keys [where in]}
+        (reduce (fn [clauses-and-args search]
+                  (let [{:keys [where in]} (search-clause search)]
+                    (-> clauses-and-args
+                        (update :where concat where)
+                        (update :in merge in))))
+                {:where []
+                 :in {}}
+                payload)
+
+        arglist (seq in)
+        in (into '[$] (map first) arglist)
+        args (into [db] (map second) arglist)]
+    (mapv #(-> % first (assoc :type :project))
+          (d/q {:query {:find '[(pull ?e [:db/id
+                                          :thk.project/project-name
+                                          :thk.project/name
+                                          :thk.project/id])]
+                        :where (into '[[?e :thk.project/id _]] where)
+                        :in in}
+                :args args}))))
