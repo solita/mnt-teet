@@ -6,7 +6,6 @@
             [teet.localization :refer [tr tr-enum]]
             [teet.ui.util :refer [mapc]]
             [reagent.core :as r]
-            [teet.ui.icons :as icons]
             [teet.ui.material-ui :refer [ButtonBase Collapse LinearProgress Grid]]
             [teet.ui.text-field :refer [TextField] :as text-field]
             [teet.project.land-controller :as land-controller]
@@ -16,10 +15,8 @@
             [teet.land.land-specs]
             [teet.project.project-controller :as project-controller]
             [teet.ui.form :as form]
-            [teet.common.common-controller :as common-controller]
             [teet.ui.select :as select]
             [teet.log :as log]
-            [clojure.string :as str]
             [teet.util.datomic :as du]))
 
 (defn cadastral-unit-style
@@ -232,11 +229,6 @@
          (form/footer2 form/form-footer)]]])))
 
 
-;; TEET-519 notes
-;; 
-;; - as starting point appdb can be empty if no saved impact/process data exist yet
-
-
 (defn cadastral-unit-form
   [e! {:keys [teet-id PINDALA] :as unit} quality on-change-event form-data]
   (let [show-extra-fields? (du/enum= (:land-acquisition/impact form-data) :land-acquisition.impact/purchase-needed)]
@@ -253,13 +245,14 @@
       ^{:attribute :land-acquisition/impact}
       [select/select-enum {:e! e!
                            :attribute :land-acquisition/impact}]
+      (when (not= :land-acquisition.impact/purchase-not-needed (:land-acquisition/impact form-data))
+        ^{:attribute :land-acquisition/status}
+        [select/select-enum {:e! e!
+                             :attribute :land-acquisition/status
+                             :show-empty-selection? true}])
       (when show-extra-fields?
         ^{:attribute :land-acquisition/pos-number :xs 6}
         [TextField {:type :number}]
-        ^{:attribute :land-acquisition/pos-number :xs 6}        
-        [select/select-enum {:e! e!
-                             :attribute :land-acquisition/status
-                             :show-empty-selection? true}]
         ^{:attribute :land-acquisition/area-to-obtain
           :adornment (let [area (:land-acquisition/area-to-obtain form-data)]
                        [:div
@@ -272,7 +265,7 @@
         [TextField {:type :number :input-style {:width "50%"}}])]]))
 
 (defn acquisition-impact-status
-  [impact]
+  [impact status]
   (let [impact (if impact
                  impact
                  :land-acquisition.impact/undecided)
@@ -289,7 +282,9 @@
             :title impact}]
      [:span {:style {:text-align :left}
              :class (<class common-styles/gray-text)}
-      (tr-enum impact)]]))
+      (tr-enum impact)
+      (when status
+        (str " - " (tr-enum status)))]]))
 
 (defn cadastral-unit-container-style
   []
@@ -328,7 +323,7 @@
                   :class (<class cadastral-unit-style selected?)}
       [typography/SectionHeading {:style {:text-align :left}} (:L_AADRESS unit)]
       [:div {:class (<class common-styles/space-between-center)}
-       [acquisition-impact-status (get-in cadastral-form [:land-acquisition/impact :db/ident])]
+       [acquisition-impact-status (get-in cadastral-form [:land-acquisition/impact :db/ident]) (get-in cadastral-form [:land-acquisition/status :db/ident])]
        [:span {:class (<class common-styles/gray-text)}
         TUNNUS]]]
      [Collapse
