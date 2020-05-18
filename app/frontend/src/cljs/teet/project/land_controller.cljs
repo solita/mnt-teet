@@ -4,6 +4,7 @@
             [teet.util.collection :as cu]
             [teet.localization :refer [tr]]
             [teet.map.map-controller :as map-controller]
+            [teet.util.datomic :as tu]
             [goog.math.Long]
             [teet.common.common-controller :as common-controller]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
@@ -149,13 +150,13 @@
                                     :land-acquisition.impact/undecided
                                     unit-impact)]
                        (if (f-value :impact)
-                         (du/enum= (f-value :impact) impact)
+                         (= (f-value :impact) impact)
                          true)))
                    (fn status [unit] ; status filter
                      (let [unit-status (get-in app [:route :project :land/cadastral-forms (:teet-id unit) :land-acquisition/status])]
                        (log/debug "status filter fn: unit-status" unit-status "f-status" (f-value :land-acquisition/status))
                        (if-let [q (f-value :status)]
-                         (du/enum= q unit-status)
+                         (= q unit-status)
                          true)))]
           ;; text (str/lower-case (get-in app [:route :project :land-acquisition-filters attribute]))
           units (get-in app [:route :project :land/units])

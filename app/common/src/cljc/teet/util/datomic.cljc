@@ -136,3 +136,11 @@
   [left right]
   (= (db-ids left)
      (db-ids right)))
+
+(defn idents->keywords [m]
+  (walk/prewalk
+   (fn walk-fn [x]
+     (if (and (map? x) (contains? x :db/ident))
+       (:db/ident x)
+       x))
+   m))
