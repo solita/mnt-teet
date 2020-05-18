@@ -31,7 +31,8 @@
 (defrecord CancelLayer []) ; cancel add/edit layer
 (defrecord UpdateLayer [layer]) ; update layer with new data
 (defrecord RemoveLayer [layer]) ; remove layer
-
+(defrecord LayerInfoResponse [layer-id key layer-info]) ; merge fetched extra layer info
+(declare maybe-fetch-layer-info)
 
 (extend-protocol t/Event
   ToggleCategorySelect
@@ -141,17 +142,30 @@
   SaveLayer
   (process-event [_ app]
     (let [{:keys [new? type] :as layer} (get-in app [:map :edit-layer])
-          layer (dissoc layer :new?)]
-      (-> app
-          (update-in [:map :layers]
-                     (fn [layers]
-                       (if new?
-                         (conj (or layers []) layer)
-                         (mapv #(if (= (:type %) type)
-                                  layer
-                                  %)
-                               layers))))
-          (update :map dissoc :edit-layer))))
+          layer (-> layer
+                    (dissoc :new?)
+                    (update :id #(or % (random-uuid))))]
+      (maybe-fetch-layer-info
+       (-> app
+           (update-in [:map :layers]
+                      (fn [layers]
+                        (if new?
+                          (conj (or layers []) layer)
+                          (mapv #(if (= (:type %) type)
+                                   layer
+                                   %)
+                                layers))))
+           (update :map dissoc :edit-layer))
+       layer)))
+
+  LayerInfoResponse
+  (process-event [{:keys [layer-id key layer-info]} app]
+    (update-in app [:map :layers]
+               #(mapv (fn [{id :id :as layer}]
+                        (if (= id layer-id)
+                          (assoc layer key layer-info)
+                          layer))
+                      %)))
 
   CancelLayer
   (process-event [_ app]
@@ -239,3 +253,24 @@
        (filter #(= (:name %) name))
        first
        :id))
+
+(defn maybe-fetch-layer-info
+  "Return effects to fetch extra information
+  needed by created/edited layer."
+  [app {:keys [id type] :as layer}]
+  (cond
+    (= type :projects)
+    (t/fx app
+          {:tuck.effect/type :query
+           :query :thk.project/search
+           :args (into {}
+                       (keep (fn [[key val]]
+                               (when-not (or (nil? val)
+                                             (and (string? val)
+                                                  (str/blank? val)))
+                                 [key val])))
+                       (select-keys layer [:text :road :km :region :date]))
+           :result-event (partial ->LayerInfoResponse id :projects)})
+
+    :else
+    app))

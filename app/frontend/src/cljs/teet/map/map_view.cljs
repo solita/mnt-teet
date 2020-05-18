@@ -154,7 +154,7 @@
               :on-change-event (e! map-controller/->UpdateLayer)
               :value layer}
    ^{:attribute :text :xs 6}
-   [TextField {}]
+   [TextField {:label "FOO"}]
 
    ^{:attribute :road :xs 6}
    [TextField {:type :number}]
@@ -168,14 +168,8 @@
    ^{:attribute :date :xs 6}
    [date-picker/date-input {}]
 
-   ^{:attribute :type :xs 6}
-   [TextField {}] ; PENDING: select from short types?
-
    ^{:attribute :owner :xs 6}
-   [TextField {}]
-
-   ^{:attribute :status :xs 6}
-   [TextField {}]])
+   [select/select-user {:e! e!}]])
 
 (defmethod layer-filters-form :default
   [_ _ _]

@@ -99,18 +99,20 @@
 (def ^:const project-pin-resolution-threshold 100)
 
 (defmethod create-data-layer :projects
-  [ctx _]
-  (let [api-url (get-in ctx [:config :api-url])]
+  [ctx {projects :projects}]
+  (let [api-url (get-in ctx [:config :api-url])
+        entity-query-options
+        (if (seq projects)
+          ;; Have fetched projects, show only them
+          {"ids" (str "{" (str/join "," (map :db/id projects)) "}")}
+          ;; Show all projects
+          {"type" "project"})]
     {:projects
-     (mvt-layer api-url
-                "mvt_entities"
-                {"type" "project"}
+     (mvt-layer api-url "mvt_entities" entity-query-options
                 map-features/project-line-style
                 {:max-resolution project-pin-resolution-threshold})
      :project-pins
-     (geojson-layer api-url
-                    "geojson_entity_pins"
-                    {"type" "project"}
+     (geojson-layer api-url "geojson_entity_pins" entity-query-options
                     map-features/project-pin-style
                     {:min-resolution project-pin-resolution-threshold})}))
 
