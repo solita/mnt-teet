@@ -17,7 +17,9 @@
 
 {:root {:path "/"
         :crumb (tr [:projects :map-view])
-        :view teet.projects.projects-view/projects-map-page}
+        :view teet.dashboard.dashboard-view/dashboard-page
+        :state {:query :dashboard/user-dashboard
+                :args {}}}
  :login {:path "/login"
          :title (tr [:login :login])}
 
