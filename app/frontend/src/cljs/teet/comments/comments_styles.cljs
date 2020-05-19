@@ -46,7 +46,7 @@
    :justify-content  :flex-end
    :display          :flex
    :align-items      :center
-   :padding          "0 1.5rem 1.5rem 1.5rem"})
+   :margin-bottom    "1.5rem"})
 
 (defn comment-amount
   []
@@ -78,7 +78,7 @@
    :margin-left "0.5rem"
    :margin-right "0.5rem"
    :display :flex
-   :align-items :flex-end
+   :align-items :center
    :justify-content :space-between})
 
 (defn attachment-link
