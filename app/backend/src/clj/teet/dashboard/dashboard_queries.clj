@@ -103,7 +103,7 @@
                                    :thk.lifecycle/activities (constantly true)]
                                   (fn [{id :db/id :as activity}]
                                     (assoc activity :activity/tasks
-                                           (vec (tasks-by-activity id)))))
+                                           (mapv :task (tasks-by-activity id)))))
          :notifications (mapv #(dissoc % :notification/project)
                               (notifications-by-project id))}))))
 

@@ -19,13 +19,17 @@
             [teet.ui.icons :as icons]
             [teet.util.collection :as cu]
             [teet.projects.projects-style :as projects-style]
-            [teet.common.common-styles :as common-styles]))
+            [teet.common.common-styles :as common-styles]
+            [alandipert.storage-atom :refer [local-storage]]))
+
+(defonce open-projects-atom (local-storage (r/atom #{}) "dashboard-open-projects"))
 
 (defn- project-card-style []
   {:margin-top "2rem"})
 
 (defn- project-card-subheader-style []
-  {:margin-left "2rem"})
+  {:margin-left "2rem"
+   :display :flex})
 
 (defn- section-style []
   {:margin-bottom "2rem"})
@@ -34,6 +38,17 @@
   [:div {:class (<class section-style)}
    [typography/SectionHeading label]
    content])
+
+(defn- task-row [{:task/keys [group type status]
+                  id :db/id :as t}]
+  [:div {:class (<class common-styles/flex-row)}
+   [:div {:class (<class common-styles/flex-table-column-style 33)}
+    (tr-enum status)]
+   [:div {:class (<class common-styles/flex-table-column-style 47)}
+    (tr-enum type)]
+   [:div {:class (<class common-styles/flex-table-column-style 20)}
+    [IconButton {:on-click #(js/alert "heppa")}
+     [icons/navigation-arrow-forward]]]])
 
 (defn project-card [{:keys [e! open-projects toggle-project]}
                     {:keys [project notifications]}]
@@ -86,7 +101,7 @@
                                           (fmt/date estimated-end-date))]
             (doall
              (for [{:activity/keys [name estimated-start-date estimated-end-date
-                                    status]
+                                    status tasks]
                     id :db/id :as activity}
                    activities]
                ^{:key (str id)}
@@ -96,18 +111,20 @@
                                                    "\u2013"
                                                    (fmt/date estimated-end-date))}
                  [itemlist/Item {:label (tr [:fields :activity/status])}
-                  (tr-enum status)]]
+                  (tr-enum status)]
+                 [itemlist/Item {:label "tasks"}
+                  [:<>
+                   (mapc task-row tasks)]]]
                 [Divider]]))]))]]]]))
 
 (defn dashboard-page [e!
                       {user :user :as _app}
                       dashboard _breadcrumbs]
-  (r/with-let [open-projects (r/atom #{})]
-    [:div {:style {:margin "3rem" :display "flex" :justify-content "center"}}
-     [Paper {:style {:flex 1
-                     :max-width "800px" :padding "1rem"}}
-      [typography/Heading1 (tr [:dashboard :my-projects])]
-      (mapc (r/partial project-card {:e! e!
-                                     :open-projects @open-projects
-                                     :toggle-project #(swap! open-projects cu/toggle %)})
-            dashboard)]]))
+  [:div {:style {:margin "3rem" :display "flex" :justify-content "center"}}
+   [Paper {:style {:flex 1
+                   :max-width "800px" :padding "1rem"}}
+    [typography/Heading1 (tr [:dashboard :my-projects])]
+    (mapc (r/partial project-card {:e! e!
+                                   :open-projects @open-projects-atom
+                                   :toggle-project #(swap! open-projects-atom cu/toggle %)})
+          dashboard)]])
