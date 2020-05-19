@@ -7,7 +7,8 @@
             [teet.notification.notification-db :as notification-db]
             [teet.project.project-db :as project-db]
             [teet.util.collection :as cu]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.project.project-model :as project-model]))
 
 
 (defn- user-tasks
@@ -64,15 +65,18 @@
         permission-projects (map :db/id
                                  (mapcat :permission/projects
                                          (permission-db/user-permissions db user-ref)))]
-    (mapv first
+    (mapv (comp project-model/project-with-status first)
           (d/q '[:find (pull ?e [:db/id :thk.project/name :thk.project/project-name
+                                 :thk.project/id
+
                                  :thk.project/estimated-start-date :thk.project/estimated-end-date
                                  {:thk.project/lifecycles
                                   [:db/id :thk.lifecycle/type
                                    :thk.lifecycle/estimated-start-date
                                    :thk.lifecycle/estimated-end-date
                                    {:thk.lifecycle/activities
-                                    [:db/id :activity/type
+                                    [:db/id :activity/name
+                                     :activity/status
                                      :activity/estimated-start-date
                                      :activity/estimated-end-date
                                      :activity/actual-start-date

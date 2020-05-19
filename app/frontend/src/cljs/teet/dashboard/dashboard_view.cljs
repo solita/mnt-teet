@@ -4,36 +4,110 @@
             [teet.project.task-model :as task-model]
             [teet.ui.typography :as typography]
             [teet.routes :as routes]
-            [teet.ui.material-ui :refer [Link Paper]]
-            [teet.localization :refer [tr]]))
+            [teet.ui.material-ui :refer [Link Paper Card CardHeader CardContent
+                                         CardActionArea CardActions Divider Collapse
+                                         IconButton]]
+            [teet.localization :refer [tr tr-enum]]
+            [teet.ui.util :refer [mapc]]
+            [teet.ui.format :as fmt]
+            [teet.ui.url :as url]
+            [teet.project.project-model :as project-model]
+            [herb.core :refer [<class]]
+            [teet.notification.notification-controller :as notification-controller]
+            [reagent.core :as r]
+            [teet.ui.buttons :as buttons]
+            [teet.ui.icons :as icons]
+            [teet.util.collection :as cu]
+            [teet.projects.projects-style :as projects-style]
+            [teet.common.common-styles :as common-styles]))
 
-(defn dashboard-page [_e! {user :user :as _app} {:keys [tasks] :as _dashboard} _breadcrumbs]
-  (let [tasks-by-project  (group-by #(get-in % [:activity/_tasks 0
-                                                :thk.lifecycle/_activities 0
-                                                :thk.project/_lifecycles 0]) tasks)]
+(defn- project-card-style []
+  {:margin-top "2rem"})
 
+(defn- project-card-subheader-style []
+  {:margin-left "2rem"})
+
+(defn- section-style []
+  {:margin-bottom "2rem"})
+
+(defn- section [label content]
+  [:div {:class (<class section-style)}
+   [typography/SectionHeading label]
+   content])
+
+(defn project-card [{:keys [e! open-projects toggle-project]}
+                    {:keys [project notifications]}]
+  (let [open? (boolean (open-projects (:db/id project)))]
+    [Card {:class (<class project-card-style)}
+     [CardHeader {:title
+                  (r/as-element
+                   [:div {:class (<class common-styles/flex-align-center)}
+                    [:div {:class (<class projects-style/project-status-circle-style
+                                          (:thk.project/status project))}]
+                    (project-model/get-column project :thk.project/project-name)])
+                  :subheader
+                  (r/as-element
+                   [:div {:class (<class project-card-subheader-style)}
+                    (str (fmt/date (:thk.project/estimated-start-date project))
+                         "\u2013"
+                         (fmt/date (:thk.project/estimated-end-date project)))])
+                  :action (r/as-element
+                           [CardActions
+                            [IconButton {:element "a"
+                                         :href (url/project (:thk.project/id project))}
+                             [icons/action-arrow-right-alt]]
+                            [IconButton {:on-click #(toggle-project (:db/id project))}
+                             (if open?
+                               [icons/navigation-unfold-less]
+                               [icons/navigation-unfold-more])]])}]
+     [Collapse {:in open?}
+      [CardContent
+       [section
+        (tr [:dashboard :notifications])
+        (doall
+         (for [{:notification/keys [type]
+                :meta/keys [created-at]
+                id :db/id} notifications]
+           ^{:key (str id)}
+           [buttons/link-button {:on-click #(e! (notification-controller/->NavigateTo id))}
+            (tr-enum type) " " (fmt/date-time created-at)]))]
+
+
+       [section
+        (tr [:dashboard :activities-and-tasks])
+        (doall
+         (for [{:thk.lifecycle/keys [type activities estimated-start-date estimated-end-date] :as lifecycle}
+               (:thk.project/lifecycles project)]
+           ^{:key (str (:db/id lifecycle))}
+           [:<>
+            [:b  (tr-enum type)]
+            [typography/BoldGreyText (str (fmt/date estimated-start-date)
+                                          "\u2013"
+                                          (fmt/date estimated-end-date))]
+            (doall
+             (for [{:activity/keys [name estimated-start-date estimated-end-date
+                                    status]
+                    id :db/id :as activity}
+                   activities]
+               ^{:key (str id)}
+               [:<>
+                [itemlist/ItemList {:title (tr-enum name)
+                                    :subtitle (str (fmt/date estimated-start-date)
+                                                   "\u2013"
+                                                   (fmt/date estimated-end-date))}
+                 [itemlist/Item {:label (tr [:fields :activity/status])}
+                  (tr-enum status)]]
+                [Divider]]))]))]]]]))
+
+(defn dashboard-page [e!
+                      {user :user :as _app}
+                      dashboard _breadcrumbs]
+  (r/with-let [open-projects (r/atom #{})]
     [:div {:style {:margin "3rem" :display "flex" :justify-content "center"}}
      [Paper {:style {:flex 1
                      :max-width "800px" :padding "1rem"}}
-      [typography/Heading2 (str "Assigned tasks for " (user-model/user-name user))]
-      (for [[{:thk.project/keys [id name]} tasks] tasks-by-project]
-        ^{:key id}
-        [itemlist/ProgressList
-         {:title [Link {:href (routes/url-for {:page :project
-                                               :params {:project id}
-                                               :query nil})} name]}
-
-         (for [t tasks]
-           ^{:key (:db/id t)}
-           {:status (cond
-                      (task-model/completed? t) :success
-                      ;;(task-model/rejected? t) :fail
-                      ;(task-model/in-progress? t) :in-progress
-                      :else :unknown)
-            :link (routes/url-for {:page :activity-task
-                                   :params {:project id
-                                            :task (str (:db/id t))}
-                                   :query nil})
-            :name [:span
-                   (tr [:enum (-> t :task/type :db/ident)]) ": "
-                   (:task/description t)]})])]]))
+      [typography/Heading1 (tr [:dashboard :my-projects])]
+      (mapc (r/partial project-card {:e! e!
+                                     :open-projects @open-projects
+                                     :toggle-project #(swap! open-projects cu/toggle %)})
+            dashboard)]]))
