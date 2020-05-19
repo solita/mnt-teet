@@ -6,7 +6,6 @@
             [teet.localization :refer [tr tr-enum]]
             [teet.ui.util :refer [mapc]]
             [reagent.core :as r]
-            [teet.ui.icons :as icons]
             [teet.ui.material-ui :refer [ButtonBase Collapse LinearProgress Grid]]
             [teet.ui.text-field :refer [TextField] :as text-field]
             [teet.project.land-controller :as land-controller]
@@ -16,10 +15,8 @@
             [teet.land.land-specs]
             [teet.project.project-controller :as project-controller]
             [teet.ui.form :as form]
-            [teet.common.common-controller :as common-controller]
             [teet.ui.select :as select]
             [teet.log :as log]
-            [clojure.string :as str]
             [teet.util.datomic :as du]))
 
 (defn cadastral-unit-style
@@ -237,7 +234,7 @@
   (let [show-extra-fields? (du/enum= (:land-acquisition/impact form-data) :land-acquisition.impact/purchase-needed)]
     [:div
      [form/form {:e! e!
-                 :value form-data ;@impact-form
+                 :value form-data
                  :on-change-event (fn [form-data]
                                     (on-change-event teet-id form-data)) ; update-impact-form
                  :save-event #(land-controller/->SubmitLandAcquisitionForm form-data (:teet-id unit))
@@ -248,10 +245,14 @@
       ^{:attribute :land-acquisition/impact}
       [select/select-enum {:e! e!
                            :attribute :land-acquisition/impact}]
+      (when (not= :land-acquisition.impact/purchase-not-needed (:land-acquisition/impact form-data))
+        ^{:attribute :land-acquisition/status}
+        [select/select-enum {:e! e!
+                             :attribute :land-acquisition/status
+                             :show-empty-selection? true}])
       (when show-extra-fields?
         ^{:attribute :land-acquisition/pos-number :xs 6}
-        [TextField {:type :number}])
-      (when show-extra-fields?
+        [TextField {:type :number}]
         ^{:attribute :land-acquisition/area-to-obtain
           :adornment (let [area (:land-acquisition/area-to-obtain form-data)]
                        [:div
@@ -264,7 +265,7 @@
         [TextField {:type :number :input-style {:width "50%"}}])]]))
 
 (defn acquisition-impact-status
-  [impact]
+  [impact status]
   (let [impact (if impact
                  impact
                  :land-acquisition.impact/undecided)
@@ -276,12 +277,17 @@
                 :land-acquisition.impact/undecided
                 theme-colors/gray-lighter
                 theme-colors/gray-lighter)]
+    (assert (keyword? impact))
+    (when status
+      (assert keyword? status))
     [:div {:class (<class common-styles/flex-align-center)}
      [:div {:class (<class common-styles/status-circle-style color)
             :title impact}]
      [:span {:style {:text-align :left}
              :class (<class common-styles/gray-text)}
-      (tr-enum impact)]]))
+      (tr-enum impact)
+      (when status
+        (str " - " (tr-enum status)))]]))
 
 (defn cadastral-unit-container-style
   []
@@ -320,7 +326,7 @@
                   :class (<class cadastral-unit-style selected?)}
       [typography/SectionHeading {:style {:text-align :left}} (:L_AADRESS unit)]
       [:div {:class (<class common-styles/space-between-center)}
-       [acquisition-impact-status (get-in cadastral-form [:land-acquisition/impact :db/ident])]
+       [acquisition-impact-status (get-in cadastral-form [:land-acquisition/impact]) (get-in cadastral-form [:land-acquisition/status])]
        [:span {:class (<class common-styles/gray-text)}
         TUNNUS]]]
      [Collapse
@@ -412,7 +418,7 @@
       units))]])
 
 (defn filter-units
-  [e! {:keys [estate-search-value quality impact] :as filter-params}]
+  [e! {:keys [estate-search-value quality status impact] :as filter-params}]
   ;; filter-params will come from appdb :land-acquisition-filters key
   ;; (println "filter-params:" filter-params)
   (r/with-let [on-change (fn [kw-or-e field]
@@ -439,10 +445,11 @@
                           :value impact
                           :on-change #(on-change % :impact)}]
      ;; this isn't implemented yet (as of 2020-05-12)
-     #_[select/select-enum {:e! e!
-                            :attribute :land-acquisition/process
-                          :show-empty-selection? false
-                          :on-change #(on-change % :process-search-value)}]
+     [select/select-enum {:e! e!
+                          :attribute :land-acquisition/status
+                          :value status
+                          :show-empty-selection? true
+                          :on-change #(on-change % :status)}]
      [select/form-select
       {:label (tr [:land :filter :quality])
        :name "Quality"

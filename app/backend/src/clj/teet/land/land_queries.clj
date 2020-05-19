@@ -6,6 +6,7 @@
             [clj-time.core :as time]
             [clj-time.coerce :as c]
             [clojure.walk :as walk]
+            [teet.util.datomic :as du]
             [teet.land.land-db :as land-db]
             [teet.util.collection :as cu]))
 
@@ -21,8 +22,9 @@
                                      db
                                      [:thk.project/id project-id]))
         related-cadastral-units (d/pull db '[:thk.project/related-cadastral-units] [:thk.project/id project-id])]
-    (merge related-cadastral-units
-           {:land-acquisitions land-acquisitions})))
+    (mapv tu/idents->keywords
+          (merge related-cadastral-units
+                 {:land-acquisitions land-acquisitions}))))
 
 (defn- project-cadastral-units [db api-url api-secret project-id]
   (let [ctx {:api-url api-url
@@ -78,17 +80,18 @@ Then it will query X-road for the estate information."
                       units)]
     {:estates estates
      :units (mapv
-              (fn [{:keys [MOOTVIIS MUUDET] :as unit}]
-                (assoc unit :quality (cond
-                                       (and (= MOOTVIIS "mõõdistatud, L-EST")
-                                            (not (time/before? (c/from-string MUUDET) (time/date-time 2018 01 01))))
-                                       :good
-                                       (and (= MOOTVIIS "mõõdistatud, L-EST")
-                                            (time/before? (c/from-string MUUDET) (time/date-time 2018 01 01)))
-                                       :questionable
-                                       :else
-                                       :bad)))
-              units)}))
+             (fn with-quality [{:keys [MOOTVIIS MUUDET] :as unit}]
+               (assoc unit :quality (cond
+                                      (and (= MOOTVIIS "mõõdistatud, L-EST")
+                                           (not (time/before? (c/from-string MUUDET) (time/date-time 2018 01 01))))
+                                      :good
+                                      (and (= MOOTVIIS "mõõdistatud, L-EST")
+                                           (time/before? (c/from-string MUUDET) (time/date-time 2018 01 01)))
+                                      :questionable
+                                      :else
+                                      :bad)))
+             units)}))
+
 
 
 (defn- compensation->form

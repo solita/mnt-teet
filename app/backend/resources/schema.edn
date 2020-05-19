@@ -850,4 +850,17 @@
            :db/doc "Ensure there is only one estate procedure form per project and estate id"}]]}
 
  {:db/ident :migration/repair-method-is-group-short-name
-  :txes [teet.migration.project-repair-method/fix-repair-method]}]
+  :txes [teet.migration.project-repair-method/fix-repair-method]}
+
+ {:db/ident :migration/land-acquisition-status
+  :txes [[{:db/ident :land-acquisition/status
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :land-acquisition.status/in-progress
+           :enum/attribute :land-acquisition/status}
+          {:db/ident :land-acquisition.status/in-progress-problematic
+           :enum/attribute :land-acquisition/status}
+          {:db/ident :land-acquisition.status/in-progress-ready
+           :enum/attribute :land-acquisition/status}
+          {:db/ident :land-acquisition.status/completed
+           :enum/attribute :land-acquisition/status}]]}]

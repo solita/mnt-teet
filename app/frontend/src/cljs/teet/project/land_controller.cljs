@@ -4,10 +4,12 @@
             [teet.util.collection :as cu]
             [teet.localization :refer [tr]]
             [teet.map.map-controller :as map-controller]
+            [teet.util.datomic :as tu]
             [goog.math.Long]
             [teet.common.common-controller :as common-controller]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [taoensso.timbre :as log]))
 
 (defrecord ToggleLandUnit [unit])
 (defrecord SearchOnChange [attribute value])
@@ -133,9 +135,7 @@
     (let [f-value #(get-in app [:route :project :land-acquisition-filters %])
           f-select-value #(:value (f-value %)) ;; use f-select-value with form-select, but not with select-enum
           filters [(fn est [unit] ; name-search filter (estate address really)
-                     #_(println "l_aadress" (:L_AADRESS unit))
-                     (let [r  (field-includes? (or (:L_AADRESS unit) "") (f-value :estate-search-value))]
-                       #_(println "aaddress match?" (boolean r) (f-value :estate-search-value))
+                     (let [r  (field-includes? (or (:L_AADRESS unit) "") (f-value :estate-search-value))]                       #_(println "aaddress match?" (boolean r) (f-value :estate-search-value))
                        r))
                    (partial owner-filter-fn (f-value :owner-search-value))
                    (fn cad [unit] ;; cadastral
@@ -150,12 +150,14 @@
                                     :land-acquisition.impact/undecided
                                     unit-impact)]
                        (if (f-value :impact)
-                         (du/enum= (f-value :impact) impact)
+                         (= (f-value :impact) impact)
                          true)))
-                   #_(fn process [unit] ; process filter ;; waiting for process status to be added
-                     (if-let [q (f-select-value :process)]
-                       (= q (:process unit))
-                       true))]
+                   (fn status [unit] ; status filter
+                     (let [unit-status (get-in app [:route :project :land/cadastral-forms (:teet-id unit) :land-acquisition/status])]
+                       (log/debug "status filter fn: unit-status" unit-status "f-status" (f-value :land-acquisition/status))
+                       (if-let [q (f-value :status)]
+                         (= q unit-status)
+                         true)))]
           ;; text (str/lower-case (get-in app [:route :project :land-acquisition-filters attribute]))
           units (get-in app [:route :project :land/units])
           filtered-ids (->> units

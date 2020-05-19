@@ -13,7 +13,7 @@
   {:doc "Save a land purchase decision form."
    :context {conn :conn
              user :user}
-   :payload {:land-acquisition/keys [impact pos-number area-to-obtain]
+   :payload {:land-acquisition/keys [impact pos-number area-to-obtain status]
              :keys [cadastral-unit
                     project-id]}
    :project-id [:thk.project/id project-id]
@@ -23,6 +23,7 @@
    [(cu/without-nils
       (merge {:db/id "new land-purchase"
               :land-acquisition/impact impact
+              :land-acquisition/status status
               :land-acquisition/project [:thk.project/id project-id]
               :land-acquisition/cadastral-unit cadastral-unit
               :land-acquisition/area-to-obtain area-to-obtain
@@ -46,7 +47,7 @@
    :context {conn :conn
              user :user
              db :db}
-   :payload {:land-acquisition/keys [impact pos-number area-to-obtain]
+   :payload {:land-acquisition/keys [impact status pos-number area-to-obtain]
              :keys [cadastral-unit
                     project-id]
              id :db/id}
@@ -58,6 +59,7 @@
    [(cu/without-nils
       (merge {:db/id id
               :land-acquisition/impact impact
+              :land-acquisition/status status
               :land-acquisition/area-to-obtain area-to-obtain
               :land-acquisition/pos-number pos-number}
              (meta-model/modification-meta user)))]})
