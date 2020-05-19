@@ -204,9 +204,13 @@
                                                       (subvec items (inc %)))))))
               [buttons/link-button {} "X"]]]]]
 
-        (when (= (:estate-procedure/type form-data) :estate-procedure.type/property-trading)
+        (log/debug "proc type matches area priced?" (:estate-procedure/type form-data) (land-controller/area-priced-procedure-types (:estate-procedure/type form-data)))
+        (when-let [procedure-type (land-controller/area-priced-procedure-types (:estate-procedure/type form-data))]
           [:div
-           [form/many {:before [typography/BoldGreyText (tr [:fields :estate-procedure/land-exchanges])]
+           [form/many {:before [typography/BoldGreyText
+                                ; (tr-enum procedure-type)
+                                ; (tr [:fields :estate-procedure/land-exchanges])
+                                ]
                        :attribute :estate-procedure/land-exchanges
                        :atleast-once? true}
             [Grid {:container true :spacing 3}
@@ -325,7 +329,9 @@
                   :on-click (e! land-controller/->ToggleLandUnit unit)
                   :class (<class cadastral-unit-style selected?)}
       [typography/SectionHeading {:style {:text-align :left}} (:L_AADRESS unit)]
+      [:div (land-controller/cadastral-purposes TUNNUS unit)]
       [:div {:class (<class common-styles/space-between-center)}
+       
        [acquisition-impact-status (get-in cadastral-form [:land-acquisition/impact]) (get-in cadastral-form [:land-acquisition/status])]
        [:span {:class (<class common-styles/gray-text)}
         TUNNUS]]]

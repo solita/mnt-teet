@@ -81,6 +81,8 @@
                  (cu/update-in-if-exists [:estate-compensation/amount] bigdec)))))
         compensations))
 
+
+;; todo: rename land-exchanges?
 (defn new-land-exchange-txs
   [land-exchanges]
   (into []
