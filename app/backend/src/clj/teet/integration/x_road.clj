@@ -124,12 +124,20 @@
     (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (hiccup/html req-hic))))
 
 
+(defn d-sihtotstarve [s-xml]
+  {:sihtotstarve (z/xml1-> s-xml :a:Sihtotstarve :a:sihtotstarve z/text)
+   :jrk (z/xml1-> s-xml :a:Sihtotstarve :a:jrk z/text)
+   :protsent (z/xml1-> s-xml :a:Sihtotstarve :a:protsent z/text)
+   :sihtotstarve_tekst (z/xml1-> s-xml :a:Sihtotstarve :a:sihtotstarve_tekst z/text)})
+
 (defn d-cadastral-unit* [k-xml]
   {:ads_oid (z/xml1-> k-xml :a:aadressobjekt :a:ads_oid z/text)
    :katastritunnus (z/xml1-> k-xml :a:KinnistuKatastriyksus :a:katastritunnus z/text)
    :katastriyksuse_aadress (z/xml1-> k-xml :a:KinnistuKatastriyksus :a:katastriyksuse_aadress z/text)
    :pindala (z/xml1-> k-xml :a:KinnistuKatastriyksus :a:pindala z/text)
-   :pindala_yhik (z/xml1-> k-xml :a:KinnistuKatastriyksus :a:pindala_yhik z/text)})
+   :pindala_yhik (z/xml1-> k-xml :a:KinnistuKatastriyksus :a:pindala_yhik z/text)
+   :plaanialusel (z/xml1-> k-xml :a:KinnistuKatastriyksus :a:plaanialusel z/text)
+   :sihtotstarbed (mapv d-sihtotstarve (z/xml-> k-xml :a:KinnistuKatastriyksus :a:sihtotstarbed))})
 
 (defn d-cadastral-units [kdr-xml]
   ;;; kdr = Kinnistu_DetailamdResponse from inside the soap body
@@ -340,5 +348,5 @@
 ;; (def *r  (perform-kinnistu-d-request "http://localhost:12073" {:instance-id "ee-dev" :registriosa-nr "308104" :requesting-eid <my-test-eid>}))
 
 ;; rr testing:
-;; (def *r2 (perform-rr442-request "http://localhost:12073" {:instance-id "ee-dev" :subject-eid "47003280318" :requesting-eid "EE47003280318}))
+;; (def *r2 (perform-rr442-request "http://localhost:12073" {:instance-id "ee-dev" :subject-eid "47003280318" :requesting-eid "EE47003280318"}))
 ;; note - subject-eid without EE prefix, requesting-eid with EE prefix
