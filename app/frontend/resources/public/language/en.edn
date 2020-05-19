@@ -31,7 +31,8 @@
   "Riigiomand" "State owned",
   "Segaomand" "Mixed property"},
  :comment
- {:save "Save comment",
+ {:mentioned-users "Mentioned users",
+  :save "Save comment",
   :comment-as "Commenting as {name}",
   :add-mention "Add mention",
   :unresolved-count "{unresolved-count} unresolved comments",
@@ -225,6 +226,7 @@
   :task.type/landscaping "Landscaping",
   :file.status/invalid "Invalid",
   :estate-compensation.reason/road-area "Road area",
+  :notification.type/comment-mention "You were mentioned in a comment",
   :task.type/third-party-review "3rd party review",
   :thk.task-type/study "Study",
   :document.sub-category/explanatory-letter "Explanatory letter ",

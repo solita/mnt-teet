@@ -30,7 +30,8 @@
   "Riigiomand" "Riigiomand",
   "Segaomand" "Segaomand"},
  :comment
- {:save "Salvestan kommentaari",
+ {:mentioned-users "Mainitud kasutajad",
+  :save "Salvestan kommentaari",
   :comment-as "Kommenteerimine kui {name}",
   :add-mention "Lisage mainimine",
   :unresolved-count "{unresolved-count} lahendamata märkust",
@@ -225,6 +226,7 @@
   :task.type/landscaping "Haljastus",
   :file.status/invalid "Kehtetu",
   :estate-compensation.reason/road-area "Tee piirkond",
+  :notification.type/comment-mention "Teid mainiti kommentaaris",
   :task.type/third-party-review "Ekspertiis",
   :thk.task-type/study "Uuring",
   :document.sub-category/explanatory-letter "Seletuskiri",
