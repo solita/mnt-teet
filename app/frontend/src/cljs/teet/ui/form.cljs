@@ -413,17 +413,19 @@
        (->> fields
             (remove (partial hide-field? step))
             (map (fn [form-field]
-                   (let [{:keys [xs lg md adornment container-class] :as field-meta}
+                   (let [{:keys [xs lg md adornment container-class attribute] :as field-meta}
                          (meta form-field)]
-                     [Grid (merge {:item true :xs (or xs 12)}
-                                  (when lg
-                                    {:lg lg})
-                                  (when md
-                                    {:md md}))
-                      [:div {:class container-class}
-                       [field field-meta form-field]
-                       (when adornment
-                         adornment)]])))))]]
+                     (with-meta
+                       [Grid (merge {:item true :xs (or xs 12)}
+                                    (when lg
+                                      {:lg lg})
+                                    (when md
+                                      {:md md}))
+                        [:div {:class container-class}
+                         [field field-meta form-field]
+                         (when adornment
+                           adornment)]]
+                       {:key (str attribute)}))))))]]
    (when (and footer
               (or cancel-event save-event))
      [footer2 footer])])
