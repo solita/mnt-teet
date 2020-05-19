@@ -39,16 +39,28 @@
    [typography/SectionHeading label]
    content])
 
-(defn- task-row [{:task/keys [group type status]
+(defn- task-row [{:task/keys [group type status estimated-end-date]
                   id :db/id :as t}]
-  [:div {:class (<class common-styles/flex-row)}
-   [:div {:class (<class common-styles/flex-table-column-style 33)}
-    (tr-enum status)]
-   [:div {:class (<class common-styles/flex-table-column-style 47)}
-    (tr-enum type)]
-   [:div {:class (<class common-styles/flex-table-column-style 20)}
-    [IconButton {:on-click #(js/alert "heppa")}
-     [icons/navigation-arrow-forward]]]])
+  [:<>
+   (url/consume-navigation-info
+    (fn [{params :params}]
+      [:div {:class (<class common-styles/flex-row)}
+       [:div {:class (<class common-styles/flex-table-column-style 23)}
+        (tr-enum status)]
+       [:div {:class (<class common-styles/flex-table-column-style 37)}
+        (tr-enum type)]
+       [:div {:class (<class common-styles/flex-table-column-style 20)}
+        (fmt/date estimated-end-date)]
+       [:div {:class (<class common-styles/flex-table-column-style 20)}
+        [IconButton {:element "a"
+                     :href (url/activity-task (merge params {:task (str id)}))}
+         [icons/navigation-arrow-forward]]]]))])
+
+(defn- task-rows-by-group [[group tasks]]
+  [:<>
+   [:b (tr-enum group)]
+   (mapc task-row tasks)])
+
 
 (defn project-card [{:keys [e! open-projects toggle-project]}
                     {:keys [project notifications]}]
@@ -106,16 +118,21 @@
                    activities]
                ^{:key (str id)}
                [:<>
-                [itemlist/ItemList {:title (tr-enum name)
-                                    :subtitle (str (fmt/date estimated-start-date)
-                                                   "\u2013"
-                                                   (fmt/date estimated-end-date))}
-                 [itemlist/Item {:label (tr [:fields :activity/status])}
-                  (tr-enum status)]
-                 [itemlist/Item {:label "tasks"}
-                  [:<>
-                   (mapc task-row tasks)]]]
-                [Divider]]))]))]]]]))
+                (url/provide-navigation-info
+                 {:params {:project (:thk.project/id project)
+                           :activity (str id)}}
+                 [:<>
+                  [itemlist/ItemList {:title (tr-enum name)
+                                         :subtitle (str (fmt/date estimated-start-date)
+                                                        "\u2013"
+                                                        (fmt/date estimated-end-date))}
+                      [itemlist/Item {:label (tr [:fields :activity/status])}
+                       (tr-enum status)]
+                      [:<>
+                       (mapc task-rows-by-group
+                             (sort-by (comp task-model/task-group-order :db/ident first)
+                                      (group-by :task/group tasks)))]]
+                  [Divider]])]))]))]]]]))
 
 (defn dashboard-page [e!
                       {user :user :as _app}
