@@ -28,6 +28,7 @@
    (comments-of-entity db entity-id entity-type comment-visibility
                        '[*
                          {:comment/author [*]
+                          :comment/mentions [:user/given-name :user/family-name]
                           :comment/files [:db/id :file/name]}]))
   ([db entity-id entity-type comment-visibility pull-selector]
    (->> (d/q (comment-query entity-type
