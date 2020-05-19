@@ -99,10 +99,11 @@
                      fn-name (symbol (name route-name))]]
            (case (count params)
              0 `(defn ~fn-name [] ~(str "#" path))
-             1 `(defn ~fn-name [~@param-syms]
-                  (if (map? ~(first param-syms))
-                    (~fn-name (~(first params) ~(first param-syms)))
-                    (str "#" ~@(split-path path))))
+             1 `(def ~fn-name
+                  (fn route# [~@param-syms]
+                    (if (map? ~(first param-syms))
+                      (route# (~(first params) ~(first param-syms)))
+                      (str "#" ~@(split-path path)))))
              ;; more than 1 parameter
              `(def ~fn-name
                 (fn route#
