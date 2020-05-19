@@ -250,5 +250,7 @@
 (def local-query   tu/local-query)
 (def local-command tu/local-command)
 
+(defn pprint-file [filename output]
+  (spit filename (with-out-str (clojure.pprint/pprint output))))
 
 ; (local-query :comment/fetch-comments {:for :task :db/id 34287170600567084})

@@ -33,7 +33,8 @@
 (def notification-keys [:db/id :notification/status
                         :notification/target :notification/type
                         :meta/created-at :meta/creator
-                        {:notification/project [:thk.project/id :thk.project/name
+                        {:notification/project [:db/id
+                                                :thk.project/id :thk.project/name
                                                 :thk.project/project-name]}])
 
 (defn unread-notifications

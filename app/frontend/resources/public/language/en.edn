@@ -1,38 +1,39 @@
 {:activity
  {:note-all-tasks-need-to-be-completed
   "Note: All tasks must be completed before activity can be submitted for review",
-  :waiting-for-submission "Results have not yet been submitted",
-  :status "Status"},
+  :status "Status",
+  :waiting-for-submission "Results have not yet been submitted"},
  :activity-approval
- {:submit-for-approval "Submit activity for approval",
+ {:activity.status/archived "Archive this activity",
+  :activity.status/canceled "Cancel this activity",
+  :activity.status/completed "Approve this activity",
   :approve-activity-confirm
   "Activity status will be set to Completed.",
-  :activity.status/completed "Approve this activity",
   :reject-activity-confirm "Activity status will be updated.",
-  :activity.status/archived "Archive this activity",
-  :activity.status/canceled "Cancel this activity"},
- :admin {:title "Admin", :create-user "Add user"},
+  :submit-for-approval "Submit activity for approval"},
+ :admin {:create-user "Add user", :title "Admin"},
  :buttons
- {:cancel "Cancel",
-  :save "Save",
-  :add "Add",
+ {:add "Add",
   :back "Back",
-  :delete "Delete",
+  :cancel "Cancel",
+  :confirm "Confirm",
   :continue "Continue",
+  :delete "Delete",
   :edit "Edit",
-  :confirm "Confirm"},
+  :save "Save"},
  :cadastral-group
- {"Munitsipaalomand" "Municipal property",
-  "Eraomand" "Private property",
-  "Riigiomand" "State owned",
+ {"" "Undefined",
   "Avalik-õiguslik omand" "Public property",
-  "Segaomand" "Mixed property",
-  "" "Undefined",
+  "Eraomand" "Private property",
   "Kiinistamata eraomand" "Unregistered private property",
-  "Omand väljaselgitamisel" "Property on identification"},
+  "Munitsipaalomand" "Municipal property",
+  "Omand väljaselgitamisel" "Property on identification",
+  "Riigiomand" "State owned",
+  "Segaomand" "Mixed property"},
  :comment
  {:save "Save comment",
   :comment-as "Commenting as {name}",
+  :add-mention "Add mention",
   :unresolved-count "{unresolved-count} unresolved comments",
   :edited "Edited {date}",
   :resolve-all "Resolve all",
@@ -70,18 +71,22 @@
   :design-stage-activities "Project stages",
   :select {:empty "- Select value"},
   :clear "Clear"},
+ :dashboard
+ {:notifications "Notifications",
+  :activities-and-tasks "Activities and tasks",
+  :my-projects "My projects"},
  :data-tab
- {:restriction-count "Currently showing {count} restrictions",
-  :cadastral-unit-count "Currently showing {count} cadastral units"},
+ {:cadastral-unit-count "Currently showing {count} cadastral units",
+  :restriction-count "Currently showing {count} restrictions"},
  :date-range {:error-text "Possible dates: {start} – {end}"},
  :document
  {:comments "Comments",
-  :new-comment "New comment",
-  :updated "Updated",
+  :deleted-notification "Document deleted successfully",
   :file-deleted-notification "File deleted successfully",
   :file-too-large "file is too large",
   :invalid-file-type "file type is not valid",
-  :deleted-notification "Document deleted successfully"},
+  :new-comment "New comment",
+  :updated "Updated"},
  :enum
  {:estate-procedure.type/acquisition-negotiation
   "Acquisition negotiation",
@@ -110,6 +115,8 @@
   :task.group/design-approval "Design approval",
   :task.type/geological-study "Geological study",
   :activity.status/in-review "In review",
+  :land-acquisition.status/in-progress-problematic
+  "In progress - problematic ",
   :task.type/property-valuation "Property valuation",
   :notification.type/task-assigned "Task assigned",
   :file.status/ready "Ready",
@@ -162,13 +169,16 @@
   :activity.status/archived "Archived",
   :activity.status/valid "Valid",
   :comment.visibility/all "Public",
-  :comment.visibility/internal "Visble internally",
+  :comment.visibility/internal "Visible internally",
   :comment.status/unresolved "Changes not yet implemented",
   :task.type/topogeodesy "Topogeodesy",
+  :land-acquisition.status/in-progress-ready
+  "In progress - ready for construction ",
   :task.type/equipment "Equipment",
   :task.type/structures "Structures",
   :activity.name/design-requirements "Design requirements",
   :task.type/calculation "Structural calculations",
+  :land-acquisition.status/in-progress "In progress ",
   :task.type/design-road-safety-audit "Design road safety audit",
   :thk.task-type/third-party-review "3rd party review",
   :document.sub-category/photo "Photo",
@@ -200,6 +210,7 @@
   "You have been assigned as project manager",
   :task.type/geology "Geology",
   :notification.type/task-review-rejected "Task review rejected",
+  :land-acquisition.status/completed "Completed",
   :task.status/in-preparation "In preparation",
   :document.category/as-built-doc "Construction documentation",
   :task.type/cadastral-works "Cadastral works",
@@ -248,9 +259,9 @@
   :task.status/not-started "Not started",
   :task.type/road "Road"},
  :environment
- {:info-text
+ {:build-time "Last build happened at",
+  :info-text
   "You are using the development build of teet. Information saved here may be lost.",
-  :build-time "Last build happened at",
   :version "Version"},
  :error
  {:authorization-failure "Session expired. Please login again.",
@@ -297,7 +308,7 @@
   :permission/role "Roles",
   :land-exchange/area "Area",
   :thk.project/carriageway "Carriageway",
-  :common {"name" "Name", "description" "Description"},
+  :common {"description" "Description", "name" "Name"},
   :land-acquisition/pos-number "POS#",
   :document/sub-category "Document subtype",
   :user/add-global-permission
@@ -334,18 +345,18 @@
   :file/status "Status",
   :thk.project/owner "Owner"},
  :file
- {:upload-new-version "Upload new version",
-  :download "Download file",
-  :other-versions "Other versions",
-  :old-version "Old version",
-  :switch-to-latest-version "Switch back to latest version",
+ {:download "Download file",
   :edit "Edit file",
+  :old-version "Old version",
+  :other-versions "Other versions",
   :sort-by
   {:file/name "Sort by name",
-   :file/type "Sort by file type",
    :file/status "Sort by status",
+   :file/type "Sort by file type",
    :meta/created-at "Sort by date"},
-  :upload-info "Uploaded {date} by {author}"},
+  :switch-to-latest-version "Switch back to latest version",
+  :upload-info "Uploaded {date} by {author}",
+  :upload-new-version "Upload new version"},
  :land
  {:total-area "Total area {area} m2",
   :unreliable "Unreliable data",
@@ -362,8 +373,8 @@
   :quality
   {:any "Any",
    :bad "Bad",
-   :questionable "Questionable",
-   :good "Good (L-Est)"},
+   :good "Good (L-Est)",
+   :questionable "Questionable"},
   :filter-label "Filter units",
   :units "units",
   :estate-info-fetch-failure
@@ -373,9 +384,9 @@
   :add-owner "+ Add owner"},
  :login {:login "Login", :password "Password", :username "Username"},
  :map
- {:clear-selections "Clear selections",
-  :select-all "Select all",
-  :map-layers "Map layers",
+ {:aerial-view "Aerial view",
+  :clear-selections "Clear selections",
+  :display "Map display",
   :layers
   {:no-filters "No filters available.",
    :projects "Projects",
@@ -386,8 +397,8 @@
    :cadastral-units "Cadastral units",
    :no-layers "No map layers",
    :land-surveys "Land surveys"},
-  :display "Map display",
-  :aerial-view "Aerial view"},
+  :map-layers "Map layers",
+  :select-all "Select all"},
  :notifications
  {:no-unread-notifications "No unread notifications",
   :task-status-updated "Task status updated successfully",
@@ -407,10 +418,10 @@
   :cadastral-units-updated "Cadastral units updated successfully"},
  :page-title {:project-list "{name} project"},
  :people-tab
- {:managers "Managers",
-  :other-users "Other users",
+ {:invite-user "Invite new user to TEET",
+  :managers "Managers",
   :no-other-users "No other users",
-  :invite-user "Invite new user to TEET"},
+  :other-users "Other users"},
  :project
  {:add-users "Add users",
   :remove-from-project "Remove from project",
@@ -419,14 +430,14 @@
   :project-updated "Project updated successfully",
   :new-activity "Add activity",
   :add-activity
-  #:thk.lifecycle-type{:design "Add phase", :construction "Add stage"},
+  #:thk.lifecycle-type{:construction "Add stage", :design "Add phase"},
   :tabs
   {:activities "Activities",
-   :people "People",
    :details "Details",
+   :land "Land",
+   :people "People",
    :restrictions "Restrictions",
-   :road-objects "Road objects",
-   :land "Land"},
+   :road-objects "Road objects"},
   :edit-activity "Edit activity",
   :restrictions-tab "Restrictions",
   :download-related-info "Download related info",
@@ -447,37 +458,37 @@
    :skip-setup "Skip setup"},
   :add-task "Add task",
   :draw-selection
-  {:link "Draw selection on map",
-   :select "Select areas",
-   :deselect "Deselect areas"},
+  {:deselect "Deselect areas",
+   :link "Draw selection on map",
+   :select "Select areas"},
   :information
-  {:estimated-duration "Estimated duration",
-   :road-number "Road number",
+  {:carriageway "Carriageway",
+   :estimated-duration "Estimated duration",
    :km-range "Km range",
    :procurement-number "Procurement number",
    :repair-method "Repair method",
-   :carriageway "Carriageway"},
+   :road-number "Road number"},
   :activities "Project activities",
   :cadastral-units-tab "Lands",
   :activities-tab "Activities"},
  :project-groups {:title "Project groups"},
  :projects
- {:title "Projects",
-  :map-view "Map",
-  :list-view "Project list",
-  :filters
-  {:my-projects "My projects",
-   :all "All projects",
+ {:filters
+  {:all "All projects",
+   :my-projects "My projects",
    :unassigned-only "Unassigned projects only"},
-  :no-activities "No activities"},
+  :list-view "Project list",
+  :map-view "Map",
+  :no-activities "No activities",
+  :title "Projects"},
  :roles
- {:internal-consultant "Internal consultant",
-  :owner "Owner",
-  :manager "Manager",
+ {:authenticated-guest "Authenticated guest",
   :external-consultant "External consultant",
   :guest "Guest",
-  :authenticated-guest "Authenticated guest"},
- :search {:quick-search "Search", :clear-filters "Clear filters"},
+  :internal-consultant "Internal consultant",
+  :manager "Manager",
+  :owner "Owner"},
+ :search {:clear-filters "Clear filters", :quick-search "Search"},
  :search-area
  {:filter-by-distance "Filter by distance",
   :select-relevant-restrictions "Select relevant restrictions",
@@ -514,7 +525,7 @@
   :results "Results"},
  :user {:role "Role"},
  :warning
- {:version-mismatch
-  "A new version of the application has been deployed. Please refresh the page.",
-  :deploying
-  "A new version of the application is being deployed. Please wait for a few minutes and refresh the page."}}
+ {:deploying
+  "A new version of the application is being deployed. Please wait for a few minutes and refresh the page.",
+  :version-mismatch
+  "A new version of the application has been deployed. Please refresh the page."}}

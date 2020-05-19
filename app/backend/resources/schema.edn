@@ -863,4 +863,11 @@
           {:db/ident :land-acquisition.status/in-progress-ready
            :enum/attribute :land-acquisition/status}
           {:db/ident :land-acquisition.status/completed
-           :enum/attribute :land-acquisition/status}]]}]
+           :enum/attribute :land-acquisition/status}]]}
+
+ {:db/ident :migration/comment-mentions
+  :txes [[{:db/ident :comment/mentions
+           :db/doc "Refers to users that need to be notified of this comment"
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many}
+          {:db/ident :notification.type/comment-mention :enum/attribute :notification/type}]]}]
