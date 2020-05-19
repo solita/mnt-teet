@@ -46,6 +46,7 @@
     :notification.type/project-manager-assigned [icons/action-work]
     :notification.type/activity-accepted [icons/action-thumb-up]
     :notification.type/activity-rejected [icons/action-thumb-down]
+    :notification.type/comment-mention [icons/communication-chat-bubble]
     [icons/navigation-more-horiz]))
 
 (defn notification-menu-style
