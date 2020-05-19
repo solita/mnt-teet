@@ -122,6 +122,27 @@
   {:display :flex
    :flex-direction :row})
 
+(defn flex-table-column-style
+  "Style for column in 'tables' that are made with flex blocks"
+  ([basis]
+   (flex-table-column-style basis :flex-start))
+  ([basis justify-content]
+   (flex-table-column-style basis justify-content 0))
+  ([basis justify-content grow]
+   ^{:pseudo {:first-child {:border-left 0}
+              :last-child {:border-right 0}}}
+   {:flex-basis (str basis "%")
+    :border-color theme-colors/gray-lighter
+    :border-style :solid
+    :border-width "2px 2px 0 0"
+    :flex-grow grow
+    :flex-shrink 0
+    :word-break :break-all
+    :display :flex
+    :align-items :center
+    :padding "0.5rem 0.25rem"
+    :justify-content justify-content}))
+
 (defn heading-and-button-style
   []
   {:display         :flex

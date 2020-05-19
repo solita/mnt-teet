@@ -27,25 +27,7 @@
             [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]))
 
-(defn- file-column-style
-  ([basis]
-   (file-column-style basis :flex-start))
-  ([basis justify-content]
-   (file-column-style basis justify-content 0))
-  ([basis justify-content grow]
-   ^{:pseudo {:first-child {:border-left 0}
-              :last-child {:border-right 0}}}
-   {:flex-basis (str basis "%")
-    :border-color theme-colors/gray-lighter
-    :border-style :solid
-    :border-width "2px 2px 0 0"
-    :flex-grow grow
-    :flex-shrink 0
-    :word-break :break-all
-    :display :flex
-    :align-items :center
-    :padding "0.5rem 0.25rem"
-    :justify-content justify-content}))
+
 
 (defn- file-row-icon-style
   []
@@ -61,17 +43,17 @@
   [{id :db/id :file/keys [number version status name] :as _file}]
   (let [[base-name suffix] (base-name-and-suffix name)]
     [:div {:class [(<class common-styles/flex-row) (<class common-styles/margin-bottom 0.5)]}
-     [:div {:class (<class file-column-style 44)}
+     [:div {:class (<class common-styles/flex-table-column-style 44)}
       [url/Link {:page :file :params {:file id}} base-name]]
-     [:div {:class (<class file-column-style 10)}
+     [:div {:class (<class common-styles/flex-table-column-style 10)}
       [:span number]]
-     [:div {:class (<class file-column-style 10)}
+     [:div {:class (<class common-styles/flex-table-column-style 10)}
       [:span suffix]]
-     [:div {:class (<class file-column-style 10)}
+     [:div {:class (<class common-styles/flex-table-column-style 10)}
       [:span (str "V" version)]]
-     [:div {:class (<class file-column-style 13)}
+     [:div {:class (<class common-styles/flex-table-column-style 13)}
       [:span (tr-enum status)]]
-     [:div {:class (<class file-column-style 13 :flex-end)}
+     [:div {:class (<class common-styles/flex-table-column-style 13 :flex-end)}
       [url/Link {:class (<class file-row-icon-style)
                  :page :file
                  :params {:file id}
@@ -88,14 +70,14 @@
     :meta/keys [created-at creator]
     :as _file}]
   [:div {:class [(<class common-styles/flex-row) (<class common-styles/margin-bottom 0.5)]}
-   [:div {:class (<class file-column-style 55)}
+   [:div {:class (<class common-styles/flex-table-column-style 55)}
     [url/Link {:page :file :params {:file id}}
      name]]
-   [:div {:class (<class file-column-style 10 :center)}
+   [:div {:class (<class common-styles/flex-table-column-style 10 :center)}
     [:span (str "V" version)]]
-   [:div {:class (<class file-column-style 10 :center)}
+   [:div {:class (<class common-styles/flex-table-column-style 10 :center)}
     [:span (tr-enum status)]]
-   [:div {:class (<class file-column-style 25 :flex-end)}
+   [:div {:class (<class common-styles/flex-table-column-style 25 :flex-end)}
     [:span (format/date created-at)]]])
 
 (def ^:private sorters
