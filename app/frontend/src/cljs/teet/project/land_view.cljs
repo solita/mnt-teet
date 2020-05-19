@@ -326,7 +326,7 @@
                   :class (<class cadastral-unit-style selected?)}
       [typography/SectionHeading {:style {:text-align :left}} (:L_AADRESS unit)]
       [:div {:class (<class common-styles/space-between-center)}
-       [acquisition-impact-status (get-in cadastral-form [:land-acquisition/impact :db/ident]) (get-in cadastral-form [:land-acquisition/status :db/ident])]
+       [acquisition-impact-status (get-in cadastral-form [:land-acquisition/impact]) (get-in cadastral-form [:land-acquisition/status])]
        [:span {:class (<class common-styles/gray-text)}
         TUNNUS]]]
      [Collapse
