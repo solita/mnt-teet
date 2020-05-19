@@ -134,8 +134,9 @@
 (defn select-with-action
   [{:keys [label id name value items format-item on-change
            required? show-empty-selection? empty-selection-label
-           container-class select-class label-element]
-    :or {format-item :label}}]
+           container-class class label-element show-label?]
+    :or {format-item :label
+         show-label? true}}]
   (let [label-element (if label-element
                         label-element
                         :span)
@@ -147,7 +148,7 @@
                            (on-change (nth items (int val))))))]
     [:div {:class container-class}
      [:label {:html-for id}
-      (when label
+      (when (and label show-label?)
         [label-element (str label ":")])
       [:select
        {:value (or (option-idx value) "")
@@ -157,8 +158,8 @@
         :on-change (fn [e]
                      (change-value e))
         :class (herb/join (<class select-with-action-styles)
-                          (when select-class
-                            select-class))}
+                          (when class
+                            class))}
        (when show-empty-selection?
          [:option {:value ""
                    :label empty-selection-label
@@ -203,15 +204,16 @@
 
 (defn select-enum
   "Select an enum value based on attribute. Automatically fetches enum values from database."
-  [{:keys [e! attribute required tiny-select? show-label? label-element show-empty-selection? empty-selection-label sort-fn]
-    :or {show-label? true
-         show-empty-selection? true}}]
+  [{:keys [e! attribute required label-element sort-fn]}]
   (when-not (contains? @enum-values attribute)
     (log/debug "getting enum vals for attribute" attribute)
     (e! (query-enums-for-attribute! attribute)))
-  (fn [{:keys [value on-change name id error container-class class values-filter
-               full-value?]
-        :enum/keys [valid-for]}]
+  (fn [{:keys [value on-change name show-label? show-empty-selection?
+               tiny-select? id error container-class class values-filter
+               full-value? empty-selection-label]
+        :enum/keys [valid-for]
+        :or {show-label? true
+             show-empty-selection? true}}]
     (let [tr* #(tr [:enum %])
           value (if (and (map? value)
                          (contains? value :db/ident))
@@ -269,7 +271,8 @@
 (defn select-user
   "Select user"
   [{:keys [e! value on-change label required error
-           extra-selection extra-selection-label]}]
+           show-label? extra-selection extra-selection-label]
+    :or {show-label? true}}]
   (when (nil? @selectable-users)
     (e! (common-controller/->Query {:query :user/list
                                     :args {}
@@ -278,6 +281,7 @@
                 {:label label
                  :value value
                  :error error
+                 :show-label? show-label?
                  :required required
                  :on-change on-change
                  :show-empty-selection? true}
@@ -310,8 +314,8 @@
 
 (defn checkbox [{:keys [value on-change label]}]
   [FormControlLabel {:label label
+                     :label-placement :start
                      :control (r/as-element [Checkbox {:checked (boolean value)
-                                                       :name "foo"
+                                                       :size :small
                                                        :on-change #(let [checked? (-> % .-target .-checked)]
-                                                                     (.log js/console checked?)
                                                                      (on-change checked?))}])}])

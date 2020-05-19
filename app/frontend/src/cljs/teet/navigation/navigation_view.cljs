@@ -26,7 +26,7 @@
    {:container-class (herb/join (<class navigation-style/language-select-container-style)
                                 (<class navigation-style/divider-style))
     :label (str (tr [:common :language]))
-    :select-class (<class navigation-style/language-select-style)
+    :class (<class navigation-style/language-select-style)
     :id "language-select"
     :name "language"
     :value (case @localization/selected-language
