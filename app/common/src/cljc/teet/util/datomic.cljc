@@ -25,7 +25,7 @@
   (let [v1 (if (keyword? e1)
              e1
              (:db/ident e1))
-        v2 (if (keyword e2)
+        v2 (if (keyword? e2)
              e2
              (:db/ident e2))]
     (= v1 v2)))
@@ -136,3 +136,11 @@
   [left right]
   (= (db-ids left)
      (db-ids right)))
+
+(defn idents->keywords [m]
+  (walk/prewalk
+   (fn walk-fn [x]
+     (if (and (map? x) (contains? x :db/ident))
+       (:db/ident x)
+       x))
+   m))
