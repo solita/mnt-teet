@@ -22,9 +22,9 @@
                                      db
                                      [:thk.project/id project-id]))
         related-cadastral-units (d/pull db '[:thk.project/related-cadastral-units] [:thk.project/id project-id])]
-    (mapv tu/idents->keywords
-          (merge related-cadastral-units
-                 {:land-acquisitions land-acquisitions}))))
+    (du/idents->keywords
+     (merge related-cadastral-units
+            {:land-acquisitions land-acquisitions}))))
 
 (defn- project-cadastral-units [db api-url api-secret project-id]
   (let [ctx {:api-url api-url
