@@ -33,7 +33,9 @@
             [teet.user.user-model :as user-model]
             [teet.util.collection :as cu]
             [teet.file.file-controller :as file-controller]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.theme.theme-colors :as theme-colors]
+            [clojure.string :as str]))
 
 (defn- new-comment-footer [{:keys [validate disabled?]}]
   [:div {:class (<class comments-styles/comment-buttons-style)}
@@ -97,7 +99,7 @@
                                       (on-success-event
                                        {:comment/files (into (or value [])
                                                              uploaded-files)}))}))}
-       (tr [:comment :add-images])]])])
+       (str "+ " (tr [:comment :add-images]))]])])
 
 ;; TODO: Both this and the create comment form should be replaced with
 ;;       form2 to make the add image button look decent.
@@ -133,7 +135,7 @@
 (defn- comment-contents-and-status
   [e!
    {:meta/keys [modified-at]
-    :comment/keys [comment status]
+    :comment/keys [comment status mentions]
     comment-id :db/id
     :as comment-entity}
    commented-entity]
@@ -160,7 +162,9 @@
                                                                                       :comment.status/unresolved
                                                                                       commented-entity))}
           (tr [:comment :unresolve])])]])
-
+   [:span (str/join ", " (mapv (fn [{:user/keys [given-name family-name]}]
+                                 (str "@" given-name " " family-name))
+                               mentions))]
    [typography/Text
     comment
     (when modified-at
@@ -181,7 +185,7 @@
                          (when el
                            (animate/focus! el)))}))
    [:div {:class [(<class common-styles/space-between-center) (<class common-styles/margin-bottom 0)]}
-    [:span
+    [:div
      [typography/SectionHeading
       {:style {:display :inline-block}}
       [user-info/user-name author]]
@@ -289,12 +293,18 @@
                                       (on-success-event
                                        {:comment/files (into (or value [])
                                                              files)}))}))}
-       (tr [:comment :add-images])]])])
+       (str "+ " (tr [:comment :add-images]))]])])
 
-(defn- form-defaults [entity-type]
+(defn- comment-form-defaults [entity-type]
   (get {:file {:comment/track? true}}
        entity-type
-       {}))
+       {:comment/visibility :comment.visibility/internal}   ;; Default value for visibility
+       ))
+
+(defn visibility-selection-style
+  []
+  {:background-color :inherit
+   :color theme-colors/primary})
 
 (defn lazy-comments
   [{:keys [e! app
@@ -303,9 +313,14 @@
            show-comment-form?]
     :or {show-comment-form? true}}]
   (r/with-let [[comment-form ->UpdateCommentForm]
-               (common-controller/internal-state (form-defaults entity-type)
+               (common-controller/internal-state (comment-form-defaults entity-type)
                                                  {:merge? true})]
-    (let [comments (get-in app [:comments-for-entity entity-id])]
+    (let [comments (get-in app [:comments-for-entity entity-id])
+          add-mention (fn [field]
+                        (e! (->UpdateCommentForm
+                              (update @comment-form
+                                      field
+                                      (fnil conj []) {}))))]
       [layout/section
        [query/query {:e! e!
                      :query :comment/fetch-comments
@@ -325,33 +340,48 @@
                   ;; TODO: This circumvents the fact that there can be
                   ;; only one file upload element in the dom at once.
                   (not (-> app :stepper :dialog)))
-         [form/form {:e! e!
-                     :value @comment-form
-                     :on-change-event ->UpdateCommentForm
-                     :save-event #(let [{:comment/keys [comment files visibility track?]} @comment-form]
-                                    (reset! comment-form (form-defaults entity-type))
-                                    (comments-controller/->CommentOnEntity
-                                     entity-type entity-id comment files visibility track?))
-                     :footer new-comment-footer
-                     :spec :task/new-comment-form}
-          ^{:attribute :comment/comment}
-          [TextField {:id "new-comment-input"
-                      :rows 4
-                      :multiline true
-                      :InputLabelProps {:shrink true}
-                      :full-width true
-                      :placeholder (tr [:document :new-comment])}]
+         [form/form2 {:e! e!
+                      :value @comment-form
+                      :on-change-event ->UpdateCommentForm
+                      :save-event #(let [{:comment/keys [comment files visibility track? mentions]} @comment-form]
+                                     (reset! comment-form (comment-form-defaults entity-type))
+                                     (comments-controller/->CommentOnEntity
+                                       entity-type entity-id comment files visibility track? mentions))
+                      :footer new-comment-footer
+                      :spec :task/new-comment-form}
+          [:div {:class (<class form/form-bg)}
+           [:div {:class (<class common-styles/heading-and-action-style)}
+            [typography/Heading2 (tr [:document :new-comment])]
+            [form/field :comment/visibility
+             [select/select-enum {:e! e! :attribute :comment/visibility :tiny-select? true
+                                  :show-empty-selection? false
+                                  :show-label? false :class (<class visibility-selection-style)}]]]
+           [form/field :comment/comment
+            [TextField {:id "new-comment-input"
+                        :rows 4
+                        :multiline true
+                        :full-width true
+                        :placeholder (tr [:document :new-comment])}]]
 
-          ^{:attribute :comment/visibility}
-          [select/select-enum {:e! e! :attribute :comment/visibility}]
+           [form/field :comment/files
+            [attached-images-field {:e! e!
+                                    :on-success-event ->UpdateCommentForm}]]
+           [:div
+            [form/many {:attribute :comment/mentions
+                        :before [typography/BoldGreyText (tr [:comment :mentioned-users])]
+                        :after [buttons/link-button
+                                {:on-click #(add-mention :comment/mentions)}
+                                (str "+ " (tr [:comment :add-mention]))]}
+             [form/field :user
+              [select/select-user {:e! e!
+                                   :show-label? false
+                                   :attribute :comment/user}]]]]
 
-          ;; TODO: when-authorized doesn't play well with form
-          (when (authorization-check/authorized? @app-state/user
-                                                 :project/track-comment-status
-                                                 {})
-            ^{:attribute :comment/track?}
-            [select/checkbox {}])
-
-          ^{:attribute :comment/files}
-          [attached-images-field {:e! e!
-                                  :on-success-event ->UpdateCommentForm} ]])])))
+           ;; TODO: when-authorized doesn't play well with form
+           (when (authorization-check/authorized? @app-state/user
+                                                  :project/track-comment-status
+                                                  {})
+             [:div {:style {:text-align :right}}
+              [form/field :comment/track?
+               [select/checkbox {}]]])
+           [new-comment-footer]]])])))
