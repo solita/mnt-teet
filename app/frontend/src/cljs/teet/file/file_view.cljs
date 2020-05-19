@@ -217,7 +217,7 @@
                                        (:versions latest-file)))
                          (:versions file))]
     [:div
-     [:div {:class [(<class common-styles/heading-and-button-style) (<class common-styles/margin-bottom 2)]}
+     [:div {:class [(<class common-styles/heading-and-action-style) (<class common-styles/margin-bottom 2)]}
       [typography/Heading2 [file-icon file] (:file/name file)]
 
       [buttons/button-secondary {:on-click #(reset! edit-open? true)}

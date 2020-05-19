@@ -143,11 +143,12 @@
     :padding "0.5rem 0.25rem"
     :justify-content justify-content}))
 
-(defn heading-and-button-style
+(defn heading-and-action-style
   []
   {:display         :flex
    :justify-content :space-between
-   :margin-bottom   "1rem"})
+   :margin-bottom   "1rem"
+   :align-items :center})
 
 (defn flex-align-center
   []

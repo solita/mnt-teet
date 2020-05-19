@@ -94,7 +94,7 @@
 
 (defn- task-header
   [e! task]
-  [:div {:class (<class common-styles/heading-and-button-style)}
+  [:div {:class (<class common-styles/heading-and-action-style)}
    [typography/Heading1 (tr-enum (:task/type task))]
    [when-authorized :task/update
     task

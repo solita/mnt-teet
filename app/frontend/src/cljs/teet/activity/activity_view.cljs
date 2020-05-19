@@ -142,7 +142,7 @@
 
 (defn activity-header
   [e! activity]
-  [:div {:class (<class common-styles/heading-and-button-style)}
+  [:div {:class (<class common-styles/heading-and-action-style)}
    [typography/Heading1 (tr-enum (:activity/name activity))]
    [buttons/button-secondary {:on-click #(e! (project-controller/->OpenEditActivityDialog (:db/id activity)))}
     (tr [:buttons :edit])]])
