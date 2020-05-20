@@ -1,9 +1,9 @@
 (ns teet.theme.theme-provider
-  (:require [teet.ui.material-ui :refer [MuiThemeProvider]]
-            [cljs-bean.core :refer [->js]]
+  (:require [cljs-bean.core :refer [->js]]
             [goog.object :as gobj]
             [teet.theme.theme-colors :as theme-colors]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            ["@material-ui/core/styles" :as styles]))
 
 ;;To target disabled buttons :MuiButton {:root {:&$disabled {//css here//}}
 
@@ -152,15 +152,12 @@
                                    :icon {:float "right"}}}})
 
 (defn- create-theme [theme]
-  (let [create-mui-theme (-> js/window
-                             (gobj/get "MaterialUI")
-                             (gobj/get "createMuiTheme"))]
-    (-> theme
-        ->js
-        create-mui-theme)))
+  (styles/createMuiTheme (->js theme)))
+
+(def ThemeProvider (r/adapt-react-class styles/ThemeProvider))
 
 (defn theme-provider [content]
   (r/with-let [theme (create-theme teet-theme)]
-    [MuiThemeProvider
+    [ThemeProvider
      {:theme theme}
      content]))

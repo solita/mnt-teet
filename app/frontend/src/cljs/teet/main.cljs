@@ -1,6 +1,8 @@
 (ns ^:figwheel-hooks teet.main
   "TEET frontend app."
-  (:require [herb.core :as herb :refer [<class]]
+  (:require react
+            react-dom
+            [herb.core :as herb :refer [<class]]
             [datafrisk.core :as df]
             [postgrest-ui.elements]
             [postgrest-ui.impl.style.material]

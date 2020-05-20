@@ -13,7 +13,7 @@
 (defn breadcrumbs
   [breadcrumbs]
   [Breadcrumbs {:class (<class breadcrumbs-style)
-                :separator (r/as-component [icons/navigation-chevron-right {:color :primary :size :small}])}
+                :separator (r/as-element [icons/navigation-chevron-right {:color :primary :size :small}])}
    (util/with-keys
      (for [crumb (butlast breadcrumbs)]
        [Link {:href (routes/url-for crumb)}

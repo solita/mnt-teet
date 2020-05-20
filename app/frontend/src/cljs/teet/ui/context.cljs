@@ -1,6 +1,7 @@
 (ns teet.ui.context
   "Helpers to use React context"
-  (:require [reagent.core :as r]))
+  (:require [reagent.core :as r]
+            react))
 
 (defonce contexts (atom {}))
 
@@ -9,7 +10,7 @@
       (swap! (fn [contexts]
                (if (contains? contexts name)
                  contexts
-                 (assoc contexts name (js/React.createContext nil)))))
+                 (assoc contexts name (react/createContext nil)))))
       (get name)))
 
 (defn provide

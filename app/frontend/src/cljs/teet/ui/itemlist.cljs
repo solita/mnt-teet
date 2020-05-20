@@ -110,10 +110,10 @@
    (uc/without-nils {:class          (<class itemlist-styles/checkbox-container)
                      :on-mouse-enter on-mouse-enter
                      :on-mouse-leave on-mouse-leave
-                     :label          (r/as-component [:span
+                     :label          (r/as-element [:span
                                                       {:class (<class itemlist-styles/checkbox-label checked?)}
                                                       value])
-                     :control        (r/as-component [Checkbox {:checked   checked?
+                     :control        (r/as-element [Checkbox {:checked   checked?
                                                                 :value     value
                                                                 :class     (<class itemlist-styles/layer-checkbox)
                                                                 :color     :primary

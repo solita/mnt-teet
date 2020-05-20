@@ -40,11 +40,11 @@
              :on-close (e! snackbar-controller/->CloseSnackbar)}
    [SnackbarContent
     {:style {:background-color (snack-color variant)}
-     :message (r/as-component [:span
+     :message (r/as-element [:span
                                {:class (<class message-style)}
                                [(snack-icon variant) {:class (<class icon-style)}]
                                [:span message]])
-     :action (r/as-component [IconButton {:size :small
+     :action (r/as-element [IconButton {:size :small
                                           :color "inherit"
                                           :on-click (e! snackbar-controller/->CloseSnackbar)}
                               [icons/content-clear]])}]])

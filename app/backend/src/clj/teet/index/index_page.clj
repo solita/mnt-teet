@@ -44,12 +44,7 @@
      [:body {:data-git-version (build-info/git-commit)
              :onload "resolveOnload()"}
       [:div#teet-frontend]
-      [:script {:src (if dev? "cljs-out/dev-main.js" "main.js")}]
-
-      [:script (if dev?
-                 {:src "https://unpkg.com/@material-ui/core@latest/umd/material-ui.development.js"
-                  :crossorigin "anonymous"}
-                 {:src "material-ui.production.min.js"})]]]))
+      [:script {:src "out/main.js"}]]]))
 
 (defn index-route [config]
   {:status 200

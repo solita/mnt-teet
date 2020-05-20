@@ -177,7 +177,7 @@
                file-too-large? (> size file-model/upload-max-file-size)]
            [ListItemText (merge
                           {:primary name
-                           :secondary (r/as-component [file-info file invalid-file-type? file-too-large?])})])
+                           :secondary (r/as-element [file-info file invalid-file-type? file-too-large?])})])
          [ListItemSecondaryAction
           [IconButton {:edge "end"
                        :on-click #(on-change (into (subvec value 0 i)
