@@ -257,6 +257,15 @@
     (gobj/getValueByKeys value "target" "value")
     value))
 
+(defn remove-from-many-at-index
+  [e! on-change form field idx]
+  (e! (on-change
+        (update form
+                field
+                (fn [items]
+                  (into (subvec items 0 idx)
+                        (subvec items (inc idx))))))))
+
 (defn- many-container [{:keys [attribute before after atleast-once?]} body
                        {update-parent-fn :update-attribute-fn
                         form-value :value :as form-ctx}]
