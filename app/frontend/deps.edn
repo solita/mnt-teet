@@ -36,8 +36,8 @@
                   :extra-deps {com.bhauman/figwheel-main {:mvn/version "0.2.3"}
                                webjure/drtest {:mvn/version "20190611"}}
                   :extra-paths ["test"]}
-           :dev {;:main-opts ["-m" "figwheel.main" "-b" "dev" "-r"]
-                 :main-opts ["-m" "cljs.main" "-co" "dev-build.edn" "-v" "-c" "-r"]
+           :dev {:main-opts ["-m" "figwheel.main" "-b" "dev" "-r"]
+                 ;:main-opts ["-m" "cljs.main" "-co" "dev-build.edn" "-v" "-c" "-r"]
                  :extra-deps {com.bhauman/figwheel-main {:mvn/version "0.2.5"}
                               webjure/drtest {:mvn/version "20190611"}
                               com.datomic/client-cloud {:mvn/version "0.8.78"}}

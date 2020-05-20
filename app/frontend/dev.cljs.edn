@@ -1,4 +1,9 @@
-^{:auto-testing true
-  :watch-dirs ["src/cljs" "../common/src/cljc" "test"]}
+^{:auto-testing false
+  :watch-dirs ["src/cljs" "../common/src/cljc"]}
 {:main teet.main
+ :target :bundle
+ :output-to "out/index.js"
+ :output-dir "out"
+ :bundle-cmd {:none ["npx" "webpack" "--mode=development"]
+              :default ["npx" "webpack"]}
  :open-url false}
