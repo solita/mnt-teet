@@ -1,8 +1,12 @@
 {:deps {org.clojure/clojurescript {:mvn/version "1.10.764"}
         ;; UI Libraries
-        reagent {:mvn/version "0.10.0" :exclusions [cljsjs/react cljsjs/react-dom-server]}
+        reagent {:mvn/version "0.10.0" :exclusions [cljsjs/react
+                                                    cljsjs/react-dom
+                                                    cljsjs/react-dom-server]}
         tatut/postgrest-ui {:git/url "https://github.com/tatut/postgrest-ui"
-                            :sha "a6a38d14433ec793c6d9df0a288d8501073eabe7"}
+                            :sha "a6a38d14433ec793c6d9df0a288d8501073eabe7"
+                            :exclusions [cljsjs/react
+                                         cljsjs/react-dom]}
         webjure/tuck {:git/url "https://github.com/tatut/tuck"
                       :sha "4afc81236a0c62155afb1a704501424e025323fb"}
         data-frisk-reagent {:mvn/version "0.4.5" :exclusions [reagent]}
