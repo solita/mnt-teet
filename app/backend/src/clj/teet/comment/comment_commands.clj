@@ -188,17 +188,34 @@
   {:doc "Update existing comment"
    :context {:keys [db user]}
    :payload {comment-id :db/id comment :comment/comment files :comment/files
-             visibility :comment/visibility}
+             visibility :comment/visibility mentions :comment/mentions}
    :project-id (get-project-id-of-comment db comment-id)
    :authorization {:project/edit-comments {:db/id comment-id}}
-   :transact (into [(merge {:db/id comment-id
-                            :comment/comment comment
-                            :comment/visibility visibility}
-                           (modification-meta user))]
-                   (update-files user
+   :transact
+
+   (let [incoming-mentions (mentioned-user-ids db mentions)
+         old-mentions (into #{}
+                            (map :db/id (:comment/mentions (d/pull db '[:comment/mentions] comment-id))))
+         un-mentioned (set/difference old-mentions incoming-mentions)
+         new-mentions (set/difference incoming-mentions old-mentions)]
+     (into [(merge {:db/id comment-id
+                    :comment/comment comment
+                    :comment/visibility visibility
+                    :comment/mentions (vec new-mentions)}
+                   (modification-meta user))]
+           (concat (update-files user
                                  comment-id
                                  (set files)
-                                 (files-in-db db comment-id)))})
+                                 (files-in-db db comment-id))
+                   (map #(notification-db/notification-tx
+                           {:from user
+                            :to %
+                            :type :notification.type/comment-mention
+                            :target comment-id
+                            :project (get-project-id-of-comment db comment-id)})
+                        new-mentions)
+                   (for [removed-mention un-mentioned]
+                     [:db/retract comment-id :comment/mentions removed-mention]))))})
 
 (defcommand :comment/delete-comment
   {:doc "Delete existing comment"
