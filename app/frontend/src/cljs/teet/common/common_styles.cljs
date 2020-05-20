@@ -164,3 +164,7 @@
    :flex-shrink 0
    :margin-right "1rem"
    :background-color color})
+
+(defn no-border
+  []
+  {:border :none})

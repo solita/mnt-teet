@@ -12,7 +12,7 @@
             [teet.project.project-specs :as project-specs]
             [teet.project.project-navigator-view :as project-navigator-view]
             [teet.activity.activity-style :as activity-style]
-            [herb.core :refer [<class]]
+            [herb.core :as herb :refer [<class]]
             [teet.activity.activity-controller :as activity-controller]
             [teet.project.project-controller :as project-controller]
             [teet.common.common-styles :as common-styles]
@@ -35,7 +35,7 @@
           (sort-by (comp task-model/task-group-order :db/ident)
                    task-groups)))
 
-(defn task-selection [{:keys [e! on-change selected activity-name]} task-groups task-types]
+(defn task-selection [{:keys [e! on-change-selected on-change-sent selected sent-to-thk activity-name]} task-groups task-types]
   [:div {:style {:max-height "70vh" :overflow-y :scroll}}
    (mapc (fn [g]
            [:div
@@ -44,11 +44,22 @@
              (tr-enum g)]
             [:ul
              (mapc (fn [{id :db/ident :as t}]
-                     [:div
-                      [select/checkbox {:label (tr-enum t)
-                                        :value (boolean (selected [(:db/ident g) id]))
-                                        :on-change #(on-change
-                                                      (cu/toggle selected [(:db/ident g) id]))}]])
+                     [:div {:class (<class common-styles/flex-row)}
+                      [:div {:class (herb/join (<class common-styles/flex-table-column-style 50)
+                                               (<class common-styles/no-border))}
+                       [select/checkbox {:label (tr-enum t)
+                                         :value (boolean (selected [(:db/ident g) id]))
+                                         :on-change #(on-change-selected
+                                                      (cu/toggle selected [(:db/ident g) id]))}]]
+                      [:div {:class (herb/join (<class common-styles/flex-table-column-style 50)
+                                               (<class common-styles/no-border))}
+                       (when (and (:thk/task-type t)
+                                  (selected [(:db/ident g) id]))
+                         (println "thk" (:thk/task-type t))
+                         [select/checkbox {:label (tr [:fields :task/send-to-thk?])
+                                           :value (boolean (sent-to-thk [(:db/ident g) id]))
+                                           :on-change #(on-change-sent
+                                                             (cu/toggle sent-to-thk [(:db/ident g) id]))}])]])
                    (filter #(= (:db/ident g) (:enum/valid-for %)) task-types))]])
          (task-groups-for-activity activity-name task-groups))])
 
@@ -82,10 +93,13 @@
      [select/with-enum-values {:e! e!
                                :attribute :task/group}
       [task-groups-and-tasks {:e! e!
-                              :on-change #(e! (activity-controller/->UpdateActivityForm
-                                               {:selected-tasks %}))
+                              :on-change-selected #(e! (activity-controller/->UpdateActivityForm
+                                                        {:selected-tasks %}))
+                              :on-change-sent #(e! (activity-controller/->UpdateActivityForm
+                                                    {:sent-tasks %}))
                               :activity-name (:activity/name activity)
-                              :selected (or (:selected-tasks activity) #{})}]]]
+                              :selected (or (:selected-tasks activity) #{})
+                              :sent-to-thk (or (:sent-tasks activity) #{})}]]]
 
     [Grid {:item true :xs 12}
      [:div {:style {:display :flex :justify-content :flex-end}}

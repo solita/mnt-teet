@@ -45,3 +45,16 @@
                      :activity/name :db/ident)
                  #{})
             (:enum/valid-for (du/entity db [:db/ident task-type])))))
+
+(defn task-type-can-be-sent-to-thk? [db task-type]
+  (ffirst (d/q '[:find ?thk-type
+                 :where [?t :thk/task-type ?thk-type]
+                 :in $ ?t]
+               db task-type)))
+
+(defn task-types-can-be-sent-to-thk? [db task-types]
+  (= (count (d/q '[:find ?thk-type
+                   :where [?t :thk/task-type ?thk-type]
+                   :in $ [?t ...]]
+                 db task-types))
+     (count task-types)))

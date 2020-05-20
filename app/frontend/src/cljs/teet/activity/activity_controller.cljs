@@ -26,10 +26,15 @@
   "Given `selected-tasks`, of form `[<task-group> <task-type>]`,
   resturns only those whose task group matches the given
   `activity-name`"
-  [activity-name selected-tasks]
-  (filter (comp (get activity-model/activity-name->task-groups activity-name #{})
-                first)
-          selected-tasks))
+  [activity-name selected-tasks sent-tasks]
+  (println "sent-tasks" sent-tasks)
+  (->> selected-tasks
+       (filter (comp (get activity-model/activity-name->task-groups activity-name #{})
+                     first))
+       (map (fn [selected-task]
+              (if (sent-tasks selected-task)
+                (conj selected-task true)
+                (conj selected-task false))))))
 
 (extend-protocol t/Event
   UpdateActivityForm
@@ -48,7 +53,8 @@
              :payload          (if new?
                                  {:activity (dissoc edit-activity-data :selected-tasks)
                                   :tasks (tasks-for-activity (:activity/name edit-activity-data)
-                                                             (:selected-tasks edit-activity-data))
+                                                             (:selected-tasks edit-activity-data)
+                                                             (:sent-tasks edit-activity-data))
                                   :lifecycle-id (get-in app [:stepper :lifecycle])}
                                  {:activity edit-activity-data})
              :success-message  (tr [:notifications (if new? :activity-create :activity-updated)])
