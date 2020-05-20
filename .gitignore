@@ -18,3 +18,5 @@
 /ci/browser-tests/cypress/screenshots/
 /ci/browser-tests/node_modules/
 /ci/browser-tests/cypress/videos/
+/app/frontend/node_modules/
+/app/frontend/out/
