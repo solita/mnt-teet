@@ -1,11 +1,10 @@
 (ns teet.activity.activity-controller
-  (:require [tuck.core :as t]
-            [teet.activity.activity-model :as activity-model]
-            [teet.localization :refer [tr]]
+  (:require goog.math.Long
             [teet.common.common-controller :as common-controller]
-            goog.math.Long
+            [teet.localization :refer [tr]]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
-            [teet.log :as log]))
+            [teet.task.task-controller :as task-controller]
+            [tuck.core :as t]))
 
 (defmethod common-controller/on-server-error :conflicting-activities [err app]
   (let [error (-> err ex-data :error)]
@@ -22,19 +21,6 @@
 (defrecord SubmitResults []) ; submit activity for review
 (defrecord Review [status]) ; review results
 
-(defn- tasks-for-activity
-  "Given `selected-tasks`, of form `[<task-group> <task-type>]`,
-  resturns only those whose task group matches the given
-  `activity-name`"
-  [activity-name selected-tasks sent-tasks]
-  (->> selected-tasks
-       (filter (comp (get activity-model/activity-name->task-groups activity-name #{})
-                     first))
-       (map (fn [selected-task]
-              (if (sent-tasks selected-task)
-                (conj selected-task true)
-                (conj selected-task false))))))
-
 (extend-protocol t/Event
   UpdateActivityForm
   (process-event [{form-data :form-data} app]
@@ -42,7 +28,10 @@
 
   SaveActivityForm
   (process-event [_ {:keys [edit-activity-data] :as app}]
-    (let [new? (nil? (:db/id edit-activity-data))]
+    (let [new? (nil? (:db/id edit-activity-data))
+          tasks-to-create (task-controller/tasks-for-activity-name  (:activity/name edit-activity-data)
+                                                                    (:selected-tasks edit-activity-data)
+                                                                    (:sent-tasks edit-activity-data))]
       (t/fx app
             {:tuck.effect/type :command!
              ;; create/update
@@ -51,9 +40,7 @@
                                  :activity/update)
              :payload          (if new?
                                  {:activity (dissoc edit-activity-data :selected-tasks)
-                                  :tasks (tasks-for-activity (:activity/name edit-activity-data)
-                                                             (:selected-tasks edit-activity-data)
-                                                             (:sent-tasks edit-activity-data))
+                                  :tasks tasks-to-create
                                   :lifecycle-id (get-in app [:stepper :lifecycle])}
                                  {:activity edit-activity-data})
              :success-message  (tr [:notifications (if new? :activity-create :activity-updated)])

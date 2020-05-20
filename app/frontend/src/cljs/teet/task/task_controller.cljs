@@ -1,12 +1,28 @@
 (ns teet.task.task-controller
-  (:require [tuck.core :as t]
-            [goog.math.Long]
-            [teet.log :as log]
-            [teet.localization :refer [tr]]
-            [teet.file.file-controller]
+  (:require [goog.math.Long]
+            [tuck.core :as t]
+            [teet.activity.activity-model :as activity-model]
             [teet.common.common-controller :as common-controller]
-            [teet.util.collection :as cu]
-            [teet.snackbar.snackbar-controller :as snackbar-controller]))
+            [teet.file.file-controller]
+            [teet.localization :refer [tr]]
+            [teet.log :as log]
+            [teet.snackbar.snackbar-controller :as snackbar-controller]
+            [teet.util.collection :as cu]))
+
+(defn tasks-for-activity-name
+  "Given `selected-tasks` of form `[<task-group> <task-type>]`, and
+  `sent-tasks` of same form, returns only those whose task group
+  matches the given `activity-name`, in form `[<task-group>
+  <task-type> <task-sent?>]` where `<task-sent?>` is true, if the task
+  was present in `sent-tasks`, `false` otherwise."
+  [activity-name selected-tasks sent-tasks]
+  (->> selected-tasks
+       (filter (comp (get activity-model/activity-name->task-groups activity-name #{})
+                     first))
+       (map (fn [selected-task]
+              (if (sent-tasks selected-task)
+                (conj selected-task true)
+                (conj selected-task false))))))
 
 (defrecord UploadDocuments [files])
 (defrecord UpdateTask [task updated-task]) ; update task info to database
