@@ -27,7 +27,6 @@
   resturns only those whose task group matches the given
   `activity-name`"
   [activity-name selected-tasks sent-tasks]
-  (println "sent-tasks" sent-tasks)
   (->> selected-tasks
        (filter (comp (get activity-model/activity-name->task-groups activity-name #{})
                      first))
