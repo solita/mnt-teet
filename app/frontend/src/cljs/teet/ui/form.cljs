@@ -253,6 +253,7 @@
   Otherwise pass value as is."
   [value]
   (if (and (not (boolean? value))
+           (not (string? value))
            (gobj/containsKey value "target"))
     (gobj/getValueByKeys value "target" "value")
     value))

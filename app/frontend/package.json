@@ -8,6 +8,7 @@
     "@material-ui/core": "^4.9.14",
     "@material-ui/styles": "^4.9.14",
     "react": "^16.13.1",
-    "react-dom": "^16.13.1"
+    "react-dom": "^16.13.1",
+    "react-mentions": "^3.3.1"
   }
 }

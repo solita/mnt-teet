@@ -268,6 +268,21 @@
     (reset! selectable-users users)
     app))
 
+(defrecord CompleteUserResult [callback result]
+  t/Event
+  (process-event [_ app]
+    (callback result)
+    app))
+
+(defrecord CompleteUser [search callback]
+  t/Event
+  (process-event [_ app]
+    (t/fx app
+          {:tuck.effect/type :query
+           :query :user/list
+           :args {:search search}
+           :result-event (partial ->CompleteUserResult callback)})))
+
 (defn select-user
   "Select user"
   [{:keys [e! value on-change label required error

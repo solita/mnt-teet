@@ -35,7 +35,12 @@
             [teet.file.file-controller :as file-controller]
             [teet.log :as log]
             [teet.theme.theme-colors :as theme-colors]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            react-mentions))
+
+
+(def Mention (r/adapt-react-class (.-Mention react-mentions)))
+(def MentionsInput (r/adapt-react-class (.-MentionsInput react-mentions)))
 
 (defn- new-comment-footer [{:keys [validate disabled?]}]
   [:div {:class (<class comments-styles/comment-buttons-style)}
@@ -328,10 +333,12 @@
        (str "+ " (tr [:comment :add-images]))]])])
 
 (defn- comment-form-defaults [entity-type]
-  (get {:file {:comment/track? true}}
-       entity-type
-       {:comment/visibility :comment.visibility/internal}   ;; Default value for visibility
-       ))
+  (merge
+   (case entity-type
+     :file {:comment/track? true}
+     {})
+   {:comment/comment ""
+    :comment/visibility :comment.visibility/internal}))
 
 (defn visibility-selection-style
   []
@@ -390,8 +397,23 @@
                                   :show-empty-selection? false
                                   :show-label? false :class (<class visibility-selection-style)}]]]
            [:div {:class (<class form-field-spacer)}
+            (pr-str @comment-form)
             [form/field :comment/comment
-             [TextField {:id "new-comment-input"
+             [MentionsInput {}
+              [Mention {:trigger "@"
+                        :data (fn [search callback]
+                                (js/console.log "haetaan: " search)
+                                (e! (select/->CompleteUser
+                                     search
+                                     (fn [users]
+                                       (js/console.log "USERS: " (pr-str users))
+                                       (callback
+                                        (into-array
+                                         (for [u users]
+                                           #js {:display (user-model/user-name u)
+                                                :id (str (:db/id u))})))))))}]]
+
+             #_[TextField {:id "new-comment-input"
                          :rows 4
                          :multiline true
                          :full-width true
