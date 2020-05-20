@@ -115,12 +115,19 @@
 
 (def schema (delay (-> "schema.edn" io/resource slurp read-string)))
 
+
+(defn sanity-check-schema [s]
+  (let [migration-ids (mapv :db/ident s)]
+    (when (not= (count migration-ids) (count (set migration-ids)))
+      (log/error "Schema has duplicate migration IDs, only one will be applied"))))
+
 (defn migrate
   ([conn]
    (migrate conn false))
   ([conn force?]
    (log/info "Migrate, db: " (:db-name conn))
    (let [schema @schema
+         _ (sanity-check-schema schema)
          applied-migrations (into #{}
                                   (map first)
                                   (d/q '[:find ?ident
