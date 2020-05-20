@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -eu
 
+npm install
+
 clojure -A:prod
 
 branch="$CODEBUILD_SOURCE_VERSION"
