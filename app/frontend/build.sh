@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eu
 
-clojure -m figwheel.main -O advanced -bo prod
+clojure -A:prod
 
 branch="$CODEBUILD_SOURCE_VERSION"
 #`git branch | grep "*" | cut -f2 -d' '`
@@ -9,7 +9,7 @@ branch="$CODEBUILD_SOURCE_VERSION"
 githash=`git rev-parse HEAD`
 buildtime=`date "+%d.%m.%Y %H:%M:%S"`
 
-MAIN=target/public/cljs-out/prod-main.js
+MAIN=out/main.js
 
 echo "" >> $MAIN
 echo "window.teet_branch = \"${branch}\"; window.teet_githash = \"${githash}\"; window.teet_buildtime = \"${buildtime}\";" >> $MAIN
