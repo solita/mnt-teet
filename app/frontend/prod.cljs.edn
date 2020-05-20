@@ -1,3 +1,8 @@
 {:main teet.main
  :closure-extra-annotations ["api" "observable"]
- :externs ["src/externs.js"]}
+ :externs ["src/externs.js"]
+ :target :bundle
+ :output-to "out/index.js"
+ :output-dir "out"
+ :bundle-cmd {:none ["npx" "webpack" "--mode=development"]
+              :default ["npx" "webpack"]}}
