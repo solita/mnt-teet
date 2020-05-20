@@ -15,22 +15,61 @@
             [teet.project.task-model :as task-model]
             [teet.task.task-controller :as task-controller]
             teet.task.task-spec
+            [teet.theme.theme-colors :as theme-colors]
             [teet.ui.buttons :as buttons]
             [teet.ui.date-picker :as date-picker]
             [teet.ui.file-upload :as file-upload]
             [teet.ui.form :as form]
             [teet.ui.format :as format]
+            [teet.ui.icons :as icons]
             [teet.ui.material-ui :refer [LinearProgress]]
             [teet.ui.panels :as panels]
             [teet.ui.select :as select]
             [teet.ui.tabs :as tabs]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.typography :as typography]
+            [teet.ui.util :as util :refer [mapc]]
             [teet.user.user-model :as user-model]
-            [teet.ui.icons :as icons]
-            [teet.theme.theme-colors :as theme-colors]
+            [teet.util.collection :as cu]
             [teet.util.datomic :as du]))
 
+(defn- task-groups-for-activity [activity-name task-groups]
+  (filter (comp (get activity-model/activity-name->task-groups activity-name #{})
+                :db/ident)
+          (sort-by (comp task-model/task-group-order :db/ident)
+                   task-groups)))
+
+(defn- task-selection [{:keys [e! on-change-selected on-change-sent selected sent-to-thk activity-name]} task-groups task-types]
+  [:div {:style {:max-height "70vh" :overflow-y :scroll}}
+   (mapc (fn [g]
+           [:div
+            [typography/Heading2 {:style {:font-variant :all-small-caps
+                                          :font-weight :bold}}
+             (tr-enum g)]
+            [:ul
+             (mapc (fn [{id :db/ident :as t}]
+                     [:div {:class (<class common-styles/flex-row)}
+                      [:div {:class (herb/join (<class common-styles/flex-table-column-style 50)
+                                               (<class common-styles/no-border))}
+                       [select/checkbox {:label (tr-enum t)
+                                         :value (boolean (selected [(:db/ident g) id]))
+                                         :on-change #(on-change-selected
+                                                      (cu/toggle selected [(:db/ident g) id]))}]]
+                      [:div {:class (herb/join (<class common-styles/flex-table-column-style 50)
+                                               (<class common-styles/no-border))}
+                       (when (and (:thk/task-type t)
+                                  (selected [(:db/ident g) id]))
+                         (println "thk" (:thk/task-type t))
+                         [select/checkbox {:label (tr [:fields :task/send-to-thk?])
+                                           :value (boolean (sent-to-thk [(:db/ident g) id]))
+                                           :on-change #(on-change-sent
+                                                             (cu/toggle sent-to-thk [(:db/ident g) id]))}])]])
+                   (filter #(= (:db/ident g) (:enum/valid-for %)) task-types))]])
+         (task-groups-for-activity activity-name task-groups))])
+
+(defn task-groups-and-tasks [{e! :e! :as opts} task-groups]
+  [select/with-enum-values {:e! e! :attribute :task/type}
+   [task-selection opts task-groups]])
 
 (defn task-basic-info
   [e! {:task/keys [estimated-end-date assignee actual-end-date status] :as _task}]
