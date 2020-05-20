@@ -402,11 +402,9 @@
              [MentionsInput {}
               [Mention {:trigger "@"
                         :data (fn [search callback]
-                                (js/console.log "haetaan: " search)
                                 (e! (select/->CompleteUser
                                      search
                                      (fn [users]
-                                       (js/console.log "USERS: " (pr-str users))
                                        (callback
                                         (into-array
                                          (for [u users]
