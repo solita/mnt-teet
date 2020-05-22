@@ -96,16 +96,16 @@
         (group-by (comp :db/id :notification/project)
                   (notification-db/user-notifications db user 100))]
     (for [{id :db/id :as project} projects]
-      (do
-        (def p* project)
-        {:project (cu/update-path project
-                                  [:thk.project/lifecycles (constantly true)
-                                   :thk.lifecycle/activities (constantly true)]
-                                  (fn [{id :db/id :as activity}]
-                                    (assoc activity :activity/tasks
-                                           (mapv :task (tasks-by-activity id)))))
-         :notifications (mapv #(dissoc % :notification/project)
-                              (notifications-by-project id))}))))
+      {:project (-> project
+                    (cu/update-path
+                      [:thk.project/lifecycles (constantly true)
+                       :thk.lifecycle/activities (constantly true)]
+                      (fn [{id :db/id :as activity}]
+                        (assoc activity :activity/tasks
+                                        (mapv :task (tasks-by-activity id)))))
+                    (update :thk.project/lifecycles project-model/sort-lifecycles))
+       :notifications (mapv #(dissoc % :notification/project)
+                            (notifications-by-project id))})))
 
 (defquery :dashboard/user-dashboard
   {:doc "Get a dashboard for the current user"
