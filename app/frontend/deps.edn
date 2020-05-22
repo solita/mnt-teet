@@ -22,7 +22,7 @@
 
         ;; Mapping and geometry libraries
         cljsjs/openlayers {:mvn/version "4.4.1-1"}
-        cljsjs/proj4 {:mvn/version "2.5.0-0"}
+        ;cljsjs/proj4 {:mvn/version "2.5.0-0"}
 
         ;; cljs-time
         com.andrewmcveigh/cljs-time {:mvn/version "0.5.2"}
