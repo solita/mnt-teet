@@ -1,0 +1,7 @@
+{:main teet.main
+ :output-to "out/index.js"
+ :output-dir "out"
+ :target :bundle
+ :bundle-cmd {:none ["npx" "webpack" "--mode=development"]
+              :default ["npx" "webpack"]}
+ :closure-defines {cljs.core/*global* "window"}}
