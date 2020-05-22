@@ -46,7 +46,7 @@
                               webjure/drtest {:mvn/version "20190611"}
                               com.datomic/client-cloud {:mvn/version "0.8.78"}}
                  :extra-paths ["test"]}
-           :prod {:main-opts ["-m" "cljs.main" "-co" "prod-build.edn" "-O" "advanced" "-v" "-c" "-s"]
+           :prod {:main-opts ["-m" "cljs.main" "-co" "prod-build.edn" "-O" "advanced" "-v" "-c"]
                                         ;:main-opts ["-m" "figwheel.main" "-O" "advanced" "-bo" "prod"]
                                         ;:extra-deps {com.bhauman/figwheel-main {:mvn/version "0.2.5"}}
                   }}}
