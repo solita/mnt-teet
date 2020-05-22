@@ -36,11 +36,12 @@
             [teet.log :as log]
             [teet.theme.theme-colors :as theme-colors]
             [clojure.string :as str]
-            react-mentions))
+            ;;react-mentions
+            ))
 
 
-(def Mention (r/adapt-react-class (.-Mention react-mentions)))
-(def MentionsInput (r/adapt-react-class (.-MentionsInput react-mentions)))
+;;(def Mention (r/adapt-react-class (.-Mention react-mentions)))
+;;(def MentionsInput (r/adapt-react-class (.-MentionsInput react-mentions)))
 
 (defn- new-comment-footer [{:keys [validate disabled?]}]
   [:div {:class (<class comments-styles/comment-buttons-style)}
@@ -399,7 +400,7 @@
            [:div {:class (<class form-field-spacer)}
             (pr-str @comment-form)
             [form/field :comment/comment
-             [MentionsInput {}
+             #_[MentionsInput {}
               [Mention {:trigger "@"
                         :data (fn [search callback]
                                 (e! (select/->CompleteUser
@@ -411,7 +412,7 @@
                                            #js {:display (user-model/user-name u)
                                                 :id (str (:db/id u))})))))))}]]
 
-             #_[TextField {:id "new-comment-input"
+             [TextField {:id "new-comment-input"
                          :rows 4
                          :multiline true
                          :full-width true
