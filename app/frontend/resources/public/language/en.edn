@@ -152,6 +152,7 @@
   "Concluding contracts with landowners",
   :task.type/environmental-impact-assessment
   "Environmental Impact Assessment (EIA)",
+  :activity.status/in-preparation "In preparation",
   :document.sub-category/geological-basis "Geological basis",
   :task.group/design-reports "Design reports",
   :activity.name/land-acquisition "Land acquisition",
