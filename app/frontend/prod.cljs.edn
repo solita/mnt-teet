@@ -5,4 +5,5 @@
  :output-to "out/index.js"
  :output-dir "out"
  :bundle-cmd {:none ["npx" "webpack" "--mode=development"]
-              :default ["npx" "webpack"]}}
+              :default ["npx" "webpack"]}
+ :closure-defines {cljs.core/*global* "window"}}
