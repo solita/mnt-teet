@@ -404,6 +404,7 @@
   :comments-resolved "Märkus edukalt lahendatud",
   :comment-edited "Kommentaar edukalt muudetud",
   :comment-deleted "Kommentaar edukalt kustutatud",
+  :activity-created "Tegevus loodi edukalt",
   :permission-revoked "Luba tühistati edukalt",
   :task-created "Ülesanne edukalt lisatud",
   :comment-status-changed "Kommentaari staatus edukalt muudetud",

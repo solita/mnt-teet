@@ -406,6 +406,7 @@
   :comments-resolved "Comments resolved successfully",
   :comment-edited "Comment edited successfully",
   :comment-deleted "Comment deleted successfully",
+  :activity-created "Activity created succesfully",
   :permission-revoked "Permission revoked successfully",
   :task-created "Task created successfully",
   :comment-status-changed "Comment status changed successfully",
