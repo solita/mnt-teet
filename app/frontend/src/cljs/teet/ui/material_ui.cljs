@@ -96,7 +96,7 @@
 
 ;; Common utility components
 (define-mui-components Divider CircularProgress LinearProgress Drawer
-                       AppBar ThemeProvider Toolbar CssBaseline Link Breadcrumbs
+                       AppBar Toolbar CssBaseline Link Breadcrumbs
                        ClickAwayListener Switch)
 
 ;; Layout

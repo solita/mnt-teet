@@ -2,6 +2,10 @@
  :output-to "out/index.js"
  :output-dir "out"
  :target :bundle
- :bundle-cmd {:none ["npx" "webpack" "--mode=development"]
-              :default ["npx" "webpack"]}
+ :bundle-cmd {:default ["npx" "webpack"]
+              #_["npx" "esbuild"
+                        "--bundle" "'--define:process.env.NODE_ENV=\"production\"'"
+                        "--minify"
+                        "--outfile=out/main.js"
+                        "out/index.js"]}
  :closure-defines {cljs.core/*global* "window"}}
