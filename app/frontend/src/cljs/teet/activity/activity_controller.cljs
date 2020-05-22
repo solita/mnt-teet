@@ -43,7 +43,7 @@
                                   :tasks tasks-to-create
                                   :lifecycle-id (get-in app [:stepper :lifecycle])}
                                  {:activity edit-activity-data})
-             :success-message  (tr [:notifications (if new? :activity-create :activity-updated)])
+             :success-message  (tr [:notifications (if new? :activity-created :activity-updated)])
              :result-event     ->SaveActivityResponse})))
 
   SaveActivityResponse

@@ -20,7 +20,7 @@
        (filter (comp (get activity-model/activity-name->task-groups activity-name #{})
                      first))
        (map (fn [selected-task]
-              (if (sent-tasks selected-task)
+              (if (and sent-tasks (sent-tasks selected-task)) ;; sent-tasks can be null when none of the send to thk has been touched
                 (conj selected-task true)
                 (conj selected-task false))))))
 
