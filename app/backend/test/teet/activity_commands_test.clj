@@ -82,7 +82,7 @@
                                    {:activity {:activity/estimated-start-date #inst "2020-04-06T21:00:00.000-00:00"
                                                :activity/estimated-end-date #inst "2020-04-12T21:00:00.000-00:00"
                                                :activity/name :activity.name/land-acquisition}
-                                    :tasks [[:task.group/base-data :task.type/general-part]]
+                                    :tasks [[:task.group/base-data :task.type/general-part false]]
                                     :lifecycle-id (tu/->db-id "p1-lc1")}))))
 
   (testing "Can't add incompatible tasks to new activity"
@@ -92,12 +92,12 @@
                                    {:activity {:activity/estimated-start-date #inst "2020-04-06T21:00:00.000-00:00"
                                                :activity/estimated-end-date #inst "2020-04-12T21:00:00.000-00:00"
                                                :activity/name :activity.name/land-acquisition}
-                                    :tasks [[:task.group/base-data :task.type/general-part]]
+                                    :tasks [[:task.group/base-data :task.type/general-part false]]
                                     :lifecycle-id (tu/->db-id "p3-lc1")})))
     (is (tu/local-command tu/mock-user-boss
                           :activity/create
                           {:activity {:activity/estimated-start-date #inst "2020-04-12T21:00:00.000-00:00"
                                       :activity/estimated-end-date #inst "2020-04-13T21:00:00.000-00:00"
                                       :activity/name :activity.name/land-acquisition}
-                           :tasks [[:task.group/land-purchase :task.type/land-owners]]
+                           :tasks [[:task.group/land-purchase :task.type/land-owners false]]
                            :lifecycle-id (tu/->db-id "p3-lc1")}))))

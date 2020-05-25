@@ -103,47 +103,48 @@
             :on-close handle-close!}
       (if (seq notifications)
         (mapc
-         (fn [[{:thk.project/keys [project-name name] :as _project} notifications]]
-           [:<>
-            [MenuItem {:classes #js {:root (<class notification-project-header-style)}}
-             [ListItemText {:disable-typography true}
-              (or project-name name "")
-              (when (some #(du/enum= :notification.status/unread
-                                     (:notification/status %))
-                          notifications)
-                [buttons/link-button {:class (<class mark-all-read-link-style)
-                                      :on-click (e! notification-controller/->AcknowledgeMany
-                                                    (map :db/id notifications)
-                                                    refresh!)}
-                 (tr [:notifications :mark-all-read])])]]
+          (fn [[{:thk.project/keys [project-name name] :as _project} notifications]]
+            [:div
+             [MenuItem {:classes #js {:root (<class notification-project-header-style)}}
+              [ListItemText {:disable-typography true}
+               (or project-name name "")
+               (when (some #(du/enum= :notification.status/unread
+                                      (:notification/status %))
+                           notifications)
+                 [buttons/link-button {:class (<class mark-all-read-link-style)
+                                       :on-click (e! notification-controller/->AcknowledgeMany
+                                                     (map :db/id notifications)
+                                                     refresh!)}
+                  (tr [:notifications :mark-all-read])])]]
 
-            (for [{:notification/keys [type status]
-                   :meta/keys [created-at]
-                   id :db/id} notifications ]
-              ^{:key id}
-              [MenuItem {:class (<class notification-style (du/enum= status :notification.status/acknowledged))
-                         :on-click #(do
-                                      ;; Navigate to the notification's target
-                                      (e! (notification-controller/->NavigateTo id))
-                                      ;; Close the menu
-                                      (handle-close!)
+             (doall
+               (for [{:notification/keys [type status]
+                      :meta/keys [created-at]
+                      id :db/id} notifications]
+                 ^{:key id}
+                 [MenuItem {:class (<class notification-style (du/enum= status :notification.status/acknowledged))
+                            :on-click #(do
+                                         ;; Navigate to the notification's target
+                                         (e! (notification-controller/->NavigateTo id))
+                                         ;; Close the menu
+                                         (handle-close!)
 
-                                      ;; Acknowledge the notification, if unread
-                                      (when (= :notification.status/unread
-                                               (:db/ident status))
-                                        (e! (notification-controller/->Acknowledge
-                                             id
-                                             ;; Refresh after acknowledge
-                                             refresh!))))}
-               [ListItemIcon
-                (notification-icon type)]
-               [ListItemText {:disable-typography true}
-                [:div
-                 (tr-enum type)]
-                [:div
-                 [typography/SmallText
-                  (format/date-time created-at)]]]])])
-         (grouped-notifications notifications))
+                                         ;; Acknowledge the notification, if unread
+                                         (when (= :notification.status/unread
+                                                  (:db/ident status))
+                                           (e! (notification-controller/->Acknowledge
+                                                 id
+                                                 ;; Refresh after acknowledge
+                                                 refresh!))))}
+                  [ListItemIcon
+                   (notification-icon type)]
+                  [ListItemText {:disable-typography true}
+                   [:div
+                    (tr-enum type)]
+                   [:div
+                    [typography/SmallText
+                     (format/date-time created-at)]]]]))])
+          (grouped-notifications notifications))
         [MenuItem {:on-click handle-close!}
          (tr [:notifications :no-unread-notifications])])]]))
 

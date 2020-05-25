@@ -20,7 +20,8 @@
   [:div {:class (<class itemlist-styles/heading variant)}
    (case variant
      :primary [Heading2 title]
-     :secondary [Heading3 title])
+     :secondary [Heading3 title]
+     :tertiary [:b title])
    (when action
      [:div {:class (<class itemlist-styles/heading-action)}
       action])

@@ -458,5 +458,5 @@
                                                   {})
              [:div {:style {:text-align :right}}
               [form/field :comment/track?
-               [select/checkbox {}]]])
+               [select/checkbox {:label-placement :start}]]])
            [new-comment-footer]]])])))

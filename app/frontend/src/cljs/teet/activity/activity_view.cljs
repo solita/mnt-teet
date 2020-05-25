@@ -1,60 +1,34 @@
 (ns teet.activity.activity-view
-  (:require [teet.ui.select :as select]
-            [teet.ui.date-picker :as date-picker]
+  (:require [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
+            [taoensso.timbre :as log]
+            [teet.activity.activity-controller :as activity-controller]
+            [teet.activity.activity-model :as activity-model]
+            [teet.activity.activity-style :as activity-style]
+            [teet.app-state]
             [teet.authorization.authorization-check :refer [authorized? when-authorized]]
+            [teet.common.common-styles :as common-styles]
+            teet.file.file-spec
             [teet.localization :refer [tr tr-enum]]
-            [teet.ui.panels :as panels]
-            [teet.ui.material-ui :refer [Grid]]
+            [teet.project.project-controller :as project-controller]
+            [teet.project.project-model :as project-model]
+            [teet.project.project-navigator-view :as project-navigator-view]
+            [teet.project.project-specs :as project-specs]
+            [teet.project.task-model :as task-model]
+            [teet.task.task-view :as task-view]
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.ui.buttons :as buttons]
+            [teet.ui.date-picker :as date-picker]
             [teet.ui.form :as form]
             [teet.ui.icons :as icons]
-            teet.file.file-spec
-            [teet.project.project-specs :as project-specs]
-            [teet.project.project-navigator-view :as project-navigator-view]
-            [teet.activity.activity-style :as activity-style]
-            [herb.core :refer [<class]]
-            [teet.activity.activity-controller :as activity-controller]
-            [teet.project.project-controller :as project-controller]
-            [teet.common.common-styles :as common-styles]
+            [teet.ui.material-ui :refer [Grid]]
+            [teet.ui.panels :as panels]
+            [teet.ui.select :as select]
             [teet.ui.typography :as typography]
-            [teet.ui.buttons :as buttons]
-            [teet.project.project-model :as project-model]
-            [teet.user.user-model :as user-model]
-            [teet.ui.util :as util :refer [mapc]]
-            [teet.theme.theme-colors :as theme-colors]
             [teet.ui.url :as url]
-            [teet.util.collection :as cu]
-            [teet.project.task-model :as task-model]
-            [teet.activity.activity-model :as activity-model]
-            [teet.app-state]
-            [taoensso.timbre :as log]))
-
-(defn- task-groups-for-activity [activity-name task-groups]
-  (filter (comp (get activity-model/activity-name->task-groups activity-name #{})
-                :db/ident)
-          (sort-by (comp task-model/task-group-order :db/ident)
-                   task-groups)))
-
-(defn task-selection [{:keys [e! on-change selected activity-name]} task-groups task-types]
-  [:div {:style {:max-height "70vh" :overflow-y :scroll}}
-   (mapc (fn [g]
-           [:div
-            [typography/Heading2 {:style {:font-variant :all-small-caps
-                                          :font-weight :bold}}
-             (tr-enum g)]
-            [:ul
-             (mapc (fn [{id :db/ident :as t}]
-                     [:div
-                      [select/checkbox {:label (tr-enum t)
-                                        :value (boolean (selected [(:db/ident g) id]))
-                                        :on-change #(on-change
-                                                      (cu/toggle selected [(:db/ident g) id]))}]])
-                   (filter #(= (:db/ident g) (:enum/valid-for %)) task-types))]])
-         (task-groups-for-activity activity-name task-groups))])
-
-(defn- task-groups-and-tasks [{e! :e! :as opts} task-groups]
-  [select/with-enum-values {:e! e! :attribute :task/type}
-   [task-selection opts task-groups]])
+            [teet.ui.util :as util :refer [mapc]]
+            [teet.user.user-model :as user-model]
+            [teet.util.collection :as cu]))
 
 (defn create-activity-form [e! activity lifecycle-type {:keys [max-date min-date]}]
   [form/form2 {:e! e!
@@ -81,11 +55,14 @@
     [Grid {:item true :xs 8}
      [select/with-enum-values {:e! e!
                                :attribute :task/group}
-      [task-groups-and-tasks {:e! e!
-                              :on-change #(e! (activity-controller/->UpdateActivityForm
-                                               {:selected-tasks %}))
-                              :activity-name (:activity/name activity)
-                              :selected (or (:selected-tasks activity) #{})}]]]
+      [task-view/task-groups-and-tasks {:e! e!
+                                        :on-change-selected #(e! (activity-controller/->UpdateActivityForm
+                                                                  {:selected-tasks %}))
+                                        :on-change-sent #(e! (activity-controller/->UpdateActivityForm
+                                                              {:sent-tasks %}))
+                                        :activity-name (:activity/name activity)
+                                        :selected (or (:selected-tasks activity) #{})
+                                        :sent-to-thk (or (:sent-tasks activity) #{})}]]]
 
     [Grid {:item true :xs 12}
      [:div {:style {:display :flex :justify-content :flex-end}}

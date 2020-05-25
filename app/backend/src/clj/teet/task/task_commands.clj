@@ -43,10 +43,7 @@
 (defn- valid-thk-send? [db {:task/keys [send-to-thk? type]}]
   (boolean
    (or (not send-to-thk?)
-       (ffirst (d/q '[:find ?thk-type
-                      :where [?t :thk/task-type ?thk-type]
-                      :in $ ?t]
-                    db type)))))
+       (task-db/task-type-can-be-sent-to-thk? db type))))
 
 (defn- new? [{id :db/id}]
   (string? id))

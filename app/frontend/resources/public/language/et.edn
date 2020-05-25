@@ -154,6 +154,7 @@
   :task.type/purchase-agreements "Lepingute sõlmimine maaomanikega",
   :task.type/environmental-impact-assessment
   "Keskkonnamõju hinnang (KMH)",
+  :activity.status/in-preparation "Valmistamisel",
   :document.sub-category/geological-basis "Geoalus",
   :task.group/design-reports "Projekti väljundid",
   :activity.name/land-acquisition "Maade omandamine",
@@ -404,6 +405,7 @@
   :comments-resolved "Märkus edukalt lahendatud",
   :comment-edited "Kommentaar edukalt muudetud",
   :comment-deleted "Kommentaar edukalt kustutatud",
+  :activity-created "Tegevus loodi edukalt",
   :permission-revoked "Luba tühistati edukalt",
   :task-created "Ülesanne edukalt lisatud",
   :comment-status-changed "Kommentaari staatus edukalt muudetud",

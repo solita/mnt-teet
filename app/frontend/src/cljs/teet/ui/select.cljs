@@ -327,10 +327,9 @@
                              :value value
                              :control (r/as-element [Radio {:value value}])}]))]]))
 
-(defn checkbox [{:keys [value on-change label]}]
+(defn checkbox [{:keys [value on-change label label-placement] :or {label-placement :end}}]
   [FormControlLabel {:label label
-                     :label-placement :start
+                     :label-placement label-placement
                      :control (r/as-element [Checkbox {:checked (boolean value)
-                                                       :size :small
                                                        :on-change #(let [checked? (-> % .-target .-checked)]
                                                                      (on-change checked?))}])}])
