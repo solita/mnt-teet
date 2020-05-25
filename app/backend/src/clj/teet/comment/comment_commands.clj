@@ -85,36 +85,63 @@
       :comment.status/untracked)
     :comment.status/untracked))
 
+(defn mentioned-user-ids
+  [db mentions]
+  (into #{}
+        (map (comp :db/id first))
+
+        (d/q '[:find (pull ?e [:db/id])
+           :in $ [?e ...]]
+         db
+         (map user-model/user-ref mentions))))
+
 (defcommand :comment/create
   {:doc "Create a new comment and add it to an entity"
    :context {:keys [db user]}
-   :payload {:keys [entity-id entity-type comment files visibility track?]}
+   :payload {:keys [entity-id entity-type comment files visibility track? mentions] :as payload}
    :project-id (project-db/entity-project-id db entity-type entity-id)
    :authorization {:project/write-comments {:db/id entity-id}}
    :transact
-   (into [(merge {:db/id entity-id
-                  (comment-model/comments-attribute-for-entity-type entity-type)
-                  [(merge {:db/id "new-comment"
-                           :comment/author [:user/id (:user/id user)]
-                           :comment/comment comment
-                           ;; TODO: Can external partners set visibility?
-                           :comment/visibility visibility
-                           :comment/timestamp (Date.)
-                           :comment/status (comment-status user
-                                                           (project-db/entity-project-id db entity-type entity-id)
-                                                           track?)}
-                          (creation-meta user)
-                          (when (seq files)
-                            {:comment/files (validate-files db user files)}))]})]
-         (map #(notification-db/notification-tx
-                {:from user
-                 :to %
-                 :type :notification.type/comment-created
-                 :target "new-comment"
-                 :project (project-db/entity-project-id db entity-type entity-id)}))
-         (participants db entity-type entity-id
-                       (= visibility :comment.visibility/internal)
-                       user))})
+   (let [mentioned-ids (mentioned-user-ids db mentions)
+         project-id (project-db/entity-project-id db entity-type entity-id)]
+     (into [(merge {:db/id entity-id
+                    (comment-model/comments-attribute-for-entity-type entity-type)
+                    [(merge {:db/id "new-comment"
+                             :comment/author [:user/id (:user/id user)]
+                             :comment/comment comment
+                             ;; TODO: Can external partners set visibility?
+                             :comment/visibility visibility
+                             :comment/mentions (mapv (fn [mention]
+                                                       [:user/id (:user/id mention)])
+                                                     mentions)
+                             :comment/timestamp (Date.)
+                             :comment/status (comment-status user
+                                                             (project-db/entity-project-id db entity-type entity-id)
+                                                             track?)}
+                            (creation-meta user)
+                            (when (seq files)
+                              {:comment/files (validate-files db user files)}))]})]
+           (concat
+             ;; Comment mention notification for mentioned users
+             (map #(notification-db/notification-tx
+                     {:from user
+                      :to %
+                      :type :notification.type/comment-mention
+                      :target "new-comment"
+                      :project project-id})
+                  mentioned-ids)
+
+             ;; Comment creation notification for participants except mentioned ones
+             (map #(notification-db/notification-tx
+                     {:from user
+                      :to %
+                      :type :notification.type/comment-created
+                      :target "new-comment"
+                      :project project-id})
+                  (set/difference (participants db entity-type entity-id
+                                                (= visibility :comment.visibility/internal)
+                                                user)
+                                  mentioned-ids)))))})
 
 (defn- comment-parent-entity [db comment-id]
   (if-let [file-id (ffirst
@@ -161,17 +188,34 @@
   {:doc "Update existing comment"
    :context {:keys [db user]}
    :payload {comment-id :db/id comment :comment/comment files :comment/files
-             visibility :comment/visibility}
+             visibility :comment/visibility mentions :comment/mentions}
    :project-id (get-project-id-of-comment db comment-id)
    :authorization {:project/edit-comments {:db/id comment-id}}
-   :transact (into [(merge {:db/id comment-id
-                            :comment/comment comment
-                            :comment/visibility visibility}
-                           (modification-meta user))]
-                   (update-files user
+   :transact
+
+   (let [incoming-mentions (mentioned-user-ids db mentions)
+         old-mentions (into #{}
+                            (map :db/id (:comment/mentions (d/pull db '[:comment/mentions] comment-id))))
+         un-mentioned (set/difference old-mentions incoming-mentions)
+         new-mentions (set/difference incoming-mentions old-mentions)]
+     (into [(merge {:db/id comment-id
+                    :comment/comment comment
+                    :comment/visibility visibility
+                    :comment/mentions (vec new-mentions)}
+                   (modification-meta user))]
+           (concat (update-files user
                                  comment-id
                                  (set files)
-                                 (files-in-db db comment-id)))})
+                                 (files-in-db db comment-id))
+                   (map #(notification-db/notification-tx
+                           {:from user
+                            :to %
+                            :type :notification.type/comment-mention
+                            :target comment-id
+                            :project (get-project-id-of-comment db comment-id)})
+                        new-mentions)
+                   (for [removed-mention un-mentioned]
+                     [:db/retract comment-id :comment/mentions removed-mention]))))})
 
 (defcommand :comment/delete-comment
   {:doc "Delete existing comment"

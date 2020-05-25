@@ -23,7 +23,7 @@
                      :activity (tu/->db-id "p1-lc1-act1")
                      :task {:task/group :task.group/land-purchase
                             :task/assignee {:user/id tu/external-consultant-id}
-                            :task/type :task.type/allotment-plan}}
+                            :task/type :task.type/property-valuation}}
                     :task-id)
 
 

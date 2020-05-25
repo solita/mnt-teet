@@ -1,13 +1,14 @@
 (ns teet.activity.activity-commands
-  (:require [teet.activity.activity-model :as activity-model]
-            [teet.db-api.core :as db-api :refer [defcommand]]
-            [teet.meta.meta-model :as meta-model]
-            [teet.util.datomic :as du]
-            [teet.project.project-db :as project-db]
-            [teet.notification.notification-db :as notification-db]
+  (:require [clojure.spec.alpha :as s]
             [datomic.client.api :as d]
             [teet.activity.activity-db :as activity-db]
-            [clojure.spec.alpha :as s])
+            [teet.activity.activity-model :as activity-model]
+            [teet.db-api.core :as db-api :refer [defcommand]]
+            [teet.meta.meta-model :as meta-model]
+            [teet.notification.notification-db :as notification-db]
+            [teet.project.project-db :as project-db]
+            [teet.task.task-db :as task-db]
+            [teet.util.datomic :as du])
   (:import (java.util Date)))
 
 (defn valid-activity-name?
@@ -42,9 +43,11 @@
                     lifecycle-id
                     (Date.))))))
 
-(defn- keyword-pair? [kw-pair]
-  (and (= (count kw-pair) 2)
-       (every? keyword? kw-pair)))
+(defn- valid-task-triple? [[t-group t-type send-to-thk? :as task-triple]]
+  (and (= (count task-triple) 3)
+       (keyword? t-group)
+       (keyword? t-type)
+       (boolean? send-to-thk?)))
 
 (defn- valid-task-types? [db tasks]
   (let [task-keywords (into #{}
@@ -61,11 +64,19 @@
   (every? (get activity-model/activity-name->task-groups activity-name #{})
           (map first tasks)))
 
+(defn- valid-tasks-sent-to-thk? [db tasks]
+  (->> tasks
+       (filter (fn [[_ _ sent-to-thk?]]
+                 sent-to-thk?))
+       (map second)
+       (task-db/task-types-can-be-sent-to-thk? db)))
+
 (defn valid-tasks? [db activity-name tasks]
   (or (empty? tasks)
-      (and (every? keyword-pair? tasks)
+      (and (every? valid-task-triple? tasks)
            (valid-task-types? db tasks)
-           (valid-task-groups-for-activity? activity-name tasks))))
+           (valid-task-groups-for-activity? activity-name tasks)
+           (valid-tasks-sent-to-thk? db tasks))))
 
 (defn valid-activity-dates?
   [db lifecycle-id {:activity/keys [estimated-start-date estimated-end-date]}]
@@ -102,7 +113,7 @@
                 (when (seq tasks)
                   {:activity/tasks
                    (vec
-                    (for [[task-group task-type] tasks]
+                    (for [[task-group task-type send-to-thk?] tasks]
                       (merge {:db/id (str "NEW-TASK-"
                                           (name task-group) "-"
                                           (name task-type))
@@ -110,7 +121,8 @@
                               :task/estimated-start-date (:activity/estimated-start-date activity)
                               :task/status :task.status/not-started
                               :task/group task-group
-                              :task/type task-type}
+                              :task/type task-type
+                              :task/send-to-thk? send-to-thk?}
                              (meta-model/creation-meta user))))})
                 (meta-model/creation-meta user))
               {:db/id lifecycle-id

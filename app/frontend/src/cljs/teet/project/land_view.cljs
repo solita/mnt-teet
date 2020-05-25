@@ -513,7 +513,7 @@
              related-estate-count (count (:land/related-estate-ids project))]
          [:div
           [:div {:style {:margin-top "1rem"}
-                 :class (<class common-styles/heading-and-button-style)}
+                 :class (<class common-styles/heading-and-action-style)}
            [typography/Heading2 (tr [:project :cadastral-units-tab])]
            [buttons/button-secondary {:href (url/set-query-param :configure "cadastral-units")}
             (tr [:buttons :edit])]]

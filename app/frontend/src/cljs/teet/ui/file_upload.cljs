@@ -9,7 +9,8 @@
             [teet.ui.typography :refer [Heading1 SectionHeading]]
             [teet.ui.format :as format]
             [teet.file.file-model :as file-model]
-            teet.file.file-spec))
+            teet.file.file-spec
+            [teet.ui.buttons :as buttons]))
 
 (defn- page-overlay []
   {;; Cover the whole page
@@ -125,12 +126,10 @@
                :on-drop on-drop
                :drop-message drop-message
                :multiple? multiple?}
-   (into [Button (merge {:component :span
-                         :variant :contained
-                         :disable-ripple true
-                         :color (or color :primary)
-                         :start-icon (r/as-element (or icon [icons/content-add]))}
-                        button-attributes)]
+   (into [buttons/link-button (merge {:component :span
+                                      :variant :contained
+                                      :style {:cursor :pointer}}
+                                     button-attributes)]
          children)])
 
 (defn- files-field-style [error]

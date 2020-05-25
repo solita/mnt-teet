@@ -48,7 +48,7 @@
   (let [project-name (project-model/get-column project :thk.project/project-name)
         [start-km end-km] (project-model/get-column project :thk.project/effective-km-range)]
     [:div
-     [:div {:class (<class common-styles/heading-and-button-style)}
+     [:div {:class (<class common-styles/heading-and-action-style)}
       [typography/Heading2 project-name]
       [buttons/button-secondary {:size :small
                                  :on-click (e! project-controller/->OpenEditDetailsDialog)}
@@ -255,7 +255,7 @@
   [:div
    [people-modal e! project query]
    [:div
-    [:div {:class (<class common-styles/heading-and-button-style)}
+    [:div {:class (<class common-styles/heading-and-action-style)}
      [typography/Heading2 (tr [:people-tab :managers])]
      [when-authorized :thk.project/update
       project
@@ -269,7 +269,7 @@
                             {:primary-text (str (:user/given-name owner) " " (:user/family-name owner))
                              :secondary-text (tr [:roles :owner])}]]]
    [:div
-    [:div {:class (<class common-styles/heading-and-button-style)}
+    [:div {:class (<class common-styles/heading-and-action-style)}
      [typography/Heading2 (tr [:people-tab :other-users])]
      [when-authorized :thk.project/add-permission
       project
@@ -290,7 +290,7 @@
 (defn restriction-tab
   [_e! {{project-id :project} :params :as _app} project]
   [:div
-   [:div {:class (<class common-styles/heading-and-button-style)}
+   [:div {:class (<class common-styles/heading-and-action-style)}
     [typography/Heading2 "Restrictions"]
     [buttons/button-secondary {:component "a"
                                :href (str "/#/projects/" project-id "?tab=restrictions&configure=restrictions")

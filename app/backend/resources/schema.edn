@@ -769,7 +769,7 @@
           {:db/ident :estate-compensation.reason/other
            :enum/attribute :estate-compensation/reason}]]}
 
- ;; TEET-539 Retract acceptanses as a duplicate to No-objection co-ordination
+ ;; TEET-539 Retract acceptances as a duplicate to No-objection co-ordination
  {:db/ident :migration/retract-acceptances
   :txes [[[:db/retractEntity [:db/ident :task.type/acceptances]]]]}
 
@@ -872,7 +872,6 @@
            :db/cardinality :db.cardinality/many}
           {:db/ident :notification.type/comment-mention :enum/attribute :notification/type}]]}
 
-
  {:db/ident :migration/estate-procedure4
   :txes [[;; many-ref off an estate-procedure, like earlier land-exchange, but renamed due to broadened scope
           {:db/doc "Refers to priced-area entities"
@@ -888,4 +887,21 @@
            :db/cardinality :db.cardinality/one}
           {:db/ident :priced-area/price-per-sqm
            :db/valueType :db.type/bigdec
-           :db/cardinality :db.cardinality/one}]]}]
+           :db/cardinality :db.cardinality/one}]]}
+ {:db/ident :migration/update-task-type-information
+  :txes [[;; Study
+          {:db/ident :task.type/study-other
+           :enum/attribute :task/type
+           :enum/valid-for :task.group/study
+           :thk/task-type :thk.task-type/study
+           :filename/code "ZZ"}
+          {:db/ident :task.type/data
+           :filename/code "AD"}
+
+          ;; Design
+          [:db/retractEntity [:db/ident :task.type/buildings]]
+
+          ;; Land acquisition
+          {:db/ident :task.type/state-estate-registry :filename/code "RR"}
+          [:db/retractEntity [:db/ident :task.type/cleanup]]
+          [:db/retractEntity [:db/ident :task.type/allotment-plan]]]]}]

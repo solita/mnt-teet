@@ -257,6 +257,15 @@
     (gobj/getValueByKeys value "target" "value")
     value))
 
+(defn remove-from-many-at-index
+  [e! on-change form field idx]
+  (e! (on-change
+        (update form
+                field
+                (fn [items]
+                  (into (subvec items 0 idx)
+                        (subvec items (inc idx))))))))
+
 (defn- many-container [{:keys [attribute before after atleast-once?]} body
                        {update-parent-fn :update-attribute-fn
                         form-value :value :as form-ctx}]
@@ -413,17 +422,19 @@
        (->> fields
             (remove (partial hide-field? step))
             (map (fn [form-field]
-                   (let [{:keys [xs lg md adornment container-class] :as field-meta}
+                   (let [{:keys [xs lg md adornment container-class attribute] :as field-meta}
                          (meta form-field)]
-                     [Grid (merge {:item true :xs (or xs 12)}
-                                  (when lg
-                                    {:lg lg})
-                                  (when md
-                                    {:md md}))
-                      [:div {:class container-class}
-                       [field field-meta form-field]
-                       (when adornment
-                         adornment)]])))))]]
+                     (with-meta
+                       [Grid (merge {:item true :xs (or xs 12)}
+                                    (when lg
+                                      {:lg lg})
+                                    (when md
+                                      {:md md}))
+                        [:div {:class container-class}
+                         [field field-meta form-field]
+                         (when adornment
+                           adornment)]]
+                       {:key (str attribute)}))))))]]
    (when (and footer
               (or cancel-event save-event))
      [footer2 footer])])

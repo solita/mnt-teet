@@ -191,7 +191,7 @@
                        :activity {:activity/name :activity.name/detailed-design
                                   :activity/estimated-start-date #inst "2020-04-13T21:00:00.000-00:00"
                                   :activity/estimated-end-date #inst "2021-04-19T20:00:00.000-00:00"}
-                       :tasks [[:task.group/design-reports :task.type/calculation]]})
+                       :tasks [[:task.group/design-reports :task.type/calculation false]]})
     [:tempids "new-activity"]))
 
   (is (some? (tu/get-data :act-id)) "new activity was created")

@@ -14,7 +14,7 @@
 
 (defrecord UpdateFileNewCommentForm [form-data])            ; update new comment on selected file
 (defrecord UpdateNewCommentForm [form-data])                ; update new comment form data
-(defrecord CommentOnEntity [entity-type entity-id comment files visibility track?])
+(defrecord CommentOnEntity [entity-type entity-id comment files visibility track? mentions])
 (defrecord ClearCommentField [])
 (defrecord CommentAddSuccess [entity-id])
 
@@ -57,18 +57,20 @@
                        documents))))
 
   CommentOnEntity
-  (process-event [{:keys [entity-type entity-id comment files visibility track?]} app]
+  (process-event [{:keys [entity-type entity-id comment files visibility track? mentions]} app]
     (assert (some? visibility))
-    (t/fx app
-          {:tuck.effect/type :command!
-           :command :comment/create
-           :payload {:entity-id entity-id
-                     :entity-type entity-type
-                     :comment comment
-                     :visibility visibility
-                     :files (mapv :db/id files)
-                     :track? track?}
-           :result-event (partial ->CommentAddSuccess entity-id)}))
+    (let [mentions (vec (keep :user mentions))]
+      (t/fx app
+            {:tuck.effect/type :command!
+             :command :comment/create
+             :payload {:entity-id entity-id
+                       :entity-type entity-type
+                       :comment comment
+                       :visibility visibility
+                       :files (mapv :db/id files)
+                       :track? track?
+                       :mentions mentions}
+             :result-event (partial ->CommentAddSuccess entity-id)})))
 
   CommentAddSuccess
   (process-event [{entity-id :entity-id} app]
@@ -104,6 +106,10 @@
                (merge {:comment/files []}
                       (select-keys comment-entity
                                    [:db/id :comment/comment :comment/visibility :comment/files])
+                      {:comment/mentions (mapv
+                                           (fn [mention]
+                                             {:user mention})
+                                           (:comment/mentions comment-entity))}
                       {:comment/commented-entity commented-entity}))))
 
   CancelCommentEdit
@@ -123,15 +129,16 @@
   SaveEditCommentForm
   (process-event [_ {edit-comment-data :edit-comment-data
                      stepper :stepper :as app}]
-    (t/fx app
-          (merge
-           {:tuck.effect/type :command!
-            :result-event ->SaveEditCommentSuccess
-            :command :comment/update
-            :payload (-> edit-comment-data
-                         (select-keys [:db/id :comment/comment :comment/visibility :comment/files])
-                         (update :comment/files (partial map :db/id)))
-            :success-message (tr [:notifications :comment-edited])})))
+    (let [mentions (vec (keep :user (:comment/mentions edit-comment-data)))]
+      (t/fx app
+            {:tuck.effect/type :command!
+             :result-event ->SaveEditCommentSuccess
+             :command :comment/update
+             :payload (-> edit-comment-data
+                          (select-keys [:db/id :comment/comment :comment/visibility :comment/files])
+                          (merge {:comment/mentions mentions})
+                          (update :comment/files (partial map :db/id)))
+             :success-message (tr [:notifications :comment-edited])})))
 
   SaveEditCommentSuccess
   (process-event [_ app]

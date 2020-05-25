@@ -100,7 +100,8 @@
 
       (:notification.type/comment-created
        :notification.type/comment-resolved
-       :notification.type/comment-unresolved)
+       :notification.type/comment-unresolved
+       :notification.type/comment-mention)
       (comment-navigation-info db (:db/id target))
 
       :notification.type/project-manager-assigned
