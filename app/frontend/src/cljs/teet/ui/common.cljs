@@ -226,3 +226,47 @@
 
 (defn wide-display? []
   (>= @window-width wide-display-cutoff-width))
+
+
+(defn estate-group-style
+  []
+  ^{:pseudo {:first-of-type {:border-top "1px solid white"}}}
+  {:border-left "1px solid white"})
+
+(defn hierarchical-heading-container
+  [bg-color font-color]
+  ^{:pseudo {:before {:content "''"
+                      :width 0
+                      :height 0
+                      :border-bottom "15px solid transparent"
+                      :border-left (str "15px solid " bg-color)
+                      :position :absolute
+                      :bottom "-15px"
+                      :transform "rotate(90deg)"
+                      :left 0}}}
+  {:background-color bg-color
+   :position :relative
+   :color font-color})
+
+(defn hierarchical-child-container
+  []
+  {:display :flex
+   :flex-direction :column
+   :margin-left "15px"})
+
+(defn hierarchical-container
+  [{:keys [heading-color heading-text-color heading-content children]
+    :or {heading-color theme-colors/gray-lighter
+         heading-text-color :inherit}}]
+  [:<>
+   [:div {:class (<class hierarchical-heading-container heading-color heading-text-color)}
+    heading-content]
+   [:div {:class (<class hierarchical-child-container)}
+    (doall
+      (map
+        (fn [child]
+          (with-meta
+            [:div {:class (<class estate-group-style)}
+             child]
+            (meta child)))
+        children))]])
