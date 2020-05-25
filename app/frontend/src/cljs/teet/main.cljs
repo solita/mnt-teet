@@ -7,6 +7,7 @@
             [postgrest-ui.elements]
             [postgrest-ui.impl.style.material]
             [reagent.core :as r]
+            reagent.dom
             [teet.app-state :as app-state]
             [teet.authorization.authorization-check :as authorization-check]
             [teet.localization :as localization]
@@ -86,8 +87,8 @@
   (routes/start!)
   (postgrest-ui.elements/set-default-style! :material)
   (localization/load-initial-language!
-    #(r/render [t/tuck app-state/app #'main-view]
-               (.getElementById js/document "teet-frontend"))))
+   #(reagent.dom/render [t/tuck app-state/app #'main-view]
+                        (.getElementById js/document "teet-frontend"))))
 
 (defn ^:after-load after-load []
-  (r/force-update-all))
+  (reagent.dom/force-update-all))
