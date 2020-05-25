@@ -97,6 +97,19 @@
                  (cu/update-in-if-exists [:priced-area/price-per-sqm] bigdec)))))
         priced-areas))
 
+(defn new-land-exchange-txs
+  [land-exchanges]
+  (into []
+        (keep-indexed
+         (fn [i exchange]
+           (when (seq exchange)
+             (-> exchange
+                 (select-keys (su/keys-of :estate-procedure/land-exchange))
+                 (maybe-add-db-id (str "new-exchange-" i))
+                 (cu/update-in-if-exists [:land-exchange/exchange] bigdec)
+                 (cu/update-in-if-exists [:land-exchange/price-per-sqm] bigdec)))))
+        land-exchanges))
+
 ;; TEET-432p2 plan/todo:
 ;; 1. rename keys, fn names, etc land-exchange -> priced-area in land-commands ns [x]
 ;;   1.5 ensure that besides creation, update and deletion (if applicable) are covered [x]
@@ -105,17 +118,27 @@
 ;; 2. add keys also to acq. negotiations and property-rights  cases in land-commands ns [x] 
 ;; 3. schema.edn - land-exchange -> priced-area [x]
 ;; 4. frontend land-controller and land-view - land-exchange -> priced-area and ensure prop rights/nagotiations case
-;;    is accounted for [ ]
-;;     work out field title (change from land exchanges) [ ]
+;;    is accounted for [x]
+;; 4b work out field title (change from land exchanges) [ ]
 ;;     fix translations for area/price fields (by renaming tr keys in localization spreadsheet)
-;; 5 update land command param specs in land-specs ns
+;; 5 update land command param specs in land-specs ns [x]
 ;; 6. manually test [ ]
 ;;    - debug why after saving form has blank area fields but POS# field contains saved data still [ ]
 ;;      - :estate-procedure/priced-areas key has wrong data under it, should have the price-per-m2 etc info
 ;;      - land-db ns wasn't updated
 ;;    - debug why we get 2 sequential area form field sets
-;; 7. check tests
-;; 
+;;    - debug "tempid 'new-area-1' used only as value in transaction"
+;; 7. check unit tests
+;;
+;; - land exchange case: area to be taken entered by the user in cadastral view, in estate view enter data the area given back in the return. cadastral view shows sum what owner gets paid. estate vew nr is deduced.
+;;   modal (coming later) will show unit valuations vs compensation, needs per unit info associated in land-exchanges
+;; -> revised plan:
+;; - keep land-exchange in data model as special case, add priced-area just for prop rights / negotiations cases
+;; 8. land-commands ns: restore land-exchange versions of functions and keys alongside priced-area  [x]
+;; 9. check l-e vs property-rights & neg. cases in land-commands [x]
+;;   - updated proc type options: :estate-procedure.type/property-trading -> land-exchanges
+;; 10. merge from master
+
 (defn new-process-fees-tx
   [process-fees]
   (vec
@@ -132,7 +155,8 @@
    [:estate-procedure/motivation-bonus bigdec]
    [:estate-procedure/compensations new-compensations-tx]
    [:estate-procedure/third-party-compensations new-compensations-tx]
-   [:estate-procedure/priced-areas new-priced-area-txs]])
+   [:estate-procedure/priced-areas new-priced-area-txs]
+   [:estate-procedure/land-exchanges new-land-exchange-txs]])
 
 (def common-procedure-keys
   [:estate-procedure/pos :estate-procedure/type :estate-procedure/estate-id])
@@ -162,7 +186,7 @@
            :estate-procedure/motivation-bonus :estate-procedure/third-party-compensations]}
 
    :estate-procedure.type/property-trading
-   {:keys [:estate-procedure/pos :estate-procedure/priced-areas
+   {:keys [:estate-procedure/pos :estate-procedure/land-exchanges
            :estate-procedure/third-party-compensations]}})
 
 (defn estate-procedure-tx
