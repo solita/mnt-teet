@@ -413,7 +413,6 @@
                                   :show-empty-selection? false
                                   :show-label? false :class (<class visibility-selection-style)}]]]
            [:div {:class (<class form-field-spacer)}
-            (pr-str @comment-form)
             [form/field :comment/comment
              [MentionsInput {}
               [Mention {:trigger "@"
