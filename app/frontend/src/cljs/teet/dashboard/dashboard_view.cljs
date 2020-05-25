@@ -22,7 +22,8 @@
             [teet.common.common-styles :as common-styles]
             [teet.ui.common :as common]
             [alandipert.storage-atom :refer [local-storage]]
-            [teet.theme.theme-colors :as theme-colors]))
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.activity.activity-view :as activity-view]))
 
 (defonce open-projects-atom (local-storage (r/atom #{}) "dashboard-open-projects"))
 
@@ -38,26 +39,24 @@
 
 (defn- section [label content]
   [:div {:class (<class section-style)}
-   [typography/Heading2 {:style {:margin-bottom "1rem"}} label]
+   [typography/Heading2 {:style {:margin-bottom "1rem"
+                                 :font-variant :all-petite-caps}} label]
    content])
 
-(defn- task-row [{:task/keys [group type status estimated-end-date]
+(defn- task-row [{:task/keys [group type status estimated-start-date estimated-end-date]
                   id :db/id :as t}]
   [:<>
    (url/consume-navigation-info
     (fn [{params :params}]
       [:div {:class (<class common-styles/flex-row)}
-       [:div {:class (<class common-styles/flex-table-column-style 23)}
-        (tr-enum status)]
-       [:div {:class (<class common-styles/flex-table-column-style 37)}
-        (tr-enum type)]
-       [:div {:class (<class common-styles/flex-table-column-style 20)}
+       [:div {:class (<class common-styles/flex-table-column-style 30)}
+        (activity-view/task-name-and-status t)]
+       [:div {:class (<class common-styles/flex-table-column-style 30)}
+        (fmt/date estimated-start-date)
+        " \u2013 "
         (fmt/date estimated-end-date)]
-       [:div {:class (<class common-styles/flex-table-column-style 20)}
-        [IconButton {:element "a"
-                     :color :primary
-                     :href (url/activity-task (merge params {:task (str id)}))}
-         [icons/action-arrow-right-alt]]]]))])
+       [:div {:class (<class common-styles/flex-table-column-style 40)}
+        (tr-enum status)]]))])
 
 (defn- task-rows-by-group [[group tasks]]
   [:<>
@@ -73,30 +72,28 @@
     {:params {:project (:thk.project/id project)
               :activity (str id)}}
     [:<>
-     [itemlist/ItemList {:title (tr-enum name)
-                         :variant :tertiary
-                         :subtitle (str (fmt/date estimated-start-date)
-                                        "\u2013"
-                                        (fmt/date estimated-end-date))}
-      [itemlist/Item {:label (tr [:fields :activity/status])}
-       (tr-enum status)]
-      [:<>
-       (mapc task-rows-by-group
-             (sort-by (comp task-model/task-group-order :db/ident first)
-                      (group-by :task/group tasks)))]]
+     [:div {:style {:display :flex}}
+      [:b (tr-enum name)]
+      [:div {:style {:margin-left "0.5rem"}}
+        (str (fmt/date estimated-start-date)
+             "\u2013"
+             (fmt/date estimated-end-date))]]
+     [:div (tr-enum status)]
+     (mapc task-rows-by-group
+           (sort-by (comp task-model/task-group-order :db/ident first)
+                    (group-by :task/group tasks)))
      [Divider {:style {:margin "2rem 0"}}]])])
 
 (defn- lifecycle-info
   [project {:thk.lifecycle/keys [type activities estimated-start-date estimated-end-date] :as _lifecycle}]
   [:div {:style {:margin-bottom "2rem"}}
    [:div {:style {:margin-bottom "1rem"
-                  :display :flex
-                  :justify-content :space-between
-                  :border-bottom "2px solid black"}}
+                  :display :flex}}
     [typography/Heading3 (tr-enum type)]
-    [typography/BoldGreyText (str (fmt/date estimated-start-date)
-                                  "\u2013"
-                                  (fmt/date estimated-end-date))]]
+    [typography/GreyText {:style {:margin-left "0.5rem"}}
+     (str (fmt/date estimated-start-date)
+          "\u2013"
+          (fmt/date estimated-end-date))]]
    (mapc (r/partial activity-info project) activities)])
 
 (defn project-card [{:keys [e! open-projects toggle-project]}
@@ -121,18 +118,17 @@
        [:div {:class (<class project-card-subheader-style)}
         (str (fmt/date (:thk.project/estimated-start-date project))
              "\u2013"
-             (fmt/date (:thk.project/estimated-end-date project)))]
-]
+             (fmt/date (:thk.project/estimated-end-date project)))]]
       :children
       (list
        ^{:key "project-info"}
        [Collapse {:in open?}
-        [:<>
+        [:div {:style {:background-color theme-colors/gray-lightest}}
          [section
           (tr [:dashboard :notifications])
           (if (empty? notifications)
             [:span {:class (<class common-styles/gray-text)}
-             "You have no notifications related to this project"]
+             (tr [:dashboard :no-notifications-for-project])]
             (doall
              (for [{:notification/keys [type]
                     :meta/keys [created-at]
@@ -141,7 +137,6 @@
                [:div
                 [buttons/link-button {:on-click #(e! (notification-controller/->NavigateTo id))}
                  (tr-enum type) " " (fmt/date-time created-at)]])))]
-
 
          [section
           (tr [:dashboard :activities-and-tasks])

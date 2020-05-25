@@ -8,7 +8,8 @@
             [teet.project.project-db :as project-db]
             [teet.util.collection :as cu]
             [teet.log :as log]
-            [teet.project.project-model :as project-model]))
+            [teet.project.project-model :as project-model]
+            [teet.project.task-model :as task-model]))
 
 
 (defn- user-tasks
@@ -22,13 +23,14 @@
             lifecycle (get-in activity [:thk.lifecycle/_activities 0])
             project (get-in lifecycle [:thk.project/_lifecycles 0])]
         (when project
-          {:task (dissoc task :activity/_tasks)
+          {:task (task-model/task-with-status (dissoc task :activity/_tasks))
            :activity-id (:db/id activity)
            :lifecycle-id (:db/id lifecycle)
            :project-id (:db/id project)}))))
    (d/q '[:find (pull ?e [:db/id :task/type :task/group
                           :task/estimated-start-date :task/estimated-end-date
                           :task/actual-start-date :task/actual-end-date
+                          :task/assignee
                           :task/status
                           {:activity/_tasks
                            [:db/id
