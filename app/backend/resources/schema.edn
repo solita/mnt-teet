@@ -870,4 +870,22 @@
            :db/doc "Refers to users that need to be notified of this comment"
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/many}
-          {:db/ident :notification.type/comment-mention :enum/attribute :notification/type}]]}]
+          {:db/ident :notification.type/comment-mention :enum/attribute :notification/type}]]}
+
+
+ {:db/ident :migration/estate-procedure4
+  :txes [[;; many-ref off an estate-procedure, like earlier land-exchange, but renamed due to broadened scope
+          {:db/doc "Refers to priced-area entities"
+           :db/ident :estate-procedure/priced-areas
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many}
+          
+          {:db/ident :priced-area/cadastral-unit-id
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :priced-area/area
+           :db/valueType :db.type/bigdec
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :priced-area/price-per-sqm
+           :db/valueType :db.type/bigdec
+           :db/cardinality :db.cardinality/one}]]}]
