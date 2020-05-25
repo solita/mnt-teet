@@ -46,6 +46,13 @@
 (defrecord StartReview []) ; change status to in review
 (defrecord Review [result]) ; review results
 
+;; Add multiple tasks
+(defrecord OpenAddTasksDialog [activity-id])
+(defrecord UpdateAddTasksForm [form-data])
+(defrecord SaveAddTasksForm [])
+(defrecord SaveAddTasksResponse [response])
+
+
 (extend-protocol t/Event
   SubmitResults
   (process-event [_ {params :params :as app}]
@@ -206,7 +213,40 @@
 
   UpdateTaskForm
   (process-event [{form-data :form-data} app]
-    (update-in app [:route :project :add-task] merge form-data)))
+    (update-in app [:route :project :add-task] merge form-data))
+
+
+  OpenAddTasksDialog
+  (process-event [{activity-id :activity-id} {:keys [page params query] :as app}]
+    (-> app
+        (assoc-in [:stepper :dialog]
+                  {:type :add-tasks})
+        (assoc :add-tasks-data {:activity-id activity-id})))
+
+  UpdateAddTasksForm
+  (process-event [{form-data :form-data} app]
+    (update app :add-tasks-data merge form-data))
+
+  SaveAddTasksForm
+  (process-event [_ {:keys [add-tasks-data] :as app}]
+    (let [tasks-to-create (tasks-for-activity-name (:activity/name add-tasks-data)
+                                                   (:selected-tasks add-tasks-data)
+                                                   (:sent-tasks add-tasks-data))]
+      (t/fx app
+            {:tuck.effect/type :command!
+             ;; create/update
+             :command          :task/create-tasks
+             :payload          {:activity-id "foo"
+                                :tasks tasks-to-create
+                                :lifecycle-id (get-in app [:stepper :lifecycle])}
+             :success-message  (tr [:notifications :tasks-created])
+             :result-event     ->SaveAddTasksResponse})))
+
+  SaveAddTasksResponse
+  (process-event [{response :response} {:keys [page params query] :as app}]
+    (t/fx (-> app
+              (update :stepper dissoc :dialog))
+          common-controller/refresh-fx)))
 
 (defmethod common-controller/on-server-error :invalid-task-dates [err app]
   (let [error (-> err ex-data :error)]

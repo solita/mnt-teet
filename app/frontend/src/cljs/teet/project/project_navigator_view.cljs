@@ -18,7 +18,8 @@
             [teet.ui.breadcrumbs :as breadcrumbs]
             [teet.ui.panels :as panels]
             [teet.project.project-style :as project-style]
-            [teet.project.task-model :as task-model]))
+            [teet.project.task-model :as task-model]
+            [teet.task.task-controller :as task-controller]))
 
 (defn- svg-style
   [bottom?]
@@ -207,7 +208,7 @@
     [:div {:class (<class task-info dark-theme?)}
      [rect-button {:size :small
                    :disabled disable-buttons?
-                   :on-click (e! project-controller/->OpenTaskDialog (str activity-id))
+                   :on-click (e! project-controller/->OpenTaskDialog (str activity-id)) ;; (e! task-controller/->OpenAddTasksDialog (str activity-id))
                    :start-icon (r/as-element
                                 [icons/content-add])}
       (tr [:project :add-task])]]]])

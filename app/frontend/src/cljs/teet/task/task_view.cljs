@@ -12,6 +12,7 @@
             [teet.project.project-controller :as project-controller]
             [teet.project.project-model :as project-model]
             [teet.project.project-navigator-view :as project-navigator-view]
+            [teet.project.project-specs :as project-specs]
             [teet.project.task-model :as task-model]
             [teet.task.task-controller :as task-controller]
             teet.task.task-spec
@@ -22,7 +23,7 @@
             [teet.ui.form :as form]
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
-            [teet.ui.material-ui :refer [LinearProgress]]
+            [teet.ui.material-ui :refer [Grid LinearProgress]]
             [teet.ui.panels :as panels]
             [teet.ui.select :as select]
             [teet.ui.tabs :as tabs]
@@ -40,6 +41,7 @@
                    task-groups)))
 
 (defn- task-selection [{:keys [e! on-change-selected on-change-sent selected sent-to-thk activity-name]} task-groups task-types]
+  (cljs.pprint/pprint sent-to-thk)
   [:div {:style {:max-height "70vh" :overflow-y :scroll}}
    (mapc (fn [g]
            [:div
@@ -70,6 +72,39 @@
 (defn task-groups-and-tasks [{e! :e! :as opts} task-groups]
   [select/with-enum-values {:e! e! :attribute :task/type}
    [task-selection opts task-groups]])
+
+(defn create-tasks-form [e! tasks activity-name {:keys [max-date min-date]}]
+  [form/form2 {:e! e!
+               :value tasks
+               :on-change-event task-controller/->UpdateAddTasksForm
+               :cancel-event project-controller/->CloseDialog
+               :save-event task-controller/->SaveAddTasksForm
+               :spec ::project-specs/activity} ;; TODO: change!
+   [Grid {:container true :style {:height "90%"} :spacing 3}
+    [Grid {:item true :xs 4}
+                              ;; TODO: not activity's estimated start date
+     [form/field {:attribute [:activity/estimated-start-date :activity/estimated-end-date]}
+      [date-picker/date-range-input {:row? false
+                                     :max-date max-date
+                                     :min-date min-date
+                                     :start-label (tr [:fields :activity/estimated-start-date])
+                                     :end-label (tr [:fields :activity/estimated-end-date])}]]]
+
+    [Grid {:item true :xs 8}
+     [select/with-enum-values {:e! e!
+                               :attribute :task/group}
+      [task-groups-and-tasks {:e! e!
+                              :on-change-selected #(e! (task-controller/->UpdateAddTasksForm
+                                                        {:selected-tasks %}))
+                              :on-change-sent #(e! (task-controller/->UpdateAddTasksForm
+                                                    {:sent-tasks %}))
+                              :activity-name activity-name
+                              :selected (or (:selected-tasks tasks) #{})
+                              :sent-to-thk (or (:sent-tasks tasks) #{})}]]]
+
+    [Grid {:item true :xs 12}
+     [:div {:style {:display :flex :justify-content :flex-end}}
+      [form/footer2]]]]])
 
 (defn task-basic-info
   [e! {:task/keys [estimated-end-date assignee actual-end-date status] :as _task}]
@@ -274,9 +309,19 @@
      {:max-date (:activity/estimated-end-date activity)
       :min-date (:activity/estimated-start-date activity)}]))
 
+(defmethod project-navigator-view/project-navigator-dialog :add-tasks
+  [{:keys [e! app project]} _dialog]
+  (let [activity-id (get-in app [:params :activity])
+        activity (project-model/activity-by-id project activity-id)]
+    [create-tasks-form e!
+     (:add-tasks-data app)
+     (-> activity :activity/name :db/ident)
+     {:max-date (:activity/estimated-end-date activity)
+      :min-date (:activity/estimated-start-date activity)}]))
+
 (defmethod project-navigator-view/project-navigator-dialog :edit-task
   [{:keys [e! app project] :as _opts}  _dialog]
-  (let [activity-id (get-in app [:params :activity])
+  (let [activity-id (get-in app [:add-tasks-data :activity-id])
         activity (project-model/activity-by-id project activity-id)]
     [edit-task-form e! (:edit-task-data app) {:max-date (:activity/estimated-end-date activity)
                                               :min-date (:activity/estimated-start-date activity)}]))
