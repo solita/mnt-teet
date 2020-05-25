@@ -202,38 +202,94 @@
                                               (fn [items]
                                                 (into (subvec items 0 %)
                                                       (subvec items (inc %)))))))
-              [buttons/link-button {} "X"]]]]]
-
-        (log/debug "proc type matches area priced?" (:estate-procedure/type form-data) (land-controller/area-priced-procedure-types (:estate-procedure/type form-data)))
-        (when-let [procedure-type (land-controller/area-priced-procedure-types (:estate-procedure/type form-data))]
-          [:div
-           [form/many {:before [typography/BoldGreyText
-                                (tr [:fields :estate-procedure/priced-area])]
-                       :attribute :estate-procedure/priced-areas
-                       :atleast-once? true}
-            [Grid {:container true :spacing 3}
-             [Grid {:item true :xs 12}
-              [form/field {:attribute :priced-area/cadastral-unit-id}
-               [TextField {:hide-label? true
-                           :placeholder (tr [:land :cadastral-unit-number])}]]]
-             [Grid {:item true :xs 6}
-              [form/field {:attribute :priced-area/area}
-               [TextField {:label-element typography/BoldGreyText
-                           :type :number
-                           :placeholder 0
-                           :end-icon text-field/sqm-end-icon}]]]
-             [Grid {:item true :xs 6}
-              [form/field {:attribute :priced-area/price-per-sqm}
-               [TextField {:type :number
-                           :placeholder 0
-                           :end-icon text-field/euro-end-icon
-                           :label-element typography/BoldGreyText}]]]]]])]
+              [buttons/link-button {} "X"]]]]]]
        (form/footer2 form/form-footer)]]]))
 
 
+(defn cadastral-area-price-fields [procedure-type]  
+  
+  (let [land-exchange? (= :estate-procedure.type/property-trading procedure-type)]
+    [:div
+     (log/debug "showing cad area price fields")
+     [form/many {:before [typography/BoldGreyText
+                          (tr [:fields (if land-exchange?
+                                         :estate-procedure/land-exchange
+                                         :estate-procedure/priced-area)])]
+                 :attribute (if land-exchange?
+                              :estate-procedure/land-exchanges
+                              :estate-procedure/priced-areas)
+                 :atleast-once? true}
+      [Grid {:container true :spacing 3}
+       [Grid {:item true :xs 6}
+        [form/field {:attribute (if land-exchange?
+                                  :land-exchange/area
+                                  :priced-area/area)}
+         [TextField {:label-element typography/BoldGreyText
+                     :type :number
+                     :placeholder 0
+                     :end-icon text-field/sqm-end-icon}]]]
+       [Grid {:item true :xs 6}
+        [form/field {:attribute (if land-exchange?
+                                  :land-exchange/area
+                                  :priced-area/price-per-sqm)}
+         [TextField {:type :number
+                     :placeholder 0
+                     :end-icon text-field/euro-end-icon
+                     :label-element typography/BoldGreyText}]]]]]]))
+
 (defn cadastral-unit-form
+  ;; wip: change to form2 
   [e! {:keys [teet-id PINDALA] :as unit} quality on-change-event form-data]
-  (let [show-extra-fields? (du/enum= (:land-acquisition/impact form-data) :land-acquisition.impact/purchase-needed)]
+  (let [show-extra-fields? (du/enum= (:land-acquisition/impact form-data) :land-acquisition.impact/purchase-needed)
+        procedure-type (:estate-procedure/type form-data)]
+    [:div
+     [form/form2 {:e! e!
+                  :value form-data
+                  :on-change-event (fn [form-data]
+                                     (on-change-event teet-id form-data)) ; update-impact-form
+                  :save-event #(land-controller/->SubmitLandAcquisitionForm form-data (:teet-id unit))
+                  :spec :land-acquisition/form
+                  :cancel-event #(land-controller/->ToggleLandUnit unit)
+                  :class (<class impact-form-style)}
+      [form/field :testfield ;; doesn't show eiher, check setup above
+       [TextField {:label-element typography/BoldGreyText
+                   :type :number
+                   :placeholder 0
+                   }]]
+      [form/field :land-acquisition/impact
+       [select/select-enum {:e! e!
+                            :show-empty-selection? true
+                            :attribute :land-acquisition/impact}]]
+
+      ;; rest not converted to form2 yet:
+      (log/debug "capf" (not= :land-acquisition.impact/purchase-not-needed (:land-acquisition/impact form-data)))
+      (when (not= :land-acquisition.impact/purchase-not-needed (:land-acquisition/impact form-data))
+        (log/debug "capf yes")
+        [cadastral-area-price-fields procedure-type]
+        [select/select-enum {:e! e!
+                             :attribute :land-acquisition/status
+                             :show-empty-selection? true}])
+      (when show-extra-fields?
+        ^{:attribute :land-acquisition/pos-number :xs 6}
+        [TextField {:type :number}]
+        
+        ^{:attribute :land-acquisition/area-to-obtain
+          :adornment (let [area (:land-acquisition/area-to-obtain form-data)]
+                       [:div
+                        [:p (tr [:land :total-area] {:area PINDALA})
+                         (case quality
+                           :bad [:span {:style {:color theme-colors/red}} " !!! " (tr [:land :unreliable])]
+                           :questionable [:span {:style {:color theme-colors/orange}} " ! " (tr [:land :unreliable])]
+                           nil)]
+                        [:span (tr [:land :net-area-balance] {:area (- PINDALA area)})]])}
+        [TextField {:type :number :input-style {:width "50%"}}])]])
+  [form/footer2 impact-form-footer])
+
+#_(defn cadastral-unit-form
+  ;; wip: change to form2 
+  [e! {:keys [teet-id PINDALA] :as unit} quality on-change-event form-data]
+  (let [show-extra-fields? (du/enum= (:land-acquisition/impact form-data) :land-acquisition.impact/purchase-needed)
+        procedure-type (:estate-procedure/type form-data)]
     [:div
      [form/form {:e! e!
                  :value form-data
@@ -247,7 +303,10 @@
       ^{:attribute :land-acquisition/impact}
       [select/select-enum {:e! e!
                            :attribute :land-acquisition/impact}]
+      (log/debug "capf" (not= :land-acquisition.impact/purchase-not-needed (:land-acquisition/impact form-data)))
       (when (not= :land-acquisition.impact/purchase-not-needed (:land-acquisition/impact form-data))
+        (log/debug "capf yes")
+        (cadastral-area-price-fields procedure-type)
         ^{:attribute :land-acquisition/status}
         [select/select-enum {:e! e!
                              :attribute :land-acquisition/status
@@ -255,6 +314,7 @@
       (when show-extra-fields?
         ^{:attribute :land-acquisition/pos-number :xs 6}
         [TextField {:type :number}]
+        
         ^{:attribute :land-acquisition/area-to-obtain
           :adornment (let [area (:land-acquisition/area-to-obtain form-data)]
                        [:div
@@ -265,6 +325,8 @@
                            nil)]
                         [:span (tr [:land :net-area-balance] {:area (- PINDALA area)})]])}
         [TextField {:type :number :input-style {:width "50%"}}])]]))
+
+
 
 (defn acquisition-impact-status
   [impact status]

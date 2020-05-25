@@ -83,6 +83,12 @@
 
 (def owner-type-can-receive-process-fee #{"Füüsiline isik"
                                           "Juriidiline isik"})
+
+(defn find-by-cadastral-id [things cad-id]
+  ;; works for things with :cadastral-id keys: land-acquisition, land-exchange & priced-area entities 
+  (filterv #(= cad-id (:cadastral-id %))
+           things))
+
 (defn format-process-fees
   "Format process fee rows for sending to server."
   [form-data]

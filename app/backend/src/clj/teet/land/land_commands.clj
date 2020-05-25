@@ -136,8 +136,18 @@
 ;; - keep land-exchange in data model as special case, add priced-area just for prop rights / negotiations cases
 ;; 8. land-commands ns: restore land-exchange versions of functions and keys alongside priced-area  [x]
 ;; 9. check l-e vs property-rights & neg. cases in land-commands [x]
-;;   - updated proc type options: :estate-procedure.type/property-trading -> land-exchanges
-;; 10. merge from master
+;;   - updated proc type options: :estate-procedure.type/property-trading -> land-exchanges [x]
+;; 10. merge from master [×] 
+;; 11. frontend land-controller: separate back out land-exchanges handling (if any) [x]
+;; 12. frontend land-view: separate back out land-exchanges handling [ ]
+;; 13. frontend land-view: change from per-estate to per-cadastral location in the the form [ ]
+;;     - add fn in land-controller that can pick out area/lex info based on cadastral id 
+;;     - q: what about interaction with area-to-obtain field? check figma
+;;        - wireframe has fields POS n, area-to-obtain, price-per-m2, estate regnr, progress all on same innermost unit level
+;;        - the status field is currently also at cadastral level
+;;        - in the data model the impact/status/cadunit/pos are their own land-acuqisition entity, but cadastral-id ties them to cadastral units
+;;     -> the picking fn needs to get both land-acquisition and priced-area/land-exchange entities based on cad id
+;;  14. cadastral subform and estate forms use different versions of form vs form2 .. change inner cadastral form to form2
 
 (defn new-process-fees-tx
   [process-fees]
