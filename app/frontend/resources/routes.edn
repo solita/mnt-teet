@@ -77,7 +77,7 @@
                  :view teet.task.task-view/task-page
                  :state {:query :thk.project/fetch-project
                          :args {:thk.project/id project
-                                :task-id (goog.math.Long/fromString task)}}}
+                                :task-id (string->long task)}}}
 
  :file {:path "/projects/:project/:activity/:task/:file"
         :parent :activity-task
@@ -86,7 +86,7 @@
         :view teet.file.file-view/file-page
         :state {:query :thk.project/fetch-project
                 :args {:thk.project/id project
-                       :task-id (goog.math.Long/fromString task)}}}
+                       :task-id (string->long task)}}}
 
  :unauthorized {:path "/unauthorized" :view teet.ui.unauthorized/restricted-path}
  :components {:path "/components" :view teet.ui.component-demo/demo}

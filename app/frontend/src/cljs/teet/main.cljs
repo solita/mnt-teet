@@ -36,7 +36,8 @@
             teet.ui.query
             [teet.ui.url :as url]
 
-            goog.math.Long
+            ;; Required by define-main-page which uses string->long
+            [goog.math.Long :refer [fromString] :rename {fromString string->long}]
             [teet.login.login-controller :as login-controller]
             [teet.common.common-styles :as common-styles])
   (:require-macros [teet.route-macros :refer [define-main-page]]))
