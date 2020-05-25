@@ -17,7 +17,8 @@
             [teet.ui.form :as form]
             [teet.ui.select :as select]
             [teet.log :as log]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.ui.common :as common]))
 
 (defn cadastral-unit-style
   [selected?]
@@ -31,8 +32,7 @@
      :flex-direction :column
      :transition "background-color 0.2s ease-in-out"
      :align-items :normal
-     :background-color bg-color
-     :border-bottom (str "1px solid " theme-colors/gray-lighter)}))
+     :background-color bg-color}))
 
 (defn impact-form-style
   []
@@ -336,32 +336,6 @@
        update-cadastral-form-event
        cadastral-form]]]))
 
-(defn cadastral-heading-container-style
-  [bg-color font-color]
-  ^{:pseudo {:before {:content "''"
-                      :width 0
-                      :height 0
-                      :border-bottom "15px solid transparent"
-                      :border-left (str "15px solid " bg-color)
-                      :position :absolute
-                      :bottom "-15px"
-                      :transform "rotate(90deg)"
-                      :left 0}}}
-  {:background-color bg-color
-   :position :relative
-   :color font-color})
-
-(defn estate-group-style
-  []
-  ^{:pseudo {:first-of-type {:border-top "1px solid white"}}}
-  {:border-left "1px solid white"})
-
-(defn plot-group-container
-  []
-  {:display :flex
-   :flex-direction :column
-   :margin-left "15px"})
-
 (defn group-style
   []
   {:width "100%"
@@ -370,52 +344,60 @@
    :align-items :flex-start
    :padding "0.5rem"})
 
+
 (defn estate-group
   [e! open-estates cadastral-forms estate-forms [estate-id units]]
-  ^{:key (str estate-id)}
-  [:div {:class (<class estate-group-style)}
-   (let [estate (:estate (first units))]
-     [:div.heading {:class (<class cadastral-heading-container-style theme-colors/gray-lighter :inherit)}
-      [ButtonBase {:class (<class group-style)
-                   :on-click (e! land-controller/->ToggleOpenEstate estate-id)}
+  (let [estate (:estate (first units))]
 
-       [typography/SectionHeading (tr [:land :estate]) " " estate-id]
-       [:span (count units) " " (if (= 1 (count units))
-                                  (tr [:land :unit])
-                                  (tr [:land :units]))]]
-      [Collapse
-       {:in (boolean (open-estates estate-id))
-        :mount-on-enter true}
-       [estate-group-form e! estate
-        (r/partial land-controller/->UpdateEstateForm estate) (get estate-forms estate-id)]]])
-   [:div {:class (<class plot-group-container)}
-    (mapc
-     (r/partial cadastral-unit e!
-                land-controller/->UpdateCadastralForm
-                cadastral-forms)
-      units)]])
+    [common/hierarchical-container
+     {:heading-color theme-colors/gray-lighter
+      :heading-text-color :inherit
+      :heading-content
+      [:<>
+       [ButtonBase {:class (<class group-style)
+                    :on-click (e! land-controller/->ToggleOpenEstate estate-id)}
+
+        [typography/SectionHeading (tr [:land :estate]) " " estate-id]
+        [:span (count units) " " (if (= 1 (count units))
+                                   (tr [:land :unit])
+                                   (tr [:land :units]))]]
+       [Collapse
+        {:in (boolean (open-estates estate-id))
+         :mount-on-enter true}
+        [estate-group-form e! estate
+         (r/partial land-controller/->UpdateEstateForm estate) (get estate-forms estate-id)]]]
+      :children
+      (mapc
+        (r/partial cadastral-unit e!
+                   land-controller/->UpdateCadastralForm
+                   cadastral-forms)
+        units)}]))
 
 (defn owner-group
   [e! open-estates cadastral-forms estate-forms [owner units]]
   ^{:key (str owner)}
   [:div {:style {:margin-bottom "2rem"}}
    (let [owners (get-in (first units) [:estate :omandiosad])]
-     [:div.heading {:class (<class cadastral-heading-container-style theme-colors/gray theme-colors/white)}
-      [:div {:class (<class group-style)}
-       [typography/SectionHeading (if (not= (count owners) 1)
-                                    (str (count owners) " owners")
-                                    (:nimi (first owners)))]
-       [:span (count units) " " (if (= 1 (count units))
-                                  (tr [:land :unit])
-                                  (tr [:land :units]))]]])
-   [:div {:class (<class plot-group-container)}
-    (mapc
-     (fn [unit-group]
-       [estate-group e! open-estates cadastral-forms estate-forms unit-group])
-     (group-by
-      (fn [unit]
-        (get-in unit [:estate :estate-id]))
-      units))]])
+
+     [common/hierarchical-container
+      {:heading-color theme-colors/gray
+       :heading-text-color theme-colors/white
+       :heading-content
+       [:div {:class (<class group-style)}
+        [typography/SectionHeading (if (not= (count owners) 1)
+                                     (str (count owners) " owners")
+                                     (:nimi (first owners)))]
+        [:span (count units) " " (if (= 1 (count units))
+                                   (tr [:land :unit])
+                                   (tr [:land :units]))]]
+       :children
+       (mapc
+         (fn [unit-group]
+           [estate-group e! open-estates cadastral-forms estate-forms unit-group])
+         (group-by
+           (fn [unit]
+             (get-in unit [:estate :estate-id]))
+           units))}])])
 
 (defn filter-units
   [e! {:keys [estate-search-value quality status impact] :as filter-params}]
