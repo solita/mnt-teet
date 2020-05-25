@@ -1,9 +1,16 @@
 (ns teet.ui.text-field
   (:require [herb.core :as herb :refer [<class]]
             [teet.theme.theme-colors :as theme-colors]
+            [teet.user.user-model :as user-model]
             [teet.ui.material-ui :refer [IconButton]]
             [teet.ui.common :as common]
-            [teet.common.common-styles :as common-styles]))
+            [teet.common.common-styles :as common-styles]
+            [reagent.core :as r]
+            [teet.ui.select :as select]
+            react-mentions))
+
+(def Mention (r/adapt-react-class (aget react-mentions "Mention")))
+(def MentionsInput (r/adapt-react-class (aget react-mentions "MentionsInput")))
 
 (defn- input-field-style
   [error multiline read-only? start-icon? type]
@@ -125,3 +132,27 @@
      (when (and error error-text)
        [:span {:class (<class common-styles/input-error-text-style)}
         error-text])]))
+
+
+(defn mentions-input
+  [{:keys [e! value on-change _error _read-only? label id required]}]
+  [:label.mention {:for id}
+   [:span {:class (<class label-text-style)}
+    label (when required
+            [common/required-astrix])]
+   [MentionsInput {:value value
+                   :on-change on-change
+                   :class-name "comment-textarea"}
+    [Mention {:trigger "@"
+              :display-transform (fn [_ display]
+                                   (str "@" display))
+              :class-name "mentions__mention"
+              :data (fn [search callback]
+                      (e! (select/->CompleteUser
+                            search
+                            (fn [users]
+                              (callback
+                                (into-array
+                                  (for [u users]
+                                    #js {:display (user-model/user-name u)
+                                         :id (str (:db/id u))})))))))}]]])

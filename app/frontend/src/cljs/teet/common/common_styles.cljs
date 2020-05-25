@@ -72,6 +72,20 @@
            [:body :html {:height "100%"}]
            [:p {:margin 0}]
            [:#teet-frontend {:height "100%"}]
+           [:.mention
+            [:textarea {:border :none}]
+            [:.comment-textarea__control {:background-color theme-colors/white
+                                          :border (str "1px solid " theme-colors/gray-light)}]]
+           [:.comment-textarea__highlighter {:padding "10px"
+                                             :border "1px solid transparent"}]
+           [:.comment-textarea__input {:padding "10px"}]
+           [:.comment-textarea__suggestions__list {:background-color theme-colors/white
+                                                   :border (str "1px solid " theme-colors/gray-light)
+                                                   :font-size "14px"
+                                                   :overflow :auto}]
+           [:.comment-textarea__suggestions__item {:padding "5px 15px"
+                                                    :border-bottom (str "1px solid " theme-colors/gray-light)}]
+           [:.comment-textarea__suggestions__item--focused {:background-color theme-colors/blue-lightest}]
            [:input :select :textarea :button {:font-family :inherit}]
            ["input::-webkit-outer-spin-button" "input::-webkit-inner-spin-button" {"-webkit-appearance" "none" :margin 0}])
 

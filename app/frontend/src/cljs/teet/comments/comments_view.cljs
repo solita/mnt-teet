@@ -24,7 +24,7 @@
             [teet.ui.query :as query]
             [teet.ui.select :as select]
             [teet.ui.skeleton :as skeleton]
-            [teet.ui.text-field :refer [TextField]]
+            [teet.ui.text-field :refer [TextField mentions-input]]
             [teet.ui.material-ui :refer [IconButton]]
             [teet.ui.typography :as typography]
             [teet.ui.util :as util :refer [mapc]]
@@ -35,12 +35,8 @@
             [teet.file.file-controller :as file-controller]
             [teet.log :as log]
             [teet.theme.theme-colors :as theme-colors]
-            [clojure.string :as str]
-            react-mentions))
+            [clojure.string :as str]))
 
-
-(def Mention (r/adapt-react-class (aget react-mentions "Mention")))
-(def MentionsInput (r/adapt-react-class (aget react-mentions "MentionsInput")))
 
 (defn- new-comment-footer [{:keys [validate disabled?]}]
   [:div {:class (<class comments-styles/comment-buttons-style)}
@@ -128,7 +124,7 @@
      [:div {:class (<class form/form-bg)}
       [:div {:class (<class form-field-spacer)}
        [form/field :comment/comment
-        [TextField {:full-width true :multiline true :rows 4}]]
+        [mentions-input {:e! e!}]]
 
        [form/field :comment/files
         [edit-attached-images-field {:e! e!
@@ -179,10 +175,8 @@
     (map-indexed
      (fn [i part]
        (if-let [[_ name :as m] (re-matches comment-model/user-mention-name-pattern part)]
-         (do
-           (def m* m)
-           ^{:key (str i)}
-           [:b (str "@" name)])
+         ^{:key (str i)}
+         [:b (str "@" name)]
          ^{:key (str i)}
          [:span part]))
      (str/split text comment-model/user-mention-pattern)))])
@@ -414,17 +408,7 @@
                                   :show-label? false :class (<class visibility-selection-style)}]]]
            [:div {:class (<class form-field-spacer)}
             [form/field :comment/comment
-             [MentionsInput {}
-              [Mention {:trigger "@"
-                        :data (fn [search callback]
-                                (e! (select/->CompleteUser
-                                     search
-                                     (fn [users]
-                                       (callback
-                                        (into-array
-                                         (for [u users]
-                                           #js {:display (user-model/user-name u)
-                                                :id (str (:db/id u))})))))))}]]
+             [mentions-input {:e! e!}]
 
              #_[TextField {:id "new-comment-input"
                          :rows 4
