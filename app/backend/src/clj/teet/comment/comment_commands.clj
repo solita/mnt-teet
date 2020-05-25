@@ -95,6 +95,13 @@
          db
          (map user-model/user-ref mentions))))
 
+(defn extract-mentions [text]
+  (into #{}
+        (keep (fn [[mention _]]
+                (when-let [[_ id] (re-matches comment-model/user-mention-id-pattern mention)]
+                  (Long/parseLong id))))
+        (re-seq comment-model/user-mention-pattern text)))
+
 (defcommand :comment/create
   {:doc "Create a new comment and add it to an entity"
    :context {:keys [db user]}
@@ -111,9 +118,7 @@
                              :comment/comment comment
                              ;; TODO: Can external partners set visibility?
                              :comment/visibility visibility
-                             :comment/mentions (mapv (fn [mention]
-                                                       [:user/id (:user/id mention)])
-                                                     mentions)
+                             :comment/mentions (extract-mentions comment)
                              :comment/timestamp (Date.)
                              :comment/status (comment-status user
                                                              (project-db/entity-project-id db entity-type entity-id)

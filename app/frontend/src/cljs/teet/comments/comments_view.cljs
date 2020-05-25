@@ -169,6 +169,24 @@
                         :on-click #(e! (comments-controller/->OpenEditCommentDialog comment-entity commented-entity))}
    (tr [:buttons :edit])])
 
+
+
+(defn- comment-text
+  "Split comment text and highlight user mentions."
+  [text]
+  [:span
+   (doall
+    (map-indexed
+     (fn [i part]
+       (if-let [[_ name :as m] (re-matches comment-model/user-mention-name-pattern part)]
+         (do
+           (def m* m)
+           ^{:key (str i)}
+           [:b (str "@" name)])
+         ^{:key (str i)}
+         [:span part]))
+     (str/split text comment-model/user-mention-pattern)))])
+
 (defn- comment-contents-and-status
   [e!
    {:meta/keys [modified-at]
@@ -199,11 +217,9 @@
                                                                                       :comment.status/unresolved
                                                                                       commented-entity))}
           (tr [:comment :unresolve])])]])
-   [:span (str/join ", " (mapv (fn [{:user/keys [given-name family-name]}]
-                                 (str "@" given-name " " family-name))
-                               mentions))]
+
    [typography/Text
-    comment
+    [comment-text comment]
     (when modified-at
       [:span {:class (<class comments-styles/data)}
        (tr [:comment :edited]
