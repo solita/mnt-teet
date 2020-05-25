@@ -334,7 +334,7 @@
           {:tuck.effect/type :command!
            :command          :activity/delete
            :success-message  (tr [:notifications :activity-deleted])
-           :payload          {:db/id (goog.math.Long/fromString activity-id)}
+           :payload          {:db/id (common-controller/->long activity-id)}
            :result-event     ->DeleteActivityResult}))
 
   DeleteActivityResult
@@ -616,7 +616,7 @@
            :query            :thk.project/db-id->thk-id
            :args             {:db/id (cond
                                        (string? id)
-                                       (goog.math.Long/fromString id)
+                                       (common-controller/->long id)
 
                                        (number? id)
                                        (goog.math.Long/fromNumber id))}

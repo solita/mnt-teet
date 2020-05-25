@@ -20,7 +20,7 @@
             [tuck.core :as t]
             [teet.theme.theme-provider :as theme]
             [teet.snackbar.snackbar-view :as snackbar]
-            [teet.common.common-controller :refer [when-feature poll-version]]
+            [teet.common.common-controller :refer [when-feature poll-version] :as common-controller]
 
             ;; Import view namespaces and needed utility namespaces (macroexpansion)
             teet.projects.projects-view
@@ -38,12 +38,12 @@
             [teet.ui.url :as url]
 
             ;; Required by define-main-page which uses string->long
-            [goog.math.Long :refer [fromString] :rename {fromString string->long}]
             [teet.login.login-controller :as login-controller]
             [teet.common.common-styles :as common-styles])
   (:require-macros [teet.route-macros :refer [define-main-page]]))
 
 ;; See routes.edn
+(def ->long common-controller/->long)
 (define-main-page page-and-title)
 
 (defn main-view [e! _]

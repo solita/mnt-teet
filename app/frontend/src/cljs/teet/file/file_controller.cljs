@@ -55,7 +55,7 @@
 
   AddFilesToTask
   (process-event [{files :files} app]
-    (let [task-id (goog.math.Long/fromString (get-in app [:params :task]))]
+    (let [task-id (common-controller/->long (get-in app [:params :task]))]
       (t/fx app
             (fn [e!]
               (e! (map->UploadFiles {:files files
@@ -78,7 +78,7 @@
     (t/fx app
           {:tuck.effect/type :command!
            :command :file/upload
-           :payload {:task-id (goog.math.Long/fromString (get-in app [:params :task]))
+           :payload {:task-id (common-controller/->long (get-in app [:params :task]))
                      :file (file-model/file-info (first new-version))
                      :previous-version-id (:db/id file)}
            :result-event (fn [{file :file :as result}]

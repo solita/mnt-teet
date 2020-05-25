@@ -57,7 +57,7 @@
     (t/fx app
           {:tuck.effect/type :command!
            :command :activity/submit-for-review
-           :payload {:activity-id (goog.math.Long/fromString (:activity params))}
+           :payload {:activity-id (common-controller/->long (:activity params))}
            :success-message (tr [:activity :submit-results-success])
            :result-event common-controller/->Refresh}))
 
@@ -89,7 +89,7 @@
     (t/fx app
           {:tuck.effect/type :command!
            :command :activity/review
-           :payload {:activity-id (goog.math.Long/fromString (:activity status))
+           :payload {:activity-id (common-controller/->long (:activity status))
                      :status (:status status)}
            :result-event common-controller/->Refresh})))
 

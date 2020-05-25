@@ -52,7 +52,7 @@
     (t/fx app
           {:tuck.effect/type :command!
            :command :task/submit
-           :payload {:task-id (goog.math.Long/fromString (:task params))}
+           :payload {:task-id (common-controller/->long (:task params))}
            :success-message (tr [:task :submit-results-success])
            :result-event common-controller/->Refresh}))
 
@@ -61,7 +61,7 @@
     (t/fx app
           {:tuck.effect/type :command!
            :command :task/start-review
-           :payload {:task-id (goog.math.Long/fromString (:task params))}
+           :payload {:task-id (common-controller/->long (:task params))}
            :success-message (tr [:task :start-review-success])
            :result-event common-controller/->Refresh}))
 
@@ -70,7 +70,7 @@
     (t/fx app
           {:tuck.effect/type :command!
            :command :task/review
-           :payload {:task-id (goog.math.Long/fromString (:task params))
+           :payload {:task-id (common-controller/->long (:task params))
                      :result result}
            :result-event common-controller/->Refresh}))
 
@@ -88,9 +88,7 @@
           {:tuck.effect/type :command!
            :command          :task/delete
            :success-message  (tr [:notifications :task-deleted])
-           :payload          {:db/id (if (string? task-id)
-                                       (goog.math.Long/fromString task-id)
-                                       task-id)}
+           :payload          {:db/id (common-controller/->long task-id)}
            :result-event     ->DeleteTaskResult}))
 
   DeleteTaskResult
@@ -124,7 +122,7 @@
       (t/fx app
             {:tuck.effect/type :upload-documents
              :files files
-             :task-id (goog.math.Long/fromString task)
+             :task-id (common-controller/->long task)
              :project-id project
              :app-path [:task task :task/documents]})))
 
@@ -134,7 +132,7 @@
       (t/fx app
         {:tuck.effect/type :command!
          :command          :task/update
-         :payload          {:db/id (goog.math.Long/fromString task-id)
+         :payload          {:db/id (common-controller/->long task-id)
                             :task/status status}
          :success-message (tr [:notifications :task-status-updated])
          :result-event     common-controller/->Refresh})))
@@ -178,7 +176,7 @@
                 :success-message (tr [:notifications :task-updated])}
                {:command :task/create
 
-                :payload {:activity-id (goog.math.Long/fromString (get-in stepper [:dialog :activity-id]))
+                :payload {:activity-id (common-controller/->long (get-in stepper [:dialog :activity-id]))
                           :task task}
                 :success-message (tr [:notifications :task-created])})))))
 
