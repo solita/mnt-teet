@@ -15,7 +15,7 @@
                 :estate-procedure/urgent-bonus
                 :estate-procedure/compensations
                 :estate-procedure/motivation-bonus
-                :estate-procedure/land-exchanges
+                :estate-procedure/priced-areas
                 :estate-procedure/third-party-compensations
                 :estate-procedure/process-fees]))
 
@@ -39,11 +39,11 @@
                                                     :estate-compensation/description
                                                     :estate-compensation/reason]))
 
-(s/def :estate-procedure/land-exchange (s/keys :opt [:land-exchange/area :land-exchange/cadastral-unit-id
-                                                      :land-exchange/price-per-sqm]))
+(s/def :estate-procedure/priced-area (s/keys :opt [:priced-area/area :priced-area/cadastral-unit-id
+                                                      :priced-area/price-per-sqm]))
 
 
-(s/def :estate-procedure/land-exchanges (s/coll-of :estate-procedure/land-exchange))
+(s/def :estate-procedure/priced-areas (s/coll-of :estate-procedure/priced-area))
 (s/def :estate-procedure/third-party-compensations (s/coll-of :estate-procedure/compensation))
 
 (s/def :estate-procedure/compensations (s/coll-of :estate-procedure/compensation))

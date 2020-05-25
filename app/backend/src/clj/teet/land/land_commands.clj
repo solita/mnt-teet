@@ -82,20 +82,40 @@
         compensations))
 
 
-;; todo: rename land-exchanges?
-(defn new-land-exchange-txs
-  [land-exchanges]
+
+
+(defn new-priced-area-txs
+  [priced-areas]
   (into []
         (keep-indexed
-         (fn [i exchange]
-           (when (seq exchange)
-             (-> exchange
-                 (select-keys (su/keys-of :estate-procedure/land-exchange))
-                 (maybe-add-db-id (str "new-exchange-" i))
-                 (cu/update-in-if-exists [:land-exchange/area] bigdec)
-                 (cu/update-in-if-exists [:land-exchange/price-per-sqm] bigdec)))))
-        land-exchanges))
+         (fn [i area]
+           (when (seq area)
+             (-> area
+                 (select-keys (su/keys-of :estate-procedure/priced-area))
+                 (maybe-add-db-id (str "new-area-" i))
+                 (cu/update-in-if-exists [:priced-area/area] bigdec)
+                 (cu/update-in-if-exists [:priced-area/price-per-sqm] bigdec)))))
+        priced-areas))
 
+;; TEET-432p2 plan/todo:
+;; 1. rename keys, fn names, etc land-exchange -> priced-area in land-commands ns [x]
+;;   1.5 ensure that besides creation, update and deletion (if applicable) are covered [x]
+;;      - update is same as create, delete doesnt exist
+;;   1.75 delete commented out old versions of fns [x]
+;; 2. add keys also to acq. negotiations and property-rights  cases in land-commands ns [x] 
+;; 3. schema.edn - land-exchange -> priced-area [x]
+;; 4. frontend land-controller and land-view - land-exchange -> priced-area and ensure prop rights/nagotiations case
+;;    is accounted for [ ]
+;;     work out field title (change from land exchanges) [ ]
+;;     fix translations for area/price fields (by renaming tr keys in localization spreadsheet)
+;; 5 update land command param specs in land-specs ns
+;; 6. manually test [ ]
+;;    - debug why after saving form has blank area fields but POS# field contains saved data still [ ]
+;;      - :estate-procedure/priced-areas key has wrong data under it, should have the price-per-m2 etc info
+;;      - land-db ns wasn't updated
+;;    - debug why we get 2 sequential area form field sets
+;; 7. check tests
+;; 
 (defn new-process-fees-tx
   [process-fees]
   (vec
@@ -112,7 +132,7 @@
    [:estate-procedure/motivation-bonus bigdec]
    [:estate-procedure/compensations new-compensations-tx]
    [:estate-procedure/third-party-compensations new-compensations-tx]
-   [:estate-procedure/land-exchanges new-land-exchange-txs]])
+   [:estate-procedure/priced-areas new-priced-area-txs]])
 
 (def common-procedure-keys
   [:estate-procedure/pos :estate-procedure/type :estate-procedure/estate-id])
@@ -128,7 +148,8 @@
    {:keys [:estate-procedure/pos :estate-procedure/compensations
            :estate-procedure/motivation-bonus
            :estate-procedure/third-party-compensations
-           :estate-procedure/process-fees]
+           :estate-procedure/process-fees
+           :estate-procedure/priced-areas]
     :updates [[:estate-procedure/process-fees new-process-fees-tx]]}
 
    :estate-procedure.type/expropriation
@@ -137,11 +158,11 @@
            :estate-procedure/third-party-compensations]}
 
    :estate-procedure.type/property-rights
-   {:keys [:estate-procedure/pos :estate-procedure/compensations
+   {:keys [:estate-procedure/pos :estate-procedure/compensations :estate-procedure/priced-areas
            :estate-procedure/motivation-bonus :estate-procedure/third-party-compensations]}
 
    :estate-procedure.type/property-trading
-   {:keys [:estate-procedure/pos :estate-procedure/land-exchanges
+   {:keys [:estate-procedure/pos :estate-procedure/priced-areas
            :estate-procedure/third-party-compensations]}})
 
 (defn estate-procedure-tx

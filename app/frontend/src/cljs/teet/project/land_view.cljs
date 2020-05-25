@@ -208,24 +208,22 @@
         (when-let [procedure-type (land-controller/area-priced-procedure-types (:estate-procedure/type form-data))]
           [:div
            [form/many {:before [typography/BoldGreyText
-                                ; (tr-enum procedure-type)
-                                ; (tr [:fields :estate-procedure/land-exchanges])
-                                ]
-                       :attribute :estate-procedure/land-exchanges
+                                (tr [:fields :estate-procedure/priced-area])]
+                       :attribute :estate-procedure/priced-areas
                        :atleast-once? true}
             [Grid {:container true :spacing 3}
              [Grid {:item true :xs 12}
-              [form/field {:attribute :land-exchange/cadastral-unit-id}
+              [form/field {:attribute :priced-area/cadastral-unit-id}
                [TextField {:hide-label? true
                            :placeholder (tr [:land :cadastral-unit-number])}]]]
              [Grid {:item true :xs 6}
-              [form/field {:attribute :land-exchange/area}
+              [form/field {:attribute :priced-area/area}
                [TextField {:label-element typography/BoldGreyText
                            :type :number
                            :placeholder 0
                            :end-icon text-field/sqm-end-icon}]]]
              [Grid {:item true :xs 6}
-              [form/field {:attribute :land-exchange/price-per-sqm}
+              [form/field {:attribute :priced-area/price-per-sqm}
                [TextField {:type :number
                            :placeholder 0
                            :end-icon text-field/euro-end-icon
