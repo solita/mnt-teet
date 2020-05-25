@@ -76,7 +76,8 @@
  {:notifications "Notifications",
   :activities-and-tasks "Activities and tasks",
   :my-projects "My projects",
-  :title "Dashboard"},
+  :title "Dashboard",
+  :open "Open"},
  :data-tab
  {:cadastral-unit-count "Currently showing {count} cadastral units",
   :restriction-count "Currently showing {count} restrictions"},

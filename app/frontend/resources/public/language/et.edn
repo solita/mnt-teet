@@ -75,7 +75,8 @@
  {:notifications "Teatised",
   :activities-and-tasks "Tegevused ja ülesanded",
   :my-projects "Minu projektid",
-  :title "Töölaud"},
+  :title "Töölaud",
+  :open "Avama"},
  :data-tab
  {:cadastral-unit-count "Praegu kuvatakse {count} katastriüksus(t)",
   :restriction-count "Praegu kuvatakse {count} kitsendus(t)"},
