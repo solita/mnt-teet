@@ -11,7 +11,26 @@
             [teet.app-state :as app-state]
             [teet.transit :as transit]
             [teet.localization :refer [tr tr-or]]
-            postgrest-ui.impl.fetch))
+            postgrest-ui.impl.fetch
+            [goog.math.Long
+             :refer [fromString fromNumber]
+             :rename {fromString string->long
+                      fromNumber number->long}]))
+
+(defn ->long [x]
+  (cond
+    (instance? goog.math.Long x)
+    x
+
+    (string? x)
+    (string->long x)
+
+    (number? x)
+    (number->long x)
+
+    :else
+    (throw (ex-info "Can't coerce to goog.math.Long. Expected Long instance, string or JS number."
+                    {:value x}))))
 
 ;; Track how many requests are in flight to show progress
 (def in-flight-requests (r/atom 0))
