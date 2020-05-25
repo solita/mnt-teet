@@ -74,7 +74,8 @@
  :dashboard
  {:notifications "Teatised",
   :activities-and-tasks "Tegevused ja ülesanded",
-  :my-projects "Minu projektid"},
+  :my-projects "Minu projektid",
+  :title "Töölaud"},
  :data-tab
  {:cadastral-unit-count "Praegu kuvatakse {count} katastriüksus(t)",
   :restriction-count "Praegu kuvatakse {count} kitsendus(t)"},
@@ -306,6 +307,7 @@
   :permission/role "Roll",
   :land-exchange/area "Pindala",
   :thk.project/carriageway "Sõidutee",
+  :land-acquisition/status "Olek",
   :common {"description" "Kirjeldus", "name" "Nimi"},
   :land-acquisition/pos-number "POS#",
   :document/sub-category "Dokumendi alamtüüp",

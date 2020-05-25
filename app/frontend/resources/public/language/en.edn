@@ -75,7 +75,8 @@
  :dashboard
  {:notifications "Notifications",
   :activities-and-tasks "Activities and tasks",
-  :my-projects "My projects"},
+  :my-projects "My projects",
+  :title "Dashboard"},
  :data-tab
  {:cadastral-unit-count "Currently showing {count} cadastral units",
   :restriction-count "Currently showing {count} restrictions"},
@@ -308,6 +309,7 @@
   :permission/role "Roles",
   :land-exchange/area "Area",
   :thk.project/carriageway "Carriageway",
+  :land-acquisition/status "Status",
   :common {"description" "Description", "name" "Name"},
   :land-acquisition/pos-number "POS#",
   :document/sub-category "Document subtype",

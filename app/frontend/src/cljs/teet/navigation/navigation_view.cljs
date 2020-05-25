@@ -94,6 +94,11 @@
    [view-link {:open? open?
                :current-page page
                :link {:page :root}
+               :icon icons/action-assignment
+               :name (tr [:dashboard :title])}]
+   [view-link {:open? open?
+               :current-page page
+               :link {:page :projects}
                :icon icons/maps-map
                :name (tr [:projects :map-view])}]
    [view-link {:open? open?
