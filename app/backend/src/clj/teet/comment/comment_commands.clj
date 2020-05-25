@@ -198,7 +198,7 @@
    :authorization {:project/edit-comments {:db/id comment-id}}
    :transact
 
-   (let [incoming-mentions (mentioned-user-ids db mentions)
+   (let [incoming-mentions (extract-mentions comment)
          old-mentions (into #{}
                             (map :db/id (:comment/mentions (d/pull db '[:comment/mentions] comment-id))))
          un-mentioned (set/difference old-mentions incoming-mentions)
