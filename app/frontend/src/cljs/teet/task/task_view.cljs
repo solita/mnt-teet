@@ -73,22 +73,21 @@
   [select/with-enum-values {:e! e! :attribute :task/type}
    [task-selection opts task-groups]])
 
-(defn create-tasks-form [e! tasks activity-name {:keys [max-date min-date]}]
+(defn add-tasks-form [e! tasks activity-name {:keys [max-date min-date]}]
   [form/form2 {:e! e!
                :value tasks
                :on-change-event task-controller/->UpdateAddTasksForm
-               :cancel-event project-controller/->CloseDialog
-               :save-event task-controller/->SaveAddTasksForm
-               :spec ::project-specs/activity} ;; TODO: change!
+               :cancel-event task-controller/->CloseAddTasksDialog
+               :save-event (partial task-controller/->SaveAddTasksForm activity-name)
+               :spec :activity/add-tasks}
    [Grid {:container true :style {:height "90%"} :spacing 3}
     [Grid {:item true :xs 4}
-                              ;; TODO: not activity's estimated start date
-     [form/field {:attribute [:activity/estimated-start-date :activity/estimated-end-date]}
+     [form/field {:attribute [:task/estimated-start-date :task/estimated-end-date]}
       [date-picker/date-range-input {:row? false
                                      :max-date max-date
                                      :min-date min-date
-                                     :start-label (tr [:fields :activity/estimated-start-date])
-                                     :end-label (tr [:fields :activity/estimated-end-date])}]]]
+                                     :start-label (tr [:fields :task/estimated-start-date])
+                                     :end-label (tr [:fields :task/estimated-end-date])}]]]
 
     [Grid {:item true :xs 8}
      [select/with-enum-values {:e! e!
@@ -311,9 +310,9 @@
 
 (defmethod project-navigator-view/project-navigator-dialog :add-tasks
   [{:keys [e! app project]} _dialog]
-  (let [activity-id (get-in app [:params :activity])
+  (let [activity-id (get-in app [:add-tasks-data :db/id])
         activity (project-model/activity-by-id project activity-id)]
-    [create-tasks-form e!
+    [add-tasks-form e!
      (:add-tasks-data app)
      (-> activity :activity/name :db/ident)
      {:max-date (:activity/estimated-end-date activity)
@@ -321,7 +320,7 @@
 
 (defmethod project-navigator-view/project-navigator-dialog :edit-task
   [{:keys [e! app project] :as _opts}  _dialog]
-  (let [activity-id (get-in app [:add-tasks-data :activity-id])
+  (let [activity-id (get-in app [:params :activity])
         activity (project-model/activity-by-id project activity-id)]
     [edit-task-form e! (:edit-task-data app) {:max-date (:activity/estimated-end-date activity)
                                               :min-date (:activity/estimated-start-date activity)}]))

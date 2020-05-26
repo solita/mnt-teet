@@ -23,8 +23,7 @@
   (s/keys :req [:db/id ;; Activity id
                 ;; For all the tasks
                 :task/estimated-start-date
-                :task/estimated-end-date]
-          :req-un [::tasks]))
+                :task/estimated-end-date]))
 
 (s/def :activity/create
   (s/keys :req-un [::activity ::tasks ::lifecycle-id]))

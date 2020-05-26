@@ -208,7 +208,7 @@
     [:div {:class (<class task-info dark-theme?)}
      [rect-button {:size :small
                    :disabled disable-buttons?
-                   :on-click (e! project-controller/->OpenTaskDialog (str activity-id)) ;; (e! task-controller/->OpenAddTasksDialog (str activity-id))
+                   :on-click (e! task-controller/->OpenAddTasksDialog activity-id)
                    :start-icon (r/as-element
                                 [icons/content-add])}
       (tr [:project :add-task])]]]])
@@ -320,6 +320,7 @@
     :new-activity {:max-width :md
                    :title (tr [:project :add-activity
                                (:lifecycle-type dialog)])}
+    :add-tasks {:max-width :md}
     {}))
 
 

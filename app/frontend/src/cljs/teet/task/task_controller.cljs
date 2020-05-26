@@ -49,9 +49,9 @@
 ;; Add multiple tasks
 (defrecord OpenAddTasksDialog [activity-id])
 (defrecord UpdateAddTasksForm [form-data])
-(defrecord SaveAddTasksForm [])
+(defrecord SaveAddTasksForm [activity-name])
 (defrecord SaveAddTasksResponse [response])
-
+(defrecord CloseAddTasksDialog [])
 
 (extend-protocol t/Event
   SubmitResults
@@ -221,24 +221,24 @@
     (-> app
         (assoc-in [:stepper :dialog]
                   {:type :add-tasks})
-        (assoc :add-tasks-data {:activity-id activity-id})))
+        (assoc :add-tasks-data {:db/id activity-id})))
 
   UpdateAddTasksForm
   (process-event [{form-data :form-data} app]
     (update app :add-tasks-data merge form-data))
 
   SaveAddTasksForm
-  (process-event [_ {:keys [add-tasks-data] :as app}]
-    (let [tasks-to-create (tasks-for-activity-name (:activity/name add-tasks-data)
+  (process-event [{activity-name :activity-name} {:keys [route add-tasks-data] :as app}]
+    (let [tasks-to-create (tasks-for-activity-name activity-name
                                                    (:selected-tasks add-tasks-data)
                                                    (:sent-tasks add-tasks-data))]
       (t/fx app
             {:tuck.effect/type :command!
-             ;; create/update
-             :command          :task/create-tasks
-             :payload          {:activity-id "foo"
+             :command          :activity/add-tasks
+             :payload          {:db/id (:db/id add-tasks-data)
                                 :tasks tasks-to-create
-                                :lifecycle-id (get-in app [:stepper :lifecycle])}
+                                :task/estimated-start-date (:task/estimated-start-date add-tasks-data)
+                                :task/estimated-end-date (:task/estimated-end-date add-tasks-data)}
              :success-message  (tr [:notifications :tasks-created])
              :result-event     ->SaveAddTasksResponse})))
 
@@ -246,7 +246,17 @@
   (process-event [{response :response} {:keys [page params query] :as app}]
     (t/fx (-> app
               (update :stepper dissoc :dialog))
-          common-controller/refresh-fx)))
+          common-controller/refresh-fx))
+
+  CloseAddTasksDialog
+  (process-event [_ {:keys [page params query] :as app}]
+    (t/fx (-> app
+              (update :stepper dissoc :dialog)
+              (dissoc :add-tasks-data))
+          {:tuck.effect/type :navigate
+           :page             page
+           :params           params
+           :query            (dissoc query :modal :add :edit :activity :lifecycle)})))
 
 (defmethod common-controller/on-server-error :invalid-task-dates [err app]
   (let [error (-> err ex-data :error)]
