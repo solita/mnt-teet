@@ -122,16 +122,13 @@
 ;; 4b work out field title (change from land exchanges) [ ]
 ;;     fix translations for area/price fields (by renaming tr keys in localization spreadsheet)
 ;; 5 update land command param specs in land-specs ns [x]
-;; 6. manually test [ ]
-;;    - debug why after saving form has blank area fields but POS# field contains saved data still [ ]
-;;      - :estate-procedure/priced-areas key has wrong data under it, should have the price-per-m2 etc info
-;;      - land-db ns wasn't updated
-;;    - debug why we get 2 sequential area form field sets
-;;    - debug "tempid 'new-area-1' used only as value in transaction"
-;; 7. check unit tests
+;; 6. manually test [x]
+;; 7. check unit tests [x]
 ;;
 ;; - land exchange case: area to be taken entered by the user in cadastral view, in estate view enter data the area given back in the return. cadastral view shows sum what owner gets paid. estate vew nr is deduced.
 ;;   modal (coming later) will show unit valuations vs compensation, needs per unit info associated in land-exchanges
+
+
 ;; -> revised plan:
 ;; - keep land-exchange in data model as special case, add priced-area just for prop rights / negotiations cases
 ;; 8. land-commands ns: restore land-exchange versions of functions and keys alongside priced-area  [x]
@@ -148,6 +145,7 @@
 ;;        - in the data model the impact/status/cadunit/pos are their own land-acuqisition entity, but cadastral-id ties them to cadastral units
 ;;     -> the picking fn needs to get both land-acquisition and priced-area/land-exchange entities based on cad id
 ;;  14. cadastral subform and estate forms use different versions of form vs form2 .. change inner cadastral form to form2
+
 
 (defn new-process-fees-tx
   [process-fees]

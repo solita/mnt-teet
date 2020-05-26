@@ -211,51 +211,39 @@
   (let [land-exchange? (= :estate-procedure.type/property-trading procedure-type)]
     [:div
      (log/debug "showing cad area price fields")
-     [form/many {:before [typography/BoldGreyText
-                          (tr [:fields (if land-exchange?
-                                         :estate-procedure/land-exchange
-                                         :estate-procedure/priced-area)])]
-                 :attribute (if land-exchange?
-                              :estate-procedure/land-exchanges
-                              :estate-procedure/priced-areas)
-                 :atleast-once? true}
-      [Grid {:container true :spacing 3}
-       [Grid {:item true :xs 6}
-        [form/field {:attribute (if land-exchange?
-                                  :land-exchange/area
-                                  :priced-area/area)}
-         [TextField {:label-element typography/BoldGreyText
-                     :type :number
-                     :placeholder 0
-                     :end-icon text-field/sqm-end-icon}]]]
-       [Grid {:item true :xs 6}
-        [form/field {:attribute (if land-exchange?
-                                  :land-exchange/area
-                                  :priced-area/price-per-sqm)}
-         [TextField {:type :number
-                     :placeholder 0
-                     :end-icon text-field/euro-end-icon
-                     :label-element typography/BoldGreyText}]]]]]]))
+     ;; todo: pick the one cadastral unit data and remove form/many
+     [Grid {:container true :spacing 3}
+      [Grid {:item true :xs 6}
+       [form/field {:attribute (if land-exchange?
+                                 :land-exchange/area
+                                 :priced-area/area)}
+        [TextField {:label-element typography/BoldGreyText
+                    :type :number
+                    :placeholder 0
+                    :end-icon text-field/sqm-end-icon}]]]
+      [Grid {:item true :xs 6}
+       [form/field {:attribute (if land-exchange?
+                                 :land-exchange/price-per-sqm
+                                 :priced-area/price-per-sqm)}
+        [TextField {:type :number
+                    :placeholder 0
+                    :end-icon text-field/euro-end-icon
+                    :label-element typography/BoldGreyText}]]]]]))
 
 (defn cadastral-unit-form
   ;; wip: change to form2 
   [e! {:keys [teet-id PINDALA] :as unit} quality on-change-event form-data]
   (let [show-extra-fields? (du/enum= (:land-acquisition/impact form-data) :land-acquisition.impact/purchase-needed)
         procedure-type (:estate-procedure/type form-data)]
-    [:div
-     [form/form2 {:e! e!
-                  :value form-data
-                  :on-change-event (fn [form-data]
-                                     (on-change-event teet-id form-data)) ; update-impact-form
-                  :save-event #(land-controller/->SubmitLandAcquisitionForm form-data (:teet-id unit))
-                  :spec :land-acquisition/form
-                  :cancel-event #(land-controller/->ToggleLandUnit unit)
-                  :class (<class impact-form-style)}
-      [form/field :testfield ;; doesn't show eiher, check setup above
-       [TextField {:label-element typography/BoldGreyText
-                   :type :number
-                   :placeholder 0
-                   }]]
+    [form/form2 {:e! e!
+                 :value form-data
+                 :on-change-event (fn [form-data]
+                                    (on-change-event teet-id form-data)) ; update-impact-form
+                 :save-event #(land-controller/->SubmitLandAcquisitionForm form-data (:teet-id unit))
+                 :spec :land-acquisition/form
+                 :cancel-event #(land-controller/->ToggleLandUnit unit)
+                 :class (<class impact-form-style)}
+     [:div            
       [form/field :land-acquisition/impact
        [select/select-enum {:e! e!
                             :show-empty-selection? true
@@ -282,8 +270,8 @@
                            :questionable [:span {:style {:color theme-colors/orange}} " ! " (tr [:land :unreliable])]
                            nil)]
                         [:span (tr [:land :net-area-balance] {:area (- PINDALA area)})]])}
-        [TextField {:type :number :input-style {:width "50%"}}])]])
-  [form/footer2 impact-form-footer])
+        [TextField {:type :number :input-style {:width "50%"}}])]
+     [form/footer2 impact-form-footer]]))
 
 #_(defn cadastral-unit-form
   ;; wip: change to form2 
@@ -376,8 +364,10 @@
 (defn cadastral-unit
   [e! update-cadastral-form-event cadastral-forms {:keys [teet-id TUNNUS KINNISTU MOOTVIIS MUUDET quality selected?] :as unit}]
   ^{:key (str TUNNUS)} ;;Arbitrary date before which data quality is bad]
-
-  (let [cadastral-form (get cadastral-forms teet-id)]
+  
+  (let [cadastral-form (get cadastral-forms teet-id)
+        ]
+    ;; todo: ensure cadastral-form data has land-exchange and priced-area for the one cadastral
     [:div {:class (<class cadastral-unit-container-style)}
      [:div {:class (<class cadastral-unit-quality-style quality)}
       [:span {:title (str MOOTVIIS " – " MUUDET)} (case quality
