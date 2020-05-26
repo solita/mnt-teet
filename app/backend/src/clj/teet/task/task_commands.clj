@@ -59,22 +59,13 @@
        :project project})
     {}))
 
-(defn valid-task-dates?
-  [db activity-id {:task/keys [actual-end-date actual-start-date estimated-end-date estimated-start-date] :as task}]
-  (let [activity-dates (activity-db/activity-date-range db activity-id)
-        dates (filterv some? [actual-end-date actual-start-date estimated-end-date estimated-start-date])]
-    (every? (fn [date]
-              (and (not (.before date (:activity/estimated-start-date activity-dates)))
-                   (not (.after date (:activity/estimated-end-date activity-dates)))))
-            dates)))
-
 (defcommand :task/update
   {:doc "Update basic task information for existing task."
    :context {:keys [user db]} ; bindings from context
    :payload {id :db/id :as task} ; bindings from payload
    :project-id (project-db/task-project-id db id)
    :pre [^{:error :invalid-task-dates}
-         (valid-task-dates? db (task-db/activity-for-task-id db id) task)
+         (activity-db/valid-task-dates? db (task-db/activity-for-task-id db id) task)
          (not (new? task))]
    :authorization {:task/task-information {:db/id id
                                            :link :task/assignee}}  ; auth checks
@@ -114,7 +105,7 @@
    :pre [(new? task)
          (valid-thk-send? db task)
          ^{:error :invalid-task-dates}
-         (valid-task-dates? db activity-id task)
+         (activity-db/valid-task-dates? db activity-id task)
          ^{:error :invalid-task-for-activity}
          (task-db/valid-task-for-activity? db activity-id task)]
    :authorization {:task/create-task {}

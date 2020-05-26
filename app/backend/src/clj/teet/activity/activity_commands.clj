@@ -7,6 +7,7 @@
             [teet.meta.meta-model :as meta-model]
             [teet.notification.notification-db :as notification-db]
             [teet.project.project-db :as project-db]
+            teet.project.project-specs
             [teet.task.task-db :as task-db]
             [teet.util.datomic :as du])
   (:import (java.util Date)))
@@ -132,6 +133,7 @@
   {:doc "Add new tasks to activity"
    :context {:keys [db user conn]}
    :payload {:keys [tasks]
+             :task/keys [estimated-start-date estimated-end-date]
              :db/keys [id]}
    :project-id (project-db/activity-project-id db id)
    :authorization {:activity/create-activity {}}
@@ -139,7 +141,11 @@
          (and (seq tasks)
               (let [activity-name (-> (du/entity db id) :activity/name :db/ident)]
                 (println activity-name)
-                (valid-tasks? db activity-name tasks)))]
+                (valid-tasks? db activity-name tasks)))
+
+         ^{:error :invalid-task-dates}
+         (activity-db/valid-task-dates? db id {:task/estimated-start-date estimated-start-date
+                                               :task/estimated-end-date estimated-end-date})]
    :transact (let [activity (du/entity db id)]
                (into [(merge
                        {:db/id id}
@@ -150,8 +156,8 @@
                                                          (name task-group) "-"
                                                          (name task-type))]
                                  [(merge {:db/id id-placeholder
-                                          :task/estimated-end-date (:activity/estimated-end-date activity)
-                                          :task/estimated-start-date (:activity/estimated-start-date activity)
+                                          :task/estimated-end-date estimated-start-date
+                                          :task/estimated-start-date estimated-end-date
                                           :task/status :task.status/not-started
                                           :task/group task-group
                                           :task/type task-type
