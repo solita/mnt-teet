@@ -101,3 +101,27 @@
                                       :activity/name :activity.name/land-acquisition}
                            :tasks [[:task.group/land-purchase :task.type/land-owners false]]
                            :lifecycle-id (tu/->db-id "p3-lc1")}))))
+
+(deftest add-tasks
+  (tu/store-data! :new-activity-id
+                  (-> (tu/local-command tu/mock-user-boss
+                                        :activity/create
+                                        {:activity {:activity/estimated-start-date #inst "2020-04-12T21:00:00.000-00:00"
+                                                    :activity/estimated-end-date #inst "2020-04-13T21:00:00.000-00:00"
+                                                    :activity/name :activity.name/land-acquisition}
+                                         :tasks [[:task.group/land-purchase :task.type/land-owners false]]
+                                         :lifecycle-id (tu/->db-id "p3-lc1")})
+                      :tempids
+                      (get "new-activity")))
+  (tu/store-data :old-activity-count (-> (du/entity (tu/db) (tu/get-data :new-activity-id))
+                                         :activity/tasks
+                                         count))
+  (is (tu/local-command tu/mock-user-boss
+                        :activity/add-tasks
+                        {:db/id (tu/get-data :new-activity-id)
+                         :tasks [[:task.group/land-purchase :task.type/cadastral-works false]
+                                 [:task.group/land-purchase :task.type/plot-allocation-plan false]]})
+      "New tasks can be added")
+  (is (= (-> (du/entity (tu/db) (tu/get-data :new-activity-id)) :activity/tasks count)
+         (+ 2 (tu/get-data :old-activity-count)))
+      "Two tasks were added"))

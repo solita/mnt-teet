@@ -128,6 +128,37 @@
               {:db/id lifecycle-id
                :thk.lifecycle/activities ["new-activity"]}]})
 
+(defcommand :activity/add-tasks
+  {:doc "Add new tasks to activity"
+   :context {:keys [db user conn]}
+   :payload {:keys [tasks]
+             :db/keys [id]}
+   :project-id (project-db/activity-project-id db id)
+   :authorization {:activity/create-activity {}}
+   :pre [^{:error :invalid-tasks}
+         (and (seq tasks)
+              (let [activity-name (-> (du/entity db id) :activity/name :db/ident)]
+                (println activity-name)
+                (valid-tasks? db activity-name tasks)))]
+   :transact (let [activity (du/entity db id)]
+               (into [(merge
+                       {:db/id id}
+                       (meta-model/modification-meta user))]
+                     (mapcat identity
+                             (for [[task-group task-type send-to-thk?] tasks]
+                               (let [id-placeholder (str "NEW-TASK-"
+                                                         (name task-group) "-"
+                                                         (name task-type))]
+                                 [(merge {:db/id id-placeholder
+                                          :task/estimated-end-date (:activity/estimated-end-date activity)
+                                          :task/estimated-start-date (:activity/estimated-start-date activity)
+                                          :task/status :task.status/not-started
+                                          :task/group task-group
+                                          :task/type task-type
+                                          :task/send-to-thk? send-to-thk?}
+                                         (meta-model/creation-meta user))
+                                  [:db/add id :activity/tasks id-placeholder]])))))})
+
 (defcommand :activity/update
   {:doc "Update activity basic info"
    :context {:keys [conn user db]}
