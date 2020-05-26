@@ -182,3 +182,11 @@
 (defn no-border
   []
   {:border :none})
+
+(defn flex-row-w100-space-between-center
+  []
+  {:display :flex
+   :flex-direction :row
+   :width "100%"
+   :align-items :center
+   :justify-content :space-between})

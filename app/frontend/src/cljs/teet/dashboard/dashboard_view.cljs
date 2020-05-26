@@ -6,13 +6,14 @@
             [teet.routes :as routes]
             [teet.ui.material-ui :refer [Link Paper Card CardHeader CardContent
                                          CardActionArea CardActions Divider Collapse
-                                         IconButton]]
+                                         IconButton ButtonBase]]
             [teet.localization :refer [tr tr-enum]]
             [teet.ui.util :refer [mapc]]
             [teet.ui.format :as fmt]
             [teet.ui.url :as url]
             [teet.project.project-model :as project-model]
             [herb.core :refer [<class]]
+            [teet.project.land-view :as land-view]
             [teet.notification.notification-controller :as notification-controller]
             [reagent.core :as r]
             [teet.ui.buttons :as buttons]
@@ -27,8 +28,6 @@
 
 (defonce open-projects-atom (local-storage (r/atom #{}) "dashboard-open-projects"))
 
-(defn- project-card-style []
-  {:margin-top "2rem"})
 
 (defn- project-card-subheader-style []
   {:margin-left "2rem"
@@ -78,7 +77,7 @@
         (str (fmt/date estimated-start-date)
              "\u2013"
              (fmt/date estimated-end-date))]]
-     [:div (tr-enum status)]
+     [:div [:span (tr-enum status)]]
      (mapc task-rows-by-group
            (sort-by (comp task-model/task-group-order :db/ident first)
                     (group-by :task/group tasks)))
@@ -103,16 +102,19 @@
      {:heading-color theme-colors/gray-lighter
       :heading-text-color theme-colors/gray-dark
       :heading-content
-      [:div {:on-click #(toggle-project (:db/id project))}
-       [:div {:class (<class common-styles/flex-align-center)}
-        [:div {:class (<class projects-style/project-status-circle-style
-                              (:thk.project/status project))}]
-        [:div {:style {:flex-grow 10 :font-weight :bold}
-               :class (<class common-styles/inline-block)}
-         (project-model/get-column project :thk.project/project-name)]
+      [ButtonBase {:class (<class land-view/group-style)
+                   :on-click #(toggle-project (:db/id project))}
+       [:div {:class (<class common-styles/flex-row-w100-space-between-center)}
+        [:div {:class (<class common-styles/space-between-center)}
+         [:div {:class (<class projects-style/project-status-circle-style
+                                    (:thk.project/status project))}]
+         [:div {:style {:flex-grow 10 :font-weight :bold}
+                :class (<class common-styles/inline-block)}
+          (project-model/get-column project :thk.project/project-name)]]
         [buttons/button-secondary {:on-click (fn [e] (.stopPropagation e))
                                    :style {:margin "0.5rem"}
                                    :element "a"
+                                   :size :small
                                    :href (url/project (:thk.project/id project))}
          (tr [:dashboard :open])]]
        [:div {:class (<class project-card-subheader-style)}
@@ -121,26 +123,27 @@
              (fmt/date (:thk.project/estimated-end-date project)))]]
       :children
       (list
-       ^{:key "project-info"}
-       [Collapse {:in open?}
-        [:div {:style {:background-color theme-colors/gray-lightest}}
-         [section
-          (tr [:dashboard :notifications])
-          (if (empty? notifications)
-            [:span {:class (<class common-styles/gray-text)}
-             (tr [:dashboard :no-notifications-for-project])]
-            (doall
-             (for [{:notification/keys [type]
-                    :meta/keys [created-at]
-                    id :db/id} notifications]
-               ^{:key (str id)}
-               [:div
-                [buttons/link-button {:on-click #(e! (notification-controller/->NavigateTo id))}
-                 (tr-enum type) " " (fmt/date-time created-at)]])))]
+        ^{:key "project-info"}
+        [Collapse {:in open?}
+         [:div {:style {:padding "1rem"
+                        :background-color theme-colors/gray-lightest}}
+          [section
+           (tr [:dashboard :notifications])
+           (if (empty? notifications)
+             [:span {:class (<class common-styles/gray-text)}
+              (tr [:dashboard :no-notifications-for-project])]
+             (doall
+               (for [{:notification/keys [type]
+                      :meta/keys [created-at]
+                      id :db/id} notifications]
+                 ^{:key (str id)}
+                 [:div
+                  [buttons/link-button {:on-click #(e! (notification-controller/->NavigateTo id))}
+                   (tr-enum type) " " (fmt/date-time created-at)]])))]
 
-         [section
-          (tr [:dashboard :activities-and-tasks])
-          (mapc (r/partial lifecycle-info project) (:thk.project/lifecycles project))]]])}]))
+          [section
+           (tr [:dashboard :activities-and-tasks])
+           (mapc (r/partial lifecycle-info project) (:thk.project/lifecycles project))]]])}]))
 
 (defn dashboard-page [e!
                       {user :user :as _app}
