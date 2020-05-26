@@ -280,7 +280,8 @@
   :invalid-activity-dates "Check activity dates",
   :bad-request "Bad request"},
  :fields
- {:comment/visibility "Visibility",
+ {:land-acquisition/registry-number "State estate registry number",
+  :comment/visibility "Visibility",
   :task/send-to-thk? "Separate contract (in THK)",
   :thk.project/manager "Manager",
   :thk.project/project-name "Name",
@@ -301,6 +302,7 @@
   :estate-procedure/third-party-compensations
   "Third party compensations",
   :project/participant "Participant",
+  :land-acquisition/price-per-sqm "Price/m²",
   :activity/estimated-start-date "Estimated start date",
   :estate-procedure/motivation-bonus "Motivation bonus",
   :task/modified "Modified",

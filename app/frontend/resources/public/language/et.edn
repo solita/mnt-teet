@@ -278,7 +278,8 @@
   :invalid-activity-dates "Kontrolli tegevuse kuupäevi",
   :bad-request "Vigane päring"},
  :fields
- {:comment/visibility "Nähtavus",
+ {:land-acquisition/registry-number "Riigivara registrinumber",
+  :comment/visibility "Nähtavus",
   :task/send-to-thk? "Eraldi leping (THKs)",
   :thk.project/manager "Vastutav isik",
   :thk.project/project-name "Nimi",
@@ -299,6 +300,7 @@
   :estate-procedure/third-party-compensations
   "Hüvitis kolmandale isikule",
   :project/participant "Osaleja",
+  :land-acquisition/price-per-sqm "Hind/m²",
   :activity/estimated-start-date "Eeldatav alguskuupäev",
   :estate-procedure/motivation-bonus "Motivatsiooni boonus",
   :task/modified "Muudetud",
