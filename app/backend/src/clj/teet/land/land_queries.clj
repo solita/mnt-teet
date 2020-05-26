@@ -6,9 +6,22 @@
             [clj-time.core :as time]
             [clj-time.coerce :as c]
             [clojure.walk :as walk]
-            [teet.util.datomic :as du]
-            [teet.land.land-db :as land-db]
-            [teet.util.collection :as cu]))
+            [teet.land.land-db :as land-db]))
+
+(defn- datomic->form
+  "Format data to a format suitable for frontend form.
+  Does following transformations:
+
+  - Stringify bigdec values.
+  - Turn enum maps with db/ident keyword to keywords"
+  [compensation]
+  (->> compensation
+       (walk/prewalk
+         (fn [x]
+           (cond
+             (decimal? x) (str x)
+             (and (map? x) (contains? x :db/ident)) (:db/ident x)
+             :else x)))))
 
 (defquery :land/fetch-land-acquisitions
   {:doc "Fetch all land acquisitions and related cadastral units from a project"
@@ -22,7 +35,7 @@
                                      db
                                      [:thk.project/id project-id]))
         related-cadastral-units (d/pull db '[:thk.project/related-cadastral-units] [:thk.project/id project-id])]
-    (du/idents->keywords
+    (datomic->form
      (merge related-cadastral-units
             {:land-acquisitions land-acquisitions}))))
 
@@ -92,24 +105,6 @@ Then it will query X-road for the estate information."
                                       :bad)))
              units)}))
 
-
-
-(defn- compensation->form
-  "Format compensation to format suitable for frontend form.
-  Does following transformations:
-
-  - Stringify bigdec values.
-  - Turn enum maps with db/ident keyword to keywords"
-  [compensation]
-  (->> compensation
-       (cu/map-vals #(update % :estate-procedure/pos str))
-       (walk/prewalk
-        (fn [x]
-          (cond
-            (decimal? x) (str x)
-            (and (map? x) (contains? x :db/ident)) (:db/ident x)
-            :else x)))))
-
 (defquery :land/fetch-estate-compensations
   {:doc "Fetch estate compensations in a given project. Returns map with estate id as the key
 and the compensation info as the value."
@@ -118,7 +113,7 @@ and the compensation info as the value."
    :project-id [:thk.project/id id]
    :authorization {:land/view-cadastral-data {:eid [:thk.project/id id]
                                               :link :thk.project/owner}}}
-  (compensation->form
+  (datomic->form
    (into {}
          (comp
           (map first)

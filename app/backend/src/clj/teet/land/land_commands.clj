@@ -13,7 +13,7 @@
   {:doc "Save a land purchase decision form."
    :context {conn :conn
              user :user}
-   :payload {:land-acquisition/keys [impact pos-number area-to-obtain status]
+   :payload {:land-acquisition/keys [impact pos-number area-to-obtain status price-per-sqm registry-number]
              :keys [cadastral-unit
                     project-id]}
    :project-id [:thk.project/id project-id]
@@ -25,6 +25,9 @@
               :land-acquisition/impact impact
               :land-acquisition/status status
               :land-acquisition/project [:thk.project/id project-id]
+              :land-acquisition/price-per-sqm (when price-per-sqm
+                                                (bigdec price-per-sqm))
+              :land-acquisition/registry-number registry-number
               :land-acquisition/cadastral-unit cadastral-unit
               :land-acquisition/area-to-obtain area-to-obtain
               :land-acquisition/pos-number pos-number}
@@ -47,7 +50,7 @@
    :context {conn :conn
              user :user
              db :db}
-   :payload {:land-acquisition/keys [impact status pos-number area-to-obtain]
+   :payload {:land-acquisition/keys [impact status pos-number area-to-obtain price-per-sqm registry-number]
              :keys [cadastral-unit
                     project-id]
              id :db/id}
@@ -60,6 +63,9 @@
       (merge {:db/id id
               :land-acquisition/impact impact
               :land-acquisition/status status
+              :land-acquisition/price-per-sqm (when price-per-sqm
+                                                (bigdec price-per-sqm))
+              :land-acquisition/registry-number registry-number
               :land-acquisition/area-to-obtain area-to-obtain
               :land-acquisition/pos-number pos-number}
              (meta-model/modification-meta user)))]})
