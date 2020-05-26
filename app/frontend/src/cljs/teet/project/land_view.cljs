@@ -229,8 +229,8 @@
        (form/footer2 form/form-footer)]]]))
 
 
-(defn cadastral-unit-form
-  [e! {:keys [teet-id PINDALA] :as unit} quality on-change-event form-data]
+(defn land-acquisition-form
+  [e! {:keys [teet-id PINDALA] :as unit} quality estate-procedure-type on-change-event form-data]
   (let [show-extra-fields? (du/enum= (:land-acquisition/impact form-data) :land-acquisition.impact/purchase-needed)]
     [:div
      [form/form {:e! e!
@@ -252,7 +252,8 @@
                              :show-empty-selection? true}])
       (when show-extra-fields?
         ^{:attribute :land-acquisition/pos-number :xs 6}
-        [TextField {:type :number}]
+        [TextField {:type :number}])
+      (when show-extra-fields?
         ^{:attribute :land-acquisition/area-to-obtain
           :adornment (let [area (:land-acquisition/area-to-obtain form-data)]
                        [:div
@@ -262,7 +263,13 @@
                            :questionable [:span {:style {:color theme-colors/orange}} " ! " (tr [:land :unreliable])]
                            nil)]
                         [:span (tr [:land :net-area-balance] {:area (- PINDALA area)})]])}
-        [TextField {:type :number :input-style {:width "50%"}}])]]))
+        [TextField {:type :number :input-style {:width "50%"}}])
+      (when (and show-extra-fields? (not= :estate-procedure.type/urgent estate-procedure-type))
+        ^{:attribute :land-acquisition/price-per-sqm}
+        [TextField {:type :number}])
+      (when show-extra-fields?
+        ^{:attribute :land-acquisition/registry-number}
+         [TextField {}])]]))
 
 (defn acquisition-impact-status
   [impact status]
@@ -310,9 +317,8 @@
 
 
 (defn cadastral-unit
-  [e! update-cadastral-form-event cadastral-forms {:keys [teet-id TUNNUS KINNISTU MOOTVIIS MUUDET quality selected?] :as unit}]
+  [e! update-cadastral-form-event estate-procedure-type cadastral-forms {:keys [teet-id TUNNUS KINNISTU MOOTVIIS MUUDET quality selected?] :as unit}]
   ^{:key (str TUNNUS)} ;;Arbitrary date before which data quality is bad]
-
   (let [cadastral-form (get cadastral-forms teet-id)]
     [:div {:class (<class cadastral-unit-container-style)}
      [:div {:class (<class cadastral-unit-quality-style quality)}
@@ -332,7 +338,11 @@
      [Collapse
       {:in selected?
        :mount-on-enter true}
-      [cadastral-unit-form e! unit quality
+      [land-acquisition-form
+       e!
+       unit
+       quality
+       estate-procedure-type
        update-cadastral-form-event
        cadastral-form]]]))
 
@@ -348,7 +358,7 @@
 (defn estate-group
   [e! open-estates cadastral-forms estate-forms [estate-id units]]
   (let [estate (:estate (first units))]
-
+    (println "estate-id in estategroup: " estate-id)
     [common/hierarchical-container
      {:heading-color theme-colors/gray-lighter
       :heading-text-color :inherit
@@ -370,6 +380,7 @@
       (mapc
         (r/partial cadastral-unit e!
                    land-controller/->UpdateCadastralForm
+                   (get-in estate-forms [estate-id :estate-procedure/type])
                    cadastral-forms)
         units)}]))
 

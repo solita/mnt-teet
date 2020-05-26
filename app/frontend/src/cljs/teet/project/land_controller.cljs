@@ -206,7 +206,7 @@
   SubmitLandAcquisitionForm
   (process-event [{:keys [form-data cadastral-id]} app]
     (let [project-id (get-in app [:params :project])
-          {:land-acquisition/keys [area-to-obtain pos-number]} form-data]
+          {:land-acquisition/keys [area-to-obtain pos-number price-per-sqm]} form-data]
       (t/fx app
             {:tuck.effect/type :command!
              :command (if (:db/id form-data)
@@ -216,6 +216,8 @@
              :payload (merge form-data
                              {:cadastral-unit cadastral-id
                               :project-id project-id}
+                             (when price-per-sqm
+                               {:land-acquisition/price-per-sqm (js/parseFloat price-per-sqm)})
                              (when area-to-obtain
                                {:land-acquisition/area-to-obtain (js/parseFloat area-to-obtain)})
                              (when pos-number
