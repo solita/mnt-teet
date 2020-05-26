@@ -888,4 +888,12 @@
           ;; Land acquisition
           {:db/ident :task.type/state-estate-registry :filename/code "RR"}
           [:db/retractEntity [:db/ident :task.type/cleanup]]
-          [:db/retractEntity [:db/ident :task.type/allotment-plan]]]]}]
+          [:db/retractEntity [:db/ident :task.type/allotment-plan]]]]}
+
+ {:db/ident :migration/land-acquisition-price
+  :txes [[{:db/ident :land-acquisition/price-per-sqm
+           :db/valueType :db.type/bigdec
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :land-acquisition/registry-number
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}]]}]
