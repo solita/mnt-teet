@@ -1,9 +1,9 @@
-(ns teet.integration.x-road.estate-registry
+(ns teet.integration.x-road.property-registry
   (:require [clojure.xml :as xml]
             [clojure.data.zip.xml :as z]
             [clojure.zip]
             [clojure.data.zip]
-            [clojure.string]
+            [clojure.string :as str]
             [hiccup.core :as hiccup]
             [org.httpkit.client :as htclient]
             [taoensso.timbre :as log]
@@ -224,22 +224,15 @@
   ;; parse-kande-tekst util
   (mapv str (z/xml-> cell clojure.data.zip/descendants clojure.zip/node string?)))
 
-(defn unexceptional-xml-parse [input]
-  (try
-    (xml/parse input)
-    (catch Exception _
-      ;; caller has to log error about input resulting in nil parse
-      nil)))
-
 (defn parse-kande-tekst [kande-tekst-str]
   ;; this assumes, like in all cases seen during development, that
   ;; kande_tekst field always contains a xhtml table with 2 columns,
   ;; with cells containing plain text interspersed with <br> elements
-  (when (not (clojure.string/blank? kande-tekst-str))
+  (when (not (str/blank? kande-tekst-str))
     (let [row-seq (-> kande-tekst-str
                       (.getBytes "UTF-8")
                       io/input-stream
-                      unexceptional-xml-parse
+                      x-road/unexceptional-xml-parse
                       clojure.zip/xml-zip (z/xml-> :table :tr))
           parsed (for [row row-seq]
                    (mapv cell-to-text (z/xml-> row :td)))]
@@ -248,11 +241,8 @@
         (log/error "couldn't parse non-empty kande_tekst without table:" kande-tekst-str)))))
 
 
-(defn kinnistu-d-parse-response [xml-string]
-  (let [xml (xml/parse (io/input-stream
-                        (.getBytes xml-string "UTF-8")))
-        zipped-xml (clojure.zip/xml-zip xml)
-        d-response (z/xml1-> zipped-xml :s:Envelope :s:Body :Kinnistu_DetailandmedResponse)
+(defn kinnistu-d-parse-response [zipped-xml]
+  (let [d-response (z/xml1-> zipped-xml :s:Envelope :s:Body :Kinnistu_DetailandmedResponse)
         d-status (z/xml1-> zipped-xml :s:Envelope :s:Body :Kinnistu_DetailandmedResponse :teade z/text)
         d-fault (or (z/xml1-> zipped-xml :SOAP-ENV:Envelope :SOAP-ENV:Body :SOAP-ENV:Fault z/text)
                     (z/xml1-> zipped-xml :s:Envelope :s:Body :Kinnistu_DetailandmedResponse :faultString z/text))
@@ -283,37 +273,14 @@
           {:status :error
            :fault "empty response"})))))
 
-(defn unpeel-multipart [ht-resp]
-  ;; Kludge to decode multipart/related, as this is not supported by the HTTP client lib
-  (let [c-type (:content-type (:headers ht-resp))
-        multipart-match (re-find #"multipart/related;.*boundary=\"([^\"]+)\"" c-type)
-        body (slurp (:body ht-resp))
-        xml-match (re-find #"(?is).*(<\?xml.*Envelope>)" body)
-        soap-msg (second xml-match)
-        boundary (second multipart-match)]
-    (if (and boundary soap-msg (clojure.string/includes? soap-msg boundary))
-      (throw (ex-info "received more than 1 part in multipart response, not implemented"
-                      {}))
-      (if-not multipart-match
-        body
-        soap-msg))))
 
 (defn perform-kinnistu-d-request
   "query-params map should kave keys :instance-id, :reg-nr and :requesting-eid"
   [url query-params]
-
-  (let [req (kr-kinnistu-d-request-xml query-params)
-        resp-atom (htclient/post url {:body req
-                                      :as :stream
-                                      :headers {"Content-Type" "text/xml; charset=UTF-8"}})
-        resp (deref resp-atom)]
-    (if (= 200 (:status resp))
-      (kinnistu-d-parse-response (unpeel-multipart resp))
-      ;; else
-      (let [msg (str "http error communicating to x-road, error=" (:error resp) ", http status=" (:status resp))]
-        (log/error msg)
-        {:status :error
-         :result msg}))))
+  (->> query-params
+       kr-kinnistu-d-request-xml
+       (x-road/perform-request url)
+       kinnistu-d-parse-response))
 
 ;; repl notes:
 
