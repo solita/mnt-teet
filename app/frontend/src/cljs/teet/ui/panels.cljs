@@ -58,8 +58,7 @@
 (defn modal-container-style
   []
   {:display :flex
-   :width "90%"
-   :max-width "900px"
+   :width "900px"
    :background-color :white
    :border-radius "3px"
    :height "50vh"})
@@ -73,7 +72,13 @@
 (defn modal-right-panel-container
   []
   {:flex    1
+   :overflow :hidden
    :padding "1rem"})
+
+(defn right-panel-content-container
+  []
+  {:overflow-y :auto
+   :max-height "43vh"})
 
 (defn right-panel-heading-style
   []
@@ -95,27 +100,27 @@
                     (reset! open-atom false)
                     (when on-close
                       (on-close)))]
-    [:<>
-     [Modal {:open                   @open-atom
-             :class                  (<class modal-style)
+    [Dialog {:open @open-atom
+             :class (<class modal-style)
              :close-after-transition true
-             :on-close               close-fn}
-      [:div {:class (<class modal-container-style)}
-       [Fade {:in @open-atom}
-        [:<>
-         [:div {:class (<class modal-left-panel-container)}
-          left-panel]
-         [:div {:class (<class modal-right-panel-container)}
-          [:div {:class (<class right-panel-heading-style)}
-           [typography/Heading2 title]
-           [IconButton {:aria-label     "close"
-                        :color          :primary
-                        :disable-ripple true
-                        :on-click       close-fn
-                        :size           :small}
-            [icons/navigation-close]]]
-          right-panel]]]]]]))
-
+             :max-width :md
+             :on-close close-fn
+             :full-width true}
+     [:div {:class (<class modal-container-style)}
+      [:<>
+       [:div {:class (<class modal-left-panel-container)}
+        left-panel]
+       [:div {:class (<class modal-right-panel-container)}
+        [:div {:class (<class right-panel-heading-style)}
+         [typography/Heading2 title]
+         [IconButton {:aria-label "close"
+                      :color :primary
+                      :disable-ripple true
+                      :on-click close-fn
+                      :size :small}
+          [icons/navigation-close]]]
+        [:div {:class (<class right-panel-content-container)}
+         right-panel]]]]]))
 
 (defn modal
   "Default modal container"
