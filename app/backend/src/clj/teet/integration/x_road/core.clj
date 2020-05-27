@@ -39,7 +39,9 @@
            [:id:memberClass "GOV"]
            [:id:memberCode (:member-code service)]
            [:id:subsystemCode (:subsystem-code service)]
-           [:id:serviceCode (:service-code service)]]]
+           [:id:serviceCode (:service-code service)]
+           (when-let [v (:version service)]
+             [:id:serviceVersion v])]]
    [:soap:Body body]])
 
 (defn request-xml
