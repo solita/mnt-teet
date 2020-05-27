@@ -42,7 +42,7 @@
   "params needs to have keys :instance-id, :requesting-eid, & :subject-eid"
   [url params]
   (->> params
-       (rr442-request-hiccup params)
+       rr442-request-hiccup
        x-road/request-xml
        (x-road/perform-request url)
        rr442-parse-name))
