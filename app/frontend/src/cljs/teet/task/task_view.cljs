@@ -40,8 +40,7 @@
           (sort-by (comp task-model/task-group-order :db/ident)
                    task-groups)))
 
-(defn- task-selection [{:keys [e! on-change-selected on-change-sent selected sent-to-thk activity-name]} task-groups task-types]
-  (cljs.pprint/pprint sent-to-thk)
+(defn- task-selection [{:keys [e! on-change-selected on-change-sent existing selected sent-to-thk activity-name]} task-groups task-types]
   [:div {:style {:max-height "70vh" :overflow-y :scroll}}
    (mapc (fn [g]
            [:div
@@ -54,14 +53,16 @@
                       [:div {:class (herb/join (<class common-styles/flex-table-column-style 50)
                                                (<class common-styles/no-border))}
                        [select/checkbox {:label (tr-enum t)
-                                         :value (boolean (selected [(:db/ident g) id]))
-                                         :on-change #(on-change-selected
-                                                      (cu/toggle selected [(:db/ident g) id]))}]]
+                                         :disabled (existing id)
+                                         :value (boolean (or (existing id)
+                                                             (selected [(:db/ident g) id])))
+                                         :on-change (when-not (existing id)
+                                                      #(on-change-selected
+                                                        (cu/toggle selected [(:db/ident g) id])))}]]
                       [:div {:class (herb/join (<class common-styles/flex-table-column-style 50)
                                                (<class common-styles/no-border))}
                        (when (and (:thk/task-type t)
                                   (selected [(:db/ident g) id]))
-                         (println "thk" (:thk/task-type t))
                          [select/checkbox {:label (tr [:fields :task/send-to-thk?])
                                            :value (boolean (sent-to-thk [(:db/ident g) id]))
                                            :on-change #(on-change-sent
@@ -73,37 +74,48 @@
   [select/with-enum-values {:e! e! :attribute :task/type}
    [task-selection opts task-groups]])
 
-(defn add-tasks-form [e! tasks activity-name {:keys [max-date min-date]}]
-  [form/form2 {:e! e!
-               :value tasks
-               :on-change-event task-controller/->UpdateAddTasksForm
-               :cancel-event task-controller/->CloseAddTasksDialog
-               :save-event (partial task-controller/->SaveAddTasksForm activity-name)
-               :spec :activity/add-tasks}
-   [Grid {:container true :style {:height "90%"} :spacing 3}
-    [Grid {:item true :xs 4}
-     [form/field {:attribute [:task/estimated-start-date :task/estimated-end-date]}
-      [date-picker/date-range-input {:row? false
-                                     :max-date max-date
-                                     :min-date min-date
-                                     :start-label (tr [:fields :task/estimated-start-date])
-                                     :end-label (tr [:fields :task/estimated-end-date])}]]]
+(defn existing-uncompleted-tasks [activity]
+  (or (->> activity
+           :activity/tasks
+           (remove task-model/completed?)
+           (map (comp :db/ident :task/type))
+           set)
+      #{}))
 
-    [Grid {:item true :xs 8}
-     [select/with-enum-values {:e! e!
-                               :attribute :task/group}
-      [task-groups-and-tasks {:e! e!
-                              :on-change-selected #(e! (task-controller/->UpdateAddTasksForm
-                                                        {:selected-tasks %}))
-                              :on-change-sent #(e! (task-controller/->UpdateAddTasksForm
-                                                    {:sent-tasks %}))
-                              :activity-name activity-name
-                              :selected (or (:selected-tasks tasks) #{})
-                              :sent-to-thk (or (:sent-tasks tasks) #{})}]]]
+(defn add-tasks-form [e! tasks activity {:keys [max-date min-date]}]
+  (let [activity-name (-> activity :activity/name :db/ident)]
+    [form/form2 {:e! e!
+                 :value tasks
+                 :on-change-event task-controller/->UpdateAddTasksForm
+                 :cancel-event task-controller/->CloseAddTasksDialog
+                 :save-event (partial task-controller/->SaveAddTasksForm
+                                      activity-name)
+                 :spec :activity/add-tasks}
+     [Grid {:container true :style {:height "90%"} :spacing 3}
+      [Grid {:item true :xs 4}
+       [form/field {:attribute [:task/estimated-start-date :task/estimated-end-date]}
+        [date-picker/date-range-input {:row? false
+                                       :max-date max-date
+                                       :min-date min-date
+                                       :start-label (tr [:fields :task/estimated-start-date])
+                                       :end-label (tr [:fields :task/estimated-end-date])}]]]
 
-    [Grid {:item true :xs 12}
-     [:div {:style {:display :flex :justify-content :flex-end}}
-      [form/footer2]]]]])
+      [Grid {:item true :xs 8}
+       [select/with-enum-values {:e! e!
+                                 :attribute :task/group}
+        [task-groups-and-tasks {:e! e!
+                                :on-change-selected #(e! (task-controller/->UpdateAddTasksForm
+                                                          {:selected-tasks %}))
+                                :on-change-sent #(e! (task-controller/->UpdateAddTasksForm
+                                                      {:sent-tasks %}))
+                                :activity-name activity-name
+                                :existing (existing-uncompleted-tasks activity)
+                                :selected (or (:selected-tasks tasks) #{})
+                                :sent-to-thk (or (:sent-tasks tasks) #{})}]]]
+
+      [Grid {:item true :xs 12}
+       [:div {:style {:display :flex :justify-content :flex-end}}
+        [form/footer2]]]]]))
 
 (defn task-basic-info
   [e! {:task/keys [estimated-end-date assignee actual-end-date status] :as _task}]
@@ -314,7 +326,7 @@
         activity (project-model/activity-by-id project activity-id)]
     [add-tasks-form e!
      (:add-tasks-data app)
-     (-> activity :activity/name :db/ident)
+     activity
      {:max-date (:activity/estimated-end-date activity)
       :min-date (:activity/estimated-start-date activity)}]))
 
