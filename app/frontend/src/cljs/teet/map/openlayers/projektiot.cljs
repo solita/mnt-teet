@@ -1,7 +1,7 @@
 (ns teet.map.openlayers.projektiot
   "Karttaa varten tarvittavat extent alueet ja projektiot"
   (:require [ol.proj :as ol-proj]
-            [proj4 :as proj4-lib]))
+            ["proj4" :as proj4-lib]))
 
 (def proj4 (aget proj4-lib "default"))
 
