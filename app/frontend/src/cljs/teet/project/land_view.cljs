@@ -330,8 +330,7 @@
                   :on-mouse-leave (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" false unit)
                   :on-click (e! land-controller/->ToggleLandUnit unit)
                   :class (<class cadastral-unit-style selected?)}
-      [typography/SectionHeading {:style {:text-align :left}} (:L_AADRESS unit)]
-      [:div (land-controller/cadastral-purposes TUNNUS unit)]
+      [typography/SectionHeading {:style {:text-align :left}} (str (:L_AADRESS unit) " (" (land-controller/cadastral-purposes TUNNUS unit) ")")]      
       [:div {:class (<class common-styles/space-between-center)}
        [acquisition-impact-status (get-in cadastral-form [:land-acquisition/impact]) (get-in cadastral-form [:land-acquisition/status])]
        [:span {:class (<class common-styles/gray-text)}
