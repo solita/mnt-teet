@@ -2,7 +2,7 @@
   (:require [teet.db-api.core :refer [defquery]]
             [teet.gis.features :as features]
             [datomic.client.api :as d]
-            [teet.integration.x-road :as x-road]
+            [teet.integration.x-road.estate-registry :as estate-registry]
             [clj-time.core :as time]
             [clj-time.coerce :as c]
             [clojure.walk :as walk]
@@ -61,7 +61,7 @@
             xroad-subsystem [:xroad :kr-subsystem-id]}
    :authorization {:land/view-cadastral-data {:eid [:thk.project/id project-id]
                                               :link :thk.project/owner}}}
-  (let [x-road-response (x-road/perform-kinnistu-d-request
+  (let [x-road-response (estate-registry/perform-kinnistu-d-request
                           xroad-url
                           {:xroad-kr-subsystem-id xroad-subsystem
                            :instance-id xroad-instance

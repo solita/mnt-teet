@@ -1,4 +1,4 @@
-(ns teet.integration.x-road
+(ns teet.integration.x-road.estate-registry
   (:require [clojure.xml :as xml]
             [clojure.data.zip.xml :as z]
             [clojure.zip]
@@ -7,7 +7,8 @@
             [hiccup.core :as hiccup]
             [org.httpkit.client :as htclient]
             [taoensso.timbre :as log]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [teet.integration.x-road.core :as x-road])
   (:import (java.util UUID)))
 
 ;; see also https://x-tee.ee/catalogue-data/ee-dev/ee-dev/GOV/70008440/rr/155.wsdl
@@ -82,46 +83,26 @@
 
 (defn kr-kinnistu-d-request-xml [{:keys [instance-id xroad-kr-subsystem-id
                                          registriosa-nr requesting-eid]}]
-  ;; xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
-  ;; xmlns:xro="http://x-road.eu/xsd/xroad.xsd"
-  ;; xmlns:iden="http://x-road.eu/xsd/identifiers"
-  ;; xmlns:kr="http://kr.x-road.eu"
-  ;; xmlns:kin="http://schemas.datacontract.org/2004/07/KinnistuService.DTO"
-  (let [req-hic
-        [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"
-                         :xmlns:xrd "http://x-road.eu/xsd/xroad.xsd"
-                         :xmlns:kr "http://kr.x-road.eu"
-                         :xmlns:kin "http://schemas.datacontract.org/2004/07/KinnistuService.DTO"
-                         :xmlns:id "http://x-road.eu/xsd/identifiers"}
-         [:soap:Header
-          [:xrd:userId requesting-eid]
-          [:xrd:id (UUID/randomUUID)]
-          [:xrd:protocolVersion "4.0"]
-          [:xrd:client {:id:objectType "SUBSYSTEM"}
-           [:id:xRoadInstance instance-id]
-           [:id:memberClass "GOV"]
-           [:id:memberCode "70001490"]
-           [:id:subsystemCode (if xroad-kr-subsystem-id
+  (x-road/request-xml
+   (x-road/request-envelope
+    {:instance-id instance-id
+     :requesting-eid requesting-eid
+     :client {:member-code "70001490"
+              :subsystem-code (if xroad-kr-subsystem-id
                                 xroad-kr-subsystem-id
                                 (do (log/warn "x-road kr client subsystem id unconfigured, defaulting to generic-consumer")
-                                    "generic-consumer"))]]
-          [:xrd:service {:id:objectType "SERVICE"}
-           [:id:xRoadInstance instance-id]
-           [:id:memberClass "GOV"]
-           [:id:memberCode "70000310"]
-           [:id:subsystemCode "kr"]
-           [:id:serviceCode "Kinnistu_Detailandmed"]
-           ;; [:id:serviceVersion ""] ;; was omitted in example SOAP as well
-           ]]
-         [:soap:Body
-          [:kr:Kinnistu_Detailandmed
-           [:kr:request
-            [:kin:jao_nr "0,1,2,3,4"]
-            [:kin:kande_kehtivus "1"]
-            [:kin:kasutajanimi]
-            [:kin:parool]
-            [:kin:registriosa_nr registriosa-nr]]]]]]
-    (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (hiccup/html req-hic))))
+                                    "generic-consumer"))}
+     :service {:member-code "70000310"
+               :subsystem-code "kr"
+               :service-code "Kinnistu_Detailandmed"}}
+    [:kr:Kinnistu_Detailandmed {:xmlns:kr "http://kr.x-road.eu"
+                                :xmlns:kin "http://schemas.datacontract.org/2004/07/KinnistuService.DTO"}
+     [:kr:request
+      [:kin:jao_nr "0,1,2,3,4"]
+      [:kin:kande_kehtivus "1"]
+      [:kin:kasutajanimi]
+      [:kin:parool]
+      [:kin:registriosa_nr registriosa-nr]]])))
 
 
 (defn d-cadastral-unit* [k-xml]

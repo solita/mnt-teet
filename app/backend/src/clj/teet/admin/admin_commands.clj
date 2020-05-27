@@ -2,7 +2,6 @@
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
             [teet.environment :as environment]
             [clojure.string :refer [blank? starts-with?]]
-            [teet.integration.x-road]
             teet.user.user-spec))
 
 (defn- new-user []
@@ -14,7 +13,7 @@
     eid
     (str "EE" eid)))
 
-(defn user-data-from-xroad [new-user-eid current-user-eid]
+#_(defn user-data-from-xroad [new-user-eid current-user-eid]
   (let [xroad-url (environment/config-value :xroad-query-url)
         xroad-instance-id (environment/config-value :xroad-instance-id)
         resp (teet.integration.x-road/perform-rr442-request xroad-url
