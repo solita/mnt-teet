@@ -19,11 +19,14 @@
                 :activity/estimated-start-date
                 :activity/estimated-end-date]))
 
+(s/def :activity/tasks-to-add (s/coll-of vector? :min-count 1))
+
 (s/def :activity/add-tasks
   (s/keys :req [:db/id ;; Activity id
                 ;; For all the tasks
                 :task/estimated-start-date
-                :task/estimated-end-date]))
+                :task/estimated-end-date
+                :activity/tasks-to-add]))
 
 (s/def :activity/create
   (s/keys :req-un [::activity ::tasks ::lifecycle-id]))

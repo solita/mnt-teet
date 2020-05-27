@@ -40,7 +40,9 @@
           (sort-by (comp task-model/task-group-order :db/ident)
                    task-groups)))
 
-(defn- task-selection [{:keys [e! on-change-selected on-change-sent existing selected sent-to-thk activity-name]} task-groups task-types]
+(defn- task-selection [{:keys [e! on-change-selected on-change-sent existing selected sent-to-thk activity-name]
+                        :or {existing #{}}}
+                       task-groups task-types]
   [:div {:style {:max-height "70vh" :overflow-y :scroll}}
    (mapc (fn [g]
            [:div
@@ -105,12 +107,12 @@
                                  :attribute :task/group}
         [task-groups-and-tasks {:e! e!
                                 :on-change-selected #(e! (task-controller/->UpdateAddTasksForm
-                                                          {:selected-tasks %}))
+                                                          {:activity/tasks-to-add %}))
                                 :on-change-sent #(e! (task-controller/->UpdateAddTasksForm
                                                       {:sent-tasks %}))
                                 :activity-name activity-name
                                 :existing (existing-uncompleted-tasks activity)
-                                :selected (or (:selected-tasks tasks) #{})
+                                :selected (or (:activity/tasks-to-add tasks) #{})
                                 :sent-to-thk (or (:sent-tasks tasks) #{})}]]]
 
       [Grid {:item true :xs 12}
