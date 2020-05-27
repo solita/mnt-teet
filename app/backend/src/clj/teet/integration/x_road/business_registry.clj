@@ -12,10 +12,12 @@
      [:prod:keha
       [:prod:ariregistri_kood business-id]
       [:prod:yandmed 1]
-      [:prod:iandmed 1]
-      [:prod:kandmed 1]
-      [:prod:dandmed 1]
-      [:prod:maarused 1]]])))
+
+      ;; We currently only use the first item, don't return unused info
+      [:prod:iandmed 0]
+      [:prod:kandmed 0]
+      [:prod:dandmed 0]
+      [:prod:maarused 0]]])))
 
 (defn- ->num [node]
   (z/xml1-> node z/text #(Long/parseLong %)))
