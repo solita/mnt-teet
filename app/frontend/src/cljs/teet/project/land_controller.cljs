@@ -40,6 +40,17 @@
                                   (not (:selected? unit)))))
     cad-units))
 
+(defn cadastral-purposes [tunnus unit]
+  (->> unit
+       :estate
+       :katastriyksus
+       (filterv #(= (:katastritunnus %) tunnus))
+       first
+       :sihtotstarbed
+       (mapv :sihtotstarve_tekst)
+       set
+       (clojure.string/join ", ")))
+
 
 (defn field-includes? [s substr]
   ;; like str/includes?, but:
