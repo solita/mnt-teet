@@ -70,7 +70,7 @@ SELECT row_to_json(fc)::TEXT
 FROM (SELECT 'FeatureCollection' as type,
              array_to_json(array_agg(f)) AS features
       FROM (SELECT 'Feature' as type,
-                   ST_AsGeoJSON(st_centroid(e.geometry))::json AS geometry,
+                   ST_AsGeoJSON(ST_LineInterpolatePoint(e.geometry, 0.5))::json AS geometry,
                    json_build_object('id', e.id::text,
                                      'tooltip', e.tooltip) AS properties
             FROM teet.entity e
