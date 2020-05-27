@@ -692,7 +692,7 @@
           {:tuck.effect/type :navigate
            :page             page
            :params           params
-           :query            (dissoc query :modal :add :edit :activity :lifecycle)}))
+           :query            (dissoc query :modal :add :edit :activity :lifecycle :modal-target)}))
 
   OpenTaskDialog
   (process-event [{activity :activity} {:keys [page params query] :as app}]
