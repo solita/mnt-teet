@@ -1,85 +1,11 @@
 (ns teet.integration.x-road.property-registry
-  (:require [clojure.xml :as xml]
-            [clojure.data.zip.xml :as z]
+  (:require [clojure.data.zip.xml :as z]
             [clojure.zip]
             [clojure.data.zip]
             [clojure.string :as str]
-            [hiccup.core :as hiccup]
-            [org.httpkit.client :as htclient]
             [taoensso.timbre :as log]
             [clojure.java.io :as io]
-            [teet.integration.x-road.core :as x-road])
-  (:import (java.util UUID)))
-
-;; see also https://x-tee.ee/catalogue-data/ee-dev/ee-dev/GOV/70008440/rr/155.wsdl
-
-(defn rr442-request-hiccup [{:keys [instance-id requesting-eid subject-eid]}]
-  [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"
-                   :xmlns:xrd "http://x-road.eu/xsd/xroad.xsd"
-                   :xmlns:ns5 "http://rr.x-road.eu/producer"
-                   :xmlns:id "http://x-road.eu/xsd/identifiers"}
-   [:soap:Header
-    [:xrd:userId requesting-eid]
-    [:xrd:id (UUID/randomUUID)]
-    [:xrd:protocolVersion "4.0"]
-    [:xrd:client {:id:objectType "SUBSYSTEM"}
-     [:id:xRoadInstance instance-id]
-     [:id:memberClass "GOV"]
-     [:id:memberCode "70001490"]
-     [:id:subsystemCode "liiklusregister"]]
-    [:xrd:service {:id:objectType "SERVICE"}
-     [:id:xRoadInstance instance-id]
-     [:id:memberClass "GOV"]
-     [:id:memberCode "70008440"]
-     [:id:subsystemCode "rr"]
-     [:id:serviceCode "RR442"]
-     [:id:serviceVersion "v3"]]]
-   [:soap:Body
-    [:ns5:RR442
-     [:request
-      [:Isikukood subject-eid]]]]])
-
-(defn rr442-request-xml [qmap]
-  (str "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" (hiccup/html (rr442-request-hiccup qmap))))
-
-(defn rr442-parse-name [xml-string]
-  (let [xml (xml/parse xml-string)
-        zipped-xml (clojure.zip/xml-zip xml)
-        fault (or
-               (z/xml1-> zipped-xml :SOAP-ENV:Envelope :SOAP-ENV:Body :SOAP-ENV:Fault z/text)
-               (z/xml1-> zipped-xml :SOAP-ENV:Body :prod:RR442Response :response :faultString z/text))
-        avaldaja (z/xml1-> zipped-xml :SOAP-ENV:Envelope :SOAP-ENV:Body :prod:RR442Response :response :Avaldaja)
-        fields [:Eesnimi :Perenimi :Isikukood]
-        fieldname->kvpair (fn [fieldname]
-                            [fieldname (z/xml1-> avaldaja fieldname z/text)])]
-    (if fault
-      (do
-        (log/error "population register soap fault:", fault)
-        {:status :error :fault (str "rr soap response reports fault: fault")})
-      (if avaldaja
-        (merge {:status :ok}
-               (into {} (mapv fieldname->kvpair fields)))
-        (do
-          (log/error "pop register empty response without fault code")
-          {:status :error
-           :fault "no fault code or Avaldaja section found in pop register response"})))))
-
-(defn perform-rr442-request
-  "params needs to have keys :instance-id, :requesting-eid, & :subject-eid"
-  [url params]
-    (let [req (rr442-request-xml params)
-
-        resp-atom (htclient/post url {:body req
-                                      :as :stream
-                                      :headers {"Content-Type" "text/xml; charset=UTF-8"}})
-        resp (deref resp-atom)]
-    (if (= 200 (:status resp))
-      (rr442-parse-name (:body resp))
-      ;; else
-      (let [msg (str "http error communicating to x-road, error=" (:error resp) ", http status=" (:status resp))]
-        (log/error msg)
-        {:status :error
-         :result msg}))))
+            [teet.integration.x-road.core :as x-road]))
 
 (defn kr-kinnistu-d-request-xml [{:keys [instance-id xroad-kr-subsystem-id
                                          registriosa-nr requesting-eid]}]
