@@ -70,6 +70,7 @@
      :contact-methods (z/xml-> item :ns1:yldandmed :ns1:sidevahendid :ns1:item parse-contact-method)}))
 
 (defn perform-detailandmed-request [url params]
+  {:pre [(contains? params :business-id)]}
   (->> params
        (merge {:client {:subsystem-code "teeregister"
                         :member-code "70001490"}
