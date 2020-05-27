@@ -4,6 +4,10 @@
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.11"
   },
+  "scripts": {
+    "build": "webpack",
+    "dev-build": "webpack --mode=development"
+  },
   "dependencies": {
     "@material-ui/core": "^4.9.14",
     "@material-ui/styles": "^4.9.14",

@@ -2,7 +2,7 @@
  :output-to "out/index.js"
  :output-dir "out"
  :target :bundle
- :bundle-cmd {:default ["npx" "webpack"]
+ :bundle-cmd {:default ["npm" "run" "webpack"]
               #_["npx" "esbuild"
                         "--bundle" "'--define:process.env.NODE_ENV=\"production\"'"
                         "--minify"
