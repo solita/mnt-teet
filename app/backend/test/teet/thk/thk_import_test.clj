@@ -252,3 +252,13 @@
       (is (= "99887" (-> :task-id tu/get-data tu/entity :thk.activity/id))
           "Task activity id has been set")
       (io/delete-file "testi.csv"))))
+
+(deftest activity-procurement-data ;; TEET-605
+  (import-csv!)
+
+  (testing "procurement nr and procurement id are imported"
+    (let [activity (ffirst (d/q '[:find (pull ?a [*])
+                                  :where [?a :thk.activity/id "6594"]]
+                                (tu/db)))]
+      (is (= (:activity/procurement-id activity) "666"))
+      (is (= (:activity/procurement-nr activity) "666666")))))
