@@ -2,5 +2,5 @@
  :output-to "out/index.js"
  :output-dir "out"
  :target :bundle
- :bundle-cmd {:none ["npm" "run" "dev-build"]
-              :default ["npm" "run" "build"]}}
+ :bundle-cmd {:none ["npx" "webpack" "--mode=development"]
+              :default ["npx" "webpack"]}}
