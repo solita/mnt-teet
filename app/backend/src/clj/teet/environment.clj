@@ -7,7 +7,7 @@
             [amazonica.aws.simplesystemsmanagement :as ssm])
   (:import (com.amazonaws.services.simplesystemsmanagement.model ParameterNotFoundException)))
 
-(defn- ssm-param
+(defn ssm-param
   [& param-path]
   (let [value (->> (str "/teet/" (str/join "/" (map name param-path)))
                    (ssm/get-parameter :name)
