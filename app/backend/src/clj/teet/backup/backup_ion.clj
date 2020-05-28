@@ -38,12 +38,6 @@
 
 
 
-;; pull land-acquisitions
-
-;; pull estate-procedures
-
-
-
 (defn pull-user [db id]
   (d/pull db '[* {:user/permissions [*]}] id))
 
@@ -115,7 +109,7 @@
       (if-not entity
         (do
           (when (seq (set/difference referred provided))
-            (throw (ex-info "Export refered to entities which were not provided! This backup is inconsistent."
+            (throw (ex-info "Export referred to entities that were not provided! This backup is inconsistent."
                             {:missing-referred-ids (set/difference referred provided)})))
           {:backed-up-entity-count (count provided)})
         (if (string? entity)
