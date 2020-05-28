@@ -124,9 +124,10 @@
 (def procedure-type-options
   {:estate-procedure.type/urgent
    {:keys
-
     [:estate-procedure/urgent-bonus
-     :estate-procedure/motivation-bonus :estate-procedure/third-party-compensations]}
+     :estate-procedure/motivation-bonus :estate-procedure/third-party-compensations]
+    :updates
+    [[:estate-procedure/urgent-bonus bigdec]]}
 
    :estate-procedure.type/acquisition-negotiation
    {:keys [:estate-procedure/pos :estate-procedure/compensations
@@ -175,8 +176,6 @@
    :pre [(empty? (du/db-ids payload))]
    :transact
    [(let [tx-data (estate-procedure-tx payload)]
-      (def p* payload)
-      (def tx* tx-data)
       tx-data)]})
 
 (defcommand :land/update-estate-procedure
@@ -194,6 +193,4 @@
           payload)]
    :transact [(let [tx-data
                     (estate-procedure-tx payload)]
-                (def p* payload)
-                (def tx* tx-data)
                 tx-data)]})
