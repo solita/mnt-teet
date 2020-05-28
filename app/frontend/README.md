@@ -11,11 +11,14 @@ Most important external libraries:
   of Reagent components for interfacing with databases using
   [PostgREST](http://postgrest.org)
 - [Openlayers](https://openlayers.org/) is used for map functionality
+- npm
+- npx
 
 # Running locally
 
 Figwheel is used to automatically hot reload code
 - Run the local backend
+- run npm install (not needed if packages.json unchanged) - npx must be installed too or startup will fail later
 - Run `dev.sh` or start a REPL with `dev` profile from your favorite text editor
 - Open [http://localhost:4000](http://localhost:4000)
   ([http://localhost:9500](http://localhost:9500) doesn't work because

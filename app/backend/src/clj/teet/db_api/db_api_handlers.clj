@@ -88,6 +88,7 @@
     (do (log/warn "No spec for " spec ", every query and command should have a spec!")
         nil)
     (when-let [problems (s/explain-data spec data)]
+      (log/debug "spec problems:" problems)
       (with-meta
         (merge
           {:status 422

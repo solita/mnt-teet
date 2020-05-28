@@ -47,3 +47,7 @@
 (s/def :estate-procedure/third-party-compensations (s/coll-of :estate-procedure/compensation))
 
 (s/def :estate-procedure/compensations (s/coll-of :estate-procedure/compensation))
+
+(s/def :land/fetch-land-acquisitions (s/keys :req-un [::project-id]))
+
+(s/def :land/fetch-estate-compensations (s/keys :req [:thk.project/id]))

@@ -6,7 +6,8 @@
             [teet.localization :refer [tr tr-enum]]
             [teet.ui.util :refer [mapc]]
             [reagent.core :as r]
-            [teet.ui.material-ui :refer [ButtonBase Collapse LinearProgress Grid]]
+            [teet.ui.panels :as panels]
+            [teet.ui.material-ui :refer [ButtonBase Collapse LinearProgress Grid Link Divider]]
             [teet.ui.text-field :refer [TextField] :as text-field]
             [teet.project.land-controller :as land-controller]
             [teet.theme.theme-colors :as theme-colors]
@@ -115,7 +116,7 @@
                   :save-event #(land-controller/->SubmitEstateCompensationForm form-data estate-id)
                   :cancel-event #(land-controller/->CancelEstateForm estate-id)
                   :disable-buttons? (not (boolean (:saved-data form-data)))}
-      [:div {:class (<class estate-compensation-form)}
+      [:div
        [:div
         [form/field :estate-procedure/pos
          [TextField {:type :number
@@ -330,7 +331,7 @@
                   :on-mouse-leave (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" false unit)
                   :on-click (e! land-controller/->ToggleLandUnit unit)
                   :class (<class cadastral-unit-style selected?)}
-      [typography/SectionHeading {:style {:text-align :left}} (:L_AADRESS unit)]
+      [typography/SectionHeading {:style {:text-align :left}} (str (:L_AADRESS unit) " (" (land-controller/cadastral-purposes TUNNUS unit) ")")]
       [:div {:class (<class common-styles/space-between-center)}
        [acquisition-impact-status (get-in cadastral-form [:land-acquisition/impact]) (get-in cadastral-form [:land-acquisition/status])]
        [:span {:class (<class common-styles/gray-text)}
@@ -358,7 +359,6 @@
 (defn estate-group
   [e! open-estates cadastral-forms estate-forms [estate-id units]]
   (let [estate (:estate (first units))]
-    (println "estate-id in estategroup: " estate-id)
     [common/hierarchical-container
      {:heading-color theme-colors/gray-lighter
       :heading-text-color :inherit
@@ -482,6 +482,35 @@
            group])
         grouped)])))
 
+(defmulti land-view-modal (fn [modal _target _project]
+                            modal))
+
+(defmethod land-view-modal :default
+  [modal _target _app _project]
+  [:div "Unsupported land view dialog " modal])
+
+(defmethod land-view-modal "estate"
+  [modal target project]
+  {:title target
+   :right-panel [:div [:span modal]
+                 [:p (pr-str project)]]
+   :left-panel [:div
+                (mapc
+                  (fn [p]
+                    [Link {:href (url/set-query-param :modal-page (name p))
+                           :style {:display :block
+                                   :color :white}}
+                     (tr [:modal-page p])])
+                  [:burdens :mortgages :costs :comments])]})
+
+(defn land-view-modals [e! app project]
+  (let [modal (get-in app [:query :modal])
+        target (get-in app [:query :modal-target])]
+    [panels/modal+ (merge {:title (tr [:land-acquisition modal])
+                           :open-atom (r/wrap (boolean modal) :_)
+                           :on-close (e! project-controller/->CloseDialog)
+                           :max-width :sm}
+                          (land-view-modal modal target project))]))
 
 (defn related-cadastral-units-info
   [e! _app project]
@@ -497,10 +526,12 @@
                                (when (nil? (:land/related-estate-ids project))
                                  (e! (land-controller/->FetchRelatedEstates)))))
      :reagent-render
-     (fn [e! _app project]
+     (fn [e! app project]
        (let [fetched-count (:fetched-estates-count project)
              related-estate-count (count (:land/related-estate-ids project))]
          [:div
+          (when (= fetched-count related-estate-count)      ;;TODO needs to also check for the required form informations
+            [land-view-modals e! app project])
           [:div {:style {:margin-top "1rem"}
                  :class (<class common-styles/heading-and-action-style)}
            [typography/Heading2 (tr [:project :cadastral-units-tab])]
