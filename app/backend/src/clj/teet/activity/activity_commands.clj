@@ -180,10 +180,9 @@
                      (meta-model/modification-meta user))]})
 
 (defn user-can-delete-activity?
-  "A user can delete an activity if they created it less than half an hour ago."
+  "A user can delete an activity if it has no procurement number"
   [db activity-id]
-  (let [activity (d/pull db '[:activity/procurement-nr] activity-id)]
-    (nil? (:activity/procurement-nr activity))))
+  (activity-model/deletable? (du/entity db activity-id)))
 
 (defcommand :activity/delete
   {:doc "Mark an activity as deleted"

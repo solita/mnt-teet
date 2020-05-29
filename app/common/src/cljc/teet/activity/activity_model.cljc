@@ -43,3 +43,8 @@
 
 (def activity-ready-statuses
   #{:activity.status/completed :activity.status/expired :activity.status/canceled})
+
+(defn deletable?
+  "Can the activity be deleted? It can if it has no procurement number."
+  [activity]
+  (nil? (:activity/procurement-nr activity)))
