@@ -5,6 +5,7 @@
             [teet.test.utils :as tu]
             [datomic.client.api :as d]
             [teet.thk.thk-export :as thk-export]
+            [teet.util.collection :as cu]
             [teet.util.datomic :as du]
             [teet.thk.thk-integration-ion :as thk-integration-ion]
             [teet.util.collection :as cu]
@@ -261,4 +262,13 @@
                                   :where [?a :thk.activity/id "6594"]]
                                 (tu/db)))]
       (is (= (:activity/procurement-id activity) "666"))
-      (is (= (:activity/procurement-nr activity) "666666")))))
+      (is (= (:activity/procurement-nr activity) "666666"))))
+
+  (testing "procurement nr and id are exported"
+    (export-csv)
+    (let [export-rows (tu/get-data :export-rows)
+          activity-row (cu/find-first #(= (get % "activity_id")
+                                          "6594")
+                                      export-rows)]
+      (is (= (get activity-row "activity_procurementid") "666"))
+      (is (= (get activity-row "activity_procurementno") "666666")))))
