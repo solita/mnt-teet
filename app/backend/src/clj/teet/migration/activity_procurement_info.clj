@@ -14,8 +14,10 @@
                      :let [info (parse integration-info)
                            procurement-id (:activity/procurementid info)
                            procurement-nr (:activity/procurementno info)]
-                     :when procurement-id]
-                 (merge {:db/id activity-id
-                         :activity/procurement-id procurement-id}
+                     :when (or procurement-id
+                               procurement-nr)]
+                 (merge {:db/id activity-id}
+                        (when procurement-id
+                          {:activity/procurement-id procurement-id})
                         (when procurement-nr
                           {:activity/procurement-nr procurement-nr})))})))
