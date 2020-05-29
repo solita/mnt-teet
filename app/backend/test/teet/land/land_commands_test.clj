@@ -3,11 +3,15 @@
             [teet.land.land-commands :as land-commands]))
 
 (deftest estate-procedure-key-parsing
-  (let [test-data {:estate-procedure/compensations
+  (let [test-db-id 123321
+        test-data {:estate-procedure/compensations
                    [#:estate-compensation{:reason :estate-compensation.reason/forest,
-                                          :amount "123"}],
+                                          :amount "123"
+                                          :db/id test-db-id}],
                    :estate-procedure/third-party-compensations
-                   [#:estate-compensation{:description "123", :amount "123"}],
+                   [#:estate-compensation{:description "123", :amount "123"}
+                    #:estate-compensation{:description "123", :amount "123"
+                                          :db/id test-db-id}],
                    :estate-procedure/land-exchanges
                    [#:land-exchange{:cadastral-unit "123",
                                     :area "123",
@@ -22,4 +26,8 @@
       (is (not (contains? parsed-data :estate-procedure/land-exchanges))))
     (testing "Proper keys are parsed"
       (is (decimal? (get-in parsed-data [:estate-procedure/compensations 0 :estate-compensation/amount])))
-      (is (int? (:estate-procedure/pos parsed-data))))))
+      (is (int? (:estate-procedure/pos parsed-data))))
+    (testing "Existing db-id stays the same for compensations"
+      (is (= test-db-id (get-in parsed-data [:estate-procedure/compensations 0 :db/id]))))
+    (testing "Existing db-id stays the same for third-party compensations"
+      (is (= test-db-id (get-in parsed-data [:estate-procedure/third-party-compensations 1 :db/id]))))))

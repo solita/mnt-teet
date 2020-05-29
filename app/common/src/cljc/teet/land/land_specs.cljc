@@ -26,7 +26,7 @@
 (defn non-empty-string? [s]
   (and (string? s) (not (str/blank? s))))
 
-(s/def :estate-procedure/pos non-empty-string?)
+(s/def :estate-procedure/pos (or non-empty-string?))
 
 (s/def :estate-procedure/process-fees (s/coll-of :estate-procedure/process-fee))
 (s/def :estate-procedure/process-fee
@@ -37,10 +37,13 @@
 
 (s/def :estate-procedure/compensation (s/keys :opt [:estate-compensation/amount
                                                     :estate-compensation/description
-                                                    :estate-compensation/reason]))
+                                                    :estate-compensation/reason
+                                                    :db/id]))
 
-(s/def :estate-procedure/land-exchange (s/keys :opt [:land-exchange/area :land-exchange/cadastral-unit-id
-                                                      :land-exchange/price-per-sqm]))
+(s/def :estate-procedure/land-exchange (s/keys :opt [:land-exchange/area
+                                                     :land-exchange/cadastral-unit-id
+                                                     :land-exchange/price-per-sqm
+                                                     :db/id]))
 
 
 (s/def :estate-procedure/land-exchanges (s/coll-of :estate-procedure/land-exchange))

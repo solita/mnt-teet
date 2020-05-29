@@ -24,5 +24,10 @@
 
            :thk-export
            {:fn teet.thk.thk-integration-ion/export-projects-to-thk
-            :description "Export projects as CSV for THK"}}
+            :description "Export projects as CSV for THK"}
+
+           :backup
+           {:fn teet.backup.backup-ion/backup
+            :description "Export backup of Datomic data to S3 bucket"}}
+
  :app-name "teet-datomic"}
