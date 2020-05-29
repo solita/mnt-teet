@@ -138,3 +138,41 @@
 (defn test-backup [db]
   (with-open [out (io/output-stream (io/file "backup.edn.zip"))]
     (backup-to db out)))
+
+(defn to-temp-ids [form]
+  (let [mapping (volatile! {})
+        form (walk/prewalk
+              (fn [f]
+                (if (and (map? f) (contains? f :db/id))
+                  (let [id (:db/id f)]
+                    (vswap! mapping assoc (str id) id)
+                    (update f :db/id str))
+                  f))
+              form)]
+    {:mapping @mapping
+     :form form}))
+
+(defn read-seq
+  "Lazy sequence of forms read from the given reader... don't let it escape with-open!"
+  [rdr]
+  (let [item (read rdr false ::eof)]
+    (when (not= item ::eof)
+      (lazy-seq
+       (cons item
+             (read-seq rdr))))))
+
+(defn restore
+  "Restore from REPL to empty database."
+  [conn file]
+
+  ;; read all users and transact them in one go
+  (with-open [istream (io/input-stream (io/file file))
+              zip-in (doto (java.util.zip.ZipInputStream. istream)
+                       (.getNextEntry))
+              zip-reader (io/reader zip-in)
+              rdr (java.io.PushbackReader. zip-reader)]
+    ;; Transact everything in one big transaction
+    (let [form (doall (read-seq rdr))
+          {:keys [mapping form]} (to-temp-ids form)
+          {tempids :tempids} (d/transact conn {:tx-data (vec form)})]
+      {:mapping mapping :form form :tempids tempids})))
