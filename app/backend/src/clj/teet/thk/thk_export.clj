@@ -101,8 +101,8 @@
 
                        format (or format str)
                        value (if override-kw
-                               (get data override-kw (get data attribute))
-                               (get data attribute))]
+                               (override-kw data (attribute data))
+                               (attribute data))]
                    #_(when (and (not= activity activity-or-task) task-mapping)
                      (log/info "COLUMN " csv-column " HAS task " attribute
                                "VALUE: " value))
