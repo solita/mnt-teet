@@ -337,16 +337,7 @@
                                                 #js {}
                                                 (when loading? (r/as-element [CircularProgress {:size 20}]))
                                                 end-adornment))))
-                                     (react/createElement TextField-class params))}]]))
-  #_[form-select (merge
-                {:label label
-                 :value value
-                 :error error
-                 :show-label? show-label?
-                 :required required
-                 :on-change on-change
-                 :show-empty-selection? true}
-                )])
+                                     (react/createElement TextField-class params))}]])))
 
 (defn radio [{:keys [value items format-item on-change]}]
   (let [item->value (zipmap items (map str (range)))]
