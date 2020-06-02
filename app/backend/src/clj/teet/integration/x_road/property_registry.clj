@@ -124,12 +124,19 @@
           (merge recursed-map
                  leaves-map))}))
 
-(defn d-jagu34 [k-xml p1]
+(declare parse-kande-tekst)
+
+(defn d-jagu34 [k-xml jagu-key]
+  ;; jagu-key will be :jagu3 or :jagu4
   (let [;; children will have eg subtree Jagu3  elements (from under the containing jagu3 element)
-        children (z/xml-> k-xml p1 clojure.zip/children)
-        jagu-maps (mapv #(d-jagu34* p1 (:content %) false)
-                        children)]
-    {p1 (mapv p1 jagu-maps)}))
+        children (z/xml-> k-xml jagu-key clojure.zip/children)
+        jagu-maps (mapv #(d-jagu34* jagu-key (:content %) false)
+                        children)
+        postprocess (fn [jagu-map]
+                      (assert (:kande_tekst jagu-map))
+                      (update jagu-map :kande_tekst parse-kande-tekst))]
+    {jagu-key (mapv postprocess
+                    (mapv jagu-key jagu-maps))}))
 
 
 (def jagu34-summary-fields [:kande_liik_tekst
@@ -170,9 +177,10 @@
                       clojure.zip/xml-zip (z/xml-> :table :tr))
           parsed (for [row row-seq]
                    (mapv cell-to-text (z/xml-> row :td)))]
-      (when (or (empty? parsed)
-                (not= 2 (count (first parsed))))
-        (log/error "couldn't parse non-empty kande_tekst without table:" kande-tekst-str)))))
+      (if (or (empty? parsed)
+              (not= 2 (count (first parsed))))
+        (log/error "couldn't parse non-empty kande_tekst without table:" kande-tekst-str)
+        parsed))))
 
 
 (defn kinnistu-d-parse-response [zipped-xml]
