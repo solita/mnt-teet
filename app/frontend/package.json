@@ -5,6 +5,7 @@
   },
   "dependencies": {
     "@material-ui/core": "^4.9.14",
+    "@material-ui/lab": "^4.0.0-alpha.55",
     "@material-ui/styles": "^4.9.14",
     "proj4": "^2.5.0",
     "react": "^16.13.1",
