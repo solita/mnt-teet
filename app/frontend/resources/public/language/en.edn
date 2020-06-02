@@ -533,7 +533,12 @@
   :no-documents "No documents",
   :edit-success-notification "Task edited successfully",
   :results "Results"},
- :user {:role "Role"},
+ :user
+ {:role "Role",
+  :autocomplete
+  {:placeholder "Type name...",
+   :no-options "User not found",
+   :loading "Searching users..."}},
  :warning
  {:deploying
   "A new version of the application is being deployed. Please wait for a few minutes and refresh the page.",
