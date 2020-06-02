@@ -75,7 +75,10 @@
             ["@material-ui/core/Popper" :as mui-Popper]
             ["@material-ui/core/Snackbar" :as mui-Snackbar]
             ["@material-ui/core/SnackbarContent" :as mui-SnackbarContent]
-            ["@material-ui/core/Badge" :as mui-Badge])
+            ["@material-ui/core/Badge" :as mui-Badge]
+            ["@material-ui/core/TextField" :as mui-TextField]
+            ["@material-ui/lab/Autocomplete" :as mui-Autocomplete])
+
   (:require-macros [teet.ui.material-ui-macros :refer [define-mui-components]]))
 
 ;; Cards
@@ -87,8 +90,10 @@
 ;; Form
 (define-mui-components
   Button ButtonBase Fab IconButton Checkbox InputAdornment FormControl FormControlLabel
-  InputLabel Input
+  InputLabel Input TextField
   Select MenuItem Menu ButtonGroup)
+
+(def TextField-class (aget mui-TextField "default"))
 
 (define-mui-components RadioGroup Radio)
 
@@ -125,3 +130,6 @@
 
 ;; Badge
 (define-mui-components Badge)
+
+;; Labs components
+(define-mui-components Autocomplete)

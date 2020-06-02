@@ -10,8 +10,11 @@
             [teet.user.user-info :as user-info]
             [teet.ui.common :as common]
             [taoensso.timbre :as log]
-            [teet.ui.material-ui :refer [FormControl FormControlLabel RadioGroup Radio Checkbox]]
-            [teet.ui.util :as util]))
+            [teet.ui.material-ui :refer [FormControl FormControlLabel RadioGroup Radio Checkbox Autocomplete TextField-class
+                                         CircularProgress]]
+                                        ;[teet.ui.text-field :refer [TextField]]
+            [teet.ui.util :as util]
+            ["react"]))
 
 (def select-bg-caret-down "url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23005E87%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')")
 
@@ -283,36 +286,58 @@
            :args {:search search}
            :result-event (partial ->CompleteUserResult callback)})))
 
+
 (defn select-user
   "Select user"
   [{:keys [e! value on-change label required error
-           show-label? extra-selection extra-selection-label]
+           show-label?]
     :or {show-label? true}}]
-  (when (nil? @selectable-users)
-    (e! (common-controller/->Query {:query :user/list
-                                    :args {}
-                                    :result-event ->SetSelectableUsers})))
-  [form-select (merge
-                {:label label
-                 :value value
-                 :error error
-                 :show-label? show-label?
-                 :required required
-                 :on-change on-change
-                 :show-empty-selection? true}
-                (if extra-selection
-                  {:items (conj @selectable-users extra-selection)
-                   :format-item (fn [{:user/keys [family-name person-id] :as user}]
-                                  (if (= user extra-selection)
-                                    extra-selection-label
-                                    (if family-name
-                                      (user-info/user-name-and-email user)
-                                      (str person-id))))}
-                  {:items @selectable-users
-                   :format-item (fn [{:user/keys [family-name person-id] :as user}]
-                                  (if family-name
-                                    (user-info/user-name-and-email user)
-                                    (str person-id)))}))])
+  (r/with-let [state (r/atom {:loading? false
+                              :users nil
+                              :open? false})]
+    (let [{:keys [loading? users open?]} @state
+          format-item (fn [{:user/keys [family-name person-id] :as user}]
+                        (if family-name
+                          (user-info/user-name user)
+                          (str person-id)))]
+      [:label
+       (when show-label? [:span label])
+       [Autocomplete {:options (into-array users)
+                      :auto-complete true
+                      :auto-highlight true
+                      :loading loading?
+                      :no-options-text (tr [:user :autocomplete :no-options])
+                      :loading-text (tr [:user :autocomplete :loading])
+
+                      :on-change (fn [_e value _reason]
+                                   (on-change value))
+                      :on-input-change (fn [e txt reason]
+                                         (when (and (= reason "input")
+                                                    (>= (count txt) 2))
+                                           (swap! state assoc :loading? true)
+                                           (e! (->CompleteUser
+                                                txt
+                                                (fn [users]
+                                                  (swap! state assoc
+                                                         :loading? false
+                                                         :users users))))))
+                      :on-open #(swap! state assoc :open? true)
+                      :on-close #(swap! state assoc :open? false)
+                      :get-option-label format-item
+                      :renderInput (fn [params]
+                                     (let [input-props (aget params "InputProps")
+                                           end-adornment (aget input-props "endAdornment")]
+                                       (aset params "variant" "outlined")
+                                       (doto input-props
+                                         (aset "style" #js {:padding "0px 4px"}) ;; FIXME: manually set style
+                                         (aset "placeholder" (tr [:user :autocomplete :placeholder]))
+                                         (aset "endAdornment"
+                                               (react/createElement
+                                                react/Fragment
+                                                #js {}
+                                                (when loading? (r/as-element [CircularProgress {:size 20}]))
+                                                end-adornment))))
+                                     (react/createElement TextField-class params))}]])))
 
 (defn radio [{:keys [value items format-item on-change]}]
   (let [item->value (zipmap items (map str (range)))]

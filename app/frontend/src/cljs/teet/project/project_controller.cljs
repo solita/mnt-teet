@@ -683,7 +683,12 @@
 
   UpdateProjectPermissionForm
   (process-event [{form-data :form-data} app]
-    (update-in app [:route :project :add-participant] merge form-data))
+    (update-in app [:route :project :add-participant]
+               (fn [form]
+                 (let [new-form (merge form form-data)]
+                   (if (contains? form-data :project/participant)
+                     (dissoc new-form :user/person-id)
+                     new-form)))))
 
 
   CloseDialog

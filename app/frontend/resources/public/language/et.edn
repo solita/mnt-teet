@@ -33,7 +33,7 @@
  {:mentioned-users "Mainitud kasutajad",
   :save "Salvestan kommentaari",
   :comment-as "Kommenteerimine kui {name}",
-  :add-mention "Lisage mainimine",
+  :add-mention "Lisan mainimise",
   :unresolved-count "{unresolved-count} lahendamata märkust",
   :edited "Muudetud {date}",
   :resolve-all "Lahendan kõik",
@@ -412,7 +412,7 @@
   :comments-resolved "Märkus edukalt lahendatud",
   :comment-edited "Kommentaar edukalt muudetud",
   :comment-deleted "Kommentaar edukalt kustutatud",
-  :activity-created "Tegevus loodi edukalt",
+  :activity-created "Tegevus edukalt loodud",
   :permission-revoked "Luba tühistati edukalt",
   :task-created "Ülesanne edukalt lisatud",
   :comment-status-changed "Kommentaari staatus edukalt muudetud",
@@ -533,7 +533,12 @@
   :no-documents "Dokumente ei ole",
   :edit-success-notification "Ülesanne edukalt muudetud",
   :results "Tulemused"},
- :user {:role "Roll"},
+ :user
+ {:role "Roll",
+  :autocomplete
+  {:placeholder "Tüüp nimi...",
+   :no-options "Kasutajat ei leitud",
+   :loading "Kasutajate otsimine..."}},
  :warning
  {:deploying
   "Rakenduse uut versiooni laetakse. Palun oota mõned minutid ning seejärel värskenda lehte.",

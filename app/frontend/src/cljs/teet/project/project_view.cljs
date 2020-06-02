@@ -23,7 +23,7 @@
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Paper Link Badge]]
+            [teet.ui.material-ui :refer [Paper Link Badge Grid]]
             [teet.ui.panels :as panels]
             [teet.ui.project-context :as project-context]
             [teet.ui.select :as select]
@@ -170,30 +170,37 @@
                     (filter ac/role-can-be-granted?)
                     @ac/all-roles)]
     [:div
-     [form/form {:e! e!
-                 :value user
-                 :on-change-event #(e! (project-controller/->UpdateProjectPermissionForm %))
-                 :save-event #(e! (project-controller/->SaveProjectPermission project-id user))
-                 :spec :project/add-permission-form}
-      ^{:attribute :project/participant :xs 6}
-      [select/select-user {:e! e! :attribute :project/participant
-                           :extra-selection :new
-                           :extra-selection-label (tr [:people-tab :invite-user])}]
+     [form/form2 {:e! e!
+                  :value user
+                  :on-change-event #(e! (project-controller/->UpdateProjectPermissionForm %))
+                  :save-event #(e! (project-controller/->SaveProjectPermission project-id user))
+                  :spec :project/add-permission-form}
+      [Grid {:container true :spacing 3}
+       [Grid {:item true :xs 6}
+        [form/field :project/participant
+         [select/select-user {:e! e!}]]]
 
-      ^{:attribute :permission/role
-        :xs 6}
-      [select/form-select {:format-item #(tr [:roles %])
-                           :show-empty-selection? true
-                           :items roles}]
+       [Grid {:item true :xs 6}
+        [form/field :permission/role
+         [select/form-select {:format-item #(tr [:roles %])
+                              :show-empty-selection? true
+                              :items roles}]]]
+
+       (when-not (some? (:project/participant user))
+         [Grid {:item true :xs 6}
+          [buttons/button-primary {:on-click #(e! (project-controller/->UpdateProjectPermissionForm
+                                                   {:project/participant :new}))}
+           (tr [:people-tab :invite-user])]])]
 
       (when (= (:project/participant user) :new)
-        ^{:attribute :user/person-id
-          :xs 6}
-        [TextField {:start-icon
-                    (fn [{c :class}]
-                      [:div {:class (str c " "
-                                         (<class common-styles/input-start-text-adornment))}
-                       "EE"])}])]]))
+        [form/field :user/person-id
+         [TextField {:start-icon
+                     (fn [{c :class}]
+                       [:div {:class (str c " "
+                                          (<class common-styles/input-start-text-adornment))}
+                        "EE"])}]])
+
+      [form/footer2]]]))
 
 (defn permission-information
   [e! project permission]
