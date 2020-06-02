@@ -275,7 +275,7 @@
    ;;"activity_teetupdstamp" :activity/teetupdstamp
    "activity_teetdelstamp" {:attribute (juxt :meta/deleted? :meta/modified-at)
                             :parse (constantly nil)
-                            :format (fn [[d? at]] (if d? (date-str at) ""))
+                            :format (fn [[d? at]] (if d? (datetime-str at) ""))
                             :task {:attribute (juxt :meta/deleted? :meta/modified-at)}}
    "activity_cost" {:attribute :activity/cost}
    "activity_procurementno" {:attribute :activity/procurement-nr}
