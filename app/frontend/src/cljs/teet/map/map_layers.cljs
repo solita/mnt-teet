@@ -115,7 +115,7 @@
      :project-pins
      (geojson-layer api-url "geojson_entity_pins" entity-query-options
                     map-features/project-pin-style
-                    {:min-resolution project-pin-resolution-threshold})}))
+                    {})}))
 
 (defn- mvt-for-datasource-ids [api-url prefix datasource-ids style opts]
   (into {}

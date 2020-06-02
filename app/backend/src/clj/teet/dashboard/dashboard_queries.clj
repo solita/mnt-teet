@@ -61,7 +61,8 @@
               (d/q '[:find ?e
                      :where
                      (or [?e :thk.project/owner ?user]
-                         [?e :thk.project/manager ?user])]
+                         [?e :thk.project/manager ?user])
+                     :in $ ?user]
                    db user-ref))
 
         permission-projects (map :db/id

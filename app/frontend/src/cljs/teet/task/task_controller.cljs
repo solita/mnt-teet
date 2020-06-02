@@ -230,13 +230,13 @@
   SaveAddTasksForm
   (process-event [{activity-name :activity-name} {:keys [route add-tasks-data] :as app}]
     (let [tasks-to-create (tasks-for-activity-name activity-name
-                                                   (:selected-tasks add-tasks-data)
+                                                   (:activity/tasks-to-add add-tasks-data)
                                                    (:sent-tasks add-tasks-data))]
       (t/fx app
             {:tuck.effect/type :command!
              :command          :activity/add-tasks
              :payload          {:db/id (:db/id add-tasks-data)
-                                :tasks tasks-to-create
+                                :activity/tasks-to-add tasks-to-create
                                 :task/estimated-start-date (:task/estimated-start-date add-tasks-data)
                                 :task/estimated-end-date (:task/estimated-end-date add-tasks-data)}
              :success-message  (tr [:notifications :tasks-created])

@@ -117,7 +117,9 @@
                                                 :activity/estimated-start-date
                                                 :activity/estimated-end-date
                                                 :activity/name
-                                                :activity/status}))
+                                                :activity/status
+                                                :activity/procurement-nr
+                                                :activity/procurement-id}))
                        {:db/id (or teet-id (str "act-" id))
                         :activity/integration-info (integration-info
                                                     activity

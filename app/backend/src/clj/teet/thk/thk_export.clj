@@ -40,11 +40,16 @@
           :in $ ?e]
         db id)))
 
+(defn- without-deleted [db entities]
+  (meta-query/without-deleted db entities
+                              ;; Keep activities, even if they are deleted
+                              #(some? (:thk.activity/id %))))
+
 (defn export-thk-projects [connection]
   (let [db (d/db connection)
         projects (->> db
                       all-projects
-                      (meta-query/without-deleted db)
+                      (without-deleted db)
                       ;; Take the pulled map from each result
                       (map first)
 
@@ -101,8 +106,8 @@
 
                        format (or format str)
                        value (if override-kw
-                               (get data override-kw (get data attribute))
-                               (get data attribute))]
+                               (override-kw data (attribute data))
+                               (attribute data))]
                    #_(when (and (not= activity activity-or-task) task-mapping)
                      (log/info "COLUMN " csv-column " HAS task " attribute
                                "VALUE: " value))

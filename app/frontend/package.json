@@ -1,6 +1,5 @@
 {
   "devDependencies": {
-    "npx": "^10.2.2",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.11"
   },

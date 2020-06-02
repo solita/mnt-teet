@@ -5,11 +5,14 @@
             [teet.test.utils :as tu]
             [datomic.client.api :as d]
             [teet.thk.thk-export :as thk-export]
+            [teet.util.collection :as cu]
             [teet.util.datomic :as du]
             [teet.thk.thk-integration-ion :as thk-integration-ion]
             [teet.util.collection :as cu]
             [teet.thk.thk-mapping :as thk-mapping]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [teet.meta.meta-query :as meta-query]
+            [teet.meta.meta-model :as meta-model]))
 
 (use-fixtures :each
   tu/with-global-data
@@ -252,3 +255,35 @@
       (is (= "99887" (-> :task-id tu/get-data tu/entity :thk.activity/id))
           "Task activity id has been set")
       (io/delete-file "testi.csv"))))
+
+(deftest activity-procurement-data ;; TEET-605
+  (import-csv!)
+
+  (testing "procurement nr and procurement id are imported"
+    (let [activity (ffirst (d/q '[:find (pull ?a [*])
+                                  :where [?a :thk.activity/id "6594"]]
+                                (tu/db)))]
+      (is (= (:activity/procurement-id activity) "666"))
+      (is (= (:activity/procurement-nr activity) "666666"))))
+
+  (testing "procurement nr and id are exported"
+    (export-csv)
+    (let [export-rows (tu/get-data :export-rows)
+          activity-row (cu/find-first #(= (get % "activity_id")
+                                          "6594")
+                                      export-rows)]
+      (is (= (get activity-row "activity_procurementid") "666"))
+      (is (= (get activity-row "activity_procurementno") "666666")))))
+
+(deftest activity-deletion-timestamp
+  (import-csv!)
+
+  (tu/tx (meta-model/deletion-tx tu/mock-user-boss (:db/id (tu/entity [:thk.activity/id "6594"]))))
+
+  (testing "Exported row has deletion timestamp"
+    (export-csv)
+    (def *export (tu/get-data :export-rows))
+    (let [{:strs [activity_teetdelstamp] :as row} (cu/find-first #(= (get % "activity_id") "6594")
+                                                                 (tu/get-data :export-rows))]
+      (println "activity teet del stamp: " row)
+      (is (some? activity_teetdelstamp) "Activity deletion stamp is present"))))

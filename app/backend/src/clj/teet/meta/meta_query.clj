@@ -5,11 +5,12 @@
 (defn gather-ids
   "Recursively gather all `:db/id` values from entities"
   ([entities]
-   (gather-ids entities #{}))
-  ([entities ids]
+   (gather-ids entities #{} (constantly true)))
+  ([entities ids gather-entity-pred]
    (let [[ids children] (cond
                           (map? entities)
-                          [(if-let [id (:db/id entities)]
+                          [(if-let [id (and (gather-entity-pred entities)
+                                            (:db/id entities))]
                              (conj ids id)
                              ids)
                            (vals entities)]
@@ -20,7 +21,7 @@
                           :else
                           [ids nil])]
      (reduce (fn [ids result]
-               (gather-ids result ids))
+               (gather-ids result ids gather-entity-pred))
              ids
              children))))
 
@@ -44,20 +45,24 @@
     entities))
 
 (defn without-deleted
-  "Removes all deleted entities from result"
-  [db entities]
-  ;Walk result tree and gather all db/id values
-  (let [ids (gather-ids entities)
-        ;Query database for db/id deletion status
-        deleted-entity-ids (into #{}
-                                 (map first)
-                                 (d/q '[:find ?e
-                                        :where [?e :meta/deleted? true]
-                                        :in $ [?e ...]]
-                                      db
-                                      ids))]
-    ;; Walk result tree removing all deleted entities
-    (remove-entities-by-ids entities deleted-entity-ids)))
+  "Removes all deleted entities from result.
+  If keep-entity-pred is given, entity maps that satisfy the predicate
+  are kept even if they are deleted."
+  ([db entities]
+   (without-deleted db entities (constantly false)))
+  ([db entities keep-entity-pred]
+   ;; Walk result tree and gather all db/id values
+   (let [ids (gather-ids entities #{} (complement keep-entity-pred))
+         ;; Query database for db/id deletion status
+         deleted-entity-ids (into #{}
+                                  (map first)
+                                  (d/q '[:find ?e
+                                         :where [?e :meta/deleted? true]
+                                         :in $ [?e ...]]
+                                       db
+                                       ids))]
+     ;; Walk result tree removing all deleted entities
+     (remove-entities-by-ids entities deleted-entity-ids))))
 
 (defn is-creator? [db entity user]
   (boolean

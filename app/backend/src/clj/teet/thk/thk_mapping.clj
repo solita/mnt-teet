@@ -98,8 +98,7 @@
 (def activity-integration-info-fields
   #{:activity/typefk :activity/shortname :activity/statusname
     :activity/contract
-    :activity/guaranteeexpired :activity/thkupdstamp :activity/cost
-    :activity/procurementno :activity/procurementid})
+    :activity/guaranteeexpired :activity/thkupdstamp :activity/cost})
 
 (def csv-column-names
   ["object_id"
@@ -274,7 +273,10 @@
    "activity_guaranteeexpired" {:attribute :activity/guaranteeexpired}
    "activity_thkupdstamp" {:attribute :activity/thkupdstamp}
    ;;"activity_teetupdstamp" :activity/teetupdstamp
-   ;;"activity_teetdelstamp" :activity/teetdelstamp
+   "activity_teetdelstamp" {:attribute (juxt :meta/deleted? :meta/modified-at)
+                            :parse (constantly nil)
+                            :format (fn [[d? at]] (if d? (datetime-str at) ""))
+                            :task {:attribute (juxt :meta/deleted? :meta/modified-at)}}
    "activity_cost" {:attribute :activity/cost}
-   "activity_procurementno" {:attribute :activity/procurementno}
-   "activity_procurementid" {:attribute :activity/procurementid}})
+   "activity_procurementno" {:attribute :activity/procurement-nr}
+   "activity_procurementid" {:attribute :activity/procurement-id}})

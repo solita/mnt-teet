@@ -6,7 +6,7 @@
             [teet.activity.activity-model :as activity-model]
             [teet.activity.activity-style :as activity-style]
             [teet.app-state]
-            [teet.authorization.authorization-check :refer [authorized? when-authorized]]
+            [teet.authorization.authorization-check :refer [authorized?]]
             [teet.common.common-styles :as common-styles]
             teet.file.file-spec
             [teet.localization :refer [tr tr-enum]]
@@ -69,11 +69,7 @@
       [form/footer2]]]]])
 
 (defn edit-activity-form [e! activity {:keys [max-date min-date]}]
-  (let [half-an-hour-ago (- (.getTime (js/Date.)) (* 30 60 1000))
-        deletable? (and (= (get-in activity [:meta/creator :db/id])
-                           (:db/id @teet.app-state/user))
-                        (> (.getTime (:meta/created-at activity))
-                           half-an-hour-ago))]
+  (let [deletable? (activity-model/deletable? activity)]
     [form/form {:e! e!
                 :value activity
                 :on-change-event activity-controller/->UpdateActivityForm

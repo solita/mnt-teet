@@ -124,6 +124,8 @@
           (merge recursed-map
                  leaves-map))}))
 
+(declare parse-kande-tekst)
+
 (defn d-jagu34 [k-xml jagu-key]
   ;; jagu-key will be :jagu3 or :jagu4
   (let [;; children will have eg subtree Jagu3  elements (from under the containing jagu3 element)
