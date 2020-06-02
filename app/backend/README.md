@@ -64,3 +64,9 @@ TEET uses Datiomic Ion as a database.
 - Eval `(datomic-connection) => {:db-name "yourname-dev", :database-id "foo", ...}`
 - import THK data: Find the latest thk->teet .csv file from the dev S3 bucket and call (user/import-thk-from-localfile <path>)
 - When creating your dev datomic db for the first time, run (make-mock-users!) and give permissions to some users with eg (give-manager-permission [:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"]) (this makes Danny D. Manager admin)
+
+## Troubleshooting
+
+- If you a build error about fetching datomic.ion dep like "Error building classpath. Could not find artifact com.datomic:ion:jar:0.9.35 in central (https://repo1.maven.org/maven2/)" it means, contrary to the message, that it's failing to get it from the Datomic s3 bucket source, check your AWS creds (eg awscli and Java AWS sdk have incompatibilities in parsing ~/.aws configs)
+- If you get this at the REPL: "Execution error (ExceptionInfo) at datomic.client.api.async/ares (async.clj:58).
+Forbidden to read keyfile at s3://[...]/dbs/catalog/read/.keys. Make sure that your endpoint is correct, and that your ambient AWS credentials allow you to GetObject on the keyfile." and aws s3 ls still works, it can be the same incomatibility as the first case, or you might have the wrong aws profile active.
