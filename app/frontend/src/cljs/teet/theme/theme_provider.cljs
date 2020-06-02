@@ -149,7 +149,11 @@
                                        :lineHeight 1.5}}
 
                :MuiTableSortLabel {:root {:display "inline-block" :width "100%"}
-                                   :icon {:float "right"}}}})
+                                   :icon {:float "right"}}
+               :MuiOutlinedInput {:root {:border-radius "2px"
+                                         :border (str "1px solid " theme-colors/gray-light)
+                                         :background-color theme-colors/white
+                                         :max-height "42px"}}}})
 
 (defn- create-theme [theme]
   (styles/createMuiTheme (->js theme)))
