@@ -22,5 +22,4 @@ echo "Restoring teeregister dump"
 $PSQL "CREATE EXTENSION IF NOT EXISTS postgis;"
 $PSQL "DROP ROLE IF EXISTS teeregister;"
 $PSQL "CREATE ROLE teeregister;"
-aws s3 cp s3://teet-dev-files/db/teeregister.full.dump.bz2 - | bzcat | psql $ARGS teet_template
 
