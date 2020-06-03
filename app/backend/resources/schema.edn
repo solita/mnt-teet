@@ -905,4 +905,10 @@
           {:db/ident :activity/procurement-id
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one}]
-         teet.migration.activity-procurement-info/extract-procurement-info-from-integration-info]}]
+         teet.migration.activity-procurement-info/extract-procurement-info-from-integration-info]}
+
+ {:db/ident :migration/notification-email-sent
+  :txes [[{:db/ident :notification/email-sent-at
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "Timestamp of when email was sent. If missing, no email has been sent."}]]}]

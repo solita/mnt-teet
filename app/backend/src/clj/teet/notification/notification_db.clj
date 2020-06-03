@@ -7,8 +7,6 @@
             [teet.comment.comment-db :as comment-db]
             [teet.project.project-model :as project-model]))
 
-
-
 (defn notification-tx
   "Return a notification transaction map."
   [{:keys [from       ; user whose action generated the notification
@@ -129,3 +127,25 @@
 
       ;; Return just the given notification id
       [notification-id])))
+
+(defn notifications-to-send
+  "Fetch all notifications that need sending.
+
+  Returns all notifications that have not been sent by email and are unread.
+  Filters out notifications that are older than 1 day as a safety precaution."
+  [db]
+  (let [one-day-ago (java.util.Date.
+                     (- (System/currentTimeMillis)
+                        (* 1000 60 60 24)))]
+    (mapv first
+          (d/q '[:find (pull ?n [:db/id
+                                 :notification/type
+                                 :meta/created-at
+                                 {:notification/receiver [:db/id :user/email]}])
+                 :where
+                 [(missing? $ ?n :notification/email-sent-at)]
+                 [?n :notification/status :notification.status/unread]
+                 [?n :meta/created-at ?created]
+                 [(> ?created ?one-day-ago)]
+                 :in $ ?one-day-ago]
+               db one-day-ago))))

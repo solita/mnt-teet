@@ -79,15 +79,9 @@
   {:page :project
    :params {:project (str (:thk.project/id (du/entity db project-id)))}})
 
-(defquery :notification/navigate
-  {:doc "Fetch navigation info for notification."
-   :context {:keys [db user]}
-   :args {:keys [notification-id]}
-   :project-id nil
-   :authorization {}}
-  (if-let [{:notification/keys [type target]}
-           (notification-db/navigation-info db user notification-id)]
-    ;; FIXME: something more elegant? a multimethod?
+(defn notification-navigation-info [db user notification-id]
+  (when-let [{:notification/keys [type target]}
+             (notification-db/navigation-info db user notification-id)]
     (case (:db/ident type)
       (:notification.type/task-waiting-for-review
        :notification.type/task-assigned)
@@ -105,5 +99,13 @@
       (comment-navigation-info db (:db/id target))
 
       :notification.type/project-manager-assigned
-      (project-navigation-info db (:db/id target)))
-    (db-api/bad-request! "No such notification")))
+      (project-navigation-info db (:db/id target)))))
+
+(defquery :notification/navigate
+  {:doc "Fetch navigation info for notification."
+   :context {:keys [db user]}
+   :args {:keys [notification-id]}
+   :project-id nil
+   :authorization {}}
+  (or (notification-navigation-info db user notification-id)
+      (db-api/bad-request! "No such notification")))
