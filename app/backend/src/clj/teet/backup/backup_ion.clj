@@ -130,7 +130,7 @@
         env (environment/ssm-param :env)
         db (d/db (environment/datomic-connection))]
     (s3/write-file-to-s3 {:to {:bucket bucket
-                               :file-key (str env "-backup-"
+                               :file-key (str "datomic/" env "-backup-"
                                               (java.util.Date.)
                                               ".edn.zip")}
                           :contents (ring-io/piped-input-stream (partial backup-to db))})))
