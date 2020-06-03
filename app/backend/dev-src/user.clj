@@ -254,3 +254,19 @@
   (spit filename (with-out-str (clojure.pprint/pprint output))))
 
 ; (local-query :comment/fetch-comments {:for :task :db/id 34287170600567084})
+
+(defn history-test [db project-id]
+  (let [db-hist (d/history db)
+        txs (d/q
+             '[:find ?instant ?tx ?ref ?op
+               :in $ ?pid
+               :where
+               [?p :thk.project/id ?pid]
+               [?p :thk.project/manager ?ref ?tx ?op]
+               [?tx :db/txInstant ?instant]]
+             db-hist project-id)
+        users (map first
+                   (d/q '[:find (pull ?u [*])
+                          :in $ [?u ...]]
+                        db (map #(get % 2) txs)))]
+    users))
