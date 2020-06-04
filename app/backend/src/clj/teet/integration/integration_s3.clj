@@ -44,3 +44,18 @@
   (let [{:keys [bucket file-key]} fd]
     (:input-stream
      (s3/get-object bucket file-key))))
+
+(defstep write-file-to-s3
+  {:ctx ctx
+   :doc "Write file to S3."
+   :in {fd {:spec ::file-descriptor
+            :path-kw :to
+            :default-path [:to]}
+        contents {:spec ::file-contents
+                  :path-kw :contents
+                  :default-path [:contents]}}
+   :out {:spec some?
+         :default-path [:write-result]}}
+  (s3/put-object :bucket-name (:bucket fd)
+                 :key (:file-key fd)
+                 :input-stream contents))
