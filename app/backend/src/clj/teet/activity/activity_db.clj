@@ -21,3 +21,50 @@
               (and (not (.before date (:activity/estimated-start-date activity-dates)))
                    (not (.after date (:activity/estimated-end-date activity-dates)))))
             dates)))
+
+(defn- manager-transactions [db activity-id]
+  (->> (d/q '[:find ?instant ?modified-at ?tx ?ref
+              :in $ ?activity-id
+              :where
+              ;; Todo change these to :db/id and :activity/manager
+              [?a :thk.project/id ?activity-id]
+              [?a :thk.project/manager ?ref ?tx true]
+              [?a :meta/modified-at ?modified-at ?tx]
+              [?tx :db/txInstant ?instant]]
+            (d/history db)
+            activity-id)
+       (map (fn [[tx-instant modified-at tx ref]]
+              {:modified-at modified-at
+               :tx-instant tx-instant
+               :tx tx
+               :ref ref}))))
+
+(defn- manager-period [[a b]]
+  (if (nil? b)
+    {:manager (:ref a)
+     :period [(:modified-at a) nil]}
+    {:manager (:ref a)
+     :period [(:modified-at a) (:modified-at b)]}))
+
+(defn- manager-transactions->manager-periods [manager-transactions]
+  (->> manager-transactions
+       (partition 2 1 nil)
+       (map manager-period)))
+
+(defn- users-by-id [db db-ids]
+  (->> (d/q '[:find (pull ?u [:db/id :user/given-name :user/family-name])
+              :in $ [?u ...]]
+            db db-ids)
+       (mapcat (comp (juxt :db/id identity)
+                     first))
+       (apply hash-map)))
+
+(defn manager-history [manager-transactions users-by-id]
+  (->> manager-transactions
+       manager-transactions->manager-periods
+       (map #(update % :manager users-by-id))))
+
+(defn fetch-manager-history [db activity-id]
+  (let [txs (manager-transactions db activity-id)
+        users (users-by-id db (map :ref txs))]
+    (manager-history txs users)))

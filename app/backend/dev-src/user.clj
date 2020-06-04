@@ -264,6 +264,7 @@
                [?p :thk.project/id ?pid]
                [?p :thk.project/manager ?ref ?tx ?op]
                [?tx :db/txInstant ?instant]]
+             ;; modified-at instead of txInstant
              db-hist project-id)
         users (map first
                    (d/q '[:find (pull ?u [*])
