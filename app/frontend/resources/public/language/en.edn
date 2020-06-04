@@ -279,6 +279,12 @@
   :request-timeout "The server did not respond.",
   :invalid-activity-dates "Check activity dates",
   :bad-request "Bad request"},
+ :estate-modal
+ {:page
+  {:burdens "Burdens",
+   :mortgages "Mortgages",
+   :costs "Acquisition costs",
+   :comments "Comments"}},
  :fields
  {:land-acquisition/registry-number "State estate registry number",
   :comment/visibility "Visibility",
@@ -389,6 +395,7 @@
   :estate-filter-label "Estate",
   :fetching-land-units "Fetching land units",
   :add-owner "+ Add owner"},
+ :land-acquisitions {:estate-data "Estate data"},
  :login {:login "Login", :password "Password", :username "Username"},
  :map
  {:aerial-view "Aerial view",

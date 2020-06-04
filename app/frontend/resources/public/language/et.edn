@@ -277,6 +277,12 @@
   :request-timeout "Ei saanud serveriga ühendust",
   :invalid-activity-dates "Kontrolli tegevuse kuupäevi",
   :bad-request "Vigane päring"},
+ :estate-modal
+ {:page
+  {:burdens "Koormused",
+   :mortgages "Hüpoteegid",
+   :costs "Kulud",
+   :comments "Kommentaarid"}},
  :fields
  {:land-acquisition/registry-number "Riigivara registrinumber",
   :comment/visibility "Nähtavus",
@@ -387,6 +393,7 @@
   :estate-filter-label "Kinnistu",
   :fetching-land-units "Toon maade andmeid",
   :add-owner "+ Lisan omaniku"},
+ :land-acquisitions {:estate-data "Pärandvara andmed"},
  :login {:login "Sisenen", :password "Salasõna", :username "Kasutaja"},
  :map
  {:aerial-view "Aerofoto",
