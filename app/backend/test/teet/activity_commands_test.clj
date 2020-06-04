@@ -75,6 +75,16 @@
       (println (= :completed (->> *actid (d/pull (tu/db) '[:activity/status] ) :activity/status :db/ident ))))))
 
 (deftest new-activity
+  (testing "Can't create activity for a nonexistent lifecycle"
+    (is (thrown? Exception
+                 (tu/local-command tu/mock-user-boss
+                                   :activity/create
+                                   {:activity {:activity/estimated-start-date #inst "2020-04-06T21:00:00.000-00:00"
+                                               :activity/estimated-end-date #inst "2020-04-12T21:00:00.000-00:00"
+                                               :activity/name :activity.name/land-acquisition}
+                                    :tasks [[:task.group/base-data :task.type/general-part false]]
+                                    :lifecycle-id 12345}))))
+
   (testing "Can't create activity if an activity of the same type already exists in the lifecycle"
     (is (thrown? Exception
                  (tu/local-command tu/mock-user-boss
@@ -103,6 +113,16 @@
                            :lifecycle-id (tu/->db-id "p3-lc1")}))))
 
 (deftest add-tasks
+  (is (thrown? Exception
+               (tu/local-command tu/mock-user-boss
+                                 :activity/add-tasks
+                                 {:db/id 12345 ;; made up activity id
+                                  :task/estimated-start-date #inst "2020-04-11T21:00:00.000-00:00" ;; Oops, too early
+                                  :task/estimated-end-date #inst "2020-04-13T21:00:00.000-00:00"
+                                  :activity/tasks-to-add [[:task.group/land-purchase :task.type/cadastral-works false]
+                                                          [:task.group/land-purchase :task.type/plot-allocation-plan false]]}))
+      "Tasks can only be added to an existing activity")
+
   (tu/store-data! :new-activity-id
                   (-> (tu/local-command tu/mock-user-boss
                                         :activity/create
