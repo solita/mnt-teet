@@ -3,19 +3,22 @@
   The interface to translate messages is the `tr` function which takes a message
   and possible parameters.
 
-  On the frontend a global `selected-language` atom is used."
-  (:require [reagent.core :as r]
+  On the frontend a global `selected-language` atom is used.
+  On the backend the `*language*` dynamic binding is used."
+  (:require #?(:cljs [reagent.core :as r])
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
-            [cljs.reader :as reader]
-            [postgrest-ui.display :as postgrest-display]
-            [alandipert.storage-atom :refer [local-storage]]
-            [teet.util.string :as string]))
+            #?(:cljs [cljs.reader :as reader])
+            #?(:cljs [postgrest-ui.display :as postgrest-display])
+            #?(:cljs [alandipert.storage-atom :refer [local-storage]])
+            [teet.util.string :as string]
+            [teet.log :as log]))
 
 (defn dev-mode? []
-  (when-let [host (-> js/window .-location .-host)]
-    (boolean (re-find #"localhost"
-                      host))))
+  #?(:clj false
+     :cljs (when-let [host (-> js/window .-location .-host)]
+             (boolean (re-find #"localhost"
+                               host)))))
 
 (def supported-languages #{"en" "et"})
 
@@ -24,8 +27,8 @@
 
 (defonce loaded-languages (atom {}))
 
-;; FIXME: read language from user cookie
-(defonce selected-language (local-storage (r/atom :et) :selected-language))
+#?(:cljs (defonce selected-language (local-storage (r/atom :et) :selected-language))
+   :clj (def ^:dynamic *language* "The current language to use" :et))
 
 (def calendar-locale {:et {:months ["jaan" "veebr" "märts" "apr" "mai" "juuni" "juuli" "aug" "sept" "okt" "nov" "dets"]
                            :days ["E" "T" "K" "N" "R" "L" "P"]
@@ -34,6 +37,18 @@
                            :days ["mon" "tue" "wed" "thu" "fri" "sat" "sun"]
                            :today "Today"}})
 
+(defn- load-language* [language callback]
+  #?(:cljs
+     (-> (str "/language/" (name language) ".edn")
+         js/fetch
+         (.then #(.text %))
+         (.then #(reader/read-string %))
+         (.then callback))
+     :clj
+     (-> (str "../frontend/resources/public/language/" (name language) ".edn")
+         slurp read-string
+         callback)))
+
 (defn load-language!
   "Load the given language translation file, if it has not been loaded yet, and adds the language
   to the `loaded-languages` atom.
@@ -41,17 +56,15 @@
   [language on-load]
   (if-let [translations (get @loaded-languages language)]
     (on-load language translations)
-    (-> (str "/language/" (name language) ".edn")
-        js/fetch
-        (.then #(.text %))
-        (.then #(reader/read-string %))
-        (.then (fn [translations]
-                 (swap! loaded-languages assoc language
-                        (assoc translations :calendar (calendar-locale language)))
-                 (on-load language translations))))))
+    (load-language*
+     language
+     (fn [translations]
+       (swap! loaded-languages assoc language
+              (assoc translations :calendar (calendar-locale language)))
+       (on-load language translations)))))
 
-(defn load-initial-language! [callback]
-  (load-language! @selected-language callback))
+#?(:cljs (defn load-initial-language! [callback]
+           (load-language! @selected-language callback)))
 
 (defn translations
   "(Re)loads the given language translation file and returns the translations."
@@ -62,8 +75,8 @@
 
 
 
-(defn set-language! [language]
-  (load-language! language #(reset! selected-language %1)))
+#?(:cljs (defn set-language! [language]
+           (load-language! language #(reset! selected-language %1))))
 
 
 (declare message)
@@ -116,9 +129,9 @@
 
   Optional `parameters` give values to replaceable parts in the message."
   ([message-path]
-   (tr @selected-language message-path {}))
+   (tr #?(:cljs @selected-language :clj *language*) message-path {}))
   ([message-path parameters]
-   (tr @selected-language message-path parameters))
+   (tr #?(:cljs @selected-language :clj *language*) message-path parameters))
   ([language message-path parameters]
    (let [language (get @loaded-languages language)]
      (assert language (str "Language " language " has not been loaded."))
@@ -161,7 +174,7 @@
 
 (defn tr-tree
   ([tree-path]
-   (tr-tree @selected-language tree-path))
+   (tr-tree #?(:cljs @selected-language :clj *language*) tree-path))
   ([language tree-path]
    (get-in (get @loaded-languages language) tree-path)))
 
@@ -172,7 +185,7 @@
     (tr [:enum kw])))
 
 (let [warn (memoize (fn [msg]
-                      (.warn js/console "UNTRANSLATED MESSAGE: " msg)))]
+                      (log/warn "UNTRANSLATED MESSAGE: " msg)))]
 
   (defn tr-fixme
     "Indicate a message that hasn't been translated yet."
@@ -203,20 +216,9 @@
            [:fields :common column] ;; Common field name
            column)))                ;; Fallback to column name
 
-(defmethod postgrest-display/label :default [table column]
-  (label-for-field table column))
+#?(:cljs (defmethod postgrest-display/label :default [table column]
+           (label-for-field table column)))
 
-(defn text-for-lang [localized-text used-lang]
-  (some (fn [{:strs [lang text]}]
-          (when (= lang used-lang)
-            text))
-        localized-text))
-
-(defn localized-text
-  "Show localized text value for the current language"
-  ([lt]
-   (localized-text lt nil))
-  ([lt fallback-lang]
-   (or (text-for-lang lt (name @selected-language))
-       (text-for-lang lt fallback-lang)
-       "")))
+(defmacro with-language [lang & body]
+  `(binding [*language* ~lang]
+     (load-language! *language* (fn [_# _#] ~@body))))
