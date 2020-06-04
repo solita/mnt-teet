@@ -13,7 +13,7 @@
   {:doc "Save a land purchase decision form."
    :context {conn :conn
              user :user}
-   :payload {:land-acquisition/keys [impact pos-number area-to-obtain status price-per-sqm registry-number]
+   :payload {:land-acquisition/keys [impact pos-number area-to-obtain status price-per-sqm registry-number estate-id]
              :keys [cadastral-unit
                     project-id]}
    :project-id [:thk.project/id project-id]
@@ -24,6 +24,7 @@
       (merge {:db/id "new land-purchase"
               :land-acquisition/impact impact
               :land-acquisition/status status
+              :land-acquisition/estate-id estate-id
               :land-acquisition/project [:thk.project/id project-id]
               :land-acquisition/price-per-sqm (when price-per-sqm
                                                 (bigdec price-per-sqm))
@@ -50,7 +51,7 @@
    :context {conn :conn
              user :user
              db :db}
-   :payload {:land-acquisition/keys [impact status pos-number area-to-obtain price-per-sqm registry-number]
+   :payload {:land-acquisition/keys [impact status pos-number area-to-obtain price-per-sqm registry-number estate-id]
              :keys [cadastral-unit
                     project-id]
              id :db/id}
@@ -63,6 +64,7 @@
       (merge {:db/id id
               :land-acquisition/impact impact
               :land-acquisition/status status
+              :land-acquisition/estate-id estate-id
               :land-acquisition/price-per-sqm (when price-per-sqm
                                                 (bigdec price-per-sqm))
               :land-acquisition/registry-number registry-number
@@ -76,14 +78,13 @@
     (assoc data :db/id new-id)))
 
 (defn new-compensations-tx
-  [compensations]
+  [temp-key compensations]
   (into []
         (keep-indexed
          (fn [i compensation]
            (when (seq compensation)
              (-> compensation
-                 (select-keys (su/keys-of :estate-procedure/compensation))
-                 (maybe-add-db-id (str "new-third-party-comp-" i))
+                 (maybe-add-db-id (str temp-key i))
                  (cu/update-in-if-exists [:estate-compensation/amount] bigdec)))))
         compensations))
 
@@ -94,7 +95,6 @@
          (fn [i exchange]
            (when (seq exchange)
              (-> exchange
-                 (select-keys (su/keys-of :estate-procedure/land-exchange))
                  (maybe-add-db-id (str "new-exchange-" i))
                  (cu/update-in-if-exists [:land-exchange/area] bigdec)
                  (cu/update-in-if-exists [:land-exchange/price-per-sqm] bigdec)))))
@@ -112,10 +112,13 @@
     process-fees)))
 
 (def common-procedure-updates
-  [[:estate-procedure/pos #(Integer/parseInt %)]
+  [[:estate-procedure/pos (fn [pos]
+                            (if (int? pos)
+                              pos
+                              (Integer/parseInt pos)))]
    [:estate-procedure/motivation-bonus bigdec]
-   [:estate-procedure/compensations new-compensations-tx]
-   [:estate-procedure/third-party-compensations new-compensations-tx]
+   [:estate-procedure/compensations (partial new-compensations-tx "compensation-")]
+   [:estate-procedure/third-party-compensations (partial new-compensations-tx "third-party-")]
    [:estate-procedure/land-exchanges new-land-exchange-txs]])
 
 (def common-procedure-keys
