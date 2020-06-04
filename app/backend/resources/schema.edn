@@ -911,4 +911,10 @@
   :txes [[{:db/ident :notification/email-sent-at
            :db/valueType :db.type/instant
            :db/cardinality :db.cardinality/one
-           :db/doc "Timestamp of when email was sent. If missing, no email has been sent."}]]}]
+           :db/doc "Timestamp of when email was sent. If missing, no email has been sent."}]]}
+
+ {:db/ident :migration/add-project-manager-to-activity
+  :txes [[{:db/ident       :activity/manager
+           :db/cardinality :db.cardinality/one
+           :db/valueType   :db.type/ref
+           :db/doc         "User who manages the activity"}]]}]
