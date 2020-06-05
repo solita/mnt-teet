@@ -131,11 +131,12 @@
     :else
     #{}))
 
-(defn same-db-ids?
+(defn no-new-db-ids?
   "Check if the two nested structures have same number :db/id values."
   [left right]
-  (= (db-ids left)
-     (db-ids right)))
+  (set/subset?
+    (db-ids right)
+    (db-ids left)))
 
 (defn idents->keywords [m]
   (walk/prewalk
