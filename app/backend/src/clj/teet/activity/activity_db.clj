@@ -23,7 +23,7 @@
             dates)))
 
 (defn- manager-transactions [db activity-id]
-  (->> (d/q '[:find ?instant ?modified-at ?tx ?ref
+  (->> (d/q '[:find ?modified-at ?tx ?ref
               :in $ ?activity-id
               :where
               ;; Todo change these to :db/id and :activity/manager
@@ -33,11 +33,11 @@
               [?tx :db/txInstant ?instant]]
             (d/history db)
             activity-id)
-       (map (fn [[tx-instant modified-at tx ref]]
+       (map (fn [[modified-at tx ref]]
               {:modified-at modified-at
-               :tx-instant tx-instant
                :tx tx
-               :ref ref}))))
+               :ref ref}))
+       (sort-by :modified-at)))
 
 (defn- manager-period [[a b]]
   (if (nil? b)
