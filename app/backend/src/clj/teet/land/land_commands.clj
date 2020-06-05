@@ -4,6 +4,7 @@
             [teet.meta.meta-model :as meta-model]
             [teet.util.collection :as cu]
             [teet.util.spec :as su]
+            [teet.land.land-model :as land-model]
             teet.land.land-specs
             [teet.util.datomic :as du]
             [teet.land.land-db :as land-db]))
@@ -121,36 +122,15 @@
    [:estate-procedure/third-party-compensations (partial new-compensations-tx "third-party-")]
    [:estate-procedure/land-exchanges new-land-exchange-txs]])
 
-(def common-procedure-keys
-  [:estate-procedure/pos :estate-procedure/type :estate-procedure/estate-id])
-
 (def procedure-type-options
-  {:estate-procedure.type/urgent
-   {:keys
-    [:estate-procedure/urgent-bonus
-     :estate-procedure/motivation-bonus :estate-procedure/third-party-compensations]
-    :updates
-    [[:estate-procedure/urgent-bonus bigdec]]}
-
-   :estate-procedure.type/acquisition-negotiation
-   {:keys [:estate-procedure/pos :estate-procedure/compensations
-           :estate-procedure/motivation-bonus
-           :estate-procedure/third-party-compensations
-           :estate-procedure/process-fees]
-    :updates [[:estate-procedure/process-fees new-process-fees-tx]]}
-
-   :estate-procedure.type/expropriation
-   {:keys [:estate-procedure/pos :estate-procedure/compensations
-           :estate-procedure/motivation-bonus
-           :estate-procedure/third-party-compensations]}
-
-   :estate-procedure.type/property-rights
-   {:keys [:estate-procedure/pos :estate-procedure/compensations
-           :estate-procedure/motivation-bonus :estate-procedure/third-party-compensations]}
-
-   :estate-procedure.type/property-trading
-   {:keys [:estate-procedure/pos :estate-procedure/land-exchanges
-           :estate-procedure/third-party-compensations]}})
+  (merge-with merge
+              land-model/procedure-type-options
+              {:estate-procedure.type/urgent
+               {:updates
+                [[:estate-procedure/urgent-bonus bigdec]]}
+               :estate-procedure.type/acquisition-negotiation
+               {:updates
+                [[:estate-procedure/process-fees new-process-fees-tx]]}}))
 
 (defn estate-procedure-tx
   [procedure-form-data]
@@ -163,7 +143,7 @@
       (reduce
        (fn [payload [path update-fn]]
          (cu/update-in-if-exists payload [path] update-fn))
-        (select-keys payload (concat common-procedure-keys keys))
+        (select-keys payload (concat land-model/common-procedure-keys keys))
         (concat common-procedure-updates updates))
       {:db/id (or (:db/id procedure-form-data) "new-estate")
        :estate-procedure/project [:thk.project/id (:thk.project/id procedure-form-data)]})))
@@ -190,10 +170,10 @@
    :project-id [:thk.project/id id]
    :authorization {:land/edit-land-acquisition {:eid [:thk.project/id id]
                                                 :link :thk.project/owner}}
-   :pre [(du/same-db-ids?
-          (land-db/project-estate-procedure-by-id
-           db [:thk.project/id id] procedure-id)
-          payload)]
+   :pre [(du/no-new-db-ids?
+           (land-db/project-estate-procedure-by-id
+             db [:thk.project/id id] procedure-id)
+           payload)]
    :transact [(let [tx-data
                     (estate-procedure-tx payload)]
                 tx-data)]})
