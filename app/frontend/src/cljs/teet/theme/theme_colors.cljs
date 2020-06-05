@@ -43,7 +43,9 @@
 (def popup-background gray-lightest)
 (def popup-border gray)
 
-(def focus-style
+(def button-focus-style
   {:outline 0
    :box-shadow (str "0 0 0 1px" white ", "
                     "0 0 0 3px " blue-light)})
+(def focus-style
+  {:outline (str "2px solid " blue-light)})

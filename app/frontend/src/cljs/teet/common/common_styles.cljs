@@ -190,3 +190,9 @@
    :width "100%"
    :align-items :center
    :justify-content :space-between})
+
+
+(defn gray-container-style
+  []
+  {:background-color theme-colors/gray-lightest
+   :padding "1.5rem"})

@@ -41,6 +41,11 @@
          " — "
          (->> end-date (tf/unparse formatter)))))
 
+
+(defn parse-date-string
+  [string]
+  (tf/unparse formatter (tf/parse string)))
+
 (defn km-range
   [km-range-string]
   (when km-range-string

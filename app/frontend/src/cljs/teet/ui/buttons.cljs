@@ -11,7 +11,7 @@
 (defn- white-button-style
   []
   ^{:pseudo {:hover {:background-color theme-colors/gray-lightest}
-             :focus theme-colors/focus-style}}
+             :focus theme-colors/button-focus-style}}
   {:background-color theme-colors/white
    :display          :flex
    :transition       "background-color 0.2s ease-in"
@@ -28,7 +28,7 @@
   "The styles are with !important because material ui css loading order makes it hard to override them normally"
   []
   ^{:pseudo {:hover {:background-color (str theme-colors/red-dark " !important")}
-             :focus (str theme-colors/focus-style " !important")}}
+             :focus (str theme-colors/button-focus-style " !important")}}
   {:background-color (str theme-colors/error " !important")
    :color            (str theme-colors/white " !important")})
 
@@ -36,18 +36,18 @@
   "The styles are with !important because material ui css loading order makes it hard to override them normally"
   []
   ^{:pseudo {:hover {:background-color (str theme-colors/green-dark " !important")}
-             :focus (str theme-colors/focus-style " !important")}}
+             :focus (str theme-colors/button-focus-style " !important")}}
   {:background-color (str theme-colors/green " !important")
    :color            (str theme-colors/white " !important")})
 
 (defn- button-text-warning-style
   []
-  ^{:pseudo {:focus (str theme-colors/focus-style " !important")}}
+  ^{:pseudo {:focus (str theme-colors/button-focus-style " !important")}}
   {:color (str theme-colors/red " !important")})
 
 (defn- button-text-green-style
   []
-  ^{:pseudo {:focus (str theme-colors/focus-style " !important")}}
+  ^{:pseudo {:focus (str theme-colors/button-focus-style " !important")}}
   {:color (str theme-colors/green " !important")})
 
 
