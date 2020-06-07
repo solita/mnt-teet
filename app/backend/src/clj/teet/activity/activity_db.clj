@@ -1,5 +1,6 @@
 (ns teet.activity.activity-db
   (:require [datomic.client.api :as d]
+            [teet.util.collection :as cu]
             [teet.util.datomic :as du]))
 
 (defn activity-date-range
@@ -22,22 +23,19 @@
                    (not (.after date (:activity/estimated-end-date activity-dates)))))
             dates)))
 
-(defn- manager-transactions [db activity-id]
-  (->> (d/q '[:find ?modified-at ?tx ?ref
-              :in $ ?activity-id
+(defn- manager-transactions [db activity-ids]
+  (->> (d/q '[:find ?a ?modified-at ?tx ?ref
+              :in $ [?a ...]
               :where
-              ;; Todo change these to :db/id and :activity/manager
-              [?a :thk.project/id ?activity-id]
-              [?a :thk.project/manager ?ref ?tx true]
-              [?a :meta/modified-at ?modified-at ?tx]
-              [?tx :db/txInstant ?instant]]
+              [?a :activity/manager ?ref ?tx true]
+              [?a :meta/modified-at ?modified-at ?tx true]]
             (d/history db)
-            activity-id)
-       (map (fn [[modified-at tx ref]]
-              {:modified-at modified-at
+            activity-ids)
+       (map (fn [[a modified-at tx ref]]
+              {:activity a
+               :modified-at modified-at
                :tx tx
-               :ref ref}))
-       (sort-by :modified-at)))
+               :ref ref}))))
 
 (defn- manager-period [[a b]]
   (if (nil? b)
@@ -59,12 +57,30 @@
                      first))
        (apply hash-map)))
 
+;; TODO rename manager-histories-by-activity etc, change in tests as well
 (defn manager-history [manager-transactions users-by-id]
   (->> manager-transactions
-       manager-transactions->manager-periods
-       (map #(update % :manager users-by-id))))
+       (group-by :activity)
+       (cu/map-vals (comp (partial map #(update % :manager users-by-id))
+                          manager-transactions->manager-periods
+                          (partial sort-by :modified-at)))))
 
-(defn fetch-manager-history [db activity-id]
-  (let [txs (manager-transactions db activity-id)
-        users (users-by-id db (map :ref txs))]
+(defn get-activity-ids-of-project
+  "get db ids of nondeleted activities belonging to project"
+  [db project-id]
+  (->> (d/q '[:find (pull ?a [:db/id :meta/deleted?])
+              :in $ ?thk-id
+              :where
+              [?p :thk.project/id ?thk-id]
+              [?p :thk.project/lifecycles ?lc]
+              [?lc :thk.lifecycle/activities ?a]]
+            db project-id)
+       (map first)
+       (remove :meta/deleted?)
+       (map :db/id)))
+
+(defn get-manager-histories [db project-id]
+  (let [activity-ids (get-activity-ids-of-project db project-id)
+        txs (manager-transactions db activity-ids)
+        users (users-by-id db (->> txs (map :ref) distinct))]
     (manager-history txs users)))
