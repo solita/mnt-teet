@@ -1,6 +1,7 @@
 (ns user
   (:require [datomic.client.api :as d]
             [teet.main :as main]
+            [teet.meta.meta-model :as meta-model]
             [teet.environment :as environment]
             [teet.test.utils :as tu]
             [teet.thk.thk-integration-ion :as thk-integration]
@@ -33,7 +34,10 @@
 
 (def mock-users tu/mock-users)
 
-(def danny-uuid (-> mock-users first :user/id))
+(def manager-uid tu/manager-id)
+(def external-consultant-id tu/external-consultant-id)
+(def internal-consultant-id tu/internal-consultant-id)
+(def boss-uid tu/boss-id)
 
 (defn give-admin-permission
   [user-eid]
@@ -255,19 +259,11 @@
 
 ; (local-query :comment/fetch-comments {:for :task :db/id 34287170600567084})
 
-(defn history-test [db project-id]
-  (let [db-hist (d/history db)
-        txs (d/q
-             '[:find ?instant ?tx ?ref ?op
-               :in $ ?pid
-               :where
-               [?p :thk.project/id ?pid]
-               [?p :thk.project/manager ?ref ?tx ?op]
-               [?tx :db/txInstant ?instant]]
-             ;; modified-at instead of txInstant
-             db-hist project-id)
-        users (map first
-                   (d/q '[:find (pull ?u [*])
-                          :in $ [?u ...]]
-                        db (map #(get % 2) txs)))]
-    users))
+(defn add-activity-manager [adding-user-id activity-id manager-user-id]
+  (let [adding-user (ffirst (q '[:find (pull ?e [*])
+                                 :in $ ?uid
+                                 :where [?e :user/id ?uid]]
+                               (db) adding-user-id))]
+    (tx (merge {:db/id activity-id
+                :activity/manager [:user/id manager-user-id]}
+               (meta-model/modification-meta adding-user)))))
