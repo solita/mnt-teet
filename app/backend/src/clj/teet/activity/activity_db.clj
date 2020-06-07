@@ -69,9 +69,8 @@
   "get db ids of nondeleted activities belonging to project"
   [db project-id]
   (->> (d/q '[:find (pull ?a [:db/id :meta/deleted?])
-              :in $ ?thk-id
+              :in $ ?p
               :where
-              [?p :thk.project/id ?thk-id]
               [?p :thk.project/lifecycles ?lc]
               [?lc :thk.lifecycle/activities ?a]]
             db project-id)
@@ -79,8 +78,44 @@
        (remove :meta/deleted?)
        (map :db/id)))
 
-(defn get-manager-histories [db project-id]
+(defn get-manager-histories
+  "Fetches the activity manager transactions for each non-deleted
+  activity in the project, and builds a manager history for them."
+  [db project-id]
   (let [activity-ids (get-activity-ids-of-project db project-id)
         txs (manager-transactions db activity-ids)
         users (users-by-id db (->> txs (map :ref) distinct))]
     (manager-history txs users)))
+
+(defn update-activities
+  "Update each activity in `project` with a given function `f`"
+  [project f]
+  (cu/update-in-if-exists
+   project
+   [:thk.project/lifecycles]
+   (partial map
+            (fn [lc]
+              (cu/update-in-if-exists
+               lc
+               [:thk.lifecycle/activities]
+               (partial map f))))))
+
+(defn project-with-manager-histories
+  "Given a project and manager histories by activity, updates the
+  activities in project to include the history of  managers."
+  [project manager-histories-by-activity]
+  (update-activities project
+                     (fn [activity]
+                       (assoc activity
+                              :activity/manager-history
+                              (or (get manager-histories-by-activity
+                                       (:db/id activity))
+                                  [])))))
+
+(defn update-activity-histories
+  "Adds manager histories to the activities of the project"
+  [project db]
+  {:pre [(:db/id project)]}
+  (project-with-manager-histories project
+                                  (get-manager-histories db
+                                                         (:db/id project))))

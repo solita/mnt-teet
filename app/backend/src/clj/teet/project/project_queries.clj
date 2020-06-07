@@ -1,23 +1,24 @@
 (ns teet.project.project-queries
-  (:require [teet.db-api.core :as db-api :refer [defquery]]
-            [teet.project.project-model :as project-model]
-            [teet.permission.permission-db :as permission-db]
+  (:require [clojure.string :as str]
             [datomic.client.api :as d]
-            [clojure.string :as str]
-            [teet.meta.meta-query :as meta-query]
-            [teet.project.project-db :as project-db]
-            [teet.util.collection :as cu]
-            [teet.task.task-db :as task-db]
-            [teet.project.task-model :as task-model]
             [dk.ative.docjure.spreadsheet :as spreadsheet]
             [ring.util.io :as ring-io]
+            [teet.activity.activity-db :as activity-db]
+            [teet.db-api.core :as db-api :refer [defquery]]
             [teet.environment :as environment]
-            [teet.gis.features :as features]
-            [teet.road.road-query :as road-query]
             [teet.gis.entity-features :as entity-features]
+            [teet.gis.features :as features]
             [teet.log :as log]
+            [teet.meta.meta-query :as meta-query]
+            [teet.permission.permission-db :as permission-db]
+            [teet.project.project-db :as project-db]
+            [teet.project.project-model :as project-model]
+            [teet.project.task-model :as task-model]
             [teet.road.road-model :as road-model]
-            [teet.user.user-model :as user-model]))
+            [teet.road.road-query :as road-query]
+            [teet.task.task-db :as task-db]
+            [teet.user.user-model :as user-model]
+            [teet.util.collection :as cu]))
 
 (defquery :thk.project/db-id->thk-id
   {:doc "Fetch THK project id for given entity :db/id"
@@ -80,7 +81,8 @@
                 (fn [lifecycle]
                   (map #(update % :thk.lifecycle/activities project-model/sort-activities) lifecycle)))
         (maybe-fetch-task-files db task-id)
-        (maybe-update-activity-tasks activity-id))))
+        (maybe-update-activity-tasks activity-id)
+        (activity-db/update-activity-histories db))))
 
 
 

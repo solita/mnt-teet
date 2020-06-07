@@ -68,47 +68,22 @@
 
 (def test-project
   {:thk.project/project-name "Test road"
-   :thk.project/custom-start-m 370
-   :thk.project/custom-end-m 550
    :thk.project/lifecycles
    [{:db/id 26141988462003014
-     :thk.lifecycle/estimated-start-date #inst "2021-03-31T21:00:00.000-00:00"
-     :thk.lifecycle/estimated-end-date #inst "2021-10-30T21:00:00.000-00:00"
-     :thk.lifecycle/type #:db{:id 33042523437924499
-                              :ident :thk.lifecycle-type/construction}
      :thk.lifecycle/activities
      [{:db/id 27685702787400519
-       :activity/estimated-start-date #inst "2021-03-31T21:00:00.000-00:00"
-       :activity/estimated-end-date #inst "2021-10-30T21:00:00.000-00:00"
-       :activity/name #:db{:id 46641283250258055
-                           :ident :activity.name/construction}
        :activity/manager {:db/id 111
                           :user/given-name "John"
                           :user/family-name "Random"}}]}
     {:db/id 12345
-     :thk.lifecycle/estimated-start-date #inst "2020-06-21T21:00:00.000-00:00"
-     :thk.lifecycle/estimated-end-date #inst "2020-10-29T22:00:00.000-00:00"
      :thk.lifecycle/type #:db{:id 59945373946347666
                               :ident :thk.lifecycle-type/design}
      :thk.lifecycle/activities
      [{:db/id 12873082138003082
-       :activity/estimated-start-date #inst "2020-06-22T00:00:00.000-00:00"
-       :activity/estimated-end-date #inst "2020-06-30T00:00:00.000-00:00"
-       :activity/name #:db{:id 57416497202462854
-                           :ident :activity.name/land-acquisition}
-       :activity/status #:db{:id 54491796272580051
-                             :ident :activity.status/in-preparation}
-       :meta/creator #:db{:id 13154557114712222}
-       :meta/created-at #inst "2020-06-04T12:01:27.756-00:00"
        :activity/manager {:db/id 222
                           :user/given-name "Ran"
                           :user/family-name "Johndom"}}
       {:db/id 66753549945537349
-       :activity/estimated-start-date #inst "2020-06-21T21:00:00.000-00:00"
-       :activity/estimated-end-date #inst "2020-10-29T22:00:00.000-00:00"
-       :activity/name #:db{:id 69757415712620677
-                           :ident :activity.name/detailed-design}
-
        :activity/manager {:db/id 222
                           :user/given-name "Ran"
                           :user/family-name "Johndom"}}]}]
@@ -117,3 +92,23 @@
           :given-name "Carla"
           :family-name "Consultant"
           :email "carla.consultant@example.com"}})
+
+(deftest project-with-manager-histories
+  (testing "sanity check for empty data"
+    (is (= (activity-db/project-with-manager-histories {} {})
+           {})))
+
+  (testing "if there is no history, adds empty vector"
+    (is (= (activity-db/project-with-manager-histories test-project {})
+           (activity-db/update-activities test-project
+                                          (fn [a]
+                                            (assoc a :activity/manager-history []))))))
+
+  (testing "otherwise adds the contents of the history"
+    (is (= (activity-db/project-with-manager-histories test-project {12873082138003082 :history})
+           (activity-db/update-activities test-project
+                                          (fn [a]
+                                            (assoc a :activity/manager-history
+                                                   (if (= (:db/id a) 12873082138003082)
+                                                     :history
+                                                     []))))))))
