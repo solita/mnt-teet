@@ -57,8 +57,8 @@
                      first))
        (apply hash-map)))
 
-;; TODO rename manager-histories-by-activity etc, change in tests as well
-(defn manager-history [manager-transactions users-by-id]
+
+(defn manager-histories-by-activity [manager-transactions users-by-id]
   (->> manager-transactions
        (group-by :activity)
        (cu/map-vals (comp (partial map #(update % :manager users-by-id))
@@ -85,7 +85,7 @@
   (let [activity-ids (get-activity-ids-of-project db project-id)
         txs (manager-transactions db activity-ids)
         users (users-by-id db (->> txs (map :ref) distinct))]
-    (manager-history txs users)))
+    (manager-histories-by-activity txs users)))
 
 (defn update-activities
   "Update each activity in `project` with a given function `f`"

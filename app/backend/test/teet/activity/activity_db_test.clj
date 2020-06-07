@@ -2,20 +2,20 @@
   (:require [clojure.test :refer :all]
             [teet.activity.activity-db :as activity-db]))
 
-(deftest manager-history
+(deftest manager-histories-by-activity
   (testing "returns empty map if there are no managers in entire project"
-    (is (empty? (activity-db/manager-history [] {}))))
+    (is (empty? (activity-db/manager-histories-by-activity [] {}))))
 
   (testing "returns one element seq for activity if there has been one manager"
     (let [manager-period-start-timestamp #inst "2020-04-06T21:00:00.000-00:00"
           manager {:db/id 111
                    :user/given-name "John"
                    :user/family-name "Random"}]
-      (is (= (activity-db/manager-history [{:activity 999
-                                            :modified-at manager-period-start-timestamp
-                                            :tx 12345
-                                            :ref (:db/id manager)}]
-                                          {(:db/id manager) manager})
+      (is (= (activity-db/manager-histories-by-activity [{:activity 999
+                                                          :modified-at manager-period-start-timestamp
+                                                          :tx 12345
+                                                          :ref (:db/id manager)}]
+                                                        {(:db/id manager) manager})
              {999 [{:manager manager
                     :period [manager-period-start-timestamp nil]}]}))))
 
@@ -28,16 +28,16 @@
           second-manager {:db/id 222
                           :user/given-name "Ran"
                           :user/family-name "Johndom"}]
-      (is (= (activity-db/manager-history [{:activity 999
-                                            :modified-at first-manager-period-start-timestamp
-                                            :tx 12345
-                                            :ref (:db/id first-manager)}
-                                           {:activity 999
-                                            :modified-at manager-change-timestamp
-                                            :tx 12346
-                                            :ref (:db/id second-manager)}]
-                                          {(:db/id first-manager) first-manager
-                                           (:db/id second-manager) second-manager})
+      (is (= (activity-db/manager-histories-by-activity [{:activity 999
+                                                          :modified-at first-manager-period-start-timestamp
+                                                          :tx 12345
+                                                          :ref (:db/id first-manager)}
+                                                         {:activity 999
+                                                          :modified-at manager-change-timestamp
+                                                          :tx 12346
+                                                          :ref (:db/id second-manager)}]
+                                                        {(:db/id first-manager) first-manager
+                                                         (:db/id second-manager) second-manager})
              {999 [{:manager first-manager
                     :period [first-manager-period-start-timestamp manager-change-timestamp]}
                    {:manager second-manager
@@ -51,16 +51,16 @@
           second-manager {:db/id 222
                           :user/given-name "Ran"
                           :user/family-name "Johndom"}]
-      (is (= (activity-db/manager-history [{:activity 888
-                                            :modified-at first-manager-period-start-timestamp
-                                            :tx 12345
-                                            :ref (:db/id first-manager)}
-                                           {:activity 999
-                                            :modified-at manager-change-timestamp
-                                            :tx 12346
-                                            :ref (:db/id second-manager)}]
-                                          {(:db/id first-manager) first-manager
-                                           (:db/id second-manager) second-manager})
+      (is (= (activity-db/manager-histories-by-activity [{:activity 888
+                                                          :modified-at first-manager-period-start-timestamp
+                                                          :tx 12345
+                                                          :ref (:db/id first-manager)}
+                                                         {:activity 999
+                                                          :modified-at manager-change-timestamp
+                                                          :tx 12346
+                                                          :ref (:db/id second-manager)}]
+                                                        {(:db/id first-manager) first-manager
+                                                         (:db/id second-manager) second-manager})
              {888 [{:manager first-manager
                     :period [first-manager-period-start-timestamp nil]}]
               999 [{:manager second-manager
