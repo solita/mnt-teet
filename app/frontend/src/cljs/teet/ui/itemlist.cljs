@@ -12,7 +12,8 @@
             [herb.core :refer [<class]]
             [teet.ui.util :as util]
             [teet.util.collection :as uc]
-            [teet.ui.buttons :as buttons]))
+            [teet.ui.buttons :as buttons]
+            [teet.common.common-styles :as common-styles]))
 
 (defn ListHeading
   [{:keys [title subtitle action variant]
@@ -149,8 +150,8 @@
      (for [{:keys [key href title selected?]} items]
        ^{:key key}
        [:li {:class (<class itemlist-styles/white-link-item-style)}
-        [:a {:class (<class itemlist-styles/white-link-style selected?)
-             :href  href} title]]))])
+        [:a {:class (<class common-styles/white-link-style selected?)
+             :href href} title]]))])
 
 (defn gray-bg-list
   [list]
