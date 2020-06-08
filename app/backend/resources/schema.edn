@@ -913,7 +913,6 @@
            :db/cardinality :db.cardinality/one
            :db/doc "Timestamp of when email was sent. If missing, no email has been sent."}]]}
 
-
  {:db/ident :migration/land-acquisition-estate-id
   :txes [[{:db/doc "ID of the estate that contains the plot for which the acquisition is made."
            :db/ident :land-acquisition/estate-id
@@ -954,4 +953,11 @@
            :db/tupleAttrs [:owner-comments/project :owner-comments/owner-id]
            :db/cardinality :db.cardinality/one
            :db/unique :db.unique/identity
-           :db/doc "Ensure there is only one owner-comments for an owner per project"}]]}]
+           :db/doc "Ensure there is only one owner-comments for an owner per project"}]]}
+
+ {:db/ident :migration/add-project-manager-to-activity
+  :txes [[{:db/ident       :activity/manager
+           :db/cardinality :db.cardinality/one
+           :db/valueType   :db.type/ref
+           :db/doc         "User who manages the activity"}]]}
+]
