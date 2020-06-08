@@ -25,9 +25,8 @@
     (testing "Proper keys are dropped"
       (is (not (contains? parsed-data :estate-procedure/land-exchanges))))
     (testing "Proper keys are parsed"
-      (is (decimal? (get-in parsed-data [:estate-procedure/compensations 0 :estate-compensation/amount])))
-      (is (int? (:estate-procedure/pos parsed-data))))
-    (testing "Existing db-id stays the same for compensations"
-      (is (= test-db-id (get-in parsed-data [:estate-procedure/compensations 0 :db/id]))))
+      (is (decimal? (get-in parsed-data [:estate-procedure/third-party-compensations 0 :estate-compensation/amount]))))
+    (testing "New db id is added if now db id is given"
+      (is (string? (get-in parsed-data [:estate-procedure/third-party-compensations 0 :db/id]))))
     (testing "Existing db-id stays the same for third-party compensations"
       (is (= test-db-id (get-in parsed-data [:estate-procedure/third-party-compensations 1 :db/id]))))))
