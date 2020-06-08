@@ -279,12 +279,6 @@
   :request-timeout "Ei saanud serveriga ühendust",
   :invalid-activity-dates "Kontrolli tegevuse kuupäevi",
   :bad-request "Vigane päring"},
- :estate-modal
- {:page
-  {:burdens "Koormused",
-   :mortgages "Hüpoteegid",
-   :costs "Kulud",
-   :comments "Kommentaarid"}},
  :fields
  {:land-acquisition/registry-number "Riigivara registrinumber",
   :comment/visibility "Nähtavus",
@@ -326,6 +320,7 @@
   :document/sub-category "Dokumendi alamtüüp",
   :user/add-global-permission
   "Lisan globaalse rolli (kehtib kõikide projektide kohta)",
+  :land-exchange/cadastral-unit-id "Katastriüksuse id",
   :activity/estimated-end-date "Eeldatav lõppkuupäev",
   :user/given-name "Eesnimi",
   :user/person-id "Isikukood",
@@ -371,7 +366,8 @@
   :upload-info "Üles laadinud {author} {date} ",
   :upload-new-version "Laen üles uue versiooni"},
  :land
- {:no-active-mortgages "Sellel kinnistul pole aktiivseid hüpoteeke",
+ {:show-owner-info "Kuva teave omaniku kohta",
+  :no-active-mortgages "Sellel kinnistul pole aktiivseid hüpoteeke",
   :total-area "Üldpind {area} m2",
   :unreliable "Küsitav kvaliteet",
   :estate-compensation-success "Andmed salvestatud",
@@ -408,7 +404,14 @@
   :no-land-acquisitions
   "Selle kinnistu jaoks maa omandamist ei toimunud",
   :fetching-land-units "Toon maade andmeid",
-  :add-owner "+ Lisan omaniku"},
+  :add-owner "+ Lisan omaniku",
+  :owner-data "Omaniku andmed"},
+ :land-modal-page
+ {:burdens "Koormused",
+  :mortgages "Hüpoteegid",
+  :costs "Kulud",
+  :comments "Kommentaarid",
+  :owner-info "Omanikud ja aktsiad"},
  :login {:login "Sisenen", :password "Salasõna", :username "Kasutaja"},
  :map
  {:aerial-view "Aerofoto",

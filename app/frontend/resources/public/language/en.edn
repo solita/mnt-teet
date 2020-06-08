@@ -281,12 +281,6 @@
   :request-timeout "The server did not respond.",
   :invalid-activity-dates "Check activity dates",
   :bad-request "Bad request"},
- :estate-modal
- {:page
-  {:burdens "Burdens",
-   :mortgages "Mortgages",
-   :costs "Acquisition costs",
-   :comments "Comments"}},
  :fields
  {:land-acquisition/registry-number "State estate registry number",
   :comment/visibility "Visibility",
@@ -328,6 +322,7 @@
   :document/sub-category "Document subtype",
   :user/add-global-permission
   "Add global role (applies to all projects)",
+  :land-exchange/cadastral-unit-id "Cadastral unit id",
   :activity/estimated-end-date "Estimated end date",
   :user/given-name "Given name",
   :user/person-id "Person ID",
@@ -373,7 +368,8 @@
   :upload-info "Uploaded {date} by {author}",
   :upload-new-version "Upload new version"},
  :land
- {:no-active-mortgages
+ {:show-owner-info "Show owner information",
+  :no-active-mortgages
   "This estate does not have any active mortgages",
   :total-area "Total area {area} m2",
   :unreliable "Unreliable data",
@@ -410,7 +406,14 @@
   :estate-filter-label "Estate",
   :no-land-acquisitions "No land acquisitions for this estate",
   :fetching-land-units "Fetching land units",
-  :add-owner "+ Add owner"},
+  :add-owner "+ Add owner",
+  :owner-data "Owner data"},
+ :land-modal-page
+ {:burdens "Burdens",
+  :mortgages "Mortgages",
+  :costs "Acquisition costs",
+  :comments "Comments",
+  :owner-info "Owners and shares"},
  :login {:login "Login", :password "Password", :username "Username"},
  :map
  {:aerial-view "Aerial view",
