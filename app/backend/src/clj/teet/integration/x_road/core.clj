@@ -83,8 +83,9 @@
     (do
       (log/error "HTTP error communicating with X-road, error:" error ", status:" status)
       (throw (ex-info "SOAP response returned non OK status."
-                      {:status status
-                       :error error
+                      {:error :invalid-x-road-response
+                       :status status
+                       :http-error error
                        :response http-response})))))
 
 (defn perform-request [url request-xml]

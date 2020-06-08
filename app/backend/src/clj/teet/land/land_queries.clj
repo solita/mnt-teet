@@ -49,6 +49,10 @@
           (map :properties
                (:features units))))))
 
+(defn filter-ended
+  "Used to filter all burdens/mortgages that are no longer deemed interesting"
+  [details]
+  (filterv #(not= "Lõpetatud" (:oiguse_seisund_tekst %)) details))
 
 (defquery :land/estate-info
   {:doc "Fetch estate info from x-road"
@@ -68,9 +72,10 @@
                            :registriosa-nr estate-id
                            :requesting-eid (str "EE" (:user/person-id user))})]
     (if (= (:status x-road-response) :ok)
-      (assoc
-        x-road-response
-        :estate-id estate-id)
+      (-> x-road-response
+          (update :jagu3 filter-ended)
+          (update :jagu4 filter-ended)
+          (assoc :estate-id estate-id))
       (throw (ex-info "Invalid xroad response" {:error :invalid-x-road-response
                                                 :response x-road-response})))))
 

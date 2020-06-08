@@ -9,12 +9,13 @@
             [teet.common.common-controller :as common-controller]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
             [teet.util.datomic :as du]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [teet.land.land-model :as land-model]))
 
 (defrecord ToggleLandUnit [unit])
 (defrecord SearchOnChange [attribute value])
 (defrecord UpdateFilteredUnitIDs [attribute ids])
-(defrecord SubmitLandAcquisitionForm [form-data cadastral-id])
+(defrecord SubmitLandAcquisitionForm [form-data cadastral-id estate-procedure-type estate-id])
 (defrecord FetchLandAcquisitions [project-id])
 (defrecord LandAcquisitionFetchSuccess [result])
 (defrecord FetchEstateInfos [estate-ids retry-count])
@@ -28,6 +29,7 @@
 
 (defrecord UpdateEstateForm [estate form-data])
 (defrecord CancelEstateForm [estate-id])
+(defrecord CancelLandAcquisition [unit])
 (defrecord UpdateCadastralForm [cadastral-id form-data])
 
 
@@ -95,7 +97,9 @@
         (merge
          (select-keys pf [:db/id :estate-process-fee/fee])
          {:estate-process-fee/recipient (:recipient pfr)}
-         (when-let [owner (:owner pfr)]
+         (when-let [owner (and (not (contains? pf :estate-process-fee/business-id))
+                               (not (contains? pf :estate-process-fee/person-id))
+                               (:owner pfr))]
            ;; Owner of the estate, add person or business code
            (case (:isiku_tyyp owner)
              ;; Physical person
@@ -107,6 +111,17 @@
              {:estate-process-fee/business-id (str "EE" (:r_kood owner))}))))))))
 
 (extend-protocol t/Event
+
+  CancelLandAcquisition
+  (process-event [{unit :unit} app]
+    (t/fx (-> app
+              (update-in [:route :project :land/cadastral-forms (:teet-id unit)]
+                         (fn [form-data]
+                           (if-let [saved (:saved-data form-data)]
+                             saved
+                             form-data))))
+          (fn [e!]
+            (e! (->ToggleLandUnit unit)))))
 
   ToggleLandUnit
   (process-event [{unit :unit} app]
@@ -206,6 +221,7 @@
 
       (-> app
           (assoc-in [:route :project :thk.project/related-cadastral-units] related-cadastral-units)
+          (assoc-in [:route :project :land-acquisitions] land-acquisitions)
           (update-in [:route :project :land/cadastral-forms]
                      (fn [cadastral-forms]
                        (into (or cadastral-forms {})
@@ -215,20 +231,21 @@
           (update-in [:route :project] dissoc :thk.project/related-cadastral-units-info))))
 
   SubmitLandAcquisitionForm
-  (process-event [{:keys [form-data cadastral-id]} app]
+  (process-event [{:keys [form-data cadastral-id estate-procedure-type estate-id]} app]
     (let [project-id (get-in app [:params :project])
-          {:land-acquisition/keys [area-to-obtain pos-number price-per-sqm]} form-data]
+          {:land-acquisition/keys [area-to-obtain pos-number]} form-data]
       (t/fx app
             {:tuck.effect/type :command!
              :command (if (:db/id form-data)
                         :land/update-land-acquisition
                         :land/create-land-acquisition)
              :success-message (tr [:land :land-acquisition-saved])
-             :payload (merge form-data
+             :payload (merge (if (= estate-procedure-type :estate-procedure.type/urgent)
+                               (dissoc form-data :land-acquisition/price-per-sqm)
+                               form-data)
                              {:cadastral-unit cadastral-id
+                              :land-acquisition/estate-id estate-id
                               :project-id project-id}
-                             (when price-per-sqm
-                               {:land-acquisition/price-per-sqm (js/parseFloat price-per-sqm)})
                              (when area-to-obtain
                                {:land-acquisition/area-to-obtain (js/parseFloat area-to-obtain)})
                              (when pos-number
@@ -244,10 +261,10 @@
                         :land/update-estate-procedure
                         :land/create-estate-procedure)
              :success-message (tr [:land :estate-compensation-success])
-             :payload (-> form-data
+             :payload (-> (dissoc form-data :saved-data)
                           (merge
-                           {:thk.project/id project-id
-                            :estate-procedure/estate-id estate-id})
+                            {:thk.project/id project-id
+                             :estate-procedure/estate-id estate-id})
                           format-process-fees)
              :result-event (partial ->FetchEstateCompensations project-id)})))
 
@@ -261,21 +278,26 @@
 
   FetchEstateCompensationsResponse
   (process-event [{response :response} app]
-    (common-controller/update-page-state
-     app [:land/estate-forms]
-     (fn [estate-forms]
-       (js/console.log "ESTATE FORMS: " (pr-str estate-forms))
-       (into (or estate-forms {})
-             (for [[estate-id form] response]
-               [estate-id
-                (cu/update-in-if-exists
-                 form [:estate-procedure/process-fees]
-                 (fn [process-fees]
-                   (mapv #(assoc % :process-fee-recipient
-                                 {:owner (or (:estate-process-fee/person-id %)
-                                             (:estate-process-fee/business-id %))
-                                  :recipient (:estate-process-fee/recipient %)})
-                         process-fees)))])))))
+    (-> app
+        (common-controller/update-page-state
+          [:land/estate-forms]
+          (fn [estate-forms]
+            (js/console.log "ESTATE FORMS: " (pr-str estate-forms))
+            (into (or estate-forms {})
+                  (for [[estate-id form] response]
+                    [estate-id
+                     (cu/update-in-if-exists
+                       form [:estate-procedure/process-fees]
+                       (fn [process-fees]
+                         (mapv #(assoc % :process-fee-recipient
+                                         {:owner (or (:estate-process-fee/person-id %)
+                                                     (:estate-process-fee/business-id %))
+                                          :recipient (:estate-process-fee/recipient %)})
+                               process-fees)))]))))
+        (assoc-in [:route :project :estate-compensations]
+                  (mapv (fn [[_ value]]
+                          value)
+                        response))))
   FetchRelatedEstates
   (process-event [_ {:keys [params] :as app}]
     (let [project-id (:project params)
@@ -364,16 +386,23 @@
                           (:estate-procedure/type old-data))
                     (not (contains? old-data :estate-procedure/process-fees)))
                {:estate-procedure/process-fees (estate-owner-process-fees estate)})]
-         (merge old-data form-data computed (when (not (:saved-data old-data)) {:saved-data (if old-data
-                                                                                              (dissoc old-data :saved-data)
-                                                                                              {})}))))))
+         (merge old-data form-data computed
+                (when (not (:saved-data old-data))
+                  {:saved-data (if old-data
+                                 (dissoc old-data :saved-data)
+                                 {})}))))))
 
   UpdateCadastralForm
   (process-event [{:keys [cadastral-id form-data]} app]
     (common-controller/update-page-state
      app
      [:land/cadastral-forms cadastral-id]
-     merge form-data)))
+     (fn [old-data]
+       (merge old-data form-data
+              (when (not (:saved-data old-data))
+                {:saved-data (if old-data
+                               (dissoc old-data :saved-data)
+                               {})}))))))
 
 (defmethod common-controller/on-server-error :invalid-x-road-response [err app]
   (let [error (-> err ex-data :error)]
