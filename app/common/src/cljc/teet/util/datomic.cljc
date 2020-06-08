@@ -132,7 +132,7 @@
     #{}))
 
 (defn no-new-db-ids?
-  "Check if the two nested structures have same number :db/id values."
+  "Check that there are no new ids in the right set of ids"
   [left right]
   (set/subset?
     (db-ids right)
