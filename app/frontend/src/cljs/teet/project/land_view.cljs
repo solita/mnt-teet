@@ -21,7 +21,9 @@
             [teet.util.datomic :as du]
             [teet.ui.common :as common]
             [teet.comments.comments-view :as comments-view]
-            [teet.ui.table :as table]))
+            [teet.ui.table :as table]
+            [teet.ui.format :as format]
+            [cljs-time.format :as tf]))
 
 (defn cadastral-unit-style
   [selected?]
@@ -62,23 +64,6 @@
   []
   {:background-color :inherit
    :padding "1.5rem"})
-
-(comment
-  ;; FIXME: app state hierarchy
-  {:route
-   {:project
-    {:land/forms
-     {#{"own1" "own2"} ;; set of owners as key
-      {:land/owner-compensation-form {:some-owner-comp-keys "value"}
-
-       ;; map containing all estate forms for this owner set
-       :land/estate-forms
-       {;; estate id and form map
-         "123123" {:estate-procedure/motivation-bonus 420}}
-
-       :land/cadastral-forms
-       ;; plot number and form maps
-       {"44422" {:land-purchase/decision :land-purchase.decision/not-needed}}}}}}})
 
 (defn field-with-title
   [{:keys [title field-name field-type end-icon placeholder]}]
@@ -420,16 +405,22 @@
   [e! project open-estates cadastral-forms estate-forms [owner units]]
   ^{:key (str owner)}
   [:div {:style {:margin-bottom "2rem"}}
-   (let [owners (get-in (first units) [:estate :omandiosad])]
+   (let [owners (get-in (first units) [:estate :omandiosad])
+         estate-id (get-in (first units) [:estate :estate-id])]
 
      [common/hierarchical-container
       {:heading-color theme-colors/gray
        :heading-text-color theme-colors/white
        :heading-content
        [:div {:class (<class group-style)}
-        [typography/SectionHeading (if (not= (count owners) 1)
-                                     (str (count owners) " owners")
-                                     (:nimi (first owners)))]
+        [:div {:style {:display :flex
+                       :justify-content :space-between}}
+         [typography/SectionHeading (if (not= (count owners) 1)
+                                      (str (count owners) " owners")
+                                      (:nimi (first owners)))]
+         [:a {:class (<class common-styles/white-link-style false)
+              :href (url/set-query-param :modal "owner" :modal-target estate-id :modal-page "owner-info")}
+          (tr [:land :show-owner-info])]]
         [:span (count units) " " (if (= 1 (count units))
                                    (tr [:land :unit])
                                    (tr [:land :units]))]]
@@ -524,11 +515,11 @@
    (mapc
      (fn [p]
        (if (= current (name p))
-         [:strong {:style {:color :white}} (tr [:estate-modal :page p])]
+         [:strong {:style {:color :white}} (tr [:land-modal-page p])]
          [Link {:href (url/set-query-param :modal-page (name p))
                 :style {:display :block
                         :color :white}}
-          (tr [:estate-modal :page p])]))
+          (tr [:land-modal-page p])]))
      pages)])
 
 (defmulti estate-modal-content (fn [{:keys [page]}]
@@ -544,10 +535,17 @@
     [:div {:class (<class common-styles/gray-container-style)}
      (if (not-empty burdens)
        (for [burden burdens]
-         [common/estate-detail {:title (:kande_liik_tekst burden)
-                                :date (:kande_alguskuupaev burden)
-                                :body (first (second (first (:kande_tekst burden))))
-                                }])
+         [common/heading-and-grey-border-body
+          {:heading [:<>
+                     [typography/BoldGreyText {:style {:display :inline}}
+                      (:kande_liik_tekst burden) " "]
+                     [typography/GreyText {:style {:display :inline}}
+                      (format/parse-date-string (:kande_alguskuupaev burden))]]
+           :body [:span (-> burden
+                            :kande_tekst
+                            first
+                            second
+                            first)]}])
        [:p (tr [:land :no-active-burdens])])]))
 
 (defmethod estate-modal-content :mortgages
@@ -556,15 +554,21 @@
     [:div {:class (<class common-styles/gray-container-style)}
      (if (not-empty mortgages)
        (for [mortgage mortgages]
-         [common/estate-detail {:title (str
-                                         (:kande_liik_tekst mortgage)
-                                         " "
-                                         (:koormatise_rahaline_vaartus mortgage)
-                                         " "
-                                         (:koormatise_rahalise_vaartuse_valuuta mortgage))
-                                :date (:kande_alguskuupaev mortgage)
-                                :body (first (second (first (:kande_tekst mortgage))))
-                                }])
+         [common/heading-and-grey-border-body {:heading [:<>
+                                          [typography/BoldGreyText {:style {:display :inline}}
+                                           (str
+                                             (:kande_liik_tekst mortgage)
+                                             " "
+                                             (:koormatise_rahaline_vaartus mortgage)
+                                             " "
+                                             (:koormatise_rahalise_vaartuse_valuuta mortgage))
+                                           [typography/GreyText {:style {:display :inline}}
+                                            (format/parse-date-string (:kande_alguskuupaev mortgage))]]]
+                                :body (-> mortgage
+                                          :kande_tekst
+                                          first
+                                          second
+                                          first)}])
        [:p (tr [:land :no-active-mortgages])])]))
 
 
@@ -669,17 +673,64 @@
   [:div "Unsupported land view dialog " modal])
 
 (defmethod land-view-modal :estate
-  [{:keys [e! app page project estate-info] :as opts}]
-  {:title (tr [:estate-modal :page (keyword page)])
+  [{:keys [e! app modal-page project estate-info]}]
+  {:title (tr [:estate-modal :page (keyword modal-page)])
    :left-panel [modal-left-panel-navigation
-                page
+                modal-page
                 (tr [:land :estate-data])
                 [:burdens :mortgages :costs :comments]]
    :right-panel [estate-modal-content {:e! e!
-                                       :page page
+                                       :page modal-page
                                        :app app
                                        :project project
                                        :estate-info estate-info}]})
+
+(defmulti owner-modal-content (fn [{:keys [modal-page]}]
+                                (keyword modal-page)))
+
+
+(defmethod owner-modal-content :default
+  [{:keys [modal-page]}]
+  [:span "Unsupported owner-modal-content " modal-page])
+
+
+(defmethod owner-modal-content :owner-info
+  [{:keys [estate-info]}]
+  (let [owners (:omandiosad estate-info)]
+    [:div {:class (<class common-styles/gray-container-style)}
+     (mapc
+       (fn [{:keys [omandiosa_suurus omandiosa_lugeja omandiosa_nimetaja] :as owner}]
+         ;; Since we don't have person registry integration show everything we have of owner.
+         [common/heading-and-grey-border-body
+          {:heading [:div {:style {:display :flex
+                                   :justify-content :space-between}}
+                     [typography/BoldGreyText (:nimi owner)]
+                     (when omandiosa_suurus
+                       [typography/BoldGreyText (str (* (/ omandiosa_lugeja omandiosa_nimetaja) 100) "%")])]
+           :body [:<> (mapc
+                        (fn [[key value]]
+                          [:div
+                           [:strong key ": "]
+                           [:span (if (and (some? (tf/parse value)) (= key :omandi_algus))
+                                    (format/parse-date-string value)
+                                    value)]])
+                        owner)]}])
+       owners)]))
+
+(defmethod land-view-modal :owner
+  [{:keys [e! app modal-page project estate-info] :as opts}]
+  {:title (tr [:land-modal-page (keyword modal-page)])
+   :left-panel [modal-left-panel-navigation
+                modal-page
+                (tr [:land :owner-data])
+                [:owner-info
+                 #_:comments                                ;;Still needs some planning on where to tie the comments to
+                 ]]
+   :right-panel [owner-modal-content {:e! e!
+                                      :modal-page modal-page
+                                      :app app
+                                      :project project
+                                      :estate-info estate-info}]})
 
 (defn land-view-modals [e! app project]
   (let [modal (get-in app [:query :modal])
@@ -698,7 +749,7 @@
                                             :app app
                                             :modal modal
                                             :target target
-                                            :page modal-page
+                                            :modal-page modal-page
                                             :project project
                                             :estate-info estate-info}))]))
 

@@ -285,12 +285,11 @@
            :class (<class count-chip-style)}
           opts)])
 
-(defn estate-detail
-  [{:keys [title date body]}]
+(defn heading-and-grey-border-body
+  [{:keys [heading body]}]
   [:div {:style {:margin-bottom "1.5rem"}}
    [:div {:style {:margin-bottom "0.25rem"}}
-    [typography/BoldGreyText {:style {:display :inline}} title] " "
-    [typography/GreyText {:style {:display :inline}} (format/parse-date-string date)]]
+    heading]
    [:div {:style {:padding-left "0.5rem"
                   :border-left (str "solid 7px " theme-colors/gray-light)}}
-    [:span body]]])
+    body]])
