@@ -344,7 +344,6 @@
    :align-items :flex-start
    :padding "0.5rem"})
 
-
 (defn estate-group
   [e! project open-estates cadastral-forms estate-forms [estate-id units]]
   (let [estate (:estate (first units))
