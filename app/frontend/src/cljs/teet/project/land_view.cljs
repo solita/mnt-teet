@@ -564,7 +564,8 @@
                                              " "
                                              (:koormatise_rahaline_vaartus mortgage)
                                              " "
-                                             (:koormatise_rahalise_vaartuse_valuuta mortgage))
+                                             (:koormatise_rahalise_vaartuse_valuuta mortgage)
+                                             " ")
                                            [typography/GreyText {:style {:display :inline}}
                                             (format/parse-date-string (:kande_alguskuupaev mortgage))]]]
                                 :body (-> mortgage
