@@ -7,7 +7,9 @@
             [clj-time.core :as time]
             [clj-time.coerce :as c]
             [clojure.walk :as walk]
-            [teet.land.land-db :as land-db]))
+            [teet.land.land-db :as land-db])
+  (:import (java.time LocalDate)
+           (java.time.format DateTimeFormatter)))
 
 (defn- datomic->form
   "Format data to a format suitable for frontend form.
@@ -144,7 +146,7 @@ and the compensation info as the value."
                     :instance-id xroad-instance})]
     (walk/prewalk
      (fn [x]
-       (if (instance? java.time.LocalDate x)
-         (.format x java.time.format.DateTimeFormatter/ISO_LOCAL_DATE)
+       (if (instance? LocalDate x)
+         (.format x DateTimeFormatter/ISO_LOCAL_DATE)
          x))
      response)))
