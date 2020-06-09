@@ -58,9 +58,11 @@
                                  ;; if entity id is a tuple for the first creation of estate-comments or owner-comments
                                  ;; This is because the tuple entity can't be resolved and thus will fail
                                  ;; There also cannot be any pre-existing comments because the whole entity is created
-                                 (when (number? entity-id)
+                                 (when-let [id (if (number? entity-id)
+                                                 entity-id
+                                                 (:db/id (du/entity db entity-id)))]
                                    (ffirst (d/q query
-                                                db entity-id))))
+                                                db id))))
                            (:db/id (du/entity db (user-model/user-ref except-user))))
         participants (if (= entity-type :file)
                        (conj participants
@@ -176,7 +178,7 @@
                       :type :notification.type/comment-created
                       :target "new-comment"
                       :project project-id})
-                  (set/difference (participants db entity-type (or resolved-id entity-id)
+                  (set/difference (participants db entity-type entity-id
                                                 (= visibility :comment.visibility/internal)
                                                 user)
                                   mentioned-ids)))))})
@@ -202,7 +204,13 @@
                                                db
                                                comment-id))]
         [:estate-comments estate-comments-id]
-        nil))))
+        (if-let [owner-comments-id (ffirst (d/q '[:find ?oc
+                                                  :in $ ?comment
+                                                  :where [?oc :owner-comments/comments ?comment]]
+                                                db
+                                                comment-id))]
+          [:owner-comments owner-comments-id]
+          nil)))))
 
 (defn- get-project-id-of-comment [db comment-id]
   (let [[parent-type parent-id] (comment-parent-entity db comment-id)]
@@ -210,6 +218,7 @@
       :file (project-db/file-project-id db parent-id)
       :task (project-db/task-project-id db parent-id)
       :estate-comments (project-db/estate-comments-project-id db parent-id)
+      :owner-comments (project-db/owner-comments-project-id db parent-id)
       (db-api/bad-request! "No such comment"))))
 
 (defn- files-in-db [db comment-id]

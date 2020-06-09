@@ -109,27 +109,30 @@
 ;; TODO: Both this and the create comment form should be replaced with
 ;;       form2 to make the add image button look decent.
 (defn- edit-comment-form [e! comment-data]
-  [form/form2 {:e! e!
-               :value comment-data
-               :on-change-event comments-controller/->UpdateEditCommentForm
-               :cancel-event comments-controller/->CancelCommentEdit
-               :save-event comments-controller/->SaveEditCommentForm
-               :spec :comment/edit-comment-form}
-   [:div {:class (<class common-styles/gray-container-style)}
-    [:div {:class (<class form-field-spacer)}
-     [form/field :comment/comment
-      [mentions-input {:e! e!}]]
+  (r/with-let [[comment-form ->UpdateCommentForm]
+               (common-controller/internal-state comment-data
+                                                 {:merge? true})]
+    [form/form2 {:e! e!
+                 :value @comment-form
+                 :on-change-event ->UpdateCommentForm
+                 :cancel-event comments-controller/->CancelCommentEdit
+                 :save-event #(comments-controller/->SaveEditCommentForm @comment-form)
+                 :spec :comment/edit-comment-form}
+     [:div {:class (<class common-styles/gray-container-style)}
+      [:div {:class (<class form-field-spacer)}
+       [form/field :comment/comment
+        [mentions-input {:e! e!}]]
 
-     [form/field :comment/files
-      [edit-attached-images-field {:e! e!
-                                   :comment-id (:db/id comment-data)
-                                   :on-success-event comments-controller/->UpdateEditCommentForm}]]]
+       [form/field :comment/files
+        [edit-attached-images-field {:e! e!
+                                     :comment-id (:db/id comment-data)
+                                     :on-success-event comments-controller/->UpdateEditCommentForm}]]]
 
-    [:div {:class (<class form-field-spacer)}
-     [form/field :comment/visibility
-      [select/select-enum {:e! e! :attribute :comment/visibility}]]]]
+      [:div {:class (<class form-field-spacer)}
+       [form/field :comment/visibility
+        [select/select-enum {:e! e! :attribute :comment/visibility}]]]]
 
-   [form/footer2]])
+     [form/footer2]]))
 
 (defmethod project-navigator-view/project-navigator-dialog :edit-comment
   [{:keys [e! app] :as _opts} _dialog]
@@ -141,8 +144,6 @@
                         :start-icon (r/as-element [icons/image-edit])
                         :on-click #(e! (comments-controller/->OpenEditCommentDialog comment-entity commented-entity))}
    (tr [:buttons :edit])])
-
-
 
 (defn- comment-text
   "Split comment text and highlight user mentions."
@@ -342,7 +343,7 @@
                (common-controller/internal-state (comment-form-defaults entity-type)
                                                  {:merge? true})]
     (let [comments (get-in app [:comments-for-entity entity-id])]
-      [layout/section
+      [:div
        [query/query {:e! e!
                      :query :comment/fetch-comments
                      :args {:db/id entity-id

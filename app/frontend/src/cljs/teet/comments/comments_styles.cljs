@@ -25,7 +25,7 @@
            {:background-color unresolved-bg-color}
 
            :comment.status/resolved
-           {:background-color theme-colors/gray-lightest}
+           {:background-color :inherit}
 
            {})))
 

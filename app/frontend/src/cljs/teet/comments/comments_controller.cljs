@@ -21,7 +21,7 @@
 (defrecord OpenEditCommentDialog [comment-entity commented-entity])
 (defrecord UpdateEditCommentForm [form-data])
 (defrecord CancelCommentEdit [])
-(defrecord SaveEditCommentForm [])
+(defrecord SaveEditCommentForm [form-data])
 (defrecord SaveEditCommentSuccess [])
 
 (defrecord SetCommentStatus [comment-id status commented-entity])
@@ -113,28 +113,27 @@
                       {:comment/commented-entity commented-entity}))))
 
   CancelCommentEdit
-  (process-event [_ {:keys [page params] :as app}]
+  (process-event [_ {:keys [page params query] :as app}]
     (t/fx (-> app
               (dissoc :edit-comment-data)
               (update :stepper dissoc :dialog))
           {:tuck.effect/type :navigate
            :page             page
            :params           params
-           :query            {:tab "comments"}}))
+           :query            query}))
 
   UpdateEditCommentForm
   (process-event [{form-data :form-data} app]
     (update-in app [:edit-comment-data] merge form-data))
 
   SaveEditCommentForm
-  (process-event [_ {edit-comment-data :edit-comment-data
-                     stepper :stepper :as app}]
-    (let [mentions (vec (keep :user (:comment/mentions edit-comment-data)))]
+  (process-event [{form-data :form-data} {stepper :stepper :as app}]
+    (let [mentions (vec (keep :user (:comment/mentions form-data)))]
       (t/fx app
             {:tuck.effect/type :command!
              :result-event ->SaveEditCommentSuccess
              :command :comment/update
-             :payload (-> edit-comment-data
+             :payload (-> form-data
                           (select-keys [:db/id :comment/comment :comment/visibility :comment/files])
                           (merge {:comment/mentions mentions})
                           (update :comment/files (partial map :db/id)))

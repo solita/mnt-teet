@@ -17,9 +17,15 @@
 
 (defn estate-comments-project-id [db ec-id]
   (or (-> (d/pull db '[:estate-comments/project] ec-id)
-          (:estate-comments/project)
-          (:db/id))
+          :estate-comments/project
+          :db/id)
       (db-api/bad-request! "No such estate-comments entity")))
+
+(defn owner-comments-project-id [db oc-id]
+  (or (-> (d/pull db '[:owner-comments/project] oc-id)
+          :owner-comments/project
+          :db/id)
+      (db-api/bad-request! "No such owner-comments entity")))
 
 (defn task-belongs-to-project [db project-id task-id]
   (ffirst

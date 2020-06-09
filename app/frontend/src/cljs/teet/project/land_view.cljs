@@ -376,8 +376,7 @@
          [Divider {:style {:margin "1rem 0"}}]
          [typography/BoldGreyText {:style {:text-transform :uppercase}}
           (tr [:land :estate-acquisition-cost])]
-         [:div {:style {:display :flex
-                        :justify-content :space-between}}
+         [:div {:class (<class common-styles/flex-row-space-between)}
           [:span (str (tr [:common :total]) ": ") (str total-estate-cost " €")]
           [Link {:style {:display :block}
                  :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "costs")}
@@ -388,11 +387,14 @@
          [Link {:style {:display :block}
                 :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "burdens")}
           [common/count-chip {:label (count (:jagu3 estate))}]
-          (tr [:estate-modal :page :burdens])]
+          (tr [:land-modal-page :burdens])]
          [Link {:style {:display :block}
                 :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "mortgages")}
           [common/count-chip {:label (count (:jagu4 estate))}]
-          (tr [:estate-modal :page :mortgages])]]]]
+          (tr [:land-modal-page :mortgages])]
+         [Link {:style {:display :block}
+                :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "comments")}
+          (tr [:land-modal-page :comments])]]]]
       :children
       (mapc
         (r/partial cadastral-unit e!
@@ -650,8 +652,7 @@
      [:div
       [typography/Heading3 {:style {:margin "1rem 0"}}
        (tr [:land :total-cost])]
-      [:div {:style {:display :flex
-                     :justify-content :space-between}}
+      [:div {:class (<class common-styles/flex-row-space-between)}
        [:span (tr [:land :total-excluding-process])]
        [typography/BoldGreyText (str total-estate-cost " €")]]]]))
 
@@ -674,7 +675,7 @@
 
 (defmethod land-view-modal :estate
   [{:keys [e! app modal-page project estate-info]}]
-  {:title (tr [:estate-modal :page (keyword modal-page)])
+  {:title (tr [:land-modal-page (keyword modal-page)])
    :left-panel [modal-left-panel-navigation
                 modal-page
                 (tr [:land :estate-data])
@@ -695,26 +696,32 @@
 
 
 (defmethod owner-modal-content :owner-info
-  [{:keys [estate-info]}]
+  [{:keys [estate-info e! app project]}]
   (let [owners (:omandiosad estate-info)]
     [:div {:class (<class common-styles/gray-container-style)}
      (mapc
-       (fn [{:keys [omandiosa_suurus omandiosa_lugeja omandiosa_nimetaja] :as owner}]
+       (fn [{:keys [omandiosa_suurus omandiosa_lugeja omandiosa_nimetaja r_kood] :as owner}]
          ;; Since we don't have person registry integration show everything we have of owner.
-         [common/heading-and-grey-border-body
-          {:heading [:div {:style {:display :flex
-                                   :justify-content :space-between}}
-                     [typography/BoldGreyText (:nimi owner)]
-                     (when omandiosa_suurus
-                       [typography/BoldGreyText (str (* (/ omandiosa_lugeja omandiosa_nimetaja) 100) "%")])]
-           :body [:<> (mapc
-                        (fn [[key value]]
-                          [:div
-                           [:strong key ": "]
-                           [:span (if (and (some? (tf/parse value)) (= key :omandi_algus))
-                                    (format/parse-date-string value)
-                                    value)]])
-                        owner)]}])
+         [:<>
+          [common/heading-and-grey-border-body
+           {:heading [:div {:style {:display :flex
+                                    :justify-content :space-between}}
+                      [typography/BoldGreyText (:nimi owner)]
+                      (when omandiosa_suurus
+                        [typography/BoldGreyText (str (* (/ omandiosa_lugeja omandiosa_nimetaja) 100) "%")])]
+            :body [:<> (mapc
+                         (fn [[key value]]
+                           [:div
+                            [:strong key ": "]
+                            [:span (if (and (some? (tf/parse value)) (= key :omandi_algus))
+                                     (format/parse-date-string value)
+                                     value)]])
+                         owner)]}]
+          (when r_kood
+            [comments-view/lazy-comments {:e! e!
+                                          :app app
+                                          :entity-type :owner-comments
+                                          :entity-id [:owner-comments/project+owner-id [(:db/id project) r_kood]]}])])
        owners)]))
 
 (defmethod land-view-modal :owner
