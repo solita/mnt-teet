@@ -3,6 +3,7 @@
             [teet.gis.features :as features]
             [datomic.client.api :as d]
             [teet.integration.x-road.property-registry :as property-registry]
+            [teet.integration.x-road.business-registry :as business-registry]
             [clj-time.core :as time]
             [clj-time.coerce :as c]
             [clojure.walk :as walk]
@@ -125,3 +126,25 @@ and the compensation info as the value."
           (map (fn [{estate-id :estate-procedure/estate-id :as compensation-form}]
                  [estate-id compensation-form])))
          (land-db/project-estate-procedures db [:thk.project/id id]))))
+
+(defquery :land/estate-owner-info
+  {:doc "Fetch information about an estate owner."
+   :context {:keys [db user]}
+   :args {id :thk.project/id
+          :keys [business-id person-id]}
+   :project-id [:thk.project/id id]
+   :authorization {:land/view-cadastral-data {:eid [:thk.project/id id]
+                                              :link :thk.project/owner}}
+   :config {xroad-instance [:xroad :instance-id]
+            xroad-url [:xroad :query-url]
+            xroad-subsystem [:xroad :kr-subsystem-id]}}
+  (let [response
+        (business-registry/perform-detailandmed-request
+         xroad-url {:business-id business-id
+                    :instance-id xroad-instance})]
+    (walk/prewalk
+     (fn [x]
+       (if (instance? java.time.LocalDate x)
+         (.format x java.time.format.DateTimeFormatter/ISO_LOCAL_DATE)
+         x))
+     response)))

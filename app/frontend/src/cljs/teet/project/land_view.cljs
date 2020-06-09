@@ -23,7 +23,8 @@
             [teet.comments.comments-view :as comments-view]
             [teet.ui.table :as table]
             [teet.ui.format :as format]
-            [cljs-time.format :as tf]))
+            [cljs-time.format :as tf]
+            [teet.ui.query :as query]))
 
 (defn cadastral-unit-style
   [selected?]
@@ -694,13 +695,44 @@
   [{:keys [modal-page]}]
   [:span "Unsupported owner-modal-content " modal-page])
 
+(def date-keys #{:omandi_algus :algus-kpv :lopp-kpv})
+(defn- key-values [data]
+  [:<>
+   (mapc
+    (fn [[key value]]
+      [:div
+       [:strong key ": "]
+       [:span (if (and (some? (tf/parse value))
+                       (date-keys key))
+                (format/parse-date-string value)
+                value)]])
+    data)])
+
+(defn- business-registry-info [{:keys [addresses contact-methods]}]
+  [:div
+   (doall
+    (for [{id :kirje-id :as addr} addresses]
+      ^{:key (str id)}
+      [:div {:style {:border-bottom "solid 1px black"
+                     :margin-bottom "0.5rem"
+                     :padding-bottom "0.5rem"}}
+       [key-values addr]]))
+
+   (doall
+    (for [{id :kirje-id :as contact} contact-methods]
+      ^{:key (str id)}
+      [:div {:style {:border-bottom "solid 1px black"
+                     :margin-bottom "0.5rem"
+                     :padding-bottom "0.5rem"}}
+       [key-values contact]]))])
+
 
 (defmethod owner-modal-content :owner-info
   [{:keys [estate-info e! app project]}]
   (let [owners (:omandiosad estate-info)]
     [:div {:class (<class common-styles/gray-container-style)}
      (mapc
-       (fn [{:keys [omandiosa_suurus omandiosa_lugeja omandiosa_nimetaja r_kood] :as owner}]
+       (fn [{:keys [omandiosa_suurus omandiosa_lugeja omandiosa_nimetaja r_kood isiku_tyyp] :as owner}]
          ;; Since we don't have person registry integration show everything we have of owner.
          [:<>
           [common/heading-and-grey-border-body
@@ -709,14 +741,15 @@
                       [typography/BoldGreyText (:nimi owner)]
                       (when omandiosa_suurus
                         [typography/BoldGreyText (str (* (/ omandiosa_lugeja omandiosa_nimetaja) 100) "%")])]
-            :body [:<> (mapc
-                         (fn [[key value]]
-                           [:div
-                            [:strong key ": "]
-                            [:span (if (and (some? (tf/parse value)) (= key :omandi_algus))
-                                     (format/parse-date-string value)
-                                     value)]])
-                         owner)]}]
+            :body [:<>
+                   (when (= isiku_tyyp "Juriidiline isik")
+                     [query/query {:e! e!
+                                   :query :land/estate-owner-info
+                                   :args {:thk.project/id (:thk.project/id project)
+                                          :business-id r_kood}
+                                   :simple-view [business-registry-info]}])
+
+                   [key-values owner]]}]
           (when r_kood
             [comments-view/lazy-comments {:e! e!
                                           :app app
