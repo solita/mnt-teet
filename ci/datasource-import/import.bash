@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -xeuo pipefail
+set -euo pipefail
 
 function get-ssm {
     key="$1"
@@ -14,4 +14,4 @@ if [ -z "$TEET_API_URL" -o -z "$TEET_API_SECRET" ]; then
     echo empty ssm keys required for import
     exit 1
 fi
-time clojure -A:import env 3
+time clojure -A:import env
