@@ -1,7 +1,6 @@
 Description:
-  This template is for the periodic
-  datasource-import job, which is a small Clojure app for loading data
-  from MNT GIS data servers and inserting in into the
+  The periodic datasource-import job - builds and runs app/datasource-import 
+  to get data from MNT GIS data servers and insert into the
   PostgreSQL/PostGIS DB through the REST API provided by PostgREST.
 
 Parameters:
@@ -15,42 +14,7 @@ Parameters:
 
 
 Resources:
-  CodeBuildRole:
-    Description: Creating service role in IAM for AWS CodeBuild
-    Properties:
-      AssumeRolePolicyDocument:
-        Statement:
-        - Action: sts:AssumeRole
-          Effect: Allow
-          Principal:
-            Service: codebuild.amazonaws.com
-      Path: /
-      RoleName: !Join
-        - '-'
-        - - !Ref 'AWS::StackName'
-          - CodeBuild
-    Type: AWS::IAM::Role
-  CodeBuildPolicy:
-    Description: Setting IAM policy for service role for CodeBuild
-    Properties:
-      PolicyDocument:
-        Statement:
-        - Action:
-          - logs:CreateLogGroup
-          - logs:CreateLogStream
-          - logs:PutLogEvents
-          Effect: Allow
-          Resource: '*'
-      PolicyName: !Join
-        - '-'
-        -  - !Ref 'AWS::StackName'
-           - CodeBuildPolicy
-      Roles:
-      - !Ref 'CodeBuildRole'
-    Type: AWS::IAM::Policy
   CodeBuildProject:
-    DependsOn:
-      - CodeBuildPolicy
     Type: AWS::CodeBuild::Project
     Properties:
       Artifacts:
@@ -62,7 +26,7 @@ Resources:
         Image: aws/codebuild/standard:4.0
         Type: LINUX_CONTAINER
       Name: !Ref 'AWS::StackName'
-      ServiceRole: !Ref 'CodeBuildRole'
+      ServiceRole: arn:aws:iam::512288025010:role/service-role/codebuild-teet-deploy-service-role
       # ServiceRole: "arn:aws:iam::512288025010:role/teet-ci-CodePipelineServiceRole-1JVURFWLE52XY"
       # ServiceRole: !Sub "${SharedResourceStack}:CodePipelineServiceRole"
       Source:
