@@ -72,14 +72,20 @@
         body
         soap-msg))))
 
+(defn string->zipped-xml [xml-string]
+  (with-open [in (io/input-stream (.getBytes xml-string "UTF-8"))]
+    (zip/xml-zip (xml/parse in))))
+
+(defn zipped-xml->string [zipped-xml]
+  (with-out-str
+    (xml/emit-element (zip/node zipped-xml))))
+
 (defn parse-response
   "Parse XML in HTTP response and return XML zipper.
   If response status is not 200 OK, throws exception."
   [{:keys [status error] :as http-response}]
   (if (= 200 status)
-    (let [xml-string (unpeel-multipart http-response)]
-      (with-open [in (io/input-stream (.getBytes xml-string "UTF-8"))]
-        (zip/xml-zip (xml/parse in))))
+    (string->zipped-xml (unpeel-multipart http-response))
     (do
       (log/error "HTTP error communicating with X-road, error:" error ", status:" status)
       (throw (ex-info "SOAP response returned non OK status."

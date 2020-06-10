@@ -5,7 +5,10 @@
             [clojure.string :as str]
             [taoensso.timbre :as log]
             [clojure.java.io :as io]
-            [teet.integration.x-road.core :as x-road]))
+            [teet.integration.x-road.core :as x-road]
+            [teet.auth.jwt-token :as jwt-token]
+            [org.httpkit.client :as client]
+            [cheshire.core :as cheshire]))
 
 (defn kr-kinnistu-d-request-xml [{:keys [instance-id xroad-kr-subsystem-id
                                          registriosa-nr requesting-eid]}]
@@ -30,20 +33,21 @@
       [:kin:parool]
       [:kin:registriosa_nr registriosa-nr]]])))
 
+(def ^:private text (comp str/trim z/text))
 
 (defn d-sihtotstarve [s-xml]
-  {:sihtotstarve (z/xml1-> s-xml :a:Sihtotstarve :a:sihtotstarve z/text)
-   :jrk (z/xml1-> s-xml :a:Sihtotstarve :a:jrk z/text)
-   :protsent (z/xml1-> s-xml :a:Sihtotstarve :a:protsent z/text)
-   :sihtotstarve_tekst (z/xml1-> s-xml :a:Sihtotstarve :a:sihtotstarve_tekst z/text)})
+  {:sihtotstarve (z/xml1-> s-xml :a:Sihtotstarve :a:sihtotstarve text)
+   :jrk (z/xml1-> s-xml :a:Sihtotstarve :a:jrk text)
+   :protsent (z/xml1-> s-xml :a:Sihtotstarve :a:protsent text)
+   :sihtotstarve_tekst (z/xml1-> s-xml :a:Sihtotstarve :a:sihtotstarve_tekst text)})
 
 (defn d-cadastral-unit* [k-xml]
-  {:ads_oid (z/xml1-> k-xml :a:aadressobjekt :a:ads_oid z/text)
-   :katastritunnus (z/xml1-> k-xml :a:KinnistuKatastriyksus :a:katastritunnus z/text)
-   :katastriyksuse_aadress (z/xml1-> k-xml :a:KinnistuKatastriyksus :a:katastriyksuse_aadress z/text)
-   :pindala (z/xml1-> k-xml :a:KinnistuKatastriyksus :a:pindala z/text)
-   :pindala_yhik (z/xml1-> k-xml :a:KinnistuKatastriyksus :a:pindala_yhik z/text)
-   :plaanialusel (z/xml1-> k-xml :a:KinnistuKatastriyksus :a:plaanialusel z/text)
+  {:ads_oid (z/xml1-> k-xml :a:aadressobjekt :a:ads_oid text)
+   :katastritunnus (z/xml1-> k-xml :a:KinnistuKatastriyksus :a:katastritunnus text)
+   :katastriyksuse_aadress (z/xml1-> k-xml :a:KinnistuKatastriyksus :a:katastriyksuse_aadress text)
+   :pindala (z/xml1-> k-xml :a:KinnistuKatastriyksus :a:pindala text)
+   :pindala_yhik (z/xml1-> k-xml :a:KinnistuKatastriyksus :a:pindala_yhik text)
+   :plaanialusel (z/xml1-> k-xml :a:KinnistuKatastriyksus :a:plaanialusel text)
    :sihtotstarbed (mapv d-sihtotstarve (z/xml-> k-xml :a:KinnistuKatastriyksus :a:sihtotstarbed))})
 
 (defn d-cadastral-units [kdr-xml]
@@ -57,8 +61,8 @@
         ;; _ (def *ox owner-xml-seq)
         oo-get (fn oo-get [ox & path]
                   (apply z/xml1-> (concat [ox] path)))
-        isikud-get (fn [ox & path] (apply oo-get ox (concat [:a:isikud] path [z/text])))
-        omandi-get (fn [ox & path] (apply oo-get ox (concat path [z/text])))]
+        isikud-get (fn [ox & path] (apply oo-get ox (concat [:a:isikud] path [text])))
+        omandi-get (fn [ox & path] (apply oo-get ox (concat path [text])))]
     {:omandiosad
      (mapv (fn [ox]
              {:isiku_tyyp (isikud-get ox :a:KinnistuIsik :a:isiku_tyyp)
@@ -165,39 +169,47 @@
   ;; parse-kande-tekst util
   (mapv str (z/xml-> cell clojure.data.zip/descendants clojure.zip/node string?)))
 
-(defn parse-kande-tekst [kande-tekst-str]
+(defn parse-kande-tekst [kande-tekst]
   ;; this assumes, like in all cases seen during development, that
   ;; kande_tekst field always contains a xhtml table with 2 columns,
   ;; with cells containing plain text interspersed with <br> elements
-  (when (not (str/blank? kande-tekst-str))
-    (let [row-seq (-> kande-tekst-str
-                      (.getBytes "UTF-8")
-                      io/input-stream
-                      x-road/unexceptional-xml-parse
-                      clojure.zip/xml-zip (z/xml-> :table :tr))
+  (def *kt kande-tekst)
+  (when kande-tekst
+    (let [row-seq (cond
+                    (and (string? kande-tekst)
+                         (not (str/blank? kande-tekst)))
+                    (-> kande-tekst
+                        (.getBytes "UTF-8")
+                        io/input-stream
+                        x-road/unexceptional-xml-parse
+                        clojure.zip/xml-zip (z/xml-> :table :tr))
+                    (vector? kande-tekst)
+                    kande-tekst)
           parsed (for [row row-seq]
                    (mapv cell-to-text (z/xml-> row :td)))]
       (if (or (empty? parsed)
               (not= 2 (count (first parsed))))
-        (log/error "couldn't parse non-empty kande_tekst without table:" kande-tekst-str)
+        (log/error "couldn't parse non-empty kande_tekst without table:" kande-tekst)
         parsed))))
 
 
+(defn kinnistu-d-parse-success
+  "Parse estate information from successful SOAP response body element."
+  [d-response]
+  (merge {:status :ok}
+         (d-cadastral-units d-response)
+         (d-property-owners d-response)
+         (d-jagu34 d-response :jagu3)
+         (d-jagu34 d-response :jagu4)))
+
 (defn kinnistu-d-parse-response [zipped-xml]
   (let [d-response (z/xml1-> zipped-xml :s:Envelope :s:Body :Kinnistu_DetailandmedResponse)
-        d-status (z/xml1-> zipped-xml :s:Envelope :s:Body :Kinnistu_DetailandmedResponse :teade z/text)
-        d-fault (or (z/xml1-> zipped-xml :SOAP-ENV:Envelope :SOAP-ENV:Body :SOAP-ENV:Fault z/text)
-                    (z/xml1-> zipped-xml :s:Envelope :s:Body :Kinnistu_DetailandmedResponse :faultString z/text))
-        ;; _ (def *x d-response)
-        ;; _ (def *x0 zipped-xml)
-        ]
+        d-status (z/xml1-> zipped-xml :s:Envelope :s:Body :Kinnistu_DetailandmedResponse :teade text)
+        d-fault (or (z/xml1-> zipped-xml :SOAP-ENV:Envelope :SOAP-ENV:Body :SOAP-ENV:Fault text)
+                    (z/xml1-> zipped-xml :s:Envelope :s:Body :Kinnistu_DetailandmedResponse :faultString text))]
     (if d-response
       (if (= "OK" d-status)
-        (merge {:status :ok}
-               (d-cadastral-units d-response)
-               (d-property-owners d-response)
-               (d-jagu34 d-response :jagu3)
-               (d-jagu34 d-response :jagu4))
+        (kinnistu-d-parse-success d-response)
         ;; else
         (do
           (log/error "property register non-ok status string:" d-status)
@@ -223,6 +235,31 @@
        kr-kinnistu-d-request-xml
        (x-road/perform-request url)
        kinnistu-d-parse-response))
+
+(defn- fetch-cached-estate-payload [{:keys [api-url api-secret]} estate-id]
+  (let [token (jwt-token/create-backend-token api-secret)]
+    (-> (str api-url "/estate?id=eq." estate-id)
+        (client/get {:headers {"Authorization" (str "Bearer " token)}})
+        deref :body
+        (cheshire/decode keyword)
+        first :payload
+        (merge {:status :ok}))))
+
+(defn- store-cached-estate-payload [{:keys [api-url api-secret]} estate-id payload]
+  @(client/post (str api-url "/estate")
+                {:body (cheshire/encode [{:id estate-id
+                                          :payload payload}])
+                 :headers {"Authorization" (str "Bearer " (jwt-token/create-backend-token api-secret))
+                           "Content-Type" "application/json"
+                           "Prefer" "resolution=merge-duplicates"}}))
+
+(defn fetch-estate-info [ctx estate-id]
+  (or (fetch-cached-estate-payload ctx estate-id)
+      (let [estate-info (perform-kinnistu-d-request
+                         (:xroad-url ctx)
+                         (merge ctx {:registriosa-nr estate-id}))]
+        (store-cached-estate-payload ctx estate-id estate-info)
+        estate-info)))
 
 ;; repl notes:
 

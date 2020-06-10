@@ -7,7 +7,10 @@
             [clj-time.core :as time]
             [clj-time.coerce :as c]
             [clojure.walk :as walk]
-            [teet.land.land-db :as land-db]))
+            [teet.land.land-db :as land-db]
+            [teet.auth.jwt-token :as jwt-token]
+            [org.httpkit.client :as client]
+            [cheshire.core :as cheshire]))
 
 (defn- datomic->form
   "Format data to a format suitable for frontend form.
@@ -55,23 +58,28 @@
   [details]
   (filterv #(not= "Lõpetatud" (:oiguse_seisund_tekst %)) details))
 
+
 (defquery :land/estate-info
-  {:doc "Fetch estate info from x-road"
+  {:doc "Fetch estate info from local cache or X-road"
    :context {:keys [user]}
    :args {estate-id :estate-id
           project-id :thk.project/id}
    :project-id [:thk.project/id project-id]
    :config {xroad-instance [:xroad :instance-id]
             xroad-url [:xroad :query-url]
-            xroad-subsystem [:xroad :kr-subsystem-id]}
+            xroad-subsystem [:xroad :kr-subsystem-id]
+            api-url [:api-url]
+            api-secret [:auth :jwt-secret]}
    :authorization {:land/view-cadastral-data {:eid [:thk.project/id project-id]
                                               :link :thk.project/owner}}}
-  (let [x-road-response (property-registry/perform-kinnistu-d-request
-                          xroad-url
-                          {:xroad-kr-subsystem-id xroad-subsystem
-                           :instance-id xroad-instance
-                           :registriosa-nr estate-id
-                           :requesting-eid (str "EE" (:user/person-id user))})]
+  (let [x-road-response (property-registry/fetch-estate-info
+                         {:xroad-url xroad-url
+                          :xroad-kr-subsystem-id xroad-subsystem
+                          :instance-id xroad-instance
+                          :requesting-eid (str "EE" (:user/person-id user))
+                          :api-url api-url
+                          :api-secret api-secret}
+                         estate-id)]
     (if (= (:status x-road-response) :ok)
       (-> x-road-response
           (update :jagu3 filter-ended)
