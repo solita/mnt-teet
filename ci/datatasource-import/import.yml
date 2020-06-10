@@ -1,0 +1,71 @@
+Description:
+  This template is for the periodic
+  datasource-import job, which is a small Clojure app for loading data
+  from MNT GIS data servers and inserting in into the
+  PostgreSQL/PostGIS DB through the REST API provided by PostgREST.
+
+Parameters:
+  SharedResourceStack:
+    Description: Name of an active CloudFormation stack that contains shared resources, such as the VPC.
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    Default: "teet-ci"
+    AllowedPattern: "^[a-zA-Z][-a-zA-Z0-9]*$"
+
+
+Resources:
+  CodeBuildRole:
+    Description: Creating service role in IAM for AWS CodeBuild
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service: codebuild.amazonaws.com
+      Path: /
+      RoleName: !Join
+        - '-'
+        - - !Ref 'AWS::StackName'
+          - CodeBuild
+    Type: AWS::IAM::Role
+  CodeBuildPolicy:
+    Description: Setting IAM policy for service role for CodeBuild
+    Properties:
+      PolicyDocument:
+        Statement:
+        - Action:
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:PutLogEvents
+          Effect: Allow
+          Resource: '*'
+      PolicyName: !Join
+        - '-'
+        -  - !Ref 'AWS::StackName'
+           - CodeBuildPolicy
+      Roles:
+      - !Ref 'CodeBuildRole'
+    Type: AWS::IAM::Policy
+  CodeBuildProject:
+    DependsOn:
+      - CodeBuildPolicy
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Type: NO_ARTIFACTS
+      BadgeEnabled: true
+      Description: Run datasource-import job
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:4.0
+        Type: LINUX_CONTAINER
+      Name: !Ref 'AWS::StackName'
+      ServiceRole: !Ref 'CodeBuildRole'
+      # ServiceRole: "arn:aws:iam::512288025010:role/teet-ci-CodePipelineServiceRole-1JVURFWLE52XY"
+      # ServiceRole: !Sub "${SharedResourceStack}:CodePipelineServiceRole"
+      Source:
+        Type: GITHUB
+        BuildSpec: ci/datasource-import/buildspec.yml
+        Location: https://github.com/solita/mnt-teet
