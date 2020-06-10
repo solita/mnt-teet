@@ -121,7 +121,7 @@
 
 (defn task-basic-info
   [e! {:task/keys [estimated-end-date assignee actual-end-date status] :as _task}]
-  [:div {:class [(<class common-styles/flex-row-space-between) (<class common-styles/margin-bottom 1)]}
+  [:div.task-basic-info {:class [(<class common-styles/flex-row-space-between) (<class common-styles/margin-bottom 1)]}
    [:div
     [typography/BoldGreyText (tr [:common :deadline])]
     [:span (format/date estimated-end-date)]]
@@ -161,7 +161,7 @@
 
 (defn task-details
   [e! _params {:task/keys [description files] :as task}]
-  [:div
+  [:div.task-details
    (when description
      [typography/Paragraph description])
    [task-basic-info e! task]
@@ -173,7 +173,7 @@
        [submit-results-button e! task]]])
    (when (task-model/reviewing? task)
      [when-authorized :task/review task
-      [:div {:style {:display :flex :justify-content :space-between}}
+      [:div.task-review-buttons {:style {:display :flex :justify-content :space-between}}
        [buttons/button-warning {:on-click (e! task-controller/->Review :reject)}
         (tr [:task :reject-review])]
        [buttons/button-primary {:on-click (e! task-controller/->Review :accept)}
@@ -181,7 +181,7 @@
 
 (defn- task-header
   [e! task]
-  [:div {:class (<class common-styles/heading-and-action-style)}
+  [:div.task-header {:class (<class common-styles/heading-and-action-style)}
    [typography/Heading1 (tr-enum (:task/type task))]
    [when-authorized :task/update
     task
@@ -195,7 +195,7 @@
 
 (defn task-page-content
   [e! app {status :task/status :as task} pm?]
-  [:div
+  [:div.task-page
    (when (and pm? (du/enum= status :task.status/waiting-for-review))
      [when-authorized :task/start-review task
       [start-review e!]])

@@ -42,7 +42,7 @@
 (defn- file-row
   [{id :db/id :file/keys [number version status name] :as _file}]
   (let [[base-name suffix] (base-name-and-suffix name)]
-    [:div {:class [(<class common-styles/flex-row) (<class common-styles/margin-bottom 0.5)]}
+    [:div.file-row {:class [(<class common-styles/flex-row) (<class common-styles/margin-bottom 0.5)]}
      [:div {:class (<class common-styles/flex-table-column-style 44)}
       [url/Link {:page :file :params {:file id}} base-name]]
      [:div {:class (<class common-styles/flex-table-column-style 10)}
@@ -95,7 +95,7 @@
          {:value "file/status"}]))
 
 (defn- file-filter-and-sorter [filter-atom sort-by-atom items]
-  [:div {:class (<class file-style/filter-sorter)}
+  [:div.file-table-filters {:class (<class file-style/filter-sorter)}
    [TextField {:value @filter-atom
                :start-icon icons/action-search
                :on-change #(reset! filter-atom (-> % .-target .-value))}]
@@ -137,7 +137,7 @@
       filter-atom
       sort-by-atom
       items-for-sort-select]
-     [:div
+     [:div.file-table-files
       (->> files
            (filtered-by @filter-atom)
            (sorted-by @sort-by-atom)
