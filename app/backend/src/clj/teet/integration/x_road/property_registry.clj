@@ -7,8 +7,8 @@
             [clojure.java.io :as io]
             [teet.integration.x-road.core :as x-road]
             [teet.auth.jwt-token :as jwt-token]
-            [org.httpkit.client :as client]
-            [cheshire.core :as cheshire]))
+            [teet.integration.postgrest :as postgrest]
+            [clojure.set :as set]))
 
 (defn kr-kinnistu-d-request-xml [{:keys [instance-id xroad-kr-subsystem-id
                                          registriosa-nr requesting-eid]}]
@@ -236,30 +236,37 @@
        (x-road/perform-request url)
        kinnistu-d-parse-response))
 
-(defn- fetch-cached-estate-payload [{:keys [api-url api-secret]} estate-id]
-  (let [token (jwt-token/create-backend-token api-secret)]
-    (-> (str api-url "/estate?id=eq." estate-id)
-        (client/get {:headers {"Authorization" (str "Bearer " token)}})
-        deref :body
-        (cheshire/decode keyword)
-        first :payload
-        (merge {:status :ok}))))
+(defn- fetch-cached-estate-payload [ctx estate-id]
+  (-> (postgrest/select ctx :estate #{:payload} {:id estate-id})
+      first :payload
+      (merge {:status :ok})))
 
-(defn- store-cached-estate-payload [{:keys [api-url api-secret]} estate-id payload]
-  @(client/post (str api-url "/estate")
-                {:body (cheshire/encode [{:id estate-id
-                                          :payload payload}])
-                 :headers {"Authorization" (str "Bearer " (jwt-token/create-backend-token api-secret))
-                           "Content-Type" "application/json"
-                           "Prefer" "resolution=merge-duplicates"}}))
+(defn- store-cached-estate-payload [ctx estate-id payload]
+  (postgrest/upsert! ctx :estate
+                     [{:id estate-id
+                       :payload payload}]))
+
+(defn- fetch-and-cache-estate-info [ctx estate-id]
+  (let [estate-info (perform-kinnistu-d-request
+                     (:xroad-url ctx)
+                     (merge ctx {:registriosa-nr estate-id}))]
+    (store-cached-estate-payload ctx estate-id estate-info)
+    estate-info))
 
 (defn fetch-estate-info [ctx estate-id]
   (or (fetch-cached-estate-payload ctx estate-id)
-      (let [estate-info (perform-kinnistu-d-request
-                         (:xroad-url ctx)
-                         (merge ctx {:registriosa-nr estate-id}))]
-        (store-cached-estate-payload ctx estate-id estate-info)
-        estate-info)))
+      (fetch-and-cache-estate-info ctx estate-id)))
+
+(defn ensure-cached-estate-info
+  "Ensure the given estates are in the cache and fetch/store it if not."
+  [ctx estate-ids]
+  (let [cached (into #{}
+                     (map :id)
+                     (postgrest/select ctx :estate #{:id} {:id [:in estate-ids]}))
+        missing (set/difference cached (set estate-ids))]
+    (doseq [id missing]
+      (log/info "Fetch and cache estate info:" id)
+      (fetch-and-cache-estate-info ctx id))))
 
 ;; repl notes:
 
