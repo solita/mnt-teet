@@ -614,12 +614,7 @@
     (t/fx app
           {:tuck.effect/type :query
            :query            :thk.project/db-id->thk-id
-           :args             {:db/id (cond
-                                       (string? id)
-                                       (common-controller/->long id)
-
-                                       (number? id)
-                                       (goog.math.Long/fromNumber id))}
+           :args             {:db/id (common-controller/->long id)}
            :result-event     ->NavigateToProject}))
 
   NavigateToProject
