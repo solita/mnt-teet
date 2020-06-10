@@ -69,17 +69,19 @@
             50 comments-component]
 
            ;; Not a wide display, show tabbed interface
-           [:div
-            [:div {:style {:margin "1rem 0 1rem 0"}}
+           [:div.page-content-tabs
+            [:div.tab-links {:style {:margin "1rem 0 1rem 0"}}
              [:div {:style {:display :inline-block}}            ;;TODO cleanup inline-styles and html structure
-              (if (= (:tab query) "comments")
-                [Link {:href (url/remove-query-param :tab)} (tr [:project :tabs :details])]
-                [typography/SectionHeading (tr [:project :tabs :details])])]
+              [:span {:class (if (= (:tab query) "comments") "tab-inactive" "tab-active")}
+               (if (= (:tab query) "comments")
+                 [Link {:href (url/remove-query-param :tab)} (tr [:project :tabs :details])]
+                 [typography/SectionHeading (tr [:project :tabs :details])])]]
              [:div {:style {:display :inline-block
                             :margin-left "2rem"}}
-              (if (= (:tab query) "comments")
-                [typography/SectionHeading (tr [:document :comments])]
-                [Link {:href (url/set-query-param :tab "comments")} (tr [:document :comments])])]]
+              [:span {:class (if (= (:tab query) "comments") "tab-active" "tab-inactive")}
+               (if (= (:tab query) "comments")
+                 [typography/SectionHeading (tr [:document :comments])]
+                 [Link {:href (url/set-query-param :tab "comments")} (tr [:document :comments])])]]]
             (if (= (:tab query) "comments")                     ;;TODO LOAD comments on render and
               comments-component
               (with-meta

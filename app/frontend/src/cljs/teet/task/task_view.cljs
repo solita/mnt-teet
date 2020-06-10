@@ -122,17 +122,17 @@
 (defn task-basic-info
   [e! {:task/keys [estimated-end-date assignee actual-end-date status] :as _task}]
   [:div.task-basic-info {:class [(<class common-styles/flex-row-space-between) (<class common-styles/margin-bottom 1)]}
-   [:div
+   [:div.task-basic-info-end-date
     [typography/BoldGreyText (tr [:common :deadline])]
-    [:span (format/date estimated-end-date)]]
+    [:span.task-basic-info-value (format/date estimated-end-date)]]
    (when actual-end-date
-     [:div
+     [:div.task-basic-info-end-date
       [typography/BoldGreyText (tr [:fields :task/actual-end-date])]
-      [:span (format/date actual-end-date)]])
-   [:div
+      [:span.task-basic-info-value (format/date actual-end-date)]])
+   [:div.task-basic-info-assignee
     [typography/BoldGreyText (tr [:fields :task/assignee])]
-    [:span (user-model/user-name assignee)]]
-   [:div
+    [:span.task-basic-info-value (user-model/user-name assignee)]]
+   [:div.task-basic-info-status
     (tr-enum status)]])
 
 (defn submit-results-button [e! task]

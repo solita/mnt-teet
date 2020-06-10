@@ -43,23 +43,23 @@
   [{id :db/id :file/keys [number version status name] :as _file}]
   (let [[base-name suffix] (base-name-and-suffix name)]
     [:div.file-row {:class [(<class common-styles/flex-row) (<class common-styles/margin-bottom 0.5)]}
-     [:div {:class (<class common-styles/flex-table-column-style 44)}
+     [:div.file-row-name {:class (<class common-styles/flex-table-column-style 44)}
       [url/Link {:page :file :params {:file id}} base-name]]
-     [:div {:class (<class common-styles/flex-table-column-style 10)}
+     [:div.file-row-number {:class (<class common-styles/flex-table-column-style 10)}
       [:span number]]
-     [:div {:class (<class common-styles/flex-table-column-style 10)}
+     [:div.file-row-suffix {:class (<class common-styles/flex-table-column-style 10)}
       [:span suffix]]
-     [:div {:class (<class common-styles/flex-table-column-style 10)}
+     [:div.file-row-version {:class (<class common-styles/flex-table-column-style 10)}
       [:span (str "V" version)]]
-     [:div {:class (<class common-styles/flex-table-column-style 13)}
+     [:div.file-row-status {:class (<class common-styles/flex-table-column-style 13)}
       [:span (tr-enum status)]]
-     [:div {:class (<class common-styles/flex-table-column-style 13 :flex-end)}
-      [url/Link {:class (<class file-row-icon-style)
+     [:div.file-row-actions {:class (<class common-styles/flex-table-column-style 13 :flex-end)}
+      [url/Link {:class ["file-row-action-comments" (<class file-row-icon-style)]
                  :page :file
                  :params {:file id}
                  :query {:tab "comments"}}
        [icons/communication-comment]]
-      [Link {:class (<class file-row-icon-style)
+      [Link {:class ["file-row-action-download" (<class file-row-icon-style)]
              :target :_blank
              :href (common-controller/query-url :file/download-file {:file-id id})}
        [icons/file-cloud-download]]]]))
@@ -69,15 +69,15 @@
     :file/keys [name version status]
     :meta/keys [created-at creator]
     :as _file}]
-  [:div {:class [(<class common-styles/flex-row) (<class common-styles/margin-bottom 0.5)]}
-   [:div {:class (<class common-styles/flex-table-column-style 55)}
+  [:div.file-row {:class [(<class common-styles/flex-row) (<class common-styles/margin-bottom 0.5)]}
+   [:div.file-row-name {:class (<class common-styles/flex-table-column-style 55)}
     [url/Link {:page :file :params {:file id}}
      name]]
-   [:div {:class (<class common-styles/flex-table-column-style 10 :center)}
+   [:div.file-row-version {:class (<class common-styles/flex-table-column-style 10 :center)}
     [:span (str "V" version)]]
-   [:div {:class (<class common-styles/flex-table-column-style 10 :center)}
+   [:div.file-row-status {:class (<class common-styles/flex-table-column-style 10 :center)}
     [:span (tr-enum status)]]
-   [:div {:class (<class common-styles/flex-table-column-style 25 :flex-end)}
+   [:div.file-row-date {:class (<class common-styles/flex-table-column-style 25 :flex-end)}
     [:span (format/date created-at)]]])
 
 (def ^:private sorters
@@ -96,16 +96,18 @@
 
 (defn- file-filter-and-sorter [filter-atom sort-by-atom items]
   [:div.file-table-filters {:class (<class file-style/filter-sorter)}
-   [TextField {:value @filter-atom
-               :start-icon icons/action-search
-               :on-change #(reset! filter-atom (-> % .-target .-value))}]
-   [select/select-with-action
-    {:id "file-sort-select"
-     :name "file-sort"
-     :show-label? false
-     :value @sort-by-atom
-     :items items
-     :on-change #(reset! sort-by-atom %)}]])
+   [:div.file-table-name-filter
+    [TextField {:value @filter-atom
+                :start-icon icons/action-search
+                :on-change #(reset! filter-atom (-> % .-target .-value))}]]
+   [:div.file-table-sorting
+    [select/select-with-action
+     {:id "file-sort-select"
+      :name "file-sort"
+      :show-label? false
+      :value @sort-by-atom
+      :items items
+      :on-change #(reset! sort-by-atom %)}]]])
 
 (defn- filter-predicate
   "matches files whose name contains one of the whitespace separated
@@ -155,8 +157,11 @@
    :position :relative
    :top "6px"})
 
-(defn file-icon [{:file/keys [type]}]
-  [:div {:class (<class file-icon-style)}
+(defn file-icon [{class :class
+                  :file/keys [type]}]
+  [:div {:class (if class
+                  [class (<class file-icon-style)]
+                  (<class file-icon-style))}
    (cond
      (and type (str/starts-with? type "image/"))
      [fi/image]
@@ -164,37 +169,39 @@
      :else
      [ti/file])])
 
+(defn- file-list-field-style []
+  {:flex-basis "25%" :flex-shrink 0 :flex-grow 0})
+
 (defn- file-list [files current-file-id]
-  [:<>
+  [:div.file-list
    [typography/Heading2 (tr [:task :results])]
    [:div
     (mapc (fn [{id :db/id :file/keys [name version number status] :as f}]
             (let [[_ base-name suffix] (re-matches #"^(.*)\.([^\.]+)$" name)]
-              [:div
+              [:div.file-list-entry
                [:div
-                [file-icon f]
+                [file-icon (assoc f :class "file-list-icon")]
                 (if (= current-file-id id)
-                  [:b (or base-name name)]
+                  [:b.file-list-name-active (or base-name name)]
                   [url/Link {:page :file
-                             :params {:file id}}
+                             :params {:file id}
+                             :class "file-list-name"}
                    (or base-name name)])]
                [:div {:style {:font-size "12px" :display :flex
                               :justify-content :space-between
                               :margin "0 1rem 1rem 1rem"}}
-                (mapc
-                 (fn [item]
-                   [:span {:style {:flex-basis "25%" :flex-shrink 0 :flex-grow 0}} item])
-                 [(if suffix
+                [:span.file-list-suffix {:class (<class file-list-field-style)}
+                 (if suffix
                     (str/upper-case suffix)
-                    "")
-                  number
-                  (str "V" version)
-                  (when status
-                    (tr-enum status))])]]))
+                    "")]
+                [:span.file-list-number {:class (<class file-list-field-style)} number]
+                [:span.file-list-version {:class (<class file-list-field-style)} (str "V" version)]
+                (when status
+                  [:span.file-list-status {:class (<class file-list-field-style)} (tr-enum status)])]]))
           files)]])
 
-(defn- labeled-data [[label data]]
-  [:div {:class (<class common-styles/inline-block)}
+(defn- labeled-data [[class label data]]
+  [:div {:class [class (<class common-styles/inline-block)]}
    [:div [:b label]]
    [:div data]])
 
@@ -216,28 +223,31 @@
                                (filter #(not= (:db/id file) (:db/id %))
                                        (:versions latest-file)))
                          (:versions file))]
-    [:div
-     [:div {:class [(<class common-styles/heading-and-action-style) (<class common-styles/margin-bottom 2)]}
+    [:div.file-details
+     [:div.file-details-header {:class [(<class common-styles/heading-and-action-style) (<class common-styles/margin-bottom 2)]}
       [typography/Heading2 [file-icon file] (:file/name file)]
 
       [buttons/button-secondary {:on-click #(reset! edit-open? true)}
        (tr [:buttons :edit])]]
-     [:div [:span (:file/name file)]]
-     [:div (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator file))
-                                     :date (format/date (:meta/created-at file))})]
+     [:div.file-details-name [:span (:file/name file)]]
+     [:div.file-details-upload-info
+      (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator file))
+                                :date (format/date (:meta/created-at file))})]
      [:div {:class (<class common-styles/flex-row-space-between)}
       (mapc labeled-data
-            [[(tr [:fields :file/number]) (:file/number file)]
-             [(tr [:fields :file/version]) [:span (when old?
-                                                    {:class (<class common-styles/warning-text)})
-                                            (str "V" (:file/version file)
-                                                 (when old?
-                                                   (str " " (tr [:file :old-version]))))]]
+            [["file-details-number" (tr [:fields :file/number]) (:file/number file)]
+             ["file-details-version" (tr [:fields :file/version]) [:span (when old?
+                                                                           {:class (<class common-styles/warning-text)})
+                                                                   (str "V" (:file/version file)
+                                                                        (when old?
+                                                                          (str " " (tr [:file :old-version]))))]]
              (if old?
-               ["" [url/Link {:page :file
+               ["file-details-latest"
+                "" [url/Link {:page :file
                               :params {:file (:db/id latest-file)}}
                     (tr [:file :switch-to-latest-version])]]
-               [(tr [:fields :file/status])
+               ["file-details-status"
+                (tr [:fields :file/status])
                 (tr-enum (:file/status file))])])]
 
      ;; preview block (placeholder for now)
@@ -251,7 +261,7 @@
 
      ;; size, upload new version and download buttons
      [:div {:class (<class common-styles/flex-row-space-between)}
-      [labeled-data [(tr [:fields :file/size]) (format/file-size (:file/size file))]]
+      [labeled-data ["file-details-size" (tr [:fields :file/size]) (format/file-size (:file/size file))]]
       (if replacement-upload-progress
         [LinearProgress {:variant :determinate
                          :value replacement-upload-progress}]
@@ -275,7 +285,7 @@
        [:<>
         [:br]
         [typography/Heading2 (tr [:file :other-versions])]
-        [:div
+        [:div.file-table-other-versions
          (mapc other-version-row other-versions)]])]))
 
 

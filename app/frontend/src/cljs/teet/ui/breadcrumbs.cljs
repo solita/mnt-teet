@@ -12,7 +12,7 @@
 
 (defn breadcrumbs
   [breadcrumbs]
-  [Breadcrumbs {:class (<class breadcrumbs-style)
+  [Breadcrumbs {:class [:breadcrumbs (<class breadcrumbs-style)]
                 :separator (r/as-element [icons/navigation-chevron-right {:color :primary :size :small}])}
    (util/with-keys
      (for [crumb (butlast breadcrumbs)]

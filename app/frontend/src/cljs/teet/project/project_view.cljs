@@ -47,7 +47,7 @@
                           carriageway repair-method procurement-nr id] :as project}]
   (let [project-name (project-model/get-column project :thk.project/project-name)
         [start-km end-km] (project-model/get-column project :thk.project/effective-km-range)]
-    [:div
+    [:div.project-details-tab
      [:div {:class (<class common-styles/heading-and-action-style)}
       [typography/Heading2 project-name]
       [buttons/button-secondary {:size :small
@@ -160,7 +160,7 @@
 
 (defn activities-tab
   [e! {:keys [stepper] :as app} project]
-  [:<>
+  [:div.project-activities-tab
    [project-navigator-view/project-navigator e! project stepper (:params app) false]])
 
 (defn add-user-form
@@ -258,7 +258,7 @@
 
 
 (defn people-tab [e! {query :query :as _app} {:thk.project/keys [manager owner permitted-users] :as project}]
-  [:div
+  [:div.project-people-tab
    [people-modal e! project query]
    [:div
     [:div {:class (<class common-styles/heading-and-action-style)}
