@@ -138,7 +138,9 @@
                         children)
         postprocess (fn [jagu-map]
                       (assert (:kande_tekst jagu-map))
-                      (update jagu-map :kande_tekst parse-kande-tekst))]
+                      (-> jagu-map
+                          (update :kande_tekst parse-kande-tekst)
+                          (update :kande_alus parse-kande-tekst)))]
     {jagu-key (mapv postprocess
                     (mapv jagu-key jagu-maps))}))
 
@@ -173,18 +175,12 @@
   ;; this assumes, like in all cases seen during development, that
   ;; kande_tekst field always contains a xhtml table with 2 columns,
   ;; with cells containing plain text interspersed with <br> elements
-  (def *kt kande-tekst)
-  (when kande-tekst
-    (let [row-seq (cond
-                    (and (string? kande-tekst)
-                         (not (str/blank? kande-tekst)))
-                    (-> kande-tekst
-                        (.getBytes "UTF-8")
-                        io/input-stream
-                        x-road/unexceptional-xml-parse
-                        clojure.zip/xml-zip (z/xml-> :table :tr))
-                    (vector? kande-tekst)
-                    kande-tekst)
+  (when (not (str/blank? kande-tekst))
+    (let [row-seq (-> kande-tekst
+                      (.getBytes "UTF-8")
+                      io/input-stream
+                      x-road/unexceptional-xml-parse
+                      clojure.zip/xml-zip (z/xml-> :table :tr))
           parsed (for [row row-seq]
                    (mapv cell-to-text (z/xml-> row :td)))]
       (if (or (empty? parsed)
@@ -237,9 +233,11 @@
        kinnistu-d-parse-response))
 
 (defn- fetch-cached-estate-payload [ctx estate-id]
-  (-> (postgrest/select ctx :estate #{:payload} {:id estate-id})
-      first :payload
-      (merge {:status :ok})))
+  (when-let [estate (first (postgrest/select ctx :estate
+                                             #{:payload}
+                                             {:id estate-id}))]
+    (merge (:payload estate)
+           {:status :ok})))
 
 (defn- store-cached-estate-payload [ctx estate-id payload]
   (postgrest/upsert! ctx :estate
