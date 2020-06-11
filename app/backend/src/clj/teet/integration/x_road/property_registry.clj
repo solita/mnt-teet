@@ -267,14 +267,18 @@
 
 (defn ensure-cached-estate-info
   "Ensure the given estates are in the cache and fetch/store it if not."
-  [ctx estate-ids]
-  (let [cached (into #{}
-                     (map :id)
-                     (postgrest/select ctx :estate #{:id} {:id [:in estate-ids]}))
-        missing (set/difference cached (set estate-ids))]
-    (doseq [id missing]
-      (log/info "Fetch and cache estate info:" id)
-      (fetch-and-cache-estate-info ctx id))))
+  ([ctx estate-ids]
+   (ensure-cached-estate-info ctx estate-ids false))
+  ([ctx estate-ids force-refetch?]
+   (let [cached (if force-refetch?
+                  #{}
+                  (into #{}
+                        (map :id)
+                        (postgrest/select ctx :estate #{:id} {:id [:in estate-ids]})))
+         missing (set/difference (set estate-ids) cached)]
+     (doseq [id missing]
+       (log/info "Fetch and cache estate info:" id)
+       (fetch-and-cache-estate-info ctx id)))))
 
 ;; repl notes:
 
