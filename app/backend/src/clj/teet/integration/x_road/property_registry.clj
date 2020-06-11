@@ -257,6 +257,16 @@
   (or (fetch-cached-estate-payload ctx estate-id)
       (fetch-and-cache-estate-info ctx estate-id)))
 
+(defn fetch-all-estate-info [ctx estate-ids]
+  (let [estates (into {}
+                      (map (juxt :id :payload))
+                      (postgrest/select ctx :estate #{:id :payload}
+                                        {:id [:in estate-ids]}))
+        missing (set/difference (set estate-ids) (set (keys estates)))]
+    (into estates
+          (for [id missing]
+            [id (fetch-estate-info ctx id)]))))
+
 (defn ensure-cached-estate-info
   "Ensure the given estates are in the cache and fetch/store it if not."
   [ctx estate-ids]

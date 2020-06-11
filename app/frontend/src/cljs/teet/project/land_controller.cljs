@@ -314,45 +314,11 @@
           :result-event ->FetchRelatedEstatesResponse}))))
 
   FetchRelatedEstatesResponse
-  (process-event [{{:keys [estates units]} :response} app]
-    (t/fx (-> app
-              (assoc-in [:route :project :land/related-estate-ids] estates)
-              (assoc-in [:route :project :fetched-estates-count] 0)
-              (assoc-in [:route :project :land/units] units)
-              (assoc-in [:route :project :land/estate-info-failure] false))
-          (fn [e!]
-            (e! (->FetchEstateInfos estates 1)))))
-
-  FetchEstateResponse
-  (process-event [{:keys [response]} app]
+  (process-event [{{:keys [estates units estate-info]} :response} app]
     (-> app
-        (update-in [:route :project :land/units]
-                   (fn [units]
-                     (mapv
-                       #(if (= (:KINNISTU %) (:estate-id response))
-                          (assoc % :estate response)
-                          %)
-                       units))
-                   response)
-        (update-in [:route :project :fetched-estates-count] inc)))
-
-  FetchEstateInfos
-  (process-event [{estate-ids :estate-ids
-                   retry-count :retry-count} {:keys [params] :as app}]
-    (let [project-id (:project params)]
-      (apply t/fx app
-             (for [estate-id estate-ids]
-               (merge {:tuck.effect/type :query
-                       :query :land/estate-info
-                       :args {:estate-id estate-id
-                              :thk.project/id project-id}
-                       :result-event ->FetchEstateResponse
-                       :error-event (fn [error]
-                                      (if (= (:error (ex-data error)) :request-timeout)
-                                        (if (pos? retry-count)
-                                          (->FetchEstateInfos [estate-id] (dec retry-count))
-                                          (common-controller/->ResponseError (ex-info "x road failed to respond" {:error :invalid-x-road-response})))
-                                        (common-controller/->ResponseError error)))}))))))
+        (assoc-in [:route :project :land/related-estate-ids] estates)
+        (assoc-in [:route :project :land/units] units)
+        (assoc-in [:route :project :land/estate-info-failure] false))))
 
 (defn- estate-owner-process-fees [{owners :omandiosad :as _estate}]
   (let [private-owners

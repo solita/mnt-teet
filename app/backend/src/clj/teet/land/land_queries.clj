@@ -88,6 +88,21 @@
       (throw (ex-info "Invalid xroad response" {:error :invalid-x-road-response
                                                 :response x-road-response})))))
 
+(defn- with-quality [{:keys [MOOTVIIS MUUDET] :as unit}]
+  (assoc unit :quality
+         (cond
+           (and (= MOOTVIIS "mõõdistatud, L-EST")
+                (not (time/before? (c/from-string MUUDET) (time/date-time 2018 01 01))))
+           :good
+           (and (= MOOTVIIS "mõõdistatud, L-EST")
+                (time/before? (c/from-string MUUDET) (time/date-time 2018 01 01)))
+           :questionable
+           :else
+           :bad)))
+
+(defn- with-estate [estates {:keys [KINNISTU] :as unit}]
+  (assoc unit :estate (get estates KINNISTU)))
+
 (defquery :land/related-project-estates
   {:doc "Fetch estates that are related to a given project's cadastral units.
 Will fetch the cadastral unit information from PostgREST to determine
@@ -97,27 +112,29 @@ Then it will query X-road for the estate information."
    :context {:keys [db user]}
    :args {:thk.project/keys [id]}
    :project-id [:thk.project/id id]
-   :config {api-url [:api-url]
+   :config {xroad-instance [:xroad :instance-id]
+            xroad-url [:xroad :query-url]
+            xroad-subsystem [:xroad :kr-subsystem-id]
+            api-url [:api-url]
             api-secret [:auth :jwt-secret]}
    :authorization {:land/view-cadastral-data {:eid [:thk.project/id id]
                                               :link :thk.project/owner}}}
   (let [units (project-cadastral-units db api-url api-secret id)
         estates (into #{}
                       (map :KINNISTU)
-                      units)]
+                      units)
+        estate-info (property-registry/fetch-all-estate-info
+                     {:xroad-url xroad-url
+                      :xroad-kr-subsystem-id xroad-subsystem
+                      :instance-id xroad-instance
+                      :requesting-eid (str "EE" (:user/person-id user))
+                      :api-url api-url
+                      :api-secret api-secret}
+                     estates)]
     {:estates estates
-     :units (mapv
-             (fn with-quality [{:keys [MOOTVIIS MUUDET] :as unit}]
-               (assoc unit :quality (cond
-                                      (and (= MOOTVIIS "mõõdistatud, L-EST")
-                                           (not (time/before? (c/from-string MUUDET) (time/date-time 2018 01 01))))
-                                      :good
-                                      (and (= MOOTVIIS "mõõdistatud, L-EST")
-                                           (time/before? (c/from-string MUUDET) (time/date-time 2018 01 01)))
-                                      :questionable
-                                      :else
-                                      :bad)))
-             units)}))
+     :units (mapv (comp with-quality
+                        (partial with-estate estate-info))
+                  units)}))
 
 (defquery :land/fetch-estate-compensations
   {:doc "Fetch estate compensations in a given project. Returns map with estate id as the key

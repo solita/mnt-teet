@@ -7,7 +7,7 @@
             [teet.ui.util :refer [mapc]]
             [reagent.core :as r]
             [teet.ui.panels :as panels]
-            [teet.ui.material-ui :refer [ButtonBase Collapse LinearProgress Grid Link Divider Chip]]
+            [teet.ui.material-ui :refer [ButtonBase Collapse CircularProgress Grid Link Divider]]
             [teet.ui.text-field :refer [TextField] :as text-field]
             [teet.project.land-controller :as land-controller]
             [teet.theme.theme-colors :as theme-colors]
@@ -809,10 +809,9 @@
                                  (e! (land-controller/->FetchRelatedEstates)))))
      :reagent-render
      (fn [e! app project]
-       (let [fetched-count (:fetched-estates-count project)
-             related-estate-count (count (:land/related-estate-ids project))]
+       (let [fetching? (nil? (:land/units project))]
          [:div
-          (when (= fetched-count related-estate-count)      ;;TODO needs to also check for the required form informations
+          (when (not fetching?)
             [land-view-modals e! app project])
           [:div {:style {:margin-top "1rem"}
                  :class (<class common-styles/heading-and-action-style)}
@@ -824,12 +823,10 @@
              [:p (tr [:land :estate-info-fetch-failure])]
              [buttons/button-primary {:on-click (e! land-controller/->FetchRelatedEstates)}
               "Try again"]]
-            (if (not= fetched-count related-estate-count)
+            (if fetching?
               [:div
-               [:p (tr [:land :fetching-land-units]) " " (str fetched-count " / " related-estate-count)]
-               [LinearProgress {:variant :determinate
-                                :value (* 100 (/ fetched-count related-estate-count))}]]
+               [:p (tr [:land :fetching-land-units])]
+               [CircularProgress {}]]
               [:div
-
                [filter-units e! (:land-acquisition-filters project)]
                [cadastral-groups e! (dissoc project :land-acquisition-filters) (:land/units project)]]))]))}))
