@@ -287,6 +287,11 @@
            :result-event (partial ->CompleteUserResult callback)})))
 
 
+(defn- format-user [{:user/keys [family-name person-id] :as user}]
+  (if family-name
+    (user-info/user-name user)
+    (str person-id)))
+
 (defn select-user
   "Select user"
   [{:keys [e! value on-change label required error
@@ -294,24 +299,29 @@
     :or {show-label? true}}]
   (r/with-let [state (r/atom {:loading? false
                               :users nil
-                              :open? false})]
-    (let [{:keys [loading? users open?]} @state
-          format-item (fn [{:user/keys [family-name person-id] :as user}]
-                        (if family-name
-                          (user-info/user-name user)
-                          (str person-id)))]
+                              :open? false})
+               input-value (r/atom (if value
+                                     (format-user value)
+                                     ""))]
+    (let [{:keys [loading? users open?]} @state]
       [:label
        (when show-label? [:span label])
        [Autocomplete {:options (into-array users)
                       :auto-complete true
                       :auto-highlight true
                       :loading loading?
+                      :input-value @input-value
                       :no-options-text (tr [:user :autocomplete :no-options])
                       :loading-text (tr [:user :autocomplete :loading])
 
                       :on-change (fn [_e value _reason]
                                    (on-change value))
                       :on-input-change (fn [e txt reason]
+                                         ;; Initially input is reset, we want to show the previously
+                                         ;; selected user and not clear it
+                                         (when (not (and (= txt "")
+                                                         (= reason "reset")))
+                                           (reset! input-value txt))
                                          (when (and (= reason "input")
                                                     (>= (count txt) 2))
                                            (swap! state assoc :loading? true)
@@ -323,7 +333,7 @@
                                                          :users users))))))
                       :on-open #(swap! state assoc :open? true)
                       :on-close #(swap! state assoc :open? false)
-                      :get-option-label format-item
+                      :get-option-label format-user
                       :renderInput (fn [params]
                                      (let [input-props (aget params "InputProps")
                                            end-adornment (aget input-props "endAdornment")]
