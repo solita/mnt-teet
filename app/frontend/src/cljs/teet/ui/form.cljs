@@ -183,7 +183,7 @@
                                               (set field)
                                               #{field}))
                             (validate-attribute validate-field field value))]
-             (println "validate " field " from " before " => " after)
+             #_(println "validate " field " from " before " => " after)
              after))))
 
 
