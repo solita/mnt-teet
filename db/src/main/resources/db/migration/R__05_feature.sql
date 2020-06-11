@@ -168,6 +168,24 @@ ON CONFLICT (entity_id,id) DO UPDATE
 RETURNING CONCAT(entity_id,':',id);
 $$ LANGUAGE SQL SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION teet.select_feature_properties(ids TEXT[], properties TEXT[])
+RETURNS JSON AS $$
+WITH features AS (
+  SELECT left(x.id, position(':' in x.id) - 1)::integer as datasource,
+         right(x.id, -position(':' in x.id)) as id
+    FROM unnest(ids) x (id)
+)
+SELECT json_object_agg(
+          -- Feature id as key
+          CONCAT(f.datasource_id,':',f.id),
+          -- JSON object of selected properties as value
+          (SELECT json_object_agg(x.prop, f.properties->x.prop)
+             FROM unnest($2) x(prop)))
+  FROM teet.feature f
+  JOIN features fs ON (fs.datasource = f.datasource_id AND fs.id = f.id)
+$$ LANGUAGE SQL;
+
+
 GRANT EXECUTE ON FUNCTION teet.mvt_features(INT,TEXT[],NUMERIC,NUMERIC,NUMERIC,NUMERIC) TO teet_user;
 GRANT EXECUTE ON FUNCTION teet.mvt_entity_features(TEXT,TEXT[],NUMERIC,NUMERIC,NUMERIC,NUMERIC) TO teet_user;
 GRANT EXECUTE ON FUNCTION teet.geojson_entity_related_features(BIGINT,INT[],INTEGER) TO teet_user;
@@ -178,4 +196,5 @@ GRANT EXECUTE ON FUNCTION teet.geojson_entity_features_by_id(TEXT[]) TO teet_use
 GRANT EXECUTE ON FUNCTION teet.geojson_features_within_area(INT[],TEXT,INTEGER) TO teet_user;
 GRANT EXECUTE ON FUNCTION teet.geojson_related_features_for_entity_by_type(INT[], BIGINT, TEXT) TO teet_user;
 GRANT EXECUTE ON FUNCTION teet.geojson_entity_features_by_type(bigint, TEXT) TO teet_user;
+GRANT EXECUTE ON FUNCTION teet.select_feature_properties(TEXT[],TEXT[]) TO teet_backend;
 GRANT ALL ON TABLE teet.entity_feature TO teet_backend;
