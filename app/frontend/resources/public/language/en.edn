@@ -192,7 +192,8 @@
   :document.sub-category/photo "Photo",
   :thk.lifecycle-type/construction "Construction",
   :task.type/road-safety-audit-design "Road safety audit",
-  :estate-procedure.type/property-rights "Property rights",
+  :estate-procedure.type/property-rights
+  "Issuing right for using property",
   :document.sub-category/drawing "Drawing",
   :task.type/traffic-study "Traffic study",
   :task.status/accepted "Accepted",
@@ -350,7 +351,7 @@
   :estate-compensation/amount "Amount",
   :document/category "Document type",
   :file/description "Description",
-  :estate-procedure/type "Procedure",
+  :estate-procedure/type "Procedure type",
   :thk.project/estimated-date-range "Estimated duration",
   :file/status "Status",
   :thk.project/owner "Owner"},
@@ -371,8 +372,8 @@
  {:show-owner-info "Show owner information",
   :no-active-mortgages
   "This estate does not have any active mortgages",
-  :total-area "Total area {area} m2",
-  :unreliable "Unreliable data",
+  :total-area "Total area {area} m²",
+  :unreliable "Bad data quality",
   :estate-compensation-success "Estate compensation saved",
   :unit "unit",
   :no-estate-compensations
@@ -406,6 +407,7 @@
   :estate-filter-label "Estate",
   :no-land-acquisitions "No land acquisitions for this estate",
   :fetching-land-units "Fetching land units",
+  :refresh-estate-info "Refresh estates",
   :add-owner "+ Add owner",
   :owner-data "Owner data"},
  :land-modal-page

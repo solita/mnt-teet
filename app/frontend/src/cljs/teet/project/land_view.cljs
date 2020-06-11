@@ -816,6 +816,8 @@
           [:div {:style {:margin-top "1rem"}
                  :class (<class common-styles/heading-and-action-style)}
            [typography/Heading2 (tr [:project :cadastral-units-tab])]
+           [buttons/button-secondary {:on-click (e! land-controller/->RefreshEstateInfo)}
+            (tr [:land :refresh-estate-info])]
            [buttons/button-secondary {:href (url/set-query-param :configure "cadastral-units")}
             (tr [:buttons :edit])]]
           (if (:land/estate-info-failure project)

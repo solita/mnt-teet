@@ -32,6 +32,7 @@
 (defrecord CancelLandAcquisition [unit])
 (defrecord UpdateCadastralForm [cadastral-id form-data])
 
+(defrecord RefreshEstateInfo [])
 
 (defn toggle-selected-unit
   [id cad-units]
@@ -318,7 +319,18 @@
     (-> app
         (assoc-in [:route :project :land/related-estate-ids] estates)
         (assoc-in [:route :project :land/units] units)
-        (assoc-in [:route :project :land/estate-info-failure] false))))
+        (assoc-in [:route :project :land/estate-info-failure] false)))
+
+  RefreshEstateInfo
+  (process-event [_ app]
+    (t/fx (update-in app [:route :project] dissoc
+                     :land/related-estate-ids
+                     :land/units
+                     :land/estate-info-failure)
+          {:tuck.effect/type :command!
+           :command :land/refresh-estate-info
+           :payload {:thk.project/id (get-in app [:params :project])}
+           :result-event common-controller/->Refresh})))
 
 (defn- estate-owner-process-fees [{owners :omandiosad :as _estate}]
   (let [private-owners
