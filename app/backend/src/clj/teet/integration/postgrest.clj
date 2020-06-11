@@ -54,3 +54,12 @@
                                       (auth-header ctx))
                             :body (cheshire/encode rows)})]
     (= (:status resp) 201)))
+
+(defn rpc
+  "POST request an RPC by name, expects JSON response."
+  [ctx rpc-name params]
+  (let [resp @(client/post (str (:api-url ctx) "/rpc/" (name rpc-name))
+                           {:headers (merge {"Content-Type" "application/json"}
+                                            (auth-header ctx))
+                            :body (cheshire/encode params)})]
+    (cheshire/decode (:body resp) keyword)))
