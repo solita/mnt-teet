@@ -235,7 +235,7 @@
       ^{:attribute :land-acquisition/impact}
       [select/select-enum {:e! e!
                            :attribute :land-acquisition/impact}]
-      (when (not= :land-acquisition.impact/purchase-not-needed (:land-acquisition/impact form-data))
+      (when show-extra-fields?
         ^{:attribute :land-acquisition/status}
         [select/select-enum {:e! e!
                              :attribute :land-acquisition/status
@@ -360,13 +360,20 @@
       :heading-text-color :inherit
       :heading-content
       [:<>
-       [ButtonBase {:class (<class group-style)
-                    :on-click (e! land-controller/->ToggleOpenEstate estate-id)}
+       (if estate-id
+         [ButtonBase {:class (<class group-style)
+                      :on-click (e! land-controller/->ToggleOpenEstate estate-id)}
 
-        [typography/SectionHeading (tr [:land :estate]) " " estate-id]
-        [:span (count units) " " (if (= 1 (count units))
-                                   (tr [:land :unit])
-                                   (tr [:land :units]))]]
+          [typography/SectionHeading (tr [:land :estate]) " " estate-id]
+          [:span (count units) " " (if (= 1 (count units))
+                                     (tr [:land :unit])
+                                     (tr [:land :units]))]]
+         [ButtonBase {:class (<class group-style)}
+
+          [typography/SectionHeading (tr [:land :no-estate-id])]
+          [:span (count units) " " (if (= 1 (count units))
+                                     (tr [:land :unit])
+                                     (tr [:land :units]))]])
        [Collapse
         {:in (boolean (open-estates estate-id))
          :mount-on-enter true}
@@ -415,14 +422,15 @@
        :heading-text-color theme-colors/white
        :heading-content
        [:div {:class (<class group-style)}
-        [:div {:style {:display :flex
-                       :justify-content :space-between}}
-         [typography/SectionHeading (if (not= (count owners) 1)
-                                      (str (count owners) " owners")
-                                      (:nimi (first owners)))]
-         [:a {:class (<class common-styles/white-link-style false)
-              :href (url/set-query-param :modal "owner" :modal-target estate-id :modal-page "owner-info")}
-          (tr [:land :show-owner-info])]]
+        (if owner
+          [:div {:class (<class common-styles/flex-row-space-between)}
+           [typography/SectionHeading (if (not= (count owners) 1)
+                                        (str (count owners) " owners")
+                                        (:nimi (first owners)))]
+           [:a {:class (<class common-styles/white-link-style false)
+                :href (url/set-query-param :modal "owner" :modal-target estate-id :modal-page "owner-info")}
+            (tr [:land :show-owner-info])]]
+          [typography/SectionHeading (tr [:land :no-owner-info])])
         [:span (count units) " " (if (= 1 (count units))
                                    (tr [:land :unit])
                                    (tr [:land :units]))]]
@@ -489,13 +497,14 @@
                   (filter #(ids (:teet-id %)) units))
           grouped (group-by
                     (fn [unit]
-                      (into #{}
-                            (map
-                              (fn [owner]
-                                (if (:r_kood owner)
-                                  (select-keys owner [:r_kood :r_riik ])
-                                  (select-keys owner [:isiku_tyyp :nimi]))))
-                            (get-in unit [:estate :omandiosad])))
+                      (when (seq (get-in unit [:estate :omandiosad])) ;; Check that the units actually have owner information
+                        (into #{}
+                              (map
+                                (fn [owner]
+                                  (if (:r_kood owner)
+                                    (select-keys owner [:r_kood :r_riik])
+                                    (select-keys owner [:isiku_tyyp :nimi]))))
+                              (get-in unit [:estate :omandiosad]))))
                     units)]
       [:div
        (mapc
