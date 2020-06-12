@@ -125,6 +125,10 @@
        {:db/id transaction-id
         :owner-comments/project project
         :owner-comments/owner-id target}
+       :unit-comments/project+unit-id
+       {:db/id transaction-id
+        :unit-comments/project project
+        :unit-comments/unit-id target}
        (throw (ex-info "Given entity tuple doesn't match known cases"
                        {:entity-tuple entity-tuple})))]))
 
@@ -210,7 +214,13 @@
                                                 db
                                                 comment-id))]
           [:owner-comments owner-comments-id]
-          nil)))))
+          (if-let [unit-comments-id (ffirst (d/q '[:find ?oc
+                                                    :in $ ?comment
+                                                    :where [?oc :unit-comments/comments ?comment]]
+                                                  db
+                                                  comment-id))]
+            [:unit-comments unit-comments-id]
+            nil))))))
 
 (defn- get-project-id-of-comment [db comment-id]
   (let [[parent-type parent-id] (comment-parent-entity db comment-id)]
