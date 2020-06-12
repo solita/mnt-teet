@@ -300,7 +300,9 @@
 
 (defn- user-select-entry [highlight?]
   ^{:pseudo {:hover {:background-color theme-colors/gray-lighter}}}
-  {:background-color (if highlight?
+  {:padding "0.5rem"
+   :cursor :pointer
+   :background-color (if highlight?
                        theme-colors/gray-lighter
                        theme-colors/white)})
 
@@ -349,10 +351,19 @@
                                         (swap! state assoc :open? false)
                                         (.preventDefault e))
 
+                                      "Escape"
+                                      (when open?
+                                        (swap! state assoc :open? false)
+                                        (.stopPropagation e))
+
                                       nil)))
+                   :on-blur #(when open?
+                               (swap! state assoc :open? false))
                    :value (if value
                             (format-user value)
                             input)
+                   :on-focus #(when (and (seq users) (>= (count input) 2))
+                                (swap! state assoc :open? true))
                    :on-change (fn [e]
                                 (let [t (-> e .-target .-value)
                                       loading? (>= (count t) 2)]
@@ -361,9 +372,9 @@
 
                                   (swap! state
                                          #(assoc %
-                                                 :input t
-                                                 :open? true
-                                                 :loading? loading?))
+                                            :input t
+                                            :open? loading?
+                                            :loading? loading?))
 
                                   (when loading?
                                     (e! (->CompleteUser t
@@ -376,7 +387,9 @@
                    :input-button-click #(do
                                           (on-change nil)
                                           (swap! state assoc :input "")
-                                          (.focus @input-ref))
+                                          (r/after-render
+                                            (fn []
+                                              (.focus @input-ref))))
                    :input-button-icon icons/content-clear}]
        (when open?
          [Popper {:open true
@@ -391,17 +404,19 @@
            (if loading?
              [CircularProgress {:size 20}]
              [:div.select-user-list
-              (mapc (fn [user]
-                      [:div.select-user-entry
-                       {:class [(if (= user highlight)
-                                  "active"
-                                  "inactive")
-                                (<class user-select-entry (= user highlight))]
-                        :on-click #(do
-                                     (swap! state assoc :open? false)
-                                     (on-change user))}
-                       (format-user user)])
-                    users)])]])])))
+              (if (seq users)
+                (mapc (fn [user]
+                          [:div.select-user-entry
+                           {:class [(if (= user highlight)
+                                      "active"
+                                      "inactive")
+                                    (<class user-select-entry (= user highlight))]
+                            :on-click #(do
+                                         (swap! state assoc :open? false)
+                                         (on-change user))}
+                           (format-user user)])
+                        users)
+                [:span.select-user-no-results {:style {:padding "0.5rem"}} (tr [:user :autocomplete :no-options])])])]])])))
 
 (defn radio [{:keys [value items format-item on-change]}]
   (let [item->value (zipmap items (map str (range)))]
