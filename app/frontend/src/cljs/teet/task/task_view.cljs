@@ -212,7 +212,6 @@
 (defn- add-files-form [e! upload-progress]
   (r/with-let [form (r/atom {})]
     [:<>
-     [:div "DEBUG: " (pr-str @form)]
      [form/form {:e!              e!
                  :value           @form
                  :on-change-event (form/update-atom-event form merge)

@@ -42,7 +42,8 @@
    :text-shadow "0px 0px 8px #333333"})
 
 (defn ->vector [file-list]
-  (mapv #(.item file-list %)
+  (mapv (fn [i]
+          {:file-object (.item file-list i)})
         (range (.-length file-list))))
 
 (defn- file-vector [e]
@@ -193,9 +194,6 @@
            [icons/action-delete]]]])
       value))]
    [FileUploadButton {:id "files-field"
-                      :on-drop #(on-change (into (or value [])
-                                                 (map (fn [f]
-                                                        {:file-object f}))
-                                                 %))}
+                      :on-drop #(on-change (into (or value []) %))}
     [icons/content-file-copy]
     (tr [:common :select-files])]])
