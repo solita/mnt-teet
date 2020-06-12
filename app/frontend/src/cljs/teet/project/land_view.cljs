@@ -231,7 +231,7 @@
                  :spec :land-acquisition/form
                  :cancel-event #(land-controller/->CancelLandAcquisition unit)
                  :footer (partial impact-form-footer (not (boolean (:saved-data form-data))))
-                 :class (<class impact-form-style)}
+                 :class (<class common-styles/padding-bottom 1)}
       ^{:attribute :land-acquisition/impact}
       [select/select-enum {:e! e!
                            :attribute :land-acquisition/impact}]
@@ -328,13 +328,20 @@
      [Collapse
       {:in selected?
        :mount-on-enter true}
-      [land-acquisition-form
-       e!
-       unit
-       quality
-       estate-procedure-type
-       update-cadastral-form-event
-       cadastral-form]]]))
+      [:div {:class (<class impact-form-style)}
+       [land-acquisition-form
+        e!
+        unit
+        quality
+        estate-procedure-type
+        update-cadastral-form-event
+        cadastral-form]
+       [Divider {:style {:margin "1rem 0"}}]
+       [typography/BoldGreyText {:style {:text-transform :uppercase}}
+        (tr [:land :unit-details])]
+       [Link {:style {:display :block}
+              :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "comments")}
+        (tr [:land-modal-page :comments])]]]]))
 
 (defn group-style
   []
@@ -699,7 +706,6 @@
 (defmulti owner-modal-content (fn [{:keys [modal-page]}]
                                 (keyword modal-page)))
 
-
 (defmethod owner-modal-content :default
   [{:keys [modal-page]}]
   [:span "Unsupported owner-modal-content " modal-page])
@@ -766,15 +772,51 @@
                                           :entity-id [:owner-comments/project+owner-id [(:db/id project) r_kood]]}])])
        owners)]))
 
+
+(defmulti unit-modal-content (fn [{:keys [modal-page]}]
+                                (keyword modal-page)))
+
+(defmethod unit-modal-content :default
+  [{:keys [modal-page]}]
+  [:span "unsupported page: " modal-page])
+
+(defmethod unit-modal-content :comments
+  [{:keys [estate-info e! target app project]}]
+  [comments-view/lazy-comments {:e! e!
+                                :app app
+                                :entity-type :unit-comments
+                                ;; Target is taken from url parameter, so probably better to use something else as target
+                                ;; for url and fetch the teet-id from the land-unit through project?
+                                :entity-id [:unit-comments/project+unit-id [(:db/id project) target]]
+                                }])
+
+
+(defmethod unit-modal-content :files
+  [{:keys [estate-info e! target app project]}]
+  [:span "IMPLEMENT FILE LISTING HERE"])
+
+(defmethod land-view-modal :unit
+  [{:keys [e! app modal-page project target estate-info] :as opts}]
+  {:title (tr [:land-modal-page (keyword modal-page)])
+   :left-panel [modal-left-panel-navigation
+                modal-page
+                (tr [:land :unit-info])                     ;;localization
+                [:files                                     ;;TODO add translation for [:land-modal-page :files]
+                 :comments]]
+   :right-panel [unit-modal-content {:e! e!
+                                     :modal-page modal-page
+                                     :app app
+                                     :target target
+                                     :project project
+                                     :estate-info estate-info}]})
+
 (defmethod land-view-modal :owner
   [{:keys [e! app modal-page project estate-info] :as opts}]
   {:title (tr [:land-modal-page (keyword modal-page)])
    :left-panel [modal-left-panel-navigation
                 modal-page
                 (tr [:land :owner-data])
-                [:owner-info
-                 #_:comments                                ;;Still needs some planning on where to tie the comments to
-                 ]]
+                [:owner-info]]
    :right-panel [owner-modal-content {:e! e!
                                       :modal-page modal-page
                                       :app app

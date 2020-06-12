@@ -209,3 +209,7 @@
   []
   {:display :block
    :font-size "1rem"})
+
+(defn padding-bottom
+  [amount]
+  {:padding-bottom (str amount "rem")})
