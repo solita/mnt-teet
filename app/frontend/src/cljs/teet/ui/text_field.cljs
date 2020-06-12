@@ -71,7 +71,7 @@
   [{:keys [label id type ref error style value
            on-change input-button-icon read-only?
            placeholder input-button-click required input-style
-           multiline on-blur error-text input-class start-icon
+           multiline on-blur error-text input-class start-icon on-focus
            maxrows rows auto-complete step hide-label? end-icon label-element
            on-key-down] :as _props
     :or {rows 2}} & _children]
@@ -105,6 +105,8 @@
                        :on-change on-change}
                       (when read-only?
                         {:disabled true})
+                      (when on-focus
+                        {:on-focus on-focus})
                       (when multiline
                         {:rows rows
                          :maxrows maxrows})
