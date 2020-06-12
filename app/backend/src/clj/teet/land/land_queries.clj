@@ -101,7 +101,7 @@
            :bad)))
 
 (defn- with-estate [estates {:keys [KINNISTU] :as unit}]
-  (assoc unit :estate (get estates KINNISTU)))
+  (assoc unit :estate (assoc (get estates KINNISTU) :estate-id KINNISTU)))
 
 (defquery :land/related-project-estates
   {:doc "Fetch estates that are related to a given project's cadastral units.
