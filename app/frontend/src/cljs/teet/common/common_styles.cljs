@@ -204,3 +204,8 @@
   []
   {:background-color theme-colors/gray-lightest
    :padding "1.5rem"})
+
+(defn label-text-style
+  []
+  {:display :block
+   :font-size "1rem"})
