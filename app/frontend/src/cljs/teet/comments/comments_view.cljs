@@ -95,7 +95,6 @@
                         :project-id project-id
                         :attachment? true
                         :on-success (fn [uploaded-files]
-                                      (log/info "FILES UPLOADED: " uploaded-files)
                                       (on-success-event
                                        {:comment/files (into (or value [])
                                                              uploaded-files)}))}))}
