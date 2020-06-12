@@ -3,6 +3,7 @@
             [reagent.core :as r]
             [teet.ui.material-ui :refer [Button IconButton List ListItem
                                          ListItemText ListItemSecondaryAction]]
+            [teet.ui.text-field :refer [TextField]]
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.icons :as icons]
             [teet.localization :refer [tr]]
@@ -171,6 +172,7 @@
         [ListItem {}
          (let [{:file/keys [type name size] :as file}
                (-> file
+                   :file-object
                    file-model/file-info
                    file-model/type-by-suffix)
                invalid-file-type? (not (file-model/upload-allowed-file-types type))
@@ -179,12 +181,21 @@
                           {:primary name
                            :secondary (r/as-element [file-info file invalid-file-type? file-too-large?])})])
          [ListItemSecondaryAction
+          [TextField {:value (or (:file/pos-number file) "")
+                      :type :number
+                      :placeholder "POS#"
+                      :inline? true
+                      :on-change #(on-change (assoc-in value [i :file/pos-number]
+                                                       (-> % .-target .-value)))}]
           [IconButton {:edge "end"
                        :on-click #(on-change (into (subvec value 0 i)
                                                    (subvec value (inc i))))}
            [icons/action-delete]]]])
       value))]
    [FileUploadButton {:id "files-field"
-                      :on-drop #(on-change (into (or value []) %))}
+                      :on-drop #(on-change (into (or value [])
+                                                 (map (fn [f]
+                                                        {:file-object f}))
+                                                 %))}
     [icons/content-file-copy]
     (tr [:common :select-files])]])

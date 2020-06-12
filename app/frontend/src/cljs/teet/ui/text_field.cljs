@@ -69,7 +69,7 @@
 
 (defn TextField
   [{:keys [label id type ref error style value
-           on-change input-button-icon read-only?
+           on-change input-button-icon read-only? inline?
            placeholder input-button-click required input-style
            multiline on-blur error-text input-class start-icon on-focus
            maxrows rows auto-complete step hide-label? end-icon label-element
@@ -87,7 +87,8 @@
          [:span {:class (<class common-styles/label-text-style)}
           label (when required
                   [common/required-astrix])]))
-     [:div {:style {:position :relative}}
+     [:div {:style {:position :relative
+                    :display (if inline? :inline-block :block)}}
       (when start-icon
         [start-icon {:color :primary
                      :class (<class start-icon-style)}])

@@ -212,6 +212,7 @@
 (defn- add-files-form [e! upload-progress]
   (r/with-let [form (r/atom {})]
     [:<>
+     [:div "DEBUG: " (pr-str @form)]
      [form/form {:e!              e!
                  :value           @form
                  :on-change-event (form/update-atom-event form merge)
@@ -346,7 +347,8 @@
                  project
                  breadcrumbs]
   [:<>
-   [panels/modal {:open-atom (r/wrap (boolean add-document) :_)
+   [panels/modal {:max-width "md"
+                  :open-atom (r/wrap (boolean add-document) :_)
                   :title     (tr [:task :add-document])
                   :on-close  (e! task-controller/->CloseAddDocumentDialog)}
     [add-files-form e! (:in-progress? new-document)]]

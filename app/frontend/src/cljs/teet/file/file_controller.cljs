@@ -7,7 +7,8 @@
             [teet.common.common-controller :as common-controller]
             [teet.localization :refer [tr]]
             [teet.file.file-model :as file-model]
-            [teet.transit :as transit]))
+            [teet.transit :as transit]
+            [clojure.string :as str]))
 
 (defrecord UploadFiles [files project-id task-id on-success progress-increment file-results]) ; Upload files (one at a time) to document
 (defrecord UploadFinished []) ; upload completed, can close dialog
@@ -87,7 +88,8 @@
                                     {:file-data (first new-version)
                                      :on-success (->UploadSuccess (:db/id file))})))}))
 
-  UploadFiles  (process-event [{:keys [files project-id task-id on-success progress-increment attachment?
+  UploadFiles
+  (process-event [{:keys [files project-id task-id on-success progress-increment attachment?
                           file-results]
                    :as event} app]
     (if-let [file (first files)]
@@ -100,14 +102,17 @@
                 app)
               {:tuck.effect/type :command!
                :command (if attachment? :file/upload-attachment :file/upload)
-               :payload (merge {:file (file-model/file-info file)}
+               :payload (merge {:file (merge (file-model/file-info (:file-object file))
+                                             (when-let [pos (:file/pos-number file)]
+                                               (when (not (str/blank? pos))
+                                                 {:file/pos-number (js/parseInt pos)})))}
                                (if attachment?
                                  {:project-id project-id}
                                  {:task-id task-id}))
                :result-event (fn [result]
                                (map->UploadFileUrlReceived
                                 (merge result
-                                       {:file-data file
+                                       {:file-data (:file-object file)
                                         :on-success (update event :files rest)})))}))
       (do
         (log/info "No more files to upload. Return on-success event: " on-success)

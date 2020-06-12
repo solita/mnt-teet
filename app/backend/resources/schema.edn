@@ -960,4 +960,10 @@
            :db/cardinality :db.cardinality/one
            :db/valueType   :db.type/ref
            :db/doc         "User who manages the activity"}]]}
+
+ {:db/ident :migration/file-pos-number
+  :txes [[{:db/ident :file/pos-number
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one
+           :db/doc "Land pos# this file relates to"}]]}
 ]

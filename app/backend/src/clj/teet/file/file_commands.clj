@@ -22,7 +22,7 @@
     old-file
     (db-api/bad-request! "Can't find previous version")))
 
-(def file-keys [:file/name :file/size :file/type :file/group-number])
+(def file-keys [:file/name :file/size :file/type :file/group-number :file/pos-number])
 
 (defn check-image-only [file]
   (when-not (str/starts-with? (:file/type file) "image/")
