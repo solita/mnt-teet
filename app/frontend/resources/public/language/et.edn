@@ -94,8 +94,7 @@
   :new-comment "Uus märkus",
   :updated "Uuendatud"},
  :enum
- {:estate-procedure.type/acquisition-negotiation
-  "Omandamine läbirääkimiste teel",
+ {:estate-procedure.type/acquisition-negotiation "Hinnangu alusel",
   :activity.name/construction "Ehitus",
   :task.type/utilities "Tehnovõrgud",
   :task.type/site-plan "Asendiplaan",
@@ -193,7 +192,7 @@
   :document.sub-category/photo "Foto",
   :thk.lifecycle-type/construction "Ehitamine",
   :task.type/road-safety-audit-design "Liiklusohutuse audit",
-  :estate-procedure.type/property-rights "Kasutusõiguse määramine",
+  :estate-procedure.type/property-rights "Kasutusõiguse seadmine",
   :document.sub-category/drawing "Joonis",
   :task.type/traffic-study "Liiklusuuring",
   :task.status/accepted "Aktsepteeritud",
@@ -225,7 +224,7 @@
   :notification.type/activity-rejected
   "Tegevus on arhiveeritud või katkestatud projekti omaniku poolt",
   :task.type/technical-conditions "Tehnilised tingimused",
-  :estate-procedure.type/property-trading "Maade vahetamine",
+  :estate-procedure.type/property-trading "Vahetamine",
   :estate-compensation.reason/loss-of-living-space "Eluruumide kaotus",
   :task.type/no-objection-coordination "Kooskõlastused",
   :task.type/landscaping "Maastik",
@@ -374,6 +373,7 @@
   :unit "üksus",
   :no-estate-compensations
   "Sellele kinnistule ei ole määratud ühtki kompensatsiooni",
+  :no-owner-info "Osakutel puudub omaniku teave",
   :total-cost "Kogumaksumus",
   :land-exchange "Maade vahetus",
   :add-compensation "+ Lisan kompensatsiooni",
@@ -397,13 +397,14 @@
    :questionable "Küsitav"},
   :filter-label "Filtreerin üksused",
   :total-excluding-process "Kokku ilma protseduuri tasudeta:",
+  :no-estate-id "Osakutel pole kinnisvara ID-sid",
   :units "üksust",
   :estate-info-fetch-failure
   "X-teest ei õnnestunud teavet hankida. Palun proovi uuesti ja kui tõrge püsib, pöörduge süsteemi administraatori poole.",
   :estate-filter-label "Kinnistu",
   :no-land-acquisitions "Selle kinnistu maid ei omandata",
   :fetching-land-units "Toon maade andmeid",
-  :refresh-estate-info "Värskenda kinnistud",
+  :refresh-estate-info "Uuendan kinnistute andmeid",
   :add-owner "+ Lisan omaniku",
   :owner-data "Omaniku andmed"},
  :land-modal-page
@@ -561,9 +562,9 @@
  :user
  {:role "Roll",
   :autocomplete
-  {:placeholder "Sisesta nimi...",
+  {:placeholder "Sisestan nime...",
    :no-options "Kasutajat ei leitud",
-   :loading "Kasutajate otsimine..."}},
+   :loading "Otsin kasutajaid..."}},
  :warning
  {:deploying
   "Rakenduse uut versiooni laetakse. Palun oota mõned minutid ning seejärel värskenda lehte.",

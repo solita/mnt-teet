@@ -96,7 +96,7 @@
   :updated "Updated"},
  :enum
  {:estate-procedure.type/acquisition-negotiation
-  "Acquisition negotiation",
+  "Acquisition based on evaluation",
   :activity.name/construction "Construction",
   :task.type/utilities "Utilities",
   :task.type/site-plan "Situation plan",
@@ -226,7 +226,7 @@
   :notification.type/activity-rejected
   "Activity has been archived or cancelled by project owner",
   :task.type/technical-conditions "Technical conditions",
-  :estate-procedure.type/property-trading "Exchanging property",
+  :estate-procedure.type/property-trading "Exchange",
   :estate-compensation.reason/loss-of-living-space
   "Loss of living space",
   :task.type/no-objection-coordination "No-objection co-ordination",
@@ -378,6 +378,7 @@
   :unit "unit",
   :no-estate-compensations
   "No saved estate compensations for this estate",
+  :no-owner-info "Units don't have any owner information",
   :total-cost "Total cost",
   :land-exchange "Land exchange",
   :add-compensation "+ Add compensation",
@@ -401,6 +402,7 @@
    :questionable "Questionable"},
   :filter-label "Filter units",
   :total-excluding-process "Total excluding process fees:",
+  :no-estate-id "Units don't have any estate ids",
   :units "units",
   :estate-info-fetch-failure
   "Couldn't fetch information from xroad. Please try again and if error persists contact system administrator.",

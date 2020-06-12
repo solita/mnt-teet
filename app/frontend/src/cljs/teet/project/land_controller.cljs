@@ -72,15 +72,11 @@
                  (let [fvals (vals (select-keys owner [:nimi :eesnimi :r_kood]))]
                    ;; (println "any-includes?" fvals query)
                    (any-includes? fvals query)))]
-
-    (if (and (not-empty owners)
-             (some match? owners))
-      (do
-        ;; (println "owner filter: TRUE for " (mapv (juxt :nimi :eesnimi) owners) "queried for" query)
-        ;; (println "owners:" owners)
-        true)
-      (do
-        ;; (println "owner filter: FALSE for " (mapv (juxt :nimi :eesnimi) owners) "queried for" query)
+    (if (empty? query)
+      true
+      (if (and (not-empty owners)
+               (some match? owners))
+        true
         false))))
 
 (def owner-type-can-receive-process-fee #{"Füüsiline isik"
