@@ -853,7 +853,7 @@
     [panels/modal+ (merge {:title (tr [:land-acquisition modal])
                            :open-atom (r/wrap (boolean modal) :_)
                            :on-close (e! project-controller/->CloseDialog)
-                           :max-width :sm}
+                           :max-width :md}
                           (land-view-modal {:e! e!
                                             :app app
                                             :modal modal
