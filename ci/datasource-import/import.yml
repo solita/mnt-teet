@@ -27,9 +27,45 @@ Resources:
         Type: LINUX_CONTAINER
       Name: !Ref 'AWS::StackName'
       ServiceRole: arn:aws:iam::512288025010:role/service-role/codebuild-teet-deploy-service-role
-      # ServiceRole: "arn:aws:iam::512288025010:role/teet-ci-CodePipelineServiceRole-1JVURFWLE52XY"
-      # ServiceRole: !Sub "${SharedResourceStack}:CodePipelineServiceRole"
       Source:
         Type: GITHUB
         BuildSpec: ci/datasource-import/buildspec.yml
         Location: https://github.com/solita/mnt-teet
+
+  ScheduledRule: 
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: "ScheduledRule"
+      ScheduleExpression: "cron(58 8 15 * ? *)"
+      State: "ENABLED"
+      Targets: 
+        - 
+          Arn: 
+            Fn::GetAtt: 
+              - "CodeBuildProject"
+              - "Arn"
+          Id: "CodeBuildTarget"
+          RoleArn: !GetAtt RunCodeBuildJobRole.Arn
+
+  RunCodeBuildJobRole:
+    Type: "AWS::IAM::Role"
+    DependsOn: CodeBuildProject
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: "events.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Policies:
+        - PolicyName: StartTask 
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'codebuild:StartBuild'
+                Resource:
+                  - !GetAtt CodeBuildProject.Arn
+
