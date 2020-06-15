@@ -16,7 +16,8 @@
   {:task :task/comments
    :file :file/comments
    :estate-comments :estate-comments/comments
-   :owner-comments :owner-comments/comments})
+   :owner-comments :owner-comments/comments
+   :unit-comments :unit-comments/comments})
 
 (defn comments-attribute-for-entity-type [entity-type]
   (or (type->comments-attribute entity-type)

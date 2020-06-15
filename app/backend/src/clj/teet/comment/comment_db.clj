@@ -16,8 +16,17 @@
    :where (into [['?entity-id
                   (comment-model/type->comments-attribute type)
                   '?comment]]
-                (when visibility
-                  [['?comment :comment/visibility visibility]]))})
+                (concat
+                 ;; Comment is not deleted
+                 '[[(missing? $ ?comment :meta/deleted?)]]
+
+                 (when visibility
+                   [['?comment :comment/visibility visibility]])))})
+
+(defn- resolve-id [db entity-id]
+   (if (number? entity-id)
+     entity-id
+     (:db/id (du/entity db entity-id))))
 
 (defn comments-of-entity
   ([db entity-id entity-type]
@@ -29,17 +38,21 @@
                           :comment/mentions [:user/given-name :user/family-name :user/id :user/person-id :user/email]
                           :comment/files [:db/id :file/name]}]))
   ([db entity-id entity-type comment-visibility pull-selector]
-   (let [resolved-id (if (number? entity-id)
-                       entity-id
-                       (:db/id (du/entity db entity-id)))]
-     (if (not resolved-id)
-       []
-       (->> (d/q (comment-query entity-type
-                                comment-visibility
-                                pull-selector)
-                 db resolved-id)
-            (map first)
-            (meta-query/without-deleted db))))))
+   (if-let [resolved-id (resolve-id db entity-id)]
+     (->> (d/q (comment-query entity-type
+                              comment-visibility
+                              pull-selector)
+               db resolved-id)
+          (map first))
+     [])))
+
+(defn comment-count-of-entity
+  [db entity-id entity-type comment-visibility]
+  (if-let [resolved-id (resolve-id db entity-id)]
+    (ffirst (d/q (assoc (comment-query entity-type comment-visibility nil)
+                        :find '[(count ?comment)])
+                 db resolved-id))
+    0))
 
 (defn comment-parent
   "Returns [entity-type entity-id] for the parent of the given comment.

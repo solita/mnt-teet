@@ -153,7 +153,8 @@
                :MuiOutlinedInput {:root {:border-radius "2px"
                                          :border (str "1px solid " theme-colors/gray-light)
                                          :background-color theme-colors/white
-                                         :max-height "42px"}}}})
+                                         :max-height "43px"}
+                                  :notchedOutline {:border :none}}}})
 
 (defn- create-theme [theme]
   (styles/createMuiTheme (->js theme)))

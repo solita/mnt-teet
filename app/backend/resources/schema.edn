@@ -960,4 +960,29 @@
            :db/cardinality :db.cardinality/one
            :db/valueType   :db.type/ref
            :db/doc         "User who manages the activity"}]]}
-]
+
+ {:db/ident :migration/file-pos-number
+  :txes [[{:db/ident :file/pos-number
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one
+           :db/doc "Land pos# this file relates to"}]]}
+
+ {:db/ident :migration/estate-unit-comments
+  :txes [[{:db/doc "Reference to the project for which the unit-comments entity exists"
+           :db/ident :unit-comments/project
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one}
+          {:db/doc "Estate-id to which the comments exist"
+           :db/ident :unit-comments/unit-id
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :unit-comments/comments
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many}
+          {:db/ident :unit-comments/project+unit-id
+           :db/valueType :db.type/tuple
+           :db/tupleAttrs [:unit-comments/project :unit-comments/unit-id]
+           :db/cardinality :db.cardinality/one
+           :db/unique :db.unique/identity
+           :db/doc "Ensure there is only one unit-comments for an unit per project"}]]}
+ ]

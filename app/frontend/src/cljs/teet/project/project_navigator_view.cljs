@@ -182,14 +182,13 @@
        (fn [[group tasks]]
          [:div.task-group
           [:ol {:class (<class ol-class)}
-           ;; FIXME: style the group better
-           [:li {:class (<class item-class true dark-theme?)}
+           [:li.task-group-label {:class (<class item-class true dark-theme?)}
             [:div {:class (<class task-info dark-theme?)}
              (tr-enum group)]]
            (doall
             (for [{:task/keys [type] :as task} tasks]
               ^{:key (str (:db/id task))}
-              [:li
+              [:li.task-group-task
                [:div {:class (<class item-class (= :done activity-state) dark-theme?)}
                 [:div {:class (<class task-info dark-theme?)}
                  [Link {:href (str "#/projects/" project-id "/" activity-id "/" (:db/id task))
@@ -205,7 +204,7 @@
       [:div {:class (<class task-info dark-theme?)}
        [:span (tr [:project :activity :no-tasks])]]])
    [:div {:class (<class item-class (= :done activity-state) dark-theme?)}
-    [:div {:class (<class task-info dark-theme?)}
+    [:div.project-navigator-add-task {:class (<class task-info dark-theme?)}
      [rect-button {:size :small
                    :disabled disable-buttons?
                    :on-click (e! task-controller/->OpenAddTasksDialog activity-id)
@@ -223,7 +222,7 @@
   (let [activity-state (activity-step-state activity)
         activity-open? (= (str activity-id) (:activity params))]
     ^{:key (str (:db/id activity))}
-    [:ol {:class (<class ol-class)}
+    [:ol.project-navigator-activity {:class (<class ol-class)}
      [:li
       [:div {:class (<class item-class (= :done activity-state) dark-theme?)}
        [circle-svg {:status activity-state :size 20 :dark-theme? dark-theme?}]
@@ -235,8 +234,9 @@
                                                          :open? activity-open?
                                                          :dark-theme? dark-theme?})}
           (tr [:enum (:db/ident (:activity/name activity))])]
-         [typography/SmallText
-          (format/date activity-est-start) " – " (format/date activity-est-end)]]]]
+         [:span.project-navigator-activity-dates
+          [typography/SmallText
+           (format/date activity-est-start) " – " (format/date activity-est-end)]]]]]
       (when activity-open?
         [activity-task-list ctx {:tasks tasks
                                  :activity-id activity-id
@@ -253,7 +253,7 @@
     (let [rect-button (if dark-theme?
                         buttons/rect-white
                         buttons/rect-primary)]
-      [:div {:class (<class navigator-container-style dark-theme?)}
+      [:div.project-navigator {:class (<class navigator-container-style dark-theme?)}
        [:ol {:class (<class ol-class)}
         (doall
          (map-indexed
@@ -268,18 +268,19 @@
               ^{:key (str lc-id)}
               [:li
                ;; Use first activity status instead of lifecycle, because there is no work to be done between the lifecycle and the first activity
-               [:div {:class (<class lifecycle-style (= (str lc-id) (str (:lifecycle stepper))) last? (= :done first-activity-status) dark-theme?)}
+               [:div.project-navigator-lifecycle {:class (<class lifecycle-style (= (str lc-id) (str (:lifecycle stepper))) last? (= :done first-activity-status) dark-theme?)}
                 [circle-svg {:status lc-status :size 28 :dark-theme? dark-theme?}]
                 [:div {:class (<class step-container-style {:offset -3})}
                  [:div {:class (<class flex-column)}
-                  [:button
+                  [:button.project-navigator-lifecycle-toggle
                    {:class (<class stepper-button-style {:size "24px"
                                                          :open? open?
                                                          :dark-theme? dark-theme?})
                     :on-click #(e! (project-controller/->ToggleStepperLifecycle lc-id))}
                    (tr [:enum (get-in lifecycle [:thk.lifecycle/type :db/ident])])]
-                  [typography/SmallText
-                   (format/date estimated-start-date) " – " (format/date estimated-end-date)]]]]
+                  [:span.project-navigator-lifecycle-dates
+                   [typography/SmallText
+                    (format/date estimated-start-date) " – " (format/date estimated-end-date)]]]]]
                [:div
                 [Collapse {:in open?}
                  (mapc (partial activity {:e! e!
@@ -294,11 +295,12 @@
 
                  [:div {:class (<class item-class (= :done lc-status) dark-theme?)}
                   [circle-svg {:status :not-started :size 20 :bottom? last? :dark-theme? dark-theme?}]
-                  [:div {:style (merge {:position :relative}
-                                       (if last?
-                                         {:top "3px"}
-                                         {:top "-3px"
-                                          :padding-bottom "1.5rem"}))}
+                  [:div.project-navigator-add-activity
+                   {:style (merge {:position :relative}
+                                  (if last?
+                                    {:top "3px"}
+                                    {:top "-3px"
+                                     :padding-bottom "1.5rem"}))}
                    [rect-button {:size :small
                                  :disabled disable-buttons?
                                  :on-click (e! project-controller/->OpenActivityDialog (str lc-id))
@@ -341,7 +343,7 @@
   (let [[nav-w content-w] column-widths]
     [project-context/provide
      {:project-id (:db/id project)}
-     [:div {:class (<class project-style/page-container)}
+     [:div.project-navigator-with-content {:class (<class project-style/page-container)}
       [breadcrumbs/breadcrumbs breadcrumbs]
       [typography/Heading1 (or (:thk.project/project-name project)
                                (:thk.project/name project))]

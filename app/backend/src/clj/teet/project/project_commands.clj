@@ -14,7 +14,9 @@
             [teet.project.project-db :as project-db]
             [teet.authorization.authorization-check :as authorization-check]
             [teet.notification.notification-db :as notification-db]
-            [teet.util.datomic :as du])
+            [teet.util.datomic :as du]
+            [teet.integration.x-road.property-registry :as property-registry]
+            [teet.integration.postgrest :as postgrest])
   (:import (java.util Date UUID)))
 
 (defn- manager-notification-tx [project-eid user manager]
@@ -121,7 +123,34 @@
    :project-id [:thk.project/id project-id]
    :authorization {:project/project-info {:eid [:thk.project/id project-id]
                                           :link :thk.project/owner}}
-   :transact (update-related-entities-tx db [:thk.project/id project-id] cadastral-units :thk.project/related-cadastral-units)})
+   :config {xroad-instance [:xroad :instance-id]
+            xroad-url [:xroad :query-url]
+            xroad-subsystem [:xroad :kr-subsystem-id]
+            api-url [:api-url]
+            api-secret [:auth :jwt-secret]}}
+  (let [{db :db-after} (db-api/tx
+                        (update-related-entities-tx db [:thk.project/id project-id]
+                                                    cadastral-units
+                                                    :thk.project/related-cadastral-units))]
+    (future
+      (let [current-cadastral-unit-ids (mapv first
+                                             (d/q '[:find ?id :where [?project :thk.project/related-cadastral-units ?id]
+                                                    :in $ ?project]
+                                                  db [:thk.project/id project-id]))
+            estate-ids (into #{}
+                             (map (comp :KINNISTU val))
+                         (postgrest/rpc {:api-url api-url :api-secret api-secret}
+                                        :select_feature_properties
+                                        {:ids current-cadastral-unit-ids
+                                         :properties ["KINNISTU"]}))]
+        (property-registry/ensure-cached-estate-info {:xroad-url xroad-url
+                                                      :xroad-kr-subsystem-id xroad-subsystem
+                                                      :instance-id xroad-instance
+                                                      :requesting-eid (str "EE" (:user/person-id user))
+                                                      :api-url api-url
+                                                      :api-secret api-secret}
+                                                     estate-ids)))
+    :ok))
 
 (defcommand :thk.project/add-permission
   {:doc "Add permission to project"

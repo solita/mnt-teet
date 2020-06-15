@@ -1,16 +1,9 @@
 (ns teet.ui.text-field
   (:require [herb.core :as herb :refer [<class]]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.user.user-model :as user-model]
             [teet.ui.material-ui :refer [IconButton]]
             [teet.ui.common :as common]
-            [teet.common.common-styles :as common-styles]
-            [reagent.core :as r]
-            [teet.ui.select :as select]
-            react-mentions))
-
-(def Mention (r/adapt-react-class (aget react-mentions "Mention")))
-(def MentionsInput (r/adapt-react-class (aget react-mentions "MentionsInput")))
+            [teet.common.common-styles :as common-styles]))
 
 (defn- input-field-style
   [error multiline read-only? start-icon? type]
@@ -36,10 +29,7 @@
     (when (= type :number)
       {"-moz-appearance" "textfield"})))
 
-(defn- label-text-style
-  []
-  {:display :block
-   :font-size "1rem"})
+
 
 (defn- label-style
   []
@@ -79,10 +69,11 @@
 
 (defn TextField
   [{:keys [label id type ref error style value
-           on-change input-button-icon read-only?
+           on-change input-button-icon read-only? inline?
            placeholder input-button-click required input-style
-           multiline on-blur error-text input-class start-icon
-           maxrows rows auto-complete step hide-label? end-icon label-element] :as _props
+           multiline on-blur error-text input-class start-icon on-focus
+           maxrows rows auto-complete step hide-label? end-icon label-element
+           on-key-down] :as _props
     :or {rows 2}} & _children]
   (let [element (if multiline
                   :textarea
@@ -93,10 +84,11 @@
      (when-not hide-label?
        (if label-element
          [label-element label (when required [common/required-astrix])]
-         [:span {:class (<class label-text-style)}
+         [:span {:class (<class common-styles/label-text-style)}
           label (when required
                   [common/required-astrix])]))
-     [:div {:style {:position :relative}}
+     [:div {:style {:position :relative
+                    :display (if inline? :inline-block :block)}}
       (when start-icon
         [start-icon {:color :primary
                      :class (<class start-icon-style)}])
@@ -114,13 +106,17 @@
                        :on-change on-change}
                       (when read-only?
                         {:disabled true})
+                      (when on-focus
+                        {:on-focus on-focus})
                       (when multiline
                         {:rows rows
                          :maxrows maxrows})
                       (when auto-complete
                         {:auto-complete auto-complete})
                       (when step
-                        {:step step}))]
+                        {:step step})
+                      (when on-key-down
+                        {:on-key-down on-key-down}))]
       (when end-icon
         [end-icon])
       (when (and input-button-click input-button-icon)
@@ -132,27 +128,3 @@
      (when (and error error-text)
        [:span {:class (<class common-styles/input-error-text-style)}
         error-text])]))
-
-
-(defn mentions-input
-  [{:keys [e! value on-change _error _read-only? label id required]}]
-  [:label.mention {:for id}
-   [:span {:class (<class label-text-style)}
-    label (when required
-            [common/required-astrix])]
-   [MentionsInput {:value value
-                   :on-change on-change
-                   :class-name "comment-textarea"}
-    [Mention {:trigger "@"
-              :display-transform (fn [_ display]
-                                   (str "@" display))
-              :class-name "mentions__mention"
-              :data (fn [search callback]
-                      (e! (select/->CompleteUser
-                            search
-                            (fn [users]
-                              (callback
-                                (into-array
-                                  (for [u users]
-                                    #js {:display (user-model/user-name u)
-                                         :id (str (:db/id u))})))))))}]]])

@@ -96,7 +96,7 @@
   :updated "Updated"},
  :enum
  {:estate-procedure.type/acquisition-negotiation
-  "Acquisition negotiation",
+  "Acquisition based on evaluation",
   :activity.name/construction "Construction",
   :task.type/utilities "Utilities",
   :task.type/site-plan "Situation plan",
@@ -192,7 +192,8 @@
   :document.sub-category/photo "Photo",
   :thk.lifecycle-type/construction "Construction",
   :task.type/road-safety-audit-design "Road safety audit",
-  :estate-procedure.type/property-rights "Property rights",
+  :estate-procedure.type/property-rights
+  "Issuing right for using property",
   :document.sub-category/drawing "Drawing",
   :task.type/traffic-study "Traffic study",
   :task.status/accepted "Accepted",
@@ -225,7 +226,7 @@
   :notification.type/activity-rejected
   "Activity has been archived or cancelled by project owner",
   :task.type/technical-conditions "Technical conditions",
-  :estate-procedure.type/property-trading "Exchanging property",
+  :estate-procedure.type/property-trading "Exchange",
   :estate-compensation.reason/loss-of-living-space
   "Loss of living space",
   :task.type/no-objection-coordination "No-objection co-ordination",
@@ -350,7 +351,7 @@
   :estate-compensation/amount "Amount",
   :document/category "Document type",
   :file/description "Description",
-  :estate-procedure/type "Procedure",
+  :estate-procedure/type "Procedure type",
   :thk.project/estimated-date-range "Estimated duration",
   :file/status "Status",
   :thk.project/owner "Owner"},
@@ -371,12 +372,14 @@
  {:show-owner-info "Show owner information",
   :no-active-mortgages
   "This estate does not have any active mortgages",
-  :total-area "Total area {area} m2",
-  :unreliable "Unreliable data",
+  :total-area "Total area {area} m²",
+  :unreliable "Bad data quality",
   :estate-compensation-success "Estate compensation saved",
   :unit "unit",
   :no-estate-compensations
   "No saved estate compensations for this estate",
+  :no-owner-info "Units don't have any owner information",
+  :unit-info "Cadastral unit info",
   :total-cost "Total cost",
   :land-exchange "Land exchange",
   :add-compensation "+ Add compensation",
@@ -386,6 +389,8 @@
   :net-area-balance "Net balance {area} m2",
   :cadastral-unit-number "Cadastral unit number",
   :filter {:quality "Land data quality"},
+  :no-position-number
+  "Cadastral unit has no position number. No files to show.",
   :estate-data "Estate data",
   :table-heading {:cost "Cost", :area "Area", :type "Type"},
   :no-active-burdens "This estate does not have any active burdens",
@@ -400,12 +405,14 @@
    :questionable "Questionable"},
   :filter-label "Filter units",
   :total-excluding-process "Total excluding process fees:",
+  :no-estate-id "Units don't have any estate ids",
   :units "units",
   :estate-info-fetch-failure
   "Couldn't fetch information from xroad. Please try again and if error persists contact system administrator.",
   :estate-filter-label "Estate",
   :no-land-acquisitions "No land acquisitions for this estate",
   :fetching-land-units "Fetching land units",
+  :refresh-estate-info "Refresh estates",
   :add-owner "+ Add owner",
   :owner-data "Owner data"},
  :land-modal-page
@@ -413,7 +420,8 @@
   :mortgages "Mortgages",
   :costs "Acquisition costs",
   :comments "Comments",
-  :owner-info "Owners and shares"},
+  :owner-info "Owners and shares",
+  :files "Files for POS#"},
  :login {:login "Login", :password "Password", :username "Username"},
  :map
  {:aerial-view "Aerial view",

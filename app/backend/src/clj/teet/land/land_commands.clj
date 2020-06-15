@@ -7,7 +7,9 @@
             [teet.land.land-model :as land-model]
             teet.land.land-specs
             [teet.util.datomic :as du]
-            [teet.land.land-db :as land-db]))
+            [teet.land.land-db :as land-db]
+            [teet.integration.postgrest :as postgrest]
+            [teet.integration.x-road.property-registry :as property-registry]))
 
 
 (defcommand :land/create-land-acquisition
@@ -177,3 +179,35 @@
    :transact [(let [tx-data
                     (estate-procedure-tx payload)]
                 tx-data)]})
+
+(defcommand :land/refresh-estate-info
+  {:doc "Force refresh of estate info from X-road"
+   :context {:keys [user db]}
+   :payload {id :thk.project/id}
+   :project-id [:thk.project/id id]
+   :authorization {:land/edit-land-acquisition {:eid [:thk.project/id id]
+                                                :link :thk.project/owner}}
+   :config {xroad-instance [:xroad :instance-id]
+            xroad-url [:xroad :query-url]
+            xroad-subsystem [:xroad :kr-subsystem-id]
+            api-url [:api-url]
+            api-secret [:auth :jwt-secret]}}
+  (let [cadastral-units (mapv first
+                              (d/q '[:find ?u
+                                     :where [?p :thk.project/related-cadastral-units ?u]
+                                     :in $ ?p]
+                                   db [:thk.project/id id]))
+        estate-ids (into #{}
+                         (map (comp :KINNISTU val))
+                         (postgrest/rpc {:api-url api-url :api-secret api-secret}
+                                        :select_feature_properties
+                                        {:ids cadastral-units
+                                         :properties ["KINNISTU"]}))]
+    (property-registry/ensure-cached-estate-info {:xroad-url xroad-url
+                                                  :xroad-kr-subsystem-id xroad-subsystem
+                                                  :instance-id xroad-instance
+                                                  :requesting-eid (str "EE" (:user/person-id user))
+                                                  :api-url api-url
+                                                  :api-secret api-secret}
+                                                 estate-ids
+                                                 true)))

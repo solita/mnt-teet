@@ -7,7 +7,7 @@
             [teet.ui.util :refer [mapc]]
             [reagent.core :as r]
             [teet.ui.panels :as panels]
-            [teet.ui.material-ui :refer [ButtonBase Collapse LinearProgress Grid Link Divider Chip]]
+            [teet.ui.material-ui :refer [ButtonBase Collapse CircularProgress Grid Link Divider]]
             [teet.ui.text-field :refer [TextField] :as text-field]
             [teet.project.land-controller :as land-controller]
             [teet.theme.theme-colors :as theme-colors]
@@ -24,7 +24,9 @@
             [teet.ui.table :as table]
             [teet.ui.format :as format]
             [cljs-time.format :as tf]
-            [teet.ui.query :as query]))
+            [teet.ui.query :as query]
+            [teet.file.file-view :as file-view]
+            [teet.log :as log]))
 
 (defn cadastral-unit-style
   [selected?]
@@ -231,11 +233,11 @@
                  :spec :land-acquisition/form
                  :cancel-event #(land-controller/->CancelLandAcquisition unit)
                  :footer (partial impact-form-footer (not (boolean (:saved-data form-data))))
-                 :class (<class impact-form-style)}
+                 :class (<class common-styles/padding-bottom 1)}
       ^{:attribute :land-acquisition/impact}
       [select/select-enum {:e! e!
                            :attribute :land-acquisition/impact}]
-      (when (not= :land-acquisition.impact/purchase-not-needed (:land-acquisition/impact form-data))
+      (when show-extra-fields?
         ^{:attribute :land-acquisition/status}
         [select/select-enum {:e! e!
                              :attribute :land-acquisition/status
@@ -328,13 +330,20 @@
      [Collapse
       {:in selected?
        :mount-on-enter true}
-      [land-acquisition-form
-       e!
-       unit
-       quality
-       estate-procedure-type
-       update-cadastral-form-event
-       cadastral-form]]]))
+      [:div {:class (<class impact-form-style)}
+       [land-acquisition-form
+        e!
+        unit
+        quality
+        estate-procedure-type
+        update-cadastral-form-event
+        cadastral-form]
+       [Divider {:style {:margin "1rem 0"}}]
+       [typography/BoldGreyText {:style {:text-transform :uppercase}}
+        (tr [:land :unit-info])]
+       [Link {:style {:display :block}
+              :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "comments")}
+        (tr [:land-modal-page :comments])]]]]))
 
 (defn group-style
   []
@@ -343,7 +352,6 @@
    :flex-direction :column
    :align-items :flex-start
    :padding "0.5rem"})
-
 
 (defn estate-group
   [e! project open-estates cadastral-forms estate-forms [estate-id units]]
@@ -361,13 +369,20 @@
       :heading-text-color :inherit
       :heading-content
       [:<>
-       [ButtonBase {:class (<class group-style)
-                    :on-click (e! land-controller/->ToggleOpenEstate estate-id)}
+       (if estate-id
+         [ButtonBase {:class (<class group-style)
+                      :on-click (e! land-controller/->ToggleOpenEstate estate-id)}
 
-        [typography/SectionHeading (tr [:land :estate]) " " estate-id]
-        [:span (count units) " " (if (= 1 (count units))
-                                   (tr [:land :unit])
-                                   (tr [:land :units]))]]
+          [typography/SectionHeading (tr [:land :estate]) " " estate-id]
+          [:span (count units) " " (if (= 1 (count units))
+                                     (tr [:land :unit])
+                                     (tr [:land :units]))]]
+         [ButtonBase {:class (<class group-style)}
+
+          [typography/SectionHeading (tr [:land :no-estate-id])]
+          [:span (count units) " " (if (= 1 (count units))
+                                     (tr [:land :unit])
+                                     (tr [:land :units]))]])
        [Collapse
         {:in (boolean (open-estates estate-id))
          :mount-on-enter true}
@@ -416,14 +431,15 @@
        :heading-text-color theme-colors/white
        :heading-content
        [:div {:class (<class group-style)}
-        [:div {:style {:display :flex
-                       :justify-content :space-between}}
-         [typography/SectionHeading (if (not= (count owners) 1)
-                                      (str (count owners) " owners")
-                                      (:nimi (first owners)))]
-         [:a {:class (<class common-styles/white-link-style false)
-              :href (url/set-query-param :modal "owner" :modal-target estate-id :modal-page "owner-info")}
-          (tr [:land :show-owner-info])]]
+        (if owner
+          [:div {:class (<class common-styles/flex-row-space-between)}
+           [typography/SectionHeading (if (not= (count owners) 1)
+                                        (str (count owners) " owners")
+                                        (:nimi (first owners)))]
+           [:a {:class (<class common-styles/white-link-style false)
+                :href (url/set-query-param :modal "owner" :modal-target estate-id :modal-page "owner-info")}
+            (tr [:land :show-owner-info])]]
+          [typography/SectionHeading (tr [:land :no-owner-info])])
         [:span (count units) " " (if (= 1 (count units))
                                    (tr [:land :unit])
                                    (tr [:land :units]))]]
@@ -490,13 +506,14 @@
                   (filter #(ids (:teet-id %)) units))
           grouped (group-by
                     (fn [unit]
-                      (into #{}
-                            (map
-                              (fn [owner]
-                                (if (:r_kood owner)
-                                  (select-keys owner [:r_kood :r_riik ])
-                                  (select-keys owner [:isiku_tyyp :nimi]))))
-                            (get-in unit [:estate :omandiosad])))
+                      (when (seq (get-in unit [:estate :omandiosad])) ;; Check that the units actually have owner information
+                        (into #{}
+                              (map
+                                (fn [owner]
+                                  (if (:r_kood owner)
+                                    (select-keys owner [:r_kood :r_riik])
+                                    (select-keys owner [:isiku_tyyp :nimi]))))
+                              (get-in unit [:estate :omandiosad]))))
                     units)]
       [:div
        (mapc
@@ -691,7 +708,6 @@
 (defmulti owner-modal-content (fn [{:keys [modal-page]}]
                                 (keyword modal-page)))
 
-
 (defmethod owner-modal-content :default
   [{:keys [modal-page]}]
   [:span "Unsupported owner-modal-content " modal-page])
@@ -758,15 +774,59 @@
                                           :entity-id [:owner-comments/project+owner-id [(:db/id project) r_kood]]}])])
        owners)]))
 
+
+(defmulti unit-modal-content (fn [{:keys [modal-page]}]
+                                (keyword modal-page)))
+
+(defmethod unit-modal-content :default
+  [{:keys [modal-page]}]
+  [:span "unsupported page: " modal-page])
+
+(defmethod unit-modal-content :comments
+  [{:keys [estate-info e! target app project]}]
+  [comments-view/lazy-comments {:e! e!
+                                :app app
+                                :entity-type :unit-comments
+                                ;; Target is taken from url parameter, so probably better to use something else as target
+                                ;; for url and fetch the teet-id from the land-unit through project?
+                                :entity-id [:unit-comments/project+unit-id [(:db/id project) target]]
+                                }])
+
+
+(defmethod unit-modal-content :files
+  [{:keys [estate-info e! target app project]}]
+  [:div.land-unit-modal]
+  (if-let [pos (get-in project [:land/cadastral-forms target :land-acquisition/pos-number])]
+    [query/query {:e! e!
+                  :query :land/files-by-position-number
+                  :args {:thk.project/id (:thk.project/id project)
+                         :file/pos-number pos}
+                  :simple-view [file-view/file-table {:link-download? true
+                                                      :actions? false}]}]
+    [:span (tr [:land :no-position-number])]))
+
+(defmethod land-view-modal :unit
+  [{:keys [e! app modal-page project target estate-info] :as opts}]
+  {:title (tr [:land-modal-page (keyword modal-page)])
+   :left-panel [modal-left-panel-navigation
+                modal-page
+                (tr [:land :unit-info])                     ;;localization
+                [:files                                     ;;TODO add translation for [:land-modal-page :files]
+                 :comments]]
+   :right-panel [unit-modal-content {:e! e!
+                                     :modal-page modal-page
+                                     :app app
+                                     :target target
+                                     :project project
+                                     :estate-info estate-info}]})
+
 (defmethod land-view-modal :owner
   [{:keys [e! app modal-page project estate-info] :as opts}]
   {:title (tr [:land-modal-page (keyword modal-page)])
    :left-panel [modal-left-panel-navigation
                 modal-page
                 (tr [:land :owner-data])
-                [:owner-info
-                 #_:comments                                ;;Still needs some planning on where to tie the comments to
-                 ]]
+                [:owner-info]]
    :right-panel [owner-modal-content {:e! e!
                                       :modal-page modal-page
                                       :app app
@@ -775,7 +835,7 @@
 
 (defn land-view-modals [e! app project]
   (let [modal (get-in app [:query :modal])
-        target (get-in app [:query :modal-target])
+        target (some-> app (get-in [:query :modal-target]) js/decodeURIComponent)
         modal-page (get-in app [:query :modal-page])
         estate-info (some
                       (fn [unit]
@@ -810,14 +870,15 @@
                                  (e! (land-controller/->FetchRelatedEstates)))))
      :reagent-render
      (fn [e! app project]
-       (let [fetched-count (:fetched-estates-count project)
-             related-estate-count (count (:land/related-estate-ids project))]
+       (let [fetching? (nil? (:land/units project))]
          [:div
-          (when (= fetched-count related-estate-count)      ;;TODO needs to also check for the required form informations
+          (when (not fetching?)
             [land-view-modals e! app project])
           [:div {:style {:margin-top "1rem"}
                  :class (<class common-styles/heading-and-action-style)}
            [typography/Heading2 (tr [:project :cadastral-units-tab])]
+           [buttons/button-secondary {:on-click (e! land-controller/->RefreshEstateInfo)}
+            (tr [:land :refresh-estate-info])]
            [buttons/button-secondary {:href (url/set-query-param :configure "cadastral-units")}
             (tr [:buttons :edit])]]
           (if (:land/estate-info-failure project)
@@ -825,12 +886,10 @@
              [:p (tr [:land :estate-info-fetch-failure])]
              [buttons/button-primary {:on-click (e! land-controller/->FetchRelatedEstates)}
               "Try again"]]
-            (if (not= fetched-count related-estate-count)
+            (if fetching?
               [:div
-               [:p (tr [:land :fetching-land-units]) " " (str fetched-count " / " related-estate-count)]
-               [LinearProgress {:variant :determinate
-                                :value (* 100 (/ fetched-count related-estate-count))}]]
+               [:p (tr [:land :fetching-land-units])]
+               [CircularProgress {}]]
               [:div
-
                [filter-units e! (:land-acquisition-filters project)]
                [cadastral-groups e! (dissoc project :land-acquisition-filters) (:land/units project)]]))]))}))

@@ -1,7 +1,8 @@
 (ns teet.integration.integration-context
   "Common integration context handling"
   (:require [clojure.stacktrace :as stacktrace]
-            [clojure.spec.alpha :as s]))
+            [clojure.spec.alpha :as s]
+            [teet.log :as log]))
 
 (defn- stack-trace [e]
   (with-out-str (stacktrace/print-stack-trace e 10)))
@@ -19,17 +20,19 @@
   "Pipe ctx through steps, wrapping all steps in exception handling"
   [ctx & steps]
   `(-> ~ctx
-       ~@(for [step steps]
+       ~@(for [step steps
+               :let [step-name (or (:doc (meta step))
+                                   (str step))]]
            `((fn [~'ctx]
                (try
+                 (log/info "Running step: " ~step-name)
                  ~(if (list? step)
                     (concat (take 1 step)
                             (list 'ctx)
                             (drop 1 step))
                     (list step 'ctx))
                  (catch Exception e#
-                   (throw (ctx-exception ~'ctx ~(or (:doc (meta step))
-                                                    (str step)) e#)))))))))
+                   (throw (ctx-exception ~'ctx ~step-name e#)))))))))
 
 (defn- validate-spec-and-path [{:keys [default-path spec]} validate-for]
   (assert (vector? default-path) (str "Expected :default-path vector in " validate-for))

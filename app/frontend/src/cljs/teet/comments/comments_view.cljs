@@ -19,12 +19,11 @@
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.layout :as layout]
             [teet.ui.project-context :as project-context]
             [teet.ui.query :as query]
             [teet.ui.select :as select]
             [teet.ui.skeleton :as skeleton]
-            [teet.ui.text-field :refer [TextField mentions-input]]
+            [teet.ui.mentions :refer [mentions-input]]
             [teet.ui.material-ui :refer [IconButton]]
             [teet.ui.typography :as typography]
             [teet.ui.util :as util :refer [mapc]]
@@ -96,7 +95,6 @@
                         :project-id project-id
                         :attachment? true
                         :on-success (fn [uploaded-files]
-                                      (log/info "FILES UPLOADED: " uploaded-files)
                                       (on-success-event
                                        {:comment/files (into (or value [])
                                                              uploaded-files)}))}))}

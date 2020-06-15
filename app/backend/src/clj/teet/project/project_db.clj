@@ -131,7 +131,8 @@
     :task (task-project-id db entity-id)
     :file (file-project-id db entity-id)
     :owner-comments (first (second entity-id))
-    :estate-comments (first (second entity-id))))
+    :estate-comments (first (second entity-id))
+    :unit-comments (first (second entity-id))))
 
 (defn comment-project-id [db comment-id]
   ;; Find what entity this comment is linked to and get

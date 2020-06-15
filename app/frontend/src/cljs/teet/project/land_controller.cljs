@@ -32,6 +32,7 @@
 (defrecord CancelLandAcquisition [unit])
 (defrecord UpdateCadastralForm [cadastral-id form-data])
 
+(defrecord RefreshEstateInfo [])
 
 (defn toggle-selected-unit
   [id cad-units]
@@ -71,15 +72,11 @@
                  (let [fvals (vals (select-keys owner [:nimi :eesnimi :r_kood]))]
                    ;; (println "any-includes?" fvals query)
                    (any-includes? fvals query)))]
-
-    (if (and (not-empty owners)
-             (some match? owners))
-      (do
-        ;; (println "owner filter: TRUE for " (mapv (juxt :nimi :eesnimi) owners) "queried for" query)
-        ;; (println "owners:" owners)
-        true)
-      (do
-        ;; (println "owner filter: FALSE for " (mapv (juxt :nimi :eesnimi) owners) "queried for" query)
+    (if (empty? query)
+      true
+      (if (and (not-empty owners)
+               (some match? owners))
+        true
         false))))
 
 (def owner-type-can-receive-process-fee #{"Füüsiline isik"
@@ -314,45 +311,22 @@
           :result-event ->FetchRelatedEstatesResponse}))))
 
   FetchRelatedEstatesResponse
-  (process-event [{{:keys [estates units]} :response} app]
-    (t/fx (-> app
-              (assoc-in [:route :project :land/related-estate-ids] estates)
-              (assoc-in [:route :project :fetched-estates-count] 0)
-              (assoc-in [:route :project :land/units] units)
-              (assoc-in [:route :project :land/estate-info-failure] false))
-          (fn [e!]
-            (e! (->FetchEstateInfos estates 1)))))
-
-  FetchEstateResponse
-  (process-event [{:keys [response]} app]
+  (process-event [{{:keys [estates units estate-info]} :response} app]
     (-> app
-        (update-in [:route :project :land/units]
-                   (fn [units]
-                     (mapv
-                       #(if (= (:KINNISTU %) (:estate-id response))
-                          (assoc % :estate response)
-                          %)
-                       units))
-                   response)
-        (update-in [:route :project :fetched-estates-count] inc)))
+        (assoc-in [:route :project :land/related-estate-ids] estates)
+        (assoc-in [:route :project :land/units] units)
+        (assoc-in [:route :project :land/estate-info-failure] false)))
 
-  FetchEstateInfos
-  (process-event [{estate-ids :estate-ids
-                   retry-count :retry-count} {:keys [params] :as app}]
-    (let [project-id (:project params)]
-      (apply t/fx app
-             (for [estate-id estate-ids]
-               (merge {:tuck.effect/type :query
-                       :query :land/estate-info
-                       :args {:estate-id estate-id
-                              :thk.project/id project-id}
-                       :result-event ->FetchEstateResponse
-                       :error-event (fn [error]
-                                      (if (= (:error (ex-data error)) :request-timeout)
-                                        (if (pos? retry-count)
-                                          (->FetchEstateInfos [estate-id] (dec retry-count))
-                                          (common-controller/->ResponseError (ex-info "x road failed to respond" {:error :invalid-x-road-response})))
-                                        (common-controller/->ResponseError error)))}))))))
+  RefreshEstateInfo
+  (process-event [_ app]
+    (t/fx (update-in app [:route :project] dissoc
+                     :land/related-estate-ids
+                     :land/units
+                     :land/estate-info-failure)
+          {:tuck.effect/type :command!
+           :command :land/refresh-estate-info
+           :payload {:thk.project/id (get-in app [:params :project])}
+           :result-event common-controller/->Refresh})))
 
 (defn- estate-owner-process-fees [{owners :omandiosad :as _estate}]
   (let [private-owners
