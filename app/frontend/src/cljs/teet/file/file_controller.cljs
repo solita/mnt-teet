@@ -80,7 +80,7 @@
           {:tuck.effect/type :command!
            :command :file/upload
            :payload {:task-id (common-controller/->long (get-in app [:params :task]))
-                     :file (file-model/file-info (first new-version))
+                     :file (file-model/file-info (:file-object (first new-version)))
                      :previous-version-id (:db/id file)}
            :result-event (fn [{file :file :as result}]
                            (map->UploadFileUrlReceived
