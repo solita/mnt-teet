@@ -171,7 +171,7 @@
                 :task/status :task.status/completed}]
 
               ;; Mark all latest versions as final
-              (for [{id :db/id} (task-db/files-for-task db task-id)]
+              (for [{id :db/id} (task-db/task-file-listing db task-id)]
                 {:db/id id
                  :file/status :file.status/final}))
 

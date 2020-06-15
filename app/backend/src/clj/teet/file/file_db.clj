@@ -41,3 +41,51 @@
      :task (get-in task [:task/type :filename/code])
      :group (:file/group-number file)
      :name (:file/name file)}))
+
+(defn file-listing
+  "Fetch file information suitable for file listing. Returns all file attributes
+  and owner info. Returns only the latest version of each file with previous versions
+  as :versions key."
+  [db file-ids]
+  (let [files (mapv first
+                    (d/q '[:find (pull ?f [*
+                                           {:file/previous-version [:db/id]}
+                                           {:meta/creator [:user/id :user/family-name :user/given-name]}])
+                           :in $ [?f ...]] db file-ids))
+        ;; Group files to first versions and next versions
+        {next-versions true
+         first-versions false}
+        (group-by (comp boolean :file/previous-version) files)
+
+        ;; Find next version for given file
+        next-version (fn [file]
+                       (some #(when (= (:db/id file)
+                                       (get-in % [:file/previous-version :db/id])) %)
+                             next-versions))]
+    (vec
+     (for [f first-versions
+           :let [versions (filter (complement :meta/deleted?)
+                                  (reverse
+                                   (take-while some? (iterate next-version f))))
+                 [latest-version & previous-versions] versions]
+           :when latest-version]
+       (assoc latest-version
+              :versions previous-versions)))))
+
+(defn files-by-project-and-pos-number [db project-id pos-number]
+  (file-listing
+   db
+   (mapv first
+         (d/q '[:find ?f
+                :where
+                ;; File has this position number
+                [?f :file/pos-number ?pos]
+
+                ;; File belongs to the project
+                [?task :task/files ?f]
+                [?act :activity/tasks ?task]
+                [?lc :thk.lifecycle/activities ?act]
+                [?project :thk.project/lifecycles ?lc]
+
+                :in $ ?project ?pos]
+              db project-id pos-number))))
