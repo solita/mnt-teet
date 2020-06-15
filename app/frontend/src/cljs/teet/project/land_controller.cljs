@@ -33,6 +33,7 @@
 (defrecord UpdateCadastralForm [cadastral-id form-data])
 
 (defrecord RefreshEstateInfo [])
+(defrecord IncrementEstateCommentCount [estate-id])
 
 (defn toggle-selected-unit
   [id cad-units]
@@ -326,7 +327,11 @@
           {:tuck.effect/type :command!
            :command :land/refresh-estate-info
            :payload {:thk.project/id (get-in app [:params :project])}
-           :result-event common-controller/->Refresh})))
+           :result-event common-controller/->Refresh}))
+
+  IncrementEstateCommentCount
+  (process-event [{estate-id :estate-id} app]
+    (update-in app [:route :project :estate-comment-count estate-id] (fnil inc 0))))
 
 (defn- estate-owner-process-fees [{owners :omandiosad :as _estate}]
   (let [private-owners

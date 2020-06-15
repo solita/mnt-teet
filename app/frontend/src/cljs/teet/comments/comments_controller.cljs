@@ -14,9 +14,10 @@
 
 (defrecord UpdateFileNewCommentForm [form-data])            ; update new comment on selected file
 (defrecord UpdateNewCommentForm [form-data])                ; update new comment form data
-(defrecord CommentOnEntity [entity-type entity-id comment files visibility track? mentions])
+(defrecord CommentOnEntity [entity-type entity-id comment files visibility track? mentions
+                            after-comment-added-event])
 (defrecord ClearCommentField [])
-(defrecord CommentAddSuccess [entity-id])
+(defrecord CommentAddSuccess [entity-id after-comment-added-event])
 
 (defrecord OpenEditCommentDialog [comment-entity commented-entity])
 (defrecord UpdateEditCommentForm [form-data])
@@ -57,7 +58,8 @@
                        documents))))
 
   CommentOnEntity
-  (process-event [{:keys [entity-type entity-id comment files visibility track? mentions]} app]
+  (process-event [{:keys [entity-type entity-id comment files visibility track? mentions
+                          after-comment-added-event]} app]
     (assert (some? visibility))
     (let [mentions (vec (keep :user mentions))]
       (t/fx app
@@ -70,14 +72,18 @@
                        :files (mapv :db/id files)
                        :track? track?
                        :mentions mentions}
-             :result-event (partial ->CommentAddSuccess entity-id)})))
+             :result-event (partial ->CommentAddSuccess entity-id after-comment-added-event)})))
 
   CommentAddSuccess
-  (process-event [{entity-id :entity-id} app]
-    ;; Add nil comment as the first comment in list
-    (update-in app [:comments-for-entity entity-id]
-               (fn [comments]
-                 (into [nil] comments))))
+  (process-event [{:keys [entity-id after-comment-added-event]} app]
+    (t/fx
+     ;; Add nil comment as the first comment in list
+     (update-in app [:comments-for-entity entity-id]
+                (fn [comments]
+                  (into [nil] comments)))
+     (fn [e!]
+       (when after-comment-added-event
+         (e! (after-comment-added-event))))))
 
   ClearCommentField
   (process-event [_ app]

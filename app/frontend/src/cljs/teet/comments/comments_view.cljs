@@ -335,7 +335,7 @@
   [{:keys [e! app
            entity-type
            entity-id
-           show-comment-form?]
+           show-comment-form? after-comment-added-event]
     :or {show-comment-form? true}}]
   (r/with-let [[comment-form ->UpdateCommentForm]
                (common-controller/internal-state (comment-form-defaults entity-type)
@@ -366,7 +366,8 @@
                       :save-event #(let [{:comment/keys [comment files visibility track? mentions]} @comment-form]
                                      (reset! comment-form (comment-form-defaults entity-type))
                                      (comments-controller/->CommentOnEntity
-                                       entity-type entity-id comment files visibility track? mentions))
+                                      entity-type entity-id comment files visibility track? mentions
+                                      after-comment-added-event))
                       :footer new-comment-footer
                       :spec :task/new-comment-form}
           [:div {:class (<class common-styles/gray-container-style)}

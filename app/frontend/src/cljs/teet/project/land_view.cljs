@@ -410,6 +410,14 @@
           (tr [:land-modal-page :mortgages])]
          [Link {:style {:display :block}
                 :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "comments")}
+          [query/query {:e! e! :query :comment/count
+                        :state-path [:route :project :estate-comment-count estate-id]
+                        :state (get-in project [:estate-comment-count estate-id])
+                        :args {:db/id [:estate-comments/project+estate-id [(:db/id project) estate-id]]
+                               :for :estate-comments}
+                        :simple-view [(fn estate-comment-count [c]
+                                        [common/count-chip {:label c}])]
+                        :loading-state "-"}]
           (tr [:land-modal-page :comments])]]]]
       :children
       (mapc
@@ -683,7 +691,9 @@
      [comments-view/lazy-comments {:e! e!
                                    :app app
                                    :entity-type :estate-comments
-                                   :entity-id [:estate-comments/project+estate-id [(:db/id project) estate-id]]}]]))
+                                   :entity-id [:estate-comments/project+estate-id [(:db/id project) estate-id]]
+                                   :after-comment-added-event
+                                   #(land-controller/->IncrementEstateCommentCount estate-id)}]]))
 
 (defmulti land-view-modal (fn [{:keys [modal]}]
                             (keyword modal)))
