@@ -16,7 +16,7 @@
             [teet.ui.file-upload :as file-upload]
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
-            [teet.ui.material-ui :refer [Grid Link LinearProgress]]
+            [teet.ui.material-ui :refer [Grid Link LinearProgress IconButton]]
             [teet.ui.panels :as panels]
             [teet.ui.select :as select]
             [teet.ui.tabs :as tabs]
@@ -40,10 +40,10 @@
       [name ""])))
 
 (defn- file-row
-  [{:keys [link-download? actions?]
+  [{:keys [link-download? actions? comment-action]
     :or {link-download? false
          actions? true}}
-   {id :db/id :file/keys [number version status name] :as _file}]
+   {id :db/id :file/keys [number version status name] :as file}]
   (let [[base-name suffix] (base-name-and-suffix name)]
     [:div.file-row {:class [(<class common-styles/flex-row) (<class common-styles/margin-bottom 0.5)]}
      [:div.file-row-name {:class (<class common-styles/flex-table-column-style 44)}
@@ -62,11 +62,14 @@
       [:span (tr-enum status)]]
      (when actions?
        [:div.file-row-actions {:class (<class common-styles/flex-table-column-style 13 :flex-end)}
-        [url/Link {:class ["file-row-action-comments" (<class file-row-icon-style)]
-                   :page :file
-                   :params {:file id}
-                   :query {:tab "comments"}}
-         [icons/communication-comment]]
+        (if comment-action
+          [IconButton {:on-click #(comment-action file)}
+           [icons/communication-comment]]
+          [url/Link {:class ["file-row-action-comments" (<class file-row-icon-style)]
+                     :page :file
+                     :params {:file id}
+                     :query {:tab "comments"}}
+           [icons/communication-comment]])
         [Link {:class ["file-row-action-download" (<class file-row-icon-style)]
                :target :_blank
                :href (common-controller/query-url :file/download-file {:file-id id})}

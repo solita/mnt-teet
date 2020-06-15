@@ -795,15 +795,23 @@
 
 (defmethod unit-modal-content :files
   [{:keys [estate-info e! target app project]}]
-  [:div.land-unit-modal]
-  (if-let [pos (get-in project [:land/cadastral-forms target :land-acquisition/pos-number])]
-    [query/query {:e! e!
-                  :query :land/files-by-position-number
-                  :args {:thk.project/id (:thk.project/id project)
-                         :file/pos-number pos}
-                  :simple-view [file-view/file-table {:link-download? true
-                                                      :actions? false}]}]
-    [:span (tr [:land :no-position-number])]))
+  (log/info "TARGET: " target)
+  (r/with-let [selected-file (r/atom nil)]
+    [:div.land-unit-modal
+     (if-let [pos (get-in project [:land/cadastral-forms target :land-acquisition/pos-number])]
+       [query/query {:e! e!
+                     :query :land/files-by-position-number
+                     :args {:thk.project/id (:thk.project/id project)
+                            :file/pos-number pos}
+                     :simple-view [file-view/file-table {:link-download? true
+                                                         :actions? true
+                                                         :comment-action #(reset! selected-file %)}]}]
+       [:span (tr [:land :no-position-number])])
+     (when-let [f @selected-file]
+       [comments-view/lazy-comments {:e! e!
+                                     :app app
+                                     :entity-type :file
+                                     :entity-id (:db/id f)}])]))
 
 (defmethod land-view-modal :unit
   [{:keys [e! app modal-page project target estate-info] :as opts}]

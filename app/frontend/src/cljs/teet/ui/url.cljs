@@ -53,7 +53,7 @@
     {:path path
      :params (into {}
                    (map (fn [[_ param-name param-value]]
-                          [(keyword param-name) param-value]))
+                          [(keyword param-name) (js/decodeURIComponent param-value)]))
                    params)}))
 
 (defn remove-params
