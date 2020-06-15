@@ -374,6 +374,7 @@
   :no-estate-compensations
   "Sellele kinnistule ei ole määratud ühtki kompensatsiooni",
   :no-owner-info "Osakutel puudub omaniku teave",
+  :unit-info "Katastriüksuse teave",
   :total-cost "Kogumaksumus",
   :land-exchange "Maade vahetus",
   :add-compensation "+ Lisan kompensatsiooni",
@@ -383,6 +384,8 @@
   :net-area-balance "Netojääk {area} m2",
   :cadastral-unit-number "Katastriüksuse number",
   :filter {:quality "Maa andmete kvaliteet"},
+  :no-position-number
+  "Katastriüksusel positsiooninumbrit pole. Pole ühtegi faili, mida näidata.",
   :estate-data "Kinnistu andmed",
   :table-heading {:cost "Maksumus", :area "Ala", :type "Tüüp"},
   :no-active-burdens "Aktiivsed koormatised puuduvad",
@@ -412,7 +415,8 @@
   :mortgages "Hüpoteegid",
   :costs "Kulud",
   :comments "Kommentaarid",
-  :owner-info "Omanikud"},
+  :owner-info "Omanikud",
+  :files "Failid POS#"},
  :login {:login "Sisenen", :password "Salasõna", :username "Kasutaja"},
  :map
  {:aerial-view "Aerofoto",

@@ -7,7 +7,8 @@
             [clj-time.core :as time]
             [clj-time.coerce :as c]
             [clojure.walk :as walk]
-            [teet.land.land-db :as land-db])
+            [teet.land.land-db :as land-db]
+            [teet.file.file-db :as file-db])
   (:import (java.time LocalDate)
            (java.time.format DateTimeFormatter)))
 
@@ -173,3 +174,14 @@ and the compensation info as the value."
          (.format x DateTimeFormatter/ISO_LOCAL_DATE)
          x))
      response)))
+
+(defquery :land/files-by-position-number
+  {:doc "Fetch files by position number"
+   :context {:keys [db user]}
+   :args {id :thk.project/id
+          pos :file/pos-number}
+   :project-id [:thk.project/id id]
+   :authorization {:land/view-cadastral-data {:eid [:thk.project/id id]
+                                              :link :thk.project/owner}}}
+  (file-db/files-by-project-and-pos-number
+   db [:thk.project/id id] pos))

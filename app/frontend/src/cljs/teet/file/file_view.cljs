@@ -40,11 +40,18 @@
       [name ""])))
 
 (defn- file-row
-  [{id :db/id :file/keys [number version status name] :as _file}]
+  [{:keys [link-download? actions?]
+    :or {link-download? false
+         actions? true}}
+   {id :db/id :file/keys [number version status name] :as _file}]
   (let [[base-name suffix] (base-name-and-suffix name)]
     [:div.file-row {:class [(<class common-styles/flex-row) (<class common-styles/margin-bottom 0.5)]}
      [:div.file-row-name {:class (<class common-styles/flex-table-column-style 44)}
-      [url/Link {:page :file :params {:file id}} base-name]]
+      (if link-download?
+        [Link {:target :_blank
+               :href (common-controller/query-url :file/download-file {:file-id id})}
+         base-name]
+        [url/Link {:page :file :params {:file id}} base-name])]
      [:div.file-row-number {:class (<class common-styles/flex-table-column-style 10)}
       [:span number]]
      [:div.file-row-suffix {:class (<class common-styles/flex-table-column-style 10)}
@@ -53,16 +60,17 @@
       [:span (str "V" version)]]
      [:div.file-row-status {:class (<class common-styles/flex-table-column-style 13)}
       [:span (tr-enum status)]]
-     [:div.file-row-actions {:class (<class common-styles/flex-table-column-style 13 :flex-end)}
-      [url/Link {:class ["file-row-action-comments" (<class file-row-icon-style)]
-                 :page :file
-                 :params {:file id}
-                 :query {:tab "comments"}}
-       [icons/communication-comment]]
-      [Link {:class ["file-row-action-download" (<class file-row-icon-style)]
-             :target :_blank
-             :href (common-controller/query-url :file/download-file {:file-id id})}
-       [icons/file-cloud-download]]]]))
+     (when actions?
+       [:div.file-row-actions {:class (<class common-styles/flex-table-column-style 13 :flex-end)}
+        [url/Link {:class ["file-row-action-comments" (<class file-row-icon-style)]
+                   :page :file
+                   :params {:file id}
+                   :query {:tab "comments"}}
+         [icons/communication-comment]]
+        [Link {:class ["file-row-action-download" (<class file-row-icon-style)]
+               :target :_blank
+               :href (common-controller/query-url :file/download-file {:file-id id})}
+         [icons/file-cloud-download]]])]))
 
 (defn- other-version-row
   [{id :db/id
@@ -130,20 +138,21 @@
     (sort-by sort-fn comparator files)))
 
 (defn file-table
-  [files]
-  (r/with-let [items-for-sort-select (sort-items)
-               filter-atom (r/atom "")
-               sort-by-atom (r/atom (first items-for-sort-select))]
-    [:<>
-     [file-filter-and-sorter
-      filter-atom
-      sort-by-atom
-      items-for-sort-select]
-     [:div.file-table-files
-      (->> files
-           (filtered-by @filter-atom)
-           (sorted-by @sort-by-atom)
-           (mapc file-row))]]))
+  ([files] (file-table {} files))
+  ([opts files]
+   (r/with-let [items-for-sort-select (sort-items)
+                filter-atom (r/atom "")
+                sort-by-atom (r/atom (first items-for-sort-select))]
+     [:<>
+      [file-filter-and-sorter
+       filter-atom
+       sort-by-atom
+       items-for-sort-select]
+      [:div.file-table-files
+       (->> files
+            (filtered-by @filter-atom)
+            (sorted-by @sort-by-atom)
+            (mapc (r/partial file-row opts)))]])))
 
 (defn file-upload-button []
   [buttons/button-primary {:href (url/set-query-param :add-document 1)

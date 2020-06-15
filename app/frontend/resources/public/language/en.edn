@@ -379,6 +379,7 @@
   :no-estate-compensations
   "No saved estate compensations for this estate",
   :no-owner-info "Units don't have any owner information",
+  :unit-info "Cadastral unit info",
   :total-cost "Total cost",
   :land-exchange "Land exchange",
   :add-compensation "+ Add compensation",
@@ -388,6 +389,8 @@
   :net-area-balance "Net balance {area} m2",
   :cadastral-unit-number "Cadastral unit number",
   :filter {:quality "Land data quality"},
+  :no-position-number
+  "Cadastral unit has no position number. No files to show.",
   :estate-data "Estate data",
   :table-heading {:cost "Cost", :area "Area", :type "Type"},
   :no-active-burdens "This estate does not have any active burdens",
@@ -417,7 +420,8 @@
   :mortgages "Mortgages",
   :costs "Acquisition costs",
   :comments "Comments",
-  :owner-info "Owners and shares"},
+  :owner-info "Owners and shares",
+  :files "Files for POS#"},
  :login {:login "Login", :password "Password", :username "Username"},
  :map
  {:aerial-view "Aerial view",

@@ -24,7 +24,9 @@
             [teet.ui.table :as table]
             [teet.ui.format :as format]
             [cljs-time.format :as tf]
-            [teet.ui.query :as query]))
+            [teet.ui.query :as query]
+            [teet.file.file-view :as file-view]
+            [teet.log :as log]))
 
 (defn cadastral-unit-style
   [selected?]
@@ -338,7 +340,7 @@
         cadastral-form]
        [Divider {:style {:margin "1rem 0"}}]
        [typography/BoldGreyText {:style {:text-transform :uppercase}}
-        (tr [:land :unit-details])]
+        (tr [:land :unit-info])]
        [Link {:style {:display :block}
               :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "comments")}
         (tr [:land-modal-page :comments])]]]]))
@@ -793,7 +795,15 @@
 
 (defmethod unit-modal-content :files
   [{:keys [estate-info e! target app project]}]
-  [:span "IMPLEMENT FILE LISTING HERE"])
+  [:div.land-unit-modal]
+  (if-let [pos (get-in project [:land/cadastral-forms target :land-acquisition/pos-number])]
+    [query/query {:e! e!
+                  :query :land/files-by-position-number
+                  :args {:thk.project/id (:thk.project/id project)
+                         :file/pos-number pos}
+                  :simple-view [file-view/file-table {:link-download? true
+                                                      :actions? false}]}]
+    [:span (tr [:land :no-position-number])]))
 
 (defmethod land-view-modal :unit
   [{:keys [e! app modal-page project target estate-info] :as opts}]
@@ -825,7 +835,7 @@
 
 (defn land-view-modals [e! app project]
   (let [modal (get-in app [:query :modal])
-        target (get-in app [:query :modal-target])
+        target (some-> app (get-in [:query :modal-target]) js/decodeURIComponent)
         modal-page (get-in app [:query :modal-page])
         estate-info (some
                       (fn [unit]
