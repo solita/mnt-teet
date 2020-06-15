@@ -56,6 +56,7 @@
            :db (:db-after import-tx-result))))
 
 (defn- move-file [bucket old-key new-key]
+  (log/info "Move file in bucket " bucket " from " old-key " => " new-key)
   (s3/copy-object bucket old-key bucket new-key)
   (s3/delete-object {:bucket-name bucket :key old-key}))
 
