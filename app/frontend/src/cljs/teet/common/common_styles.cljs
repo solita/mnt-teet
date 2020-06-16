@@ -213,3 +213,6 @@
 (defn padding-bottom
   [amount]
   {:padding-bottom (str amount "rem")})
+
+(defn no-margin []
+  {:margin "0px"})

@@ -154,13 +154,16 @@
              :href href} title]]))])
 
 (defn gray-bg-list
-  [list]
-  [:ul {:style {:padding 0}}
-   (doall
+  ([list] (gray-bg-list {} list))
+  ([{:keys [style class]
+     :or {style {:padding 0}}} list]
+   [:ul (merge {:style style}
+               (when class {:class class}))
+    (doall
      (for [{:keys [id primary-text secondary-text] :as _item} list]
        ^{:key id}
        [:li {:class (<class itemlist-styles/gray-bg-list-element)}
         (when primary-text
           [Heading3 primary-text])
         (when secondary-text
-          [typography/Text secondary-text])]))])
+          [typography/Text secondary-text])]))]))
