@@ -357,8 +357,12 @@
                                         (.stopPropagation e))
 
                                       nil)))
-                   :on-blur #(when open?
-                               (swap! state assoc :open? false))
+                   :on-blur #(js/setTimeout
+                              ;; Delay closing because we might be blurring
+                              ;; because user clicked one of the options
+                              (fn [] (when open?
+                                       (swap! state assoc :open? false)))
+                              100)
                    :value (if value
                             (format-user value)
                             input)
@@ -397,6 +401,7 @@
                   :placement "bottom"
                   :modifiers #js {:hide #js {:enabled false}
                                   :preventOverflow #js {:enabled false}}
+
                   :style {:z-index 9999} ; Must have high z-index to use in modals
                   }
           [Paper  {:style {:width (.-clientWidth @input-ref)}
