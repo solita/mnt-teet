@@ -1,6 +1,8 @@
 (ns teet.permission.permission-db
   "Datomic queries related to project user permissions"
-  (:require [datomic.client.api :as d])
+  (:require [datomic.client.api :as d]
+            [teet.util.datomic :as du]
+            [teet.util.collection :as cu])
   (:import (java.util Date)))
 
 (defn valid-project-permissions
@@ -23,7 +25,8 @@
               time))))
 
 (defn user-permission-for-project
-  "User and project are either db/ids or lookup refs."
+  "Return user permissions that are explicitly scoped to the given project.
+  User and project are either db/ids or lookup refs."
   ([db user project]
    (user-permission-for-project db user project (Date.)))
   ([db user project time]
@@ -57,3 +60,15 @@
                 [(<= ?time-from ?time)]
                 [(<= ?time ?time-until)]]
               db user time))))
+
+(defn user-permissions-in-project
+  "Return user permissions that are valid in the given project at the given time."
+  ([db user project]
+   (user-permissions-in-project db user project (Date.)))
+  ([db user project time]
+   (let [project-id {:db/id (:db/id (du/entity db project))}]
+     (filter
+      (fn [{projects :permission/projects}]
+        (or (empty? projects)
+            (cu/contains-value? projects project-id)))
+      (user-permissions db user time)))))

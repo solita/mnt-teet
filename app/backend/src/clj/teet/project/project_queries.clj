@@ -84,7 +84,39 @@
         (maybe-update-activity-tasks activity-id)
         (activity-db/update-activity-histories db))))
 
+(defn- assignees-by-activity
+  "Fetch all people who are assigned in some task in the given project.
+  Returns assignees grouped by activity and includes their permissions
+  for the project."
+  [db project]
+  (->> (d/q '[:find
+              (pull ?act [:db/id :activity/name])
+              (pull ?a [:db/id :user/given-name :user/family-name])
+              :where
+              [?project :thk.project/lifecycles ?lc]
+              [?lc :thk.lifecycle/activities ?act]
+              [?act :activity/tasks ?task]
+              [?task :task/assignee ?a]
+              :in
+              $ ?project]
+            db project)
+       (group-by first)
+       (cu/map-vals (partial mapv
+                             (fn [[_ {user-id :db/id :as user}]]
+                               (assoc user :permissions
+                                      (mapv :permission/role
+                                            (permission-db/user-permissions-in-project db user-id project))))))
+       (cu/map-keys (comp :db/ident :activity/name))))
 
+(defquery :thk.project/assignees-by-activity
+  {:doc "Fetch assignees by activity"
+   :context {db :db}
+   :args {:thk.project/keys [id]}
+   :project-id [:thk.project/id id]
+   :authorization {:project/project-info {:eid [:thk.project/id id]
+                                          :link :thk.project/owner
+                                          :access :read}}}
+  (assignees-by-activity db [:thk.project/id id]))
 
 (defn- maps->sheet [maps]
   (let [headers (sort (reduce into #{}
