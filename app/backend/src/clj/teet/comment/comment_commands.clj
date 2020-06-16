@@ -187,43 +187,8 @@
                                                 user)
                                   mentioned-ids)))))})
 
-(defn- comment-parent-entity [db comment-id]
-
-  ;; TODO try to use a single query that gets ':file/comments' etc as param and returns the key + id
-  (if-let [file-id (ffirst
-                    (d/q '[:find ?file
-                           :in $ ?comment
-                           :where [?file :file/comments ?comment]]
-                         db comment-id))]
-    [:file file-id]
-    (if-let [task-id (ffirst
-                      (d/q '[:find ?task
-                             :in $ ?comment
-                             :where [?task :task/comments ?comment]]
-                           db comment-id))]
-      [:task task-id]
-      (if-let [estate-comments-id (ffirst (d/q '[:find ?ec
-                                                 :in $ ?comment
-                                                 :where [?ec :estate-comments/comments ?comment]]
-                                               db
-                                               comment-id))]
-        [:estate-comments estate-comments-id]
-        (if-let [owner-comments-id (ffirst (d/q '[:find ?oc
-                                                  :in $ ?comment
-                                                  :where [?oc :owner-comments/comments ?comment]]
-                                                db
-                                                comment-id))]
-          [:owner-comments owner-comments-id]
-          (if-let [unit-comments-id (ffirst (d/q '[:find ?oc
-                                                    :in $ ?comment
-                                                    :where [?oc :unit-comments/comments ?comment]]
-                                                  db
-                                                  comment-id))]
-            [:unit-comments unit-comments-id]
-            nil))))))
-
 (defn- get-project-id-of-comment [db comment-id]
-  (let [[parent-type parent-id] (comment-parent-entity db comment-id)]
+  (let [[parent-type parent-id] (comment-db/comment-parent db comment-id)]
     (case parent-type
       :file (project-db/file-project-id db parent-id)
       :task (project-db/task-project-id db parent-id)
@@ -304,7 +269,7 @@
   "Return the comment status notification itself along with
   notifications of the update"
   [db user id status]
-  (let [[entity-type entity-id] (comment-parent-entity db id)
+  (let [[entity-type entity-id] (comment-db/comment-parent db id)
         visibility (get-in (du/entity db id)
                            [:comment/visibility :db/ident])]
            ;; The comment status update itself
