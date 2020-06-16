@@ -60,31 +60,47 @@
           (recur)))))
   ctx)
 
+(defn existing-features-ids [{:keys [api-url api-secret] :as ctx}]
+  (let [get-url (str api-url "/feature?select=id,datasource_id")
+        resp (client/get get-url
+                         {:headers (merge (auth-headers {:api-secret api-secret})
+                                          {"Content-Type" "application/json"})})
+        rows (cheshire/decode (:body resp))
+        id-to-datasource (into {} (for [m rows] [(get m "id") (get m "datasource_id")]))]
+    id-to-datasource))
+
 (defn read-features
   "Read features from downloaded source. Assocs :features
   function to context to avoid retaining the head."
   [{dds :downloaded-datasource
     ds :datasource
     :as ctx}]
-  (assoc
-   ctx :features
-   (case (:content_type ds)
-     "SHP" #(shp/read-features-from-path (:path dds)))))
+  (assoc ctx
+         :old-features (existing-features-ids ctx) ;; pre-existing ids, to detect deletions
+         :features (case (:content_type ds)
+                     "SHP" #(shp/read-features-from-path (:path dds)))))
 
 (defn property-pattern-fn [pattern]
   (fn [{attrs :attributes}]
     (string/interpolate pattern attrs)))
 
-(defn upsert-features [{:keys [features api-url datasource-id datasource] :as ctx}]
+(defn upsert-features [{:keys [features api-url datasource-id datasource old-features] :as ctx}]
   (let [->label (property-pattern-fn (:label_pattern datasource))
-        ->id (property-pattern-fn (:id_pattern datasource))]
-    (doseq [features (partition-all 100
+        ->id (property-pattern-fn (:id_pattern datasource))
+        old-feature-id-set (into #{}
+                                 (map first
+                                      (filter #(= datasource-id (second %))
+                                              old-features)))
+        features-data (features)
+        new-feature-id-set (into #{} (map ->id features-data))
+        deleted? (clojure.set/difference old-feature-id-set new-feature-id-set)]
+    (doseq [features-chunk (partition-all 100
                                     ;; Add :i attribute that can be used as fallback id
                                     (map-indexed
                                      (fn [i feature]
                                        (update feature :attributes
                                                assoc :i i))
-                                     (features)))]
+                                     features-data))]
       (print ".") (flush)
       (client/post
        (str api-url "/feature")
@@ -93,13 +109,27 @@
                   {"Prefer" "resolution=merge-duplicates"
                    "Content-Type" "application/json"})
         :body (cheshire/encode
-               (for [{:keys [geometry attributes] :as f} features]
+               (for [{:keys [geometry attributes] :as f} features-chunk]
                  ;; Feature as JSON
                  {:datasource_id datasource-id
                   :id (->id f)
                   :label (->label f)
                   :geometry geometry
+                  :deleted false
                   :properties attributes}))}))
+    (when (not-empty deleted?)
+      (print "marking features absent from import file as deleted")
+      (client/post
+       (str api-url "/feature")
+       {:headers (merge
+                  (auth-headers ctx)
+                  {"Prefer" "resolution=merge-duplicates"
+                   "Content-Type" "application/json"})
+        :body (cheshire/encode
+               (for [deleted-feature-id deleted?]                 
+                 {:datasource_id datasource-id
+                  :id deleted-feature-id
+                  :deleted true}))}))
     ctx))
 
 (defn delete-working-files [{{path :path} :downloaded-datasource :as ctx}]
@@ -125,7 +155,7 @@
                  {:api-url (System/getenv "TEET_API_URL")
                   :api-secret (System/getenv "TEET_API_SECRET")}
                  ;; else
-                 (do 
+                 (do
                    (assert (and config-file
                                 (.canRead (io/file config-file)))
                            "Specify config file to read")
