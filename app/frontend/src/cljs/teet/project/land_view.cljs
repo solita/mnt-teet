@@ -91,8 +91,9 @@
       [TextField {:read-only? true :value recipient}])))
 
 (defn estate-group-form
-  [e! {:keys [estate-id]} on-change form-data]
-  (let [procedure-type (:estate-procedure/type form-data)
+  [e! {:keys [estate-id] :as estate} on-change form-data]
+  (let [public? (land-model/publicly-owned? estate)
+        procedure-type (:estate-procedure/type form-data)
         add-row! (fn [field]
                    (e! (on-change
                          (update form-data
@@ -107,10 +108,11 @@
                   :disable-buttons? (not (boolean (:saved-data form-data)))}
       [:div
        [:div {:style {:padding "0.2rem"}}
-        [form/field :estate-procedure/type
-         [select/select-enum {:e! e!
-                              :label-element typography/BoldGreyText
-                              :attribute :estate-procedure/type}]]
+        (when-not public?
+          [form/field :estate-procedure/type
+           [select/select-enum {:e! e!
+                                :label-element typography/BoldGreyText
+                                :attribute :estate-procedure/type}]])
         (when (= procedure-type :estate-procedure.type/acquisition-negotiation)
           [form/many {:attribute :estate-procedure/process-fees
                       :before [typography/BoldGreyText (tr [:fields :estate-procedure/process-fees])]
@@ -218,8 +220,9 @@
 
 
 (defn land-acquisition-form
-  [e! {:keys [teet-id PINDALA] :as unit} quality estate-procedure-type on-change-event form-data]
-  (let [show-extra-fields? (du/enum= (:land-acquisition/impact form-data) :land-acquisition.impact/purchase-needed)
+  [e! {:keys [teet-id PINDALA estate] :as unit} quality estate-procedure-type on-change-event form-data]
+  (let [public? (land-model/publicly-owned? estate)
+        show-extra-fields? (du/enum= (:land-acquisition/impact form-data) :land-acquisition.impact/purchase-needed)
         estate-id (get-in unit [:estate :estate-id])]
     [:div
      [form/form {:e! e!
@@ -256,7 +259,7 @@
                            nil)]
                         [:span (tr [:land :net-area-balance] {:area (- PINDALA area)})]])}
         [TextField {:type :number :input-style {:width "50%"}}])
-      (when (and show-extra-fields? (not= :estate-procedure.type/urgent estate-procedure-type))
+      (when (and (not public?) show-extra-fields? (not= :estate-procedure.type/urgent estate-procedure-type))
         ^{:attribute :land-acquisition/price-per-sqm}
         [TextField {:type :number}])
       (when show-extra-fields?

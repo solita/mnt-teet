@@ -99,3 +99,12 @@
     (select-keys estate-comp (concat common-procedure-keys
                                      (get-in procedure-type-options
                                              [type :keys])))))
+
+(defn publicly-owned?
+  "Check if estate is fully publicly owner.
+  Returns true if there is ownership information and every owner is a
+  public legal entity."
+  [{omandiosad :omandiosad :as _estate}]
+  (and (seq omandiosad)
+       (every? (comp (partial = "Avalik-õiguslik juriidiline isik") :isiku_tyyp)
+               omandiosad)))
