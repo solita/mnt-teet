@@ -118,7 +118,7 @@
                   :deleted false
                   :properties attributes}))}))
     (when (not-empty deleted?)
-      (print "marking features absent from import file as deleted")
+      (println "marking features absent from import file as deleted")
       (client/post
        (str api-url "/feature")
        {:headers (merge
