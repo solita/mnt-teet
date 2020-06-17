@@ -460,7 +460,8 @@
   :managers "Juhid",
   :no-other-users "Teisi kasutajaid pole",
   :other-users "Muud kasutajad",
-  :consultants "Konsultandid"},
+  :consultants "Konsultandid",
+  :active "AKTIIVNE"},
  :project
  {:add-users "Lisan kasutajaid",
   :remove-from-project "Eemaldan projektist",

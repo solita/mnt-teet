@@ -465,7 +465,8 @@
   :managers "Managers",
   :no-other-users "No other users",
   :other-users "Other users",
-  :consultants "Consultants"},
+  :consultants "Consultants",
+  :active "ACTIVE"},
  :project
  {:add-users "Add users",
   :remove-from-project "Remove from project",

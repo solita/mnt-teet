@@ -48,6 +48,9 @@
   {:color theme-colors/error
    :font-size "1.125rem"})
 
+(defn green-text []
+  {:color theme-colors/green})
+
 (defn inline-block []
   {:display "inline-block"})
 

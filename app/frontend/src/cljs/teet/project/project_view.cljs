@@ -277,7 +277,8 @@
                                 assignees)]]]}])
          assignees)])
 
-(defn people-tab [e! {query :query :as _app} {:thk.project/keys [id manager owner permitted-users] :as project}]
+(defn people-tab [e! {query :query :as _app} {:thk.project/keys [id manager owner permitted-users
+                                                                 lifecycles] :as project}]
   [:div.project-people-tab
    [people-modal e! project query]
    [:div.people-tab-managers
@@ -288,12 +289,24 @@
       [buttons/button-secondary {:on-click (e! project-controller/->OpenEditProjectDialog)
                                  :size :small}
        (tr [:buttons :edit])]]]
-    [itemlist/gray-bg-list [{:primary-text (if manager
-                                             (str (:user/given-name manager) " " (:user/family-name manager))
-                                             [information-missing-icon])
-                             :secondary-text (tr [:roles :manager])}
-                            {:primary-text (str (:user/given-name owner) " " (:user/family-name owner))
-                             :secondary-text (tr [:roles :owner])}]]]
+    [itemlist/gray-bg-list
+     (into [{:primary-text (str (:user/given-name owner) " " (:user/family-name owner))
+             :secondary-text (tr [:roles :owner])}]
+           ;; All activity owners
+           (mapcat (fn [{activities :thk.lifecycle/activities}]
+                     (for [{:activity/keys [manager name]
+                            id :db/id} activities
+                           :when manager]
+                       ^{:key (str id)}
+                       {:primary-text (user-model/user-name manager)
+                        :secondary-text (tr [:roles :manager])
+                        :tertiary-text [:span (tr-enum name)
+                                        [:div.activity-manager-active
+                                         {:class [(<class common-styles/green-text)
+                                                  (<class common-styles/inline-block)
+                                                  (<class common-styles/margin-left 1)]}
+                                         (tr [:people-tab :active])]]})))
+           lifecycles)]]
 
    [:div.people-tab-assignees-by-activity
     [query/query {:e! e!

@@ -160,10 +160,12 @@
    [:ul (merge {:style style}
                (when class {:class class}))
     (doall
-     (for [{:keys [id primary-text secondary-text] :as _item} list]
+     (for [{:keys [id primary-text secondary-text tertiary-text] :as _item} list]
        ^{:key id}
        [:li {:class (<class itemlist-styles/gray-bg-list-element)}
         (when primary-text
           [Heading3 primary-text])
         (when secondary-text
-          [typography/Text secondary-text])]))]))
+          [typography/Text secondary-text])
+        (when tertiary-text
+          [typography/Text tertiary-text])]))]))
