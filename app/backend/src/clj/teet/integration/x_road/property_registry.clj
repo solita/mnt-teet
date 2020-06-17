@@ -29,6 +29,7 @@
      [:kr:request
       [:kin:jao_nr "0,1,2,3,4"]
       [:kin:kande_kehtivus "1"]
+      ;; [:kin:kande_kehtivus "0"] ;; to also see not in force items
       [:kin:kasutajanimi]
       [:kin:parool]
       [:kin:registriosa_nr registriosa-nr]]])))
@@ -185,7 +186,8 @@
                    (mapv cell-to-text (z/xml-> row :td)))]
       (if (or (empty? parsed)
               (not= 2 (count (first parsed))))
-        (log/error "couldn't parse non-empty kande_tekst without table:" kande-tekst)
+        (when (not= "<root/>" kande-tekst)
+          (log/error "couldn't parse non-empty kande_tekst without table or <root/>:" kande-tekst))
         parsed))))
 
 
