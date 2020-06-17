@@ -954,13 +954,7 @@
            :db/cardinality :db.cardinality/one
            :db/unique :db.unique/identity
            :db/doc "Ensure there is only one owner-comments for an owner per project"}]]}
-
- {:db/ident :migration/add-project-manager-to-activity
-  :txes [[{:db/ident       :activity/manager
-           :db/cardinality :db.cardinality/one
-           :db/valueType   :db.type/ref
-           :db/doc         "User who manages the activity"}]]}
-
+ 
  {:db/ident :migration/file-pos-number
   :txes [[{:db/ident :file/pos-number
            :db/valueType :db.type/long
@@ -985,4 +979,10 @@
            :db/cardinality :db.cardinality/one
            :db/unique :db.unique/identity
            :db/doc "Ensure there is only one unit-comments for an unit per project"}]]}
+ {:db/ident :migration/add-project-manager-to-activity
+  :txes [[{:db/ident       :activity/manager
+           :db/cardinality :db.cardinality/one
+           :db/valueType   :db.type/ref
+           :db/doc         "User who manages the activity"}]]}
+
  ]
