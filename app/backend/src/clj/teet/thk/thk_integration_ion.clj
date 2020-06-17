@@ -130,7 +130,8 @@
                         update-entity-info
                         move-file-to-processed)]
       (log/event :thk-file-processed
-                 {:input result}))
+                 {:input result})
+      "{\"success\": true}")
     (catch Exception e
       (log/error (.getCause e) "Exception in THK import")
       (on-import-error (ex-data e)))))
