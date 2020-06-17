@@ -913,8 +913,76 @@
            :db/cardinality :db.cardinality/one
            :db/doc "Timestamp of when email was sent. If missing, no email has been sent."}]]}
 
+ {:db/ident :migration/land-acquisition-estate-id
+  :txes [[{:db/doc "ID of the estate that contains the plot for which the acquisition is made."
+           :db/ident :land-acquisition/estate-id
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}]]}
+
+ {:db/ident :migration/owner-and-estate-comments
+  :txes [[{:db/doc "Reference to the project for which the estate-comments entity exists"
+           :db/ident :estate-comments/project
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one}
+          {:db/doc "Estate-id to which the comments exist"
+           :db/ident :estate-comments/estate-id
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :estate-comments/comments
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many}
+          {:db/ident :estate-comments/project+estate-id
+           :db/valueType :db.type/tuple
+           :db/tupleAttrs [:estate-comments/project :estate-comments/estate-id]
+           :db/cardinality :db.cardinality/one
+           :db/unique :db.unique/identity
+           :db/doc "Ensure there is only one estate-comments for an estate per project"}
+          {:db/doc "Reference to the project for which the owner-comments entity exists"
+           :db/ident :owner-comments/project
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one}
+          {:db/doc "Id for a single owner of an estate"
+           :db/ident :owner-comments/owner-id
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :owner-comments/comments
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many}
+          {:db/ident :owner-comments/project+owner-id
+           :db/valueType :db.type/tuple
+           :db/tupleAttrs [:owner-comments/project :owner-comments/owner-id]
+           :db/cardinality :db.cardinality/one
+           :db/unique :db.unique/identity
+           :db/doc "Ensure there is only one owner-comments for an owner per project"}]]}
+ 
+ {:db/ident :migration/file-pos-number
+  :txes [[{:db/ident :file/pos-number
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one
+           :db/doc "Land pos# this file relates to"}]]}
+
+ {:db/ident :migration/estate-unit-comments
+  :txes [[{:db/doc "Reference to the project for which the unit-comments entity exists"
+           :db/ident :unit-comments/project
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one}
+          {:db/doc "Estate-id to which the comments exist"
+           :db/ident :unit-comments/unit-id
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :unit-comments/comments
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many}
+          {:db/ident :unit-comments/project+unit-id
+           :db/valueType :db.type/tuple
+           :db/tupleAttrs [:unit-comments/project :unit-comments/unit-id]
+           :db/cardinality :db.cardinality/one
+           :db/unique :db.unique/identity
+           :db/doc "Ensure there is only one unit-comments for an unit per project"}]]}
  {:db/ident :migration/add-project-manager-to-activity
   :txes [[{:db/ident       :activity/manager
            :db/cardinality :db.cardinality/one
            :db/valueType   :db.type/ref
-           :db/doc         "User who manages the activity"}]]}]
+           :db/doc         "User who manages the activity"}]]}
+
+ ]

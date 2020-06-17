@@ -5,7 +5,8 @@
             [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]
             [teet.comment.comment-db :as comment-db]
-            [teet.project.project-model :as project-model]))
+            [teet.project.project-model :as project-model]
+            [teet.comment.comment-model :as comment-model]))
 
 (defn notification-tx
   "Return a notification transaction map."
@@ -121,7 +122,7 @@
                     '[?id :notification/target ?target]
                     '[?id :notification/receiver ?user]
                     '[?id :notification/status :notification.status/unread]
-                    ['?parent-id (comment-db/type->comments-attribute parent-type) '?target]
+                    ['?parent-id (comment-model/type->comments-attribute parent-type) '?target]
                     :in '$ '?user '?parent-id]
                    db (:db/id receiver) parent-id)))
 

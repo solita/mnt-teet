@@ -46,14 +46,6 @@
      :padding          "0.5rem"
      :background-color theme-colors/gray-lightest}))
 
-(defn white-link-style
-  [selected?]
-  ^{:pseudo {:hover {:text-decoration :underline}}}
-  {:color theme-colors/white
-   :text-decoration :none
-   :font-weight (if selected?
-                  :bold
-                  :normal)})
 
 (defn white-link-item-style
   []

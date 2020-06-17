@@ -23,27 +23,40 @@ Aurora(pgAlias, "PostgreSQL DB", "Geo data")
 package "External systems" {
         (THK system) as thkAlias
         (Maa-amet maps) as mapsAlias
-        (Delta) as deltaAlias
         (Maa-amet restrictions) as restrictionsAlias
         (Cadastral data) as cadastraldbAlias
         (TARA login) as taraAlias
+        cloud "X-road" {
+  [Maanteeamet Security Server] as xroad
+  database "Property registry" as propertyRegistry
+                database "Business registry" as businessRegistry
+                note bottom of xroad
+        TEET accesses X-road services via VPN and through Maanteeamet security server.
+
+        TEET does not offer any services through X-road, only acts as a client to fetch information from registries.
+end note
+
+}
+
+        note bottom of mapsAlias
+	Front end requests map tiles from Maa-amet tile server
+end note
 }
 
 
 mapsAlias <-- personAlias
 
-note bottom of mapsAlias
-	Front end requests map tiles from Maa-amet tile server
-end note
+
 
 Fargate(pgRestAlias, "PostgREST API", "HTTP access to PostgreSQL")
 SimpleStorageServiceS3(storageAlias, "Stored docs", "Project-related uploaded files")
 SimpleStorageServiceS3(integrationS3Alias, "THK integration data", "CSV files")
 APIGateway(apigwAlias, "Frontend APIGW", "Web UI actions")
+SimpleStorageServiceS3(frontendBucket, "Frontend assets", "HTML, CSS and compiled JS")
 
 (TEET Geo data import tool) as importToolAlias
-importToolAlias -up-> restrictionsAlias
-importToolAlias -up-> cadastraldbAlias
+importToolAlias --> restrictionsAlias
+importToolAlias --> cadastraldbAlias
 importToolAlias --> pgRestAlias
 
 
@@ -67,9 +80,10 @@ package "Datomic" {
 
 }
 
-datomicComputeNode <-l-> datomicAlias
+datomicComputeNode <--> datomicAlias
 personAlias --> taraAlias
 personAlias --> apigwAlias
+apigwAlias --> frontendBucket
 apigwAlias --> storageAlias
 apigwAlias --> queryIonAlias
 apigwAlias --> commandIonAlias
@@ -85,8 +99,8 @@ commandIonAlias <--> datomicComputeNode
 uploadProcessingIonAlias <--> datomicComputeNode
 taraLoginIon <--> datomicComputeNode
 
-taraLoginIon -up-> taraAlias
-Datomic -up-> pgRestAlias
+taraLoginIon --> taraAlias
+Datomic -u-> pgRestAlias
 uploadProcessingIonAlias <--> storageAlias
 
 pgRestAlias --> pgAlias
@@ -95,5 +109,12 @@ personAlias --> pgRestAlias
 note left of integrationS3Alias
 	THK system periodically uploads CSV file to S3 integration bucket
 end note
+
+
+
+datomicComputeNode --> xroad :VPN connection
+xroad --> propertyRegistry
+xroad --> businessRegistry
+
 
 @enduml

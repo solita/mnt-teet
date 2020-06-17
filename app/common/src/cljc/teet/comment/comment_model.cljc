@@ -12,12 +12,15 @@
   "Regex pattern for extracting user id from mention."
   #"^@\[[^\]]+\]\((\d+)\)$")
 
-(def entity-comment-attribute
+(def type->comments-attribute
   {:task :task/comments
-   :file :file/comments})
+   :file :file/comments
+   :estate-comments :estate-comments/comments
+   :owner-comments :owner-comments/comments
+   :unit-comments :unit-comments/comments})
 
 (defn comments-attribute-for-entity-type [entity-type]
-  (or (entity-comment-attribute entity-type)
+  (or (type->comments-attribute entity-type)
       (throw (ex-info "Don't know what the comment attribute is for entity type"
                       {:entity-type entity-type}))))
 

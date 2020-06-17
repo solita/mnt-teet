@@ -55,8 +55,14 @@
         participants (disj (into (if project-manager-uid
                                  #{project-manager-uid}
                                  #{})
-                               (ffirst (d/q query
-                                            db entity-id)))
+                                 ;; if entity id is a tuple for the first creation of estate-comments or owner-comments
+                                 ;; This is because the tuple entity can't be resolved and thus will fail
+                                 ;; There also cannot be any pre-existing comments because the whole entity is created
+                                 (when-let [id (if (number? entity-id)
+                                                 entity-id
+                                                 (:db/id (du/entity db entity-id)))]
+                                   (ffirst (d/q query
+                                                db id))))
                            (:db/id (du/entity db (user-model/user-ref except-user))))
         participants (if (= entity-type :file)
                        (conj participants
@@ -102,6 +108,31 @@
                   (Long/parseLong id))))
         (re-seq comment-model/user-mention-pattern text)))
 
+(defn comment-entity-transaction
+  [entity-tuple transaction-id]
+  (let [project (-> entity-tuple
+                    second
+                    first)
+        target (-> entity-tuple
+                   second
+                   second)]
+    [(case (first entity-tuple)
+       :estate-comments/project+estate-id
+       {:db/id transaction-id
+        :estate-comments/project project
+        :estate-comments/estate-id target}
+       :owner-comments/project+owner-id
+       {:db/id transaction-id
+        :owner-comments/project project
+        :owner-comments/owner-id target}
+       :unit-comments/project+unit-id
+       {:db/id transaction-id
+        :unit-comments/project project
+        :unit-comments/unit-id target}
+       (throw (ex-info "Given entity tuple doesn't match known cases"
+                       {:entity-tuple entity-tuple})))]))
+
+
 (defcommand :comment/create
   {:doc "Create a new comment and add it to an entity"
    :context {:keys [db user]}
@@ -110,23 +141,31 @@
    :authorization {:project/write-comments {:db/id entity-id}}
    :transact
    (let [mentioned-ids (extract-mentions comment)
-         project-id (project-db/entity-project-id db entity-type entity-id)]
-     (into [(merge {:db/id entity-id
-                    (comment-model/comments-attribute-for-entity-type entity-type)
-                    [(merge {:db/id "new-comment"
-                             :comment/author [:user/id (:user/id user)]
-                             :comment/comment comment
-                             ;; TODO: Can external partners set visibility?
-                             :comment/visibility visibility
-                             :comment/mentions (extract-mentions comment)
-                             :comment/timestamp (Date.)
-                             :comment/status (comment-status user
-                                                             (project-db/entity-project-id db entity-type entity-id)
-                                                             track?)}
-                            (creation-meta user)
-                            (when (seq files)
-                              {:comment/files (validate-files db user files)}))]})]
+         project-id (project-db/entity-project-id db entity-type entity-id)
+         resolved-id (if (number? entity-id)
+                       entity-id
+                       (:db/id (du/entity db entity-id)))
+         transact-id (if resolved-id
+                       resolved-id
+                       "new-entity")]
+     (into [{:db/id transact-id
+             (comment-model/comments-attribute-for-entity-type entity-type)
+             [(merge {:db/id "new-comment"
+                      :comment/author [:user/id (:user/id user)]
+                      :comment/comment comment
+                      ;; TODO: Can external partners set visibility?
+                      :comment/visibility visibility
+                      :comment/mentions (extract-mentions comment)
+                      :comment/timestamp (Date.)
+                      :comment/status (comment-status user
+                                                      (project-db/entity-project-id db entity-type entity-id)
+                                                      track?)}
+                     (creation-meta user)
+                     (when (seq files)
+                       {:comment/files (validate-files db user files)}))]}]
            (concat
+             (when (not resolved-id)
+               (comment-entity-transaction entity-id transact-id))
              ;; Comment mention notification for mentioned users
              (map #(notification-db/notification-tx
                      {:from user
@@ -148,26 +187,13 @@
                                                 user)
                                   mentioned-ids)))))})
 
-(defn- comment-parent-entity [db comment-id]
-  (if-let [file-id (ffirst
-                    (d/q '[:find ?file
-                           :in $ ?comment
-                           :where [?file :file/comments ?comment]]
-                         db comment-id))]
-    [:file file-id]
-    (if-let [task-id (ffirst
-                      (d/q '[:find ?task
-                             :in $ ?comment
-                             :where [?task :task/comments ?comment]]
-                           db comment-id))]
-      [:task task-id]
-      nil)))
-
 (defn- get-project-id-of-comment [db comment-id]
-  (let [[parent-type parent-id] (comment-parent-entity db comment-id)]
+  (let [[parent-type parent-id] (comment-db/comment-parent db comment-id)]
     (case parent-type
       :file (project-db/file-project-id db parent-id)
       :task (project-db/task-project-id db parent-id)
+      :estate-comments (project-db/estate-comments-project-id db parent-id)
+      :owner-comments (project-db/owner-comments-project-id db parent-id)
       (db-api/bad-request! "No such comment"))))
 
 (defn- files-in-db [db comment-id]
@@ -243,7 +269,7 @@
   "Return the comment status notification itself along with
   notifications of the update"
   [db user id status]
-  (let [[entity-type entity-id] (comment-parent-entity db id)
+  (let [[entity-type entity-id] (comment-db/comment-parent db id)
         visibility (get-in (du/entity db id)
                            [:comment/visibility :db/ident])]
            ;; The comment status update itself

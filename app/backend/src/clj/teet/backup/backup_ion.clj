@@ -7,7 +7,9 @@
             [clojure.java.io :as io]
             [clojure.pprint :as pprint]
             [clojure.walk :as walk]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [teet.util.datomic :as du]
+            [teet.log :as log]))
 
 (defn prepare [form]
   (walk/prewalk
@@ -109,8 +111,10 @@
       (if-not entity
         (do
           (when (seq (set/difference referred provided))
-            (throw (ex-info "Export referred to entities that were not provided! This backup is inconsistent."
-                            {:missing-referred-ids (set/difference referred provided)})))
+            (let [missing-referred-ids (set/difference referred provided)
+                  msg "Export referred to entities that were not provided! This backup is inconsistent."]
+              (log/warn msg (set/difference referred provided))
+              (throw (ex-info msg {:missing-referred-ids missing-referred-ids}))))
           {:backed-up-entity-count (count provided)})
         (if (string? entity)
           (do
@@ -161,6 +165,17 @@
        (cons item
              (read-seq rdr))))))
 
+(defn check-ids-without-attributes [form]
+  (let [ids (volatile! (du/db-ids form))]
+    (walk/prewalk
+     (fn [x]
+       ;; This is an entity map that has more than just the :db/id
+       (when-let [id (and (map? x) (:db/id x))]
+         (when (> (count (keys x)) 1)
+           (vswap! ids disj id)))
+       x) form)
+    @ids))
+
 (defn restore
   "Restore from REPL to empty database."
   [conn file]
@@ -173,6 +188,8 @@
               rdr (java.io.PushbackReader. zip-reader)]
     ;; Transact everything in one big transaction
     (let [form (doall (read-seq rdr))
+          ids (check-ids-without-attributes form)
+          _ (def *ids ids)
           {:keys [mapping form]} (to-temp-ids form)
           {tempids :tempids} (d/transact conn {:tx-data (vec form)})]
       {:mapping mapping :form form :tempids tempids})))

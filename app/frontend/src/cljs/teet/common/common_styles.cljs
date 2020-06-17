@@ -190,3 +190,29 @@
    :width "100%"
    :align-items :center
    :justify-content :space-between})
+
+(defn white-link-style
+  [selected?]
+  ^{:pseudo {:hover {:text-decoration :underline}}}
+  {:color theme-colors/white
+   :text-decoration :none
+   :font-weight (if selected?
+                  :bold
+                  :normal)})
+
+(defn gray-container-style
+  []
+  {:background-color theme-colors/gray-lightest
+   :padding "1.5rem"})
+
+(defn label-text-style
+  []
+  {:display :block
+   :font-size "1rem"})
+
+(defn padding-bottom
+  [amount]
+  {:padding-bottom (str amount "rem")})
+
+(defn no-margin []
+  {:margin "0px"})

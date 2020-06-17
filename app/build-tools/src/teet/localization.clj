@@ -46,9 +46,12 @@
 
 (defn localization-edn-for-language [localizations lang]
   (reduce (fn [acc localization-entry]
-            (assoc-in acc
-                      (edn/read-string (:key localization-entry))
-                      (lang localization-entry)))
+              (try (assoc-in acc
+                             (edn/read-string (:key localization-entry))
+                             (lang localization-entry))
+                   (catch Exception e
+                     (println "error reading line " (pr-str localization-entry))
+                     (throw e))))
           ;; Order keys alphabetically
           ;; TODO nested order, not only main level
           (sorted-map)

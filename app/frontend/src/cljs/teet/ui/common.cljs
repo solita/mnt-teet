@@ -4,10 +4,11 @@
             [reagent.core :as r]
             [teet.ui.icons :as icons]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.material-ui :refer [ButtonBase Link]]
+            [teet.ui.material-ui :refer [ButtonBase Link Chip]]
             [teet.ui.typography :refer [Text SmallText] :as typography]
             [teet.common.common-styles :as common-styles]
-            [teet.ui.buttons :as buttons]))
+            [teet.ui.buttons :as buttons]
+            [teet.ui.format :as format]))
 
 (def lifecycle-methods
   "Supported lifecycle methods in mixins."
@@ -270,3 +271,25 @@
              child]
             (meta child)))
         children))]])
+
+(defn- count-chip-style
+  []
+  {:margin-right "0.25rem"
+   :cursor :inherit})
+
+(defn count-chip
+  [opts]
+  [Chip (merge
+          {:size :small
+           :color :primary
+           :class (<class count-chip-style)}
+          opts)])
+
+(defn heading-and-grey-border-body
+  [{:keys [heading body]}]
+  [:div {:style {:margin-bottom "1.5rem"}}
+   [:div {:style {:margin-bottom "0.25rem"}}
+    heading]
+   [:div {:style {:padding-left "0.5rem"
+                  :border-left (str "solid 7px " theme-colors/gray-light)}}
+    body]])

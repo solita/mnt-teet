@@ -3,7 +3,7 @@
             [reagent.core :as r]
             [teet.authorization.authorization-check :as ac :refer [when-authorized]]
             [teet.common.common-styles :as common-styles]
-            [teet.localization :refer [tr]]
+            [teet.localization :refer [tr tr-enum]]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-model :as project-model]
             [teet.project.project-style :as project-style]
@@ -31,6 +31,7 @@
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.typography :refer [Heading1 Heading3] :as typography]
             [teet.ui.url :as url]
+            [teet.ui.util :refer [mapc]]
             [teet.util.collection :as cu]
             [teet.theme.theme-colors :as theme-colors]
             [teet.project.search-area-controller :as search-area-controller]
@@ -38,7 +39,9 @@
             [teet.ui.num-range :as num-range]
             [teet.project.project-map-view :as project-map-view]
             [teet.common.common-controller :as common-controller]
-            [teet.road.road-model :as road-model]))
+            [teet.road.road-model :as road-model]
+            [teet.ui.query :as query]
+            [clojure.string :as str]))
 
 
 
@@ -47,7 +50,7 @@
                           carriageway repair-method procurement-nr id] :as project}]
   (let [project-name (project-model/get-column project :thk.project/project-name)
         [start-km end-km] (project-model/get-column project :thk.project/effective-km-range)]
-    [:div
+    [:div.project-details-tab
      [:div {:class (<class common-styles/heading-and-action-style)}
       [typography/Heading2 project-name]
       [buttons/button-secondary {:size :small
@@ -160,8 +163,7 @@
 
 (defn activities-tab
   [e! {:keys [stepper] :as app} project]
-  [:<>
-   [project-navigator-view/project-navigator-dialogs {:e! e! :app app :project project}]
+  [:div.project-activities-tab
    [project-navigator-view/project-navigator e! project stepper (:params app) false]])
 
 (defn add-user-form
@@ -257,11 +259,28 @@
    {:font-size :small
     :style {:color theme-colors/warning}}])
 
+(defn- assignees-by-activity [assignees]
+  [:<>
+   [:div {:class (<class common-styles/heading-and-action-style)}
+    [typography/Heading2 (tr [:people-tab :consultants])]]
+   (mapc (fn [[activity assignees]]
+           [common/hierarchical-container
+            {:heading-content (tr-enum activity)
+             :children [^{:key "assignees"}
+                        [:div.people-tab-assignees-for-activity
+                         [itemlist/gray-bg-list
+                          {:class (<class common-styles/no-margin)}
+                          (mapv (fn [{id :db/id permissions :permissions :as user}]
+                                  {:primary-text (user-model/user-name user)
+                                   :secondary-text (str/join ", " (map #(tr [:roles %]) permissions))
+                                   :id (str id)})
+                                assignees)]]]}])
+         assignees)])
 
-(defn people-tab [e! {query :query :as _app} {:thk.project/keys [manager owner permitted-users] :as project}]
-  [:div
+(defn people-tab [e! {query :query :as _app} {:thk.project/keys [id manager owner permitted-users] :as project}]
+  [:div.project-people-tab
    [people-modal e! project query]
-   [:div
+   [:div.people-tab-managers
     [:div {:class (<class common-styles/heading-and-action-style)}
      [typography/Heading2 (tr [:people-tab :managers])]
      [when-authorized :thk.project/update
@@ -275,6 +294,14 @@
                              :secondary-text (tr [:roles :manager])}
                             {:primary-text (str (:user/given-name owner) " " (:user/family-name owner))
                              :secondary-text (tr [:roles :owner])}]]]
+
+   [:div.people-tab-assignees-by-activity
+    [query/query {:e! e!
+                  :query :thk.project/assignees-by-activity
+                  :args {:thk.project/id id}
+                  :simple-view [assignees-by-activity]}]
+    ]
+
    [:div
     [:div {:class (<class common-styles/heading-and-action-style)}
      [typography/Heading2 (tr [:people-tab :other-users])]
@@ -283,6 +310,7 @@
       [buttons/button-secondary {:on-click (e! project-controller/->OpenPeopleModal)
                                  :size :small}
        (tr [:buttons :edit])]]]
+
     (if (empty? permitted-users)
       [typography/GreyText (tr [:people-tab :no-other-users])]
       [itemlist/gray-bg-list (for [{:keys [user] :as permission} permitted-users]
@@ -540,5 +568,6 @@
   [project-context/provide
    {:project-id (:db/id project)}
    [:<>
+    [project-navigator-view/project-navigator-dialogs {:e! e! :app app :project project}]
     [project-page-modals e! app project]
     [project-view e! app project breadcrumbs]]])

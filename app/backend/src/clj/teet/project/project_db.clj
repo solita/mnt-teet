@@ -15,6 +15,18 @@
             db task-id))
       (db-api/bad-request! "No such task")))
 
+(defn estate-comments-project-id [db ec-id]
+  (or (-> (d/pull db '[:estate-comments/project] ec-id)
+          :estate-comments/project
+          :db/id)
+      (db-api/bad-request! "No such estate-comments entity")))
+
+(defn owner-comments-project-id [db oc-id]
+  (or (-> (d/pull db '[:owner-comments/project] oc-id)
+          :owner-comments/project
+          :db/id)
+      (db-api/bad-request! "No such owner-comments entity")))
+
 (defn task-belongs-to-project [db project-id task-id]
   (ffirst
    (d/q '[:find ?project
@@ -117,7 +129,10 @@
   (case entity-type
     :activity (activity-project-id db entity-id)
     :task (task-project-id db entity-id)
-    :file (file-project-id db entity-id)))
+    :file (file-project-id db entity-id)
+    :owner-comments (first (second entity-id))
+    :estate-comments (first (second entity-id))
+    :unit-comments (first (second entity-id))))
 
 (defn comment-project-id [db comment-id]
   ;; Find what entity this comment is linked to and get

@@ -3,23 +3,30 @@
   (:require [datomic.client.api :as d]
             [teet.meta.meta-query :as meta-query]
             [teet.db-api.core :as db-api]
-            [teet.comment.comment-model :as comment-model]))
+            [teet.comment.comment-model :as comment-model]
+            [teet.util.datomic :as du]))
 
-(def type->comments-attribute
-  {:task :task/comments
-   :file :file/comments})
 
 (defn- comment-query [type visibility pull-selector]
-  {:pre [(type->comments-attribute type)]}
+  {:pre [(comment-model/type->comments-attribute type)]}
   {:find [(list 'pull
                 '?comment
                 pull-selector)]
    :in '[$ ?entity-id]
    :where (into [['?entity-id
-                  (type->comments-attribute type)
+                  (comment-model/type->comments-attribute type)
                   '?comment]]
-                (when visibility
-                  [['?comment :comment/visibility visibility]]))})
+                (concat
+                 ;; Comment is not deleted
+                 '[[(missing? $ ?comment :meta/deleted?)]]
+
+                 (when visibility
+                   [['?comment :comment/visibility visibility]])))})
+
+(defn- resolve-id [db entity-id]
+   (if (number? entity-id)
+     entity-id
+     (:db/id (du/entity db entity-id))))
 
 (defn comments-of-entity
   ([db entity-id entity-type]
@@ -31,12 +38,21 @@
                           :comment/mentions [:user/given-name :user/family-name :user/id :user/person-id :user/email]
                           :comment/files [:db/id :file/name]}]))
   ([db entity-id entity-type comment-visibility pull-selector]
-   (->> (d/q (comment-query entity-type
-                            comment-visibility
-                            pull-selector)
-             db entity-id)
-        (map first)
-        (meta-query/without-deleted db))))
+   (if-let [resolved-id (resolve-id db entity-id)]
+     (->> (d/q (comment-query entity-type
+                              comment-visibility
+                              pull-selector)
+               db resolved-id)
+          (map first))
+     [])))
+
+(defn comment-count-of-entity
+  [db entity-id entity-type comment-visibility]
+  (if-let [resolved-id (resolve-id db entity-id)]
+    (ffirst (d/q (assoc (comment-query entity-type comment-visibility nil)
+                        :find '[(count ?comment)])
+                 db resolved-id))
+    0))
 
 (defn comment-parent
   "Returns [entity-type entity-id] for the parent of the given comment.
@@ -49,4 +65,4 @@
                                       :in '$ '?c]
                                      db comment-id))]
             [entity-type entity-id]))
-        comment-model/entity-comment-attribute))
+        comment-model/type->comments-attribute))

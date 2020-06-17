@@ -5,10 +5,11 @@
                                          TableSortLabel]]
             [teet.ui.text-field :refer [TextField]]
             [clojure.string :as str]
-            [herb.core :refer [<class]]
+            [herb.core :refer [<class] :as herb]
             [teet.localization :refer [tr]]
             [teet.theme.theme-colors :as theme-colors]
             [reagent.core :as r]
+            [teet.ui.util :refer [mapc]]
             [teet.ui.icons :as icons]
             [postgrest-ui.components.scroll-sensor :as scroll-sensor]
             [teet.ui.panels :as panels]))
@@ -156,3 +157,54 @@
        [listing-table (assoc opts
                              :filters filters
                              :data data)]])))
+
+(defn simple-table-row-style
+  []
+  ^{:pseudo {:first-of-type {:border-top :none}}}
+  {:border-width "1px 0"
+   :border-style :solid
+   :border-color theme-colors/gray-lighter})
+
+(defn table-heading-cell-style
+  []
+  ^{:pseudo {:first-of-type {:padding-right 0}}}
+  {:white-space :nowrap
+   :font-weight 500
+   :font-size "0.875rem"
+   :color theme-colors/gray
+   :padding-right "0.5rem"})
+
+(defn simple-table-cell-style
+  []
+  ^{:pseudo {:last-of-type {:padding-right 0}}}
+  {:padding "0.5rem 0.5rem 0.5rem 0"})
+
+(defn simple-table
+  [table-headings rows]
+  [:table {:style {:border-collapse :collapse
+                   :width "100%"}}
+   [:thead
+    [:tr {:class (<class simple-table-row-style)}
+     (mapc
+       (fn [[heading opts]]
+         [:td (merge
+                {:class (<class table-heading-cell-style)}
+                opts)
+          heading])
+       table-headings)]]
+   [:tbody
+    (mapc
+      (fn [row]
+        [:tr {:class (<class simple-table-row-style)}
+         (mapc
+           (fn [[column {:keys [style class] :as opts}]]
+             [:td (merge
+                    {:style (merge {} style)
+                     :class (herb/join
+                              (<class simple-table-cell-style)
+                              (when class
+                                class))}
+                    (dissoc opts :style :class))
+              column])
+           row)])
+      rows)]])

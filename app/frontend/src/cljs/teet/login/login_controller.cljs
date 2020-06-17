@@ -32,7 +32,8 @@
                :payload           {}
                :error-event       ->CheckSessionError
                :result-event      (partial ->SetSessionInfo false nil)})
-        (t/fx app
+        (t/fx (assoc-in app [:login :navigate-to] (when-not (= (:page app) :login)
+                                                    (select-keys app [:page :params :query])))
               {::tuck-effect/type :navigate
                :page :login}))))
 

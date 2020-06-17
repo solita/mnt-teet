@@ -19,12 +19,11 @@
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.layout :as layout]
             [teet.ui.project-context :as project-context]
             [teet.ui.query :as query]
             [teet.ui.select :as select]
             [teet.ui.skeleton :as skeleton]
-            [teet.ui.text-field :refer [TextField mentions-input]]
+            [teet.ui.mentions :refer [mentions-input]]
             [teet.ui.material-ui :refer [IconButton]]
             [teet.ui.typography :as typography]
             [teet.ui.util :as util :refer [mapc]]
@@ -96,7 +95,6 @@
                         :project-id project-id
                         :attachment? true
                         :on-success (fn [uploaded-files]
-                                      (log/info "FILES UPLOADED: " uploaded-files)
                                       (on-success-event
                                        {:comment/files (into (or value [])
                                                              uploaded-files)}))}))}
@@ -109,19 +107,16 @@
 ;; TODO: Both this and the create comment form should be replaced with
 ;;       form2 to make the add image button look decent.
 (defn- edit-comment-form [e! comment-data]
-  (let [remove-mention (partial form/remove-from-many-at-index e! comments-controller/->UpdateEditCommentForm comment-data :comment/mentions)
-        add-mention (fn [field]
-                      (e! (comments-controller/->UpdateEditCommentForm
-                            (update comment-data
-                                    field
-                                    (fnil conj []) {}))))]
+  (r/with-let [[comment-form ->UpdateCommentForm]
+               (common-controller/internal-state comment-data
+                                                 {:merge? true})]
     [form/form2 {:e! e!
-                 :value comment-data
-                 :on-change-event comments-controller/->UpdateEditCommentForm
+                 :value @comment-form
+                 :on-change-event ->UpdateCommentForm
                  :cancel-event comments-controller/->CancelCommentEdit
-                 :save-event comments-controller/->SaveEditCommentForm
+                 :save-event #(comments-controller/->SaveEditCommentForm @comment-form)
                  :spec :comment/edit-comment-form}
-     [:div {:class (<class form/form-bg)}
+     [:div {:class (<class common-styles/gray-container-style)}
       [:div {:class (<class form-field-spacer)}
        [form/field :comment/comment
         [mentions-input {:e! e!}]]
@@ -133,24 +128,7 @@
 
       [:div {:class (<class form-field-spacer)}
        [form/field :comment/visibility
-        [select/select-enum {:e! e! :attribute :comment/visibility}]]]
-
-      [:div
-       [form/many {:attribute :comment/mentions
-                   :before [typography/BoldGreyText (tr [:comment :mentioned-users])]
-                   :after [buttons/link-button
-                           {:on-click #(add-mention :comment/mentions)}
-                           (str "+ " (tr [:comment :add-mention]))]}
-        [:div {:style {:display :flex
-                       :flex-direction :row
-                       :margin-bottom "1rem"
-                       :justify-content :space-between}}
-         [form/field :user
-          [select/select-user {:e! e!
-                               :show-label? false
-                               :attribute :comment/user}]]
-         [form/many-remove #(remove-mention %)
-          [buttons/button-text-warning {:size :small} (r/as-element [icons/action-delete-outline])]]]]]]
+        [select/select-enum {:e! e! :attribute :comment/visibility}]]]]
 
      [form/footer2]]))
 
@@ -164,8 +142,6 @@
                         :start-icon (r/as-element [icons/image-edit])
                         :on-click #(e! (comments-controller/->OpenEditCommentDialog comment-entity commented-entity))}
    (tr [:buttons :edit])])
-
-
 
 (defn- comment-text
   "Split comment text and highlight user mentions."
@@ -359,19 +335,13 @@
   [{:keys [e! app
            entity-type
            entity-id
-           show-comment-form?]
+           show-comment-form? after-comment-added-event]
     :or {show-comment-form? true}}]
   (r/with-let [[comment-form ->UpdateCommentForm]
                (common-controller/internal-state (comment-form-defaults entity-type)
                                                  {:merge? true})]
-    (let [comments (get-in app [:comments-for-entity entity-id])
-          add-mention (fn [field]
-                        (e! (->UpdateCommentForm
-                              (update @comment-form
-                                      field
-                                      (fnil conj []) {}))))
-          remove-mention (partial form/remove-from-many-at-index e! ->UpdateCommentForm @comment-form :comment/mentions)]
-      [layout/section
+    (let [comments (get-in app [:comments-for-entity entity-id])]
+      [:div
        [query/query {:e! e!
                      :query :comment/fetch-comments
                      :args {:db/id entity-id
@@ -396,10 +366,11 @@
                       :save-event #(let [{:comment/keys [comment files visibility track? mentions]} @comment-form]
                                      (reset! comment-form (comment-form-defaults entity-type))
                                      (comments-controller/->CommentOnEntity
-                                       entity-type entity-id comment files visibility track? mentions))
+                                      entity-type entity-id comment files visibility track? mentions
+                                      after-comment-added-event))
                       :footer new-comment-footer
                       :spec :task/new-comment-form}
-          [:div {:class (<class form/form-bg)}
+          [:div {:class (<class common-styles/gray-container-style)}
            [:div {:class (<class common-styles/heading-and-action-style)}
             [typography/Heading2 (tr [:document :new-comment])]
             [form/field :comment/visibility
@@ -419,22 +390,6 @@
             [form/field :comment/files
              [attached-images-field {:e! e!
                                      :on-success-event ->UpdateCommentForm}]]]
-           [:div
-            [form/many {:attribute :comment/mentions
-                        :before [typography/BoldGreyText (tr [:comment :mentioned-users])]
-                        :after [buttons/link-button
-                                {:on-click #(add-mention :comment/mentions)}
-                                (str "+ " (tr [:comment :add-mention]))]}
-             [:div {:style {:display :flex
-                            :flex-direction :row
-                            :margin-bottom "1rem"
-                            :justify-content :space-between}}
-              [form/field :user
-                    [select/select-user {:e! e!
-                                         :show-label? false
-                                         :attribute :comment/user}]]
-              [form/many-remove #(remove-mention %)
-               [buttons/button-text-warning {:size :small} (r/as-element [icons/action-delete-outline])]]]]]
 
            ;; TODO: when-authorized doesn't play well with form
            (when (authorization-check/authorized? @app-state/user

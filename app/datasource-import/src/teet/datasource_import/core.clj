@@ -121,10 +121,15 @@
 
 (defn make-config [[config-file datasource-id]]
   {:post [(seq (:datasources %))]}
-  (assert (and config-file
-               (.canRead (io/file config-file)))
-          "Specify config file to read")
-  (let [config (-> config-file slurp read-string)]
+  (let [config (if (= "env" config-file)
+                 {:api-url (System/getenv "TEET_API_URL")
+                  :api-secret (System/getenv "TEET_API_SECRET")}
+                 ;; else
+                 (do 
+                   (assert (and config-file
+                                (.canRead (io/file config-file)))
+                           "Specify config file to read")
+                   (-> config-file slurp read-string)))]
     (assert (valid-api? config)
             "Specify :api-url and :api-secret")
     (assoc config

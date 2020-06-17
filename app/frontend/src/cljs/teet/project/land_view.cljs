@@ -3,23 +3,30 @@
             [herb.core :refer [<class]]
             [teet.common.common-styles :as common-styles]
             [teet.ui.buttons :as buttons]
-            [teet.localization :refer [tr tr-enum]]
+            [teet.localization :refer [tr tr-enum tr-or]]
             [teet.ui.util :refer [mapc]]
             [reagent.core :as r]
             [teet.ui.panels :as panels]
-            [teet.ui.material-ui :refer [ButtonBase Collapse LinearProgress Grid Link Divider]]
+            [teet.ui.material-ui :refer [ButtonBase Collapse CircularProgress Grid Link Divider]]
             [teet.ui.text-field :refer [TextField] :as text-field]
             [teet.project.land-controller :as land-controller]
             [teet.theme.theme-colors :as theme-colors]
             [garden.color :refer [darken]]
+            [teet.land.land-model :as land-model]
             [teet.ui.url :as url]
             [teet.land.land-specs]
             [teet.project.project-controller :as project-controller]
             [teet.ui.form :as form]
             [teet.ui.select :as select]
-            [teet.log :as log]
             [teet.util.datomic :as du]
-            [teet.ui.common :as common]))
+            [teet.ui.common :as common]
+            [teet.comments.comments-view :as comments-view]
+            [teet.ui.table :as table]
+            [teet.ui.format :as format]
+            [cljs-time.format :as tf]
+            [teet.ui.query :as query]
+            [teet.file.file-view :as file-view]
+            [teet.log :as log]))
 
 (defn cadastral-unit-style
   [selected?]
@@ -41,7 +48,7 @@
    :padding "1.5rem"})
 
 (defn impact-form-footer
-  [{:keys [validate disabled? cancel]}]
+  [disabled? {:keys [validate cancel]}]
   [:div {:style {:display :flex
                  :flex-direction :row
                  :justify-content :flex-end
@@ -49,11 +56,10 @@
                  :padding "0 1.5rem 1.5rem 0"}}
    [buttons/button-secondary {:style {:margin-right "1rem"}
                               :on-click cancel
-                              :size :small}
+                              :disabled disabled?}
     (tr [:buttons :cancel])]
    [buttons/button-primary {:disabled disabled?
                             :type :submit
-                            :size :small
                             :on-click validate}
     (tr [:buttons :save])]])
 
@@ -61,23 +67,6 @@
   []
   {:background-color :inherit
    :padding "1.5rem"})
-
-(comment
-  ;; FIXME: app state hierarchy
-  {:route
-   {:project
-    {:land/forms
-     {#{"own1" "own2"} ;; set of owners as key
-      {:land/owner-compensation-form {:some-owner-comp-keys "value"}
-
-       ;; map containing all estate forms for this owner set
-       :land/estate-forms
-       {;; estate id and form map
-         "123123" {:estate-procedure/motivation-bonus 420}}
-
-       :land/cadastral-forms
-       ;; plot number and form maps
-       {"44422" {:land-purchase/decision :land-purchase.decision/not-needed}}}}}}})
 
 (defn field-with-title
   [{:keys [title field-name field-type end-icon placeholder]}]
@@ -102,8 +91,9 @@
       [TextField {:read-only? true :value recipient}])))
 
 (defn estate-group-form
-  [e! {:keys [estate-id]} on-change form-data]
-  (let [procedure-type (:estate-procedure/type form-data)
+  [e! {:keys [estate-id] :as estate} on-change form-data]
+  (let [public? (land-model/publicly-owned? estate)
+        procedure-type (:estate-procedure/type form-data)
         add-row! (fn [field]
                    (e! (on-change
                          (update form-data
@@ -117,14 +107,12 @@
                   :cancel-event #(land-controller/->CancelEstateForm estate-id)
                   :disable-buttons? (not (boolean (:saved-data form-data)))}
       [:div
-       [:div
-        [form/field :estate-procedure/pos
-         [TextField {:type :number
-                     :label-element typography/BoldGreyText}]]
-        [form/field :estate-procedure/type
-         [select/select-enum {:e! e!
-                              :label-element typography/BoldGreyText
-                              :attribute :estate-procedure/type}]]
+       [:div {:style {:padding "0.2rem"}}
+        (when-not public?
+          [form/field :estate-procedure/type
+           [select/select-enum {:e! e!
+                                :label-element typography/BoldGreyText
+                                :attribute :estate-procedure/type}]])
         (when (= procedure-type :estate-procedure.type/acquisition-negotiation)
           [form/many {:attribute :estate-procedure/process-fees
                       :before [typography/BoldGreyText (tr [:fields :estate-procedure/process-fees])]
@@ -207,13 +195,14 @@
 
         (when (= (:estate-procedure/type form-data) :estate-procedure.type/property-trading)
           [:div
-           [form/many {:before [typography/BoldGreyText (tr [:fields :estate-procedure/land-exchanges])]
+           [form/many {:before [typography/BoldGreyText {:style {:margin-bottom "0.5rem"}}
+                                (tr [:fields :estate-procedure/land-exchanges])]
                        :attribute :estate-procedure/land-exchanges
                        :atleast-once? true}
             [Grid {:container true :spacing 3}
              [Grid {:item true :xs 12}
               [form/field {:attribute :land-exchange/cadastral-unit-id}
-               [TextField {:hide-label? true
+               [TextField {:label-element typography/BoldGreyText
                            :placeholder (tr [:land :cadastral-unit-number])}]]]
              [Grid {:item true :xs 6}
               [form/field {:attribute :land-exchange/area}
@@ -231,22 +220,27 @@
 
 
 (defn land-acquisition-form
-  [e! {:keys [teet-id PINDALA] :as unit} quality estate-procedure-type on-change-event form-data]
-  (let [show-extra-fields? (du/enum= (:land-acquisition/impact form-data) :land-acquisition.impact/purchase-needed)]
+  [e! {:keys [teet-id PINDALA estate] :as unit} quality estate-procedure-type on-change-event form-data]
+  (let [public? (land-model/publicly-owned? estate)
+        show-extra-fields? (du/enum= (:land-acquisition/impact form-data) :land-acquisition.impact/purchase-needed)
+        estate-id (get-in unit [:estate :estate-id])]
     [:div
      [form/form {:e! e!
                  :value form-data
                  :on-change-event (fn [form-data]
                                     (on-change-event teet-id form-data)) ; update-impact-form
-                 :save-event #(land-controller/->SubmitLandAcquisitionForm form-data (:teet-id unit))
+                 :save-event #(land-controller/->SubmitLandAcquisitionForm form-data
+                                                                           (:teet-id unit)
+                                                                           estate-procedure-type
+                                                                           estate-id)
                  :spec :land-acquisition/form
-                 :cancel-event #(land-controller/->ToggleLandUnit unit)
-                 :footer impact-form-footer
-                 :class (<class impact-form-style)}
+                 :cancel-event #(land-controller/->CancelLandAcquisition unit)
+                 :footer (partial impact-form-footer (not (boolean (:saved-data form-data))))
+                 :class (<class common-styles/padding-bottom 1)}
       ^{:attribute :land-acquisition/impact}
       [select/select-enum {:e! e!
                            :attribute :land-acquisition/impact}]
-      (when (not= :land-acquisition.impact/purchase-not-needed (:land-acquisition/impact form-data))
+      (when show-extra-fields?
         ^{:attribute :land-acquisition/status}
         [select/select-enum {:e! e!
                              :attribute :land-acquisition/status
@@ -265,7 +259,7 @@
                            nil)]
                         [:span (tr [:land :net-area-balance] {:area (- PINDALA area)})]])}
         [TextField {:type :number :input-style {:width "50%"}}])
-      (when (and show-extra-fields? (not= :estate-procedure.type/urgent estate-procedure-type))
+      (when (and (not public?) show-extra-fields? (not= :estate-procedure.type/urgent estate-procedure-type))
         ^{:attribute :land-acquisition/price-per-sqm}
         [TextField {:type :number}])
       (when show-extra-fields?
@@ -319,7 +313,7 @@
 
 (defn cadastral-unit
   [e! update-cadastral-form-event estate-procedure-type cadastral-forms {:keys [teet-id TUNNUS KINNISTU MOOTVIIS MUUDET quality selected?] :as unit}]
-  ^{:key (str TUNNUS)} ;;Arbitrary date before which data quality is bad]
+  ^{:key (str TUNNUS)}
   (let [cadastral-form (get cadastral-forms teet-id)]
     [:div {:class (<class cadastral-unit-container-style)}
      [:div {:class (<class cadastral-unit-quality-style quality)}
@@ -339,13 +333,20 @@
      [Collapse
       {:in selected?
        :mount-on-enter true}
-      [land-acquisition-form
-       e!
-       unit
-       quality
-       estate-procedure-type
-       update-cadastral-form-event
-       cadastral-form]]]))
+      [:div {:class (<class impact-form-style)}
+       [land-acquisition-form
+        e!
+        unit
+        quality
+        estate-procedure-type
+        update-cadastral-form-event
+        cadastral-form]
+       [Divider {:style {:margin "1rem 0"}}]
+       [typography/BoldGreyText {:style {:text-transform :uppercase}}
+        (tr [:land :unit-info])]
+       [Link {:style {:display :block}
+              :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "comments")}
+        (tr [:land-modal-page :comments])]]]]))
 
 (defn group-style
   []
@@ -355,27 +356,72 @@
    :align-items :flex-start
    :padding "0.5rem"})
 
-
 (defn estate-group
-  [e! open-estates cadastral-forms estate-forms [estate-id units]]
-  (let [estate (:estate (first units))]
+  [e! project open-estates cadastral-forms estate-forms [estate-id units]]
+  (let [estate (:estate (first units))
+
+        ;;these are all done just to calculate the total cost for the estate, there might be an easier way
+        estates-land-acquisitions (land-model/estate-land-acquisitions estate-id
+                                                                       (:land/units project)
+                                                                       (:land-acquisitions project))
+        estate-procedure (land-model/estate-compensation estate-id (:estate-compensations project))
+        total-estate-cost (land-model/total-estate-cost estate-procedure
+                                                        estates-land-acquisitions)]
     [common/hierarchical-container
      {:heading-color theme-colors/gray-lighter
       :heading-text-color :inherit
       :heading-content
       [:<>
-       [ButtonBase {:class (<class group-style)
-                    :on-click (e! land-controller/->ToggleOpenEstate estate-id)}
+       (if estate-id
+         [ButtonBase {:class (<class group-style)
+                      :on-click (e! land-controller/->ToggleOpenEstate estate-id)}
 
-        [typography/SectionHeading (tr [:land :estate]) " " estate-id]
-        [:span (count units) " " (if (= 1 (count units))
-                                   (tr [:land :unit])
-                                   (tr [:land :units]))]]
+          [typography/SectionHeading (tr [:land :estate]) " " estate-id]
+          [:span (count units) " " (if (= 1 (count units))
+                                     (tr [:land :unit])
+                                     (tr [:land :units]))]]
+         [ButtonBase {:class (<class group-style)}
+
+          [typography/SectionHeading (tr [:land :no-estate-id])]
+          [:span (count units) " " (if (= 1 (count units))
+                                     (tr [:land :unit])
+                                     (tr [:land :units]))]])
        [Collapse
         {:in (boolean (open-estates estate-id))
          :mount-on-enter true}
-        [estate-group-form e! estate
-         (r/partial land-controller/->UpdateEstateForm estate) (get estate-forms estate-id)]]]
+        [:div {:class (<class estate-compensation-form)}
+         [estate-group-form e! estate
+          (r/partial land-controller/->UpdateEstateForm estate) (get estate-forms estate-id)]
+         [Divider {:style {:margin "1rem 0"}}]
+         [typography/BoldGreyText {:style {:text-transform :uppercase}}
+          (tr [:land :estate-acquisition-cost])]
+         [:div {:class (<class common-styles/flex-row-space-between)}
+          [:span (str (tr [:common :total]) ": ") (str total-estate-cost " €")]
+          [Link {:style {:display :block}
+                 :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "costs")}
+           (tr [:common :show-details])]]
+         [Divider {:style {:margin "1rem 0"}}]
+         [typography/BoldGreyText {:style {:text-transform :uppercase}}
+          (tr [:land :estate-data])]
+         [Link {:style {:display :block}
+                :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "burdens")}
+          [common/count-chip {:label (count (:jagu3 estate))}]
+          (tr [:land-modal-page :burdens])]
+         [Link {:style {:display :block}
+                :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "mortgages")}
+          [common/count-chip {:label (count (:jagu4 estate))}]
+          (tr [:land-modal-page :mortgages])]
+         [Link {:style {:display :block}
+                :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "comments")}
+          [query/query {:e! e! :query :comment/count
+                        :state-path [:route :project :estate-comment-count estate-id]
+                        :state (get-in project [:estate-comment-count estate-id])
+                        :args {:db/id [:estate-comments/project+estate-id [(:db/id project) estate-id]]
+                               :for :estate-comments}
+                        :simple-view [(fn estate-comment-count [c]
+                                        [common/count-chip {:label c}])]
+                        :loading-state "-"}]
+          (tr [:land-modal-page :comments])]]]]
       :children
       (mapc
         (r/partial cadastral-unit e!
@@ -385,26 +431,33 @@
         units)}]))
 
 (defn owner-group
-  [e! open-estates cadastral-forms estate-forms [owner units]]
+  [e! project open-estates cadastral-forms estate-forms [owner units]]
   ^{:key (str owner)}
   [:div {:style {:margin-bottom "2rem"}}
-   (let [owners (get-in (first units) [:estate :omandiosad])]
+   (let [owners (get-in (first units) [:estate :omandiosad])
+         estate-id (get-in (first units) [:estate :estate-id])]
 
      [common/hierarchical-container
       {:heading-color theme-colors/gray
        :heading-text-color theme-colors/white
        :heading-content
        [:div {:class (<class group-style)}
-        [typography/SectionHeading (if (not= (count owners) 1)
-                                     (str (count owners) " owners")
-                                     (:nimi (first owners)))]
+        (if owner
+          [:div {:class (<class common-styles/flex-row-space-between)}
+           [typography/SectionHeading (if (not= (count owners) 1)
+                                        (str (count owners) " owners")
+                                        (:nimi (first owners)))]
+           [:a {:class (<class common-styles/white-link-style false)
+                :href (url/set-query-param :modal "owner" :modal-target estate-id :modal-page "owner-info")}
+            (tr [:land :show-owner-info])]]
+          [typography/SectionHeading (tr [:land :no-owner-info])])
         [:span (count units) " " (if (= 1 (count units))
                                    (tr [:land :unit])
                                    (tr [:land :units]))]]
        :children
        (mapc
          (fn [unit-group]
-           [estate-group e! open-estates cadastral-forms estate-forms unit-group])
+           [estate-group e! project open-estates cadastral-forms estate-forms unit-group])
          (group-by
            (fn [unit]
              (get-in unit [:estate :estate-id]))
@@ -464,53 +517,364 @@
                   (filter #(ids (:teet-id %)) units))
           grouped (group-by
                     (fn [unit]
-                      (into #{}
-                            (map
-                              (fn [owner]
-                                (if (:r_kood owner)
-                                  (select-keys owner [:r_kood :r_riik ])
-                                  (select-keys owner [:isiku_tyyp :nimi]))))
-                            (get-in unit [:estate :omandiosad])))
+                      (when (seq (get-in unit [:estate :omandiosad])) ;; Check that the units actually have owner information
+                        (into #{}
+                              (map
+                                (fn [owner]
+                                  (if (:r_kood owner)
+                                    (select-keys owner [:r_kood :r_riik])
+                                    (select-keys owner [:isiku_tyyp :nimi]))))
+                              (get-in unit [:estate :omandiosad]))))
                     units)]
       [:div
        (mapc
         (fn [group]
           [owner-group e!
+           project
            (or (:land/open-estates project) #{})
            (:land/cadastral-forms project)
            (:land/estate-forms project)
            group])
         grouped)])))
 
-(defmulti land-view-modal (fn [modal _target _project]
-                            modal))
+(defn modal-left-panel-navigation
+  [current title pages]
+  [:div
+   [typography/Heading2 {:style {:color :white
+                                 :margin-bottom "1rem"}}
+    title]
+   (mapc
+     (fn [p]
+       (if (= current (name p))
+         [:strong {:style {:color :white}} (tr [:land-modal-page p])]
+         [Link {:href (url/set-query-param :modal-page (name p))
+                :style {:display :block
+                        :color :white}}
+          (tr [:land-modal-page p])]))
+     pages)])
+
+(defmulti estate-modal-content (fn [{:keys [page]}]
+                                 (keyword page)))
+
+(defmethod estate-modal-content :default
+  [{:keys [page]}]
+  [:span "usupported page: " page])
+
+(defmethod estate-modal-content :burdens
+  [{:keys [estate-info]}]
+  (let [burdens (:jagu3 estate-info)]
+    [:div {:class (<class common-styles/gray-container-style)}
+     (if (not-empty burdens)
+       (for [burden burdens]
+         [common/heading-and-grey-border-body
+          {:heading [:<>
+                     [typography/BoldGreyText {:style {:display :inline}}
+                      (:kande_liik_tekst burden) " "]
+                     [typography/GreyText {:style {:display :inline}}
+                      (format/parse-date-string (:kande_alguskuupaev burden))]]
+           :body [:span (-> burden
+                            :kande_tekst
+                            first
+                            second
+                            first)]}])
+       [:p (tr [:land :no-active-burdens])])]))
+
+(defmethod estate-modal-content :mortgages
+  [{:keys [estate-info]}]
+  (let [mortgages (:jagu4 estate-info)]
+    [:div {:class (<class common-styles/gray-container-style)}
+     (if (not-empty mortgages)
+       (for [mortgage mortgages]
+         [common/heading-and-grey-border-body {:heading [:<>
+                                          [typography/BoldGreyText {:style {:display :inline}}
+                                           (str
+                                             (:kande_liik_tekst mortgage)
+                                             " "
+                                             (:koormatise_rahaline_vaartus mortgage)
+                                             " "
+                                             (:koormatise_rahalise_vaartuse_valuuta mortgage)
+                                             " ")
+                                           [typography/GreyText {:style {:display :inline}}
+                                            (format/parse-date-string (:kande_alguskuupaev mortgage))]]]
+                                :body (-> mortgage
+                                          :kande_tekst
+                                          first
+                                          second
+                                          first)}])
+       [:p (tr [:land :no-active-mortgages])])]))
+
+
+(defn create-land-acquisition-row
+  [la]
+  {:name-id {:address (get-in la [:unit-data :L_AADRESS])
+             :id (get-in la [:unit-data :TUNNUS])}
+   :price-per-sqm (:land-acquisition/price-per-sqm la)
+   :area-to-obtain (:land-acquisition/area-to-obtain la)
+   :total (* (double (:land-acquisition/price-per-sqm la))
+             (double (:land-acquisition/area-to-obtain la)))})
+
+(defmethod estate-modal-content :costs
+  [{:keys [e! project estate-info]}]
+  (let [estate-id (:estate-id estate-info)
+        estates-land-acquisitions (land-model/estate-land-acquisitions estate-id
+                                                                       (:land/units project)
+                                                                       (:land-acquisitions project))
+        estate-procedure (land-model/estate-compensation estate-id (:estate-compensations project))
+        parsed-estate-comps (land-model/estate-procedure-costs estate-procedure)
+        total-estate-cost (land-model/total-estate-cost estate-procedure
+                                                        estates-land-acquisitions)
+        land-exchanges (:estate-procedure/land-exchanges estate-procedure)]
+    [:div {:class (<class common-styles/gray-container-style)}
+     [typography/Heading3 {:style {:margin-bottom "1rem"}}
+      (tr [:land :unit-valuations])]
+
+     (if (not-empty estates-land-acquisitions)
+       [table/simple-table
+        [[(tr [:land :unit-name-id]) {:align :left}]
+         [(tr [:fields :land-acquisition/price-per-sqm]) {:align :right}]
+         [(tr [:fields :land-acquisition/area-to-obtain]) {:align :right}]
+         [(tr [:common :total]) {:align :right}]]
+        (for [la estates-land-acquisitions
+              :let [data (create-land-acquisition-row la)]]
+
+          [[[:div
+             [:span {:style {:display :block}}
+              (get-in data [:name-id :address])]
+             [typography/GreyText
+              (get-in data [:name-id :id])]]
+            {:align :left}]
+           [(str (:price-per-sqm data) " €") {:align :right}]
+           [(str (:area-to-obtain data) " m²") {:align :right}]
+           [(str (:total data) " €") {:align :right}]])]
+       [typography/GreyText (tr [:land :no-land-acquisitions])])
+
+     [:div
+      [typography/Heading3 {:style {:margin "1rem 0"}}
+       (tr [:fields :estate-procedure/compensations])]
+      (if (not-empty parsed-estate-comps)
+        [table/simple-table
+         [[(tr [:land :table-heading :type]) {:align :left}]
+          [(tr [:land :table-heading :area]) {:align :right}]]
+         (for [{:keys [reason description amount]} parsed-estate-comps]
+           [[(or description (tr-or [:enum reason] [:fields reason])) {:align :left}]
+            [(str amount " €") {:align :right}]])]
+
+        [typography/GreyText (tr [:land :no-estate-compensations])])]
+
+     (when land-exchanges
+       [:div
+        [typography/Heading3 {:style {:margin "1rem 0"}}
+         (tr [:land :land-exchange])]
+        [table/simple-table
+         [[(tr [:land :table-heading :type]) {:align :left}]
+          [(tr [:land :table-heading :area]) {:align :right}]
+          [(tr [:fields :land-acquisition/price-per-sqm]) {:align :right}]]
+         (for [land-exchange land-exchanges]
+           [[[:div
+              [:span {:style {:display :block}}
+               (tr [:land :land-exchange])]
+              [typography/GreyText
+               (:land-exchange/cadastral-unit-id land-exchange)]]
+             {:align :left}]
+            [(str (:land-exchange/area land-exchange) " m²") {:align :right}]
+            [(str (:land-exchange/price-per-sqm land-exchange) " €") {:align :right}]])]])
+
+     [:div
+      [typography/Heading3 {:style {:margin "1rem 0"}}
+       (tr [:land :total-cost])]
+      [:div {:class (<class common-styles/flex-row-space-between)}
+       [:span (tr [:land :total-excluding-process])]
+       [typography/BoldGreyText (str total-estate-cost " €")]]]]))
+
+
+(defmethod estate-modal-content :comments
+  [{:keys [e! app project estate-info]}]
+  (let [estate-id (:estate-id estate-info)]
+    [:div {:style {:padding "1.5rem"}}
+     [comments-view/lazy-comments {:e! e!
+                                   :app app
+                                   :entity-type :estate-comments
+                                   :entity-id [:estate-comments/project+estate-id [(:db/id project) estate-id]]
+                                   :after-comment-added-event
+                                   #(land-controller/->IncrementEstateCommentCount estate-id)}]]))
+
+(defmulti land-view-modal (fn [{:keys [modal]}]
+                            (keyword modal)))
 
 (defmethod land-view-modal :default
-  [modal _target _app _project]
+  [{:keys [modal]}]
   [:div "Unsupported land view dialog " modal])
 
-(defmethod land-view-modal "estate"
-  [modal target project]
-  {:title target
-   :right-panel [:div [:span modal]
-                 [:p (pr-str project)]]
-   :left-panel [:div
-                (mapc
-                  (fn [p]
-                    [Link {:href (url/set-query-param :modal-page (name p))
-                           :style {:display :block
-                                   :color :white}}
-                     (tr [:modal-page p])])
-                  [:burdens :mortgages :costs :comments])]})
+(defmethod land-view-modal :estate
+  [{:keys [e! app modal-page project estate-info]}]
+  {:title (tr [:land-modal-page (keyword modal-page)])
+   :left-panel [modal-left-panel-navigation
+                modal-page
+                (tr [:land :estate-data])
+                [:burdens :mortgages :costs :comments]]
+   :right-panel [estate-modal-content {:e! e!
+                                       :page modal-page
+                                       :app app
+                                       :project project
+                                       :estate-info estate-info}]})
+
+(defmulti owner-modal-content (fn [{:keys [modal-page]}]
+                                (keyword modal-page)))
+
+(defmethod owner-modal-content :default
+  [{:keys [modal-page]}]
+  [:span "Unsupported owner-modal-content " modal-page])
+
+(def date-keys #{:omandi_algus :algus-kpv :lopp-kpv})
+(defn- key-values [data]
+  [:<>
+   (mapc
+    (fn [[key value]]
+      [:div
+       [:strong key ": "]
+       [:span (if (and (some? (tf/parse value))
+                       (date-keys key))
+                (format/parse-date-string value)
+                value)]])
+    data)])
+
+(defn- business-registry-info [{:keys [addresses contact-methods]}]
+  [:div
+   (doall
+    (for [{id :kirje-id :as addr} addresses]
+      ^{:key (str id)}
+      [:div {:style {:border-bottom "solid 1px black"
+                     :margin-bottom "0.5rem"
+                     :padding-bottom "0.5rem"}}
+       [key-values addr]]))
+
+   (doall
+    (for [{id :kirje-id :as contact} contact-methods]
+      ^{:key (str id)}
+      [:div {:style {:border-bottom "solid 1px black"
+                     :margin-bottom "0.5rem"
+                     :padding-bottom "0.5rem"}}
+       [key-values contact]]))])
+
+
+(defmethod owner-modal-content :owner-info
+  [{:keys [estate-info e! app project]}]
+  (let [owners (:omandiosad estate-info)]
+    [:div {:class (<class common-styles/gray-container-style)}
+     (mapc
+       (fn [{:keys [omandiosa_suurus omandiosa_lugeja omandiosa_nimetaja r_kood isiku_tyyp] :as owner}]
+         ;; Since we don't have person registry integration show everything we have of owner.
+         [:<>
+          [common/heading-and-grey-border-body
+           {:heading [:div {:style {:display :flex
+                                    :justify-content :space-between}}
+                      [typography/BoldGreyText (:nimi owner)]
+                      (when omandiosa_suurus
+                        [typography/BoldGreyText (str (* (/ omandiosa_lugeja omandiosa_nimetaja) 100) "%")])]
+            :body [:<>
+                   (when (= isiku_tyyp "Juriidiline isik")
+                     [query/query {:e! e!
+                                   :query :land/estate-owner-info
+                                   :args {:thk.project/id (:thk.project/id project)
+                                          :business-id r_kood}
+                                   :simple-view [business-registry-info]}])
+
+                   [key-values owner]]}]
+          (when r_kood
+            [comments-view/lazy-comments {:e! e!
+                                          :app app
+                                          :entity-type :owner-comments
+                                          :entity-id [:owner-comments/project+owner-id [(:db/id project) r_kood]]}])])
+       owners)]))
+
+
+(defmulti unit-modal-content (fn [{:keys [modal-page]}]
+                                (keyword modal-page)))
+
+(defmethod unit-modal-content :default
+  [{:keys [modal-page]}]
+  [:span "unsupported page: " modal-page])
+
+(defmethod unit-modal-content :comments
+  [{:keys [estate-info e! target app project]}]
+  [comments-view/lazy-comments {:e! e!
+                                :app app
+                                :entity-type :unit-comments
+                                ;; Target is taken from url parameter, so probably better to use something else as target
+                                ;; for url and fetch the teet-id from the land-unit through project?
+                                :entity-id [:unit-comments/project+unit-id [(:db/id project) target]]
+                                }])
+
+
+(defmethod unit-modal-content :files
+  [{:keys [estate-info e! target app project]}]
+  (log/info "TARGET: " target)
+  (r/with-let [selected-file (r/atom nil)]
+    [:div.land-unit-modal
+     (if-let [pos (get-in project [:land/cadastral-forms target :land-acquisition/pos-number])]
+       [query/query {:e! e!
+                     :query :land/files-by-position-number
+                     :args {:thk.project/id (:thk.project/id project)
+                            :file/pos-number pos}
+                     :simple-view [file-view/file-table {:link-download? true
+                                                         :actions? true
+                                                         :comment-action #(reset! selected-file %)}]}]
+       [:span (tr [:land :no-position-number])])
+     (when-let [f @selected-file]
+       [comments-view/lazy-comments {:e! e!
+                                     :app app
+                                     :entity-type :file
+                                     :entity-id (:db/id f)}])]))
+
+(defmethod land-view-modal :unit
+  [{:keys [e! app modal-page project target estate-info] :as opts}]
+  {:title (tr [:land-modal-page (keyword modal-page)])
+   :left-panel [modal-left-panel-navigation
+                modal-page
+                (tr [:land :unit-info])                     ;;localization
+                [:files                                     ;;TODO add translation for [:land-modal-page :files]
+                 :comments]]
+   :right-panel [unit-modal-content {:e! e!
+                                     :modal-page modal-page
+                                     :app app
+                                     :target target
+                                     :project project
+                                     :estate-info estate-info}]})
+
+(defmethod land-view-modal :owner
+  [{:keys [e! app modal-page project estate-info] :as opts}]
+  {:title (tr [:land-modal-page (keyword modal-page)])
+   :left-panel [modal-left-panel-navigation
+                modal-page
+                (tr [:land :owner-data])
+                [:owner-info]]
+   :right-panel [owner-modal-content {:e! e!
+                                      :modal-page modal-page
+                                      :app app
+                                      :project project
+                                      :estate-info estate-info}]})
 
 (defn land-view-modals [e! app project]
   (let [modal (get-in app [:query :modal])
-        target (get-in app [:query :modal-target])]
+        target (some-> app (get-in [:query :modal-target]) js/decodeURIComponent)
+        modal-page (get-in app [:query :modal-page])
+        estate-info (some
+                      (fn [unit]
+                        (when (= (get-in unit [:estate :estate-id]) target)
+                          (:estate unit)))
+                      (:land/units project))]
     [panels/modal+ (merge {:title (tr [:land-acquisition modal])
                            :open-atom (r/wrap (boolean modal) :_)
                            :on-close (e! project-controller/->CloseDialog)
-                           :max-width :sm}
-                          (land-view-modal modal target project))]))
+                           :max-width :md}
+                          (land-view-modal {:e! e!
+                                            :app app
+                                            :modal modal
+                                            :target target
+                                            :modal-page modal-page
+                                            :project project
+                                            :estate-info estate-info}))]))
+
 
 (defn related-cadastral-units-info
   [e! _app project]
@@ -527,14 +891,15 @@
                                  (e! (land-controller/->FetchRelatedEstates)))))
      :reagent-render
      (fn [e! app project]
-       (let [fetched-count (:fetched-estates-count project)
-             related-estate-count (count (:land/related-estate-ids project))]
+       (let [fetching? (nil? (:land/units project))]
          [:div
-          (when (= fetched-count related-estate-count)      ;;TODO needs to also check for the required form informations
+          (when (not fetching?)
             [land-view-modals e! app project])
           [:div {:style {:margin-top "1rem"}
                  :class (<class common-styles/heading-and-action-style)}
            [typography/Heading2 (tr [:project :cadastral-units-tab])]
+           [buttons/button-secondary {:on-click (e! land-controller/->RefreshEstateInfo)}
+            (tr [:land :refresh-estate-info])]
            [buttons/button-secondary {:href (url/set-query-param :configure "cadastral-units")}
             (tr [:buttons :edit])]]
           (if (:land/estate-info-failure project)
@@ -542,12 +907,10 @@
              [:p (tr [:land :estate-info-fetch-failure])]
              [buttons/button-primary {:on-click (e! land-controller/->FetchRelatedEstates)}
               "Try again"]]
-            (if (not= fetched-count related-estate-count)
+            (if fetching?
               [:div
-               [:p (tr [:land :fetching-land-units]) " " (str fetched-count " / " related-estate-count)]
-               [LinearProgress {:variant :determinate
-                                :value (* 100 (/ fetched-count related-estate-count))}]]
+               [:p (tr [:land :fetching-land-units])]
+               [CircularProgress {}]]
               [:div
-
                [filter-units e! (:land-acquisition-filters project)]
                [cadastral-groups e! (dissoc project :land-acquisition-filters) (:land/units project)]]))]))}))

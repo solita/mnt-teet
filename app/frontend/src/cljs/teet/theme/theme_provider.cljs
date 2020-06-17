@@ -85,7 +85,7 @@
                                             :font-weight :bold
                                             :border-radius "4px 4px 0 0"}}}
                :MuiIconButton {:root {:border-radius "2px"
-                                      "&:focus" theme-colors/focus-style}}
+                                      "&:focus" theme-colors/button-focus-style}}
                :MuiButtonBase {:root {:font-size "1rem"}}
                :MuiButton {:sizeSmall {:padding "0 10px"
                                        :font-size "0.875rem"}
@@ -94,7 +94,7 @@
                                       :color theme-colors/white
                                       "&:hover" {:background-color theme-colors/gray-dark}
                                       "&:active" {:background-color "#000"}
-                                      "&:focus" theme-colors/focus-style}
+                                      "&:focus" theme-colors/button-focus-style}
                            :containedSecondary {:background-color theme-colors/white
                                                 :border (str "2px solid " theme-colors/gray)
                                                 :color theme-colors/gray-dark
@@ -103,7 +103,7 @@
                                                 "&:disabled" {:background-color theme-colors/gray-lightest
                                                               :border-color theme-colors/gray-lighter}}
                            :contained {:border-radius "20px"
-                                       "&:focus" theme-colors/focus-style
+                                       "&:focus" theme-colors/button-focus-style
                                        :box-shadow "none"
                                        "&:hover" {:box-shadow "none"}}
                            :containedPrimary {"&:disabled" {:opacity "0.8"
@@ -153,7 +153,8 @@
                :MuiOutlinedInput {:root {:border-radius "2px"
                                          :border (str "1px solid " theme-colors/gray-light)
                                          :background-color theme-colors/white
-                                         :max-height "42px"}}}})
+                                         :max-height "43px"}
+                                  :notchedOutline {:border :none}}}})
 
 (defn- create-theme [theme]
   (styles/createMuiTheme (->js theme)))

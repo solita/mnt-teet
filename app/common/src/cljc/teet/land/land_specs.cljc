@@ -6,8 +6,7 @@
   (s/keys :req [:land-acquisition/impact]))
 
 (s/def :land/create-estate-procedure
-  (s/keys :req [:estate-procedure/pos
-                :estate-procedure/type
+  (s/keys :req [:estate-procedure/type
                 :estate-procedure/estate-id
                 :thk.project/id]
           :opt [:estate-procedure/reason
@@ -26,24 +25,20 @@
 (defn non-empty-string? [s]
   (and (string? s) (not (str/blank? s))))
 
-(s/def :estate-procedure/pos (or non-empty-string?))
-
 (s/def :estate-procedure/process-fees (s/coll-of :estate-procedure/process-fee))
 (s/def :estate-procedure/process-fee
-  (s/keys :req [:estate-process-fee/fee
-                :estate-process-fee/recipient]
-          :opt [:estate-process-fee/person-id
+  (s/keys :opt [:estate-process-fee/fee
+                :estate-process-fee/recipient
+                :estate-process-fee/person-id
                 :estate-process-fee/business-id]))
 
 (s/def :estate-procedure/compensation (s/keys :opt [:estate-compensation/amount
                                                     :estate-compensation/description
-                                                    :estate-compensation/reason
-                                                    :db/id]))
+                                                    :estate-compensation/reason]))
 
 (s/def :estate-procedure/land-exchange (s/keys :opt [:land-exchange/area
                                                      :land-exchange/cadastral-unit-id
-                                                     :land-exchange/price-per-sqm
-                                                     :db/id]))
+                                                     :land-exchange/price-per-sqm]))
 
 
 (s/def :estate-procedure/land-exchanges (s/coll-of :estate-procedure/land-exchange))

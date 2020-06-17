@@ -13,7 +13,8 @@
             [tuck.core :as t]
             [teet.log :as log]
             [teet.ui.context :as context]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [teet.common.common-styles :as common-styles]))
 
 (def default-value
   "Mapping of component to default value. Some components don't want nil as the value (like text area)."
@@ -65,11 +66,6 @@
                 :let [attribute (contains-predicate pred)]
                 :when attribute]
             attribute))))
-
-(defn form-bg
-  []
-  {:background-color theme-colors/gray-lightest
-   :padding "1.5rem"})
 
 (defn form-buttons
   ([] (form-buttons nil))
@@ -187,7 +183,7 @@
                                               (set field)
                                               #{field}))
                             (validate-attribute validate-field field value))]
-             (println "validate " field " from " before " => " after)
+             #_(println "validate " field " from " before " => " after)
              after))))
 
 
@@ -411,7 +407,7 @@
            cancel-event
            save-event]
     :as opts
-    :or {class (<class form-bg)
+    :or {class (<class common-styles/gray-container-style)
          footer form-footer
          spacing 3}}
    & fields]

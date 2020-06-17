@@ -614,12 +614,7 @@
     (t/fx app
           {:tuck.effect/type :query
            :query            :thk.project/db-id->thk-id
-           :args             {:db/id (cond
-                                       (string? id)
-                                       (common-controller/->long id)
-
-                                       (number? id)
-                                       (goog.math.Long/fromNumber id))}
+           :args             {:db/id (common-controller/->long id)}
            :result-event     ->NavigateToProject}))
 
   NavigateToProject
@@ -697,7 +692,7 @@
           {:tuck.effect/type :navigate
            :page             page
            :params           params
-           :query            (dissoc query :modal :add :edit :activity :lifecycle :modal-target)}))
+           :query            (dissoc query :modal :add :edit :activity :lifecycle :modal-target :modal-page)}))
 
   OpenTaskDialog
   (process-event [{activity :activity} {:keys [page params query] :as app}]

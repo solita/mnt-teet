@@ -14,14 +14,15 @@
 
 (defrecord UpdateFileNewCommentForm [form-data])            ; update new comment on selected file
 (defrecord UpdateNewCommentForm [form-data])                ; update new comment form data
-(defrecord CommentOnEntity [entity-type entity-id comment files visibility track? mentions])
+(defrecord CommentOnEntity [entity-type entity-id comment files visibility track? mentions
+                            after-comment-added-event])
 (defrecord ClearCommentField [])
-(defrecord CommentAddSuccess [entity-id])
+(defrecord CommentAddSuccess [entity-id after-comment-added-event])
 
 (defrecord OpenEditCommentDialog [comment-entity commented-entity])
 (defrecord UpdateEditCommentForm [form-data])
 (defrecord CancelCommentEdit [])
-(defrecord SaveEditCommentForm [])
+(defrecord SaveEditCommentForm [form-data])
 (defrecord SaveEditCommentSuccess [])
 
 (defrecord SetCommentStatus [comment-id status commented-entity])
@@ -57,7 +58,8 @@
                        documents))))
 
   CommentOnEntity
-  (process-event [{:keys [entity-type entity-id comment files visibility track? mentions]} app]
+  (process-event [{:keys [entity-type entity-id comment files visibility track? mentions
+                          after-comment-added-event]} app]
     (assert (some? visibility))
     (let [mentions (vec (keep :user mentions))]
       (t/fx app
@@ -70,14 +72,18 @@
                        :files (mapv :db/id files)
                        :track? track?
                        :mentions mentions}
-             :result-event (partial ->CommentAddSuccess entity-id)})))
+             :result-event (partial ->CommentAddSuccess entity-id after-comment-added-event)})))
 
   CommentAddSuccess
-  (process-event [{entity-id :entity-id} app]
-    ;; Add nil comment as the first comment in list
-    (update-in app [:comments-for-entity entity-id]
-               (fn [comments]
-                 (into [nil] comments))))
+  (process-event [{:keys [entity-id after-comment-added-event]} app]
+    (t/fx
+     ;; Add nil comment as the first comment in list
+     (update-in app [:comments-for-entity entity-id]
+                (fn [comments]
+                  (into [nil] comments)))
+     (fn [e!]
+       (when after-comment-added-event
+         (e! (after-comment-added-event))))))
 
   ClearCommentField
   (process-event [_ app]
@@ -113,28 +119,27 @@
                       {:comment/commented-entity commented-entity}))))
 
   CancelCommentEdit
-  (process-event [_ {:keys [page params] :as app}]
+  (process-event [_ {:keys [page params query] :as app}]
     (t/fx (-> app
               (dissoc :edit-comment-data)
               (update :stepper dissoc :dialog))
           {:tuck.effect/type :navigate
            :page             page
            :params           params
-           :query            {:tab "comments"}}))
+           :query            query}))
 
   UpdateEditCommentForm
   (process-event [{form-data :form-data} app]
     (update-in app [:edit-comment-data] merge form-data))
 
   SaveEditCommentForm
-  (process-event [_ {edit-comment-data :edit-comment-data
-                     stepper :stepper :as app}]
-    (let [mentions (vec (keep :user (:comment/mentions edit-comment-data)))]
+  (process-event [{form-data :form-data} {stepper :stepper :as app}]
+    (let [mentions (vec (keep :user (:comment/mentions form-data)))]
       (t/fx app
             {:tuck.effect/type :command!
              :result-event ->SaveEditCommentSuccess
              :command :comment/update
-             :payload (-> edit-comment-data
+             :payload (-> form-data
                           (select-keys [:db/id :comment/comment :comment/visibility :comment/files])
                           (merge {:comment/mentions mentions})
                           (update :comment/files (partial map :db/id)))

@@ -10,11 +10,13 @@
             [teet.user.user-info :as user-info]
             [teet.ui.common :as common]
             [taoensso.timbre :as log]
-            [teet.ui.material-ui :refer [FormControl FormControlLabel RadioGroup Radio Checkbox Autocomplete TextField-class
-                                         CircularProgress]]
-                                        ;[teet.ui.text-field :refer [TextField]]
-            [teet.ui.util :as util]
-            ["react"]))
+            [teet.ui.material-ui :refer [FormControl FormControlLabel RadioGroup Radio Checkbox
+                                         Popper CircularProgress Paper]]
+            [teet.ui.text-field :refer [TextField]]
+            [teet.ui.util :as util :refer [mapc]]
+            ["react"]
+            [teet.util.collection :as cu]
+            [teet.ui.icons :as icons]))
 
 (def select-bg-caret-down "url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23005E87%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')")
 
@@ -287,6 +289,23 @@
            :result-event (partial ->CompleteUserResult callback)})))
 
 
+(defn- format-user [{:user/keys [family-name person-id] :as user}]
+  (if family-name
+    (user-info/user-name user)
+    (str person-id)))
+
+(defn- user-select-popper []
+  {:padding "0.3rem"
+   :z-index 99})
+
+(defn- user-select-entry [highlight?]
+  ^{:pseudo {:hover {:background-color theme-colors/gray-lighter}}}
+  {:padding "0.5rem"
+   :cursor :pointer
+   :background-color (if highlight?
+                       theme-colors/gray-lighter
+                       theme-colors/white)})
+
 (defn select-user
   "Select user"
   [{:keys [e! value on-change label required error
@@ -294,50 +313,115 @@
     :or {show-label? true}}]
   (r/with-let [state (r/atom {:loading? false
                               :users nil
-                              :open? false})]
-    (let [{:keys [loading? users open?]} @state
-          format-item (fn [{:user/keys [family-name person-id] :as user}]
-                        (if family-name
-                          (user-info/user-name user)
-                          (str person-id)))]
-      [:label
-       (when show-label? [:span label])
-       [Autocomplete {:options (into-array users)
-                      :auto-complete true
-                      :auto-highlight true
-                      :loading loading?
-                      :no-options-text (tr [:user :autocomplete :no-options])
-                      :loading-text (tr [:user :autocomplete :loading])
+                              :open? false
+                              :input ""})
+               input-ref (atom nil)]
+    (let [{:keys [loading? users open? input highlight]} @state]
+      [:<>
+       [:label (when show-label? [:span label])]
+       [TextField {:ref #(reset! input-ref %)
+                   :placeholder (tr [:user :autocomplete :placeholder])
+                   :on-key-down (fn [e]
+                                  (let [hl-idx (and (seq users) highlight
+                                                    (cu/find-idx #(= highlight %) users))]
+                                    (case (.-key e)
+                                      ;; Move highlight down
+                                      "ArrowDown"
+                                      (when hl-idx
+                                        (swap! state assoc
+                                               :highlight (nth users
+                                                               (if (< hl-idx (dec (count users)))
+                                                                 (inc hl-idx)
+                                                                 0)))
+                                        (.preventDefault e))
 
-                      :on-change (fn [_e value _reason]
-                                   (on-change value))
-                      :on-input-change (fn [e txt reason]
-                                         (when (and (= reason "input")
-                                                    (>= (count txt) 2))
-                                           (swap! state assoc :loading? true)
-                                           (e! (->CompleteUser
-                                                txt
-                                                (fn [users]
-                                                  (swap! state assoc
-                                                         :loading? false
-                                                         :users users))))))
-                      :on-open #(swap! state assoc :open? true)
-                      :on-close #(swap! state assoc :open? false)
-                      :get-option-label format-item
-                      :renderInput (fn [params]
-                                     (let [input-props (aget params "InputProps")
-                                           end-adornment (aget input-props "endAdornment")]
-                                       (aset params "variant" "outlined")
-                                       (doto input-props
-                                         (aset "style" #js {:padding "0px 4px"}) ;; FIXME: manually set style
-                                         (aset "placeholder" (tr [:user :autocomplete :placeholder]))
-                                         (aset "endAdornment"
-                                               (react/createElement
-                                                react/Fragment
-                                                #js {}
-                                                (when loading? (r/as-element [CircularProgress {:size 20}]))
-                                                end-adornment))))
-                                     (react/createElement TextField-class params))}]])))
+                                      ;; Move highlight up
+                                      "ArrowUp"
+                                      (when hl-idx
+                                        (swap! state assoc
+                                               :highlight (nth users
+                                                               (if (zero? hl-idx)
+                                                                 (dec (count users))
+                                                                 (dec hl-idx))))
+                                        (.preventDefault e))
+
+                                      "Enter"
+                                      (when hl-idx
+                                        (on-change highlight)
+                                        (swap! state assoc :open? false)
+                                        (.preventDefault e))
+
+                                      "Escape"
+                                      (when open?
+                                        (swap! state assoc :open? false)
+                                        (.stopPropagation e))
+
+                                      nil)))
+                   :on-blur #(js/setTimeout
+                              ;; Delay closing because we might be blurring
+                              ;; because user clicked one of the options
+                              (fn [] (when open?
+                                       (swap! state assoc :open? false)))
+                              100)
+                   :value (if value
+                            (format-user value)
+                            input)
+                   :on-focus #(when (and (seq users) (>= (count input) 2))
+                                (swap! state assoc :open? true))
+                   :on-change (fn [e]
+                                (let [t (-> e .-target .-value)
+                                      loading? (>= (count t) 2)]
+                                  (when value
+                                    (on-change nil))
+
+                                  (swap! state
+                                         #(assoc %
+                                            :input t
+                                            :open? loading?
+                                            :loading? loading?))
+
+                                  (when loading?
+                                    (e! (->CompleteUser t
+                                                        (fn [users]
+                                                          (swap! state assoc
+                                                                 :loading? false
+                                                                 :open? true
+                                                                 :users users
+                                                                 :highlight (first users))))))))
+                   :input-button-click #(do
+                                          (on-change nil)
+                                          (swap! state assoc :input "")
+                                          (r/after-render
+                                            (fn []
+                                              (.focus @input-ref))))
+                   :input-button-icon icons/content-clear}]
+       (when open?
+         [Popper {:open true
+                  :anchorEl @input-ref
+                  :placement "bottom"
+                  :modifiers #js {:hide #js {:enabled false}
+                                  :preventOverflow #js {:enabled false}}
+
+                  :style {:z-index 9999} ; Must have high z-index to use in modals
+                  }
+          [Paper  {:style {:width (.-clientWidth @input-ref)}
+                   :class ["user-select-popper" (<class user-select-popper)]}
+           (if loading?
+             [CircularProgress {:size 20}]
+             [:div.select-user-list
+              (if (seq users)
+                (mapc (fn [user]
+                          [:div.select-user-entry
+                           {:class [(if (= user highlight)
+                                      "active"
+                                      "inactive")
+                                    (<class user-select-entry (= user highlight))]
+                            :on-click #(do
+                                         (swap! state assoc :open? false)
+                                         (on-change user))}
+                           (format-user user)])
+                        users)
+                [:span.select-user-no-results {:style {:padding "0.5rem"}} (tr [:user :autocomplete :no-options])])])]])])))
 
 (defn radio [{:keys [value items format-item on-change]}]
   (let [item->value (zipmap items (map str (range)))]
