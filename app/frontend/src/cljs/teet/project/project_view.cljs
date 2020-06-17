@@ -396,7 +396,7 @@
                                                       project-setup-view/format-range)
                             :thk.project/owner (:thk.project/owner project)
                             :thk.project/manager (:thk.project/manager project)}))))
-  (fn [e! {form :basic-information-form :as project}]
+  (fn [e! {form :basic-information-form :as _project}]
     [form/form {:e! e!
                 :value form
                 :on-change-event project-controller/->UpdateBasicInformationForm
@@ -404,10 +404,7 @@
                 :spec :project/edit-form}
 
      ^{:attribute :thk.project/owner}
-     [select/select-user {:e! e! :attribute :thk.project/owner}]
-
-     ^{:attribute :thk.project/manager}
-     [select/select-user {:e! e! :attribute :thk.project/manager}]]))
+     [select/select-user {:e! e! :attribute :thk.project/owner}]]))
 
 
 
