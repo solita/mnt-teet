@@ -26,7 +26,7 @@
            lifecycle-id
            activity-name))))
 
-(defn conflicting-activites?
+(defn- conflicting-activities?
   "Check if the lifecycle contains any activities withe the same name that have not ended yet"
   [db {activity-name :activity/name :as _activity} lifecycle-id]
   (boolean
@@ -101,7 +101,7 @@
          (valid-activity-dates? db lifecycle-id activity)
 
          ^{:error :conflicting-activities}
-         (not (conflicting-activites? db activity lifecycle-id))
+         (not (conflicting-activities? db activity lifecycle-id))
 
          ^{:error :invalid-tasks}
          (valid-tasks? db (:activity/name activity) tasks)]
@@ -174,7 +174,8 @@
                                 (activity-db/lifecycle-id-for-activity-id db (:db/id activity))
                                 activity)]
    :transact [(merge (select-keys activity
-                                  [:activity/estimated-start-date
+                                  [:activity/manager
+                                   :activity/estimated-start-date
                                    :activity/estimated-end-date
                                    :db/id])
                      (meta-model/modification-meta user))]})

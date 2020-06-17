@@ -79,6 +79,9 @@
                           (activity-controller/->DeleteActivity (:db/id activity)))
                 :spec :activity/new-activity-form}
 
+     ^{:attribute :activity/manager}
+     [select/select-user {:e! e!}]
+
      ^{:attribute [:activity/estimated-start-date :activity/estimated-end-date]}
      [date-picker/date-range-input {:start-label (tr [:fields :activity/estimated-start-date])
                                     :max-date max-date
@@ -209,7 +212,10 @@
         tasks-complete? (activity-model/all-tasks-completed? activity)]
     [:<>
      [activity-header e! activity]
-     [project-management-and-status (:thk.project/owner project) (:thk.project/manager project) (:activity/status activity)]
+     [project-management-and-status
+      (:thk.project/owner project)
+      (:activity/manager activity)
+      (:activity/status activity)]
      [task-lists (:activity/tasks activity)]
      ;; fixme: [when-authorized] doesn't work here, why?
      (if (and (authorized? @teet.app-state/user :activity/change-activity-status activity)

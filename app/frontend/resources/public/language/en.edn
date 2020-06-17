@@ -296,6 +296,7 @@
   :task/assignee "Responsible person",
   :land-exchange/price-per-sqm "Price/m²",
   :thk.project/owner-info "Owner",
+  :activity/manager "Manager",
   :activity/status "Status",
   :task/group "Task group",
   :file/version "Version",

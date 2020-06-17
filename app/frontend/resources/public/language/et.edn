@@ -292,6 +292,7 @@
   :task/assignee "Vastutav isik",
   :land-exchange/price-per-sqm "Hind/m²",
   :thk.project/owner-info "Projektijuht",
+  :activity/manager "Vastutav isik",
   :activity/status "Olek",
   :task/group "Ülesande tüüp",
   :file/version "Versioon",

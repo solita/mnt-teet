@@ -106,6 +106,7 @@
                        :thk.lifecycle/type
                        {:thk.lifecycle/activities
                         [*
+                         {:activity/manager [:user/given-name :user/family-name :db/id]}
                          {:activity/tasks [:db/id
                                            :task/name :task/description
                                            :task/status :task/type :task/group
