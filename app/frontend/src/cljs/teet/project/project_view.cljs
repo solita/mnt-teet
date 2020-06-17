@@ -31,7 +31,7 @@
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.typography :refer [Heading1 Heading3] :as typography]
             [teet.ui.url :as url]
-            [teet.ui.util :refer [mapc]]
+            [teet.ui.util :refer [mapc] :as util]
             [teet.util.collection :as cu]
             [teet.theme.theme-colors :as theme-colors]
             [teet.project.search-area-controller :as search-area-controller]
@@ -277,59 +277,94 @@
                                 assignees)]]]}])
          assignees)])
 
-(defn people-tab [e! {query :query :as _app} {:thk.project/keys [id manager owner permitted-users
-                                                                 lifecycles] :as project}]
-  [:div.project-people-tab
-   [people-modal e! project query]
-   [:div.people-tab-managers
-    [:div {:class (<class common-styles/heading-and-action-style)}
-     [typography/Heading2 (tr [:people-tab :managers])]
-     [when-authorized :thk.project/update
-      project
-      [buttons/button-secondary {:on-click (e! project-controller/->OpenEditProjectDialog)
-                                 :size :small}
-       (tr [:buttons :edit])]]]
+(defn- project-owner-and-managers [owner lifecycles show-history?]
+  (let [now (js/Date.)]
     [itemlist/gray-bg-list
-     (into [{:primary-text (str (:user/given-name owner) " " (:user/family-name owner))
-             :secondary-text (tr [:roles :owner])}]
-           ;; All activity owners
-           (mapcat (fn [{activities :thk.lifecycle/activities}]
-                     (for [{:activity/keys [manager name]
-                            id :db/id} activities
-                           :when manager]
-                       ^{:key (str id)}
-                       {:primary-text (user-model/user-name manager)
-                        :secondary-text (tr [:roles :manager])
-                        :tertiary-text [:span (tr-enum name)
-                                        [:div.activity-manager-active
-                                         {:class [(<class common-styles/green-text)
-                                                  (<class common-styles/inline-block)
-                                                  (<class common-styles/margin-left 1)]}
-                                         (tr [:people-tab :active])]]})))
-           lifecycles)]]
+     (util/with-keys
+       (into [{:primary-text (str (:user/given-name owner) " " (:user/family-name owner))
+               :secondary-text (tr [:roles :owner])}]
+             ;; All activity owners
+             (mapcat (fn [{activities :thk.lifecycle/activities}]
+                       (if show-history?
+                         (mapcat (fn [{:activity/keys [manager-history name]}]
+                                   (for [{:keys [manager period]} manager-history
+                                         :let [[start end] period]]
+                                     {:primary-text (user-model/user-name manager)
+                                      :secondary-text (tr [:roles :manager])
+                                      :tertiary-text [:span (tr-enum name)
+                                                      (if (and (or (nil? start) (<= start now))
+                                                               (or (nil? end) (>= end now)))
+                                                        [:div.activity-manager-active
+                                                         {:class [(<class common-styles/green-text)
+                                                                  (<class common-styles/inline-block)
+                                                                  (<class common-styles/margin-left 1)]}
+                                                         (tr [:people-tab :active])]
+                                                        [:div.activity-manager-inactive
+                                                         {:class [(<class common-styles/gray-text)
+                                                                  (<class common-styles/inline-block)
+                                                                  (<class common-styles/margin-left 1)]}
+                                                         (str (and start (format/date start))
+                                                              "\u2013"
+                                                              (and end (format/date end)))])]}))
+                                 activities)
+                         (for [{:activity/keys [manager name]
+                                id :db/id} activities
+                               :when manager]
+                           ^{:key (str id)}
+                           {:primary-text (user-model/user-name manager)
+                            :secondary-text (tr [:roles :manager])
+                            :tertiary-text [:span (tr-enum name)
+                                            [:div.activity-manager-active
+                                             {:class [(<class common-styles/green-text)
+                                                      (<class common-styles/inline-block)
+                                                      (<class common-styles/margin-left 1)]}
+                                             (tr [:people-tab :active])]]}))))
+             lifecycles))]))
 
-   [:div.people-tab-assignees-by-activity
-    [query/query {:e! e!
-                  :query :thk.project/assignees-by-activity
-                  :args {:thk.project/id id}
-                  :simple-view [assignees-by-activity]}]
-    ]
+(defn people-tab [e! {query :query :as _app}
+                  {:thk.project/keys [id owner permitted-users lifecycles] :as project}]
+  (r/with-let [show-history? (r/atom false)
+               has-history? (some #(> (count (:activity/manager-history %)) 1) ; more than 1 manager period => has history
+                                  (mapcat :thk.lifecycle/activities lifecycles))]
+    [:div.project-people-tab
+     [people-modal e! project query]
+     [:div.people-tab-managers
+      [:div {:class (<class common-styles/heading-and-action-style)}
+       [typography/Heading2 (tr [:people-tab :managers])]
+       [when-authorized :thk.project/update
+        project
+        [buttons/button-secondary {:on-click (e! project-controller/->OpenEditProjectDialog)
+                                   :size :small}
+         (tr [:buttons :edit])]]]
+      [project-owner-and-managers owner lifecycles @show-history?]
+      (when has-history?
+        [Link {:on-click #(swap! show-history? not)}
+         (tr [:people-tab (if @show-history?
+                            :hide-history
+                            :show-history)])])]
 
-   [:div
-    [:div {:class (<class common-styles/heading-and-action-style)}
-     [typography/Heading2 (tr [:people-tab :other-users])]
-     [when-authorized :thk.project/add-permission
-      project
-      [buttons/button-secondary {:on-click (e! project-controller/->OpenPeopleModal)
-                                 :size :small}
-       (tr [:buttons :edit])]]]
+     [:div.people-tab-assignees-by-activity
+      [query/query {:e! e!
+                    :query :thk.project/assignees-by-activity
+                    :args {:thk.project/id id}
+                    :simple-view [assignees-by-activity]}]
+      ]
 
-    (if (empty? permitted-users)
-      [typography/GreyText (tr [:people-tab :no-other-users])]
-      [itemlist/gray-bg-list (for [{:keys [user] :as permission} permitted-users]
-                               {:primary-text (str (:user/given-name user) " " (:user/family-name user))
-                                :secondary-text (tr [:roles (:permission/role permission)])
-                                :id (:db/id user)})])]])
+     [:div
+      [:div {:class (<class common-styles/heading-and-action-style)}
+       [typography/Heading2 (tr [:people-tab :other-users])]
+       [when-authorized :thk.project/add-permission
+        project
+        [buttons/button-secondary {:on-click (e! project-controller/->OpenPeopleModal)
+                                   :size :small}
+         (tr [:buttons :edit])]]]
+
+      (if (empty? permitted-users)
+        [typography/GreyText (tr [:people-tab :no-other-users])]
+        [itemlist/gray-bg-list (for [{:keys [user] :as permission} permitted-users]
+                                 {:primary-text (str (:user/given-name user) " " (:user/family-name user))
+                                  :secondary-text (tr [:roles (:permission/role permission)])
+                                  :id (:db/id user)})])]]))
 
 (defn details-tab [e! _app project]
   [:<>

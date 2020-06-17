@@ -466,7 +466,9 @@
   :no-other-users "No other users",
   :other-users "Other users",
   :consultants "Consultants",
-  :active "ACTIVE"},
+  :active "ACTIVE",
+  :show-history "Show history",
+  :hide-history "Hide history"},
  :project
  {:add-users "Add users",
   :remove-from-project "Remove from project",

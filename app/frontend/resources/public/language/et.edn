@@ -461,7 +461,9 @@
   :no-other-users "Teisi kasutajaid pole",
   :other-users "Muud kasutajad",
   :consultants "Konsultandid",
-  :active "AKTIIVNE"},
+  :active "AKTIIVNE",
+  :show-history "Näidata ajalugu",
+  :hide-history "Peida ajalugu"},
  :project
  {:add-users "Lisan kasutajaid",
   :remove-from-project "Eemaldan projektist",
