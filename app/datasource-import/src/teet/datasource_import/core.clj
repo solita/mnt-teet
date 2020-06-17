@@ -61,6 +61,10 @@
   ctx)
 
 (defn existing-features-ids [{:keys [api-url api-secret] :as ctx}]
+  ;; memory usage note:
+  ;; (clj-memory-meter.core/measure (existing-features-ids (make-config ["example-config.edn"])))
+  ;; gives 97 kB/1000 rows and 183 MB for the 2M rows in current db as of this writing, leaving
+  ;; a lot of headroom, but conceivably could outgrow the smallest 3GB CodeBuild VM some day.
   (let [get-url (str api-url "/feature?select=id,datasource_id")
         resp (client/get get-url
                          {:headers (merge (auth-headers {:api-secret api-secret})
@@ -118,7 +122,7 @@
                   :deleted false
                   :properties attributes}))}))
     (when (not-empty deleted?)
-      (println "marking features absent from import file as deleted")
+      (print "\nMarking features absent from import file as deleted.\n")
       (client/post
        (str api-url "/feature")
        {:headers (merge
