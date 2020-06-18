@@ -35,6 +35,17 @@
       (db-api/bad-request! "No such file")
       files)))
 
+(def ^:private manager-user-id-path
+  {:file [:task/_files 0 :activity/_tasks 0 :activity/manager :user/id]
+   :task [:activity/_tasks 0 :activity/manager :user/id]})
+
+(defn- manager-user-id
+  "Get manager for comment about entity. For file or task comments
+  it is the manager assigned to the activity."
+  [db entity-type entity-id]
+  (when-let [p (manager-user-id-path entity-type)]
+    (get-in (du/entity db entity-id) p)))
+
 (defn- participants
   "Returns all participants (excluding `except-user`) in the comment thread.
 
@@ -45,15 +56,14 @@
   read internal comments."
   [db entity-type entity-id internal? except-user]
   (let [project-id (project-db/entity-project-id db entity-type entity-id)
-        project-manager-uid (get-in (du/entity db project-id)
-                                    [:thk.project/manager :db/id])
+        manager-uid (manager-user-id db entity-type entity-id)
         attr (comment-model/comments-attribute-for-entity-type entity-type)
         query {:find '[(distinct ?author)]
                :where [['?entity attr '?comment]
                        '[?comment :comment/author ?author]]
                :in '[$ ?entity]}
-        participants (disj (into (if project-manager-uid
-                                 #{project-manager-uid}
+        participants (disj (into (if manager-uid
+                                 #{manager-uid}
                                  #{})
                                  ;; if entity id is a tuple for the first creation of estate-comments or owner-comments
                                  ;; This is because the tuple entity can't be resolved and thus will fail
