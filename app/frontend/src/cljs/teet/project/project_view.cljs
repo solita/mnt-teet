@@ -347,7 +347,8 @@
          (tr [:buttons :edit])]]]
       [project-owner-and-managers owner lifecycles @show-history?]
       (when has-history?
-        [Link {:on-click #(swap! show-history? not)}
+        [Link {:on-click #(swap! show-history? not)
+               :style {:cursor :pointer}}
          (tr [:people-tab (if @show-history?
                             :hide-history
                             :show-history)])])]
