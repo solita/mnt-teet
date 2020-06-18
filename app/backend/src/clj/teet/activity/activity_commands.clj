@@ -257,8 +257,8 @@
    :context {:keys [conn user db]}
    :payload {:keys [activity-id]}
    :project-id (project-db/activity-project-id db activity-id)
-   :authorization {:task/submit-results {:eid (project-db/activity-project-id db activity-id)
-                                         :link :thk.project/manager}}
+   :authorization {:task/submit-results {:eid activity-id
+                                         :link :activity/manager}}
    :pre [(check-tasks-are-complete db activity-id)]
    :transact [(merge
                {:db/id activity-id
