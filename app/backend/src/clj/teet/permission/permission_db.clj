@@ -61,6 +61,7 @@
                 [(<= ?time ?time-until)]]
               db user time))))
 
+
 (defn user-permissions-in-project
   "Return user permissions that are valid in the given project at the given time."
   ([db user project]
@@ -72,3 +73,22 @@
         (or (empty? projects)
             (cu/contains-value? projects project-id)))
       (user-permissions db user time)))))
+
+(defn has-permission?
+  "Check if user has the given permission in the given project at the specified time (defaults to now)."
+  ([db user project permission-role]
+   (has-permission? db user project permission-role (Date.)))
+  ([db user project permission-role time]
+   (boolean
+    (seq
+     (d/q '[:find ?p
+            :in $ ?user ?proj ?role ?time
+            :where
+            [?user :user/permissions ?p]
+            [?p :permission/projects ?proj]
+            [?p :permission/role ?role]
+            [?p :permission/valid-from ?time-from]
+            [(get-else $ ?p :permission/valid-until ?time) ?time-until]
+            [(<= ?time-from ?time)]
+            [(<= ?time ?time-until)]]
+          db user project permission-role time)))))

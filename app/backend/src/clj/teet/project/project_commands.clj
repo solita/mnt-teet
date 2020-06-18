@@ -13,28 +13,9 @@
             [clojure.set :as set]
             [teet.project.project-db :as project-db]
             [teet.authorization.authorization-check :as authorization-check]
-            [teet.notification.notification-db :as notification-db]
-            [teet.util.datomic :as du]
-            [teet.integration.x-road.property-registry :as property-registry]
-            [teet.integration.postgrest :as postgrest])
+            [teet.util.datomic :as du])
   (:import (java.util Date UUID)))
 
-(defn- manager-notification-tx [project-eid user manager]
-  (notification-db/notification-tx
-   {:from user
-    :to manager
-    :target project-eid
-    :type :notification.type/project-manager-assigned
-    :project project-eid}))
-
-(defn- manager-permission-tx [project-eid user manager]
-  {:user/id (:user/id manager)
-   :user/permissions [(merge
-                       {:db/id "new-manager-permission"
-                        :permission/valid-from (java.util.Date.)
-                        :permission/role :manager
-                        :permission/projects [project-eid]}
-                       (creation-meta user))]})
 
 (defn- project-custom-m-range [db project-eid]
   (d/pull db '[:thk.project/custom-start-m :thk.project/custom-end-m] project-eid))
@@ -46,10 +27,7 @@
    :project-id [:thk.project/id id]
    :authorization {:project/project-info {:eid [:thk.project/id id]
                                           :link :thk.project/owner}}}
-  (let [current-manager-id (get-in (du/entity db [:thk.project/id id])
-                                   [:thk.project/manager :user/id])
-        new-manager (:thk.project/manager project-form)
-        {db-before :db-before
+  (let [{db-before :db-before
          db :db-after} (tx [(merge (cu/without-nils
                                     (select-keys project-form
                                                  [:thk.project/id
@@ -59,11 +37,7 @@
                                                   :thk.project/project-name
                                                   :thk.project/custom-start-m
                                                   :thk.project/custom-end-m]))
-                                   (modification-meta user))]
-                           (when (and new-manager
-                                      (not= (:user/id new-manager) current-manager-id))
-                             [(manager-notification-tx [:thk.project/id id] user new-manager)
-                              (manager-permission-tx [:thk.project/id id] user new-manager)]))]
+                                   (modification-meta user))])]
     (when (not= (project-custom-m-range db-before [:thk.project/id id])
                 (project-custom-m-range db [:thk.project/id id]))
       (project-geometry/update-project-geometries!

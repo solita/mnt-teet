@@ -46,6 +46,9 @@
                            :sort-fn activity-model/activity-order
                            :enum/valid-for lifecycle-type}]]
 
+     [form/field :activity/manager
+      [select/select-user {:e! e!}]]
+
      [form/field {:attribute [:activity/estimated-start-date :activity/estimated-end-date]}
       [date-picker/date-range-input {:row? false
                                      :max-date max-date
