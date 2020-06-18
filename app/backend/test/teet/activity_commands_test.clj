@@ -18,9 +18,9 @@
 (deftest activity-submit-statuses
   ;; Set manager
   (tu/local-command tu/mock-user-boss
-                    :thk.project/update
-                    {:thk.project/id "11111"
-                     :thk.project/manager {:user/id tu/manager-id}})
+                    :activity/update
+                    {:activity {:db/id (act1-id)
+                                :activity/manager {:user/id tu/manager-id}}})
 
   (tu/local-command tu/mock-user-boss
                     :thk.project/add-permission

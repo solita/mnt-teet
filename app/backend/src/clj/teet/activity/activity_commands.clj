@@ -297,8 +297,8 @@
                      (meta-model/modification-meta user))
               (notification-db/notification-tx
                {:from user
-                :to (get-in (du/entity db (project-db/activity-project-id db activity-id))
-                            [:thk.project/manager :db/id])
+                :to (get-in (du/entity db activity-id)
+                            [:activity/manager :db/id])
                 :type (if (= status :activity.status/completed)
                         :notification.type/activity-accepted
                         ;; else archived or canceled (ensured by pre-check)

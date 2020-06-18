@@ -109,7 +109,8 @@
          ^{:error :invalid-task-for-activity}
          (task-db/valid-task-for-activity? db activity-id task)]
    :authorization {:task/create-task {}
-                   :activity/edit-activity {:db/id activity-id}}
+                   :activity/edit-activity {:db/id activity-id
+                                            :link :activity/manager}}
    :transact [(merge
                (when (:task/assignee task)
                  {:activity/status :activity.status/in-progress})

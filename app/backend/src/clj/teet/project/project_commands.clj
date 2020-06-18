@@ -34,7 +34,6 @@
                                     (select-keys project-form
                                                  [:thk.project/id
                                                   :thk.project/owner
-                                                  :thk.project/manager
                                                   :thk.project/m-range-change-reason
                                                   :thk.project/project-name
                                                   :thk.project/custom-start-m
