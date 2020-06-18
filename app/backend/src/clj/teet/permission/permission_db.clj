@@ -2,7 +2,8 @@
   "Datomic queries related to project user permissions"
   (:require [datomic.client.api :as d]
             [teet.util.datomic :as du]
-            [teet.util.collection :as cu])
+            [teet.util.collection :as cu]
+            [teet.user.user-model :as user-model])
   (:import (java.util Date)))
 
 (defn valid-project-permissions
@@ -91,4 +92,4 @@
             [(get-else $ ?p :permission/valid-until ?time) ?time-until]
             [(<= ?time-from ?time)]
             [(<= ?time ?time-until)]]
-          db user project permission-role time)))))
+          db (user-model/user-ref user) project permission-role time)))))

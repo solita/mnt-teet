@@ -13,7 +13,9 @@
             [clojure.set :as set]
             [teet.project.project-db :as project-db]
             [teet.authorization.authorization-check :as authorization-check]
-            [teet.util.datomic :as du])
+            [teet.util.datomic :as du]
+            [teet.integration.x-road.property-registry :as property-registry]
+            [teet.integration.postgrest :as postgrest])
   (:import (java.util Date UUID)))
 
 

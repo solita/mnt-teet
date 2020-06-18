@@ -307,3 +307,8 @@
                                            (mapcat #(remove nil? %) more-tx-data))
                                      {:db/id "datomic.tx"
                                       :tx/author (:user/id user)})})))
+
+(defn tx-ret
+  "Call tx and return :tempids as command response."
+  [& tx-args]
+  (select-keys (apply tx tx-args) [:tempids]))
