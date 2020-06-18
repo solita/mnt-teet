@@ -278,7 +278,16 @@
          assignees)])
 
 (defn- project-owner-and-managers [owner lifecycles show-history?]
-  (let [now (js/Date.)]
+  (let [now (js/Date.)
+        active-manager (fn [manager name]
+                          {:primary-text (user-model/user-name manager)
+                           :secondary-text (tr [:roles :manager])
+                           :tertiary-text [:span (tr-enum name)
+                                           [:div.activity-manager-active
+                                            {:class [(<class common-styles/green-text)
+                                                     (<class common-styles/inline-block)
+                                                     (<class common-styles/margin-left 1)]}
+                                            (tr [:people-tab :active])]]})]
     [itemlist/gray-bg-list
      (util/with-keys
        (into [{:primary-text (str (:user/given-name owner) " " (:user/family-name owner))
@@ -286,39 +295,39 @@
              ;; All activity owners
              (mapcat (fn [{activities :thk.lifecycle/activities}]
                        (if show-history?
-                         (mapcat (fn [{:activity/keys [manager-history name]}]
-                                   (for [{:keys [manager period]} manager-history
-                                         :let [[start end] period]]
-                                     {:primary-text (user-model/user-name manager)
-                                      :secondary-text (tr [:roles :manager])
-                                      :tertiary-text [:span (tr-enum name)
-                                                      (if (and (or (nil? start) (<= start now))
-                                                               (or (nil? end) (>= end now)))
-                                                        [:div.activity-manager-active
-                                                         {:class [(<class common-styles/green-text)
-                                                                  (<class common-styles/inline-block)
-                                                                  (<class common-styles/margin-left 1)]}
-                                                         (tr [:people-tab :active])]
-                                                        [:div.activity-manager-inactive
-                                                         {:class [(<class common-styles/gray-text)
-                                                                  (<class common-styles/inline-block)
-                                                                  (<class common-styles/margin-left 1)]}
-                                                         (str (and start (format/date start))
-                                                              "\u2013"
-                                                              (and end (format/date end)))])]}))
+                         (mapcat (fn [{:activity/keys [manager-history manager name]}]
+                                   (if (and (empty? manager-history) manager)
+                                     ;; No manager history, manager has been set when created
+                                     ;; and has never been changed
+                                     [(active-manager manager name)]
+
+                                     ;; Has histories containing previous and current managers
+                                     (for [{:keys [manager period]} manager-history
+                                           :let [[start end] period]]
+                                       {:primary-text (user-model/user-name manager)
+                                        :secondary-text (tr [:roles :manager])
+                                        :tertiary-text [:span (tr-enum name)
+                                                        (if (and (or (nil? start) (<= start now))
+                                                                 (or (nil? end) (>= end now)))
+                                                          [:div.activity-manager-active
+                                                           {:class [(<class common-styles/green-text)
+                                                                    (<class common-styles/inline-block)
+                                                                    (<class common-styles/margin-left 1)]}
+                                                           (tr [:people-tab :active])]
+                                                          [:div.activity-manager-inactive
+                                                           {:class [(<class common-styles/gray-text)
+                                                                    (<class common-styles/inline-block)
+                                                                    (<class common-styles/margin-left 1)]}
+                                                           (str (and start (format/date start))
+                                                                "\u2013"
+                                                                (and end (format/date end)))])]})))
                                  activities)
                          (for [{:activity/keys [manager name]
                                 id :db/id} activities
                                :when manager]
-                           ^{:key (str id)}
-                           {:primary-text (user-model/user-name manager)
-                            :secondary-text (tr [:roles :manager])
-                            :tertiary-text [:span (tr-enum name)
-                                            [:div.activity-manager-active
-                                             {:class [(<class common-styles/green-text)
-                                                      (<class common-styles/inline-block)
-                                                      (<class common-styles/margin-left 1)]}
-                                             (tr [:people-tab :active])]]}))))
+                           (with-meta
+                             (active-manager manager name)
+                             {:key (str id)})))))
              lifecycles))]))
 
 (defn people-tab [e! {query :query :as _app}
