@@ -49,8 +49,9 @@
 (defn- participants
   "Returns all participants (excluding `except-user`) in the comment thread.
 
-  The project manager is always considered to be a participant.
-  For comments on files, the file creator is always considered to be a participant.
+  When comment is about task or file in the task, the manager is always considered
+  to be a participant. For comments on files, the file creator is always considered
+  to be a participant.
 
   If internal? is true, returns only participants allowed to
   read internal comments."
