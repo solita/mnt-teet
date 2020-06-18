@@ -6,7 +6,6 @@
             [datafrisk.core :as df]
             [postgrest-ui.elements]
             [postgrest-ui.impl.style.material]
-            [reagent.core :as r]
             reagent.dom
             [teet.app-state :as app-state]
             [teet.authorization.authorization-check :as authorization-check]
