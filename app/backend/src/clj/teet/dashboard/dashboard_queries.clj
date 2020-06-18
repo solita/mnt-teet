@@ -1,13 +1,10 @@
 (ns teet.dashboard.dashboard-queries
   (:require [teet.db-api.core :refer [defquery]]
             [datomic.client.api :as d]
-            [teet.meta.meta-query :as meta-query]
             [teet.user.user-model :as user-model]
             [teet.permission.permission-db :as permission-db]
             [teet.notification.notification-db :as notification-db]
-            [teet.project.project-db :as project-db]
             [teet.util.collection :as cu]
-            [teet.log :as log]
             [teet.project.project-model :as project-model]
             [teet.project.task-model :as task-model]))
 
@@ -52,16 +49,25 @@
 
 (defn user-projects
   "Fetch all projects the user is involved in.
-  Returns all projects where the user is owner or manager or has a project
-  scoped permission."
+  Returns all projects where the user is owner or manager of an activity
+  or has a project scoped permission."
   [db user project-ids]
   (let [user-ref (user-model/user-ref user)
-        owner-or-managed-projects
+        owned-projects
         (mapv first
               (d/q '[:find ?e
                      :where
-                     (or [?e :thk.project/owner ?user]
-                         [?e :thk.project/manager ?user])
+                     [?e :thk.project/owner ?user]
+                     :in $ ?user]
+                   db user-ref))
+
+        managing-activity-projects
+        (mapv first
+              (d/q '[:find ?e
+                     :where
+                     [?e :thk.project/lifecycles ?lc]
+                     [?lc :thk.lifecycle/activities ?act]
+                     [?act :activity/manager ?user]
                      :in $ ?user]
                    db user-ref))
 
@@ -85,7 +91,8 @@
                                      :activity/actual-start-date
                                      :activity/actual-end-date]}]}])
                  :in $ [?e ...]]
-               db (distinct (concat owner-or-managed-projects
+               db (distinct (concat owned-projects
+                                    managing-activity-projects
                                     permission-projects
                                     project-ids))))))
 
