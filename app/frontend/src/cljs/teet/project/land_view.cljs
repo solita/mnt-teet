@@ -291,6 +291,15 @@
       (when status
         (str " - " (tr-enum status)))]]))
 
+(defn archived-status []
+  (let [status-text (tr [:land :archived-unit])]
+    [:div {:class (<class common-styles/flex-align-center)}
+     [:div {:class (<class common-styles/status-circle-style {:color "#e0e0e0"})
+            :title status-text}]
+     [:span {:style {:text-align :left}
+             :class (<class common-styles/gray-text)}
+      status-text]]))
+
 (defn cadastral-unit-container-style
   []
   ^{:pseudo {:first-of-type {:border-top "1px solid white"}}}
@@ -299,6 +308,10 @@
    :position :relative
    :flex 1
    :flex-direction :column})
+
+(defn cadastral-unit-new-style
+  [] 
+  {:color "green"})
 
 (defn cadastral-unit-quality-style
   [quality]
@@ -314,7 +327,9 @@
 (defn cadastral-unit
   [e! update-cadastral-form-event estate-procedure-type cadastral-forms {:keys [teet-id TUNNUS KINNISTU MOOTVIIS MUUDET quality selected?] :as unit}]
   ^{:key (str TUNNUS)}
-  (let [cadastral-form (get cadastral-forms teet-id)]
+  (let [cadastral-form (get cadastral-forms teet-id)
+        new-unit? true ;; FIXME - add code in controller to check against project-associated cadastral id's
+        deleted-unit? (:deleted unit)]
     [:div {:class (<class cadastral-unit-container-style)}
      [:div {:class (<class cadastral-unit-quality-style quality)}
       [:span {:title (str MOOTVIIS " – " MUUDET)} (case quality
@@ -325,11 +340,22 @@
                   :on-mouse-leave (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" false unit)
                   :on-click (e! land-controller/->ToggleLandUnit unit)
                   :class (<class cadastral-unit-style selected?)}
-      [typography/SectionHeading {:style {:text-align :left}} (str (:L_AADRESS unit) " (" (land-controller/cadastral-purposes TUNNUS unit) ")")]
-      [:div {:class (<class common-styles/space-between-center)}
-       [acquisition-impact-status (get-in cadastral-form [:land-acquisition/impact]) (get-in cadastral-form [:land-acquisition/status])]
+      [typography/SectionHeading {:style {:text-align :left}}
+       (when new-unit?
+         [:div {:class (<class cadastral-unit-new-style)}
+          (tr [:land :new-cadastral-unit])])
+       (str (:L_AADRESS unit)
+            " (" (land-controller/cadastral-purposes TUNNUS unit) ")")]
+      (if deleted-unit?
+        [:div {:class (<class common-styles/space-between-center)}         
+         [archived-status]
+         [:span {:color "#e0e0e0"}
+          TUNNUS]]
+        ;; else
+        [:div {:class (<class common-styles/space-between-center)}
+       [acquisition-impact-status (get-in cadastral-form [:land-acquisition/impact]) (get-in cadastral-form [:land-acquisition/status])]       
        [:span {:class (<class common-styles/gray-text)}
-        TUNNUS]]]
+        TUNNUS]])]
      [Collapse
       {:in selected?
        :mount-on-enter true}
