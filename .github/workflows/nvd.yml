@@ -25,11 +25,10 @@ jobs:
       uses: DeLaGuardo/setup-clojure@2.0
       with:
         tools-deps: '1.10.1.510'
+    - name: install babashka
+      run: |
+        curl -s https://raw.githubusercontent.com/borkdude/babashka/master/install -o install-babashka
+        chmod +x install-babashka
+        ./install-babashka
     - name: run nvd
-      run: ./nvd.bash
-      working-directory: app/backend/
-    - uses: ashley-taylor/junit-report-annotations-action@master
-      if: always()
-      with:
-        path: app/backend/target/nvd/dependency-check-junit.xml
-        access-token: ${{ secrets.GITHUB_TOKEN }}
+      run: ./ci/scripts/nvd.clj
