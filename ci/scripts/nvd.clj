@@ -29,6 +29,7 @@
            (select-keys v [:name :description :source :severity]))))
 
 (defn post-annotations [url head-sha vulns]
+  (println "Posting " (count vulns) " annotations to " url " for HEAD SHA " head-sha)
   (curl/post
    url
    {:headers {"Content-Type" "application/json"

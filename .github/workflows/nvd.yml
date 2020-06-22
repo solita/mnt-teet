@@ -14,7 +14,6 @@ jobs:
       env:
         cache-name: cache-m2-repo
       with:
-        # npm cache files are stored in `~/.npm` on Linux/macOS
         path: ~/.m2
         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/deps.edn') }}
         restore-keys: |
