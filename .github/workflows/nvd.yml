@@ -29,6 +29,6 @@ jobs:
       run: |
         curl -s https://raw.githubusercontent.com/borkdude/babashka/master/install -o install-babashka
         chmod +x install-babashka
-        ./install-babashka
+        sudo ./install-babashka
     - name: run nvd
       run: ./ci/scripts/nvd.clj
