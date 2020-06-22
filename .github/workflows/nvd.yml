@@ -32,3 +32,6 @@ jobs:
         sudo ./install-babashka
     - name: run nvd
       run: ./ci/scripts/nvd.clj
+      env:
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

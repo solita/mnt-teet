@@ -32,7 +32,8 @@
   (curl/post
    url
    {:headers {"Content-Type" "application/json"
-              "Accept" "application/vnd.github.antiope-preview+json"}
+              "Accept" "application/vnd.github.antiope-preview+json"
+              "Authorization" (str "Bearer " (System/getenv "GITHUB_TOKEN"))}
     :body (cheshire/encode
            {:name "nvd"
             :head_sha head-sha
