@@ -29,8 +29,8 @@
            (select-keys v [:name :description :source :severity]))))
 
 (defn post-annotations [url head-sha vulns]
-  (println "Posting " (count vulns) " annotations to " url " for HEAD SHA " head-sha)
-  (curl/post
+  (println "Patching " (count vulns) " annotations to " url " for HEAD SHA " head-sha)
+  (curl/patch
    url
    {:headers {"Content-Type" "application/json"
               "Accept" "application/vnd.github.antiope-preview+json"
@@ -55,7 +55,8 @@
 
 (def annotation-url (str "https://api.github.com/repos/"
                          (System/getenv "GITHUB_REPOSITORY")
-                         "/check-runs"))
+                         "/check-runs/"
+                         (System/getenv "GITHUB_RUN_ID")))
 
 (def head-sha (str/trim (:out (sh/sh "git" "rev-parse" "HEAD"))))
 
