@@ -55,7 +55,9 @@ SELECT row_to_json(fc)::TEXT
                array_to_json(array_agg(f)) as features
           FROM (SELECT 'Feature' as type,
                        ST_AsGeoJSON(f.geometry)::json as geometry,
-                       (jsonb_build_object('teet-id', CONCAT(f.datasource_id,':',f.id)) || f.properties) AS properties
+                       (jsonb_build_object('teet-id', CONCAT(f.datasource_id,':',f.id))
+		        || (jsonb_build_object('deleted', f.deleted))
+		        || f.properties) AS properties
                   FROM teet.feature f
                   JOIN teet.entity e ON ST_DWithin(f.geometry, e.geometry, distance)
                  WHERE e.id = entity_id
@@ -72,7 +74,9 @@ SELECT row_to_json(fc)::TEXT
                array_to_json(array_agg(f)) as features
           FROM (SELECT 'Feature' as type,
                        ST_AsGeoJSON(f.geometry)::json as geometry,
-                       (jsonb_build_object('teet-id', CONCAT(f.datasource_id,':',f.id)) || f.properties) AS properties
+                       (jsonb_build_object('teet-id', CONCAT(f.datasource_id,':',f.id))
+		        || (jsonb_build_object('deleted', f.deleted))
+		        || f.properties) AS properties
                   FROM teet.feature f
                   JOIN teet.entity_feature e ON ST_DWithin(e.geometry, f.geometry, 0)
                  WHERE e.entity_id = $2 AND e.type = $3
@@ -103,7 +107,9 @@ SELECT row_to_json(fc)::TEXT
                array_to_json(array_agg(f)) as features
           FROM (SELECT 'Feature' as type,
                        ST_AsGeoJSON(f.geometry)::json as geometry,
-                       (jsonb_build_object('teet-id', CONCAT(f.datasource_id,':',f.id)) || f.properties) AS properties
+                       (jsonb_build_object('teet-id', CONCAT(f.datasource_id,':',f.id))
+		        || (jsonb_build_object('deleted', f.deleted))
+		        || f.properties) AS properties
                   FROM teet.feature f
                  WHERE ST_DWithin(f.geometry, ST_SetSRID(ST_GeomFromText(geometry_wkt),3301), distance)
                    AND f.datasource_id = ANY(datasource_ids)) f) fc;
@@ -123,7 +129,9 @@ SELECT row_to_json(fc)::TEXT
                array_to_json(array_agg(f)) as features
           FROM (SELECT 'Feature' as type,
                        ST_AsGeoJSON(f.geometry)::json as geometry,
-                       (jsonb_build_object('teet-id', CONCAT(f.datasource_id,':',f.id)) || f.properties) AS properties
+                       (jsonb_build_object('teet-id', CONCAT(f.datasource_id,':',f.id))
+		        || (jsonb_build_object('deleted', f.deleted))
+			|| f.properties) AS properties
                   FROM teet.feature f
                   JOIN features fs ON (f.datasource_id = fs.datasource AND f.id = fs.id)) f) fc;
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;
@@ -142,7 +150,8 @@ SELECT row_to_json(fc)::TEXT
                array_to_json(array_agg(f)) as features
           FROM (SELECT 'Feature' as type,
                        ST_AsGeoJSON(f.geometry)::json as geometry,
-                       (jsonb_build_object('teet-id', CONCAT(f.entity_id,':',f.id)) || f.properties) AS properties
+                       (jsonb_build_object('teet-id', CONCAT(f.entity_id,':',f.id))
+		        || f.properties) AS properties
                   FROM teet.entity_feature f
                   JOIN features fs ON (f.entity_id = fs.entity AND f.id = fs.id)) f) fc;
 $$ LANGUAGE SQL STABLE SECURITY DEFINER;
