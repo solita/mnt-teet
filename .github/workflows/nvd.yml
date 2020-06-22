@@ -1,4 +1,4 @@
-name: lint
+name: nvd
 
 on: [push, pull_request]
 
@@ -28,7 +28,7 @@ jobs:
     - name: run nvd
       run: clojure -Sdeps '{:deps {clj-nvd {:git/url "https://github.com/miikka/clj-nvd.git" :sha "141d54f5304e53f6caa6e3de1677f3cfb04091f4"}}}' -m clj-nvd.core check
       working-directory: app/backend/
-    - uses: ashley-taylor/junit-report-annotations-action@v1.1
+    - uses: ashley-taylor/junit-report-annotations-action@master
       if: always()
       with:
         path: app/backend/target/nvd/dependency-check-junit.xml
