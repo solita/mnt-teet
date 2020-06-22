@@ -5,7 +5,9 @@
             [datomic.client.api :as d]
             [teet.meta.meta-query :as meta-query]
             [teet.log :as log]
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [teet.integration.postgrest :as postgrest]
+            [teet.environment :as environment]))
 
 (defmulti query
   "Execute a given named query.
@@ -312,3 +314,14 @@
   "Call tx and return :tempids as command response."
   [& tx-args]
   (select-keys (apply tx tx-args) [:tempids]))
+
+(defn audit! [event & [args]]
+  (let [user-id (get-in *request-ctx* [:user :user/id])]
+    (assert user-id "Audit event requires a user!")
+    (postgrest/rpc
+     (environment/config-map {:api-url [:api-url]
+                              :api-secret [:auth :jwt-secret]})
+     :audit_event
+     {:user user-id
+      :event (str event)
+      :args (or args {})})))

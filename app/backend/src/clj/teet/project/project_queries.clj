@@ -4,7 +4,7 @@
             [dk.ative.docjure.spreadsheet :as spreadsheet]
             [ring.util.io :as ring-io]
             [teet.activity.activity-db :as activity-db]
-            [teet.db-api.core :as db-api :refer [defquery]]
+            [teet.db-api.core :as db-api :refer [defquery audit!]]
             [teet.environment :as environment]
             [teet.gis.entity-features :as entity-features]
             [teet.gis.features :as features]
@@ -69,7 +69,8 @@
    :authorization {:project/project-info {:eid [:thk.project/id id]
                                           :link :thk.project/owner
                                           :access :read}}}
-  (let [project (meta-query/without-deleted
+  (let [_ (audit! "fetch project" {:thk-id id})
+        project (meta-query/without-deleted
                   db
                   (project-db/project-by-id db [:thk.project/id id]))]
     (-> project
