@@ -114,7 +114,6 @@
         [buttons/button-secondary {:on-click (fn [e] (.stopPropagation e))
                                    :style {:margin "0.5rem"}
                                    :element "a"
-                                   :size :small
                                    :href (url/project (:thk.project/id project))}
          (tr [:dashboard :open])]]
        [:div {:class (<class project-card-subheader-style)}

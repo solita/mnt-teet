@@ -358,8 +358,7 @@
       [query/query {:e! e!
                     :query :thk.project/assignees-by-activity
                     :args {:thk.project/id id}
-                    :simple-view [assignees-by-activity]}]
-      ]
+                    :simple-view [assignees-by-activity]}]]
 
      [:div
       [:div {:class (<class common-styles/heading-and-action-style)}
