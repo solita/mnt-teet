@@ -146,7 +146,8 @@
     [:div {:class (<class project-style/project-page-structure)}
      [project-header project breadcrumbs]
      [:div {:class (<class project-style/project-map-container)}
-      [project-map-view/project-map e! app project]
+                                        ;[project-map-view/project-map e! app project]
+      (project-map-view/create-project-map e! app project)
       [Paper {:class (<class project-style/project-content-overlay)}
        header
        [:div {:class (<class project-style/content-overlay-inner)}

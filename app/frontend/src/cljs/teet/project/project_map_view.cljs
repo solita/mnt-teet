@@ -78,3 +78,22 @@
                          @overlays
                          (remove nil? (vals @named-overlays))))}
       map]]))
+
+(def ^{:private true :const true}
+  project-map-app-keys #{:map :page :config :query})
+
+(def ^{:private true :const true}
+  project-map-project-keys
+  #{:overlays :thk.project/custom-start-m :thk.project/custom-end-m
+    :thk.project/filtered-cadastral-units :road/highlight-geometries :thk.project/lifecycles
+    :thk.project/related-restrictions :thk.project/start-m :setup-step :geometry
+    :open-restrictions-geojsons :thk.project/related-cadastral-units :checked-cadastral-geojson
+    :db/id :checked-restrictions-geojson :feature-candidates :basic-information-form
+    :thk.project/end-m})
+
+(defn create-project-map
+  "Return project-map component with only the needed keys from app and project"
+  [e! app project]
+  [project-map e!
+   (select-keys app project-map-app-keys)  ; (uu/lookup-tracker "PROJECT-MAP app key:" app)
+   (select-keys project project-map-project-keys)])  ; (uu/lookup-tracker "PROJECT-MAP project key:" project)
