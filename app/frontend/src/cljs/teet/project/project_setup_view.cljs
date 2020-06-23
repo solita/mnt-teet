@@ -4,6 +4,7 @@
             [reagent.core :as r]
             [teet.localization :refer [tr]]
             [teet.project.project-controller :as project-controller]
+            [teet.project.land-controller :as land-controller]
             [teet.project.project-model :as project-model]
             [teet.project.project-specs]
             [teet.ui.buttons :as buttons]
@@ -186,7 +187,11 @@
                  :let [checked? (boolean (checked-cadastral-units cadastral-unit))]]
              {:id (:teet-id cadastral-unit)
               :checked? checked?
-              :value (str (:L_AADRESS cadastral-unit) " " (:TUNNUS cadastral-unit))
+              :value (str (:L_AADRESS cadastral-unit) " " (:TUNNUS cadastral-unit) " "
+                          (when (land-controller/unit-new? (:TUNNUS cadastral-unit) cadastral-units)
+                            (tr [:land :new-cadastral-unit]))
+                          (when (:deleted cadastral-unit)
+                            (tr [:land :archived-unit])))
               :on-change (r/partial toggle-cadastral-unit cadastral-unit)
               :on-mouse-enter (r/partial on-mouse-enter cadastral-unit)
               :on-mouse-leave (r/partial on-mouse-leave cadastral-unit)}))]]])))

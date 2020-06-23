@@ -4,13 +4,10 @@
             [teet.util.collection :as cu]
             [teet.localization :refer [tr]]
             [teet.map.map-controller :as map-controller]
-            [teet.util.datomic :as tu]
             [goog.math.Long]
             [teet.common.common-controller :as common-controller]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
-            [teet.util.datomic :as du]
-            [taoensso.timbre :as log]
-            [teet.land.land-model :as land-model]))
+            [taoensso.timbre :as log]))
 
 (defrecord ToggleLandUnit [unit])
 (defrecord SearchOnChange [attribute value])
@@ -44,6 +41,34 @@
                                      id)
                                   (not (:selected? unit)))))
     cad-units))
+
+
+(defn unit-last-updated [unit]
+  (let [timestamp-strs (-> unit
+                           (select-keys [:REGISTR :MUUDET :MOODUST] )
+                           vals)]
+    (->> timestamp-strs
+         (filter some?)
+         sort
+         last)))
+
+(defn unit-new?
+  "Decides whether we show it as \"NEW\" in the UI, for purposes of
+  deciding if it may be replacement for a deleted unit."
+  [tunnus units]
+  (let [this-unit (first (filter #(= tunnus (:TUNNUS %))
+                                 units))
+        deleted-units (filter :deleted units)
+        deleted-min-timestamp (->> deleted-units
+                                   (map unit-last-updated)
+                                   sort
+                                   first)]    
+    (if deleted-min-timestamp
+      (> (unit-last-updated this-unit) deleted-min-timestamp)
+      ;; else
+      (if this-unit
+        false
+        true)))) ;; new if not in the set of known cadastral units
 
 (defn cadastral-purposes [tunnus unit]
   (->> unit

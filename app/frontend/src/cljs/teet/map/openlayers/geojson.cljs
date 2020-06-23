@@ -16,14 +16,17 @@
 
 (defn load-features [^ol.source.Vector source url-or-data content-type _extent _resolution _projection]
   ;;(log/info "LOAD " url-or-data ", extent:" extent ", resolution: " resolution ", projection: " projection)
-  (let [add-features! (fn [json]
-                        ;;(js/console.log "loaded geojson: " json)
-                        (let [features (-> source
-                                           .getFormat
-                                           (.readFeatures json #js {"dataProjection" "EPSG:3301"}))]
-                          (doto source
-                            (.addFeatures features)
-                            .refresh)))]
+  (let [add-features! (fn [json]                        
+                        (assert (some? json) "null json received")
+                        (if-not (nil? (.-features json))
+                          (let [features (-> source
+                                             .getFormat
+                                             (.readFeatures json #js {"dataProjection" "EPSG:3301"}))]
+                            (doto source
+                              (.addFeatures features)
+                              .refresh))
+                          ;; else
+                          (log/warn "nil .features in received geojson")))]
     (-> (cond
           (object? url-or-data)
           (add-features! url-or-data)

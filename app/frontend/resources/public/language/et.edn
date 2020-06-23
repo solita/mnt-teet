@@ -370,6 +370,7 @@
   :no-active-mortgages "Aktiivsed hüpoteegid puuduvad",
   :total-area "Üldpind {area} m²",
   :unreliable "Halb andmete kvaliteet",
+  :new-cadastral-unit nil,
   :estate-compensation-success "Andmed salvestatud",
   :unit "üksus",
   :no-estate-compensations
@@ -379,6 +380,7 @@
   :total-cost "Kogumaksumus",
   :land-exchange "Vahetus",
   :add-compensation "+ Lisan kompensatsiooni",
+  :archived-unit nil,
   :estate-acquisition-cost "Maa soetusmaksumus",
   :estate "Kinnistu",
   :land-acquisition-saved "Maa omandamine edukalt salvestatud",
