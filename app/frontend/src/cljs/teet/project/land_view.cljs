@@ -294,7 +294,7 @@
 (defn archived-status []
   (let [status-text (tr [:land :archived-unit])]
     [:div {:class (<class common-styles/flex-align-center)}
-     [:div {:class (<class common-styles/status-circle-style {:color "#e0e0e0"})
+     [:div {:class (<class common-styles/status-circle-style {:color theme-colors/gray-lightest})
             :title status-text}]
      [:span {:style {:text-align :left}
              :class (<class common-styles/gray-text)}
@@ -308,10 +308,6 @@
    :position :relative
    :flex 1
    :flex-direction :column})
-
-(defn cadastral-unit-new-style
-  [] 
-  {:color "green"})
 
 (defn cadastral-unit-quality-style
   [quality]
@@ -346,7 +342,7 @@
       (if deleted-unit?
         [:div {:class (<class common-styles/space-between-center)}         
          [archived-status]
-         [:span {:color "#e0e0e0"}
+         [:span {:color theme-colors/gray-lightest}
           TUNNUS]]
         ;; else
         [:div {:class (<class common-styles/space-between-center)}
