@@ -82,4 +82,6 @@
 (let [vulns (mapcat dependency-vulns (:dependencies (read-report)))
       new-vulns (check-new-vulns (read-nvd-lock) vulns)]
   (post-annotations annotation-url head-sha vulns new-vulns)
-  )
+  (when (seq new-vulns)
+    (println (count new-vulns) " NEW vulnerabilities!")
+    (System/exit 1)))
