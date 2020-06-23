@@ -64,15 +64,7 @@
         deleted-min-timestamp (->> deleted-units
                                    (map unit-last-updated)
                                    sort
-                                   first)]
-    (println "deleted comparison timestamp:" deleted-min-timestamp " - returning" (if deleted-min-timestamp
-      (> (unit-last-updated this-unit) deleted-min-timestamp)
-      ;; else
-      false) "for" tunnus "/" (unit-last-updated this-unit))
-    (if (= "71901:001:0090" tunnus)
-      (println "data for 71901:001:0090 is" (pr-str this-unit)))
-    (if (= "71901:001:0091" tunnus)
-      (println "data for 71901:001:0091 is" (pr-str this-unit)))
+                                   first)]    
     (if deleted-min-timestamp
       (> (unit-last-updated this-unit) deleted-min-timestamp)
       ;; else

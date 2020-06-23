@@ -329,7 +329,6 @@
   ^{:key (str TUNNUS)}
   (let [cadastral-form (get cadastral-forms teet-id)
         deleted-unit? (:deleted unit)]
-    (log/info "deleted status: " deleted-unit? " for " KINNISTU TUNNUS)
     [:div {:class (<class cadastral-unit-container-style)}
      [:div {:class (<class cadastral-unit-quality-style quality)}
       [:span {:title (str MOOTVIIS " – " MUUDET)} (case quality
