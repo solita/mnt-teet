@@ -4,13 +4,10 @@
             [teet.util.collection :as cu]
             [teet.localization :refer [tr]]
             [teet.map.map-controller :as map-controller]
-            [teet.util.datomic :as tu]
             [goog.math.Long]
             [teet.common.common-controller :as common-controller]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
-            [teet.util.datomic :as du]
-            [taoensso.timbre :as log]
-            [teet.land.land-model :as land-model]))
+            [taoensso.timbre :as log]))
 
 (defrecord ToggleLandUnit [unit])
 (defrecord SearchOnChange [attribute value])
