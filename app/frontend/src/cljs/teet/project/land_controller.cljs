@@ -44,6 +44,42 @@
                                   (not (:selected? unit)))))
     cad-units))
 
+
+(defn unit-last-updated [unit]
+  (let [timestamp-strs (-> unit
+                           (select-keys [:REGISTR :MUUDET :MOODUST] )
+                           vals)]
+    (->> timestamp-strs
+         (filter some?)
+         sort
+         last)))
+
+(defn unit-new?
+  "Decides whether we show it as \"NEW\" in the UI, for purposes of
+  deciding if it may be replacement for a deleted unit."
+  [tunnus units]
+  (let [this-unit (first (filter #(= tunnus (:TUNNUS %))
+                                 units))
+        deleted-units (filter :deleted units)
+        deleted-min-timestamp (->> deleted-units
+                                   (map unit-last-updated)
+                                   sort
+                                   first)]
+    (println "deleted comparison timestamp:" deleted-min-timestamp " - returning" (if deleted-min-timestamp
+      (> (unit-last-updated this-unit) deleted-min-timestamp)
+      ;; else
+      false) "for" tunnus "/" (unit-last-updated this-unit))
+    (if (= "71901:001:0090" tunnus)
+      (println "data for 71901:001:0090 is" (pr-str this-unit)))
+    (if (= "71901:001:0091" tunnus)
+      (println "data for 71901:001:0091 is" (pr-str this-unit)))
+    (if deleted-min-timestamp
+      (> (unit-last-updated this-unit) deleted-min-timestamp)
+      ;; else
+      (if this-unit
+        false
+        true)))) ;; new if not in the set of known cadastral units
+
 (defn cadastral-purposes [tunnus unit]
   (->> unit
        :estate

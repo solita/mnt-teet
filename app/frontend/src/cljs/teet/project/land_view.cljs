@@ -328,8 +328,8 @@
   [e! update-cadastral-form-event estate-procedure-type cadastral-forms {:keys [teet-id TUNNUS KINNISTU MOOTVIIS MUUDET quality selected?] :as unit}]
   ^{:key (str TUNNUS)}
   (let [cadastral-form (get cadastral-forms teet-id)
-        new-unit? true ;; FIXME - add code in controller to check against project-associated cadastral id's
         deleted-unit? (:deleted unit)]
+    (log/info "deleted status: " deleted-unit? " for " KINNISTU TUNNUS)
     [:div {:class (<class cadastral-unit-container-style)}
      [:div {:class (<class cadastral-unit-quality-style quality)}
       [:span {:title (str MOOTVIIS " – " MUUDET)} (case quality
@@ -341,9 +341,6 @@
                   :on-click (e! land-controller/->ToggleLandUnit unit)
                   :class (<class cadastral-unit-style selected?)}
       [typography/SectionHeading {:style {:text-align :left}}
-       (when new-unit?
-         [:div {:class (<class cadastral-unit-new-style)}
-          (tr [:land :new-cadastral-unit])])
        (str (:L_AADRESS unit)
             " (" (land-controller/cadastral-purposes TUNNUS unit) ")")]
       (if deleted-unit?
