@@ -15,10 +15,7 @@
                                       :exclusions [net.minidev/json-smart]}
         net.minidev/json-smart {:mvn/version "2.3"}
 
-        ;; Database driver and libraries
-        org.postgresql/postgresql {:mvn/version "42.1.4"}
-        com.zaxxer/HikariCP {:mvn/version "2.6.1"}
-        webjure/jeesql {:mvn/version "0.4.7"}
+        ;; Datomic libraries
         com.datomic/client-cloud {:mvn/version "0.8.78"}
         com.datomic/ion {:mvn/version "0.9.35"}
 
@@ -28,9 +25,9 @@
         ;; AWS client
         amazonica {:mvn/version "0.3.146" :exclusions [com.amazonaws/aws-java-sdk
                                                        com.amazonaws/amazon-kinesis-client]}
-        com.amazonaws/aws-java-sdk-core {:mvn/version "1.11.623"}
-        com.amazonaws/aws-java-sdk-s3 {:mvn/version "1.11.623"}
-        com.amazonaws/aws-java-sdk-ssm {:mvn/version "1.11.623"}
+        com.amazonaws/aws-java-sdk-core {:mvn/version "1.11.807"}
+        com.amazonaws/aws-java-sdk-s3 {:mvn/version "1.11.807"}
+        com.amazonaws/aws-java-sdk-ssm {:mvn/version "1.11.807"}
 
         commons-io/commons-io {:mvn/version "2.6"}
 
