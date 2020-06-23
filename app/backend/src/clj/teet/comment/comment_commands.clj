@@ -29,7 +29,7 @@
                      [(.startsWith ^String ?type "image/")]
                      :in $ $user [?c ...]]
                    db
-                   [:user/id (:user/id user)]
+                   (user-model/user-ref user)
                    files))]
     (if-not (every? user-created-files files)
       (db-api/bad-request! "No such file")
@@ -64,7 +64,7 @@
                        '[?comment :comment/author ?author]]
                :in '[$ ?entity]}
         participants (disj (into (if manager-uid
-                                 #{manager-uid}
+                                 #{[:user/id manager-uid]}
                                  #{})
                                  ;; if entity id is a tuple for the first creation of estate-comments or owner-comments
                                  ;; This is because the tuple entity can't be resolved and thus will fail
@@ -162,7 +162,7 @@
      (into [{:db/id transact-id
              (comment-model/comments-attribute-for-entity-type entity-type)
              [(merge {:db/id "new-comment"
-                      :comment/author [:user/id (:user/id user)]
+                      :comment/author (user-model/user-ref user)
                       :comment/comment comment
                       ;; TODO: Can external partners set visibility?
                       :comment/visibility visibility
