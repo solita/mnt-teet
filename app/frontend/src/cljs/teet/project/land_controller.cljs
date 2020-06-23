@@ -159,8 +159,8 @@
     ;; (.log js/console "UFUI: a" (pr-str attribute) "v" (pr-str value))
     (let [f-value #(get-in app [:route :project :land-acquisition-filters %])
           f-select-value #(:value (f-value %)) ;; use f-select-value with form-select, but not with select-enum
-          filters [(fn est [unit] ; name-search filter (estate address really)
-                     (let [r  (field-includes? (or (:L_AADRESS unit) "") (f-value :estate-search-value))]                       #_(println "aaddress match?" (boolean r) (f-value :estate-search-value))
+          filters [(fn est [unit] ; estate id search filter
+                     (let [r (field-includes? (or (get-in unit [:estate :estate-id]) "") (f-value :estate-search-value))]                       #_(println "aaddress match?" (boolean r) (f-value :estate-search-value))
                        r))
                    (partial owner-filter-fn (f-value :owner-search-value))
                    (fn cad [unit] ;; cadastral
