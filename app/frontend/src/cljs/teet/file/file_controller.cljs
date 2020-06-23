@@ -24,6 +24,9 @@
 
 (defrecord DeleteAttachment [on-success-event file-id])
 
+(defrecord MarkUploadComplete [file-id on-success])
+(defrecord MarkUploadCompleteResponse [on-success response])
+
 (extend-protocol t/Event
 
   DeleteFile
@@ -128,13 +131,30 @@
                 (.then (fn [^js/Response resp]
                          (if (.-ok resp)
                            (do
-                             (log/info "Upload successfull, calling on-success: " on-success)
-                             (e! (update on-success
-                                         :file-results
-                                         (fnil conj []) file)))
+                             (log/info "Upload success, marking file as complete: " (:db/id file))
+                             (e! (->MarkUploadComplete (:db/id file)
+                                                       (update on-success
+                                                               :file-results
+                                                               (fnil conj []) file))))
                            ;; FIXME: notify somehow
                            (log/warn "Upload failed: " (.-status resp) (.-statusText resp)))))))))
 
+
+  MarkUploadComplete
+  (process-event [{:keys [file-id on-success]} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :file/upload-complete
+           :payload {:db/id file-id}
+           :result-event (partial ->MarkUploadCompleteResponse on-success)}))
+
+  MarkUploadCompleteResponse
+  (process-event [{:keys [on-success response]} app]
+    (log/info "Upload complete response: " response)
+    (t/fx app
+          (fn [e!]
+            (log/info "File marked as complete, continue with on-success event: " on-success)
+            (e! on-success))))
 
   UploadFinished
   (process-event [_ {:keys [query page params] :as app}]

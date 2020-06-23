@@ -954,7 +954,7 @@
            :db/cardinality :db.cardinality/one
            :db/unique :db.unique/identity
            :db/doc "Ensure there is only one owner-comments for an owner per project"}]]}
- 
+
  {:db/ident :migration/file-pos-number
   :txes [[{:db/ident :file/pos-number
            :db/valueType :db.type/long
@@ -985,4 +985,10 @@
            :db/valueType   :db.type/ref
            :db/doc         "User who manages the activity"}]]}
 
- ]
+ {:db/ident :migration/file-upload-status
+  :txes [[{:db/ident :file/upload-complete?
+           :db/cardinality :db.cardinality/one
+           :db/valueType :db.type/boolean
+           :db/doc "Set to true when upload is complete and file exists in S3"}]
+
+         teet.migration.file-upload-complete/existing-files-upload-complete]}]

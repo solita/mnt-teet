@@ -51,6 +51,7 @@
                     (d/q '[:find (pull ?f [*
                                            {:file/previous-version [:db/id]}
                                            {:meta/creator [:user/id :user/family-name :user/given-name]}])
+                           :where [?f :file/upload-complete? true]
                            :in $ [?f ...]] db file-ids))
         ;; Group files to first versions and next versions
         {next-versions true
@@ -94,4 +95,3 @@
   [db project-id pos-number]
   ;; Could be improved with some distinct query magic to query only the count
   (count (files-by-project-and-pos-number db project-id pos-number)))
-

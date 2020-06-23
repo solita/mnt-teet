@@ -71,6 +71,18 @@
                 ;; Take part after last underscore to skip over invalid metadata
                 (last (str/split n #"_")))))))
 
+(defcommand :file/upload-complete
+  {:doc "Mark file upload as complete"
+   :context {:keys [conn user db]}
+   :payload {id :db/id}
+   :pre [(file-db/own-file? db user id)]
+   ;; No need to check extra authorization again, as we check pre condition that this
+   ;; is the user's own uploaded file
+   :project-id nil
+   :authorization {}
+   :transact [{:db/id id
+               :file/upload-complete? true}]})
+
 (defcommand :file/upload
   {:doc "Upload new file to task."
    :context {:keys [conn user db]}
