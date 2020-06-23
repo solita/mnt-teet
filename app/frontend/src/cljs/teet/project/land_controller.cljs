@@ -34,6 +34,7 @@
 
 (defrecord RefreshEstateInfo [])
 (defrecord IncrementEstateCommentCount [estate-id])
+(defrecord IncrementUnitCommentCount [unit-id])
 
 (defn toggle-selected-unit
   [id cad-units]
@@ -331,7 +332,11 @@
 
   IncrementEstateCommentCount
   (process-event [{estate-id :estate-id} app]
-    (update-in app [:route :project :estate-comment-count estate-id] (fnil inc 0))))
+    (update-in app [:route :project :estate-comment-count estate-id] (fnil inc 0)))
+
+  IncrementUnitCommentCount
+  (process-event [{unit-id :unit-id} app]
+    (update-in app [:route :project :unit-comment-count unit-id] (fnil inc 0))))
 
 (defn- estate-owner-process-fees [{owners :omandiosad :as _estate}]
   (let [private-owners

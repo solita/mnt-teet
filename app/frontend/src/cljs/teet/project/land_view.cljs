@@ -312,9 +312,14 @@
 
 
 (defn cadastral-unit
-  [e! update-cadastral-form-event estate-procedure-type cadastral-forms {:keys [teet-id TUNNUS KINNISTU MOOTVIIS MUUDET quality selected?] :as unit}]
+  [{:keys [e! project on-change estate-procedure-type cadastral-forms]} {:keys [teet-id TUNNUS KINNISTU MOOTVIIS MUUDET quality selected?] :as unit}]
   ^{:key (str TUNNUS)}
-  (let [cadastral-form (get cadastral-forms teet-id)]
+  (let [cadastral-form (get cadastral-forms teet-id)
+        saved-pos (:land-acquisition/pos-number
+                    (some #(when (= teet-id (:land-acquisition/cadastral-unit %))
+                             %)
+                          (:land-acquisitions project)))
+        _ (println "CADASTRAL FORMS IN PROJECT " (:land/cadastral-forms project))]
     [:div {:class (<class cadastral-unit-container-style)}
      [:div {:class (<class cadastral-unit-quality-style quality)}
       [:span {:title (str MOOTVIIS " – " MUUDET)} (case quality
@@ -339,13 +344,35 @@
         unit
         quality
         estate-procedure-type
-        update-cadastral-form-event
+        on-change
         cadastral-form]
        [Divider {:style {:margin "1rem 0"}}]
        [typography/BoldGreyText {:style {:text-transform :uppercase}}
         (tr [:land :unit-info])]
+       ;; add when the pos number exists
+       (when saved-pos
+         [Link {:style {:display :block}
+                :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "files")}
+          [query/query {:e! e!
+                        :query :land/file-count-by-position-number
+                        :args {:thk.project/id (:thk.project/id project)
+                               :file/pos-number saved-pos}
+                        :simple-view [(fn estate-comment-count [c]
+                                        [common/count-chip {:label c}])]
+                        :loading-state "-"}]
+          (tr [:land-modal-page :files])])
+
        [Link {:style {:display :block}
               :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "comments")}
+        [query/query {:e! e! :query :comment/count
+                      :state-path [:route :project :unit-comment-count teet-id]
+                      :state (get-in project [:unit-comment-count teet-id])
+                      :args {:db/id [:unit-comments/project+unit-id [(:db/id project) teet-id]]
+                             :for :unit-comments}
+                      :simple-view [(fn unit-comment-count [c]
+                                      [common/count-chip {:label c}])]
+                      :loading-state "-"}]
+
         (tr [:land-modal-page :comments])]]]]))
 
 (defn group-style
@@ -424,10 +451,12 @@
           (tr [:land-modal-page :comments])]]]]
       :children
       (mapc
-        (r/partial cadastral-unit e!
-                   land-controller/->UpdateCadastralForm
-                   (get-in estate-forms [estate-id :estate-procedure/type])
-                   cadastral-forms)
+        #(cadastral-unit {:e! e!
+                          :project project
+                          :on-change land-controller/->UpdateCadastralForm
+                          :estate-procedure/type (get-in estate-forms [estate-id :estate-procedure/type])
+                          :cadastral-forms cadastral-forms}                  ;; TODO select only cadastral form for this unit
+                         %)
         units)}]))
 
 (defn owner-group
@@ -457,7 +486,9 @@
        :children
        (mapc
          (fn [unit-group]
-           [estate-group e! project open-estates cadastral-forms estate-forms unit-group])
+           [estate-group e! project open-estates cadastral-forms
+            estate-forms ;; TODO only the form of THIS estate
+            unit-group])
          (group-by
            (fn [unit]
              (get-in unit [:estate :estate-id]))
@@ -585,22 +616,23 @@
     [:div {:class (<class common-styles/gray-container-style)}
      (if (not-empty mortgages)
        (for [mortgage mortgages]
-         [common/heading-and-grey-border-body {:heading [:<>
-                                          [typography/BoldGreyText {:style {:display :inline}}
-                                           (str
-                                             (:kande_liik_tekst mortgage)
-                                             " "
-                                             (:koormatise_rahaline_vaartus mortgage)
-                                             " "
-                                             (:koormatise_rahalise_vaartuse_valuuta mortgage)
-                                             " ")
-                                           [typography/GreyText {:style {:display :inline}}
-                                            (format/parse-date-string (:kande_alguskuupaev mortgage))]]]
-                                :body (-> mortgage
-                                          :kande_tekst
-                                          first
-                                          second
-                                          first)}])
+         [common/heading-and-grey-border-body
+          {:heading [:<>
+                     [typography/BoldGreyText {:style {:display :inline}}
+                      (str
+                        (:kande_liik_tekst mortgage)
+                        " "
+                        (:koormatise_rahaline_vaartus mortgage)
+                        " "
+                        (:koormatise_rahalise_vaartuse_valuuta mortgage)
+                        " ")
+                      [typography/GreyText {:style {:display :inline}}
+                       (format/parse-date-string (:kande_alguskuupaev mortgage))]]]
+           :body (-> mortgage
+                     :kande_tekst
+                     first
+                     second
+                     first)}])
        [:p (tr [:land :no-active-mortgages])])]))
 
 
@@ -803,15 +835,18 @@
                                 ;; Target is taken from url parameter, so probably better to use something else as target
                                 ;; for url and fetch the teet-id from the land-unit through project?
                                 :entity-id [:unit-comments/project+unit-id [(:db/id project) target]]
+                                :after-comment-added-event
+                                #(land-controller/->IncrementUnitCommentCount target)
                                 }])
 
 
 (defmethod unit-modal-content :files
   [{:keys [estate-info e! target app project]}]
-  (log/info "TARGET: " target)
   (r/with-let [selected-file (r/atom nil)]
     [:div.land-unit-modal
-     (if-let [pos (get-in project [:land/cadastral-forms target :land-acquisition/pos-number])]
+     (if-let [pos (some #(when (= target (:land-acquisition/cadastral-unit %))
+                           (:land-acquisition/pos-number %))
+                        (:land-acquisitions project))]
        [query/query {:e! e!
                      :query :land/files-by-position-number
                      :args {:thk.project/id (:thk.project/id project)
@@ -827,12 +862,12 @@
                                      :entity-id (:db/id f)}])]))
 
 (defmethod land-view-modal :unit
-  [{:keys [e! app modal-page project target estate-info] :as opts}]
+  [{:keys [e! app modal-page project target estate-info]}]
   {:title (tr [:land-modal-page (keyword modal-page)])
    :left-panel [modal-left-panel-navigation
                 modal-page
-                (tr [:land :unit-info])                     ;;localization
-                [:files                                     ;;TODO add translation for [:land-modal-page :files]
+                (tr [:land :unit-info])
+                [:files
                  :comments]]
    :right-panel [unit-modal-content {:e! e!
                                      :modal-page modal-page
@@ -842,7 +877,7 @@
                                      :estate-info estate-info}]})
 
 (defmethod land-view-modal :owner
-  [{:keys [e! app modal-page project estate-info] :as opts}]
+  [{:keys [e! app modal-page project estate-info]}]
   {:title (tr [:land-modal-page (keyword modal-page)])
    :left-panel [modal-left-panel-navigation
                 modal-page
