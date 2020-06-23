@@ -193,8 +193,8 @@
                                                        (name task-group) "-"
                                                        (name task-type))]
                                [(merge {:db/id id-placeholder
-                                        :task/estimated-end-date estimated-start-date
-                                        :task/estimated-start-date estimated-end-date
+                                        :task/estimated-end-date estimated-end-date
+                                        :task/estimated-start-date estimated-start-date
                                         :task/status :task.status/not-started
                                         :task/group task-group
                                         :task/type task-type
