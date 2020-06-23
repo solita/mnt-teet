@@ -16,7 +16,7 @@
   :manager :full,
   :internal-consultant :full,
   :external-consultant :full,
-  :authenticated-guest :full,
+  :authenticated-guest :read,
   :guest :read},
  :projects/projects-search
  {:admin :read,
@@ -62,8 +62,7 @@
  {:admin :full,
   :manager :full,
   :internal-consultant :full,
-  :external-consultant :full,
-  :authenticated-guest :link},
+  :external-consultant :full},
  :document/edit-comment
  {:admin :full,
   :manager :link,
@@ -91,6 +90,8 @@
   :manager :full,
   :internal-consultant :full,
   :external-consultant :link},
+ :projects/set-comment-visibility
+ {:admin :full, :manager :full, :internal-consultant :link},
  :projects/projects-listing
  {:admin :read,
   :manager :read,
@@ -98,8 +99,8 @@
   :external-consultant :read,
   :authenticated-guest :read,
   :guest :read},
- :admin/remove-user {:admin :full},
- :admin/add-user {:admin :full},
+ :admin/remove-user {:admin :full, :manager :link},
+ :admin/add-user {:admin :full, :manager :link},
  :land/view-cadastral-data
  {:admin :full,
   :manager :full,
@@ -121,10 +122,7 @@
   :internal-consultant :read,
   :external-consultant :read},
  :project/edit-comments
- {:admin :full,
-  :manager :link,
-  :internal-consultant :link,
-  :authenticated-guest :link},
+ {:admin :full, :manager :link, :internal-consultant :link},
  :task/submit-results
  {:admin :full,
   :manager :full,
@@ -144,7 +142,7 @@
  :project/delete-comments
  {:admin :full, :manager :link, :internal-consultant :link},
  :project/track-comment-status {:admin :full, :manager :full},
- :admin/change-user-role {:admin :full},
+ :admin/change-user-role {:admin :full, :manager :link},
  :activity/edit-activity
  {:admin :full,
   :manager :full,
@@ -176,7 +174,7 @@
   :authenticated-guest :read,
   :guest :read},
  :maintenance/write-asset {:admin :full, :manager :full},
- :admin/set-user-role {:admin :full},
+ :admin/set-user-role {:admin :full, :manager :link},
  :maintenance/asset-listing
  {:admin :full,
   :manager :full,
@@ -207,7 +205,7 @@
   :authenticated-guest :read,
   :guest :read},
  :land/view-personal-information-of-estate-owners
- {:admin :full, :manager :full},
+ {:admin :full, :manager :link},
  :document/view-document
  {:admin :full,
   :manager :full,
@@ -220,8 +218,7 @@
  {:admin :full,
   :manager :full,
   :internal-consultant :full,
-  :external-consultant :full,
-  :authenticated-guest :full},
+  :external-consultant :full},
  :maintenance/comment-asset
  {:admin :full,
   :manager :full,

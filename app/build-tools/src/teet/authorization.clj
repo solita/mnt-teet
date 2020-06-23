@@ -5,8 +5,9 @@
 
 (defn- keywordize [s]
   (-> s
-      str/trim
       str/lower-case
+      (str/replace #"\([^)]+\)" "")
+      str/trim
       (str/replace #" +" "-")
       keyword))
 
