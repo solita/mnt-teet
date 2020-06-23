@@ -1,0 +1,4 @@
+;; If there are new vulnerability names that are not in this list
+;; the NVD scan github action will fail
+#{"CVE-2018-10054" ; Datomic H2 storage, we don't use
+  }
