@@ -1,0 +1,17 @@
+;; If there are new vulnerability names that are not in this list
+;; the NVD scan github action will fail
+#{"CVE-2018-10054" ; Datomic H2 storage, we don't use
+
+  "CVE-2020-5234" ; msgpack is about C# impl, not java
+  "CVE-2019-12415" ; code execution in excel transformation, we are not reading user provided excel files
+
+  ;; multiple jackson databind vulnerabilities about classes not being in blocklist
+  ;; jackson is included via AWS sdk, but we are not using it to deserialize user provided data
+  "CVE-2017-15095" "CVE-2017-17485" "CVE-2018-1000873" "CVE-2018-11307" "CVE-2018-14719" "CVE-2018-14720"
+  "CVE-2018-14721" "CVE-2018-19360" "CVE-2018-19361" "CVE-2018-19362" "CVE-2018-5968" "CVE-2018-7489"
+  "CVE-2019-14540" "CVE-2019-14893" "CVE-2019-16335" "CVE-2019-16942" "CVE-2019-16943" "CVE-2019-17267"
+  "CVE-2019-17531" "CVE-2019-20330" "CVE-2020-10672" "CVE-2020-10673" "CVE-2020-10968" "CVE-2020-10969"
+  "CVE-2020-11111" "CVE-2020-11112" "CVE-2020-11113" "CVE-2020-11619" "CVE-2020-11620" "CVE-2020-14060"
+  "CVE-2020-14061" "CVE-2020-14062" "CVE-2020-8840" "CVE-2020-9546" "CVE-2020-9547" "CVE-2020-9548"
+  "CWE-611: Improper Restriction of XML External Entity Reference ('XXE')"
+  }

@@ -318,13 +318,15 @@
                                                              files)}))}))}
        (str "+ " (tr [:comment :add-images]))]])])
 
-(defn- comment-form-defaults [entity-type]
+(defn- comment-form-defaults [entity-type can-set-visibility?]
   (merge
    (case entity-type
      :file {:comment/track? true}
      {})
    {:comment/comment ""
-    :comment/visibility :comment.visibility/internal}))
+    :comment/visibility (if can-set-visibility?
+                          :comment.visibility/internal
+                          :comment.visibility/all)}))
 
 (defn visibility-selection-style
   []
@@ -337,8 +339,13 @@
            entity-id
            show-comment-form? after-comment-added-event]
     :or {show-comment-form? true}}]
-  (r/with-let [[comment-form ->UpdateCommentForm]
-               (common-controller/internal-state (comment-form-defaults entity-type)
+  (r/with-let [can-set-visibility? (authorization-check/authorized? @app-state/user
+                                                                    :projects/set-comment-visibility
+                                                                    {})
+               initial-comment-form (comment-form-defaults entity-type
+                                                           can-set-visibility?)
+               [comment-form ->UpdateCommentForm]
+               (common-controller/internal-state initial-comment-form
                                                  {:merge? true})]
     (let [comments (get-in app [:comments-for-entity entity-id])]
       [:div
@@ -364,7 +371,7 @@
                       :value @comment-form
                       :on-change-event ->UpdateCommentForm
                       :save-event #(let [{:comment/keys [comment files visibility track? mentions]} @comment-form]
-                                     (reset! comment-form (comment-form-defaults entity-type))
+                                     (reset! comment-form initial-comment-form)
                                      (comments-controller/->CommentOnEntity
                                       entity-type entity-id comment files visibility track? mentions
                                       after-comment-added-event))
@@ -373,10 +380,11 @@
           [:div {:class (<class common-styles/gray-container-style)}
            [:div {:class (<class common-styles/heading-and-action-style)}
             [typography/Heading2 (tr [:document :new-comment])]
-            [form/field :comment/visibility
-             [select/select-enum {:e! e! :attribute :comment/visibility :tiny-select? true
-                                  :show-empty-selection? false
-                                  :show-label? false :class (<class visibility-selection-style)}]]]
+            (when can-set-visibility?
+              [form/field :comment/visibility
+               [select/select-enum {:e! e! :attribute :comment/visibility :tiny-select? true
+                                    :show-empty-selection? false
+                                    :show-label? false :class (<class visibility-selection-style)}]])]
            [:div {:class (<class form-field-spacer)}
             [form/field :comment/comment
              [mentions-input {:e! e!}]

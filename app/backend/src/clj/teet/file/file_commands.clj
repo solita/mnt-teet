@@ -14,7 +14,7 @@
 
 
 (defn- find-previous-version [db task-id previous-version]
-  (if-let [old-file (ffirst (d/q '[:find (pull ?f [:db/id :file/version])
+  (if-let [old-file (ffirst (d/q '[:find (pull ?f [:db/id :file/version :file/pos-number])
                                    :in $ ?f ?t
                                    :where
                                    [?t :task/files ?f]]
@@ -91,6 +91,8 @@
                                              :file/version version}
                                             (when old-file
                                               {:file/previous-version (:db/id old-file)})
+                                            (when-let [old-pos-number (:file/pos-number old-file)]
+                                              {:file/pos-number old-pos-number})
                                             (creation-meta user))]}])
               t-id (or task-id (get-in res [:tempids "new-task"]))
               file-id (get-in res [:tempids "new-file"])

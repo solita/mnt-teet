@@ -42,3 +42,15 @@
                      {:key (str id)})
                    component))))
            collections)))
+
+(defn lookup-tracker
+  "UI debug helper to see what is being looked up"
+  [log-prefix obj]
+  (let [get-key (fn [k not-found]
+                  (js/console.log log-prefix (pr-str k))
+                  (get obj k not-found))]
+    (reify cljs.core/ILookup
+      (-lookup [_ k]
+        (get-key k nil))
+      (-lookup [_ k not-found]
+        (get-key k not-found)))))

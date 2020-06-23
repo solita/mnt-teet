@@ -60,7 +60,7 @@
                 [(get-else $ ?p :permission/valid-until ?time) ?time-until]
                 [(<= ?time-from ?time)]
                 [(<= ?time ?time-until)]]
-              db user time))))
+              db (user-model/user-ref user) time))))
 
 
 (defn user-permissions-in-project

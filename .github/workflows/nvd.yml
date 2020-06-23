@@ -14,7 +14,6 @@ jobs:
       env:
         cache-name: cache-m2-repo
       with:
-        # npm cache files are stored in `~/.npm` on Linux/macOS
         path: ~/.m2
         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/deps.edn') }}
         restore-keys: |
@@ -25,11 +24,14 @@ jobs:
       uses: DeLaGuardo/setup-clojure@2.0
       with:
         tools-deps: '1.10.1.510'
+    - name: install babashka
+      run: |
+        curl -s https://raw.githubusercontent.com/borkdude/babashka/master/install -o install-babashka
+        chmod +x install-babashka
+        sudo ./install-babashka
     - name: run nvd
-      run: ./nvd.bash
-      working-directory: app/backend/
-    - uses: ashley-taylor/junit-report-annotations-action@master
-      if: always()
-      with:
-        path: app/backend/target/nvd/dependency-check-junit.xml
-        access-token: ${{ secrets.GITHUB_TOKEN }}
+      run: ./ci/scripts/nvd.clj
+      env:
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_RUN_ID: ${{ github.run_id }}

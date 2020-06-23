@@ -185,3 +185,15 @@ and the compensation info as the value."
                                               :link :thk.project/owner}}}
   (file-db/files-by-project-and-pos-number
    db [:thk.project/id id] pos))
+
+(defquery :land/file-count-by-position-number
+  {:doc "Fetch files by position number"
+   :context {:keys [db user]}
+   :args {id :thk.project/id
+          pos :file/pos-number}
+   :project-id [:thk.project/id id]
+   :authorization {:land/view-cadastral-data {:eid [:thk.project/id id]
+                                              :link :thk.project/owner}}
+   :pre [(some? pos)]}
+  (file-db/file-count-by-project-and-pos-number
+    db [:thk.project/id id] pos))

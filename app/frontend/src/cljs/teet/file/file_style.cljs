@@ -4,5 +4,8 @@
   []
   {:display :flex
    :flex-direction :row
-   :align-items :flex-start
-   :justify-content :space-between})
+   :align-items :center
+   :justify-content :space-between
+   :padding "2px"
+   :margin-bottom "0.25rem"})
+

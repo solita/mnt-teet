@@ -377,8 +377,7 @@
                    :style {:flex 1
                            :display :flex
                            :flex-direction :column
-                           :justify-content :space-between
-                           :overflow :hidden}}
+                           :justify-content :space-between}}
                   (when id
                     {:id id}))
      (context/provide

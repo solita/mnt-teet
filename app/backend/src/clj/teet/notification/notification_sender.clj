@@ -77,4 +77,4 @@
                 :when to]
           (log/info "sending to: " to ", subject: " subject ", body: " body)
           (send-email from to subject body))))
-    :ok))
+    "{\"success\": true}"))
