@@ -120,7 +120,7 @@
         [form/footer2]]]]]))
 
 (defn task-basic-info
-  [e! {:task/keys [estimated-end-date assignee actual-end-date status] :as _task}]
+  [{:task/keys [estimated-end-date assignee actual-end-date status] :as _task}]
   [:div.task-basic-info {:class [(<class common-styles/flex-row-space-between) (<class common-styles/margin-bottom 1)]}
    [:div.task-basic-info-end-date
     [typography/BoldGreyText (tr [:common :deadline])]
@@ -164,7 +164,7 @@
   [:div.task-details
    (when description
      [typography/Paragraph description])
-   [task-basic-info e! task]
+   [task-basic-info task]
    [file-view/file-table files]
    (when (task-model/can-submit? task)
      [:<>
