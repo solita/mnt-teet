@@ -375,6 +375,7 @@
   "This estate does not have any active mortgages",
   :total-area "Total area {area} m²",
   :unreliable "Bad data quality",
+  :new-cadastral-unit "NEW",
   :estate-compensation-success "Estate compensation saved",
   :unit "unit",
   :no-estate-compensations
@@ -384,6 +385,7 @@
   :total-cost "Total cost",
   :land-exchange "Exchange",
   :add-compensation "+ Add compensation",
+  :archived-unit "(Archived)",
   :estate-acquisition-cost "Estate acquisition cost",
   :estate "Estate",
   :land-acquisition-saved "Land acquisition saved successfully",
