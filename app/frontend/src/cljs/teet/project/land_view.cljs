@@ -312,14 +312,10 @@
 
 
 (defn cadastral-unit
-  [{:keys [e! project on-change estate-procedure-type cadastral-forms]} {:keys [teet-id TUNNUS KINNISTU MOOTVIIS MUUDET quality selected?] :as unit}]
-  ^{:key (str TUNNUS)}
-  (let [cadastral-form (get cadastral-forms teet-id)
-        saved-pos (:land-acquisition/pos-number
-                    (some #(when (= teet-id (:land-acquisition/cadastral-unit %))
-                             %)
-                          (:land-acquisitions project)))
-        _ (println "CADASTRAL FORMS IN PROJECT " (:land/cadastral-forms project))]
+  [{:keys [e! project-info on-change estate-procedure-type cadastral-form]} {:keys [teet-id TUNNUS KINNISTU MOOTVIIS MUUDET quality selected?] :as unit}]
+  (let [saved-pos (some #(when (= teet-id (:land-acquisition/cadastral-unit %))
+                           (:land-acquisition/pos-number %))
+                        (:land-acquisitions project-info))]
     [:div {:class (<class cadastral-unit-container-style)}
      [:div {:class (<class cadastral-unit-quality-style quality)}
       [:span {:title (str MOOTVIIS " – " MUUDET)} (case quality
@@ -355,7 +351,7 @@
                 :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "files")}
           [query/query {:e! e!
                         :query :land/file-count-by-position-number
-                        :args {:thk.project/id (:thk.project/id project)
+                        :args {:thk.project/id (:thk.project/id project-info)
                                :file/pos-number saved-pos}
                         :simple-view [(fn estate-comment-count [c]
                                         [common/count-chip {:label c}])]
@@ -366,8 +362,8 @@
               :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "comments")}
         [query/query {:e! e! :query :comment/count
                       :state-path [:route :project :unit-comment-count teet-id]
-                      :state (get-in project [:unit-comment-count teet-id])
-                      :args {:db/id [:unit-comments/project+unit-id [(:db/id project) teet-id]]
+                      :state (get-in project-info [:unit-comment-count teet-id])
+                      :args {:db/id [:unit-comments/project+unit-id [(:db/id project-info) teet-id]]
                              :for :unit-comments}
                       :simple-view [(fn unit-comment-count [c]
                                       [common/count-chip {:label c}])]
@@ -384,14 +380,14 @@
    :padding "0.5rem"})
 
 (defn estate-group
-  [e! project open-estates cadastral-forms estate-forms [estate-id units]]
+  [e! project-info open-estates cadastral-forms estate-form [estate-id units]]
   (let [estate (:estate (first units))
 
         ;;these are all done just to calculate the total cost for the estate, there might be an easier way
         estates-land-acquisitions (land-model/estate-land-acquisitions estate-id
-                                                                       (:land/units project)
-                                                                       (:land-acquisitions project))
-        estate-procedure (land-model/estate-compensation estate-id (:estate-compensations project))
+                                                                       (:land/units project-info)
+                                                                       (:land-acquisitions project-info))
+        estate-procedure (land-model/estate-compensation estate-id (:estate-compensations project-info))
         total-estate-cost (land-model/total-estate-cost estate-procedure
                                                         estates-land-acquisitions)]
     [common/hierarchical-container
@@ -418,7 +414,7 @@
          :mount-on-enter true}
         [:div {:class (<class estate-compensation-form)}
          [estate-group-form e! estate
-          (r/partial land-controller/->UpdateEstateForm estate) (get estate-forms estate-id)]
+          (r/partial land-controller/->UpdateEstateForm estate) estate-form]
          [Divider {:style {:margin "1rem 0"}}]
          [typography/BoldGreyText {:style {:text-transform :uppercase}}
           (tr [:land :estate-acquisition-cost])]
@@ -442,8 +438,8 @@
                 :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "comments")}
           [query/query {:e! e! :query :comment/count
                         :state-path [:route :project :estate-comment-count estate-id]
-                        :state (get-in project [:estate-comment-count estate-id])
-                        :args {:db/id [:estate-comments/project+estate-id [(:db/id project) estate-id]]
+                        :state (get-in project-info [:estate-comment-count estate-id])
+                        :args {:db/id [:estate-comments/project+estate-id [(:db/id project-info) estate-id]]
                                :for :estate-comments}
                         :simple-view [(fn estate-comment-count [c]
                                         [common/count-chip {:label c}])]
@@ -451,16 +447,17 @@
           (tr [:land-modal-page :comments])]]]]
       :children
       (mapc
-        #(cadastral-unit {:e! e!
-                          :project project
-                          :on-change land-controller/->UpdateCadastralForm
-                          :estate-procedure/type (get-in estate-forms [estate-id :estate-procedure/type])
-                          :cadastral-forms cadastral-forms}                  ;; TODO select only cadastral form for this unit
-                         %)
+        (fn [unit]
+          [cadastral-unit {:e! e!
+                           :project-info project-info
+                           :on-change land-controller/->UpdateCadastralForm
+                           :estate-procedure/type (:estate-procedure/type estate-form)
+                           :cadastral-form (get cadastral-forms (:teet-id unit))}
+           unit])
         units)}]))
 
 (defn owner-group
-  [e! project open-estates cadastral-forms estate-forms [owner units]]
+  [e! project-info open-estates cadastral-forms estate-forms [owner units]]
   ^{:key (str owner)}
   [:div {:style {:margin-bottom "2rem"}}
    (let [owners (get-in (first units) [:estate :omandiosad])
@@ -485,9 +482,12 @@
                                    (tr [:land :units]))]]
        :children
        (mapc
-         (fn [unit-group]
-           [estate-group e! project open-estates cadastral-forms
-            estate-forms ;; TODO only the form of THIS estate
+         (fn [[estate-id units :as unit-group]]
+           [estate-group e!
+            project-info
+            open-estates
+            (select-keys cadastral-forms (map :teet-id units))
+            (get estate-forms estate-id)
             unit-group])
          (group-by
            (fn [unit]
@@ -561,7 +561,8 @@
        (mapc
         (fn [group]
           [owner-group e!
-           project
+           (select-keys project
+                        [:db/id :thk.project/id :land/units :land-acquisitions :unit-comment-count :estate-compensations :estate-comment-count])
            (or (:land/open-estates project) #{})
            (:land/cadastral-forms project)
            (:land/estate-forms project)
