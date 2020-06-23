@@ -11,16 +11,13 @@
         dk.ative/docjure {:mvn/version "1.13.0"}
 
         ;; JWT and JWK
-        com.nimbusds/nimbus-jose-jwt {:mvn/version "7.8"
+        com.nimbusds/nimbus-jose-jwt {:mvn/version "7.9"
                                       :exclusions [net.minidev/json-smart]}
         net.minidev/json-smart {:mvn/version "2.3"}
 
         ;; Datomic libraries
         com.datomic/client-cloud {:mvn/version "0.8.78"}
         com.datomic/ion {:mvn/version "0.9.35"}
-
-        ;; Geometry libraries
-        org.locationtech.jts/jts-core {:mvn/version "1.16.1"}
 
         ;; AWS client
         amazonica {:mvn/version "0.3.146" :exclusions [com.amazonaws/aws-java-sdk
