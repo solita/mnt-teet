@@ -79,8 +79,7 @@
                   :textarea
                   :input)]
     [:label {:for id
-             :style style
-             :class (<class label-style)}
+             :style style}
      (when-not hide-label?
        (if label-element
          [label-element label (when required [common/required-astrix])]
