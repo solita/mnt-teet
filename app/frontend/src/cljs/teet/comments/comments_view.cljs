@@ -126,9 +126,12 @@
                                      :comment-id (:db/id comment-data)
                                      :on-success-event comments-controller/->UpdateEditCommentForm}]]]
 
-      [:div {:class (<class form-field-spacer)}
-       [form/field :comment/visibility
-        [select/select-enum {:e! e! :attribute :comment/visibility}]]]]
+      (when (authorization-check/authorized? @app-state/user
+                                             :projects/set-comment-visibility
+                                             {})
+        [:div {:class (<class form-field-spacer)}
+         [form/field :comment/visibility
+          [select/select-enum {:e! e! :attribute :comment/visibility}]]])]
 
      [form/footer2]]))
 
