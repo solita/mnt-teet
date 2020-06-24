@@ -20,14 +20,18 @@
          (keyword? type)
          (some? target)
          (or (nil? project) (project-model/project-ref project))]}
-  (merge {:db/id (str "new-notification-" (str (java.util.UUID/randomUUID)))
-          :notification/receiver (user-model/user-ref to)
-          :notification/status :notification.status/unread
-          :notification/target target
-          :notification/type type}
-         (when project
-           {:notification/project (project-model/project-ref project)})
-         (meta-model/creation-meta from)))
+  (let [from-ref (user-model/user-ref from)
+        to-ref (user-model/user-ref to)]
+    (if-not (= to-ref from-ref)
+      (merge {:db/id (str "new-notification-" (str (java.util.UUID/randomUUID)))
+              :notification/receiver to-ref
+              :notification/status :notification.status/unread
+              :notification/target target
+              :notification/type type}
+             (when project
+               {:notification/project (project-model/project-ref project)})
+             (meta-model/creation-meta from))
+      {})))
 
 (def notification-keys [:db/id :notification/status
                         :notification/target :notification/type
