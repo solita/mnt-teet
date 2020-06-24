@@ -108,6 +108,8 @@
    :padding-right "1rem"
    :padding-top "0.25rem"
    :padding-bottom "0.25rem"
+   :margin-bottom "0.25rem"
+   :margin-top "0.25rem"
    :background-color (case level
                        0 theme-colors/gray-lightest
                        1 theme-colors/gray-lighter
