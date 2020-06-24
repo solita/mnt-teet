@@ -62,7 +62,7 @@
         deleted-min-timestamp (->> deleted-units
                                    (map unit-last-updated)
                                    sort
-                                   first)]    
+                                   first)]
     (if deleted-min-timestamp
       (> (unit-last-updated this-unit) deleted-min-timestamp)
       ;; else
