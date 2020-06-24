@@ -1,5 +1,6 @@
 (ns teet.login.login-commands
-  (:require [teet.db-api.core :as db-api :refer [defcommand]]
+  (:require [clojure.spec.alpha :as s]
+            [teet.db-api.core :as db-api :refer [defcommand]]
             [teet.environment :as environment]
             [teet.auth.jwt-token :as jwt-token]
             [datomic.client.api :as d]
