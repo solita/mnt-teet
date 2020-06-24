@@ -146,7 +146,7 @@
 (defn- comment-text
   "Split comment text and highlight user mentions."
   [text]
-  [:span
+  [:span {:style {:white-space :pre-wrap}}
    (doall
     (map-indexed
      (fn [i part]
@@ -276,9 +276,11 @@
       (process-event [_ app]
         (swap! internal-state-atom update :comment/comment
                (fn [old-value]
-                 (if (not-empty old-value)
-                   (str old-value "\n" new-value)
-                   new-value)))
+                 (str
+                  (if (not-empty old-value)
+                    (str old-value "\n" new-value)
+                    new-value)
+                  "\n")))
         (animate/scroll-into-view-by-id! "new-comment-input" {:behavior :smooth})
         (js/setTimeout #(animate/focus-by-id! "new-comment-input")
                        500)
