@@ -3,7 +3,6 @@
                :cljs [cljs.reader :as reader])
             #?(:cljs [teet.app-state :as app-state])
             #?(:cljs [teet.ui.project-context :as project-context])
-            #?(:cljs [teet.ui.query :as query])
             [teet.util.collection :as cu]
             [clojure.set :as set]
             [teet.log :as log]))
@@ -78,13 +77,6 @@
        (throw (ex-info "Unauthorized" {:user          user
                                        :functionality functionality
                                        :entity        entity})))))
-
-#?(:cljs
-   (defn query-request-permissions! [e!]
-     (e! (query/->Query :authorization/permissions
-                        {}
-                        [:authorization/permissions]
-                        nil))))
 
 #?(:cljs
    (defn when-authorized

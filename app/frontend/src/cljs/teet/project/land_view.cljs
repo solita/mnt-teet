@@ -18,6 +18,7 @@
             [teet.project.project-controller :as project-controller]
             [teet.ui.form :as form]
             [teet.ui.select :as select]
+            [teet.ui.icons :as icons]
             [teet.util.datomic :as du]
             [teet.ui.common :as common]
             [teet.comments.comments-view :as comments-view]
@@ -266,25 +267,40 @@
         ^{:attribute :land-acquisition/registry-number}
          [TextField {}])]]))
 
+(defn land-acquisition-status-color
+  [impact status]
+  (cond
+    (and (= impact :land-acquisition.impact/purchase-needed)
+         (= status nil))
+    theme-colors/red
+    (and (= impact :land-acquisition.impact/purchase-needed)
+         (= status :land-acquisition.status/in-progress-problematic))
+    theme-colors/red
+    (and (= impact :land-acquisition.impact/purchase-needed)
+         (= status :land-acquisition.status/in-progress))
+    theme-colors/yellow
+    (and (= impact :land-acquisition.impact/purchase-needed)
+         (= status :land-acquisition.status/in-progress-ready))
+    theme-colors/green
+    (= status :land-acquisition.status/completed)
+    theme-colors/green
+    :else
+    theme-colors/gray-lighter))
+
 (defn acquisition-impact-status
   [impact status]
   (let [impact (if impact
                  impact
                  :land-acquisition.impact/undecided)
-        color (case impact
-                :land-acquisition.impact/purchase-needed
-                theme-colors/red
-                :land-acquisition.impact/purchase-not-needed
-                theme-colors/green
-                :land-acquisition.impact/undecided
-                theme-colors/gray-lighter
-                theme-colors/gray-lighter)]
+        color (land-acquisition-status-color impact status)]
     (assert (keyword? impact))
     (when status
       (assert keyword? status))
     [:div {:class (<class common-styles/flex-align-center)}
-     [:div {:class (<class common-styles/status-circle-style color)
-            :title impact}]
+     (if (= :land-acquisition.status/completed status)
+       [icons/action-done {:style {:color "white"}
+                           :class (<class common-styles/status-circle-style color)}]
+       [:div {:class (<class common-styles/status-circle-style color)}])
      [:span {:style {:text-align :left}
              :class (<class common-styles/gray-text)}
       (tr-enum impact)
@@ -340,13 +356,15 @@
        (str (:L_AADRESS unit)
             " (" (land-controller/cadastral-purposes TUNNUS unit) ")")]
       (if deleted-unit?
-        [:div {:class (<class common-styles/space-between-center)}         
+        [:div {:class (<class common-styles/space-between-center)}
          [archived-status]
          [:span {:color theme-colors/gray-lightest}
           TUNNUS]]
         ;; else
         [:div {:class (<class common-styles/space-between-center)}
-       [acquisition-impact-status (get-in cadastral-form [:land-acquisition/impact]) (get-in cadastral-form [:land-acquisition/status])]       
+       [acquisition-impact-status
+        (get-in cadastral-form [:land-acquisition/impact])
+        (get-in cadastral-form [:land-acquisition/status])]
        [:span {:class (<class common-styles/gray-text)}
         TUNNUS]])]
      [Collapse

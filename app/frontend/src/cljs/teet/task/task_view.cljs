@@ -139,8 +139,8 @@
   (r/with-let [clicked? (r/atom false)]
     [:<>
      [buttons/button-primary {:on-click #(reset! clicked? true)
-                              :style {:float :right}}
-      [icons/action-check-circle]
+                              :style {:float :right}
+                              :start-icon (r/as-element [icons/action-check-circle])}
       (tr [:task :submit-results])]
      (when @clicked?
        [panels/modal {:title (str (tr [:task :submit-results]) "?")

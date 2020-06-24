@@ -178,7 +178,8 @@
                   :on-change-event #(e! (project-controller/->UpdateProjectPermissionForm %))
                   :save-event #(e! (project-controller/->SaveProjectPermission project-id user))
                   :spec :project/add-permission-form}
-      [Grid {:container true :spacing 3}
+      [Grid {:container true :spacing 3
+             :style {:width "100%"}}                        ;; Because material ui grid spacing causes sidescroll
        [Grid {:item true :xs 6}
         [form/field :project/participant
          [select/select-user {:e! e!}]]]
@@ -203,7 +204,8 @@
                                           (<class common-styles/input-start-text-adornment))}
                         "EE"])}]])
 
-      [form/footer2]]]))
+      [:div {:style {:margin "0 12px"}}                     ;; To align the footer with the form after above fix
+       [form/footer2]]]]))
 
 (defn permission-information
   [e! project permission]
@@ -261,12 +263,15 @@
     :style {:color theme-colors/warning}}])
 
 (defn- assignees-by-activity [assignees]
-  [:<>
+  [:div {:style {:margin-bottom "1rem"}}
    [:div {:class (<class common-styles/heading-and-action-style)}
     [typography/Heading2 (tr [:people-tab :consultants])]]
    (mapc (fn [[activity assignees]]
            [common/hierarchical-container
-            {:heading-content (tr-enum activity)
+            {:heading-color theme-colors/gray
+             :heading-content [:div {:style {:padding "0.75rem 1rem"}}
+                               [typography/Heading3 {:style {:color theme-colors/white}}
+                                (tr-enum activity)]]
              :children [^{:key "assignees"}
                         [:div.people-tab-assignees-for-activity
                          [itemlist/gray-bg-list

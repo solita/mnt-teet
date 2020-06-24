@@ -28,7 +28,8 @@
               :in $ [?a ...]
               :where
               [?a :activity/manager ?ref ?tx true]
-              [?a :meta/modified-at ?modified-at ?tx true]]
+              (or [?a :meta/modified-at ?modified-at ?tx true]
+                  [?a :meta/created-at ?modified-at ?tx true])]
             (d/history db)
             activity-ids)
        (map (fn [[a modified-at tx ref]]
