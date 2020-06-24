@@ -312,3 +312,11 @@
   "Call tx and return :tempids as command response."
   [& tx-args]
   (select-keys (apply tx tx-args) [:tempids]))
+
+
+(defn audit
+  "Log an audit message with user context"
+  [event args]
+  (let [user-id (get-in *request-ctx* [:user :user/id])]
+    (assert user-id "Audit event requires a user!")
+    (log/audit user-id event args)))

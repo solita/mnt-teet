@@ -83,6 +83,16 @@
                      (when-let [user-id (not-empty (:user timbre/*context*))]
                        {:request/user-id user-id}))))
 
+(defn audit [user-id audit-event audit-event-args]
+  {:pre [(uuid? user-id)
+         (and (keyword? audit-event)
+              (some? (namespace audit-event)))
+         (map? audit-event-args)]}
+  (event "Audit"
+         {:audit/event audit-event
+          :audit/user-id user-id
+          :audit/event-args audit-event-args}))
+
 (defn metric
   "Casts a metric to Amazon CloudWatch.
   `metric-name`: a keyword
