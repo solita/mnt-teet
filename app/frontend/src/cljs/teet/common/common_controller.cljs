@@ -15,7 +15,8 @@
             [goog.math.Long
              :refer [fromString fromNumber]
              :rename {fromString string->long
-                      fromNumber number->long}]))
+                      fromNumber number->long}]
+            [teet.ui.query :as query]))
 
 (defn ->long [x]
   (cond
@@ -34,6 +35,12 @@
 
 ;; Track how many requests are in flight to show progress
 (def in-flight-requests (r/atom 0))
+
+(defn query-request-permissions! [e!]
+  (e! (query/->Query :authorization/permissions
+                     {}
+                     [:authorization/permissions]
+                     nil)))
 
 (defn in-flight-requests?
   "Returns true if there are currently any requests in flight."

@@ -4,7 +4,6 @@
             [reagent.core :as r]
             [tuck.core :as t]
             [teet.ui.material-ui :refer [CircularProgress]]
-            [teet.common.common-controller :as common-controller]
             [teet.common.common-styles :as common-styles]))
 
 (defrecord Query [query args state-path state-atom])
@@ -75,19 +74,3 @@
               skeleton
               [:div {:class (<class common-styles/spinner-style)}
                [CircularProgress]]))))})))
-
-(defn rpc
-  "Component that does an PostgREST RPC call and shows view with the resulting data."
-  [{:keys [e! rpc args state-path]}]
-  (e! (common-controller/->RPC {:rpc rpc
-                                :args args
-                                :result-path state-path
-                                :loading-path state-path}))
-  (r/create-class
-   {:component-will-unmount (e! ->Cleanup state-path)
-    :reagent-render
-    (fn [{:keys [e! state-path view app skeleton]}]
-      (let [state (get-in app state-path)]
-        (if (:loading? state)
-          (or skeleton [CircularProgress])
-          [view e! state])))}))

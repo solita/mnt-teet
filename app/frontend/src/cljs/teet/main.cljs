@@ -21,9 +21,10 @@
             [teet.snackbar.snackbar-view :as snackbar]
             [teet.common.common-controller :refer [when-feature poll-version] :as common-controller]
 
-            ;; Import view namespaces and needed utility namespaces (macroexpansion)
+    ;; Import view namespaces and needed utility namespaces (macroexpansion)
             teet.projects.projects-view
-            teet.project.project-view teet.project.project-model
+            teet.project.project-view
+            teet.project.project-model
             teet.task.task-view
             teet.road-visualization.road-visualization-view
             teet.ui.component-demo
@@ -36,7 +37,7 @@
             teet.ui.query
             [teet.ui.url :as url]
 
-            ;; Required by define-main-page which uses string->long
+    ;; Required by define-main-page which uses string->long
             [teet.login.login-controller :as login-controller]
             [teet.common.common-styles :as common-styles])
   (:require-macros [teet.route-macros :refer [define-main-page]]))
@@ -47,7 +48,7 @@
 
 (defn main-view [e! _]
   (log/hook-onerror! e!)
-  (authorization-check/query-request-permissions! e!)
+  (common-controller/query-request-permissions! e!)
   (poll-version e!)
   (e! (login-controller/->CheckExistingSession))
   (fn [e! {:keys [page user navigation quick-search snackbar] :as app}]
