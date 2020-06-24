@@ -143,6 +143,12 @@
        (throw (ex-info "Given entity tuple doesn't match known cases"
                        {:entity-tuple entity-tuple})))]))
 
+(defn- valid-visibility-for-user? [user project-id visibility]
+  (or (= visibility :comment.visibility/all)
+      (authorization-check/authorized? user
+                                       :project/set-comment-visibility
+                                       {:project-id project-id})))
+
 
 (defcommand :comment/create
   {:doc "Create a new comment and add it to an entity"
@@ -150,6 +156,9 @@
    :payload {:keys [entity-id entity-type comment files visibility track?] :as payload}
    :project-id (project-db/entity-project-id db entity-type entity-id)
    :authorization {:project/write-comments {:db/id entity-id}}
+   :pre [(valid-visibility-for-user? user
+                                     (project-db/entity-project-id db entity-type entity-id)
+                                     visibility)]
    :transact
    (let [mentioned-ids (extract-mentions comment)
          project-id (project-db/entity-project-id db entity-type entity-id)
