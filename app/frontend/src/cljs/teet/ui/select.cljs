@@ -22,9 +22,7 @@
 
 (defn- primary-select-style
   [error]
-  ^{:pseudo {:focus theme-colors/focus-style
-             :invalid {:box-shadow :inherit
-                       :outline :inherit}}}
+  ^{:pseudo {:focus theme-colors/focus-style}}
   {:-moz {:appearance :none}
    :-webkit {:appearance :none}
    :border-radius "2px"
@@ -318,8 +316,11 @@
                input-ref (atom nil)]
     (let [{:keys [loading? users open? input highlight]} @state]
       [:<>
-       [:label (when show-label? [:span label])]
        [TextField {:ref #(reset! input-ref %)
+                   :label label
+                   :show-label? show-label?
+                   :required required
+                   :error error
                    :placeholder (tr [:user :autocomplete :placeholder])
                    :on-key-down (fn [e]
                                   (let [hl-idx (and (seq users) highlight
