@@ -185,9 +185,9 @@
          [:span part]))
      (str/split text comment-model/user-mention-pattern)))])
 
-(defn- comment-text
+(defn- comment-text*
   "Split comment text and highlight user mentions and put quotations in blocks."
-  ([text] (comment-text text 0))
+  ([text] (comment-text* text 0))
   ([text quote-level]
    (let [{:keys [before quote after]} (extract-quote text)]
      [:<>
@@ -197,10 +197,14 @@
         [:div.comment-quote {:class (<class comments-styles/quote-block quote-level)}
          [:div.comment-quote-from {:class (<class comments-styles/quote-from)}
           (:from quote)]
-         [:div.comment-quote-text [comment-text (:text quote) (inc quote-level)]]])
+         [:div.comment-quote-text
+          [comment-text* (:text quote) (inc quote-level)]]])
       (when (not-empty after)
-        [comment-text after])])))
+        [comment-text* after quote-level])])))
 
+(defn- comment-text [comment]
+  [:div.comment {:class (<class comments-styles/comment-text)}
+   (comment-text* comment)])
 
 (defn- comment-contents-and-status
   [e!
@@ -234,8 +238,7 @@
           (tr [:comment :unresolve])])]])
 
    [typography/Text
-    [:span {:style {:white-space :pre-wrap}}
-     [comment-text comment]]
+    [comment-text comment]
     (when modified-at
       [:span {:class (<class comments-styles/data)}
        (tr [:comment :edited]

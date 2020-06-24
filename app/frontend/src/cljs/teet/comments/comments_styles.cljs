@@ -105,6 +105,7 @@
 
 (defn quote-block [level]
   {:padding-left "1rem"
+   :padding-right "1rem"
    :padding-top "0.25rem"
    :padding-bottom "0.25rem"
    :background-color (case level
@@ -115,3 +116,9 @@
 
 (defn quote-from []
   {:font-weight :bold})
+
+(defn comment-text []
+  {:white-space :pre-wrap
+   :border (str "solid 1px " theme-colors/gray-dark)
+   :border-radius "5px"
+   :padding "0.25rem"})
