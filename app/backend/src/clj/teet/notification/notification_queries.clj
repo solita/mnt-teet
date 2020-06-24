@@ -19,6 +19,7 @@
   {:doc "Fetch notifications for user, sorted by most recent first."
    :context {:keys [db user]}
    :args _
+   :spec empty?
    :project-id nil
    :authorization {}}
   (notification-db/user-notifications db user 20))

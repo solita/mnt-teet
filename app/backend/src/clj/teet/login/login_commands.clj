@@ -61,11 +61,16 @@
 
 
 
+;; dummy-login trust person-id etc information from
+;; the frontend (command could be renamed to dummy-login)
+
 (defcommand :login/login
   {:doc "Login to the system"
    :context {conn :conn}
    :payload {:user/keys [id given-name family-name email person-id]
              site-password :site-password}
+   :spec (s/keys :req [:user/id :user/given-name :user/family-name:user/email :user/person-id]
+                 :opt-un [::site-password])
    :unauthenticated? true}
   (d/transact conn {:tx-data [{:user/id id}]})
 
@@ -73,6 +78,7 @@
     (log/warn "Demo login can only be used in dev environment")
     (throw (ex-info "Demo login not allowed"
                     {:demo-user id})))
+
 
   (if (environment/check-site-password site-password)
     (let [secret (environment/config-value :auth :jwt-secret)
@@ -91,6 +97,10 @@
        :api-url (environment/config-value :api-url)})
     {:error :incorrect-site-password}))
 
+
+;; production env login, teet.db-api.db-api-ion/tara-login
+;; will eventually send us here.
+;; the redirect url is handled in the frontend routing.
 
 (defn on-tara-login [claims]
   (let [conn (environment/datomic-connection)
@@ -124,6 +134,7 @@
 (defcommand :login/check-session-token
   {:doc "Check for JWT token in cookie session"
    :context {session :session}
+   :spec empty?
    :payload _
    :unauthenticated? true}
   (:jwt-token session))
@@ -135,6 +146,7 @@
    :pre [(and user
               (every? #(contains? user %)
                       [:user/id :user/given-name :user/family-name :user/person-id]))]
+   :spec empty?
    :payload _
    :project-id nil
    :authorization {}}

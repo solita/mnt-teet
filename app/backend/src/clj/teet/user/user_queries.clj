@@ -1,7 +1,8 @@
 (ns teet.user.user-queries
   (:require [datomic.client.api :as d]
             [teet.db-api.core :as db-api :refer [defquery]]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [clojure.spec.alpha :as s]))
 
 (defn- find-user-by-name [db name]
   (d/q '[:find (pull ?e [:db/id :user/id :user/given-name :user/family-name :user/email :user/person-id])
@@ -20,12 +21,13 @@
          :where [?e :user/id _]]
        db))
 
+(s/def ::search string?)
 (defquery :user/list
   {:doc "List all users"
    :context {db :db}
    :args {search :search}
-
-   ;; FIXME: can anyone list users?
+   :spec (s/keys :opt-un [::search])
+   ;; FIXME: can any authenticated user list all other users?
    :project-id nil
    :authorization {}}
   (mapv first
