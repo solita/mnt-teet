@@ -69,7 +69,7 @@
    :context {conn :conn}
    :payload {:user/keys [id given-name family-name email person-id]
              site-password :site-password}
-   :spec (s/keys :req [:user/id :user/given-name :user/family-name:user/email :user/person-id]
+   :spec (s/keys :req [:user/id :user/given-name :user/family-name :user/email :user/person-id]
                  :opt-un [::site-password])
    :unauthenticated? true}
   (d/transact conn {:tx-data [{:user/id id}]})
