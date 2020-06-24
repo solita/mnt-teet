@@ -119,6 +119,6 @@
 
 (defn comment-text []
   {:white-space :pre-wrap
-   :border (str "solid 1px " theme-colors/gray-dark)
+   :border (str "solid 1px " theme-colors/gray-lightest)
    :border-radius "5px"
    :padding "0.25rem"})
