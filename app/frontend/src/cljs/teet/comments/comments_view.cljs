@@ -143,10 +143,38 @@
                         :on-click #(e! (comments-controller/->OpenEditCommentDialog comment-entity commented-entity))}
    (tr [:buttons :edit])])
 
-(defn- comment-text
-  "Split comment text and highlight user mentions."
-  [text]
-  [:span {:style {:white-space :pre-wrap}}
+(def ^{:private true :const true} quotation-mark "\u00bb ")
+
+(defn- extract-quote [text]
+  (let [lines (str/split-lines text)
+        quote-start-idx (cu/find-idx (fn [[line next-line]]
+                                       (and (str/ends-with? line ":")
+                                            (str/starts-with? next-line quotation-mark)))
+                                     (partition 2 1 lines))]
+    (if-not quote-start-idx
+      {:before text}
+      (let [quote-end-idx (+ quote-start-idx 1
+                             (cu/find-idx #(not (str/starts-with? % quotation-mark))
+                                          (drop (inc quote-start-idx) lines)))
+
+            quote-lines (take (- quote-end-idx quote-start-idx)
+                              (drop quote-start-idx lines))
+            before-text (when (pos? quote-start-idx)
+                          (str/join "\n"
+                                    (take quote-start-idx lines)))
+            quote-from (first quote-lines)
+            quote-from (subs quote-from 0 (dec (count quote-from)))
+            quote-text (str/join "\n"
+                                 (map #(subs % 2)
+                                      (drop 1 quote-lines)))
+            after-text (str/join "\n"
+                                 (drop quote-end-idx lines))]
+        {:before before-text
+         :quote {:from quote-from :text quote-text}
+         :after after-text}))))
+
+(defn- text-with-mentions [text]
+  [:<>
    (doall
     (map-indexed
      (fn [i part]
@@ -156,6 +184,23 @@
          ^{:key (str i)}
          [:span part]))
      (str/split text comment-model/user-mention-pattern)))])
+
+(defn- comment-text
+  "Split comment text and highlight user mentions and put quotations in blocks."
+  ([text] (comment-text text 0))
+  ([text quote-level]
+   (let [{:keys [before quote after]} (extract-quote text)]
+     [:<>
+      (when before
+        [text-with-mentions before])
+      (when quote
+        [:div.comment-quote {:class (<class comments-styles/quote-block quote-level)}
+         [:div.comment-quote-from {:class (<class comments-styles/quote-from)}
+          (:from quote)]
+         [:div.comment-quote-text [comment-text (:text quote) (inc quote-level)]]])
+      (when (not-empty after)
+        [comment-text after])])))
+
 
 (defn- comment-contents-and-status
   [e!
@@ -189,7 +234,8 @@
           (tr [:comment :unresolve])])]])
 
    [typography/Text
-    [comment-text comment]
+    [:span {:style {:white-space :pre-wrap}}
+     [comment-text comment]]
     (when modified-at
       [:span {:class (<class comments-styles/data)}
        (tr [:comment :edited]
@@ -271,16 +317,20 @@
   "An ad hoc event that merges the quote at the end of current new
   comment text."
   [internal-state-atom]
-  (fn [new-value]
+  (fn [name quoted-text]
     (reify t/Event
       (process-event [_ app]
         (swap! internal-state-atom update :comment/comment
                (fn [old-value]
-                 (str
-                  (if (not-empty old-value)
-                    (str old-value "\n" new-value)
-                    new-value)
-                  "\n")))
+                 (let [old-value (if (not-empty old-value)
+                                   (str old-value "\n")
+                                   "")]
+                   (str
+                    old-value
+                    name ":\n"
+                    (str/join "\n" (map #(str quotation-mark %)
+                                        (str/split quoted-text "\n")))
+                    "\n"))))
         (animate/scroll-into-view-by-id! "new-comment-input" {:behavior :smooth})
         (js/setTimeout #(animate/focus-by-id! "new-comment-input")
                        500)
@@ -359,8 +409,9 @@
                      :state-path [:comments-for-entity entity-id]
                      :state comments
                      :simple-view [comment-list {:e! e!
-                                                 :quote-comment! #(e! ((quote-comment-fn comment-form)
-                                                                       (str %1 ": \"" %2 "\"")))
+                                                 :quote-comment! (fn [name quoted-text]
+                                                                   (e! ((quote-comment-fn comment-form)
+                                                                        name quoted-text)))
                                                  :commented-entity {:db/id entity-id
                                                                     :for   entity-type}
                                                  :focused-comment (get-in app [:query :focus-on])}]

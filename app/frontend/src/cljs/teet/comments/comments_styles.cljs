@@ -102,3 +102,16 @@
    :color theme-colors/blue
    :font-weight :bold
    :margin-bottom "0.5rem"})
+
+(defn quote-block [level]
+  {:padding-left "1rem"
+   :padding-top "0.25rem"
+   :padding-bottom "0.25rem"
+   :background-color (case level
+                       0 theme-colors/gray-lightest
+                       1 theme-colors/gray-lighter
+                       2 theme-colors/gray-light
+                       theme-colors/gray)})
+
+(defn quote-from []
+  {:font-weight :bold})
