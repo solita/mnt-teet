@@ -1,5 +1,5 @@
 (ns teet.land.land-queries
-  (:require [teet.db-api.core :refer [defquery]]
+  (:require [teet.db-api.core :refer [defquery audit]]
             [teet.gis.features :as features]
             [datomic.client.api :as d]
             [teet.integration.x-road.property-registry :as property-registry]
@@ -132,6 +132,7 @@ Then it will query X-road for the estate information."
                       :api-url api-url
                       :api-secret api-secret}
                      estates)]
+    (audit :land/related-project-estates {:thk.project/id id})
     {:estates estates
      :units (mapv (comp with-quality
                         (partial with-estate estate-info))
