@@ -47,12 +47,24 @@
   and owner info. Returns only the latest version of each file with previous versions
   as :versions key."
   [db file-ids]
-  (let [files (mapv first
-                    (d/q '[:find (pull ?f [*
-                                           {:file/previous-version [:db/id]}
-                                           {:meta/creator [:user/id :user/family-name :user/given-name]}])
-                           :where [?f :file/upload-complete? true]
-                           :in $ [?f ...]] db file-ids))
+  (let [;; Get comment counts for files
+        comment-count-by-file
+        (into {}
+              (d/q '[:find ?f (count ?c)
+                     :where [?f :file/comments ?c]
+                     :in $ [?f ...]]
+                   db file-ids))
+
+        files
+        (mapv
+         (comp #(assoc % :file/comments-count (comment-count-by-file (:db/id %) 0))
+               first)
+         (d/q '[:find (pull ?f [:db/id :file/name :file/version :file/size :file/type :file/status
+                                {:file/previous-version [:db/id]}
+                                {:meta/creator [:user/id :user/family-name :user/given-name]}])
+                :where [?f :file/upload-complete? true]
+                :in $ [?f ...]] db file-ids))
+
         ;; Group files to first versions and next versions
         {next-versions true
          first-versions false}

@@ -13,6 +13,7 @@
 (defquery :teet.system/db
   {:doc "Check database status"
    :context {db :db}
+   :spec empty?
    :args _
    :unauthenticated? true}
   {:query '[:find ?e
