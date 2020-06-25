@@ -27,6 +27,12 @@
           :db/id)
       (db-api/bad-request! "No such owner-comments entity")))
 
+(defn unit-comments-project-id [db oc-id]
+  (or (-> (d/pull db '[:unit-comments/project] oc-id)
+          :unit-comments/project
+          :db/id)
+      (db-api/bad-request! "No such unit-comments entity")))
+
 (defn task-belongs-to-project [db project-id task-id]
   (ffirst
    (d/q '[:find ?project
@@ -144,7 +150,7 @@
                                          db))]
                 (entity-project-id db entity-type id)))
             [[:task :task/comments]
-             [:file :file/comments]])
+             [:file :file/comments]])                       ;; TODO add funcctionality here to get project id from estate unit and owner comments
       (db-api/bad-request! "No such comment")))
 
 (defn project-owner [db project-eid]
