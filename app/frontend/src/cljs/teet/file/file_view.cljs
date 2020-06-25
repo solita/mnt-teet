@@ -25,7 +25,8 @@
             [teet.ui.url :as url]
             [teet.ui.util :refer [mapc]]
             [teet.user.user-model :as user-model]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.ui.common :as common]))
 
 
 
@@ -43,7 +44,7 @@
   [{:keys [link-download? actions? comment-action]
     :or {link-download? false
          actions? true}}
-   {id :db/id :file/keys [number version status name] :as file}]
+   {id :db/id :file/keys [number version status name comments-count] :as file}]
   (let [[base-name suffix] (base-name-and-suffix name)]
     [:div.file-row {:class [(<class common-styles/flex-row) (<class common-styles/margin-bottom 0.5)]}
      [:div.file-row-name {:class (<class common-styles/flex-table-column-style 44)}
@@ -62,6 +63,7 @@
       [:span (tr-enum status)]]
      (when actions?
        [:div.file-row-actions {:class (<class common-styles/flex-table-column-style 13 :flex-end)}
+        [common/count-chip {:label comments-count}]
         (if comment-action
           [IconButton {:on-click #(comment-action file)}
            [icons/communication-comment]]
