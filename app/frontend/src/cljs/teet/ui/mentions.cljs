@@ -33,6 +33,9 @@
            label (when required
                    [common/required-astrix])]
           [MentionsInput {:value value
+                          :id id
+                          :on-focus (fn [_]
+                                      (reset! caret (.-selectionStart @input-ref)))
                           :on-change (fn [e new-value new-plain-text-value new-mentions]
                                        (let [old-mention-ids (into #{} (map #(aget % "id")) @old-mentions)
                                              new-mention-ids (into #{} (map #(aget % "id")) new-mentions)

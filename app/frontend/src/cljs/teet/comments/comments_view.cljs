@@ -319,6 +319,14 @@
            ^{:key (str id)}
            [comment-entry e! comment-entity commented-entity quote-comment! focused?])))]]))
 
+(defn strip-mentions
+  "@[Carla Consultant](123456) -> @Carla Consultant"
+  [string]
+  (str/replace string
+               comment-model/user-mention-pattern
+               (fn [[_ mention]]
+                 (str "@"  (second (re-matches comment-model/user-mention-name-pattern mention))))))
+
 (defn- quote-comment-fn
   "An ad hoc event that merges the quote at the end of current new
   comment text."
@@ -334,7 +342,8 @@
                    (str
                     old-value
                     name ":\n"
-                    (str/join "\n" (map #(str quotation-mark %)
+                    (str/join "\n" (map #(str quotation-mark
+                                              (strip-mentions %))
                                         (str/split quoted-text "\n")))
                     "\n"))))
         (animate/scroll-into-view-by-id! "new-comment-input" {:behavior :smooth})
@@ -446,7 +455,8 @@
                                     :show-label? false :class (<class visibility-selection-style)}]])]
            [:div {:class (<class form-field-spacer)}
             [form/field :comment/comment
-             [mentions-input {:e! e!}]
+             [mentions-input {:id "new-comment-input"
+                              :e! e!}]
 
              #_[TextField {:id "new-comment-input"
                          :rows 4
