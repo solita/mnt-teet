@@ -186,6 +186,7 @@
   {:doc "List all project basic info"
    :context {db :db}
    :args _
+   :spec empty?
    :project-id nil
    :authorization {}}
   (map

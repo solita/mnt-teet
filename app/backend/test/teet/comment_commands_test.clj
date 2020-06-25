@@ -31,19 +31,30 @@
                  (tu/create-comment {:user tu/mock-user-edna-consultant
                                      :entity-type :task
                                      :entity-id (tu/get-data :task-id)
-                                     :comment {:comment/comment "Boss comment"}}))))
+                                     :comment {:comment "Boss comment"}}))))
+
+  ;; Boss invites the external consultant to the project
+  (tu/local-command tu/mock-user-boss
+                    :thk.project/add-permission
+                    {:project-id (tu/->db-id "p1")
+                     :user {:user/id tu/external-consultant-id}
+                     :role :external-consultant})
 
   (testing "External consultant can comment the task after being invited to the project"
-    (tu/local-command tu/mock-user-boss
-                      :thk.project/add-permission
-                      {:project-id (tu/->db-id "p1")
-                       :user {:user/id tu/external-consultant-id}
-                       :role :external-consultant})
     (let [external-comment-id (tu/create-comment {:user tu/mock-user-carla-consultant
                                                   :entity-type :task
                                                   :entity-id (tu/get-data :task-id)
-                                                  :comment {:comment/comment "Consultant comment"}})]
-      (is (some? external-comment-id)))))
+                                                  :comment {:comment "Consultant comment"}})]
+      (is (some? external-comment-id))))
+
+  (testing "External consultant can only make comments that are publicly seen"
+    (is (thrown? Exception
+                 (tu/create-comment {:user tu/mock-user-carla-consultant
+                                     :entity-type :task
+                                     :entity-id (tu/get-data :task-id)
+                                     :comment {:comment "Consultant comment"
+                                               :visibility :comment.visibility/internal}})))))
+
 
 (deftest comment-status-tracking
   ;; Grant access to project manager
@@ -87,7 +98,7 @@
     (tu/create-comment {:user tu/mock-user-carla-consultant
                         :entity-type :task
                         :entity-id (tu/get-data :task-id)
-                        :comment {:comment/comment "Consultant comment"
+                        :comment {:comment "Consultant comment"
                                   ;; ... as can be seen here ...
                                   :track? true}}
                        :ednas-comment-id)
