@@ -146,7 +146,7 @@
 (defn- valid-visibility-for-user? [user project-id visibility]
   (or (= visibility :comment.visibility/all)
       (authorization-check/authorized? user
-                                       :project/set-comment-visibility
+                                       :projects/set-comment-visibility
                                        {:project-id project-id})))
 
 
@@ -242,8 +242,10 @@
              visibility :comment/visibility mentions :comment/mentions}
    :project-id (get-project-id-of-comment db comment-id)
    :authorization {:project/edit-comments {:db/id comment-id}}
+   :pre [(valid-visibility-for-user? user
+                                     (project-db/comment-project-id db comment-id)
+                                     visibility)]
    :transact
-
    (let [incoming-mentions (extract-mentions comment)
          old-mentions (into #{}
                             (map :db/id (:comment/mentions (d/pull db '[:comment/mentions] comment-id))))

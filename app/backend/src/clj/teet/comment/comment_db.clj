@@ -43,7 +43,8 @@
                               comment-visibility
                               pull-selector)
                db resolved-id)
-          (map first))
+          (map first)
+          (meta-query/without-deleted db))
      [])))
 
 (defn comment-count-of-entity
