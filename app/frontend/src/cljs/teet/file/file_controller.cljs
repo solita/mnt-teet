@@ -88,7 +88,7 @@
            :result-event (fn [{file :file :as result}]
                            (map->UploadFileUrlReceived
                              (merge result
-                                    {:file-data (first new-version)
+                                    {:file-data (:file-object (first new-version))
                                      :on-success (->UploadSuccess (:db/id file))})))}))
 
   UploadFiles
