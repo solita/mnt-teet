@@ -65,19 +65,24 @@
   Takes in a database, a mapping of when user has seen a file (files-seen-at)
   and file-ids."
   [db seen-at-by-file file-ids]
-  (into {}
-        (map (juxt first (fn [[_ new-count]]
-                           {:file/comments-new-count new-count})))
-        (d/q '[:find ?f (count ?c)
-               :where
-               [?f :file/comments ?c]
-               [?c :comment/timestamp ?ts]
-               [(> ?ts ?seen)]
-               :in $ [[?f ?seen]]]
-             db
-             (for [f file-ids
-                   :let [seen (seen-at-by-file f)]]
-               [f (or seen (java.util.Date. 0))]))))
+  (->> (d/q '[:find ?f ?ts
+              :keys :file-id :comment-ts
+              :where
+              [?f :file/comments ?c]
+              [?c :comment/timestamp ?ts]
+              :in $ [?f ...]]
+            db
+            file-ids)
+       (group-by :file-id)
+       (cu/map-vals
+        (fn [comments]
+          (cu/count-by (fn [{f :file-id ts :comment-ts}]
+                         (let [seen (seen-at-by-file f)]
+                           (if (or (nil? seen)
+                                   (.before seen ts))
+                             :file/comments-new-count
+                             :file/comments-old-count)))
+                       comments)))))
 
 (defn file-listing
   "Fetch file information suitable for file listing. Returns all file attributes
@@ -90,6 +95,7 @@
         seen-at-by-file (files-seen-at db user file-ids)
 
         ;; Get comment counts for files
+        ;; FIXME: take all/internal visibility into account!!!
         comment-counts-by-file
         (files-comment-counts db seen-at-by-file file-ids)
 
