@@ -243,7 +243,7 @@
              visibility :comment/visibility mentions :comment/mentions}
    :project-id (get-project-id-of-comment db comment-id)
    :authorization {:project/edit-comments {:db/id comment-id}}
-   #_:pre #_[(valid-visibility-for-user? user               ;; TODO fix for owner estate and unit comments
+   :pre [(valid-visibility-for-user? user               ;; TODO fix for owner estate and unit comments
                                      (project-db/comment-project-id db comment-id)
                                      visibility)]
    :transact
