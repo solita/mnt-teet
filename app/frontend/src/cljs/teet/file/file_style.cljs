@@ -9,3 +9,7 @@
    :padding "2px"
    :margin-bottom "0.25rem"})
 
+(defn file-row-name [seen?]
+  (if seen?
+    {:font-weight :normal}
+    {:font-weight :bold}))

@@ -1,6 +1,8 @@
 (ns teet.file.file-db
   "File queries"
-  (:require [datomic.client.api :as d]))
+  (:require [datomic.client.api :as d]
+            [teet.user.user-model :as user-model]
+            [teet.util.collection :as cu]))
 
 (defn own-file? [db user file-id]
   (boolean
@@ -42,22 +44,60 @@
      :group (:file/group-number file)
      :name (:file/name file)}))
 
+(defn files-seen-at
+  "Return mapping of file-id to timestamp when the given user has seen a given
+  file. If the user has not seen a file, the file-id will not have a mapping."
+  [db user file-ids]
+  (into {}
+        (d/q '[:find ?f ?at
+               :where
+               [?fs :file-seen/file ?f]
+               [?fs :file-seen/user ?user]
+               [?fs :file-seen/seen-at ?at]
+               :in $ ?user [?f ...]]
+             db (user-model/user-ref user) file-ids)))
+
+
+(defn files-comment-counts
+  "Return mapping of file-id to map containing the amount of comments
+  the file has (both total comments and new).
+
+  Takes in a database, a mapping of when user has seen a file (files-seen-at)
+  and file-ids."
+  [db seen-at-by-file file-ids]
+  (into {}
+        (map (juxt first (fn [[_ new-count]]
+                           {:file/comments-new-count new-count})))
+        (d/q '[:find ?f (count ?c)
+               :where
+               [?f :file/comments ?c]
+               [?c :comment/timestamp ?ts]
+               [(> ?ts ?seen)]
+               :in $ [[?f ?seen]]]
+             db
+             (for [f file-ids
+                   :let [seen (seen-at-by-file f)]]
+               [f (or seen (java.util.Date. 0))]))))
+
 (defn file-listing
   "Fetch file information suitable for file listing. Returns all file attributes
   and owner info. Returns only the latest version of each file with previous versions
-  as :versions key."
-  [db file-ids]
-  (let [;; Get comment counts for files
-        comment-count-by-file
-        (into {}
-              (d/q '[:find ?f (count ?c)
-                     :where [?f :file/comments ?c]
-                     :in $ [?f ...]]
-                   db file-ids))
+  as :versions key.
+
+  Includes the timestamp user has seen the file (if any) as :file-seen/seen-at."
+  [db user file-ids]
+  (let [;; File seen statuses
+        seen-at-by-file (files-seen-at db user file-ids)
+
+        ;; Get comment counts for files
+        comment-counts-by-file
+        (files-comment-counts db seen-at-by-file file-ids)
 
         files
         (mapv
-         (comp #(assoc % :file/comments-count (comment-count-by-file (:db/id %) 0))
+         (comp #(merge %
+                       (comment-counts-by-file (:db/id %))
+                       {:file-seen/seen-at (seen-at-by-file (:db/id %))})
                first)
          (d/q '[:find (pull ?f [:db/id :file/name :file/version :file/size :file/type :file/status
                                 {:file/previous-version [:db/id]}
@@ -85,9 +125,9 @@
        (assoc latest-version
               :versions previous-versions)))))
 
-(defn files-by-project-and-pos-number [db project-id pos-number]
+(defn files-by-project-and-pos-number [db user project-id pos-number]
   (file-listing
-   db
+   db user
    (mapv first
          (d/q '[:find ?f
                 :where
@@ -104,6 +144,6 @@
               db project-id pos-number))))
 
 (defn file-count-by-project-and-pos-number
-  [db project-id pos-number]
+  [db user project-id pos-number]
   ;; Could be improved with some distinct query magic to query only the count
-  (count (files-by-project-and-pos-number db project-id pos-number)))
+  (count (files-by-project-and-pos-number db user project-id pos-number)))

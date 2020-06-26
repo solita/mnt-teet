@@ -16,7 +16,7 @@
             [teet.ui.file-upload :as file-upload]
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
-            [teet.ui.material-ui :refer [Grid Link LinearProgress IconButton]]
+            [teet.ui.material-ui :refer [Grid Link LinearProgress IconButton Badge]]
             [teet.ui.panels :as panels]
             [teet.ui.select :as select]
             [teet.ui.tabs :as tabs]
@@ -26,7 +26,8 @@
             [teet.ui.util :refer [mapc]]
             [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]
-            [teet.ui.common :as common]))
+            [teet.ui.common :as common]
+            [teet.log :as log]))
 
 
 
@@ -44,10 +45,13 @@
   [{:keys [link-download? actions? comment-action]
     :or {link-download? false
          actions? true}}
-   {id :db/id :file/keys [number version status name comments-count] :as file}]
-  (let [[base-name suffix] (base-name-and-suffix name)]
-    [:div.file-row {:class [(<class common-styles/flex-row) (<class common-styles/margin-bottom 0.5)]}
-     [:div.file-row-name {:class (<class common-styles/flex-table-column-style 44)}
+   {id :db/id :file/keys [number version status name comments-new-count] :as file}]
+  (let [[base-name suffix] (base-name-and-suffix name)
+        seen (:file-seen/seen-at file)]
+    [:div.file-row {:class [(<class common-styles/flex-row)
+                            (<class common-styles/margin-bottom 0.5)]}
+     [:div.file-row-name {:class [(<class file-style/file-row-name seen)
+                                  (<class common-styles/flex-table-column-style 44)]}
       (if link-download?
         [Link {:target :_blank
                :href (common-controller/query-url :file/download-file {:file-id id})}
@@ -63,15 +67,16 @@
       [:span (tr-enum status)]]
      (when actions?
        [:div.file-row-actions {:class (<class common-styles/flex-table-column-style 13 :flex-end)}
-        [common/count-chip {:label comments-count}]
-        (if comment-action
-          [IconButton {:on-click #(comment-action file)}
-           [icons/communication-comment]]
-          [url/Link {:class ["file-row-action-comments" (<class file-row-icon-style)]
-                     :page :file
-                     :params {:file id}
-                     :query {:tab "comments"}}
-           [icons/communication-comment]])
+        [Badge {:badge-content (or comments-new-count 0)
+                :color :error}
+         (if comment-action
+           [IconButton {:on-click #(comment-action file)}
+            [icons/communication-comment]]
+           [url/Link {:class ["file-row-action-comments" (<class file-row-icon-style)]
+                      :page :file
+                      :params {:file id}
+                      :query {:tab "comments"}}
+            [icons/communication-comment]])]
         [Link {:class ["file-row-action-download" (<class file-row-icon-style)]
                :target :_blank
                :href (common-controller/query-url :file/download-file {:file-id id})}
@@ -323,34 +328,45 @@
       [buttons/button-primary {:on-click on-close}
        (tr [:buttons :save])]]]]])
 
-(defn file-page [e! {{file-id :file
+(defn file-page [e! {{file-id :file} :params} _project _breadcrumbs]
+  ;; Update the file seen timestamp for this user
+  (e! (file-controller/->UpdateFileSeen file-id))
+  (let [edit-open? (r/atom false)]
+    (r/create-class
+     {:component-did-update
+      (fn [this [_ _ {{prev-file-id :file} :params} _ _ :as _prev-args] _ _]
+        (let [[_ _ {{curr-file-id :file} :params} _ _ :as _curr-args] (r/argv this)]
+          (when (not= curr-file-id prev-file-id)
+            (e! (file-controller/->UpdateFileSeen curr-file-id)))))
+
+      :reagent-render
+      (fn  [e! {{file-id :file
                       task-id :task} :params
-                     :as app} project breadcrumbs]
-  (r/with-let [edit-open? (r/atom false)]
-    (let [task (project-model/task-by-id project task-id)
-          file (project-model/file-by-id project file-id false)
-          old? (nil? file)
-          file (or file (project-model/file-by-id project file-id true))
-          latest-file (when old?
-                        (project-model/latest-version-for-file-id project file-id))]
-      [project-navigator-view/project-navigator-with-content
-       {:e! e!
-        :app app
-        :project project
-        :breadcrumbs breadcrumbs
-        :column-widths [2 8 2]}
-       [Grid {:container true}
-        [Grid {:item true :xs 3 :xl 2}
-         [file-list (:task/files task) (:db/id file)]]
-        [Grid {:item true :xs 9 :xl 10}
-         [:<>
-          (when @edit-open?
-            [file-edit-dialog {:e! e! :on-close #(reset! edit-open? false) :file file}])]
-         [tabs/details-and-comments-tabs
-          {:e! e!
-           :app app
-           :entity-id (:db/id file)
-           :entity-type :file
-           :show-comment-form? (not old?)}
-          (when file
-            [file-details e! file latest-file edit-open?])]]]])))
+                :as app} project breadcrumbs]
+        (let [task (project-model/task-by-id project task-id)
+              file (project-model/file-by-id project file-id false)
+              old? (nil? file)
+              file (or file (project-model/file-by-id project file-id true))
+              latest-file (when old?
+                            (project-model/latest-version-for-file-id project file-id))]
+          [project-navigator-view/project-navigator-with-content
+           {:e! e!
+            :app app
+            :project project
+            :breadcrumbs breadcrumbs
+            :column-widths [2 8 2]}
+           [Grid {:container true}
+            [Grid {:item true :xs 3 :xl 2}
+             [file-list (:task/files task) (:db/id file)]]
+            [Grid {:item true :xs 9 :xl 10}
+             [:<>
+              (when @edit-open?
+                [file-edit-dialog {:e! e! :on-close #(reset! edit-open? false) :file file}])]
+             [tabs/details-and-comments-tabs
+              {:e! e!
+               :app app
+               :entity-id (:db/id file)
+               :entity-type :file
+               :show-comment-form? (not old?)}
+              (when file
+                [file-details e! file latest-file edit-open?])]]]]))})))

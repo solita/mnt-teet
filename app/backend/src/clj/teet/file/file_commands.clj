@@ -9,7 +9,9 @@
             [clojure.string :as str]
             [teet.file.file-db :as file-db]
             [teet.file.filename-metadata :as filename-metadata]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.user.user-model :as user-model]
+            [teet.util.datomic :as du]))
 
 
 
@@ -121,3 +123,16 @@
    :project-id (project-db/file-project-id db file-id)
    :authorization {:document/delete-document {:db/id file-id}}
    :transact [(deletion-tx user file-id)]})
+
+(defcommand :file/seen
+  {:doc "Mark that I have seen this file"
+   :context {:keys [user db]}
+   :payload {:keys [file-id]}
+   :project-id (project-db/file-project-id db file-id)
+   :authorization {:document/view-document {:db/id file-id}}
+   :transact [(let [user-id (->> user user-model/user-ref (du/entity db) :db/id)]
+                {:db/id "file-seen"
+                 :file-seen/file file-id
+                 :file-seen/user user-id
+                 :file-seen/file+user [file-id user-id]
+                 :file-seen/seen-at (java.util.Date.)})]})

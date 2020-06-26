@@ -991,4 +991,27 @@
            :db/valueType :db.type/boolean
            :db/doc "Set to true when upload is complete and file exists in S3"}]
 
-         teet.migration.file-upload-complete/existing-files-upload-complete]}]
+         teet.migration.file-upload-complete/existing-files-upload-complete]}
+
+ ;; Track file seen status per user... no need for history
+ {:db/ident :migration/file-seen-status
+  :txes [[{:db/ident :file-seen/file
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/noHistory true}
+          {:db/ident :file-seen/user
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/noHistory true}
+          {:db/ident :file-seen/file+user
+           :db/valueType :db.type/tuple
+           :db/tupleAttrs [:file-seen/file :file-seen/user]
+           :db/cardinality :db.cardinality/one
+           :db/unique :db.unique/identity
+           :db/doc "Unique file+user pair that identifies this entity"
+           :db/noHistory true}
+          {:db/ident :file-seen/seen-at
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "When the user has seen this file. Updated every time file page is opened or file is downloaded."
+           :db/noHistory true}]]}]

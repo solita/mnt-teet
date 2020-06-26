@@ -30,7 +30,7 @@
       (d/pull [:thk.project/id] id)
       :thk.project/id))
 
-(defn maybe-fetch-task-files [project db task-id]
+(defn maybe-fetch-task-files [project db user task-id]
   (if-not task-id
     project
     (cu/update-path
@@ -40,7 +40,7 @@
       :activity/tasks #(= task-id (:db/id %))] ; matching task
 
      ;; Fetch and assoc the tasks
-     assoc :task/files (task-db/task-file-listing db task-id))))
+     assoc :task/files (task-db/task-file-listing db user task-id))))
 
 
 (defn tasks-with-statuses
@@ -61,7 +61,7 @@
 
 (defquery :thk.project/fetch-project
   {:doc "Fetch project information"
-   :context {db :db}
+   :context {:keys [db user]}
    :args {:thk.project/keys [id]
           task-id :task-id
           activity-id :activity-id}
@@ -80,7 +80,7 @@
         (update :thk.project/lifecycles
                 (fn [lifecycle]
                   (map #(update % :thk.lifecycle/activities project-model/sort-activities) lifecycle)))
-        (maybe-fetch-task-files db task-id)
+        (maybe-fetch-task-files db user task-id)
         (maybe-update-activity-tasks activity-id)
         (activity-db/update-activity-histories db))))
 

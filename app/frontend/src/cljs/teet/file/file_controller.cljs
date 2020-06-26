@@ -27,6 +27,9 @@
 (defrecord MarkUploadComplete [file-id on-success])
 (defrecord MarkUploadCompleteResponse [on-success response])
 
+(defrecord UpdateFileSeen [file-id])
+(defrecord UpdateFileSeenResponse [response])
+
 (extend-protocol t/Event
 
   DeleteFile
@@ -170,7 +173,20 @@
     (t/fx app
           {:tuck.effect/type :navigate
            :page :file
-           :params (assoc params :file (:db/id file))})))
+           :params (assoc params :file (:db/id file))}))
+
+  UpdateFileSeen
+  (process-event [{file-id :file-id} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :file/seen
+           :payload {:file-id (common-controller/->long file-id)}
+           :result-event ->UpdateFileSeenResponse}))
+
+  UpdateFileSeenResponse
+  (process-event [_ app]
+    (log/info "File marked as seen.")
+    app))
 
 (defn download-url [file-id]
   (common-controller/query-url :file/download-file {:file-id file-id}))

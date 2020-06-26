@@ -15,12 +15,12 @@
 (defn task-file-listing
   "Returns files for a given task. Returns latest versions of files as vector
   and adds all previous versions of a files as :versions key."
-  [db task-eid]
-  (file-db/file-listing db (mapv first
-                                 (d/q '[:find ?f
-                                        :where [?t :task/files ?f]
-                                        :in $ ?t]
-                                      db task-eid))))
+  [db user task-eid]
+  (file-db/file-listing db user (mapv first
+                                      (d/q '[:find ?f
+                                             :where [?t :task/files ?f]
+                                             :in $ ?t]
+                                           db task-eid))))
 
 (defn valid-task-for-activity? [db activity-id {task-type :task/type :as _task}]
   (boolean ((get activity-model/activity-name->task-groups
