@@ -19,6 +19,20 @@
    :owner-comments :owner-comments/comments
    :unit-comments :unit-comments/comments})
 
+(def ^:private task-project-id-path
+  [:activity/_tasks 0 :thk.lifecycle/_activities 0 :thk.project/_lifecycles 0 :db/id])
+
+(def ^{:doc "All paths from comment that lead to project id"}
+  comment-project-paths
+  [(into [:task/_comments 0] task-project-id-path) ; task project id
+   (into [:file/_comments 0 :task/_files 0] task-project-id-path) ; file project id
+   [:unit-comments/_comments 0 :unit-comments/project :db/id] ; unit comments
+   [:owner-comments/_comments 0 :owner-comments/project :db/id] ; owner comments
+   [:estate-comments/_comments 0 :estate-comments/project :db/id] ; estate comments
+   ])
+
+
+
 (defn comments-attribute-for-entity-type [entity-type]
   (or (type->comments-attribute entity-type)
       (throw (ex-info "Don't know what the comment attribute is for entity type"

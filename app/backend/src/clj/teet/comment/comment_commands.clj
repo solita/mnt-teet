@@ -119,7 +119,7 @@
                   (Long/parseLong id))))
         (re-seq comment-model/user-mention-pattern text)))
 
-(defn comment-entity-transaction
+(defn comment-entity-tx
   [entity-tuple transaction-id]
   (let [project (-> entity-tuple
                     second
@@ -185,7 +185,7 @@
                        {:comment/files (validate-files db user files)}))]}]
            (concat
              (when (not resolved-id)
-               (comment-entity-transaction entity-id transact-id))
+               (comment-entity-tx entity-id transact-id))
              ;; Comment mention notification for mentioned users
              (map #(notification-db/notification-tx
                      {:from user

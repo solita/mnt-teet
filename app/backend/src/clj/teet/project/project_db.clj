@@ -3,7 +3,8 @@
   (:require [datomic.client.api :as d]
             [teet.db-api.core :as db-api]
             [teet.project.project-model :as project-model]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.comment.comment-model :as comment-model]))
 
 (defn task-project-id [db task-id]
   (or (ffirst
@@ -142,35 +143,11 @@
     :estate-comments (first (second entity-id))
     :unit-comments (first (second entity-id))))
 
-(def ^:private task-project-id-path
-  [:activity/_tasks 0 :thk.lifecycle/_activities 0 :thk.project/_lifecycles 0 :db/id])
-
-(def ^{:doc "All paths from comment that lead to project id"}
-  comment-project-paths
-  [(into [:task/_comments 0] task-project-id-path) ; task project id
-   (into [:file/_comments 0 :task/_files 0] task-project-id-path) ; file project id
-   [:unit-comments/_comments 0 :unit-comments/project :db/id] ; unit comments
-   [:owner-comments/_comments 0 :owner-comments/project :db/id] ; owner comments
-   [:estate-comments/_comments 0 :estate-comments/project :db/id] ; estate comments
-   ])
-
 (defn comment-project-id [db comment-id]
   (let [ce (du/entity db comment-id)]
     (some (fn [path]
             (get-in ce path))
-          comment-project-paths)))
-
-#_(defn comment-project-id [db comment-id]
-  ;; Find what entity this comment is linked to and get
-  ;; entity project id
-  (or (some (fn [[entity-type query-attr]]
-              (when-let [id (ffirst (d/q [:find '?id
-                                          :where ['?id query-attr comment-id]]
-                                         db))]
-                (entity-project-id db entity-type id)))
-            [[:task :task/comments]
-             [:file :file/comments]])                       ;; TODO add funcctionality here to get project id from estate unit and owner comments
-      (db-api/bad-request! "No such comment")))
+          comment-model/comment-project-paths)))
 
 (defn project-owner [db project-eid]
   (get-in (d/pull db '[:thk.project/owner] project-eid)

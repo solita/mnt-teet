@@ -1,7 +1,8 @@
 (ns teet.task.task-spec
   "Specs for task data"
   (:require [clojure.spec.alpha :as s]
-            [teet.file.file-model :as file-model]))
+            [teet.file.file-model :as file-model]
+            [clojure.string :as str]))
 
 (defn- task-type-and-group-both-present-or-absent?
   "Check that both task type and group are present, or neither"
@@ -36,3 +37,5 @@
                          #(nil? (file-model/validate-file (file-model/type-by-suffix %)))))
 
 (s/def :task/new-comment-form (s/keys :req [:comment/comment]))
+
+(s/def :comment/comment (s/and string? #(not-empty (str/trim %))))
