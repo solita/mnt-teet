@@ -146,7 +146,7 @@
 (defn- valid-visibility-for-user? [user project-id visibility]
   (or (= visibility :comment.visibility/all)
       (authorization-check/authorized? user
-                                       :project/set-comment-visibility
+                                       :projects/set-comment-visibility
                                        {:project-id project-id})))
 
 
@@ -214,6 +214,7 @@
       :task (project-db/task-project-id db parent-id)
       :estate-comments (project-db/estate-comments-project-id db parent-id)
       :owner-comments (project-db/owner-comments-project-id db parent-id)
+      :unit-comments (project-db/unit-comments-project-id db parent-id)
       (db-api/bad-request! "No such comment"))))
 
 (defn- files-in-db [db comment-id]
@@ -242,8 +243,10 @@
              visibility :comment/visibility mentions :comment/mentions}
    :project-id (get-project-id-of-comment db comment-id)
    :authorization {:project/edit-comments {:db/id comment-id}}
+   #_:pre #_[(valid-visibility-for-user? user               ;; TODO fix for owner estate and unit comments
+                                     (project-db/comment-project-id db comment-id)
+                                     visibility)]
    :transact
-
    (let [incoming-mentions (extract-mentions comment)
          old-mentions (into #{}
                             (map :db/id (:comment/mentions (d/pull db '[:comment/mentions] comment-id))))

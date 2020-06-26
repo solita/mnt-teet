@@ -73,18 +73,17 @@
 (defn- edit-attached-images-field
   "File field that only allows uploading images. Files are
   directly uploaded and on-change called after success."
-  [{:keys [e! value comment-id on-success-event]}]
+  [{:keys [e! value on-change comment-id on-success-event]}]
   [project-context/consume
    (fn [{:keys [project-id]}]
      [:div
       [attachments {:files value
                     :comment-id comment-id
                     :on-delete (fn [{file-id :db/id}]
-                                 (e! (comments-controller/->UpdateEditCommentForm
-                                      {:comment/files
-                                       (into []
-                                             (cu/remove-by-id file-id)
-                                             value)})))}]
+                                 (on-change
+                                   (into []
+                                         (cu/remove-by-id file-id)
+                                         value)))}]
       [file-upload/FileUploadButton
        {:id "images-field"
         :color :secondary
@@ -124,7 +123,7 @@
        [form/field :comment/files
         [edit-attached-images-field {:e! e!
                                      :comment-id (:db/id comment-data)
-                                     :on-success-event comments-controller/->UpdateEditCommentForm}]]]
+                                     :on-success-event ->UpdateCommentForm}]]]
 
       (when (authorization-check/authorized? @app-state/user
                                              :projects/set-comment-visibility
