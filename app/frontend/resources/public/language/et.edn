@@ -30,7 +30,8 @@
   "Riigiomand" "Riigiomand",
   "Segaomand" "Segaomand"},
  :comment
- {:mentioned-users "Mainitud kasutajad",
+ {:total-comments "{count} kogu",
+  :mentioned-users "Mainitud kasutajad",
   :save "Salvestan kommentaari",
   :comment-as "Kommenteerimine kui {name}",
   :add-mention "Lisan mainimise",
@@ -40,6 +41,7 @@
   :quote "Tsiteerin",
   :resolve "Lahendan",
   :unresolve "Märgin mittelahendatuks",
+  :new-comments "{count} uut",
   :add-images "Lisan pildid",
   :open-latest-unresolved "Avan uusimad"},
  :common
@@ -464,8 +466,8 @@
   :other-users "Muud kasutajad",
   :consultants "Konsultandid",
   :active "AKTIIVNE",
-  :show-history "Näidata ajalugu",
-  :hide-history "Peida ajalugu"},
+  :show-history "Vaatan ajalugu",
+  :hide-history "Peidan ajaloo"},
  :project
  {:add-users "Lisan kasutajaid",
   :remove-from-project "Eemaldan projektist",

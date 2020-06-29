@@ -31,7 +31,8 @@
   "Riigiomand" "State owned",
   "Segaomand" "Mixed property"},
  :comment
- {:mentioned-users "Mentioned users",
+ {:total-comments "{count} total",
+  :mentioned-users "Mentioned users",
   :save "Save comment",
   :comment-as "Commenting as {name}",
   :add-mention "Add mention",
@@ -41,6 +42,7 @@
   :quote "Quote",
   :resolve "Resolve",
   :unresolve "Unresolve",
+  :new-comments "{count} new",
   :add-images "Add images",
   :open-latest-unresolved "Open latest"},
  :common
