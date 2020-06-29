@@ -51,10 +51,12 @@
        set))
 
 (defn enabled-features-config []
-  (try (parse-enabled-features (ssm-param :enabled-features))
-       (catch ParameterNotFoundException _e
-         (log/warn "SSM parameter enabled-features not found, treating all as disabled")
-         #{})))
+  (or (some-> [:enabled-features]
+              (ssm-param-default nil)
+              parse-enabled-features)
+      (do
+        (log/warn "SSM parameter enabled-features not found, treating all as disabled")
+        #{})))
 
 (defn tara-config []
   (let [p (partial ssm-param :auth :tara)]
