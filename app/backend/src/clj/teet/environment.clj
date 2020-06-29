@@ -4,23 +4,32 @@
             [clojure.java.io :as io]
             [teet.log :as log]
             [datomic.client.api :as d]
-            [amazonica.aws.simplesystemsmanagement :as ssm])
-  (:import (com.amazonaws.services.simplesystemsmanagement.model ParameterNotFoundException)))
+            [cognitect.aws.client.api :as aws]))
+
+(def ^:private ssm-client (delay (aws/client {:api :ssm})))
 
 (defn ssm-param
   [& param-path]
-  (let [value (->> (str "/teet/" (str/join "/" (map name param-path)))
-                   (ssm/get-parameter :name)
-                   :parameter :value)]
-    (if (string? value)
-      (str/trim value)
-      value)))
+  (let [name (str "/teet/" (str/join "/" (map name param-path)))
+        response (aws/invoke @ssm-client {:op :GetParameter
+                                          :request {:Name name}})]
+    (if (:cognitect.anomalies/category response)
+      (throw (ex-info "Anomaly in SSM invocation"
+                      {:response response}))
+      (let [value (get-in response [:Parameter :Value])]
+        (if (string? value)
+          (str/trim value)
+          value)))))
 
 (defn- ssm-param-default [param-path default-value]
   (try
     (apply ssm-param param-path)
-    (catch ParameterNotFoundException _e
-      default-value)))
+    (catch Exception e
+      (if (= (get-in (ex-data e) [:response :__type]) "ParameterNotFound")
+        default-value
+        (throw (ex-info "Exception in SSM invocation (not ParameterNotfound)"
+                        {:param-path param-path :default-value default-value}
+                        e))))))
 
 (def init-config {:datomic {:db-name "teet"
                             :client {:server-type :ion}}

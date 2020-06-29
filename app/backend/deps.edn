@@ -24,14 +24,16 @@
                                                        com.amazonaws/amazon-kinesis-client]}
         com.amazonaws/aws-java-sdk-core {:mvn/version "1.11.807"}
         com.amazonaws/aws-java-sdk-s3 {:mvn/version "1.11.807"}
-        com.amazonaws/aws-java-sdk-ssm {:mvn/version "1.11.807"}
 
         commons-io/commons-io {:mvn/version "2.6"}
 
         ;; Cognitect AWS API
         com.cognitect.aws/api       {:mvn/version "0.8.456"}
         com.cognitect.aws/endpoints {:mvn/version "1.1.11.789"}
-        com.cognitect.aws/email {:mvn/version "770.2.568.0"}}
+        com.cognitect.aws/email {:mvn/version "770.2.568.0"}
+        com.cognitect.aws/ssm {:mvn/version "798.2.672.0"}}
+
+
 
  :mvn/repos {"central" {:url "https://repo1.maven.org/maven2/"}
              ;;"teet-dev-files" {:url "s3://teet-dev-files/maven"}
