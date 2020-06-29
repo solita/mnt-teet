@@ -7,7 +7,7 @@
             [ol.Attribution]
             [ol.Map]
             [ol.MapEvent]
-            [ol.Overlay] ;; popup
+            [ol.Overlay]                                    ;; popup
             [ol.View]
             [ol.events.condition :as condition]
             [ol.interaction :as ol-interaction]
@@ -18,10 +18,11 @@
             [ol.source.Vector]
 
             [reagent.core :as reagent :refer [atom]]
+            [reagent.dom :as rdom]
 
-            ;[teet.geo :as geo]
-            ;[teet.style.base :as style-base]
-            ;[teet.style.colors :as colors]
+    ;[teet.geo :as geo]
+    ;[teet.style.base :as style-base]
+    ;[teet.style.colors :as colors]
             [teet.map.openlayers.kuvataso :as kuvataso]
             [teet.map.openlayers.projektiot :refer [estonian-extent]]
             [teet.map.openlayers.layer :as taso]
@@ -324,7 +325,7 @@
 
 (defn create-overlay [coordinates contents]
   (let [elt (js/document.createElement "span")]
-    (reagent/render contents elt)
+    (rdom/render contents elt)
     (ol.Overlay. (clj->js {:element   elt
                            :position  coordinates
                            :stopEvent false}))))
@@ -408,9 +409,9 @@
 
 (defn- on-container-resize [this]
   (let [new-width (.-offsetWidth
-                      (aget (.-childNodes (reagent/dom-node this)) 0))
+                      (aget (.-childNodes (rdom/dom-node this)) 0))
         new-height (.-offsetHeight
-                       (aget (.-childNodes (reagent/dom-node this)) 0))]
+                       (aget (.-childNodes (rdom/dom-node this)) 0))]
 
     (when-not (and (= new-width
                       @openlayers-map-width)
@@ -457,11 +458,11 @@
 
         _ (reset!
             openlayers-map-width
-            (.-offsetWidth (aget (.-childNodes (reagent/dom-node this)) 0)))
+            (.-offsetWidth (aget (.-childNodes (rdom/dom-node this)) 0)))
 
         _ (reset!
             openlayers-map-height
-            (.-offsetHeight (aget (.-childNodes (reagent/dom-node this)) 0)))
+            (.-offsetHeight (aget (.-childNodes (rdom/dom-node this)) 0)))
 
         _ (reset! the-map ol3)
 
