@@ -1,7 +1,6 @@
 (ns teet.integration.integration-s3
   "Integration steps for S3"
-  (:require [amazonica.aws.s3 :as s3]
-            [clojure.spec.alpha :as s]
+  (:require [clojure.spec.alpha :as s]
             [teet.integration.integration-context :refer [defstep]]
             [cheshire.core :as cheshire]
             [cognitect.aws.client.api :as aws]
