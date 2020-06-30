@@ -23,6 +23,7 @@
             [teet.ui.form :as form]
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
+            [teet.ui.rich-text-editor :as rich-text-editor]
             [teet.ui.material-ui :refer [Grid LinearProgress]]
             [teet.ui.panels :as panels]
             [teet.ui.select :as select]
@@ -216,7 +217,7 @@
                  :value           @form
                  :on-change-event (form/update-atom-event form merge)
                  :save-event      (partial file-controller/->AddFilesToTask (:task/files @form))
-                 :cancel-event    #(common-controller/->SetQueryParam :add-files nil)
+                 :cancel-event    #(common-controller/->SetQueryParam :add-document nil)
                  :in-progress?    upload-progress
                  :spec :task/add-files}
       ^{:attribute :task/files}
