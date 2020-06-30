@@ -4,11 +4,7 @@
             [teet.integration.integration-context :refer [defstep]]
             [cheshire.core :as cheshire]
             [cognitect.aws.client.api :as aws]
-            [clojure.string :as str]
-            [org.httpkit.client :as client]
-            [clojure.xml :as xml]
-            [clojure.zip :as zip]
-            [clojure.data.zip.xml :as z]))
+            [clojure.string :as str]))
 
 (def ^:private s3-client (delay (aws/client {:api :s3})))
 
