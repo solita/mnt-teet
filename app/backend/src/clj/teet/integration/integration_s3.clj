@@ -179,8 +179,10 @@
 ;; https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html#query-string-auth-v4-signing-example
 (defn presigned-url
   ([method bucket key]
-   (presigned-url nil method bucket key))
-  ([content-disposition method bucket key]
+   (presigned-url {} method bucket key))
+  ([{:keys [content-disposition expiration-seconds]
+     :or {expiration-seconds 300}}
+    method bucket key]
    {:pre [(or (= method "GET") (= method "PUT"))
           (string? bucket)
           (string? key)]}
@@ -196,7 +198,7 @@
                        "X-Amz-Algorithm=AWS4-HMAC-SHA256"
                        "&X-Amz-Credential=" (url-encode x-amz-credential)
                        "&X-Amz-Date=" (timestamp now)
-                       "&X-Amz-Expires=" 300
+                       "&X-Amz-Expires=" expiration-seconds
                        "&X-Amz-Security-Token=" (url-encode SessionToken)
                        "&X-Amz-SignedHeaders=host"
                        (when content-disposition
