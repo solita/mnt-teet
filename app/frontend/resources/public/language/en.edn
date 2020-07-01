@@ -77,13 +77,13 @@
   :select {:empty "- Select value"},
   :clear "Clear"},
  :dashboard
- {:notifications "Notifications",
-  :activities-and-tasks "Activities and tasks",
+ {:activities-and-tasks "Activities and tasks",
   :my-projects "My projects",
-  :title "Dashboard",
-  :open "Open",
   :no-notifications-for-project
-  "You have no notifications related to this project"},
+  "You have no notifications related to this project",
+  :notifications "Notifications",
+  :open "Open",
+  :title "Dashboard"},
  :data-tab
  {:cadastral-unit-count "Currently showing {count} cadastral units",
   :restriction-count "Currently showing {count} restrictions"},
@@ -397,7 +397,8 @@
   :no-position-number
   "Cadastral unit has no position number. No files to show.",
   :estate-data "Estate data",
-  :table-heading {:cost "Cost", :area "Area", :type "Type"},
+  :table-heading
+  {:area "Area", :cost "Cost", :recipient "Recipient", :type "Type"},
   :no-active-burdens "This estate does not have any active burdens",
   :owner-filter-label "Owner",
   :unit-valuations "Unit valuations",
@@ -422,11 +423,11 @@
   :owner-data "Owner data"},
  :land-modal-page
  {:burdens "Burdens",
-  :mortgages "Mortgages",
-  :costs "Acquisition costs",
   :comments "Comments",
-  :owner-info "Owners",
-  :files "Files attached to this unit"},
+  :costs "Acquisition costs",
+  :files "Files attached to this unit",
+  :mortgages "Mortgages",
+  :owner-info "Owners"},
  :login {:login "Login", :password "Password", :username "Username"},
  :map
  {:aerial-view "Aerial view",
@@ -465,14 +466,14 @@
   :cadastral-units-updated "Cadastral units updated successfully"},
  :page-title {:project-list "{name} project"},
  :people-tab
- {:invite-user "Invite new user to TEET",
+ {:active "ACTIVE",
+  :consultants "Consultants",
+  :hide-history "Hide history",
+  :invite-user "Invite new user to TEET",
   :managers "Managers",
   :no-other-users "No other users",
   :other-users "Other users",
-  :consultants "Consultants",
-  :active "ACTIVE",
-  :show-history "Show history",
-  :hide-history "Hide history"},
+  :show-history "Show history"},
  :project
  {:add-users "Add users",
   :remove-from-project "Remove from project",
@@ -576,11 +577,11 @@
   :edit-success-notification "Task edited successfully",
   :results "Results"},
  :user
- {:role "Role",
-  :autocomplete
-  {:placeholder "Type name...",
+ {:autocomplete
+  {:loading "Searching users...",
    :no-options "User not found",
-   :loading "Searching users..."}},
+   :placeholder "Type name..."},
+  :role "Role"},
  :warning
  {:deploying
   "A new version of the application is being deployed. Please wait for a few minutes and refresh the page.",

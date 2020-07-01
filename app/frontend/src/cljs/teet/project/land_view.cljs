@@ -690,6 +690,7 @@
                                                                        (:land-acquisitions project))
         estate-procedure (land-model/estate-compensation estate-id (:estate-compensations project))
         parsed-estate-comps (land-model/estate-procedure-costs estate-procedure)
+        parsed-process-fees (land-model/estate-process-fees estate-procedure)
         total-estate-cost (land-model/total-estate-cost estate-procedure
                                                         estates-land-acquisitions)
         land-exchanges (:estate-procedure/land-exchanges estate-procedure)]
@@ -717,15 +718,28 @@
            [(str (:total data) " €") {:align :right}]])]
        [typography/GreyText (tr [:land :no-land-acquisitions])])
 
+
+     (when (not-empty parsed-process-fees)
+       [:div
+        [typography/Heading3 {:style {:margin "1rem 0"}}
+         (tr [:fields :estate-procedure/process-fees])]
+        [table/simple-table
+         [[(tr [:land :table-heading :recipient]) {:align :left}]
+          [(tr [:land :table-heading :cost]) {:align :right}]]
+         (for [{:keys [recipient amount]} parsed-process-fees]
+           [[(str recipient) {:align :left}]
+            [(str amount " €") {:align :right}]])]])
+
+
      [:div
       [typography/Heading3 {:style {:margin "1rem 0"}}
        (tr [:fields :estate-procedure/compensations])]
       (if (not-empty parsed-estate-comps)
         [table/simple-table
          [[(tr [:land :table-heading :type]) {:align :left}]
-          [(tr [:land :table-heading :area]) {:align :right}]]
+          [(tr [:land :table-heading :cost]) {:align :right}]]
          (for [{:keys [reason description amount]} parsed-estate-comps]
-           [[(or description (tr-or [:enum reason] [:fields reason])) {:align :left}]
+           [[(or description (tr-or [:enum reason] [:fields reason] (str reason))) {:align :left}]
             [(str amount " €") {:align :right}]])]
 
         [typography/GreyText (tr [:land :no-estate-compensations])])]
@@ -748,12 +762,11 @@
             [(str (:land-exchange/area land-exchange) " m²") {:align :right}]
             [(str (:land-exchange/price-per-sqm land-exchange) " €") {:align :right}]])]])
 
-     [:div
-      [typography/Heading3 {:style {:margin "1rem 0"}}
+     [:div {:style {:margin "1rem 0"}
+            :class (<class common-styles/flex-row-space-between)}
+      [typography/Heading3
        (tr [:land :total-cost])]
-      [:div {:class (<class common-styles/flex-row-space-between)}
-       [:span (tr [:land :total-excluding-process])]
-       [typography/BoldGreyText (str total-estate-cost " €")]]]]))
+      [typography/BoldGreyText (str total-estate-cost " €")]]]))
 
 
 (defmethod estate-modal-content :comments

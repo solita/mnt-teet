@@ -30,7 +30,7 @@
   "Riigiomand" "Riigiomand",
   "Segaomand" "Segaomand"},
  :comment
- {:total-comments "{count} kogu",
+ {:total-comments "{count} kommentaari kokku",
   :mentioned-users "Mainitud kasutajad",
   :save "Salvestan kommentaari",
   :comment-as "Kommenteerimine kui {name}",
@@ -41,7 +41,7 @@
   :quote "Tsiteerin",
   :resolve "Lahendan",
   :unresolve "Märgin mittelahendatuks",
-  :new-comments "{count} uut",
+  :new-comments "{count} uut kommentaari",
   :add-images "Lisan pildid",
   :open-latest-unresolved "Avan uusimad"},
  :common
@@ -76,13 +76,13 @@
   :select {:empty "- Valin"},
   :clear "Puhastan"},
  :dashboard
- {:notifications "Teavitused",
-  :activities-and-tasks "Tegevused ja ülesanded",
+ {:activities-and-tasks "Tegevused ja ülesanded",
   :my-projects "Minu projektid",
-  :title "Töölaud",
-  :open "Avan",
   :no-notifications-for-project
-  "Teil pole selle projektiga seotud teatisi"},
+  "Teil pole selle projektiga seotud teatisi",
+  :notifications "Teavitused",
+  :open "Avan",
+  :title "Töölaud"},
  :data-tab
  {:cadastral-unit-count "Praegu kuvatakse {count} katastriüksus(t)",
   :restriction-count "Praegu kuvatakse {count} kitsendus(t)"},
@@ -293,7 +293,7 @@
   :thk.project/activity-status "Olek",
   :task/assignee "Vastutav isik",
   :land-exchange/price-per-sqm "Hind/m²",
-  :thk.project/owner-info "Projektijuht",
+  :thk.project/owner-info "Vastutav isik",
   :activity/manager "Vastutav isik",
   :activity/status "Olek",
   :task/group "Ülesande tüüp",
@@ -353,7 +353,7 @@
   :estate-procedure/type "Protseduuri tüüp",
   :thk.project/estimated-date-range "Eeldatav kestus",
   :file/status "Olek",
-  :thk.project/owner "Projektijuht"},
+  :thk.project/owner "Vastutav isik"},
  :file
  {:download "Laen faili alla",
   :edit "Muudan faili",
@@ -382,7 +382,7 @@
   :total-cost "Kogumaksumus",
   :land-exchange "Vahetus",
   :add-compensation "+ Lisan kompensatsiooni",
-  :archived-unit "(Arhiivitud)",
+  :archived-unit "(Arhiveeritud)",
   :estate-acquisition-cost "Maa soetusmaksumus",
   :estate "Kinnistu",
   :land-acquisition-saved "Maa omandamine edukalt salvestatud",
@@ -392,7 +392,8 @@
   :no-position-number
   "Katastriüksusel puudub positsiooni number. Seotud failid puuduvad.",
   :estate-data "Kinnistu andmed",
-  :table-heading {:cost "Maksumus", :area "Ala", :type "Tüüp"},
+  :table-heading
+  {:area "Ala", :cost "Maksumus", :recipient "Saaja", :type "Tüüp"},
   :no-active-burdens "Aktiivsed koormatised puuduvad",
   :owner-filter-label "Omanik",
   :unit-valuations "Üksuse hindamine",
@@ -416,12 +417,12 @@
   :add-owner "+ Lisan omaniku",
   :owner-data "Omaniku andmed"},
  :land-modal-page
- {:burdens "Koormatised",
-  :mortgages "Hüpoteegid",
+ {:burdens "Koormatist",
+  :comments "Kommentaari",
   :costs "Kulud",
-  :comments "Kommentaarid",
-  :owner-info "Omanikud",
-  :files "Üksusega seotud failid"},
+  :files "Üksusega seotud failid",
+  :mortgages "Hüpoteeki",
+  :owner-info "Omanikud"},
  :login {:login "Sisenen", :password "Salasõna", :username "Kasutaja"},
  :map
  {:aerial-view "Aerofoto",
@@ -460,14 +461,14 @@
   :cadastral-units-updated "Katastriüksused edukalt värskendatud"},
  :page-title {:project-list "{name} projekt"},
  :people-tab
- {:invite-user "Lisan uue kasutaja",
+ {:active "AKTIIVNE",
+  :consultants "Konsultandid",
+  :hide-history "Peidan ajaloo",
+  :invite-user "Lisan uue kasutaja",
   :managers "Juhid",
   :no-other-users "Teisi kasutajaid pole",
   :other-users "Muud kasutajad",
-  :consultants "Konsultandid",
-  :active "AKTIIVNE",
-  :show-history "Vaatan ajalugu",
-  :hide-history "Peidan ajaloo"},
+  :show-history "Vaatan ajalugu"},
  :project
  {:add-users "Lisan kasutajaid",
   :remove-from-project "Eemaldan projektist",
@@ -573,11 +574,11 @@
   :edit-success-notification "Ülesanne edukalt muudetud",
   :results "Tulemused"},
  :user
- {:role "Roll",
-  :autocomplete
-  {:placeholder "Sisestan nime...",
+ {:autocomplete
+  {:loading "Otsin kasutajaid...",
    :no-options "Kasutajat ei leitud",
-   :loading "Otsin kasutajaid..."}},
+   :placeholder "Sisestan nime..."},
+  :role "Roll"},
  :warning
  {:deploying
   "Rakenduse uut versiooni laetakse. Palun oota mõned minutid ning seejärel värskenda lehte.",
