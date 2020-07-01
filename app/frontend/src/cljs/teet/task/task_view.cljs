@@ -216,7 +216,7 @@
                  :value           @form
                  :on-change-event (form/update-atom-event form merge)
                  :save-event      (partial file-controller/->AddFilesToTask (:task/files @form))
-                 :cancel-event    #(common-controller/->SetQueryParam :add-files nil)
+                 :cancel-event    #(common-controller/->SetQueryParam :add-document nil)
                  :in-progress?    upload-progress
                  :spec :task/add-files}
       ^{:attribute :task/files}
