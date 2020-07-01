@@ -238,7 +238,8 @@
    :flex-direction :column
    :margin "2rem 0 2rem 0"})
 
-(defn- file-details [e! {:keys [replacement-upload-progress] :as file} latest-file edit-open?]
+(defn- file-details [e! {:keys [replacement-upload-progress] :as file} latest-file edit-open? show-preview?]
+  (log/info "file-details: file map is" (pr-str file))
   (let [old? (some? latest-file)
         other-versions (if old?
                          (into [latest-file]
@@ -272,14 +273,19 @@
                 (tr [:fields :file/status])
                 (tr-enum (:file/status file))])])]
 
-     ;; preview block (placeholder for now)
-     [:div {:class (<class preview-style)}
-      (if (str/starts-with? (:file/type file) "image/")
-        [:img {:style {:width :auto :height :auto
-                       :max-height "250px"
-                       :object-fit :contain}
-               :src (common-controller/query-url :file/download-file {:file-id (:db/id file)})}]
-        "Preview")]
+     (if @show-preview?       
+       [:div {:class (<class preview-style)}
+        (if (str/starts-with? (:file/type file) "image/")
+          [:img {:style {:width :auto :height :auto
+                         :max-height "250px"
+                         :object-fit :contain}
+                 :src (common-controller/query-url :file/download-file {:file-id (:db/id file)})}]
+          "Preview")
+        [buttons/button-primary {:on-click #(reset! show-preview? false)}
+         (tr [:file :hide-preview])]]
+       ;; else
+       [buttons/button-primary {:on-click #(reset! show-preview? true)}
+        (tr [:file :show-preview])])
 
      ;; size, upload new version and download buttons
      [:div {:class (<class common-styles/flex-row-space-between)}
@@ -348,6 +354,7 @@
                 :as app} project breadcrumbs]
         (let [task (project-model/task-by-id project task-id)
               file (project-model/file-by-id project file-id false)
+              show-preview? (r/atom (str/starts-with? (:file/type file) "image/"))
               old? (nil? file)
               file (or file (project-model/file-by-id project file-id true))
               latest-file (when old?
@@ -372,4 +379,4 @@
                :entity-type :file
                :show-comment-form? (not old?)}
               (when file
-                [file-details e! file latest-file edit-open?])]]]]))})))
+                [file-details e! file latest-file edit-open? show-preview?])]]]]))})))

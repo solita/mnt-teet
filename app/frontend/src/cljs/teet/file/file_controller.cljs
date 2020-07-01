@@ -130,7 +130,11 @@
                                                                :file-results
                                                                (fnil conj []) file))))
                            ;; FIXME: notify somehow
-                           (log/warn "Upload failed: " (.-status resp) (.-statusText resp)))))))))
+                           (log/warn "Upload failed: " (.-status resp) (.-statusText resp)))))
+                (.catch (fn [error]
+                          ;; happens on CORS errors and network-level errors
+                          (log/error "Upload failed: " error)
+                          (log/debug "If the erroris a a 301 status: you need matching region between set region in the environment and the home region of the s3 bucket")))))))
 
 
   MarkUploadComplete
