@@ -160,7 +160,7 @@
             (map #(format "%02x" %) bytes)))
 
 (defn- ->b [string]
-  (.getBytes string "UTF-8"#_"US-ASCII"))
+  (.getBytes string "UTF-8"))
 
 (defn- hmac-sha256 [key-bytes content-bytes]
   (let [secret-key (javax.crypto.spec.SecretKeySpec. key-bytes "HmacSHA256")
