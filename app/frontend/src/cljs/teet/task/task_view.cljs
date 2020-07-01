@@ -346,20 +346,25 @@
                      user :user :as app}
                  project
                  breadcrumbs]
-  [:<>
-   [panels/modal {:max-width "md"
-                  :open-atom (r/wrap (boolean add-document) :_)
-                  :title     (tr [:task :add-document])
-                  :on-close  (e! task-controller/->CloseAddDocumentDialog)}
-    [add-files-form e! (:in-progress? new-document)]]
+  (let [activity-manager (cu/find-> project
+                                    :thk.project/lifecycles some?
+                                    :thk.lifecycle/activities (fn [{:activity/keys [tasks]}]
+                                                                (cu/find-by-id task-id tasks))
+                                    :activity/manager)]
+    [:<>
+     [panels/modal {:max-width "md"
+                    :open-atom (r/wrap (boolean add-document) :_)
+                    :title (tr [:task :add-document])
+                    :on-close (e! task-controller/->CloseAddDocumentDialog)}
+      [add-files-form e! (:in-progress? new-document)]]
 
-   [project-navigator-view/project-navigator-with-content
-    {:e! e!
-     :project project
-     :app app
-     :breadcrumbs breadcrumbs}
+     [project-navigator-view/project-navigator-with-content
+      {:e! e!
+       :project project
+       :app app
+       :breadcrumbs breadcrumbs}
 
-    [task-page-content e! app
-     (project-model/task-by-id project task-id)
-     (= (:user/id user)
-        (:user/id (:thk.project/manager project)))]]])
+      [task-page-content e! app
+       (project-model/task-by-id project task-id)
+       (= (:db/id user)
+          (:db/id activity-manager))]]]))
