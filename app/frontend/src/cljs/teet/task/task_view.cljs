@@ -349,7 +349,7 @@
   (let [activity-manager (cu/find-> project
                                     :thk.project/lifecycles some?
                                     :thk.lifecycle/activities (fn [{:activity/keys [tasks]}]
-                                                                (cu/find-by-id task-id tasks))
+                                                                (du/find-by-id task-id tasks))
                                     :activity/manager)]
     [:<>
      [panels/modal {:max-width "md"
