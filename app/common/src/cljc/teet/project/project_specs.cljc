@@ -46,7 +46,7 @@
   (s/keys :req [:thk.project/project-name]))
 
 (s/def :project/add-permission-form
-  (s/keys :req [:project/participant
+  (s/keys :req [(or :project/participant :user/person-id)
                 :permission/role]))
 
 
