@@ -164,7 +164,6 @@
   "Utility for returning the first found translation path, or a fallback string (last parameter)"
   [& paths-and-fallback]
   (or (some #(let [result (tr %)]
-               (println result)
                (when-not (or (str/blank? result)
                              (when (dev-mode?)
                                (= \[ (first result))))

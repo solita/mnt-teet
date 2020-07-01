@@ -14,8 +14,20 @@
         (merge la {:unit-data land-unit})))
     (filterv
       (fn [la]
-        (= (:land-acquisition/estate-id la) estate-id))
+        (and (= (:land-acquisition/estate-id la)
+                estate-id)
+             (= (:land-acquisition/impact la)
+                :land-acquisition.impact/purchase-needed)))
       land-acquisitions)))
+
+(defn estate-process-fees
+  [{:estate-procedure/keys [process-fees]}]
+  (let [parsed (map
+                 (fn [{:estate-process-fee/keys [recipient fee]}]
+                   {:recipient recipient
+                    :amount fee})
+                 process-fees)]
+    parsed))
 
 (defn estate-procedure-costs
   "Return formatted list of cost cost maps for estate procedure"
@@ -44,17 +56,25 @@
                          (+ total (int amount)))
                        0
                        (estate-procedure-costs estate-procedure))
+        process-fees-total (reduce
+                             (fn [total {:keys [amount]}]
+                               (+ total (int amount)))
+                             0
+                             (estate-process-fees estate-procedure))
         land-exchange (reduce
                         (fn [total {:land-exchange/keys [area price-per-sqm]}]
                           (+ total (* area price-per-sqm)))
                         0
                         (:estate-procedure/land-exchanges estate-procedure))
         la-total (reduce
-                   (fn [total {:land-acquisition/keys [area-to-obtain price-per-sqm]}]
-                     (+ total (* price-per-sqm area-to-obtain)))
+                   (fn [total {:land-acquisition/keys [area-to-obtain price-per-sqm impact]}]
+                     (let [cost-of-area (if (= impact :land-acquisition.impact/purchase-needed)
+                                          (* price-per-sqm area-to-obtain)
+                                          0)]
+                       (+ total cost-of-area)))
                    0
                    land-acquisitions)]
-    (- (+ estate-total la-total) land-exchange)))
+    (- (+ estate-total la-total process-fees-total) land-exchange)))
 
 
 (def common-procedure-keys
@@ -75,7 +95,6 @@
 
    :estate-procedure.type/expropriation
    {:keys [:estate-procedure/compensations
-           :estate-procedure/motivation-bonus
            :estate-procedure/third-party-compensations]}
 
    :estate-procedure.type/property-rights

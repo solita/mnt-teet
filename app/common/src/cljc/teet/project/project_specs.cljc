@@ -39,14 +39,13 @@
 
 (s/def :project/edit-form
   (s/keys :req [:thk.project/project-name
-                :thk.project/owner
-                :thk.project/manager]))
+                :thk.project/owner]))
 
 (s/def :project/edit-details-form
   (s/keys :req [:thk.project/project-name]))
 
 (s/def :project/add-permission-form
-  (s/keys :req [:project/participant
+  (s/keys :req [(or :project/participant :user/person-id)
                 :permission/role]))
 
 

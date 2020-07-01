@@ -412,7 +412,7 @@
     :value "people"
     :component people-tab
     :badge (fn [project]
-             (when-not (:thk.project/manager project)
+             (when-not (:thk.project/owner project)
                [Badge {:badge-content (r/as-element [information-missing-icon])}]))
     :layers #{:thk-project}}
    {:label [:project :tabs :details]
