@@ -169,7 +169,7 @@
    [file-view/file-table files]
    (when (task-model/can-submit? task)
      [:<>
-      [file-view/file-upload-button]
+      [file-view/file-upload-button e!]
       [when-authorized :task/submit task
        [submit-results-button e! task]]])
    (when (task-model/reviewing? task)
