@@ -22,8 +22,7 @@
 (defn find-by-id
   "Find first element in `collection` whose `:db/id` is `id`"
   [id collection]
-  (cu/find-first (comp (partial du/id= id)
-                    :db/id)
+  (cu/find-first (comp (partial id= id) :db/id)
               collection))
 (defn enum=
   "Compare two enum values.
