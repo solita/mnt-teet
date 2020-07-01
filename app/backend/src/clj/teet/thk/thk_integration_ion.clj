@@ -1,7 +1,6 @@
 (ns teet.thk.thk-integration-ion
   "THK integration lambdas"
-  (:require [amazonica.aws.s3 :as s3]
-            [clojure.java.io :as io]
+  (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [teet.log :as log]
             [teet.thk.thk-import :as thk-import]
@@ -24,14 +23,10 @@
 (defn- write-file-to-s3 [{{:keys [bucket-name file-key]} :s3
                           file :file
                           :as ctx}]
-  (let [response
-        (s3/put-object {:bucket-name bucket-name
-                        :key file-key
-                        :input-stream (io/input-stream file)})]
-    (if-not (contains? response :content-md5)
-      (throw (ex-info "Expected S3 write response to contain :content-md5"
-                      {:s3-response response}))
-      (assoc ctx file-key response))))
+  (assoc ctx file-key
+         (integration-s3/put-object bucket-name
+                                    file-key
+                                    (io/input-stream file))))
 
 (defn- file->csv [{:keys [file] :as ctx}]
   (assoc ctx :csv
@@ -57,8 +52,8 @@
 
 (defn- move-file [bucket old-key new-key]
   (log/info "Move file in bucket " bucket " from " old-key " => " new-key)
-  (s3/copy-object bucket old-key bucket new-key)
-  (s3/delete-object {:bucket-name bucket :key old-key}))
+  (integration-s3/copy-object bucket old-key new-key)
+  (integration-s3/delete-object bucket old-key))
 
 (defn- change-directory [file-key directory]
   (str directory
@@ -84,14 +79,15 @@
 
 (defn- write-error-to-log [{{:keys [bucket file-key]} :s3
                             {:keys [message stack-trace]}  :error}]
-  (s3/put-object {:bucket-name  bucket
-                  :key          (-> file-key
-                                    (change-directory log-directory)
-                                    (add-suffix (str (System/currentTimeMillis)
-                                                     ".error.txt")))
-                  :input-stream (io/input-stream (.getBytes (str message
-                                                                 "\n"
-                                                                 stack-trace)))}))
+  (integration-s3/put-object
+   bucket
+   (-> file-key
+       (change-directory log-directory)
+       (add-suffix (str (System/currentTimeMillis)
+                        ".error.txt")))
+   (io/input-stream (.getBytes (str message
+                                    "\n"
+                                    stack-trace)))))
 
 (defn- update-entity-info [{db :db :as ctx}]
   (let [projects (map first
