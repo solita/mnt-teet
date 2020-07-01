@@ -57,12 +57,13 @@
 
 
 (deftest comment-status-tracking
-  ;; Grant access to project manager
+  ;; Update activity and set manager
   (tu/local-command tu/mock-user-boss
-                    :thk.project/add-permission
-                    {:project-id (tu/->db-id "p1")
-                     :user {:user/id tu/manager-id}
-                     :role :manager})
+                    :activity/update
+                    {:activity (merge
+                                (d/pull (tu/db) '[:db/id :activity/estimated-start-date :activity/estimated-end-date]
+                                        (tu/->db-id "p1-lc1-act1"))
+                                {:activity/manager {:user/id tu/manager-id}})})
 
   ;; Create a task for commenting
   (let [task-id (tu/create-task {:user tu/mock-user-manager
