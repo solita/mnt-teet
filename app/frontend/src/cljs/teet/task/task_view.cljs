@@ -23,6 +23,7 @@
             [teet.ui.form :as form]
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
+            [teet.ui.rich-text-editor :as rich-text-editor]
             [teet.ui.material-ui :refer [Grid LinearProgress]]
             [teet.ui.panels :as panels]
             [teet.ui.select :as select]
@@ -216,7 +217,7 @@
                  :value           @form
                  :on-change-event (form/update-atom-event form merge)
                  :save-event      (partial file-controller/->AddFilesToTask (:task/files @form))
-                 :cancel-event    #(common-controller/->SetQueryParam :add-files nil)
+                 :cancel-event    #(common-controller/->SetQueryParam :add-document nil)
                  :in-progress?    upload-progress
                  :spec :task/add-files}
       ^{:attribute :task/files}
@@ -345,20 +346,25 @@
                      user :user :as app}
                  project
                  breadcrumbs]
-  [:<>
-   [panels/modal {:max-width "md"
-                  :open-atom (r/wrap (boolean add-document) :_)
-                  :title     (tr [:task :add-document])
-                  :on-close  (e! task-controller/->CloseAddDocumentDialog)}
-    [add-files-form e! (:in-progress? new-document)]]
+  (let [activity-manager (cu/find-> project
+                                    :thk.project/lifecycles some?
+                                    :thk.lifecycle/activities (fn [{:activity/keys [tasks]}]
+                                                                (cu/find-by-id task-id tasks))
+                                    :activity/manager)]
+    [:<>
+     [panels/modal {:max-width "md"
+                    :open-atom (r/wrap (boolean add-document) :_)
+                    :title (tr [:task :add-document])
+                    :on-close (e! task-controller/->CloseAddDocumentDialog)}
+      [add-files-form e! (:in-progress? new-document)]]
 
-   [project-navigator-view/project-navigator-with-content
-    {:e! e!
-     :project project
-     :app app
-     :breadcrumbs breadcrumbs}
+     [project-navigator-view/project-navigator-with-content
+      {:e! e!
+       :project project
+       :app app
+       :breadcrumbs breadcrumbs}
 
-    [task-page-content e! app
-     (project-model/task-by-id project task-id)
-     (= (:user/id user)
-        (:user/id (:thk.project/manager project)))]]])
+      [task-page-content e! app
+       (project-model/task-by-id project task-id)
+       (= (:db/id user)
+          (:db/id activity-manager))]]]))

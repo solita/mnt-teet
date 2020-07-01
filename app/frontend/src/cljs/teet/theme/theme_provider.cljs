@@ -52,9 +52,7 @@
                          :underlineHover {:text-decoration :underline
                                           :font-size "1rem"
                                           "&:hover" {:text-decoration :none}
-                                          "&:focus" {:outline 0
-                                                     :box-shadow (str "0 0 0 3px" theme-colors/white ", "
-                                                                      "0 0 0 5px " theme-colors/blue-light)}}}
+                                          "&:focus" theme-colors/focus-style}}
                :MuiTabs {:root {:background-color theme-colors/gray-lighter}
                          :flexContainer {:border-bottom (str "1px solid " theme-colors/gray-lighter)
                                          :justify-content :flex-start

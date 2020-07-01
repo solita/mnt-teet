@@ -17,7 +17,6 @@
 (defrecord UploadSuccess [file-id])
 
 (defrecord DeleteFile [file-id])
-(defrecord DeleteFileResult [])
 
 (defrecord AddFilesToTask [files]) ;; upload more files to existing document
 (defrecord NavigateToFile [file])
@@ -50,15 +49,6 @@
            :command :file/delete-attachment
            :payload {:file-id file-id}
            :result-event on-success-event}))
-
-  DeleteFileResult
-  (process-event [_ {:keys [page params query] :as app}]
-    (t/fx app
-          {:tuck.effect/type :navigate
-           :page page
-           :params params
-           :query (dissoc query :file)}
-          common-controller/refresh-fx))
 
   AddFilesToTask
   (process-event [{files :files} app]
@@ -140,7 +130,11 @@
                                                                :file-results
                                                                (fnil conj []) file))))
                            ;; FIXME: notify somehow
-                           (log/warn "Upload failed: " (.-status resp) (.-statusText resp)))))))))
+                           (log/warn "Upload failed: " (.-status resp) (.-statusText resp)))))
+                (.catch (fn [error]
+                          ;; happens on CORS errors and network-level errors
+                          (log/error "Upload failed: " error)
+                          (log/debug "If the erroris a a 301 status: you need matching region between set region in the environment and the home region of the s3 bucket")))))))
 
 
   MarkUploadComplete

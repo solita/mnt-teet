@@ -8,7 +8,8 @@
             [clj-time.coerce :as c]
             [clojure.walk :as walk]
             [teet.land.land-db :as land-db]
-            [teet.file.file-db :as file-db])
+            [teet.file.file-db :as file-db]
+            [teet.util.collection :as cu])
   (:import (java.time LocalDate)
            (java.time.format DateTimeFormatter)))
 
@@ -131,11 +132,17 @@ Then it will query X-road for the estate information."
                       :requesting-eid (str "EE" (:user/person-id user))
                       :api-url api-url
                       :api-secret api-secret}
-                     estates)]
+                     estates)
+        filtered-estate-info (cu/map-vals (fn [estate]
+                                            (-> estate
+                                                (update :jagu3 filter-ended)
+                                                (update :jagu4 filter-ended)))
+                                          estate-info)]
+
     (audit :land/related-project-estates {:thk.project/id id})
     {:estates estates
      :units (mapv (comp with-quality
-                        (partial with-estate estate-info))
+                        (partial with-estate filtered-estate-info))
                   units)}))
 
 (defquery :land/fetch-estate-compensations
