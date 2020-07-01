@@ -83,5 +83,5 @@
       new-vulns (check-new-vulns (read-nvd-lock) vulns)]
   (post-annotations annotation-url head-sha vulns new-vulns)
   (when (seq new-vulns)
-    (println (count new-vulns) " NEW vulnerabilities!")
+    (println (count new-vulns) " NEW vulnerabilities: " (str/join ", " new-vulns))
     (System/exit 1)))
