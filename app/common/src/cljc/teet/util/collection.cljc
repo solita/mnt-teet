@@ -1,6 +1,5 @@
 (ns teet.util.collection
-  "Collection utilities"
-  (:require [teet.util.datomic :as du]))
+  "Collection utilities")
 
 (defn contains-value? [coll v]
   (some #(when (= % v) true) coll))
@@ -49,12 +48,7 @@
             element))
         collection))
 
-(defn find-by-id
-  "Find first element in `collection` whose `:db/id` is `id`"
-  [id collection]
-  (find-first (comp (partial du/id= id)
-                    :db/id)
-              collection))
+
 
 (defn remove-by-id
   "Remove elements in `collection` whose `:db/id` is `id`"

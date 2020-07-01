@@ -82,7 +82,7 @@
     (let [created-comment (->> (tu/local-query tu/mock-user-boss :comment/fetch-comments
                                                {:db/id (tu/get-data :task-id)
                                                 :for :task})
-                               (cu/find-by-id (tu/get-data :tracked-comment-id)))]
+                               (du/find-by-id (tu/get-data :tracked-comment-id)))]
       (is (= (-> created-comment :comment/status :db/ident)
              :comment.status/unresolved))))
 
@@ -107,7 +107,7 @@
     (let [created-comment (->> (tu/local-query tu/mock-user-boss :comment/fetch-comments
                                                {:db/id (tu/get-data :task-id)
                                                 :for :task})
-                               (cu/find-by-id (tu/get-data :ednas-comment-id)))]
+                               (du/find-by-id (tu/get-data :ednas-comment-id)))]
       (is (= :comment.status/untracked
              (-> created-comment :comment/status :db/ident)))))
 
@@ -129,7 +129,7 @@
      (let [resolved-comment (->> (tu/local-query tu/mock-user-manager :comment/fetch-comments
                                                  {:db/id (tu/get-data :task-id)
                                                   :for :task})
-                                 (cu/find-by-id (tu/get-data :tracked-comment-id)))]
+                                 (du/find-by-id (tu/get-data :tracked-comment-id)))]
        (testing "the comment is status has changed"
          (is (= :comment.status/resolved
                 (-> resolved-comment :comment/status :db/ident))))

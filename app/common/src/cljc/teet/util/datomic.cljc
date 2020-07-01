@@ -3,7 +3,8 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.walk :as walk]
             #?(:clj [datomic.client.api :as d])
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [teet.util.collection :as cu]))
 
 (s/def :db/ident keyword?)
 (s/def ::enum (s/or :keyword keyword?
@@ -18,6 +19,12 @@
   #?(:clj (= id1 id2)
      :cljs (= (str id1) (str id2))))
 
+(defn find-by-id
+  "Find first element in `collection` whose `:db/id` is `id`"
+  [id collection]
+  (cu/find-first (comp (partial du/id= id)
+                    :db/id)
+              collection))
 (defn enum=
   "Compare two enum values.
   Enum may be a keyword or a map containing :db/ident."
