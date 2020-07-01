@@ -261,16 +261,18 @@
                                          :link :activity/manager}}
    :pre [(check-tasks-are-complete db activity-id)]
    :transact [(merge
-               {:db/id activity-id
-                :activity/status :activity.status/in-review}
-               (meta-model/modification-meta user))
-              (notification-db/notification-tx
-               {:from user
-                :to (get-in (du/entity db (project-db/activity-project-id db activity-id))
-                            [:thk.project/owner :db/id])
-                :type :notification.type/activity-waiting-for-review
-                :target activity-id
-                :project (project-db/activity-project-id db activity-id)})]})
+                {:db/id activity-id
+                 :activity/status :activity.status/in-review}
+                (meta-model/modification-meta user))
+              (if-let [owner (get-in (du/entity db (project-db/activity-project-id db activity-id))
+                                     [:thk.project/owner :db/id])]
+                (notification-db/notification-tx
+                  {:from user
+                   :to owner
+                   :type :notification.type/activity-waiting-for-review
+                   :target activity-id
+                   :project (project-db/activity-project-id db activity-id)})
+                {})]})
 
 (s/def ::activity-id integer?)
 (s/def ::status #{:activity.status/canceled
