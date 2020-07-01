@@ -1090,8 +1090,18 @@
            :db/doc "References to meeting decision entities"}
 
           ;; Meeting decision has body, responsible and deadline
+          {:db/ident :meeting-decision/body
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Rich text of the decision body"}
 
+          {:db/ident :meeting-decision/responsible
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "User who is responsible for this"}
 
-
-          ]]}
+          {:db/ident :meeting-decision/deadline
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "Deadline for this decision"}]]}
  ]
