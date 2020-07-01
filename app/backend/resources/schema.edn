@@ -1014,4 +1014,84 @@
            :db/valueType :db.type/instant
            :db/cardinality :db.cardinality/one
            :db/doc "When the user has seen this file. Updated every time file page is opened or file is downloaded."
-           :db/noHistory true}]]}]
+           :db/noHistory true}]]}
+
+ ;; Meetings
+ {:db/ident :migration/meetings
+  :txes [[{:db/ident :activity/meetings
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "All meetings (upcoming and previously held) in this activity"}
+
+          ;; The meeting has: topic, location, start and end time, participants
+          ;; each participant may have a role (organizer, reviewer or participant)
+          {:db/ident :meeting/topic
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "The short topic of the meeting"}
+
+          {:db/ident :meeting/location
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "The short location description of the meeting"}
+
+          {:db/ident :meeting/start-time
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "The date and time when the meeting is scheduled to start"}
+
+          {:db/ident :meeting/end-time
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "The date and time when the meeting is scheduled to end"}
+
+          {:db/ident :meeting/participants
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "References to meeting participant entities"}
+
+          ;; Meeting participants
+          {:db/ident :meeting-participant/type
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Enum reference to participant type"}
+
+          {:db/ident :meeting-participant.type/organizer :enum/attribute :meeting-participant/type
+           :db/doc "The meeting organizer, should be one per meeting."}
+          {:db/ident :meeting-participant.type/reviewer :enum/attribute :meeting-participant/type
+           :db/doc "Meeting reviewer, one per organizer, that accepts/rejects the decisions."}
+          {:db/ident :meeting-participant.type/participant :enum/attribute :meeting-participant/type
+           :db/doc "Regular participant who has no special role in the meeting"}
+
+          ;; Meeting agenda topics
+          {:db/ident :meeting/agenda
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "References to meeting agenda entities"}
+
+          {:db/ident :meeting-agenda/topic
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Short topic title"}
+
+          {:db/ident :meeting-agenda/body
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Rich text description of the topic"}
+
+          {:db/ident :meeting-agenda/files
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "Files attached to this agenda item"}
+
+          {:db/ident :meeting-agenda/decisions
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "References to meeting decision entities"}
+
+          ;; Meeting decision has body, responsible and deadline
+
+
+
+          ]]}
+ ]
