@@ -105,7 +105,7 @@
            :Key to-key}))
 
 (defn delete-object
-  "Delete obejct in a bucket"
+  "Delete object in a bucket"
   [bucket key]
   {:pre [(string? bucket)
          (string? key)]}
