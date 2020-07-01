@@ -135,12 +135,14 @@
                                          :link :task/assignee}}
    :transact [{:db/id task-id
                :task/status :task.status/waiting-for-review}
-              (notification-db/notification-tx
-               {:from user
-                :to (project-db/project-owner db (project-db/task-project-id db task-id))
-                :target task-id
-                :type :notification.type/task-waiting-for-review
-                :project (project-db/task-project-id db task-id)})]})
+              (if-let [manager (activity-db/activity-manager db (activity-db/task-activity-id db task-id))]
+                (notification-db/notification-tx
+                  {:from user
+                   :to manager
+                   :target task-id
+                   :type :notification.type/task-waiting-for-review
+                   :project (project-db/task-project-id db task-id)})
+                {})]})
 
 (defcommand :task/start-review
   {:doc "Start review for task, sets status."
