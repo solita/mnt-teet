@@ -353,15 +353,13 @@
   PostProjectEdit
   (process-event [_ app]
     (let [{:thk.project/keys [id]} (get-in app [:route :project])
-          {:thk.project/keys [project-name owner manager
-                              km-range m-range-change-reason]}
+          {:thk.project/keys [project-name owner km-range m-range-change-reason]}
           (get-in app [:route :project :basic-information-form])
           [start-km end-km] (mapv road-model/parse-km km-range)]
       (t/fx app {:tuck.effect/type :command!
                  :command :thk.project/update
                  :payload (cu/without-nils (merge {:thk.project/id id
                                                    :thk.project/owner owner
-                                                   :thk.project/manager manager
                                                    :thk.project/project-name project-name}
                                                   (when m-range-change-reason
                                                     {:thk.project/m-range-change-reason m-range-change-reason})
