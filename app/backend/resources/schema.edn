@@ -1063,6 +1063,11 @@
           {:db/ident :meeting-participant.type/participant :enum/attribute :meeting-participant/type
            :db/doc "Regular participant who has no special role in the meeting"}
 
+          {:db/ident :meeting-participant/user
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Reference to the participant user"}
+
           ;; Meeting agenda topics
           {:db/ident :meeting/agenda
            :db/valueType :db.type/ref
