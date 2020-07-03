@@ -6,7 +6,8 @@
             teet.project.project-commands
             [teet.test.utils :as tu]
             [teet.util.collection :as cu]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            teet.integration.integration-s3))
 
 (use-fixtures :each tu/with-environment (tu/with-db) tu/with-global-data)
 
@@ -83,7 +84,7 @@
     (let [created-comment (->> (tu/local-query tu/mock-user-boss :comment/fetch-comments
                                                {:db/id (tu/get-data :task-id)
                                                 :for :task})
-                               (cu/find-by-id (tu/get-data :tracked-comment-id)))]
+                               (du/find-by-id (tu/get-data :tracked-comment-id)))]
       (is (= (-> created-comment :comment/status :db/ident)
              :comment.status/unresolved))))
 
@@ -108,7 +109,7 @@
     (let [created-comment (->> (tu/local-query tu/mock-user-boss :comment/fetch-comments
                                                {:db/id (tu/get-data :task-id)
                                                 :for :task})
-                               (cu/find-by-id (tu/get-data :ednas-comment-id)))]
+                               (du/find-by-id (tu/get-data :ednas-comment-id)))]
       (is (= :comment.status/untracked
              (-> created-comment :comment/status :db/ident)))))
 
@@ -130,7 +131,7 @@
      (let [resolved-comment (->> (tu/local-query tu/mock-user-manager :comment/fetch-comments
                                                  {:db/id (tu/get-data :task-id)
                                                   :for :task})
-                                 (cu/find-by-id (tu/get-data :tracked-comment-id)))]
+                                 (du/find-by-id (tu/get-data :tracked-comment-id)))]
        (testing "the comment is status has changed"
          (is (= :comment.status/resolved
                 (-> resolved-comment :comment/status :db/ident))))
@@ -226,12 +227,14 @@
                  [:task/assignee :user/id]))
       "task is assigned to carla")
   (tu/local-login tu/mock-user-carla-consultant)
-  (->> (tu/local-command :file/upload {:task-id (tu/get-data :task-id)
-                                       :file {:file/name "land_deals.pdf"
-                                              :file/size 666
-                                              :file/type "application/pdf"}})
-       :file
-       (tu/store-data! :file))
+  (with-redefs [;; Mock out URL generation (we don't use it for anything)
+                teet.integration.integration-s3/presigned-url (constantly "url")]
+    (->> (tu/local-command :file/upload {:task-id (tu/get-data :task-id)
+                                         :file {:file/name "land_deals.pdf"
+                                                :file/size 666
+                                                :file/type "application/pdf"}})
+         :file
+         (tu/store-data! :file)))
 
   (is (some? (:db/id (tu/get-data :file))) "file was created")
 

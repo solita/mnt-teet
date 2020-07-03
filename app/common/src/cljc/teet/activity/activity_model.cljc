@@ -48,3 +48,15 @@
   "Can the activity be deleted? It can if it has no procurement number."
   [activity]
   (nil? (:activity/procurement-nr activity)))
+
+(defn currently-active?
+  "Is the activity currently active? An activity is active if the
+  current timestamp is between the actual start and end date of the
+  activity."
+  [{:activity/keys [actual-start-date actual-end-date]} current-timestamp]
+  {:pre [(instance? java.util.Date current-timestamp)]}
+  ;; must have started to be active
+  (boolean (and actual-start-date
+                (not (.before current-timestamp actual-start-date))
+                (or (not actual-end-date)
+                    (not (.after current-timestamp actual-end-date))))))
