@@ -132,7 +132,7 @@
    :payload {task-id :task-id}
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/submit-results {:eid task-id
-                                         :link :task/assignee}}
+                                         :link :task/assignee}} ;; TODO add pre check to check that the task being submitted contains files
    :transact [{:db/id task-id
                :task/status :task.status/waiting-for-review}
               (if-let [manager (activity-db/activity-manager db (activity-db/task-activity-id db task-id))]
