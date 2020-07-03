@@ -2,7 +2,8 @@
  {:note-all-tasks-need-to-be-completed
   "Note: All tasks must be completed before activity can be submitted for review",
   :status "Status",
-  :waiting-for-submission "Results have not yet been submitted"},
+  :waiting-for-submission "Results have not yet been submitted",
+  :submit-results-success "Activity submitted succesfully"},
  :activity-approval
  {:activity.status/archived "Archive this activity",
   :activity.status/canceled "Cancel this activity",
@@ -288,7 +289,7 @@
  {:land-acquisition/registry-number "State estate registry number",
   :comment/visibility "Visibility",
   :task/send-to-thk? "Separate contract (in THK)",
-  :thk.project/manager "Manager",
+  :thk.project/manager "Project manager",
   :thk.project/project-name "Name",
   :task/thk-type "THK type",
   :task/type "Task type",
@@ -298,7 +299,7 @@
   :task/assignee "Responsible person",
   :land-exchange/price-per-sqm "Price/m²",
   :thk.project/owner-info "Owner",
-  :activity/manager "Manager",
+  :activity/manager "Project manager",
   :activity/status "Status",
   :task/group "Task group",
   :file/version "Version",
@@ -359,18 +360,20 @@
   :file/status "Status",
   :thk.project/owner "Owner"},
  :file
- {:download "Download file",
-  :edit "Edit file",
+ {:upload-new-version "Upload new version",
   :old-version "Old version",
+  :show-preview "Show preview",
+  :edit "Edit file",
+  :upload-info "Uploaded {date} by {author}",
+  :hide-preview "Hide preview",
   :other-versions "Other versions",
+  :switch-to-latest-version "Switch back to latest version",
   :sort-by
   {:file/name "Sort by name",
    :file/status "Sort by status",
    :file/type "Sort by file type",
    :meta/created-at "Sort by date"},
-  :switch-to-latest-version "Switch back to latest version",
-  :upload-info "Uploaded {date} by {author}",
-  :upload-new-version "Upload new version"},
+  :download "Download file"},
  :land
  {:show-owner-info "Show owner information",
   :no-active-mortgages
@@ -539,7 +542,7 @@
   :external-consultant "External consultant",
   :guest "Guest",
   :internal-consultant "Internal consultant",
-  :manager "Manager",
+  :manager "Project manager",
   :owner "Owner"},
  :search {:clear-filters "Clear filters", :quick-search "Search"},
  :search-area
@@ -572,7 +575,7 @@
   :submit-results "Submit results",
   :submit-results-success "Results submitted successfully",
   :submit-results-confirm
-  "Are you sure you want to submit the reults to {task}?",
+  "Are you sure you want to submit the results to {task}?",
   :no-documents "No documents",
   :edit-success-notification "Task edited successfully",
   :results "Results"},
