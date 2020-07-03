@@ -1108,5 +1108,34 @@
           {:db/ident :meeting-decision/deadline
            :db/valueType :db.type/instant
            :db/cardinality :db.cardinality/one
-           :db/doc "Deadline for this decision"}]]}
+           :db/doc "Deadline for this decision"}
+
+          ;; Meeting has acceptances that are given by reviewers
+          {:db/ident :meeting/acceptances
+           :db/valueType :db.type/ref
+           :d/cardinality :db.cardinality/many
+           :db/doc "References to meeting acceptance entities"}
+
+          {:db/ident :meeting-acceptance/user
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "The user who gave this acceptance"}
+
+          {:db/ident :meeting-acceptance/comment
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Comment related to the acceptance"}
+
+          {:db/ident :meeting-acceptance/acceptance
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Reference to meeting acceptance enum"}
+
+          ;; Enum values accepted and rejected
+          {:db/ident :meeting-acceptance.acceptance/accepted
+           :enum/attribute :meeting-acceptance/acceptance}
+          {:db/ident :meeting-acceptance.acceptance/rejected
+           :enum/attribute :meeting-acceptance/acceptance}
+
+          ]]}
  ]
