@@ -25,7 +25,8 @@
             [teet.ui.url :as url]
             [teet.ui.util :refer [mapc]]
             [teet.user.user-model :as user-model]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.project.task-model :as task-model]))
 
 
 
@@ -228,7 +229,7 @@
    :flex-direction :column
    :margin "2rem 0 2rem 0"})
 
-(defn- file-details [e! {:keys [replacement-upload-progress] :as file} latest-file edit-open?]
+(defn- file-details [e! {:keys [replacement-upload-progress] :as file} latest-file edit-open? can-replace-file?]
   (let [old? (some? latest-file)
         other-versions (if old?
                          (into [latest-file]
@@ -278,7 +279,7 @@
         [LinearProgress {:variant :determinate
                          :value replacement-upload-progress}]
         [:<>
-         (when (du/enum= :file.status/draft (:file/status (or latest-file file)))
+         (when (and can-replace-file? (du/enum= :file.status/draft (:file/status (or latest-file file))))
            [file-upload/FileUploadButton {:on-drop (e! file-controller/->UploadNewVersion file)
                                           :color :secondary
                                           :icon [icons/file-cloud-upload]
@@ -351,4 +352,4 @@
            :entity-type :file
            :show-comment-form? (not old?)}
           (when file
-            [file-details e! file latest-file edit-open?])]]]])))
+            [file-details e! file latest-file edit-open? (task-model/can-submit? task)])]]]])))
