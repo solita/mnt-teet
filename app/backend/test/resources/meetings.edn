@@ -1,0 +1,55 @@
+;; Test meetings
+[{:thk.activity/id "15906"
+  :activity/meetings
+  [{:db/id "p1-lc1-act1-meet1"
+    :meeting/topic "Test meeting"
+    :meeting/location "virtual"
+    :meeting/start-time #inst "2020-08-03T11:00:00.00-00:00"
+    :meeting/end-time #inst "2020-08-03T11:00:00.00-00:00"
+    :meeting/participants
+    [ ;; Organized by Danny D. Manager
+     {:db/id "meet1-organizer"
+      :meeting-participant/type :meeting-participant.type/organizer
+      :meeting-participant/user [:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"]}
+
+     ;; Reviewed by Benjamin Boss
+     {:db/id "meet1-reviewer"
+      :meeting-participant/type :meeting-participant.type/reviewer
+      :meetic-participant/user [:user/id #uuid "fa8af5b7-df45-41ba-93d0-603c543c880d"]}
+
+     ;; external and internal consultants are participating as well
+     {:db/id "meet1-participant-ext"
+      :meeting-participant/type :meeting-participant.type/participant
+      :meeting-participant/user [:user/id #uuid "ccbedb7b-ab30-405c-b389-292cdfe85271"]}
+     {:db/id "meet1-participant-int"
+      :meeting-participant/type :meeting-participant.type/participant
+      :meeting-participant/user [:user/id #uuid "008af5b7-0f45-01ba-03d0-003c111c8f00"]}]
+
+    :meeting/agenda
+    [{:db/id "meet1-agenda1"
+      :meeting-agenda/topic "Discuss the rich text editor"
+      :meeting-agenda/body "We discussed multiple **different** options for rich text."
+      :meeting-agenda/decisions [{:db/id "meet1-agenda1-dec1"
+                                  :meeting-decision/body "We decided to use **markdown** as the storage format"
+                                  :meeting-decision/deadline #inst "2020-09-01T13:45:00.00-00:00"
+                                  :meeting-decision/responsible [:user/id #uuid "ccbedb7b-ab30-405c-b389-292cdfe85271"]}]}
+     {:db/id "meet1-agenda2"
+      :meeting-agenda/topic "Frobnicate the foos"
+      :meeting-agenda/body "Frobnicate all the fooz, bars and quuxi"
+      :meeting-agenda/decisions [{:db/id "meet1-agenda2-dec1"
+                                  :meeting-decision/body "It was decided to call in metasyntactic specialists to evaluate the situation."
+                                  :meeting-decision/deadline #inst "2021-01-01T11:22:33.00-00:00"
+                                  :meeting-decision/responsible [:user/id #uuid "008af5b7-0f45-01ba-03d0-003c111c8f00"]}
+                                 {:db/id "meet1-agenda2-dec2"
+                                  :meeting-decision/body "Another decision"
+                                  :meeting-decision/deadline #inst "2020-09-09T12:34:56.00-00:00"
+                                  :meeting-decision/responsible [:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"]}]}]
+
+    :meeting/acceptances
+    [{:db/id "meet1-acceptance1"
+      :meeting-acceptance/user [:user/id #uuid "fa8af5b7-df45-41ba-93d0-603c543c880d"]
+      :meeting-acceptance/acceptance :meeting-acceptance.acceptance/accepted
+      :meeting-acceptance/comment "This looks like what we discussed"
+      :meta/created-at #inst "2020-08-05T11:00:00.00-00:00"}]
+
+    }]}]
