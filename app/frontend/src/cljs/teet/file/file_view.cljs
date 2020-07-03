@@ -26,8 +26,8 @@
             [teet.ui.util :refer [mapc]]
             [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]
-            [teet.ui.common :as common]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.project.task-model :as task-model]))
 
 
 
@@ -238,7 +238,7 @@
    :flex-direction :column
    :margin "2rem 0 2rem 0"})
 
-(defn- file-details [e! {:keys [replacement-upload-progress] :as file} latest-file edit-open? show-preview?]
+(defn- file-details [e! {:keys [replacement-upload-progress] :as file} latest-file edit-open? show-preview? can-replace-file?]
   (log/info "file-details: file map is" (pr-str file))
   (let [old? (some? latest-file)
         other-versions (if old?
@@ -273,7 +273,7 @@
                 (tr [:fields :file/status])
                 (tr-enum (:file/status file))])])]
 
-     (if @show-preview?       
+     (if @show-preview?
        [:div {:class (<class preview-style)}
         (if (str/starts-with? (:file/type file) "image/")
           [:img {:style {:width :auto :height :auto
@@ -294,7 +294,7 @@
         [LinearProgress {:variant :determinate
                          :value replacement-upload-progress}]
         [:<>
-         (when (du/enum= :file.status/draft (:file/status (or latest-file file)))
+         (when (and can-replace-file? (du/enum= :file.status/draft (:file/status (or latest-file file))))
            [file-upload/FileUploadButton {:on-drop (e! file-controller/->UploadNewVersion file)
                                           :color :secondary
                                           :icon [icons/file-cloud-upload]
@@ -342,41 +342,41 @@
   (e! (file-controller/->UpdateFileSeen file-id))
   (let [edit-open? (r/atom false)]
     (r/create-class
-     {:component-did-update
-      (fn [this [_ _ {{prev-file-id :file} :params} _ _ :as _prev-args] _ _]
-        (let [[_ _ {{curr-file-id :file} :params} _ _ :as _curr-args] (r/argv this)]
-          (when (not= curr-file-id prev-file-id)
-            (e! (file-controller/->UpdateFileSeen curr-file-id)))))
+      {:component-did-update
+       (fn [this [_ _ {{prev-file-id :file} :params} _ _ :as _prev-args] _ _]
+         (let [[_ _ {{curr-file-id :file} :params} _ _ :as _curr-args] (r/argv this)]
+           (when (not= curr-file-id prev-file-id)
+             (e! (file-controller/->UpdateFileSeen curr-file-id)))))
 
-      :reagent-render
-      (fn  [e! {{file-id :file
-                      task-id :task} :params
+       :reagent-render
+       (fn [e! {{file-id :file
+                 task-id :task} :params
                 :as app} project breadcrumbs]
-        (let [task (project-model/task-by-id project task-id)
-              file (project-model/file-by-id project file-id false)
-              show-preview? (r/atom (str/starts-with? (:file/type file) "image/"))
-              old? (nil? file)
-              file (or file (project-model/file-by-id project file-id true))
-              latest-file (when old?
-                            (project-model/latest-version-for-file-id project file-id))]
-          [project-navigator-view/project-navigator-with-content
-           {:e! e!
-            :app app
-            :project project
-            :breadcrumbs breadcrumbs
-            :column-widths [2 8 2]}
-           [Grid {:container true}
-            [Grid {:item true :xs 3 :xl 2}
-             [file-list (:task/files task) (:db/id file)]]
-            [Grid {:item true :xs 9 :xl 10}
-             [:<>
-              (when @edit-open?
-                [file-edit-dialog {:e! e! :on-close #(reset! edit-open? false) :file file}])]
-             [tabs/details-and-comments-tabs
-              {:e! e!
-               :app app
-               :entity-id (:db/id file)
-               :entity-type :file
-               :show-comment-form? (not old?)}
-              (when file
-                [file-details e! file latest-file edit-open? show-preview?])]]]]))})))
+         (let [task (project-model/task-by-id project task-id)
+               file (project-model/file-by-id project file-id false)
+               show-preview? (r/atom (and file (str/starts-with? (:file/type file) "image/")))
+               old? (nil? file)
+               file (or file (project-model/file-by-id project file-id true))
+               latest-file (when old?
+                             (project-model/latest-version-for-file-id project file-id))]
+           [project-navigator-view/project-navigator-with-content
+            {:e! e!
+             :app app
+             :project project
+             :breadcrumbs breadcrumbs
+             :column-widths [2 8 2]}
+            [Grid {:container true}
+             [Grid {:item true :xs 3 :xl 2}
+              [file-list (:task/files task) (:db/id file)]]
+             [Grid {:item true :xs 9 :xl 10}
+              [:<>
+               (when @edit-open?
+                 [file-edit-dialog {:e! e! :on-close #(reset! edit-open? false) :file file}])]
+              [tabs/details-and-comments-tabs
+               {:e! e!
+                :app app
+                :entity-id (:db/id file)
+                :entity-type :file
+                :show-comment-form? (not old?)}
+               (when file
+                 [file-details e! file latest-file edit-open? show-preview? (task-model/can-submit? task)])]]]]))})))
