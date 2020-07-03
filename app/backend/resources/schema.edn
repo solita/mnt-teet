@@ -1111,6 +1111,10 @@
            :db/doc "Deadline for this decision"}
 
           ;; Meeting has acceptances that are given by reviewers
+          ;;
+          ;; If meeting is modified in any way, set :meta/deleted? to true on all
+          ;; current acceptances.
+
           {:db/ident :meeting/acceptances
            :db/valueType :db.type/ref
            :d/cardinality :db.cardinality/many
