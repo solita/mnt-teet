@@ -12,8 +12,7 @@
             [teet.util.datomic :as du]
             [teet.permission.permission-db :as permission-db]
             [teet.util.collection :as cu]
-            [teet.user.user-model :as user-model])
-  (:import (java.util Date)))
+            [teet.user.user-model :as user-model]))
 
 (defn valid-activity-name?
   "Check if the activity name is valid for the lifecycle it's being added to"
@@ -28,24 +27,6 @@
            db
            lifecycle-id
            activity-name))))
-
-(defn- conflicting-activities?
-  "Check if the lifecycle contains any activities withe the same name that have not ended yet"
-  [db {activity-name :activity/name :as _activity} lifecycle-id]
-  (boolean
-    (seq
-      (mapv first (d/q '[:find (pull ?a [*])
-                         :in $ ?name ?lc ?time
-                         :where
-                         [?a :activity/name ?name]
-                         [?lc :thk.lifecycle/activities ?a]
-                         [(missing? $ ?a :meta/deleted?)]   ;; Don't take in to account deleted activities
-                         [(get-else $ ?a :activity/actual-end-date ?time) ?end-date]
-                         [(>= ?end-date ?time)]]
-                    db
-                    activity-name
-                    lifecycle-id
-                    (Date.))))))
 
 (defn- valid-task-triple? [[t-group t-type send-to-thk? :as task-triple]]
   (and (= (count task-triple) 3)
@@ -128,7 +109,7 @@
          (valid-activity-dates? db lifecycle-id activity)
 
          ^{:error :conflicting-activities}
-         (not (conflicting-activities? db activity lifecycle-id))
+         (not (activity-db/conflicting-activities? db activity lifecycle-id))
 
          ^{:error :invalid-tasks}
          (valid-tasks? db (:activity/name activity) tasks)]}
