@@ -273,14 +273,15 @@
                 (tr [:fields :file/status])
                 (tr-enum (:file/status file))])])]
 
-     (if @show-preview?       
-       [:div {:class (<class preview-style)}
-        (if (str/starts-with? (:file/type file) "image/")
-          [:img {:style {:width :auto :height :auto
-                         :max-height "250px"
-                         :object-fit :contain}
-                 :src (common-controller/query-url :file/download-file {:file-id (:db/id file)})}]
-          "Preview")
+     (if @show-preview?
+       [:div        
+        [:div {:class (<class preview-style)}
+         (if (str/starts-with? (:file/type file) "image/")
+           [:img {:style {:width :auto :height :auto
+                          :max-height "250px"
+                          :object-fit :contain}
+                  :src (common-controller/query-url :file/download-file {:file-id (:db/id file)})}]
+           "Preview")]
         [buttons/button-primary {:on-click #(reset! show-preview? false)}
          (tr [:file :hide-preview])]]
        ;; else
