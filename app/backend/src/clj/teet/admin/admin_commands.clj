@@ -34,12 +34,20 @@
         (throw (ex-info "x-road error response" (merge resp {:names name-map})))))))
 
 
+(defn date-before?
+  "a is-before b?"
+  [a b]
+  (if (and a b)
+    (.before a b)
+    false))
+
 (defn redundant-with-existing-permission? [db person-id new-permission current-date]
   (let [redundant (fn [existing]
                     (and (= (:permission/role new-permission) (:permission/role existing)) ;; same role
                          (nil? (:permission/valid-to new-permission)) ;; no expiration
                          (nil? (:permission/valid-to existing)) ;; no expiration
-                         (.before (:permission/valid-from existing) current-date)))        
+                         
+                         (date-before? (:permission/valid-from existing) current-date)))        
         q-res (d/q '[:find (pull ?perms [*])
                      :in $ ?pid
                      :where [?user :user/person-id ?pid]
