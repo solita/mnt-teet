@@ -665,11 +665,10 @@
                         " ")
                       [typography/GreyText {:style {:display :inline}}
                        (format/parse-date-string (:kande_alguskuupaev mortgage))]]]
-           :body (-> mortgage
-                     :kande_tekst
-                     first
-                     second
-                     first)}])
+           :body [:div
+                  (when-let [mortgage-owner (get-in mortgage [:oigustatud_isikud 0 :KinnistuIsik 0 :nimi])]
+                    [:span mortgage-owner])
+                  [:p (pr-str mortgage)]]}])
        [:p (tr [:land :no-active-mortgages])])]))
 
 
