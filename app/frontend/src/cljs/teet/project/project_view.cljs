@@ -41,6 +41,7 @@
             [teet.common.common-controller :as common-controller]
             [teet.road.road-model :as road-model]
             [teet.ui.query :as query]
+            [taoensso.timbre :as log]
             [clojure.string :as str]))
 
 
@@ -283,6 +284,14 @@
                                 assignees)]]]}])
          assignees)])
 
+(defn- project-managers-info-missing [project]
+  (let [acts (:thk.lifecycle/activities project)
+        activity-managers (mapv :activity/manager acts)
+        owner (:thk.project/owner project)]
+    (or
+     (nil? owner)
+     (contains? nil activity-managers))))
+
 (defn- project-owner-and-managers [owner lifecycles show-history?]
   (let [now (js/Date.)
         active-manager (fn [manager name]
@@ -328,6 +337,7 @@
                                                                 "\u2013"
                                                                 (and end (format/date end)))])]})))
                                  activities)
+                         ;; else - show-history? = false
                          (for [{:activity/keys [manager name]
                                 id :db/id} activities
                                :when manager]
@@ -402,7 +412,6 @@
    [project-timeline-view/timeline project]])
 
 (def project-tabs-layout
-  ;; FIXME: Labels with TR paths instead of text
   [{:label [:project :tabs :activities]
     :value "activities"
     :component activities-tab
@@ -412,7 +421,7 @@
     :value "people"
     :component people-tab
     :badge (fn [project]
-             (when-not (:thk.project/owner project)
+             (when (project-managers-info-missing project)               
                [Badge {:badge-content (r/as-element [information-missing-icon])}]))
     :layers #{:thk-project}}
    {:label [:project :tabs :details]
