@@ -2,7 +2,8 @@
   (:require [datomic.client.api :as d]
             [teet.util.collection :as cu]
             [teet.util.datomic :as du]
-            [teet.db-api.core :as db-api]))
+            [teet.db-api.core :as db-api])
+  (:import (java.util Date)))
 
 (defn activity-date-range
   [db activity-id]
@@ -134,3 +135,21 @@
   (project-with-manager-histories project
                                   (get-manager-histories db
                                                          (:db/id project))))
+
+(defn conflicting-activities?
+  "Check if the lifecycle contains any activities withe the same name that have not ended yet"
+  [db {activity-name :activity/name :as _activity} lifecycle-id]
+  (boolean
+   (seq
+    (mapv first (d/q '[:find (pull ?a [*])
+                       :in $ ?name ?lc ?time
+                       :where
+                       [?a :activity/name ?name]
+                       [?lc :thk.lifecycle/activities ?a]
+                       [(missing? $ ?a :meta/deleted?)]   ;; Don't take in to account deleted activities
+                       [(get-else $ ?a :activity/actual-end-date ?time) ?end-date]
+                       [(>= ?end-date ?time)]]
+                     db
+                     activity-name
+                     lifecycle-id
+                     (Date.))))))
