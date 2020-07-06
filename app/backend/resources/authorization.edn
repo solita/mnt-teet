@@ -105,7 +105,7 @@
  {:admin :full,
   :manager :full,
   :internal-consultant :full,
-  :external-consultant :link,
+  :external-consultant :full,
   :authenticated-guest :read,
   :guest :read},
  :land/edit-land-acquisition {:admin :full, :manager :full},
