@@ -34,27 +34,19 @@
         (throw (ex-info "x-road error response" (merge resp {:names name-map})))))))
 
 
-(defn redundant-with-existing-permission [db person-id new-permission current-date]
-  (let [redundant (fn [new existing]
-                    (log/info "redundant tests:"
-                              (= (:permission/role new) (:permission/role existing)) ;; same role
-                              (nil? (:permission/valid-to new)) ;; no expiration
-                              (nil? (:permission/valid-to existing)) ;; no expiration
-                              (.before (:permission/valid-from existing) current-date))
-                    (and (= (:permission/role new) (:permission/role existing)) ;; same role
-                         (nil? (:permission/valid-to new)) ;; no expiration
-                       (nil? (:permission/valid-to existing)) ;; no expiration
-                       (.before (:permission/valid-from existing) current-date)))
-        
+(defn redundant-with-existing-permission? [db person-id new-permission current-date]
+  (let [redundant (fn [existing]
+                    (and (= (:permission/role new-permission) (:permission/role existing)) ;; same role
+                         (nil? (:permission/valid-to new-permission)) ;; no expiration
+                         (nil? (:permission/valid-to existing)) ;; no expiration
+                         (.before (:permission/valid-from existing) current-date)))        
         q-res (d/q '[:find (pull ?perms [*])
                      :in $ ?pid
                      :where [?user :user/person-id ?pid]
                      [?user :user/permissions ?perms]] db "EE123123123X")
-        existing-perms (-> q-res ffirst :user/permissions)
-        redundants (filterv #(redundant new-permission %)
-                            existing-perms)]
-    (log/info "count of existing perms" (count existing-perms)) ;; reporting 0, wip
-    (empty? redundants)))
+        existing-perms (map first q-res)
+        redundants (filterv redundant existing-perms)]
+    (not-empty redundants)))
 
 (defcommand :admin/create-user
   {:doc "Create user"
@@ -63,23 +55,20 @@
    :project-id nil
    :authorization {:admin/add-user {}}
    :transact [;; (log/info "admin/create-user: current user" (:user/person-id user))
-              (let [user-tx 
-                    (merge (new-user)
+              (merge (new-user)
                            (select-keys user-data [:user/person-id])
                            (when-let [p (:user/add-global-permission user-data)]
                              
                              (let [current-date (java.util.Date.)
                                    new-permission {:user/permissions [{:db/id "new-permission"
-                                                  :permission/role p
-                                                  :permission/valid-from current-date}]}
-                                   redundant? (redundant-with-existing-permission
+                                                                       :permission/role p
+                                                                       :permission/valid-from current-date}]}
+                                   redundant? (redundant-with-existing-permission?
                                                db
                                                (:user/person-id user-data)
-                                               new-permission
+                                               (first (:user/permissions new-permission))
                                                current-date)]
-                               (log/info "new permission redundant? ->" redundant?)
-                               (when-not redundant?
+                               (if redundant?
+                                 (log/info "request to add redundant permission, skipping - new permission was" new-permission)
                                  new-permission)))
-                           #_(user-data-from-xroad (:user/person-id user-data) (:user/person-id user)))]
-                (log/info "create-user: tx'ing" user-tx)
-                user-tx)]})
+                           #_(user-data-from-xroad (:user/person-id user-data) (:user/person-id user)))]})
