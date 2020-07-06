@@ -853,7 +853,7 @@
                       (when omandiosa_suurus
                         [typography/BoldGreyText (str (* (/ omandiosa_lugeja omandiosa_nimetaja) 100) "%")])]
             :body [:<>
-                   (when (= isiku_tyyp "Juriidiline isik")
+                   (when (and (= isiku_tyyp "Juriidiline isik") r_kood) ;; r_kood was null in some cases in production data
                      [query/query {:e! e!
                                    :query :land/estate-owner-info
                                    :args {:thk.project/id (:thk.project/id project)
