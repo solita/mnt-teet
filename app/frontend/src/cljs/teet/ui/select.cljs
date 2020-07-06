@@ -361,9 +361,8 @@
                    :on-blur #(js/setTimeout
                               ;; Delay closing because we might be blurring
                               ;; because user clicked one of the options
-                              (fn [] (when open?
-                                       (swap! state assoc :open? false)))
-                              100)
+                              (fn [] (swap! state assoc :open? false))
+                              200)
                    :value (if value
                             (format-user value)
                             input)

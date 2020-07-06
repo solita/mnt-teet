@@ -1,7 +1,8 @@
 (ns teet.activity.activity-db
   (:require [datomic.client.api :as d]
             [teet.util.collection :as cu]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.db-api.core :as db-api]))
 
 (defn activity-date-range
   [db activity-id]
@@ -22,6 +23,19 @@
               (and (not (.before date (:activity/estimated-start-date activity-dates)))
                    (not (.after date (:activity/estimated-end-date activity-dates)))))
             dates)))
+
+(defn activity-manager
+  [db activity-id]
+  (get-in (d/pull db '[:activity/manager] activity-id)
+          [:activity/manager :db/id]))
+
+(defn task-activity-id
+  [db task-id]
+  (or (ffirst (d/q '[:find ?activity
+                     :in $ ?t
+                     :where [?activity :activity/tasks ?t]]
+                   db task-id))
+      (db-api/bad-request! "No such task")))
 
 (defn- manager-transactions [db activity-ids]
   (->> (d/q '[:find ?a ?modified-at ?tx ?ref
