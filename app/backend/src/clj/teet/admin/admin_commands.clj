@@ -41,7 +41,7 @@
     (.before a b)
     false))
 
-(defn redundant-with-existing-permission? [db person-id new-permission current-date]
+(defn redundant-with-existing-permission? [db new-permission current-date]
   (let [redundant (fn [existing]
                     (and (= (:permission/role new-permission) (:permission/role existing)) ;; same role
                          (nil? (:permission/valid-to new-permission)) ;; no expiration
@@ -73,7 +73,6 @@
                                                                        :permission/valid-from current-date}]}
                                    redundant? (redundant-with-existing-permission?
                                                db
-                                               (:user/person-id user-data)
                                                (first (:user/permissions new-permission))
                                                current-date)]
                                (if redundant?
