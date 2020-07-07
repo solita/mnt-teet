@@ -26,6 +26,7 @@
             [teet.ui.format :as format]
             [cljs-time.format :as tf]
             [teet.ui.query :as query]
+            [clojure.string]
             [teet.file.file-view :as file-view]
             [teet.log :as log]))
 
@@ -649,12 +650,9 @@
                       (:kande_liik_tekst burden) " "]
                      [typography/GreyText {:style {:display :inline}}
                       (format/parse-date-string (:kande_alguskuupaev burden))]]
-           :body [:div
-                  (when-let [mortgage-owner (get-in mortgage [:oigustatud_isikud 0 :KinnistuIsik 0 :nimi])]
-                    [:span mortgage-owner])
-                  (-> burden
-                      :kande_tekst
-                      flatten-kande-tekst-table)]}])
+           :body (-> burden
+                     :kande_tekst
+                     flatten-kande-tekst-table)}])
        [:p (tr [:land :no-active-burdens])])]))
 
 (defmethod estate-modal-content :mortgages
@@ -675,9 +673,12 @@
                         " ")
                       [typography/GreyText {:style {:display :inline}}
                        (format/parse-date-string (:kande_alguskuupaev mortgage))]]]
-           :body (-> mortgage
-                     :kande_tekst
-                     flatten-kande-tekst-table)}])
+           :body [:div
+                  (when-let [mortgage-owner (get-in mortgage [:oigustatud_isikud 0 :KinnistuIsik 0 :nimi])]
+                    [:span mortgage-owner])
+                  (-> mortgage
+                      :kande_tekst
+                      flatten-kande-tekst-table)]}])
        [:p (tr [:land :no-active-mortgages])])]))
 
 
