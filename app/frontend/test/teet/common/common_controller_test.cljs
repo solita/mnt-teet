@@ -4,6 +4,7 @@
             [teet.drtest :as drt :include-macros true]))
 
 (defn test-view [_e! _app]
+  (println "foo2")
   (fn [_e! _app]
     [:div
     (when-feature :test-feature
