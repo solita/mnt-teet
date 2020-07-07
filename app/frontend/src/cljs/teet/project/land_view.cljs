@@ -668,7 +668,11 @@
            :body [:div
                   (when-let [mortgage-owner (get-in mortgage [:oigustatud_isikud 0 :KinnistuIsik 0 :nimi])]
                     [:span mortgage-owner])
-                  [:p (pr-str mortgage)]]}])
+                  [:p (-> mortgage
+                          :kande_tekst
+                          first
+                          second
+                          first)]]}])
        [:p (tr [:land :no-active-mortgages])])]))
 
 
