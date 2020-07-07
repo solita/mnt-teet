@@ -525,6 +525,8 @@
   :add-tasks "Add tasks",
   :activities "Project activities",
   :cadastral-units-tab "Lands",
+  :no-selected-restrictions
+  "No selected restrictions for this project",
   :activities-tab "Activities"},
  :project-groups {:title "Project groups"},
  :projects

@@ -2,7 +2,9 @@
  {:note-all-tasks-need-to-be-completed
   "Kõik ülesanded peavad olema lõpetatud enne kui tegevuse saab ülevaatamiseks saata",
   :status "Olek",
-  :waiting-for-submission "Tulemusi ei ole veel esitatud"},
+  :waiting-for-submission "Tulemusi ei ole veel esitatud",
+  :submit-results-success
+  "Tegevus on edukalt esitatud ülevaatamiseks"},
  :activity-approval
  {:activity.status/archived "Arhiveerin tegevuse",
   :activity.status/canceled "Katkestan tegevuse",
@@ -521,6 +523,8 @@
   :add-tasks "Lisan ülesandeid",
   :activities "Projekti tegevused",
   :cadastral-units-tab "Maad",
+  :no-selected-restrictions
+  "Selle projekti jaoks pole ühtegi piirangut valitud",
   :activities-tab "Tegevused"},
  :project-groups {:title "Projektirühmad"},
  :projects
