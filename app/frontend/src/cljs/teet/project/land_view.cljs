@@ -628,6 +628,16 @@
   [{:keys [page]}]
   [:span "usupported page: " page])
 
+(defn flatten-kande-tekst-table [parsed]
+  (let [outer-rows parsed
+        flattened-once
+        (for [row outer-rows]
+          (mapv (partial clojure.string/join " | ") (drop 1 row)))
+        flattened-twice (mapv (partial clojure.string/join " / ") flattened-once)]
+    (if (= 1 (count flattened-twice))
+      flattened-twice
+      (vec (concat [:div] flattened-twice)))))
+
 (defmethod estate-modal-content :burdens
   [{:keys [estate-info]}]
   (let [burdens (:jagu3 estate-info)]
@@ -640,11 +650,9 @@
                       (:kande_liik_tekst burden) " "]
                      [typography/GreyText {:style {:display :inline}}
                       (format/parse-date-string (:kande_alguskuupaev burden))]]
-           :body [:span (-> burden
-                            :kande_tekst
-                            first
-                            second
-                            first)]}])
+           :body (-> burden
+                     :kande_tekst
+                     flatten-kande-tekst-table)}])
        [:p (tr [:land :no-active-burdens])])]))
 
 (defmethod estate-modal-content :mortgages
@@ -667,9 +675,7 @@
                        (format/parse-date-string (:kande_alguskuupaev mortgage))]]]
            :body (-> mortgage
                      :kande_tekst
-                     first
-                     second
-                     first)}])
+                     flatten-kande-tekst-table)}])
        [:p (tr [:land :no-active-mortgages])])]))
 
 
