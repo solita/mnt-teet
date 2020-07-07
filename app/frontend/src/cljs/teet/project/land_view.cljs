@@ -649,9 +649,12 @@
                       (:kande_liik_tekst burden) " "]
                      [typography/GreyText {:style {:display :inline}}
                       (format/parse-date-string (:kande_alguskuupaev burden))]]
-           :body (-> burden
-                     :kande_tekst
-                     flatten-kande-tekst-table)}])
+           :body [:div
+                  (when-let [mortgage-owner (get-in mortgage [:oigustatud_isikud 0 :KinnistuIsik 0 :nimi])]
+                    [:span mortgage-owner])
+                  (-> burden
+                      :kande_tekst
+                      flatten-kande-tekst-table)]}])
        [:p (tr [:land :no-active-burdens])])]))
 
 (defmethod estate-modal-content :mortgages
@@ -859,7 +862,7 @@
                       (when omandiosa_suurus
                         [typography/BoldGreyText (str (* (/ omandiosa_lugeja omandiosa_nimetaja) 100) "%")])]
             :body [:<>
-                   (when (= isiku_tyyp "Juriidiline isik")
+                   (when (and (= isiku_tyyp "Juriidiline isik") r_kood) ;; r_kood was null in some cases in production data
                      [query/query {:e! e!
                                    :query :land/estate-owner-info
                                    :args {:thk.project/id (:thk.project/id project)
