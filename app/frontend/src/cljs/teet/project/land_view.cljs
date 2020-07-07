@@ -634,9 +634,8 @@
         (for [row outer-rows]
           (mapv (partial clojure.string/join " | ") (drop 1 row)))
         flattened-twice (mapv (partial clojure.string/join " / ") flattened-once)]
-    (if (= 1 (count flattened-twice))
-      flattened-twice
-      (vec (concat [:div] flattened-twice)))))
+    (for [flat-row flattened-twice]
+      [:div flat-row])))
 
 (defmethod estate-modal-content :burdens
   [{:keys [estate-info]}]

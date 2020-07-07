@@ -80,7 +80,7 @@
               (log/error e "Exception in handler")
               (merge {:status (or status 500)
                       :body "Internal server error, see log for details"}
-                     (when error
+                     (when (keyword? error)
                        {:headers {"X-TEET-Error" (name error)}})))))))))
 
 (defn- check-spec [spec data]
