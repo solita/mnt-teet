@@ -60,3 +60,42 @@
                 (not (.before current-timestamp actual-start-date))
                 (or (not actual-end-date)
                     (not (.after current-timestamp actual-end-date))))))
+
+
+(defn conflicting-schedules?
+  "Returns true if there's a conflict in the schedules of the two
+  activities. Land acquisition can coincide with another activity. If
+  an activity is in a post-review state (completed, canceled,
+  archived) it doesn't conflict. Actual dates are used if available,
+  otherwise estimates are used."
+  [a1 a2]
+  (boolean
+   (and
+    ;; No conflict if at least one of the activities is post-review
+    (not (or (reviewed-statuses (:activity/status a1))
+             (reviewed-statuses (:activity/status a2))))
+    ;; No conflict if one of the activities is land-acquisition
+    (not (let [a1-name (:activity/name a1)
+               a2-name (:activity/name a2)]
+           (and (not= a1-name a2-name)
+                (or (= a1-name :activity.name/land-acquisition)
+                    (= a2-name :activity.name/land-acquisition)))))
+    ;; Do the schedules overlap
+    ;; Use actual date if exists, fallback to estimated
+    (let [start1 (or (:activity/actual-start-date a1)
+                     (:activity/estimated-start-date a1))
+          end1 (or (:activity/actual-end-date a1)
+                   (:activity/estimated-end-date a1))
+          start2 (or (:activity/actual-start-date a2)
+                     (:activity/estimated-start-date a2))
+          end2 (or (:activity/actual-end-date a2)
+                   (:activity/estimated-end-date a2))]
+      (not (or (.before end1 start2)
+               (.before end2 start1)))))))
+
+(defn conflicts?
+  "Are there conflicts preventing the two activities from coexisting
+  within a lifecycle?"
+  [a1 a2]
+  (or (= (:activity/name a1) (:activity/name a2))
+      (conflicting-schedules? a1 a2)))

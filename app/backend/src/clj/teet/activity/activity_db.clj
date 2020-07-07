@@ -1,5 +1,6 @@
 (ns teet.activity.activity-db
   (:require [datomic.client.api :as d]
+            [teet.activity.activity-model :as activity-model]
             [teet.util.collection :as cu]
             [teet.util.datomic :as du]
             [teet.db-api.core :as db-api])
@@ -137,19 +138,24 @@
                                                          (:db/id project))))
 
 (defn conflicting-activities?
-  "Check if the lifecycle contains any activities withe the same name that have not ended yet"
-  [db {activity-name :activity/name :as _activity} lifecycle-id]
-  (boolean
-   (seq
-    (mapv first (d/q '[:find (pull ?a [*])
-                       :in $ ?name ?lc ?time
-                       :where
-                       [?a :activity/name ?name]
-                       [?lc :thk.lifecycle/activities ?a]
-                       [(missing? $ ?a :meta/deleted?)]   ;; Don't take in to account deleted activities
-                       [(get-else $ ?a :activity/actual-end-date ?time) ?end-date]
-                       [(>= ?end-date ?time)]]
-                     db
-                     activity-name
-                     lifecycle-id
-                     (Date.))))))
+  "Check if the lifecycle contains any activies that conflict with the new activity"
+  [db new-activity-candidate lifecycle-id]
+  (let [existing-activities (mapv first (d/q '[:find (pull ?a [:activity/actual-start-date
+                                                               :activity/actual-end-date
+                                                               :activity/estimated-start-date
+                                                               :activity/estimated-end-date
+                                                               :activity/name
+                                                               :activity/status])
+                                               :in $ ?lc ?time
+                                               :where
+                                               [?lc :thk.lifecycle/activities ?a]
+                                               ;; Ignore deleted activities
+                                               [(missing? $ ?a :meta/deleted?)]
+                                               ;; Ignore activities that have ended
+                                               [(get-else $ ?a :activity/actual-end-date ?time) ?end-date]
+                                               [(>= ?end-date ?time)]]
+                                             db
+                                             lifecycle-id
+                                             (Date.)))]
+    (some (partial activity-model/conflicts? new-activity-candidate)
+          existing-activities)))
