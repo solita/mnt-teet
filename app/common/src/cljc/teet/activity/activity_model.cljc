@@ -64,16 +64,12 @@
 
 (defn conflicting-schedules?
   "Returns true if there's a conflict in the schedules of the two
-  activities. Land acquisition can coincide with another activity. If
-  an activity is in a post-review state (completed, canceled,
-  archived) it doesn't conflict. Actual dates are used if available,
-  otherwise estimates are used."
+  activities. Land acquisition can coincide with another
+  activity. Actual dates are used if available, otherwise estimates
+  are used."
   [a1 a2]
   (boolean
    (and
-    ;; No conflict if at least one of the activities is post-review
-    (not (or (reviewed-statuses (:activity/status a1))
-             (reviewed-statuses (:activity/status a2))))
     ;; No conflict if one of the activities is land-acquisition
     (not (let [a1-name (:activity/name a1)
                a2-name (:activity/name a2)]
@@ -95,7 +91,15 @@
 
 (defn conflicts?
   "Are there conflicts preventing the two activities from coexisting
-  within a lifecycle?"
+  within a lifecycle?  If an activity is in a post-review
+  state (completed, canceled, archived) it doesn't conflict."
   [a1 a2]
-  (or (= (:activity/name a1) (:activity/name a2))
-      (conflicting-schedules? a1 a2)))
+  ;; If either of the activities is completed/archived/canceled,
+  ;; there are no conflicts
+  (when (not (or (reviewed-statuses (:activity/status a1))
+                 (reviewed-statuses (:activity/status a2))))
+   (or
+    ;; Two incomplete activies of same type (name) cannot coexist within a lifecycle
+    (= (:activity/name a1) (:activity/name a2))
+
+    (conflicting-schedules? a1 a2))))

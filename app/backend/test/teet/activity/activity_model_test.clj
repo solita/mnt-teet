@@ -40,12 +40,13 @@
                                                {:activity/name :activity.name/land-acquisition
                                                 :activity/actual-start-date #inst "2020-04-12T21:00:00.000-00:00"
                                                 :activity/actual-end-date #inst "2020-04-14T21:00:00.000-00:00"})
-        "They can't both be land acquisitions"))
+        "They can't both be land acquisitions")))
 
+(deftest conflicts?
   (testing "There's no conflict if either one of the activities is completed"
-    (is (not (activity-model/conflicting-schedules? {:activity/status :activity.status/completed
-                                                     :activity/actual-start-date #inst "2020-04-10T21:00:00.000-00:00"
-                                                     :activity/actual-end-date #inst "2020-04-13T21:00:00.000-00:00"}
-                                                    {:activity/status :activity.status/in-preparation
-                                                     :activity/actual-start-date #inst "2020-04-12T21:00:00.000-00:00"
-                                                     :activity/actual-end-date #inst "2020-04-14T21:00:00.000-00:00"})))))
+    (is (not (activity-model/conflicts? {:activity/status :activity.status/completed
+                                         :activity/actual-start-date #inst "2020-04-10T21:00:00.000-00:00"
+                                         :activity/actual-end-date #inst "2020-04-13T21:00:00.000-00:00"}
+                                        {:activity/status :activity.status/in-preparation
+                                         :activity/actual-start-date #inst "2020-04-12T21:00:00.000-00:00"
+                                         :activity/actual-end-date #inst "2020-04-14T21:00:00.000-00:00"})))))
