@@ -28,7 +28,8 @@
             [teet.ui.query :as query]
             [clojure.string]
             [teet.file.file-view :as file-view]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.authorization.authorization-check :as authorization-check]))
 
 (defn cadastral-unit-style
   [selected?]
@@ -992,8 +993,10 @@
           [:div {:style {:margin-top "1rem"}
                  :class (<class common-styles/heading-and-action-style)}
            [typography/Heading2 (tr [:project :cadastral-units-tab])]
-           [buttons/button-secondary {:on-click (e! land-controller/->RefreshEstateInfo)}
-            (tr [:land :refresh-estate-info])]
+           [authorization-check/when-authorized :land/refresh-estate-info
+            project
+            [buttons/button-secondary {:on-click (e! land-controller/->RefreshEstateInfo)}
+             (tr [:land :refresh-estate-info])]]
            [buttons/button-secondary {:href (url/set-query-param :configure "cadastral-units")}
             (tr [:buttons :edit])]]
           (if (:land/estate-info-failure project)
