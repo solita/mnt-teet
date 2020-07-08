@@ -677,9 +677,7 @@
                     [:span mortgage-owner])
                   [:p (-> mortgage
                           :kande_tekst
-                          first
-                          second
-                          first)]]}])
+                          flatten-kande-tekst-table)]]}])
        [:p (tr [:land :no-active-mortgages])])]))
 
 
