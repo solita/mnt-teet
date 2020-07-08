@@ -144,7 +144,7 @@
                        {:entity-tuple entity-tuple})))]))
 
 (defn- valid-visibility-for-user? [user project-id visibility]
-  (or (= visibility :comment.visibility/all)
+  (or (du/enum= visibility :comment.visibility/all)
       (authorization-check/authorized? user
                                        :projects/set-comment-visibility
                                        {:project-id project-id})))
