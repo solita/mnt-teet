@@ -452,7 +452,11 @@
 (defn restriction-tab
   [e! _ {:thk.project/keys [related-restrictions] :as _project}]
   (e! (project-controller/->FetchRelatedFeatures related-restrictions :restrictions))
-  (fn [_e! {{project-id :project} :params :as _app} {:keys [checked-restrictions] :as _project}]
+  (fn [_e! {{project-id :project} :params :as _app} {:keys [checked-restrictions] :as project}]
+    (js/setTimeout                                          ;; WHen the restrictions are updated this hack was needed because the component mounts before the refresh call finishes
+      #(when (nil? checked-restrictions)
+        (e! (project-controller/->FetchRelatedFeatures (:thk.project/related-restrictions project) :restrictions)))
+      100)
     [:div
      [:div {:class (<class common-styles/heading-and-action-style)}
       [typography/Heading2 "Restrictions"]
