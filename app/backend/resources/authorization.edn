@@ -122,7 +122,10 @@
   :internal-consultant :read,
   :external-consultant :read},
  :project/edit-comments
- {:admin :full, :manager :link, :internal-consultant :link},
+ {:admin :full,
+  :manager :link,
+  :internal-consultant :link,
+  :external-consultant :link},
  :task/submit-results
  {:admin :full,
   :manager :full,
