@@ -84,8 +84,7 @@
                          estate-id)]
     (if (= (:status x-road-response) :ok)
       (-> x-road-response
-          (update :jagu3 filter-ended)
-          (update :jagu4 filter-ended)
+          property-registry/active-jagu34-only
           (assoc :estate-id estate-id))
       (throw (ex-info "Invalid xroad response" {:error :invalid-x-road-response
                                                 :response x-road-response})))))
