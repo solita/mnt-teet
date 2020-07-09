@@ -4,7 +4,7 @@
 (defn all-tasks-completed? [activity]
   (and (not-empty (:activity/tasks activity))
        (every? task-model/completed?
-                (:activity/tasks activity))))
+               (:activity/tasks activity))))
 
 (def reviewed-statuses #{:activity.status/canceled
                          :activity.status/archived

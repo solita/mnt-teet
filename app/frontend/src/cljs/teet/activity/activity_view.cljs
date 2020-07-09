@@ -232,8 +232,9 @@
       (:activity/manager activity)
       (:activity/status activity)]
      [task-lists (:activity/tasks activity)]
-     ;; fixme: [when-authorized] doesn't work here, why?
-     (if (and (authorized? @teet.app-state/user :activity/change-activity-status activity)
+     (if (and (authorized? @teet.app-state/user :activity/change-activity-status
+                           {:project-id (:db/id project)
+                            :entity activity})
               tasks-complete?
               (= (-> activity :activity/manager :db/id)
                  (-> @teet.app-state/user :db/id))
@@ -243,7 +244,8 @@
        (when-not tasks-complete?
          [:div (tr [:activity :note-all-tasks-need-to-be-completed])]))
 
-     (when (and (authorized? @teet.app-state/user :activity/change-activity-status nil)
+     (when (and (authorized? @teet.app-state/user :activity/change-activity-status
+                             {:project-id (:db/id project)})
                 (= (-> project :thk.project/owner :user/id)
                    (-> @teet.app-state/user :user/id)))
        (if (= status :activity.status/in-review)
