@@ -991,4 +991,9 @@
            :db/valueType :db.type/boolean
            :db/doc "Set to true when upload is complete and file exists in S3"}]
 
-         teet.migration.file-upload-complete/existing-files-upload-complete]}]
+         teet.migration.file-upload-complete/existing-files-upload-complete]}
+
+ {:db/ident :migration/task-type-options-update
+  :txes [[[:db/retractEntity [:db/ident :task.type/site-plan]]
+          {:db/ident :task.type/general-part
+           :enum/valid-for :task.group/design}]]}]
