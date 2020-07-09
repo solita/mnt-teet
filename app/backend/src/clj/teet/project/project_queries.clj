@@ -126,10 +126,11 @@
           maps)))
 
 (defn- feature-collection->sheet-data [feature-collection]
-  (->> feature-collection
-       :features
-       (map :properties)
-       maps->sheet))
+  (when (:features feature-collection)
+    (->> feature-collection
+         :features
+         (map :properties)
+         maps->sheet)))
 
 (defn- road-object-sheets [ctx entity-id]
   (let [gml-geometry
