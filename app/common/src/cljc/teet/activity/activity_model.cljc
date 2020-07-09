@@ -41,7 +41,7 @@
 (def activity-in-progress-statuses
   #{:activity.status/valid :activity.status/other :activity.status/research :activity.status/in-progress})
 
-(def activity-ready-statuses
+(def activity-finished-statuses
   #{:activity.status/completed :activity.status/expired :activity.status/canceled})
 
 (defn deletable?
@@ -49,18 +49,11 @@
   [activity]
   (nil? (:activity/procurement-nr activity)))
 
-(defn currently-active?
-  "Is the activity currently active? An activity is active if the
-  current timestamp is between the actual start and end date of the
-  activity."
-  [{:activity/keys [actual-start-date actual-end-date]} current-timestamp]
-  {:pre [(instance? java.util.Date current-timestamp)]}
-  ;; must have started to be active
-  (boolean (and actual-start-date
-                (not (.before current-timestamp actual-start-date))
-                (or (not actual-end-date)
-                    (not (.after current-timestamp actual-end-date))))))
+(defn active? [activity]
+  (-> activity :activity/status :db/ident activity-in-progress-statuses))
 
+(defn finished? [activity]
+  (-> activity :activity/status :db/ident activity-finished-statuses))
 
 (defn conflicting-schedules?
   "Returns true if there's a conflict in the schedules of the two

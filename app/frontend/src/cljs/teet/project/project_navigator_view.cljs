@@ -137,7 +137,7 @@
   [activity]
   (let [status (get-in activity [:activity/status :db/ident])]
     (cond
-      (activity-model/activity-ready-statuses status)
+      (activity-model/activity-finished-statuses status)
       :done
       (activity-model/activity-in-progress-statuses status)
       :started
@@ -154,7 +154,7 @@
         ready-activities (->> lifecycle
                               :thk.lifecycle/activities
                               (map #(get-in % [:activity/status :db/ident]))
-                              (filter activity-model/activity-ready-statuses)
+                              (filter activity-model/activity-finished-statuses)
                               count)
         lc-status (cond
                     (and (zero? in-progress-activities) (zero? ready-activities))
