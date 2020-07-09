@@ -1014,4 +1014,9 @@
            :db/valueType :db.type/instant
            :db/cardinality :db.cardinality/one
            :db/doc "When the user has seen this file. Updated every time file page is opened or file is downloaded."
-           :db/noHistory true}]]}]
+           :db/noHistory true}]]}
+
+ {:db/ident :migration/task-type-options-update
+  :txes [[[:db/retractEntity [:db/ident :task.type/site-plan]]
+          {:db/ident :task.type/general-part
+           :enum/valid-for :task.group/design}]]}]
