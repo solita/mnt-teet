@@ -27,7 +27,7 @@
    :context {:keys [conn db user]}
    :payload {id :thk.project/id :as project-form}
    :project-id [:thk.project/id id]
-   :authorization {:project/project-info {:eid [:thk.project/id id]
+   :authorization {:project/update-info {:eid [:thk.project/id id]
                                           :link :thk.project/owner}}}
   (let [{db-before :db-before
          db :db-after} (tx [(merge (cu/without-nils
@@ -87,7 +87,7 @@
    :context {:keys [user db]}
    :payload {:keys [restrictions project-id]}
    :project-id [:thk.project/id project-id]
-   :authorization {:project/project-info {:eid [:thk.project/id project-id]
+   :authorization {:project/update-info {:eid [:thk.project/id project-id]
                                           :link :thk.project/owner}}
    :transact (update-related-entities-tx db [:thk.project/id project-id] restrictions :thk.project/related-restrictions)})
 
@@ -96,7 +96,7 @@
    :context {:keys [user db]}
    :payload {:keys [cadastral-units project-id]}
    :project-id [:thk.project/id project-id]
-   :authorization {:project/project-info {:eid [:thk.project/id project-id]
+   :authorization {:project/update-info {:eid [:thk.project/id project-id]
                                           :link :thk.project/owner}}
    :config {xroad-instance [:xroad :instance-id]
             xroad-url [:xroad :query-url]
@@ -175,7 +175,7 @@
              id :thk.project/id}
    :spec (s/keys :req-un [::geometry])
    :project-id [:thk.project/id id]
-   :authorization {:project/project-info {:eid [:thk.project/id id]
+   :authorization {:project/update-info {:eid [:thk.project/id id]
                                           :link :thk.project/owner}}
    :pre [(string? id)]}
   (let [config (environment/config-map {:api-url [:api-url]
@@ -195,7 +195,7 @@
              geometry-id :geometry-id}
    :spec (s/keys :req-un [::entity-id ::geometry-id])
    :project-id [:thk.project/id entity-id]
-   :authorization {:project/project-info {:eid [:thk.project/id entity-id]
+   :authorization {:project/update-info {:eid [:thk.project/id entity-id]
                                           :link :thk.project/owner}}
    :pre [(number? entity-id)
          (string? geometry-id)]}
