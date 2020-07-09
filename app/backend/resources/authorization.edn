@@ -1,4 +1,5 @@
-{:task/review {:admin :full, :manager :full},
+{:project/update-info {:admin :full, :manager :full},
+ :task/review {:admin :full, :manager :full},
  :task/task-information
  {:admin :full,
   :manager :full,
@@ -99,6 +100,13 @@
   :external-consultant :read,
   :authenticated-guest :read,
   :guest :read},
+ :project/read-info
+ {:admin :full,
+  :manager :full,
+  :internal-consultant :full,
+  :external-consultant :full,
+  :authenticated-guest :read,
+  :guest :read},
  :admin/remove-user {:admin :full, :manager :link},
  :admin/add-user {:admin :full, :manager :link},
  :land/view-cadastral-data
@@ -169,13 +177,6 @@
   :internal-consultant :link,
   :external-consultant :link,
   :authenticated-guest :link},
- :project/project-info
- {:admin :full,
-  :manager :full,
-  :internal-consultant :read,
-  :external-consultant :read,
-  :authenticated-guest :read,
-  :guest :read},
  :maintenance/write-asset {:admin :full, :manager :full},
  :admin/set-user-role {:admin :full, :manager :link},
  :maintenance/asset-listing
