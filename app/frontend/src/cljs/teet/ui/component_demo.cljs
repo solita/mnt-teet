@@ -13,7 +13,8 @@
             [teet.ui.typography :refer [DataLabel Heading1 Heading2 Heading3 Paragraph SectionHeading Text]]
             [tuck.core :as t]
             [teet.log :as log]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [teet.ui.rich-text-editor :as rich-text-editor]))
 
 (defrecord TestFileUpload [files])
 (defrecord UploadFiles [files])
@@ -73,7 +74,6 @@
                     :on-change on-change
                     :placeholder "Calendar"
                     :variant :outlined
-                    :start-icon [:span "123"]
                     :button-click println}]
         [TextField {:label "Tekstiä"
                     :on-change on-change
@@ -112,6 +112,14 @@
 (defn demo
   [e! _app]
   [:div
+   [Heading1 "Rich text editor"]
+
+   [:div {:style {:margin "2rem"}}
+    [:f> rich-text-editor/wysiwyg-editor]]
+
+   [Divider {:style {:margin "2rem 0"}}]
+
+
    [Heading1 "TEET UI Components"]
    [Divider]
    [:section

@@ -7,7 +7,9 @@
             ["react" :as react]
             [alandipert.storage-atom :refer [local-storage]]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.util :as util]))
+            [teet.ui.util :as util]
+            [teet.ui.buttons :as buttons]
+            [teet.ui.material-ui :refer [Divider]]))
 
 (def Editor (r/adapt-react-class (aget draft-js "Editor")))
 (def EditorState (aget draft-js "EditorState"))
@@ -49,14 +51,20 @@
    {:label "Underline"
     :style "UNDERLINE"}])
 
+(defn type-control-button-style
+  [active?]
+  {:border :none
+   :background-color :none
+   :font-weight (if active?
+                  :bold
+                  :normal)})
+
 (defn type-control-button
   [{:keys [label style]} click active]
-  [:button {:on-click (fn [e]
+  [buttons/button-text {:on-click (fn [e]
                         (.stopPropagation e)
                         (click style))
-            :style {:background-color (if active
-                                        "green"
-                                        "blue")}}
+            :class (<class type-control-button-style active)}
    label])
 
 (defn block-style-controls
@@ -154,6 +162,7 @@
                             (.stopPropagation e)
                             (set-link))}
        "set link"]
+      [Divider {:style {:margin "1rem"}}]
 
       [Editor {:ref #(reset! editor-ref %)
                :editorState editorState
