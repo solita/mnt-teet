@@ -974,7 +974,6 @@
 
 (defn related-cadastral-units-info
   [e! _app project]
-
   (r/create-class
     {:component-did-mount
      (do
@@ -984,7 +983,11 @@
      :component-did-update (fn [this [_ _ _ _]]
                              (let [[_ _ _ project] (r/argv this)]
                                (when (nil? (:land/related-estate-ids project))
-                                 (e! (land-controller/->FetchRelatedEstates)))))
+                                 (e! (land-controller/->FetchRelatedEstates)))
+                               (when (nil? (:land/estate-forms project))
+                                 (e! (land-controller/->FetchEstateCompensations (:thk.project/id project))))
+                               (when (nil? (:land-acquisitions project))
+                                 (e! (land-controller/->FetchLandAcquisitions (:thk.project/id project))))))
      :reagent-render
      (fn [e! app project]
        (let [fetching? (nil? (:land/units project))]
