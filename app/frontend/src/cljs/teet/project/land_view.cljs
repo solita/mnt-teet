@@ -872,7 +872,8 @@
                                    :simple-view [business-registry-info]}])
 
                    [key-values owner]]}]
-          (when r_kood
+          (when (and (not= isiku_tyyp "Füüsiline isik")
+                     r_kood)
             [comments-view/lazy-comments {:e! e!
                                           :app app
                                           :entity-type :owner-comments
