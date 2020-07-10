@@ -2,9 +2,14 @@
   (:require [teet.project.task-model :as task-model]))
 
 (defn all-tasks-completed? [activity]
-  (and (not-empty (:activity/tasks activity))
-       (every? task-model/completed?
-               (:activity/tasks activity))))
+  "Expects the meta/deleted? key in tasks if they are deleted"
+  (let [tasks (filter
+                (fn [task]
+                  (not (:meta/deleted? task)))
+                (:activity/tasks activity))]
+    (and (not-empty tasks)
+         (every? task-model/completed?
+                 tasks))))
 
 (def reviewed-statuses #{:activity.status/canceled
                          :activity.status/archived

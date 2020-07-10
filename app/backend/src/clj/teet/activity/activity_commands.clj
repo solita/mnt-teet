@@ -228,7 +228,7 @@
 
 
 (defn check-tasks-are-complete [db activity-eid]
-  (let [activity (d/pull db '[:activity/name :activity/status {:activity/tasks [:task/status]}] activity-eid)]
+  (let [activity (d/pull db '[:activity/name :activity/status {:activity/tasks [:task/status :meta/deleted?]}] activity-eid)]
     (and (not-empty activity)
          (:activity/name activity)
          (activity-model/all-tasks-completed? activity))))
