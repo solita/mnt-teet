@@ -285,13 +285,22 @@
                                 assignees)]]]}])
          assignees)])
 
+(defn- contains-nils? [seq]
+  ;; (contains? doesn't work for vecs)
+  (not-every? some? seq))
+
 (defn- project-managers-info-missing [project]
-  (let [acts (:thk.lifecycle/activities project)
+  (let [acts (mapcat :thk.lifecycle/activities
+                     (:thk.project/lifecycles project))
         activity-managers (mapv :activity/manager acts)
         owner (:thk.project/owner project)]
+    (log/debug "people info-missing badge tests:" (nil? owner)
+               (contains-nils? activity-managers)
+               (empty? activity-managers) " - managers:" activity-managers)
     (or
      (nil? owner)
-     (contains? nil activity-managers))))
+     (contains-nils? activity-managers)
+     (empty? activity-managers))))
 
 (defn- project-owner-and-managers [owner lifecycles show-history?]
   (let [now (js/Date.)
