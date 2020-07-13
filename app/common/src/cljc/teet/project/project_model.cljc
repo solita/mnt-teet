@@ -162,6 +162,7 @@
 (defn- activity-behind-schedule?
   [{:activity/keys [estimated-end-date] :as activity}]
   (and (not (activity-model/activity-finished-statuses (get-in activity [:activity/status :db/ident])))
+       estimated-end-date
        (date/date-in-past? estimated-end-date)))
 
 (defn- atleast-one-activity-over-deadline?
