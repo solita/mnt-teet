@@ -92,6 +92,41 @@
   (fn [{attrs :attributes}]
     (string/interpolate pattern attrs)))
 
+(def retry-delay-ms {5      0
+                     4   5000
+                     3  30000
+                     2  60000
+                     1 120000})
+
+(defn patient-post [url params retry-statuses]
+  (loop [tries 5]
+    (let [last-exception (atom nil)
+          result
+          (try
+            (assert (not (neg? tries)))
+            (client/post url
+                         params)
+            (println "no error")
+            'ok
+            (catch clojure.lang.ExceptionInfo e
+              (println "caught exception, status" (:status (ex-data e)))
+              (if (retry-statuses (:status (ex-data e)))
+                (do
+                  (reset! last-exception e)
+                  'retry)
+                ;; else
+                (throw e))))]
+      (if (and (pos? tries) (= 'retry result))
+        (let [delay (get retry-delay-ms tries 20000)]
+          (println "retry #" (- 5 tries))          
+          (println "retry delay" delay)
+          ; (Thread/sleep delay)
+          (recur (dec tries)))
+        ;; else
+        (if (= 'retry result)
+          (throw (deref last-exception))
+          result)))))
+
 (defn upsert-features [{:keys [features api-url datasource-id datasource old-features] :as ctx}]  
   (let [->label (property-pattern-fn (:label_pattern datasource))
         ->id (property-pattern-fn (:id_pattern datasource))
@@ -103,7 +138,7 @@
         new-feature-id-set (into #{} (map ->id features-data))
         deleted? (clojure.set/difference old-feature-id-set new-feature-id-set)]
     (println "POSTing to " (str api-url "/feature"))
-    (doseq [features-chunk (partition-all 20
+    (doseq [features-chunk (partition-all 50
                                     ;; Add :i attribute that can be used as fallback id
                                     (map-indexed
                                      (fn [i feature]
@@ -111,7 +146,7 @@
                                                assoc :i i))
                                      features-data))]
       (print ".") (flush)
-      (client/post
+      (patient-post
        (str api-url "/feature")
        {:headers (merge
                   (auth-headers ctx)
@@ -128,7 +163,7 @@
                   :properties attributes}))}))
     (when (not-empty deleted?)
       (print "\nMarking features absent from import file as deleted.\n")
-      (client/post
+      (patient-post
        (str api-url "/feature")
        {:headers (merge
                   (auth-headers ctx)
