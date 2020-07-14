@@ -27,6 +27,8 @@
   (let [response (client/get (str api-url "/datasource?id=eq." datasource-id)
                              {:as :json
                               :headers (auth-headers ctx)})]
+    (println "fetched datasource config")
+    (flush)
     (assoc ctx :datasource (-> response :body first))))
 
 (defn download-datasource [{{:keys [url]} :datasource :as ctx}]
@@ -65,6 +67,8 @@
   ;; (clj-memory-meter.core/measure (existing-features-ids (make-config ["example-config.edn"])))
   ;; gives 97 kB/1000 rows and 183 MB for the 2M rows in current db as of this writing, leaving
   ;; a lot of headroom, but conceivably could outgrow the smallest 3GB CodeBuild VM some day.
+  (println "getting existing features")
+  (flush)
   (let [get-url (str api-url "/feature?select=id,datasource_id")
         resp (client/get get-url
                          {:headers (merge (auth-headers {:api-secret api-secret})
@@ -88,7 +92,7 @@
   (fn [{attrs :attributes}]
     (string/interpolate pattern attrs)))
 
-(defn upsert-features [{:keys [features api-url datasource-id datasource old-features] :as ctx}]
+(defn upsert-features [{:keys [features api-url datasource-id datasource old-features] :as ctx}]  
   (let [->label (property-pattern-fn (:label_pattern datasource))
         ->id (property-pattern-fn (:id_pattern datasource))
         old-feature-id-set (into #{}
@@ -98,7 +102,8 @@
         features-data (features)
         new-feature-id-set (into #{} (map ->id features-data))
         deleted? (clojure.set/difference old-feature-id-set new-feature-id-set)]
-    (doseq [features-chunk (partition-all 100
+    (println "POSTing to " (str api-url "/feature"))
+    (doseq [features-chunk (partition-all 20
                                     ;; Add :i attribute that can be used as fallback id
                                     (map-indexed
                                      (fn [i feature]
@@ -176,6 +181,7 @@
 
 (defn -main [& args]
   (let [config (make-config args)]
+    (println "Starting import")
     (doseq [datasource-id (:datasources config)]
       (-> (assoc config :datasource-id datasource-id)
           fetch-datasource-config
