@@ -108,7 +108,6 @@
             (assert (not (neg? tries)))
             (client/post url
                          params)
-            (println "no error")
             'ok
             (catch clojure.lang.ExceptionInfo e
               (println "caught exception, status" (:status (ex-data e)))
