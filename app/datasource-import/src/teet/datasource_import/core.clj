@@ -98,7 +98,9 @@
                      2  60000
                      1 120000})
 
-(defn patient-post [url params retry-statuses]
+(def retry-statuses #{502 503 504}) ; bad gateway, serv unavailable, gw timeout
+
+(defn patient-post [url params]
   (loop [tries 5]
     (let [last-exception (atom nil)
           result
