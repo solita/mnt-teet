@@ -8,7 +8,6 @@
             [clojure.data.zip.xml :as z]
             [hiccup.core :as hiccup]
             [teet.util.geo :as geo]
-            [teet.util.collection :as cu]
             [teet.log :as log]))
 
 (declare parse-feature)
