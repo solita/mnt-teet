@@ -63,19 +63,15 @@
   ctx)
 
 (defn existing-features-ids [{:keys [api-url api-secret] :as ctx}]
-  ;; memory usage note:
-  ;; (clj-memory-meter.core/measure (existing-features-ids (make-config ["example-config.edn"])))
-  ;; gives 97 kB/1000 rows and 183 MB for the 2M rows in current db as of this writing, leaving
-  ;; a lot of headroom, but conceivably could outgrow the smallest 3GB CodeBuild VM some day.
-  (println "getting existing features")
+  (println "getting existing features from data source id #" (:datasource-id ctx))
   (flush)
-  (let [get-url (str api-url "/feature?select=id,datasource_id")
+  (let [get-url (str api-url "/feature?select=id&datasource_id=eq." (:datasource-id ctx))
         resp (client/get get-url
                          {:headers (merge (auth-headers {:api-secret api-secret})
                                           {"Content-Type" "application/json"})})
         rows (cheshire/decode (:body resp))
-        id-to-datasource (into {} (for [m rows] [(get m "id") (get m "datasource_id")]))]
-    id-to-datasource))
+        this-ds-ids (into #{} (for [m rows] (get m "id")))]
+    this-ds-ids))
 
 (defn read-features
   "Read features from downloaded source. Assocs :features
@@ -131,13 +127,9 @@
 (defn upsert-features [{:keys [features api-url datasource-id datasource old-features] :as ctx}]  
   (let [->label (property-pattern-fn (:label_pattern datasource))
         ->id (property-pattern-fn (:id_pattern datasource))
-        old-feature-id-set (into #{}
-                                 (map first
-                                      (filter #(= datasource-id (second %))
-                                              old-features)))
         features-data (features)
         new-feature-id-set (into #{} (map ->id features-data))
-        deleted? (clojure.set/difference old-feature-id-set new-feature-id-set)]
+        deleted? (clojure.set/difference old-features new-feature-id-set)]
     (println "POSTing to " (str api-url "/feature"))
     (doseq [features-chunk (partition-all 50
                                     ;; Add :i attribute that can be used as fallback id
