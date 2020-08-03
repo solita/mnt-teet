@@ -4,8 +4,8 @@
             [teet.integration.integration-context :refer [defstep]]
             [cheshire.core :as cheshire]
             [cognitect.aws.client.api :as aws]
-            [clojure.string :as str]
-            [teet.log :as log]))
+            [cognitect.aws.credentials :as aws-credentials]
+            [clojure.string :as str]))
 
 (def ^:private s3-client (delay (aws/client {:api :s3})))
 
@@ -112,31 +112,6 @@
          (string? key)]}
   (invoke :DeleteObject {:Bucket bucket :Key key}))
 
-;; Generate presigned URL:
-;; - generate session token with STS
-;;   - :GetSessionToken
-;; - use session token access key to presign a URL
-
-(def ^:private sts-client (delay (aws/client {:api :sts})))
-
-(let [credentials (atom nil)]
-  (defn- temp-credentials []
-    (swap! credentials
-           (fn [{exp :Expiration :as creds}]
-             ;; If no expiration or less than 30 minutes until expiration,
-             ;; request a new token
-             (try
-               (if (or (nil? exp)
-                       (< (- (.getTime exp) (System/currentTimeMillis))
-                          (* 1000 60 30)))
-                 ;; Get new token for 12h
-                 (:Credentials (aws/invoke @sts-client {:op :GetSessionToken
-                                                        :request {:DurationSeconds (* 60 60 12)}}))
-
-                 ;; Use the existing credentials
-                 creds)
-               (catch Exception e
-                 (log/warn e "Unable to create temporary credentials with GetSessionToken")))))))
 
 (def bucket-location
   (memoize (fn [bucket]
@@ -176,6 +151,12 @@
   (let [d (java.security.MessageDigest/getInstance "SHA-256")]
     (.digest d bytes)))
 
+(def credentials-provider (aws-credentials/cached-credentials-with-auto-refresh
+                           (aws-credentials/default-credentials-provider aws/default-http-client)))
+
+(defn- aws-credentials []
+  (aws-credentials/fetch credentials-provider))
+
 ;; https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html#query-string-auth-v4-signing-example
 (defn presigned-url
   ([method bucket key]
@@ -188,18 +169,17 @@
           (string? key)]}
    (let [now (java.util.Date.)
          url (s3-url bucket key)
-         {:keys [AccessKeyId SecretAccessKey SessionToken]} (temp-credentials)
+         {:aws/keys [access-key-id secret-access-key]} (aws-credentials)
          region (bucket-location bucket)
 
          scope (str (date now) "/" region "/s3/aws4_request")
-         x-amz-credential (str AccessKeyId "/" scope)
+         x-amz-credential (str access-key-id "/" scope)
 
          query-string (str
                        "X-Amz-Algorithm=AWS4-HMAC-SHA256"
                        "&X-Amz-Credential=" (url-encode x-amz-credential)
                        "&X-Amz-Date=" (timestamp now)
                        "&X-Amz-Expires=" expiration-seconds
-                       "&X-Amz-Security-Token=" (url-encode SessionToken)
                        "&X-Amz-SignedHeaders=host"
                        (when content-disposition
                          (str "&response-content-disposition="
@@ -220,7 +200,7 @@
                              scope "\n"
                              (hex (sha256 (->b canonical-request))))
 
-         date-key (hmac-sha256 (->b (str "AWS4" SecretAccessKey)) (->b (date now)))
+         date-key (hmac-sha256 (->b (str "AWS4" secret-access-key)) (->b (date now)))
          date-region-key (hmac-sha256 date-key (->b region))
          date-region-service-key (hmac-sha256 date-region-key (->b "s3"))
          sign-key (hmac-sha256 date-region-service-key (->b "aws4_request"))
