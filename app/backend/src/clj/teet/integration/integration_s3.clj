@@ -152,7 +152,7 @@
     (.digest d bytes)))
 
 (def credentials-provider (aws-credentials/cached-credentials-with-auto-refresh
-                           (aws-credentials/default-credentials-provider aws/default-http-client)))
+                           (aws-credentials/default-credentials-provider (aws/default-http-client))))
 
 (defn- aws-credentials []
   (aws-credentials/fetch credentials-provider))
