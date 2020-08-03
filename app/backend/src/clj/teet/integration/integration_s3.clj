@@ -5,7 +5,8 @@
             [cheshire.core :as cheshire]
             [cognitect.aws.client.api :as aws]
             [cognitect.aws.credentials :as aws-credentials]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.log :as log]))
 
 (def ^:private s3-client (delay (aws/client {:api :s3})))
 
@@ -169,7 +170,7 @@
           (string? key)]}
    (let [now (java.util.Date.)
          url (s3-url bucket key)
-         {:aws/keys [access-key-id secret-access-key]} (aws-credentials)
+         {:aws/keys [access-key-id secret-access-key session-token] :as creds} (aws-credentials)
          region (bucket-location bucket)
 
          scope (str (date now) "/" region "/s3/aws4_request")
@@ -180,6 +181,8 @@
                        "&X-Amz-Credential=" (url-encode x-amz-credential)
                        "&X-Amz-Date=" (timestamp now)
                        "&X-Amz-Expires=" expiration-seconds
+                       (when session-token
+                         (str "&X-Amz-Security-Token=" (url-encode session-token)))
                        "&X-Amz-SignedHeaders=host"
                        (when content-disposition
                          (str "&response-content-disposition="
