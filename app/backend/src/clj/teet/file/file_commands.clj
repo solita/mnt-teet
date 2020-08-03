@@ -111,10 +111,13 @@
               t-id (or task-id (get-in res [:tempids "new-task"]))
               file-id (get-in res [:tempids "new-file"])
               key (str file-id "-" (:file/name file))]
-
-          {:url (file-storage/upload-url key)
-           :task-id t-id
-           :file (d/pull (:db-after res) '[*] file-id)}))))
+          (try
+            {:url (file-storage/upload-url key)
+             :task-id t-id
+             :file (d/pull (:db-after res) '[*] file-id)}
+            (catch Exception e
+              (log/warn e "Unable to create S3 presigned URL")
+              (throw e)))))))
 
 (defcommand :file/delete
   {:doc "Delete file"
