@@ -4,7 +4,8 @@
             [teet.integration.integration-context :refer [defstep]]
             [cheshire.core :as cheshire]
             [cognitect.aws.client.api :as aws]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.log :as log]))
 
 (def ^:private s3-client (delay (aws/client {:api :s3})))
 
@@ -124,15 +125,18 @@
            (fn [{exp :Expiration :as creds}]
              ;; If no expiration or less than 30 minutes until expiration,
              ;; request a new token
-             (if (or (nil? exp)
-                     (< (- (.getTime exp) (System/currentTimeMillis))
-                        (* 1000 60 30)))
-               ;; Get new token for 12h
-               (:Credentials (aws/invoke @sts-client {:op :GetSessionToken
-                                                      :request {:DurationSeconds (* 60 60 12)}}))
+             (try
+               (if (or (nil? exp)
+                       (< (- (.getTime exp) (System/currentTimeMillis))
+                          (* 1000 60 30)))
+                 ;; Get new token for 12h
+                 (:Credentials (aws/invoke @sts-client {:op :GetSessionToken
+                                                        :request {:DurationSeconds (* 60 60 12)}}))
 
-               ;; Use the existing credentials
-               creds)))))
+                 ;; Use the existing credentials
+                 creds)
+               (catch Exception e
+                 (log/warn e "Unable to create temporary credentials with GetSessionToken")))))))
 
 (def bucket-location
   (memoize (fn [bucket]
