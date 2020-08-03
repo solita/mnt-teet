@@ -1,12 +1,13 @@
-#!/usr/bin/env planck
+#!/usr/bin/env bb
 
-(require '[planck.shell :refer [sh]])
+(require '[cheshire.core :as cheshire])
+(require '[clojure.java.shell :refer [sh]])
 (require '[clojure.string :as str])
-(require '[planck.core :as core])
 
 (defn json-out [shell-result]
   (-> shell-result
-      :out js/JSON.parse (js->clj :keywordize-keys true)))
+      :out
+      (cheshire/decode keyword)))
 
 (defn start-build [project version]
   (println "Starting CodeBuild for" project "with source version" version)
@@ -30,14 +31,15 @@
       json-out
       (get-in [:builds 0])))
 
-(defn sleep [seconds]
-  (sh "sleep" (str seconds)))
-
 (defn tail-build-logs
   ([log-info]
    (tail-build-logs log-info nil))
-  ([[group stream] since-timestamp]
-   (let [logs
+  ([log-info since-timestamp]
+   (assert (and (vector? log-info)
+                (= 2 (count log-info)))
+           "Expected group and stream log info")
+   (let [[group stream] log-info
+         logs
          (->> (sh "aws" "logs" "get-log-events"
                   "--log-group-name" group
                   "--log-stream-name" stream
@@ -46,19 +48,22 @@
               :events
               (mapv (juxt :timestamp :message)))]
      (with-meta (mapv second logs)
-       {:last-timestamp (reduce max (map first logs))}))))
+       {:last-timestamp (if (seq logs)
+                          (reduce max (map first logs))
+                          (or since-timestamp 0))}))))
 
 (defn print-logs [lines]
   (doseq [line lines]
     ;; Move to beginning of line and clear the line... then print the message
-    (print "\u001b[1000D\u001b[2K" line)))
+    (print "\u001b[1000D\u001b[2K" line))
+  (flush))
 
 (defn wait-for-completion [project-name version build-id]
-  (let [start-time (.getTime (js/Date.))
-        elapsed #(.toFixed (/ (- (.getTime (js/Date.)) start-time) 1000) 0)
+  (let [start-time (System/currentTimeMillis)
+        elapsed #(int (/ (- (System/currentTimeMillis) start-time) 1000))
         log-info (get-log-info build-id)
         poll (fn [last-timestamp]
-               (sleep 2)
+               (Thread/sleep 2000)
                (let [logs (tail-build-logs log-info last-timestamp)
                      info (get-build-info build-id)]
                  (when (seq logs)
@@ -74,21 +79,23 @@
           (print "\u001b[1000D\u001b[2K\u001b[7m"
                  (str "[" project-name "@" version "] (" (elapsed) "s) ")
                  s " " currentPhase "\u001b[0m")
+          (flush)
           (recur (poll last-log-timestamp) spinner))))))
 
 (defn notify [project status]
   (let [params (str "display notification \"" status "\" with title \"" project "\"")]
     (try
       (sh "osascript" "-e" params)
-      (catch :default e
+      (catch Exception e
         (println "osascript notification failed")))))
+
 
 (let [[project version & _] *command-line-args*
       version (or version "master")
       build-id (start-build project version)]
   (println "Build ID: " build-id)
-  (sleep 5)
+  (Thread/sleep 5000)
   (let [{status :buildStatus} (wait-for-completion project version build-id)]
     (println "Finished build: " build-id " => " status)
     (notify project status)
-    (core/exit (if (= "SUCCEEDED" status) 0 1))))
+    (System/exit (if (= "SUCCEEDED" status) 0 1))))
