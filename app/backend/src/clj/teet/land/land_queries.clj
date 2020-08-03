@@ -124,7 +124,7 @@ Then it will query X-road for the estate information."
         estates (into #{}
                       (map :KINNISTU)
                       units)
-        estate-info (property-registry/fetch-all-estate-info
+        estate-infos (property-registry/fetch-all-estate-info
                      {:xroad-url xroad-url
                       :xroad-kr-subsystem-id xroad-subsystem
                       :instance-id xroad-instance
@@ -132,16 +132,13 @@ Then it will query X-road for the estate information."
                       :api-url api-url
                       :api-secret api-secret}
                      estates)
-        filtered-estate-info (cu/map-vals (fn [estate]
-                                            (-> estate
-                                                (update :jagu3 filter-ended)
-                                                (update :jagu4 filter-ended)))
-                                          estate-info)]
-
+        filtered-estate-infos (cu/map-vals
+                               property-registry/active-jagu34-only
+                               estate-infos)]
     (audit :land/related-project-estates {:thk.project/id id})
     {:estates estates
      :units (mapv (comp with-quality
-                        (partial with-estate filtered-estate-info))
+                        (partial with-estate filtered-estate-infos))
                   units)}))
 
 (defquery :land/fetch-estate-compensations
