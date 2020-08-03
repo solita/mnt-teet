@@ -21,6 +21,6 @@ fi
 
 echo "Building and deploying version $VERSION that has latest commit in GitHub $LATEST_COMMIT"
 
-AWS_DEFAULT_REGION=us-east-1 $DIR/codebuild teet-datomic-ion $VERSION
+AWS_REGION=us-east-1 $DIR/codebuild teet-datomic-ion $VERSION
 $DIR/codebuild teet-frontend $VERSION
 $DIR/codebuild teet-deploy $VERSION
