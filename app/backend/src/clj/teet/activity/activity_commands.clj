@@ -193,7 +193,10 @@
    :pre [^{:error :invalid-activity-dates}
          (valid-activity-dates? db
                                 (activity-db/lifecycle-id-for-activity-id db (:db/id activity))
-                                activity)]}
+                                activity)
+
+         ^{:error :conflicting-activities}
+         (not (activity-db/conflicting-activities? db activity (activity-db/lifecycle-id-for-activity-id db (:db/id activity))))]}
   (let [project-id (project-db/activity-project-id db (:db/id activity))
         new-manager (:activity/manager activity)
         current-manager-id (get-in (du/entity db project-id) [:activity/manager :user/id])]
