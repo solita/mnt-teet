@@ -77,7 +77,11 @@
           (recur (poll last-log-timestamp) spinner))))))
 
 (defn notify [project status]
-  (sh "osascript" "-e" (str "display notification \"" status "\" with title \"" project "\"")))
+  (let [params (str "display notification \"" status "\" with title \"" project "\"")]
+    (try
+      (sh "osascript" "-e" params)
+      (catch :default e
+        (println "osascript notification failed")))))
 
 (let [[project version & _] *command-line-args*
       version (or version "master")

@@ -26,50 +26,58 @@
             [teet.ui.select :as select]
             [teet.ui.typography :as typography]
             [teet.ui.url :as url]
-            [teet.ui.util :as util :refer [mapc]]
-            [teet.user.user-model :as user-model]
-            [teet.util.collection :as cu]))
+            [teet.ui.util :as util]
+            [teet.user.user-model :as user-model]))
 
-(defn create-activity-form [e! activity lifecycle-type {:keys [max-date min-date]}]
-  [form/form2 {:e! e!
-               :value activity
-               :on-change-event activity-controller/->UpdateActivityForm
-               :cancel-event project-controller/->CloseDialog
-               :save-event activity-controller/->SaveActivityForm
-               :spec ::project-specs/activity}
-   [Grid {:container true :style {:height "90%"} :spacing 3}
-    [Grid {:item true :xs 4}
+(defn- names-of-unfinished-activities [existing-activities]
+  (->> existing-activities
+       (remove activity-model/finished?)
+       (map #(-> % :activity/name :db/ident))
+       set))
 
-     [form/field :activity/name
-      [select/select-enum {:e! e!
-                           :attribute :activity/name
-                           :sort-fn activity-model/activity-order
-                           :enum/valid-for lifecycle-type}]]
+(defn create-activity-form [e! activity lifecycle-type existing-activities {:keys [max-date min-date]}]
+  (let [unfinished-names (names-of-unfinished-activities existing-activities)
+        remove-active (complement unfinished-names)]
+    [form/form2 {:e! e!
+                 :value activity
+                 :on-change-event activity-controller/->UpdateActivityForm
+                 :cancel-event project-controller/->CloseDialog
+                 :save-event activity-controller/->SaveActivityForm
+                 :spec ::project-specs/activity}
+     [Grid {:container true :style {:height "90%"} :spacing 3}
+      [Grid {:item true :xs 4}
 
-     [form/field :activity/manager
-      [select/select-user {:e! e!}]]
+       [form/field :activity/name
+        [select/select-enum {:e! e!
+                             :attribute :activity/name
+                             :sort-fn activity-model/activity-order
+                             :values-filter remove-active
+                             :enum/valid-for lifecycle-type}]]
 
-     [form/field {:attribute [:activity/estimated-start-date :activity/estimated-end-date]}
-      [date-picker/date-range-input {:row? false
-                                     :max-date max-date
-                                     :min-date min-date
-                                     :start-label (tr [:fields :activity/estimated-start-date])
-                                     :end-label (tr [:fields :activity/estimated-end-date])}]]]
-    [Grid {:item true :xs 8}
-     [select/with-enum-values {:e! e!
-                               :attribute :task/group}
-      [task-view/task-groups-and-tasks {:e! e!
-                                        :on-change-selected #(e! (activity-controller/->UpdateActivityForm
-                                                                  {:selected-tasks %}))
-                                        :on-change-sent #(e! (activity-controller/->UpdateActivityForm
-                                                              {:sent-tasks %}))
-                                        :activity-name (:activity/name activity)
-                                        :selected (or (:selected-tasks activity) #{})
-                                        :sent-to-thk (or (:sent-tasks activity) #{})}]]]
+       [form/field :activity/manager
+        [select/select-user {:e! e!}]]
 
-    [Grid {:item true :xs 12}
-     [:div {:style {:display :flex :justify-content :flex-end}}
-      [form/footer2]]]]])
+       [form/field {:attribute [:activity/estimated-start-date :activity/estimated-end-date]}
+        [date-picker/date-range-input {:row? false
+                                       :max-date max-date
+                                       :min-date min-date
+                                       :start-label (tr [:fields :activity/estimated-start-date])
+                                       :end-label (tr [:fields :activity/estimated-end-date])}]]]
+      [Grid {:item true :xs 8}
+       [select/with-enum-values {:e! e!
+                                 :attribute :task/group}
+        [task-view/task-groups-and-tasks {:e! e!
+                                          :on-change-selected #(e! (activity-controller/->UpdateActivityForm
+                                                                    {:selected-tasks %}))
+                                          :on-change-sent #(e! (activity-controller/->UpdateActivityForm
+                                                                {:sent-tasks %}))
+                                          :activity-name (:activity/name activity)
+                                          :selected (or (:selected-tasks activity) #{})
+                                          :sent-to-thk (or (:sent-tasks activity) #{})}]]]
+
+      [Grid {:item true :xs 12}
+       [:div {:style {:display :flex :justify-content :flex-end}}
+        [form/footer2]]]]]))
 
 (defn edit-activity-form [e! activity {:keys [max-date min-date]}]
   (let [deletable? (activity-model/deletable? activity)]
@@ -102,8 +110,12 @@
   [{:keys [e! app project]} dialog]
   (let [lifecycle-id (get-in app [:stepper :lifecycle])
         lifecycle (project-model/lifecycle-by-id project lifecycle-id)]
-    [create-activity-form e! (:edit-activity-data app) (:lifecycle-type dialog) {:min-date (:thk.lifecycle/estimated-start-date lifecycle)
-                                                                                 :max-date (:thk.lifecycle/estimated-end-date lifecycle)}]))
+    [create-activity-form e!
+     (:edit-activity-data app)
+     (:lifecycle-type dialog)
+     (:thk.lifecycle/activities lifecycle)
+     {:min-date (:thk.lifecycle/estimated-start-date lifecycle)
+      :max-date (:thk.lifecycle/estimated-end-date lifecycle)}]))
 
 (defn project-management-and-status
   [owner manager status]
@@ -220,25 +232,29 @@
       (:activity/manager activity)
       (:activity/status activity)]
      [task-lists (:activity/tasks activity)]
-     ;; fixme: [when-authorized] doesn't work here, why?
-     (if (and (authorized? @teet.app-state/user :activity/change-activity-status activity)
+     (if (and (authorized? @teet.app-state/user :activity/change-activity-status
+                           {:project-id (:db/id project)
+                            :entity activity})
               tasks-complete?
-              (-> project :thk.project/manager :user/id) (-> @teet.app-state/user :user/id)
+              (= (-> activity :activity/manager :db/id)
+                 (-> @teet.app-state/user :db/id))
               (-> activity :activity/status :db/ident not-reviewed-status?))
        (when (not= status :activity.status/in-review)
          [submit-for-approval-button e! params])
        (when-not tasks-complete?
          [:div (tr [:activity :note-all-tasks-need-to-be-completed])]))
 
-     (when (and (authorized? @teet.app-state/user :activity/change-activity-status nil)
-                (-> project :thk.project/owner :user/id) (-> @teet.app-state/user :user/id))
+     (when (and (authorized? @teet.app-state/user :activity/change-activity-status
+                             {:project-id (:db/id project)})
+                (= (-> project :thk.project/owner :user/id)
+                   (-> @teet.app-state/user :user/id)))
        (if (= status :activity.status/in-review)
            [:div
             [reject-button e! (assoc params :status :activity.status/archived)]
             [reject-button e! (assoc params :status :activity.status/canceled)]
             [approve-button e! (assoc params :status :activity.status/completed)]]
            ;; else
-           (when not-reviewed-status?
+           (when (not-reviewed-status? status)
              [:div (tr [:activity :waiting-for-submission])])))]))
 
 (defn activity-page [e! {:keys [params] :as app} project breadcrumbs]

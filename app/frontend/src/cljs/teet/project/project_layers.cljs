@@ -167,7 +167,7 @@
      (map-layers/geojson-layer (endpoint app)
                                "geojson_features_by_id"
                                {"ids" (str "{" (str/join "," restrictions) "}")}
-                               map-features/project-restriction-style
+                               map-features/project-related-restriction-style
                                {})}))
 
 (defn related-cadastral-units [{{query :query :as app} :app

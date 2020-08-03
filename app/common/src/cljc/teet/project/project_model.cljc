@@ -156,16 +156,13 @@
    :activity.name/construction
    :activity.name/other])
 
-(defn- activity-sort-priority [activity]
-  (.indexOf activity-sort-priority-vec
-            (-> activity :activity/name :db/ident)))
-
 (def sort-activities
   (partial sort-by :activity/estimated-start-date))
 
 (defn- activity-behind-schedule?
   [{:activity/keys [estimated-end-date] :as activity}]
-  (and (not (activity-model/activity-ready-statuses (get-in activity [:activity/status :db/ident])))
+  (and (not (activity-model/activity-finished-statuses (get-in activity [:activity/status :db/ident])))
+       estimated-end-date
        (date/date-in-past? estimated-end-date)))
 
 (defn- atleast-one-activity-over-deadline?

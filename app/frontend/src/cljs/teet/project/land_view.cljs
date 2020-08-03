@@ -26,8 +26,10 @@
             [teet.ui.format :as format]
             [cljs-time.format :as tf]
             [teet.ui.query :as query]
+            [clojure.string]
             [teet.file.file-view :as file-view]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.authorization.authorization-check :as authorization-check]))
 
 (defn cadastral-unit-style
   [selected?]
@@ -628,6 +630,15 @@
   [{:keys [page]}]
   [:span "usupported page: " page])
 
+(defn flatten-kande-tekst-table [parsed]
+  (let [outer-rows parsed
+        flattened-once
+        (for [row outer-rows]
+          (mapv (partial clojure.string/join " | ") (drop 1 row)))
+        flattened-twice (mapv (partial clojure.string/join " / ") flattened-once)]
+    (for [flat-row flattened-twice]
+      [:div flat-row])))
+
 (defmethod estate-modal-content :burdens
   [{:keys [estate-info]}]
   (let [burdens (:jagu3 estate-info)]
@@ -640,11 +651,9 @@
                       (:kande_liik_tekst burden) " "]
                      [typography/GreyText {:style {:display :inline}}
                       (format/parse-date-string (:kande_alguskuupaev burden))]]
-           :body [:span (-> burden
-                            :kande_tekst
-                            first
-                            second
-                            first)]}])
+           :body (-> burden
+                     :kande_tekst
+                     flatten-kande-tekst-table)}])
        [:p (tr [:land :no-active-burdens])])]))
 
 (defmethod estate-modal-content :mortgages
@@ -665,11 +674,12 @@
                         " ")
                       [typography/GreyText {:style {:display :inline}}
                        (format/parse-date-string (:kande_alguskuupaev mortgage))]]]
-           :body (-> mortgage
-                     :kande_tekst
-                     first
-                     second
-                     first)}])
+           :body [:div
+                  (when-let [mortgage-owner (get-in mortgage [:oigustatud_isikud 0 :KinnistuIsik 0 :nimi])]
+                    [:span mortgage-owner])
+                  (-> mortgage
+                      :kande_tekst
+                      flatten-kande-tekst-table)]}])
        [:p (tr [:land :no-active-mortgages])])]))
 
 
@@ -854,7 +864,7 @@
                       (when omandiosa_suurus
                         [typography/BoldGreyText (str (* (/ omandiosa_lugeja omandiosa_nimetaja) 100) "%")])]
             :body [:<>
-                   (when (= isiku_tyyp "Juriidiline isik")
+                   (when (and (= isiku_tyyp "Juriidiline isik") r_kood) ;; r_kood was null in some cases in production data
                      [query/query {:e! e!
                                    :query :land/estate-owner-info
                                    :args {:thk.project/id (:thk.project/id project)
@@ -862,7 +872,8 @@
                                    :simple-view [business-registry-info]}])
 
                    [key-values owner]]}]
-          (when r_kood
+          (when (and (not= isiku_tyyp "Füüsiline isik")
+                     r_kood)
             [comments-view/lazy-comments {:e! e!
                                           :app app
                                           :entity-type :owner-comments
@@ -963,7 +974,6 @@
 
 (defn related-cadastral-units-info
   [e! _app project]
-
   (r/create-class
     {:component-did-mount
      (do
@@ -973,7 +983,11 @@
      :component-did-update (fn [this [_ _ _ _]]
                              (let [[_ _ _ project] (r/argv this)]
                                (when (nil? (:land/related-estate-ids project))
-                                 (e! (land-controller/->FetchRelatedEstates)))))
+                                 (e! (land-controller/->FetchRelatedEstates)))
+                               (when (nil? (:land/estate-forms project))
+                                 (e! (land-controller/->FetchEstateCompensations (:thk.project/id project))))
+                               (when (nil? (:land-acquisitions project))
+                                 (e! (land-controller/->FetchLandAcquisitions (:thk.project/id project))))))
      :reagent-render
      (fn [e! app project]
        (let [fetching? (nil? (:land/units project))]
@@ -983,8 +997,10 @@
           [:div {:style {:margin-top "1rem"}
                  :class (<class common-styles/heading-and-action-style)}
            [typography/Heading2 (tr [:project :cadastral-units-tab])]
-           [buttons/button-secondary {:on-click (e! land-controller/->RefreshEstateInfo)}
-            (tr [:land :refresh-estate-info])]
+           [authorization-check/when-authorized :land/refresh-estate-info
+            project
+            [buttons/button-secondary {:on-click (e! land-controller/->RefreshEstateInfo)}
+             (tr [:land :refresh-estate-info])]]
            [buttons/button-secondary {:href (url/set-query-param :configure "cadastral-units")}
             (tr [:buttons :edit])]]
           (if (:land/estate-info-failure project)

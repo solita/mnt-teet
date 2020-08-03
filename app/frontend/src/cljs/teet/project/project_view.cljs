@@ -23,7 +23,7 @@
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Paper Link Badge Grid]]
+            [teet.ui.material-ui :refer [Paper Link Badge Grid ButtonBase]]
             [teet.ui.panels :as panels]
             [teet.ui.project-context :as project-context]
             [teet.ui.select :as select]
@@ -41,9 +41,11 @@
             [teet.common.common-controller :as common-controller]
             [teet.road.road-model :as road-model]
             [teet.ui.query :as query]
-            [clojure.string :as str]))
-
-
+            [taoensso.timbre :as log]
+            [clojure.string :as str]
+            [alandipert.storage-atom :refer [local-storage]]
+            [teet.map.map-controller :as map-controller]
+            [teet.ui.container :as container]))
 
 (defn project-details
   [e! {:thk.project/keys [estimated-start-date estimated-end-date road-nr
@@ -283,6 +285,23 @@
                                 assignees)]]]}])
          assignees)])
 
+(defn- contains-nils? [seq]
+  ;; (contains? doesn't work for vecs)
+  (not-every? some? seq))
+
+(defn- project-managers-info-missing [project]
+  (let [acts (mapcat :thk.lifecycle/activities
+                     (:thk.project/lifecycles project))
+        activity-managers (mapv :activity/manager acts)
+        owner (:thk.project/owner project)]
+    (log/debug "people info-missing badge tests:" (nil? owner)
+               (contains-nils? activity-managers)
+               (empty? activity-managers) " - managers:" activity-managers)
+    (or
+     (nil? owner)
+     (contains-nils? activity-managers)
+     (empty? activity-managers))))
+
 (defn- project-owner-and-managers [owner lifecycles show-history?]
   (let [now (js/Date.)
         active-manager (fn [manager name]
@@ -328,6 +347,7 @@
                                                                 "\u2013"
                                                                 (and end (format/date end)))])]})))
                                  activities)
+                         ;; else - show-history? = false
                          (for [{:activity/keys [manager name]
                                 id :db/id} activities
                                :when manager]
@@ -385,24 +405,81 @@
   [:<>
    [project-details e! project]])
 
+(defn restriction-listing-class
+  [zoomed?]
+  ^{:pseudo {:hover {:background-color (if zoomed?
+                                         theme-colors/blue-lighter
+                                         theme-colors/gray-lighter)}}}
+  {:transition "background-color 0.2s ease-in-out"
+   :padding "1rem"
+   :margin-bottom "0.25rem"
+   :background-color (if zoomed?
+                       theme-colors/blue-lightest
+                       theme-colors/gray-lightest)})
+
+(defn restrictions-list
+  [_e! _restrictions]
+  (let [opened-groups (local-storage (r/atom #{}) "opened-restriction-groups")
+        toggle-groups (fn [group]
+                        (if (@opened-groups group)
+                          (swap! opened-groups disj group)
+                          (swap! opened-groups conj group)))
+        zoomed-id (r/atom "")]
+    (fn [e! restrictions]
+      (let [grouped-restrictions (group-by :VOOND restrictions)
+            toggle-zoom (fn [restriction]
+                          (if (= @zoomed-id (:teet-id restriction))
+                            (do
+                              (reset! zoomed-id "")
+                              (map-controller/zoom-on-layer "geojson_entities"))
+                            (do
+                              (reset! zoomed-id (:teet-id restriction))
+                              (map-controller/zoom-on-feature "geojson_features_by_id" restriction))))]
+        (if (not-empty restrictions)
+          [:div
+           (mapc
+             (fn [[group restrictions]]
+               ^{:key group}
+               [container/collapsible-container {:on-toggle #(toggle-groups group)
+                                                 :open? (boolean (@opened-groups group))}
+                (str group " " (count restrictions))
+                (when (not-empty restrictions)
+                  [:div {:style {:display :flex
+                                 :flex-direction :column}}
+                   (mapc
+                     (fn [restriction]
+                       ^{:key (:teet-id restriction)}
+                       [ButtonBase {:class (<class restriction-listing-class (= (:teet-id restriction) @zoomed-id))
+                                    :on-mouse-enter (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" true restriction)
+                                    :on-mouse-leave (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" false restriction)
+                                    :on-click #(toggle-zoom restriction)}
+                        [:span (:VOOND restriction)]])
+                     restrictions)])])
+             grouped-restrictions)]
+          [typography/GreyText (tr [:project :no-selected-restrictions])])))))
+
 (defn restriction-tab
-  [_e! {{project-id :project} :params :as _app} project]
-  [:div
-   [:div {:class (<class common-styles/heading-and-action-style)}
-    [typography/Heading2 "Restrictions"]
-    [buttons/button-secondary {:component "a"
-                               :href (str "/#/projects/" project-id "?tab=restrictions&configure=restrictions")
-                               :size :small}
-     (tr [:buttons :edit])]]
-   [itemlist/gray-bg-list [{:secondary-text (tr [:data-tab :restriction-count]
-                                                {:count (count (:thk.project/related-restrictions project))})}]]])
+  [e! _ {:thk.project/keys [related-restrictions] :as _project}]
+  (e! (project-controller/->FetchRelatedFeatures related-restrictions :restrictions))
+  (fn [_e! {{project-id :project} :params :as _app} {:keys [checked-restrictions] :as project}]
+    (js/setTimeout                                          ;; WHen the restrictions are updated this hack was needed because the component mounts before the refresh call finishes
+      #(when (nil? checked-restrictions)
+        (e! (project-controller/->FetchRelatedFeatures (:thk.project/related-restrictions project) :restrictions)))
+      100)
+    [:div
+     [:div {:class (<class common-styles/heading-and-action-style)}
+      [typography/Heading2 "Restrictions"]
+      [buttons/button-secondary {:component "a"
+                                 :href (str "/#/projects/" project-id "?tab=restrictions&configure=restrictions")
+                                 :size :small}
+       (tr [:buttons :edit])]]
+     [restrictions-list e! checked-restrictions]]))
 
 (defn activities-tab-footer [_e! _app project]
   [:div {:class (<class project-style/activities-tab-footer)}
    [project-timeline-view/timeline project]])
 
 (def project-tabs-layout
-  ;; FIXME: Labels with TR paths instead of text
   [{:label [:project :tabs :activities]
     :value "activities"
     :component activities-tab
@@ -412,7 +489,7 @@
     :value "people"
     :component people-tab
     :badge (fn [project]
-             (when-not (:thk.project/owner project)
+             (when (project-managers-info-missing project)
                [Badge {:badge-content (r/as-element [information-missing-icon])}]))
     :layers #{:thk-project}}
    {:label [:project :tabs :details]
@@ -468,9 +545,6 @@
 
      ^{:attribute :thk.project/owner}
      [select/select-user {:e! e! :attribute :thk.project/owner}]]))
-
-
-
 
 (defn change-restrictions-view
   [e! app project]

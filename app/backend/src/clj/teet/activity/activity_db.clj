@@ -1,8 +1,10 @@
 (ns teet.activity.activity-db
   (:require [datomic.client.api :as d]
+            [teet.activity.activity-model :as activity-model]
             [teet.util.collection :as cu]
             [teet.util.datomic :as du]
-            [teet.db-api.core :as db-api]))
+            [teet.db-api.core :as db-api])
+  (:import (java.util Date)))
 
 (defn activity-date-range
   [db activity-id]
@@ -134,3 +136,26 @@
   (project-with-manager-histories project
                                   (get-manager-histories db
                                                          (:db/id project))))
+
+(defn conflicting-activities?
+  "Check if the lifecycle contains any activies that conflict with the new activity"
+  [db new-activity-candidate lifecycle-id]
+  (let [existing-activities (mapv first (d/q '[:find (pull ?a [:activity/actual-start-date
+                                                               :activity/actual-end-date
+                                                               :activity/estimated-start-date
+                                                               :activity/estimated-end-date
+                                                               :activity/name
+                                                               :activity/status])
+                                               :in $ ?lc ?time
+                                               :where
+                                               [?lc :thk.lifecycle/activities ?a]
+                                               ;; Ignore deleted activities
+                                               [(missing? $ ?a :meta/deleted?)]
+                                               ;; Ignore activities that have ended
+                                               [(get-else $ ?a :activity/actual-end-date ?time) ?end-date]
+                                               [(>= ?end-date ?time)]]
+                                             db
+                                             lifecycle-id
+                                             (Date.)))]
+    (some (partial activity-model/conflicts? new-activity-candidate)
+          existing-activities)))

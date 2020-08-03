@@ -2,9 +2,14 @@
   (:require [teet.project.task-model :as task-model]))
 
 (defn all-tasks-completed? [activity]
-  (and (not-empty (:activity/tasks activity))
-       (every? task-model/completed?
-                (:activity/tasks activity))))
+  "Expects the meta/deleted? key in tasks if they are deleted"
+  (let [tasks (filter
+                (fn [task]
+                  (not (:meta/deleted? task)))
+                (:activity/tasks activity))]
+    (and (not-empty tasks)
+         (every? task-model/completed?
+                 tasks))))
 
 (def reviewed-statuses #{:activity.status/canceled
                          :activity.status/archived
@@ -41,7 +46,7 @@
 (def activity-in-progress-statuses
   #{:activity.status/valid :activity.status/other :activity.status/research :activity.status/in-progress})
 
-(def activity-ready-statuses
+(def activity-finished-statuses
   #{:activity.status/completed :activity.status/expired :activity.status/canceled})
 
 (defn deletable?
@@ -49,14 +54,50 @@
   [activity]
   (nil? (:activity/procurement-nr activity)))
 
-(defn currently-active?
-  "Is the activity currently active? An activity is active if the
-  current timestamp is between the actual start and end date of the
-  activity."
-  [{:activity/keys [actual-start-date actual-end-date]} current-timestamp]
-  {:pre [(instance? java.util.Date current-timestamp)]}
-  ;; must have started to be active
-  (boolean (and actual-start-date
-                (not (.before current-timestamp actual-start-date))
-                (or (not actual-end-date)
-                    (not (.after current-timestamp actual-end-date))))))
+(defn active? [activity]
+  (-> activity :activity/status :db/ident activity-in-progress-statuses))
+
+(defn finished? [activity]
+  (-> activity :activity/status :db/ident activity-finished-statuses))
+
+(defn conflicting-schedules?
+  "Returns true if there's a conflict in the schedules of the two
+  activities. Land acquisition can coincide with another
+  activity. Actual dates are used if available, otherwise estimates
+  are used."
+  [a1 a2]
+  (boolean
+   (and
+    ;; No conflict if one of the activities is land-acquisition
+    (not (let [a1-name (:activity/name a1)
+               a2-name (:activity/name a2)]
+           (and (not= a1-name a2-name)
+                (or (= a1-name :activity.name/land-acquisition)
+                    (= a2-name :activity.name/land-acquisition)))))
+    ;; Do the schedules overlap
+    ;; Use actual date if exists, fallback to estimated
+    (let [start1 (or (:activity/actual-start-date a1)
+                     (:activity/estimated-start-date a1))
+          end1 (or (:activity/actual-end-date a1)
+                   (:activity/estimated-end-date a1))
+          start2 (or (:activity/actual-start-date a2)
+                     (:activity/estimated-start-date a2))
+          end2 (or (:activity/actual-end-date a2)
+                   (:activity/estimated-end-date a2))]
+      (not (or (.before end1 start2)
+               (.before end2 start1)))))))
+
+(defn conflicts?
+  "Are there conflicts preventing the two activities from coexisting
+  within a lifecycle?  If an activity is in a post-review
+  state (completed, canceled, archived) it doesn't conflict."
+  [a1 a2]
+  ;; If either of the activities is completed/archived/canceled,
+  ;; there are no conflicts
+  (when (not (or (reviewed-statuses (:activity/status a1))
+                 (reviewed-statuses (:activity/status a2))))
+   (or
+    ;; Two incomplete activies of same type (name) cannot coexist within a lifecycle
+    (= (:activity/name a1) (:activity/name a2))
+
+    (conflicting-schedules? a1 a2))))

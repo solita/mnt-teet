@@ -161,12 +161,13 @@
         (update :jagu4 map-fn))))
 
 (defn active-jagu34-only [k-resp]
-  ;; prunes "lopetatud" records from the maps in the seq under :jagu3 and :jagu4.
+  ;; prunes "lopetatud" records from the maps in the seq under :jagu3 and keeps only "Aktiivne" in :jagu4.
   ;; {:jagu3 [... {:oiguse_seisund "L", ..} ...]
-  (let [filter-fn #(filter (comp (partial not= "L") :oiguse_seisund) %)]
+  (let [jagu3-filter-fn #(filter (comp (partial not= "L") :oiguse_seisund) %)
+        jagu4-filter-fn #(filter (comp (partial = "Aktiivne") :oiguse_seisund_tekst) %)]
     (-> k-resp
-        (update :jagu3 filter-fn)
-        (update :jagu4 filter-fn))))
+        (update :jagu3 jagu3-filter-fn)
+        (update :jagu4 jagu4-filter-fn))))
 
 (defn cell-to-text [cell]
   ;; parse-kande-tekst util
@@ -185,11 +186,11 @@
           parsed (for [row row-seq]
                    (mapv cell-to-text (z/xml-> row :td)))]
       (if (or (empty? parsed)
-              (not= 2 (count (first parsed))))
+              (= 1 (count (first parsed))))
         (when (not= "<root/>" kande-tekst)
+          (log/debug "parsed is" (vec parsed))
           (log/error "couldn't parse non-empty kande_tekst without table or <root/>:" kande-tekst))
         parsed))))
-
 
 (defn kinnistu-d-parse-success
   "Parse estate information from successful SOAP response body element."

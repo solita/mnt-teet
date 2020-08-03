@@ -42,6 +42,10 @@
          (contains? user :user/id))
     [:user/id (:user/id user)]
 
+    (and (map? user)
+         (contains? user :db/id))
+    (:db/id user)
+
     ;; Not valid user
     :else
     (throw (ex-info "Not a valid user reference. Expected eid or user info map."

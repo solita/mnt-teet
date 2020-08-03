@@ -66,7 +66,7 @@
           task-id :task-id
           activity-id :activity-id}
    :project-id [:thk.project/id id]
-   :authorization {:project/project-info {:eid [:thk.project/id id]
+   :authorization {:project/read-info {:eid [:thk.project/id id]
                                           :link :thk.project/owner
                                           :access :read}}}
   (let [project (meta-query/without-deleted
@@ -113,7 +113,7 @@
    :context {db :db}
    :args {:thk.project/keys [id]}
    :project-id [:thk.project/id id]
-   :authorization {:project/project-info {:eid [:thk.project/id id]
+   :authorization {:project/read-info {:eid [:thk.project/id id]
                                           :link :thk.project/owner
                                           :access :read}}}
   (assignees-by-activity db [:thk.project/id id]))
@@ -126,10 +126,11 @@
           maps)))
 
 (defn- feature-collection->sheet-data [feature-collection]
-  (->> feature-collection
-       :features
-       (map :properties)
-       maps->sheet))
+  (when (:features feature-collection)
+    (->> feature-collection
+         :features
+         (map :properties)
+         maps->sheet)))
 
 (defn- road-object-sheets [ctx entity-id]
   (let [gml-geometry
@@ -146,8 +147,8 @@
    :context {db :db}
    :args {:thk.project/keys [id]}
    :project-id [:thk.project/id id]
-   :authorization {:project/project-info {:eid [:thk.project/id id]
-                                          :link :thk.project/owner}}}
+   :authorization {:project/read-info {:eid [:thk.project/id id]
+                                       :link :thk.project/owner}}}
   ^{:format :raw}
   {:status 200
    :headers {"Content-Disposition" (str "attachment; filename=THK" id "-related.xlsx")}

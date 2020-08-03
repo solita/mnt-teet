@@ -170,8 +170,9 @@
    (when (task-model/can-submit? task)
      [:<>
       [file-view/file-upload-button e!]
-      [when-authorized :task/submit task
-       [submit-results-button e! task]]])
+      (when (seq files)
+        [when-authorized :task/submit task
+         [submit-results-button e! task]])])
    (when (task-model/reviewing? task)
      [when-authorized :task/review task
       [:div.task-review-buttons {:style {:display :flex :justify-content :space-between}}

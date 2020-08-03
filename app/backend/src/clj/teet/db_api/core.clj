@@ -168,7 +168,7 @@
                                                              (when link#
                                                                [link#])))})))
                                        ~authorization)
-                       (log/warn "Failed to authorize command " ~request-name " for user " ~-user)
+                       (log/warn "Failed to authorize " ~request-name " for user " ~-user)
                        (throw (ex-info "Request authorization failed"
                                        {:status 403
                                         :error :request-authorization-failed})))])
