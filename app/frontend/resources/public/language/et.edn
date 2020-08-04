@@ -77,6 +77,7 @@
   :design-stage-activities "Ülesanded",
   :select {:empty "- Valin"},
   :clear "Puhastan"},
+ :contact {:address "Aadress", :email "E-post", :phone "Telefon"},
  :dashboard
  {:activities-and-tasks "Tegevused ja ülesanded",
   :my-projects "Minu projektid",

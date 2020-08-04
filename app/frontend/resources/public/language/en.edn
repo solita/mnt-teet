@@ -77,6 +77,7 @@
   :design-stage-activities "Project stages",
   :select {:empty "- Select value"},
   :clear "Clear"},
+ :contact {:address "Address", :email "Email", :phone "Phone"},
  :dashboard
  {:activities-and-tasks "Activities and tasks",
   :my-projects "My projects",

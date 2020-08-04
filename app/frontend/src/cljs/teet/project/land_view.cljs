@@ -818,35 +818,35 @@
   [:span "Unsupported owner-modal-content " modal-page])
 
 (def date-keys #{:omandi_algus :algus-kpv :lopp-kpv})
+
+(defn- key-value [[key value]]
+  [:div
+   [:strong key ": "]
+   [:span (if (and (some? (tf/parse value))
+                   (date-keys key))
+            (format/parse-date-string value)
+            value)]])
+
 (defn- key-values [data]
   [:<>
-   (mapc
-    (fn [[key value]]
-      [:div
-       [:strong key ": "]
-       [:span (if (and (some? (tf/parse value))
-                       (date-keys key))
-                (format/parse-date-string value)
-                value)]])
-    data)])
+   (mapc key-value data)])
 
 (defn- business-registry-info [{:keys [addresses contact-methods]}]
-  [:div
-   (doall
-    (for [{id :kirje-id :as addr} addresses]
-      ^{:key (str id)}
-      [:div {:style {:border-bottom "solid 1px black"
-                     :margin-bottom "0.5rem"
-                     :padding-bottom "0.5rem"}}
-       [key-values addr]]))
+  (let [unique-addresses (into #{}
+                               (for [{:keys [tanav-maja-korter postiindeks lopp-kpv]} addresses
+                                     :when (not lopp-kpv)]
+                                 (str tanav-maja-korter ", " postiindeks)))]
+    [:div
+     (mapc (fn [a]
+             [key-value [(tr [:contact :address]) a]]) unique-addresses)
 
-   (doall
-    (for [{id :kirje-id :as contact} contact-methods]
-      ^{:key (str id)}
-      [:div {:style {:border-bottom "solid 1px black"
-                     :margin-bottom "0.5rem"
-                     :padding-bottom "0.5rem"}}
-       [key-values contact]]))])
+     (doall
+      (for [{:keys [kirje-id type content lopp-kpv] :as contact} contact-methods
+            :when (and content
+                       (not lopp-kpv)
+                       (or (= type :email) (= type :phone)))]
+        ^{:key (str kirje-id)}
+        [key-value [(tr [:contact type]) content]]))]))
 
 
 (defmethod owner-modal-content :owner-info
@@ -854,30 +854,36 @@
   (let [owners (:omandiosad estate-info)]
     [:div {:class (<class common-styles/gray-container-style)}
      (mapc
-       (fn [{:keys [omandiosa_suurus omandiosa_lugeja omandiosa_nimetaja r_kood isiku_tyyp] :as owner}]
-         ;; Since we don't have person registry integration show everything we have of owner.
-         [:<>
-          [common/heading-and-grey-border-body
-           {:heading [:div {:style {:display :flex
-                                    :justify-content :space-between}}
-                      [typography/BoldGreyText (:nimi owner)]
-                      (when omandiosa_suurus
-                        [typography/BoldGreyText (str (* (/ omandiosa_lugeja omandiosa_nimetaja) 100) "%")])]
-            :body [:<>
-                   (when (and (= isiku_tyyp "Juriidiline isik") r_kood) ;; r_kood was null in some cases in production data
-                     [query/query {:e! e!
-                                   :query :land/estate-owner-info
-                                   :args {:thk.project/id (:thk.project/id project)
-                                          :business-id r_kood}
-                                   :simple-view [business-registry-info]}])
-
-                   [key-values owner]]}]
-          (when (and (not= isiku_tyyp "Füüsiline isik")
-                     r_kood)
-            [comments-view/lazy-comments {:e! e!
-                                          :app app
-                                          :entity-type :owner-comments
-                                          :entity-id [:owner-comments/project+owner-id [(:db/id project) r_kood]]}])])
+      (fn [{:keys [omandiosa_suurus omandiosa_lugeja omandiosa_nimetaja r_kood isiku_tyyp] :as owner}]
+        (println "OWNER:" owner)
+        (let [person? (= isiku_tyyp "Füüsiline isik")]
+          ;; Since we don't have person registry integration show everything we have of owner.
+          [:<>
+           [common/heading-and-grey-border-body
+            {:heading [:div {:style {:display :flex
+                                     :justify-content :space-between}}
+                       [typography/BoldGreyText (if person?
+                                                  (str (:eesnimi owner) " " (:nimi owner))
+                                                  (:nimi owner))]
+                       [typography/GreyText (if person?
+                                              (str "EE" r_kood)
+                                              r_kood)]
+                       (when omandiosa_suurus
+                         [typography/BoldGreyText (if (= "1" omandiosa_lugeja omandiosa_nimetaja)
+                                                    "1"
+                                                    (str omandiosa_lugeja "/" omandiosa_nimetaja))])]
+             :body [:<>
+                    (when (and (= isiku_tyyp "Juriidiline isik") r_kood) ;; r_kood was null in some cases in production data
+                      [query/query {:e! e!
+                                    :query :land/estate-owner-info
+                                    :args {:thk.project/id (:thk.project/id project)
+                                           :business-id r_kood}
+                                    :simple-view [business-registry-info]}])]}]
+           (when (and (not person?) r_kood)
+             [comments-view/lazy-comments {:e! e!
+                                           :app app
+                                           :entity-type :owner-comments
+                                           :entity-id [:owner-comments/project+owner-id [(:db/id project) r_kood]]}])]))
        owners)]))
 
 
