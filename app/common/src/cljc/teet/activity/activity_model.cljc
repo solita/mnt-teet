@@ -1,5 +1,6 @@
 (ns teet.activity.activity-model
-  (:require [teet.project.task-model :as task-model]))
+  (:require [teet.project.task-model :as task-model]
+            [teet.util.datomic :as du]))
 
 (defn all-tasks-completed? [activity]
   "Expects the meta/deleted? key in tasks if they are deleted"
@@ -72,8 +73,8 @@
     (not (let [a1-name (:activity/name a1)
                a2-name (:activity/name a2)]
            (and (not= a1-name a2-name)
-                (or (= a1-name :activity.name/land-acquisition)
-                    (= a2-name :activity.name/land-acquisition)))))
+                (or (du/enum= a1-name :activity.name/land-acquisition)
+                    (du/enum= a2-name :activity.name/land-acquisition)))))
     ;; Do the schedules overlap
     ;; Use actual date if exists, fallback to estimated
     (let [start1 (or (:activity/actual-start-date a1)
