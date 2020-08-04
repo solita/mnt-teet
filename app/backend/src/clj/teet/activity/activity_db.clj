@@ -160,14 +160,14 @@
                                       (Date.))
                                  (mapv first)
                                  (filterv #(not= (:db/id activity-candidate) (:db/id %))))
-        new-activity (merge (if (:db/id activity-candidate)
+        new-activity (merge (if-let [candidate-id (:db/id activity-candidate)]
                               (d/pull db [:activity/actual-start-date
                                           :activity/actual-end-date
                                           :activity/estimated-start-date
                                           :activity/estimated-end-date
                                           :activity/name
                                           :activity/status]
-                                      (:db/id activity-candidate))
+                                      candidate-id)
                               {})
                             activity-candidate)]
     (some (partial activity-model/conflicts? new-activity)
