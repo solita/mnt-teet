@@ -159,6 +159,16 @@
                                       lifecycle-id
                                       (Date.))
                                  (mapv first)
-                                 (filter #(not= (:db/id activity-candidate) (:db/id %))))]
-    (some (partial activity-model/conflicts? activity-candidate)
+                                 (filterv #(not= (:db/id activity-candidate) (:db/id %))))
+        new-activity (merge (if (:db/id activity-candidate)
+                              (d/pull db [:activity/actual-start-date
+                                          :activity/actual-end-date
+                                          :activity/estimated-start-date
+                                          :activity/estimated-end-date
+                                          :activity/name
+                                          :activity/status]
+                                      (:db/id activity-candidate))
+                              {})
+                            activity-candidate)]
+    (some (partial activity-model/conflicts? new-activity)
           existing-activities)))
