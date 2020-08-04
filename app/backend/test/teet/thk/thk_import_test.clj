@@ -97,7 +97,7 @@
           (let [{owner :thk.project/owner :as _p1}
                 (d/pull db '[{:thk.project/owner [*]}]
                         [:thk.project/id "11111"])]
-            (is (= {:user/person-id "12345678900"
+            (is (= {:user/person-id "EE12345678900"
                     :user/given-name "Danny D."
                     :user/family-name "Manager"}
                    (select-keys owner [:user/person-id
@@ -107,7 +107,7 @@
           (let [{owner :thk.project/owner :as _p5}
                 (d/pull db '[* {:thk.project/owner [*]}]
                         [:thk.project/id "55555"])]
-            (is (= {:user/person-id "66666666666"}
+            (is (= {:user/person-id "EE66666666666"}
                    (select-keys owner [:user/person-id])))
             (is (= #{:db/id :user/person-id}
                    (set (keys owner)))))))))

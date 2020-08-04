@@ -21,7 +21,7 @@
 
 (def mock-users
   [{:user/id manager-id
-    :user/person-id "12345678900"
+    :user/person-id "EE12345678900"
     :user/given-name "Danny D."
     :user/family-name "Manager"
     :user/email "danny.d.manager@example.com"
@@ -29,7 +29,7 @@
     }
 
    {:user/id external-consultant-id
-    :user/person-id "33445566770"
+    :user/person-id "EE33445566770"
     :user/given-name "Carla"
     :user/family-name "Consultant"
     :user/email "carla.consultant@example.com"
@@ -37,7 +37,7 @@
     }
 
    {:user/id boss-id
-    :user/person-id "94837264730"
+    :user/person-id "EE94837264730"
     :user/given-name "Benjamin"
     :user/family-name "Boss"
     :user/email "benjamin.boss@example.com"
@@ -47,7 +47,7 @@
     }
 
    {:user/id internal-consultant-id
-    :user/person-id "1233726123"
+    :user/person-id "EE1233726123"
     :user/given-name "Edna E."
     :user/family-name "Consultant"
     :user/email "edna.e.consultant@example.com"
