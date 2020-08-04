@@ -69,6 +69,7 @@
               :keys :file-id :comment-ts
               :where
               [?f :file/comments ?c]
+              [(missing? $ ?c :meta/deleted?)]
               [?c :comment/timestamp ?ts]
               :in $ [?f ...]]
             db
