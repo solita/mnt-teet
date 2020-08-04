@@ -64,23 +64,25 @@
 
   Takes in a database, a mapping of when user has seen a file (files-seen-at)
   and file-ids."
-  [db seen-at-by-file file-ids]
-  (->> (d/q '[:find ?f ?ts
-              :keys :file-id :comment-ts
+  [db seen-at-by-file file-ids current-user]
+  (->> (d/q '[:find ?f ?ts ?u
+              :keys :file-id :comment-ts :comment-creator
               :where
               [?f :file/comments ?c]
               [(missing? $ ?c :meta/deleted?)]
               [?c :comment/timestamp ?ts]
+              [?c :meta/creator ?u]
               :in $ [?f ...]]
             db
             file-ids)
        (group-by :file-id)
        (cu/map-vals
         (fn [comments]
-          (cu/count-by (fn [{f :file-id ts :comment-ts}]
+          (cu/count-by (fn [{f :file-id ts :comment-ts cc :comment-creator}]
                          (let [seen (seen-at-by-file f)]
-                           (if (or (nil? seen)
-                                   (.before seen ts))
+                           (if (and (or (nil? seen)
+                                        (.before seen ts))
+                                    (not= (:db/id current-user) cc))
                              :file/comments-new-count
                              :file/comments-old-count)))
                        comments)))))
@@ -98,7 +100,7 @@
         ;; Get comment counts for files
         ;; FIXME: take all/internal visibility into account!!!
         comment-counts-by-file
-        (files-comment-counts db seen-at-by-file file-ids)
+        (files-comment-counts db seen-at-by-file file-ids user)
 
         files
         (mapv
