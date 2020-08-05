@@ -464,14 +464,20 @@
          [Divider {:style {:margin "1rem 0"}}]
          [typography/BoldGreyText {:style {:text-transform :uppercase}}
           (tr [:land :estate-data])]
-         [Link {:style {:display :block}
-                :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "burdens")}
-          [common/count-chip {:label (count (:jagu3 estate))}]
-          (tr [:land-modal-page :burdens])]
-         [Link {:style {:display :block}
-                :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "mortgages")}
-          [common/count-chip {:label (count (:jagu4 estate))}]
-          (tr [:land-modal-page :mortgages])]
+         (let [burden-count (count (:jagu3 estate))]
+           (if (zero? burden-count)
+             [typography/GreyText (tr [:land-modal-page :no-burdens])]
+             [Link {:style {:display :block}
+                    :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "burdens")}
+              [common/count-chip {:label burden-count}]
+              (tr [:land-modal-page (if (= 1 burden-count) :burden :burdens)])]))
+         (let [mortgage-count (count (:jagu4 estate))]
+           (if (zero? mortgage-count)
+             [typography/GreyText (tr [:land-modal-page :no-mortgages])]
+             [Link {:style {:display :block}
+                    :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "mortgages")}
+              [common/count-chip {:label mortgage-count}]
+              (tr [:land-modal-page (if (= 1 mortgage-count) :mortgage :mortgages)])]))
          [Link {:style {:display :block}
                 :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "comments")}
           [query/query {:e! e! :query :comment/count
@@ -480,9 +486,15 @@
                         :args {:db/id [:estate-comments/project+estate-id [(:db/id project-info) estate-id]]
                                :for :estate-comments}
                         :simple-view [(fn estate-comment-count [c]
-                                        [common/count-chip {:label c}])]
-                        :loading-state "-"}]
-          (tr [:land-modal-page :comments])]]]]
+                                        (if (number? c)
+                                          [:span
+                                           [common/count-chip {:label c}]
+                                           (tr [:land-modal-page (cond
+                                                                   (zero? c) :no-comments
+                                                                   (= 1 c) :comment
+                                                                   :else :comments)])]
+                                          [:span]))]
+                        :loading-state "-"}]]]]]
       :children
       (mapc
         (fn [unit]
