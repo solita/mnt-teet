@@ -14,13 +14,18 @@
             [teet.util.datomic :as du]))
 
 
+(defn latest-file-version-id
+  [db file-id]
+  (if-let [parent (get-in (du/entity db file-id) [:file/_previous-version 0 :db/id])]
+    (recur db parent)
+    file-id))
 
 (defn- find-previous-version [db task-id previous-version]
   (if-let [old-file (ffirst (d/q '[:find (pull ?f [:db/id :file/version :file/pos-number])
                                    :in $ ?f ?t
                                    :where
                                    [?t :task/files ?f]]
-                                 db previous-version task-id))]
+                                 db (latest-file-version-id db previous-version) task-id))]
     old-file
     (db-api/bad-request! "Can't find previous version")))
 
@@ -85,11 +90,19 @@
    :transact [{:db/id id
                :file/upload-complete? true}]})
 
+(defn file-belong-to-task?
+  [db task-id file-id]
+  (let [file-entity (du/entity db file-id)]
+    (= task-id (get-in file-entity [:task/_files 0 :db/id]))))
+
 (defcommand :file/upload
   {:doc "Upload new file to task."
    :context {:keys [conn user db]}
    :payload {:keys [task-id attachment? file previous-version-id]}
    :project-id (project-db/task-project-id db task-id)
+   :pre [^{:error :invalid-previous-file}
+         (or (nil? previous-version-id)
+             (file-belong-to-task? db task-id previous-version-id))]
    :authorization {:document/upload-document {:db/id task-id
                                               :link :task/assignee}}}
   (let [file (file-model/type-by-suffix file)]
