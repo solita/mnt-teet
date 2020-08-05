@@ -212,7 +212,7 @@
                   [?e :thk.project/name ?name])
               [(.toLowerCase ^String ?name) ?lower-name]
               [(.contains ?lower-name ?text)]]
-     :in {'?text text}}))
+     :in {'?text (str/lower-case text)}}))
 
 (defmethod search-clause :road [[_ road]]
   {:where '[[?e :thk.project/road-nr ?road]]
