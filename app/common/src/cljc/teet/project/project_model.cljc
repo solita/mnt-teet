@@ -174,6 +174,7 @@
 (defn- task-behind-schedule?
   [{:task/keys [estimated-end-date] :as task}]
   (and (not (task-model/completed? task))
+       estimated-end-date
        (date/date-in-past? estimated-end-date)))
 
 (defn- atleast-one-task-over-deadline?
@@ -183,20 +184,18 @@
     tasks))
 
 (defn project-with-status
-  [{:thk.project/keys [lifecycles owner estimated-end-date estimated-start-date] :as project}]
+  [{:thk.project/keys [lifecycles owner estimated-start-date] :as project}]
   (let [activities (mapcat :thk.lifecycle/activities
                            lifecycles)
-        tasks (mapcat                                       ;;TODO: when tasks have their own end dates use those instead
-                (fn [activity]
-                  (map
-                    #(assoc % :task/estimated-end-date (:activity/estimated-end-date activity))
-                    (:activity/tasks activity)))
-                (mapcat :thk.lifecycle/activities (:thk.project/lifecycles project)))]
+        tasks (->> project
+                   :thk.project/lifecycles
+                   (mapcat :thk.lifecycle/activities)
+                   (mapcat :activity/tasks))]
     (assoc project :thk.project/status
                    (cond
                      (and (nil? owner) (date/date-in-past? estimated-start-date))
                      :unassigned-over-start-date
-                     (and (atleast-one-activity-over-deadline? activities) (date/date-in-past? estimated-end-date))
+                     (atleast-one-activity-over-deadline? activities)
                      :activity-over-deadline
                      (atleast-one-task-over-deadline? tasks)
                      :task-over-deadline
