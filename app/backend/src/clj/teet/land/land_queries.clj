@@ -171,7 +171,8 @@ and the compensation info as the value."
   (let [response
         (business-registry/perform-detailandmed-request
          xroad-url {:business-id business-id
-                    :instance-id xroad-instance})]
+                    :instance-id xroad-instance
+                    :requesting-eid (:user/person-id user)})]
     (walk/prewalk
      (fn [x]
        (if (instance? LocalDate x)

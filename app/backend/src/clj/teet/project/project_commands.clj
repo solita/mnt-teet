@@ -121,7 +121,7 @@
         (property-registry/ensure-cached-estate-info {:xroad-url xroad-url
                                                       :xroad-kr-subsystem-id xroad-subsystem
                                                       :instance-id xroad-instance
-                                                      :requesting-eid (str "EE" (:user/person-id user))
+                                                      :requesting-eid (:user/person-id user)
                                                       :api-url api-url
                                                       :api-secret api-secret}
                                                      estate-ids)))

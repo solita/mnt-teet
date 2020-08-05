@@ -3,24 +3,21 @@
             [teet.environment :as environment]
             [clojure.string :refer [blank? starts-with?]]
             [taoensso.timbre :as log]
-            [datomic.client.api :as d]            
+            [datomic.client.api :as d]
             teet.user.user-spec))
 
 (defn- new-user []
   {:user/id (java.util.UUID/randomUUID)
    :user/roles [:user]})
 
-(defn ensure-ee-prefix [eid]
-  (if (starts-with? eid "EE")
-    eid
-    (str "EE" eid)))
+
 
 #_(defn user-data-from-xroad [new-user-eid current-user-eid]
   (let [xroad-url (environment/config-value :xroad-query-url)
         xroad-instance-id (environment/config-value :xroad-instance-id)
         resp (teet.integration.x-road/perform-rr442-request xroad-url
                                                             {:instance-id xroad-instance-id
-                                                             :requesting-eid (ensure-ee-prefix current-user-eid)
+                                                             :requesting-eid current-user-eid
                                                              :subject-eid new-user-eid})
         name-valid? (complement blank?)
         name-map {:user/given-name (-> resp :result :Eesnimi)
@@ -46,8 +43,8 @@
                     (and (= (:permission/role new-permission) (:permission/role existing)) ;; same role
                          (nil? (:permission/valid-to new-permission)) ;; no expiration
                          (nil? (:permission/valid-to existing)) ;; no expiration
-                         
-                         (date-before? (:permission/valid-from existing) current-date)))        
+
+                         (date-before? (:permission/valid-from existing) current-date)))
         q-res (d/q '[:find (pull ?perms [*])
                      :in $ ?pid
                      :where [?user :user/person-id ?pid]
@@ -66,7 +63,7 @@
               (merge (new-user)
                            (select-keys user-data [:user/person-id])
                            (when-let [p (:user/add-global-permission user-data)]
-                             
+
                              (let [current-date (java.util.Date.)
                                    new-permission {:user/permissions [{:db/id "new-permission"
                                                                        :permission/role p

@@ -14,6 +14,11 @@
        (contains? system :member-code)
        (contains? system :subsystem-code)))
 
+(defn- ensure-ee-prefix [eid]
+  (if (str/starts-with? eid "EE")
+    eid
+    (str "EE" eid)))
+
 (defn request-envelope
   "Return a SOAP Envelope with header and body."
   [{:keys [instance-id requesting-eid
@@ -21,12 +26,13 @@
    body]
   {:pre [(valid-header-system? client)
          (valid-header-system? service)
-         (contains? service :service-code)]}
+         (contains? service :service-code)
+         (string? requesting-eid)]}
   [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"
                    :xmlns:xrd "http://x-road.eu/xsd/xroad.xsd"
                    :xmlns:id "http://x-road.eu/xsd/identifiers"}
          [:soap:Header
-          [:xrd:userId requesting-eid]
+          [:xrd:userId (ensure-ee-prefix requesting-eid)]
           [:xrd:id (UUID/randomUUID)]
           [:xrd:protocolVersion "4.0"]
           [:xrd:client {:id:objectType "SUBSYSTEM"}
