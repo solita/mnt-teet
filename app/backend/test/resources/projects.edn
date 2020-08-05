@@ -107,7 +107,7 @@
   :thk.project/road-nr 20
   :thk.project/integration-info "#:object{:statusfk \"1605\", :statusname \"Kinnitatud\", :regionfk \"1803\", :groupfk \"1104\", :groupshortname \"REK\", :thkupdstamp \"2020-04-07 12:06:57.739\"}"
   :thk.project/end-m 10000
-  :thk.project/owner {:db/id "p5-owner" :user/person-id "66666666666"}}
+  :thk.project/owner {:db/id "p5-owner" :user/person-id "EE66666666666"}}
 
  {:thk.project/estimated-start-date #inst "2020-07-05T21:00:00.000-00:00"
   :thk.project/lifecycles

@@ -152,7 +152,10 @@
 (defn estonian-person-id->user [id]
   (when-not (str/blank? id)
     {:db/id (str "new-user-" id)
-     :user/person-id id}))
+     :user/person-id (if (re-matches #"^\d+$" id)
+                       ;; If id is a string of digits: it is a person id without EE prefix
+                       (str "EE" id)
+                       id)}))
 
 (defonce estonian-translations
   (delay
