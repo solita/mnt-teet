@@ -152,3 +152,16 @@
 (defn project-owner [db project-eid]
   (get-in (d/pull db '[:thk.project/owner] project-eid)
           [:thk.project/owner :db/id]))
+
+(defn project-exists?
+  "Check if TEET has a project with the given THK project id"
+  [db thk-project-id]
+  (boolean
+   (ffirst (d/q '[:find ?e :where [?e :thk.project/id ?project-id] :in $ ?project-id]
+                db thk-project-id))))
+
+(defn project-has-owner?
+  [db project-eid]
+  (boolean
+   (ffirst (d/q '[:find ?e :where [?project :thk.project/owner ?e] :in $ ?project]
+                db project-eid))))

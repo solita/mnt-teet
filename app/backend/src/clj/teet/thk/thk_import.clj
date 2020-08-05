@@ -12,7 +12,8 @@
             [datomic.client.api :as d]
             [teet.util.collection :as cu]
             [teet.thk.thk-mapping :as thk-mapping]
-            [teet.log :as log])
+            [teet.log :as log]
+            [teet.project.project-db :as project-db])
   (:import (org.apache.commons.io.input BOMInputStream)))
 
 (def excluded-project-types #{"TUGI" "TEEMU"})
@@ -66,7 +67,10 @@
         phase-est-ends (keep :thk.lifecycle/estimated-end-date rows)
 
         project-est-start (first (sort phase-est-starts))
-        project-est-end (last (sort phase-est-ends))]
+        project-est-end (last (sort phase-est-ends))
+        project-exists? (project-db/project-exists? db project-id)
+        project-has-owner? (and project-exists?
+                                (project-db/project-has-owner? db [:thk.project/id project-id]))]
     (into
      [(cu/without-nils
        (merge
@@ -78,8 +82,13 @@
                            :thk.project/repair-method
                            :thk.project/region-name
                            :thk.project/carriageway
-                           :thk.project/name
-                           :thk.project/owner})
+                           :thk.project/name})
+
+        ;; Use THK provided owner only if project does not exist or doesn't have owner in TEET yet
+        (when (or (not project-exists?)
+                  (not project-has-owner?))
+          (select-keys prj #{:thk.project/owner}))
+
         {:db/id (str "prj-" project-id)
          :thk.project/estimated-start-date project-est-start
          :thk.project/estimated-end-date project-est-end
