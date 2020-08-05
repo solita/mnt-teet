@@ -50,9 +50,9 @@
 (defn comment-count-of-entity
   [db entity-id entity-type comment-visibility]
   (if-let [resolved-id (resolve-id db entity-id)]
-    (ffirst (d/q (assoc (comment-query entity-type comment-visibility nil)
-                        :find '[(count ?comment)])
-                 db resolved-id))
+    (or (ffirst (d/q (assoc (comment-query entity-type comment-visibility nil)
+                            :find '[(count ?comment)])
+                     db resolved-id)) 0)
     0))
 
 (defn comment-parent
