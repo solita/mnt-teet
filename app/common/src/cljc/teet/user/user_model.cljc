@@ -37,14 +37,14 @@
     (s/valid? :user/eid user)
     user
 
+    (and (map? user)
+         (contains? user :db/id))
+    (:db/id user)
+
     ;; This is a user entity map, return user uuid
     (and (map? user)
          (contains? user :user/id))
     [:user/id (:user/id user)]
-
-    (and (map? user)
-         (contains? user :db/id))
-    (:db/id user)
 
     ;; Not valid user
     :else

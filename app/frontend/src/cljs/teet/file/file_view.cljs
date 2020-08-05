@@ -274,8 +274,8 @@
                 (tr-enum (:file/status file))])])]
 
      (if @show-preview?
-       [:div 
-        [:div {:class (<class preview-style)}        
+       [:div
+        [:div {:class (<class preview-style)}
          (if (str/starts-with? (:file/type file) "image/")
            [:img {:style {:width :auto :height :auto
                           :max-height "250px"
@@ -295,12 +295,15 @@
         [LinearProgress {:variant :determinate
                          :value replacement-upload-progress}]
         [:<>
-         (when (and can-replace-file? (du/enum= :file.status/draft (:file/status (or latest-file file))))
-           [file-upload/FileUploadButton {:on-drop (e! file-controller/->UploadNewVersion file)
-                                          :color :secondary
-                                          :icon [icons/file-cloud-upload]
-                                          :multiple? false}
-            (tr [:file :upload-new-version])])])
+         (when (and can-replace-file?
+                    (nil? latest-file)
+                    (du/enum= :file.status/draft (:file/status file)))
+           [:div
+            [file-upload/FileUploadButton {:on-drop (e! file-controller/->UploadNewVersion file)
+                                           :color :secondary
+                                           :icon [icons/file-cloud-upload]
+                                           :multiple? false}
+             (tr [:file :upload-new-version])]])])
       [buttons/button-primary {:element "a"
                                :href (common-controller/query-url :file/download-file
                                                                   {:file-id (:db/id file)})
@@ -315,7 +318,7 @@
         [:br]
         [typography/Heading2 (tr [:file :other-versions])]
         [:div.file-table-other-versions
-         (mapc other-version-row other-versions)]])]))
+         [file-table other-versions]]])]))
 
 
 (defn- file-edit-dialog [{:keys [e! on-close file]}]

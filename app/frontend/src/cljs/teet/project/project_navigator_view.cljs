@@ -358,12 +358,11 @@
          [project-navigator e! project (:stepper app) (:params app) true]]
         [Grid {:item  true
                :xs content-w
-               :style {
-                       :padding "2rem 1.5rem"
+               :style {:padding "2rem 1.5rem"
                        :overflow-y :auto
                        ;; content area should scroll, not the whole page because we
                        ;; want map to stay in place without scrolling it
-                       :max-height "calc(100vh - 150px)"}}
+                       }}
          content]
         [Grid {:item  true
                :xs :auto
