@@ -94,6 +94,7 @@
 
   Includes the timestamp user has seen the file (if any) as :file-seen/seen-at."
   [db user file-ids]
+  ;; TODO separate comment-count per file and file listing
   (let [;; File seen statuses
         seen-at-by-file (files-seen-at db user file-ids)
 
