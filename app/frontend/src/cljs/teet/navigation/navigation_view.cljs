@@ -16,7 +16,6 @@
             [teet.login.login-controller :as login-controller]
             [teet.notification.notification-view :as notification-view]))
 
-(def entity-quote (fnil js/escape "(nil)"))
 
 (def uri-quote (fnil js/encodeURIComponent "(nil)"))
 
@@ -45,17 +44,23 @@
 
 
 (defn feedback-link
-  []
+  [{:user/keys [given-name family-name person-id]}]
   (let [ua-string (.-userAgent js/navigator)
         current-uri (.-URL js/document)
+        subject-text (str "TEET Feedback, " (.toLocaleDateString (js/Date.))
+                          ", " given-name " " family-name)
         body-text (str "Session info:\n"
                        "Browser type string: " ua-string "\n"
-                       "Address in TEET: " current-uri "\n\n")]
+                       "Address in TEET: " current-uri "\n"
+                       "TEET branch: " (aget js/window "teet_branch") "\n"
+                       "TEET git hash: " (aget js/window "teet_githash") "\n"
+                       "User: " (str given-name " " family-name
+                                     " (person code:" person-id ")\n\n"))]
     [:div {:class (<class navigation-style/feedback-container-style)}
      [Link {:class (<class navigation-style/feedback-style)
-            :href (str "mailto:teet-feedback@mnt.ee?Subject=TEET Feedback&body="
-                       (-> body-text
-                           entity-quote))}
+            :href (str "mailto:teet-feedback@mnt.ee"
+                       "?Subject=" (uri-quote subject-text)
+                       "&body=" (uri-quote body-text))}
       (tr [:common :send-feedback])]]))
 
 (defn- drawer-header
@@ -150,7 +155,7 @@
   [user e!]
   [:div {:style {:display :flex
                  :justify-content :flex-end}}
-   [feedback-link]
+   [feedback-link user]
    [notification-view/notifications e!]
    [language-selector]
    (when-feature :my-role-display
