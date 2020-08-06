@@ -10,7 +10,7 @@
   (let [orig-deps (slurp "app/backend/deps.edn")]
     (spit "app/backend/deps.edn"
           (str/replace orig-deps
-                       "com.datomic/ion {:mvn/version \"0.9.35\"}"
+                       "com.datomic/ion {:mvn/version \"0.9.43\"}"
                        ""))
     (try
       (func)
