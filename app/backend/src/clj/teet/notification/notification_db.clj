@@ -6,11 +6,14 @@
             [teet.util.datomic :as du]
             [teet.comment.comment-db :as comment-db]
             [teet.project.project-model :as project-model]
-            [teet.comment.comment-model :as comment-model]))
+            [teet.comment.comment-model :as comment-model]
+            [teet.user.user-db :as user-db])
+  (:import (java.util UUID)))
 
 (defn notification-tx
-  "Return a notification transaction map."
-  [{:keys [from       ; user whose action generated the notification
+  "Return a notification transaction map when the target of notification is not the cause of the notification"
+  [db
+   {:keys [from       ; user whose action generated the notification
            to         ; user who receives the notification
            target     ; id of the entity targeted by the notification
            type       ; notification type
@@ -20,11 +23,11 @@
          (keyword? type)
          (some? target)
          (or (nil? project) (project-model/project-ref project))]}
-  (let [from-ref (user-model/user-ref from)
-        to-ref (user-model/user-ref to)]
-    (if-not (= to-ref from-ref)
-      (merge {:db/id (str "new-notification-" (str (java.util.UUID/randomUUID)))
-              :notification/receiver to-ref
+  (let [from-id (user-db/resolve-user db from)
+        to-id (user-db/resolve-user db to)]
+    (if-not (= from-id to-id)
+      (merge {:db/id (str "new-notification-" (str (UUID/randomUUID)))
+              :notification/receiver to-id
               :notification/status :notification.status/unread
               :notification/target target
               :notification/type type}

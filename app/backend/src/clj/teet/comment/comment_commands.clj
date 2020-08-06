@@ -55,7 +55,7 @@
 
   If internal? is true, returns only participants allowed to
   read internal comments."
-  [db entity-type entity-id internal? except-user]
+  [db entity-type entity-id internal?]
   (let [project-id (project-db/entity-project-id db entity-type entity-id)
         manager-uid (manager-user-id db entity-type entity-id)
         attr (comment-model/comments-attribute-for-entity-type entity-type)
@@ -63,18 +63,17 @@
                :where [['?entity attr '?comment]
                        '[?comment :comment/author ?author]]
                :in '[$ ?entity]}
-        participants (disj (into (if manager-uid
-                                 #{[:user/id manager-uid]}
-                                 #{})
-                                 ;; if entity id is a tuple for the first creation of estate-comments or owner-comments
-                                 ;; This is because the tuple entity can't be resolved and thus will fail
-                                 ;; There also cannot be any pre-existing comments because the whole entity is created
-                                 (when-let [id (if (number? entity-id)
-                                                 entity-id
-                                                 (:db/id (du/entity db entity-id)))]
-                                   (ffirst (d/q query
-                                                db id))))
-                           (:db/id (du/entity db (user-model/user-ref except-user))))
+        participants (into (if manager-uid
+                             #{[:user/id manager-uid]}
+                             #{})
+                           ;; if entity id is a tuple for the first creation of estate-comments or owner-comments
+                           ;; This is because the tuple entity can't be resolved and thus will fail
+                           ;; There also cannot be any pre-existing comments because the whole entity is created
+                           (when-let [id (if (number? entity-id)
+                                           entity-id
+                                           (:db/id (du/entity db entity-id)))]
+                             (ffirst (d/q query
+                                          db id))))
         participants (if (= entity-type :file)
                        (conj participants
                              (get-in (du/entity db entity-id)
@@ -188,6 +187,7 @@
                (comment-entity-tx entity-id transact-id))
              ;; Comment mention notification for mentioned users
              (map #(notification-db/notification-tx
+                     db
                      {:from user
                       :to %
                       :type :notification.type/comment-mention
@@ -197,14 +197,14 @@
 
              ;; Comment creation notification for participants except mentioned ones
              (map #(notification-db/notification-tx
+                     db
                      {:from user
                       :to %
                       :type :notification.type/comment-created
                       :target "new-comment"
                       :project project-id})
                   (set/difference (participants db entity-type entity-id
-                                                (= visibility :comment.visibility/internal)
-                                                user)
+                                                (= visibility :comment.visibility/internal))
                                   mentioned-ids)))))})
 
 (defn- get-project-id-of-comment [db comment-id]
@@ -262,6 +262,7 @@
                                  (set files)
                                  (files-in-db db comment-id))
                    (map #(notification-db/notification-tx
+                           db
                            {:from user
                             :to %
                             :type :notification.type/comment-mention
@@ -301,14 +302,14 @@
           ;; Notifications of the status update
           (when (comment-model/tracked-statuses status)
             (map #(notification-db/notification-tx
-                   {:from user
-                    :to %
-                    :type (status->notification status)
-                    :target id
-                    :project (project-db/entity-project-id db entity-type entity-id)})
+                    db
+                    {:from user
+                     :to %
+                     :type (status->notification status)
+                     :target id
+                     :project (project-db/entity-project-id db entity-type entity-id)})
                  (participants db entity-type entity-id
-                               (= visibility :comment.visibility/internal)
-                               user))))))
+                               (= visibility :comment.visibility/internal)))))))
 
 (defcommand :comment/set-status
   {:doc "Toggle the tracking status of the comment"

@@ -49,9 +49,10 @@
   (string? id))
 
 (defn assignment-notification-tx
-  [user task project]
+  [db user task project]
   (if-let [assignee (:task/assignee task)]
     (notification-db/notification-tx
+      db
       {:from user
        :to [:user/id (:user/id assignee)]
        :target (:db/id task)
@@ -82,7 +83,7 @@
                       uc/without-nils)
                   (meta-model/modification-meta user))
                 (if assign?
-                  (assignment-notification-tx user task (project-db/task-project-id db id))
+                  (assignment-notification-tx db user task (project-db/task-project-id db id))
                   {})
                 (if assign?
                   ;; If assigning, set activity status to in-progress
@@ -123,7 +124,7 @@
                            :task/assignee [:user/id (:user/id (:task/assignee task))]}
                           {:task/status :task.status/not-started})
                         (meta-model/creation-meta user))]})
-              (assignment-notification-tx user task
+              (assignment-notification-tx db user task
                                           (project-db/activity-project-id db activity-id))]})
 
 (defcommand :task/submit
@@ -137,6 +138,7 @@
                :task/status :task.status/waiting-for-review}
               (if-let [manager (activity-db/activity-manager db (activity-db/task-activity-id db task-id))]
                 (notification-db/notification-tx
+                  db
                   {:from user
                    :to manager
                    :target task-id
@@ -170,21 +172,22 @@
    (case result
      ;; Accept: mark as completed and finalize files
      :accept (into
-              [{:db/id task-id
-                :task/status :task.status/completed}]
+               [{:db/id task-id
+                 :task/status :task.status/completed}]
 
-              ;; Mark all latest versions as final
-              (for [{id :db/id} (task-db/task-file-listing db user task-id)]
-                {:db/id id
-                 :file/status :file.status/final}))
+               ;; Mark all latest versions as final
+               (for [{id :db/id} (task-db/task-file-listing db user task-id)]
+                 {:db/id id
+                  :file/status :file.status/final}))
 
      ;; Reject: mark as in-progress and notify assignee
      :reject [{:db/id task-id
                :task/status :task.status/in-progress}
               (notification-db/notification-tx
-               {:from user
-                :to (get-in (du/entity db task-id)
-                            [:task/assignee :db/id])
-                :type :notification.type/task-review-rejected
-                :target task-id
-                :project (project-db/task-project-id db task-id)})])})
+                db
+                {:from user
+                 :to (get-in (du/entity db task-id)
+                             [:task/assignee :db/id])
+                 :type :notification.type/task-review-rejected
+                 :target task-id
+                 :project (project-db/task-project-id db task-id)})])})
