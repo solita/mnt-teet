@@ -5,6 +5,8 @@
   "CVE-2020-5234" ; msgpack is about C# impl, not java
   "CVE-2019-12415" ; code execution in excel transformation, we are not reading user provided excel files
 
+  "CVE-2019-17638" ; jetty bytebuffer release (not using jetty to serve requests)
+
   ;; multiple jackson databind vulnerabilities about classes not being in blocklist
   ;; jackson is included via AWS sdk, but we are not using it to deserialize user provided data
   "CVE-2017-15095" "CVE-2017-17485" "CVE-2018-1000873" "CVE-2018-11307" "CVE-2018-14719" "CVE-2018-14720"
