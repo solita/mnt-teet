@@ -2,8 +2,18 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.string :as str]))
 
+(defn decimal-number?
+  [s]
+  (re-matches #"^\d+((,|\.)\d+)?$" s))
+
+(s/def :land-acquisition/price-per-sqm decimal-number?)
+(s/def :estate-procedure/motivation-bonus decimal-number?)
+(s/def :estate-procedure/urgent-bonus decimal-number?)
+(s/def :estate-process-fee/fee decimal-number?)
+
 (s/def :land-acquisition/form
-  (s/keys :req [:land-acquisition/impact]))
+  (s/keys :req [:land-acquisition/impact]
+          :opt [:land-acquisition/price-per-sqm]))
 
 (s/def :land/create-estate-procedure
   (s/keys :req [:estate-procedure/type
