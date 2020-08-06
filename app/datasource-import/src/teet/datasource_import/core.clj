@@ -159,6 +159,7 @@
     (when (seq deleted-feature-id-set)
       (print "\nMarking " (count deleted-feature-id-set) " features absent from import file as deleted.\n")
       (doseq [chunk (partition-all 50 deleted-feature-id-set)]
+        (print ".") (flush)
         (patient-post
          (str api-url "/feature")
          {:headers (merge
