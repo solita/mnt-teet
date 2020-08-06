@@ -16,8 +16,8 @@
         net.minidev/json-smart {:mvn/version "2.3"}
 
         ;; Datomic libraries
-        com.datomic/client-cloud {:mvn/version "0.8.78"}
-        com.datomic/ion {:mvn/version "0.9.35"}
+        com.datomic/client-cloud {:mvn/version "0.8.102"}
+        com.datomic/ion {:mvn/version "0.9.43"}
 
         commons-io/commons-io {:mvn/version "2.6"}
 
@@ -38,7 +38,7 @@
              }
  :paths ["src/clj" "../common/src/cljc" "../common/src/clj" "resources"
          "../frontend/resources/public/language"]
- :aliases {:dev {:extra-deps {com.datomic/ion-dev {:mvn/version "0.9.234"}
+ :aliases {:dev {:extra-deps {com.datomic/ion-dev {:mvn/version "0.9.265"}
                               org.clojure/tools.namespace {:mvn/version "0.3.1"}}
                  :extra-paths ["dev-src" "test"]}
            :pack {:extra-deps {pack/pack.alpha {:git/url "https://github.com/juxt/pack.alpha.git"
