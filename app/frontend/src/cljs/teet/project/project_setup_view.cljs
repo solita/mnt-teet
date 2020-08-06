@@ -100,7 +100,7 @@
        [:<>
         [container/collapsible-container {:on-toggle (e! project-controller/->ToggleSelectedCategory)
                                           :open? (open-types :selected)}
-         (str (count checked-restrictions) " selected")
+         (tr [:common :n-selected] {:count (str (count checked-restrictions))})
          (when (not-empty checked-restrictions)
            [itemlist/checkbox-list
             (for [restriction (sort-by (juxt :VOOND :teet-id) checked-restrictions)]

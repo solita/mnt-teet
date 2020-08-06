@@ -74,6 +74,7 @@
   :files "Files",
   :deadline "Deadline",
   :back-to-task "Back to task",
+  :n-selected "{count} selected",
   :design-stage-activities "Project stages",
   :select {:empty "- Select value"},
   :clear "Clear"},
@@ -556,6 +557,7 @@
  :search {:clear-filters "Clear filters", :quick-search "Search"},
  :search-area
  {:filter-by-distance "Filter by distance",
+  :inclusion-areas "Inclusion areas",
   :select-relevant-restrictions "Select relevant restrictions",
   :waiting-for-area "Waiting for area",
   :inclusion-distance "Inclusion distance",

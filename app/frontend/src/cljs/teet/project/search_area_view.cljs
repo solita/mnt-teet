@@ -34,7 +34,7 @@
        (let [drawing? (get-in map [:search-area :drawing?])
              drawn-geometries (get-in map [:search-area :drawn-areas])]
          [:div {:style {:padding "1rem"}}
-          [:span "Inclusion areas"]
+          [:span (tr [:search-area :inclusion-areas])]
           (doall
             (for [{:keys [label id] :as feature} drawn-geometries]
               ^{:key id}

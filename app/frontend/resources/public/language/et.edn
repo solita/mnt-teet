@@ -74,6 +74,7 @@
   :files "Failid",
   :deadline "Tähtaeg",
   :back-to-task "Tagasi ülesandesse",
+  :n-selected "{count} valitud",
   :design-stage-activities "Ülesanded",
   :select {:empty "- Valin"},
   :clear "Puhastan"},
@@ -553,6 +554,7 @@
  :search {:clear-filters "Puhastan filtrid", :quick-search "Otsin"},
  :search-area
  {:filter-by-distance "Filtreerin kauguse järgi",
+  :inclusion-areas "Mõjualad",
   :select-relevant-restrictions "Valin asjakohased piirangud",
   :waiting-for-area "Mõjuala ootamine",
   :inclusion-distance "Mõju ulatus",
