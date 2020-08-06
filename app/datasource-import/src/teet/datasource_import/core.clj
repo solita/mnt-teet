@@ -6,7 +6,8 @@
             [cheshire.core :as cheshire]
             [teet.datasource-import.shp :as shp]
             [teet.util.string :as string]
-            [teet.auth.jwt-token :as jwt-token])
+            [teet.auth.jwt-token :as jwt-token]
+            [clojure.set :as set])
   (:import (java.nio.file Files)
            (java.nio.file.attribute FileAttribute)
            (java.util.zip ZipEntry ZipInputStream)
@@ -65,13 +66,16 @@
 (defn existing-features-ids [{:keys [api-url api-secret] :as ctx}]
   (println "getting existing features from data source id #" (:datasource-id ctx))
   (flush)
-  (let [get-url (str api-url "/feature?select=id&datasource_id=eq." (:datasource-id ctx))
-        resp (client/get get-url
-                         {:headers (merge (auth-headers {:api-secret api-secret})
-                                          {"Content-Type" "application/json"})})
-        rows (cheshire/decode (:body resp))
-        this-ds-ids (into #{} (for [m rows] (get m "id")))]
-    this-ds-ids))
+  (assoc ctx :old-features
+         (future
+           (let [get-url (str api-url "/feature?select=id&datasource_id=eq." (:datasource-id ctx))
+                 resp (client/get get-url
+                                  {:headers (merge (auth-headers {:api-secret api-secret})
+                                                   {"Content-Type" "application/json"})})
+                 rows (cheshire/decode (:body resp))]
+             (into #{}
+                   (map #(get % "id"))
+                   rows)))))
 
 (defn read-features
   "Read features from downloaded source. Assocs :features
@@ -79,10 +83,8 @@
   [{dds :downloaded-datasource
     ds :datasource
     :as ctx}]
-  (assoc ctx
-         :old-features (existing-features-ids ctx) ;; pre-existing ids, to detect deletions
-         :features (case (:content_type ds)
-                     "SHP" #(shp/read-features-from-path (:path dds)))))
+  (assoc ctx :features (case (:content_type ds)
+                         "SHP" #(shp/read-features-from-path (:path dds)))))
 
 (defn property-pattern-fn [pattern]
   (fn [{attrs :attributes}]
@@ -115,7 +117,7 @@
                 (throw e))))]
       (if (and (pos? tries) (= 'retry result))
         (let [delay (get retry-delay-ms tries 20000)]
-          (println "retry #" (- 5 tries))          
+          (println "retry #" (- 5 tries))
           (println "retry delay" delay)
           ; (Thread/sleep delay)
           (recur (dec tries)))
@@ -124,12 +126,12 @@
           (throw (deref last-exception))
           result)))))
 
-(defn upsert-features [{:keys [features api-url datasource-id datasource old-features] :as ctx}]  
+(defn upsert-features [{:keys [features api-url datasource-id datasource old-features] :as ctx}]
   (let [->label (property-pattern-fn (:label_pattern datasource))
         ->id (property-pattern-fn (:id_pattern datasource))
         features-data (features)
         new-feature-id-set (into #{} (map ->id features-data))
-        deleted? (clojure.set/difference old-features new-feature-id-set)]
+        deleted-feature-id-set (set/difference @old-features new-feature-id-set)]
     (println "POSTing to " (str api-url "/feature"))
     (doseq [features-chunk (partition-all 50
                                     ;; Add :i attribute that can be used as fallback id
@@ -154,19 +156,20 @@
                   :geometry geometry
                   :deleted false
                   :properties attributes}))}))
-    (when (not-empty deleted?)
-      (print "\nMarking features absent from import file as deleted.\n")
-      (patient-post
-       (str api-url "/feature")
-       {:headers (merge
-                  (auth-headers ctx)
-                  {"Prefer" "resolution=merge-duplicates"
-                   "Content-Type" "application/json"})
-        :body (cheshire/encode
-               (for [deleted-feature-id deleted?]                 
-                 {:datasource_id datasource-id
-                  :id deleted-feature-id
-                  :deleted true}))}))
+    (when (seq deleted-feature-id-set)
+      (print "\nMarking " (count deleted-feature-id-set) " features absent from import file as deleted.\n")
+      (doseq [chunk (partition-all 50 deleted-feature-id-set)]
+        (patient-post
+         (str api-url "/feature")
+         {:headers (merge
+                    (auth-headers ctx)
+                    {"Prefer" "resolution=merge-duplicates"
+                     "Content-Type" "application/json"})
+          :body (cheshire/encode
+                 (for [deleted-feature-id chunk]
+                   {:datasource_id datasource-id
+                    :id deleted-feature-id
+                    :deleted true}))})))
     ctx))
 
 (defn delete-working-files [{{path :path} :downloaded-datasource :as ctx}]
@@ -207,14 +210,19 @@
                (do (println "No datasource id provided, importing all of them.")
                    (get-all-datasource-ids config))))))
 
+(defn import-datasource [config datasource-id]
+  (-> config
+      (assoc :datasource-id datasource-id)
+      existing-features-ids
+      fetch-datasource-config
+      download-datasource
+      extract-datasource
+      read-features
+      upsert-features
+      delete-working-files))
+
 (defn -main [& args]
   (let [config (make-config args)]
     (println "Starting import")
     (doseq [datasource-id (:datasources config)]
-      (-> (assoc config :datasource-id datasource-id)
-          fetch-datasource-config
-          download-datasource
-          extract-datasource
-          read-features
-          upsert-features
-          delete-working-files))))
+      (import-datasource config datasource-id))))
