@@ -306,7 +306,6 @@
         (common-controller/update-page-state
           [:land/estate-forms]
           (fn [estate-forms]
-            (js/console.log "ESTATE FORMS: " (pr-str estate-forms))
             (into (or estate-forms {})
                   (for [[estate-id form] response]
                     [estate-id
