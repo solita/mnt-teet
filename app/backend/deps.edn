@@ -16,6 +16,9 @@
         net.minidev/json-smart {:mvn/version "2.3"}
 
         ;; Datomic libraries
+
+        ;; NOTE This is also a dependency on the frontend side to help
+        ;; with cljc reloading. Bump that version as well.
         com.datomic/client-cloud {:mvn/version "0.8.102"}
         com.datomic/ion {:mvn/version "0.9.43"}
 
