@@ -29,4 +29,4 @@ find frontend -type f -exec gzip {} \; -exec mv {}.gz {} \;
 aws s3 rm s3://$PUBLICDIR --exclude "js/deploy.json" --recursive
 
 # Upload new files (with content encoding set to gzip)
-aws s3 sync frontend s3://$PUBLICDIR --acl public-read --content-encoding gzip
+aws s3 sync frontend s3://$PUBLICDIR --acl public-read --content-encoding gzip --metadata-directive REPLACE
