@@ -68,12 +68,11 @@
   [:span {:class (<class end-icon-style)} "m²"])
 
 (defn TextField
-  [{:keys [label id type ref error style value
-           on-change input-button-icon read-only? inline?
-           placeholder input-button-click required input-style
-           multiline on-blur error-text input-class start-icon on-focus
-           maxrows rows auto-complete step hide-label? end-icon label-element
-           on-key-down] :as _props
+  [{:keys [label id type error style input-button-icon read-only? inline?
+           input-button-click required input-style
+           multiline error-text input-class start-icon
+           maxrows rows hide-label? end-icon label-element
+           ] :as props
     :or {rows 2}} & _children]
   (let [element (if multiline
                   :textarea
@@ -91,31 +90,18 @@
       (when start-icon
         [start-icon {:color :primary
                      :class (<class start-icon-style)}])
-      [element (merge {:type type
-                       :ref ref
-                       :required required
-                       :value value
-                       :id id
-                       :style input-style
-                       :on-blur on-blur
-                       :placeholder placeholder
-                       :class (herb/join (<class input-field-style error multiline read-only?
-                                                 (boolean start-icon) type)
-                                         input-class)
-                       :on-change on-change}
-                      (when read-only?
-                        {:disabled true})
-                      (when on-focus
-                        {:on-focus on-focus})
-                      (when multiline
-                        {:rows rows
-                         :maxrows maxrows})
-                      (when auto-complete
-                        {:auto-complete auto-complete})
-                      (when step
-                        {:step step})
-                      (when on-key-down
-                        {:on-key-down on-key-down}))]
+      [element (merge
+                 (select-keys props
+                              [:on-change :on-focus :auto-complete :step :on-key-down :min :max :type :ref :value :required :id :on-blur :placeholder])
+                 {:style input-style
+                  :class (herb/join (<class input-field-style error multiline read-only?
+                                            (boolean start-icon) type)
+                                    input-class)}
+                 (when read-only?
+                   {:disabled true})
+                 (when multiline
+                   {:rows rows
+                    :maxrows maxrows}))]
       (when end-icon
         [end-icon])
       (when (and input-button-click input-button-icon)

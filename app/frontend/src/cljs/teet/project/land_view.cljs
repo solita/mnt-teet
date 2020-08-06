@@ -129,14 +129,17 @@
             [Grid {:item true :xs 4}
              [form/field :estate-process-fee/fee
               [TextField {:type :number :placeholder "0"
+                          :step ".01"
                           :hide-label? true
-                          :min 0
+                          :min "0"
                           :end-icon text-field/euro-end-icon}]]]]])
         (when (#{:estate-procedure.type/urgent :estate-procedure.type/acquisition-negotiation}
                procedure-type)
           [field-with-title {:title (tr [:fields :estate-procedure/motivation-bonus])
                              :field-name :estate-procedure/motivation-bonus
                              :type :number
+                             :step ".01"
+                             :min "0"
                              :placeholder 0
                              :end-icon text-field/euro-end-icon}])
 
@@ -145,6 +148,8 @@
           [field-with-title {:title (tr [:fields :estate-procedure/urgent-bonus])
                              :field-name :estate-procedure/urgent-bonus
                              :type :number
+                             :step ".01"
+                             :min "0"
                              :placeholder 0
                              :end-icon text-field/euro-end-icon}])
 
@@ -166,7 +171,9 @@
               [TextField {:hide-label? true
                           :placeholder 0
                           :end-icon text-field/euro-end-icon
-                          :type :number}]]]]])
+                          :type :number
+                          :min "0"
+                          :step ".01"}]]]]])
 
         [form/many {:attribute :estate-procedure/third-party-compensations
                     :before [typography/BoldGreyText (tr [:fields :estate-procedure/third-party-compensations])]
@@ -181,6 +188,8 @@
           [Grid {:item true :xs 4}
            [form/field {:attribute :estate-compensation/amount}
             [TextField {:type :number
+                        :step ".01"
+                        :min "0"
                         :placeholder 0
                         :end-icon text-field/euro-end-icon
                         :hide-label? true}]]]
@@ -212,11 +221,14 @@
                [TextField {:label-element typography/BoldGreyText
                            :type :number
                            :placeholder 0
+                           :min "0"
                            :end-icon text-field/sqm-end-icon}]]]
              [Grid {:item true :xs 6}
               [form/field {:attribute :land-exchange/price-per-sqm}
                [TextField {:type :number
                            :placeholder 0
+                           :step ".01"
+                           :min "0"
                            :end-icon text-field/euro-end-icon
                            :label-element typography/BoldGreyText}]]]]]])]
        (form/footer2 form/form-footer)]]]))
@@ -261,10 +273,14 @@
                            :questionable [:span {:style {:color theme-colors/orange}} " ! " (tr [:land :unreliable])]
                            nil)]
                         [:span (tr [:land :net-area-balance] {:area (- PINDALA area)})]])}
-        [TextField {:type :number :input-style {:width "50%"}}])
+        [TextField {:type :number
+                    :min "0"
+                    :input-style {:width "50%"}}])
       (when (and (not public?) show-extra-fields? (not= :estate-procedure.type/urgent estate-procedure-type))
         ^{:attribute :land-acquisition/price-per-sqm}
-        [TextField {:type :number}])
+        [TextField {:type :number
+                    :step ".01"
+                    :min "0"}])
       (when show-extra-fields?
         ^{:attribute :land-acquisition/registry-number}
          [TextField {}])]]))

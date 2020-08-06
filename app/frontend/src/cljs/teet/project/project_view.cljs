@@ -468,7 +468,7 @@
       100)
     [:div
      [:div {:class (<class common-styles/heading-and-action-style)}
-      [typography/Heading2 "Restrictions"]
+      [typography/Heading2 (tr [:project :tabs :restrictions])]
       [buttons/button-secondary {:component "a"
                                  :href (str "/#/projects/" project-id "?tab=restrictions&configure=restrictions")
                                  :size :small}
