@@ -23,10 +23,11 @@ sed -i -e "s/main.js/main-$CODEBUILD_RESOLVED_SOURCE_VERSION.js/g" index.html
 cd ..
 
 # Gzip all frontend files in-place
-find frontend -type f -exec gzip {} \; -exec mv {}.gz {} \;
+#find frontend -type f -exec gzip {} \; -exec mv {}.gz {} \;
 
 # Remove old files
 aws s3 rm s3://$PUBLICDIR --exclude "js/deploy.json" --recursive
 
 # Upload new files (with content encoding set to gzip)
-aws s3 sync frontend s3://$PUBLICDIR --acl public-read --content-encoding gzip --metadata-directive REPLACE
+aws s3 sync frontend s3://$PUBLICDIR --acl public-read
+#--content-encoding gzip --metadata-directive REPLACE
