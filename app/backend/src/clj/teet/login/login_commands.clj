@@ -5,6 +5,7 @@
             [teet.auth.jwt-token :as jwt-token]
             [datomic.client.api :as d]
             [teet.log :as log]
+            [teet.permission.permission-db :as permission-db]
             [teet.user.user-db :as user-db]))
 
 
@@ -83,17 +84,14 @@
 
   (if (environment/check-site-password site-password)
     (let [secret (environment/config-value :auth :jwt-secret)
-          db (d/db conn)
-          roles (user-db/user-roles db [:user/id id])]
+          db (d/db conn)]
       {:token (jwt-token/create-token secret "teet_user"
                                       {:given-name given-name
                                        :family-name family-name
                                        :person-id person-id
                                        :email email
-                                       :id id
-                                       :roles roles})
+                                       :id id})
        :user (user-db/user-info db [:user/id id])
-       :roles roles
        :enabled-features (environment/config-value :enabled-features)
        :api-url (environment/config-value :api-url)})
     {:error :incorrect-site-password}))
@@ -113,12 +111,12 @@
 
         id (ensure-user! conn person-id given_name family_name)
         db (d/db conn)
-        roles (user-db/user-roles db [:user/id id])
+        permissions (permission-db/user-permissions db [:user/id id])
         response {:status 302
                   :headers {"Location"
                             (str (environment/config-value :base-url)
                                  "#/login"
-                                 (if (empty? roles)
+                                 (if (empty? permissions)
                                    "?error=no-roles"
                                    (str "?token="
                                         (jwt-token/create-token
@@ -126,8 +124,7 @@
                                          {:given-name given_name
                                           :family-name family_name
                                           :person-id person-id
-                                          :id id
-                                          :roles roles}))))}
+                                          :id id}))))}
                   :body "Redirecting to TEET"}]
     (log/info "on-tara-login response: " response)
     response))
@@ -151,15 +148,12 @@
    :payload _
    :project-id nil
    :authorization {}}
-  (let [roles (user-db/user-roles db [:user/id id])]
-    {:token (jwt-token/create-token (environment/config-value :auth :jwt-secret) "teet_user"
-                                    {:given-name given-name
-                                     :family-name family-name
-                                     :person-id person-id
-                                     :email email
-                                     :id id
-                                     :roles roles})
-     :user (user-db/user-info db [:user/id id])
-     :roles roles
-     :enabled-features (environment/config-value :enabled-features)
-     :api-url (environment/config-value :api-url)}))
+  {:token (jwt-token/create-token (environment/config-value :auth :jwt-secret) "teet_user"
+                                  {:given-name given-name
+                                   :family-name family-name
+                                   :person-id person-id
+                                   :email email
+                                   :id id})
+   :user (user-db/user-info db [:user/id id])
+   :enabled-features (environment/config-value :enabled-features)
+   :api-url (environment/config-value :api-url)})

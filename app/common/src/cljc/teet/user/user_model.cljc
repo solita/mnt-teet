@@ -82,6 +82,6 @@
        (mapcat permission->projects)
        (remove nil?)))
 
-(defn new-user []
-  {:user/id (java.util.UUID/randomUUID)
-   :user/roles [:user]})
+#?(:clj
+   (defn new-user []
+     {:user/id (java.util.UUID/randomUUID)}))

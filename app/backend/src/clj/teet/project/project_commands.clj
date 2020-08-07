@@ -158,8 +158,7 @@
                                        ;; Normalize estonian ids to start with "EE"
                                        (if (str/starts-with? pid "EE")
                                          pid
-                                         (str "EE" pid)))
-                     :user/roles [:user]}))]]
+                                         (str "EE" pid)))}))]]
         (d/transact conn {:tx-data tx})
         {:success "User added successfully"})
       (db-api/fail!

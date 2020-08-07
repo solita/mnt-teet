@@ -39,15 +39,10 @@
 (def internal-consultant-id tu/internal-consultant-id)
 (def boss-uid tu/boss-id)
 
-(defn give-role [user-eid r]
-  (tx {:db/id            user-eid
-       :user/roles [r]}))
-
 (defn give-admin-permission
   [user-eid]
   (tx {:db/id            user-eid
        :user/permissions [{:db/id                 "new-permission"
-                           :user/roles :admin
                            :permission/role       :admin
                            :permission/valid-from (Date.)}]}))
 
