@@ -68,7 +68,9 @@
   (flush)
   (assoc ctx :old-features
          (future
-           (let [get-url (str api-url "/feature?select=id&datasource_id=eq." (:datasource-id ctx))
+           (let [get-url (str api-url "/feature?select=id"
+                              "&datasource_id=eq." (:datasource-id ctx)
+                              "&deleted=is.false")
                  resp (client/get get-url
                                   {:headers (merge (auth-headers {:api-secret api-secret})
                                                    {"Content-Type" "application/json"})})
@@ -86,9 +88,21 @@
   (assoc ctx :features (case (:content_type ds)
                          "SHP" #(shp/read-features-from-path (:path dds)))))
 
+(defn- hex [bytes]
+  (str/join ""
+            (map #(format "%02x" %) bytes)))
+
+(defn- sha256 [bytes]
+  (let [d (java.security.MessageDigest/getInstance "SHA-256")]
+    (hex (.digest d bytes))))
+
 (defn property-pattern-fn [pattern]
-  (fn [{attrs :attributes}]
-    (string/interpolate pattern attrs)))
+  (fn [{attrs :attributes :as f}]
+    (let [all-attrs (merge (dissoc f :attributes)
+                           attrs)]
+      (string/interpolate pattern attrs
+                          {:sha256 (fn [attr-name]
+                                     (sha256 (.getBytes (str (all-attrs (keyword attr-name))))))}))))
 
 (def retry-delay-ms {5      0
                      4   5000
