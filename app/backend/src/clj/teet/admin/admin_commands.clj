@@ -58,18 +58,18 @@
    :authorization {:admin/add-user {}}
    :transact [;; (log/info "admin/create-user: current user" (:user/person-id user))
               (merge (user-model/new-user)
-                           (select-keys user-data [:user/person-id])
-                           (when-let [p (:user/add-global-permission user-data)]
+                     (select-keys user-data [:user/person-id])
+                     (when-let [p (:user/add-global-permission user-data)]
 
-                             (let [current-date (java.util.Date.)
-                                   new-permission {:user/permissions [{:db/id "new-permission"
-                                                                       :permission/role p
-                                                                       :permission/valid-from current-date}]}
-                                   redundant? (redundant-with-existing-permission?
-                                               db
-                                               (first (:user/permissions new-permission))
-                                               current-date)]
-                               (if redundant?
-                                 (log/info "request to add redundant permission, skipping - new permission was" new-permission)
-                                 new-permission)))
-                           #_(user-data-from-xroad (:user/person-id user-data) (:user/person-id user)))]})
+                       (let [current-date (java.util.Date.)
+                             new-permission {:user/permissions [{:db/id "new-permission"
+                                                                 :permission/role p
+                                                                 :permission/valid-from current-date}]}
+                             redundant? (redundant-with-existing-permission?
+                                         db
+                                         (first (:user/permissions new-permission))
+                                         current-date)]
+                         (if redundant?
+                           (log/info "request to add redundant permission, skipping - new permission was" new-permission)
+                           new-permission)))
+                     #_(user-data-from-xroad (:user/person-id user-data) (:user/person-id user)))]})

@@ -1,10 +1,11 @@
 (ns teet.user.user-model
   (:require [clojure.spec.alpha :as s]
+            [clojure.string :as str]
             #?(:clj  [clj-time.core :as t]
                :cljs [cljs-time.core :as t])
             #?(:clj  [clj-time.coerce :as c]
                :cljs [cljs-time.coerce :as c])
-            teet.user.user-spec))
+            [teet.user.user-spec :as user-spec]))
 
 (def user-listing-attributes
   [:user/id
@@ -82,6 +83,13 @@
        (mapcat permission->projects)
        (remove nil?)))
 
-#?(:clj
-   (defn new-user []
-     {:user/id (java.util.UUID/randomUUID)}))
+#?(:clj (defn new-user []
+          {:user/id (java.util.UUID/randomUUID)}))
+
+(defn normalize-person-id
+  "Normalizes the `person-id` to contain the 'EE' prefix."
+  [person-id]
+  {:pre [(user-spec/estonian-person-id? person-id)]}
+  (if (str/starts-with? person-id "EE")
+    person-id
+    (str "EE" person-id)))

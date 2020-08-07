@@ -2,9 +2,13 @@
   "Specs for document data"
   (:require [clojure.spec.alpha :as s]
             [clojure.string :as str]
-            #?(:cljs [teet.file.file-model :as file-model])
             teet.util.datomic))
 
+#?(:cljs
+   (defn file-info [^js/File f]
+     {:file/name (.-name f)
+      :file/size (.-size f)
+      :file/type (.-type f)}))
 
 (s/def ::task-id integer?)
 (s/def ::file-id integer?)
