@@ -4,11 +4,8 @@
             [clojure.string :refer [blank? starts-with?]]
             [taoensso.timbre :as log]
             [datomic.client.api :as d]
+            [teet.user.user-model :as user-model]
             teet.user.user-spec))
-
-(defn- new-user []
-  {:user/id (java.util.UUID/randomUUID)
-   :user/roles [:user]})
 
 
 
@@ -60,7 +57,7 @@
    :project-id nil
    :authorization {:admin/add-user {}}
    :transact [;; (log/info "admin/create-user: current user" (:user/person-id user))
-              (merge (new-user)
+              (merge (user-model/new-user)
                            (select-keys user-data [:user/person-id])
                            (when-let [p (:user/add-global-permission user-data)]
 
