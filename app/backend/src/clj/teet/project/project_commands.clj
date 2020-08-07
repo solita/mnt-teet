@@ -140,7 +140,8 @@
    :payload {:keys [project-id user role] :as payload}
    :spec (s/keys :req-un [::project-id])
    :project-id project-id
-   :pre [(user-spec/estonian-person-id? (:user/person-id user))]
+   :pre [(:user/person-id user)
+         (user-spec/estonian-person-id? (:user/person-id user))]
    :authorization {:project/edit-permissions {:link :thk.project/owner}}}
   (assert (authorization-check/role-can-be-granted? role) "Can't grant role")
   (let [user-info (user-db/user-info-by-person-id db (:user/person-id user))

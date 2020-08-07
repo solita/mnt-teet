@@ -38,7 +38,8 @@
   (tu/local-command tu/mock-user-boss
                     :thk.project/add-permission
                     {:project-id (tu/->db-id "p1")
-                     :user {:user/id tu/external-consultant-id}
+                     ;; Carla Consultant
+                     :user {:user/person-id "EE33445566770"}
                      :role :external-consultant})
 
   (testing "External consultant can comment the task after being invited to the project"
@@ -93,7 +94,8 @@
     (tu/local-command tu/mock-user-boss
                       :thk.project/add-permission
                       {:project-id (tu/->db-id "p1")
-                       :user {:user/id tu/external-consultant-id}
+                       ;; Carla Consultant
+                       :user {:user/person-id "EE33445566770"}
                        :role :external-consultant})
 
     ;; Edna creates comment with tracking on...
