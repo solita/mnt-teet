@@ -46,6 +46,10 @@
          (contains? user :user/id))
     [:user/id (:user/id user)]
 
+    (and (map? user)
+         (contains? user :user/person-id))
+    [:user/person-id (:user/person-id user)]
+
     ;; Not valid user
     :else
     (throw (ex-info "Not a valid user reference. Expected eid or user info map."
@@ -77,3 +81,7 @@
   (->> (permissions-valid-at user timestamp)
        (mapcat permission->projects)
        (remove nil?)))
+
+#?(:clj
+   (defn new-user []
+     {:user/id (java.util.UUID/randomUUID)}))

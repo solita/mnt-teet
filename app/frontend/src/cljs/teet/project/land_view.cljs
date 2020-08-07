@@ -442,8 +442,9 @@
                                                                        (:land/units project-info)
                                                                        (:land-acquisitions project-info))
         estate-procedure (land-model/estate-compensation estate-id (:estate-compensations project-info))
-        total-estate-cost (land-model/total-estate-cost estate-procedure
-                                                        estates-land-acquisitions)]
+        total-estate-cost (.toFixed (land-model/total-estate-cost estate-procedure
+                                                                  estates-land-acquisitions)
+                                    2)]
     [common/hierarchical-container
      {:heading-color theme-colors/gray-lighter
       :heading-text-color :inherit
@@ -715,13 +716,15 @@
   [la]
   {:name-id {:address (get-in la [:unit-data :L_AADRESS])
              :id (get-in la [:unit-data :TUNNUS])}
-   :price-per-sqm (:land-acquisition/price-per-sqm la)
+   :price-per-sqm (.toFixed (js/parseFloat (:land-acquisition/price-per-sqm la))
+                            2)
    :area-to-obtain (:land-acquisition/area-to-obtain la)
-   :total (* (double (:land-acquisition/price-per-sqm la))
-             (double (:land-acquisition/area-to-obtain la)))})
+   :total (.toFixed (* (double (:land-acquisition/price-per-sqm la))
+                       (double (:land-acquisition/area-to-obtain la)))
+                    2)})
 
 (defmethod estate-modal-content :costs
-  [{:keys [e! project estate-info]}]
+  [{:keys [project estate-info]}]
   (let [estate-id (:estate-id estate-info)
         estates-land-acquisitions (land-model/estate-land-acquisitions estate-id
                                                                        (:land/units project)
@@ -729,8 +732,9 @@
         estate-procedure (land-model/estate-compensation estate-id (:estate-compensations project))
         parsed-estate-comps (land-model/estate-procedure-costs estate-procedure)
         parsed-process-fees (land-model/estate-process-fees estate-procedure)
-        total-estate-cost (land-model/total-estate-cost estate-procedure
-                                                        estates-land-acquisitions)
+        total-estate-cost (.toFixed (land-model/total-estate-cost estate-procedure
+                                                                  estates-land-acquisitions)
+                                    2)
         land-exchanges (:estate-procedure/land-exchanges estate-procedure)]
     [:div {:class (<class common-styles/gray-container-style)}
      [typography/Heading3 {:style {:margin-bottom "1rem"}}
@@ -766,7 +770,8 @@
           [(tr [:land :table-heading :cost]) {:align :right}]]
          (for [{:keys [recipient amount]} parsed-process-fees]
            [[(str recipient) {:align :left}]
-            [(str amount " €") {:align :right}]])]])
+            [(str (.toFixed (js/parseFloat amount)
+                            2) " €") {:align :right}]])]])
 
 
      [:div
@@ -778,7 +783,8 @@
           [(tr [:land :table-heading :cost]) {:align :right}]]
          (for [{:keys [reason description amount]} parsed-estate-comps]
            [[(or description (tr-or [:enum reason] [:fields reason] (str reason))) {:align :left}]
-            [(str amount " €") {:align :right}]])]
+            [(str (.toFixed (js/parseFloat amount)
+                            2) " €") {:align :right}]])]
 
         [typography/GreyText (tr [:land :no-estate-compensations])])]
 
@@ -788,8 +794,9 @@
          (tr [:land :land-exchange])]
         [table/simple-table
          [[(tr [:land :table-heading :type]) {:align :left}]
+          [(tr [:fields :land-acquisition/price-per-sqm]) {:align :right}]
           [(tr [:land :table-heading :area]) {:align :right}]
-          [(tr [:fields :land-acquisition/price-per-sqm]) {:align :right}]]
+          [(tr [:common :total]) {:align :right}]]
          (for [land-exchange land-exchanges]
            [[[:div
               [:span {:style {:display :block}}
@@ -797,8 +804,12 @@
               [typography/GreyText
                (:land-exchange/cadastral-unit-id land-exchange)]]
              {:align :left}]
+            [(str (.toFixed (js/parseFloat (:land-exchange/price-per-sqm land-exchange))
+                            2) " €") {:align :right}]
             [(str (:land-exchange/area land-exchange) " m²") {:align :right}]
-            [(str (:land-exchange/price-per-sqm land-exchange) " €") {:align :right}]])]])
+            [(str (.toFixed (* (:land-exchange/price-per-sqm land-exchange)
+                               (:land-exchange/area land-exchange))
+                            2) " €") {:align :right}]])]])
 
      [:div {:style {:margin "1rem 0"}
             :class (<class common-styles/flex-row-space-between)}

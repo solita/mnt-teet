@@ -30,7 +30,7 @@
     parsed))
 
 (defn estate-procedure-costs
-  "Return formatted list of cost cost maps for estate procedure"
+  "Return formatted list of cost maps for estate procedure"
   [{:estate-procedure/keys [compensations third-party-compensations motivation-bonus urgent-bonus]}]
   (let [parse-compensation (fn [{:estate-compensation/keys [description reason amount]}]
                              {:reason reason

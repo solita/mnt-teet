@@ -1,15 +1,8 @@
 (ns teet.user.user-db
   (:require [datomic.client.api :as d]
             [teet.permission.permission-db :as permission-db]
-            [teet.user.user-model :as user-model]))
-
-(defn user-roles
-  "Given a datomic connection and a user uuid, return a set of user's roles."
-  [db user-ref]
-  (-> db
-      (d/pull '[:user/roles] (user-model/user-ref user-ref))
-      :user/roles
-      set))
+            [teet.user.user-model :as user-model]
+            [teet.util.datomic :as du]))
 
 (defn user-info
   "Fetch user information with current valid permissions."
@@ -20,3 +13,8 @@
     (assoc user :user/permissions
            (when id
              (permission-db/user-permissions db id)))))
+
+(defn resolve-user
+  "Allways returns db/id for given user"
+  [db user]
+  (:db/id (du/entity db (user-model/user-ref user))))

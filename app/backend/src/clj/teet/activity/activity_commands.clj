@@ -72,13 +72,14 @@
                    (not (.after date (:thk.lifecycle/estimated-end-date lifecycle-dates)))))
             dates)))
 
-(defn- manager-notification-tx [project-eid user manager]
+(defn- manager-notification-tx [db project-eid user manager]
   (notification-db/notification-tx
-   {:from user
-    :to manager
-    :target project-eid
-    :type :notification.type/project-manager-assigned
-    :project project-eid}))
+    db
+    {:from user
+     :to manager
+     :target project-eid
+     :type :notification.type/project-manager-assigned
+     :project project-eid}))
 
 (defn- manager-permission-tx [project-eid user manager]
   {:user/id (:user/id manager)
@@ -147,7 +148,7 @@
                                              project-id
                                              user
                                              manager)
-               (manager-notification-tx project-id user manager)]))))
+               (manager-notification-tx db project-id user manager)]))))
 
 (defcommand :activity/add-tasks
   {:doc "Add new tasks to activity"
@@ -211,7 +212,7 @@
               [(ensure-manager-permission-tx db project-id user new-manager)
                (when (not= (:user/id new-manager)
                            current-manager-id)
-                 (manager-notification-tx project-id user new-manager))]))))
+                 (manager-notification-tx db project-id user new-manager))]))))
 
 (defn user-can-delete-activity?
   "A user can delete an activity if it has no procurement number"
@@ -251,6 +252,7 @@
               (if-let [owner (get-in (du/entity db (project-db/activity-project-id db activity-id))
                                      [:thk.project/owner :db/id])]
                 (notification-db/notification-tx
+                  db
                   {:from user
                    :to owner
                    :type :notification.type/activity-waiting-for-review
@@ -282,12 +284,13 @@
                       :activity/status status}
                      (meta-model/modification-meta user))
               (notification-db/notification-tx
-               {:from user
-                :to (get-in (du/entity db activity-id)
-                            [:activity/manager :db/id])
-                :type (if (= status :activity.status/completed)
-                        :notification.type/activity-accepted
-                        ;; else archived or canceled (ensured by pre-check)
-                        :notification.type/activity-rejected)
-                :target activity-id
-                :project (project-db/activity-project-id db activity-id)})]})
+                db
+                {:from user
+                 :to (get-in (du/entity db activity-id)
+                             [:activity/manager :db/id])
+                 :type (if (= status :activity.status/completed)
+                         :notification.type/activity-accepted
+                         ;; else archived or canceled (ensured by pre-check)
+                         :notification.type/activity-rejected)
+                 :target activity-id
+                 :project (project-db/activity-project-id db activity-id)})]})

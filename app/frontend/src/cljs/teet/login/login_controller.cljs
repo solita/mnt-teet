@@ -4,7 +4,6 @@
             [teet.log :as log]
             [teet.login.login-paths :as login-paths]
             [teet.user.user-info :as user-info]
-            teet.user.user-controller
             [teet.snackbar.snackbar-controller :as snackbar-controller]
             [teet.common.common-controller :as common-controller]))
 

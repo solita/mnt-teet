@@ -10,6 +10,14 @@
   (tu/with-db)
   tu/with-global-data)
 
+(defn fetch-user-comment-notifications
+  [user]
+  (filter #(du/enum= :notification.type/comment-created
+                     (:notification/type %))
+          (tu/local-query user
+                          :notification/user-notifications
+                          {})))
+
 (deftest acknowledging-comment-notification
   (testing "Create task and comments for task"
 
@@ -38,23 +46,21 @@
                           :entity-id (tu/get-data :task-id)
                           :comment {:comment/comment c}})))
 
-  (testing "Carla has 2 unread comment notifications"
-    (let [fetch-comment-notifications
-          (fn []
-            (filter #(du/enum= :notification.type/comment-created
-                        (:notification/type %))
-                    (tu/local-query tu/mock-user-carla-consultant
-                                    :notification/user-notifications
-                                    {})))
-          notifications (fetch-comment-notifications)]
-      (is (= 2 (count notifications)))
+
+  (testing "Boss doesn't receive notifications for their own comments"
+    (let [boss-notifications (fetch-user-comment-notifications tu/mock-user-boss)]
+      (is (= 0 (count boss-notifications)))))
+
+  (testing "Carla has received notifications for boss' comments"
+    (let [carla-notifications (fetch-user-comment-notifications tu/mock-user-carla-consultant)]
+      (is (= 2 (count carla-notifications)))
       (is (every? #(du/enum= :notification.status/unread
-                             (:notification/status %)) notifications))
+                             (:notification/status %)) carla-notifications))
       (testing "Marking one as read will mark both"
         (tu/local-command [:user/id tu/external-consultant-id]
                           :notification/acknowledge
-                          {:notification-id (:db/id (rand-nth notifications))})
-        (let [notifications-after (fetch-comment-notifications)]
+                          {:notification-id (:db/id (rand-nth carla-notifications))})
+        (let [notifications-after (fetch-user-comment-notifications tu/mock-user-carla-consultant)]
           (is (= 2 (count notifications-after)))
           (is (every? #(du/enum= :notification.status/acknowledged
                                  (:notification/status %))

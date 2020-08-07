@@ -1,7 +1,6 @@
 (ns teet.db-api.core
   "TEET database API multimethods"
   (:require [teet.authorization.authorization-check :as authorization-check]
-            [teet.permission.permission-db :as permission-db]
             [datomic.client.api :as d]
             [teet.meta.meta-query :as meta-query]
             [teet.log :as log]
@@ -111,7 +110,6 @@
 
   (let [-ctx (gensym "CTX")
         -payload (gensym "PAYLOAD")
-        -perms (gensym "PERMISSIONS")
         -db (gensym "DB")
         -user (gensym "USER")
         -proj-id (gensym "PID")
@@ -133,8 +131,6 @@
                           :query args) -payload) ~-payload
                    ~-db (d/db (:conn ~-ctx))
                    ~-user (:user ~-ctx)
-                   ~-perms (when (:user ~-ctx)
-                             (permission-db/user-permissions ~-db [:user/id (:user/id (:user ~-ctx))]))
                    ~-proj-id (project-id->db-id ~-db ~project-id)
                    ~@(when config
                        (mapcat (fn [[symbol path]]

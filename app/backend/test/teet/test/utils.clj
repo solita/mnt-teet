@@ -283,6 +283,5 @@
   [user-id]
   (tx {:user/id          user-id
        :user/permissions [{:db/id                 "new-permission"
-                           :user/roles :admin
                            :permission/role       :admin
                            :permission/valid-from (Date.)}]}))

@@ -18,7 +18,6 @@
        (Payload. (cheshire/encode {:role role
                                    :given_name given-name
                                    :family_name family-name
-                                   :roles roles
                                    :id id
                                    :sub person-id
                                    :email email
@@ -30,8 +29,7 @@
 (defn create-backend-token
   "Create token for TEET backend to use PostgREST API."
   [shared-secret]
-  (create-token shared-secret "teet_backend" {:given-name "TEET" :family-name "TEET"
-                                              :roles ["system"]}))
+  (create-token shared-secret "teet_backend" {:given-name "TEET" :family-name "TEET"}))
 
 (defn verify-token
   "Verify JWT token validity. Returns user info on success. Throws exception on failure."
@@ -51,7 +49,7 @@
                        :error :jwt-verification-failed
                        })))
 
-    (let [{:strs [sub given_name family_name role email id roles]} claims]
+    (let [{:strs [sub given_name family_name role email id]} claims]
       (when-not (= role "teet_user")
         (throw (ex-info "Unexpected role in JWT token"
                         {:expected-role "teet_user"
@@ -62,7 +60,4 @@
               :family-name family_name
               :email email
               :person-id sub
-              :roles (into #{}
-                           (map keyword)
-                           roles)
               :id (java.util.UUID/fromString id)})))
