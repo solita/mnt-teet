@@ -10,6 +10,6 @@ jobs:
     - uses: pixta-dev/repository-mirroring-action@v1
       with:
         target_repo_url:
-          git@git.mnt.ee:tatu.tarvainen/teet-mirror.git
+          git@git.mnt.ee:teet/teet.git
         ssh_private_key:                                # <-- use 'secrets' to pass credential information.
           ${{ secrets.MNT_DEPLOY_KEY }}
