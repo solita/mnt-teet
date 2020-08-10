@@ -140,7 +140,7 @@
                                    procedure-form-data
                                    #{:db/id})
         type (:estate-procedure/type payload)
-        {:keys [keys updates]} (type procedure-type-options)]
+        {:keys [keys updates]} (procedure-type-options type)]
     (merge
       (reduce
        (fn [payload [path update-fn]]
@@ -150,12 +150,12 @@
       {:db/id (or (:db/id procedure-form-data) "new-estate")
        :estate-procedure/project [:thk.project/id (:thk.project/id procedure-form-data)]})))
 
-
 (defcommand :land/create-estate-procedure
   {:doc "Create a new compensation for estate"
    :context {:keys [db user]}
    :payload {:thk.project/keys [id] :as payload}
    :project-id [:thk.project/id id]
+   :spec :land/estate-procedure
    :authorization {:land/edit-land-acquisition {:eid [:thk.project/id id]
                                                 :link :thk.project/owner}}
    :pre [(empty? (du/db-ids payload))]
@@ -170,6 +170,7 @@
              procedure-id :db/id
              :as payload}
    :project-id [:thk.project/id id]
+   :spec :land/estate-procedure
    :authorization {:land/edit-land-acquisition {:eid [:thk.project/id id]
                                                 :link :thk.project/owner}}
    :pre [(du/no-new-db-ids?

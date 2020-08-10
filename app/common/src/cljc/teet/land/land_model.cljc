@@ -102,7 +102,10 @@
 
    :estate-procedure.type/property-trading
    {:keys [:estate-procedure/land-exchanges
-           :estate-procedure/third-party-compensations]}})
+           :estate-procedure/third-party-compensations]}
+   ;; If no procedure type is given only allow saving of third party compensations
+   nil {:keys [:estate-procedure/third-party-compensations]}
+   })
 
 
 (defn estate-compensation
