@@ -13,15 +13,6 @@
   (-> file io/as-url
       ShapefileDataStore.))
 
-(defn- to-iterator [^SimpleFeatureIterator it]
-  (reify
-    java.util.Iterator
-    (hasNext [_] (.hasNext it))
-    (next [_] (.next it))
-
-    java.lang.AutoCloseable
-    (close [_] (.close it))))
-
 (def ignore-attributes #{"the_geom"})
 
 (let [wkb-writer (WKBWriter. 2 true)]
@@ -45,13 +36,23 @@
                                     .getValue)]))
                        attr-names)}))
 
+(defn- feature-iterator-seq [^ShapefileDataStore ds ^SimpleFeatureIterator it]
+  (if (.hasNext it)
+    (lazy-seq
+     (cons (.next it)
+           (feature-iterator-seq ds it)))
+    (do
+      (println "No more features, closing feature iterator.")
+      (.close it)
+      (.dispose ds)
+      nil)))
+
 (defn features [shp]
   (->> shp
        .getFeatureSource
        .getFeatures
        .features
-       to-iterator
-       iterator-seq
+       (feature-iterator-seq shp)
        (map feature-data)))
 
 (defn read-features-from-path

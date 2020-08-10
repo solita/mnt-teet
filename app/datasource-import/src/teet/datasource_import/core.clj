@@ -143,37 +143,23 @@
 (defn upsert-features [{:keys [features api-url datasource-id datasource old-features] :as ctx}]
   (let [->label (property-pattern-fn (:label_pattern datasource))
         ->id (property-pattern-fn (:id_pattern datasource))
-        features-data (features)
-        new-feature-id-set (into #{} (map ->id features-data))
-        deleted-feature-id-set (set/difference @old-features new-feature-id-set)]
+        new-feature-ids (volatile! #{})
+        chunk-size 50]
     (println "POSTing to " (str api-url "/feature"))
-    (doseq [features-chunk (partition-all 50
+    (loop [upserted 0
+           [chunk & chunks] (partition-all chunk-size
                                     ;; Add :i attribute that can be used as fallback id
                                     (map-indexed
                                      (fn [i feature]
                                        (update feature :attributes
                                                assoc :i i))
-                                     features-data))]
-      (print ".") (flush)
-      (patient-post
-       (str api-url "/feature")
-       {:headers (merge
-                  (auth-headers ctx)
-                  {"Prefer" "resolution=merge-duplicates"
-                   "Content-Type" "application/json"})
-        :body (cheshire/encode
-               (for [{:keys [geometry attributes] :as f} features-chunk]
-                 ;; Feature as JSON
-                 {:datasource_id datasource-id
-                  :id (->id f)
-                  :label (->label f)
-                  :geometry geometry
-                  :deleted false
-                  :properties attributes}))}))
-    (when (seq deleted-feature-id-set)
-      (print "\nMarking " (count deleted-feature-id-set) " features absent from import file as deleted.\n")
-      (doseq [chunk (partition-all 50 deleted-feature-id-set)]
-        (print ".") (flush)
+                                     (features)))]
+      (when (seq chunk)
+        (if (zero? (rem upserted (* 40 chunk-size)))
+          (println "\n" upserted "features upserted")
+          (do
+            (print ".")
+            (flush)))
         (patient-post
          (str api-url "/feature")
          {:headers (merge
@@ -181,10 +167,33 @@
                     {"Prefer" "resolution=merge-duplicates"
                      "Content-Type" "application/json"})
           :body (cheshire/encode
-                 (for [deleted-feature-id chunk]
+                 (for [{:keys [geometry attributes] :as f} chunk
+                       :let [id (->id f)
+                             _ (vswap! new-feature-ids conj id)]]
+                   ;; Feature as JSON
                    {:datasource_id datasource-id
-                    :id deleted-feature-id
-                    :deleted true}))})))
+                    :id id
+                    :label (->label f)
+                    :geometry geometry
+                    :deleted false
+                    :properties attributes}))})
+        (recur (+ upserted chunk-size) chunks)))
+    (let [deleted-feature-id-set (set/difference @old-features @new-feature-ids)]
+      (when (seq deleted-feature-id-set)
+        (print "\nMarking " (count deleted-feature-id-set) " features absent from import file as deleted.\n")
+        (doseq [chunk (partition-all 50 deleted-feature-id-set)]
+          (print ".") (flush)
+          (patient-post
+           (str api-url "/feature")
+           {:headers (merge
+                      (auth-headers ctx)
+                      {"Prefer" "resolution=merge-duplicates"
+                       "Content-Type" "application/json"})
+            :body (cheshire/encode
+                   (for [deleted-feature-id chunk]
+                     {:datasource_id datasource-id
+                      :id deleted-feature-id
+                      :deleted true}))}))))
     ctx))
 
 (defn delete-working-files [{{path :path} :downloaded-datasource :as ctx}]
@@ -241,3 +250,5 @@
     (println "Starting import")
     (doseq [datasource-id (:datasources config)]
       (import-datasource config datasource-id))))
+
+;; -- vesi restrictions STILL have duplicate ids
