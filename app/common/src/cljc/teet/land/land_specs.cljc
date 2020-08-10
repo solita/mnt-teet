@@ -59,10 +59,6 @@
                                                     :estate-compensation/description
                                                     :estate-compensation/reason]))
 
-(s/def :estate-procedure/compensation-or-blank
-  (s/or :blank #(every? str/blank? (vals %))
-        :compensation :estate-procedure/compensation))
-
 (s/def :estate-compensation/description non-empty-string?)
 
 (s/def :estate-compensation/amount non-empty-string?)
@@ -71,9 +67,8 @@
                                                      :land-exchange/cadastral-unit-id
                                                      :land-exchange/price-per-sqm]))
 
-
 (s/def :estate-procedure/land-exchanges (s/coll-of :estate-procedure/land-exchange))
-(s/def :estate-procedure/third-party-compensations (s/coll-of :estate-procedure/compensation-or-blank))
+(s/def :estate-procedure/third-party-compensations (s/coll-of :estate-procedure/compensation))
 
 (s/def :estate-procedure/compensations (s/coll-of :estate-procedure/compensation))
 
