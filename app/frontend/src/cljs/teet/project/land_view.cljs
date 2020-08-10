@@ -28,8 +28,8 @@
             [teet.ui.query :as query]
             [clojure.string]
             [teet.file.file-view :as file-view]
-            [teet.log :as log]
-            [teet.authorization.authorization-check :as authorization-check]))
+            [teet.authorization.authorization-check :as authorization-check]
+            [teet.log :as log]))
 
 (defn cadastral-unit-style
   [selected?]
@@ -108,7 +108,8 @@
                   :on-change-event on-change
                   :save-event #(land-controller/->SubmitEstateCompensationForm form-data estate-id)
                   :cancel-event #(land-controller/->CancelEstateForm estate-id)
-                  :disable-buttons? (not (boolean (:saved-data form-data)))}
+                  :disable-buttons? (not (boolean (:saved-data form-data)))
+                  :spec :land/estate-procedure-form}
       [:div
        [:div {:style {:padding "0.2rem"}}
         (when-not public?
@@ -716,11 +717,11 @@
   [la]
   {:name-id {:address (get-in la [:unit-data :L_AADRESS])
              :id (get-in la [:unit-data :TUNNUS])}
-   :price-per-sqm (.toFixed (js/parseFloat (:land-acquisition/price-per-sqm la))
+   :price-per-sqm (.toFixed (js/parseFloat (or (:land-acquisition/price-per-sqm la) 0))
                             2)
    :area-to-obtain (:land-acquisition/area-to-obtain la)
-   :total (.toFixed (* (double (:land-acquisition/price-per-sqm la))
-                       (double (:land-acquisition/area-to-obtain la)))
+   :total (.toFixed (* (js/parseFloat (:land-acquisition/price-per-sqm la))
+                       (js/parseFloat (:land-acquisition/area-to-obtain la)))
                     2)})
 
 (defmethod estate-modal-content :costs

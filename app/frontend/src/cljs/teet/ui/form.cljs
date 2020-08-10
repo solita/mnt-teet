@@ -9,7 +9,6 @@
             [clojure.spec.alpha :as s]
             [herb.core :refer [<class]]
             [teet.ui.buttons :as buttons]
-            [teet.theme.theme-colors :as theme-colors]
             [tuck.core :as t]
             [teet.log :as log]
             [teet.ui.context :as context]
@@ -186,8 +185,6 @@
              #_(println "validate " field " from " before " => " after)
              after))))
 
-
-
 (defn- field*
   [field-info _field
    {:keys [invalid-attributes required-fields current-fields] :as ctx}]
@@ -292,7 +289,9 @@
                  (let [value (change-event-value value)]
                    (update-parent-fn
                     attribute
-                    (assoc-in parent-value [i field] value)))))
+                    (assoc-in parent-value [i field] value))
+                   ;; Return this fields value that goes to validation instead of update-parent-fn value
+                   value)))
         body))
 
      after]))
