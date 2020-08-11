@@ -303,15 +303,19 @@
   [opts body]
   (context/consume :form [many-container opts body]))
 
-(defn- many-remove-container [on-remove button-child {idx :many-index}]
-  (assoc-in button-child [1 :on-click]
-            #(on-remove idx)))
+(defn- many-remove-container [{:keys [on-remove show-if]} button-child {idx :many-index
+                                                                        value :value}]
+  (if (or (nil? show-if)
+          (show-if value))
+    (assoc-in button-child [1 :on-click]
+              #(on-remove idx))
+    [:span]))
 
 (defn many-remove
   "Inside a many body, this component will render given child component
   with an on-click handler that calls on-remove with the index to remove."
-  [on-remove button-child]
-  (context/consume :form [many-remove-container on-remove button-child]))
+  [opts button-child]
+  (context/consume :form [many-remove-container opts button-child]))
 
 (defn- update-attribute-fn
   "Return a function for updating attribute values by dispatching change events."
