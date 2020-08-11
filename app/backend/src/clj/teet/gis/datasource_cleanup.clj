@@ -3,7 +3,6 @@
   from any project."
   (:require [datomic.client.api :as d]
             [teet.environment :as environment]
-            [clojure.string :as str]
             [teet.integration.postgrest :as postgrest]
             [clojure.set :as set]
             [teet.log :as log]))
@@ -50,7 +49,7 @@
           (fetch-all-referenced-features db)]
     (delete-unreferenced-features ctx datasource-id referenced-feature-ids)))
 
-(defn cleanup-datasources [_event]
+(defn cleanup-datasources-ion [_event]
   (try
     (cleanup-datasources (environment/api-context)
                          (d/db (environment/datomic-connection)))

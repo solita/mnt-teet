@@ -31,7 +31,7 @@
             :description "Export backup of Datomic data to S3 bucket"}
 
            :datasource-cleanup
-           {:fn teet.gis.datasource-cleanup/cleanup-datasources
+           {:fn teet.gis.datasource-cleanup/cleanup-datasources-ion
             :description "Cleanup unreferenced deleted features"}}
 
  :app-name "teet-datomic"}
