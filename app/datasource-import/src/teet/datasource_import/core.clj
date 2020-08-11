@@ -102,7 +102,18 @@
                            attrs)]
       (string/interpolate pattern attrs
                           {:sha256 (fn [attr-name]
-                                     (sha256 (.getBytes (str (all-attrs (keyword attr-name))))))}))))
+                                     (sha256
+                                      (.getBytes
+                                       (str (if (= "*" attr-name)
+                                              ;; Take all attributes (except :i index)
+                                              (str/join ";"
+                                                        (map
+                                                         (fn [[k v]]
+                                                           (str (name k) "=" v))
+                                                         (sort-by first (dissoc all-attrs :i))))
+
+                                              ;; Take 1 specific attribute
+                                              (all-attrs (keyword attr-name)))))))}))))
 
 (def retry-delay-ms {5      0
                      4   5000
@@ -196,6 +207,19 @@
                       :deleted true}))}))))
     ctx))
 
+(defn check-feature-ids [{:keys [features api-url datasource-id datasource old-features] :as ctx}]
+  (let [->id (property-pattern-fn (:id_pattern datasource))
+        seen-feature-ids (volatile! #{})
+        duplicate-ids (volatile! #{})]
+    (doseq [f (features)
+            :let [id (->id f)]]
+      (if (@seen-feature-ids id)
+        (do
+          (println "Duplicate feature id: " id)
+          (vswap! duplicate-ids conj id))
+        (vswap! seen-feature-ids conj id)))
+    (assoc ctx :duplicate-ids @duplicate-ids)))
+
 (defn delete-working-files [{{path :path} :downloaded-datasource :as ctx}]
   (println "Delete path:" path)
   (FileUtils/deleteDirectory (.toFile path))
@@ -243,6 +267,16 @@
       extract-datasource
       read-features
       upsert-features
+      delete-working-files))
+
+(defn check-datasource-unique-ids [config datasource-id]
+  (-> config
+      (assoc :datasource-id datasource-id)
+      fetch-datasource-config
+      download-datasource
+      extract-datasource
+      read-features
+      check-feature-ids
       delete-working-files))
 
 (defn -main [& args]
