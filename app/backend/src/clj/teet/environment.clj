@@ -191,3 +191,9 @@
 (defmacro when-feature [feature & body]
   `(when (feature-enabled? ~feature)
      ~@body))
+
+(defn api-context
+  "Convenience for getting a PostgREST API context map."
+  []
+  {:api-url (config-value :api-url)
+   :api-secret (config-value :auth :jwt-secret)})
