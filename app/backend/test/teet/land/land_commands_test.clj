@@ -1,6 +1,7 @@
 (ns teet.land.land-commands-test
   (:require [clojure.test :refer :all]
-            [teet.land.land-commands :as land-commands]))
+            [teet.land.land-commands :as land-commands]
+            [teet.test.utils :as tu]))
 
 (deftest estate-procedure-key-parsing
   (let [test-db-id 123321
@@ -21,12 +22,14 @@
                    :estate-procedure/type :estate-procedure.type/property-rights,
                    :thk.project/id "14643",
                    :estate-procedure/estate-id "2644340"}
-        parsed-data (land-commands/estate-procedure-tx test-data)]
+        parsed-data (land-commands/estate-procedure-tx test-data tu/mock-user-boss)]
     (testing "Proper keys are dropped"
       (is (not (contains? parsed-data :estate-procedure/land-exchanges))))
     (testing "Proper keys are parsed"
-      (is (decimal? (get-in parsed-data [:estate-procedure/third-party-compensations 0 :estate-compensation/amount]))))
+      (is (decimal? (get-in parsed-data [0 :estate-procedure/third-party-compensations 0 :estate-compensation/amount]))))
     (testing "New db id is added if no db id is given"
-      (is (string? (get-in parsed-data [:estate-procedure/third-party-compensations 0 :db/id]))))
+      (is (string? (get-in parsed-data [0 :estate-procedure/third-party-compensations 0 :db/id]))))
     (testing "Existing db-id stays the same for third-party compensations"
-      (is (= test-db-id (get-in parsed-data [:estate-procedure/third-party-compensations 1 :db/id]))))))
+      (is (= test-db-id (get-in parsed-data [0 :estate-procedure/third-party-compensations 1 :db/id]))))))
+
+
