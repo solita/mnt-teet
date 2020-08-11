@@ -151,60 +151,58 @@
           (throw (deref last-exception))
           result)))))
 
+(defn- do-chunked [description chunk-size all-items chunk-fn]
+  (loop [processed 0
+         [chunk & chunks] (partition-all chunk-size all-items)]
+    (when (seq chunk)
+      (if (zero? (rem processed (* 40 chunk-size)))
+        (println "\n" processed description)
+        (do
+          (print ".")
+          (flush)))
+      (chunk-fn chunk)
+      (recur (+ processed chunk-size) chunks))))
+
 (defn upsert-features [{:keys [features api-url datasource-id datasource old-features] :as ctx}]
   (let [->label (property-pattern-fn (:label_pattern datasource))
         ->id (property-pattern-fn (:id_pattern datasource))
-        new-feature-ids (volatile! #{})
-        chunk-size 50]
+        new-feature-ids (volatile! #{})]
     (println "POSTing to " (str api-url "/feature"))
-    (loop [upserted 0
-           [chunk & chunks] (partition-all chunk-size
-                                    ;; Add :i attribute that can be used as fallback id
-                                    (map-indexed
-                                     (fn [i feature]
-                                       (update feature :attributes
-                                               assoc :i i))
-                                     (features)))]
-      (when (seq chunk)
-        (if (zero? (rem upserted (* 40 chunk-size)))
-          (println "\n" upserted "features upserted")
-          (do
-            (print ".")
-            (flush)))
-        (patient-post
-         (str api-url "/feature")
-         {:headers (merge
-                    (auth-headers ctx)
-                    {"Prefer" "resolution=merge-duplicates"
-                     "Content-Type" "application/json"})
-          :body (cheshire/encode
-                 (for [{:keys [geometry attributes] :as f} chunk
-                       :let [id (->id f)
-                             _ (vswap! new-feature-ids conj id)]]
-                   ;; Feature as JSON
-                   {:datasource_id datasource-id
-                    :id id
-                    :label (->label f)
-                    :geometry geometry
-                    :deleted false
-                    :properties attributes}))})
-        (recur (+ upserted chunk-size) chunks)))
+    (do-chunked "features upserted" 50 (features)
+                (fn [chunk]
+                  (patient-post
+                   (str api-url "/feature")
+                   {:headers (merge
+                              (auth-headers ctx)
+                              {"Prefer" "resolution=merge-duplicates"
+                               "Content-Type" "application/json"})
+                    :body (cheshire/encode
+                           (for [{:keys [geometry attributes] :as f} chunk
+                                 :let [id (->id f)
+                                       _ (vswap! new-feature-ids conj id)]]
+                             ;; Feature as JSON
+                             {:datasource_id datasource-id
+                              :id id
+                              :label (->label f)
+                              :geometry geometry
+                              :deleted false
+                              :properties attributes}))})))
     (let [deleted-feature-id-set (set/difference @old-features @new-feature-ids)]
       (when (seq deleted-feature-id-set)
         (print "\nMarking " (count deleted-feature-id-set) " features absent from import file as deleted.\n")
-        (doseq [chunk (partition-all 50 deleted-feature-id-set)]
-          (print ".") (flush)
-          (patient-post
-           (str api-url "/feature")
-           {:headers (merge
-                      (auth-headers ctx)
-                      {"Prefer" "resolution=merge-duplicates"
-                       "Content-Type" "application/json"})
-            :body (cheshire/encode
-                   (for [deleted-feature-id chunk]
-                     {:datasource_id datasource-id
-                      :id deleted-feature-id
-                      :deleted true}))}))))
+        (do-chunked "features marked as deleted" 50 deleted-feature-id-set
+                    (fn [chunk]
+                      (patient-post
+                       (str api-url "/feature")
+                       {:headers (merge
+                                  (auth-headers ctx)
+                                  {"Prefer" "resolution=merge-duplicates"
+                                   "Content-Type" "application/json"})
+                        :body (cheshire/encode
+                               (for [deleted-feature-id chunk]
+                                 {:datasource_id datasource-id
+                                  :id deleted-feature-id
+                                  :deleted true}))})))))
     ctx))
 
 (defn check-feature-ids [{:keys [features api-url datasource-id datasource old-features] :as ctx}]
