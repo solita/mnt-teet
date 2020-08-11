@@ -24,6 +24,15 @@
                                                  (str "\"" x "\""))
                                                %)) ")")})
 
+(defn- where-params [where]
+  (into {}
+        (map (fn [[key val]]
+               (if (vector? val)
+                 [(name key) ((where-op (first val))
+                              (second val))]
+                 [(name key) (str "eq." val)])))
+        where))
+
 (defn select
   "Select data from a table endpoint in PostgREST."
   ([ctx table] (select ctx table nil nil))
@@ -33,15 +42,19 @@
                            {:query-params (merge {}
                                                  (when (seq columns)
                                                    {"select" (str/join "," (map name columns))})
-                                                 (into {}
-                                                       (map (fn [[key val]]
-                                                              (if (vector? val)
-                                                                [(name key) ((where-op (first val))
-                                                                             (second val))]
-                                                                [(name key) (str "eq." val)])))
-                                                       where))
+                                                 (where-params where))
                             :headers (auth-header ctx)})]
      (cheshire/decode (:body resp) keyword))))
+
+(defn delete!
+  "Delete rows from table with the given where clause."
+  [ctx table where]
+  {:pre [(valid-api-context? ctx)
+         (seq where)]}
+  (let [resp @(client/delete (str (:api-url ctx) "/" (name table))
+                             {:query-params (where-params where)
+                              :headers (auth-header ctx)})]
+    (cheshire/decode (:body resp) keyword)))
 
 (defn upsert!
   "Upsert data to a table endpoint in PostgREST."
