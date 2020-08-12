@@ -49,32 +49,32 @@
             motiv-bonus
             u-bonus)))
 
-(defn total-estate-cost
-  [estate-procedure land-acquisitions]
-  (let [estate-total (reduce
-                       (fn [total {:keys [amount]}]
-                         (+ total (int amount)))
-                       0
-                       (estate-procedure-costs estate-procedure))
-        process-fees-total (reduce
-                             (fn [total {:keys [amount]}]
-                               (+ total (int amount)))
-                             0
-                             (estate-process-fees estate-procedure))
-        land-exchange (reduce
-                        (fn [total {:land-exchange/keys [area price-per-sqm]}]
-                          (+ total (* area price-per-sqm)))
-                        0
-                        (:estate-procedure/land-exchanges estate-procedure))
-        la-total (reduce
-                   (fn [total {:land-acquisition/keys [area-to-obtain price-per-sqm impact]}]
-                     (let [cost-of-area (if (= impact :land-acquisition.impact/purchase-needed)
-                                          (* price-per-sqm area-to-obtain)
-                                          0)]
-                       (+ total cost-of-area)))
-                   0
-                   land-acquisitions)]
-    (- (+ estate-total la-total process-fees-total) land-exchange)))
+#?(:cljs (defn total-estate-cost
+               [estate-procedure land-acquisitions]
+               (let [estate-total (reduce
+                                    (fn [total {:keys [amount]}]
+                                        (+ total (js/parseFloat amount)))
+                                    0
+                                    (estate-procedure-costs estate-procedure))
+                     process-fees-total (reduce
+                                          (fn [total {:keys [amount]}]
+                                              (+ total (js/parseFloat amount)))
+                                          0
+                                          (estate-process-fees estate-procedure))
+                     land-exchange (reduce
+                                     (fn [total {:land-exchange/keys [area price-per-sqm]}]
+                                         (+ total (* area price-per-sqm)))
+                                     0
+                                     (:estate-procedure/land-exchanges estate-procedure))
+                     la-total (reduce
+                                (fn [total {:land-acquisition/keys [area-to-obtain price-per-sqm impact]}]
+                                    (let [cost-of-area (if (= impact :land-acquisition.impact/purchase-needed)
+                                                         (* price-per-sqm area-to-obtain)
+                                                         0)]
+                                         (+ total cost-of-area)))
+                                0
+                                land-acquisitions)]
+                    (- (+ estate-total la-total process-fees-total) land-exchange))))
 
 
 (def common-procedure-keys
