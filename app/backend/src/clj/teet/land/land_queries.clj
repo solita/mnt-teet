@@ -56,12 +56,6 @@
           (map :properties
                (:features units))))))
 
-(defn filter-ended
-  "Used to filter all burdens/mortgages that are no longer deemed interesting"
-  [details]
-  (filterv #(not= "Lõpetatud" (:oiguse_seisund_tekst %)) details))
-
-
 (defquery :land/estate-info
   {:doc "Fetch estate info from local cache or X-road"
    :context {:keys [user]}

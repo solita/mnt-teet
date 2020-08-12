@@ -92,7 +92,9 @@
                      :class (<class start-icon-style)}])
       [element (merge
                  (select-keys props
-                              [:on-change :on-focus :auto-complete :step :on-key-down :min :max :type :ref :value :required :id :on-blur :placeholder])
+                              [:on-change :lang :on-focus :auto-complete
+                               :step :on-key-down :min :max :type :ref :value
+                               :required :id :on-blur :placeholder])
                  {:style input-style
                   :class (herb/join (<class input-field-style error multiline read-only?
                                             (boolean start-icon) type)

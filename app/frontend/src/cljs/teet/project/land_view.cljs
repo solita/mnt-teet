@@ -142,6 +142,7 @@
              [form/field :estate-process-fee/fee
               [TextField {:type :number :placeholder "0"
                           :step ".01"
+                          :lang "et"
                           :hide-label? true
                           :min "0"
                           :end-icon text-field/euro-end-icon}]]]
@@ -152,7 +153,7 @@
              [form/many-remove {:on-remove #(e! (remove-form-many-item form-data on-change :estate-procedure/process-fees %))
                                 :show-if (fn [value]
                                            (nil? (get-in value [:process-fee-recipient :owner])))}
-              [buttons/link-button {} "X"]]]]])
+              [buttons/link-button {} [icons/action-delete {:font-size :small}]]]]]])
         (when (#{:estate-procedure.type/urgent :estate-procedure.type/acquisition-negotiation}
                procedure-type)
           [field-with-title
@@ -161,6 +162,7 @@
            {:type :number
             :step ".01"
             :min "0"
+            :lang "et"
             :placeholder 0
             :end-icon text-field/euro-end-icon}])
 
@@ -172,6 +174,7 @@
            {:type :number
             :step ".01"
             :min "0"
+            :lang "et"
             :placeholder 0
             :end-icon text-field/euro-end-icon}])
 
@@ -194,6 +197,7 @@
                           :placeholder 0
                           :end-icon text-field/euro-end-icon
                           :type :number
+                          :lang "et"
                           :min "0"
                           :step ".01"}]]]
             [Grid {:item true :xs 1
@@ -201,7 +205,7 @@
                            :justify-content :center
                            :align-items :center}}
              [form/many-remove {:on-remove #(e! (remove-form-many-item form-data on-change :estate-procedure/compensations %))}
-              [buttons/link-button {} "X"]]]]])
+              [buttons/link-button {} [icons/action-delete {:font-size :small}]]]]]])
 
         [form/many {:attribute :estate-procedure/third-party-compensations
                     :before [typography/BoldGreyText (tr [:fields :estate-procedure/third-party-compensations])]
@@ -218,6 +222,7 @@
             [TextField {:type :number
                         :step ".01"
                         :min "0"
+                        :lang "et"
                         :placeholder 0
                         :end-icon text-field/euro-end-icon
                         :hide-label? true}]]]
@@ -226,7 +231,8 @@
                            :justify-content :center
                            :align-items :center}}
              [form/many-remove {:on-remove #(e! (remove-form-many-item form-data on-change :estate-procedure/third-party-compensations %))}
-              [buttons/link-button {} "X"]]]]]
+              [buttons/link-button {} [icons/action-delete {:font-size :small}]
+               ]]]]]
 
         (when (= (:estate-procedure/type form-data) :estate-procedure.type/property-trading)
           [:div
@@ -243,6 +249,7 @@
               [form/field {:attribute :land-exchange/area}
                [TextField {:label-element typography/BoldGreyText
                            :type :number
+                           :lang "et"
                            :placeholder 0
                            :min "0"
                            :end-icon text-field/sqm-end-icon}]]]
@@ -252,6 +259,7 @@
                            :placeholder 0
                            :step ".01"
                            :min "0"
+                           :lang "et"
                            :end-icon text-field/euro-end-icon
                            :label-element typography/BoldGreyText}]]]]]])]
        (form/footer2 form/form-footer)]]]))
@@ -285,7 +293,8 @@
                              :show-empty-selection? true}])
       (when show-extra-fields?
         ^{:attribute :land-acquisition/pos-number :xs 6}
-        [TextField {:type :number}])
+        [TextField {:type :number
+                    :lang "et"}])
       (when show-extra-fields?
         ^{:attribute :land-acquisition/area-to-obtain
           :adornment (let [area (:land-acquisition/area-to-obtain form-data)]
@@ -298,11 +307,13 @@
                         [:span (tr [:land :net-area-balance] {:area (- PINDALA area)})]])}
         [TextField {:type :number
                     :min "0"
+                    :lang "et"
                     :input-style {:width "50%"}}])
       (when (and (not public?) show-extra-fields? (not= :estate-procedure.type/urgent estate-procedure-type))
         ^{:attribute :land-acquisition/price-per-sqm}
         [TextField {:type :number
                     :step ".01"
+                    :lang "et"
                     :min "0"}])
       (when show-extra-fields?
         ^{:attribute :land-acquisition/registry-number}
@@ -465,9 +476,8 @@
                                                                        (:land/units project-info)
                                                                        (:land-acquisitions project-info))
         estate-procedure (land-model/estate-compensation estate-id (:estate-compensations project-info))
-        total-estate-cost (.toFixed (land-model/total-estate-cost estate-procedure
-                                                                  estates-land-acquisitions)
-                                    2)]
+        total-estate-cost (land-model/total-estate-cost estate-procedure
+                                                        estates-land-acquisitions)]
     [common/hierarchical-container
      {:heading-color theme-colors/gray-lighter
       :heading-text-color :inherit
@@ -497,7 +507,7 @@
          [typography/BoldGreyText {:style {:text-transform :uppercase}}
           (tr [:land :estate-acquisition-cost])]
          [:div {:class (<class common-styles/flex-row-space-between)}
-          [:span (str (tr [:common :total]) ": ") (str total-estate-cost " €")]
+          [:span (str (tr [:common :total]) ": ") (common/readable-currency total-estate-cost)]
           [Link {:style {:display :block}
                  :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "costs")}
            (tr [:common :show-details])]]
@@ -747,12 +757,10 @@
   [la]
   {:name-id {:address (get-in la [:unit-data :L_AADRESS])
              :id (get-in la [:unit-data :TUNNUS])}
-   :price-per-sqm (.toFixed (js/parseFloat (or (:land-acquisition/price-per-sqm la) 0))
-                            2)
+   :price-per-sqm (or (:land-acquisition/price-per-sqm la) 0)
    :area-to-obtain (:land-acquisition/area-to-obtain la)
-   :total (.toFixed (* (js/parseFloat (:land-acquisition/price-per-sqm la))
-                       (js/parseFloat (:land-acquisition/area-to-obtain la)))
-                    2)})
+   :total (* (js/parseFloat (:land-acquisition/price-per-sqm la))
+             (js/parseFloat (:land-acquisition/area-to-obtain la)))})
 
 (defmethod estate-modal-content :costs
   [{:keys [project estate-info]}]
@@ -763,9 +771,8 @@
         estate-procedure (land-model/estate-compensation estate-id (:estate-compensations project))
         parsed-estate-comps (land-model/estate-procedure-costs estate-procedure)
         parsed-process-fees (land-model/estate-process-fees estate-procedure)
-        total-estate-cost (.toFixed (land-model/total-estate-cost estate-procedure
-                                                                  estates-land-acquisitions)
-                                    2)
+        total-estate-cost (land-model/total-estate-cost estate-procedure
+                                                        estates-land-acquisitions)
         land-exchanges (:estate-procedure/land-exchanges estate-procedure)]
     [:div {:class (<class common-styles/gray-container-style)}
      [typography/Heading3 {:style {:margin-bottom "1rem"}}
@@ -786,9 +793,9 @@
              [typography/GreyText
               (get-in data [:name-id :id])]]
             {:align :left}]
-           [(str (:price-per-sqm data) " €") {:align :right}]
+           [(common/readable-currency (:price-per-sqm data)) {:align :right}]
            [(str (:area-to-obtain data) " m²") {:align :right}]
-           [(str (:total data) " €") {:align :right}]])]
+           [(common/readable-currency (:total data)) {:align :right}]])]
        [typography/GreyText (tr [:land :no-land-acquisitions])])
 
 
@@ -801,8 +808,7 @@
           [(tr [:land :table-heading :cost]) {:align :right}]]
          (for [{:keys [recipient amount]} parsed-process-fees]
            [[(str recipient) {:align :left}]
-            [(str (.toFixed (js/parseFloat amount)
-                            2) " €") {:align :right}]])]])
+            [(common/readable-currency amount) {:align :right}]])]])
 
 
      [:div
@@ -814,8 +820,7 @@
           [(tr [:land :table-heading :cost]) {:align :right}]]
          (for [{:keys [reason description amount]} parsed-estate-comps]
            [[(or description (tr-or [:enum reason] [:fields reason] (str reason))) {:align :left}]
-            [(str (.toFixed (js/parseFloat amount)
-                            2) " €") {:align :right}]])]
+            [(common/readable-currency amount) {:align :right}]])]
 
         [typography/GreyText (tr [:land :no-estate-compensations])])]
 
@@ -835,18 +840,16 @@
               [typography/GreyText
                (:land-exchange/cadastral-unit-id land-exchange)]]
              {:align :left}]
-            [(str (.toFixed (js/parseFloat (:land-exchange/price-per-sqm land-exchange))
-                            2) " €") {:align :right}]
+            [(common/readable-currency (:land-exchange/price-per-sqm land-exchange)) {:align :right}]
             [(str (:land-exchange/area land-exchange) " m²") {:align :right}]
-            [(str (.toFixed (* (:land-exchange/price-per-sqm land-exchange)
-                               (:land-exchange/area land-exchange))
-                            2) " €") {:align :right}]])]])
+            [(common/readable-currency (* (:land-exchange/price-per-sqm land-exchange)
+                                          (:land-exchange/area land-exchange))) {:align :right}]])]])
 
      [:div {:style {:margin "1rem 0"}
             :class (<class common-styles/flex-row-space-between)}
       [typography/Heading3
        (tr [:land :total-cost])]
-      [typography/BoldGreyText (str total-estate-cost " €")]]]))
+      [typography/BoldGreyText (common/readable-currency total-estate-cost)]]]))
 
 
 (defmethod estate-modal-content :comments

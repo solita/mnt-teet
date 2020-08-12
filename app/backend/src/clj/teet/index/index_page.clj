@@ -11,7 +11,8 @@
   If you add things here, also add them to index.html in frontend for production env."
   [{:keys [base-url mode]}]
   (let [dev? (= mode :dev)]
-    [:html {:style "overflow-y: scroll;"}
+    [:html {:style "overflow-y: scroll;"
+            :lang "et"}
      [:head
       [:meta {:charset "UTF-8"}]
       [:meta {:name "viewport" :content "width=device-width, initial-scale=1"}]
