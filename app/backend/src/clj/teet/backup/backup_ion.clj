@@ -130,14 +130,16 @@
                    entities)))))))
 
 (defn backup [_event]
-  (let [bucket (environment/ssm-param :s3 :backup-bucket)
-        env (environment/ssm-param :env)
-        db (d/db (environment/datomic-connection))]
-    (s3/write-file-to-s3 {:to {:bucket bucket
-                               :file-key (str env "-backup-"
-                                              (java.util.Date.)
-                                              ".edn.zip")}
-                          :contents (ring-io/piped-input-stream (partial backup-to db))})))
+  (future
+    (let [bucket (environment/ssm-param :s3 :backup-bucket)
+          env (environment/ssm-param :env)
+          db (d/db (environment/datomic-connection))]
+      (s3/write-file-to-s3 {:to {:bucket bucket
+                                 :file-key (str env "-backup-"
+                                                (java.util.Date.)
+                                                ".edn.zip")}
+                            :contents (ring-io/piped-input-stream (partial backup-to db))})))
+  "{\"success\": true}")
 
 (defn test-backup [db]
   (with-open [out (io/output-stream (io/file "backup.edn.zip"))]
@@ -188,8 +190,7 @@
               rdr (java.io.PushbackReader. zip-reader)]
     ;; Transact everything in one big transaction
     (let [form (doall (read-seq rdr))
-          ids (check-ids-without-attributes form)
-          _ (def *ids ids)
+          ;ids (check-ids-without-attributes form)
           {:keys [mapping form]} (to-temp-ids form)
           {tempids :tempids} (d/transact conn {:tx-data (vec form)})]
       {:mapping mapping :form form :tempids tempids})))
