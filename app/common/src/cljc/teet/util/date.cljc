@@ -1,11 +1,20 @@
 (ns teet.util.date
   (:require #?@(:cljs ([cljs-time.core :as t])
                 :clj ([clojure.string :as str])))
-  #?(:clj (:import (java.util Date Calendar))))
+  #?(:clj (:import (java.util Date Calendar)
+                   (java.time ZoneId))))
+
+#?(:clj
+   (defn to-local-date
+     [date]
+     (-> date
+         .toInstant
+         (.atZone (ZoneId/systemDefault))
+         .toLocalDate)))
 
 (defn date-in-past?
   [date]
-  #?(:clj (.before date (Date.))
+  #?(:clj (neg? (.compareTo (to-local-date date) (to-local-date (Date.))))
      :cljs (t/before? date (js/Date.))))
 
 (defn days-until-date
