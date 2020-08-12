@@ -45,7 +45,8 @@
                                      :activity/estimated-start-date
                                      :activity/name
                                      :activity/status
-                                     {:activity/tasks [:task/status]}]}]}]))
+                                     {:activity/tasks [:task/status
+                                                       :task/estimated-end-date]}]}]}]))
 
 (def project-info-attributes
   (into project-listing-attributes
