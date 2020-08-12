@@ -50,7 +50,7 @@
             :tanav-maja-korter [:ns1:tanav_maja_korter]
             :postiindeks [:ns1:postiindeks]
             :algus-kpv [:ns1:algus_kpv ->date]
-            :lopp-kpv [:ns1:lopp-kpv ->date]}))
+            :lopp-kpv [:ns1:lopp_kpv ->date]}))
 
 (def parse-contact-method
   (partial fields->map
