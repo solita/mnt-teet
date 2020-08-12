@@ -72,19 +72,16 @@
    :padding "1.5rem"})
 
 (defn field-with-title
-  [{:keys [title field-name field-type end-icon placeholder]}]
+  [title field-name input-opts]
   [:<>
    [typography/BoldGreyText title]
    [Grid {:container true :spacing 3}
-    [Grid {:item true :xs 8}
+    [Grid {:item true :xs 7}
      [TextField {:read-only? true :value title}]]
     [Grid {:item true :xs 4}
      [form/field field-name
-      [TextField (merge {:type field-type
-                         :placeholder placeholder
-                         :hide-label? true}
-                        (when end-icon
-                          {:end-icon end-icon}))]]]]])
+      [TextField (merge {:hide-label? true}
+                        input-opts)]]]]])
 
 (defn- owner-process-fee-field [{:keys [on-change value]}]
   (let [{:keys [owner recipient]} value]
@@ -101,7 +98,21 @@
                    (e! (on-change
                          (update form-data
                                  field
-                                 (fnil conj []) {}))))]
+                                 (fnil conj []) {}))))
+        remove-form-many-item (fn [form-data on-change-fn kw index]
+                                (on-change-fn
+                                  (-> form-data
+                                      (update
+                                        kw
+                                        (fn [items]
+                                          (into (subvec items 0 index)
+                                                (subvec items (inc index)))))
+                                      (update
+                                        :estate-procedure/removed-ids
+                                        (fn [ids]
+                                          (if-let [remove-id (get-in form-data [kw index :db/id])]
+                                            (conj (or ids #{}) remove-id)
+                                            (or ids #{})))))))]
     [:div
      [form/form2 {:e! e!
                   :value form-data
@@ -124,7 +135,7 @@
                               {:on-click #(add-row! :estate-procedure/process-fees)}
                               (tr [:land :add-owner])]}
            [Grid {:container true :spacing 3}
-            [Grid {:item true :xs 8}
+            [Grid {:item true :xs 7}
              [form/field :process-fee-recipient
               [owner-process-fee-field {}]]]
             [Grid {:item true :xs 4}
@@ -133,26 +144,36 @@
                           :step ".01"
                           :hide-label? true
                           :min "0"
-                          :end-icon text-field/euro-end-icon}]]]]])
+                          :end-icon text-field/euro-end-icon}]]]
+            [Grid {:item true :xs 1
+                   :style {:display :flex
+                           :justify-content :center
+                           :align-items :center}}
+             [form/many-remove {:on-remove #(e! (remove-form-many-item form-data on-change :estate-procedure/process-fees %))
+                                :show-if (fn [value]
+                                           (nil? (get-in value [:process-fee-recipient :owner])))}
+              [buttons/link-button {} "X"]]]]])
         (when (#{:estate-procedure.type/urgent :estate-procedure.type/acquisition-negotiation}
                procedure-type)
-          [field-with-title {:title (tr [:fields :estate-procedure/motivation-bonus])
-                             :field-name :estate-procedure/motivation-bonus
-                             :type :number
-                             :step ".01"
-                             :min "0"
-                             :placeholder 0
-                             :end-icon text-field/euro-end-icon}])
+          [field-with-title
+           (tr [:fields :estate-procedure/motivation-bonus])
+           :estate-procedure/motivation-bonus
+           {:type :number
+            :step ".01"
+            :min "0"
+            :placeholder 0
+            :end-icon text-field/euro-end-icon}])
 
         (when (#{:estate-procedure.type/urgent}
                procedure-type)
-          [field-with-title {:title (tr [:fields :estate-procedure/urgent-bonus])
-                             :field-name :estate-procedure/urgent-bonus
-                             :type :number
-                             :step ".01"
-                             :min "0"
-                             :placeholder 0
-                             :end-icon text-field/euro-end-icon}])
+          [field-with-title
+           (tr [:fields :estate-procedure/urgent-bonus])
+           :estate-procedure/urgent-bonus
+           {:type :number
+            :step ".01"
+            :min "0"
+            :placeholder 0
+            :end-icon text-field/euro-end-icon}])
 
         (when (#{:estate-procedure.type/acquisition-negotiation :estate-procedure.type/expropriation} procedure-type)
           [form/many {:attribute :estate-procedure/compensations
@@ -162,7 +183,7 @@
                               (tr [:land :add-compensation])]
                       :atleast-once? true}
            [Grid {:container true :spacing 3}
-            [Grid {:item true :xs 8}
+            [Grid {:item true :xs 7}
              [form/field {:attribute :estate-compensation/reason}
               [select/select-enum {:e! e!
                                    :show-label? false
@@ -174,7 +195,13 @@
                           :end-icon text-field/euro-end-icon
                           :type :number
                           :min "0"
-                          :step ".01"}]]]]])
+                          :step ".01"}]]]
+            [Grid {:item true :xs 1
+                   :style {:display :flex
+                           :justify-content :center
+                           :align-items :center}}
+             [form/many-remove {:on-remove #(e! (remove-form-many-item form-data on-change :estate-procedure/compensations %))}
+              [buttons/link-button {} "X"]]]]])
 
         [form/many {:attribute :estate-procedure/third-party-compensations
                     :before [typography/BoldGreyText (tr [:fields :estate-procedure/third-party-compensations])]
@@ -183,7 +210,7 @@
                             (tr [:land :add-compensation])]
                     :atleast-once? true}
          [Grid {:container true :spacing 3}
-          [Grid {:item true :xs 8}
+          [Grid {:item true :xs 7}
            [form/field {:attribute :estate-compensation/description}
             [TextField {:hide-label? true}]]]
           [Grid {:item true :xs 4}
@@ -194,16 +221,11 @@
                         :placeholder 0
                         :end-icon text-field/euro-end-icon
                         :hide-label? true}]]]
-          #_[Grid {:item true :xs 2
+          [Grid {:item true :xs 1
                    :style {:display :flex
                            :justify-content :center
                            :align-items :center}}
-             [form/many-remove #(e! (on-change
-                                      (update form-data
-                                              :estate-procedure/third-party-compensations
-                                              (fn [items]
-                                                (into (subvec items 0 %)
-                                                      (subvec items (inc %)))))))
+             [form/many-remove {:on-remove #(e! (remove-form-many-item form-data on-change :estate-procedure/third-party-compensations %))}
               [buttons/link-button {} "X"]]]]]
 
         (when (= (:estate-procedure/type form-data) :estate-procedure.type/property-trading)
@@ -484,14 +506,22 @@
           (tr [:land :estate-data])]
          (let [burden-count (count (:jagu3 estate))]
            (if (zero? burden-count)
-             [typography/GreyText (tr [:land-modal-page :no-burdens])]
+             [typography/GreyText
+              [common/count-chip {:label "0"
+                                  :style {:background-color theme-colors/gray-light
+                                          :color theme-colors/gray-light}}]
+              (tr [:land-modal-page :no-burdens])]
              [Link {:style {:display :block}
                     :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "burdens")}
               [common/count-chip {:label burden-count}]
               (tr [:land-modal-page (if (= 1 burden-count) :burden :burdens)])]))
          (let [mortgage-count (count (:jagu4 estate))]
            (if (zero? mortgage-count)
-             [typography/GreyText (tr [:land-modal-page :no-mortgages])]
+             [typography/GreyText
+              [common/count-chip {:label "0"
+                                  :style {:background-color theme-colors/gray-light
+                                          :color theme-colors/gray-light}}]
+              (tr [:land-modal-page :no-mortgages])]
              [Link {:style {:display :block}
                     :href (url/set-query-param :modal "estate" :modal-target estate-id :modal-page "mortgages")}
               [common/count-chip {:label mortgage-count}]
@@ -895,7 +925,6 @@
     [:div {:class (<class common-styles/gray-container-style)}
      (mapc
       (fn [{:keys [omandiosa_suurus omandiosa_lugeja omandiosa_nimetaja r_kood isiku_tyyp] :as owner}]
-        (println "OWNER:" owner)
         (let [person? (= isiku_tyyp "Füüsiline isik")]
           ;; Since we don't have person registry integration show everything we have of owner.
           [:<>
@@ -1016,7 +1045,6 @@
                                             :modal-page modal-page
                                             :project project
                                             :estate-info estate-info}))]))
-
 
 (defn related-cadastral-units-info
   [e! _app project]

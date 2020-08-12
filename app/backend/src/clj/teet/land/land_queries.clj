@@ -9,7 +9,8 @@
             [clojure.walk :as walk]
             [teet.land.land-db :as land-db]
             [teet.file.file-db :as file-db]
-            [teet.util.collection :as cu])
+            [teet.util.collection :as cu]
+            [teet.meta.meta-query :as meta-query])
   (:import (java.time LocalDate)
            (java.time.format DateTimeFormatter)))
 
@@ -150,12 +151,12 @@ and the compensation info as the value."
    :authorization {:land/view-cadastral-data {:eid [:thk.project/id id]
                                               :link :thk.project/owner}}}
   (datomic->form
-   (into {}
-         (comp
+    (into {}
+          (comp
           (map first)
           (map (fn [{estate-id :estate-procedure/estate-id :as compensation-form}]
                  [estate-id compensation-form])))
-         (land-db/project-estate-procedures db [:thk.project/id id]))))
+          (meta-query/without-deleted db (land-db/project-estate-procedures db [:thk.project/id id])))))
 
 (defquery :land/estate-owner-info
   {:doc "Fetch information about an estate owner."

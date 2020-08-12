@@ -9,7 +9,8 @@
             [teet.util.datomic :as du]
             [teet.land.land-db :as land-db]
             [teet.integration.postgrest :as postgrest]
-            [teet.integration.x-road.property-registry :as property-registry]))
+            [teet.integration.x-road.property-registry :as property-registry]
+            [teet.meta.meta-query :as meta-query]))
 
 
 (defcommand :land/create-land-acquisition
@@ -135,20 +136,26 @@
                 [[:estate-procedure/process-fees new-process-fees-tx]]}}))
 
 (defn estate-procedure-tx
-  [procedure-form-data]
-  (let [payload (su/select-by-spec :land/create-estate-procedure
+  [procedure-form-data user]
+  (let [payload (su/select-by-spec :land/estate-procedure
                                    procedure-form-data
                                    #{:db/id})
         type (:estate-procedure/type payload)
         {:keys [keys updates]} (procedure-type-options type)]
-    (merge
-      (reduce
-       (fn [payload [path update-fn]]
-         (cu/update-in-if-exists payload [path] update-fn))
-        (select-keys payload (concat land-model/common-procedure-keys keys))
-        (concat common-procedure-updates updates))
-      {:db/id (or (:db/id procedure-form-data) "new-estate")
-       :estate-procedure/project [:thk.project/id (:thk.project/id procedure-form-data)]})))
+    (into []
+          (concat
+            [(merge
+               (reduce
+                 (fn [payload [path update-fn]]
+                   (cu/update-in-if-exists payload [path] update-fn))
+                 (select-keys payload (concat land-model/common-procedure-keys keys))
+                 (concat common-procedure-updates updates))
+               {:db/id (or (:db/id procedure-form-data) "new-estate")
+                :estate-procedure/project [:thk.project/id (:thk.project/id procedure-form-data)]})]
+            (when-let [removed-ids (:estate-procedure/removed-ids procedure-form-data)]
+              (mapv
+                (partial meta-model/deletion-tx user)
+                removed-ids))))))
 
 (defcommand :land/create-estate-procedure
   {:doc "Create a new compensation for estate"
@@ -158,28 +165,33 @@
    :spec :land/estate-procedure
    :authorization {:land/edit-land-acquisition {:eid [:thk.project/id id]
                                                 :link :thk.project/owner}}
-   :pre [(empty? (du/db-ids payload))]
-   :transact
-   [(let [tx-data (estate-procedure-tx payload)]
-      tx-data)]})
+   :pre [(empty? (du/db-ids payload))
+         (nil? (:estate-procedure/removed-ids payload))]
+   :transact (estate-procedure-tx payload user)})
+
+(defn procedure-contains-ids?
+  [db project-eid procedure-id ids-to-check]
+  (let [procedure-ids (meta-query/gather-ids
+                        (land-db/project-estate-procedure-by-id db project-eid procedure-id))]
+    (every? procedure-ids ids-to-check)))
 
 (defcommand :land/update-estate-procedure
   {:doc "Update an existing estate procedure"
    :context {:keys [user db]}
    :payload {id :thk.project/id
              procedure-id :db/id
+             removed-ids :estate-procedure/removed-ids
              :as payload}
    :project-id [:thk.project/id id]
    :spec :land/estate-procedure
    :authorization {:land/edit-land-acquisition {:eid [:thk.project/id id]
                                                 :link :thk.project/owner}}
-   :pre [(du/no-new-db-ids?
+   :pre [(procedure-contains-ids? db [:thk.project/id id] procedure-id removed-ids)
+         (du/no-new-db-ids?
            (land-db/project-estate-procedure-by-id
              db [:thk.project/id id] procedure-id)
            payload)]
-   :transact [(let [tx-data
-                    (estate-procedure-tx payload)]
-                tx-data)]})
+   :transact (estate-procedure-tx payload user)})
 
 (defcommand :land/refresh-estate-info
   {:doc "Force refresh of estate info from X-road"
