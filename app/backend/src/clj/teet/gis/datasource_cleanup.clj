@@ -50,9 +50,10 @@
     (delete-unreferenced-features ctx datasource-id referenced-feature-ids)))
 
 (defn cleanup-datasources-ion [_event]
-  (try
-    (cleanup-datasources (environment/api-context)
-                         (d/db (environment/datomic-connection)))
-    "{\"success\": true}"
-    (catch Exception e
-      (log/error e "Exception in datasource cleanup"))))
+  (future
+    (try
+      (cleanup-datasources (environment/api-context)
+                           (d/db (environment/datomic-connection)))
+      (catch Exception e
+        (log/error e "Exception in datasource cleanup"))))
+  "{\"success\": true}")
