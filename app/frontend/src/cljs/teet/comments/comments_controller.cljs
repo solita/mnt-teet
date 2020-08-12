@@ -9,7 +9,8 @@
 (defn comment-dom-id [id]
   (str "comment-" id))
 
-(defrecord DeleteComment [comment-id commented-entity])
+(defrecord DeleteComment [comment-id commented-entity after-comment-deleted-event])
+(defrecord DeleteCommentSuccess [entity-id after-comment-deleted-event])
 (defrecord QueryEntityComments [commented-entity])
 
 (defrecord UpdateFileNewCommentForm [form-data])            ; update new comment on selected file
@@ -91,13 +92,22 @@
 
 
   DeleteComment
-  (process-event [{:keys [comment-id commented-entity]} app]
+  (process-event [{:keys [comment-id commented-entity after-comment-deleted-event]} app]
     (t/fx app
           {:tuck.effect/type :command!
            :command          :comment/delete-comment
            :payload          {:comment-id comment-id}
            :success-message (tr [:notifications :comment-deleted])
-           :result-event     (partial ->QueryEntityComments commented-entity)}))
+           :result-event     (partial ->DeleteCommentSuccess commented-entity after-comment-deleted-event)}))
+
+  DeleteCommentSuccess
+  (process-event [{:keys [entity-id after-comment-deleted-event]} app]
+    (t/fx app
+          (fn [e!]
+            (when after-comment-deleted-event
+              (e! (after-comment-deleted-event))))
+          (fn [e!]
+            (e! (->QueryEntityComments entity-id)))))
 
   QueryEntityComments
   (process-event [{:keys [commented-entity]} app]

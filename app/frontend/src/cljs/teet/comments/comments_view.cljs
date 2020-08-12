@@ -194,7 +194,7 @@
    (let [{:keys [before quote after]} (extract-quote text)]
      [:<>
       (when before
-        [text-with-mentions before])
+        [typography/Text [text-with-mentions before]])
       (when quote
         [:div.comment-quote {:class (<class comments-styles/quote-block quote-level)}
          [:div.comment-quote-from {:class (<class comments-styles/quote-from)}
@@ -239,19 +239,21 @@
                                                                                       commented-entity))}
           (tr [:comment :unresolve])])]])
 
-   [typography/Text
+   [:div
     [comment-text comment]
     (when modified-at
       [:span {:class (<class comments-styles/data)}
        (tr [:comment :edited]
            {:date (format/date modified-at)})])]])
 
-(defn- comment-entry [e! {id :db/id
-                          :comment/keys [author comment timestamp files visibility]
-                          :as comment-entity}
-                      commented-entity
-                      quote-comment!
-                      focused?]
+(defn- comment-entry [{id :db/id
+                       :comment/keys [author comment timestamp files visibility]
+                       :as comment-entity}
+                      {:keys [e!
+                              commented-entity
+                              quote-comment!
+                              focused?
+                              after-comment-deleted-event]}]
   [:div (merge {:id (comments-controller/comment-dom-id id)
                 :class (<class comments-styles/comment-entry focused?)}
                (when focused?
@@ -282,7 +284,7 @@
      comment-entity
      [buttons/delete-button-with-confirm {:small? true
                                           :icon-position :start
-                                          :action (e! comments-controller/->DeleteComment id commented-entity)}
+                                          :action (e! comments-controller/->DeleteComment id commented-entity after-comment-deleted-event)}
       (tr [:buttons :delete])]]]
    [attachments {:files files :comment-id id}]])
 
@@ -301,7 +303,7 @@
      (tr [:comment :resolve-all])]]])
 
 (defn comment-list
-  [{:keys [e! quote-comment! commented-entity focused-comment]} comments]
+  [{:keys [e! quote-comment! commented-entity focused-comment after-comment-deleted-event]} comments]
   (let [unresolved-comments (filterv comment-model/unresolved? comments)]
     [:<>
      (when (seq unresolved-comments)
@@ -316,7 +318,11 @@
            [comment-skeleton 1]
 
            ^{:key (str id)}
-           [comment-entry e! comment-entity commented-entity quote-comment! focused?])))]]))
+           [comment-entry comment-entity {:e! e!
+                                          :commented-entity commented-entity
+                                          :quote-comment! quote-comment!
+                                          :focused? focused?
+                                          :after-comment-deleted-event after-comment-deleted-event}])))]]))
 
 (defn strip-mentions
   "@[Carla Consultant](123456) -> @Carla Consultant"
@@ -403,7 +409,8 @@
   [{:keys [e! app
            entity-type
            entity-id
-           show-comment-form? after-comment-added-event]
+           show-comment-form? after-comment-added-event
+           after-comment-deleted-event]
     :or {show-comment-form? true}}]
   (r/with-let [can-set-visibility? (authorization-check/authorized? @app-state/user
                                                                     :projects/set-comment-visibility
@@ -423,6 +430,7 @@
                      :state-path [:comments-for-entity entity-id]
                      :state comments
                      :simple-view [comment-list {:e! e!
+                                                 :after-comment-deleted-event after-comment-deleted-event
                                                  :quote-comment! (fn [name quoted-text]
                                                                    (e! ((quote-comment-fn comment-form)
                                                                         name quoted-text)))

@@ -861,7 +861,9 @@
                                    :entity-type :estate-comments
                                    :entity-id [:estate-comments/project+estate-id [(:db/id project) estate-id]]
                                    :after-comment-added-event
-                                   #(land-controller/->IncrementEstateCommentCount estate-id)}]]))
+                                   #(land-controller/->IncrementEstateCommentCount estate-id)
+                                   :after-comment-deleted-event
+                                   #(land-controller/->DecrementEstateCommentCount estate-id)}]]))
 
 (defmulti land-view-modal (fn [{:keys [modal]}]
                             (keyword modal)))
@@ -976,6 +978,8 @@
                                 :entity-id [:unit-comments/project+unit-id [(:db/id project) target]]
                                 :after-comment-added-event
                                 #(land-controller/->IncrementUnitCommentCount target)
+                                :after-comment-deleted-event
+                                #(land-controller/->DecrementUnitCommentCount target)
                                 }])
 
 
