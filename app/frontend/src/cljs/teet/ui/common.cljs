@@ -293,3 +293,10 @@
    [:div {:style {:padding-left "0.5rem"
                   :border-left (str "solid 7px " theme-colors/gray-light)}}
     body]])
+
+(def number-formatter (js/Intl.NumberFormat "et-EE" #js {:style "currency"
+                                                         :currency "EUR"}))
+
+(defn readable-currency
+  [s]
+  (.format number-formatter s))
