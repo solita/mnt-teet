@@ -171,3 +171,21 @@
    :display        :flex
    :flex-direction :column
    :flex           1})
+
+(defn project-view-selection-menu []
+  {:margin-top "2.5rem"})
+
+(defn project-view-selection-item []
+  {:min-width "250px"})
+
+(defn project-view-selection-item-label []
+  {:width "200px"})
+
+(defn project-view-selection-item-hotkey []
+  {:background-color theme-colors/gray-lightest
+   :font-size "75%"
+   :padding "0px 5px 0px 5px"
+   :border-radius "4px"})
+
+(defn project-tab-container []
+  {:padding "1rem"})

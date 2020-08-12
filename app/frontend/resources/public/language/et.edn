@@ -67,6 +67,7 @@
   :last-modified "Viimati muudetud",
   :added-on "Lisatud",
   :select-all "Vali kõik",
+  :hotkey "klahv {key}",
   :total "Kokku",
   :language "Keel",
   :unassigned "Määramata",
@@ -424,8 +425,8 @@
   :owner-data "Omaniku andmed"},
  :land-modal-page
  {:owner-info "Omanikud",
-  :no-burdens "Ei koorma",
-  :no-comments "Pole kommentaare",
+  :no-burdens "Koormatisi pole",
+  :no-comments "Kommentaare pole",
   :burdens "Koormatist",
   :comments "Kommentaari",
   :mortgages "Hüpoteeki",

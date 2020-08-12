@@ -1070,13 +1070,10 @@
             [land-view-modals e! app project])
           [:div {:style {:margin-top "1rem"}
                  :class (<class common-styles/heading-and-action-style)}
-           [typography/Heading2 (tr [:project :cadastral-units-tab])]
            [authorization-check/when-authorized :land/refresh-estate-info
             project
             [buttons/button-secondary {:on-click (e! land-controller/->RefreshEstateInfo)}
-             (tr [:land :refresh-estate-info])]]
-           [buttons/button-secondary {:href (url/set-query-param :configure "cadastral-units")}
-            (tr [:buttons :edit])]]
+             (tr [:land :refresh-estate-info])]]]
           (if (:land/estate-info-failure project)
             [:div
              [:p (tr [:land :estate-info-fetch-failure])]

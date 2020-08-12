@@ -67,6 +67,7 @@
   :last-modified "Last modified",
   :added-on "Added on",
   :select-all "Select all",
+  :hotkey "key {key}",
   :total "Total",
   :language "Language",
   :unassigned "Unassigned",

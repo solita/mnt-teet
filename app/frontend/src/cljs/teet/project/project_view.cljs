@@ -23,7 +23,8 @@
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Paper Link Badge Grid ButtonBase]]
+            [teet.ui.material-ui :refer [Paper Link Badge Grid ButtonBase Menu MenuItem ListItemText
+                                         IconButton]]
             [teet.ui.panels :as panels]
             [teet.ui.project-context :as project-context]
             [teet.ui.select :as select]
@@ -45,7 +46,9 @@
             [clojure.string :as str]
             [alandipert.storage-atom :refer [local-storage]]
             [teet.map.map-controller :as map-controller]
-            [teet.ui.container :as container]))
+            [teet.ui.container :as container]
+            [teet.ui.hotkeys :as hotkeys]
+            [teet.project.land-controller :as land-controller]))
 
 (defn project-details
   [e! {:thk.project/keys [estimated-start-date estimated-end-date road-nr
@@ -54,10 +57,7 @@
         [start-km end-km] (project-model/get-column project :thk.project/effective-km-range)]
     [:div.project-details-tab
      [:div {:class (<class common-styles/heading-and-action-style)}
-      [typography/Heading2 project-name]
-      [buttons/button-secondary {:size :small
-                                 :on-click (e! project-controller/->OpenEditDetailsDialog)}
-       (tr [:buttons :edit])]]
+      [typography/Heading2 project-name]]
      [:div [:span "THK id: " id]]
      [:div [:span (tr [:project :information :estimated-duration])
             ": "
@@ -364,13 +364,6 @@
     [:div.project-people-tab
      [people-modal e! project query]
      [:div.people-tab-managers
-      [:div {:class (<class common-styles/heading-and-action-style)}
-       [typography/Heading2 (tr [:people-tab :managers])]
-       [when-authorized :thk.project/update
-        project
-        [buttons/button-secondary {:on-click (e! project-controller/->OpenEditProjectDialog)
-                                   :size :small}
-         (tr [:buttons :edit])]]]
       [project-owner-and-managers owner lifecycles @show-history?]
       (when has-history?
         [Link {:on-click #(swap! show-history? not)
@@ -463,17 +456,10 @@
   (e! (project-controller/->FetchRelatedFeatures related-restrictions :restrictions))
   (fn [_e! {{project-id :project} :params :as _app} {:keys [checked-restrictions] :as project}]
     (js/setTimeout                                          ;; WHen the restrictions are updated this hack was needed because the component mounts before the refresh call finishes
-      #(when (nil? checked-restrictions)
+     #(when (nil? checked-restrictions)
         (e! (project-controller/->FetchRelatedFeatures (:thk.project/related-restrictions project) :restrictions)))
-      100)
-    [:div
-     [:div {:class (<class common-styles/heading-and-action-style)}
-      [typography/Heading2 (tr [:project :tabs :restrictions])]
-      [buttons/button-secondary {:component "a"
-                                 :href (str "/#/projects/" project-id "?tab=restrictions&configure=restrictions")
-                                 :size :small}
-       (tr [:buttons :edit])]]
-     [restrictions-list e! checked-restrictions]]))
+     100)
+    [restrictions-list e! checked-restrictions]))
 
 (defn activities-tab-footer [_e! _app project]
   [:div {:class (<class project-style/activities-tab-footer)}
@@ -484,42 +470,103 @@
     :value "activities"
     :component activities-tab
     :layers #{:thk-project :related-cadastral-units :related-restrictions}
-    :footer activities-tab-footer}
+    :footer activities-tab-footer
+    :hotkey "1"}
    {:label [:project :tabs :people]
     :value "people"
     :component people-tab
     :badge (fn [project]
              (when (project-managers-info-missing project)
                [Badge {:badge-content (r/as-element [information-missing-icon])}]))
-    :layers #{:thk-project}}
+    :action-component-fn (fn [e! _app project]
+                           [when-authorized :thk.project/update
+                            project
+                            [buttons/button-secondary {:on-click (e! project-controller/->OpenEditProjectDialog)
+                                                       :size :small}
+                (tr [:buttons :edit])]])
+    :layers #{:thk-project}
+    :hotkey "2"}
    {:label [:project :tabs :details]
     :value "details"
     :component details-tab
-    :layers #{:thk-project}}
+    :layers #{:thk-project}
+    :hotkey "3"
+    :action-component-fn (fn [e! app project]
+                           [when-authorized
+                            :thk.project/update
+                            project
+                            [buttons/button-secondary {:size :small
+                                                       :on-click (e! project-controller/->OpenEditDetailsDialog)}
+                             (tr [:buttons :edit])]])}
    {:label [:project :tabs :restrictions]
     :value "restrictions"
     :component restriction-tab
-    :layers #{:thk-project}}
+    :layers #{:thk-project}
+    :hotkey "4"
+    :action-component-fn (fn [_e! _app {project-id :thk.project/id}]
+                           [buttons/button-secondary {:component "a"
+                                                      :href (str "/#/projects/" project-id "?tab=restrictions&configure=restrictions")
+                                                      :size :small}
+                            (tr [:buttons :edit])])}
    {:label [:project :tabs :land]
     :value "land"
-    :component land-tab/related-cadastral-units-info}
+    :component land-tab/related-cadastral-units-info
+    :hotkey "5"
+    :action-component-fn (fn [e! _app project]
+                           [buttons/button-secondary {:href (url/set-query-param :configure "cadastral-units")}
+                            (tr [:buttons :edit])])}
    {:label [:project :tabs :road-objects]
     :value "road"
-    :component road-view/road-objects-tab}])
+    :component road-view/road-objects-tab
+    :hotkey "6"}])
 
 (defn selected-project-tab [{{:keys [tab]} :query :as _app}]
   (if tab
     (cu/find-first #(= tab (:value %)) project-tabs-layout)
     (first project-tabs-layout)))
 
-(defn- project-tabs [e! app project]
-  [tabs/tabs {:e! e!
-              :selected-tab (:value (selected-project-tab app))}
-   (mapv (fn [{badge :badge :as tab}]
-           (if badge
-             (assoc tab :badge (badge project))
-             tab))
-         project-tabs-layout)])
+(defn- project-tabs-item [e! close-menu! _selected-tab {:keys [value hotkey] :as _tab}]
+  (let [activate! #(do
+                     (e! (common-controller/->SetQueryParam :tab value))
+                     (close-menu!))]
+    (common/component
+     (hotkeys/hotkey hotkey activate!)
+     (fn [_ _ selected-tab {:keys [value label badge hotkey]}]
+       [MenuItem {:on-click activate!
+                  :selected (= value (:value selected-tab))
+                  :classes {:root (<class project-style/project-view-selection-item)}}
+        [:div {:class (<class project-style/project-view-selection-item-label)} (tr label)]
+        [:div {:class (<class project-style/project-view-selection-item-hotkey)} (tr [:common :hotkey] {:key hotkey})]]))))
+
+(defn- project-tabs [_ _ _]
+  (let [open? (r/atom false)
+        anchor-el (atom nil)
+        toggle-open! #(do
+                        (swap! open? not)
+                        (.blur @anchor-el))
+        set-anchor! #(reset! anchor-el %)]
+    (common/component
+     (hotkeys/hotkey "§" toggle-open!)
+     (fn [e! app project]
+
+       (let [{action :action-component-fn :as selected} (selected-project-tab app)]
+         [:div {:class (<class project-style/project-tab-container)}
+          [:div {:class (<class common-styles/space-between-center)}
+           [:div {:class (<class common-styles/flex-align-center)}
+            [IconButton {:on-click toggle-open!
+                         :ref set-anchor!}
+             [icons/navigation-apps]]
+            [typography/Heading1 {:class [(<class common-styles/inline-block)
+                                          (<class common-styles/no-margin)]} (tr (:label (selected-project-tab app)))]]
+           (when action
+             (action e! app project))]
+          [Menu {:open @open?
+                 :anchor-el @anchor-el
+                 :classes {:paper (<class project-style/project-view-selection-menu)}}
+           (doall
+            (for [tab project-tabs-layout]
+              ^{:key (str (:value tab))}
+              [project-tabs-item e! toggle-open! selected tab]))]])))))
 
 (defn- project-tab [e! app project]
   (let [selected-tab (selected-project-tab app)]
