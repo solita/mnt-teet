@@ -23,7 +23,8 @@
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.material-ui :refer [Paper Link Badge Grid ButtonBase Menu MenuItem ListItemText
+            [teet.ui.material-ui :refer [Paper Link Badge Grid ButtonBase
+                                         Popper MenuList MenuItem ClickAwayListener
                                          IconButton]]
             [teet.ui.panels :as panels]
             [teet.ui.project-context :as project-context]
@@ -548,7 +549,6 @@
     (common/component
      (hotkeys/hotkey "§" toggle-open!)
      (fn [e! app project]
-
        (let [{action :action-component-fn :as selected} (selected-project-tab app)]
          [:div {:class (<class project-style/project-tab-container)}
           [:div {:class (<class common-styles/space-between-center)}
@@ -560,13 +560,17 @@
                                           (<class common-styles/no-margin)]} (tr (:label (selected-project-tab app)))]]
            (when action
              (action e! app project))]
-          [Menu {:open @open?
-                 :anchor-el @anchor-el
-                 :classes {:paper (<class project-style/project-view-selection-menu)}}
-           (doall
-            (for [tab project-tabs-layout]
-              ^{:key (str (:value tab))}
-              [project-tabs-item e! toggle-open! selected tab]))]])))))
+          [Popper {:open @open?
+                   :anchor-el @anchor-el
+                   :classes {:paper (<class project-style/project-view-selection-menu)}
+                   :placement "bottom-start"}
+           [ClickAwayListener {:on-click-away toggle-open!}
+            [Paper
+             [MenuList {}
+              (doall
+               (for [tab project-tabs-layout]
+                 ^{:key (str (:value tab))}
+                 [project-tabs-item e! toggle-open! selected tab]))]]]]])))))
 
 (defn- project-tab [e! app project]
   (let [selected-tab (selected-project-tab app)]

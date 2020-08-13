@@ -30,6 +30,7 @@
             ["@material-ui/core/Input" :as mui-Input]
             ["@material-ui/core/Select" :as mui-Select]
             ["@material-ui/core/MenuItem" :as mui-MenuItem]
+            ["@material-ui/core/MenuList" :as mui-MenuList]
             ["@material-ui/core/Menu" :as mui-Menu]
             ["@material-ui/core/ButtonGroup" :as mui-ButtonGroup]
             ["@material-ui/core/RadioGroup" :as mui-RadioGroup]
@@ -91,7 +92,7 @@
 (define-mui-components
   Button ButtonBase Fab IconButton Checkbox InputAdornment FormControl FormControlLabel
   InputLabel Input TextField
-  Select MenuItem Menu ButtonGroup)
+  Select MenuItem MenuList Menu ButtonGroup)
 
 (def TextField-class (aget mui-TextField "default"))
 
