@@ -755,12 +755,14 @@
 
 (defn create-land-acquisition-row
   [la]
-  {:name-id {:address (get-in la [:unit-data :L_AADRESS])
-             :id (get-in la [:unit-data :TUNNUS])}
-   :price-per-sqm (or (:land-acquisition/price-per-sqm la) 0)
-   :area-to-obtain (:land-acquisition/area-to-obtain la)
-   :total (* (js/parseFloat (:land-acquisition/price-per-sqm la))
-             (js/parseFloat (:land-acquisition/area-to-obtain la)))})
+  (let [price-per-sqm (or (:land-acquisition/price-per-sqm la) 0)
+        area (or (:land-acquisition/area-to-obtain la) 0)]
+    {:name-id {:address (get-in la [:unit-data :L_AADRESS])
+               :id (get-in la [:unit-data :TUNNUS])}
+     :price-per-sqm price-per-sqm
+     :area-to-obtain area
+     :total (* (js/parseFloat price-per-sqm)
+               (js/parseFloat area))}))
 
 (defmethod estate-modal-content :costs
   [{:keys [project estate-info]}]
