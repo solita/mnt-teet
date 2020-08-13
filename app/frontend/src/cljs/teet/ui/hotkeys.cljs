@@ -76,12 +76,12 @@
                 (when (and (not (hotkey-disallowed? (some-> js/document .-activeElement .-tagName) kc))
                            (not (@hotkey-down-keys kc)))
                   (swap! hotkey-down-keys conj kc)
-                  (let [hotkey-registry @hotkey-registry
-                        key (.-key event)]
-                    (when-let [handler-fn (or (peek (get hotkey-registry key))
-                                              (peek (get hotkey-registry (str/upper-case key))))]
-                      (.preventDefault event)
-                      (handler-fn))))))))
+                  (when-let [key (.-key event)]
+                    (let [hotkey-registry @hotkey-registry]
+                      (when-let [handler-fn (or (peek (get hotkey-registry key))
+                                                (peek (get hotkey-registry (str/upper-case key))))]
+                        (.preventDefault event)
+                        (handler-fn)))))))))
     (set! (.-onkeyup js/window)
           (fn [event]
             (when (not (.-ctrlKey event))
