@@ -547,7 +547,7 @@
                         (.blur @anchor-el))
         set-anchor! #(reset! anchor-el %)]
     (common/component
-     (hotkeys/hotkey "§" toggle-open!)
+     (hotkeys/hotkey "Q" toggle-open!)
      (fn [e! app project]
        (let [{action :action-component-fn :as selected} (selected-project-tab app)]
          [:div {:class (<class project-style/project-tab-container)}
