@@ -910,9 +910,9 @@
 
 (defn- business-registry-info [{:keys [addresses contact-methods]}]
   (let [unique-addresses (into #{}
-                               (for [{:keys [tanav-maja-korter postiindeks lopp-kpv]} addresses
+                               (for [{:keys [tanav-maja-korter postiindeks lopp-kpv ehak-nimetus]} addresses
                                      :when (not lopp-kpv)]
-                                 (str tanav-maja-korter ", " postiindeks)))]
+                                 (str tanav-maja-korter ", " postiindeks ", " ehak-nimetus)))]
     [:div
      (mapc (fn [a]
              [key-value [(tr [:contact :address]) a]]) unique-addresses)
