@@ -939,9 +939,7 @@
                        [typography/BoldGreyText (if person?
                                                   (str (:eesnimi owner) " " (:nimi owner))
                                                   (:nimi owner))]
-                       [typography/GreyText (if person?
-                                              (str "EE" r_kood)
-                                              r_kood)]
+                       [typography/GreyText r_kood]
                        (when omandiosa_suurus
                          [typography/BoldGreyText (if (= "1" omandiosa_lugeja omandiosa_nimetaja)
                                                     "1"
