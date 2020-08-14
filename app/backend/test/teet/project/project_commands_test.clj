@@ -1,9 +1,10 @@
 (ns ^:db teet.project.project-commands-test
   (:require [clojure.test :refer [deftest is testing] :as t]
-            [teet.project.project-model :as project-model])
+            [teet.project.project-model :as project-model]
+            [teet.test.utils :as tu])
   (:import (java.util Date)))
 
-#_(t/use-fixtures :each
+(t/use-fixtures :each
   tu/with-environment
   (tu/with-db))
 
@@ -171,3 +172,61 @@
   (testing "Activity deadline current date not over deadline"
     (is (= :on-schedule (:thk.project/status (project-model/project-with-status
                                                       activity-deadline-current-date))))))
+
+(deftest add-permission
+  (tu/give-admin-permission tu/mock-user-boss)
+
+  (testing "Adding permission requires proper ...permissions"
+    (is (thrown? Exception
+                 (tu/local-command tu/mock-user-manager
+                                   :thk.project/add-permission
+                                   {:project-id (tu/->db-id "p1")
+                                    ;; Carla Consultant
+                                    :user {:user/person-id "EE33445566770"}
+                                    :role :external-consultant})))
+
+    ;; Give manager role to Danny
+    (tu/local-command tu/mock-user-boss
+                      :admin/create-user
+                      ;; Danny D. Manager
+                      {:user/person-id "EE12345678900"
+                       :user/add-global-permission :manager})
+
+    ;; He can now grant the permission
+    (is (tu/local-command tu/mock-user-manager
+                          :thk.project/add-permission
+                          {:project-id (tu/->db-id "p1")
+                           ;; Carla Consultant
+                           :user {:user/person-id "EE33445566770"}
+                           :role :external-consultant})))
+
+  (testing "Can't add user to the same project twice"
+    (is (tu/local-command tu/mock-user-manager
+                          :thk.project/add-permission
+                          {:project-id (tu/->db-id "p1")
+                           ;; Nonexistent user
+                           :user {:user/person-id "EE33445566780"}
+                           :role :external-consultant})
+        "New users can be added")
+    (is (thrown? Exception
+                 (tu/local-command tu/mock-user-manager
+                                   :thk.project/add-permission
+                                   {:project-id (tu/->db-id "p1")
+                                    ;; Nonexistent user
+                                    :user {:user/person-id "EE33445566780"}
+                                    :role :external-consultant}))
+        "Same user cannot be added twice"))
+
+  (testing "User who has not logged in can be invited to multiple projects by person id"
+    (is (tu/local-command tu/mock-user-manager
+                          :thk.project/add-permission
+                          {:project-id (tu/->db-id "p1")
+                           :user {:user/person-id "EE33445566790"}
+                           :role :external-consultant})
+        "New users can be added to a project")
+    (is (tu/local-command tu/mock-user-manager
+                          :thk.project/add-permission
+                          {:project-id (tu/->db-id "p2")
+                           :user {:user/person-id "EE33445566790"}
+                           :role :external-consultant})
+        "New users can be added to a different project")))
