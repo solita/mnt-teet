@@ -281,7 +281,7 @@
 
 (defn give-admin-permission
   [user-id]
-  (tx {:user/id          user-id
+  (tx {:db/id            (user-model/user-ref user-id)
        :user/permissions [{:db/id                 "new-permission"
                            :permission/role       :admin
                            :permission/valid-from (Date.)}]}))

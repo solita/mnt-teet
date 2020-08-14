@@ -83,8 +83,10 @@
        (mapcat permission->projects)
        (remove nil?)))
 
-#?(:clj (defn new-user []
-          {:user/id (java.util.UUID/randomUUID)}))
+#?(:clj (defn new-user [person-id]
+          {:db/id "new-user"
+           :user/id (java.util.UUID/randomUUID)
+           :user/person-id person-id}))
 
 (defn normalize-person-id
   "Normalizes the `person-id` to contain the 'EE' prefix."

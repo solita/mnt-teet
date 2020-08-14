@@ -129,10 +129,6 @@
                                                      estate-ids)))
     :ok))
 
-(defn- new-user [person-id]
-  (merge (user-model/new-user)
-         {:user/person-id (user-model/normalize-person-id person-id)}))
-
 (defcommand :thk.project/add-permission
   {:doc "Add permission to project"
    :context {granting-user :user
@@ -155,7 +151,7 @@
     (if-not user-already-added-to-project?
       (let [tx [(merge
                  (when-not user-info
-                   (new-user (:user/person-id user)))
+                   (user-model/new-user (:user/person-id user)))
                  {:db/id (if user-info
                            (user-model/user-ref user-info)
                            "new-user")
