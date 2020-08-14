@@ -81,5 +81,5 @@
     (let [existing-user-permissions (-> (du/entity (tu/db) [:user/person-id "EE55667788990"])
                                         :user/permissions)]
       (is (= (count existing-user-permissions) 2) "Can add multiple global roles")
-      (is (= (-> existing-user-permissions last :permission/role)
-             :internal-consultant)))))
+      (is (= (->> existing-user-permissions (map :permission/role) set)
+             #{:admin :internal-consultant})))))

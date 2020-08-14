@@ -1,6 +1,7 @@
 (ns teet.admin.admin-commands
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
             [taoensso.timbre :as log]
+            [teet.meta.meta-model :as meta-model]
             [teet.user.user-db :as user-db]
             [teet.user.user-model :as user-model]
             [teet.user.user-spec :as user-spec]))
@@ -47,10 +48,23 @@
          (filter redundant)
          not-empty)))
 
-(defn- new-permission [role date]
-  {:user/permissions [{:db/id "new-permission"
-                       :permission/role role
-                       :permission/valid-from date}]})
+(defn- new-permission [granting-user role date]
+  {:user/permissions [(merge (meta-model/creation-meta granting-user)
+                             {:db/id "new-permission"
+                              :permission/role role
+                              :permission/valid-from date})]})
+
+(defn- add-permission-to-existin-user-tx [granting-user user-info global-permission]
+  (merge (select-keys user-info [:db/id])
+         (let [permission-map (new-permission granting-user
+                                              global-permission
+                                              (java.util.Date.))
+               redundant? (redundant-with-existing-permission?
+                           user-info
+                           (first (:user/permissions permission-map)))]
+           (if redundant?
+             (log/info "request to add redundant permission, skipping - new permission was" permission-map)
+             permission-map))))
 
 (defcommand :admin/create-user
   {:doc "Create user (although for now can be also used to add global permissions to existing users through admin view)"
@@ -60,22 +74,17 @@
    :pre [(:user/person-id user-data)
          (user-spec/estonian-person-id? (:user/person-id user-data))]
    :authorization {:admin/add-user {}}
-   :transact (let [user-info (user-db/user-info-by-person-id db (:user/person-id user-data))
+   :transact (let [user-person-id (user-model/normalize-person-id (:user/person-id user-data))
+                   user-info (user-db/user-info-by-person-id db user-person-id)
                    global-permission (:user/add-global-permission user-data)]
                (if user-info
                  ;; User exists, check for redundant permissions
-                 [(merge (select-keys user-info [:db/id])
-                         (when global-permission
-                           (let [permission-map (new-permission global-permission
-                                                                (java.util.Date.))
-                                 redundant? (redundant-with-existing-permission?
-                                             user-info
-                                             (first (:user/permissions permission-map)))]
-                             (if redundant?
-                               (log/info "request to add redundant permission, skipping - new permission was" permission-map)
-                               permission-map))))]
+                 [(if global-permission
+                    (add-permission-to-existin-user-tx user user-info global-permission)
+                    {})]
                  ;; New user, no need to check
-                 [(merge (user-model/new-user (:user/person-id user-data))
+                 [(merge (user-model/new-user user-person-id)
                          (when global-permission
-                           (new-permission global-permission
+                           (new-permission user
+                                           global-permission
                                            (java.util.Date.))))]))})

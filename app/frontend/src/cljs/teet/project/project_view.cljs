@@ -223,6 +223,16 @@
      [buttons/delete-button-with-confirm {:action #(e! (project-controller/->RevokeProjectPermission (:db/id permission)))}
       (tr [:project :remove-from-project])]]]])
 
+(defn- unregistered-user-description [user-id]
+  (str (tr [:user :unregistered])
+       ": "
+       user-id))
+
+(defn- user-description [user]
+  (or (user-model/user-name user)
+      (some-> user :user/person-id unregistered-user-description)
+      (tr [:common :unknown])))
+
 (defn people-panel-user-list
   [permissions selected-person]
   [:div
@@ -231,8 +241,7 @@
                                    (let [user-id (:db/id user)]
                                      {:key user-id
                                       :href (url/set-query-param :person user-id)
-                                      :title (or (user-model/user-name user)
-                                                 (tr [:common :unknown]))
+                                      :title (user-description user)
                                       :selected? (= (str user-id) selected-person)}))
                                  permissions)]
        [itemlist/white-link-list permission-links]))
@@ -251,7 +260,7 @@
                                first))]
     [panels/modal+ {:open-atom (r/wrap open? :_)
                     :title (if person
-                             (str (get-in selected-person [:user :user/given-name]) " " (get-in selected-person [:user :user/family-name]))
+                             (-> selected-person :user user-description)
                              (tr [:project :add-users]))
                     :on-close (e! project-controller/->CloseDialog)
                     :left-panel [people-panel-user-list permitted-users person]
@@ -391,7 +400,7 @@
       (if (empty? permitted-users)
         [typography/GreyText (tr [:people-tab :no-other-users])]
         [itemlist/gray-bg-list (for [{:keys [user] :as permission} permitted-users]
-                                 {:primary-text (str (:user/given-name user) " " (:user/family-name user))
+                                 {:primary-text (user-description user)
                                   :secondary-text (tr [:roles (:permission/role permission)])
                                   :id (:db/id user)})])]]))
 

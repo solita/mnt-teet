@@ -140,7 +140,10 @@
          (user-spec/estonian-person-id? (:user/person-id user))]
    :authorization {:project/edit-permissions {:link :thk.project/owner}}}
   (assert (authorization-check/role-can-be-granted? role) "Can't grant role")
-  (let [user-info (user-db/user-info-by-person-id db (:user/person-id user))
+  (let [user-person-id (-> user
+                           :user/person-id
+                           user-model/normalize-person-id)
+        user-info (user-db/user-info-by-person-id db user-person-id)
         user-already-added-to-project?
         (and user-info
              (boolean
@@ -151,7 +154,7 @@
     (if-not user-already-added-to-project?
       (let [tx [(merge
                  (when-not user-info
-                   (user-model/new-user (:user/person-id user)))
+                   (user-model/new-user user-person-id))
                  {:db/id (if user-info
                            (user-model/user-ref user-info)
                            "new-user")
