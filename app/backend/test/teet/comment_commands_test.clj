@@ -82,7 +82,7 @@
                        :tracked-comment-id)
     (is (some? (tu/get-data :tracked-comment-id)))
     (let [created-comment (->> (tu/local-query tu/mock-user-boss :comment/fetch-comments
-                                               {:db/id (tu/get-data :task-id)
+                                               {:eid (tu/get-data :task-id)
                                                 :for :task})
                                (du/find-by-id (tu/get-data :tracked-comment-id)))]
       (is (= (-> created-comment :comment/status :db/ident)
@@ -107,7 +107,7 @@
 
     ;; ... but the comment status is untracked
     (let [created-comment (->> (tu/local-query tu/mock-user-boss :comment/fetch-comments
-                                               {:db/id (tu/get-data :task-id)
+                                               {:eid (tu/get-data :task-id)
                                                 :for :task})
                                (du/find-by-id (tu/get-data :ednas-comment-id)))]
       (is (= :comment.status/untracked
@@ -129,7 +129,7 @@
                          :comment/status :comment.status/resolved})
 
      (let [resolved-comment (->> (tu/local-query tu/mock-user-manager :comment/fetch-comments
-                                                 {:db/id (tu/get-data :task-id)
+                                                 {:eid (tu/get-data :task-id)
                                                   :for :task})
                                  (du/find-by-id (tu/get-data :tracked-comment-id)))]
        (testing "the comment is status has changed"
@@ -167,7 +167,7 @@
 
     (testing "before resolving all comments of task, the tracked comments are unresolved"
       (let [task-comments (tu/local-query tu/mock-user-manager :comment/fetch-comments
-                                          {:db/id (tu/get-data :multi-resolve-task-id)
+                                          {:eid (tu/get-data :multi-resolve-task-id)
                                            :for :task})]
         (is (= 3 (count (filter comment-model/unresolved? task-comments))))))
 
@@ -177,7 +177,7 @@
                         {:entity-id (tu/get-data :multi-resolve-task-id)
                          :entity-type :task})
       (let [task-comments (tu/local-query tu/mock-user-manager :comment/fetch-comments
-                                          {:db/id (tu/get-data :multi-resolve-task-id)
+                                          {:eid (tu/get-data :multi-resolve-task-id)
                                            :for :task})]
         (testing "the tracked comments are resolved"
           (is (= 3 (count (filter comment-model/resolved? task-comments)))))
