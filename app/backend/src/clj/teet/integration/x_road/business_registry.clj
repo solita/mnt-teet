@@ -46,7 +46,7 @@
             :kaardi-tyyp [:ns1:kaardi_tyyp]
             :kande-nr [:ns1:kande_nr ->num]
             :ehak [:ns1:ehak]
-            :ehak-nimetys [:ns1:ehak_nimetys]
+            :ehak-nimetus [:ns1:ehak_nimetus]
             :tanav-maja-korter [:ns1:tanav_maja_korter]
             :postiindeks [:ns1:postiindeks]
             :algus-kpv [:ns1:algus_kpv ->date]

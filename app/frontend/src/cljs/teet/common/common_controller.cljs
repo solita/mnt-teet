@@ -476,7 +476,8 @@
                      (e! (snackbar-controller/->OpenSnackBar success-message :success)))
                    (if result-path
                      (e! (->RPCResponse result-path data))
-                     (e! (result-event data)))))))))
+                     (when (not= :ignore result-event)
+                       (e! (result-event data))))))))))
 
 (defmethod tuck-effect/process-effect :navigate [_ {:keys [page params query]}]
   (routes/navigate! page params query))

@@ -285,6 +285,20 @@
            :class (<class count-chip-style)}
           opts)])
 
+(defn comment-count-chip
+  [{:comment/keys [counts]}]
+  (let [{:comment/keys [old-comments new-comments]} counts
+        new? (pos? (int new-comments))
+        count (+ new-comments
+                 old-comments)]
+     [Chip {:size :small
+           :color :primary
+           :class (<class count-chip-style)
+           :label (str count)
+           :style {:background-color (if new?
+                                       theme-colors/red
+                                       theme-colors/primary)}}]))
+
 (defn heading-and-grey-border-body
   [{:keys [heading body]}]
   [:div {:style {:margin-bottom "1.5rem"}}

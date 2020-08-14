@@ -45,8 +45,9 @@
   [{:keys [link-download? actions? comment-action]
     :or {link-download? false
          actions? true}}
-   {id :db/id :file/keys [number version status name comments-new-count comments-old-count] :as file}]
+   {id :db/id :file/keys [number version status name] comments :comment/counts :as file}]
   (let [[base-name suffix] (base-name-and-suffix name)
+        {:comment/keys [new-comments old-comments]} comments
         seen (:file-seen/seen-at file)]
     [:div.file-row {:class [(<class common-styles/flex-row)
                             (<class common-styles/margin-bottom 0.5)]}
@@ -67,9 +68,9 @@
       [:span (tr-enum status)]]
      (when actions?
        [:div.file-row-actions {:class (<class common-styles/flex-table-column-style 13 :flex-end)}
-        [Badge {:badge-content (+ (or comments-new-count 0)
-                                  (or comments-old-count 0))
-                :color (if (pos? comments-new-count)
+        [Badge {:badge-content (+ (or new-comments 0)
+                                  (or old-comments 0))
+                :color (if (pos? new-comments)
                          :error
                          :primary)}
          (if comment-action

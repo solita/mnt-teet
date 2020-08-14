@@ -1019,4 +1019,26 @@
  {:db/ident :migration/task-type-options-update
   :txes [[[:db/retractEntity [:db/ident :task.type/site-plan]]
           {:db/ident :task.type/general-part
-           :enum/valid-for :task.group/design}]]}]
+           :enum/valid-for :task.group/design}]]}
+
+ {:db/ident :migration/comment-entity-seen
+  :txes [[{:db/ident :comments-seen/user
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/noHistory true}
+          {:db/ident :comments-seen/entity
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/noHistory true}
+          {:db/ident :comments-seen/seen-at
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "When was the last time user saw this entitys comments"
+           :db/noHistory true}
+          {:db/ident :comments-seen/entity+user
+           :db/valueType :db.type/tuple
+           :db/tupleAttrs [:comments-seen/entity :comments-seen/user]
+           :db/cardinality :db.cardinality/one
+           :db/unique :db.unique/identity
+           :db/doc "A single entity and user pair should only save a single last seen timestamp"
+           :db/noHistory true}]]}]

@@ -18,6 +18,8 @@
 (defrecord CommentOnEntity [entity-type entity-id comment files visibility track? mentions
                             after-comment-added-event])
 (defrecord ClearCommentField [])
+(defrecord CommentsSeen [entity-id comment-target])
+(defrecord SetCommentsAsOld [update-path])
 (defrecord CommentAddSuccess [entity-id after-comment-added-event])
 
 (defrecord OpenEditCommentDialog [comment-entity commented-entity])
@@ -127,6 +129,21 @@
                                              {:user mention})
                                            (:comment/mentions comment-entity))}
                       {:comment/commented-entity commented-entity}))))
+
+  SetCommentsAsOld
+  (process-event [{:keys [update-path]} app]
+    (update-in app update-path (fn [{:comment/keys [old-comments new-comments] :as val}]
+                                 {:comment/old-comments (+ old-comments new-comments)
+                                  :comment/new-comments 0})))
+
+  CommentsSeen
+  (process-event [{:keys [entity-id comment-target]} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :comment/entity-comments-seen
+           :payload {:eid entity-id
+                     :for comment-target}
+           :result-event :ignore}))
 
   CancelCommentEdit
   (process-event [_ {:keys [page params query] :as app}]

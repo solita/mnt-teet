@@ -40,12 +40,17 @@
 
 (def project-list-with-status-attributes
   (into project-listing-attributes
-        [{:thk.project/lifecycles [{:thk.lifecycle/activities
-                                    [:activity/estimated-end-date
+        [{:thk.project/lifecycles [:db/id
+                                   {:thk.lifecycle/activities
+                                    [:db/id
+                                     :activity/estimated-end-date
                                      :activity/estimated-start-date
                                      :activity/name
                                      :activity/status
-                                     {:activity/tasks [:task/status
+                                     :meta/deleted?
+                                     {:activity/tasks [:db/id
+                                                       :task/status
+                                                       :meta/deleted?
                                                        :task/estimated-end-date]}]}]}]))
 
 (def project-info-attributes
