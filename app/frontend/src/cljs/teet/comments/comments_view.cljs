@@ -87,8 +87,7 @@
       [file-upload/FileUploadButton
        {:id "images-field"
         :color :secondary
-        :button-attributes {:variant :text
-                            :size :small}
+        :button-attributes {:size :small}
         :on-drop #(e! (file-controller/map->UploadFiles
                        {:files %
                         :project-id project-id
@@ -303,26 +302,33 @@
      (tr [:comment :resolve-all])]]])
 
 (defn comment-list
-  [{:keys [e! quote-comment! commented-entity focused-comment after-comment-deleted-event]} comments]
-  (let [unresolved-comments (filterv comment-model/unresolved? comments)]
-    [:<>
-     (when (seq unresolved-comments)
-       [unresolved-comments-info e! commented-entity unresolved-comments])
-     [itemlist/ItemList {}
-      (doall
-       (for [{id :db/id :as comment-entity} comments
-             :let [focused? (= (str id) focused-comment)]]
-         (if (nil? comment-entity)
-           ;; New comment was just added but hasn't been refetched yet, show skeleton
-           ^{:key "loading-comment"}
-           [comment-skeleton 1]
+  [{:keys [e! commented-entity after-comment-list-rendered-event]} comments]
+  (when-let [eid (and (seq comments)
+                      (:eid commented-entity))]
+    (when after-comment-list-rendered-event
+      (e! (after-comment-list-rendered-event)))
+    (e! (comments-controller/->CommentsSeen eid (:for commented-entity))))
+  (fn [{:keys [e! quote-comment! commented-entity
+               focused-comment after-comment-deleted-event]}
+       comments]
+    (let [unresolved-comments (filterv comment-model/unresolved? comments)]
+           [:<>
+            (when (seq unresolved-comments)
+              [unresolved-comments-info e! commented-entity unresolved-comments])
+            (doall
+              (for [{id :db/id :as comment-entity} comments
+                    :let [focused? (= (str id) focused-comment)]]
+                (if (nil? comment-entity)
+                  ;; New comment was just added but hasn't been refetched yet, show skeleton
+                  ^{:key "loading-comment"}
+                  [comment-skeleton 1]
 
-           ^{:key (str id)}
-           [comment-entry comment-entity {:e! e!
-                                          :commented-entity commented-entity
-                                          :quote-comment! quote-comment!
-                                          :focused? focused?
-                                          :after-comment-deleted-event after-comment-deleted-event}])))]]))
+                  ^{:key (str id)}
+                  [comment-entry comment-entity {:e! e!
+                                                 :commented-entity commented-entity
+                                                 :quote-comment! quote-comment!
+                                                 :focused? focused?
+                                                 :after-comment-deleted-event after-comment-deleted-event}])))])))
 
 (defn strip-mentions
   "@[Carla Consultant](123456) -> @Carla Consultant"
@@ -377,8 +383,7 @@
       [file-upload/FileUploadButton
        {:id "images-field"
         :color :secondary
-        :button-attributes {:variant :text
-                            :size :small}
+        :button-attributes {:size :small}
         :on-drop #(e! (file-controller/map->UploadFiles
                        {:files %
                         :project-id project-id
@@ -409,8 +414,11 @@
   [{:keys [e! app
            entity-type
            entity-id
-           show-comment-form? after-comment-added-event
-           after-comment-deleted-event]
+           show-comment-form?
+           after-comment-added-event
+           after-comment-deleted-event
+           after-comment-list-rendered-event
+           ]
     :or {show-comment-form? true}}]
   (r/with-let [can-set-visibility? (authorization-check/authorized? @app-state/user
                                                                     :projects/set-comment-visibility
@@ -424,17 +432,18 @@
       [:div
        [query/query {:e! e!
                      :query :comment/fetch-comments
-                     :args {:db/id entity-id
+                     :args {:eid entity-id
                             :for entity-type}
-                     :skeleton [comment-skeleton 1]
+                     :skeleton [comment-skeleton 2]
                      :state-path [:comments-for-entity entity-id]
                      :state comments
                      :simple-view [comment-list {:e! e!
+                                                 :after-comment-list-rendered-event after-comment-list-rendered-event
                                                  :after-comment-deleted-event after-comment-deleted-event
                                                  :quote-comment! (fn [name quoted-text]
                                                                    (e! ((quote-comment-fn comment-form)
                                                                         name quoted-text)))
-                                                 :commented-entity {:db/id entity-id
+                                                 :commented-entity {:eid entity-id
                                                                     :for   entity-type}
                                                  :focused-comment (get-in app [:query :focus-on])}]
                      :refresh (count comments)}]
