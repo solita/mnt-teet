@@ -18,6 +18,7 @@ phases:
     commands:
       - echo Building frontend ClojureScript app
       - cd $FRONTEND
+      - npm install
       - bash run-tests.sh
       - bash build.sh
       - bash resources.sh
