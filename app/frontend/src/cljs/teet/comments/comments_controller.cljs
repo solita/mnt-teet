@@ -10,7 +10,7 @@
   (str "comment-" id))
 
 (defrecord DeleteComment [comment-id commented-entity after-comment-deleted-event])
-(defrecord DeleteCommentSuccess [entity-id after-comment-deleted-event])
+(defrecord DeleteCommentSuccess [commented-entity after-comment-deleted-event])
 (defrecord QueryEntityComments [commented-entity])
 
 (defrecord UpdateFileNewCommentForm [form-data])            ; update new comment on selected file
@@ -37,7 +37,7 @@
   {:tuck.effect/type :query
    :query :comment/fetch-comments
    :args commented-entity
-   :result-path [:comments-for-entity (:db/id commented-entity)]})
+   :result-path [:comments-for-entity (:eid commented-entity)]})
 
 (extend-protocol t/Event
 
@@ -103,13 +103,13 @@
            :result-event     (partial ->DeleteCommentSuccess commented-entity after-comment-deleted-event)}))
 
   DeleteCommentSuccess
-  (process-event [{:keys [entity-id after-comment-deleted-event]} app]
+  (process-event [{:keys [commented-entity after-comment-deleted-event]} app]
     (t/fx app
           (fn [e!]
             (when after-comment-deleted-event
               (e! (after-comment-deleted-event))))
           (fn [e!]
-            (e! (->QueryEntityComments entity-id)))))
+            (e! (->QueryEntityComments commented-entity)))))
 
   QueryEntityComments
   (process-event [{:keys [commented-entity]} app]

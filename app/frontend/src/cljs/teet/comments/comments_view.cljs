@@ -211,7 +211,7 @@
   [e!
    {:meta/keys [modified-at]
     :comment/keys [comment status mentions]
-    comment-id :db/id
+    comment-id :eid
     :as comment-entity}
    commented-entity]
   [:div {:class (<class comments-styles/comment-contents
@@ -444,7 +444,7 @@
                                                                    (e! ((quote-comment-fn comment-form)
                                                                         name quoted-text)))
                                                  :commented-entity {:eid entity-id
-                                                                    :for   entity-type}
+                                                                    :for entity-type}
                                                  :focused-comment (get-in app [:query :focus-on])}]
                      :refresh (count comments)}]
        (when (and show-comment-form?
