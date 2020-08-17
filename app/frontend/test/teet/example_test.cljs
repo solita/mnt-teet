@@ -2,9 +2,7 @@
   (:require [teet.drtest :as drt :include-macros true]))
 
 (drt/define-drtest example-component-test
-  {;; :screenshots? true ... TODO update drtest so that these can be run
-   ;; without clj-chrome-devtools
-   :initial-context {:app (drt/atom {})}}
+  {:initial-context {:app (drt/atom {})}}
    (drt/step :render "Render component"
              :component (fn [{app :app}]
                           [:button#test-button {:on-click #(swap! app assoc :test true)}]))

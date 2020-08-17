@@ -40,4 +40,6 @@
                                 (aset js/window "CLJ_TESTS_STARTED" true)
                                 (set! *print-fn* (fn [& msg] (swap! PRINTED conj (apply str msg))))
                                 (aset js/window "CLJ_TEST_GET_PRINTED" get-printed)
-                                (test/run-all-tests)))
+                                (test/run-tests 'teet.example-tuck-test
+                                                'teet.example-test
+                                                'teet.common.common-controller-test)))

@@ -38,12 +38,11 @@
                                    "-co" "test-build.edn"
                                    "-O" "advanced" "-v" "-c"]
                        :extra-deps {webjure/drtest {:git/url "https://github.com/tatut/drtest"
-                                                    :sha "cfe520d864810c0d028625b72ab5363c85e391f7"}
-                                    }
+                                                    :sha "cfe520d864810c0d028625b72ab5363c85e391f7"}}
                        :extra-paths ["test"]}
-           :testrun {;:main-opts ["-m" "teet.test"]
+           :testrun {:main-opts ["-m" "teet.test"]
                      :extra-deps {clj-chrome-devtools {:git/url "https://github.com/tatut/clj-chrome-devtools"
-                                                       :sha "62deecf155d0e88154a458f28c72b4a018bc7a08"}}
+                                                       :sha "c1991d57fa78b30996120413e502d5e5939aabf9"}}
                      :extra-paths ["test"]}
            :dev {:main-opts ["-m" "figwheel.main" "-b" "dev" "-r"]
                  ;:main-opts ["-m" "cljs.main" "-co" "dev-build.edn" "-v" "-c" "-r"]
