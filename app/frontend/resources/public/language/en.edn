@@ -435,6 +435,11 @@
   :burdens "Burdens",
   :comments "Comments",
   :mortgages "Mortgages",
+  :modal-title
+  {:burdens "Burdens",
+   :comments "Comments",
+   :costs "Acquisition costs",
+   :mortgages "Mortgages"},
   :costs "Acquisition costs",
   :mortgage "Mortgage",
   :comment "Comment",

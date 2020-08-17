@@ -430,6 +430,11 @@
   :burdens "Koormatist",
   :comments "Kommentaari",
   :mortgages "Hüpoteeki",
+  :modal-title
+  {:burdens "Koormatised",
+   :comments "Kommentaarid",
+   :costs "Kulud",
+   :mortgages "Hüpoteekid"},
   :costs "Kulud",
   :mortgage "Hüpoteek",
   :comment "Kommentaar",
