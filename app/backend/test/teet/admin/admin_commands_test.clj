@@ -1,4 +1,4 @@
-(ns teet.admin.admin-commands-test
+(ns ^:db teet.admin.admin-commands-test
   (:require [clojure.test :refer :all]
             teet.admin.admin-commands
             [teet.util.datomic :as du]
