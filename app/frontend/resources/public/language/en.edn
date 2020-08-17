@@ -112,7 +112,8 @@
   :document.category/maintenance-doc "Maintenance documentation",
   :document.category/source-doc "Source documentation",
   :task.status/canceled "Canceled",
-  :land-acquisition.impact/purchase-not-needed "Purchase not needed",
+  :land-acquisition.impact/purchase-not-needed
+  "Acquisition not needed",
   :task.type/funding-plan "Funding plan",
   :thk.lifecycle-type/maintenance "Maintenance",
   :comment.status/resolved "Changes implemented",
@@ -218,7 +219,7 @@
   :notification.type/activity-waiting-for-review
   "Activity waiting for review",
   :activity.status/in-progress "In progress",
-  :land-acquisition.impact/purchase-needed "Purchase needed",
+  :land-acquisition.impact/purchase-needed "Acquisition needed",
   :task.status/assigned "Assigned",
   :notification.type/project-manager-assigned
   "You have been assigned as project manager",
@@ -316,7 +317,7 @@
   :activity/estimated-start-date "Estimated start date",
   :estate-procedure/motivation-bonus "Motivation bonus",
   :task/modified "Modified",
-  :estate-procedure/land-exchanges "Exchanging property",
+  :estate-procedure/land-exchanges "State land to be given",
   :file/number "Number",
   :task/status "Status",
   :file/size "Size",
@@ -596,7 +597,8 @@
   {:loading "Searching users...",
    :no-options "User not found",
    :placeholder "Type name..."},
-  :role "Role"},
+  :role "Role",
+  :unregistered "Unregistered user"},
  :warning
  {:deploying
   "A new version of the application is being deployed. Please wait for a few minutes and refresh the page.",

@@ -313,7 +313,7 @@
   :activity/estimated-start-date "Eeldatav alguskuupäev",
   :estate-procedure/motivation-bonus "Motivatsiooni boonus",
   :task/modified "Muudetud",
-  :estate-procedure/land-exchanges "Vara vahetamine",
+  :estate-procedure/land-exchanges "Vastu antav riigimaa",
   :file/number "Number",
   :task/status "Olek",
   :file/size "Suurus",
@@ -594,7 +594,8 @@
   {:loading "Otsin kasutajaid...",
    :no-options "Kasutajat ei leitud",
    :placeholder "Sisestan nime..."},
-  :role "Roll"},
+  :role "Roll",
+  :unregistered "Registreerimata kasutaja"},
  :warning
  {:deploying
   "Rakenduse uut versiooni laetakse. Palun oota mõned minutid ning seejärel värskenda lehte.",
