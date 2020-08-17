@@ -1,5 +1,7 @@
 (ns teet.runner
-  (:require [cljs.test :as test]
+  (:require "react"
+            "react-dom"
+            [cljs.test :as test]
             teet.example-tuck-test
             teet.example-test
             teet.common.common-controller-test))
