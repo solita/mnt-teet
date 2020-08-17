@@ -692,11 +692,11 @@
    (mapc
      (fn [p]
        (if (= current (name p))
-         [:strong {:style {:color :white}} (tr [:land-modal-page p])]
+         [:strong {:style {:color :white}} (tr [:land-modal-page :modal-title p])]
          [Link {:href (url/set-query-param :modal-page (name p))
                 :style {:display :block
                         :color :white}}
-          (tr [:land-modal-page p])]))
+          (tr [:land-modal-page :modal-title p])]))
      pages)])
 
 (defmulti estate-modal-content (fn [{:keys [page]}]
@@ -878,22 +878,7 @@
 (defmulti land-view-modal (fn [{:keys [modal]}]
                             (keyword modal)))
 
-(defmethod land-view-modal :default
-  [{:keys [modal]}]
-  [:div "Unsupported land view dialog " modal])
 
-(defmethod land-view-modal :estate
-  [{:keys [e! app modal-page project estate-info]}]
-  {:title (tr [:land-modal-page (keyword modal-page)])
-   :left-panel [modal-left-panel-navigation
-                modal-page
-                (tr [:land :estate-data])
-                [:burdens :mortgages :costs :comments]]
-   :right-panel [estate-modal-content {:e! e!
-                                       :page modal-page
-                                       :app app
-                                       :project project
-                                       :estate-info estate-info}]})
 
 (defmulti owner-modal-content (fn [{:keys [modal-page]}]
                                 (keyword modal-page)))
@@ -1013,6 +998,24 @@
                                      :app app
                                      :entity-type :file
                                      :entity-id (:db/id f)}])]))
+
+
+(defmethod land-view-modal :default
+  [{:keys [modal]}]
+  [:div "Unsupported land view dialog " modal])
+
+(defmethod land-view-modal :estate
+  [{:keys [e! app modal-page project estate-info]}]
+  {:title (tr [:land-modal-page :modal-title (keyword modal-page)])
+   :left-panel [modal-left-panel-navigation
+                modal-page
+                (tr [:land :estate-data])
+                [:burdens :mortgages :costs :comments]]
+   :right-panel [estate-modal-content {:e! e!
+                                       :page modal-page
+                                       :app app
+                                       :project project
+                                       :estate-info estate-info}]})
 
 (defmethod land-view-modal :unit
   [{:keys [e! app modal-page project target estate-info]}]
