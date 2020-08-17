@@ -34,15 +34,20 @@
 
         com.cognitect/transit-cljs {:mvn/version "0.8.256"}}
  :paths ["src/cljs" "../common/src/cljc" "target" "resources"]
- :aliases {:test {:main-opts ["-m" "figwheel.main"
-                              "-co" "tests.cljs.edn"
-                              "-m" "teet.runner"]
-                  :extra-deps {com.bhauman/figwheel-main {:mvn/version "0.2.5"}
-                               webjure/drtest {:mvn/version "20190611"}}
-                  :extra-paths ["test"]}
+ :aliases {:testbuild {:main-opts ["-m" "cljs.main"
+                                   "-co" "test-build.edn"
+                                   "-O" "advanced" "-v" "-c"]
+                       :extra-deps {webjure/drtest {:git/url "https://github.com/tatut/drtest"
+                                                    :sha "cfe520d864810c0d028625b72ab5363c85e391f7"}
+                                    }
+                       :extra-paths ["test"]}
+           :testrun {;:main-opts ["-m" "teet.test"]
+                     :extra-deps {clj-chrome-devtools {:git/url "https://github.com/tatut/clj-chrome-devtools"
+                                                       :sha "62deecf155d0e88154a458f28c72b4a018bc7a08"}}
+                     :extra-paths ["test"]}
            :dev {:main-opts ["-m" "figwheel.main" "-b" "dev" "-r"]
                  ;:main-opts ["-m" "cljs.main" "-co" "dev-build.edn" "-v" "-c" "-r"]
-                 :extra-deps {com.bhauman/figwheel-main {:mvn/version "0.2.5"}
+                 :extra-deps {com.bhauman/figwheel-main {:mvn/version "0.2.11"}
                               webjure/drtest {:mvn/version "20190611"}
                               com.datomic/client-cloud {:mvn/version "0.8.102"}}
                  :extra-paths ["test"]}

@@ -7,31 +7,16 @@
             [reagent.core :as r]
             [teet.common.common-controller :as common-controller]
             [tuck.core :as t]
-            [teet.localization :as localization]
-            [goog.object :as gobj])
+            [teet.localization :as localization])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (reset! common-controller/test-mode? true)
 (reset! postgrest-fetch/fetch-impl common-controller/send-fake-postgrest-query!)
 
-(defn- wait-for-materialui [ok]
-  (.log js/console "Waiting for MaterialUI")
-  (if (gobj/containsKey js/window "MaterialUI")
-    (ok)
-    (js/window.setTimeout #(wait-for-materialui ok) 100)))
-
 (defonce test-initialized
-  (.then (js/Promise.
-          (fn [ok err]
-            (localization/load-language! :et ok)))
-         (fn [_]
-           (.appendChild js/document.head
-                         (doto (js/document.createElement "script")
-                           (.setAttribute "src" "https://unpkg.com/@material-ui/core@latest/umd/material-ui.development.js")
-                           (.setAttribute "crossorigin" "anonymous")))
-           (js/Promise.
-            (fn [ok err]
-              (wait-for-materialui ok))))))
+  (js/Promise.
+   (fn [ok _err]
+     (localization/load-language! :et ok))))
 
 (defonce init-step
   {:drtest.step/label "Wait for test initialization"
