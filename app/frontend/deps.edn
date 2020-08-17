@@ -1,4 +1,4 @@
-{:deps {org.clojure/clojurescript {:mvn/version "1.10.764"}
+{:deps {org.clojure/clojurescript {:mvn/version "1.10.773"}
         ;; UI Libraries
         reagent {:mvn/version "1.0.0-alpha2" :exclusions [cljsjs/react
                                                           cljsjs/react-dom
