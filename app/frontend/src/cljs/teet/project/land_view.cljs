@@ -920,13 +920,13 @@
   (let [unique-addresses (into #{}
                                (for [{:keys [tanav-maja-korter postiindeks lopp-kpv ehak-nimetus]} addresses
                                      :when (not lopp-kpv)]
-                                 (str tanav-maja-korter ", " postiindeks ", " ehak-nimetus)))]
+                                 (str tanav-maja-korter ", " ehak-nimetus ", " postiindeks)))]
     [:div
      (mapc (fn [a]
              [key-value [(tr [:contact :address]) a]]) unique-addresses)
 
      (doall
-      (for [{:keys [kirje-id type content lopp-kpv] :as contact} contact-methods
+      (for [{:keys [kirje-id type content lopp-kpv]} contact-methods
             :when (and content
                        (not lopp-kpv)
                        (or (= type :email) (= type :phone)))]
