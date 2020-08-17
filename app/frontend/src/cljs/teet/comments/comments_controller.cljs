@@ -10,7 +10,7 @@
   (str "comment-" id))
 
 (defrecord DeleteComment [comment-id commented-entity after-comment-deleted-event])
-(defrecord DeleteCommentSuccess [entity-id after-comment-deleted-event])
+(defrecord DeleteCommentSuccess [commented-entity after-comment-deleted-event])
 (defrecord QueryEntityComments [commented-entity])
 
 (defrecord UpdateFileNewCommentForm [form-data])            ; update new comment on selected file
@@ -18,6 +18,8 @@
 (defrecord CommentOnEntity [entity-type entity-id comment files visibility track? mentions
                             after-comment-added-event])
 (defrecord ClearCommentField [])
+(defrecord CommentsSeen [entity-id comment-target])
+(defrecord SetCommentsAsOld [update-path])
 (defrecord CommentAddSuccess [entity-id after-comment-added-event])
 
 (defrecord OpenEditCommentDialog [comment-entity commented-entity])
@@ -35,7 +37,7 @@
   {:tuck.effect/type :query
    :query :comment/fetch-comments
    :args commented-entity
-   :result-path [:comments-for-entity (:db/id commented-entity)]})
+   :result-path [:comments-for-entity (:eid commented-entity)]})
 
 (extend-protocol t/Event
 
@@ -101,13 +103,13 @@
            :result-event     (partial ->DeleteCommentSuccess commented-entity after-comment-deleted-event)}))
 
   DeleteCommentSuccess
-  (process-event [{:keys [entity-id after-comment-deleted-event]} app]
+  (process-event [{:keys [commented-entity after-comment-deleted-event]} app]
     (t/fx app
           (fn [e!]
             (when after-comment-deleted-event
               (e! (after-comment-deleted-event))))
           (fn [e!]
-            (e! (->QueryEntityComments entity-id)))))
+            (e! (->QueryEntityComments commented-entity)))))
 
   QueryEntityComments
   (process-event [{:keys [commented-entity]} app]
@@ -127,6 +129,21 @@
                                              {:user mention})
                                            (:comment/mentions comment-entity))}
                       {:comment/commented-entity commented-entity}))))
+
+  SetCommentsAsOld
+  (process-event [{:keys [update-path]} app]
+    (update-in app update-path (fn [{:comment/keys [old-comments new-comments] :as val}]
+                                 {:comment/old-comments (+ old-comments new-comments)
+                                  :comment/new-comments 0})))
+
+  CommentsSeen
+  (process-event [{:keys [entity-id comment-target]} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :comment/entity-comments-seen
+           :payload {:eid entity-id
+                     :for comment-target}
+           :result-event :ignore}))
 
   CancelCommentEdit
   (process-event [_ {:keys [page params query] :as app}]

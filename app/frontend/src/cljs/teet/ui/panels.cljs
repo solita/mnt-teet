@@ -165,13 +165,14 @@
   []
   {:display :flex
    :flex-direction :row})
+
 (defn- side-by-side-column-style
-  [basis]
+  [flex-num]
   ^{:pseudo {:first-child {:border-left 0
-                           :padding-right "0.5rem"}
+                           :padding-right "1rem"}
              :last-child {:border-right 0
-                          :padding-left "0.5rem"}}}
-  {:flex-basis (str basis "%")
+                          :padding-left "1rem"}}}
+  {:flex (str flex-num)
    :border-color theme-colors/gray-lighter
    :border-style :solid
    :border-width "0 2px 0 0"
@@ -185,10 +186,11 @@
 
 (defn side-by-side
   "Show components side by side. With border in between.
-  Takes in alternating width percentages (1-100) and components."
+  Takes in components flex number based on which the components automatically assign space
+  eg. both have flex 1 they both get 50% of given space"
   [& percentages-and-components]
   [:div {:class (<class side-by-side-container-style)}
-   (mapc (fn [[percentage component]]
-           [:div {:class (<class side-by-side-column-style percentage)}
+   (mapc (fn [[flex-num component]]
+           [:div {:class (<class side-by-side-column-style flex-num)}
             component])
          (partition 2 percentages-and-components))])

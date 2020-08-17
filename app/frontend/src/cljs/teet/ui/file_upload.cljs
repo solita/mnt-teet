@@ -129,7 +129,6 @@
                :drop-message drop-message
                :multiple? multiple?}
    (into [buttons/link-button (merge {:component :span
-                                      :variant :contained
                                       :style {:cursor :pointer}}
                                      button-attributes)]
          children)])

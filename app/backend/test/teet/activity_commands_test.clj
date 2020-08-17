@@ -25,7 +25,8 @@
   (tu/local-command tu/mock-user-boss
                     :thk.project/add-permission
                     {:project-id (tu/->db-id "p1")
-                     :user {:user/id tu/internal-consultant-id}
+                     ;; Carla Consultant
+                     :user {:user/person-id "EE33445566770"}
                      :role :internal-consultant})
 
   (let [task-id (tu/create-task {:user tu/mock-user-manager :activity (act1-id)

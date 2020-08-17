@@ -2,7 +2,6 @@
   (:require [teet.db-api.core :as db-api :refer [defcommand tx]]
             [datomic.client.api :as d]
             [teet.permission.permission-db :as permission-db]
-            [clojure.string :as str]
             [teet.project.project-geometry :as project-geometry]
             [teet.gis.entity-features :as entity-features]
             [teet.environment :as environment]
@@ -13,6 +12,9 @@
             [clojure.set :as set]
             [teet.project.project-db :as project-db]
             [teet.authorization.authorization-check :as authorization-check]
+            [teet.user.user-db :as user-db]
+            [teet.user.user-model :as user-model]
+            [teet.user.user-spec :as user-spec]
             [teet.util.datomic :as du]
             [teet.integration.x-road.property-registry :as property-registry]
             [teet.integration.postgrest :as postgrest])
@@ -134,31 +136,34 @@
    :payload {:keys [project-id user role] :as payload}
    :spec (s/keys :req-un [::project-id])
    :project-id project-id
+   :pre [(:user/person-id user)
+         (user-spec/estonian-person-id? (:user/person-id user))]
    :authorization {:project/edit-permissions {:link :thk.project/owner}}}
   (assert (authorization-check/role-can-be-granted? role) "Can't grant role")
-  (let [user-exists? (:user/id user)
-        user-already-added?
-        (and user-exists?
+  (let [user-person-id (-> user
+                           :user/person-id
+                           user-model/normalize-person-id)
+        user-info (user-db/user-info-by-person-id db user-person-id)
+        user-already-added-to-project?
+        (and user-info
              (boolean
                (seq
-                 (permission-db/user-permission-for-project db [:user/id (:user/id user)] project-id))))]
-    (if-not user-already-added?
+                (permission-db/user-permission-for-project db
+                                                           user-info
+                                                           project-id))))]
+    (if-not user-already-added-to-project?
       (let [tx [(merge
-                  {:db/id (if user-exists?
-                            [:user/id (:user/id user)]
-                            "new-user")
-                   :user/permissions
-                   [(merge {:db/id "new-permission"
-                            :permission/role role
-                            :permission/projects project-id
-                            :permission/valid-from (Date.)}
-                           (creation-meta granting-user))]}
-                  (when-not user-exists?
-                    {:user/person-id (let [pid (:user/person-id user)]
-                                       ;; Normalize estonian ids to start with "EE"
-                                       (if (str/starts-with? pid "EE")
-                                         pid
-                                         (str "EE" pid)))}))]]
+                 (when-not user-info
+                   (user-model/new-user user-person-id))
+                 {:db/id (if user-info
+                           (user-model/user-ref user-info)
+                           "new-user")
+                  :user/permissions
+                  [(merge {:db/id "new-permission"
+                           :permission/role role
+                           :permission/projects project-id
+                           :permission/valid-from (Date.)}
+                          (creation-meta granting-user))]})]]
         (d/transact conn {:tx-data tx})
         {:success "User added successfully"})
       (db-api/fail!

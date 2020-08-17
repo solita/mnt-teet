@@ -2,7 +2,7 @@
   "File queries"
   (:require [datomic.client.api :as d]
             [teet.user.user-model :as user-model]
-            [teet.util.collection :as cu]))
+            [teet.comment.comment-db :as comment-db]))
 
 (defn own-file? [db user file-id]
   (boolean
@@ -58,34 +58,13 @@
              db (user-model/user-ref user) file-ids)))
 
 
-(defn files-comment-counts
-  "Return mapping of file-id to map containing the amount of comments
-  the file has (both total comments and new).
-
-  Takes in a database, a mapping of when user has seen a file (files-seen-at)
-  and file-ids."
-  [db seen-at-by-file file-ids current-user]
-  (->> (d/q '[:find ?f ?ts ?u
-              :keys :file-id :comment-ts :comment-creator
-              :where
-              [?f :file/comments ?c]
-              [(missing? $ ?c :meta/deleted?)]
-              [?c :comment/timestamp ?ts]
-              [?c :meta/creator ?u]
-              :in $ [?f ...]]
-            db
-            file-ids)
-       (group-by :file-id)
-       (cu/map-vals
-        (fn [comments]
-          (cu/count-by (fn [{f :file-id ts :comment-ts cc :comment-creator}]
-                         (let [seen (seen-at-by-file f)]
-                           (if (and (or (nil? seen)
-                                        (.before seen ts))
-                                    (not= (:db/id current-user) cc))
-                             :file/comments-new-count
-                             :file/comments-old-count)))
-                       comments)))))
+(defn file-ids-with-comment-counts
+  [db file-ids user]
+  (reduce
+    (fn [val id]
+      (merge val {id (comment-db/comment-count-of-entity-by-status db user id :file)}))
+    {}
+    file-ids))
 
 (defn file-listing
   "Fetch file information suitable for file listing. Returns all file attributes
@@ -99,9 +78,8 @@
         seen-at-by-file (files-seen-at db user file-ids)
 
         ;; Get comment counts for files
-        ;; FIXME: take all/internal visibility into account!!!
         comment-counts-by-file
-        (files-comment-counts db seen-at-by-file file-ids user)
+        (file-ids-with-comment-counts db file-ids user)
 
         files
         (mapv

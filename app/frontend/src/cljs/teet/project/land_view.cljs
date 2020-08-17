@@ -29,7 +29,8 @@
             [clojure.string]
             [teet.file.file-view :as file-view]
             [teet.authorization.authorization-check :as authorization-check]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.comments.comments-controller :as comments-controller]))
 
 (defn cadastral-unit-style
   [selected?]
@@ -66,7 +67,7 @@
                             :on-click validate}
     (tr [:buttons :save])]])
 
-(defn estate-compensation-form
+(defn estate-compensation-form-style
   []
   {:background-color :inherit
    :padding "1.5rem"})
@@ -451,13 +452,18 @@
         [query/query {:e! e! :query :comment/count
                       :state-path [:route :project :unit-comment-count teet-id]
                       :state (get-in project-info [:unit-comment-count teet-id])
-                      :args {:db/id [:unit-comments/project+unit-id [(:db/id project-info) teet-id]]
+                      :args {:eid [:unit-comments/project+unit-id [(:db/id project-info) teet-id]]
                              :for :unit-comments}
-                      :simple-view [(fn unit-comment-count [c]
-                                      [common/count-chip {:label c}])]
-                      :loading-state "-"}]
-
-        (tr [:land-modal-page :comments])]]]]))
+                      :simple-view [(fn estate-comment-count [c]
+                                      (let [count (+ (get-in c [:comment/counts :comment/old-comments])
+                                                     (get-in c [:comment/counts :comment/new-comments]))]
+                                        [:span
+                                         [common/comment-count-chip c]
+                                         (tr [:land-modal-page (cond
+                                                                 (zero? count) :no-comments
+                                                                 (= 1 count) :comment
+                                                                 :else :comments)])]))]
+                      :loading-state "-"}]]]]]))
 
 (defn group-style
   []
@@ -500,7 +506,7 @@
        [Collapse
         {:in (boolean (open-estates estate-id))
          :mount-on-enter true}
-        [:div {:class (<class estate-compensation-form)}
+        [:div {:class (<class estate-compensation-form-style)}
          [estate-group-form e! estate
           (r/partial land-controller/->UpdateEstateForm estate) estate-form]
          [Divider {:style {:margin "1rem 0"}}]
@@ -541,17 +547,17 @@
           [query/query {:e! e! :query :comment/count
                         :state-path [:route :project :estate-comment-count estate-id]
                         :state (get-in project-info [:estate-comment-count estate-id])
-                        :args {:db/id [:estate-comments/project+estate-id [(:db/id project-info) estate-id]]
+                        :args {:eid [:estate-comments/project+estate-id [(:db/id project-info) estate-id]]
                                :for :estate-comments}
                         :simple-view [(fn estate-comment-count [c]
-                                        (if (number? c)
+                                        (let [count (+ (get-in c [:comment/counts :comment/old-comments])
+                                                       (get-in c [:comment/counts :comment/new-comments]))]
                                           [:span
-                                           [common/count-chip {:label c}]
+                                           [common/comment-count-chip c]
                                            (tr [:land-modal-page (cond
-                                                                   (zero? c) :no-comments
-                                                                   (= 1 c) :comment
-                                                                   :else :comments)])]
-                                          [:span]))]
+                                                                   (zero? count) :no-comments
+                                                                   (= 1 count) :comment
+                                                                   :else :comments)])]))]
                         :loading-state "-"}]]]]]
       :children
       (mapc
@@ -862,6 +868,8 @@
                                    :app app
                                    :entity-type :estate-comments
                                    :entity-id [:estate-comments/project+estate-id [(:db/id project) estate-id]]
+                                   :after-comment-list-rendered-event
+                                   #(comments-controller/->SetCommentsAsOld [:route :project :estate-comment-count estate-id :comment/counts])
                                    :after-comment-added-event
                                    #(land-controller/->IncrementEstateCommentCount estate-id)
                                    :after-comment-deleted-event
@@ -912,13 +920,13 @@
   (let [unique-addresses (into #{}
                                (for [{:keys [tanav-maja-korter postiindeks lopp-kpv ehak-nimetus]} addresses
                                      :when (not lopp-kpv)]
-                                 (str tanav-maja-korter ", " postiindeks ", " ehak-nimetus)))]
+                                 (str tanav-maja-korter ", " ehak-nimetus ", " postiindeks)))]
     [:div
      (mapc (fn [a]
              [key-value [(tr [:contact :address]) a]]) unique-addresses)
 
      (doall
-      (for [{:keys [kirje-id type content lopp-kpv] :as contact} contact-methods
+      (for [{:keys [kirje-id type content lopp-kpv]} contact-methods
             :when (and content
                        (not lopp-kpv)
                        (or (= type :email) (= type :phone)))]
@@ -976,6 +984,8 @@
                                 ;; Target is taken from url parameter, so probably better to use something else as target
                                 ;; for url and fetch the teet-id from the land-unit through project?
                                 :entity-id [:unit-comments/project+unit-id [(:db/id project) target]]
+                                :after-comment-list-rendered-event
+                                #(comments-controller/->SetCommentsAsOld [:route :project :unit-comment-count target :comment/counts])
                                 :after-comment-added-event
                                 #(land-controller/->IncrementUnitCommentCount target)
                                 :after-comment-deleted-event

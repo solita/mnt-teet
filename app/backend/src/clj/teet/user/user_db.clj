@@ -18,3 +18,14 @@
   "Allways returns db/id for given user"
   [db user]
   (:db/id (du/entity db (user-model/user-ref user))))
+
+(defn user-with-person-id-exists? [db person-id]
+  (-> db
+      (d/pull '[:db/id] [:user/person-id person-id])
+      :db/id
+      boolean))
+
+(defn user-info-by-person-id [db person-id]
+  (let [user (user-info db {:user/person-id person-id})]
+    (when (:db/id user)
+      user)))

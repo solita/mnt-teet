@@ -41,7 +41,7 @@
           [(<= ?time-from ?time)]
           [(<= ?time ?time-until)]]
         db
-        user
+        (user-model/user-ref user)
         project
         time)))
 

@@ -61,12 +61,14 @@
                                    [typography/Heading2 {:class (<class common-styles/margin-bottom 2)} (tr [:document :comments])])
                                  [comments-view/lazy-comments
                                   (select-keys opts [:e! :app :entity-id :entity-type
-                                                     :show-comment-form?])]]]
+                                                     :show-comment-form? :after-comment-list-rendered-event
+                                                     :after-comment-added-event
+                                                     :after-comment-deleted-event])]]]
          (if (common/wide-display?)
            ;; Wide display, show side by side
            [panels/side-by-side
-            50 details
-            50 comments-component]
+            1 details
+            1 comments-component]
 
            ;; Not a wide display, show tabbed interface
            [:div.page-content-tabs

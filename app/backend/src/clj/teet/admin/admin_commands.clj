@@ -1,11 +1,10 @@
 (ns teet.admin.admin-commands
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
-            [teet.environment :as environment]
-            [clojure.string :refer [blank? starts-with?]]
             [taoensso.timbre :as log]
-            [datomic.client.api :as d]
+            [teet.meta.meta-model :as meta-model]
+            [teet.user.user-db :as user-db]
             [teet.user.user-model :as user-model]
-            teet.user.user-spec))
+            [teet.user.user-spec :as user-spec]))
 
 
 
@@ -35,41 +34,57 @@
     (.before a b)
     false))
 
-(defn redundant-with-existing-permission? [db new-permission current-date]
+(defn- redundant-with-existing-permission? [user-info new-permission]
   (let [redundant (fn [existing]
-                    (and (= (:permission/role new-permission) (:permission/role existing)) ;; same role
+                    (and (= (:permission/role new-permission)
+                            (:permission/role existing)) ;; same role
                          (nil? (:permission/valid-to new-permission)) ;; no expiration
                          (nil? (:permission/valid-to existing)) ;; no expiration
 
-                         (date-before? (:permission/valid-from existing) current-date)))
-        q-res (d/q '[:find (pull ?perms [*])
-                     :in $ ?pid
-                     :where [?user :user/person-id ?pid]
-                     [?user :user/permissions ?perms]] db "EE123123123X")
-        existing-perms (map first q-res)
-        redundants (filterv redundant existing-perms)]
-    (not-empty redundants)))
+                         (date-before? (:permission/valid-from existing)
+                                       (:permission/valid-from new-permission))))]
+
+    (->> (:user/permissions user-info)
+         (filter redundant)
+         not-empty)))
+
+(defn- new-permission [granting-user role date]
+  {:user/permissions [(merge (meta-model/creation-meta granting-user)
+                             {:db/id "new-permission"
+                              :permission/role role
+                              :permission/valid-from date})]})
+
+(defn- add-permission-to-existin-user-tx [granting-user user-info global-permission]
+  (merge (select-keys user-info [:db/id])
+         (let [permission-map (new-permission granting-user
+                                              global-permission
+                                              (java.util.Date.))
+               redundant? (redundant-with-existing-permission?
+                           user-info
+                           (first (:user/permissions permission-map)))]
+           (if redundant?
+             (log/info "request to add redundant permission, skipping - new permission was" permission-map)
+             permission-map))))
 
 (defcommand :admin/create-user
-  {:doc "Create user"
+  {:doc "Create user (although for now can be also used to add global permissions to existing users through admin view)"
    :context {:keys [conn user db]}
    :payload user-data
    :project-id nil
+   :pre [(:user/person-id user-data)
+         (user-spec/estonian-person-id? (:user/person-id user-data))]
    :authorization {:admin/add-user {}}
-   :transact [;; (log/info "admin/create-user: current user" (:user/person-id user))
-              (merge (user-model/new-user)
-                           (select-keys user-data [:user/person-id])
-                           (when-let [p (:user/add-global-permission user-data)]
-
-                             (let [current-date (java.util.Date.)
-                                   new-permission {:user/permissions [{:db/id "new-permission"
-                                                                       :permission/role p
-                                                                       :permission/valid-from current-date}]}
-                                   redundant? (redundant-with-existing-permission?
-                                               db
-                                               (first (:user/permissions new-permission))
-                                               current-date)]
-                               (if redundant?
-                                 (log/info "request to add redundant permission, skipping - new permission was" new-permission)
-                                 new-permission)))
-                           #_(user-data-from-xroad (:user/person-id user-data) (:user/person-id user)))]})
+   :transact (let [user-person-id (user-model/normalize-person-id (:user/person-id user-data))
+                   user-info (user-db/user-info-by-person-id db user-person-id)
+                   global-permission (:user/add-global-permission user-data)]
+               (if user-info
+                 ;; User exists, check for redundant permissions
+                 [(if global-permission
+                    (add-permission-to-existin-user-tx user user-info global-permission)
+                    {})]
+                 ;; New user, no need to check
+                 [(merge (user-model/new-user user-person-id)
+                         (when global-permission
+                           (new-permission user
+                                           global-permission
+                                           (java.util.Date.))))]))})

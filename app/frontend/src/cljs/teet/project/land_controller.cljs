@@ -358,21 +358,24 @@
 
   IncrementEstateCommentCount
   (process-event [{estate-id :estate-id} app]
-    (update-in app [:route :project :estate-comment-count estate-id] (fnil inc 0)))
+    (update-in app [:route :project :estate-comment-count estate-id :comment/counts :comment/old-comments]
+               (fnil inc 0)))
 
   IncrementUnitCommentCount
   (process-event [{unit-id :unit-id} app]
-    (update-in app [:route :project :unit-comment-count unit-id] (fnil inc 0)))
+    (update-in app [:route :project :unit-comment-count unit-id :comment/counts :comment/old-comments]
+               (fnil inc 0)))
 
   DecrementEstateCommentCount
   (process-event [{estate-id :estate-id} app]
-    (println "DECREMENT ESTATE COMMENTCOUNT : " estate-id)
-    (update-in app [:route :project :estate-comment-count estate-id] (fnil dec 0)))
+    (update-in app [:route :project :estate-comment-count estate-id :comment/counts :comment/old-comments]
+               (fnil dec 0)))
 
   DecrementUnitCommentCount
   (process-event [{unit-id :unit-id} app]
-    (println "DECREMENT UNIT COMMENTCOUNT : " unit-id)
-    (update-in app [:route :project :unit-comment-count unit-id] (fnil dec 0))))
+    (update-in app
+               [:route :project :unit-comment-count unit-id :comment/counts :comment/old-comments]
+               (fnil dec 0))))
 
 (defn- estate-owner-process-fees [{owners :omandiosad :as _estate}]
   (let [private-owners

@@ -311,6 +311,24 @@
                  (participants db entity-type entity-id
                                (= visibility :comment.visibility/internal)))))))
 
+(defcommand :comment/entity-comments-seen
+  {:doc "Save the timestamp when the current user has seen the given entitys comments"
+   :context {:keys [db user]}
+   :payload {entity-id :eid
+             entity-type :for}
+   :project-id (project-db/entity-project-id db entity-type entity-id)
+   :authorization {:project/read-comments {:db/id (project-db/entity-project-id db entity-type entity-id)}}
+   :transact
+   (let [resolved-entity (:db/id (du/entity db entity-id))
+         user-ref (user-model/user-ref user)]
+     (if resolved-entity
+       [{:db/id "new-comments-seen"
+         :comments-seen/seen-at (Date.)
+         :comments-seen/user user-ref
+         :comments-seen/entity resolved-entity
+         :comments-seen/entity+user [resolved-entity user-ref]}]
+       []))})
+
 (defcommand :comment/set-status
   {:doc "Toggle the tracking status of the comment"
    :context {:keys [db user]}
