@@ -42,7 +42,7 @@
                        :extra-paths ["test"]}
            :testrun {:main-opts ["-m" "teet.test"]
                      :extra-deps {clj-chrome-devtools {:git/url "https://github.com/tatut/clj-chrome-devtools"
-                                                       :sha "c1991d57fa78b30996120413e502d5e5939aabf9"}}
+                                                       :sha "1ffc1a52804517dfb7e15ef78b34348a763db2d1"}}
                      :extra-paths ["test"]}
            :dev {:main-opts ["-m" "figwheel.main" "-b" "dev" "-r"]
                  ;:main-opts ["-m" "cljs.main" "-co" "dev-build.edn" "-v" "-c" "-r"]
@@ -50,7 +50,4 @@
                               webjure/drtest {:mvn/version "20190611"}
                               com.datomic/client-cloud {:mvn/version "0.8.102"}}
                  :extra-paths ["test"]}
-           :prod {:main-opts ["-m" "cljs.main" "-co" "prod-build.edn" "-O" "advanced" "-v" "-c"]
-                  ;:main-opts ["-m" "figwheel.main" "-O" "advanced" "-bo" "prod"]
-                  ;:extra-deps {com.bhauman/figwheel-main {:mvn/version "0.2.5"}}
-                  }}}
+           :prod {:main-opts ["-m" "cljs.main" "-co" "prod-build.edn" "-O" "advanced" "-v" "-c"]}}}
