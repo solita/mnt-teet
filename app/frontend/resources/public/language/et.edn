@@ -434,7 +434,7 @@
   {:burdens "Koormatised",
    :comments "Kommentaarid",
    :costs "Kulud",
-   :mortgages "Hüpoteekid"},
+   :mortgages "Hüpoteegid"},
   :costs "Kulud",
   :mortgage "Hüpoteek",
   :comment "Kommentaar",
