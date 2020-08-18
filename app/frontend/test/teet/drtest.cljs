@@ -10,8 +10,7 @@
             [teet.localization :as localization])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(reset! common-controller/test-mode? true)
-(reset! postgrest-fetch/fetch-impl common-controller/send-fake-postgrest-query!)
+(defonce take-screenshots? (cljs.core/atom false))
 
 (defonce test-initialized
   (js/Promise.
@@ -50,7 +49,7 @@
 
 (defmethod ds/execute :wait-request [{:keys [predicate retries as response] :as step-descriptor
                                       :or {retries 10}}
-                                     ctx ok fail]
+                                     {e!-atom ::e! :as ctx} ok fail]
   (wait-request* predicate
                  retries
                  (fn [req]
@@ -58,7 +57,9 @@
                      (fail (str "Request not caugth after " retries " retries."))
                      (do (when response
                            ;; Automatically respond with the given value
-                           ((:on-success req) response))
+                           (if-let [evt (:result-event req)]
+                             (@e!-atom (evt response))
+                             (println "Response given, but no :result-event")))
                          (ok (if as
                                (assoc ctx as req)
                                ctx)))))))
@@ -71,6 +72,17 @@
                                   (and (= :command! (:tuck.effect/type req))
                                        (or (and predicate (predicate req))
                                            (and payload (= payload (:payload req)))))))
+              ctx ok fail))
+
+(defmethod ds/execute :wait-query [{:keys [query args predicate] :as step-descriptor}
+                                   ctx ok fail]
+  (ds/execute (assoc step-descriptor
+                     :drtest.step/type :wait-request
+                     :predicate (fn [req]
+                                  (and (= :query (:tuck.effect/type req))
+                                       (= query (:query req))
+                                       (or (and predicate (predicate req))
+                                           (and args (:args req))))))
               ctx ok fail))
 
 (defmethod ds/execute :no-request [_ ctx ok fail]
@@ -120,3 +132,11 @@
 (def step ds/step)
 
 (def atom r/atom)
+
+(defmethod ds/execute :debug-test [_step-descriptor _ctx ok fail]
+  (js/console.log "Invoke TEST_OK() or TEST_FAIL() to continue.")
+  (aset js/window "TEST_OK" ok)
+  (aset js/window "TEST_FAIL" fail))
+
+;; stop test execution for inspecting DOM
+(defonce debug (step :debug-test "Debug tests"))

@@ -1,6 +1,6 @@
-^{:auto-testing false
-  :watch-dirs ["src/cljs" "../common/src/cljc"]}
-{:main teet.main
+^{:auto-testing false ; see teet.runner
+  :watch-dirs ["test" "src/cljs" "../common/src/cljc"]}
+{:main teet.dev-main ;teet.main
  :target :bundle
  :output-to "out/index.js"
  :output-dir "out"
