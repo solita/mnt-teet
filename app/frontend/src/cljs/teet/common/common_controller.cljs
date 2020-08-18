@@ -36,11 +36,6 @@
 ;; Track how many requests are in flight to show progress
 (def in-flight-requests (r/atom 0))
 
-(defn query-request-permissions! [e!]
-  (e! (query/->Query :authorization/permissions
-                     {}
-                     [:authorization/permissions]
-                     nil)))
 
 (defn in-flight-requests?
   "Returns true if there are currently any requests in flight."
@@ -54,7 +49,12 @@
 (defonce test-mode? (atom false))
 (defonce test-requests (atom []))
 
-(defonce init-events (atom {}))
+;; Events to run after session has been initialized/user has logged in (has a valid jwt)
+(defonce init-events (atom {:query-request-permissions #(query/->Query :authorization/permissions
+                                                                       {}
+                                                                       [:authorization/permissions]
+                                                                       nil)}))
+
 (defn register-init-event!
   "Register an init event to be run when user has logged in."
   [name constructor]

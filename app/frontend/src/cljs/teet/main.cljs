@@ -48,7 +48,6 @@
 
 (defn main-view [e! _]
   (log/hook-onerror! e!)
-  (common-controller/query-request-permissions! e!)
   (poll-version e!)
   (e! (login-controller/->CheckExistingSession))
   (fn [e! {:keys [page user navigation quick-search snackbar] :as app}]

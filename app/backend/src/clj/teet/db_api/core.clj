@@ -68,7 +68,7 @@
                     project-id))
     project-id))
 
-(def request-permissions (atom {}))
+(defonce request-permissions (atom {}))
 
 (defn- authorization->registrable-permissions [authorization]
   (cu/map-vals #(select-keys % [:link])
