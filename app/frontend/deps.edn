@@ -47,7 +47,8 @@
            :dev {:main-opts ["-m" "figwheel.main" "-b" "dev" "-r"]
                  ;:main-opts ["-m" "cljs.main" "-co" "dev-build.edn" "-v" "-c" "-r"]
                  :extra-deps {com.bhauman/figwheel-main {:mvn/version "0.2.11"}
-                              webjure/drtest {:mvn/version "20190611"}
+                              webjure/drtest {:git/url "https://github.com/tatut/drtest"
+                                              :sha "cfe520d864810c0d028625b72ab5363c85e391f7"}
                               com.datomic/client-cloud {:mvn/version "0.8.102"}}
                  :extra-paths ["test"]}
            :prod {:main-opts ["-m" "cljs.main" "-co" "prod-build.edn" "-O" "advanced" "-v" "-c"]}}}
