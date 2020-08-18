@@ -434,6 +434,7 @@
   {:burdens "Koormatised",
    :comments "Kommentaarid",
    :costs "Kulud",
+   :files "Üksusega seotud failid",
    :mortgages "Hüpoteegid"},
   :costs "Kulud",
   :mortgage "Hüpoteek",

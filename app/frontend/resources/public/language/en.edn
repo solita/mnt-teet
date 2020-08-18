@@ -439,6 +439,7 @@
   {:burdens "Burdens",
    :comments "Comments",
    :costs "Acquisition costs",
+   :files "Files attached to this unit",
    :mortgages "Mortgages"},
   :costs "Acquisition costs",
   :mortgage "Mortgage",
