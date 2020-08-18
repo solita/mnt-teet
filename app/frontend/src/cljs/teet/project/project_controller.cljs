@@ -321,12 +321,15 @@
 
   SelectRestriction
   (process-event [{p :p} app]
-    (let [restriction-candidates (get-in app [:route :project :restriction-candidates])
+    (let [restriction-candidates (get-in app [:route :project :feature-candidates :restriction-candidates])
           restriction-selections (get-in app [:route :project :checked-restrictions])
           restriction (or
                         (first (filter #(= (:teet-id %) (:map/teet-id p)) restriction-selections))
                         (first (filter #(= (:teet-id %) (:map/teet-id p)) restriction-candidates)))]
-      (toggle-restriction app restriction)))
+
+      (if restriction
+        (toggle-restriction app restriction)
+        app)))
 
   DeleteActivity
   (process-event [{activity-id :activity-id} app]
