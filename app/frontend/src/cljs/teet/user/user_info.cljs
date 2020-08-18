@@ -24,6 +24,13 @@
                   :user/given-name "Benjamin"
                   :user/family-name "Boss"
                   :user/email "benjamin.boss@example.com"
+                  :user/organization "Maanteeamet"}
+
+                 {:user/id #uuid "fa8af5b7-df45-41ba-93d0-603c543c8801"
+                  :user/person-id "12345678955"
+                  :user/given-name "Irma I."
+                  :user/family-name "Consultant"
+                  :user/email "irma.i.consultant@example.com"
                   :user/organization "Maanteeamet"}])
 
 

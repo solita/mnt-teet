@@ -17,6 +17,7 @@
 (def manager-id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74")
 (def external-consultant-id #uuid "ccbedb7b-ab30-405c-b389-292cdfe85271")
 (def internal-consultant-id #uuid "008af5b7-0f45-01ba-03d0-003c111c8f00")
+(def internal-consultant-2-id #uuid "fa8af5b7-df45-41ba-93d0-603c543c8801")
 (def boss-id #uuid "fa8af5b7-df45-41ba-93d0-603c543c880d")
 
 (def mock-users
@@ -52,7 +53,17 @@
     :user/family-name "Consultant"
     :user/email "edna.e.consultant@example.com"
                                         ; :user/organization "Maanteeamet"
-    }])
+    }
+   {:user/id internal-consultant-2-id
+    :user/person-id "12345678955"
+    :user/given-name "Irma I."
+    :user/family-name "Consultant"
+    :user/email "irma.i.consultant@example.com"
+    :user/permissions [{:db/id "irma-permission"
+                        :permission/role :internal-consultant
+                        :permission/valid-from (java.util.Date.)}]
+    ;; :user/organization "Maanteeamet"
+                  }])
 
 (def mock-user-manager [:user/id manager-id])
 (def mock-user-carla-consultant [:user/id external-consultant-id])

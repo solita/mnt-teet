@@ -139,7 +139,7 @@
 (defn user-info [user]
   [ui-common/labeled-data {:class (<class navigation-style/divider-style)
                            :label (tr [:user :role])
-                           :data (:user/family-name user)}])
+                           :data (:user/email user)}])
 
 (defn logout [e!]
   [:div {:class (herb/join (<class navigation-style/logout-container-style)
