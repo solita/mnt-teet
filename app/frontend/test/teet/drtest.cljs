@@ -15,7 +15,7 @@
 (defonce test-initialized
   (js/Promise.
    (fn [ok _err]
-     (localization/load-language! :et ok))))
+     (localization/load-language! @localization/selected-language ok))))
 
 (defonce init-step
   {:drtest.step/label "Wait for test initialization"
