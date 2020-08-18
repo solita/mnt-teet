@@ -46,7 +46,7 @@
 
 (defn- comment-skeleton
   [n]
-  [:<>
+  [:span.lazy-comments-loading
    (doall
      (for [y (range n)]
        ^{:key y}
