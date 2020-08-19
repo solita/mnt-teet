@@ -46,6 +46,7 @@
 (defonce original-postgrest-fetch-impl @postgrest-fetch/fetch-impl)
 
 (defn run-teet-tests []
+  (set! (.-innerHTML js/document.body) "")
   (reset! common-controller/test-mode? true)
   (reset! postgrest-fetch/fetch-impl common-controller/send-fake-postgrest-query!)
   (test/run-tests 'teet.comments.comments-view-test

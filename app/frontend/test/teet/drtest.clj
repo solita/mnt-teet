@@ -6,4 +6,6 @@
      ~name
      ~(merge {:screenshots? `(deref teet.drtest/take-screenshots?)}
              options)
+     {:drtest.step/label "Test init"
+      :drtest.step/type :init-tests}
      ~@steps))
