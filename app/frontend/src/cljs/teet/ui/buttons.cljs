@@ -111,9 +111,9 @@
     :or {icon-position :end
          close-on-action? true}}
    button-content]
-  (let [open-atom (r/atom false)
-        open #(reset! open-atom true)
-        close #(reset! open-atom false)]
+  (r/with-let [open-atom (r/atom false)
+               open #(reset! open-atom true)
+               close #(reset! open-atom false)]
     [:<>
      [panels/modal {:title     (if modal-title
                                  modal-title

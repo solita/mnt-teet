@@ -57,25 +57,14 @@
   (step :tuck-render "Render lazy comments"
         :component test-view)
 
-  ;; FIXME: why doesn't this work, but the manual one does?
-  #_(step :click "click delete on 1st comment"
+  (step :click "click delete on 1st comment"
         :selector "#delete-button-420")
 
-  (fn [{c :drtest.step/container :as ctx}]
-    (println "KONTEKSTI " ctx)
-    (let [b (.querySelector c "#delete-button-420")]
-      (println "NAPPI: " b)
-      (.click b)
-      true))
+  ;(step :wait "for modal to appear" :ms 500)
 
-  (step :wait "for modal to appear" :ms 500)
-
-  ^{:drtest.step/label "Click on modal confirm (outside container in body)"}
-  (fn [_]
-    (if-let [b (.querySelector js/document.body "#confirm-delete")]
-      (do (.click b)
-          true)
-      false))
+  (step :click "click modal confirm (outside of container in body)"
+        :selector "#confirm-delete"
+        :in js/document.body)
 
   (step :wait-command
         :command :comment/delete-comment
