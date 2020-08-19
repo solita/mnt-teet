@@ -282,6 +282,7 @@
     [when-authorized :comment/delete-comment
      comment-entity
      [buttons/delete-button-with-confirm {:small? true
+                                          :id (str id "-delete-button")
                                           :icon-position :start
                                           :action (e! comments-controller/->DeleteComment id commented-entity after-comment-deleted-event)}
       (tr [:buttons :delete])]]]
@@ -417,8 +418,7 @@
            show-comment-form?
            after-comment-added-event
            after-comment-deleted-event
-           after-comment-list-rendered-event
-           ]
+           after-comment-list-rendered-event]
     :or {show-comment-form? true}}]
   (r/with-let [can-set-visibility? (authorization-check/authorized? @app-state/user
                                                                     :projects/set-comment-visibility
