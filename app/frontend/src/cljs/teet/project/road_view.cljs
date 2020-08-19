@@ -9,7 +9,8 @@
             [teet.project.road-controller :as road-controller]
             [teet.map.openlayers :as openlayers]
             [teet.project.project-map-view :as project-map-view]
-            [teet.map.map-view :as map-view]))
+            [teet.map.map-view :as map-view]
+            [teet.map.map-overlay :as map-overlay]))
 
 (defn road-object [{:keys [open toggle]} label {oid :ms:oid :as object}]
   [:div
@@ -75,9 +76,9 @@
                 #(project-map-view/register-overlay!
                   :road-at-coordinate
                   {:coordinate (:location %)
-                   :content [map-view/overlay {:width 200
-                                               :height 200
-                                               :single-line? false}
+                   :content [map-overlay/overlay {:width 200
+                                                  :height 200
+                                                  :single-line? false}
                              [road-info e! (:location %)]]}))]
     [:<>
      [query/query

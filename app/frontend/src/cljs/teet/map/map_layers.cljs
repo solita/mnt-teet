@@ -3,11 +3,18 @@
             [teet.map.openlayers.geojson :as geojson]
             [teet.map.openlayers :as openlayers]
             [teet.map.openlayers.layer :as layer]
+            [teet.map.map-overlay :as map-overlay]
             [clojure.string :as str]
             [teet.map.map-features :as map-features]
             [teet.log :as log]
             [ol.layer.Tile]
-            [ol.source.TileWMS]))
+            [ol.layer.Vector]
+            [ol.source.TileWMS]
+            [ol.source.Vector]
+            [ol.format.WFS]
+            [ol.format.GeoJSON]
+            [ol.loadingstrategy :as ol-loadingstrategy]))
+
 
 (def ^:const default-projection "EPSG:3301")
 
@@ -145,10 +152,9 @@
                             map-features/cadastral-unit-style
                             {:max-resolution cadastral-unit-resolution})))
 
-(defn create-wms-layer
-  [prefix]
+(def create-wms-layer
   (memoize
-   (fn [wms-url layer]
+   (fn [prefix wms-url layer]
      (let [name (str prefix layer)
            layer (ol.layer.Tile.
                   #js {:source
@@ -163,17 +169,63 @@
        (.set layer "teet-source" name)
        [name (layer/->OpenLayersTaso layer)]))))
 
+(def create-wfs-layer
+  (memoize
+   (fn [prefix wfs-url feature-type]
+     (let [name (str prefix feature-type)
+           projection "EPSG:3301"
+           source (ol.source.Vector.
+                   #js {:projection projection
+                        :strategy ol-loadingstrategy/bbox
+                        :format (ol.format.GeoJSON.)})
+           loader (fn [extent resolution _projection]
+                    (let [url (str wfs-url
+                                   "?service=WFS"
+                                   "&version=1.1.0"
+                                   "&request=GetFeature"
+                                   "&typename=" feature-type
+                                   "&outputFormat=application/json"
+                                   "&srsname=" projection
+                                   "&bbox=" (str/join "," extent) "," projection)]
+                      (js/console.log "WFS URL:" url)
+                      (-> (js/fetch url)
+                          (.then #(.text %))
+                          (.then
+                           (fn [text]
+                             ;;(js/console.log "GOT JSON TEXT: " text)
+                             (let [fmt (.getFormat source)]
+                               (.addFeatures source
+                                             (.readFeatures fmt text
+                                                            #js {:dataProjection projection}))))))))
+           layer (ol.layer.Vector. #js {:source source
+                                        :style map-features/survey-style})]
+       (.setLoader source loader)
+       (.set layer "teet-source" name)
+       (.set layer "teet-on-select"
+             (partial map-overlay/feature-info-on-select
+                      {:single-line? false
+                       :height 200}))
+       [name (layer/->OpenLayersTaso layer)]))))
+
+
 (defmethod create-data-layer :teeregister
   [_ctx {:keys [wms-url selected]}]
   (into {}
-        (map (partial (create-wms-layer "teeregister-") wms-url))
+        (map (partial create-wms-layer "teeregister-" wms-url))
         selected))
 
 (defmethod create-data-layer :eelis
   [_ctx {:keys [wms-url selected]}]
   (into {}
-        (map (partial (create-wms-layer "eelis-") wms-url))
+        (map (partial create-wms-layer "eelis-" wms-url))
         selected))
+
+(defmethod create-data-layer :heritage
+  [_ctx _]
+  (let [[name layer] (create-wfs-layer "heritage-"
+                                       "https://gsavalik.envir.ee/geoserver/keskkonnainfo/ows"
+                                       "keskkonnainfo:muinsusobjekt")]
+    {name layer}))
 
 (defmethod create-data-layer :default [_ {type :type}]
   (log/warn "Unsupported data layer type: " type)

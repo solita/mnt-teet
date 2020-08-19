@@ -8,7 +8,8 @@
             [teet.map.map-view :as map-view]
             [teet.project.project-model :as project-model]
             [clojure.string :as str]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [teet.map.map-overlay :as map-overlay]))
 
 (defn- endpoint [app]
   (get-in app [:config :api-url]))
@@ -24,10 +25,10 @@
 (defn- km-range-label-overlays [start-label start-coordinate
                                 end-label end-coordinate]
   [{:coordinate start-coordinate
-    :content [map-view/overlay {:arrow-direction :right :height 30}
+    :content [map-overlay/overlay {:arrow-direction :right :height 30}
               start-label]}
    {:coordinate end-coordinate
-    :content [map-view/overlay {:arrow-direction :left :height 30}
+    :content [map-overlay/overlay {:arrow-direction :left :height 30}
               end-label]}])
 
 (defn- update-km-range-label-overlays! [start-label end-label callback {source :source}]
