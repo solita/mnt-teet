@@ -248,7 +248,7 @@
    :authorization {:project/edit-comments {:db/id comment-id}}
    :pre [(valid-visibility-for-user? user               ;; TODO fix for owner estate and unit comments
                                      (project-db/comment-project-id db comment-id)
-                                     (du/entity db entity-id)
+                                     (du/entity db comment-id)
                                      visibility)]
    :transact
    (let [incoming-mentions (extract-mentions comment)
