@@ -75,7 +75,7 @@
   directly uploaded and on-change called after success."
   [{:keys [e! value on-change comment-id on-success-event]}]
   [project-context/consume
-   (fn [{:keys [project-id]}]
+   (fn [{project-id :db/id}]
      [:div
       [attachments {:files value
                     :comment-id comment-id
@@ -124,7 +124,7 @@
         [edit-attached-images-field {:e! e!
                                      :comment-id (:db/id comment-data)
                                      :on-success-event ->UpdateCommentForm}]]]
-      
+
       (log/debug "authorized test for vis edit:" (authorization-check/debug-authorized? @app-state/user
                                              :projects/set-comment-visibility
                                              {:entity comment-data
@@ -136,7 +136,7 @@
         [:div {:class (<class form-field-spacer)}
          [form/field :comment/visibility
           [select/select-enum {:e! e! :attribute :comment/visibility}]]])]
-     
+
      [form/footer2]]))
 
 (defmethod project-navigator-view/project-navigator-dialog :edit-comment
@@ -375,7 +375,7 @@
   directly uploaded and on-change called after success."
   [{:keys [e! value on-success-event]}]
   [project-context/consume
-   (fn [{:keys [project-id]}]
+   (fn [{project-id :db/id}]
      [:div
       [attachments {:files value
                     :comment-id nil
@@ -435,7 +435,7 @@
                                                                     {})
                initial-comment-form (comment-form-defaults entity-type
                                                            ;; can-set-visibility?
-                                                           true 
+                                                           true
                                                            )
                [comment-form ->UpdateCommentForm]
                (common-controller/internal-state initial-comment-form

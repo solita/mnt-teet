@@ -761,7 +761,8 @@
   "Shows the normal project view for initialized projects, setup wizard otherwise."
   [e! app project breadcrumbs]
   [project-context/provide
-   {:project-id (:db/id project)}
+   {:db/id (:db/id project)
+    :thk.project/id (:thk.project/id project)}
    [:<>
     [project-navigator-view/project-navigator-dialogs {:e! e! :app app :project project}]
     [project-page-modals e! app project]

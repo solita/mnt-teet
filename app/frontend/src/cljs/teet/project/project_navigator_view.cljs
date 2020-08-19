@@ -342,7 +342,8 @@
     :as opts} content]
   (let [[nav-w content-w] column-widths]
     [project-context/provide
-     {:project-id (:db/id project)}
+     {:db/id (:db/id project)
+      :thk.project/id (:thk.project/id project)}
      [:div.project-navigator-with-content {:class (<class project-style/page-container)}
       [breadcrumbs/breadcrumbs breadcrumbs]
       [typography/Heading1 (or (:thk.project/project-name project)
