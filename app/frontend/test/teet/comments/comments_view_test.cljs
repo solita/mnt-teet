@@ -23,7 +23,7 @@
                                 :entity-type entity-type
                                 :entity-id entity-id}])
 
-#_(drt/define-drtest lazy-comments-rendering
+(drt/define-drtest lazy-comments-rendering
   {:initial-context {:app (drt/atom {:entity-type :test
                                      :entity-id "1"})}}
 
