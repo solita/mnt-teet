@@ -278,6 +278,7 @@
   [:div {:style {:margin-bottom "1rem"}}
    [:div {:class (<class common-styles/heading-and-action-style)}
     [typography/Heading2 (tr [:people-tab :consultants])]]
+   (log/debug "assignees:" (pr-str assignees))
    (mapc (fn [[activity assignees]]
            [common/hierarchical-container
             {:heading-color theme-colors/gray

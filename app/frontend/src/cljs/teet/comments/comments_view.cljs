@@ -104,7 +104,8 @@
 
 ;; TODO: Both this and the create comment form should be replaced with
 ;;       form2 to make the add image button look decent.
-(defn- edit-comment-form [e! comment-data]
+(defn- edit-comment-form [e! comment-data project-id]
+  (log/debug "edit-comment-form: got project-id" project-id)
   (r/with-let [[comment-form ->UpdateCommentForm]
                (common-controller/internal-state comment-data
                                                  {:merge? true})]
@@ -123,19 +124,26 @@
         [edit-attached-images-field {:e! e!
                                      :comment-id (:db/id comment-data)
                                      :on-success-event ->UpdateCommentForm}]]]
-
+      
+      (log/debug "authorized test for vis edit:" (authorization-check/debug-authorized? @app-state/user
+                                             :projects/set-comment-visibility
+                                             {:entity comment-data
+                                              :project-id project-id}))
       (when (authorization-check/authorized? @app-state/user
                                              :projects/set-comment-visibility
-                                             {})
+                                             {:entity comment-data
+                                              :project-id project-id})
         [:div {:class (<class form-field-spacer)}
          [form/field :comment/visibility
           [select/select-enum {:e! e! :attribute :comment/visibility}]]])]
-
+     
      [form/footer2]]))
 
 (defmethod project-navigator-view/project-navigator-dialog :edit-comment
   [{:keys [e! app] :as _opts} _dialog]
-  [edit-comment-form e! (:edit-comment-data app)])
+  [project-context/consume
+   (fn [ctx]
+     [edit-comment-form e! (:edit-comment-data app) (:thk.project/id ctx)])])
 
 (defn- edit-comment-button [e! comment-entity commented-entity]
   [buttons/button-text {:size :small
@@ -420,14 +428,19 @@
            after-comment-list-rendered-event
            ]
     :or {show-comment-form? true}}]
-  (r/with-let [can-set-visibility? (authorization-check/authorized? @app-state/user
+  (r/with-let [can-set-visibility? true #_(authorization-check/authorized? @app-state/user
                                                                     :projects/set-comment-visibility
+                                                                    #_{:entity ??} ;; wip
+                                                                    #_{:project-id ??} ;; wip
                                                                     {})
                initial-comment-form (comment-form-defaults entity-type
-                                                           can-set-visibility?)
+                                                           ;; can-set-visibility?
+                                                           true 
+                                                           )
                [comment-form ->UpdateCommentForm]
                (common-controller/internal-state initial-comment-form
                                                  {:merge? true})]
+    (log/debug "lazy-comments main: can-set-visibility?" can-set-visibility?)
     (let [comments (get-in app [:comments-for-entity entity-id])]
       [:div
        [query/query {:e! e!

@@ -55,13 +55,13 @@
                                         ; :user/organization "Maanteeamet"
     }
    {:user/id internal-consultant-2-id
-    :user/person-id "12345678955"
+    :user/person-id "EE12345678955"
     :user/given-name "Irma I."
     :user/family-name "Consultant"
     :user/email "irma.i.consultant@example.com"
-    :user/permissions [{:db/id "irma-permission"
-                        :permission/role :internal-consultant
-                        :permission/valid-from (java.util.Date.)}]
+    ;; :user/permissions [{:db/id "irma-permission"
+    ;;                     :permission/role :internal-consultant
+    ;;                     :permission/valid-from (java.util.Date.)}]
     ;; :user/organization "Maanteeamet"
                   }])
 

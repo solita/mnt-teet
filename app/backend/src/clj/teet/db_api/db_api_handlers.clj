@@ -124,13 +124,9 @@
          result (db-api/command! ctx payload)]
      (log/debug "command: " command ", payload: " payload ", result => " result)
      (if-let [error (:error result)]
-       (try
-         (with-meta
-           error
-           {:format :raw})
-         (catch clojure.lang.ExceptionInfo e
-           (log/error e)
-           error))
+       (with-meta
+         error
+         {:format :raw})       
        result))))
 
 (def command-handler
