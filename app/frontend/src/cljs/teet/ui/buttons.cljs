@@ -122,10 +122,10 @@
                     :actions   [DialogActions
                                 [button-secondary
                                  {:on-click close
-                                  :id (str id "-cancel-delete")}
+                                  :id (str "cancel-delete-" id)}
                                  (tr [:buttons :cancel])]
                                 [button-warning
-                                 {:id (str id "-confirm-delete")
+                                 {:id (str "confirm-delete-" id)
                                   :on-click (if close-on-action?
                                               #(do (action)
                                                    (close))

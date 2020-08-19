@@ -282,7 +282,7 @@
     [when-authorized :comment/delete-comment
      comment-entity
      [buttons/delete-button-with-confirm {:small? true
-                                          :id (str id "-delete-button")
+                                          :id (str "delete-button-" id)
                                           :icon-position :start
                                           :action (e! comments-controller/->DeleteComment id commented-entity after-comment-deleted-event)}
       (tr [:buttons :delete])]]]
