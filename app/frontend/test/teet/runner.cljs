@@ -84,7 +84,18 @@
 (defmethod test/report [:cljs.test/default :end-run-tests] [m]
 
   (set-favicon! (cljs.test/successful? m))
-
+  (set! (.-innerHTML js/document.body)
+        (str "<div style=\"position: absolute; width: 100%; background-color:"
+             (if (cljs.test/successful? m)
+               "green"
+               "red")
+             "; border: solid 1px black; height: 100px; font-size: 36px;\">"
+             "TESTS RUN: " (:test m)
+             ", pass: " (:pass m)
+             ", fail: " (:fail m)
+             ", error: " (:error m)
+             "<button onclick=\"teet.runner.run_teet_tests()\">Rerun</button>"
+             "</div>"))
   (if (cljs.test/successful? m)
     (println "Success!")
     (println "FAIL")))
