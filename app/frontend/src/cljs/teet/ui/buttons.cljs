@@ -121,10 +121,12 @@
                     :open-atom open-atom
                     :actions   [DialogActions
                                 [button-secondary
-                                 {:on-click close}
+                                 {:on-click close
+                                  :id (str id "-cancel-delete")}
                                  (tr [:buttons :cancel])]
                                 [button-warning
-                                 {:on-click (if close-on-action?
+                                 {:id (str id "-confirm-delete")
+                                  :on-click (if close-on-action?
                                               #(do (action)
                                                    (close))
                                               action)}
