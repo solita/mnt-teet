@@ -7,7 +7,8 @@
             [teet.gis.entity-features :as entity-features]
             [teet.road.road-model :as road-model]
             [teet.util.datomic :as du]
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [teet.map.map-services :as map-services]))
 
 (defonce cache-options
   ;; For local development use:
@@ -97,11 +98,11 @@
   (road-properties coordinate))
 
 (def ^:private fetch-wms-layers*
-  (comp (memoize road-query/fetch-wms-layers)
+  (comp (memoize map-services/fetch-wms-layers)
         #(select-keys % [:wms-url])))
 
 (def ^:private fetch-wfs-feature-types*
-  (comp (memoize road-query/fetch-wfs-feature-types)
+  (comp (memoize map-services/fetch-wfs-feature-types)
         #(select-keys % [:wfs-url])))
 
 (defquery :road/wms-layers
