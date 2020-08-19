@@ -124,11 +124,6 @@
         [edit-attached-images-field {:e! e!
                                      :comment-id (:db/id comment-data)
                                      :on-success-event ->UpdateCommentForm}]]]
-
-      (log/debug "authorized test for vis edit:" (authorization-check/debug-authorized? @app-state/user
-                                             :projects/set-comment-visibility
-                                             {:entity comment-data
-                                              :project-id project-id}))
       (when (authorization-check/authorized? @app-state/user
                                              :projects/set-comment-visibility
                                              {:entity comment-data
@@ -143,7 +138,7 @@
   [{:keys [e! app] :as _opts} _dialog]
   [project-context/consume
    (fn [ctx]
-     [edit-comment-form e! (:edit-comment-data app) (:thk.project/id ctx)])])
+     [edit-comment-form e! (:edit-comment-data app) (:db/id ctx)])])
 
 (defn- edit-comment-button [e! comment-entity commented-entity]
   [buttons/button-text {:size :small

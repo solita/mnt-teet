@@ -74,66 +74,6 @@
                        (:db/id user)))))))
          (:user/permissions user))))
 
-(defn debug-authorized?
-  ([user functionality]
-   (authorized? user functionality nil))
-  ([user functionality {:keys [access entity project-id link]
-                        :or {link :meta/creator}}]
-   (log/debug "enter")
-   (some (fn [{:permission/keys [role projects]}]
-           (log/debug "somefn")
-           (let [required-access (or access :full)
-                 access-for-role
-                 (and (if (seq projects)
-                        ;; Project specific permission: check project id is included
-                        (and project-id
-                             (cu/contains-value? projects {:db/id project-id}))
-
-                        ;; Global permission
-                        true)
-
-                      (access-for functionality role))]
-             (log/debug "ra" required-access "afr" access-for-role)
-             (log/debug "ANDs"
-                        access-for-role
-                        (or
-                         ;; full access is required and this permission gives it
-                         (= required-access access-for-role :full)
-
-                         ;; read access required and permission gives full or read
-                         (and (= required-access :read)
-                              (or (= access-for-role :read)
-                                  (= access-for-role :full)))
-
-                         ;; link access required check ownership
-                         (and (= access-for-role :link) user entity
-                              (=
-                               (do
-                                 (log/debug "checking for link access for user " (:db/id user) " under key " link " - id " (get-in entity [link :db/id]) " - match? " (= (get-in entity [link :db/id]) (:db/id user)))
-
-                                 (get-in entity [link :db/id]))
-                               (:db/id user)))))
-             (and
-              access-for-role
-              (or
-               ;; full access is required and this permission gives it
-               (= required-access access-for-role :full)
-
-               ;; read access required and permission gives full or read
-               (and (= required-access :read)
-                    (or (= access-for-role :read)
-                        (= access-for-role :full)))
-
-               ;; link access required check ownership
-               (and (= access-for-role :link) user entity
-                    (=
-                     (do
-                       (log/debug "checking for link access for user " (:db/id user) " under key " link " - id " (get-in entity [link :db/id]) " - match? " (= (get-in entity [link :db/id]) (:db/id user)))
-
-                       (get-in entity [link :db/id]))
-                       (:db/id user)))))))
-         (:user/permissions user))))
-
 #?(:clj
    (defn check-authorized
      [user functionality entity]
