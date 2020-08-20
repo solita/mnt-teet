@@ -187,8 +187,8 @@
   (r/with-let [clicked? (r/atom false)]
     [:<>
      [button-component {:on-click #(reset! clicked? true)
-                              :style {:float :right}}
-      [icon]
+                        :style {:margin-bottom "1rem"}
+                        :start-icon (r/as-element [icon])}
       (tr [:activity-approval button-kw])]
      (when @clicked?
        [panels/modal {:title (str (tr [:activity-approval button-kw]) "?")
@@ -249,10 +249,10 @@
                 (= (-> project :thk.project/owner :user/id)
                    (-> @teet.app-state/user :user/id)))
        (if (= status :activity.status/in-review)
-           [:div
+           [:div {:class (<class common-styles/flex-space-between-wrap)}
+            [approve-button e! (assoc params :status :activity.status/completed)]
             [reject-button e! (assoc params :status :activity.status/archived)]
-            [reject-button e! (assoc params :status :activity.status/canceled)]
-            [approve-button e! (assoc params :status :activity.status/completed)]]
+            [reject-button e! (assoc params :status :activity.status/canceled)]]
            ;; else
            (when (not-reviewed-status? status)
              [:div (tr [:activity :waiting-for-submission])])))]))
