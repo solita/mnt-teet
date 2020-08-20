@@ -70,7 +70,7 @@
                             :teeregister
                             :eelis
                             :heritage
-                            :cultural-heritage-protection-zones])
+                            :heritage-protection-zones])
 
 
 (defmulti layer-filters-form

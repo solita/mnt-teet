@@ -171,7 +171,7 @@
 
 (def create-wfs-layer
   (memoize
-   (fn [prefix wfs-url feature-type]
+   (fn [prefix wfs-url feature-type style-fn]
      (let [name (str prefix feature-type)
            projection "EPSG:3301"
            source (ol.source.Vector.
@@ -192,20 +192,19 @@
                           (.then #(.text %))
                           (.then
                            (fn [text]
-                             ;;(js/console.log "GOT JSON TEXT: " text)
                              (let [fmt (.getFormat source)]
                                (.addFeatures source
                                              (.readFeatures fmt text
                                                             #js {:dataProjection projection}))))))))
            layer (ol.layer.Vector. #js {:source source
-                                        :style map-features/survey-style})]
+                                        :style style-fn})]
        (.setLoader source loader)
        (.set layer "teet-source" name)
        (.set layer "teet-on-select"
              (partial map-overlay/feature-info-on-select
                       {:single-line? false
                        :height 200}))
-       [name (layer/->OpenLayersTaso layer)]))))
+       {name (layer/->OpenLayersTaso layer)}))))
 
 
 (defmethod create-data-layer :teeregister
@@ -222,10 +221,17 @@
 
 (defmethod create-data-layer :heritage
   [_ctx _]
-  (let [[name layer] (create-wfs-layer "heritage-"
-                                       "https://gsavalik.envir.ee/geoserver/keskkonnainfo/ows"
-                                       "keskkonnainfo:muinsusobjekt")]
-    {name layer}))
+  (create-wfs-layer "heritage-"
+                    "https://gsavalik.envir.ee/geoserver/keskkonnainfo/ows"
+                    "keskkonnainfo:muinsusobjekt"
+                    map-features/heritage-style))
+
+(defmethod create-data-layer :heritage-protection-zones
+  [_ctx _]
+  (create-wfs-layer "heritae-protection-zones-"
+                    "https://gsavalik.envir.ee/geoserver/keskkonnainfo/ows"
+                    "keskkonnainfo:muinsusvoond"
+                    map-features/heritage-protection-zone-style))
 
 (defmethod create-data-layer :default [_ {type :type}]
   (log/warn "Unsupported data layer type: " type)
