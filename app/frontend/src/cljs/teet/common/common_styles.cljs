@@ -220,3 +220,9 @@
 
 (defn no-margin []
   {:margin "0px"})
+
+(defn flex-space-between-wrap
+  []
+  {:display :flex
+   :justify-content :space-between
+   :flex-wrap :wrap})
