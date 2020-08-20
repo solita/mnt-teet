@@ -107,29 +107,47 @@
                                 "LINK"))))
                      callback))
 
+(defn focus! [editor-id]
+  (.focus (js/document.querySelector (str "#" editor-id " .DraftEditor-editorContainer div:nth-child(1)"))))
+
+(defn editor-state->markdown [editor-state]
+  (stateToMarkdown (.getCurrentContent editor-state)))
+
+(def ^:private decorator
+  (new CompositeDecorator #js [#js {:strategy findLinkEntities
+                                    :component (r/reactify-component link-comp)}]))
+
+(defn markdown->editor-state [markdown]
+  (.createWithContent EditorState (stateFromMarkdown markdown) decorator))
+
+
 (defn wysiwyg-editor
-  []
-  (let [decorator (new CompositeDecorator #js [#js {:strategy findLinkEntities
-                                                    :component (r/reactify-component link-comp)}])
-        [editorState setEditorState] (react/useState (.createEmpty EditorState decorator) #_(if (not-empty @wysiwyg-data)
-                                                       #(.createWithContent EditorState (stateFromMarkdown @wysiwyg-data))
-                                                       (.createEmpty EditorState decorator)))
+  "Rich text editor component that keeps its own internal state.
+
+  Options:
+
+  :id         string id to give to the root editor container element (used for some commands)
+  :value      current draftjs EditorState object (or nil for empty)
+  :on-change  callback to update editor state"
+
+  [{:keys [value on-change id]}]
+  (let [editorState (or value (.createEmpty EditorState decorator))
         [linkValue setLinkValue] (react/useState "")
 
         handle-key-command (fn [command state]
                              (let [new-state (. RichUtils handleKeyCommand state command)]
                                (if new-state
                                  (do
-                                   (setEditorState new-state)
+                                   (on-change new-state)
                                    "handled")
                                  "not-handled")))
 
-        editor-ref (atom nil)
-        focus-editor #(.focus @editor-ref)
+        [editor-ref set-editor-ref!] (react/useState nil)
+        focus-editor #(.focus editor-ref)
         inlineToggle (fn [style]
-                       (setEditorState (toggleInlineStyle editorState style)))
+                       (on-change (toggleInlineStyle editorState style)))
         blockToggle (fn [type]
-                      (setEditorState (toggleBlockType editorState type)))
+                      (on-change (toggleBlockType editorState type)))
         set-link (fn []
                    (let [contentState (.getCurrentContent editorState)
                          contentStateWithEntity (.createEntity contentState "LINK" "MUTABLE" #js {:url linkValue})
@@ -139,22 +157,16 @@
                      (println "new-editorstate: " newEditorState)
                      (println "contentWithEntity: " contentStateWithEntity)
 
-                     (setEditorState (.toggleLink RichUtils
+                     (on-change (.toggleLink RichUtils
                                                   newEditorState
                                                   (.getSelection newEditorState)
                                                   entityKey))))]
-    [:<>
-     [:div {:style {:background-color theme-colors/gray-light
-                    :margin-bottom "2rem"}}
-      [:span "result: "]
-      [Editor {:editorState editorState
-               :read-only true}]]
-
+    [:span (when id {:id id})
      [:input {:value linkValue
               :on-change #(setLinkValue (-> % .-target .-value))}]
 
      [:div {:on-click focus-editor
-            :class (<class editor-style (< 4096 (count (stateToMarkdown (.getCurrentContent editorState))))) }
+            :class (<class editor-style false) }
 
       [block-style-controls editorState blockToggle]
       [inline-style-controls editorState inlineToggle]
@@ -164,12 +176,10 @@
        "set link"]
       [Divider {:style {:margin "1rem"}}]
 
-      [Editor {:ref #(reset! editor-ref %)
+      [Editor {:ref set-editor-ref!
                :editorState editorState
                :handleKeyCommand handle-key-command
                :blockRenderMap DefaultDraftBlockRenderMap
                :placeholder "Rich text editor"
                :on-change (fn [editorState]
-                            (println (count (stateToMarkdown (.getCurrentContent editorState))))
-                            (reset! wysiwyg-data (stateToMarkdown (.getCurrentContent editorState)))
-                            (setEditorState editorState))}]]]))
+                            (on-change editorState))}]]]))

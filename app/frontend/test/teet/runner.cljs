@@ -10,7 +10,8 @@
             teet.comments.comments-view-test
             teet.example-tuck-test
             teet.example-test
-            teet.common.common-controller-test))
+            teet.common.common-controller-test
+            teet.ui.rich-text-editor-test))
 
 ;; runner code from clj-chrome-devtools
 (def PRINTED (atom []))
@@ -49,7 +50,8 @@
   (set! (.-innerHTML js/document.body) "")
   (reset! common-controller/test-mode? true)
   (reset! postgrest-fetch/fetch-impl common-controller/send-fake-postgrest-query!)
-  (test/run-tests 'teet.comments.comments-view-test
+  (test/run-tests 'teet.ui.rich-text-editor-test
+                  'teet.comments.comments-view-test
                   'teet.example-tuck-test
                   'teet.example-test
                   'teet.common.common-controller-test))

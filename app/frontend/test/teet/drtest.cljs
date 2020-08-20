@@ -157,3 +157,11 @@
 
 ;; stop test execution for inspecting DOM
 (defonce debug (step :debug-test "Debug tests"))
+
+(defmethod ds/execute :draftjs-type [{:keys [text id]} ctx ok fail]
+  (if-let [elt (js/document.body.querySelector (str "#" id " .public-DraftEditor-content"))]
+    (do
+      (.dispatchEvent elt (doto (js/document.createEvent "TextEvent")
+                            (.initTextEvent "textInput" true true nil text)))
+      (ok ctx))
+    (fail "Couldn't find draftjs content element" {:id id})))
