@@ -23,5 +23,5 @@ jobs:
       run: clojure -A:test
       working-directory: app/backend/
     - name: run frontend tests
-      run: clojure -A:test
+      run: ./run-tests.sh
       working-directory: app/frontend/
