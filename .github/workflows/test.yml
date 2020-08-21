@@ -20,8 +20,10 @@ jobs:
       run: tar jxf ci-deps.tar.bz2 -C ~
       working-directory: .
     - name: run backend tests
-      run: clojure -A:test
+      run: clojure -A:ci-test
       working-directory: app/backend/
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     - name: run frontend tests
       run: ./run-tests.sh
       working-directory: app/frontend/

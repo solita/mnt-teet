@@ -57,9 +57,8 @@
            :test {:main-opts ["-m" "kaocha.runner" "--skip-meta" "db"]
                   :extra-deps {lambdaisland/kaocha {:mvn/version "0.0-529"}}
                   :extra-paths ["test"]}
-           :db-test {:main-opts ["-m" "kaocha.runner"
+           :ci-test {:main-opts ["-m" "kaocha.runner"
                                  "--no-color" ;; No ANSI codes in CI
-                                 "--focus-meta" "db"
                                  "--reporter" "teet.test.slack/report"]
                      :extra-deps {lambdaisland/kaocha {:mvn/version "1.0-612"}
                                   com.datomic/dev-local {:mvn/version "0.9.195"}}
