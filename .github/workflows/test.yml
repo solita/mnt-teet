@@ -19,6 +19,11 @@ jobs:
     - name: extract ci-deps
       run: tar jxf ci-deps.tar.bz2 -C ~
       working-directory: .
+    - name: configure datomic local
+      run: |
+        mkdir ~/.datomic
+        mkdir /tmp/datomic-storage
+        echo "{:storage-dir \"/tmp/datomic-storage\"} > ~/.datomic/dev-local.edn
     - name: run backend tests
       run: clojure -A:ci-test
       working-directory: app/backend/
