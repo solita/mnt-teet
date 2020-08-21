@@ -6,7 +6,8 @@
             [teet.notification.notification-db :as notification-db]
             [teet.util.collection :as cu]
             [teet.project.project-model :as project-model]
-            [teet.project.task-model :as task-model]))
+            [teet.project.task-model :as task-model]
+            [teet.meta.meta-query :as meta-query]))
 
 
 (defn- user-tasks
@@ -74,27 +75,36 @@
         permission-projects (map :db/id
                                  (mapcat :permission/projects
                                          (permission-db/user-permissions db user-ref)))]
-    (mapv (comp project-model/project-with-status first)
-          (d/q '[:find (pull ?e [:db/id :thk.project/name :thk.project/project-name
-                                 :thk.project/id
-
-                                 :thk.project/estimated-start-date :thk.project/estimated-end-date
-                                 {:thk.project/lifecycles
-                                  [:db/id :thk.lifecycle/type
-                                   :thk.lifecycle/estimated-start-date
-                                   :thk.lifecycle/estimated-end-date
-                                   {:thk.lifecycle/activities
-                                    [:db/id :activity/name
-                                     :activity/status
-                                     :activity/estimated-start-date
-                                     :activity/estimated-end-date
-                                     :activity/actual-start-date
-                                     :activity/actual-end-date]}]}])
-                 :in $ [?e ...]]
-               db (distinct (concat owned-projects
-                                    managing-activity-projects
-                                    permission-projects
-                                    project-ids))))))
+    (map
+      project-model/project-with-status
+      (meta-query/without-deleted
+        db
+        (mapv first
+              (d/q '[:find (pull ?e [:db/id :thk.project/name :thk.project/project-name
+                                     :thk.project/id
+                                     :thk.project/estimated-start-date :thk.project/estimated-end-date
+                                     {:thk.project/owner [:user/id :user/given-name :user/family-name :user/email]}
+                                     {:thk.project/manager [:user/id :user/given-name :user/family-name :user/email]}
+                                     {:thk.project/lifecycles
+                                      [:db/id :thk.lifecycle/type
+                                       :thk.lifecycle/estimated-start-date
+                                       :thk.lifecycle/estimated-end-date
+                                       {:thk.lifecycle/activities
+                                        [:db/id
+                                         :activity/estimated-end-date
+                                         :activity/estimated-start-date
+                                         :activity/name
+                                         :activity/status
+                                         :meta/deleted?
+                                         {:activity/tasks [:db/id
+                                                           :task/status
+                                                           :meta/deleted?
+                                                           :task/estimated-end-date]}]}]}])
+                     :in $ [?e ...]]
+                   db (distinct (concat owned-projects
+                                        managing-activity-projects
+                                        permission-projects
+                                        project-ids))))))))
 
 
 (defn user-dashboard [db user]
