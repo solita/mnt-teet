@@ -4,9 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - name: setup clojure
       uses: DeLaGuardo/setup-clojure@2.0
@@ -14,7 +12,7 @@ jobs:
         tools-deps: '1.10.1.510'
     - name: install ci-deps
       run: |
-        openssl enc -aes-265-cbc -d -pass pass:${{ secrets.CI_DEPS_ENCRYPTION_PASS }} -in .github/ci-deps-enc.tar.bz2 -out ci-deps.tar.bz2
+        openssl enc -aes-256-cbc -d -pass pass:${{ secrets.CI_DEPS_ENCRYPTION_PASS }} -in .github/ci-deps-enc.tar.bz2 -out ci-deps.tar.bz2
         tar jxf ci-deps.tar.bz2 -C ~
     - name: run backend tests
       run: clojure -A:test
