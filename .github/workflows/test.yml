@@ -12,7 +12,7 @@ jobs:
       with:
         tools-deps: '1.10.1.510'
     - name: decrypt ci-deps
-      run: openssl enc -aes-256-cbc -d -pass pass:${{ secrets.CI_DEPS_ENCRYPTION_PASS }} -in .github/ci-deps-enc.tar.bz2 -out ci-deps.tar.bz2
+      run: openssl enc -md sha256 -aes-256-cbc -d -pass pass:${{ secrets.CI_DEPS_ENCRYPTION_PASS }} -in .github/ci-deps-enc.tar.bz2 -out ci-deps.tar.bz2
       working-directory: .
     - name: extract ci-deps
       run: tar jxf ci-deps.tar.bz2 -C ~
