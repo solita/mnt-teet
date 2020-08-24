@@ -15,7 +15,7 @@
            `[~path ~route-name])])))
 
 (defn- param-names [path]
-  (map (comp keyword second) (re-seq #":([^/]+)" path)))
+  (map (comp keyword second) (re-seq #":([^/(]+)" path)))
 
 (defmacro define-main-page [fn-name]
   (let [defs (read-route-defs)]
@@ -76,17 +76,16 @@
 
            [:div "Unrecognized page: " (str page#)])))))
 
-(def path-split-pattern #"([^:]+)((:[^/]+)(.*))?")
+(def param-name-with-pattern #":([^(]+)(\(.+\))?")
 (defn split-path [path]
-  (loop [acc []
-         path path]
-    (if (str/blank? path)
-      acc
-      (let [[_ before _ param after] (re-matches path-split-pattern path)]
-        (if param
-          (recur (into acc [before (symbol (subs param 1))])
-                 after)
-          (conj acc path))))))
+  (map (fn [path-segment]
+         (if (str/starts-with? path-segment ":")
+           (let [[_ name _pattern] (re-matches param-name-with-pattern path-segment)]
+             (symbol name))
+           path-segment))
+       (interleave
+         (repeat "/")
+         (str/split (subs path 1) #"/"))))
 
 (defmacro define-url-functions
   "Define functions to generate URLs for all routes"
