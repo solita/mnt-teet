@@ -460,7 +460,7 @@
    :heritage "Heritage ",
    :eelis "EELIS",
    :layer "layer",
-   :heritage-protection-zones nil,
+   :heritage-protection-zones "Heritage protection zone",
    :cadastral-units "Cadastral units",
    :no-layers "No map layers",
    :land-surveys "Land surveys"},
