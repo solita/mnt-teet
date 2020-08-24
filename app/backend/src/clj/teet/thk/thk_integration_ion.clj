@@ -146,6 +146,13 @@
     (catch Exception e
       (println e "Exception in import"))))
 
+(defn update-all-project-entity-info []
+  (ctx-> {:db (d/db (environment/datomic-connection))
+          :api-url (environment/config-value :api-url)
+          :api-secret (environment/config-value :auth :jwt-secret)
+          :wfs-url (environment/config-value :road-registry :wfs-url)}
+         update-entity-info))
+
 (defn export-projects [{conn :connection :as ctx}]
   (assoc ctx :csv (thk-export/export-thk-projects conn)))
 
