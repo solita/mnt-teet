@@ -35,7 +35,7 @@
 
 
 (defn test-view [e! {:keys [entity-type entity-id] :as app}]
-  
+
   (project-context/provide {:db/id project-eid :thk.project/id "4242"}
                            [comments-view/lazy-comments {:e! e!
                                                          :app app
@@ -45,7 +45,7 @@
 (drt/define-drtest lazy-comments-rendering
   {:initial-context {:app (drt/atom {:entity-type :test
                                      :entity-id "1"
-                                     :page :project                                    
+                                     :page :project
                                      :route {:project {:db/id project-eid}}
                                      :user  test-user
                                      })}}
@@ -81,22 +81,20 @@
         :component test-view)
 
 
-  
+
 
   (step :click "click delete on 1st comment"
         :selector "#delete-button-420")
-  
-  
+
+
   (step :wait "for modal to appear" :ms 500)
 
 
-  drt/debug
-  
   (step :click "click modal confirm (outside of container in body)"
         :selector "#confirm-delete"
         :in js/document.body)
 
-  
+
   (step :wait-command
         :command :comment/delete-comment
         :payload {:comment-id 420}

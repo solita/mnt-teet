@@ -420,7 +420,8 @@
   {:background-color :inherit
    :color theme-colors/primary})
 
-(defn lazy-comments
+
+(defn lazy-comments*
   [{:keys [e! app
            entity-type
            entity-id
@@ -428,84 +429,88 @@
            after-comment-added-event
            after-comment-deleted-event
            after-comment-list-rendered-event]
-    :or {show-comment-form? true}}]
-  (project-context/consume (fn [proj-map]
-                             
-                             (r/with-let [can-set-visibility? (authorization-check/authorized? @app-state/user
-                                                                                               :projects/set-comment-visibility
-                                                                                               {:entity {:meta/creator {:db/id (:db/id @app-state/user)}}
-                                                                                                :project-id (:db/id proj-map)
-                                                                                                :debug? true})
-                                          ;; _ (log/debug "keys in page-state map:" (keys (common-controller/page-state @app-state/app)))
-                                          initial-comment-form (comment-form-defaults entity-type
-                                                                                      can-set-visibility?)
-                                          [comment-form ->UpdateCommentForm]
-                                          (common-controller/internal-state initial-comment-form
-                                                                            {:merge? true})]
-                               (log/debug "lazy-comments main: can-set-visibility?" can-set-visibility? {:entity {:meta/creator {:db/id (:db/id @app-state/user)}}
-                                                                                                         :project-id (:db/id proj-map)
-                                                                                                         :debug? true})
-                               (let [comments (get-in app [:comments-for-entity entity-id])]
-                                 [:div
-                                  [query/query {:e! e!
-                                                :query :comment/fetch-comments
-                                                :args {:eid entity-id
-                                                       :for entity-type}
-                                                :skeleton [comment-skeleton 2]
-                                                :state-path [:comments-for-entity entity-id]
-                                                :state comments
-                                                :simple-view [comment-list {:e! e!
-                                                                            :after-comment-list-rendered-event after-comment-list-rendered-event
-                                                                            :after-comment-deleted-event after-comment-deleted-event
-                                                                            :quote-comment! (fn [name quoted-text]
-                                                                                              (e! ((quote-comment-fn comment-form)
-                                                                                                   name quoted-text)))
-                                                                            :commented-entity {:eid entity-id
-                                                                                               :for entity-type}
-                                                                            :focused-comment (get-in app [:query :focus-on])}]
-                                                :refresh (count comments)}]
-                                  (when (and show-comment-form?
-                                             ;; TODO: This circumvents the fact that there can be
-                                             ;; only one file upload element in the dom at once.
-                                             (not (-> app :stepper :dialog)))
-                                    [form/form2 {:e! e!
-                                                 :value @comment-form
-                                                 :on-change-event ->UpdateCommentForm
-                                                 :save-event #(let [{:comment/keys [comment files visibility track? mentions]} @comment-form]
-                                                                (reset! comment-form initial-comment-form)
-                                                                (comments-controller/->CommentOnEntity
-                                                                 entity-type entity-id comment files visibility track? mentions
-                                                                 after-comment-added-event))
-                                                 :footer new-comment-footer
-                                                 :spec :task/new-comment-form}
-                                     [:div {:class (<class common-styles/gray-container-style)}
-                                      [:div {:class (<class common-styles/heading-and-action-style)}
-                                       [typography/Heading2 (tr [:document :new-comment])]
-                                       (when can-set-visibility?
-                                         [form/field :comment/visibility
-                                          [select/select-enum {:e! e! :attribute :comment/visibility :tiny-select? true
-                                                               :show-empty-selection? false
-                                                               :show-label? false :class (<class visibility-selection-style)}]])]
-                                      [:div {:class (<class form-field-spacer)}
-                                       [form/field :comment/comment
-                                        [mentions-input {:id "new-comment-input"
-                                                         :e! e!}]
+    :or {show-comment-form? true}}
+   proj-map]
+  (r/with-let [can-set-visibility? (authorization-check/authorized? @app-state/user
+                                                                    :projects/set-comment-visibility
+                                                                    {:entity {:meta/creator {:db/id (:db/id @app-state/user)}}
+                                                                     :project-id (:db/id proj-map)
+                                                                     :debug? true})
+               ;; _ (log/debug "keys in page-state map:" (keys (common-controller/page-state @app-state/app)))
+               initial-comment-form (comment-form-defaults entity-type
+                                                           can-set-visibility?)
+               [comment-form ->UpdateCommentForm]
+               (common-controller/internal-state initial-comment-form
+                                                 {:merge? true})]
+    (log/debug "lazy-comments main: can-set-visibility?" can-set-visibility? {:entity {:meta/creator {:db/id (:db/id @app-state/user)}}
+                                                                              :project-id (:db/id proj-map)
+                                                                              :debug? true})
+    (let [comments (get-in app [:comments-for-entity entity-id])]
+      [:div
+       [query/query {:e! e!
+                     :query :comment/fetch-comments
+                     :args {:eid entity-id
+                            :for entity-type}
+                     :skeleton [comment-skeleton 2]
+                     :state-path [:comments-for-entity entity-id]
+                     :state comments
+                     :simple-view [comment-list {:e! e!
+                                                 :after-comment-list-rendered-event after-comment-list-rendered-event
+                                                 :after-comment-deleted-event after-comment-deleted-event
+                                                 :quote-comment! (fn [name quoted-text]
+                                                                   (e! ((quote-comment-fn comment-form)
+                                                                        name quoted-text)))
+                                                 :commented-entity {:eid entity-id
+                                                                    :for entity-type}
+                                                 :focused-comment (get-in app [:query :focus-on])}]
+                     :refresh (count comments)}]
+       (when (and show-comment-form?
+                  ;; TODO: This circumvents the fact that there can be
+                  ;; only one file upload element in the dom at once.
+                  (not (-> app :stepper :dialog)))
+         [form/form2 {:e! e!
+                      :value @comment-form
+                      :on-change-event ->UpdateCommentForm
+                      :save-event #(let [{:comment/keys [comment files visibility track? mentions]} @comment-form]
+                                     (reset! comment-form initial-comment-form)
+                                     (comments-controller/->CommentOnEntity
+                                      entity-type entity-id comment files visibility track? mentions
+                                      after-comment-added-event))
+                      :footer new-comment-footer
+                      :spec :task/new-comment-form}
+          [:div {:class (<class common-styles/gray-container-style)}
+           [:div {:class (<class common-styles/heading-and-action-style)}
+            [typography/Heading2 (tr [:document :new-comment])]
+            (when can-set-visibility?
+              [form/field :comment/visibility
+               [select/select-enum {:e! e! :attribute :comment/visibility :tiny-select? true
+                                    :show-empty-selection? false
+                                    :show-label? false :class (<class visibility-selection-style)}]])]
+           [:div {:class (<class form-field-spacer)}
+            [form/field :comment/comment
+             [mentions-input {:id "new-comment-input"
+                              :e! e!}]
 
-                                        #_[TextField {:id "new-comment-input"
-                                                      :rows 4
-                                                      :multiline true
-                                                      :full-width true
-                                                      :placeholder (tr [:document :new-comment])}]]
+             #_[TextField {:id "new-comment-input"
+                           :rows 4
+                           :multiline true
+                           :full-width true
+                           :placeholder (tr [:document :new-comment])}]]
 
-                                       [form/field :comment/files
-                                        [attached-images-field {:e! e!
-                                                                :on-success-event ->UpdateCommentForm}]]]
+            [form/field :comment/files
+             [attached-images-field {:e! e!
+                                     :on-success-event ->UpdateCommentForm}]]]
 
-                                      ;; TODO: when-authorized doesn't play well with form
-                                      (when (authorization-check/authorized? @app-state/user
-                                                                             :project/track-comment-status
-                                                                             {})
-                                        [:div {:style {:text-align :right}}
-                                         [form/field :comment/track?
-                                          [select/checkbox {:label-placement :start}]]])
-                                      [new-comment-footer]]])])))))
+           ;; TODO: when-authorized doesn't play well with form
+           (when (authorization-check/authorized? @app-state/user
+                                                  :project/track-comment-status
+                                                  {})
+             [:div {:style {:text-align :right}}
+              [form/field :comment/track?
+               [select/checkbox {:label-placement :start}]]])
+           [new-comment-footer]]])])))
+
+(defn lazy-comments
+  [opts]
+  (project-context/consume
+   [lazy-comments* opts]))
