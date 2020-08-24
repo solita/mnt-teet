@@ -6,5 +6,5 @@ REGION="eu-central-1"
 
 cd ../../app/backend
 
-clojure -Adev -m datomic.ion.dev \
+clojure -Aion -m datomic.ion.dev \
         "{:op :deploy :group $GROUP :rev \"$CODEBUILD_RESOLVED_SOURCE_VERSION\" :region \"$REGION\"}"
