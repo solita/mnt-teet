@@ -47,6 +47,10 @@
                               org.clojure/tools.namespace {:mvn/version "0.3.1"}
                               com.datomic/dev-local {:mvn/version "0.9.195"}}
                  :extra-paths ["dev-src" "test"]}
+           :db-connect {:extra-deps {com.datomic/ion-dev {:mvn/version "0.9.265"}
+                                     org.clojure/tools.namespace {:mvn/version "0.3.1"}}
+                        :extra-paths ["dev-src" "test"]}
+
            :rebl {:extra-deps {com.cognitect/rebl          {:mvn/version "0.9.240"}
                                org.openjfx/javafx-fxml     {:mvn/version "15-ea+6"}
                                org.openjfx/javafx-controls {:mvn/version "15-ea+6"}
