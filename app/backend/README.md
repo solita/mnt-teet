@@ -50,6 +50,16 @@ clojure -A:test --test-help
 
 TEET uses Datiomic Ion as a database.
 
+## Using local Datomic
+
+New local dev datomic does not need network connection, but stores
+data locally on disk. It is now used for CI tests as well.
+
+- Download tools https://cognitect.com/dev-tools
+- Create file `~/.datomic/dev-local.edn` with content `{:storage-directory "/Some/Directory"}`
+
+
+
 ## Connecting to Datomic locally
 
 - Set `AWS_PROFILE` to your TEET profile

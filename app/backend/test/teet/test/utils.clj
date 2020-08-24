@@ -105,7 +105,7 @@
       (throw (ex-info "No db id found for data-fixture-temp-id"
                       {:temp-id data-fixture-temp-id}))))
 
-(defn- datomic-client-env
+#_(defn- datomic-client-env
   "Get Datomic client info from environment variables (running in CI)"
   []
   (let [region (System/getenv "DATOMIC_REGION")
@@ -117,6 +117,11 @@
        :query-group system
        :endpoint (str "http://entry." system "." region ".datomic.net:8182/")
        :proxy-port 8182})))
+
+(defn- datomic-client-env
+  []
+  {:server-type :dev-local
+   :system "teet-db-test"})
 
 
 (defn with-environment [f]

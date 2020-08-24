@@ -48,10 +48,11 @@
      (str "- `[" file ":" line "] " name "`: " message))))
 
 (defn webhook-url []
-  (-> (sh "aws" "ssm" "get-parameters" "--names" "/teet/slack/webhook-url")
-      :out
-      (cheshire/decode keyword)
-      (get-in [:Parameters 0 :Value])))
+  (or (System/getenv "SLACK_WEBHOOK_URL")
+      (-> (sh "aws" "ssm" "get-parameters" "--names" "/teet/slack/webhook-url")
+          :out
+          (cheshire/decode keyword)
+          (get-in [:Parameters 0 :Value]))))
 
 (defmethod slack :summary [_]
   (let [{:keys [success fail error failures errors]} @results]

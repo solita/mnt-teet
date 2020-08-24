@@ -107,13 +107,13 @@
                              :type      :button}))
 
 (defn delete-button-with-confirm
-  [{:keys [action modal-title modal-text style small? icon-position close-on-action?]
+  [{:keys [action modal-title modal-text style small? icon-position close-on-action? id]
     :or {icon-position :end
          close-on-action? true}}
    button-content]
-  (let [open-atom (r/atom false)
-        open #(reset! open-atom true)
-        close #(reset! open-atom false)]
+  (r/with-let [open-atom (r/atom false)
+               open #(reset! open-atom true)
+               close #(reset! open-atom false)]
     [:<>
      [panels/modal {:title     (if modal-title
                                  modal-title
@@ -121,10 +121,12 @@
                     :open-atom open-atom
                     :actions   [DialogActions
                                 [button-secondary
-                                 {:on-click close}
+                                 {:on-click close
+                                  :id (str "cancel-delete")}
                                  (tr [:buttons :cancel])]
                                 [button-warning
-                                 {:on-click (if close-on-action?
+                                 {:id (str "confirm-delete")
+                                  :on-click (if close-on-action?
                                               #(do (action)
                                                    (close))
                                               action)}
@@ -135,13 +137,15 @@
          (tr [:common :deletion-modal-text]))]]
      (if small?
        [button-text-warning (merge {:on-click open
+                                    :id id
                                     :size :small}
                                    (case icon-position
                                      :end {:end-icon (r/as-element [icons/action-delete-outline])}
                                      :start {:start-icon (r/as-element [icons/action-delete-outline])}))
         button-content]
        [button-warning {:on-click open
-                        :style    style}
+                        :style    style
+                        :id id}
         button-content])]))
 
 (defn- add-button-style

@@ -240,6 +240,48 @@
       (when hover?
         (small-feature-style feature res)))))
 
+(defn heritage-style
+  "Show heritage points."
+  [^ol.render.Feature _feature _res]
+  ;(js/console.log "heritage feature: " (.getType (.getGeometry _feature)))
+  (ol.style.Style.
+   #js {:stroke (ol.style.Stroke. #js {:color "#9d0002"
+                                       :width 2})
+        :fill (ol.style.Fill. #js {:cursor :pointer
+                                   :color "#c43c39"})}))
+
+
+(def heritage-protection-zone-pattern
+  (let [a (atom nil)
+        canvas (.createElement js/document "canvas")]
+    (set! (.-width canvas) 32)
+    (set! (.-height canvas) 32)
+    (let [ctx (.getContext canvas "2d")]
+      (set! (.-strokeStyle ctx) "black")
+      (set! (.-lineWidth ctx) 3)
+      (set! (.-fillStyle ctx) "purple")
+      (.fillRect ctx 0 0 32 32)
+      (.beginPath ctx)
+      (.moveTo ctx 4 12)
+      (.lineTo ctx 28 2)
+      (.moveTo ctx 4 20)
+      (.lineTo ctx 28 10)
+      (.stroke ctx)
+
+      (let [img (js/Image.)]
+        (set! (.-onload img) #(do
+                                (js/console.log "protection zone img loaded" img)
+                                (reset! a (.createPattern ctx img "repeat"))))
+        (set! (.-src img) (.toDataURL canvas))))
+    a))
+
+(defn heritage-protection-zone-style
+  "Show heritage protection zones"
+  []
+  (ol.style.Style.
+   #js {:fill (ol.style.Fill.
+               #js {:color @heritage-protection-zone-pattern})}))
+
 (defn survey-style
   "Show survey area."
   [^ol.render.Feature _feature _res]
@@ -248,6 +290,7 @@
                                        :width 2})
         :fill (ol.style.Fill. #js {:cursor :pointer
                                    :color "#af38bc"})}))
+
 
 (defn ags-survey-style
   "Show AGS survey feature (point)"

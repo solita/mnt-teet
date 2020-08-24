@@ -6,7 +6,8 @@
             [teet.project.project-layers :as project-layers]
             [teet.project.project-style :as project-style]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.common :as common]))
+            [teet.ui.common :as common]
+            [teet.map.map-overlay :as map-overlay]))
 
 (defn map-style
   []
@@ -68,10 +69,10 @@
                        (concat
                          (for [[_ {:keys [coordinate content-data]}] (:overlays project)]
                            {:coordinate coordinate
-                            :content [map-view/overlay {:single-line? false
-                                                        :width 200
-                                                        :height nil
-                                                        :arrow-direction :top}
+                            :content [map-overlay/overlay {:single-line? false
+                                                           :width 200
+                                                           :height nil
+                                                           :arrow-direction :top}
                                       [itemlist/ItemList {}
                                        (for [[k v] content-data]
                                          [itemlist/Item {:label k} v])]]})

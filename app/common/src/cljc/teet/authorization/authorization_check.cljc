@@ -82,24 +82,28 @@
                                        :functionality functionality
                                        :entity        entity})))))
 
+#?(:cljs (defonce test-authorize (atom nil)))
 #?(:cljs
    (defn when-authorized
      [action entity component]
-     [project-context/consume
-      (fn [{project-id :db/id}]
-        (let [permissions @app-state/action-permissions
-              user @app-state/user
-              action-permissions (action permissions)]
-          (when (and permissions
-                     user
-                     action-permissions)
-            (when (every? (fn [[permission {:keys [link]}]]
-                            (authorized? @app-state/user permission (merge {:project-id project-id
-                                                                            :entity entity}
+     (if-let [authorize @test-authorize]
+       (when (authorize action entity)
+         component)
+       [project-context/consume
+         (fn [{project-id :db/id}]
+          (let [permissions @app-state/action-permissions
+                user @app-state/user
+                action-permissions (action permissions)]
+            (when (and permissions
+                       user
+                       action-permissions)
+              (when (every? (fn [[permission {:keys [link]}]]
+                              (authorized? @app-state/user permission (merge {:project-id project-id
+                                                                              :entity entity}
 
-                                                                           (when link {:link link}))))
-                          (action permissions))
-              component))))]))
+                                                                             (when link {:link link}))))
+                            (action permissions))
+                component))))])))
 
 (defn authorization-rule-names []
   (into #{} (keys @authorization-rules)))

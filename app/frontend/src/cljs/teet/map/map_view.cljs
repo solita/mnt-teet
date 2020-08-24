@@ -6,6 +6,7 @@
             [teet.log :as log]
             [teet.localization :refer [tr]]
             [teet.map.map-controller :as map-controller]
+            [teet.map.map-overlay :as map-overlay]
             [teet.ui.container :as container]
             [teet.ui.material-ui :refer [Fab Button Grid Checkbox]]
             [teet.ui.typography :as typography]
@@ -67,7 +68,9 @@
                             :cadastral-units
                             :land-surveys
                             :teeregister
-                            :eelis])
+                            :eelis
+                            :heritage
+                            :heritage-protection-zones])
 
 
 (defmulti layer-filters-form
@@ -148,6 +151,10 @@
                 :query :road/eelis-wms-layers
                 :simple-view [wms-layer-selector* e! layer]}])
 
+(defmethod layer-filters-form :default
+  [_e! _layer _map-data]
+  (tr [:map :layers :no-filters]))
+
 (defmethod layer-filters-form :projects
   [e! layer _map-data]
   [form/form {:e! e!
@@ -202,6 +209,7 @@
 (defmethod layer-legend :default
   [_ _]
   [:span])
+
 (defn edit-layer-dialog [e! {:keys [new? type] :as edit-layer} map-data]
   [panels/modal {:disable-content-wrapper? true
                  :on-close (e! map-controller/->CancelLayer)}
@@ -380,10 +388,15 @@
          :on-dblclick-select nil #_kasittele-dblclick-select!
 
          :tooltip-fn (fn [geom]
-                       (when-let [tt (:map/tooltip geom)]
-                         ;; Returns a function for current tooltip value or nil
-                         ;; if item has no tooltip specified.
-                         (constantly [:div (pr-str tt)])))
+                       (aset js/window "TT" (:map/feature geom))
+                       (let [feature-props (.getProperties (:map/feature geom))]
+                         (when-let [tt (or (:map/tooltip geom)
+                                           ;; fallback to checking "nimi" or "name" property
+                                           (aget feature-props "nimi")
+                                           (aget feature-props "name"))]
+                           ;; Returns a function for current tooltip value or nil
+                           ;; if item has no tooltip specified.
+                           (constantly [:div (pr-str tt)]))))
 
          :geometries (merge (get-in map-data [:geometries])
                             (:layers opts)
@@ -395,7 +408,10 @@
                            {:coordinate coordinate
                             :content [:div {:class (<class map-styles/map-overlay)}
                                       content]})
-                         (:overlays opts))
+                         (concat
+                          (when-let [overlay @map-overlay/selected-item-overlay]
+                            [overlay])
+                          (:overlays opts)))
          :current-zoom (get-in map-data [:map-info])
          ;; map of geometry layer keys to control map zoom. If a key's value changes map is re-zoomed
          :zoom-to-geometries (get-in map-data [:zoom-to-geometries])
@@ -422,15 +438,3 @@
                 :layer layer
                 :style ""
                 :default true}))}]])))
-
-(defn overlay
-  "Helper for creating map overlay components"
-  [{:keys [arrow-direction width height single-line? style]
-    :or {height 60
-         single-line? true}} content]
-  [:div {:class (<class map-styles/map-overlay-container width height arrow-direction)
-         :style (or style {})}
-   (when arrow-direction
-     [:div {:class (<class map-styles/map-overlay-arrow width height arrow-direction)}])
-   [:div {:class (<class map-styles/map-overlay-content single-line?)}
-    content]])

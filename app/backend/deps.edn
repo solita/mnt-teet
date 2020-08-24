@@ -30,7 +30,8 @@
         com.cognitect.aws/email {:mvn/version "770.2.568.0"}
         com.cognitect.aws/ssm {:mvn/version "798.2.672.0"}
         com.cognitect.aws/s3 {:mvn/version "799.2.682.0"}
-        com.cognitect.aws/sts {:mvn/version "798.2.678.0"}}
+        com.cognitect.aws/sts {:mvn/version "798.2.678.0"}
+        com.cognitect.aws/logs {:mvn/version "798.2.672.0"}}
 
 
 
@@ -42,25 +43,33 @@
  :paths ["src/clj" "../common/src/cljc" "../common/src/clj" "resources"
          "../frontend/resources/public/language"]
  :aliases {:dev {:extra-deps {com.datomic/ion-dev {:mvn/version "0.9.265"}
-                              org.clojure/tools.namespace {:mvn/version "0.3.1"}}
+                              org.clojure/tools.namespace {:mvn/version "0.3.1"}
+                              com.datomic/dev-local {:mvn/version "0.9.195"}}
                  :extra-paths ["dev-src" "test"]}
+           :rebl {:extra-deps {com.cognitect/rebl          {:mvn/version "0.9.240"}
+                               org.openjfx/javafx-fxml     {:mvn/version "15-ea+6"}
+                               org.openjfx/javafx-controls {:mvn/version "15-ea+6"}
+                               org.openjfx/javafx-swing    {:mvn/version "15-ea+6"}
+                               org.openjfx/javafx-base     {:mvn/version "15-ea+6"}
+                               org.openjfx/javafx-web      {:mvn/version "15-ea+6"}}}
            :pack {:extra-deps {pack/pack.alpha {:git/url "https://github.com/juxt/pack.alpha.git"
                                                 :sha "2769a6224bfb938e777906ea311b3daf7d2220f5"}}}
            :test {:main-opts ["-m" "kaocha.runner" "--skip-meta" "db"]
                   :extra-deps {lambdaisland/kaocha {:mvn/version "0.0-529"}}
                   :extra-paths ["test"]}
-           :db-test {:main-opts ["-m" "kaocha.runner"
+           :ci-test {:main-opts ["-m" "kaocha.runner"
                                  "--no-color" ;; No ANSI codes in CI
-                                 "--focus-meta" "db"
                                  "--reporter" "teet.test.slack/report"]
-                     :extra-deps {lambdaisland/kaocha {:mvn/version "1.0-612"}}
+                     :extra-deps {lambdaisland/kaocha {:mvn/version "1.0-612"}
+                                  com.datomic/dev-local {:mvn/version "0.9.195"}}
                      :extra-paths ["test"]}
            :test-all {:main-opts ["-m" "kaocha.runner"]
-                      :extra-deps {lambdaisland/kaocha {:mvn/version "1.0-612"}}
+                      :extra-deps {lambdaisland/kaocha {:mvn/version "1.0-612"}
+                                   com.datomic/dev-local {:mvn/version "0.9.195"}}
                       :extra-paths ["test"]}
            :authorizations {:main-opts ["-m" "teet.authorization"]
                             :extra-paths ["src/build"]
                             :extra-deps {:dk.ative/docjure {:mvn/version "1.12.0"}}}
            :clj-nvd  {:extra-deps {clj-nvd {:git/url "https://github.com/miikka/clj-nvd.git"
-                                           :sha "141d54f5304e53f6caa6e3de1677f3cfb04091f4"}}
+                                            :sha "141d54f5304e53f6caa6e3de1677f3cfb04091f4"}}
                       :main-opts ["-m" "clj-nvd.core"]}}}

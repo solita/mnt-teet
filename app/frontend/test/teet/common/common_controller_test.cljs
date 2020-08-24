@@ -9,18 +9,10 @@
     (when-feature :test-feature
       [:span#feature "It's-a-me, feature!"])]))
 
-(defn initialize-enabled-features [features-set]
-  {:drtest.step/label "Wait for test initialization"
-   :drtest.step/type :wait-promise
-   :promise (js/Promise.
-             (fn [ok err]
-               (swap! app-state/app assoc :enabled-features features-set)
-               (ok)))})
 
 (drt/define-drtest component-shown-if-feature-enabled
-  {:initial-context {:app (drt/atom {:is :unused})}}
-
-  (initialize-enabled-features #{:test-feature :other-feature})
+  {:initial-context {:app (drt/atom {:is :unused
+                                     :enabled-features #{:test-feature :other-feature}})}}
 
   (drt/step :tuck-render "Render component with feature"
             :component test-view)
@@ -29,9 +21,8 @@
             :selector "span[id=\"feature\"]"))
 
 (drt/define-drtest component-not-shown-if-feature-not-enabled
-  {:initial-context {:app (drt/atom {:is :unused})}}
-
-  (initialize-enabled-features #{})
+  {:initial-context {:app (drt/atom {:is :unused
+                                     :enabled-features #{}})}}
 
   (drt/step :tuck-render "Render component with feature"
             :component test-view)

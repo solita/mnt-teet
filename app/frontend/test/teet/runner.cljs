@@ -10,7 +10,8 @@
             teet.comments.comments-view-test
             teet.example-tuck-test
             teet.example-test
-            teet.common.common-controller-test))
+            teet.common.common-controller-test
+            teet.ui.rich-text-editor-test))
 
 ;; runner code from clj-chrome-devtools
 (def PRINTED (atom []))
@@ -46,9 +47,11 @@
 (defonce original-postgrest-fetch-impl @postgrest-fetch/fetch-impl)
 
 (defn run-teet-tests []
+  (set! (.-innerHTML js/document.body) "")
   (reset! common-controller/test-mode? true)
   (reset! postgrest-fetch/fetch-impl common-controller/send-fake-postgrest-query!)
-  (test/run-tests 'teet.comments.comments-view-test
+  (test/run-tests 'teet.ui.rich-text-editor-test
+                  'teet.comments.comments-view-test
                   'teet.example-tuck-test
                   'teet.example-test
                   'teet.common.common-controller-test))
@@ -83,7 +86,18 @@
 (defmethod test/report [:cljs.test/default :end-run-tests] [m]
 
   (set-favicon! (cljs.test/successful? m))
-
+  (set! (.-innerHTML js/document.body)
+        (str "<div style=\"position: absolute; width: 100%; background-color:"
+             (if (cljs.test/successful? m)
+               "green"
+               "red")
+             "; border: solid 1px black; height: 100px; font-size: 36px;\">"
+             "TESTS RUN: " (:test m)
+             ", pass: " (:pass m)
+             ", fail: " (:fail m)
+             ", error: " (:error m)
+             "<button onclick=\"teet.runner.run_teet_tests()\">Rerun</button>"
+             "</div>"))
   (if (cljs.test/successful? m)
     (println "Success!")
     (println "FAIL")))

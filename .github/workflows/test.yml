@@ -1,0 +1,34 @@
+name: test
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: setup clojure
+      uses: DeLaGuardo/setup-clojure@2.0
+      with:
+        tools-deps: '1.10.1.510'
+    - name: openssl version
+      run: openssl version
+    - name: decrypt ci-deps
+      run: openssl enc -md md5 -aes-256-cbc -d -pass pass:${{ secrets.CI_DEPS_ENCRYPTION_PASS }} -in .github/ci-deps-enc.tar.bz2 -out ci-deps.tar.bz2
+      working-directory: .
+    - name: extract ci-deps
+      run: tar jxf ci-deps.tar.bz2 -C ~
+      working-directory: .
+    - name: configure datomic local
+      run: |
+        mkdir ~/.datomic
+        mkdir /tmp/datomic-storage
+        echo "{:storage-dir \"/tmp/datomic-storage\"}" > ~/.datomic/dev-local.edn
+    - name: run backend tests
+      run: clojure -A:ci-test
+      working-directory: app/backend/
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    - name: run frontend tests
+      run: ./run-tests.sh
+      working-directory: app/frontend/

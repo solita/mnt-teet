@@ -7,7 +7,9 @@
             [reagent.core :as r]
             [teet.common.common-controller :as common-controller]
             [tuck.core :as t]
-            [teet.localization :as localization])
+            [teet.localization :as localization]
+            [teet.app-state :as app-state]
+            [teet.authorization.authorization-check :as authorization-check])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defonce take-screenshots? (cljs.core/atom false))
@@ -15,13 +17,21 @@
 (defonce test-initialized
   (js/Promise.
    (fn [ok _err]
-     (localization/load-language! :et ok))))
+     (localization/load-language! @localization/selected-language ok))))
 
-(defonce init-step
-  {:drtest.step/label "Wait for test initialization"
-   :drtest.step/type :wait-promise
-   :promise test-initialized})
+(defmethod ds/execute :init-tests [_ {app :app :as ctx} ok fail]
+  (.then test-initialized
+         (fn [_]
+           ;; Synchronize test app state to the global one
+           (reset! app-state/app @app)
+           (add-watch app :update-app-state
+                      (fn [_ _ _ new-state]
+                        (reset! app-state/app new-state)))
+           (ok ctx))))
 
+(defmethod ds/execute :with-authorization [{fn* :fn} ctx ok _fail]
+  (reset! authorization-check/test-authorize fn*)
+  (ok ctx))
 ;;
 ;; Wait-request step
 ;;
@@ -70,8 +80,9 @@
                      :drtest.step/type :wait-request
                      :predicate (fn [req]
                                   (and (= :command! (:tuck.effect/type req))
-                                       (or (and predicate (predicate req))
-                                           (and payload (= payload (:payload req)))))))
+                                       (and (= (:command req) command)
+                                            (or (and predicate (predicate req))
+                                                (and payload (= payload (:payload req))))))))
               ctx ok fail))
 
 (defmethod ds/execute :wait-query [{:keys [query args predicate] :as step-descriptor}
@@ -82,7 +93,7 @@
                                   (and (= :query (:tuck.effect/type req))
                                        (= query (:query req))
                                        (or (and predicate (predicate req))
-                                           (and args (:args req))))))
+                                           (and (= args (:args req)))))))
               ctx ok fail))
 
 (defmethod ds/execute :no-request [_ ctx ok fail]
@@ -94,9 +105,15 @@
 ;;
 
 (defn capture-e! [e!-atom events-atom component orig-e! app]
-  (let [e! (fn [event]
-             (swap! events-atom conj event)
-             (orig-e! event))]
+  (let [e! (fn [event & args]
+             (cond
+               (satisfies? t/Event event)
+               (swap! events-atom conj event)
+
+               (fn? event)
+               (swap! events-atom conj {:event-constructor event
+                                        :event-args args}))
+             (apply orig-e! event args))]
     (reset! e!-atom e!)
     [component e! app]))
 
@@ -140,3 +157,11 @@
 
 ;; stop test execution for inspecting DOM
 (defonce debug (step :debug-test "Debug tests"))
+
+(defmethod ds/execute :draftjs-type [{:keys [text id]} ctx ok fail]
+  (if-let [elt (js/document.body.querySelector (str "#" id " .public-DraftEditor-content"))]
+    (do
+      (.dispatchEvent elt (doto (js/document.createEvent "TextEvent")
+                            (.initTextEvent "textInput" true true nil text)))
+      (ok ctx))
+    (fail "Couldn't find draftjs content element" {:id id})))
