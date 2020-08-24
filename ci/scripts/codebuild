@@ -5,21 +5,21 @@
 (require '[clojure.string :as str])
 
 (defn json-out [shell-result]
-  (-> shell-result
+  (if (pos? (:exit shell-result))
+    (throw (ex-info (str "shell command failed, stdout: " (:out shell-result) ", stderr: " (:err shell-result))
+                    shell-result))
+    (-> shell-result
       :out
-      (cheshire/decode keyword)))
+      (cheshire/decode keyword))))
 
 
-(defn dump [x]
-  (println "debug:" (pr-str x))
-  x)
+
 (defn start-build [project version]
   (println "Starting CodeBuild for" project "with source version" version)
   (-> (sh "aws" "codebuild" "start-build"
           "--project-name" project
           "--source-version" version)
       json-out
-      dump
       (get-in [:build :id])))
 
 (defn get-log-info
