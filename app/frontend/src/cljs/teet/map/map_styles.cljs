@@ -113,7 +113,8 @@
 
 (def overlay-background-color "#005E87")
 
-(defn map-overlay-container [width height arrow-direction]
+(defn map-overlay-container
+  [width height arrow-direction background-color]
   (let [half-height (when height
                       (str (/ height 2) "px"))
         half-width (when width
@@ -136,7 +137,7 @@
        {:width (str width "px")})
      (when height
        {:height (str height "px")})
-     {:background-color overlay-background-color
+     {:background-color background-color
       :position :absolute
       :display :flex
       :align-items :center

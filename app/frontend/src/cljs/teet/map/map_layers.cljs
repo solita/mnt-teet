@@ -13,7 +13,8 @@
             [ol.source.Vector]
             [ol.format.WFS]
             [ol.format.GeoJSON]
-            [ol.loadingstrategy :as ol-loadingstrategy]))
+            [ol.loadingstrategy :as ol-loadingstrategy]
+            [teet.theme.theme-colors :as theme-colors]))
 
 
 (def ^:const default-projection "EPSG:3301")
@@ -202,7 +203,8 @@
        (.set layer "teet-source" name)
        (.set layer "teet-on-select"
              (partial map-overlay/feature-info-on-select
-                      {:single-line? false
+                      {:background-color theme-colors/gray-dark
+                       :single-line? false
                        :height 200}))
        {name (layer/->OpenLayersTaso layer)}))))
 

@@ -7,7 +7,8 @@
             [teet.ui.itemlist :as itemlist]
             [teet.ui.material-ui :refer [IconButton Link]]
             [clojure.string :as str]
-            [teet.ui.icons :as icons]))
+            [teet.ui.icons :as icons]
+            [teet.common.common-styles :as common-styles]))
 
 ;; Atom that on-select handlers can use to set overlay
 (defonce selected-item-overlay (r/atom nil))
@@ -15,10 +16,12 @@
 (defn overlay
   "Helper for creating map overlay components"
   [{:keys [arrow-direction width height single-line? style
+           background-color
            on-close]
     :or {height 60
-         single-line? true}} content]
-  [:div {:class (<class map-styles/map-overlay-container width height arrow-direction)
+         single-line? true
+         background-color map-styles/overlay-background-color}} content]
+  [:div {:class (<class map-styles/map-overlay-container width height arrow-direction background-color)
          :style (or style {})}
 
    (when arrow-direction
@@ -43,7 +46,8 @@
          [itemlist/Item {:label key}
           (if (= key "url")
             [Link {:target :_blank
-                   :href val} val]
+                   :href val
+                   :class (<class common-styles/white-link-style false)} val]
             val)])]]]))
 
 (defn feature-info-on-select
