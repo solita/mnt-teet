@@ -122,8 +122,7 @@
         (assoc-in [:stepper :dialog] {:type :edit-comment})
         (assoc :edit-comment-data
                (merge {:comment/files []}
-                      (select-keys comment-entity
-                                   [:db/id :comment/comment :comment/visibility :comment/files])
+                      comment-entity
                       {:comment/mentions (mapv
                                            (fn [mention]
                                              {:user mention})

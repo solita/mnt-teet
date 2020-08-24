@@ -42,6 +42,7 @@
    :payload {:keys [file project-id]}
    :project-id project-id
    :authorization {:project/upload-comment-attachment {}}}
+  (log/debug "upload-attachment: got project-id" project-id)
   (let [file (file-model/type-by-suffix file)]
     (check-image-only file)
     (let [res (tx [(merge (select-keys file file-keys)

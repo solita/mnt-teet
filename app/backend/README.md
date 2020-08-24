@@ -56,7 +56,7 @@ New local dev datomic does not need network connection, but stores
 data locally on disk. It is now used for CI tests as well.
 
 - Download tools https://cognitect.com/dev-tools
-- Create file `~/.datomic/dev-local.edn` with content `{:storage-directory "/Some/Directory"}`
+- Create file `~/.datomic/dev-local.edn` with content `{:storage-dir "/Some/Directory"}`
 
 
 

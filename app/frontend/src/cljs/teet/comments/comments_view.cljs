@@ -73,30 +73,28 @@
 (defn- edit-attached-images-field
   "File field that only allows uploading images. Files are
   directly uploaded and on-change called after success."
-  [{:keys [e! value on-change comment-id on-success-event]}]
-  [project-context/consume
-   (fn [{:keys [project-id]}]
-     [:div
-      [attachments {:files value
-                    :comment-id comment-id
-                    :on-delete (fn [{file-id :db/id}]
-                                 (on-change
-                                   (into []
-                                         (cu/remove-by-id file-id)
-                                         value)))}]
-      [file-upload/FileUploadButton
-       {:id "images-field"
-        :color :secondary
-        :button-attributes {:size :small}
-        :on-drop #(e! (file-controller/map->UploadFiles
-                       {:files %
-                        :project-id project-id
-                        :attachment? true
-                        :on-success (fn [uploaded-files]
-                                      (on-success-event
-                                       {:comment/files (into (or value [])
-                                                             uploaded-files)}))}))}
-       (str "+ " (tr [:comment :add-images]))]])])
+  [{:keys [e! value on-change comment-id on-success-event project-id]}]
+  [:div
+   [attachments {:files value
+                 :comment-id comment-id
+                 :on-delete (fn [{file-id :db/id}]
+                              (on-change
+                               (into []
+                                     (cu/remove-by-id file-id)
+                                     value)))}]
+   [file-upload/FileUploadButton
+    {:id "images-field"
+     :color :secondary
+     :button-attributes {:size :small}
+     :on-drop #(e! (file-controller/map->UploadFiles
+                    {:files %
+                     :project-id project-id
+                     :attachment? true
+                     :on-success (fn [uploaded-files]
+                                   (on-success-event
+                                    {:comment/files (into (or value [])
+                                                          uploaded-files)}))}))}
+    (str "+ " (tr [:comment :add-images]))]])
 
 (defn form-field-spacer
   []
@@ -104,38 +102,48 @@
 
 ;; TODO: Both this and the create comment form should be replaced with
 ;;       form2 to make the add image button look decent.
-(defn- edit-comment-form [e! comment-data]
-  (r/with-let [[comment-form ->UpdateCommentForm]
-               (common-controller/internal-state comment-data
-                                                 {:merge? true})]
-    [form/form2 {:e! e!
-                 :value @comment-form
-                 :on-change-event ->UpdateCommentForm
-                 :cancel-event comments-controller/->CancelCommentEdit
-                 :save-event #(comments-controller/->SaveEditCommentForm @comment-form)
-                 :spec :comment/edit-comment-form}
-     [:div {:class (<class common-styles/gray-container-style)}
-      [:div {:class (<class form-field-spacer)}
-       [form/field :comment/comment
-        [mentions-input {:e! e!}]]
-
-       [form/field :comment/files
-        [edit-attached-images-field {:e! e!
-                                     :comment-id (:db/id comment-data)
-                                     :on-success-event ->UpdateCommentForm}]]]
-
-      (when (authorization-check/authorized? @app-state/user
-                                             :projects/set-comment-visibility
-                                             {})
+(defn- edit-comment-form [e! comment-data {project-id :db/id}]
+  (let [[comment-form ->UpdateCommentForm]
+        (common-controller/internal-state comment-data
+                                          {:merge? true})]
+    ;; Don't care about updated values
+    (fn [_ _ _]
+      [form/form2 {:e! e!
+                   :value @comment-form
+                   :on-change-event ->UpdateCommentForm
+                   :cancel-event comments-controller/->CancelCommentEdit
+                   :save-event #(comments-controller/->SaveEditCommentForm @comment-form)
+                   :spec :comment/edit-comment-form}
+       [:div {:class (<class common-styles/gray-container-style)}
         [:div {:class (<class form-field-spacer)}
-         [form/field :comment/visibility
-          [select/select-enum {:e! e! :attribute :comment/visibility}]]])]
+         [form/field :comment/comment
+          [mentions-input {:e! e!}]]
 
-     [form/footer2]]))
+         [form/field :comment/files
+          [edit-attached-images-field {:e! e!
+                                       :comment-id (:db/id comment-data)
+                                       :project-id project-id
+                                       :on-success-event ->UpdateCommentForm}]]]
+        (log/debug "edit-comment-form: can set visibility? ->"
+                   (authorization-check/authorized? @app-state/user
+                                                    :projects/set-comment-visibility
+                                                    {:entity comment-data
+                                                     :project-id project-id})
+                   project-id comment-data)
+        (when (authorization-check/authorized? @app-state/user
+                                               :projects/set-comment-visibility
+                                              {:entity comment-data
+                                               :project-id project-id})
+          [:div {:class (<class form-field-spacer)}
+           [form/field :comment/visibility
+            [select/select-enum {:e! e! :attribute :comment/visibility}]]])]
+
+       [form/footer2]])))
 
 (defmethod project-navigator-view/project-navigator-dialog :edit-comment
   [{:keys [e! app] :as _opts} _dialog]
-  [edit-comment-form e! (:edit-comment-data app)])
+  (project-context/consume
+   [edit-comment-form e! (:edit-comment-data app)]))
 
 (defn- edit-comment-button [e! comment-entity commented-entity]
   [buttons/button-text {:size :small
@@ -281,6 +289,7 @@
      [edit-comment-button e! comment-entity commented-entity]]
     [when-authorized :comment/delete-comment
      comment-entity
+     ;; (log/debug "showing delete-button-with-confirm, id" (str "delete-button-" id))
      [buttons/delete-button-with-confirm {:small? true
                                           :id (str "delete-button-" id)
                                           :icon-position :start
@@ -368,7 +377,7 @@
   directly uploaded and on-change called after success."
   [{:keys [e! value on-success-event]}]
   [project-context/consume
-   (fn [{:keys [project-id]}]
+   (fn [{project-id :db/id}]
      [:div
       [attachments {:files value
                     :comment-id nil
@@ -411,7 +420,8 @@
   {:background-color :inherit
    :color theme-colors/primary})
 
-(defn lazy-comments
+
+(defn lazy-comments*
   [{:keys [e! app
            entity-type
            entity-id
@@ -419,15 +429,22 @@
            after-comment-added-event
            after-comment-deleted-event
            after-comment-list-rendered-event]
-    :or {show-comment-form? true}}]
+    :or {show-comment-form? true}}
+   proj-map]
   (r/with-let [can-set-visibility? (authorization-check/authorized? @app-state/user
                                                                     :projects/set-comment-visibility
-                                                                    {})
+                                                                    {:entity {:meta/creator {:db/id (:db/id @app-state/user)}}
+                                                                     :project-id (:db/id proj-map)
+                                                                     :debug? true})
+               ;; _ (log/debug "keys in page-state map:" (keys (common-controller/page-state @app-state/app)))
                initial-comment-form (comment-form-defaults entity-type
                                                            can-set-visibility?)
                [comment-form ->UpdateCommentForm]
                (common-controller/internal-state initial-comment-form
                                                  {:merge? true})]
+    (log/debug "lazy-comments main: can-set-visibility?" can-set-visibility? {:entity {:meta/creator {:db/id (:db/id @app-state/user)}}
+                                                                              :project-id (:db/id proj-map)
+                                                                              :debug? true})
     (let [comments (get-in app [:comments-for-entity entity-id])]
       [:div
        [query/query {:e! e!
@@ -475,10 +492,10 @@
                               :e! e!}]
 
              #_[TextField {:id "new-comment-input"
-                         :rows 4
-                         :multiline true
-                         :full-width true
-                         :placeholder (tr [:document :new-comment])}]]
+                           :rows 4
+                           :multiline true
+                           :full-width true
+                           :placeholder (tr [:document :new-comment])}]]
 
             [form/field :comment/files
              [attached-images-field {:e! e!
@@ -492,3 +509,8 @@
               [form/field :comment/track?
                [select/checkbox {:label-placement :start}]]])
            [new-comment-footer]]])])))
+
+(defn lazy-comments
+  [opts]
+  (project-context/consume
+   [lazy-comments* opts]))

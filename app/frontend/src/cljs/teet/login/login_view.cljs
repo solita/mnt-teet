@@ -45,10 +45,10 @@
                                    (e! (login-controller/->SetPassword (-> e .-target .-value)))
                                    #_(log/info "password changed"))}]
           (doall
-           (for [{:user/keys [email family-name] :as user} login-controller/mock-users]
+           (for [{:user/keys [email given-name family-name organization] :as user} login-controller/mock-users]
              ^{:key email}
              [buttons/white-button-with-icon {:icon icons/navigation-arrow-forward
                                               :on-click #(do
                                                            (e! (login-controller/->Login user))
                                                            (log/info "Start login: " user))}
-              (str "Login as " family-name)]))]])]]))
+              (str "Login as " given-name " " family-name " (" organization ")")]))]])]]))

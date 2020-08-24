@@ -165,3 +165,5 @@
   (boolean
    (ffirst (d/q '[:find ?e :where [?project :thk.project/owner ?e] :in $ ?project]
                 db project-eid))))
+
+

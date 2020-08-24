@@ -66,7 +66,11 @@
 
                ;; link access required check ownership
                (and (= access-for-role :link) user entity
-                    (= (get-in entity [link :db/id])
+                    (=
+                     (do
+                       (log/debug "checking for link access for user " (:db/id user) " under key " link " - id " (get-in entity [link :db/id]) " - match? " (= (get-in entity [link :db/id]) (:db/id user)))
+
+                       (get-in entity [link :db/id]))
                        (:db/id user)))))))
          (:user/permissions user))))
 
@@ -86,7 +90,7 @@
        (when (authorize action entity)
          component)
        [project-context/consume
-        (fn [{:keys [project-id]}]
+         (fn [{project-id :db/id}]
           (let [permissions @app-state/action-permissions
                 user @app-state/user
                 action-permissions (action permissions)]

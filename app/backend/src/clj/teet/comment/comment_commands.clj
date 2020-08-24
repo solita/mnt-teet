@@ -12,6 +12,7 @@
             [teet.permission.permission-db :as permission-db]
             [teet.notification.notification-db :as notification-db]
             [teet.user.user-model :as user-model]
+            [teet.util.collection :as cu]
             [teet.util.datomic :as du])
   (:import (java.util Date)))
 
@@ -142,11 +143,13 @@
        (throw (ex-info "Given entity tuple doesn't match known cases"
                        {:entity-tuple entity-tuple})))]))
 
-(defn- valid-visibility-for-user? [user project-id visibility]
+
+(defn- valid-visibility-for-user? [user project-id comment-entity visibility]
   (or (du/enum= visibility :comment.visibility/all)
       (authorization-check/authorized? user
                                        :projects/set-comment-visibility
-                                       {:project-id project-id})))
+                                       {:project-id project-id
+                                        :entity comment-entity})))
 
 
 (defcommand :comment/create
@@ -156,7 +159,7 @@
    :project-id (project-db/entity-project-id db entity-type entity-id)
    :authorization {:project/write-comments {:db/id entity-id}}
    :pre [(valid-visibility-for-user? user
-                                     (project-db/entity-project-id db entity-type entity-id)
+                                     (project-db/entity-project-id db entity-type entity-id)                                                                  {:meta/creator {:db/id (:db/id user)}}
                                      visibility)]
    :transact
    (let [mentioned-ids (extract-mentions comment)
@@ -245,6 +248,7 @@
    :authorization {:project/edit-comments {:db/id comment-id}}
    :pre [(valid-visibility-for-user? user               ;; TODO fix for owner estate and unit comments
                                      (project-db/comment-project-id db comment-id)
+                                     (du/entity db comment-id)
                                      visibility)]
    :transact
    (let [incoming-mentions (extract-mentions comment)

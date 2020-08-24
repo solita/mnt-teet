@@ -126,7 +126,7 @@
      (if-let [error (:error result)]
        (with-meta
          error
-         {:format :raw})
+         {:format :raw})       
        result))))
 
 (def command-handler
