@@ -172,16 +172,18 @@
     (update app :map dissoc :edit-layer))
 
   RemoveLayer
-  (process-event [{:keys [layer]} app]
-    (-> app
-        (update-in [:map :layers]
-                   (fn [layers]
-                     (into []
-                           (keep #(when (not= (:type layer)
-                                              (:type %))
-                                    %))
-                           layers)))
-        (update :map dissoc :edit-layer))))
+  (process-event [{layer :layer} app]
+    (let [type-and-id #(select-keys % [:type :id])
+          to-remove (type-and-id layer)]
+      (-> app
+          (update-in [:map :layers]
+                     (fn [layers]
+                       (into []
+                             (keep #(when (not= to-remove
+                                                (type-and-id %))
+                                      %))
+                             layers)))
+          (update :map dissoc :edit-layer)))))
 
 (defn update-features! [layer-name update-fn & args]
   (let [^ol.Map m (openlayers/get-the-map)]
