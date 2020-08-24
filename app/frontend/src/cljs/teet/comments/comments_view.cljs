@@ -136,12 +136,8 @@
 (defmethod project-navigator-view/project-navigator-dialog :edit-comment
   [{:keys [e! app] :as _opts} _dialog]
   [edit-comment-form e! (:edit-comment-data app)
-   ;; KLUDGE
-   (->> app
-        :route
-        vals
-        (filter :thk.project/id)
-        (some :db/id))])
+   (log/debug "edit-comment: calling page-state")
+   (common-controller/page-state app)])
 
 (defn- edit-comment-button [e! comment-entity commented-entity]
   [buttons/button-text {:size :small
