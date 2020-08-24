@@ -289,6 +289,7 @@
      [edit-comment-button e! comment-entity commented-entity]]
     [when-authorized :comment/delete-comment
      comment-entity
+     ;; (log/debug "showing delete-button-with-confirm, id" (str "delete-button-" id))
      [buttons/delete-button-with-confirm {:small? true
                                           :id (str "delete-button-" id)
                                           :icon-position :start
