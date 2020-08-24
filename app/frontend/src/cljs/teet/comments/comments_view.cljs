@@ -102,10 +102,11 @@
 
 ;; TODO: Both this and the create comment form should be replaced with
 ;;       form2 to make the add image button look decent.
-(defn- edit-comment-form [e! comment-data project-id]
+(defn- edit-comment-form [e! comment-data {project-id :db/id}]
   (let [[comment-form ->UpdateCommentForm]
         (common-controller/internal-state comment-data
                                           {:merge? true})]
+    ;; Don't care about updated values
     (fn [_ _ _]
       [form/form2 {:e! e!
                    :value @comment-form
@@ -141,9 +142,8 @@
 
 (defmethod project-navigator-view/project-navigator-dialog :edit-comment
   [{:keys [e! app] :as _opts} _dialog]
-  [project-context/consume (fn [proj-map]
-                             [edit-comment-form e! (:edit-comment-data app)
-                              (:db/id proj-map)])])
+  (project-context/consume
+   [edit-comment-form e! (:edit-comment-data app)]))
 
 (defn- edit-comment-button [e! comment-entity commented-entity]
   [buttons/button-text {:size :small
