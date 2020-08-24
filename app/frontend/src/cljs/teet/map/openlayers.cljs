@@ -30,6 +30,7 @@
             [teet.map.map-utils :as map-utils]
 
             [teet.log :as log]
+            [teet.theme.theme-provider :as theme-provider]
 
             [tuck.effect])
 
@@ -324,8 +325,8 @@
   (remove-openlayers-popup! this))
 
 (defn create-overlay [coordinates contents]
-  (let [elt (js/document.createElement "span")]
-    (rdom/render contents elt)
+  (let [elt (js/document.createElement "div")]
+    (rdom/render [theme-provider/theme-provider contents] elt)
     (ol.Overlay. (clj->js {:element   elt
                            :position  coordinates
                            :stopEvent false}))))

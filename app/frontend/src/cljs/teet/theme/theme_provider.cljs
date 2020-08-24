@@ -157,10 +157,12 @@
 (defn- create-theme [theme]
   (styles/createMuiTheme (->js theme)))
 
+
 (def ThemeProvider (r/adapt-react-class styles/ThemeProvider))
 
+(defonce teet-theme-instance (create-theme teet-theme))
+
 (defn theme-provider [content]
-  (r/with-let [theme (create-theme teet-theme)]
-    [ThemeProvider
-     {:theme theme}
-     content]))
+  [ThemeProvider
+   {:theme teet-theme-instance}
+   content])
