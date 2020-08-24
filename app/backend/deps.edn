@@ -42,7 +42,8 @@
              }
  :paths ["src/clj" "../common/src/cljc" "../common/src/clj" "resources"
          "../frontend/resources/public/language"]
- :aliases {:dev {:extra-deps {com.datomic/ion-dev {:mvn/version "0.9.265"}
+ :aliases {:ion {:extra-deps {com.datomic/ion-dev {:mvn/version "0.9.265"}}}
+           :dev {:extra-deps {com.datomic/ion-dev {:mvn/version "0.9.265"}
                               org.clojure/tools.namespace {:mvn/version "0.3.1"}
                               com.datomic/dev-local {:mvn/version "0.9.195"}}
                  :extra-paths ["dev-src" "test"]}
