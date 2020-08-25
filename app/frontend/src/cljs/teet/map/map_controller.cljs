@@ -34,6 +34,11 @@
 (defrecord LayerInfoResponse [layer-id key layer-info]) ; merge fetched extra layer info
 (declare maybe-fetch-layer-info)
 
+(let [type-and-id #(select-keys % [:type :id])]
+  (defn- layer= [l1 l2]
+    (= (type-and-id l1)
+       (type-and-id l2))))
+
 (extend-protocol t/Event
   ToggleCategorySelect
   (process-event [{:keys [category closing?]} app]
@@ -141,7 +146,7 @@
 
   SaveLayer
   (process-event [_ app]
-    (let [{:keys [new? type] :as layer} (get-in app [:map :edit-layer])
+    (let [{:keys [new?] :as layer} (get-in app [:map :edit-layer])
           layer (-> layer
                     (dissoc :new?)
                     (update :id #(or % (random-uuid))))]
@@ -151,7 +156,7 @@
                       (fn [layers]
                         (if new?
                           (conj (or layers []) layer)
-                          (mapv #(if (= (:type %) type)
+                          (mapv #(if (layer= layer %)
                                    layer
                                    %)
                                 layers))))
@@ -173,17 +178,14 @@
 
   RemoveLayer
   (process-event [{layer :layer} app]
-    (let [type-and-id #(select-keys % [:type :id])
-          to-remove (type-and-id layer)]
-      (-> app
-          (update-in [:map :layers]
-                     (fn [layers]
-                       (into []
-                             (keep #(when (not= to-remove
-                                                (type-and-id %))
-                                      %))
-                             layers)))
-          (update :map dissoc :edit-layer)))))
+    (-> app
+        (update-in [:map :layers]
+                   (fn [layers]
+                     (into []
+                           (keep #(when (not (layer= layer %))
+                                    %))
+                           layers)))
+        (update :map dissoc :edit-layer))))
 
 (defn update-features! [layer-name update-fn & args]
   (let [^ol.Map m (openlayers/get-the-map)]
