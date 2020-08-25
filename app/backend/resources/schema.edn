@@ -1041,4 +1041,27 @@
            :db/cardinality :db.cardinality/one
            :db/unique :db.unique/identity
            :db/doc "A single entity and user pair should only save a single last seen timestamp"
-           :db/noHistory true}]]}]
+           :db/noHistory true}]]}
+
+ {:db/ident :migration/work-meetings-v1
+  :txes [[{:db/ident :activity/meetings
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many}
+          {:db/ident :meeting/title
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :meeting/location
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :meeting/start
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :meeting/end
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :meeting/organizer
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one}
+          {:db/ident :meeting/number
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one}]]}]

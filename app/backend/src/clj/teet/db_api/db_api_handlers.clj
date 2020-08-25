@@ -26,6 +26,7 @@
             teet.system.system-queries
             teet.task.task-commands
             teet.activity.activity-commands
+            teet.meeting.meeting-commands
             teet.dashboard.dashboard-queries
             teet.notification.notification-queries
             teet.notification.notification-commands

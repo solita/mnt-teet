@@ -33,6 +33,7 @@
             teet.activity.activity-view
             teet.file.file-view
             teet.ui.unauthorized
+            teet.meeting.meeting-view
 
             teet.ui.query
             [teet.ui.url :as url]

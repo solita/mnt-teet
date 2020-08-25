@@ -53,6 +53,20 @@
                                                        :meta/deleted?
                                                        :task/estimated-end-date]}]}]}]))
 
+(def default-fetch-pattern
+  "Default pull pattern required for project navigation"
+  [:db/id
+   :task/name :task/description
+   :task/status :task/type :task/group
+   :task/estimated-start-date :task/estimated-end-date
+   :task/actual-start-date :task/actual-end-date
+   :task/send-to-thk?
+   {:task/assignee [:user/given-name
+                    :user/email
+                    :user/id
+                    :db/id
+                    :user/family-name]}])
+
 (def project-info-attributes
   (into project-listing-attributes
         [:thk.project/procurement-nr

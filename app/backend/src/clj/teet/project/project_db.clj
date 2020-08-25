@@ -103,30 +103,27 @@
       (db-api/bad-request! "No such document")
       default-value))))
 
+(defn project-fetch-pattern
+  [opts]
+  (into project-model/project-info-attributes
+        `[{:thk.project/lifecycles
+           [:db/id
+            :thk.lifecycle/estimated-start-date
+            :thk.lifecycle/estimated-end-date
+            :thk.lifecycle/type
+            {:thk.lifecycle/activities
+             [~'*
+              ~@(:thk.lifecycle/activities opts)
+              {:activity/manager [:user/given-name :user/family-name :db/id]}
+              {:activity/tasks [~@(:activity/tasks opts)]}]}]}]))
+
 (defn project-by-id
   "Fetch project by id. Includes all information on nested items required by project navigator."
-  [db eid]
-  (d/pull db (into project-model/project-info-attributes
-                   '[{:thk.project/lifecycles
-                      [:db/id
-                       :thk.lifecycle/estimated-start-date
-                       :thk.lifecycle/estimated-end-date
-                       :thk.lifecycle/type
-                       {:thk.lifecycle/activities
-                        [*
-                         {:activity/manager [:user/given-name :user/family-name :db/id]}
-                         {:activity/tasks [:db/id
-                                           :task/name :task/description
-                                           :task/status :task/type :task/group
-                                           :task/estimated-start-date :task/estimated-end-date
-                                           :task/actual-start-date :task/actual-end-date
-                                           :task/send-to-thk?
-                                           {:task/assignee [:user/given-name
-                                                            :user/email
-                                                            :user/id
-                                                            :db/id
-                                                            :user/family-name]}]}]}]}])
-          eid))
+  ([db eid]
+   (project-by-id db eid {:activity/tasks project-model/default-fetch-pattern}))
+  ([db eid opts]
+   (d/pull db (project-fetch-pattern opts)
+           eid)))
 
 (defn lifecycle-dates
   [db lifecycle-id]
