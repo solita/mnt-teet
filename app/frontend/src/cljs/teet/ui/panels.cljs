@@ -127,21 +127,21 @@
   [{:keys [title on-close open-atom actions disable-content-wrapper? max-width]
     :or {max-width "sm"}
     :as _opts} content]
-  (let [open-atom (or open-atom (r/atom true))      ;;creates new atoms unnecessarily
-        close-fn #(do
-                    (reset! open-atom false)
-                    (when on-close
-                      (on-close)))
-        close-button [IconButton {:aria-label     "close"
-                                  :color          :primary
-                                  :disable-ripple true
-                                  :on-click       close-fn
-                                  :size           :small}
-                      [icons/navigation-close]]]
+  (r/with-let [open-atom (or open-atom (r/atom true))       ;;creates new atoms unnecessarily
+               close-fn #(do
+                           (reset! open-atom false)
+                           (when on-close
+                             (on-close)))
+               close-button [IconButton {:aria-label "close"
+                                         :color :primary
+                                         :disable-ripple true
+                                         :on-click close-fn
+                                         :size :small}
+                             [icons/navigation-close]]]
     [Dialog {:full-width true
-             :max-width  max-width
-             :open       @open-atom
-             :on-close   close-fn}
+             :max-width max-width
+             :open @open-atom
+             :on-close close-fn}
      (if title
        ;; Title specified, show title and close button
        [DialogTitle {:disable-typography true

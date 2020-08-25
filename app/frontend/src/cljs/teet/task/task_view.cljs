@@ -319,7 +319,6 @@
   [{:keys [e! app project] :as _opts} _dialog]
   (let [activity-id (get-in app [:params :activity])
         activity (project-model/activity-by-id project activity-id)]
-    (println "ACTIVITY " activity)
     [task-form e! (:edit-task-data app) activity
      {:max-date (:activity/estimated-end-date activity)
       :min-date (:activity/estimated-start-date activity)}]))

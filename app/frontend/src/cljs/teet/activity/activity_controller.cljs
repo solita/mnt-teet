@@ -74,7 +74,6 @@
   DeleteActivity
   (process-event
     [{activity-id :activity-id} app]
-    (println "IN DELETE:" activity-id)
     (t/fx (update-in app [:stepper] dissoc :dialog)
           {:tuck.effect/type :command!
            :command :activity/delete

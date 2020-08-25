@@ -188,7 +188,9 @@
   [:div {:on-mouse-enter on-mouse-enter
          :on-mouse-leave on-mouse-leave
          :class (<class feature-and-action-style)}
-   [:span label]
+   [:span
+    {:style {:margin-right "0.5rem"}}
+    label]
    [buttons/rect-white {:on-click action}
     button-label]])
 

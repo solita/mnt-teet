@@ -45,8 +45,8 @@
            :parent :projects-list
            :title (:thk.project/name state)
            :crumb (teet.project.project-model/get-column (or (some-> state :project)
-                                                             state)
-                                                         :thk.project/project-name)
+                                                           state)
+                    :thk.project/project-name)
            :view teet.project.project-view/project-page
            :state {:query :thk.project/fetch-project
                    :args {:thk.project/id project}}}
@@ -54,30 +54,38 @@
  :activity {:path "/projects/:project/:activity"
             :parent :project
             :crumb (-> state
-                       (teet.project.project-model/activity-by-id activity)
-                       :activity/name tr-enum)
+                     (teet.project.project-model/activity-by-id activity)
+                     :activity/name tr-enum)
             :title (-> state
-                       (teet.project.project-model/activity-by-id activity)
-                       :activity/name tr-enum)
+                     (teet.project.project-model/activity-by-id activity)
+                     :activity/name tr-enum)
             :view teet.activity.activity-view/activity-page
             :state {:query :thk.project/fetch-project
                     :args {:thk.project/id project
                            :activity-id activity}}}
 
- :activity-task {:path "/projects/:project/:activity/:task"
+ :activity-task {:path "/projects/:project/:activity(\\d+)/:task(\\d+)"
                  :parent :activity
                  :crumb (-> state
-                            (teet.project.project-model/task-by-id task)
-                            :task/type
-                            tr-enum)
+                          (teet.project.project-model/task-by-id task)
+                          :task/type
+                          tr-enum)
                  :title  (-> state
-                             (teet.project.project-model/task-by-id task)
-                             :task/type
-                             tr-enum)
+                           (teet.project.project-model/task-by-id task)
+                           :task/type
+                           tr-enum)
                  :view teet.task.task-view/task-page
                  :state {:query :thk.project/fetch-project
                          :args {:thk.project/id project
                                 :task-id (->long task)}}}
+
+ :activity-meetings {:path "/projects/:project/meetings/:activity/"
+                     :view teet.meeting.meeting-view/activity-meetings-view
+                     :title "meetings"                      ;; todo proper value
+                     :crumb "Meeting"                        ;; TODO proper value
+                     :parent :project
+                     :state {:query :thk.project/fetch-project ;; proper query
+                             :args {:thk.project/id project}}}
 
  :file {:path "/projects/:project/:activity/:task/:file"
         :parent :activity-task

@@ -73,7 +73,8 @@
     (when justify
       {:justify-content justify})
     {:display :flex
-     :margin-top "1.5rem"})))
+     :margin-top "1.5rem"
+     :padding-bottom "1rem"})))
 
 (defn form-footer [{:keys [delete cancel validate disabled?]}]
   [:div {:class (<class form-buttons)}
@@ -109,6 +110,15 @@
       (process-event [_ app]
         (swap! the-atom update-fn %)
         app))))
+
+(defn reset-atom-event
+  "Returns a tuck event that resets the given atom when processed.
+  Leaves app state unaffected."
+  [the-atom new-value]
+  #(reify t/Event
+     (process-event [_ app]
+       (reset! the-atom new-value)
+       app)))
 
 (defn required-field? [attribute required-fields]
   (boolean

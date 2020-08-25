@@ -6,7 +6,6 @@
             [tuck.core :as tuck]
             [teet.app-state :as app-state]
             [teet.log :as log]
-            [clojure.string :as str]
             [alandipert.storage-atom :refer [local-storage]])
   (:require-macros [teet.route-macros :refer [define-router]]))
 

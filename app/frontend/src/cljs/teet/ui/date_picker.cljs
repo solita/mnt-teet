@@ -10,8 +10,10 @@
                                          Button Grid]]
             [teet.ui.text-field :refer [TextField]]
             [teet.theme.theme-colors :as colors]
+            [goog.string :as gstr]
             [herb.core :refer [<class]]
-            [teet.ui.format :as format]))
+            [teet.ui.format :as format]
+            [clojure.string :as str]))
 
 (defn- date-seq [first-date last-date]
   (when-not (t/after? first-date last-date)
@@ -261,6 +263,82 @@
                                     (close-input))
                        :selectable? selectable?}]]]])))
 
+
+;; Date picker clear & disable start and end
+;; When first date picked enable start and end
+;; When date is changed after some values in start/end call on-change to both
+;; When either end or start changed call on-change with the new date value for that
+;; Fail end inputs that are before start input
+;; Have the ability to change start input and not have to touch the end
+;; WIP in a sense that all functionality should work, but might require some fine-tuning and error support
+(defn date-time-range-input
+  "Give date-picker and two time inputs to form datetime rante"
+  [{:keys [error value on-change required]}]
+  (let [[start end] value]
+    (r/with-let [time-input-value (fn [date]
+                                    (when date
+                                      (str (gstr/format "%02d" (.getHours date)) ":"
+                                           (gstr/format "%02d" (.getMinutes date)))))
+                 start-input-atom (r/atom (or (time-input-value start) ""))
+                 end-input-atom (r/atom (or (time-input-value end)) "")
+                 date (r/atom nil)
+                 time-to-date (fn [input-val date]
+                                (let [[hours minutes] (str/split input-val ":")]
+                                  (when (and hours minutes)
+                                    (doto (js/Date. date)
+                                      (.setHours hours)
+                                      (.setMinutes minutes)))))
+                 date-change (fn [val]
+                               (let [new-date val
+                                     start-date (when (not-empty @start-input-atom)
+                                                  (time-to-date @start-input-atom new-date))
+                                     end-date (when (not-empty @end-input-atom)
+                                                (time-to-date @end-input-atom new-date))]
+                                 (reset! date val)
+                                 (if (nil? val)
+                                   (on-change [nil nil])
+                                   (on-change [start-date end-date]))))]
+      [:div
+       [Grid {:container true :spacing 1}
+        [Grid {:item true :xs 9}
+         [date-input {:value @date
+                      :label (tr [:common-texts :date])
+                      :required required
+                      :on-change date-change}]]
+        [Grid {:item true :xs 3}
+         [:div {:style {:display :flex
+                        :flex-direction :row
+                        :align-items :center
+                        :justify-content :space-between}}
+          [:div
+           [TextField {:type :time
+                       :required required
+                       :disabled (nil? @date)
+                       :label (tr [:common-texts :start-time])
+                       :value @start-input-atom
+                       :max @end-input-atom
+                       :on-blur (fn [_]
+                                  (on-change [(time-to-date @start-input-atom @date) end]))
+                       :on-change (fn [e]
+                                    (let [v (-> e .-target .-value)]
+                                      (when (empty? v)
+                                        (on-change [nil end]))
+                                      (reset! start-input-atom v)))}]]
+          [:p {:style {:padding "0 0.25rem"}} "–"]
+          [:div
+           [TextField {:type :time
+                       :required required
+                       :disabled (nil? @date)
+                       :value @end-input-atom
+                       :label (tr [:common-texts :end-time])
+                       :min @start-input-atom
+                       :on-blur (fn [_]
+                                  (on-change [start (time-to-date @end-input-atom @date)]))
+                       :on-change (fn [e]
+                                    (let [v (-> e .-target .-value)]
+                                      (when (empty? v)
+                                        (on-change [start nil]))
+                                      (reset! end-input-atom v)))}]]]]]])))
 
 (defn date-range-input
   "combine two date-inputs to provide a consistent date-range-picker"
