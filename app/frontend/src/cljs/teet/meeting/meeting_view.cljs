@@ -58,17 +58,18 @@
 (defn meetings-page-content
   [e! activity]
   [:div
-   [:h1 (:tr [:meetings :meetings-title]) activity]
+   [typography/Heading1 (tr [:meetings :meetings-title])]
    [form-modal-button {:form-component (r/partial create-meeting-form e! activity)
                        :button-component buttons/rect-primary}
-    (:tr [:meetings :add-meeting])]])
+    (tr [:meetings :new-meeting-button])]])
 
 (defn activity-meetings-view
   "Page structure showing project navigator along with content."
   [e! {{:keys [activity]} :params :as app} project breadcrumbs]
   (let [[nav-w content-w] [3 6]]
     [project-context/provide
-     {:project-id (:db/id project)}
+     {:project-id (:db/id project)
+      :thk.project/id (:thk.project/id project)}
      [:div.project-navigator-with-content {:class (<class project-style/page-container)}
       [:div
        [breadcrumbs/breadcrumbs breadcrumbs]]
