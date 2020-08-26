@@ -126,9 +126,8 @@
 
   [{:keys [value on-change id]}]
   (js>
-   (let [_ (println "before create empty state")
+   (let [read-only? (nil? on-change)
          editorState (or value (.createEmpty draft-js/EditorState decorator))
-         _ (println "after create empty state")
          [linkValue setLinkValue] (react/useState "")
 
          handle-key-command (fn [command state]
@@ -158,24 +157,38 @@
                                               (.getSelection newEditorState)
                                               entityKey))))]
      [:span (when id {:id id})
-      [:input {:value linkValue
-               :on-change #(setLinkValue (-> % .-target .-value))}]
+      (when-not read-only?
+        [:span
+         [:input {:value linkValue
+                  :on-change #(setLinkValue (-> % .-target .-value))}]
 
-      [:div {:on-click focus-editor
-             :class (<class editor-style false) }
+         [:div {:on-click focus-editor
+                :class (<class editor-style false) }
 
-       [block-style-controls editorState blockToggle]
-       [inline-style-controls editorState inlineToggle]
-       [:button {:on-click (fn [e]
-                             (.stopPropagation e)
-                             (set-link))}
-        "set link"]
-       [Divider {:style {:margin "1rem"}}]
+          [block-style-controls editorState blockToggle]
+          [inline-style-controls editorState inlineToggle]
+          [:button {:on-click (fn [e]
+                                (.stopPropagation e)
+                                (set-link))}
+           "set link"]
+          [Divider {:style {:margin "1rem"}}]]])
 
-       [Editor {:ref set-editor-ref!
-                :editorState editorState
-                :handleKeyCommand handle-key-command
-                :blockRenderMap draft-js/DefaultDraftBlockRenderMap
-                :placeholder "Rich text editor"
-                :on-change (fn [editorState]
-                             (on-change editorState))}]]])))
+      [Editor {:ref set-editor-ref!
+               :readOnly (nil? on-change)
+               :editorState editorState
+               :handleKeyCommand handle-key-command
+               :blockRenderMap draft-js/DefaultDraftBlockRenderMap
+               :placeholder "Rich text editor"
+               :on-change (fn [editorState]
+                            (on-change editorState))}]])))
+
+(defn display-markdown
+  "Display a markdown that does not change during the component lifecycle.
+  Parses and creates an editorstate once at mount."
+  [markdown]
+  (let [editor-state (when markdown
+                       (markdown->editor-state markdown))]
+    (fn [_]
+      (if editor-state
+        [:f> wysiwyg-editor {:value editor-state}]
+        [:span]))))
