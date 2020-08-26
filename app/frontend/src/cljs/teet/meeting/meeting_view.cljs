@@ -99,3 +99,42 @@
                        :padding "1rem 1.5rem"}}
          [:h1 "participants"]                               ;; TODO create participants view
          ]]]]]))
+
+(defn project-meetings-page-content [e! project]
+  [:div "projektin meetingit"])
+
+(defn project-meetings-view
+  "Project meetings"
+  [e! app project breadcrumbs]
+  (let [[nav-w content-w] [3 6]]
+    [project-context/provide
+     {:project-id (:db/id project)
+      :thk.project/id (:thk.project/id project)}
+     [:div.project-navigator-with-content {:class (<class project-style/page-container)}
+      [:div
+       [breadcrumbs/breadcrumbs breadcrumbs]]
+      [typography/Heading1 (or (:thk.project/project-name project)
+                               (:thk.project/name project))]
+      [Paper {:class (<class task-style/task-page-paper-style)}
+       [Grid {:container true
+              :wrap :nowrap
+              :spacing   0}
+        [Grid {:item  true
+               :xs nav-w
+               :style {:max-width "400px"}}
+         [project-navigator-view/project-navigator e! project (:stepper app) (:params app) true]]
+        [Grid {:item  true
+               :xs content-w
+               :style {:padding "2rem 1.5rem"
+                       :overflow-y :auto
+                       ;; content area should scroll, not the whole page because we
+                       ;; want map to stay in place without scrolling it
+                       }}
+         [project-meetings-page-content e! project]]
+        [Grid {:item  true
+               :xs :auto
+               :style {:display :flex
+                       :flex    1
+                       :padding "1rem 1.5rem"}}
+         [:h1 "participants"]                               ;; TODO create participants view
+         ]]]]]))

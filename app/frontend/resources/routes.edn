@@ -51,7 +51,7 @@
            :state {:query :thk.project/fetch-project
                    :args {:thk.project/id project}}}
 
- :activity {:path "/projects/:project/:activity"
+ :activity {:path "/projects/:project/:activity(\\d+)"
             :parent :project
             :crumb (-> state
                      (teet.project.project-model/activity-by-id activity)
@@ -79,13 +79,23 @@
                          :args {:thk.project/id project
                                 :task-id (->long task)}}}
 
- :activity-meetings {:path "/projects/:project/meetings/:activity/"
-                     :view teet.meeting.meeting-view/activity-meetings-view
+ :project-meetings  {:path "/projects/:project/meetings"
+                     :view teet.meeting.meeting-view/project-meetings-view
                      :title "meetings"                      ;; todo proper value
                      :crumb "Meeting"                        ;; TODO proper value
                      :parent :project
                      :state {:query :thk.project/fetch-project ;; proper query
                              :args {:thk.project/id project}}}
+
+ :activity-meetings {:path "/projects/:project/meetings/:activity/"
+                     :view teet.meeting.meeting-view/activity-meetings-view
+                     :title "meetings"                      ;; todo proper value
+                     :crumb "Meeting"                        ;; TODO proper value
+                     :parent :project-meetings
+                     :state {:query :thk.project/fetch-project ;; proper query
+                             :args {:thk.project/id project}}}
+
+
 
  :file {:path "/projects/:project/:activity/:task/:file"
         :parent :activity-task
