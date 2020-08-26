@@ -16,7 +16,10 @@
             [teet.ui.form :as form]
             [teet.meeting.meeting-controller :as meeting-controller]
             [teet.ui.select :as select]
-            [teet.ui.date-picker :as date-picker]))
+            [teet.ui.date-picker :as date-picker]
+            [teet.ui.util :refer [mapc]]
+            [teet.ui.itemlist :as itemlist]
+            [teet.ui.url :as url]))
 
 
 (defn create-meeting-form
@@ -100,8 +103,32 @@
          [:h1 "participants"]                               ;; TODO create participants view
          ]]]]]))
 
+(defn meeting-list [meetings]
+  [:div
+   [typography/Heading1 "Project meetings"]
+   [itemlist/ItemList {}
+    (for [{:meeting/keys [title location start end organizer number]
+           activity-id :activity-id
+           id :db/id} meetings]
+      ^{:key (str id)}
+      [itemlist/Item {:label (str title
+                                  (when number
+                                    (str " #" number)))}
+       [url/Link {:page :meeting
+                  :params {:activity (str activity-id)
+                           :meeting (str id)}}
+        title]])]])
+
 (defn project-meetings-page-content [e! project]
-  [:div "projektin meetingit"])
+  (let [meetings (mapcat
+                  (fn [{:thk.lifecycle/keys [activities]}]
+                    (mapcat (fn [{meetings :activity/meetings
+                                  id :db/id}]
+                              (map #(assoc % :activity-id id) meetings))
+                            activities))
+                  (:thk.project/lifecycles project))]
+
+    [meeting-list meetings]))
 
 (defn project-meetings-view
   "Project meetings"
@@ -138,3 +165,7 @@
                        :padding "1rem 1.5rem"}}
          [:h1 "participants"]                               ;; TODO create participants view
          ]]]]]))
+
+
+(defn meeting-page [e! app meeting breadcrumbs]
+  [:div "meeting page: " (pr-str meeting)])

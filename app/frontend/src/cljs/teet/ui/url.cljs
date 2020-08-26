@@ -2,7 +2,8 @@
   "Define functions to generate URLs and links for any route"
   (:require [clojure.string :as str]
             [teet.ui.context :as context]
-            teet.ui.material-ui)
+            teet.ui.material-ui
+            [teet.log :as log])
   (:require-macros [teet.route-macros :refer [define-url-functions]]))
 
 
@@ -95,11 +96,13 @@
    content]
   [consume-navigation-info
    (fn [{context-params :params}]
-     [teet.ui.material-ui/Link
-      (merge {:href ((route-url-fns page)
-                     (merge context-params params
-                            (when query
-                              {::query query})))}
-             (when class
-               {:class class}))
-      content])])
+     (let [url-fn (route-url-fns page)]
+       (when (nil? url-fn)
+         (log/error "No such page:" page))
+       [teet.ui.material-ui/Link
+        (merge {:href (url-fn (merge context-params params
+                                     (when query
+                                       {::query query})))}
+               (when class
+                 {:class class}))
+        content]))])

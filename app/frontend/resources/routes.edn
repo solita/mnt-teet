@@ -95,6 +95,15 @@
                      :state {:query :thk.project/fetch-project ;; proper query
                              :args {:thk.project/id project}}}
 
+ :meeting {:path "/projects/:project/meetings/:activity(\\d+)/:meeting(\\d+)"
+           :view teet.meeting.meeting-view/meeting-page
+           :title (:meeting/title state)
+           :crumb (:meeting/title state)
+           :parent :activity-meetings
+           :state {:query :meeting/fetch-meeting
+                   :args {:activity-id (->long activity)
+                          :meeting-id (->long meeting)}}}
+
 
 
  :file {:path "/projects/:project/:activity/:task/:file"
