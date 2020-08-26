@@ -19,7 +19,12 @@
             [teet.ui.date-picker :as date-picker]
             [teet.ui.util :refer [mapc]]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.url :as url]))
+            [teet.ui.url :as url]
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.common :as common]
+            [teet.ui.format :as fmt]
+            [teet.user.user-model :as user-model]
+            [teet.ui.rich-text-editor :as rich-text-editor]))
 
 
 (defn create-meeting-form
@@ -167,5 +172,27 @@
          ]]]]]))
 
 
-(defn meeting-page [e! app meeting breadcrumbs]
-  [:div "meeting page: " (pr-str meeting)])
+(defn meeting-page [e! app {:meeting/keys [title number location start end organizer agenda] :as meeting} breadcrumbs]
+  [:div
+   [:div {:class (<class common-styles/heading-and-action-style)}
+    [typography/Heading2 title (when number (str " #" number))]]
+
+   [common/labeled-data {:label (tr [:fields :meeting/location])
+                         :data location}]
+   [common/labeled-data {:label (tr [:fields :meeting/start])
+                         :data (fmt/date-time start)}]
+   [common/labeled-data {:label (tr [:fields :meeting/end])
+                         :data (fmt/date-time end)}]
+   [common/labeled-data {:label (tr [:fields :meeting/organizer])
+                         :data (user-model/user-name organizer)}]
+
+   [itemlist/ItemList {:title (tr [:fields :meeting/agenda])}
+    (for [{:meeting.agenda/keys [topic body responsible]} agenda]
+      [:div.meeting-agenda
+       [common/labeled-data {:label (tr [:fields :meeting.agenda/topic])
+                             :data topic}]
+       [common/labeled-data {:label (tr [:fields :meeting.agenda/resposible])
+                             :data (user-model/user-name responsible)}]
+       [common/labeled-data {:label (tr [:fields :meeting.agenda/body])
+                             :data [rich-text-editor/display-markdown body]}]
+       ])]])
