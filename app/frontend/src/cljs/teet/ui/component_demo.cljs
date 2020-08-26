@@ -117,7 +117,20 @@
 
      [:div {:style {:margin "2rem"}}
       [:f> rich-text-editor/wysiwyg-editor {:value @editor-state
-                                            :on-change #(reset! editor-state %)}]]
+                                            :on-change #(reset! editor-state %)}]
+
+      [:button {:on-click (fn [_]
+                            (swap! editor-state
+                                   (fn [editor-state]
+                                     (aset js/window "ES" editor-state)
+                                     (log/info "OLD EDITOR STATE: " editor-state)
+                                     (let [blocks (rich-text-editor/editor-state->block-seq editor-state)]
+                                       (log/info "BLOCKS: " blocks)
+                                       (let [new-editor-state
+                                             (rich-text-editor/block-seq->editor-state blocks)]
+                                         (log/info "NEW EDITOR STATE: " new-editor-state)
+                                         new-editor-state)))))}
+       "round trip"]]
 
      [Divider {:style {:margin "2rem 0"}}]
 
