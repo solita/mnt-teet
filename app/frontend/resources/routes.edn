@@ -16,7 +16,6 @@
 ;; :args     arguments map for the query, can refer to params by symbol name
 
 {:root {:path "/"
-        :crumb (tr [:projects :map-view])
         :view teet.dashboard.dashboard-view/dashboard-page
         :state {:query :dashboard/user-dashboard
                 :args {}}}
@@ -81,8 +80,8 @@
 
  :project-meetings  {:path "/projects/:project/meetings"
                      :view teet.meeting.meeting-view/project-meetings-view
-                     :title "meetings"                      ;; todo proper value
-                     :crumb "Meeting"                        ;; TODO proper value
+                     :title "Meetings list" ;; todo proper value
+                     :crumb "Meeting list" ;; TODO proper value
                      :parent :project
                      :state {:query :meeting/project-with-meetings
                              :args {:thk.project/id project}}}
@@ -90,15 +89,17 @@
  :activity-meetings {:path "/projects/:project/meetings/:activity/"
                      :view teet.meeting.meeting-view/activity-meetings-view
                      :title "meetings"                      ;; todo proper value
-                     :crumb "Meeting"                        ;; TODO proper value
+                     :crumb (-> (or (:project state)
+                                    state)
+                                (teet.project.project-model/activity-by-id activity) :activity/name tr-enum)
                      :parent :project-meetings
                      :state {:query :thk.project/fetch-project ;; proper query
                              :args {:thk.project/id project}}}
 
  :meeting {:path "/projects/:project/meetings/:activity(\\d+)/:meeting(\\d+)"
            :view teet.meeting.meeting-view/meeting-page
-           :title (:meeting/title state)
-           :crumb (:meeting/title state)
+           :title (-> state :meeting :meeting/title)
+           :crumb (-> state :meeting :meeting/title)
            :parent :activity-meetings
            :state {:query :meeting/fetch-meeting
                    :args {:activity-id (->long activity)

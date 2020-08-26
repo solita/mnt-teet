@@ -1,7 +1,6 @@
 (ns teet.meeting.meeting-view
   (:require [reagent.core :as r]
             [teet.project.project-navigator-view :as project-navigator-view]
-            [teet.ui.breadcrumbs :as breadcrumbs]
             [teet.ui.typography :as typography]
             [teet.ui.text-field :refer [TextField]]
             [herb.core :refer [<class]]
@@ -71,16 +70,13 @@
                        :button-component buttons/rect-primary}
     (tr [:meetings :new-meeting-button])]])
 
-(defn activity-meetings-view
-  "Page structure showing project navigator along with content."
-  [e! {{:keys [activity]} :params :as app} project breadcrumbs]
+(defn meeting-page-structure [e! app project
+                              main-content right-panel-content]
   (let [[nav-w content-w] [3 6]]
     [project-context/provide
      {:project-id (:db/id project)
       :thk.project/id (:thk.project/id project)}
      [:div.project-navigator-with-content {:class (<class project-style/page-container)}
-      [:div
-       [breadcrumbs/breadcrumbs breadcrumbs]]
       [typography/Heading1 (or (:thk.project/project-name project)
                                (:thk.project/name project))]
       [Paper {:class (<class task-style/task-page-paper-style)}
@@ -90,8 +86,7 @@
         [Grid {:item  true
                :xs nav-w
                :style {:max-width "400px"}}
-         [project-navigator-view/project-navigator e! project (:stepper app) (:params app) true] ;;TODO create new meetings navigator
-         ]
+         [project-navigator-view/project-navigator e! project (:stepper app) (:params app) true]]
         [Grid {:item  true
                :xs content-w
                :style {:padding "2rem 1.5rem"
@@ -99,14 +94,20 @@
                        ;; content area should scroll, not the whole page because we
                        ;; want map to stay in place without scrolling it
                        }}
-         [meetings-page-content e! activity]]
+         main-content]
         [Grid {:item  true
                :xs :auto
                :style {:display :flex
                        :flex    1
                        :padding "1rem 1.5rem"}}
-         [:h1 "participants"]                               ;; TODO create participants view
-         ]]]]]))
+         right-panel-content]]]]]))
+
+(defn activity-meetings-view
+  "Page structure showing project navigator along with content."
+  [e! {{:keys [activity]} :params :as app} project breadcrumbs]
+  [meeting-page-structure e! app project
+   [meetings-page-content e! activity]
+   [:h1 "participants"]])
 
 (defn meeting-list [meetings]
   [:div
@@ -135,64 +136,39 @@
 
     [meeting-list meetings]))
 
+
 (defn project-meetings-view
   "Project meetings"
-  [e! app project breadcrumbs]
-  (let [[nav-w content-w] [3 6]]
-    [project-context/provide
-     {:project-id (:db/id project)
-      :thk.project/id (:thk.project/id project)}
-     [:div.project-navigator-with-content {:class (<class project-style/page-container)}
-      [:div
-       [breadcrumbs/breadcrumbs breadcrumbs]]
-      [typography/Heading1 (or (:thk.project/project-name project)
-                               (:thk.project/name project))]
-      [Paper {:class (<class task-style/task-page-paper-style)}
-       [Grid {:container true
-              :wrap :nowrap
-              :spacing   0}
-        [Grid {:item  true
-               :xs nav-w
-               :style {:max-width "400px"}}
-         [project-navigator-view/project-navigator e! project (:stepper app) (:params app) true]]
-        [Grid {:item  true
-               :xs content-w
-               :style {:padding "2rem 1.5rem"
-                       :overflow-y :auto
-                       ;; content area should scroll, not the whole page because we
-                       ;; want map to stay in place without scrolling it
-                       }}
-         [project-meetings-page-content e! project]]
-        [Grid {:item  true
-               :xs :auto
-               :style {:display :flex
-                       :flex    1
-                       :padding "1rem 1.5rem"}}
-         [:h1 "participants"]                               ;; TODO create participants view
-         ]]]]]))
+  [e! app project _breadcrumbs]
+  [meeting-page-structure e! app project
+   [project-meetings-page-content e! project]
+   [:h1 "participants"]])
 
 
-(defn meeting-page [e! app {:keys [project meeting]} breadcrumbs]
-  (let [{:meeting/keys [title number location start end organizer agenda]} meeting]
-    [:div
-     [:div {:class (<class common-styles/heading-and-action-style)}
-      [typography/Heading2 title (when number (str " #" number))]]
 
-     [common/labeled-data {:label (tr [:fields :meeting/location])
-                           :data location}]
-     [common/labeled-data {:label (tr [:fields :meeting/start])
-                           :data (fmt/date-time start)}]
-     [common/labeled-data {:label (tr [:fields :meeting/end])
-                           :data (fmt/date-time end)}]
-     [common/labeled-data {:label (tr [:fields :meeting/organizer])
-                           :data (user-model/user-name organizer)}]
+(defn meeting-page [e! app {:keys [project meeting]} _breadcrumbs]
+  [meeting-page-structure e! app project
+   (let [{:meeting/keys [title number location start end organizer agenda]} meeting]
+     [:div
+      [:div {:class (<class common-styles/heading-and-action-style)}
+       [typography/Heading2 title (when number (str " #" number))]]
 
-     [itemlist/ItemList {:title (tr [:fields :meeting/agenda])}
-      (for [{:meeting.agenda/keys [topic body responsible]} agenda]
-        [:div.meeting-agenda
-         [common/labeled-data {:label (tr [:fields :meeting.agenda/topic])
-                               :data topic}]
-         [common/labeled-data {:label (tr [:fields :meeting.agenda/resposible])
-                               :data (user-model/user-name responsible)}]
-         [common/labeled-data {:label (tr [:fields :meeting.agenda/body])
-                               :data [rich-text-editor/display-markdown body]}]])]]))
+      [common/labeled-data {:label (tr [:fields :meeting/location])
+                            :data location}]
+      [common/labeled-data {:label (tr [:fields :meeting/start])
+                            :data (fmt/date-time start)}]
+      [common/labeled-data {:label (tr [:fields :meeting/end])
+                            :data (fmt/date-time end)}]
+      [common/labeled-data {:label (tr [:fields :meeting/organizer])
+                            :data (user-model/user-name organizer)}]
+
+      [itemlist/ItemList {:title (tr [:fields :meeting/agenda])}
+       (for [{:meeting.agenda/keys [topic body responsible]} agenda]
+         [:div.meeting-agenda
+          [common/labeled-data {:label (tr [:fields :meeting.agenda/topic])
+                                :data topic}]
+          [common/labeled-data {:label (tr [:fields :meeting.agenda/resposible])
+                                :data (user-model/user-name responsible)}]
+          [common/labeled-data {:label (tr [:fields :meeting.agenda/body])
+                                :data [rich-text-editor/display-markdown body]}]])]])
+   [:h1 "participants"]])
