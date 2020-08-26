@@ -1064,4 +1064,25 @@
            :db/cardinality :db.cardinality/one}
           {:db/ident :meeting/number
            :db/valueType :db.type/long
-           :db/cardinality :db.cardinality/one}]]}]
+           :db/cardinality :db.cardinality/one}]]}
+ {:db/ident :migration/work-meetings-agenda
+  :txes [[{:db/ident :meeting/agenda
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/isComponent true
+           :db/doc "Agenda entries for this meeting"}
+
+          {:db/ident :meeting.agenda/topic
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Short agenda topic description in plain text."}
+
+          {:db/ident :meeting.agenda/body
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Agenda body. rich text in markdown format."}
+
+          {:db/ident :meeting.agenda/responsible
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Reference to user who is responsible for this item"}]]}]
