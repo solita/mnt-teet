@@ -172,27 +172,27 @@
          ]]]]]))
 
 
-(defn meeting-page [e! app {:meeting/keys [title number location start end organizer agenda] :as meeting} breadcrumbs]
-  [:div
-   [:div {:class (<class common-styles/heading-and-action-style)}
-    [typography/Heading2 title (when number (str " #" number))]]
+(defn meeting-page [e! app {:keys [project meeting]} breadcrumbs]
+  (let [{:meeting/keys [title number location start end organizer agenda]} meeting]
+    [:div
+     [:div {:class (<class common-styles/heading-and-action-style)}
+      [typography/Heading2 title (when number (str " #" number))]]
 
-   [common/labeled-data {:label (tr [:fields :meeting/location])
-                         :data location}]
-   [common/labeled-data {:label (tr [:fields :meeting/start])
-                         :data (fmt/date-time start)}]
-   [common/labeled-data {:label (tr [:fields :meeting/end])
-                         :data (fmt/date-time end)}]
-   [common/labeled-data {:label (tr [:fields :meeting/organizer])
-                         :data (user-model/user-name organizer)}]
+     [common/labeled-data {:label (tr [:fields :meeting/location])
+                           :data location}]
+     [common/labeled-data {:label (tr [:fields :meeting/start])
+                           :data (fmt/date-time start)}]
+     [common/labeled-data {:label (tr [:fields :meeting/end])
+                           :data (fmt/date-time end)}]
+     [common/labeled-data {:label (tr [:fields :meeting/organizer])
+                           :data (user-model/user-name organizer)}]
 
-   [itemlist/ItemList {:title (tr [:fields :meeting/agenda])}
-    (for [{:meeting.agenda/keys [topic body responsible]} agenda]
-      [:div.meeting-agenda
-       [common/labeled-data {:label (tr [:fields :meeting.agenda/topic])
-                             :data topic}]
-       [common/labeled-data {:label (tr [:fields :meeting.agenda/resposible])
-                             :data (user-model/user-name responsible)}]
-       [common/labeled-data {:label (tr [:fields :meeting.agenda/body])
-                             :data [rich-text-editor/display-markdown body]}]
-       ])]])
+     [itemlist/ItemList {:title (tr [:fields :meeting/agenda])}
+      (for [{:meeting.agenda/keys [topic body responsible]} agenda]
+        [:div.meeting-agenda
+         [common/labeled-data {:label (tr [:fields :meeting.agenda/topic])
+                               :data topic}]
+         [common/labeled-data {:label (tr [:fields :meeting.agenda/resposible])
+                               :data (user-model/user-name responsible)}]
+         [common/labeled-data {:label (tr [:fields :meeting.agenda/body])
+                               :data [rich-text-editor/display-markdown body]}]])]]))

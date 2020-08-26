@@ -34,19 +34,20 @@
           :thk.project/lifecycles project-model/sort-lifecycles))
 
 (defquery :meeting/fetch-meeting
-  {:doc "Fetch a single meeting info"
+  {:doc "Fetch a single meeting info and project info"
    :context {:keys [db user]}
    :args {:keys [activity-id meeting-id]}
    :project-id (project-db/activity-project-id db activity-id)
    :authorization {:project/read-info {:eid (project-db/activity-project-id db activity-id)
                                        :link :thk.project/owner
                                        :access :read}}}
-  (d/pull db '[:meeting/title :meeting/location
-               :meeting/start :meeting/end
-               :meeting/organizer
-               {:meeting/agenda [:meeting.agenda/topic
-                                 :meeting.agenda/body
-                                 :meeting.agenda/responsible]}
-               ;; FIXME: all decisions, participants etc
-               ]
-          (meeting-db/activity-meeting-id db activity-id meeting-id)))
+  {:project (project-db/project-by-id db (project-db/activity-project-id db activity-id))
+   :meeting (d/pull db '[:meeting/title :meeting/location
+                         :meeting/start :meeting/end
+                         :meeting/organizer
+                         {:meeting/agenda [:meeting.agenda/topic
+                                           :meeting.agenda/body
+                                           :meeting.agenda/responsible]}
+                         ;; FIXME: all decisions, participants etc
+                         ]
+           (meeting-db/activity-meeting-id db activity-id meeting-id))})
