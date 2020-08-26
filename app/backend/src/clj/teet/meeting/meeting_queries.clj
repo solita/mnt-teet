@@ -44,6 +44,9 @@
   (d/pull db '[:meeting/title :meeting/location
                :meeting/start :meeting/end
                :meeting/organizer
-               ;; FIXME: all meeting agenda, decisions, participants etc
+               {:meeting/agenda [:meeting.agenda/topic
+                                 :meeting.agenda/body
+                                 :meeting.agenda/responsible]}
+               ;; FIXME: all decisions, participants etc
                ]
           (meeting-db/activity-meeting-id db activity-id meeting-id)))
