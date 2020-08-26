@@ -76,7 +76,7 @@
   []
   {:padding "0 1.875rem 1.5rem 1.875rem"})
 
-(defn- project-header [project _breadcrumbs _activities]
+(defn- project-header [project]
   (let [thk-url (project-info/thk-url project)]
     [:div {:class (<class project-header-style)}
      [:div {:style {:display :flex
@@ -138,13 +138,12 @@
   [e!
    app
    project
-   breadcrumbs
    {:keys [header body footer map-settings]}]
   (let [related-entity-type (or
                               (project-controller/project-setup-step app)
                               (get-in app [:query :configure]))]
     [:div {:class (<class project-style/project-page-structure)}
-     [project-header project breadcrumbs]
+     [project-header project]
      [:div {:class (<class project-style/project-map-container)}
                                         ;[project-map-view/project-map e! app project]
       (project-map-view/create-project-map e! app project)
@@ -650,11 +649,11 @@
 
 (defn- project-view
   "The project view shown for initialized projects."
-  [e! {{configure :configure} :query :as app} project breadcrumbs]
+  [e! {{configure :configure} :query :as app} project]
   (cond
     (= configure "restrictions")
     ^{:key "Restrictions"}
-    [project-page-structure e! app project breadcrumbs
+    [project-page-structure e! app project
      {:header [:div {:class (<class project-style/project-view-header)}
                [typography/Heading1 {:style {:margin-bottom 0}} (tr [:search-area :select-relevant-restrictions])]]
       :body [change-restrictions-view e! app project]
@@ -671,7 +670,7 @@
                 (tr [:buttons :save])]]}]
     (= configure "cadastral-units")
     ^{:key "Cadastral units"}
-    [project-page-structure e! app project breadcrumbs
+    [project-page-structure e! app project
      {:header [:div {:class (<class project-style/project-view-header)}
                [typography/Heading1 {:style {:margin-bottom 0}} (tr [:search-area :select-relevant-cadastral-units])]]
       :body [change-cadastral-units-view e! app project]
@@ -688,7 +687,7 @@
                 (tr [:buttons :save])]]}]
     :else
     ^{:key "Project view "}
-    [project-page-structure e! app project breadcrumbs
+    [project-page-structure e! app project
      (merge {:header [project-tabs e! app project]
              :body [project-tab e! app project]
              :map-settings {:layers #{:thk-project :surveys}}}
@@ -756,11 +755,11 @@
 
 (defn project-page
   "Shows the normal project view for initialized projects, setup wizard otherwise."
-  [e! app project breadcrumbs]
+  [e! app project]
   [project-context/provide
    {:db/id (:db/id project)
     :thk.project/id (:thk.project/id project)}
    [:<>
     [project-navigator-view/project-navigator-dialogs {:e! e! :app app :project project}]
     [project-page-modals e! app project]
-    [project-view e! app project breadcrumbs]]])
+    [project-view e! app project]]])

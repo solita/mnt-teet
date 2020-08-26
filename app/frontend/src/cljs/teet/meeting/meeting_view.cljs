@@ -104,7 +104,7 @@
 
 (defn activity-meetings-view
   "Page structure showing project navigator along with content."
-  [e! {{:keys [activity]} :params :as app} project breadcrumbs]
+  [e! {{:keys [activity]} :params :as app} project]
   [meeting-page-structure e! app project
    [meetings-page-content e! activity]
    [:h1 "participants"]])
@@ -139,14 +139,14 @@
 
 (defn project-meetings-view
   "Project meetings"
-  [e! app project _breadcrumbs]
+  [e! app project]
   [meeting-page-structure e! app project
    [project-meetings-page-content e! project]
    [:h1 "participants"]])
 
 
 
-(defn meeting-page [e! app {:keys [project meeting]} _breadcrumbs]
+(defn meeting-page [e! app {:keys [project meeting]}]
   [meeting-page-structure e! app project
    (let [{:meeting/keys [title number location start end organizer agenda]} meeting]
      [:div

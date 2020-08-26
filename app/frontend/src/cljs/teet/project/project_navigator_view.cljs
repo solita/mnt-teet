@@ -15,7 +15,6 @@
             [teet.ui.typography :as typography]
             [teet.task.task-style :as task-style]
             [teet.project.project-map-view :as project-map-view]
-            [teet.ui.breadcrumbs :as breadcrumbs]
             [teet.ui.panels :as panels]
             [teet.project.project-style :as project-style]
             [teet.project.task-model :as task-model]
@@ -337,7 +336,7 @@
 
 (defn project-navigator-with-content
   "Page structure showing project navigator along with content."
-  [{:keys [e! project app breadcrumbs column-widths]
+  [{:keys [e! project app column-widths]
     :or {column-widths [3 6 :auto]}
     :as opts} content]
   (let [[nav-w content-w] column-widths]

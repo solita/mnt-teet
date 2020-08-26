@@ -80,7 +80,7 @@
 (defn query-page-view [page-content-view e! app state breadcrumbs]
   [:<>
    [breadcrumbs/breadcrumbs breadcrumbs]
-   [page-content-view e! app state breadcrumbs]])
+   [page-content-view e! app state]])
 
 (defn query-page [{:keys [view breadcrumbs] :as opts}]
   (if (> (count breadcrumbs) 1)

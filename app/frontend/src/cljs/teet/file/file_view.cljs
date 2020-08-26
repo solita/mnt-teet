@@ -342,7 +342,7 @@
       [buttons/button-primary {:on-click on-close}
        (tr [:buttons :save])]]]]])
 
-(defn file-page [e! {{file-id :file} :params} _project _breadcrumbs]
+(defn file-page [e! {{file-id :file} :params} _project]
   ;; Update the file seen timestamp for this user
   (e! (file-controller/->UpdateFileSeen file-id))
   (let [edit-open? (r/atom false)]
@@ -356,7 +356,7 @@
        :reagent-render
        (fn [e! {{file-id :file
                  task-id :task} :params
-                :as app} project breadcrumbs]
+                :as app} project]
          (let [task (project-model/task-by-id project task-id)
                file (project-model/file-by-id project file-id false)
                show-preview? (r/atom (and file (str/starts-with? (:file/type file) "image/")))
@@ -368,7 +368,6 @@
             {:e! e!
              :app app
              :project project
-             :breadcrumbs breadcrumbs
              :column-widths [2 8 2]}
             [Grid {:container true}
              [Grid {:item true :xs 3 :xl 2}
