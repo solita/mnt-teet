@@ -23,6 +23,11 @@
 (def q d/q)
 (def pull d/pull)
 
+(defn pull*
+  "Pull all attributes of entity"
+  [eid]
+  (d/pull (db) '[*] eid))
+
 (defn entity [eid]
   (pull (db) '[*] eid))
 
