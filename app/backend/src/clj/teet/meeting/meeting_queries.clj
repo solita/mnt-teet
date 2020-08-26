@@ -2,7 +2,9 @@
   (:require [teet.project.project-db :as project-db]
             [teet.db-api.core :refer [defquery]]
             [teet.meta.meta-query :as meta-query]
-            [teet.project.project-model :as project-model]))
+            [teet.project.project-model :as project-model]
+            [teet.meeting.meeting-db :as meeting-db]
+            [datomic.client.api :as d]))
 
 
 (defn fetch-project-meetings
@@ -30,3 +32,18 @@
             db
             (fetch-project-meetings db [:thk.project/id id]))
           :thk.project/lifecycles project-model/sort-lifecycles))
+
+(defquery :meeting/fetch-meeting
+  {:doc "Fetch a single meeting info"
+   :context {:keys [db user]}
+   :args {:keys [activity-id meeting-id]}
+   :project-id (project-db/activity-project-id db activity-id)
+   :authorization {:project/read-info {:eid (project-db/activity-project-id db activity-id)
+                                       :link :thk.project/owner
+                                       :access :read}}}
+  (d/pull db '[:meeting/title :meeting/location
+               :meeting/start :meeting/end
+               :meeting/organizer
+               ;; FIXME: all meeting agenda, decisions, participants etc
+               ]
+          (meeting-db/activity-meeting-id db activity-id meeting-id)))
