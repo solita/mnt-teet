@@ -84,7 +84,7 @@
                      :title "meetings"                      ;; todo proper value
                      :crumb "Meeting"                        ;; TODO proper value
                      :parent :project
-                     :state {:query :thk.project/fetch-project ;; proper query
+                     :state {:query :meeting/project-with-meetings
                              :args {:thk.project/id project}}}
 
  :activity-meetings {:path "/projects/:project/meetings/:activity/"
