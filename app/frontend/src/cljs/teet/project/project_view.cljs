@@ -14,7 +14,6 @@
             [teet.project.project-timeline-view :as project-timeline-view]
             [teet.project.road-view :as road-view]
             teet.task.task-spec
-            [teet.ui.breadcrumbs :as breadcrumbs]
             [teet.ui.buttons :as buttons]
             [teet.ui.common :as common]
             [teet.ui.form :as form]
@@ -75,32 +74,30 @@
 
 (defn project-header-style
   []
-  {:padding "1.5rem 1.875rem"})
+  {:padding "0 1.875rem 1.5rem 1.875rem"})
 
-(defn- project-header [project breadcrumbs _activities]
+(defn- project-header [project _breadcrumbs _activities]
   (let [thk-url (project-info/thk-url project)]
     [:div {:class (<class project-header-style)}
-     [:div
-      [breadcrumbs/breadcrumbs breadcrumbs]
+     [:div {:style {:display :flex
+                    :justify-content :space-between}}
+      [Heading1 {:style {:margin-bottom 0}}
+       (project-model/get-column project :thk.project/project-name)]
       [:div {:style {:display :flex
-                     :justify-content :space-between}}
-       [Heading1 {:style {:margin-bottom 0}}
-        (project-model/get-column project :thk.project/project-name)]
-       [:div {:style {:display :flex
-                      :align-items :center}}
-        (when (project-model/has-related-info? project)
-          [Link {:target :_blank
-                 :style {:margin-right "1rem"
-                         :display :flex
-                         :align-items :center}
-                 :href (common-controller/query-url :thk.project/download-related-info
-                                                    (select-keys project [:thk.project/id]))}
-           [:span {:style {:margin-right "0.5rem"}}
-            (tr [:project :download-related-info])]
-           [icons/file-cloud-download]])
-        [common/thk-link {:href thk-url
-                          :target "_blank"}
-         (str "THK" (:thk.project/id project))]]]]]))
+                     :align-items :center}}
+       (when (project-model/has-related-info? project)
+         [Link {:target :_blank
+                :style {:margin-right "1rem"
+                        :display :flex
+                        :align-items :center}
+                :href (common-controller/query-url :thk.project/download-related-info
+                                                   (select-keys project [:thk.project/id]))}
+          [:span {:style {:margin-right "0.5rem"}}
+           (tr [:project :download-related-info])]
+          [icons/file-cloud-download]])
+       [common/thk-link {:href thk-url
+                         :target "_blank"}
+        (str "THK" (:thk.project/id project))]]]]))
 
 (defn heading-state
   [title select]

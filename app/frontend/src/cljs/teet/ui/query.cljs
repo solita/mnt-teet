@@ -4,7 +4,9 @@
             [reagent.core :as r]
             [tuck.core :as t]
             [teet.ui.material-ui :refer [CircularProgress]]
-            [teet.common.common-styles :as common-styles]))
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.breadcrumbs :as breadcrumbs]
+            [teet.project.project-style :as project-style]))
 
 (defrecord Query [query args state-path state-atom])
 (defrecord QueryResult [state-path state-atom result])
@@ -74,3 +76,14 @@
               skeleton
               [:div {:class (<class common-styles/spinner-style)}
                [CircularProgress]]))))})))
+
+(defn query-page-view [page-content-view e! app state breadcrumbs]
+  [:<>
+   [breadcrumbs/breadcrumbs breadcrumbs]
+   [page-content-view e! app state breadcrumbs]])
+
+(defn query-page [{:keys [view breadcrumbs] :as opts}]
+  (if (> (count breadcrumbs) 1)
+    [query (assoc opts
+                  :view (reagent.core/partial query-page-view view))]
+    [query opts]))

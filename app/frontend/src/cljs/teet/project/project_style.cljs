@@ -167,7 +167,7 @@
    :text-decoration :none})
 
 (defn page-container []
-  {:padding        "1.5rem 1.875rem"
+  {:padding        "0 1.875rem 1.5rem 1.875rem"
    :display        :flex
    :flex-direction :column
    :flex           1})

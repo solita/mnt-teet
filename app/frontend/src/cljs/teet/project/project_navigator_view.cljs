@@ -345,7 +345,6 @@
      {:db/id (:db/id project)
       :thk.project/id (:thk.project/id project)}
      [:div.project-navigator-with-content {:class (<class project-style/page-container)}
-      [breadcrumbs/breadcrumbs breadcrumbs]
       [typography/Heading1 (or (:thk.project/project-name project)
                                (:thk.project/name project))]
       [project-navigator-dialogs opts]
