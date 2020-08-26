@@ -26,10 +26,11 @@
             teet.system.system-queries
             teet.task.task-commands
             teet.activity.activity-commands
-            teet.meeting.meeting-commands
             teet.dashboard.dashboard-queries
             teet.notification.notification-queries
             teet.notification.notification-commands
+            teet.meeting.meeting-queries
+            teet.meeting.meeting-commands
 
             [teet.log :as log]
             [teet.auth.jwt-token :as jwt-token]
@@ -127,7 +128,7 @@
      (if-let [error (:error result)]
        (with-meta
          error
-         {:format :raw})       
+         {:format :raw})
        result))))
 
 (def command-handler
