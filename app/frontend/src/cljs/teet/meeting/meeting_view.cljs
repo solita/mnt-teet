@@ -50,7 +50,7 @@
 (defn meetings-page-content
   [e! activity]
   [:div
-   [typography/Heading1 (tr [:meetings :meetings-title])]])
+   [typography/Heading1 (tr [:meeting :meeting-title])]])
 
 (defn activity-meetings-list
   [{:keys [e! dark-theme? disable-buttons? project-id rect-button]}
@@ -102,7 +102,7 @@
                                                                 :disabled disable-buttons?
                                                                 :start-icon (r/as-element
                                                                               [icons/content-add])}
-                                                   (tr [:meetings :new-meeting-button])]}]]]]))
+                                                   (tr [:meeting :new-meeting-button])]}]]]]))
 
 (defn meeting-page-structure [e! app project
                               main-content right-panel-content]
