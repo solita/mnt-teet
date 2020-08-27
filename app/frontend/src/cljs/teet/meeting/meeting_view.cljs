@@ -162,7 +162,9 @@
        [url/Link {:page :meeting
                   :params {:activity (str activity-id)
                            :meeting (str id)}}
-        title]])]])
+        (str title " "
+             "(" location ") "
+             (format/date-time start) " ")]])]])
 
 (defn project-meetings-page-content [e! project]
   (let [meetings (mapcat
@@ -211,8 +213,12 @@
 
       [common/labeled-data {:label (tr [:fields :meeting/location])
                             :data location}]
-      [common/labeled-data {:label (tr [:fields :meeting/start])
-                            :data (fmt/date-time start)}]
+      [common/labeled-data {:label (tr [:fields :meeting/date-and-time])
+                            :data (str (format/date start)
+                                       " "
+                                       (format/time* start)
+                                       " - "
+                                       (format/time* end))}]
       [common/labeled-data {:label (tr [:fields :meeting/end])
                             :data (fmt/date-time end)}]
       [common/labeled-data {:label (tr [:fields :meeting/organizer])
