@@ -25,7 +25,8 @@
             [teet.ui.format :as fmt]
             [teet.user.user-model :as user-model]
             [teet.ui.rich-text-editor :as rich-text-editor]
-            [teet.ui.format :as format]))
+            [teet.ui.format :as format]
+            [teet.localization :as localization]))
 
 
 (defn create-meeting-form
@@ -88,7 +89,7 @@
           ;; group tasks by the task group
           (group-by (fn [meeting]
                       (if-let [meeting-start (:meeting/start meeting)]
-                        (.toLocaleString meeting-start "default" #js {:month "long" :year "numeric"})
+                        (localization/localized-month-year meeting-start)
                         "No date for meeting"               ;; TODO add localization
                         ))
                     (sort-by :meeting/start meetings)))]
