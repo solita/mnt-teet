@@ -39,7 +39,7 @@
                       {:page [:div "No such page"]}
                       {:page ~(if state
                                 ;; If page has needed state, wrap it in the query component to fetch it
-                                `[teet.ui.query/query-page
+                                `[teet.ui.query/query
                                   {:e! ~'e!
                                    :app (dissoc ~'app :route) ;; FIXME: select-keys
                                    :query ~(:query state)
