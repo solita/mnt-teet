@@ -13,7 +13,8 @@
             [teet.log :as log]
             [teet.ui.context :as context]
             [clojure.set :as set]
-            [teet.common.common-styles :as common-styles]))
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.panels :as panels]))
 
 (def default-value
   "Mapping of component to default value. Some components don't want nil as the value (like text area)."
@@ -447,3 +448,22 @@
    (when (and footer
               (or cancel-event save-event))
      [footer2 footer])])
+
+(defn form-modal-button
+  [{:keys [form-component button-component button-opts]} label]
+  (r/with-let [open-atom (r/atom false)
+               form-atom (r/atom {})
+               open #(reset! open-atom true)
+               close #(reset! open-atom false)
+               close-event (reset-atom-event open-atom false)]
+    [:<>
+     [panels/modal {:max-width "md"
+                    :open-atom open-atom
+                    :title (tr [:meeting :add-meeting])     ;; TODO localization
+                    :on-close close}
+      [form-component close-event form-atom]]
+     [button-component
+      (merge
+        button-opts
+        {:on-click open})
+      label]]))
