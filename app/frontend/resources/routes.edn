@@ -93,7 +93,7 @@
                                     state)
                                 (teet.project.project-model/activity-by-id activity) :activity/name tr-enum)
                      :parent :project-meetings
-                     :state {:query :thk.project/fetch-project ;; proper query
+                     :state {:query :meeting/project-with-meetings
                              :args {:thk.project/id project}}}
 
  :meeting {:path "/projects/:project/meetings/:activity(\\d+)/:meeting(\\d+)"

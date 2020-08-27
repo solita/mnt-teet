@@ -7,6 +7,7 @@
             [teet.localization :refer [tr]]
             teet.meeting.meeting-specs
             [teet.ui.project-context :as project-context]
+            [teet.ui.icons :as icons]
             [teet.task.task-style :as task-style]
             [teet.project.project-style :as project-style]
             [teet.ui.material-ui :refer [Link Collapse Paper Grid]]
@@ -23,7 +24,8 @@
             [teet.ui.common :as common]
             [teet.ui.format :as fmt]
             [teet.user.user-model :as user-model]
-            [teet.ui.rich-text-editor :as rich-text-editor]))
+            [teet.ui.rich-text-editor :as rich-text-editor]
+            [teet.ui.format :as format]))
 
 
 (defn create-meeting-form
@@ -47,8 +49,7 @@
 
 (defn form-modal-button
   [{:keys [form-component button-component
-           modal-title
-           button-label]}]
+           modal-title]}]
   (r/with-let [open-atom (r/atom false)
                form-atom (r/atom {})
                open #(reset! open-atom true)
@@ -60,18 +61,62 @@
                     :title modal-title
                     :on-close close}
       (into form-component [close-event form-atom])]
-     [button-component
-      {:on-click open}
-      button-label]]))
+     (assoc-in button-component [1 :on-click] open)]))
 
 (defn meetings-page-content
   [e! activity]
   [:div
-   [typography/Heading1 (tr [:meetings :meetings-title])]
-   [form-modal-button {:form-component [create-meeting-form e! activity]
-                       :button-component buttons/rect-primary
-                       :modal-title (tr [:meeting :add-meeting])
-                       :button-label (tr [:meetings :new-meeting-button])}]])
+   [typography/Heading1 (tr [:meetings :meetings-title])]])
+
+(defn activity-meetings-list
+  [{:keys [e! dark-theme? disable-buttons? project-id rect-button]}
+   {:keys [activity activity-id]}]
+  (let [meetings (:activity/meetings activity)]
+    [:<>
+     (if (seq meetings)
+       [:div
+        (mapc
+          (fn [[group meetings]]
+            [:div.meeting-group {:style {:margin-bottom "0.5rem"}}
+             [:ul {:class (<class project-navigator-view/ol-class)}
+              [:li.meeting-group-label
+               [:div
+                [typography/SmallText {:style {:text-transform :uppercase
+                                               :font-weight :bold}}
+                 group]]]
+              (doall
+                (for [{:meeting/keys [title start location] :as meeting} meetings]
+                  ^{:key (str (:db/id meeting))}
+                  [:li.meeting-group-task {:class (<class project-navigator-view/custom-list-indicator dark-theme?)}
+                   [:div {:class (<class project-navigator-view/task-info)}
+                    [Link {:href (str "#/projects/" project-id "/meetings/" activity-id "/" (:db/id meeting))
+                           :class (<class project-navigator-view/stepper-button-style {:size "16px"
+                                                                                       :open? false
+                                                                                       :dark-theme? dark-theme?})}
+                     title]
+                    [typography/SmallText (when dark-theme?
+                                            {:style {:color "white"
+                                                     :opacity "0.7"}})
+                     (format/date start) " " location]]]))]])
+
+          ;; group tasks by the task group
+          (group-by (fn [meeting]
+                      (if-let [meeting-start (:meeting/start meeting)]
+                        (.toLocaleString meeting-start "default" #js {:month "long" :year "numeric"})
+                        "No date for meeting"               ;; TODO add localization
+                        ))
+                    (sort-by :meeting/start meetings)))]
+       [:div {:class (<class project-navigator-view/empty-section-style)}
+        [typography/GreyText (tr [:meeting :no-meetings])]])
+     [:div
+      [:div.project-navigator-add-meeting
+
+       [form-modal-button {:form-component [create-meeting-form e! activity-id]
+                           :button-component [rect-button {:size :small
+                                                           :disabled disable-buttons?
+                                                           :start-icon (r/as-element
+                                                                         [icons/content-add])}
+                                              (tr [:meetings :new-meeting-button])]}]]]]))
 
 (defn meeting-page-structure [e! app project
                               main-content right-panel-content]
@@ -89,7 +134,10 @@
         [Grid {:item  true
                :xs nav-w
                :style {:max-width "400px"}}
-         [project-navigator-view/project-navigator e! project (:stepper app) (:params app) true]]
+         [project-navigator-view/project-navigator e! project (:stepper app) (:params app)
+          {:dark-theme? true
+           :activity-section-content activity-meetings-list
+           :add-activity? false}]]
         [Grid {:item  true
                :xs content-w
                :style {:padding "2rem 1.5rem"
@@ -138,7 +186,6 @@
                   (:thk.project/lifecycles project))]
 
     [meeting-list meetings]))
-
 
 (defn project-meetings-view
   "Project meetings"
@@ -193,7 +240,5 @@
           [common/labeled-data {:label (tr [:fields :meeting.agenda/body])
                                 :data [rich-text-editor/display-markdown body]}]])]
       [form-modal-button {:form-component [add-agenda-form e! meeting]
-                          :button-component buttons/rect-primary
-                          :modal-title (tr [:meeting :add-agenda])
-                          :button-label (tr [:meeting :add-agenda-button])}]])
+                          :button-component [buttons/rect-primary (tr [:meeting :add-agenda-button])]}]])
    [:h1 "participants"]])
