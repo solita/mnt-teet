@@ -4,6 +4,7 @@
             [teet.meta.meta-query :as meta-query]
             [teet.project.project-model :as project-model]
             [teet.meeting.meeting-db :as meeting-db]
+            [teet.user.user-model :as user-model]
             [datomic.client.api :as d]))
 
 
@@ -42,14 +43,14 @@
                                        :link :thk.project/owner
                                        :access :read}}}
   {:project (project-db/project-by-id db (project-db/activity-project-id db activity-id))
-   :meeting (d/pull db '[:db/id
+   :meeting (d/pull db `[:db/id
                          :meeting/title :meeting/location
                          :meeting/start :meeting/end
-                         :meeting/organizer
+                         {:meeting/organizer ~user-model/user-listing-attributes}
                          {:meeting/agenda [:db/id
                                            :meeting.agenda/topic
                                            :meeting.agenda/body
-                                           :meeting.agenda/responsible]}
+                                           {:meeting.agenda/responsible ~user-model/user-listing-attributes}]}
                          ;; FIXME: all decisions, participants etc
                          ]
            (meeting-db/activity-meeting-id db activity-id meeting-id))})
