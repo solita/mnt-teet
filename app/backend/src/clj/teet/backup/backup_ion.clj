@@ -38,8 +38,6 @@
                         [*
                          {:comment/files [*]}]}]}]}]}]}] id))
 
-
-
 (defn pull-user [db id]
   (d/pull db '[* {:user/permissions [*]}] id))
 
@@ -178,9 +176,30 @@
        x) form)
     @ids))
 
+(defn s3-filename [db-id filename]
+  (str db-id "-" filename))
+
+(defn rename-documents! [{:keys [conn document-bucket tempids]}]
+  (let [files (map first
+                   (d/q '[:find (pull ?f [:db/id :file/name])
+                          :in $
+                          :where [?f :file/name _]]
+                        (d/db conn)))]
+    (doseq [file files]
+      (try
+        (s3/rename-object document-bucket
+                          (s3-filename (tempids (:db/id file))
+                                       (:file/name file))
+                          (s3-filename (:db/id file)
+                                       (:file/name file)))
+        (catch Exception e
+          (log/error (ex-data e)))))))
+
 (defn restore
-  "Restore from REPL to empty database."
-  [conn file]
+  "Restore a TEET backup zip from `file` by running the transactions in
+  the file to the database pointed to by `conn`. It is assumed that
+  the given database is empty."
+  [{:keys [conn file] :as ctx}]
 
   ;; read all users and transact them in one go
   (with-open [istream (io/input-stream (io/file file))
@@ -192,5 +211,6 @@
     (let [form (doall (read-seq rdr))
           ;ids (check-ids-without-attributes form)
           {:keys [mapping form]} (to-temp-ids form)
-          {tempids :tempids} (d/transact conn {:tx-data (vec form)})]
-      {:mapping mapping :form form :tempids tempids})))
+          {tempids :tempids} (d/transact conn {:tx-data (vec form)})
+          ctx (merge ctx {:mapping mapping :form form :tempids tempids})]
+      (rename-documents! ctx))))

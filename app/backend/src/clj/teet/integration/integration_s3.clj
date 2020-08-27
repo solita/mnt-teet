@@ -113,6 +113,14 @@
          (string? key)]}
   (invoke :DeleteObject {:Bucket bucket :Key key}))
 
+(defn rename-object
+  "Rename object by copying the existing object and deleting the old one"
+  [bucket existing-key new-key]
+  {:pre [(string? bucket)
+         (string? key)]}
+  (copy-object bucket existing-key new-key)
+  (delete-object bucket existing-key))
+
 
 (def bucket-location
   (memoize (fn [bucket]
