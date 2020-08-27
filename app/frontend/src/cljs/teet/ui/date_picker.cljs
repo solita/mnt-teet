@@ -281,7 +281,7 @@
                                            (gstr/format "%02d" (.getMinutes date)))))
                  start-input-atom (r/atom (or (time-input-value start) ""))
                  end-input-atom (r/atom (or (time-input-value end)) "")
-                 date (r/atom nil)
+                 date (r/atom (or start nil))
                  time-to-date (fn [input-val date]
                                 (let [[hours minutes] (str/split input-val ":")]
                                   (when (and hours minutes)
