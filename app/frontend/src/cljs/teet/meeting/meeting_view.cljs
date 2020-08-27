@@ -46,7 +46,9 @@
     [select/select-user {:e! e!}]]])
 
 (defn form-modal-button
-  [{:keys [form-component button-component]} label]
+  [{:keys [form-component button-component
+           modal-title
+           button-label]}]
   (r/with-let [open-atom (r/atom false)
                form-atom (r/atom {})
                open #(reset! open-atom true)
@@ -55,20 +57,21 @@
     [:<>
      [panels/modal {:max-width "md"
                     :open-atom open-atom
-                    :title (tr [:meeting :add-meeting])
+                    :title modal-title
                     :on-close close}
-      [form-component close-event form-atom]]
+      (into form-component [close-event form-atom])]
      [button-component
       {:on-click open}
-      label]]))
+      button-label]]))
 
 (defn meetings-page-content
   [e! activity]
   [:div
    [typography/Heading1 (tr [:meetings :meetings-title])]
-   [form-modal-button {:form-component (r/partial create-meeting-form e! activity)
-                       :button-component buttons/rect-primary}
-    (tr [:meetings :new-meeting-button])]])
+   [form-modal-button {:form-component [create-meeting-form e! activity]
+                       :button-component buttons/rect-primary
+                       :modal-title (tr [:meeting :add-meeting])
+                       :button-label (tr [:meetings :new-meeting-button])}]])
 
 (defn meeting-page-structure [e! app project
                               main-content right-panel-content]
@@ -145,6 +148,8 @@
    [:h1 "participants"]])
 
 
+(defn add-agenda-form [e! meeting close-event form-atom]
+  [:div "placeholder add agenda form " (pr-str meeting)])
 
 (defn meeting-page [e! app {:keys [project meeting]}]
   [meeting-page-structure e! app project
@@ -170,5 +175,9 @@
           [common/labeled-data {:label (tr [:fields :meeting.agenda/resposible])
                                 :data (user-model/user-name responsible)}]
           [common/labeled-data {:label (tr [:fields :meeting.agenda/body])
-                                :data [rich-text-editor/display-markdown body]}]])]])
+                                :data [rich-text-editor/display-markdown body]}]])]
+      [form-modal-button {:form-component [add-agenda-form e! meeting]
+                          :button-component buttons/rect-primary
+                          :modal-title (tr [:meeting :add-agenda])
+                          :button-label (tr [:meeting :add-agenda-button])}]])
    [:h1 "participants"]])
