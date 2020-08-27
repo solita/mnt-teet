@@ -515,26 +515,32 @@
                                                       :href (str "/#/projects/" project-id "?tab=restrictions&configure=restrictions")
                                                       :size :small}
                             (tr [:buttons :edit])])}
+   {:label [:project :tabs :meetings]
+    :hotkey "5"
+    :navigate {:page :project-meetings}}
    {:label [:project :tabs :land]
     :value "land"
     :component land-tab/related-cadastral-units-info
-    :hotkey "5"
+    :hotkey "6"
     :action-component-fn (fn [e! _app project]
                            [buttons/button-secondary {:href (url/set-query-param :configure "cadastral-units")}
                             (tr [:buttons :edit])])}
    {:label [:project :tabs :road-objects]
     :value "road"
     :component road-view/road-objects-tab
-    :hotkey "6"}])
+    :hotkey "7"}])
 
 (defn selected-project-tab [{{:keys [tab]} :query :as _app}]
   (if tab
     (cu/find-first #(= tab (:value %)) project-tabs-layout)
     (first project-tabs-layout)))
 
-(defn- project-tabs-item [e! close-menu! _selected-tab {:keys [value hotkey] :as _tab}]
+(defn- project-tabs-item [e! close-menu! _selected-tab
+                          {:keys [value hotkey navigate] :as _tab}]
   (let [activate! #(do
-                     (e! (common-controller/->SetQueryParam :tab value))
+                     (if navigate
+                       (e! (common-controller/map->Navigate navigate))
+                       (e! (common-controller/->SetQueryParam :tab value)))
                      (close-menu!))]
     (common/component
      (hotkeys/hotkey hotkey activate!)
@@ -554,7 +560,7 @@
         set-anchor! #(reset! anchor-el %)]
     (common/component
      (hotkeys/hotkey "Q" toggle-open!)
-     (fn [e! app project]
+     (fn [e! {:keys [params query] :as app} project]
        (let [{action :action-component-fn :as selected} (selected-project-tab app)]
          [:div {:class (<class project-style/project-tab-container)}
           [:div {:class (<class common-styles/space-between-center)}
@@ -576,7 +582,10 @@
               (doall
                (for [tab project-tabs-layout]
                  ^{:key (str (:value tab))}
-                 [project-tabs-item e! toggle-open! selected tab]))]]]]])))))
+                 [project-tabs-item e! toggle-open! selected
+                  (update tab :navigate
+                          #(when %
+                             (merge {:params params :query query} %)))]))]]]]])))))
 
 (defn- project-tab [e! app project]
   (let [selected-tab (selected-project-tab app)]
