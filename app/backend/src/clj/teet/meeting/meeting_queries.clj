@@ -42,10 +42,12 @@
                                        :link :thk.project/owner
                                        :access :read}}}
   {:project (project-db/project-by-id db (project-db/activity-project-id db activity-id))
-   :meeting (d/pull db '[:meeting/title :meeting/location
+   :meeting (d/pull db '[:db/id
+                         :meeting/title :meeting/location
                          :meeting/start :meeting/end
                          :meeting/organizer
-                         {:meeting/agenda [:meeting.agenda/topic
+                         {:meeting/agenda [:db/id
+                                           :meeting.agenda/topic
                                            :meeting.agenda/body
                                            :meeting.agenda/responsible]}
                          ;; FIXME: all decisions, participants etc

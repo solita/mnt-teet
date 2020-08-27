@@ -85,6 +85,12 @@
             db permission-id))
       (db-api/bad-request! "No such permission")))
 
+(defn meeting-project-id [db meeting-id]
+  (get-in (du/entity db meeting-id)
+          [:activity/_meetings 0
+           :thk.lifecycle/_activities 0
+           :thk.project/_lifecycles 0 :db/id]))
+
 (defn document-project-id
   ([db document-id]
    (document-project-id db document-id ::throw))
@@ -162,5 +168,3 @@
   (boolean
    (ffirst (d/q '[:find ?e :where [?project :thk.project/owner ?e] :in $ ?project]
                 db project-eid))))
-
-

@@ -192,3 +192,9 @@
       (if editor-state
         [:f> wysiwyg-editor {:value editor-state}]
         [:span]))))
+
+(defn rich-text-field
+  "Rich text input that can be used in forms."
+  [{:keys [value on-change]}]
+  [:f> wysiwyg-editor {:value value
+                       :on-change on-change}])

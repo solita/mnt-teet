@@ -149,7 +149,23 @@
 
 
 (defn add-agenda-form [e! meeting close-event form-atom]
-  [:div "placeholder add agenda form " (pr-str meeting)])
+  [form/form {:e! e!
+              :value @form-atom
+              :on-change-event (form/update-atom-event form-atom merge)
+              :cancel-event close-event
+              ;;:spec :meeting/form-data
+              :save-event #(meeting-controller/->SubmitAgendaForm
+                            meeting
+                            (-> @form-atom
+                                (update :meeting.agenda/body rich-text-editor/editor-state->markdown))
+                            close-event)}
+   ^{:attribute :meeting.agenda/topic}
+   [TextField {}]
+   ^{:attribute :meeting.agenda/body
+     :before-save rich-text-editor/editor-state->markdown}
+   [rich-text-editor/rich-text-field {}]
+   ^{:attribute :meeting.agenda/responsible}
+   [select/select-user {:e! e!}]])
 
 (defn meeting-page [e! app {:keys [project meeting]}]
   [meeting-page-structure e! app project

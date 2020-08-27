@@ -10,6 +10,9 @@
 (defrecord MeetingCreationResult [close-event response])
 (defrecord UpdateMeetingForm [form-data])
 
+(defrecord SubmitAgendaForm [meeting form-data close-event])
+(defrecord AddAgendaResult [close-event response])
+
 (extend-protocol t/Event
   SubmitMeetingForm
   (process-event [{:keys [activity-id form-data close-event]} app]
@@ -32,6 +35,22 @@
   UpdateMeetingForm
   (process-event [{form-data :form-data} app]
     (println "form changed: " (pr-str form-data))
-    (update-in app [:route :activity-meetings :meeting-form] merge form-data)))
+    (update-in app [:route :activity-meetings :meeting-form] merge form-data))
 
+  SubmitAgendaForm
+  (process-event [{:keys [meeting form-data close-event]} app]
+    (println "form data: " form-data)
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :meeting/update-agenda
+           :payload {:db/id (:db/id meeting)
+                     :meeting/agenda [(merge {:db/id "new-agenda-item"}
+                                             form-data)]}
+           :result-event (partial ->AddAgendaResult close-event)}))
 
+  AddAgendaResult
+  (process-event [{:keys [result close-event]} app]
+    (t/fx app
+          (fn [e!]
+            (e! (close-event)))
+          common-controller/refresh-fx)))

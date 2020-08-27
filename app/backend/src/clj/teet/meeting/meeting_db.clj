@@ -24,6 +24,14 @@
      db
      arg-vals)))
 
+(defn meeting-agenda-ids
+  "Return set of agenda item db ids for given meeting"
+  [db meeting-id]
+  (into #{}
+        (map :db/id)
+        (:meeting/agenda
+         (d/pull db [:meeting/agenda] meeting-id))))
+
 (defn activity-meeting-id
   "Check activity has meeting. Returns meeting id."
   [db activity-id meeting-id]

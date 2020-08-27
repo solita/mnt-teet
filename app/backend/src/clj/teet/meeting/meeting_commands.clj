@@ -8,7 +8,8 @@
             teet.meeting.meeting-specs
             [teet.util.datomic :as du]
             [teet.util.collection :as cu]
-            [teet.user.user-model :as user-model]))
+            [teet.user.user-model :as user-model]
+            [teet.meeting.meeting-db :as meeting-db]))
 
 ;; TODO query all activity meetings
 ;; matching name found
@@ -25,3 +26,24 @@
                                   (meta-model/creation-meta user))]
                [{:db/id activity-eid
                  :activity/meetings [meeting]}])})
+
+(defn- agenda-items-new-or-belong-to-meeting [db meeting-id agenda]
+  (let [ids-to-update (remove string? (map :db/id agenda))
+        existing-ids (meeting-db/meeting-agenda-ids db meeting-id)]
+    (every? existing-ids ids-to-update)))
+
+(defcommand :meeting/update-agenda
+  {:doc "Add/update agenda item(s) in a meeting"
+   :context {:keys [db user]}
+   :payload {id :db/id
+             agenda :meeting/agenda}
+   :project-id (project-db/meeting-project-id db id)
+    ;; TODO authorization matrix
+   :authorization {:activity/edit-activity {}}
+   :pre [(agenda-items-new-or-belong-to-meeting db id agenda)]
+   :transact [{:db/id id
+               :meeting/agenda (mapv #(select-keys % [:db/id
+                                                      :meeting.agenda/topic
+                                                      :meeting.agenda/body
+                                                      :meeting.agenda/responsible])
+                                     agenda)}]})
