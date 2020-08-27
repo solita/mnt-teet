@@ -45,10 +45,10 @@
    :activity.name/workshop-design #{}})
 
 (def activity-in-progress-statuses
-  #{:activity.status/valid :activity.status/other :activity.status/research :activity.status/in-progress})
+  #{:activity.status/valid :activity.status/other :activity.status/research :activity.status/in-progress :activity.status/in-review})
 
 (def activity-finished-statuses
-  #{:activity.status/completed :activity.status/expired :activity.status/canceled})
+  #{:activity.status/completed :activity.status/expired :activity.status/canceled :activity.status/archived})
 
 (defn deletable?
   "Can the activity be deleted? It can if it has no procurement number."
