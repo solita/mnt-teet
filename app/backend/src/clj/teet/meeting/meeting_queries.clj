@@ -29,10 +29,9 @@
    :authorization {:project/read-info {:eid [:thk.project/id id]
                                        :link :thk.project/owner
                                        :access :read}}}
-  (update (meta-query/without-deleted
-            db
-            (fetch-project-meetings db [:thk.project/id id]))
-          :thk.project/lifecycles project-model/sort-lifecycles))
+  (meta-query/without-deleted
+    db
+    (fetch-project-meetings db [:thk.project/id id])))
 
 (defquery :meeting/fetch-meeting
   {:doc "Fetch a single meeting info and project info"
@@ -42,15 +41,17 @@
    :authorization {:project/read-info {:eid (project-db/activity-project-id db activity-id)
                                        :link :thk.project/owner
                                        :access :read}}}
-  {:project (project-db/project-by-id db (project-db/activity-project-id db activity-id))
-   :meeting (d/pull db `[:db/id
-                         :meeting/title :meeting/location
-                         :meeting/start :meeting/end
-                         {:meeting/organizer ~user-model/user-listing-attributes}
-                         {:meeting/agenda [:db/id
-                                           :meeting.agenda/topic
-                                           :meeting.agenda/body
-                                           {:meeting.agenda/responsible ~user-model/user-listing-attributes}]}
-                         ;; FIXME: all decisions, participants etc
-                         ]
-           (meeting-db/activity-meeting-id db activity-id meeting-id))})
+  (meta-query/without-deleted
+    db
+    {:project (fetch-project-meetings db (project-db/activity-project-id db activity-id)) ;; This ends up pulling duplicate information, could be refactored
+     :meeting (d/pull db `[:db/id
+                           :meeting/title :meeting/location
+                           :meeting/start :meeting/end
+                           {:meeting/organizer ~user-model/user-listing-attributes}
+                           {:meeting/agenda [:db/id
+                                             :meeting.agenda/topic
+                                             :meeting.agenda/body
+                                             {:meeting.agenda/responsible ~user-model/user-listing-attributes}]}
+                           ;; FIXME: all decisions, participants etc
+                           ]
+                      (meeting-db/activity-meeting-id db activity-id meeting-id))}))

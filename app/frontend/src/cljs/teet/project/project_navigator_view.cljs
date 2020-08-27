@@ -255,7 +255,7 @@
 
 
 (defn- activity
-  [{:keys [params dark-theme? activity-section-content] :as ctx}
+  [{:keys [params dark-theme? activity-section-content activity-link-page] :as ctx}
    {activity-id :db/id
     activity-est-end :activity/estimated-end-date
     activity-est-start :activity/estimated-start-date
@@ -269,7 +269,7 @@
        [circle-svg {:status activity-state :size 20 :dark-theme? dark-theme?}]
        [:div {:class (<class step-container-style {:offset -4})}
         [:div {:class (<class flex-column)}
-         [url/Link {:page :activity
+         [url/Link {:page (or activity-link-page :activity)
                     :params {:activity (:db/id activity)}
                     :class (<class stepper-button-style {:size "20px"
                                                          :open? activity-open?
@@ -292,7 +292,7 @@
     (when old-stepper?
       (e! (project-controller/->ToggleStepperLifecycle (first lifecycle-ids)))))
   (fn [e! {:thk.project/keys [lifecycles id] :as _project} stepper params
-       {:keys [dark-theme? activity-section-content add-activity?] :as _opts}]
+       {:keys [dark-theme? activity-section-content add-activity? activity-link-page] :as _opts}]
     (let [rect-button (if dark-theme?
                         buttons/rect-white
                         buttons/rect-primary)]
@@ -328,6 +328,7 @@
                   [Collapse {:in open?}
                    (mapc (partial activity {:e! e!
                                             :stepper stepper
+                                            :activity-link-page activity-link-page
                                             :activity-section-content activity-section-content
                                             :dark-theme? dark-theme?
                                             :disable-buttons? disable-buttons?

@@ -47,22 +47,6 @@
     ^{:attribute :meeting/organizer}
     [select/select-user {:e! e!}]]])
 
-(defn form-modal-button
-  [{:keys [form-component button-component
-           modal-title]}]
-  (r/with-let [open-atom (r/atom false)
-               form-atom (r/atom {})
-               open #(reset! open-atom true)
-               close #(reset! open-atom false)
-               close-event (form/reset-atom-event open-atom false)]
-    [:<>
-     [panels/modal {:max-width "md"
-                    :open-atom open-atom
-                    :title modal-title
-                    :on-close close}
-      (into form-component [close-event form-atom])]
-     (assoc-in button-component [1 :on-click] open)]))
-
 (defn meetings-page-content
   [e! activity]
   [:div
@@ -89,10 +73,12 @@
                   ^{:key (str (:db/id meeting))}
                   [:li.meeting-group-task {:class (<class project-navigator-view/custom-list-indicator dark-theme?)}
                    [:div {:class (<class project-navigator-view/task-info)}
-                    [Link {:href (str "#/projects/" project-id "/meetings/" activity-id "/" (:db/id meeting))
-                           :class (<class project-navigator-view/stepper-button-style {:size "16px"
-                                                                                       :open? false
-                                                                                       :dark-theme? dark-theme?})}
+                    [url/Link {:page :meeting
+                               :params {:activity activity-id
+                                        :meeting (:db/id meeting)}
+                               :class (<class project-navigator-view/stepper-button-style {:size "16px"
+                                                                                           :open? false
+                                                                                           :dark-theme? dark-theme?})}
                      title]
                     [typography/SmallText (when dark-theme?
                                             {:style {:color "white"
@@ -111,12 +97,12 @@
      [:div
       [:div.project-navigator-add-meeting
 
-       [form-modal-button {:form-component [create-meeting-form e! activity-id]
-                           :button-component [rect-button {:size :small
-                                                           :disabled disable-buttons?
-                                                           :start-icon (r/as-element
-                                                                         [icons/content-add])}
-                                              (tr [:meetings :new-meeting-button])]}]]]]))
+       [form/form-modal-button {:form-component [create-meeting-form e! activity-id]
+                                :button-component [rect-button {:size :small
+                                                                :disabled disable-buttons?
+                                                                :start-icon (r/as-element
+                                                                              [icons/content-add])}
+                                                   (tr [:meetings :new-meeting-button])]}]]]]))
 
 (defn meeting-page-structure [e! app project
                               main-content right-panel-content]
@@ -136,6 +122,7 @@
                :style {:max-width "400px"}}
          [project-navigator-view/project-navigator e! project (:stepper app) (:params app)
           {:dark-theme? true
+           :activity-link-page :activity-meetings
            :activity-section-content activity-meetings-list
            :add-activity? false}]]
         [Grid {:item  true
@@ -235,10 +222,10 @@
          [:div.meeting-agenda
           [common/labeled-data {:label (tr [:fields :meeting.agenda/topic])
                                 :data topic}]
-          [common/labeled-data {:label (tr [:fields :meeting.agenda/resposible])
+          [common/labeled-data {:label (tr [:fields :meeting.agenda/responsible])
                                 :data (user-model/user-name responsible)}]
           [common/labeled-data {:label (tr [:fields :meeting.agenda/body])
                                 :data [rich-text-editor/display-markdown body]}]])]
-      [form-modal-button {:form-component [add-agenda-form e! meeting]
-                          :button-component [buttons/rect-primary (tr [:meeting :add-agenda-button])]}]])
+      [form/form-modal-button {:form-component [add-agenda-form e! meeting]
+                          :button-component [buttons/rect-primary {} (tr [:meeting :add-agenda-button])]}]])
    [:h1 "participants"]])

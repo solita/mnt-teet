@@ -128,8 +128,10 @@
   ([db eid]
    (project-by-id db eid {:activity/tasks project-model/default-fetch-pattern}))
   ([db eid opts]
-   (d/pull db (project-fetch-pattern opts)
-           eid)))
+   (update (d/pull db (project-fetch-pattern opts)
+                   eid)
+           :thk.project/lifecycles
+           project-model/sort-lifecycles)))
 
 (defn lifecycle-dates
   [db lifecycle-id]

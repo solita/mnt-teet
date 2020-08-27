@@ -37,6 +37,6 @@
   [db activity-id meeting-id]
   (or (ffirst (d/q '[:find ?m
                      :where [?activity :activity/meetings ?m]
-                     :in $ ?activity]
-                   db activity-id))
+                     :in $ ?activity ?m]
+                   db activity-id meeting-id))
       (db-api/bad-request! "No such meeting in activity.")))

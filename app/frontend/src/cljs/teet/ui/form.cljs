@@ -450,7 +450,8 @@
      [footer2 footer])])
 
 (defn form-modal-button
-  [{:keys [form-component button-component button-opts]} label]
+  [{:keys [form-component button-component
+           modal-title]}]
   (r/with-let [open-atom (r/atom false)
                form-atom (r/atom {})
                open #(reset! open-atom true)
@@ -459,11 +460,7 @@
     [:<>
      [panels/modal {:max-width "md"
                     :open-atom open-atom
-                    :title (tr [:meeting :add-meeting])     ;; TODO localization
+                    :title modal-title
                     :on-close close}
-      [form-component close-event form-atom]]
-     [button-component
-      (merge
-        button-opts
-        {:on-click open})
-      label]]))
+      (into form-component [close-event form-atom])]
+     (assoc-in button-component [1 :on-click] open)]))
