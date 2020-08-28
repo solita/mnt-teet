@@ -457,7 +457,6 @@
            form-value]}]
   (r/with-let [open-atom (r/atom false)
                form-atom (r/atom (or form-value {}))
-               open #(reset! open-atom true)
                close #(reset! open-atom false)
                close-event (reset-atom-event open-atom false)]
     [:<>
@@ -466,4 +465,7 @@
                     :title modal-title
                     :on-close close}
       (into form-component [close-event form-atom])]
-     (assoc-in button-component [1 :on-click] open)]))
+     (assoc-in button-component [1 :on-click]
+               (fn []
+                 (reset! form-atom (or form-value {}))
+                 (reset! open-atom true)))]))
