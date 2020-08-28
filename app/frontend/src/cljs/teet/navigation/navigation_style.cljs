@@ -136,7 +136,7 @@
           :vertical-align :top}
          (divider-style)))
 
-(defn navigator-left-panel
+(defn navigator-left-panel-style
   []
   {:max-width "400px"
    :display :flex
