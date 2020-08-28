@@ -30,16 +30,19 @@
             [teet.project.project-menu :as project-menu]))
 
 
-(defn create-meeting-form
+(defn meeting-form
   [e! activity-id close-event form-atom]
   [:<>
-   #_[:span (pr-str @form-atom)]                            ;debug form values
-   [form/form {:e! e!
-               :value @form-atom
-               :on-change-event (form/update-atom-event form-atom merge)
-               :cancel-event close-event
-               :spec :meeting/form-data
-               :save-event #(meeting-controller/->SubmitMeetingForm activity-id @form-atom close-event)}
+   [:span (pr-str @form-atom)]                            ;debug form values
+   [form/form (merge
+                {:e! e!
+                 :value @form-atom
+                 :on-change-event (form/update-atom-event form-atom merge)
+                 :cancel-event close-event
+                 :spec :meeting/form-data
+                 :save-event #(meeting-controller/->SubmitMeetingForm activity-id @form-atom close-event)}
+                (when (:db/id @form-atom)
+                  {:delete (meeting-controller/->DeleteMeeting activity-id (:db/id @form-atom) close-event)}))
     ^{:attribute :meeting/title}
     [TextField {}]
     ^{:attribute :meeting/location}
@@ -99,7 +102,7 @@
      [:div
       [:div.project-navigator-add-meeting
 
-       [form/form-modal-button {:form-component [create-meeting-form e! activity-id]
+       [form/form-modal-button {:form-component [meeting-form e! activity-id]
                                 :button-component [rect-button {:size :small
                                                                 :disabled disable-buttons?
                                                                 :start-icon (r/as-element
@@ -207,12 +210,17 @@
    ^{:attribute :meeting.agenda/responsible}
    [select/select-user {:e! e!}]])
 
-(defn meeting-page [e! app {:keys [project meeting]}]
+(defn meeting-page [e! {:keys [params] :as app} {:keys [project meeting]}]
   [meeting-page-structure e! app project
    (let [{:meeting/keys [title number location start end organizer agenda]} meeting]
      [:div
       [:div {:class (<class common-styles/heading-and-action-style)}
-       [typography/Heading2 title (when number (str " #" number))]]
+       [typography/Heading2 title (when number (str " #" number))]
+       [form/form-modal-button {:form-component [meeting-form e! (:activity params)]
+                                :form-value meeting
+                                :button-component [buttons/button-primary
+                                                   {}
+                                                   "Editoi"]}]]
 
       [common/labeled-data {:label (tr [:fields :meeting/location])
                             :data location}]

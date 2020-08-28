@@ -27,6 +27,33 @@
                [{:db/id activity-eid
                  :activity/meetings [meeting]}])})
 
+(defcommand :meeting/update
+  {:doc "Update existing meeting"
+   :context {:keys [db user]}
+   :payload {:keys [activity-eid]
+             :meeting/keys [form-data]}
+   :project-id (project-db/activity-project-id db activity-eid)
+   :authorization {:activity/create-activity {}             ;;TODO Actual authorization
+                   }
+   :pre [(meeting-db/activity-meeting-id db activity-eid (:db/id form-data))]
+   :transact [(let [meeting (merge
+                              (select-keys form-data [:db/id :meeting/organizer :meeting/title
+                                                      :meeting/start :meeting/end])
+                              (meta-model/modification-meta user))]
+                meeting)]})
+
+(defcommand :meeting/delete
+  {:doc "Delete existing meeting"
+   :context {:keys [db user]}
+   :payload {:keys [activity-eid meeting-id]}
+   :project-id (project-db/activity-project-id db activity-eid)
+   :authorization {:activity/delete-activity {}             ;; TODO actual authorization
+                   }
+   :pre [(meeting-db/activity-meeting-id db activity-eid meeting-id)]
+   :transact [(let [deletion-tx (merge (meta-model/deletion-tx user meeting-id))]
+                (def deletion-tx* deletion-tx)
+                deletion-tx)]})
+
 (defn- agenda-items-new-or-belong-to-meeting [db meeting-id agenda]
   (let [ids-to-update (remove string? (map :db/id agenda))
         existing-ids (meeting-db/meeting-agenda-ids db meeting-id)]
