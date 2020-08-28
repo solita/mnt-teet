@@ -13,7 +13,8 @@
             [teet.ui.icons :as icons]
             [teet.ui.typography :as typography]
             [teet.localization :refer [tr]]
-            [teet.ui.project-context :as project-context]))
+            [teet.ui.project-context :as project-context]
+            [teet.theme.theme-colors :as theme-colors]))
 
 ;; Define multimethods that different views can implement to hook into
 ;; the project menu system.
@@ -104,7 +105,7 @@
         [:div {:class (<class project-style/project-view-selection-item-label)} (tr label)]
         [:div {:class (<class project-style/project-view-selection-item-hotkey)} (tr [:common :hotkey] {:key hotkey})]]))))
 
-(defn project-menu [_e! _app _project]
+(defn project-menu [_e! _app _project _dark-theme?]
   (let [open? (r/atom false)
         anchor-el (atom nil)
         toggle-open! #(do
@@ -113,15 +114,16 @@
         set-anchor! #(reset! anchor-el %)]
     (common/component
      (hotkeys/hotkey "Q" toggle-open!)
-     (fn [e! {:keys [params query] :as app} project]
+     (fn [e! {:keys [params query] :as app} project dark-theme?]
        (let [{tab-name :name
               tab-label :label} (active-tab app)]
-         [:div {:class (<class project-style/project-tab-container)}
+         [:div {:class (<class project-style/project-tab-container dark-theme?)}
           [:div {:class (<class common-styles/space-between-center)}
            [:div {:class (<class common-styles/flex-align-center)}
             [IconButton {:on-click toggle-open!
                          :ref set-anchor!}
-             [icons/navigation-apps]]
+             [icons/navigation-apps (when dark-theme?
+                                      {:style {:color theme-colors/white}})]]
             [typography/Heading2 {:class [(<class common-styles/inline-block)
                                           (<class common-styles/no-margin)
                                           (<class common-styles/padding 0 0 0 0.5)]}
@@ -132,14 +134,14 @@
                    :classes {:paper (<class project-style/project-view-selection-menu)}
                    :placement "bottom-start"}
            (project-context/consume
-            (fn [{project-id :thk.project/id}]
-              [ClickAwayListener {:on-click-away toggle-open!}
-               [Paper
-                [MenuList {}
-                 (doall
-                  (for [tab project-tabs-layout]
-                    ^{:key (name (:name tab))}
-                    [project-tabs-item
-                     e! toggle-open! (= tab-name (:name tab))
-                     tab
-                     project-id]))]]]))]])))))
+             (fn [{project-id :thk.project/id}]
+               [ClickAwayListener {:on-click-away toggle-open!}
+                [Paper
+                 [MenuList {}
+                  (doall
+                    (for [tab project-tabs-layout]
+                      ^{:key (name (:name tab))}
+                      [project-tabs-item
+                       e! toggle-open! (= tab-name (:name tab))
+                       tab
+                       project-id]))]]]))]])))))
