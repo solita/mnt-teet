@@ -19,6 +19,7 @@
             [teet.ui.date-picker :as date-picker]
             [teet.ui.util :refer [mapc]]
             [teet.ui.itemlist :as itemlist]
+            [teet.meeting.meeting-model :as meeting-model]
             [teet.ui.url :as url]
             [teet.common.common-styles :as common-styles]
             [teet.ui.common :as common]
@@ -74,7 +75,7 @@
                                                :font-weight :bold}}
                  group]]]
               (doall
-                (for [{:meeting/keys [title start location] :as meeting} meetings]
+                (for [{:meeting/keys [start location] :as meeting} meetings]
                   ^{:key (str (:db/id meeting))}
                   [:li.meeting-group-task {:class (<class project-navigator-view/custom-list-indicator dark-theme?)}
                    [:div {:class (<class project-navigator-view/task-info)}
@@ -84,7 +85,7 @@
                                :class (<class project-navigator-view/stepper-button-style {:size "16px"
                                                                                            :open? false
                                                                                            :dark-theme? dark-theme?})}
-                     title]
+                     (meeting-model/meeting-title meeting)]
                     [typography/SmallText (when dark-theme?
                                             {:style {:color "white"
                                                      :opacity "0.7"}})
@@ -126,7 +127,7 @@
         [Grid {:item  true
                :xs nav-w
                :style {:max-width "400px"}}
-         [project-menu/project-menu e! app project]
+         [project-menu/project-menu e! app project true]
          [project-navigator-view/project-navigator e! project (:stepper app) (:params app)
           {:dark-theme? true
            :activity-link-page :activity-meetings
@@ -158,7 +159,7 @@
   [:div
    [typography/Heading1 "Project meetings"]
    [itemlist/ItemList {}
-    (for [{:meeting/keys [title location start end organizer number]
+    (for [{:meeting/keys [title location start end organizer number] :as meeting
            activity-id :activity-id
            id :db/id} meetings]
       ^{:key (str id)}
@@ -168,7 +169,7 @@
        [url/Link {:page :meeting
                   :params {:activity (str activity-id)
                            :meeting (str id)}}
-        (str title " "
+        (str (meeting-model/meeting-title meeting) " "
              "(" location ") "
              (format/date-time start) " ")]])]])
 
@@ -218,9 +219,9 @@
        [typography/Heading2 title (when number (str " #" number))]
        [form/form-modal-button {:form-component [meeting-form e! (:activity params)]
                                 :form-value meeting
-                                :button-component [buttons/button-primary
+                                :button-component [buttons/button-secondary
                                                    {}
-                                                   "Editoi"]}]]
+                                                   (tr [:buttons :edit])]}]]
 
       [common/labeled-data {:label (tr [:fields :meeting/location])
                             :data location}]
