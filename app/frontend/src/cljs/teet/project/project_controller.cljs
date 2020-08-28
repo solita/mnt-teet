@@ -21,6 +21,8 @@
 (defrecord OpenEditDetailsDialog [])
 (defrecord PostProjectEdit [on-result-callback])
 (defrecord PostProjectEditResult [on-result-callback result])
+(defrecord SaveProjectOwner [on-result-callback owner])
+(defrecord SaveProjectOwnerResult [on-result-callback result])
 (defrecord OpenPeopleModal [])
 (defrecord UpdateProjectPermissionForm [form-data])
 (defrecord SaveProjectPermission [project-id form-data])
@@ -353,8 +355,24 @@
   (process-event [{step :step} app]
     (navigate-to-step app step))
 
+  SaveProjectOwner
+  (process-event [{:keys [owner on-result-callback]} app]
+    (let [project-id (get-in app [:params :project])]
+      (t/fx app {:tuck.effect/type :command!
+                 :command :thk.project/update
+                 :payload {:thk.project/id project-id
+                           :thk.project/owner owner}
+                 :result-event (partial ->SaveProjectOwnerResult on-result-callback)})))
+
+  SaveProjectOwnerResult
+  (process-event [{:keys [on-result-callback]} app]
+    (t/fx app
+          (fn [_e!]
+            (on-result-callback))
+          common-controller/refresh-fx))
+
   PostProjectEdit
-  (process-event [{:keys [on-result-callback]}_ app]
+  (process-event [{:keys [on-result-callback]} app]
     (let [{:thk.project/keys [id]} (get-in app [:route :project])
           {:thk.project/keys [project-name owner km-range m-range-change-reason]}
           (get-in app [:route :project :basic-information-form])

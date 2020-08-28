@@ -491,8 +491,27 @@
   (when (project-managers-info-missing project)
     [Badge {:badge-content (r/as-element [information-missing-icon])}]))
 
-(defmethod project-menu/project-tab-action :people [_ e! app project]
-  [people-modal e! project (:query app)])
+(defn edit-project-owner
+  [e! on-close form-data]
+  [form/form {:e! e!
+              :value @form-data
+              :on-change-event (form/update-atom-event form-data)
+              :save-event #(project-controller/->SaveProjectOwner on-close (:thk.project/owner @form-data))
+              :spec :project/edit-owner-form}
+
+   ^{:attribute :thk.project/owner}
+   [select/select-user {:e! e! :attribute :thk.project/owner}]])
+
+(defmethod project-menu/project-tab-action :people [_ e! _app project]
+  [when-authorized
+   :thk.project/update
+   project
+   [form/form-modal-button {:modal-title (tr [:project :edit-project])
+                            :form-component [edit-project-owner e!]
+                            :button-component [buttons/button-secondary {:size :small}
+                                               (tr [:buttons :edit])]}]]
+
+  #_[people-modal e! project (:query app)])
 
 (defn edit-project-details
   [e! project close!]
@@ -569,25 +588,7 @@
   [road-view/road-objects-tab e! app project])
 
 
-(defn edit-project-management
-  [e! project]
-  (when-not (:basic-information-form project)
-    (e! (project-controller/->UpdateBasicInformationForm
-          (cu/without-nils {:thk.project/project-name (or (:thk.project/project-name project) (:thk.project/name project))
-                            :thk.project/km-range (-> project
-                                                      (project-model/get-column :thk.project/effective-km-range)
-                                                      project-setup-view/format-range)
-                            :thk.project/owner (:thk.project/owner project)
-                            :thk.project/manager (:thk.project/manager project)}))))
-  (fn [e! {form :basic-information-form :as _project}]
-    [form/form {:e! e!
-                :value form
-                :on-change-event project-controller/->UpdateBasicInformationForm
-                :save-event project-controller/->PostProjectEdit
-                :spec :project/edit-form}
 
-     ^{:attribute :thk.project/owner}
-     [select/select-user {:e! e! :attribute :thk.project/owner}]]))
 
 (defn change-restrictions-view
   [e! app project]
