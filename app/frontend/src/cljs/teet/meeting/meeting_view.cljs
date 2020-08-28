@@ -26,7 +26,8 @@
             [teet.user.user-model :as user-model]
             [teet.ui.rich-text-editor :as rich-text-editor]
             [teet.ui.format :as format]
-            [teet.localization :as localization]))
+            [teet.localization :as localization]
+            [teet.project.project-menu :as project-menu]))
 
 
 (defn create-meeting-form
@@ -112,6 +113,7 @@
      {:project-id (:db/id project)
       :thk.project/id (:thk.project/id project)}
      [:div.project-navigator-with-content {:class (<class project-style/page-container)}
+
       [typography/Heading1 (or (:thk.project/project-name project)
                                (:thk.project/name project))]
       [Paper {:class (<class task-style/task-page-paper-style)}
@@ -121,6 +123,7 @@
         [Grid {:item  true
                :xs nav-w
                :style {:max-width "400px"}}
+         [project-menu/project-menu e! app project]
          [project-navigator-view/project-navigator e! project (:stepper app) (:params app)
           {:dark-theme? true
            :activity-link-page :activity-meetings
