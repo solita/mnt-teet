@@ -187,5 +187,9 @@
    :padding "0px 5px 0px 5px"
    :border-radius "4px"})
 
-(defn project-tab-container []
-  {:padding "1rem"})
+(defn project-tab-container [dark-theme?]
+  (merge
+    {:padding "1rem"}
+    (when dark-theme?
+      {:background-color theme-colors/gray-dark
+       :color :white})))

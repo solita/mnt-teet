@@ -60,9 +60,7 @@
    :authorization {:activity/delete-activity {}             ;; TODO actual authorization
                    }
    :pre [(meeting-db/activity-meeting-id db activity-eid meeting-id)]
-   :transact [(let [deletion-tx (merge (meta-model/deletion-tx user meeting-id))]
-                (def deletion-tx* deletion-tx)
-                deletion-tx)]})
+   :transact [(meta-model/deletion-tx user meeting-id)]})
 
 (defn- agenda-items-new-or-belong-to-meeting [db meeting-id agenda]
   (let [ids-to-update (remove string? (map :db/id agenda))

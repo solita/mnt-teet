@@ -676,7 +676,7 @@
     (let [{tab-name :name :as tab} (project-menu/active-tab app)]
       ^{:key "Project view"}
       [project-page-structure e! app project
-       (merge {:header [project-menu/project-menu e! app project]
+       (merge {:header [project-menu/project-menu e! app project false]
                :body [project-menu/project-tab-content tab-name e! app project]
                :map-settings {:layers (or (:layers tab)
                                           #{:thk-project :surveys})}

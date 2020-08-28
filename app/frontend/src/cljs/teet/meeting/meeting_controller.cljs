@@ -2,8 +2,6 @@
   (:require goog.math.Long
             [teet.common.common-controller :as common-controller]
             [teet.localization :refer [tr]]
-            [teet.snackbar.snackbar-controller :as snackbar-controller]
-            [teet.task.task-controller :as task-controller]
             [tuck.core :as t]))
 
 (defrecord SubmitMeetingForm [activity-id form-data close-event])
@@ -43,7 +41,7 @@
 
 
   DeletionSuccess
-  (process-event [{:keys [close-event response]} {:keys [params] :as app}]
+  (process-event [{:keys [close-event _response]} {:keys [params] :as app}]
     (t/fx app
           (fn [e!]
             (e! (close-event)))
@@ -51,8 +49,7 @@
             (e! (common-controller/->Navigate :activity-meetings (dissoc params :meeting) {})))))
 
   MeetingCreationResult
-  (process-event [{response :response
-                   close-event :close-event} app]
+  (process-event [{close-event :close-event} app]
     (t/fx app
           (fn [e!]
             (e! (close-event)))
@@ -60,12 +57,10 @@
 
   UpdateMeetingForm
   (process-event [{form-data :form-data} app]
-    (println "form changed: " (pr-str form-data))
     (update-in app [:route :activity-meetings :meeting-form] merge form-data))
 
   SubmitAgendaForm
   (process-event [{:keys [meeting form-data close-event]} app]
-    (println "form data: " form-data)
     (t/fx app
           {:tuck.effect/type :command!
            :command :meeting/update-agenda
