@@ -147,11 +147,12 @@
   [items]
   [:ul {:style {:padding-left 0}}
    (doall
-     (for [{:keys [key href title selected?]} items]
+     (for [{:keys [key href on-click title selected?]} items]
        ^{:key key}
        [:li {:class (<class itemlist-styles/white-link-item-style)}
         [:a {:class (<class common-styles/white-link-style selected?)
-             :href href} title]]))])
+             :href href
+             :on-click on-click} title]]))])
 
 (defn gray-bg-list
   ([list] (gray-bg-list {} list))

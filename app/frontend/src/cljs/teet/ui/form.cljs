@@ -344,6 +344,7 @@
   [{:keys [e! ;; Tuck event handle
            on-change-event ;; Input change callback
            cancel-event    ;; Form cancel callback
+           cancel-fn       ;; function to call on cancel (instead of cancel-event)
            save-event      ;; Form submit callback
            value           ;; Current value of the form
            disable-buttons?
@@ -380,8 +381,9 @@
                     :required-fields required-fields
                     :current-fields current-fields
                     :e! e!
-                    :footer {:cancel    (when cancel-event
-                                          (r/partial e! (cancel-event)))
+                    :footer {:cancel   (or cancel-fn
+                                           (when cancel-event
+                                             (r/partial e! (cancel-event))))
                              :validate  (when save-event
                                           (fn [value]
                                             (validate value @current-fields)))
@@ -417,7 +419,7 @@
            footer   ; Form footer component fn
            spacing  ; Form grid spacing
            step     ; Current form step (unused?)
-           cancel-event
+           cancel-event cancel-fn
            save-event]
     :as opts
     :or {class (<class common-styles/gray-container-style)
@@ -446,7 +448,7 @@
                            adornment)]]
                        {:key (str attribute)}))))))]]
    (when (and footer
-              (or cancel-event save-event))
+              (or cancel-fn cancel-event save-event))
      [footer2 footer])])
 
 (defn form-modal-button

@@ -230,39 +230,52 @@
       (tr [:common :unknown])))
 
 (defn people-panel-user-list
-  [permissions selected-person]
+  [permissions selected-person-id]
   [:div
    (when permissions
-     (let [permission-links (map (fn [{:keys [user] :as _}]
+     (let [current-selected-person-id @selected-person-id
+           permission-links (map (fn [{:keys [user] :as _}]
                                    (let [user-id (:db/id user)]
                                      {:key user-id
-                                      :href (url/set-query-param :person user-id)
+                                      :on-click #(reset! selected-person-id user-id)
                                       :title (user-description user)
-                                      :selected? (= (str user-id) selected-person)}))
+                                      :selected? (= user-id current-selected-person-id)}))
                                  permissions)]
        [itemlist/white-link-list permission-links]))
-   [buttons/rect-white {:href (url/remove-query-param :person)}
+   [buttons/rect-white {:on-click #(reset! selected-person-id nil)}
     [icons/content-add]
     (tr [:project :add-users])]])
 
 (defn people-modal
   [e! {:keys [add-participant]
-       permitted-users :thk.project/permitted-users :as project} {:keys [modal person] :as _query}]
-  (let [open? (= modal "people")
-        selected-person (when person
-                          (->> permitted-users
-                               (filter (fn [{user :user}]
-                                         (= (str (:db/id user)) person)))
-                               first))]
-    [panels/modal+ {:open-atom (r/wrap open? :_)
-                    :title (if person
-                             (-> selected-person :user user-description)
-                             (tr [:project :add-users]))
-                    :on-close (e! project-controller/->CloseDialog)
-                    :left-panel [people-panel-user-list permitted-users person]
-                    :right-panel (if selected-person
-                                   [permission-information e! project selected-person]
-                                   [add-user-form e! add-participant (:db/id project)])}]))
+       permitted-users :thk.project/permitted-users :as project}
+   _]
+  (r/with-let [open? (r/atom false)
+               open-dialog! #(reset! open? true)
+               close-dialog! #(reset! open? false)
+               selected-person-id-atom (r/atom nil)]
+    [:<>
+     (let [person @selected-person-id-atom
+           selected-person (when person
+                             (->> permitted-users
+                                  (filter (fn [{user :user}]
+                                            (= (:db/id user) person)))
+                                  first))]
+       [panels/modal+ {:open-atom open?
+                       :title (if person
+                                (-> selected-person :user user-description)
+                                (tr [:project :add-users]))
+                       :on-close close-dialog!
+                       :left-panel [people-panel-user-list permitted-users
+                                    selected-person-id-atom]
+                       :right-panel (if selected-person
+                                      [permission-information e! project selected-person]
+                                      [add-user-form e! add-participant (:db/id project)])}])
+     [when-authorized :thk.project/update
+      project
+      [buttons/button-secondary {:on-click open-dialog!
+                                 :size :small}
+       (tr [:buttons :edit])]]]))
 
 (defn information-missing-icon
   []
@@ -370,7 +383,7 @@
                has-history? (some #(> (count (:activity/manager-history %)) 1) ; more than 1 manager period => has history
                                   (mapcat :thk.lifecycle/activities lifecycles))]
     [:div.project-people-tab
-     [people-modal e! project query]
+
      [:div.people-tab-managers
       [project-owner-and-managers owner lifecycles @show-history?]
       (when has-history?
@@ -479,19 +492,64 @@
     [Badge {:badge-content (r/as-element [information-missing-icon])}]))
 
 (defmethod project-menu/project-tab-action :people [_ e! app project]
-  [when-authorized :thk.project/update
-   project
-   [buttons/button-secondary {:on-click (e! project-controller/->OpenEditProjectDialog)
-                              :size :small}
-    (tr [:buttons :edit])]])
+  [people-modal e! project (:query app)]
+  )
+
+(defn edit-project-details
+  [e! project close!]
+  (when-not (:basic-information-form project)
+    (e! (project-controller/->InitializeBasicInformationForm
+          (cu/without-nils {:thk.project/project-name (:thk.project/name project)
+                            :thk.project/km-range (-> project
+                                                      (project-model/get-column :thk.project/effective-km-range)
+                                                      project-setup-view/format-range)
+                            :thk.project/owner (:thk.project/owner project)
+                            :thk.project/manager (:thk.project/manager project)}))))
+  (fn [e! {form :basic-information-form :as project}]
+    [form/form {:e! e!
+                :value form
+                :on-change-event project-controller/->UpdateBasicInformationForm
+                :save-event project-controller/->PostProjectEdit
+                :cancel-fn close!
+                :spec :project/edit-details-form}
+
+     ^{:attribute :thk.project/project-name
+       :adornment [project-setup-view/original-name-adornment e! project]}
+     [TextField {:full-width true :variant :outlined}]
+     (let [min-km (some-> project :road-info :start-m road-model/m->km)
+           max-km (some-> project :road-info :end-m road-model/m->km)]
+       ^{:xs 12 :attribute :thk.project/km-range
+         :validate (fn [[start end :as value]]
+                     (when (or (num-range/num-range-error nil value start min-km max-km)
+                               (num-range/num-range-error nil value end min-km max-km))
+                       (str "Valid km range: " min-km "km - " max-km "km")))}
+       [num-range/num-range {:start-label "Start km"
+                             :end-label "End km"
+                             :min-value min-km
+                             :max-value max-km
+                             :reset-start (partial project-setup-view/reset-range-value e! project :start)
+                             :reset-end (partial project-setup-view/reset-range-value e! project :end)}])
+     (when (project-setup-view/km-range-changed? project)
+       ^{:xs 12 :attribute :thk.project/m-range-change-reason}
+       [TextField {:multiline true
+                   :rows 3}])]))
 
 (defmethod project-menu/project-tab-action :details [_ e! _app project]
-  [when-authorized
-   :thk.project/update
-   project
-   [buttons/button-secondary {:size :small
-                              :on-click (e! project-controller/->OpenEditDetailsDialog)}
-    (tr [:buttons :edit])]])
+  (r/with-let [open? (r/atom false)
+               open-dialog! #(reset! open? true)
+               close-dialog! #(reset! open? false)]
+    [:<>
+     [panels/modal {:open-atom open?
+                    :on-close #(reset! open? false)
+                    :title "Edit project details"} ;; FIXME: translate
+      [edit-project-details e! project close-dialog!]]
+
+     [when-authorized
+      :thk.project/update
+      project
+      [buttons/button-secondary {:size :small
+                                 :on-click open-dialog!}
+       (tr [:buttons :edit])]]]))
 
 (defmethod project-menu/project-tab-action :restrictions
   [_ _e! _app {project-id :thk.project/id}]
@@ -624,64 +682,8 @@
                                           #{:thk-project :surveys})}
                :footer [project-menu/project-tab-footer tab-name e! app project]})])))
 
-(defn edit-project-details
-  [e! project]
-  (when-not (:basic-information-form project)
-    (e! (project-controller/->InitializeBasicInformationForm
-          (cu/without-nils {:thk.project/project-name (:thk.project/name project)
-                            :thk.project/km-range (-> project
-                                                      (project-model/get-column :thk.project/effective-km-range)
-                                                      project-setup-view/format-range)
-                            :thk.project/owner (:thk.project/owner project)
-                            :thk.project/manager (:thk.project/manager project)}))))
-  (fn [e! {form :basic-information-form :as project}]
-    [form/form {:e! e!
-                :value form
-                :on-change-event project-controller/->UpdateBasicInformationForm
-                :save-event project-controller/->PostProjectEdit
-                :cancel-event project-controller/->CancelUpdateProjectInformation
-                :spec :project/edit-details-form}
-
-     ^{:attribute :thk.project/project-name
-       :adornment [project-setup-view/original-name-adornment e! project]}
-     [TextField {:full-width true :variant :outlined}]
-     (let [min-km (some-> project :road-info :start-m road-model/m->km)
-           max-km (some-> project :road-info :end-m road-model/m->km)]
-       ^{:xs 12 :attribute :thk.project/km-range
-         :validate (fn [[start end :as value]]
-                     (when (or (num-range/num-range-error nil value start min-km max-km)
-                               (num-range/num-range-error nil value end min-km max-km))
-                       (str "Valid km range: " min-km "km - " max-km "km")))}
-       [num-range/num-range {:start-label "Start km"
-                             :end-label "End km"
-                             :min-value min-km
-                             :max-value max-km
-                             :reset-start (partial project-setup-view/reset-range-value e! project :start)
-                             :reset-end (partial project-setup-view/reset-range-value e! project :end)}])
-     (when (project-setup-view/km-range-changed? project)
-       ^{:xs 12 :attribute :thk.project/m-range-change-reason}
-       [TextField {:multiline true
-                   :rows 3}])]))
 
 
-(defn project-page-modals
-  [e! {{:keys [edit]} :query} project]
-  (let [[modal modal-label]
-        (cond
-          edit
-          (case edit
-            "project"
-            [[edit-project-management e! project]
-             (tr [:project :edit-project])]
-            "details"
-            [[edit-project-details e! project]
-             "Edit project details"])
-          :else nil)]
-    [panels/modal {:open-atom (r/wrap (boolean modal) :_)
-                   :title (or modal-label "")
-                   :on-close (e! project-controller/->CloseDialog)}
-
-     modal]))
 
 (defn project-page
   "Shows the normal project view for initialized projects, setup wizard otherwise."
@@ -691,5 +693,4 @@
     :thk.project/id (:thk.project/id project)}
    [:<>
     [project-navigator-view/project-navigator-dialogs {:e! e! :app app :project project}]
-    [project-page-modals e! app project]
     [project-view e! app project]]])
