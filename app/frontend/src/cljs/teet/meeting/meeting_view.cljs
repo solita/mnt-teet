@@ -127,7 +127,7 @@
               :spacing   0}
         [Grid {:item true
                :xs nav-w
-               :class (navigation-style/navigator-left-panel)}
+               :class (<class navigation-style/navigator-left-panel-style)}
          [project-menu/project-menu e! app project true]
          [project-navigator-view/project-navigator e! project (:stepper app) (:params app)
           {:dark-theme? true

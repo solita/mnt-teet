@@ -454,8 +454,9 @@
 (defn form-modal-button
   [{:keys [form-component button-component
            modal-title
-           form-value]}]
-  (r/with-let [open-atom (r/atom false)
+           form-value
+           open?]}]
+  (r/with-let [open-atom (r/atom (or open? false))
                form-atom (r/atom (or form-value {}))
                close #(reset! open-atom false)
                close-event (reset-atom-event open-atom false)]
