@@ -275,7 +275,7 @@
       project
       [buttons/button-secondary {:on-click open-dialog!
                                  :size :small}
-       (tr [:buttons :edit])]]]))
+       (tr [:project :add-users])]]]))
 
 (defn information-missing-icon
   []
@@ -404,9 +404,7 @@
        [typography/Heading2 (tr [:people-tab :other-users])]
        [when-authorized :thk.project/add-permission
         project
-        [buttons/button-secondary {:on-click (e! project-controller/->OpenPeopleModal)
-                                   :size :small}
-         (tr [:buttons :edit])]]]
+        [people-modal e! project]]]
 
       (if (empty? permitted-users)
         [typography/GreyText (tr [:people-tab :no-other-users])]
@@ -509,9 +507,7 @@
    [form/form-modal-button {:modal-title (tr [:project :edit-project])
                             :form-component [edit-project-owner e!]
                             :button-component [buttons/button-secondary {:size :small}
-                                               (tr [:buttons :edit])]}]]
-
-  #_[people-modal e! project (:query app)])
+                                               (tr [:buttons :edit])]}]])
 
 (defn edit-project-details
   [e! project close!]
