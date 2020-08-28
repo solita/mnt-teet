@@ -18,7 +18,9 @@
             [teet.ui.panels :as panels]
             [teet.project.project-style :as project-style]
             [teet.project.task-model :as task-model]
-            [teet.task.task-controller :as task-controller]))
+            [teet.task.task-controller :as task-controller]
+            [teet.project.project-menu :as project-menu]
+            [teet.navigation.navigation-style :as navigation-style]))
 
 (defn- svg-style
   [bottom?]
@@ -194,8 +196,8 @@
   {:background-color (if dark-theme?
                        theme-colors/gray-dark
                        theme-colors/white)
-   :padding "1rem 0 1rem 1rem"
-   :height "100%"})
+   :padding "0 0 1rem 1rem"
+   :flex 1})
 
 (defn custom-list-indicator
   [dark-theme?]
@@ -405,9 +407,10 @@
        [Grid {:container true
               :wrap :nowrap
               :spacing   0}
-        [Grid {:item  true
+        [Grid {:item true
                :xs nav-w
-               :style {:max-width "400px"}}
+               :class (<class navigation-style/navigator-left-panel)}
+         [project-menu/project-menu e! app project true]
          [project-task-navigator e! project (:stepper app) (:params app) true]]
         [Grid {:item  true
                :xs content-w

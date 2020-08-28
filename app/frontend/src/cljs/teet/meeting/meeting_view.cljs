@@ -28,7 +28,8 @@
             [teet.ui.rich-text-editor :as rich-text-editor]
             [teet.ui.format :as format]
             [teet.localization :as localization]
-            [teet.project.project-menu :as project-menu]))
+            [teet.project.project-menu :as project-menu]
+            [teet.navigation.navigation-style :as navigation-style]))
 
 
 (defn meeting-form
@@ -124,9 +125,9 @@
        [Grid {:container true
               :wrap :nowrap
               :spacing   0}
-        [Grid {:item  true
+        [Grid {:item true
                :xs nav-w
-               :style {:max-width "400px"}}
+               :class (navigation-style/navigator-left-panel)}
          [project-menu/project-menu e! app project true]
          [project-navigator-view/project-navigator e! project (:stepper app) (:params app)
           {:dark-theme? true
