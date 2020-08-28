@@ -21,9 +21,14 @@
              :meeting/keys [form-data]}
    :project-id (project-db/activity-project-id db activity-eid)
    :authorization {:activity/create-activity {}}            ;;TODO ADD ACTUAL AUTHORIZATION
-   :transact (let [meeting (merge {:db/id "new-meeting"}
-                                  form-data
-                                  (meta-model/creation-meta user))]
+   :transact (let [meeting
+                   (merge {:db/id "new-meeting"}
+                          form-data
+                          (meta-model/creation-meta user)
+                          {:meeting/number (meeting-db/next-meeting-number
+                                            db
+                                            activity-eid
+                                            (:meeting/title form-data))})]
                [{:db/id activity-eid
                  :activity/meetings [meeting]}])})
 
@@ -36,10 +41,15 @@
    :authorization {:activity/create-activity {}             ;;TODO Actual authorization
                    }
    :pre [(meeting-db/activity-meeting-id db activity-eid (:db/id form-data))]
-   :transact [(let [meeting (merge
+   :transact [(let [old-meeting-title (:meeting/title (du/entity db (:db/id form-data)))
+                    meeting (merge
                               (select-keys form-data [:db/id :meeting/organizer :meeting/title
                                                       :meeting/start :meeting/end])
-                              (meta-model/modification-meta user))]
+                              (meta-model/modification-meta user)
+                              (when (not= old-meeting-title (:meeting/title form-data))
+                                ;; Changing meeting title, we need to renumber the meeting
+                                {:meeting/number (meeting-db/next-meeting-number
+                                                  db activity-eid (:meeting/title form-data))}))]
                 meeting)]})
 
 (defcommand :meeting/delete

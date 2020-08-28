@@ -40,3 +40,17 @@
                      :in $ ?activity ?m]
                    db activity-id meeting-id))
       (db-api/bad-request! "No such meeting in activity.")))
+
+
+(defn next-meeting-number [db activity-id title]
+  (or (some-> (d/q '[:find (max ?n)
+                     :where
+                     [?activity :activity/meetings ?meeting]
+                     [?meeting :meeting/title ?title]
+                     [(missing? $ ?meeting :meta/deleted?)]
+                     [?meeting :meeting/number ?n]
+                     :in $ ?activity ?title]
+                   db activity-id title)
+              ffirst
+              inc)
+      1))
