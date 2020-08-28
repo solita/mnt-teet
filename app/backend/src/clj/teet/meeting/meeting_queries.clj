@@ -18,7 +18,8 @@
                                        {:meeting/organizer [:user/person-id
                                                             :user/given-name
                                                             :user/family-name]}
-                                       :meeting/end :meeting/start]}]}))
+                                       :meeting/end :meeting/start
+                                       :meeting/number]}]}))
 
 (defquery :meeting/project-with-meetings
   {:doc "Fetch project data with project meetings"
@@ -47,6 +48,7 @@
      :meeting (d/pull db `[:db/id
                            :meeting/title :meeting/location
                            :meeting/start :meeting/end
+                           :meeting/number
                            {:meeting/organizer ~user-model/user-listing-attributes}
                            {:meeting/agenda [:db/id
                                              :meeting.agenda/topic
