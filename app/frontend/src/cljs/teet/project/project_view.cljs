@@ -139,7 +139,7 @@
   [e!
    app
    project
-   {:keys [header body footer map-settings]}]
+   {:keys [key header body footer map-settings]}]
   (let [related-entity-type (or
                               (project-controller/project-setup-step app)
                               (get-in app [:query :configure]))]
@@ -151,7 +151,9 @@
       [Paper {:class (<class project-style/project-content-overlay)}
        header
        [:div {:class (<class project-style/content-overlay-inner)}
-        body]
+        (with-meta
+          body
+          {:key key})]
        (when footer
          footer)]
       (when (get-in app [:map :search-area :drawing?])
@@ -670,9 +672,10 @@
                 (tr [:buttons :save])]]}]
     :else
     (let [{tab-name :name :as tab} (project-menu/active-tab app)]
-      ^{:key "Project view"}
+      ^{:key "project-view"}
       [project-page-structure e! app project
-       (merge {:header [project-menu/project-menu e! app project false]
+       (merge {:key (name tab-name)
+               :header [project-menu/project-menu e! app project false]
                :body [project-menu/project-tab-content tab-name e! app project]
                :map-settings {:layers (or (:layers tab)
                                           #{:thk-project :surveys})}
