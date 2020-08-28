@@ -492,8 +492,7 @@
     [Badge {:badge-content (r/as-element [information-missing-icon])}]))
 
 (defmethod project-menu/project-tab-action :people [_ e! app project]
-  [people-modal e! project (:query app)]
-  )
+  [people-modal e! project (:query app)])
 
 (defn edit-project-details
   [e! project close!]
@@ -509,7 +508,7 @@
     [form/form {:e! e!
                 :value form
                 :on-change-event project-controller/->UpdateBasicInformationForm
-                :save-event project-controller/->PostProjectEdit
+                :save-event (r/partial project-controller/->PostProjectEdit close!)
                 :cancel-fn close!
                 :spec :project/edit-details-form}
 

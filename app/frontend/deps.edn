@@ -8,7 +8,7 @@
                             :exclusions [cljsjs/react
                                          cljsjs/react-dom]}
         webjure/tuck {:git/url "https://github.com/tatut/tuck"
-                      :sha "4afc81236a0c62155afb1a704501424e025323fb"}
+                      :sha "f053d3ac50bc623cbd44397cea2387a28c0cf82e"}
         data-frisk-reagent {:mvn/version "0.4.5" :exclusions [reagent]}
         herb {:mvn/version "0.10.1-SNAPSHOT"}
         tatut/re-svg-icons {:git/url "https://github.com/tatut/re-svg-icons"
