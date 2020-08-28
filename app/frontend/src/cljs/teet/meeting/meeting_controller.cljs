@@ -18,15 +18,18 @@
 (extend-protocol t/Event
   SubmitMeetingForm
   (process-event [{:keys [activity-id form-data close-event]} app]
-    (t/fx app
-          {:tuck.effect/type :command!
-           :command (if (:db/id form-data)
-                      :meeting/update
-                      :meeting/create)
-           :payload {:activity-eid (common-controller/->long activity-id)
-                     :meeting/form-data form-data}
-           :success-message "Meeting created successfully"  ;; TODO ADD TRANSLATIONS
-           :result-event (partial ->MeetingCreationResult close-event)}))
+    (let [editing? (:db/id form-data)]
+      (t/fx app
+            {:tuck.effect/type :command!
+             :command (if editing?
+                        :meeting/update
+                        :meeting/create)
+             :payload {:activity-eid (common-controller/->long activity-id)
+                       :meeting/form-data form-data}
+             :success-message (if editing?
+                                (tr [:notifications :meeting-updated])
+                                (tr [:notifications :meeting-created]))
+             :result-event (partial ->MeetingCreationResult close-event)})))
 
   DeleteMeeting
   (process-event [{:keys [activity-id meeting-id close-event]} app]
@@ -35,7 +38,7 @@
            :command :meeting/delete
            :payload {:activity-eid (common-controller/->long activity-id)
                      :meeting-id meeting-id}
-           :success-message "Meeting-deleted successfully"  ;; todo add translation
+           :success-message (tr [:notifications :meeting-deleted])
            :result-event (partial ->DeletionSuccess close-event)}))
 
 
