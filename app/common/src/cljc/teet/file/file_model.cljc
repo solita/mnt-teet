@@ -39,6 +39,7 @@
     ;; Design model files, Building Information Models
     "application/ifc"
     "application/xml"
+    "text/xml"
     "application/bcf"
     "application/rvt"
     "application/skp"
