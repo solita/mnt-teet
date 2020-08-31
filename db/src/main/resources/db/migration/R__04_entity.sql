@@ -154,3 +154,33 @@ SELECT ST_AsGML(ST_FlipCoordinates(ST_Collect(x.geometry)))
 $$ LANGUAGE SQL SECURITY DEFINER;
 
 GRANT EXECUTE ON FUNCTION teet.gml_entity_search_area(BIGINT,INTEGER) TO teet_backend;
+
+
+CREATE OR REPLACE FUNCTION teet.replace_entity_ids(idlist TEXT)
+RETURNS BOOLEAN
+AS $$
+DECLARE
+BEGIN
+  CREATE TEMPORARY TABLE new_ids (old_id BIGINT, new_id BIGINT);
+  INSERT INTO new_ids
+    SELECT y.ids[1]::bigint AS old_id, y.ids[2]::bigint AS new_id
+      FROM (SELECT regexp_split_to_array(x.row, '=') AS ids
+              FROM (SELECT regexp_split_to_table(idlist, ',') AS row) x) y;
+
+  -- Make new ids negative to prevent clashes with existing rows
+  UPDATE teet.entity
+     SET id = (SELECT -new_id FROM new_ids WHERE old_id=id)
+   WHERE EXISTS (SELECT new_id FROM new_ids WHERE old_id=id);
+
+  -- Flip all negative ids
+  UPDATE teet.entity
+     SET id = -id
+   WHERE id < 0;
+
+  DROP TABLE new_ids;
+
+  RETURN true;
+END;
+$$ LANGUAGE PLPGSQL SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION teet.replace_entity_ids(TEXT) TO teet_backend;

@@ -10,7 +10,8 @@
             [clojure.set :as set]
             [teet.util.datomic :as du]
             [teet.log :as log]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.integration.postgrest :as postgrest]))
 
 (defn prepare [form]
   (walk/prewalk
@@ -218,6 +219,16 @@
                                  {:db/id id
                                   :comment/comment new-txt}))})))
 
+
+(defn replace-entity-ids!
+  "Replace entity ids in postgres entity table. List of ids
+  is comma separated list of old_id=new_id."
+  [{:keys [tempids] :as ctx}]
+  (postgrest/rpc ctx :replace_entity_ids
+                 {:idlist (str/join ","
+                                    (map (fn [[old-id new-id]]
+                                           (str old-id "=" new-id))
+                                         tempids))}))
 
 (defn restore
   "Restore a TEET backup zip from `file` by running the transactions in
