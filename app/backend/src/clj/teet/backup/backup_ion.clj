@@ -9,7 +9,8 @@
             [clojure.walk :as walk]
             [clojure.set :as set]
             [teet.util.datomic :as du]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [clojure.string :as str]))
 
 (defn prepare [form]
   (walk/prewalk
@@ -195,6 +196,29 @@
         (catch Exception e
           (log/error (ex-data e)))))))
 
+;; Match and replace mentions like "@[user name](user db id)"
+;; with new user ids
+(defn replace-comment-mention-ids [txt tempids]
+  (str/replace txt
+               #"@\[([^\]]+)\]\((\d+)\)"
+               (fn [[_ name id]]
+                 (str "@[" name "](" (tempids id) ")"))))
+
+;; "hei @[Benjamin Boss](92358976733956) mitä kuuluu?"
+(defn rewrite-comment-mentions! [{:keys [conn tempids]}]
+  (let [comments (map first
+                      (d/q '[:find (pull ?c [:db/id :comment/comment])
+                             :where
+                             [?c :comment/comment ?txt]
+                             [(clojure.string/includes? ?txt "@[")]]
+                           (d/db conn)))]
+    (d/transact conn
+                {:tx-data (vec (for [{id :db/id txt :comment/comment} comments
+                                     :let [new-txt (replace-comment-mention-ids txt tempids)]]
+                                 {:db/id id
+                                  :comment/comment new-txt}))})))
+
+
 (defn restore
   "Restore a TEET backup zip from `file` by running the transactions in
   the file to the database pointed to by `conn`. It is assumed that
@@ -209,8 +233,9 @@
               rdr (java.io.PushbackReader. zip-reader)]
     ;; Transact everything in one big transaction
     (let [form (doall (read-seq rdr))
-          ;ids (check-ids-without-attributes form)
+                                        ;ids (check-ids-without-attributes form)
           {:keys [mapping form]} (to-temp-ids form)
           {tempids :tempids} (d/transact conn {:tx-data (vec form)})
           ctx (merge ctx {:mapping mapping :form form :tempids tempids})]
-      (rename-documents! ctx))))
+      (rename-documents! ctx)
+      (rewrite-comment-mentions! ctx))))
