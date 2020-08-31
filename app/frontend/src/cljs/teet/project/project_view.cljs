@@ -514,7 +514,7 @@
   [e! project close!]
   (when-not (:basic-information-form project)
     (e! (project-controller/->InitializeBasicInformationForm
-          (cu/without-nils {:thk.project/project-name (:thk.project/name project)
+          (cu/without-nils {:thk.project/project-name (or (:thk.project/project-name project) (:thk.project/name project))
                             :thk.project/km-range (-> project
                                                       (project-model/get-column :thk.project/effective-km-range)
                                                       project-setup-view/format-range)
