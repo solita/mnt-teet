@@ -287,9 +287,9 @@
             :api-url (environment/config-value :api-url)
             :api-secret (environment/config-value :auth :jwt-secret)
             :conn (environment/datomic-connection)}
-           validate-empty-environment
            integration-s3/read-trigger-event
            download-backup-file
+           validate-empty-environment
            restore-file
            delete-backup-file))
   "{\"success\": true}")
