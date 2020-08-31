@@ -234,8 +234,6 @@
                                        (format/time* start)
                                        " - "
                                        (format/time* end))}]
-      [common/labeled-data {:label (tr [:fields :meeting/end])
-                            :data (fmt/date-time end)}]
       [common/labeled-data {:label (tr [:fields :meeting/organizer])
                             :data (user-model/user-name organizer)}]
 
