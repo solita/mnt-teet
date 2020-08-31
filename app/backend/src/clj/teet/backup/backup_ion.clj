@@ -13,8 +13,7 @@
             [teet.util.datomic :as du]
             [teet.log :as log]
             [clojure.string :as str]
-            [teet.integration.postgrest :as postgrest]
-            [teet.integration.integration-s3 :as integration-s3]))
+            [teet.integration.postgrest :as postgrest]))
 
 (defn prepare [form]
   (walk/prewalk
@@ -257,7 +256,7 @@
 
 (defstep download-backup-file
   {:doc "Download backup file from S3 to temporary directory. Puts file path to context"
-   :in {backup-file {:spec ::integration-s3/file-descriptor
+   :in {backup-file {:spec ::s3/file-descriptor
                      :path-kw :backup-file
                      :default-path [:s3]}}
    :out {:spec string?
@@ -265,7 +264,7 @@
   (let [{:keys [bucket file-key]} backup-file
         file (java.io.File/createTempFile "backup" "edn" nil)]
     (log/info "Download backup file, bucket:  " bucket ", file-key: " file-key ", to local file: " file)
-    (io/copy (integration-s3/get-object bucket file-key)
+    (io/copy (s3/get-object bucket file-key)
              file)
     (.getAbsolutePath file)))
 
