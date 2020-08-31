@@ -175,9 +175,9 @@
                     @ac/all-roles)]
     [:div
      [form/form2 {:e! e!
-                  :value user
-                  :on-change-event #(e! (project-controller/->UpdateProjectPermissionForm %))
-                  :save-event #(e! (project-controller/->SaveProjectPermission project-id user))
+                  :value @user
+                  :on-change-event (form/update-atom-event user merge)
+                  :save-event #(e! (project-controller/->SaveProjectPermission project-id @user))
                   :spec :project/add-permission-form}
       [Grid {:container true :spacing 3
              :style {:width "100%"}}                        ;; Because material ui grid spacing causes sidescroll
@@ -249,13 +249,12 @@
     (tr [:project :add-users])]])
 
 (defn people-modal
-  [e! {:keys [add-participant]
-       permitted-users :thk.project/permitted-users :as project}
-   _]
+  [e! {permitted-users :thk.project/permitted-users :as project}]
   (r/with-let [open? (r/atom false)
                open-dialog! #(reset! open? true)
                close-dialog! #(reset! open? false)
-               selected-person-id-atom (r/atom nil)]
+               selected-person-id-atom (r/atom nil)
+               form-value (r/atom nil)]
     [:<>
      (let [person @selected-person-id-atom
            selected-person (when person
@@ -272,7 +271,7 @@
                                     selected-person-id-atom]
                        :right-panel (if selected-person
                                       [permission-information e! project selected-person]
-                                      [add-user-form e! add-participant (:db/id project)])}])
+                                      [add-user-form e! form-value (:db/id project)])}])
      [when-authorized :thk.project/update
       project
       [buttons/button-secondary {:on-click open-dialog!
@@ -568,25 +567,26 @@
        (tr [:buttons :edit])]]]))
 
 (defmethod project-menu/project-tab-action :restrictions
-  [_ _e! _app {project-id :thk.project/id}]
-  [buttons/button-secondary {:component "a"
-                             :href (str "/#/projects/" project-id "?tab=restrictions&configure=restrictions")
-                             :size :small}
-   (tr [:buttons :edit])])
+  [_ _e! _app {project-id :thk.project/id :as project}]
+  [when-authorized :thk.project/update
+   project
+   [buttons/button-secondary {:component "a"
+                              :href (str "/#/projects/" project-id "?tab=restrictions&configure=restrictions")
+                              :size :small}
+    (tr [:buttons :edit])]])
 
 (defmethod project-menu/project-tab-content :land [_ e! app project]
   [land-tab/related-cadastral-units-info e! app project])
 
 (defmethod project-menu/project-tab-action :land
-  [_  _e! _app _project]
-  [buttons/button-secondary {:href (url/set-query-param :configure "cadastral-units")}
-   (tr [:buttons :edit])])
+  [_  _e! _app project]
+  [when-authorized :thk.project/update
+   project
+   [buttons/button-secondary {:href (url/set-query-param :configure "cadastral-units")}
+    (tr [:buttons :edit])]])
 
 (defmethod project-menu/project-tab-content :road [_ e! app project]
   [road-view/road-objects-tab e! app project])
-
-
-
 
 (defn change-restrictions-view
   [e! app project]
