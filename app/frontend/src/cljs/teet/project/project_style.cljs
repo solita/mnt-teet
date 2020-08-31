@@ -17,7 +17,8 @@
   {:position "relative"
    :display "flex"
    :flex-direction "column"
-   :height "calc(100vh - 204px)"})
+   :height "calc(100vh - 220px)"}                           ;;HTML structure needs refactor so these cals wouldn't be needed
+  )
 
 (defn project-page-structure
   []

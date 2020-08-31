@@ -2,9 +2,7 @@
 
 (def appbar-height "90px")
 
-(def breadcrumbs-height "75px")
-
-(def content-height (str "calc(100vh - " appbar-height " - " breadcrumbs-height ")"))
+(def content-height (str "calc(100vh - " appbar-height ")"))
 
 (defn fill-content []
   {:min-height content-height
