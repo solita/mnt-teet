@@ -281,7 +281,7 @@
                                            (gstr/format "%02d" (.getMinutes date)))))
                  start-input-atom (r/atom (or (time-input-value start) ""))
                  end-input-atom (r/atom (or (time-input-value end)) "")
-                 date (r/atom nil)
+                 date (r/atom (or start nil))
                  time-to-date (fn [input-val date]
                                 (let [[hours minutes] (str/split input-val ":")]
                                   (when (and hours minutes)
@@ -299,13 +299,13 @@
                                    (on-change [nil nil])
                                    (on-change [start-date end-date]))))]
       [:div
-       [Grid {:container true :spacing 1}
-        [Grid {:item true :xs 9}
+       [Grid {:container true :spacing 1 :style {:align-items :flex-end}}
+        [Grid {:item true :xs 8 :md 9}
          [date-input {:value @date
-                      :label (tr [:common-texts :date])
+                      :label (tr [:fields :meeting/date-and-time])
                       :required required
                       :on-change date-change}]]
-        [Grid {:item true :xs 3}
+        [Grid {:item true :xs 4 :md 3}
          [:div {:style {:display :flex
                         :flex-direction :row
                         :align-items :center
@@ -314,7 +314,8 @@
            [TextField {:type :time
                        :required required
                        :disabled (nil? @date)
-                       :label (tr [:common-texts :start-time])
+                       ;:label (tr [:common :start-time])
+                       :hide-label? true
                        :value @start-input-atom
                        :max @end-input-atom
                        :on-blur (fn [_]
@@ -330,7 +331,8 @@
                        :required required
                        :disabled (nil? @date)
                        :value @end-input-atom
-                       :label (tr [:common-texts :end-time])
+                       :hide-label? true
+                       ;:label (tr [:common-texts :end-time])
                        :min @start-input-atom
                        :on-blur (fn [_]
                                   (on-change [start (time-to-date @end-input-atom @date)]))

@@ -85,6 +85,12 @@
             db permission-id))
       (db-api/bad-request! "No such permission")))
 
+(defn meeting-project-id [db meeting-id]
+  (get-in (du/entity db meeting-id)
+          [:activity/_meetings 0
+           :thk.lifecycle/_activities 0
+           :thk.project/_lifecycles 0 :db/id]))
+
 (defn document-project-id
   ([db document-id]
    (document-project-id db document-id ::throw))
@@ -122,8 +128,10 @@
   ([db eid]
    (project-by-id db eid {:activity/tasks project-model/default-fetch-pattern}))
   ([db eid opts]
-   (d/pull db (project-fetch-pattern opts)
-           eid)))
+   (update (d/pull db (project-fetch-pattern opts)
+                   eid)
+           :thk.project/lifecycles
+           project-model/sort-lifecycles)))
 
 (defn lifecycle-dates
   [db lifecycle-id]
@@ -162,5 +170,3 @@
   (boolean
    (ffirst (d/q '[:find ?e :where [?project :thk.project/owner ?e] :in $ ?project]
                 db project-eid))))
-
-

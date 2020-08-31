@@ -8,7 +8,7 @@
 
 (defn breadcrumbs-style
   []
-  {:margin-bottom "0.5rem"})
+  {:padding        "1.5rem 1.875rem"})
 
 (defn breadcrumbs
   [breadcrumbs]

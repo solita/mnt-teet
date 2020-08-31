@@ -13,7 +13,8 @@
             [teet.log :as log]
             [teet.ui.context :as context]
             [clojure.set :as set]
-            [teet.common.common-styles :as common-styles]))
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.panels :as panels]))
 
 (def default-value
   "Mapping of component to default value. Some components don't want nil as the value (like text area)."
@@ -343,6 +344,7 @@
   [{:keys [e! ;; Tuck event handle
            on-change-event ;; Input change callback
            cancel-event    ;; Form cancel callback
+           cancel-fn       ;; function to call on cancel (instead of cancel-event)
            save-event      ;; Form submit callback
            value           ;; Current value of the form
            disable-buttons?
@@ -379,8 +381,9 @@
                     :required-fields required-fields
                     :current-fields current-fields
                     :e! e!
-                    :footer {:cancel    (when cancel-event
-                                          (r/partial e! (cancel-event)))
+                    :footer {:cancel   (or cancel-fn
+                                           (when cancel-event
+                                             (r/partial e! (cancel-event))))
                              :validate  (when save-event
                                           (fn [value]
                                             (validate value @current-fields)))
@@ -416,7 +419,7 @@
            footer   ; Form footer component fn
            spacing  ; Form grid spacing
            step     ; Current form step (unused?)
-           cancel-event
+           cancel-event cancel-fn
            save-event]
     :as opts
     :or {class (<class common-styles/gray-container-style)
@@ -445,5 +448,25 @@
                            adornment)]]
                        {:key (str attribute)}))))))]]
    (when (and footer
-              (or cancel-event save-event))
+              (or cancel-fn cancel-event save-event))
      [footer2 footer])])
+
+(defn form-modal-button
+  [{:keys [form-component button-component
+           modal-title
+           form-value
+           open?]}]
+  (r/with-let [open-atom (r/atom (or open? false))
+               form-atom (r/atom (or form-value {}))
+               close #(reset! open-atom false)
+               close-event (reset-atom-event open-atom false)]
+    [:<>
+     [panels/modal {:max-width "md"
+                    :open-atom open-atom
+                    :title modal-title
+                    :on-close close}
+      (into form-component [close-event form-atom])]
+     (assoc-in button-component [1 :on-click]
+               (fn []
+                 (reset! form-atom (or form-value {}))
+                 (reset! open-atom true)))]))

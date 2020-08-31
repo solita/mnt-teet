@@ -344,8 +344,7 @@
                      {task-id :task :as _params} :params
                      new-document :new-document
                      user :user :as app}
-                 project
-                 breadcrumbs]
+                 project]
   (let [activity-manager (cu/find-> project
                                     :thk.project/lifecycles some?
                                     :thk.lifecycle/activities (fn [{:activity/keys [tasks]}]
@@ -361,8 +360,7 @@
      [project-navigator-view/project-navigator-with-content
       {:e! e!
        :project project
-       :app app
-       :breadcrumbs breadcrumbs}
+       :app app}
 
       [task-page-content e! app
        (project-model/task-by-id project task-id)

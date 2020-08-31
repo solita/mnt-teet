@@ -1,13 +1,13 @@
 (ns teet.meeting.meeting-view
   (:require [reagent.core :as r]
             [teet.project.project-navigator-view :as project-navigator-view]
-            [teet.ui.breadcrumbs :as breadcrumbs]
             [teet.ui.typography :as typography]
             [teet.ui.text-field :refer [TextField]]
             [herb.core :refer [<class]]
             [teet.localization :refer [tr]]
             teet.meeting.meeting-specs
             [teet.ui.project-context :as project-context]
+            [teet.ui.icons :as icons]
             [teet.task.task-style :as task-style]
             [teet.project.project-style :as project-style]
             [teet.ui.material-ui :refer [Link Collapse Paper Grid]]
@@ -19,19 +19,32 @@
             [teet.ui.date-picker :as date-picker]
             [teet.ui.util :refer [mapc]]
             [teet.ui.itemlist :as itemlist]
-            [teet.ui.url :as url]))
+            [teet.meeting.meeting-model :as meeting-model]
+            [teet.ui.url :as url]
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.common :as common]
+            [teet.ui.format :as fmt]
+            [teet.user.user-model :as user-model]
+            [teet.ui.rich-text-editor :as rich-text-editor]
+            [teet.ui.format :as format]
+            [teet.localization :as localization]
+            [teet.project.project-menu :as project-menu]
+            [teet.navigation.navigation-style :as navigation-style]))
 
 
-(defn create-meeting-form
+(defn meeting-form
   [e! activity-id close-event form-atom]
   [:<>
-   #_[:span (pr-str @form-atom)]                            ;debug form values
-   [form/form {:e! e!
-               :value @form-atom
-               :on-change-event (form/update-atom-event form-atom merge)
-               :cancel-event close-event
-               :spec :meeting/form-data
-               :save-event #(meeting-controller/->SubmitMeetingForm activity-id @form-atom close-event)}
+   ;[:span (pr-str @form-atom)]                            ;debug form values
+   [form/form (merge
+                {:e! e!
+                 :value @form-atom
+                 :on-change-event (form/update-atom-event form-atom merge)
+                 :cancel-event close-event
+                 :spec :meeting/form-data
+                 :save-event #(meeting-controller/->SubmitMeetingForm activity-id @form-atom close-event)}
+                (when (:db/id @form-atom)
+                  {:delete (meeting-controller/->DeleteMeeting activity-id (:db/id @form-atom) close-event)}))
     ^{:attribute :meeting/title}
     [TextField {}]
     ^{:attribute :meeting/location}
@@ -41,52 +54,87 @@
     ^{:attribute :meeting/organizer}
     [select/select-user {:e! e!}]]])
 
-(defn form-modal-button
-  [{:keys [form-component button-component]} label]
-  (r/with-let [open-atom (r/atom false)
-               form-atom (r/atom {})
-               open #(reset! open-atom true)
-               close #(reset! open-atom false)
-               close-event (form/reset-atom-event open-atom false)]
-    [:<>
-     [panels/modal {:max-width "md"
-                    :open-atom open-atom
-                    :title (tr [:meeting :add-meeting])
-                    :on-close close}
-      [form-component close-event form-atom]]
-     [button-component
-      {:on-click open}
-      label]]))
-
 (defn meetings-page-content
   [e! activity]
   [:div
-   [typography/Heading1 (tr [:meetings :meetings-title])]
-   [form-modal-button {:form-component (r/partial create-meeting-form e! activity)
-                       :button-component buttons/rect-primary}
-    (tr [:meetings :new-meeting-button])]])
+   [typography/Heading1 (tr [:meeting :meeting-title])]])
 
-(defn activity-meetings-view
-  "Page structure showing project navigator along with content."
-  [e! {{:keys [activity]} :params :as app} project breadcrumbs]
+(defn activity-meetings-list
+  [{:keys [e! dark-theme? disable-buttons? project-id rect-button]}
+   {:keys [activity activity-id]}]
+  (let [meetings (:activity/meetings activity)]
+    [:<>
+     (if (seq meetings)
+       [:div
+        (mapc
+          (fn [[group meetings]]
+            [:div.meeting-group {:style {:margin-bottom "0.5rem"}}
+             [:ul {:class (<class project-navigator-view/ol-class)}
+              [:li.meeting-group-label
+               [:div
+                [typography/SmallText {:style {:text-transform :uppercase
+                                               :font-weight :bold}}
+                 group]]]
+              (doall
+                (for [{:meeting/keys [start location] :as meeting} meetings]
+                  ^{:key (str (:db/id meeting))}
+                  [:li.meeting-group-task {:class (<class project-navigator-view/custom-list-indicator dark-theme?)}
+                   [:div {:class (<class project-navigator-view/task-info)}
+                    [url/Link {:page :meeting
+                               :params {:activity activity-id
+                                        :meeting (:db/id meeting)}
+                               :class (<class project-navigator-view/stepper-button-style {:size "16px"
+                                                                                           :open? false
+                                                                                           :dark-theme? dark-theme?})}
+                     (meeting-model/meeting-title meeting)]
+                    [typography/SmallText (when dark-theme?
+                                            {:style {:color "white"
+                                                     :opacity "0.7"}})
+                     (format/date start) " " location]]]))]])
+
+          ;; group tasks by the task group
+          (group-by (fn [meeting]
+                      (if-let [meeting-start (:meeting/start meeting)]
+                        (localization/localized-month-year meeting-start)
+                        "No date for meeting"               ;; TODO add localization
+                        ))
+                    (sort-by :meeting/start meetings)))]
+       [:div {:class (<class project-navigator-view/empty-section-style)}
+        [typography/GreyText (tr [:meeting :no-meetings])]])
+     [:div
+      [:div.project-navigator-add-meeting
+
+       [form/form-modal-button {:form-component [meeting-form e! activity-id]
+                                :modal-title (tr [:meeting :new-meeting-modal-title])
+                                :button-component [rect-button {:size :small
+                                                                :disabled disable-buttons?
+                                                                :start-icon (r/as-element
+                                                                              [icons/content-add])}
+                                                   (tr [:meeting :new-meeting-button])]}]]]]))
+
+(defn meeting-page-structure [e! app project
+                              main-content right-panel-content]
   (let [[nav-w content-w] [3 6]]
     [project-context/provide
      {:project-id (:db/id project)
       :thk.project/id (:thk.project/id project)}
      [:div.project-navigator-with-content {:class (<class project-style/page-container)}
-      [:div
-       [breadcrumbs/breadcrumbs breadcrumbs]]
+
       [typography/Heading1 (or (:thk.project/project-name project)
                                (:thk.project/name project))]
       [Paper {:class (<class task-style/task-page-paper-style)}
        [Grid {:container true
               :wrap :nowrap
               :spacing   0}
-        [Grid {:item  true
+        [Grid {:item true
                :xs nav-w
-               :style {:max-width "400px"}}
-         [project-navigator-view/project-navigator e! project (:stepper app) (:params app) true] ;;TODO create new meetings navigator
-         ]
+               :class (<class navigation-style/navigator-left-panel-style)}
+         [project-menu/project-menu e! app project true]
+         [project-navigator-view/project-navigator e! project (:stepper app) (:params app)
+          {:dark-theme? true
+           :activity-link-page :activity-meetings
+           :activity-section-content activity-meetings-list
+           :add-activity? false}]]
         [Grid {:item  true
                :xs content-w
                :style {:padding "2rem 1.5rem"
@@ -94,20 +142,26 @@
                        ;; content area should scroll, not the whole page because we
                        ;; want map to stay in place without scrolling it
                        }}
-         [meetings-page-content e! activity]]
+         main-content]
         [Grid {:item  true
                :xs :auto
                :style {:display :flex
                        :flex    1
                        :padding "1rem 1.5rem"}}
-         [:h1 "participants"]                               ;; TODO create participants view
-         ]]]]]))
+         right-panel-content]]]]]))
+
+(defn activity-meetings-view
+  "Page structure showing project navigator along with content."
+  [e! {{:keys [activity]} :params :as app} project]
+  [meeting-page-structure e! app project
+   [meetings-page-content e! activity]
+   [:h1 "participants"]])
 
 (defn meeting-list [meetings]
   [:div
    [typography/Heading1 "Project meetings"]
    [itemlist/ItemList {}
-    (for [{:meeting/keys [title location start end organizer number]
+    (for [{:meeting/keys [title location start end organizer number] :as meeting
            activity-id :activity-id
            id :db/id} meetings]
       ^{:key (str id)}
@@ -117,7 +171,9 @@
        [url/Link {:page :meeting
                   :params {:activity (str activity-id)
                            :meeting (str id)}}
-        title]])]])
+        (str (meeting-model/meeting-title meeting) " "
+             "(" location ") "
+             (format/date-time start) " ")]])]])
 
 (defn project-meetings-page-content [e! project]
   (let [meetings (mapcat
@@ -132,40 +188,66 @@
 
 (defn project-meetings-view
   "Project meetings"
-  [e! app project breadcrumbs]
-  (let [[nav-w content-w] [3 6]]
-    [project-context/provide
-     {:project-id (:db/id project)
-      :thk.project/id (:thk.project/id project)}
-     [:div.project-navigator-with-content {:class (<class project-style/page-container)}
-      [:div
-       [breadcrumbs/breadcrumbs breadcrumbs]]
-      [typography/Heading1 (or (:thk.project/project-name project)
-                               (:thk.project/name project))]
-      [Paper {:class (<class task-style/task-page-paper-style)}
-       [Grid {:container true
-              :wrap :nowrap
-              :spacing   0}
-        [Grid {:item  true
-               :xs nav-w
-               :style {:max-width "400px"}}
-         [project-navigator-view/project-navigator e! project (:stepper app) (:params app) true]]
-        [Grid {:item  true
-               :xs content-w
-               :style {:padding "2rem 1.5rem"
-                       :overflow-y :auto
-                       ;; content area should scroll, not the whole page because we
-                       ;; want map to stay in place without scrolling it
-                       }}
-         [project-meetings-page-content e! project]]
-        [Grid {:item  true
-               :xs :auto
-               :style {:display :flex
-                       :flex    1
-                       :padding "1rem 1.5rem"}}
-         [:h1 "participants"]                               ;; TODO create participants view
-         ]]]]]))
+  [e! app project]
+  [meeting-page-structure e! app project
+   [project-meetings-page-content e! project]
+   [:h1 "participants"]])
 
 
-(defn meeting-page [e! app meeting breadcrumbs]
-  [:div "meeting page: " (pr-str meeting)])
+(defn add-agenda-form [e! meeting close-event form-atom]
+  [form/form {:e! e!
+              :value @form-atom
+              :on-change-event (form/update-atom-event form-atom merge)
+              :cancel-event close-event
+              ;;:spec :meeting/form-data
+              :save-event #(meeting-controller/->SubmitAgendaForm
+                            meeting
+                            (-> @form-atom
+                                (update :meeting.agenda/body rich-text-editor/editor-state->markdown))
+                            close-event)}
+   ^{:attribute :meeting.agenda/topic}
+   [TextField {}]
+   ^{:attribute :meeting.agenda/body
+     :before-save rich-text-editor/editor-state->markdown}
+   [rich-text-editor/rich-text-field {}]
+   ^{:attribute :meeting.agenda/responsible}
+   [select/select-user {:e! e!}]])
+
+(defn meeting-page [e! {:keys [params] :as app} {:keys [project meeting]}]
+  [meeting-page-structure e! app project
+   (let [{:meeting/keys [title number location start end organizer agenda]} meeting]
+     [:div
+      [:div {:class (<class common-styles/heading-and-action-style)}
+       [typography/Heading2 title (when number (str " #" number))]
+       [form/form-modal-button {:form-component [meeting-form e! (:activity params)]
+                                :form-value meeting
+                                :modal-title (tr [:meeting :edit-meeting-modal-title])
+                                :button-component [buttons/button-secondary
+                                                   {}
+                                                   (tr [:buttons :edit])]}]]
+
+      [common/labeled-data {:label (tr [:fields :meeting/location])
+                            :data location}]
+      [common/labeled-data {:label (tr [:fields :meeting/date-and-time])
+                            :data (str (format/date start)
+                                       " "
+                                       (format/time* start)
+                                       " - "
+                                       (format/time* end))}]
+      [common/labeled-data {:label (tr [:fields :meeting/end])
+                            :data (fmt/date-time end)}]
+      [common/labeled-data {:label (tr [:fields :meeting/organizer])
+                            :data (user-model/user-name organizer)}]
+
+      [itemlist/ItemList {:title (tr [:fields :meeting/agenda])}
+       (for [{:meeting.agenda/keys [topic body responsible]} agenda]
+         [:div.meeting-agenda
+          [common/labeled-data {:label (tr [:fields :meeting.agenda/topic])
+                                :data topic}]
+          [common/labeled-data {:label (tr [:fields :meeting.agenda/responsible])
+                                :data (user-model/user-name responsible)}]
+          [common/labeled-data {:label (tr [:fields :meeting.agenda/body])
+                                :data [rich-text-editor/display-markdown body]}]])]
+      [form/form-modal-button {:form-component [add-agenda-form e! meeting]
+                          :button-component [buttons/rect-primary {} (tr [:meeting :add-agenda-button])]}]])
+   [:h1 "participants"]])

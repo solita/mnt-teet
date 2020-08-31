@@ -22,16 +22,21 @@
 (defn editor-style
   [error]
   {:padding "1rem"
+   :background-color theme-colors/white
    :border (str "1px solid " (if error
                                theme-colors/error
-                               theme-colors/gray-lighter))})
+                               theme-colors/gray-light))})
 
 
 (def block-types
   [{:label "H1"
     :style "header-one"}
    {:label "H2"
-    :style "header-two"}])
+    :style "header-two"}
+   {:label "OL"
+    :style "ordered-list-item"}
+   {:label "UL"
+    :style "unordered-list-item"}])
 
 (def inline-styles
   [{:label "Bold"
@@ -44,7 +49,7 @@
 (defn type-control-button-style
   [active?]
   {:border :none
-   :background-color :none
+   :padding 0
    :font-weight (if active?
                   :bold
                   :normal)})
@@ -126,9 +131,8 @@
 
   [{:keys [value on-change id]}]
   (js>
-   (let [_ (println "before create empty state")
+   (let [read-only? (nil? on-change)
          editorState (or value (.createEmpty draft-js/EditorState decorator))
-         _ (println "after create empty state")
          [linkValue setLinkValue] (react/useState "")
 
          handle-key-command (fn [command state]
@@ -142,40 +146,59 @@
          [editor-ref set-editor-ref!] (react/useState nil)
          focus-editor #(.focus editor-ref)
          inlineToggle (fn [style]
-                        (on-change (.toggleInlineStyle draft-js/RichUtils editorState style)))
+                        (on-change (.toggleInlineStyle draft-js/RichUtils editorState style))
+                        (r/after-render focus-editor)       ;; TODO: might break when in empty editor
+
+                        )
          blockToggle (fn [type]
-                       (on-change (.toggleBlockType draft-js/RichUtils editorState type)))
+                       (on-change (.toggleBlockType draft-js/RichUtils editorState type))
+                       (r/after-render focus-editor))
          set-link (fn []
                     (let [contentState (.getCurrentContent editorState)
                           contentStateWithEntity (.createEntity contentState "LINK" "MUTABLE" #js {:url linkValue})
                           entityKey (.getLastCreatedEntityKey contentStateWithEntity)
                           newEditorState (.set draft-js/EditorState editorState  #js {:currentContent contentStateWithEntity})]
-                      (println "entity-key " entityKey)
-                      (println "new-editorstate: " newEditorState)
-                      (println "contentWithEntity: " contentStateWithEntity)
 
                       (on-change (.toggleLink draft-js/RichUtils newEditorState
                                               (.getSelection newEditorState)
                                               entityKey))))]
-     [:span (when id {:id id})
-      [:input {:value linkValue
-               :on-change #(setLinkValue (-> % .-target .-value))}]
+     [:div (when id {:id id})
+      (when-not read-only?
+        [:div
+         #_[:input {:value linkValue
+                  :on-change #(setLinkValue (-> % .-target .-value))}]
 
-      [:div {:on-click focus-editor
-             :class (<class editor-style false) }
+         [:div {:on-click focus-editor
+                :class (<class editor-style false) }
 
-       [block-style-controls editorState blockToggle]
-       [inline-style-controls editorState inlineToggle]
-       [:button {:on-click (fn [e]
-                             (.stopPropagation e)
-                             (set-link))}
-        "set link"]
-       [Divider {:style {:margin "1rem"}}]
+          [block-style-controls editorState blockToggle]
+          [inline-style-controls editorState inlineToggle]
+          #_[:button {:on-click (fn [e]
+                                (.stopPropagation e)
+                                (set-link))}
+           "set link"]
+          [Divider {:style {:margin "1rem 0"}}]
+          [Editor {:ref set-editor-ref!
+                   :readOnly (nil? on-change)
+                   :editorState editorState
+                   :handleKeyCommand handle-key-command
+                   :blockRenderMap draft-js/DefaultDraftBlockRenderMap
+                   :on-change (fn [editorState]
+                                (on-change editorState))}]]])])))
 
-       [Editor {:ref set-editor-ref!
-                :editorState editorState
-                :handleKeyCommand handle-key-command
-                :blockRenderMap draft-js/DefaultDraftBlockRenderMap
-                :placeholder "Rich text editor"
-                :on-change (fn [editorState]
-                             (on-change editorState))}]]])))
+(defn display-markdown
+  "Display a markdown that does not change during the component lifecycle.
+  Parses and creates an editorstate once at mount."
+  [markdown]
+  (let [editor-state (when markdown
+                       (markdown->editor-state markdown))]
+    (fn [_]
+      (if editor-state
+        [:f> wysiwyg-editor {:value editor-state}]
+        [:span]))))
+
+(defn rich-text-field
+  "Rich text input that can be used in forms."
+  [{:keys [value on-change]}]
+  [:f> wysiwyg-editor {:value value
+                       :on-change on-change}])

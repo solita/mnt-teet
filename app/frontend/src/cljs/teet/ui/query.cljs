@@ -4,7 +4,9 @@
             [reagent.core :as r]
             [tuck.core :as t]
             [teet.ui.material-ui :refer [CircularProgress]]
-            [teet.common.common-styles :as common-styles]))
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.breadcrumbs :as breadcrumbs]
+            [teet.project.project-style :as project-style]))
 
 (defrecord Query [query args state-path state-atom])
 (defrecord QueryResult [state-path state-atom result])
@@ -34,6 +36,7 @@
       (assoc-in app state-path nil)
       app)))
 
+(declare query-page-view)
 
 (defn query
   "Component that does a datomic query and shows view with the resulting data."
@@ -67,10 +70,16 @@
             (if simple-view
               (conj simple-view (or state loading-state))
               ^{:key "query-result-view"}
-              [view e! app state breadcrumbs])
+              [query-page-view view e! app state breadcrumbs])
 
             ;; Results not loaded, show skeleton or loading spinner
             (if skeleton
               skeleton
               [:div {:class (<class common-styles/spinner-style)}
                [CircularProgress]]))))})))
+
+(defn query-page-view [page-content-view e! app state breadcrumbs]
+  [:<>
+   (when (> (count breadcrumbs) 1)
+     [breadcrumbs/breadcrumbs breadcrumbs])
+   [page-content-view e! app state]])

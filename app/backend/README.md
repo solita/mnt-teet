@@ -73,7 +73,7 @@ data locally on disk. It is now used for CI tests as well.
 - Eval `(load-local-config!)`.
 - Eval only when setting up `(user/create-db "yourname-dev")`.
 - Eval `(datomic-connection) => {:db-name "yourname-dev", :database-id "foo", ...}`
-- import THK data: Find the latest thk->teet .csv file from the dev S3 bucket and call (user/import-thk-from-localfile <path>)
+- import THK data: Find the latest thk->teet .csv file from the dev S3 bucket and call (user/import-thk-from-local-file <path>)
 - When creating your dev datomic db for the first time, run (make-mock-users!) and give permissions to some users with eg (give-manager-permission [:user/id #uuid "4c8ec140-4bd8-403b-866f-d2d5db9bdf74"]) (this makes Danny D. Manager admin)
 
 ## Troubleshooting

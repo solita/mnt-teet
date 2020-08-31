@@ -158,6 +158,6 @@
                                              :fit-on-load? true})}))}
      (:map app)]))
 
-(defn projects-list-page [e! app projects _breadcrumbs]
+(defn projects-list-page [e! app projects]
   [:div {:class (<class projects-style/projects-table-container)}
    [projects-listing e! app projects]])

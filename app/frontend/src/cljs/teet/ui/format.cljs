@@ -1,7 +1,8 @@
 (ns teet.ui.format
   "Common formatters for human readable data"
   (:require [clojure.string :as string]
-            [cljs-time.format :as tf]))
+            [cljs-time.format :as tf]
+            [goog.string :as gstr]))
 
 (defn date
   "Format date in human readable locale specific format, eg. dd.MM.yyyy"
@@ -14,6 +15,12 @@
   [date]
   (when date
     (.toLocaleString date "et-EE")))
+
+(defn time*
+  "Format time with minute resolution"
+  [date]
+  (when date
+    (gstr/format "%02d:%02d" (.getHours date) (.getMinutes date))))
 
 (defn file-size [b]
   (let [kb (/ b 1024)]

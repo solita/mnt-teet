@@ -257,11 +257,10 @@
            (when (not-reviewed-status? status)
              [:div (tr [:activity :waiting-for-submission])])))]))
 
-(defn activity-page [e! {:keys [params] :as app} project breadcrumbs]
+(defn activity-page [e! {:keys [params] :as app} project]
   [project-navigator-view/project-navigator-with-content
    {:e! e!
     :project project
-    :app app
-    :breadcrumbs breadcrumbs}
+    :app app}
 
    [activity-content e! params project]])

@@ -146,7 +146,7 @@
 
 (defn dashboard-page [e!
                       {user :user :as _app}
-                      dashboard _breadcrumbs]
+                      dashboard]
   [:div {:style {:margin "3rem" :display "flex" :justify-content "center"}}
    [Paper {:style {:flex 1
                    :max-width "800px" :padding "1rem"}}

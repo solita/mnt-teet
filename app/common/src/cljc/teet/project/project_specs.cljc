@@ -37,9 +37,8 @@
                 :thk.project/owner
                 :thk.project/manager]))
 
-(s/def :project/edit-form
-  (s/keys :req [:thk.project/project-name
-                :thk.project/owner]))
+(s/def :project/edit-owner-form
+  (s/keys :req [:thk.project/owner]))
 
 (s/def :project/edit-details-form
   (s/keys :req [:thk.project/project-name]))
