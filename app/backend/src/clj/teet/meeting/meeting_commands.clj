@@ -44,7 +44,7 @@
    :transact [(let [old-meeting-title (:meeting/title (du/entity db (:db/id form-data)))
                     meeting (merge
                               (select-keys form-data [:db/id :meeting/organizer :meeting/title
-                                                      :meeting/start :meeting/end])
+                                                      :meeting/start :meeting/end :meeting/location])
                               (meta-model/modification-meta user)
                               (when (not= old-meeting-title (:meeting/title form-data))
                                 ;; Changing meeting title, we need to renumber the meeting
