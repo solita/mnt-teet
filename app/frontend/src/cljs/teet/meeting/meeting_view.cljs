@@ -207,11 +207,11 @@
                             close-event)}
    ^{:attribute :meeting.agenda/topic}
    [TextField {}]
+   ^{:attribute :meeting.agenda/responsible}
+   [select/select-user {:e! e!}]
    ^{:attribute :meeting.agenda/body
      :before-save rich-text-editor/editor-state->markdown}
-   [rich-text-editor/rich-text-field {}]
-   ^{:attribute :meeting.agenda/responsible}
-   [select/select-user {:e! e!}]])
+   [rich-text-editor/rich-text-field {}]])
 
 (defn meeting-page [e! {:keys [params] :as app} {:keys [project meeting]}]
   [meeting-page-structure e! app project
@@ -244,8 +244,10 @@
                                 :data topic}]
           [common/labeled-data {:label (tr [:fields :meeting.agenda/responsible])
                                 :data (user-model/user-name responsible)}]
-          [common/labeled-data {:label (tr [:fields :meeting.agenda/body])
-                                :data [rich-text-editor/display-markdown body]}]])]
+          [:div
+           [:p (tr [:fields :meeting.agenda/body]) ":"]
+           [rich-text-editor/display-markdown body]]])]
       [form/form-modal-button {:form-component [add-agenda-form e! meeting]
-                          :button-component [buttons/rect-primary {} (tr [:meeting :add-agenda-button])]}]])
+                               :modal-title (tr [:meeting :new-agenda-modal-title])
+                               :button-component [buttons/rect-primary {} (tr [:meeting :add-agenda-button])]}]])
    [:h1 "participants"]])

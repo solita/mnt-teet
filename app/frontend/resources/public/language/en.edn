@@ -479,10 +479,11 @@
  :meeting
  {:meetings-title "Meetings",
   :new-meeting-button "Create meeting",
-  :add-agenda-button "Add agenda",
+  :add-agenda-button "Add new topic",
   :no-meetings "No meetings",
   :new-meeting-modal-title "New meeting",
-  :edit-meeting-modal-title "Edit meeting"},
+  :edit-meeting-modal-title "Edit meeting",
+  :new-agenda-modal-title "New topic"},
  :notifications
  {:no-unread-notifications "No unread notifications",
   :task-status-updated "Task status updated successfully",

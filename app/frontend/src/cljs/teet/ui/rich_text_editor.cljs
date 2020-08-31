@@ -48,6 +48,7 @@
 
 (defn type-control-button-style
   [active?]
+  ^{:pseudo {:focus theme-colors/button-focus-style}}
   {:border :none
    :padding 0
    :font-weight (if active?
@@ -129,7 +130,7 @@
   :value      current draftjs EditorState object (or nil for empty)
   :on-change  callback to update editor state"
 
-  [{:keys [value on-change id]}]
+  [{:keys [value on-change id label]}]
   (js>
    (let [read-only? (nil? on-change)
          editorState (or value (.createEmpty draft-js/EditorState decorator))
@@ -163,28 +164,30 @@
                                               (.getSelection newEditorState)
                                               entityKey))))]
      [:div (when id {:id id})
-      (when-not read-only?
-        [:div
-         #_[:input {:value linkValue
+      [:div
+       #_[:input {:value linkValue
                   :on-change #(setLinkValue (-> % .-target .-value))}]
+       [:label
+        label]
+       [:div (merge {:on-click focus-editor}
 
-         [:div {:on-click focus-editor
-                :class (<class editor-style false) }
-
-          [block-style-controls editorState blockToggle]
-          [inline-style-controls editorState inlineToggle]
-          #_[:button {:on-click (fn [e]
-                                (.stopPropagation e)
-                                (set-link))}
-           "set link"]
-          [Divider {:style {:margin "1rem 0"}}]
-          [Editor {:ref set-editor-ref!
-                   :readOnly (nil? on-change)
-                   :editorState editorState
-                   :handleKeyCommand handle-key-command
-                   :blockRenderMap draft-js/DefaultDraftBlockRenderMap
-                   :on-change (fn [editorState]
-                                (on-change editorState))}]]])])))
+                    (when-not read-only? {:class (<class editor-style false)}))
+        (when-not read-only?
+          [:<>
+           [block-style-controls editorState blockToggle]
+           [inline-style-controls editorState inlineToggle]
+           #_[:button {:on-click (fn [e]
+                                   (.stopPropagation e)
+                                   (set-link))}
+              "set link"]
+           [Divider {:style {:margin "1rem 0"}}]])
+        [Editor {:ref set-editor-ref!
+                 :readOnly (nil? on-change)
+                 :editorState editorState
+                 :handleKeyCommand handle-key-command
+                 :blockRenderMap draft-js/DefaultDraftBlockRenderMap
+                 :on-change (fn [editorState]
+                              (on-change editorState))}]]]])))
 
 (defn display-markdown
   "Display a markdown that does not change during the component lifecycle.
@@ -199,6 +202,7 @@
 
 (defn rich-text-field
   "Rich text input that can be used in forms."
-  [{:keys [value on-change]}]
+  [{:keys [value on-change label]}]
   [:f> wysiwyg-editor {:value value
+                       :label label
                        :on-change on-change}])

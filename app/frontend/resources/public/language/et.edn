@@ -477,7 +477,8 @@
   :add-agenda-button "Lisan päevakavapunkti",
   :no-meetings "Koosolekuid ei ole",
   :new-meeting-modal-title "Uus koosolek",
-  :edit-meeting-modal-title "Muuda koosolekut"},
+  :edit-meeting-modal-title "Muuda koosolekut",
+  :new-agenda-modal-title "Uus päevakavapunkti"},
  :notifications
  {:no-unread-notifications "Uusi teavitusi ei ole",
   :task-status-updated "Ülesande staatus edukalt värskendatud",
