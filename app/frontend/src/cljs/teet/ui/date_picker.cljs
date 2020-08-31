@@ -312,6 +312,7 @@
                         :justify-content :space-between}}
           [:div
            [TextField {:type :time
+                       :pattern "[0-9]{2}:[0-9]{2}"
                        :required required
                        :disabled (nil? @date)
                        ;:label (tr [:common :start-time])
@@ -328,6 +329,7 @@
           [:p {:style {:padding "0 0.25rem"}} "–"]
           [:div
            [TextField {:type :time
+                       :pattern "[0-9]{2}:[0-9]{2}"
                        :required required
                        :disabled (nil? @date)
                        :value @end-input-atom
