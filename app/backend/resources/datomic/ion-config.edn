@@ -30,6 +30,10 @@
            {:fn teet.backup.backup-ion/backup
             :description "Export backup of Datomic data to S3 bucket"}
 
+           :restore
+           {:fn teet.backup.backup-ion/restore
+            :description "Restore environment from S3 backup file"}
+
            :datasource-cleanup
            {:fn teet.gis.datasource-cleanup/cleanup-datasources-ion
             :description "Cleanup unreferenced deleted features"}}
