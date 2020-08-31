@@ -59,9 +59,11 @@
   :unknown "Teadmata",
   :deletion-modal-text
   "Oled sa kindel, et soovid selle üksuse kustutada?",
+  :start-time nil,
   :design-stage "Staadium",
   :deselect-all "Tühistan kõik valikud",
   :show-details "Vaatan arvutuskäiku",
+  :end-time nil,
   :forbidden "Keelatud",
   :construction-phase-activities "Faasid",
   :last-modified "Viimati muudetud",
@@ -473,7 +475,9 @@
  {:meetings-title "Koosolekud",
   :new-meeting-button "Loon uue koosoleku",
   :add-agenda-button "Lisan päevakavapunkti",
-  :no-meetings "Koosolekuid ei ole"},
+  :no-meetings "Koosolekuid ei ole",
+  :new-meeting-modal-title "Uus koosolek",
+  :edit-meeting-modal-title "Muuda koosolekut"},
  :notifications
  {:no-unread-notifications "Uusi teavitusi ei ole",
   :task-status-updated "Ülesande staatus edukalt värskendatud",

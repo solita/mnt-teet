@@ -221,6 +221,7 @@
        [typography/Heading2 title (when number (str " #" number))]
        [form/form-modal-button {:form-component [meeting-form e! (:activity params)]
                                 :form-value meeting
+                                :form-title (tr [:meeting :edit-meeting-modal-title])
                                 :button-component [buttons/button-secondary
                                                    {}
                                                    (tr [:buttons :edit])]}]]
