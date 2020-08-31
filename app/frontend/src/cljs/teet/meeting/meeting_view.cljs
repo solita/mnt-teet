@@ -35,7 +35,7 @@
 (defn meeting-form
   [e! activity-id close-event form-atom]
   [:<>
-   [:span (pr-str @form-atom)]                            ;debug form values
+   ;[:span (pr-str @form-atom)]                            ;debug form values
    [form/form (merge
                 {:e! e!
                  :value @form-atom
@@ -105,6 +105,7 @@
       [:div.project-navigator-add-meeting
 
        [form/form-modal-button {:form-component [meeting-form e! activity-id]
+                                :modal-title (tr [:meeting :new-meeting-modal-title])
                                 :button-component [rect-button {:size :small
                                                                 :disabled disable-buttons?
                                                                 :start-icon (r/as-element
