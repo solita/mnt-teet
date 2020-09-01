@@ -3,13 +3,17 @@
   (:require [datomic.client.api :as d]
             [teet.environment :as environment]
             [teet.integration.integration-s3 :as s3]
+            [teet.integration.integration-context :as integration-context
+             :refer [ctx-> defstep]]
             [ring.util.io :as ring-io]
             [clojure.java.io :as io]
             [clojure.pprint :as pprint]
             [clojure.walk :as walk]
             [clojure.set :as set]
             [teet.util.datomic :as du]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [clojure.string :as str]
+            [teet.integration.postgrest :as postgrest]))
 
 (defn prepare [form]
   (walk/prewalk
@@ -37,8 +41,6 @@
                        {:file/comments
                         [*
                          {:comment/files [*]}]}]}]}]}]}] id))
-
-
 
 (defn pull-user [db id]
   (d/pull db '[* {:user/permissions [*]}] id))
@@ -178,9 +180,63 @@
        x) form)
     @ids))
 
-(defn restore
-  "Restore from REPL to empty database."
-  [conn file]
+(defn s3-filename [db-id filename]
+  (str db-id "-" filename))
+
+(defn rename-documents! [{:keys [conn document-bucket tempids]}]
+  (let [files (map first
+                   (d/q '[:find (pull ?f [:db/id :file/name])
+                          :in $
+                          :where [?f :file/name _]]
+                        (d/db conn)))]
+    (doseq [file files]
+      (try
+        (s3/rename-object document-bucket
+                          (s3-filename (tempids (:db/id file))
+                                       (:file/name file))
+                          (s3-filename (:db/id file)
+                                       (:file/name file)))
+        (catch Exception e
+          (log/error (ex-data e)))))))
+
+;; Match and replace mentions like "@[user name](user db id)"
+;; with new user ids
+(defn replace-comment-mention-ids [txt tempids]
+  (str/replace txt
+               #"@\[([^\]]+)\]\((\d+)\)"
+               (fn [[_ name id]]
+                 (str "@[" name "](" (tempids id) ")"))))
+
+;; "hei @[Benjamin Boss](92358976733956) mitä kuuluu?"
+(defn rewrite-comment-mentions! [{:keys [conn tempids]}]
+  (let [comments (map first
+                      (d/q '[:find (pull ?c [:db/id :comment/comment])
+                             :where
+                             [?c :comment/comment ?txt]
+                             [(clojure.string/includes? ?txt "@[")]]
+                           (d/db conn)))]
+    (d/transact conn
+                {:tx-data (vec (for [{id :db/id txt :comment/comment} comments
+                                     :let [new-txt (replace-comment-mention-ids txt tempids)]]
+                                 {:db/id id
+                                  :comment/comment new-txt}))})))
+
+
+(defn replace-entity-ids!
+  "Replace entity ids in postgres entity table. List of ids
+  is comma separated list of old_id=new_id."
+  [{:keys [tempids] :as ctx}]
+  (postgrest/rpc ctx :replace_entity_ids
+                 {:idlist (str/join ","
+                                    (map (fn [[old-id new-id]]
+                                           (str old-id "=" new-id))
+                                         tempids))}))
+
+(defn restore-file
+  "Restore a TEET backup zip from `file` by running the transactions in
+  the file to the database pointed to by `conn`. It is assumed that
+  the given database is empty."
+  [{:keys [conn file] :as ctx}]
 
   ;; read all users and transact them in one go
   (with-open [istream (io/input-stream (io/file file))
@@ -190,7 +246,49 @@
               rdr (java.io.PushbackReader. zip-reader)]
     ;; Transact everything in one big transaction
     (let [form (doall (read-seq rdr))
-          ;ids (check-ids-without-attributes form)
+                                        ;ids (check-ids-without-attributes form)
           {:keys [mapping form]} (to-temp-ids form)
-          {tempids :tempids} (d/transact conn {:tx-data (vec form)})]
-      {:mapping mapping :form form :tempids tempids})))
+          {tempids :tempids} (d/transact conn {:tx-data (vec form)})
+          ctx (merge ctx {:mapping mapping :form form :tempids tempids})]
+      (rename-documents! ctx)
+      (rewrite-comment-mentions! ctx)
+      (replace-entity-ids! ctx))))
+
+(defstep download-backup-file
+  {:doc "Download backup file from S3 to temporary directory. Puts file path to context"
+   :in {backup-file {:spec ::s3/file-descriptor
+                     :path-kw :backup-file
+                     :default-path [:s3]}}
+   :out {:spec string?
+         :default-path [:file]}}
+  (let [{:keys [bucket file-key]} backup-file
+        file (java.io.File/createTempFile "backup" "edn" nil)]
+    (log/info "Download backup file, bucket:  " bucket ", file-key: " file-key ", to local file: " file)
+    (io/copy (s3/get-object bucket file-key)
+             file)
+    (.getAbsolutePath file)))
+
+(defn delete-backup-file [{file :file :as ctx}]
+  (.delete (io/file file))
+  (dissoc ctx :file))
+
+(defn validate-empty-environment [{conn :conn :as ctx}]
+  (let [projects (d/q '[:find ?e :where [?e :thk.project/id _]]
+                      (d/db conn))]
+    (when (seq projects)
+      (throw (ex-info "Database is not empty!"
+                      {:found-projects (count projects)})))
+    ctx))
+
+(defn restore [event]
+  (future
+    (ctx-> {:event event
+            :api-url (environment/config-value :api-url)
+            :api-secret (environment/config-value :auth :jwt-secret)
+            :conn (environment/datomic-connection)}
+           s3/read-trigger-event
+           download-backup-file
+           validate-empty-environment
+           restore-file
+           delete-backup-file))
+  "{\"success\": true}")
