@@ -5,7 +5,8 @@
             [teet.environment :as environment]
             [teet.test.utils :as tu]
             [teet.thk.thk-integration-ion :as thk-integration]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [clojure.walk :as walk])
   (:import (java.util Date)
            (java.util.concurrent TimeUnit Executors)))
 
@@ -24,9 +25,22 @@
 (def pull d/pull)
 
 (defn pull*
-  "Pull all attributes of entity"
-  [eid]
-  (d/pull (db) '[*] eid))
+  "Pull all attributes of entity.
+  Takes optional depth to pull maps recursively."
+  ([eid]
+   (pull* eid 0))
+  ([eid depth]
+   (pull* (db) eid depth))
+  ([db eid depth]
+   (walk/postwalk
+    (fn [f]
+      (if (and (pos? depth)
+               (map? f)
+               (= #{:db/id} (set (keys f))))
+        (pull* db (:db/id f) (dec depth))
+        f))
+    (d/pull db '[*] eid))))
+
 
 (defn entity [eid]
   (pull (db) '[*] eid))
