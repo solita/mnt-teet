@@ -216,7 +216,7 @@
      :before-save rich-text-editor/editor-state->markdown}
    [rich-text-editor/rich-text-field {}]])
 
-(defn meeting-page [e! {:keys [params] :as app} {:keys [project meeting]}]
+(defn meeting-page [e! {:keys [params user] :as app} {:keys [project meeting]}]
   [meeting-page-structure e! app project
    (let [{:meeting/keys [title number location start end organizer agenda]} meeting]
      [:div
@@ -251,6 +251,12 @@
            [:p (tr [:fields :meeting.agenda/body]) ":"]
            [rich-text-editor/display-markdown body]]])]
       [form/form-modal-button {:form-component [add-agenda-form e! meeting]
+                               :form-value {:meeting.agenda/responsible (select-keys user [:db/id
+                                                                                           :user/id
+                                                                                           :user/given-name
+                                                                                           :user/family-name
+                                                                                           :user/email
+                                                                                           :user/person-id])}
                                :modal-title (tr [:meeting :new-agenda-modal-title])
                                :button-component [buttons/rect-primary {} (tr [:meeting :add-agenda-button])]}]])
    [:h1 "participants"]])
