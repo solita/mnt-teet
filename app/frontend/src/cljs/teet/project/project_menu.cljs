@@ -55,7 +55,8 @@
    {:name :meetings
     :label [:project :tabs :meetings]
     :navigate {:page :project-meetings}
-    :hotkey "5"}
+    :hotkey "5"
+    :feature-flag :meetings}
    {:name :land
     :label [:project :tabs :land]
     :navigate {:page :project :query {:tab "land"}}
@@ -139,9 +140,11 @@
                 [Paper
                  [MenuList {}
                   (doall
-                    (for [tab project-tabs-layout]
-                      ^{:key (name (:name tab))}
-                      [project-tabs-item
-                       e! toggle-open! (= tab-name (:name tab))
-                       tab
-                       project-id]))]]]))]])))))
+                   (for [{ff :feature-flag :as tab} project-tabs-layout
+                         :when (or (nil? ff)
+                                   (common-controller/feature-enabled? ff))]
+                     ^{:key (name (:name tab))}
+                     [project-tabs-item
+                      e! toggle-open! (= tab-name (:name tab))
+                      tab
+                      project-id]))]]]))]])))))
