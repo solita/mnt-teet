@@ -538,8 +538,8 @@
                      (when (or (num-range/num-range-error nil value start min-km max-km)
                                (num-range/num-range-error nil value end min-km max-km))
                        (str "Valid km range: " min-km "km - " max-km "km")))}
-       [num-range/num-range {:start-label "Start km"
-                             :end-label "End km"
+       [num-range/num-range {:start-label (tr [:fields :thk.project/start-km])
+                             :end-label (tr [:fields :thk.project/end-km])
                              :min-value min-km
                              :max-value max-km
                              :reset-start (partial project-setup-view/reset-range-value e! project :start)
@@ -556,7 +556,7 @@
     [:<>
      [panels/modal {:open-atom open?
                     :on-close #(reset! open? false)
-                    :title "Edit project details"} ;; FIXME: translate
+                    :title (tr [:project :edit-project-details-modal-title])}
       [edit-project-details e! project close-dialog!]]
 
      [when-authorized

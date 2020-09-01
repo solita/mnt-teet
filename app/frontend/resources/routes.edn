@@ -80,15 +80,19 @@
 
  :project-meetings  {:path "/projects/:project/meetings"
                      :view teet.meeting.meeting-view/project-meetings-view
-                     :title "Meetings list" ;; todo proper value
-                     :crumb "Meeting list" ;; TODO proper value
+                     :title (tr [:meeting :meetings-title])
+                     :crumb (tr [:meeting :meetings-title])
                      :parent :project
                      :state {:query :meeting/project-with-meetings
                              :args {:thk.project/id project}}}
 
  :activity-meetings {:path "/projects/:project/meetings/:activity/"
                      :view teet.meeting.meeting-view/activity-meetings-view
-                     :title "meetings"                      ;; todo proper value
+                     :title (tr [:meeting :activity-meetings-title]
+                              {:activity-name
+                               (-> (or (:project state)
+                                     state)
+                                 (teet.project.project-model/activity-by-id activity) :activity/name tr-enum)})
                      :crumb (-> (or (:project state)
                                     state)
                                 (teet.project.project-model/activity-by-id activity) :activity/name tr-enum)

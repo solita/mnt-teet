@@ -4,7 +4,7 @@
             [teet.ui.typography :as typography]
             [teet.ui.text-field :refer [TextField]]
             [herb.core :refer [<class]]
-            [teet.localization :refer [tr]]
+            [teet.localization :refer [tr tr-enum]]
             teet.meeting.meeting-specs
             [teet.ui.project-context :as project-context]
             [teet.ui.icons :as icons]
@@ -29,7 +29,8 @@
             [teet.ui.format :as format]
             [teet.localization :as localization]
             [teet.project.project-menu :as project-menu]
-            [teet.navigation.navigation-style :as navigation-style]))
+            [teet.navigation.navigation-style :as navigation-style]
+            [teet.project.project-model :as project-model]))
 
 
 (defn meeting-form
@@ -57,7 +58,9 @@
 (defn meetings-page-content
   [e! activity]
   [:div
-   [typography/Heading1 (tr [:meeting :meeting-title])]])
+   [typography/Heading1 (tr [:meeting :activity-meetings-title]
+                            {:activity-name
+                             (tr-enum (:activity/name activity))})]])
 
 (defn activity-meetings-list
   [{:keys [e! dark-theme? disable-buttons? project-id rect-button]}
@@ -154,7 +157,7 @@
   "Page structure showing project navigator along with content."
   [e! {{:keys [activity]} :params :as app} project]
   [meeting-page-structure e! app project
-   [meetings-page-content e! activity]
+   [meetings-page-content e! (project-model/activity-by-id project activity)]
    [:h1 "participants"]])
 
 (defn meeting-list [meetings]
