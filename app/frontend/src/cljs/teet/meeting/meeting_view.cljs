@@ -159,7 +159,7 @@
 
 (defn meeting-list [meetings]
   [:div
-   [typography/Heading1 "Project meetings"]
+   [typography/Heading1 (tr [:meeting :project-meetings-title])]
    [itemlist/ItemList {}
     (for [{:meeting/keys [title location start end organizer number] :as meeting
            activity-id :activity-id
