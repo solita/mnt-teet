@@ -2,7 +2,8 @@
   (:require goog.math.Long
             [teet.common.common-controller :as common-controller]
             [teet.localization :refer [tr]]
-            [tuck.core :as t]))
+            [tuck.core :as t]
+            [teet.util.collection :as cu]))
 
 (defrecord SubmitMeetingForm [activity-id form-data close-event])
 (defrecord DeleteMeeting [activity-id meeting-id close-event])
@@ -65,8 +66,9 @@
           {:tuck.effect/type :command!
            :command :meeting/update-agenda
            :payload {:db/id (:db/id meeting)
-                     :meeting/agenda [(merge {:db/id "new-agenda-item"}
-                                             form-data)]}
+                     :meeting/agenda [(cu/without-nils
+                                       (merge {:db/id "new-agenda-item"}
+                                              form-data))]}
            :result-event (partial ->AddAgendaResult close-event)}))
 
   AddAgendaResult

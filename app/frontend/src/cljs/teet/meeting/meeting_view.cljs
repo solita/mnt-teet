@@ -203,7 +203,10 @@
               :save-event #(meeting-controller/->SubmitAgendaForm
                             meeting
                             (-> @form-atom
-                                (update :meeting.agenda/body rich-text-editor/editor-state->markdown))
+                                (update :meeting.agenda/body
+                                        (fn [editor-state]
+                                          (when editor-state
+                                            (rich-text-editor/editor-state->markdown editor-state)))))
                             close-event)}
    ^{:attribute :meeting.agenda/topic}
    [TextField {}]
