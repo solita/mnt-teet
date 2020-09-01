@@ -199,7 +199,7 @@
               :value @form-atom
               :on-change-event (form/update-atom-event form-atom merge)
               :cancel-event close-event
-              ;;:spec :meeting/form-data
+              :spec :meeting/agenda-form
               :save-event #(meeting-controller/->SubmitAgendaForm
                             meeting
                             (-> @form-atom
