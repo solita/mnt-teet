@@ -160,7 +160,24 @@
                                    :style {:margin-left "1rem"}}
            (tr [:buttons :confirm])]]]])]))
 
-(declare add-files-form)
+(defn- add-files-form [e! upload-progress close!]
+  (r/with-let [form (r/atom {})]
+    [:<>
+     [form/form {:e!              e!
+                 :value           @form
+                 :on-change-event (form/update-atom-event form merge)
+                 :save-event      #(file-controller/->AddFilesToTask (:task/files @form)
+                                                                     (fn [_]
+                                                                       (close!)
+                                                                       (common-controller/->Refresh)))
+                 :cancel-fn close!
+                 :in-progress?    upload-progress
+                 :spec :task/add-files}
+      ^{:attribute :task/files}
+      [file-upload/files-field {}]]
+     (when upload-progress
+       [LinearProgress {:variant "determinate"
+                        :value   upload-progress}])]))
 
 (defn task-details
   [e! new-document {:task/keys [description files] :as task}]
@@ -214,25 +231,6 @@
      :entity-type :task
      :entity-id (:db/id task)}
     [task-details e! (:new-document app) task]]])
-
-(defn- add-files-form [e! upload-progress close!]
-  (r/with-let [form (r/atom {})]
-    [:<>
-     [form/form {:e!              e!
-                 :value           @form
-                 :on-change-event (form/update-atom-event form merge)
-                 :save-event      #(file-controller/->AddFilesToTask (:task/files @form)
-                                                                     (fn [_]
-                                                                       (close!)
-                                                                       (common-controller/->Refresh)))
-                 :cancel-fn close!
-                 :in-progress?    upload-progress
-                 :spec :task/add-files}
-      ^{:attribute :task/files}
-      [file-upload/files-field {}]]
-     (when upload-progress
-       [LinearProgress {:variant "determinate"
-                        :value   upload-progress}])]))
 
 
 (defn task-form [_e!
