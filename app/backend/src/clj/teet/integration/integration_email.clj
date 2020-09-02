@@ -37,9 +37,7 @@
                          "Sender" from
                          "Subject" (quote-header subject)
                          "BCC" (str/join ","
-                                         (if (string? to) [to] to))
-
-                    }]
+                                         (if (string? to) [to] to))}]
     (if (> (count parts) 1)
       ;; Multipart message, separate parts with boundary
       (let [b (boundary)]
