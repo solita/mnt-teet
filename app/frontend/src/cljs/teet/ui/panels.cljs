@@ -198,10 +198,10 @@
 (defn button-with-modal [{:keys [modal-title button-component modal-component]}]
   (r/with-let [open? (r/atom false)
                open! #(reset! open? true)
-               close! #(reset! open? false)]
+               close! #(do (reset! open? false) nil)]
     [:<>
      (assoc-in button-component [1 :on-click] open!)
      [modal {:open-atom open?
-             :on-clise close!
+             :on-close close!
              :title modal-title}
       (conj modal-component close!)]]))
