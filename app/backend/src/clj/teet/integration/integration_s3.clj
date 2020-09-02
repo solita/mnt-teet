@@ -121,6 +121,20 @@
   (copy-object bucket existing-key new-key)
   (delete-object bucket existing-key))
 
+(defn object-exists? [bucket key]
+  {:pre [(string? bucket)
+         (string? key)]}
+  (try
+    (invoke :HeadObject
+            {:Bucket bucket
+             :Key key})
+    true
+    (catch clojure.lang.ExceptionInfo e
+      (if (-> (ex-data e) :response :cognitect.anomalies/category (= :cognitect.anomalies/not-found))
+          false
+          ;; else
+          (throw e)))))
+
 
 (def bucket-location
   (memoize (fn [bucket]
