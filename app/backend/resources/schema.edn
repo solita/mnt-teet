@@ -1085,4 +1085,27 @@
           {:db/ident :meeting.agenda/responsible
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
-           :db/doc "Reference to user who is responsible for this item"}]]}]
+           :db/doc "Reference to user who is responsible for this item"}]]}
+ {:db/ident :migration/work-meeting-participants
+  :txes [[{:db/ident :meeting/participants
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/isComponent true
+           :db/doc "List of participant info (role + user)"}
+
+          {:db/ident :meeting.participant/user
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Reference to the user information"}
+          {:db/ident :meeting.participant/role
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Reference to role enum value"}
+
+          {:db/ident :meeting.participant.role/reviewer
+           :enum/attribute :meeting.participant/role
+           :db/doc "Participant who reviews and must accept/decline the meeting decisions"}
+          {:db/ident :meeting.participant.role/participant
+           :enum/attribute :meeting.participant/role
+           :db/doc "Regular participant"}]]}
+ ]
