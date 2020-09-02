@@ -164,9 +164,9 @@
       (when (:geometry-range? map-settings)
         [search-area-view/feature-search-area e! app project related-entity-type])]]))
 
-(defmethod project-menu/project-tab-content :activities [_ e! {:keys [stepper] :as app} project]
+(defmethod project-menu/project-tab-content :activities [_ e! app project]
   [:div.project-activities-tab
-   [project-navigator-view/project-task-navigator e! project stepper (:params app) false]])
+   [project-navigator-view/project-task-navigator e! project app false]])
 
 (defn add-user-form
   [e! user project-id]

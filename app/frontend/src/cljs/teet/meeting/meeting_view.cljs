@@ -60,7 +60,7 @@
                              (tr-enum (:activity/name activity))})]])
 
 (defn activity-meetings-list
-  [{:keys [e! dark-theme? disable-buttons? project-id rect-button]}
+  [{:keys [e! dark-theme? disable-buttons? user rect-button]}
    {:keys [activity activity-id]}]
   (let [meetings (:activity/meetings activity)]
     [:<>
@@ -105,6 +105,7 @@
       [:div.project-navigator-add-meeting
 
        [form/form-modal-button {:form-component [meeting-form e! activity-id]
+                                :form-value {:meeting/organizer (dissoc user :api-token :roles)}
                                 :modal-title (tr [:meeting :new-meeting-modal-title])
                                 :button-component [rect-button {:size :small
                                                                 :disabled disable-buttons?
@@ -130,7 +131,7 @@
                :xs nav-w
                :class (<class navigation-style/navigator-left-panel-style)}
          [project-menu/project-menu e! app project true]
-         [project-navigator-view/project-navigator e! project (:stepper app) (:params app)
+         [project-navigator-view/project-navigator e! project app
           {:dark-theme? true
            :activity-link-page :activity-meetings
            :activity-section-content activity-meetings-list
