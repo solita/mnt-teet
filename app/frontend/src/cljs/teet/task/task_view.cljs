@@ -160,8 +160,10 @@
                                    :style {:margin-left "1rem"}}
            (tr [:buttons :confirm])]]]])]))
 
+(declare add-files-form)
+
 (defn task-details
-  [e! _params {:task/keys [description files] :as task}]
+  [e! new-document {:task/keys [description files] :as task}]
   [:div.task-details
    (when description
      [typography/Paragraph description])
@@ -169,7 +171,9 @@
    [file-view/file-table files]
    (when (task-model/can-submit? task)
      [:<>
-      [file-view/file-upload-button e!]
+      [panels/button-with-modal {:button-component (file-view/file-upload-button)
+                                 :modal-title (tr [:task :add-document])
+                                 :modal-component [add-files-form e! (:in-progress? new-document)]}]
       (when (seq files)
         [when-authorized :task/submit task
          [submit-results-button e! task]])])
@@ -209,16 +213,19 @@
      :comment-command :comment/comment-on-task
      :entity-type :task
      :entity-id (:db/id task)}
-    [task-details e! (:params app) task]]])
+    [task-details e! (:new-document app) task]]])
 
-(defn- add-files-form [e! upload-progress]
+(defn- add-files-form [e! upload-progress close!]
   (r/with-let [form (r/atom {})]
     [:<>
      [form/form {:e!              e!
                  :value           @form
                  :on-change-event (form/update-atom-event form merge)
-                 :save-event      (partial file-controller/->AddFilesToTask (:task/files @form))
-                 :cancel-event    #(common-controller/->SetQueryParam :add-document nil)
+                 :save-event      #(file-controller/->AddFilesToTask (:task/files @form)
+                                                                     (fn [_]
+                                                                       (close!)
+                                                                       (common-controller/->Refresh)))
+                 :cancel-fn close!
                  :in-progress?    upload-progress
                  :spec :task/add-files}
       ^{:attribute :task/files}
@@ -340,29 +347,19 @@
     [edit-task-form e! (:edit-task-data app) {:max-date (:activity/estimated-end-date activity)
                                               :min-date (:activity/estimated-start-date activity)}]))
 
-(defn task-page [e! {{:keys [add-document] :as _query} :query
-                     {task-id :task :as _params} :params
-                     new-document :new-document
-                     user :user :as app}
+(defn task-page [e! {{task-id :task :as _params} :params user :user :as app}
                  project]
   (let [activity-manager (cu/find-> project
                                     :thk.project/lifecycles some?
                                     :thk.lifecycle/activities (fn [{:activity/keys [tasks]}]
                                                                 (du/find-by-id task-id tasks))
                                     :activity/manager)]
-    [:<>
-     [panels/modal {:max-width "md"
-                    :open-atom (r/wrap (boolean add-document) :_)
-                    :title (tr [:task :add-document])
-                    :on-close (e! task-controller/->CloseAddDocumentDialog)}
-      [add-files-form e! (:in-progress? new-document)]]
+    [project-navigator-view/project-navigator-with-content
+     {:e! e!
+      :project project
+      :app app}
 
-     [project-navigator-view/project-navigator-with-content
-      {:e! e!
-       :project project
-       :app app}
-
-      [task-page-content e! app
-       (project-model/task-by-id project task-id)
-       (= (:db/id user)
-          (:db/id activity-manager))]]]))
+     [task-page-content e! app
+      (project-model/task-by-id project task-id)
+      (= (:db/id user)
+         (:db/id activity-manager))]]))

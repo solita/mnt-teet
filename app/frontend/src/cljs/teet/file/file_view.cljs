@@ -168,9 +168,8 @@
             (sorted-by @sort-by-atom)
             (mapc (r/partial file-row opts)))]])))
 
-(defn file-upload-button [e!]
-  [buttons/button-primary {:on-click (e! common-controller/->SetQueryParam :add-document 1)
-                           :start-icon (r/as-element
+(defn file-upload-button []
+  [buttons/button-primary {:start-icon (r/as-element
                                         [icons/file-cloud-upload])}
    (tr [:task :upload-files])])
 
