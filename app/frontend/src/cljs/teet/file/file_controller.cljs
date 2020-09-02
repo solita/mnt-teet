@@ -18,7 +18,7 @@
 
 (defrecord DeleteFile [file-id])
 
-(defrecord AddFilesToTask [files]) ;; upload more files to existing document
+(defrecord AddFilesToTask [files on-success]) ;; upload more files to existing document
 (defrecord NavigateToFile [file])
 
 (defrecord DeleteAttachment [on-success-event file-id])
@@ -51,14 +51,14 @@
            :result-event on-success-event}))
 
   AddFilesToTask
-  (process-event [{files :files} app]
+  (process-event [{:keys [files on-success]} app]
     (let [task-id (common-controller/->long (get-in app [:params :task]))]
       (t/fx app
             (fn [e!]
               (e! (map->UploadFiles {:files files
                                      :task-id task-id
                                      :progress-increment (int (/ 100 (count files)))
-                                     :on-success ->UploadFinished}))))))
+                                     :on-success on-success}))))))
 
 
   UploadSuccess
@@ -113,7 +113,10 @@
       (do
         (log/info "No more files to upload. Return on-success event: " on-success)
         (t/fx app
-              (fn [e!] (e! (on-success file-results)))))))
+              (fn [e!]
+                ;; Invoke on-success and if it returns an event, apply it
+                (when-let [evt (on-success file-results)]
+                  (e! evt)))))))
 
   UploadFileUrlReceived
   (process-event [{:keys [file file-data document-id url on-success]} app]

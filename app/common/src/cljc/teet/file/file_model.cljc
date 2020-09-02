@@ -12,6 +12,7 @@
     "application/msword"
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     "application/msexcel"
+    "application/vnd.ms-excel"
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     "application/vnd.openxmlformats-officedocument.presentationml.presentation"
     "application/mspowerpoint"
@@ -39,6 +40,7 @@
     ;; Design model files, Building Information Models
     "application/ifc"
     "application/xml"
+    "text/xml"
     "application/bcf"
     "application/rvt"
     "application/skp"

@@ -94,7 +94,7 @@
                  (select-keys props
                               [:on-change :lang :on-focus :auto-complete
                                :step :on-key-down :disabled :min :max :type :ref :value
-                               :required :id :on-blur :placeholder])
+                               :required :id :on-blur :placeholder :pattern])
                  {:style input-style
                   :class (herb/join (<class input-field-style error multiline read-only?
                                             (boolean start-icon) type)

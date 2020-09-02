@@ -48,7 +48,8 @@
             [teet.map.map-controller :as map-controller]
             [teet.ui.container :as container]
             [teet.ui.hotkeys :as hotkeys]
-            [teet.project.land-controller :as land-controller]))
+            [teet.project.land-controller :as land-controller]
+            [teet.project.project-menu :as project-menu]))
 
 (defn project-details
   [e! {:thk.project/keys [estimated-start-date estimated-end-date road-nr
@@ -138,7 +139,7 @@
   [e!
    app
    project
-   {:keys [header body footer map-settings]}]
+   {:keys [key header body footer map-settings]}]
   (let [related-entity-type (or
                               (project-controller/project-setup-step app)
                               (get-in app [:query :configure]))]
@@ -150,7 +151,9 @@
       [Paper {:class (<class project-style/project-content-overlay)}
        header
        [:div {:class (<class project-style/content-overlay-inner)}
-        body]
+        (with-meta
+          body
+          {:key key})]
        (when footer
          footer)]
       (when (get-in app [:map :search-area :drawing?])
@@ -161,10 +164,9 @@
       (when (:geometry-range? map-settings)
         [search-area-view/feature-search-area e! app project related-entity-type])]]))
 
-(defn activities-tab
-  [e! {:keys [stepper] :as app} project]
+(defmethod project-menu/project-tab-content :activities [_ e! app project]
   [:div.project-activities-tab
-   [project-navigator-view/project-navigator e! project stepper (:params app) false]])
+   [project-navigator-view/project-task-navigator e! project app false]])
 
 (defn add-user-form
   [e! user project-id]
@@ -173,9 +175,9 @@
                     @ac/all-roles)]
     [:div
      [form/form2 {:e! e!
-                  :value user
-                  :on-change-event #(e! (project-controller/->UpdateProjectPermissionForm %))
-                  :save-event #(e! (project-controller/->SaveProjectPermission project-id user))
+                  :value @user
+                  :on-change-event (form/update-atom-event user merge)
+                  :save-event #(e! (project-controller/->SaveProjectPermission project-id @user))
                   :spec :project/add-permission-form}
       [Grid {:container true :spacing 3
              :style {:width "100%"}}                        ;; Because material ui grid spacing causes sidescroll
@@ -230,39 +232,51 @@
       (tr [:common :unknown])))
 
 (defn people-panel-user-list
-  [permissions selected-person]
+  [permissions selected-person-id]
   [:div
    (when permissions
-     (let [permission-links (map (fn [{:keys [user] :as _}]
+     (let [current-selected-person-id @selected-person-id
+           permission-links (map (fn [{:keys [user] :as _}]
                                    (let [user-id (:db/id user)]
                                      {:key user-id
-                                      :href (url/set-query-param :person user-id)
+                                      :on-click #(reset! selected-person-id user-id)
                                       :title (user-description user)
-                                      :selected? (= (str user-id) selected-person)}))
+                                      :selected? (= user-id current-selected-person-id)}))
                                  permissions)]
        [itemlist/white-link-list permission-links]))
-   [buttons/rect-white {:href (url/remove-query-param :person)}
+   [buttons/rect-white {:on-click #(reset! selected-person-id nil)}
     [icons/content-add]
     (tr [:project :add-users])]])
 
 (defn people-modal
-  [e! {:keys [add-participant]
-       permitted-users :thk.project/permitted-users :as project} {:keys [modal person] :as _query}]
-  (let [open? (= modal "people")
-        selected-person (when person
-                          (->> permitted-users
-                               (filter (fn [{user :user}]
-                                         (= (str (:db/id user)) person)))
-                               first))]
-    [panels/modal+ {:open-atom (r/wrap open? :_)
-                    :title (if person
-                             (-> selected-person :user user-description)
-                             (tr [:project :add-users]))
-                    :on-close (e! project-controller/->CloseDialog)
-                    :left-panel [people-panel-user-list permitted-users person]
-                    :right-panel (if selected-person
-                                   [permission-information e! project selected-person]
-                                   [add-user-form e! add-participant (:db/id project)])}]))
+  [e! {permitted-users :thk.project/permitted-users :as project}]
+  (r/with-let [open? (r/atom false)
+               open-dialog! #(reset! open? true)
+               close-dialog! #(reset! open? false)
+               selected-person-id-atom (r/atom nil)
+               form-value (r/atom nil)]
+    [:<>
+     (let [person @selected-person-id-atom
+           selected-person (when person
+                             (->> permitted-users
+                                  (filter (fn [{user :user}]
+                                            (= (:db/id user) person)))
+                                  first))]
+       [panels/modal+ {:open-atom open?
+                       :title (if person
+                                (-> selected-person :user user-description)
+                                (tr [:project :add-users]))
+                       :on-close close-dialog!
+                       :left-panel [people-panel-user-list permitted-users
+                                    selected-person-id-atom]
+                       :right-panel (if selected-person
+                                      [permission-information e! project selected-person]
+                                      [add-user-form e! form-value (:db/id project)])}])
+     [when-authorized :thk.project/update
+      project
+      [buttons/button-secondary {:on-click open-dialog!
+                                 :size :small}
+       (tr [:project :add-users])]]]))
 
 (defn information-missing-icon
   []
@@ -363,13 +377,14 @@
                              {:key (str id)})))))
              lifecycles))]))
 
-(defn people-tab [e! {query :query :as _app}
-                  {:thk.project/keys [id owner permitted-users lifecycles] :as project}]
+(defmethod project-menu/project-tab-content :people
+  [_ e! {query :query :as _app}
+   {:thk.project/keys [id owner permitted-users lifecycles] :as project}]
   (r/with-let [show-history? (r/atom false)
                has-history? (some #(> (count (:activity/manager-history %)) 1) ; more than 1 manager period => has history
                                   (mapcat :thk.lifecycle/activities lifecycles))]
     [:div.project-people-tab
-     [people-modal e! project query]
+
      [:div.people-tab-managers
       [project-owner-and-managers owner lifecycles @show-history?]
       (when has-history?
@@ -390,9 +405,7 @@
        [typography/Heading2 (tr [:people-tab :other-users])]
        [when-authorized :thk.project/add-permission
         project
-        [buttons/button-secondary {:on-click (e! project-controller/->OpenPeopleModal)
-                                   :size :small}
-         (tr [:buttons :edit])]]]
+        [people-modal e! project]]]
 
       (if (empty? permitted-users)
         [typography/GreyText (tr [:people-tab :no-other-users])]
@@ -401,7 +414,7 @@
                                   :secondary-text (tr [:roles (:permission/role permission)])
                                   :id (:db/id user)})])]]))
 
-(defn details-tab [e! _app project]
+(defmethod project-menu/project-tab-content :details [_ e! _app project]
   [:<>
    [project-details e! project]])
 
@@ -458,11 +471,11 @@
              grouped-restrictions)]
           [typography/GreyText (tr [:project :no-selected-restrictions])])))))
 
-(defn restriction-tab
-  [e! _ {:thk.project/keys [related-restrictions] :as _project}]
+(defmethod project-menu/project-tab-content :restrictions
+  [_ e! _ {:thk.project/keys [related-restrictions] :as _project}]
   (e! (project-controller/->FetchRelatedFeatures related-restrictions :restrictions))
-  (fn [_e! {{project-id :project} :params :as _app} {:keys [checked-restrictions] :as project}]
-    (js/setTimeout                                          ;; WHen the restrictions are updated this hack was needed because the component mounts before the refresh call finishes
+  (fn [_ e! {{project-id :project} :params :as _app} {:keys [checked-restrictions] :as project}]
+    (js/setTimeout ;; When the restrictions are updated this hack was needed because the component mounts before the refresh call finishes
      #(when (nil? checked-restrictions)
         (e! (project-controller/->FetchRelatedFeatures (:thk.project/related-restrictions project) :restrictions)))
      100)
@@ -472,136 +485,108 @@
   [:div {:class (<class project-style/activities-tab-footer)}
    [project-timeline-view/timeline project]])
 
-(def project-tabs-layout
-  [{:label [:project :tabs :activities]
-    :value "activities"
-    :component activities-tab
-    :layers #{:thk-project :related-cadastral-units :related-restrictions}
-    :footer activities-tab-footer
-    :hotkey "1"}
-   {:label [:project :tabs :people]
-    :value "people"
-    :component people-tab
-    :badge (fn [project]
-             (when (project-managers-info-missing project)
-               [Badge {:badge-content (r/as-element [information-missing-icon])}]))
-    :action-component-fn (fn [e! _app project]
-                           [when-authorized :thk.project/update
-                            project
-                            [buttons/button-secondary {:on-click (e! project-controller/->OpenEditProjectDialog)
-                                                       :size :small}
-                (tr [:buttons :edit])]])
-    :layers #{:thk-project}
-    :hotkey "2"}
-   {:label [:project :tabs :details]
-    :value "details"
-    :component details-tab
-    :layers #{:thk-project}
-    :hotkey "3"
-    :action-component-fn (fn [e! app project]
-                           [when-authorized
-                            :thk.project/update
-                            project
-                            [buttons/button-secondary {:size :small
-                                                       :on-click (e! project-controller/->OpenEditDetailsDialog)}
-                             (tr [:buttons :edit])]])}
-   {:label [:project :tabs :restrictions]
-    :value "restrictions"
-    :component restriction-tab
-    :layers #{:thk-project}
-    :hotkey "4"
-    :action-component-fn (fn [_e! _app {project-id :thk.project/id}]
-                           [buttons/button-secondary {:component "a"
-                                                      :href (str "/#/projects/" project-id "?tab=restrictions&configure=restrictions")
-                                                      :size :small}
-                            (tr [:buttons :edit])])}
-   {:label [:project :tabs :land]
-    :value "land"
-    :component land-tab/related-cadastral-units-info
-    :hotkey "5"
-    :action-component-fn (fn [e! _app project]
-                           [buttons/button-secondary {:href (url/set-query-param :configure "cadastral-units")}
-                            (tr [:buttons :edit])])}
-   {:label [:project :tabs :road-objects]
-    :value "road"
-    :component road-view/road-objects-tab
-    :hotkey "6"}])
 
-(defn selected-project-tab [{{:keys [tab]} :query :as _app}]
-  (if tab
-    (cu/find-first #(= tab (:value %)) project-tabs-layout)
-    (first project-tabs-layout)))
+(defmethod project-menu/project-tab-badge :people [_ project]
+  (when (project-managers-info-missing project)
+    [Badge {:badge-content (r/as-element [information-missing-icon])}]))
 
-(defn- project-tabs-item [e! close-menu! _selected-tab {:keys [value hotkey] :as _tab}]
-  (let [activate! #(do
-                     (e! (common-controller/->SetQueryParam :tab value))
-                     (close-menu!))]
-    (common/component
-     (hotkeys/hotkey hotkey activate!)
-     (fn [_ _ selected-tab {:keys [value label badge hotkey]}]
-       [MenuItem {:on-click activate!
-                  :selected (= value (:value selected-tab))
-                  :classes {:root (<class project-style/project-view-selection-item)}}
-        [:div {:class (<class project-style/project-view-selection-item-label)} (tr label)]
-        [:div {:class (<class project-style/project-view-selection-item-hotkey)} (tr [:common :hotkey] {:key hotkey})]]))))
+(defn edit-project-owner
+  [e! on-close form-data]
+  [form/form {:e! e!
+              :value @form-data
+              :on-change-event (form/update-atom-event form-data)
+              :save-event #(project-controller/->SaveProjectOwner on-close (:thk.project/owner @form-data))
+              :spec :project/edit-owner-form}
 
-(defn- project-tabs [_ _ _]
-  (let [open? (r/atom false)
-        anchor-el (atom nil)
-        toggle-open! #(do
-                        (swap! open? not)
-                        (.blur @anchor-el))
-        set-anchor! #(reset! anchor-el %)]
-    (common/component
-     (hotkeys/hotkey "Q" toggle-open!)
-     (fn [e! app project]
-       (let [{action :action-component-fn :as selected} (selected-project-tab app)]
-         [:div {:class (<class project-style/project-tab-container)}
-          [:div {:class (<class common-styles/space-between-center)}
-           [:div {:class (<class common-styles/flex-align-center)}
-            [IconButton {:on-click toggle-open!
-                         :ref set-anchor!}
-             [icons/navigation-apps]]
-            [typography/Heading1 {:class [(<class common-styles/inline-block)
-                                          (<class common-styles/no-margin)]} (tr (:label (selected-project-tab app)))]]
-           (when action
-             (action e! app project))]
-          [Popper {:open @open?
-                   :anchor-el @anchor-el
-                   :classes {:paper (<class project-style/project-view-selection-menu)}
-                   :placement "bottom-start"}
-           [ClickAwayListener {:on-click-away toggle-open!}
-            [Paper
-             [MenuList {}
-              (doall
-               (for [tab project-tabs-layout]
-                 ^{:key (str (:value tab))}
-                 [project-tabs-item e! toggle-open! selected tab]))]]]]])))))
+   ^{:attribute :thk.project/owner}
+   [select/select-user {:e! e! :attribute :thk.project/owner}]])
 
-(defn- project-tab [e! app project]
-  (let [selected-tab (selected-project-tab app)]
-    ^{:key (:value selected-tab)}
-    [(:component selected-tab) e! app project]))
+(defmethod project-menu/project-tab-action :people [_ e! _app project]
+  [when-authorized
+   :thk.project/update
+   project
+   [form/form-modal-button {:modal-title (tr [:project :edit-project])
+                            :form-component [edit-project-owner e!]
+                            :button-component [buttons/button-secondary {:size :small}
+                                               (tr [:buttons :edit])]}]])
 
-(defn edit-project-management
-  [e! project]
+(defn edit-project-details
+  [e! project close!]
   (when-not (:basic-information-form project)
-    (e! (project-controller/->UpdateBasicInformationForm
+    (e! (project-controller/->InitializeBasicInformationForm
           (cu/without-nils {:thk.project/project-name (or (:thk.project/project-name project) (:thk.project/name project))
                             :thk.project/km-range (-> project
                                                       (project-model/get-column :thk.project/effective-km-range)
                                                       project-setup-view/format-range)
                             :thk.project/owner (:thk.project/owner project)
                             :thk.project/manager (:thk.project/manager project)}))))
-  (fn [e! {form :basic-information-form :as _project}]
+  (fn [e! {form :basic-information-form :as project}]
     [form/form {:e! e!
                 :value form
                 :on-change-event project-controller/->UpdateBasicInformationForm
-                :save-event project-controller/->PostProjectEdit
-                :spec :project/edit-form}
+                :save-event (r/partial project-controller/->PostProjectEdit close!)
+                :cancel-fn close!
+                :spec :project/edit-details-form}
 
-     ^{:attribute :thk.project/owner}
-     [select/select-user {:e! e! :attribute :thk.project/owner}]]))
+     ^{:attribute :thk.project/project-name
+       :adornment [project-setup-view/original-name-adornment e! project]}
+     [TextField {:full-width true :variant :outlined}]
+     (let [min-km (some-> project :road-info :start-m road-model/m->km)
+           max-km (some-> project :road-info :end-m road-model/m->km)]
+       ^{:xs 12 :attribute :thk.project/km-range
+         :validate (fn [[start end :as value]]
+                     (when (or (num-range/num-range-error nil value start min-km max-km)
+                               (num-range/num-range-error nil value end min-km max-km))
+                       (str "Valid km range: " min-km "km - " max-km "km")))}
+       [num-range/num-range {:start-label (tr [:fields :thk.project/start-km])
+                             :end-label (tr [:fields :thk.project/end-km])
+                             :min-value min-km
+                             :max-value max-km
+                             :reset-start (partial project-setup-view/reset-range-value e! project :start)
+                             :reset-end (partial project-setup-view/reset-range-value e! project :end)}])
+     (when (project-setup-view/km-range-changed? project)
+       ^{:xs 12 :attribute :thk.project/m-range-change-reason}
+       [TextField {:multiline true
+                   :rows 3}])]))
+
+(defmethod project-menu/project-tab-action :details [_ e! _app project]
+  (r/with-let [open? (r/atom false)
+               open-dialog! #(reset! open? true)
+               close-dialog! #(reset! open? false)]
+    [:<>
+     [panels/modal {:open-atom open?
+                    :on-close #(reset! open? false)
+                    :title (tr [:project :edit-project-details-modal-title])}
+      [edit-project-details e! project close-dialog!]]
+
+     [when-authorized
+      :thk.project/update
+      project
+      [buttons/button-secondary {:size :small
+                                 :on-click open-dialog!}
+       (tr [:buttons :edit])]]]))
+
+(defmethod project-menu/project-tab-action :restrictions
+  [_ _e! _app {project-id :thk.project/id :as project}]
+  [when-authorized :thk.project/update
+   project
+   [buttons/button-secondary {:component "a"
+                              :href (str "/#/projects/" project-id "?tab=restrictions&configure=restrictions")
+                              :size :small}
+    (tr [:buttons :edit])]])
+
+(defmethod project-menu/project-tab-content :land [_ e! app project]
+  [land-tab/related-cadastral-units-info e! app project])
+
+(defmethod project-menu/project-tab-action :land
+  [_  _e! _app project]
+  [when-authorized :thk.project/update
+   project
+   [buttons/button-secondary {:href (url/set-query-param :configure "cadastral-units")}
+    (tr [:buttons :edit])]])
+
+(defmethod project-menu/project-tab-content :road [_ e! app project]
+  [road-view/road-objects-tab e! app project])
 
 (defn change-restrictions-view
   [e! app project]
@@ -686,72 +671,18 @@
                                (:thk.project/id project))}
                 (tr [:buttons :save])]]}]
     :else
-    ^{:key "Project view "}
-    [project-page-structure e! app project
-     (merge {:header [project-tabs e! app project]
-             :body [project-tab e! app project]
-             :map-settings {:layers #{:thk-project :surveys}}}
-            (when-let [tab-footer (:footer (selected-project-tab app))]
-              {:footer [tab-footer e! app project]}))]))
-
-(defn edit-project-details
-  [e! project]
-  (when-not (:basic-information-form project)
-    (e! (project-controller/->InitializeBasicInformationForm
-          (cu/without-nils {:thk.project/project-name (:thk.project/name project)
-                            :thk.project/km-range (-> project
-                                                      (project-model/get-column :thk.project/effective-km-range)
-                                                      project-setup-view/format-range)
-                            :thk.project/owner (:thk.project/owner project)
-                            :thk.project/manager (:thk.project/manager project)}))))
-  (fn [e! {form :basic-information-form :as project}]
-    [form/form {:e! e!
-                :value form
-                :on-change-event project-controller/->UpdateBasicInformationForm
-                :save-event project-controller/->PostProjectEdit
-                :cancel-event project-controller/->CancelUpdateProjectInformation
-                :spec :project/edit-details-form}
-
-     ^{:attribute :thk.project/project-name
-       :adornment [project-setup-view/original-name-adornment e! project]}
-     [TextField {:full-width true :variant :outlined}]
-     (let [min-km (some-> project :road-info :start-m road-model/m->km)
-           max-km (some-> project :road-info :end-m road-model/m->km)]
-       ^{:xs 12 :attribute :thk.project/km-range
-         :validate (fn [[start end :as value]]
-                     (when (or (num-range/num-range-error nil value start min-km max-km)
-                               (num-range/num-range-error nil value end min-km max-km))
-                       (str "Valid km range: " min-km "km - " max-km "km")))}
-       [num-range/num-range {:start-label "Start km"
-                             :end-label "End km"
-                             :min-value min-km
-                             :max-value max-km
-                             :reset-start (partial project-setup-view/reset-range-value e! project :start)
-                             :reset-end (partial project-setup-view/reset-range-value e! project :end)}])
-     (when (project-setup-view/km-range-changed? project)
-       ^{:xs 12 :attribute :thk.project/m-range-change-reason}
-       [TextField {:multiline true
-                   :rows 3}])]))
+    (let [{tab-name :name :as tab} (project-menu/active-tab app)]
+      ^{:key "project-view"}
+      [project-page-structure e! app project
+       (merge {:key (name tab-name)
+               :header [project-menu/project-menu e! app project false]
+               :body [project-menu/project-tab-content tab-name e! app project]
+               :map-settings {:layers (or (:layers tab)
+                                          #{:thk-project :surveys})}
+               :footer [project-menu/project-tab-footer tab-name e! app project]})])))
 
 
-(defn project-page-modals
-  [e! {{:keys [edit]} :query} project]
-  (let [[modal modal-label]
-        (cond
-          edit
-          (case edit
-            "project"
-            [[edit-project-management e! project]
-             (tr [:project :edit-project])]
-            "details"
-            [[edit-project-details e! project]
-             "Edit project details"])
-          :else nil)]
-    [panels/modal {:open-atom (r/wrap (boolean modal) :_)
-                   :title (or modal-label "")
-                   :on-close (e! project-controller/->CloseDialog)}
 
-     modal]))
 
 (defn project-page
   "Shows the normal project view for initialized projects, setup wizard otherwise."
@@ -761,5 +692,4 @@
     :thk.project/id (:thk.project/id project)}
    [:<>
     [project-navigator-view/project-navigator-dialogs {:e! e! :app app :project project}]
-    [project-page-modals e! app project]
     [project-view e! app project]]])

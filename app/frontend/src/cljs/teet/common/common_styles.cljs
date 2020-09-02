@@ -218,6 +218,16 @@
   [amount]
   {:padding-bottom (str amount "rem")})
 
+(defn padding
+  "Add padding. Amounts specified in rem unit."
+  ([vertical horizontal]
+   (padding vertical horizontal vertical horizontal))
+  ([up right down left]
+   {:padding-up (str up "rem")
+    :padding-right (str right "rem")
+    :padding-down (str down "rem")
+    :padding-left (str left "rem")}))
+
 (defn no-margin []
   {:margin "0px"})
 

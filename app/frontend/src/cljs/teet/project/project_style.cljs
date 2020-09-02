@@ -17,7 +17,8 @@
   {:position "relative"
    :display "flex"
    :flex-direction "column"
-   :height "calc(100vh - 204px)"})
+   :height "calc(100vh - 220px)"}                           ;;HTML structure needs refactor so these cals wouldn't be needed
+  )
 
 (defn project-page-structure
   []
@@ -187,5 +188,9 @@
    :padding "0px 5px 0px 5px"
    :border-radius "4px"})
 
-(defn project-tab-container []
-  {:padding "1rem"})
+(defn project-tab-container [dark-theme?]
+  (merge
+    {:padding "1rem"}
+    (when dark-theme?
+      {:background-color theme-colors/gray-dark
+       :color :white})))

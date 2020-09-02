@@ -156,3 +156,10 @@
   (if (contains-in? m ks)
     (apply (partial update-in m ks f) args)
     m))
+
+(defn deep-merge
+  "Recursive merge-with merge."
+  [a b]
+  (if (and (map? a) (map b))
+    (merge-with deep-merge a b)
+    b))

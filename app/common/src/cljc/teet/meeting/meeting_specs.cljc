@@ -9,6 +9,8 @@
                 :meeting/end
                 :meeting/organizer]))
 
+(s/def :meeting/agenda-form
+  (s/keys :req [:meeting.agenda/topic]))
 
 (s/def :meeting/create
   (s/keys :reg [:activity-eid

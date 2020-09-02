@@ -5,7 +5,8 @@
 (defonce app (r/atom {:config     {}
                       :navigation {:open? true}
                       :map        {:road-buffer-meters (str road-model/default-road-buffer-meters)
-                                   :layers [{:type :projects}]}}))
+                                   :layers [{:type :projects
+                                             :id (random-uuid)}]}}))
 
 (defonce user (r/cursor app [:user]))
 

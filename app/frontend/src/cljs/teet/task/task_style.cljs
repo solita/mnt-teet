@@ -27,7 +27,7 @@
   (merge (common-styles/content-paper-style)
          {:display :flex
           :flex    1
-          :max-height "calc(100vh - 220px)"}))
+          :max-height "calc(100vh - 230px)"}))
 
 (defn result-style
   []

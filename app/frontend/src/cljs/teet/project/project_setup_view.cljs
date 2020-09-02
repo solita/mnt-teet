@@ -18,7 +18,7 @@
 (defn original-name-adornment [e! {:thk.project/keys [name] :as _project}]
   [:div {:style {:padding-top "6px"
                  :display     :flex}}
-   [typography/Text {:style {:margin-right "6px"}} "Road name:"]
+   [typography/Text {:style {:margin-right "6px"}} (tr [:fields :thk.project/road-name]) ": "]
    [buttons/link-button {:on-click #(e! (project-controller/->UpdateBasicInformationForm {:thk.project/project-name name}))}
     name]])
 

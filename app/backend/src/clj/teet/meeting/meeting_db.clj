@@ -24,11 +24,33 @@
      db
      arg-vals)))
 
+(defn meeting-agenda-ids
+  "Return set of agenda item db ids for given meeting"
+  [db meeting-id]
+  (into #{}
+        (map :db/id)
+        (:meeting/agenda
+         (d/pull db [:meeting/agenda] meeting-id))))
+
 (defn activity-meeting-id
   "Check activity has meeting. Returns meeting id."
   [db activity-id meeting-id]
   (or (ffirst (d/q '[:find ?m
                      :where [?activity :activity/meetings ?m]
-                     :in $ ?activity]
-                   db activity-id))
+                     :in $ ?activity ?m]
+                   db activity-id meeting-id))
       (db-api/bad-request! "No such meeting in activity.")))
+
+
+(defn next-meeting-number [db activity-id title]
+  (or (some-> (d/q '[:find (max ?n)
+                     :where
+                     [?activity :activity/meetings ?meeting]
+                     [?meeting :meeting/title ?title]
+                     [(missing? $ ?meeting :meta/deleted?)]
+                     [?meeting :meeting/number ?n]
+                     :in $ ?activity ?title]
+                   db activity-id title)
+              ffirst
+              inc)
+      1))

@@ -194,3 +194,14 @@
            [:div {:class (<class side-by-side-column-style flex-num)}
             component])
          (partition 2 percentages-and-components))])
+
+(defn button-with-modal [{:keys [modal-title button-component modal-component]}]
+  (r/with-let [open? (r/atom false)
+               open! #(reset! open? true)
+               close! #(do (reset! open? false) nil)]
+    [:<>
+     (assoc-in button-component [1 :on-click] open!)
+     [modal {:open-atom open?
+             :on-close close!
+             :title modal-title}
+      (conj modal-component close!)]]))
