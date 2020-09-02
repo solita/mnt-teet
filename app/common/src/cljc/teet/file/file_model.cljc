@@ -12,6 +12,7 @@
     "application/msword"
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     "application/msexcel"
+    "application/vnd.ms-excel"
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     "application/vnd.openxmlformats-officedocument.presentationml.presentation"
     "application/mspowerpoint"
