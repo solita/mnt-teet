@@ -105,7 +105,11 @@
       [:div.project-navigator-add-meeting
 
        [form/form-modal-button {:form-component [meeting-form e! activity-id]
-                                :form-value {:meeting/organizer (dissoc user :api-token :roles)}
+                                :form-value {:meeting/organizer (select-keys user [:db/id
+                                                                                   :user/id
+                                                                                   :user/given-name
+                                                                                   :user/family-name
+                                                                                   :user/person-id])}
                                 :modal-title (tr [:meeting :new-meeting-modal-title])
                                 :button-component [rect-button {:size :small
                                                                 :disabled disable-buttons?
