@@ -236,16 +236,20 @@
 
 
 (defn- add-meeting-participant [e! meeting user]
-  (r/with-let [form (r/atom nil)]
+  (r/with-let [form (r/atom nil)
+               save-participant! #(meeting-controller/->AddParticipant meeting @form)]
     [:div.new-participant
      [:div
       [typography/BoldGreyText (tr [:meeting :add-person])]
-      [form/form2 {:value @form
-                   :on-change-event (form/update-atom-event form)}
+      [form/form2 {:e! e!
+                   :value @form
+                   :on-change-event (form/update-atom-event form merge)
+                   :save-event save-participant!}
        [form/field :meeting.participant/user
         [select/select-user {:e! e!}]]
        [form/field :meeting.participant/role
-        [select/select-enum {:e! e! :attribute :meeting.participant/role}]]]]]))
+        [select/select-enum {:e! e! :attribute :meeting.participant/role}]]
+       [form/footer2]]]]))
 
 (defn meeting-participants [e! {:meeting/keys [participants organizer] :as meeting} user]
   (r/with-let [remove-participant! (fn [participant]

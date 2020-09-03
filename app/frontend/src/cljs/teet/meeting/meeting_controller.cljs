@@ -14,6 +14,7 @@
 (defrecord AddAgendaResult [close-event response])
 (defrecord DeletionSuccess [close-event response])
 
+(defrecord AddParticipant [meeting participant])
 (defrecord RemoveParticipant [participant-id])
 
 (extend-protocol t/Event
@@ -86,4 +87,19 @@
           {:tuck.effect/type :command!
            :command :meeting/remove-participant
            :payload {:db/id id}
-           :result-event common-controller/->Refresh})))
+           ;; FIXME: Result event with undo
+           :result-event common-controller/->Refresh}))
+
+  AddParticipant
+  (process-event [{:keys [meeting participant]} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :meeting/add-participant
+           :payload {:db/id meeting
+                     :meeting/participants
+                     [(merge {:db/id "new-participant"}
+                             (select-keys participant
+                                          #{:meeting.participant/user
+                                            :meeting.participant/role}))]}
+           :result-event common-controller/->Refresh}))
+  )
