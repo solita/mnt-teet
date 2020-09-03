@@ -1,6 +1,8 @@
 (ns teet.meta.meta-query
   (:require [clojure.walk :as walk]
-            [datomic.client.api :as d]))
+            [datomic.client.api :as d]
+            [teet.util.datomic :as du]
+            [teet.user.user-model :as user-model]))
 
 (defn gather-ids
   "Recursively gather all `:db/id` values from entities"
@@ -81,3 +83,18 @@
                     :meta/deleted?]
                    extra-attrs)
           entity))
+
+(defn can-undo-delete?
+  "Check if delete can be undone. The entity must be deleted
+  within the last 5 minutes by the user."
+  [db entity user]
+  (let [user-id (:db/id (du/entity db (user-model/user-ref user)))
+        {:meta/keys [deleted? modifier modified-at]}
+        (d/pull db
+                [:meta/deleted? :meta/modifier :meta/modified-at]
+                entity)
+        five-minutes-ago (java.util.Date. (- (System/currentTimeMillis)
+                                             (* 1000 60 5)))]
+    (and deleted?
+         (= user-id (:db/id modifier))
+         (.after modified-at five-minutes-ago))))

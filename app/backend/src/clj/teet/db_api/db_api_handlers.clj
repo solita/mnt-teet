@@ -31,6 +31,7 @@
             teet.notification.notification-commands
             teet.meeting.meeting-queries
             teet.meeting.meeting-commands
+            teet.meta.meta-commands
 
             [teet.log :as log]
             [teet.auth.jwt-token :as jwt-token]
