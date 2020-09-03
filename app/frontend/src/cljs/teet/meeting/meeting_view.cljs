@@ -28,7 +28,8 @@
             [teet.project.project-menu :as project-menu]
             [teet.navigation.navigation-style :as navigation-style]
             [teet.project.project-model :as project-model]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.ui.context :as context]))
 
 
 (defn meeting-form
@@ -233,18 +234,34 @@
       [IconButton {:on-click #(on-remove participant)}
        [icons/content-clear]])]])
 
-(defn meeting-participants [e! {:meeting/keys [participants organizer] :as meeting}]
+
+(defn- add-meeting-participant [e! meeting user]
+  (r/with-let [form (r/atom nil)]
+    [:div.new-participant
+     [:div
+      [typography/BoldGreyText (tr [:meeting :add-person])]
+      [form/form2 {:value @form
+                   :on-change-event (form/update-atom-event form)}
+       [form/field :meeting.participant/user
+        [select/select-user {:e! e!}]]
+       [form/field :meeting.participant/role
+        [select/select-enum {:e! e! :attribute :meeting.participant/role}]]]]]))
+
+(defn meeting-participants [e! {:meeting/keys [participants organizer] :as meeting} user]
   (r/with-let [remove-participant! (fn [participant]
                                      (log/info "Remove participant:" participant)
                                      (e! (meeting-controller/->RemoveParticipant (:db/id participant))))]
-    [:div.meeting-participants
-     [typography/Heading2 (tr [:meeting :participants-title])]
-     [:div.participant-list
-      [meeting-participant nil {:meeting.participant/user organizer
-                                :meeting.participant/role :meeting.participant.role/organizer}]
-      (mapc (r/partial meeting-participant remove-participant!)
-            participants)]
-     ]))
+    (let [can-edit-participants? (meeting-model/user-is-organizer-or-reviewer? user meeting)]
+      [:div.meeting-participants
+       [typography/Heading2 (tr [:meeting :participants-title])]
+       [:div.participant-list
+        [meeting-participant nil {:meeting.participant/user organizer
+                                  :meeting.participant/role :meeting.participant.role/organizer}]
+        (mapc (r/partial meeting-participant (and can-edit-participants? remove-participant!))
+              participants)]
+       (when can-edit-participants?
+         [add-meeting-participant e! meeting user])])))
+
 (defn meeting-page [e! {:keys [params user] :as app} {:keys [project meeting]}]
   [meeting-page-structure e! app project
    (let [{:meeting/keys [title number location start end organizer agenda]} meeting]
@@ -288,4 +305,5 @@
                                                                                            :user/person-id])}
                                :modal-title (tr [:meeting :new-agenda-modal-title])
                                :button-component [buttons/rect-primary {} (tr [:meeting :add-agenda-button])]}]])
-   [meeting-participants e! meeting]])
+   [context/consume :user
+    [meeting-participants e! meeting]]])

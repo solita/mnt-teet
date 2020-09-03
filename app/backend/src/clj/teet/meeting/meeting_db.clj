@@ -2,7 +2,8 @@
   (:require [datomic.client.api :as d]
             [teet.user.user-model :as user-model]
             [teet.db-api.core :as db-api]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.meeting.meeting-model :as meeting-model]))
 
 (defn meetings
   "Fetch a listing of meetings for the given where
@@ -55,15 +56,11 @@
               inc)
       1))
 
+
 (defn user-is-organizer-or-reviewer? [db user meeting-id]
-  (let [user-id (:db/id (du/entity db (user-model/user-ref user)))
-        {:meeting/keys [organizer participants]}
-        (d/pull db '[:meeting/organizer
-                     {:meeting/participants
-                      [:meeting.participant/user
-                       :meeting.participant/role]}] meeting-id)]
-    (or (= user-id (:db/id organizer))
-        (some #(and (du/enum= :meeting.participant.role/reviewer
-                              (:meeting.participant/role %))
-                    (= user-id (get-in % [:meeting.participant/user :db/id])))
-              participants))))
+  (meeting-model/user-is-organizer-or-reviewer?
+   (du/entity db (user-model/user-ref user))
+   (d/pull db '[:meeting/organizer
+                {:meeting/participants
+                 [:meeting.participant/user
+                  :meeting.participant/role]}] meeting-id)))
