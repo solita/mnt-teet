@@ -81,7 +81,7 @@
 (without-ion-dep run-nvd)
 (let [vulns (mapcat dependency-vulns (:dependencies (read-report)))
       new-vulns (check-new-vulns (read-nvd-lock) vulns)]
-  (post-annotations annotation-url head-sha vulns new-vulns)
+  #_(post-annotations annotation-url head-sha vulns new-vulns)
   (when (seq new-vulns)
     (println (count new-vulns) " NEW vulnerabilities: " (str/join ", " new-vulns))
     (System/exit 1)))
