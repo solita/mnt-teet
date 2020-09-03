@@ -189,6 +189,7 @@
    (when (task-model/can-submit? task)
      [:<>
       [panels/button-with-modal {:button-component (file-view/file-upload-button)
+                                 :modal-options {:max-width "lg"}
                                  :modal-title (tr [:task :add-document])
                                  :modal-component [add-files-form e! (:in-progress? new-document)]}]
       (when (seq files)
