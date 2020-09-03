@@ -3,7 +3,8 @@
             [teet.common.common-controller :as common-controller]
             [teet.localization :refer [tr]]
             [tuck.core :as t]
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [teet.snackbar.snackbar-controller :as snackbar-controller]))
 
 (defrecord SubmitMeetingForm [activity-id form-data close-event])
 (defrecord DeleteMeeting [activity-id meeting-id close-event])
@@ -16,6 +17,7 @@
 
 (defrecord AddParticipant [meeting participant])
 (defrecord RemoveParticipant [participant-id])
+(defrecord RemoveParticipantResult [participant-id result])
 
 (extend-protocol t/Event
   SubmitMeetingForm
@@ -87,8 +89,18 @@
           {:tuck.effect/type :command!
            :command :meeting/remove-participant
            :payload {:db/id id}
-           ;; FIXME: Result event with undo
-           :result-event common-controller/->Refresh}))
+           :result-event (partial ->RemoveParticipantResult id)}))
+
+  RemoveParticipantResult
+  (process-event [{:keys [participant-id result]} app]
+    (t/fx (snackbar-controller/open-snack-bar
+           {:app app
+            :message (tr [:meeting :participant-removed])
+            :variant :success
+            :hide-duration 15000
+            :action {:title (tr [:buttons :undo])
+                     :event (common-controller/->UndoDelete participant-id nil)}})
+          common-controller/refresh-fx))
 
   AddParticipant
   (process-event [{:keys [meeting participant]} app]
