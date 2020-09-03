@@ -21,7 +21,7 @@
             [teet.snackbar.snackbar-view :as snackbar]
             [teet.common.common-controller :refer [when-feature poll-version] :as common-controller]
 
-    ;; Import view namespaces and needed utility namespaces (macroexpansion)
+            ;; Import view namespaces and needed utility namespaces (macroexpansion)
             teet.projects.projects-view
             teet.project.project-view
             teet.project.project-model
@@ -38,20 +38,38 @@
             teet.ui.query
             [teet.ui.url :as url]
 
-    ;; Required by define-main-page which uses string->long
+            ;; Required by define-main-page which uses string->long
             [teet.login.login-controller :as login-controller]
-            [teet.common.common-styles :as common-styles])
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.context :as context])
   (:require-macros [teet.route-macros :refer [define-main-page]]))
 
 ;; See routes.edn
 (def ->long common-controller/->long)
 (define-main-page page-and-title)
 
+(defn- main-view-content [e! nav-open? app]
+  (if (get-in app [:config :api-url])               ;;config gets loaded when session is checked
+    (let [{:keys [page]} (page-and-title e! app)]
+      [:<>
+       [navigation-view/header e!
+        {:open?        nav-open?
+         :page         (:page app)
+         :quick-search (:quick-search app)}
+        (:user app)]
+       [navigation-view/main-container
+        nav-open?
+        (with-meta page
+          {:key (:route-key app)})]])
+    ;; else - show spinner while config is loaded
+    [:div {:class (<class common-styles/spinner-style)}
+     [CircularProgress]]))
+
 (defn main-view [e! _]
   (log/hook-onerror! e!)
   (poll-version e!)
   (e! (login-controller/->CheckExistingSession))
-  (fn [e! {:keys [page user navigation quick-search snackbar] :as app}]
+  (fn [e! {:keys [page navigation  snackbar] :as app}]
     (let [nav-open? (boolean (:open? navigation))]
       [url/provide-navigation-info
        (select-keys app [:page :params :query])
@@ -65,21 +83,8 @@
          (if (= page :login)
            ;; Show only login dialog
            [login-view/login-page e! app]
-           (if (get-in app [:config :api-url])               ;;config gets loaded when session is checked
-             (let [{:keys [page]} (page-and-title e! app)]
-               [:<>
-                [navigation-view/header e!
-                 {:open?        nav-open?
-                  :page         (:page app)
-                  :quick-search quick-search}
-                 user]
-                [navigation-view/main-container
-                 nav-open?
-                 (with-meta page
-                   {:key (:route-key app)})]])
-             ;; else - show spinner while config is loaded
-             [:div {:class (<class common-styles/spinner-style)}
-              [CircularProgress]]))
+           [context/provide :user (:user app)
+            [main-view-content e! nav-open? app]])
          (when-feature :data-frisk
            [df/DataFriskShell app])]]])))
 
