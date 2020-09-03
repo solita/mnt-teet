@@ -144,9 +144,17 @@
     :activity (activity-project-id db entity-id)
     :task (task-project-id db entity-id)
     :file (file-project-id db entity-id)
-    :owner-comments (first (second entity-id))
-    :estate-comments (first (second entity-id))
-    :unit-comments (first (second entity-id))))
+    ;;When the entity to be commented doesn't exist we get the project id from the tuple containing project-id and the entitys identifier
+    ;;For all of these units the project
+    :owner-comments (or (get-in (du/entity db entity-id)
+                                [:owner-comments/project :db/id])
+                      (first (second entity-id)))
+    :estate-comments (or (get-in (du/entity db entity-id)
+                                 [:estate-comments/project :db/id])
+                         (first (second entity-id)))
+    :unit-comments (or (get-in (du/entity db entity-id)
+                               [:unit-comments/project :db/id])
+                       (first (second entity-id)))))
 
 (defn comment-project-id [db comment-id]
   (let [ce (du/entity db comment-id)]

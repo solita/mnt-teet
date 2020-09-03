@@ -219,7 +219,7 @@
   [e!
    {:meta/keys [modified-at]
     :comment/keys [comment status mentions]
-    comment-id :eid
+    comment-id :db/id
     :as comment-entity}
    commented-entity]
   [:div {:class (<class comments-styles/comment-contents
