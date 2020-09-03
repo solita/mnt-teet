@@ -13,13 +13,15 @@
    (open-snack-bar {:app app
                     :message message
                     :variant variant}))
-  ([{:keys [app message variant hide-duration]
+  ([{:keys [app message variant hide-duration
+            action]
      :or {variant :success hide-duration 5000}}]
    (assoc app :snackbar
           {:open? true
            :message message
            :variant variant
-           :hide-duration hide-duration})))
+           :hide-duration hide-duration
+           :action action})))
 
 (extend-protocol t/Event
   OpenSnackBar
