@@ -15,5 +15,5 @@
                    (d/pull db [:meta/deleted? :meta/modifier :meta/modified-at]
                            id)]
                [[:db/retract id :meta/deleted? deleted?]
-                [:db/retract id :meta/modifier modifier]
+                [:db/retract id :meta/modifier (:db/id modifier)]
                 [:db/retract id :meta/modified-at modified-at]])})
