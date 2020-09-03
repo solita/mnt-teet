@@ -555,3 +555,16 @@
               (swap! internal-state-atom merge new-value)
               (reset! internal-state-atom new-value))
             app)))])))
+
+
+(defrecord UndoDelete [id undo-result-event]
+  t/Event
+  (process-event [_ app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :meta/undo-delete
+           :payload {:db/id id}
+           :result-event (fn [result]
+                           (or (and undo-result-event
+                                    (undo-result-event result))
+                               (->Refresh)))})))
