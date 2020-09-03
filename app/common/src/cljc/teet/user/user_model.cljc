@@ -8,7 +8,8 @@
             [teet.user.user-spec :as user-spec]))
 
 (def user-listing-attributes
-  [:user/id
+  [:db/id
+   :user/id
    :user/given-name
    :user/family-name])
 
