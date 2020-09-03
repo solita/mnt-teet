@@ -82,3 +82,16 @@
                                                       :meeting.agenda/body
                                                       :meeting.agenda/responsible])
                                      agenda)}]})
+
+(defcommand :meeting/remove-participant
+  {:doc "Remove a participant."
+   :context {:keys [db user]}
+   :payload {id :db/id}
+   :project-id (project-db/meeting-project-id
+                db
+                (get-in (du/entity db id) [:meeting/_participants :db/id]))
+   :authorization {:activity/edit-activity {}}
+   :pre [(meeting-db/user-is-organizer-or-reviewer?
+          db user
+          (get-in (du/entity db id) [:meeting/_participants :db/id]))]
+   :transact [(meta-model/deletion-tx user id)]})

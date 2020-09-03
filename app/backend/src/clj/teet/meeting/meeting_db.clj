@@ -54,3 +54,16 @@
               ffirst
               inc)
       1))
+
+(defn user-is-organizer-or-reviewer? [db user meeting-id]
+  (let [user-id (:db/id (du/entity db (user-model/user-ref user)))
+        {:meeting/keys [organizer participants]}
+        (d/pull db '[:meeting/organizer
+                     {:meeting/participants
+                      [:meeting.participant/user
+                       :meeting.participant/role]}] meeting-id)]
+    (or (= user-id (:db/id organizer))
+        (some #(and (du/enum= :meeting.participant.role/reviewer
+                              (:meeting.participant/role %))
+                    (= user-id (get-in % [:meeting.participant/user :db/id])))
+              participants))))

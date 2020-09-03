@@ -14,6 +14,8 @@
 (defrecord AddAgendaResult [close-event response])
 (defrecord DeletionSuccess [close-event response])
 
+(defrecord RemoveParticipant [participant-id])
+
 (extend-protocol t/Event
   SubmitMeetingForm
   (process-event [{:keys [activity-id form-data close-event]} app]
@@ -76,4 +78,12 @@
     (t/fx app
           (fn [e!]
             (e! (close-event)))
-          common-controller/refresh-fx)))
+          common-controller/refresh-fx))
+
+  RemoveParticipant
+  (process-event [{id :participant-id} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :meeting/remove-participant
+           :payload {:db/id id}
+           :result-event common-controller/->Refresh})))

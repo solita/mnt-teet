@@ -129,6 +129,7 @@
   :document.sub-category/design-requirements "Design requirements",
   :task.group/design-approval "Design approval",
   :task.type/geological-study "Geological study",
+  :meeting.participant.role/reviewer "Reviewer",
   :activity.status/in-review "In review",
   :land-acquisition.status/in-progress-problematic
   "In progress - problematic ",
@@ -194,6 +195,7 @@
   :task.type/equipment "Equipment",
   :task.type/structures "Structures",
   :activity.name/design-requirements "Design requirements",
+  :meeting.participant.role/participant "Participant",
   :task.type/calculation "Calculation",
   :land-acquisition.status/in-progress "In progress ",
   :task.type/design-road-safety-audit "Design road safety audit",
@@ -201,6 +203,7 @@
   :document.sub-category/photo "Photo",
   :thk.lifecycle-type/construction "Construction",
   :task.type/road-safety-audit-design "Road safety audit",
+  :meeting.participant.role/organizer "Organizer",
   :estate-procedure.type/property-rights
   "Issuing right for using property",
   :document.sub-category/drawing "Drawing",
