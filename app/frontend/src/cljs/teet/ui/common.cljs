@@ -3,8 +3,9 @@
   (:require [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
             [teet.ui.icons :as icons]
+            [garden.color :refer [darken lighten as-hex]]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.material-ui :refer [ButtonBase Link Chip]]
+            [teet.ui.material-ui :refer [ButtonBase Link Chip Collapse]]
             [teet.ui.typography :refer [Text SmallText] :as typography]
             [teet.common.common-styles :as common-styles]
             [teet.ui.buttons :as buttons]
@@ -237,19 +238,21 @@
   {:border-left "1px solid white"})
 
 (defn hierarchical-heading-container
-  [bg-color font-color]
-  ^{:pseudo {:before {:content "''"
-                      :width 0
-                      :height 0
-                      :border-bottom "15px solid transparent"
-                      :border-left (str "15px solid " bg-color)
-                      :position :absolute
-                      :bottom "-15px"
-                      :transform "rotate(90deg)"
-                      :left 0}}}
-  {:background-color bg-color
-   :position :relative
-   :color font-color})
+  [bg-color font-color show-polygon]
+  (with-meta
+    {:background-color bg-color
+     :position :relative
+     :color font-color}
+    (when show-polygon
+      {:pseudo {:before {:content "''"
+                         :width 0
+                         :height 0
+                         :border-bottom "15px solid transparent"
+                         :border-left (str "15px solid " bg-color)
+                         :position :absolute
+                         :bottom "-15px"
+                         :transform "rotate(90deg)"
+                         :left 0}}})))
 
 (defn hierarchical-child-container
   []
@@ -258,11 +261,12 @@
    :margin-left "15px"})
 
 (defn hierarchical-container
-  [{:keys [heading-color heading-text-color heading-content children]
+  [{:keys [heading-color heading-text-color heading-content children show-polygon?]
     :or {heading-color theme-colors/gray-lighter
-         heading-text-color :inherit}}]
+         heading-text-color :inherit
+         show-polygon? true}}]
   [:<>
-   [:div {:class (<class hierarchical-heading-container heading-color heading-text-color)}
+   [:div {:class (<class hierarchical-heading-container heading-color heading-text-color show-polygon?)}
     heading-content]
    [:div {:class (<class hierarchical-child-container)}
     (doall
@@ -273,6 +277,95 @@
              child]
             (meta child)))
         children))]])
+
+(defn hierarchical-container-button-style
+  [bg-color]
+  ^{:pseudo {:hover {:background-color (darken bg-color 10)}}}
+  {:width "100%"
+   :justify-content :space-between
+   :flex-direction :column
+   :align-items :flex-start
+   :cursor :pointer
+   :border-bottom "3px solid white"
+   :background-color bg-color
+   :padding "1rem"
+   :transition "0.2s ease-in-out background-color"})
+
+(defn hierarchical-container-style
+  [bg-color]
+  {:justify-content :space-between
+   :flex-direction :column
+   :align-items :flex-start
+   :border-bottom "3px solid white"
+   :background-color bg-color
+   :padding "1rem"})
+
+(defn hierarchical-heading-container2
+  [bg-color font-color show-polygon]
+  (with-meta
+    {:background-color bg-color
+     :position :relative
+     :color font-color
+     :border-bottom "1px solid white"}
+    (when show-polygon
+      {:pseudo {:before {:content "''"
+                         :width 0
+                         :height 0
+                         :border-bottom "15px solid transparent"
+                         :border-left (str "15px solid " bg-color)
+                         :position :absolute
+                         :bottom "-15px"
+                         :transform "rotate(90deg)"
+                         :left 0}}})))
+
+(defn hierarchical-container2
+  ([param]
+   [hierarchical-container2 param theme-colors/gray-light])
+  ([{:keys [text-color content heading heading-button children after-children-component]
+     :or {text-color :inherit}} bg-color]
+   (r/with-let [open? (r/atom false)
+                toggle-open! #(do
+                                (.stopPropagation %)
+                                (swap! open? not))]
+     [:<>
+      [:div {:class (<class hierarchical-heading-container2 bg-color text-color (and
+                                                                                  content
+                                                                                  (or children after-children-component)
+                                                                                  @open?))}
+       [:div                                                ;; This is a div because buttons shouldn't contain buttons even though this is bad practice as well
+        {:disable-ripple true
+         :class (<class hierarchical-container-button-style bg-color)
+         :on-click toggle-open!}
+        [:div {:style {:width "100%"
+                       :display :flex
+                       :justify-content :space-between
+                       :align-items :center}}
+         [:div {:style {:flex-grow 1
+                        :text-align :start}}
+          heading]
+         (when (and heading-button @open?)
+           [:div {:style {:flex-grow 0}
+                  :on-click (fn [e]
+                              (.stopPropagation e))}
+            heading-button])]]
+       (when content
+         [Collapse {:in @open?
+                    :mount-on-enter true}
+          [:div {:style {:padding "1rem"}}
+           content]])]
+
+      (when (or children after-children-component)
+        [Collapse {:in @open?
+                   :mount-on-enter true}
+         [:div {:class (<class hierarchical-child-container)}
+          (doall
+            (for [child children]
+              (with-meta
+                (if (vector? child)                         ;;Check if it's component and render that instaed
+                  child
+                  [hierarchical-container2 child (as-hex (lighten bg-color 15))])
+                {:key (:key child)})))
+          after-children-component]])])))
 
 (defn- count-chip-style
   []
@@ -316,6 +409,23 @@
 (defn readable-currency
   [s]
   (.format number-formatter s))
+
+(defn info-row-item-style
+  []
+  ^{:pseudo {:last-child {:margin-right 0}}}
+  {:margin-right "1rem"
+   :margin-bottom "1rem"})
+
+(defn basic-information-row
+  "[[data-title data-value]...]"
+  [data]
+  [:div {:class (<class common-styles/flex-row-wrap)}
+   (doall
+     (for [[label data] data]
+       ^{:key label}
+       [:div {:class (<class info-row-item-style)}
+        [typography/SectionHeading label]
+        [:p data]]))])
 
 (defn column-with-space-between [space-between & children]
   (let [cls (<class common-styles/padding-bottom space-between)]

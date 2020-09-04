@@ -194,16 +194,16 @@
   "Display a markdown that does not change during the component lifecycle.
   Parses and creates an editorstate once at mount."
   [markdown]
-  (let [editor-state (when markdown
-                       (markdown->editor-state markdown))]
-    (fn [_]
-      (if editor-state
-        [:f> wysiwyg-editor {:value editor-state}]
-        [:span]))))
+  (if-let [editor-state (when markdown
+                          (markdown->editor-state markdown))]
+    [:f> wysiwyg-editor {:value editor-state}]
+    [:span]))
 
 (defn rich-text-field
   "Rich text input that can be used in forms."
   [{:keys [value on-change label]}]
-  [:f> wysiwyg-editor {:value value
+  [:f> wysiwyg-editor {:value (if (string? value)
+                                (markdown->editor-state value)
+                                value)
                        :label label
                        :on-change on-change}])
