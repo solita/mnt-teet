@@ -1,6 +1,6 @@
 (ns teet.meeting.meeting-specs
   (:require [clojure.spec.alpha :as s]
-            [clojure.string :as str]
+            teet.user.user-spec
             teet.util.datomic))
 
 (s/def :meeting/form-data
@@ -15,3 +15,11 @@
 (s/def :meeting/create
   (s/keys :reg [:activity-eid
                 :meeting/form-data]))
+
+(s/def :meeting/add-participant-form
+  (s/keys :req [(or (and :user/given-name
+                          :user/family-name
+                          :user/email)
+                     (and
+                      :meeting.participant/role
+                      :meeting.participant/user))]))

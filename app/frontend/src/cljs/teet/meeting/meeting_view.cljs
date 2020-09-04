@@ -249,7 +249,8 @@
         [form/form2 {:e! e!
                      :value @form
                      :on-change-event (form/update-atom-event form merge)
-                     :save-event save-participant!}
+                     :save-event save-participant!
+                     :spec :meeting/add-participant-form}
          (if non-teet?
            ;; Show fields for user info when adding non-TEET user participant
            ^{:key "non-teet-user"}

@@ -39,3 +39,16 @@
 (s/def ::person-id-ref (s/and vector?
                               (s/cat :person-id-kw #(= :user/person-id %)
                                      :person-id estonian-person-id?)))
+
+(defn non-empty-string? [s]
+  (and (string? s) (not (str/blank? s))))
+
+(defn email?
+  "Naive email check"
+  [s]
+  (and (string? s)
+       (boolean (re-matches #".+@.+" s))))
+
+(s/def :user/given-name non-empty-string?)
+(s/def :user/family-name non-empty-string?)
+(s/def :user/email email?)
