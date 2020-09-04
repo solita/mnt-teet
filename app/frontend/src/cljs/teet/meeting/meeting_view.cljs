@@ -236,9 +236,10 @@
 
 
 (defn- add-meeting-participant [e! meeting user]
-  (r/with-let [form (r/atom nil)
+  (r/with-let [initial-form {:meeting.participant/role :meeting.participant.role/participant}
+               form (r/atom initial-form)
                save-participant! #(let [form-data @form]
-                                    (reset! form nil)
+                                    (reset! form initial-form)
                                     (meeting-controller/->AddParticipant meeting form-data))
                add-non-teet-user! #(reset! form {:non-teet-user? true})]
     (let [non-teet? (:non-teet-user? @form)]
@@ -262,13 +263,17 @@
 
            ;; Show user selection for selecting TEET user
            ^{:key "teet-user"}
-           [:div
+           [common/column-with-space-between 0.5
             [form/field :meeting.participant/user
              [select/select-user {:e! e!
+                                  :label ""
                                   :after-results-action {:title (tr [:meeting :add-non-teet-participant])
                                                          :on-click add-non-teet-user!}}]]
             [form/field :meeting.participant/role
-             [select/select-enum {:e! e! :attribute :meeting.participant/role}]]])
+             [select/select-enum {:e! e!
+                                  :show-label? false
+                                  :show-empty-selection? false
+                                  :attribute :meeting.participant/role}]]])
 
          [form/footer2]]]])))
 
