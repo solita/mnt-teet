@@ -95,3 +95,15 @@
           db user
           (get-in (du/entity db id) [:meeting/_participants :db/id]))]
    :transact [(meta-model/deletion-tx user id)]})
+
+(defcommand :meeting/add-participant
+  {:doc "Remove a participant."
+   :context {:keys [db user]}
+   :payload {:keys [meeting participant]}
+   :project-id (project-db/meeting-project-id db meeting)
+   :authorization {:activity/edit-activity {}}
+   :pre [(meeting-db/user-is-organizer-or-reviewer? db user meeting)]
+   :transact [{:db/id meeting
+               :meeting/participants [(merge {:db/id "new-participant"}
+                                             (select-keys participant [:meeting.participant/role
+                                                                       :meeting.participant/user]))]}]})
