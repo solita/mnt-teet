@@ -18,4 +18,7 @@
   "CWE-611: Improper Restriction of XML External Entity Reference ('XXE')"
   "CVE-2020-14195" "CVE-2019-14892" "CVE-2018-14718"
   "CVE-2020-24616"
+
+  ;; Github enterprise doesn't affect us
+  "CVE-2020-10517" "CVE-2020-10518"
   }
