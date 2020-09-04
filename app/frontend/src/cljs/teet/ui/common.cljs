@@ -329,6 +329,7 @@
                                 (swap! open? not))]
      [:<>
       [:div {:class (<class hierarchical-heading-container2 bg-color text-color (and
+                                                                                  content
                                                                                   (or children after-children-component)
                                                                                   @open?))}
        [:div                                                ;; This is a div because buttons shouldn't contain buttons even though this is bad practice as well

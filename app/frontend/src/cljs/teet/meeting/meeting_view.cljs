@@ -211,13 +211,13 @@
               :cancel-event close-event
               :spec :meeting/agenda-form
               :save-event #(meeting-controller/->SubmitAgendaForm
-                            meeting
-                            (-> @form-atom
-                                (update :meeting.agenda/body
-                                        (fn [editor-state]
-                                          (when editor-state
-                                            (rich-text-editor/editor-state->markdown editor-state)))))
-                            close-event)}
+                             meeting
+                             (-> @form-atom
+                                 (update :meeting.agenda/body
+                                         (fn [editor-state]
+                                           (when (and editor-state (not (string? editor-state)))
+                                             (rich-text-editor/editor-state->markdown editor-state)))))
+                             close-event)}
    ^{:attribute :meeting.agenda/topic}
    [TextField {}]
    ^{:attribute :meeting.agenda/responsible}
@@ -325,8 +325,9 @@
                                                                                   :form-value agenda-topic
                                                                                   :modal-title (tr [:meeting :edit-agenda-modal-title])
                                                                                   :button-component [buttons/button-secondary {} (tr [:buttons :edit])]}]
-                                         :content [:div
-                                                   [rich-text-editor/display-markdown body]]
+                                         :content (when body
+                                                    [:div
+                                                     [rich-text-editor/display-markdown body]])
                                          :after-children-component [add-decision-component e!]}
          theme-colors/gray-light]))]
    [form/form-modal-button {:form-component [add-agenda-form e! meeting]
