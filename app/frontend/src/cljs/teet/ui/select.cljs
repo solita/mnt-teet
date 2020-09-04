@@ -11,7 +11,7 @@
             [teet.ui.common :as common]
             [taoensso.timbre :as log]
             [teet.ui.material-ui :refer [FormControl FormControlLabel RadioGroup Radio Checkbox
-                                         Popper CircularProgress Paper]]
+                                         Popper CircularProgress Paper Link Divider]]
             [teet.ui.text-field :refer [TextField]]
             [teet.ui.util :as util :refer [mapc]]
             ["react"]
@@ -307,7 +307,7 @@
 (defn select-user
   "Select user"
   [{:keys [e! value on-change label required error
-           show-label?]
+           show-label? after-results-action]
     :or {show-label? true}}]
   (r/with-let [state (r/atom {:loading? false
                               :users nil
@@ -421,7 +421,12 @@
                                          (on-change user))}
                            (format-user user)])
                         users)
-                [:span.select-user-no-results {:style {:padding "0.5rem"}} (tr [:user :autocomplete :no-options])])])]])])))
+                [:span.select-user-no-results {:style {:padding "0.5rem"}} (tr [:user :autocomplete :no-options])])
+              (when-let [{:keys [title on-click]} after-results-action]
+                [:<>
+                 [Divider]
+                 [:div {:class (<class common-styles/gray-lightest-background-style)}
+                  [Link {:on-click on-click} title]]])])]])])))
 
 (defn radio [{:keys [value items format-item on-change]}]
   (let [item->value (zipmap items (map str (range)))]
