@@ -187,7 +187,8 @@
                  :handleKeyCommand handle-key-command
                  :blockRenderMap draft-js/DefaultDraftBlockRenderMap
                  :on-change (fn [editorState]
-                              (on-change editorState))}]]]])))
+                              (when on-change
+                                (on-change editorState)))}]]]])))
 
 (defn display-markdown
   "Display a markdown that does not change during the component lifecycle.
