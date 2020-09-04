@@ -101,6 +101,7 @@
     [common/hierarchical-container
      {:heading-color theme-colors/gray-lighter
       :heading-text-color theme-colors/gray-dark
+      :show-polygon? open?
       :heading-content
       [ButtonBase {:class (<class land-view/group-style)
                    :on-click #(toggle-project (:db/id project))}
@@ -112,7 +113,7 @@
                 :class (<class common-styles/inline-block)}
           (project-model/get-column project :thk.project/project-name)]]
         [buttons/button-secondary {:on-click (fn [e] (.stopPropagation e))
-                                   :style {:margin "0.5rem"}
+                                   :style {:margin "0 0.5rem"}
                                    :element "a"
                                    :href (url/project (:thk.project/id project))}
          (tr [:dashboard :open])]]

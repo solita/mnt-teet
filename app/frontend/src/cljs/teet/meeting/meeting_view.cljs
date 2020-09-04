@@ -8,6 +8,7 @@
             teet.meeting.meeting-specs
             [teet.ui.project-context :as project-context]
             [teet.ui.icons :as icons]
+            [garden.color :refer [lighten as-hex]]
             [teet.task.task-style :as task-style]
             [teet.project.project-style :as project-style]
             [teet.ui.material-ui :refer [Paper Grid IconButton]]
@@ -28,8 +29,10 @@
             [teet.project.project-menu :as project-menu]
             [teet.navigation.navigation-style :as navigation-style]
             [teet.project.project-model :as project-model]
+            [teet.ui.tabs :as tabs]
             [teet.log :as log]
-            [teet.ui.context :as context]))
+            [teet.ui.context :as context]
+            [teet.theme.theme-colors :as theme-colors]))
 
 
 (defn meeting-form
@@ -219,8 +222,7 @@
    [TextField {}]
    ^{:attribute :meeting.agenda/responsible}
    [select/select-user {:e! e!}]
-   ^{:attribute :meeting.agenda/body
-     :before-save rich-text-editor/editor-state->markdown}
+   ^{:attribute :meeting.agenda/body}
    [rich-text-editor/rich-text-field {}]])
 
 (defn meeting-participant [on-remove {:meeting.participant/keys [role user] :as participant}]
@@ -293,7 +295,51 @@
        (when can-edit-participants?
          [add-meeting-participant e! meeting user])])))
 
-(defn meeting-page [e! {:keys [params user] :as app} {:keys [project meeting]}]
+(defn add-decision-component
+  [e!]
+  [:div {:class (<class common/hierarchical-container-style (as-hex (lighten theme-colors/gray-light 10)))}
+   [buttons/button-primary {}
+    "Add decision placeholder"]])
+
+
+(defn meeting-details
+  [e! user {:meeting/keys [start end location agenda] :as meeting}]
+  [:div
+   [common/basic-information-row [[(tr [:fields :meeting/date-and-time])
+                                   (str (format/date start)
+                                        " "
+                                        (format/time* start)
+                                        " - "
+                                        (format/time* end))]
+                                  [(tr [:fields :meeting/location])
+                                   location]]]
+   [:div {:style {:margin-bottom "1rem"}}
+    (doall
+      (for [{id :db/id
+             :meeting.agenda/keys [topic responsible body] :as agenda-topic} agenda]
+        ^{:key id}
+        [common/hierarchical-container2 {:heading [:div
+                                                   [typography/Heading3 {:class (<class common-styles/margin-bottom "0.5")} topic]
+                                                   [:span (user-model/user-name responsible)]]
+                                         :heading-button [form/form-modal-button {:form-component [add-agenda-form e! meeting]
+                                                                                  :form-value agenda-topic
+                                                                                  :modal-title (tr [:meeting :edit-agenda-modal-title])
+                                                                                  :button-component [buttons/button-secondary {} (tr [:buttons :edit])]}]
+                                         :content [:div
+                                                   [rich-text-editor/display-markdown body]]
+                                         :after-children-component [add-decision-component e!]}
+         theme-colors/gray-light]))]
+   [form/form-modal-button {:form-component [add-agenda-form e! meeting]
+                            :form-value {:meeting.agenda/responsible (select-keys user [:db/id
+                                                                                        :user/id
+                                                                                        :user/given-name
+                                                                                        :user/family-name
+                                                                                        :user/email
+                                                                                        :user/person-id])}
+                            :modal-title (tr [:meeting :new-agenda-modal-title])
+                            :button-component [buttons/button-primary {} (tr [:meeting :add-agenda-button])]}]])
+
+(defn meeting-page [e! {:keys [params user query] :as app} {:keys [project meeting]}]
   [meeting-page-structure e! app project
    (let [{:meeting/keys [title number location start end organizer agenda]} meeting]
      [:div
@@ -305,36 +351,9 @@
                                 :button-component [buttons/button-secondary
                                                    {}
                                                    (tr [:buttons :edit])]}]]
-
-      [common/labeled-data {:label (tr [:fields :meeting/location])
-                            :data location}]
-      [common/labeled-data {:label (tr [:fields :meeting/date-and-time])
-                            :data (str (format/date start)
-                                       " "
-                                       (format/time* start)
-                                       " - "
-                                       (format/time* end))}]
-      [common/labeled-data {:label (tr [:fields :meeting/organizer])
-                            :data (user-model/user-name organizer)}]
-
-      [itemlist/ItemList {:title (tr [:fields :meeting/agenda])}
-       (for [{:meeting.agenda/keys [topic body responsible]} agenda]
-         [:div.meeting-agenda
-          [common/labeled-data {:label (tr [:fields :meeting.agenda/topic])
-                                :data topic}]
-          [common/labeled-data {:label (tr [:fields :meeting.agenda/responsible])
-                                :data (user-model/user-name responsible)}]
-          [:div
-           [:p (tr [:fields :meeting.agenda/body]) ":"]
-           [rich-text-editor/display-markdown body]]])]
-      [form/form-modal-button {:form-component [add-agenda-form e! meeting]
-                               :form-value {:meeting.agenda/responsible (select-keys user [:db/id
-                                                                                           :user/id
-                                                                                           :user/given-name
-                                                                                           :user/family-name
-                                                                                           :user/email
-                                                                                           :user/person-id])}
-                               :modal-title (tr [:meeting :new-agenda-modal-title])
-                               :button-component [buttons/rect-primary {} (tr [:meeting :add-agenda-button])]}]])
+      [tabs/tabs
+       query
+       {:details [meeting-details e! user meeting]
+        :notes [:div [:h1 "notes"]]}]])
    [context/consume :user
     [meeting-participants e! meeting]]])

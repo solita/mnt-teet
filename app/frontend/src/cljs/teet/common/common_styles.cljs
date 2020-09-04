@@ -75,6 +75,9 @@
 (defglobal global
            [:body :html {:height "100%"}]
            [:p {:margin 0}]
+           ;; Richtexteditor styling
+           [:h1 {:margin-top 0}]
+           ;;
            [:#teet-frontend {:height "100%"}]
            [:.mention
             [:textarea {:border :none}]
@@ -139,6 +142,12 @@
   []
   {:display :flex
    :flex-direction :row})
+
+(defn flex-row-wrap
+  []
+  {:display :flex
+   :flex-direction :row
+   :flex-wrap :wrap})
 
 (defn flex-table-column-style
   "Style for column in 'tables' that are made with flex blocks"

@@ -360,6 +360,7 @@
   :estate-procedure/urgent-bonus "Urgent fee",
   :comment/comment "Comment",
   :file/timestamp "Upload date",
+  :user/email "Email",
   :land-acquisition/area-to-obtain "Area to obtain",
   :meeting/location "Location",
   :thk.project/repair-method "Method",
@@ -618,6 +619,7 @@
   :filter-by-area "Filter by area",
   :inclusion-distance-placeholder "Give value to show related areas",
   :component-title "Related features search area"},
+ :tab-names {:details "Details", :notes "Notes"},
  :task
  {:task-overview "Task overview",
   :upload-files "Upload files",
