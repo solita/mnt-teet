@@ -104,14 +104,18 @@
 
   AddParticipant
   (process-event [{:keys [meeting participant]} app]
-    (t/fx app
-          {:tuck.effect/type :command!
-           :command :meeting/add-participant
-           :payload {:db/id meeting
-                     :meeting/participants
-                     [(merge {:db/id "new-participant"}
-                             (select-keys participant
-                                          #{:meeting.participant/user
-                                            :meeting.participant/role}))]}
-           :result-event common-controller/->Refresh}))
+    (let [[role user]
+          (if (:non-teet-user? participant)
+            [:meeting.participant.role/participant
+             (merge {:db/id "non-teet-user"}
+                    (select-keys participant #{:user/given-name :user/family-name :user/email}))]
+            [(:meeting.participant/role participant)
+             (:meeting.participant/user participant)])]
+      (t/fx app
+            {:tuck.effect/type :command!
+             :command :meeting/add-participant
+             :payload {:meeting (:db/id meeting)
+                       :participant {:meeting.participant/user user
+                                     :meeting.participant/role role}}
+             :result-event common-controller/->Refresh})))
   )

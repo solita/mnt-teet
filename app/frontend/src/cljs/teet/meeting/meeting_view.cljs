@@ -237,19 +237,41 @@
 
 (defn- add-meeting-participant [e! meeting user]
   (r/with-let [form (r/atom nil)
-               save-participant! #(meeting-controller/->AddParticipant meeting @form)]
-    [:div.new-participant
-     [:div
-      [typography/BoldGreyText (tr [:meeting :add-person])]
-      [form/form2 {:e! e!
-                   :value @form
-                   :on-change-event (form/update-atom-event form merge)
-                   :save-event save-participant!}
-       [form/field :meeting.participant/user
-        [select/select-user {:e! e!}]]
-       [form/field :meeting.participant/role
-        [select/select-enum {:e! e! :attribute :meeting.participant/role}]]
-       [form/footer2]]]]))
+               save-participant! #(let [form-data @form]
+                                    (println "FORM-DATA" form-data)
+                                    (reset! form nil)
+                                    (meeting-controller/->AddParticipant meeting form-data))
+               add-non-teet-user! #(reset! form {:non-teet-user? true})]
+    (let [non-teet? (:non-teet-user? @form)]
+      [:div.new-participant
+       [:div
+        [typography/BoldGreyText (tr [:meeting :add-person])]
+        [form/form2 {:e! e!
+                     :value @form
+                     :on-change-event (form/update-atom-event form merge)
+                     :save-event save-participant!}
+         (if non-teet?
+           ;; Show fields for user info when adding non-TEET user participant
+           ^{:key "non-teet-user"}
+           [:div
+            [form/field :user/given-name
+             [TextField {}]]
+            [form/field :user/family-name
+             [TextField {}]]
+            [form/field :user/email
+             [TextField {}]]]
+
+           ;; Show user selection for selecting TEET user
+           ^{:key "teet-user"}
+           [:div
+            [form/field :meeting.participant/user
+             [select/select-user {:e! e!
+                                  :after-results-action {:title (tr [:meeting :add-non-teet-participant])
+                                                         :on-click add-non-teet-user!}}]]
+            [form/field :meeting.participant/role
+             [select/select-enum {:e! e! :attribute :meeting.participant/role}]]])
+
+         [form/footer2]]]])))
 
 (defn meeting-participants [e! {:meeting/keys [participants organizer] :as meeting} user]
   (r/with-let [remove-participant! (fn [participant]

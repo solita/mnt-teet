@@ -204,6 +204,9 @@
                   :bold
                   :normal)})
 
+(defn gray-lightest-background-style []
+  {:background-color theme-colors/gray-lightest})
+
 (defn gray-container-style
   []
   {:background-color theme-colors/gray-lightest
