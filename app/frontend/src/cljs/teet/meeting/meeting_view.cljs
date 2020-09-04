@@ -10,7 +10,7 @@
             [teet.ui.icons :as icons]
             [teet.task.task-style :as task-style]
             [teet.project.project-style :as project-style]
-            [teet.ui.material-ui :refer [Paper Grid IconButton]]
+            [teet.ui.material-ui :refer [Paper Grid IconButton Divider]]
             [teet.ui.buttons :as buttons]
             [teet.ui.form :as form]
             [teet.meeting.meeting-controller :as meeting-controller]
@@ -291,7 +291,15 @@
         (mapc (r/partial meeting-participant (and can-edit-participants? remove-participant!))
               participants)]
        (when can-edit-participants?
-         [add-meeting-participant e! meeting user])])))
+         [:<>
+          [add-meeting-participant e! meeting user]
+          [Divider]
+          [typography/Heading3 (tr [:meeting :notifications-title])]
+          (tr [:meeting :notifications-help])
+          [:div {:class (<class common-styles/flex-row)}
+           [buttons/button-primary {:on-click (e! meeting-controller/->SendNotifications meeting)}
+            (tr [:buttons :send])]
+           (tr [:meeting :send-notification-to-participants] {:count (inc (count participants))})]])])))
 
 (defn meeting-page [e! {:keys [params user] :as app} {:keys [project meeting]}]
   [meeting-page-structure e! app project

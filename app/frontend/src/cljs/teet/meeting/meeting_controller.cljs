@@ -18,6 +18,7 @@
 (defrecord AddParticipant [meeting participant])
 (defrecord RemoveParticipant [participant-id])
 (defrecord RemoveParticipantResult [participant-id result])
+(defrecord SendNotifications [meeting])
 
 (extend-protocol t/Event
   SubmitMeetingForm
@@ -118,4 +119,14 @@
                        :participant {:meeting.participant/user user
                                      :meeting.participant/role role}}
              :result-event common-controller/->Refresh})))
+
+  SendNotifications
+  (process-event [{meeting :meeting} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :meeting/send-notifications
+           :payload {:db/id (:db/id meeting)}
+           :result-event #(snackbar-controller/->OpenSnackBar (tr [:meeting :notifications-sent])
+                                                              :success)}))
+
   )
