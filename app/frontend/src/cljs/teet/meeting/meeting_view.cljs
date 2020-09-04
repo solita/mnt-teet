@@ -238,7 +238,6 @@
 (defn- add-meeting-participant [e! meeting user]
   (r/with-let [form (r/atom nil)
                save-participant! #(let [form-data @form]
-                                    (println "FORM-DATA" form-data)
                                     (reset! form nil)
                                     (meeting-controller/->AddParticipant meeting form-data))
                add-non-teet-user! #(reset! form {:non-teet-user? true})]
@@ -253,13 +252,13 @@
          (if non-teet?
            ;; Show fields for user info when adding non-TEET user participant
            ^{:key "non-teet-user"}
-           [:div
+           [common/column-with-space-between 0.5
             [form/field :user/given-name
-             [TextField {}]]
+             [TextField {:label "" :placeholder (tr [:fields :user/given-name])}]]
             [form/field :user/family-name
-             [TextField {}]]
+             [TextField {:label "" :placeholder (tr [:fields :user/family-name])}]]
             [form/field :user/email
-             [TextField {}]]]
+             [TextField {:label "" :placeholder (tr [:fields :user/email])}]]]
 
            ;; Show user selection for selecting TEET user
            ^{:key "teet-user"}

@@ -316,3 +316,11 @@
 (defn readable-currency
   [s]
   (.format number-formatter s))
+
+(defn column-with-space-between [space-between & children]
+  (let [cls (<class common-styles/padding-bottom space-between)]
+    (into [:<>]
+          (map (fn [child]
+                 [:div {:class cls}
+                  child]))
+          children)))
