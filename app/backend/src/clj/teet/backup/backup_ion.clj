@@ -81,10 +81,13 @@
 (defn fetch-entities-to-backup [db]
   (map prepare
        (concat
-        ;; Dump all users with
         [";; Dump all users"]
+        ;; seems dev env can have mock users without user/id, we don't want to
+        ;; trigger incomplete backup error from that
         (map (partial pull-user db)
-             (query-ids-with-attr db :user/id))
+             (seq (into #{}
+                        (concat (query-ids-with-attr (user/db) :user/id)
+                                (query-ids-with-attr (user/db) :user/person-id)))))
 
         [";; Dump all user notifications"]
         (map (partial pull* db)
@@ -107,6 +110,8 @@
   (with-open [zip-out (doto (java.util.zip.ZipOutputStream. ostream)
                         (.putNextEntry (java.util.zip.ZipEntry. "backup.edn")))
               out (io/writer zip-out)]
+    ;; loop over entities to backup,
+    ;; carrying sets of referred and provided as loop state
     (loop [referred #{}
            provided #{}
            [entity & entities] (fetch-entities-to-backup db)]
@@ -115,8 +120,11 @@
           (when (seq (set/difference referred provided))
             (let [missing-referred-ids (set/difference referred provided)
                   msg "Export referred to entities that were not provided! This backup is inconsistent."]
-              (log/warn msg (set/difference referred provided))
+              (log/error msg (set/difference referred provided))
+              ;; XXX should we delete the known incoplete backup file?
+              ;; Given the file will be closed by with-open, what's the right way to do it?
               (throw (ex-info msg {:missing-referred-ids missing-referred-ids}))))
+          ;; with-open will close zip-out and out
           {:backed-up-entity-count (count provided)})
         (if (string? entity)
           (do
