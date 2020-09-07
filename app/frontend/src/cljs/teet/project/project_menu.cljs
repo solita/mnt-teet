@@ -55,6 +55,7 @@
    {:name :meetings
     :label [:project :tabs :meetings]
     :navigate {:page :project-meetings}
+    :match-pages #{:activity-meetings :meeting} ; other pages to match as this tab
     :hotkey "5"
     :feature-flag :meetings}
    {:name :land
@@ -74,11 +75,14 @@
   default tab if no tab matched navigation info."
   [{:keys [page query] :as _app}]
   (or (some (fn [{{tab-page :page
-                   tab-query :query} :navigate :as tab}]
-              ;; Tab is active is the page is correct and
+                   tab-query :query} :navigate
+                  tab-match-pages :match-pages :as tab}]
+              (println " tab match pages " tab-match-pages ", page: " page)
+              ;; Tab is active if the page is correct and
               ;; all the query params have correct values.
               ;; The page may have other query params as well.
-              (when (and (= tab-page page)
+              (when (and (or (= tab-page page)
+                             (and tab-match-pages (tab-match-pages page)))
                          (or (nil? tab-query)
                              (= tab-query (select-keys query (keys tab-query)))))
                 tab))
