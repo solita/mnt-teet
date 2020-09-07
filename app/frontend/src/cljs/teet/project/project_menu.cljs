@@ -77,7 +77,6 @@
   (or (some (fn [{{tab-page :page
                    tab-query :query} :navigate
                   tab-match-pages :match-pages :as tab}]
-              (println " tab match pages " tab-match-pages ", page: " page)
               ;; Tab is active if the page is correct and
               ;; all the query params have correct values.
               ;; The page may have other query params as well.
