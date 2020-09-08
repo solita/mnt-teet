@@ -481,7 +481,9 @@
   :map-layers "Kaardikihid",
   :select-all "Valin kõik"},
  :meeting
- {:notifications-help nil,
+ {:notifications-help
+  "Saatke koosoleku osalejatele teateid koosoleku sisu asjakohaste muudatuste kohta.",
+  :add-non-teet-participant "Lisage inimene, kes pole TEET-is",
   :participant-removed "Osaleja eemaldatud",
   :edit-meeting-modal-title "Muuda koosolekut",
   :activity-meetings-title "Koosolekud - {activity-name}",
@@ -489,12 +491,12 @@
   :participants-title "Osalejad",
   :meetings-title "Koosolekud",
   :no-meetings "Koosolekuid ei ole",
-  :send-notification-to-participants nil,
+  :send-notification-to-participants "{count} osalejat",
   :add-agenda-button "Lisan päevakavapunkti",
   :new-meeting-button "Loon uue koosoleku",
   :project-meetings-title "Projekti koosolekud",
-  :notifications-title nil,
-  :edit-agenda-modal-title nil,
+  :notifications-title "Teatised",
+  :edit-agenda-modal-title "Päevakavapunkti muutmine",
   :new-agenda-modal-title "Uus päevakavapunkt",
   :add-person "Osaleja lisamine"},
  :notifications

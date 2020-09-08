@@ -488,6 +488,7 @@
  :meeting
  {:notifications-help
   "Send notifications to meeting participants about relevant changes to meeting contents.",
+  :add-non-teet-participant "Add person not in TEET",
   :participant-removed "Participant removed",
   :edit-meeting-modal-title "Edit meeting",
   :activity-meetings-title "{activity-name} meetings",
