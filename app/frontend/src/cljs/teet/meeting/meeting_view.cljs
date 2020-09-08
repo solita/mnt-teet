@@ -238,7 +238,7 @@
 
 
 (defn- add-meeting-participant [e! meeting user]
-  (r/with-let [initial-form {:meeting.participant/role :meeting.participant.role/participant}
+  (r/with-let [initial-form {:participation/role :participation.role/participant}
                form (r/atom initial-form)
                save-participant! #(let [form-data @form]
                                     (reset! form initial-form)
