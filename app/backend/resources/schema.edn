@@ -1113,7 +1113,16 @@
            :db/doc "Regular participation"}]]}
 
 
-
+ {:db/ident :migration/work-meetings-decisions
+  :txes [[{:db/ident :meeting.agenda/decisions
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/isComponent true
+           :db/doc "List of all decisions in an agenda entry"}
+          {:db/ident :meeting.decision/body
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Decision body made in rich text"}]]}
 
 
  ]
