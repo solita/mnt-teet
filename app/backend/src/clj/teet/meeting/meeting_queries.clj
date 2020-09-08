@@ -54,9 +54,10 @@
                                              :meeting.agenda/topic
                                              :meeting.agenda/body
                                              {:meeting.agenda/responsible ~user-model/user-listing-attributes}]}
-                           {:meeting/participants
-                            [:db/id :meeting.participant/role
-                             {:meeting.participant/user ~user-model/user-listing-attributes}]}
+                           {:participation/_in
+                            [:db/id
+                             :participation/role
+                             {:participation/participant ~user-model/user-listing-attributes}]}
                            ;; FIXME: all decisions etc
                            ]
                       (meeting-db/activity-meeting-id db activity-id meeting-id))}))

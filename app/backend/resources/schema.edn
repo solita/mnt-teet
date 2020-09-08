@@ -1086,26 +1086,34 @@
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
            :db/doc "Reference to user who is responsible for this item"}]]}
- {:db/ident :migration/work-meeting-participants
-  :txes [[{:db/ident :meeting/participants
-           :db/valueType :db.type/ref
-           :db/cardinality :db.cardinality/many
-           :db/isComponent true
-           :db/doc "List of participant info (role + user)"}
 
-          {:db/ident :meeting.participant/user
+
+ {:db/ident :migration/participation
+  :txes [[{:db/ident :participation/in
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
-           :db/doc "Reference to the user information"}
-          {:db/ident :meeting.participant/role
+           :db/doc "The entity this participation is in, for example a meeting or task."}
+
+          {:db/ident :participation/participant
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
-           :db/doc "Reference to role enum value"}
+           :db/doc "Reference to the user who is participating"}
 
-          {:db/ident :meeting.participant.role/reviewer
-           :enum/attribute :meeting.participant/role
-           :db/doc "Participant who reviews and must accept/decline the meeting decisions"}
-          {:db/ident :meeting.participant.role/participant
-           :enum/attribute :meeting.participant/role
-           :db/doc "Regular participant"}]]}
+          {:db/ident :participation/role
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Enum refererence to participation role"}
+
+          {:db/ident :participation.role/reviewer
+           :enum/attribute :participation/role
+           :db/doc "Participation as reviewer that must accept/decline decisions or work"}
+
+          {:db/ident :participation.role/participant
+           :enum/attribute :participation/role
+           :db/doc "Regular participation"}]]}
+
+
+
+
+
  ]

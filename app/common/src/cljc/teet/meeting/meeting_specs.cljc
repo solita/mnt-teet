@@ -18,8 +18,8 @@
 
 (s/def :meeting/add-participant-form
   (s/keys :req [(or (and :user/given-name
-                          :user/family-name
-                          :user/email)
+                         :user/family-name
+                         :user/email)
                      (and
-                      :meeting.participant/role
-                      :meeting.participant/user))]))
+                      :participation/role
+                      :participation/participant))]))

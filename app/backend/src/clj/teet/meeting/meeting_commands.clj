@@ -9,7 +9,13 @@
             [teet.util.datomic :as du]
             [teet.util.collection :as cu]
             [teet.user.user-model :as user-model]
-            [teet.meeting.meeting-db :as meeting-db]))
+            [teet.meeting.meeting-db :as meeting-db]
+            [teet.meeting.meeting-ics :as meeting-ics]
+            [teet.integration.integration-email :as integration-email]
+            [teet.environment :as environment]
+            [teet.meeting.meeting-model :as meeting-model]
+            [teet.log :as log]
+            [clojure.string :as str]))
 
 ;; TODO query all activity meetings
 ;; matching name found
@@ -83,27 +89,59 @@
                                                       :meeting.agenda/responsible])
                                      agenda)}]})
 
-(defcommand :meeting/remove-participant
-  {:doc "Remove a participant."
+(defcommand :meeting/remove-participation
+  {:doc "Remove a participation."
    :context {:keys [db user]}
    :payload {id :db/id}
    :project-id (project-db/meeting-project-id
                 db
                 (get-in (du/entity db id) [:meeting/_participants :db/id]))
-   :authorization {:activity/edit-activity {}}
+   :authorization {}
    :pre [(meeting-db/user-is-organizer-or-reviewer?
           db user
           (get-in (du/entity db id) [:meeting/_participants :db/id]))]
    :transact [(meta-model/deletion-tx user id)]})
 
-(defcommand :meeting/add-participant
-  {:doc "Remove a participant."
+(defcommand :meeting/add-participation
+  {:doc "Remove a participation."
    :context {:keys [db user]}
-   :payload {:keys [meeting participant]}
+   :payload {meeting :participation/in :as participation}
    :project-id (project-db/meeting-project-id db meeting)
-   :authorization {:activity/edit-activity {}}
+   :authorization {}
    :pre [(meeting-db/user-is-organizer-or-reviewer? db user meeting)]
-   :transact [{:db/id meeting
-               :meeting/participants [(merge {:db/id "new-participant"}
-                                             (select-keys participant [:meeting.participant/role
-                                                                       :meeting.participant/user]))]}]})
+   :transact [(merge {:db/id "new-participation"}
+                     (select-keys participation [:participation/in
+                                                 :participation/role
+                                                 :participation/participant]))]})
+
+(defcommand :meeting/send-notifications
+  {:doc "Send iCalendar notifications to organizer and participants."
+   :context {:keys [db user]}
+   :payload {id :db/id}
+   :project-id (project-db/meeting-project-id db id)
+   :authorization {}
+   :pre [(meeting-db/user-is-organizer-or-reviewer? db user id)]}
+  (let [to (remove #(str/ends-with? % "@example.com")
+                   (keep :user/email (meeting-db/participants db id)))]
+    (if (seq to)
+      (let [meeting (d/pull db
+                            '[:db/id
+                              :meeting/number
+                              :meeting/title :meeting/location
+                              :meeting/start :meeting/end
+                              {:meeting/agenda [:meeting.agenda/topic
+                                                {:meeting.agenda/responsible [:user/given-name
+                                                                              :user/family-name]}]}]
+                            id)
+
+            ics (meeting-ics/meeting-ics meeting)
+            email-response
+            (integration-email/send-email!
+             {:from (environment/ssm-param :email :from)
+              :to to
+              :subject (meeting-model/meeting-title meeting)
+              :parts [{:headers {"Content-Type" "text/calendar"}
+                       :body ics}]})]
+        (log/info "SES send response" email-response)
+        :ok)
+      {:error :no-participants-with-email})))

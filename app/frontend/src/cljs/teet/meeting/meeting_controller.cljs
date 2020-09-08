@@ -88,7 +88,7 @@
   (process-event [{id :participant-id} app]
     (t/fx app
           {:tuck.effect/type :command!
-           :command :meeting/remove-participant
+           :command :meeting/remove-participation
            :payload {:db/id id}
            :result-event (partial ->RemoveParticipantResult id)}))
 
@@ -107,17 +107,17 @@
   (process-event [{:keys [meeting participant]} app]
     (let [[role user]
           (if (:non-teet-user? participant)
-            [:meeting.participant.role/participant
+            [:participation.role/participant
              (merge {:db/id "non-teet-user"}
                     (select-keys participant #{:user/given-name :user/family-name :user/email}))]
-            [(:meeting.participant/role participant)
-             (:meeting.participant/user participant)])]
+            [(:participation/role participant)
+             (:participation/participant participant)])]
       (t/fx app
             {:tuck.effect/type :command!
-             :command :meeting/add-participant
-             :payload {:meeting (:db/id meeting)
-                       :participant {:meeting.participant/user user
-                                     :meeting.participant/role role}}
+             :command :meeting/add-participation
+             :payload {:participation/in (:db/id meeting)
+                       :participation/participant user
+                       :participation/role role}
              :result-event common-controller/->Refresh})))
 
   SendNotifications

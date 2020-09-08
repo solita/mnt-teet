@@ -61,6 +61,25 @@
   (meeting-model/user-is-organizer-or-reviewer?
    (du/entity db (user-model/user-ref user))
    (d/pull db '[:meeting/organizer
-                {:meeting/participants
-                 [:meeting.participant/user
-                  :meeting.participant/role]}] meeting-id)))
+                {:participation/_in
+                 [:participation/participant
+                  :participation/role]}] meeting-id)))
+
+(defn participants
+  "List user names and emails of meeting participants for
+  notification sending. Includes the meeting organizer."
+  [db meeting-id]
+  (let [{organizer :meeting/organizer
+         participations :participation/_in}
+        (d/pull db
+                '[:meeting/organizer
+                  {:participation/_in [:participation/participant]}]
+                meeting-id)
+        recipients (into #{(:db/id organizer)}
+                         (map (comp :db/id :participation/participant))
+                         participations)]
+    (mapv first
+          (d/q '[:find (pull ?u [:user/given-name :user/family-name
+                                 :user/email])
+                 :in $ [?u ...]]
+               db recipients))))

@@ -1,5 +1,5 @@
 (ns teet.meeting.meeting-model
-  (:require [teet.util.datomic :as du]))
+  (:require [teet.participation.participation-model :as participation-model]))
 
 (defn meeting-title
   [{:meeting/keys [title number]}]
@@ -8,10 +8,8 @@
 
 (defn user-is-organizer-or-reviewer? [user meeting]
   (let [user-id (:db/id user)
-        {:meeting/keys [organizer participants]} meeting]
-    (println "User id: " user-id ", org: " organizer ", participants: " participants)
+        {organizer :meeting/organizer
+         participations :participation/_in} meeting]
+    (println "User id: " user-id ", org: " organizer ", participations: " participations)
     (or (= user-id (:db/id organizer))
-        (some #(and (du/enum= :meeting.participant.role/reviewer
-                              (:meeting.participant/role %))
-                    (= user-id (get-in % [:meeting.participant/user :db/id])))
-              participants))))
+        (participation-model/user-in-role? participations user :participation.role/reviewer))))

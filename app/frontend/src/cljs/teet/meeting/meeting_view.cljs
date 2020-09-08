@@ -225,15 +225,15 @@
    ^{:attribute :meeting.agenda/body}
    [rich-text-editor/rich-text-field {}]])
 
-(defn meeting-participant [on-remove {:meeting.participant/keys [role user] :as participant}]
+(defn meeting-participant [on-remove {:participation/keys [role participant] :as participation}]
   [:div.participant {:class (<class common-styles/flex-row)}
    [:div.participant-name {:class (<class common-styles/flex-table-column-style 45)}
-    [user-model/user-name user]]
+    [user-model/user-name participant]]
    [:div.participant-role {:class (<class common-styles/flex-table-column-style 45)}
     (tr-enum role)]
    [:div.participant-remove {:class (<class common-styles/flex-table-column-style 10)}
     (when on-remove
-      [IconButton {:on-click #(on-remove participant)}
+      [IconButton {:on-click #(on-remove participation)}
        [icons/content-clear]])]])
 
 
@@ -267,20 +267,21 @@
            ;; Show user selection for selecting TEET user
            ^{:key "teet-user"}
            [common/column-with-space-between 0.5
-            [form/field :meeting.participant/user
+            [form/field :participation/participant
              [select/select-user {:e! e!
                                   :label ""
                                   :after-results-action {:title (tr [:meeting :add-non-teet-participant])
                                                          :on-click add-non-teet-user!}}]]
-            [form/field :meeting.participant/role
+            [form/field :participation/role
              [select/select-enum {:e! e!
                                   :show-label? false
                                   :show-empty-selection? false
-                                  :attribute :meeting.participant/role}]]])
+                                  :attribute :participation/role}]]])
 
          [form/footer2]]]])))
 
-(defn meeting-participants [e! {:meeting/keys [participants organizer] :as meeting} user]
+(defn meeting-participants [e! {organizer :meeting/organizer
+                                participations :participation/_in :as meeting} user]
   (r/with-let [remove-participant! (fn [participant]
                                      (log/info "Remove participant:" participant)
                                      (e! (meeting-controller/->RemoveParticipant (:db/id participant))))]
@@ -288,10 +289,10 @@
       [:div.meeting-participants
        [typography/Heading2 (tr [:meeting :participants-title])]
        [:div.participant-list
-        [meeting-participant nil {:meeting.participant/user organizer
-                                  :meeting.participant/role :meeting.participant.role/organizer}]
+        [meeting-participant nil {:participation/participant organizer
+                                  :participation/role :participation.role/organizer}]
         (mapc (r/partial meeting-participant (and can-edit-participants? remove-participant!))
-              participants)]
+              participations)]
        (when can-edit-participants?
          [:<>
           [add-meeting-participant e! meeting user]
@@ -301,7 +302,7 @@
           [:div {:class (<class common-styles/flex-row)}
            [buttons/button-primary {:on-click (e! meeting-controller/->SendNotifications meeting)}
             (tr [:buttons :send])]
-           (tr [:meeting :send-notification-to-participants] {:count (inc (count participants))})]])])))
+           (tr [:meeting :send-notification-to-participants] {:count (inc (count participations))})]])])))
 
 (defn add-decision-component
   [e!]
