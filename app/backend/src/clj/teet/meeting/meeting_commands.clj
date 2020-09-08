@@ -95,11 +95,11 @@
    :payload {id :db/id}
    :project-id (project-db/meeting-project-id
                 db
-                (get-in (du/entity db id) [:meeting/_participants :db/id]))
+                (get-in (du/entity db id) [:participation/in :db/id]))
    :authorization {}
    :pre [(meeting-db/user-is-organizer-or-reviewer?
           db user
-          (get-in (du/entity db id) [:meeting/_participants :db/id]))]
+          (get-in (du/entity db id) [:participation/in :db/id]))]
    :transact [(meta-model/deletion-tx user id)]})
 
 (defcommand :meeting/add-participation
