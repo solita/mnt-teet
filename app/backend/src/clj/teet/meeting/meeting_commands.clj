@@ -62,7 +62,7 @@
   {:doc "Delete existing meeting"
    :context {:keys [db user]}
    :payload {:keys [activity-eid meeting-id]}
-   :project-id (project-db/activity-project-id db activity-eid)
+   :project-id (project-db/activity-project-id db activity-eid) ;; TODO use meeting-id to fetch project-id
    :authorization {:activity/delete-activity {}             ;; TODO actual authorization
                    }
    :pre [(meeting-db/activity-meeting-id db activity-eid meeting-id)]
@@ -145,3 +145,41 @@
         (log/info "SES send response" email-response)
         :ok)
       {:error :no-participants-with-email})))
+
+(defcommand :meeting/create-decision
+  {:doc "Create a new decision under a topic"
+   :context {:keys [db user]}
+   :payload {:keys [agenda-eid form-data]}
+   :project-id (project-db/agenda-project-id db agenda-eid)
+   :authorization {:activity/edit-activity {}}
+   :pre [(meeting-db/user-is-organizer-or-reviewer?
+           db user
+           (get-in (du/entity db agenda-eid) [:meeting/_agenda :db/id]))]
+   :transact [{:db/id agenda-eid
+               :meeting.agenda/decisions [(merge (select-keys form-data [:meeting.decision/body])
+                                                 {:db/id "new decision"})]}]})
+
+(defcommand :meeting/update-decision
+  {:doc "Create a new decision under a topic"
+   :context {:keys [db user]}
+   :payload {:keys [form-data]}
+   :project-id (project-db/decision-project-id db (:db/id form-data))
+   :authorization {:activity/edit-activity {}}
+   :pre [(meeting-db/user-is-organizer-or-reviewer?
+           db user
+           (get-in (du/entity db (:db/id form-data))
+                   [:meeting.agenda/_decisions :meeting/_agenda :db/id]))]
+   :transact [(merge (select-keys form-data [:meeting.decision/body :db/id]))]})
+
+(defcommand :meeting/delete-decision
+  {:doc "Mark a given decision as deleted"
+   :context {:keys [db user]}
+   :payload {:keys [decision-id]}
+   :project-id (project-db/decision-project-id db decision-id)
+   :authorization {:activity/delete-activity {}             ;; TODO actual authorization
+                   }
+   :pre [(meeting-db/user-is-organizer-or-reviewer?
+           db user
+           (get-in (du/entity db decision-id)
+                   [:meeting.agenda/_decisions :meeting/_agenda :db/id]))]
+   :transact [(meta-model/deletion-tx user decision-id)]})
