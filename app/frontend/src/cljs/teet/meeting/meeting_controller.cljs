@@ -8,12 +8,12 @@
 
 (defrecord SubmitMeetingForm [activity-id form-data close-event])
 (defrecord DeleteMeeting [activity-id meeting-id close-event])
-(defrecord MeetingCreationResult [close-event response])
-(defrecord UpdateMeetingForm [form-data])
 
 (defrecord SubmitAgendaForm [meeting form-data close-event])
-(defrecord AddAgendaResult [close-event response])
 (defrecord DeletionSuccess [close-event response])
+
+(defrecord SubmitDecisionForm [agenda-eid form-data close-event])
+(defrecord DeleteDecision [decision-id close-event])
 
 (defrecord AddParticipant [meeting participant])
 (defrecord RemoveParticipant [participant-id])
@@ -34,7 +34,7 @@
              :success-message (if editing?
                                 (tr [:notifications :meeting-updated])
                                 (tr [:notifications :meeting-created]))
-             :result-event (partial ->MeetingCreationResult close-event)})))
+             :result-event (partial common-controller/->ModalFormResult close-event)})))
 
   DeleteMeeting
   (process-event [{:keys [activity-id meeting-id close-event]} app]
@@ -46,6 +46,14 @@
            :success-message (tr [:notifications :meeting-deleted])
            :result-event (partial ->DeletionSuccess close-event)}))
 
+  DeleteDecision
+  (process-event [{:keys [decision-id close-event]} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :meeting/delete-decision
+           :payload {:decision-id decision-id}
+           :success-message (tr [:notifications :decision-deleted])
+           :result-event (partial common-controller/->ModalFormResult close-event)}))
 
   DeletionSuccess
   (process-event [{:keys [close-event _response]} {:keys [params] :as app}]
@@ -54,17 +62,6 @@
             (e! (close-event)))
           (fn [e!]
             (e! (common-controller/->Navigate :activity-meetings (dissoc params :meeting) {})))))
-
-  MeetingCreationResult
-  (process-event [{close-event :close-event} app]
-    (t/fx app
-          (fn [e!]
-            (e! (close-event)))
-          common-controller/refresh-fx))
-
-  UpdateMeetingForm
-  (process-event [{form-data :form-data} app]
-    (update-in app [:route :activity-meetings :meeting-form] merge form-data))
 
   SubmitAgendaForm
   (process-event [{:keys [meeting form-data close-event]} app]
@@ -75,14 +72,7 @@
                      :meeting/agenda [(cu/without-nils
                                        (merge {:db/id "new-agenda-item"}
                                               form-data))]}
-           :result-event (partial ->AddAgendaResult close-event)}))
-
-  AddAgendaResult
-  (process-event [{:keys [result close-event]} app]
-    (t/fx app
-          (fn [e!]
-            (e! (close-event)))
-          common-controller/refresh-fx))
+           :result-event (partial common-controller/->ModalFormResult close-event)}))
 
   RemoveParticipant
   (process-event [{id :participant-id} app]
@@ -128,5 +118,20 @@
            :payload {:db/id (:db/id meeting)}
            :result-event #(snackbar-controller/->OpenSnackBar (tr [:meeting :notifications-sent])
                                                               :success)}))
+
+  SubmitDecisionForm
+  (process-event [{:keys [agenda-eid form-data close-event]} app]
+    (let [editing? (boolean (:db/id form-data))]
+      (t/fx app
+            {:tuck.effect/type :command!
+             :command (if editing?
+                        :meeting/update-decision
+                        :meeting/create-decision)
+             :payload {:agenda-eid agenda-eid
+                       :form-data form-data}
+             :success-message (if editing?
+                                (tr [:notifications :decision-updated])
+                                (tr [:notifications :decision-created]))
+             :result-event (partial common-controller/->ModalFormResult close-event)})))
 
   )
