@@ -196,7 +196,7 @@
            :command :comment/resolve-comments-of-entity
            :payload {:entity-id entity-id
                      :entity-type entity-type}
-           :result-event (partial ->QueryEntityComments {:db/id entity-id
+           :result-event (partial ->QueryEntityComments {:eid entity-id
                                                          :for entity-type})
            :success-message (tr [:notifications :comments-resolved])}))
 
