@@ -13,7 +13,9 @@
             [teet.util.datomic :as du]
             [teet.log :as log]
             [clojure.string :as str]
-            [teet.integration.postgrest :as postgrest]))
+            [teet.integration.postgrest :as postgrest])
+  (:import (java.time LocalDate)
+           (java.time.format DateTimeFormatter)))
 
 (defn prepare [form]
   (walk/prewalk
@@ -106,7 +108,20 @@
         (map (partial pull-estate-procedure db)
              (query-ids-with-attr db :estate-procedure/type)))))
 
-(defn backup-to [db ostream]
+(defn disable-zip [ostream zip-out]
+  ;; hack to render incomplete backup zip unreadable
+  ;; (we try to delete them but things could fail, and the s3 streaming write can't be canceled)
+  (.finish zip-out)
+  (.write ostream (byte-array (repeat 100000 42)))
+  (.close zip-out)
+  (.close ostream))
+
+(defn backup-to [db status-atom ostream]
+  ;; Close-safety to catch buffered write errors:
+  ;; 1. This is assumed to be called by ring-io/piped-input-stream which promises
+  ;;     to .close the ostream.
+  ;; 2. The ZipOutputstream and its io/writer will be closed
+  ;;    by the with-open form
   (with-open [zip-out (doto (java.util.zip.ZipOutputStream. ostream)
                         (.putNextEntry (java.util.zip.ZipEntry. "backup.edn")))
               out (io/writer zip-out)]
@@ -117,15 +132,18 @@
            [entity & entities] (fetch-entities-to-backup db)]
       (if-not entity
         (do
-          (when (seq (set/difference referred provided))
+          (if (seq (set/difference referred provided))
             (let [missing-referred-ids (set/difference referred provided)
                   msg "Export referred to entities that were not provided! This backup is inconsistent."]
               (log/error msg (set/difference referred provided))
-              ;; XXX should we delete the known incoplete backup file?
-              ;; Given the file will be closed by with-open, what's the right way to do it?
+              (.flush out)
+              (disable-zip ostream zip-out)              
+              (reset! status-atom :fail)
               (throw (ex-info msg {:missing-referred-ids missing-referred-ids}))))
           ;; with-open will close zip-out and out
-          {:backed-up-entity-count (count provided)})
+          (do
+            (reset! status-atom :ok)
+            {:backed-up-entity-count (count provided)}))
         (if (string? entity)
           (do
             (.write out entity)
@@ -139,21 +157,36 @@
                    (set/union provided (:provided ids))
                    entities)))))))
 
+(defn now-date-as-iso []
+  (.format (java.time.LocalDate/now) DateTimeFormatter/ISO_LOCAL_DATE))
+
 (defn backup [_event]
   (future
     (let [bucket (environment/ssm-param :s3 :backup-bucket)
           env (environment/ssm-param :env)
-          db (d/db (environment/datomic-connection))]
-      (s3/write-file-to-s3 {:to {:bucket bucket
-                                 :file-key (str env "-backup-"
-                                                (java.util.Date.)
-                                                ".edn.zip")}
-                            :contents (ring-io/piped-input-stream (partial backup-to db))})))
+          db (d/db (environment/datomic-connection))
+          status-atom (atom nil) ;; exceptions don't seem to make it through ring-io/piped-input-stream seems
+          file-key (str env "-backup-" (now-date-as-iso) ".edn.zip")
+          delete-failed-file! (fn []
+                                (log/info "deleting failed backup file from s3:" file-key)
+                                (s3/delete-object bucket file-key))]
+      (try        
+        (s3/write-file-to-s3 {:to {:bucket bucket
+                                   :file-key file-key}
+                              :contents (ring-io/piped-input-stream
+                                         (partial backup-to db status-atom))})
+        (catch clojure.lang.ExceptionInfo e          
+          (log/error "caught exception writing backup:" (ex-data e))
+          (delete-failed-file!)
+          (reset! status-atom nil)))
+      (when (= :fail @status-atom)
+        (delete-failed-file!))))
   "{\"success\": true}")
 
 (defn test-backup [db]
+
   (with-open [out (io/output-stream (io/file "backup.edn.zip"))]
-    (backup-to db out)))
+    (backup-to db (atom nil) out)))
 
 (defn to-temp-ids [form]
   (let [mapping (volatile! {})
@@ -213,13 +246,12 @@
   (let [files (query-all-files! conn)]
     (doseq [file files]
       (try
-        (s3/rename-object document-bucket
-                          (s3-filename (tempids (:db/id file))
-                                       (:file/name file))
-                          (s3-filename (:db/id file)
-                                       (:file/name file)))
-        (catch Exception e
-          (log/error (ex-data e)))))))
+        (let [old-name (s3-filename (tempids (:db/id file))
+                                    (:file/name file))
+              new-name (s3-filename (:db/id file)
+                                    (:file/name file))]
+          ;; if the ids and hence the names are same, this will throw an InvalidRequest exception - to support restoring to the same instance and bucket instead of a blank one this would need ot be changed          
+          (s3/rename-object document-bucket old-name new-name))))))
 
 ;; Match and replace mentions like "@[user name](user db id)"
 ;; with new user ids
@@ -315,3 +347,4 @@
            restore-file
            delete-backup-file))
   "{\"success\": true}")
+
