@@ -399,6 +399,9 @@
      (context/provide
        :form (-> ctx
                  (assoc :value value)
+                 (assoc-in [:footer :cancel] (or cancel-fn
+                                                 (when cancel-event
+                                                   (r/partial e! (cancel-event))))) ;;This is if the cancel event is a conditional so it's not shadowed
                  (assoc-in [:footer :disabled?] (or in-progress? disable-buttons?)))
        [:<> (util/with-keys children)])]))
 
