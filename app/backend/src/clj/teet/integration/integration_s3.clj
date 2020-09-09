@@ -121,6 +121,13 @@
   (copy-object bucket existing-key new-key)
   (delete-object bucket existing-key))
 
+(defn object-exists? [bucket key]
+  {:pre [(string? bucket)
+         (string? key)]}
+  (invoke :HeadObject
+          {:Bucket bucket
+           :Key key}))
+
 
 (def bucket-location
   (memoize (fn [bucket]

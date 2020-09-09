@@ -5,7 +5,7 @@ Backend app hosts the index page and SPA application JS.
 # Environment variables
 
 - *API_URL* The URL the SPA uses for the API, defaults to "/api"
-- *AWS_DEFAULT_REGION* must be set to same as the configued s3 bucket's region (for local dev setup, eu-central-1 as of this writing)
+- *AWS_DEFAULT_REGION* and *AWS_REGION* must be set to same as the configued s3 bucket's region (for local dev setup, eu-central-1 as of this writing)
 
 # Running locally
 

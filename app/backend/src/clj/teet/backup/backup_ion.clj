@@ -183,12 +183,26 @@
 (defn s3-filename [db-id filename]
   (str db-id "-" filename))
 
+(defn query-all-files! [conn]
+  (map first
+       (d/q '[:find (pull ?f [:db/id :file/name])
+              :in $
+              :where [?f :file/name _]]
+            (d/db conn))))
+
+(defn validate-files-exist! [conn document-bucket tempids]
+  (let [files (query-all-files! conn)]
+    (doseq [file files]
+      (let [s3-fn (s3-filename (tempids (:db/id file)) (:file/name file))]
+        
+        (log/debug "validating" s3-filename)
+        (when-not (s3/object-exists? document-bucket s3-fn)
+          (throw (ex-info "Missing file when performing restore sanity check, rename already done or bad documents bucket config?" {:missing-s3-file s3-fn})))))
+    (log/info "validated that all" (count files) "files existed in s3 bucket" document-bucket)))
+
 (defn rename-documents! [{:keys [conn document-bucket tempids]}]
-  (let [files (map first
-                   (d/q '[:find (pull ?f [:db/id :file/name])
-                          :in $
-                          :where [?f :file/name _]]
-                        (d/db conn)))]
+  (validate-files-exist! conn document-bucket tempids)
+  (let [files (query-all-files! conn)]
     (doseq [file files]
       (try
         (s3/rename-object document-bucket
@@ -279,6 +293,7 @@
       (throw (ex-info "Database is not empty!"
                       {:found-projects (count projects)})))
     ctx))
+
 
 (defn restore [event]
   (future

@@ -287,13 +287,13 @@
                                          :activity-state activity-state}]])]]]))
 
 (defn project-navigator
-  [e! {:thk.project/keys [lifecycles] :as _project} stepper _ _ _]
+  [e! {:thk.project/keys [lifecycles] :as _project} {:keys [stepper] :as _app} _ _ _]
   (let [lifecycle-ids (mapv :db/id lifecycles)
         lc-id (:lifecycle stepper)
         old-stepper? (empty? (filter #(= lc-id %) lifecycle-ids))]
     (when old-stepper?
       (e! (project-controller/->ToggleStepperLifecycle (first lifecycle-ids)))))
-  (fn [e! {:thk.project/keys [lifecycles id] :as _project} stepper params
+  (fn [e! {:thk.project/keys [lifecycles id] :as _project} {:keys [stepper params user] :as _app}
        {:keys [dark-theme? activity-section-content add-activity? activity-link-page] :as _opts}]
     (let [rect-button (if dark-theme?
                         buttons/rect-white
@@ -329,6 +329,7 @@
                  [:div
                   [Collapse {:in open?}
                    (mapc (partial activity {:e! e!
+                                            :user user
                                             :stepper stepper
                                             :activity-link-page activity-link-page
                                             :activity-section-content activity-section-content
@@ -359,8 +360,8 @@
 
 
 (defn project-task-navigator
-  [e! project stepper params dark-theme?]
-  [project-navigator e! project stepper params {:dark-theme? dark-theme?
+  [e! project app dark-theme?]
+  [project-navigator e! project app {:dark-theme? dark-theme?
                                                 :activity-section-content activity-task-list
                                                 :add-activity? true}])
 
@@ -411,7 +412,7 @@
                :xs nav-w
                :class (<class navigation-style/navigator-left-panel-style)}
          [project-menu/project-menu e! app project true]
-         [project-task-navigator e! project (:stepper app) (:params app) true]]
+         [project-task-navigator e! project app true]]
         [Grid {:item  true
                :xs content-w
                :style {:padding "2rem 1.5rem"

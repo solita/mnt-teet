@@ -266,7 +266,7 @@
      (if (seq layers)
             (util/with-keys
               (for [layer layers]
-                ^{:key (:id layer)}
+                ^{:key (or (:id layer) (:type layer))}
                 [common/feature-and-action
                  {:label (tr [:map :layers (:type layer)])}
                  {:button-label (tr [:buttons :edit])
