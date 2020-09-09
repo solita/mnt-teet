@@ -318,16 +318,19 @@
 
 (defn restore [event]
   (future
-    (ctx-> {:event event
-            :api-url (environment/config-value :api-url)
-            :api-secret (environment/config-value :auth :jwt-secret)
-            :conn (environment/datomic-connection)}
-           read-restore-config
-           download-backup-file
-           validate-empty-environment
-           restore-file
-           rename-documents!
-           rewrite-comment-mentions!
-           replace-entity-ids!
-           delete-backup-file))
+    (try
+      (ctx-> {:event event
+              :api-url (environment/config-value :api-url)
+              :api-secret (environment/config-value :auth :jwt-secret)
+              :conn (environment/datomic-connection)}
+             read-restore-config
+             download-backup-file
+             validate-empty-environment
+             restore-file
+             rename-documents!
+             rewrite-comment-mentions!
+             replace-entity-ids!
+             delete-backup-file)
+      (catch Exception e
+        (log/error e "ERROR IN RESTORE" (ex-data e)))))
   "{\"success\": true}")
