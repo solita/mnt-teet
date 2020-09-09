@@ -13,7 +13,8 @@
             [teet.util.datomic :as du]
             [teet.log :as log]
             [clojure.string :as str]
-            [teet.integration.postgrest :as postgrest]))
+            [teet.integration.postgrest :as postgrest]
+            [cheshire.core :as cheshire]))
 
 (defn prepare [form]
   (walk/prewalk
@@ -183,12 +184,27 @@
 (defn s3-filename [db-id filename]
   (str db-id "-" filename))
 
-(defn rename-documents! [{:keys [conn document-bucket tempids]}]
-  (let [files (map first
-                   (d/q '[:find (pull ?f [:db/id :file/name])
-                          :in $
-                          :where [?f :file/name _]]
-                        (d/db conn)))]
+(defn query-all-files! [conn]
+  (map first
+       (d/q '[:find (pull ?f [:db/id :file/name])
+              :in $
+              :where [?f :file/name _]]
+            (d/db conn))))
+
+(defn validate-files-exist! [conn document-bucket tempids]
+  (let [files (query-all-files! conn)]
+    (doseq [file files]
+      (let [s3-fn (s3-filename (tempids (:db/id file)) (:file/name file))]
+
+        (log/debug "validating" s3-filename)
+        (when-not (s3/object-exists? document-bucket s3-fn)
+          (throw (ex-info "Missing file when performing restore sanity check, rename already done or bad documents bucket config?" {:missing-s3-file s3-fn})))))
+    (log/info "validated that all" (count files) "files existed in s3 bucket" document-bucket)))
+
+(defn rename-documents! [{:keys [conn document-bucket tempids config]}]
+  (when-not (:skip-file-validation? config)
+    (validate-files-exist! conn document-bucket tempids))
+  (let [files (query-all-files! conn)]
     (doseq [file files]
       (try
         (s3/rename-object document-bucket
@@ -280,13 +296,28 @@
                       {:found-projects (count projects)})))
     ctx))
 
+(defn read-restore-config [{event :event :as ctx}]
+  (let [{:keys [file-key bucket] :as config*} (-> event :input (cheshire/decode keyword))
+        config (dissoc config* :bucket :file-key)]
+    (log/info "Read restore config from event:\n"
+              "Restore from, bucket: " bucket ", file key: " file-key "\n"
+              "Other options: " config)
+    (if (or (str/blank? bucket)
+            (str/blank? file-key))
+      (throw (ex-info "Missing restore file configuration in event."
+                      {:expected-keys [:file-key :bucket]
+                       :got-keys (keys config*)}))
+      (assoc ctx
+             :s3 {:bucket bucket :file-key file-key}
+             :config config))))
+
 (defn restore [event]
   (future
     (ctx-> {:event event
             :api-url (environment/config-value :api-url)
             :api-secret (environment/config-value :auth :jwt-secret)
             :conn (environment/datomic-connection)}
-           s3/read-trigger-event
+           read-restore-config
            download-backup-file
            validate-empty-environment
            restore-file
