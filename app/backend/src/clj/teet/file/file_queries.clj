@@ -2,16 +2,15 @@
   (:require [teet.db-api.core :as db-api :refer [defquery]]
             [teet.file.file-spec]
             [teet.file.file-storage :as file-storage]
-            [datomic.client.api :as d]
             [teet.project.project-db :as project-db]
             [teet.file.file-db :as file-db]
-            [teet.file.filename-metadata :as filename-metadata])
+            [teet.file.filename-metadata :as filename-metadata]
+            [teet.util.datomic :as du])
   (:import (java.net URLEncoder)))
 
 
 (defn- url-for-file [db file-id with-metadata?]
-  (let [file-name (:file/name (d/pull db '[:file/name] file-id))
-        s3-file-name (str file-id "-" file-name)]
+  (let [s3-file-name (:file/s3-key (du/entity db file-id))]
     ^{:format :raw}
     {:status 302
      :headers {"Location" (file-storage/download-url

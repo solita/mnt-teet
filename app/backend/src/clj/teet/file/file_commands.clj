@@ -13,6 +13,8 @@
             [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]))
 
+(defn- new-file-key [{name :file/name}]
+  (str (java.util.UUID/randomUUID) "-" name))
 
 (defn latest-file-version-id
   [db file-id]
@@ -45,11 +47,12 @@
   (log/debug "upload-attachment: got project-id" project-id)
   (let [file (file-model/type-by-suffix file)]
     (check-image-only file)
-    (let [res (tx [(merge (select-keys file file-keys)
-                          {:db/id "new-file"}
+    (let [key (new-file-key file)
+          res (tx [(merge (select-keys file file-keys)
+                          {:db/id "new-file"
+                           :file/s3-key key}
                           (creation-meta user))])
-          file-id (get-in res [:tempids "new-file"])
-          key (str file-id "-" (:file/name file))]
+          file-id (get-in res [:tempids "new-file"])]
 
       {:url (file-storage/upload-url key)
        :file (d/pull (:db-after res) '[*] file-id)})))
@@ -112,9 +115,11 @@
                          (find-previous-version db task-id previous-version-id))
               version (or (some-> old-file :file/version inc) 1)
               file (file-with-metadata file)
+              key (new-file-key file)
               res (tx [{:db/id (or task-id "new-task")
                         :task/files [(merge (select-keys file file-keys)
                                             {:db/id "new-file"
+                                             :file/s3-key key
                                              :file/status :file.status/draft
                                              :file/version version}
                                             (when old-file
@@ -123,8 +128,7 @@
                                               {:file/pos-number old-pos-number})
                                             (creation-meta user))]}])
               t-id (or task-id (get-in res [:tempids "new-task"]))
-              file-id (get-in res [:tempids "new-file"])
-              key (str file-id "-" (:file/name file))]
+              file-id (get-in res [:tempids "new-file"])]
           (try
             {:url (file-storage/upload-url key)
              :task-id t-id

@@ -1112,8 +1112,11 @@
            :enum/attribute :participation/role
            :db/doc "Regular participation"}]]}
 
-
-
-
-
+ {:db/ident :migration/stable-file-keys
+  :txes [[{:db/ident :file/s3-key
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/unique :db.unique/identity
+           :db/doc "The key this file is stored with in the documents S3 bucket."}]
+         teet.migration.file-s3-key/set-file-keys]}
  ]
