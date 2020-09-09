@@ -310,7 +310,9 @@
           [:div {:class (<class common-styles/flex-align-center)}
            [buttons/button-primary {:on-click (e! meeting-controller/->SendNotifications meeting)}
             (tr [:buttons :send])]
-           [typography/GreyText {:style {:margin-left "1rem"}} (tr [:meeting :send-notification-to-participants] {:count (inc (count participations))})]]])])))
+           [typography/GreyText {:style {:margin-left "1rem"}}
+            (tr [:meeting :send-notification-to-participants]
+                {:count (inc (count participations))})]]])])))
 
 (defn decision-form
   [e! agenda-eid close-event form-atom]
@@ -388,15 +390,16 @@
            :after-children-component (when edit?
                                        [add-decision-component e! meeting agenda-topic])}
           theme-colors/gray-lighter]))]
-     [form/form-modal-button {:form-component [add-agenda-form e! meeting]
-                              :form-value {:meeting.agenda/responsible (select-keys user [:db/id
-                                                                                          :user/id
-                                                                                          :user/given-name
-                                                                                          :user/family-name
-                                                                                          :user/email
-                                                                                          :user/person-id])}
-                              :modal-title (tr [:meeting :new-agenda-modal-title])
-                              :button-component [buttons/button-primary {} (tr [:meeting :add-agenda-button])]}]]))
+     (when edit?
+       [form/form-modal-button {:form-component [add-agenda-form e! meeting]
+                                :form-value {:meeting.agenda/responsible (select-keys user [:db/id
+                                                                                            :user/id
+                                                                                            :user/given-name
+                                                                                            :user/family-name
+                                                                                            :user/email
+                                                                                            :user/person-id])}
+                                :modal-title (tr [:meeting :new-agenda-modal-title])
+                                :button-component [buttons/button-primary {} (tr [:meeting :add-agenda-button])]}])]))
 
 (defn meeting-details [e! user meeting]
   [authorization-context/consume
@@ -421,7 +424,7 @@
                                                      (tr [:buttons :edit])]}]]]
        [tabs/tabs
         query
-        {:details [meeting-details e! user meeting]
-         :notes [:div [:h1 "notes"]]}]])
+        [[:details [meeting-details e! user meeting]]
+         [:notes [:div [:h1 "notes"]]]]]])
     [context/consume :user
      [meeting-participants e! meeting]]]])

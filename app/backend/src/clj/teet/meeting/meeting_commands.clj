@@ -26,7 +26,7 @@
    :payload {:keys [activity-eid]
              :meeting/keys [form-data]}
    :project-id (project-db/activity-project-id db activity-eid)
-   :authorization {:activity/create-activity {}}            ;;TODO ADD ACTUAL AUTHORIZATION
+   :authorization {:activity/edit-activity {}}
    :transact (let [meeting
                    (merge {:db/id "new-meeting"}
                           form-data
@@ -44,9 +44,9 @@
    :payload {:keys [activity-eid]
              :meeting/keys [form-data]}
    :project-id (project-db/activity-project-id db activity-eid)
-   :authorization {:activity/create-activity {}             ;;TODO Actual authorization
-                   }
-   :pre [(meeting-db/activity-meeting-id db activity-eid (:db/id form-data))]
+   :authorization {}
+   :pre [(meeting-db/activity-meeting-id db activity-eid (:db/id form-data))
+         (meeting-db/user-is-organizer-or-reviewer? db user (:db/id form-data))]
    :transact [(let [old-meeting-title (:meeting/title (du/entity db (:db/id form-data)))
                     meeting (merge
                               (select-keys form-data [:db/id :meeting/organizer :meeting/title
@@ -55,16 +55,15 @@
                               (when (not= old-meeting-title (:meeting/title form-data))
                                 ;; Changing meeting title, we need to renumber the meeting
                                 {:meeting/number (meeting-db/next-meeting-number
-                                                  db activity-eid (:meeting/title form-data))}))]
+                                                   db activity-eid (:meeting/title form-data))}))]
                 meeting)]})
 
 (defcommand :meeting/delete
   {:doc "Delete existing meeting"
    :context {:keys [db user]}
    :payload {:keys [activity-eid meeting-id]}
-   :project-id (project-db/activity-project-id db activity-eid) ;; TODO use meeting-id to fetch project-id
-   :authorization {:activity/delete-activity {}             ;; TODO actual authorization
-                   }
+   :project-id (project-db/meeting-project-id db meeting-id)
+   :authorization {:activity/edit-activity {}}
    :pre [(meeting-db/activity-meeting-id db activity-eid meeting-id)]
    :transact [(meta-model/deletion-tx user meeting-id)]})
 
@@ -151,7 +150,7 @@
    :context {:keys [db user]}
    :payload {:keys [agenda-eid form-data]}
    :project-id (project-db/agenda-project-id db agenda-eid)
-   :authorization {:activity/edit-activity {}}
+   :authorization {}
    :pre [(meeting-db/user-is-organizer-or-reviewer?
            db user
            (get-in (du/entity db agenda-eid) [:meeting/_agenda :db/id]))]
@@ -164,7 +163,7 @@
    :context {:keys [db user]}
    :payload {:keys [form-data]}
    :project-id (project-db/decision-project-id db (:db/id form-data))
-   :authorization {:activity/edit-activity {}}
+   :authorization {}
    :pre [(meeting-db/user-is-organizer-or-reviewer?
            db user
            (get-in (du/entity db (:db/id form-data))
@@ -176,8 +175,7 @@
    :context {:keys [db user]}
    :payload {:keys [decision-id]}
    :project-id (project-db/decision-project-id db decision-id)
-   :authorization {:activity/delete-activity {}             ;; TODO actual authorization
-                   }
+   :authorization {}
    :pre [(meeting-db/user-is-organizer-or-reviewer?
            db user
            (get-in (du/entity db decision-id)
