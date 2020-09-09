@@ -201,7 +201,7 @@
           (throw (ex-info "Missing file when performing restore sanity check, rename already done or bad documents bucket config?" {:missing-s3-file s3-fn})))))
     (log/info "validated that all" (count files) "files existed in s3 bucket" document-bucket)))
 
-(defn rename-documents! [{:keys [conn document-bucket tempids config]}]
+(defn rename-documents! [{:keys [conn document-bucket tempids config] :as ctx}]
   (when-not (:skip-file-validation? config)
     (validate-files-exist! conn document-bucket tempids))
   (let [files (query-all-files! conn)]
@@ -213,7 +213,8 @@
                           (s3-filename (:db/id file)
                                        (:file/name file)))
         (catch Exception e
-          (log/error (ex-data e)))))))
+          (log/error (ex-data e)))))
+    (assoc ctx :files-renamed (count files))))
 
 ;; Match and replace mentions like "@[user name](user db id)"
 ;; with new user ids
@@ -224,29 +225,33 @@
                  (str "@[" name "](" (tempids id) ")"))))
 
 ;; "hei @[Benjamin Boss](92358976733956) mitä kuuluu?"
-(defn rewrite-comment-mentions! [{:keys [conn tempids]}]
+(defn rewrite-comment-mentions! [{:keys [conn tempids] :as ctx}]
   (let [comments (map first
                       (d/q '[:find (pull ?c [:db/id :comment/comment])
                              :where
                              [?c :comment/comment ?txt]
                              [(clojure.string/includes? ?txt "@[")]]
                            (d/db conn)))]
+    (log/info "Rewriting " (count comments) " with user mentions")
     (d/transact conn
                 {:tx-data (vec (for [{id :db/id txt :comment/comment} comments
                                      :let [new-txt (replace-comment-mention-ids txt tempids)]]
                                  {:db/id id
-                                  :comment/comment new-txt}))})))
+                                  :comment/comment new-txt}))})
+    (assoc ctx :comments-with-mentions-rewritten (count comments))))
 
 
 (defn replace-entity-ids!
   "Replace entity ids in postgres entity table. List of ids
   is comma separated list of old_id=new_id."
   [{:keys [tempids] :as ctx}]
+  (log/info "Replace " (count tempids) " entity ids in PostgREST")
   (postgrest/rpc ctx :replace_entity_ids
                  {:idlist (str/join ","
                                     (map (fn [[old-id new-id]]
                                            (str old-id "=" new-id))
-                                         tempids))}))
+                                         tempids))})
+  ctx)
 
 (defn restore-file
   "Restore a TEET backup zip from `file` by running the transactions in
@@ -254,6 +259,7 @@
   the given database is empty."
   [{:keys [conn file] :as ctx}]
 
+  (log/info "Restoring backup from file: " file)
   ;; read all users and transact them in one go
   (with-open [istream (io/input-stream (io/file file))
               zip-in (doto (java.util.zip.ZipInputStream. istream)
@@ -263,12 +269,11 @@
     ;; Transact everything in one big transaction
     (let [form (doall (read-seq rdr))
                                         ;ids (check-ids-without-attributes form)
+          _ (log/info "Read " (count form) " forms from backup.")
           {:keys [mapping form]} (to-temp-ids form)
-          {tempids :tempids} (d/transact conn {:tx-data (vec form)})
-          ctx (merge ctx {:mapping mapping :form form :tempids tempids})]
-      (rename-documents! ctx)
-      (rewrite-comment-mentions! ctx)
-      (replace-entity-ids! ctx))))
+          {tempids :tempids} (d/transact conn {:tx-data (vec form)}) ]
+      (log/info "Restore transaction applied.")
+      (merge ctx {:mapping mapping :form form :tempids tempids}))))
 
 (defstep download-backup-file
   {:doc "Download backup file from S3 to temporary directory. Puts file path to context"
@@ -321,5 +326,8 @@
            download-backup-file
            validate-empty-environment
            restore-file
+           rename-documents!
+           rewrite-comment-mentions!
+           replace-entity-ids!
            delete-backup-file))
   "{\"success\": true}")
