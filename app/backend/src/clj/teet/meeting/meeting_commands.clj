@@ -78,9 +78,9 @@
    :payload {id :db/id
              agenda :meeting/agenda}
    :project-id (project-db/meeting-project-id db id)
-    ;; TODO authorization matrix
-   :authorization {:activity/edit-activity {}}
-   :pre [(agenda-items-new-or-belong-to-meeting db id agenda)]
+   :authorization {}
+   :pre [(meeting-db/user-is-organizer-or-reviewer? db user id)
+         (agenda-items-new-or-belong-to-meeting db id agenda)]
    :transact [{:db/id id
                :meeting/agenda (mapv #(select-keys % [:db/id
                                                       :meeting.agenda/topic
