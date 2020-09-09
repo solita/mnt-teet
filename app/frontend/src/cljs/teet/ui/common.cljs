@@ -333,8 +333,7 @@
                                                                                   (or children after-children-component)
                                                                                   @open?))}
        [:div                                                ;; This is a div because buttons shouldn't contain buttons even though this is bad practice as well
-        {:disable-ripple true
-         :class (<class hierarchical-container-button-style bg-color)
+        {:class (<class hierarchical-container-button-style bg-color)
          :on-click toggle-open!}
         [:div {:style {:width "100%"
                        :display :flex

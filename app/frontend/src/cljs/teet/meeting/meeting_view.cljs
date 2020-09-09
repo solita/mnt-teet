@@ -375,7 +375,8 @@
                        [rich-text-editor/display-markdown body]])
            :children (map-indexed
                       (fn [i decision]
-                        {:heading [typography/Heading3 (tr [:meeting :decision-topic] {:topic topic
+                        {:key (:db/id decision)
+                         :heading [typography/Heading3 (tr [:meeting :decision-topic] {:topic topic
                                                                                        :num (inc i)})]
                          :heading-button (when edit?
                                            [form/form-modal-button
