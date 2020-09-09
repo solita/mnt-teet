@@ -69,7 +69,7 @@
   "Given as [[:tab-name tab-component]...[...]] first being the default
    and tab-name used as url-parameter"
   [{query-param-tab :tab} tabs]
-  (let [tab-names (keys tabs)
+  (let [tab-names (map (comp keyword first) tabs)
         selected-tab (or (keyword query-param-tab)
                          (-> tabs
                              first
