@@ -16,6 +16,9 @@
   (s/keys :reg [:activity-eid
                 :meeting/form-data]))
 
+(s/def :meeting/decision-form
+  (s/keys :req [:meeting.decision/body]))
+
 (s/def :meeting/add-participant-form
   (s/keys :req [(or (and :user/given-name
                          :user/family-name

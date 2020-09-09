@@ -91,6 +91,19 @@
            :thk.lifecycle/_activities 0
            :thk.project/_lifecycles 0 :db/id]))
 
+(defn agenda-project-id [db agenda-eid]
+  (get-in (du/entity db agenda-eid)
+          [:meeting/_agenda :activity/_meetings 0
+           :thk.lifecycle/_activities 0
+           :thk.project/_lifecycles 0 :db/id]))
+
+(defn decision-project-id [db decision-eid]
+  (get-in (du/entity db decision-eid)
+          [:meeting.agenda/_decisions :meeting/_agenda
+           :activity/_meetings 0
+           :thk.lifecycle/_activities 0
+           :thk.project/_lifecycles 0 :db/id]))
+
 (defn document-project-id
   ([db document-id]
    (document-project-id db document-id ::throw))

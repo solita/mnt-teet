@@ -9,7 +9,8 @@
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.util :as util]
             [teet.ui.buttons :as buttons]
-            [teet.ui.material-ui :refer [Divider]])
+            [teet.ui.material-ui :refer [Divider]]
+            [teet.ui.common :as common])
   (:require-macros [teet.util.js :refer [js>]]))
 
 (def ^:private Editor (r/adapt-react-class draft-js/Editor))
@@ -130,7 +131,7 @@
   :value      current draftjs EditorState object (or nil for empty)
   :on-change  callback to update editor state"
 
-  [{:keys [value on-change id label]}]
+  [{:keys [value on-change id label required]}]
   (js>
    (let [read-only? (nil? on-change)
          editorState (or value (.createEmpty draft-js/EditorState decorator))
@@ -167,8 +168,10 @@
       [:div
        #_[:input {:value linkValue
                   :on-change #(setLinkValue (-> % .-target .-value))}]
-       [:label
-        label]
+       (when label
+         [:label
+          label (when required
+                  [common/required-astrix])])
        [:div (merge {:on-click focus-editor}
 
                     (when-not read-only? {:class (<class editor-style false)}))
@@ -201,9 +204,10 @@
 
 (defn rich-text-field
   "Rich text input that can be used in forms."
-  [{:keys [value on-change label]}]
+  [{:keys [value on-change label required]}]
   [:f> wysiwyg-editor {:value (if (string? value)
                                 (markdown->editor-state value)
                                 value)
                        :label label
+                       :required required
                        :on-change on-change}])

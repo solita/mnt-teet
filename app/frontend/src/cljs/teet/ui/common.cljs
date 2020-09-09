@@ -286,7 +286,7 @@
    :flex-direction :column
    :align-items :flex-start
    :cursor :pointer
-   :border-bottom "3px solid white"
+   :border-bottom "1px solid white"
    :background-color bg-color
    :padding "1rem"
    :transition "0.2s ease-in-out background-color"})
@@ -327,7 +327,7 @@
                 toggle-open! #(do
                                 (.stopPropagation %)
                                 (swap! open? not))]
-     [:<>
+     [:div {:style {:border-bottom "3px solid white"}}
       [:div {:class (<class hierarchical-heading-container2 bg-color text-color (and
                                                                                   content
                                                                                   (or children after-children-component)
@@ -363,7 +363,7 @@
               (with-meta
                 (if (vector? child)                         ;;Check if it's component and render that instaed
                   child
-                  [hierarchical-container2 child (as-hex (lighten bg-color 15))])
+                  [hierarchical-container2 child (as-hex (lighten bg-color 5))])
                 {:key (:key child)})))
           after-children-component]])])))
 

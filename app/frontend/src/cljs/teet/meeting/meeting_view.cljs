@@ -157,7 +157,8 @@
                :xs :auto
                :style {:display :flex
                        :flex    1
-                       :padding "1rem 1.5rem"}}
+                       :padding "1rem 1.5rem"
+                       :background-color theme-colors/gray-lightest}}
          right-panel-content]]]]]))
 
 (defn activity-meetings-view
@@ -286,7 +287,7 @@
                                      (log/info "Remove participant:" participant)
                                      (e! (meeting-controller/->RemoveParticipant (:db/id participant))))]
     (let [can-edit-participants? (meeting-model/user-is-organizer-or-reviewer? user meeting)]
-      [:div.meeting-participants
+      [:div.meeting-participants {:style {:flex 1}}
        [typography/Heading2 (tr [:meeting :participants-title])]
        [:div.participant-list
         [meeting-participant nil {:participation/participant organizer
@@ -304,11 +305,33 @@
             (tr [:buttons :send])]
            (tr [:meeting :send-notification-to-participants] {:count (inc (count participations))})]])])))
 
+(defn decision-form
+  [e! agenda-eid close-event form-atom]
+  [form/form (merge {:e! e!
+                     :value @form-atom
+                     :on-change-event (form/update-atom-event form-atom merge)
+                     :cancel-event close-event
+                     :spec :meeting/decision-form
+                     :save-event #(meeting-controller/->SubmitDecisionForm
+                                    agenda-eid
+                                    (-> @form-atom
+                                        (update :meeting.decision/body
+                                                (fn [editor-state]
+                                                  (when (and editor-state (not (string? editor-state)))
+                                                    (rich-text-editor/editor-state->markdown editor-state)))))
+                                    close-event)}
+                    (when (:db/id @form-atom)
+                      {:delete (meeting-controller/->DeleteDecision (:db/id @form-atom) close-event)}))
+
+   ^{:attribute :meeting.decision/body}
+   [rich-text-editor/rich-text-field {}]])
+
 (defn add-decision-component
-  [e!]
-  [:div {:class (<class common/hierarchical-container-style (as-hex (lighten theme-colors/gray-light 10)))}
-   [buttons/button-primary {}
-    "Add decision placeholder"]])
+  [e! meeting agenda-topic]
+  [:div {:class (<class common/hierarchical-container-style (as-hex (lighten theme-colors/gray-lighter 5)))}
+   [form/form-modal-button {:form-component [decision-form e! (:db/id agenda-topic)]
+                            :modal-title (tr [:meeting :new-decision-modal-title])
+                            :button-component [buttons/button-primary {} (tr [:meeting :add-decision-button])]}]])
 
 
 (defn meeting-details
@@ -325,7 +348,7 @@
    [:div {:style {:margin-bottom "1rem"}}
     (doall
       (for [{id :db/id
-             :meeting.agenda/keys [topic responsible body] :as agenda-topic} agenda]
+             :meeting.agenda/keys [topic responsible body decisions] :as agenda-topic} agenda]
         ^{:key id}
         [common/hierarchical-container2 {:heading [:div
                                                    [typography/Heading3 {:class (<class common-styles/margin-bottom "0.5")} topic]
@@ -333,12 +356,26 @@
                                          :heading-button [form/form-modal-button {:form-component [add-agenda-form e! meeting]
                                                                                   :form-value agenda-topic
                                                                                   :modal-title (tr [:meeting :edit-agenda-modal-title])
-                                                                                  :button-component [buttons/button-secondary {} (tr [:buttons :edit])]}]
+                                                                                  :button-component [buttons/button-secondary {}
+                                                                                                     (tr [:buttons :edit])]}]
                                          :content (when body
                                                     [:div
                                                      [rich-text-editor/display-markdown body]])
-                                         :after-children-component [add-decision-component e!]}
-         theme-colors/gray-light]))]
+                                         :children (map-indexed
+                                                     (fn [i decision]
+                                                       {:heading [typography/Heading3 (tr [:meeting :decision-topic] {:topic topic
+                                                                                                                      :num (inc i)})]
+                                                        :heading-button [form/form-modal-button
+                                                                         {:form-component [decision-form e! (:db/id agenda-topic)]
+                                                                          :form-value decision
+                                                                          :modal-title (tr [:meeting :edit-decision-modal-title])
+                                                                          :button-component [buttons/button-secondary {:size :small}
+                                                                                             (tr [:buttons :edit])]}]
+                                                        :content [rich-text-editor/display-markdown
+                                                                  (:meeting.decision/body decision)]})
+                                                     decisions)
+                                         :after-children-component [add-decision-component e! meeting agenda-topic]}
+         theme-colors/gray-lighter]))]
    [form/form-modal-button {:form-component [add-agenda-form e! meeting]
                             :form-value {:meeting.agenda/responsible (select-keys user [:db/id
                                                                                         :user/id

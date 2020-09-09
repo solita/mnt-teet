@@ -197,6 +197,7 @@
                        theme-colors/gray-dark
                        theme-colors/white)
    :padding "0 0 1rem 1rem"
+   :overflow-y :auto
    :flex 1})
 
 (defn custom-list-indicator

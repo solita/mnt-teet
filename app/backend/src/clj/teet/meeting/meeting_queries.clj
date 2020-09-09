@@ -53,6 +53,7 @@
                            {:meeting/agenda [:db/id
                                              :meeting.agenda/topic
                                              :meeting.agenda/body
+                                             {:meeting.agenda/decisions [:db/id :meeting.decision/body]}
                                              {:meeting.agenda/responsible ~user-model/user-listing-attributes}]}
                            {:participation/_in
                             [:db/id

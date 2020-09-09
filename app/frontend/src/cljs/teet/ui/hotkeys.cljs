@@ -72,8 +72,10 @@
     (set! (.-onkeydown js/window)
           (fn [event]
             (when (not (.-ctrlKey event))
-              (let [kc (.-keyCode event)]
+              (let [kc (.-keyCode event)
+                    active-element (some-> js/document .-activeElement)]
                 (when (and (not (hotkey-disallowed? (some-> js/document .-activeElement .-tagName) kc))
+                           (not (= (.getAttribute active-element "role") "textbox")) ;; draft.js inserts this role to the text editor so we want to disable hotkeys when it's the active element
                            (not (@hotkey-down-keys kc)))
                   (swap! hotkey-down-keys conj kc)
                   (when-let [key (.-key event)]

@@ -118,8 +118,24 @@
 (defrecord Navigate [page params query])
 (defrecord SetQueryParam [param value]) ; navigate to same page but set set single query param
 (defrecord ResponseError [err]) ; handle errors in HTTP response
+(defrecord ModalFormResult [close-event response])          ; Handle the submit result of form-modal-button
 
 (defonce debounce-timeouts (atom {}))
+
+(defn refresh-page [app]
+  (let [path [:route (keyword (str (name (:page app)) "-refresh"))]]
+    (update-in app path (fnil inc 0))))
+
+;; Refresh the current page query state
+(defrecord Refresh []
+  t/Event
+  (process-event [_ app]
+    ;; Update the refresh indicator value so query component will force a refetch
+    (refresh-page app)))
+
+(def refresh-fx
+  "Tuck effect that refreshes the current page state from database."
+  (fn [e!] (e! (->Refresh))))
 
 (defmethod tuck-effect/process-effect :debounce [e! {:keys [event effect timeout id]}]
   (let [timeout-id (or id event)
@@ -202,7 +218,14 @@
 
   ResponseError
   (process-event [{err :err} app]
-    (on-server-error err app)))
+    (on-server-error err app))
+
+  ModalFormResult
+  (process-event [{close-event :close-event} app]
+    (t/fx app
+          (fn [e!]
+            (e! (close-event)))
+          refresh-fx)))
 
 (defn check-response-status [response]
   (let [status (.-status response)]
@@ -491,21 +514,6 @@
   (reset! api-token nil))
 
 (defmulti map-item-selected :map/type)
-
-(defn refresh-page [app]
-  (let [path [:route (keyword (str (name (:page app)) "-refresh"))]]
-    (update-in app path (fnil inc 0))))
-
-;; Refresh the current page query state
-(defrecord Refresh []
-  t/Event
-  (process-event [_ app]
-    ;; Update the refresh indicator value so query component will force a refetch
-    (refresh-page app)))
-
-(def refresh-fx
-  "Tuck effect that refreshes the current page state from database."
-  (fn [e!] (e! (->Refresh))))
 
 (defn update-page-state
   "Apply update fn to path in current page state."
