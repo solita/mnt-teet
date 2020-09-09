@@ -234,8 +234,9 @@
     (tr-enum role)]
    [:div.participant-remove {:class (<class common-styles/flex-table-column-style 10)}
     (when on-remove
-      [IconButton {:on-click #(on-remove participation)}
-       [icons/content-clear]])]])
+      [IconButton {:size :small
+                   :on-click #(on-remove participation)}
+       [icons/content-clear {:font-size :small}]])]])
 
 
 (defn- add-meeting-participant [e! meeting user]
@@ -253,7 +254,9 @@
                      :value @form
                      :on-change-event (form/update-atom-event form merge)
                      :save-event save-participant!
-                     :spec :meeting/add-participant-form}
+                     :spec :meeting/add-participant-form
+                     :cancel-fn (when (:non-teet-user? @form)
+                                  #(reset! form {:non-teet-user? false}))}
          (if non-teet?
            ;; Show fields for user info when adding non-TEET user participant
            ^{:key "non-teet-user"}
@@ -288,8 +291,9 @@
                                      (e! (meeting-controller/->RemoveParticipant (:db/id participant))))]
     (let [can-edit-participants? (meeting-model/user-is-organizer-or-reviewer? user meeting)]
       [:div.meeting-participants {:style {:flex 1}}
-       [typography/Heading2 (tr [:meeting :participants-title])]
-       [:div.participant-list
+       [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}
+        (tr [:meeting :participants-title])]
+       [:div.participant-list {:class (<class common-styles/margin-bottom 1)}
         [meeting-participant nil {:participation/participant organizer
                                   :participation/role :participation.role/organizer}]
         (mapc (r/partial meeting-participant (and can-edit-participants? remove-participant!))
@@ -297,13 +301,15 @@
        (when can-edit-participants?
          [:<>
           [add-meeting-participant e! meeting user]
-          [Divider]
-          [typography/Heading3 (tr [:meeting :notifications-title])]
-          (tr [:meeting :notifications-help])
-          [:div {:class (<class common-styles/flex-row)}
+          [Divider {:style {:margin "1rem 0"}}]
+          [typography/Heading3 {:class (<class common-styles/margin-bottom 1)}
+           (tr [:meeting :notifications-title])]
+          [:p {:class (<class common-styles/margin-bottom 1)}
+           (tr [:meeting :notifications-help])]
+          [:div {:class (<class common-styles/flex-align-center)}
            [buttons/button-primary {:on-click (e! meeting-controller/->SendNotifications meeting)}
             (tr [:buttons :send])]
-           (tr [:meeting :send-notification-to-participants] {:count (inc (count participations))})]])])))
+           [typography/GreyText {:style {:margin-left "1rem"}} (tr [:meeting :send-notification-to-participants] {:count (inc (count participations))})]]])])))
 
 (defn decision-form
   [e! agenda-eid close-event form-atom]
