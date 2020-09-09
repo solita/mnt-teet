@@ -13,9 +13,11 @@
             [teet.util.datomic :as du]
             [teet.log :as log]
             [clojure.string :as str]
-            [teet.integration.postgrest :as postgrest])
+            [teet.integration.postgrest :as postgrest]
+            [cheshire.core :as cheshire])
   (:import (java.time LocalDate)
            (java.time.format DateTimeFormatter)))
+
 
 (defn prepare [form]
   (walk/prewalk
@@ -137,7 +139,7 @@
                   msg "Export referred to entities that were not provided! This backup is inconsistent."]
               (log/error msg (set/difference referred provided))
               (.flush out)
-              (disable-zip ostream zip-out)              
+              (disable-zip ostream zip-out)
               (reset! status-atom :fail)
               (throw (ex-info msg {:missing-referred-ids missing-referred-ids}))))
           ;; with-open will close zip-out and out
@@ -170,12 +172,12 @@
           delete-failed-file! (fn []
                                 (log/info "deleting failed backup file from s3:" file-key)
                                 (s3/delete-object bucket file-key))]
-      (try        
+      (try
         (s3/write-file-to-s3 {:to {:bucket bucket
                                    :file-key file-key}
                               :contents (ring-io/piped-input-stream
                                          (partial backup-to db status-atom))})
-        (catch clojure.lang.ExceptionInfo e          
+        (catch clojure.lang.ExceptionInfo e
           (log/error "caught exception writing backup:" (ex-data e))
           (delete-failed-file!)
           (reset! status-atom nil)))
@@ -235,14 +237,15 @@
   (let [files (query-all-files! conn)]
     (doseq [file files]
       (let [s3-fn (s3-filename (tempids (:db/id file)) (:file/name file))]
-        
+
         (log/debug "validating" s3-filename)
         (when-not (s3/object-exists? document-bucket s3-fn)
           (throw (ex-info "Missing file when performing restore sanity check, rename already done or bad documents bucket config?" {:missing-s3-file s3-fn})))))
     (log/info "validated that all" (count files) "files existed in s3 bucket" document-bucket)))
 
-(defn rename-documents! [{:keys [conn document-bucket tempids]}]
-  (validate-files-exist! conn document-bucket tempids)
+(defn rename-documents! [{:keys [conn document-bucket tempids config]}]
+  (when-not (:skip-file-validation? config)
+    (validate-files-exist! conn document-bucket tempids))
   (let [files (query-all-files! conn)]
     (doseq [file files]
       (try
@@ -250,7 +253,7 @@
                                     (:file/name file))
               new-name (s3-filename (:db/id file)
                                     (:file/name file))]
-          ;; if the ids and hence the names are same, this will throw an InvalidRequest exception - to support restoring to the same instance and bucket instead of a blank one this would need ot be changed          
+          ;; if the ids and hence the names are same, this will throw an InvalidRequest exception - to support restoring to the same instance and bucket instead of a blank one this would need ot be changed
           (s3/rename-object document-bucket old-name new-name))))))
 
 ;; Match and replace mentions like "@[user name](user db id)"
@@ -334,6 +337,20 @@
                       {:found-projects (count projects)})))
     ctx))
 
+(defn read-restore-config [{event :event :as ctx}]
+  (let [{:keys [file-key bucket] :as config*} (-> event :input (cheshire/decode keyword))
+        config (dissoc config* :bucket :file-key)]
+    (log/info "Read restore config from event:\n"
+              "Restore from, bucket: " bucket ", file key: " file-key "\n"
+              "Other options: " config)
+    (if (or (str/blank? bucket)
+            (str/blank? file-key))
+      (throw (ex-info "Missing restore file configuration in event."
+                      {:expected-keys [:file-key :bucket]
+                       :got-keys (keys config*)}))
+      (assoc ctx
+             :s3 {:bucket bucket :file-key file-key}
+             :config config))))
 
 (defn restore [event]
   (future
@@ -341,10 +358,9 @@
             :api-url (environment/config-value :api-url)
             :api-secret (environment/config-value :auth :jwt-secret)
             :conn (environment/datomic-connection)}
-           s3/read-trigger-event
+           read-restore-config
            download-backup-file
            validate-empty-environment
            restore-file
            delete-backup-file))
   "{\"success\": true}")
-
