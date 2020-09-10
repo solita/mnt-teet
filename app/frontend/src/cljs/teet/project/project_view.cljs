@@ -191,13 +191,12 @@
                               :show-empty-selection? true
                               :items roles}]]]
 
-       (when-not (some? (:project/participant user))
+       (when-not (some? (:project/participant @user))
          [Grid {:item true :xs 6}
-          [buttons/button-primary {:on-click #(e! (project-controller/->UpdateProjectPermissionForm
-                                                   {:project/participant :new}))}
+          [buttons/button-primary {:on-click #(swap! user merge {:project/participant :new})}
            (tr [:people-tab :invite-user])]])]
 
-      (when (= (:project/participant user) :new)
+      (when (= (:project/participant @user) :new)
         [form/field :user/person-id
          [TextField {:start-icon
                      (fn [{c :class}]
