@@ -23,11 +23,6 @@
     "application/pdf"
     "application/dwf"
 
-    ;; Digitally signed containers
-    "application/ddoc"
-    "application/bdoc"
-    "application/asice"
-
     ;; Design/drawing/GIS files
     "application/dwg"
     "application/dgn"
