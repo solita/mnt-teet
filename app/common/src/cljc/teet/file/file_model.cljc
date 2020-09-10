@@ -45,7 +45,6 @@
     "application/ags"
     "application/gpx"
 
-
     ;; Images
     "image/png"
     "image/jpeg"
@@ -53,8 +52,8 @@
     "image/ecw"
 
     ;; Other supporting files
-    "shx" "application/shx"
-    "lin" "application/lin"})
+    "application/shx"
+    "application/lin"})
 
 (def ^:const upload-file-suffix-type
   {;; Generic office files
@@ -109,12 +108,10 @@
    "shx" "application/shx"
    "lin" "application/lin"})
 
-(defn type-by-suffix [{:file/keys [name type] :as file}]
-  (if-not (str/blank? type)
-    file
-    (if-let [type-by-suffix (-> name (str/split #"\.") last upload-file-suffix-type)]
-      (assoc file :file/type type-by-suffix)
-      file)))
+(defn type-by-suffix [{:file/keys [name] :as file}]
+  (if-let [type-by-suffix (-> name (str/split #"\.") last upload-file-suffix-type)]
+    (assoc file :file/type type-by-suffix)
+    file))
 
 (defn validate-file [{:file/keys [type size]}]
   (cond
