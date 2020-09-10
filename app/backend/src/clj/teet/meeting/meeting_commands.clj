@@ -47,16 +47,26 @@
    :authorization {}
    :pre [(meeting-db/activity-meeting-id db activity-eid (:db/id form-data))
          (meeting-db/user-is-organizer-or-reviewer? db user (:db/id form-data))]
-   :transact [(let [old-meeting-title (:meeting/title (du/entity db (:db/id form-data)))
-                    meeting (merge
-                              (select-keys form-data [:db/id :meeting/organizer :meeting/title
-                                                      :meeting/start :meeting/end :meeting/location])
-                              (meta-model/modification-meta user)
-                              (when (not= old-meeting-title (:meeting/title form-data))
-                                ;; Changing meeting title, we need to renumber the meeting
-                                {:meeting/number (meeting-db/next-meeting-number
-                                                   db activity-eid (:meeting/title form-data))}))]
-                meeting)]})
+   :transact (let [{old-meeting-title :meeting/title
+                    old-organizer :meeting/organizer}
+                   (d/pull db '[:meeting/title :meeting/organizer]
+                           (:db/id form-data))
+                   new-organizer (get-in form-data [:meeting/organizer :db/id])]
+
+               ;; New organizer must not already be a participant
+               (when (and (not= (:db/id old-organizer)
+                                (:db/id new-organizer))
+                          (meeting-db/user-is-participating? db new-organizer (:db/id form-data)))
+                 (db-api/fail! {:error :user-is-already-participant}))
+
+               [(merge
+                 (select-keys form-data [:db/id :meeting/organizer :meeting/title
+                                         :meeting/start :meeting/end :meeting/location])
+                 (meta-model/modification-meta user)
+                 (when (not= old-meeting-title (:meeting/title form-data))
+                   ;; Changing meeting title, we need to renumber the meeting
+                   {:meeting/number (meeting-db/next-meeting-number
+                                     db activity-eid (:meeting/title form-data))}))])})
 
 (defcommand :meeting/delete
   {:doc "Delete existing meeting"
@@ -104,10 +114,13 @@
 (defcommand :meeting/add-participation
   {:doc "Remove a participation."
    :context {:keys [db user]}
-   :payload {meeting :participation/in :as participation}
+   :payload {meeting :participation/in
+             participant :participation/participant :as participation}
    :project-id (project-db/meeting-project-id db meeting)
    :authorization {}
-   :pre [(meeting-db/user-is-organizer-or-reviewer? db user meeting)]
+   :pre [(meeting-db/user-is-organizer-or-reviewer? db user meeting)
+         ^{:error :user-is-already-participant}
+         (not (meeting-db/user-is-participating? db participant meeting))]
    :transact [(merge {:db/id "new-participation"}
                      (select-keys participation [:participation/in
                                                  :participation/role

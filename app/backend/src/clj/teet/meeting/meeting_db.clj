@@ -83,3 +83,19 @@
                                  :user/email])
                  :in $ [?u ...]]
                db recipients))))
+
+(defn user-is-participating?
+  "Check if given user is participating in the given meeting (in any role)."
+  [db participant meeting-id]
+  (let [user (user-model/user-ref participant)]
+    (boolean
+     (or (seq (d/q '[:find ?m
+                     :where [?m :meeting/organizer ?u]
+                     :in $ ?m ?u] db meeting-id user))
+
+         (seq (d/q '[:find ?p
+                     :where
+                     [?p :participation/in ?m]
+                     [?p :participation/participant ?u]
+                     [(missing? $ ?p :meta/deleted?)]
+                     :in $ ?m ?u] db meeting-id user))))))

@@ -287,6 +287,7 @@
  :error
  {:authorization-failure "Session expired. Please login again.",
   :invalid-task-dates "Check task dates",
+  :user-is-already-participant "User is already participant",
   :server-error "Server error.",
   :invalid-x-road-response "Invalid response from X-road",
   :permission-already-granted
@@ -335,6 +336,7 @@
   "projectgroup" {"activity" "Activities"},
   :permission/role "Roles",
   :land-exchange/area "Area",
+  :meeting.decision/body "Decision",
   :meeting/agenda "Agenda",
   :thk.project/carriageway "CW",
   :land-acquisition/status "Status",
