@@ -95,8 +95,7 @@
 (defn modal+
   "Advanced modal container"
   [{:keys [title on-close open-atom left-panel right-panel] :as _opts}]
-  (let [open-atom (or open-atom (r/atom true))
-        close-fn #(do
+  (let [close-fn #(do
                     (reset! open-atom false)
                     (when on-close
                       (on-close)))]
