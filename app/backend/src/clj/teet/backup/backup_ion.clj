@@ -293,13 +293,23 @@
   (.delete (io/file file))
   (dissoc ctx :file))
 
-(defn validate-empty-environment [{conn :conn :as ctx}]
-  (let [projects (d/q '[:find ?e :where [?e :thk.project/id _]]
-                      (d/db conn))]
-    (when (seq projects)
-      (throw (ex-info "Database is not empty!"
-                      {:found-projects (count projects)})))
-    ctx))
+(defn prepare-database-for-restore [{:keys [datomic-client conn config] :as ctx}]
+  (if (:clear-database? config)
+    (do
+      (log/info "DELETING AND RECREATING \"teet\" DATOMIC DATABASE.")
+      (d/delete-database datomic-client {:db-name "teet"})
+      (d/create-database datomic-client {:db-name "teet"})
+      (let [conn (d/connect datomic-client {:db-name "teet"})]
+        (environment/migrate conn)
+        (assoc ctx :conn conn)))
+    (do
+      (log/info "Using existing \"teet\" database, checking that it is empty.")
+      (let [projects (d/q '[:find ?e :where [?e :thk.project/id _]]
+                          (d/db conn))]
+        (when (seq projects)
+          (throw (ex-info "Database is not empty!"
+                          {:found-projects (count projects)})))
+        ctx))))
 
 (defn read-restore-config [{event :event :as ctx}]
   (let [{:keys [file-key bucket] :as config*} (-> event :input (cheshire/decode keyword))
@@ -322,10 +332,11 @@
       (ctx-> {:event event
               :api-url (environment/config-value :api-url)
               :api-secret (environment/config-value :auth :jwt-secret)
+              :datomic-client (environment/datomic-client)
               :conn (environment/datomic-connection)}
              read-restore-config
              download-backup-file
-             validate-empty-environment
+             prepare-database-for-restore
              restore-file
              rename-documents!
              rewrite-comment-mentions!
