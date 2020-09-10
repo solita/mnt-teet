@@ -5,15 +5,16 @@
   []
   {:display :flex
    :justify-content :center
-   :align-items :center
-   :background-image "linear-gradient(rgba(52,57,76,0.7), rgba(52,57,76,0.7)), url(/img/loginsplash.webp)"
+   :align-items :flex-start
+   :background-image "url(/img/loginsplash_new.jpg)"
    :background-position :center
    :background-size :cover
-   :min-height "100vh"})
+   :flex 1})
 
 (defn login-container
   []
-  {:width "420px"
+  {:margin-top "5rem"
+   :width "420px"
    :border-radius "4px"
    :overflow :hidden
    :background-color theme-colors/white

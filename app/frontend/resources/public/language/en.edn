@@ -468,7 +468,12 @@
   :files "Files attached to this unit",
   :burden "Burden",
   :no-mortgages "No mortgages"},
- :login {:login "Login", :password "Password", :username "Username"},
+ :login
+ {:login "Login",
+  :password "Password",
+  :username "Username",
+  :greetings-text
+  "Tee elukaare teabe ning andmete haldamise ja vahetamise keskkond TEET"},
  :map
  {:aerial-view "Aerial view",
   :clear-selections "Clear selections",
