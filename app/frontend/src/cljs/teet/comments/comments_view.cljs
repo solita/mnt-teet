@@ -307,7 +307,7 @@
     [buttons/button-text {:color :primary
                           :end-icon (r/as-element [icons/action-check-circle-outline])
                           :on-click #(e! (comments-controller/->ResolveCommentsOfEntity
-                                          (:db/id commented-entity)
+                                          (:eid commented-entity)
                                           (:for commented-entity)))}
      (tr [:comment :resolve-all])]]])
 
