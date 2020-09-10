@@ -9,16 +9,16 @@
 (def project-eid 123123123)
 (def test-user
   {:user/permissions
- [#:permission{:role :internal-consultant,
-               :projects [#:db{:id project-eid}],
-               :valid-from #inst "2020-08-24T09:30:34.141-00:00"}],
- :user/family-name "Consultant",
- :user/id #uuid "fa8af5b7-df45-41ba-93d0-603c543c8801",
- :roles nil,
- :user/given-name "Irma I.",
- :user/person-id "EE12345678955",
- :db/id 321321321,
- :user/email "irma.i.consultant@example.com"})
+   [#:permission{:role :internal-consultant,
+                 :projects [#:db{:id project-eid}],
+                 :valid-from #inst "2020-08-24T09:30:34.141-00:00"}],
+   :user/family-name "Consultant",
+   :user/id #uuid "fa8af5b7-df45-41ba-93d0-603c543c8801",
+   :roles nil,
+   :user/given-name "Irma I.",
+   :user/person-id "EE12345678955",
+   :db/id 321321321,
+   :user/email "irma.i.consultant@example.com"})
 
 (def test-comments [{:db/id 420
                      :comment/author #:user {:given-name "Com" :family-name "Menter"}
@@ -80,12 +80,8 @@
   (step :tuck-render "Render lazy comments"
         :component test-view)
 
-
-
-
   (step :click "click delete on 1st comment"
         :selector "#delete-button-420")
-
 
   (step :wait "for modal to appear" :ms 500)
 
@@ -93,7 +89,6 @@
   (step :click "click modal confirm (outside of container in body)"
         :selector "#confirm-delete"
         :in js/document.body)
-
 
   (step :wait-command
         :command :comment/delete-comment
