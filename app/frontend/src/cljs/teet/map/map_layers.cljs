@@ -205,7 +205,7 @@
              (partial map-overlay/feature-info-on-select
                       {:background-color theme-colors/gray-dark
                        :single-line? false
-                       :height 200}))
+                       :height 300}))
        {name (layer/->OpenLayersTaso layer)}))))
 
 
