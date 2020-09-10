@@ -206,26 +206,29 @@
    [:h1 "participants"]])
 
 
-(defn add-agenda-form [e! meeting close-event form-atom]
-  [form/form {:e! e!
-              :value @form-atom
-              :on-change-event (form/update-atom-event form-atom merge)
-              :cancel-event close-event
-              :spec :meeting/agenda-form
-              :save-event #(meeting-controller/->SubmitAgendaForm
-                             meeting
-                             (-> @form-atom
-                                 (update :meeting.agenda/body
-                                         (fn [editor-state]
-                                           (when (and editor-state (not (string? editor-state)))
-                                             (rich-text-editor/editor-state->markdown editor-state)))))
-                             close-event)}
-   ^{:attribute :meeting.agenda/topic}
-   [TextField {}]
-   ^{:attribute :meeting.agenda/responsible}
-   [select/select-user {:e! e!}]
-   ^{:attribute :meeting.agenda/body}
-   [rich-text-editor/rich-text-field {}]])
+(defn agenda-form [e! meeting close-event form-atom]
+  [:<>
+   [form/form (merge {:e! e!
+                      :value @form-atom
+                      :on-change-event (form/update-atom-event form-atom merge)
+                      :cancel-event close-event
+                      :spec :meeting/agenda-form
+                      :save-event #(meeting-controller/->SubmitAgendaForm
+                                     meeting
+                                     (-> @form-atom
+                                         (update :meeting.agenda/body
+                                                 (fn [editor-state]
+                                                   (when (and editor-state (not (string? editor-state)))
+                                                     (rich-text-editor/editor-state->markdown editor-state)))))
+                                     close-event)}
+                     (when-let [agenda-id (:db/id @form-atom)]
+                       {:delete (meeting-controller/->DeleteAgendaTopic agenda-id close-event)}))
+    ^{:attribute :meeting.agenda/topic}
+    [TextField {:id "agenda-title"}]
+    ^{:attribute :meeting.agenda/responsible}
+    [select/select-user {:e! e!}]
+    ^{:attribute :meeting.agenda/body}
+    [rich-text-editor/rich-text-field {}]]])
 
 (defn meeting-participant [on-remove {:participation/keys [role participant] :as participation}]
   [:div.participant {:class (<class common-styles/flex-row)}

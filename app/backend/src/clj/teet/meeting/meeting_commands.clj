@@ -98,6 +98,17 @@
                                                       :meeting.agenda/responsible])
                                      agenda)}]})
 
+(defcommand :meeting/delete-agenda
+  {:doc "Mark given agenda topic as deleted"
+   :context {:keys [db user]}
+   :payload {agenda-id :agenda-id}
+   :project-id (project-db/agenda-project-id db agenda-id)
+   :authorization {}
+   :pre [(meeting-db/user-is-organizer-or-reviewer?
+           db user
+           (get-in (du/entity db agenda-id) [:meeting/_agenda :db/id]))]
+   :transact [(meta-model/deletion-tx user agenda-id)]})
+
 (defcommand :meeting/remove-participation
   {:doc "Remove a participation."
    :context {:keys [db user]}
