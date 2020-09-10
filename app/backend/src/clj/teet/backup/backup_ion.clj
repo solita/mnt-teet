@@ -191,31 +191,6 @@
               :where [?f :file/name _]]
             (d/db conn))))
 
-(defn validate-files-exist! [conn document-bucket tempids]
-  (let [files (query-all-files! conn)]
-    (doseq [file files]
-      (let [s3-fn (s3-filename (tempids (:db/id file)) (:file/name file))]
-
-        (log/debug "validating" s3-filename)
-        (when-not (s3/object-exists? document-bucket s3-fn)
-          (throw (ex-info "Missing file when performing restore sanity check, rename already done or bad documents bucket config?" {:missing-s3-file s3-fn})))))
-    (log/info "validated that all" (count files) "files existed in s3 bucket" document-bucket)))
-
-(defn rename-documents! [{:keys [conn document-bucket tempids config] :as ctx}]
-  (when-not (:skip-file-validation? config)
-    (validate-files-exist! conn document-bucket tempids))
-  (let [files (query-all-files! conn)]
-    (doseq [file files]
-      (try
-        (s3/rename-object document-bucket
-                          (s3-filename (tempids (:db/id file))
-                                       (:file/name file))
-                          (s3-filename (:db/id file)
-                                       (:file/name file)))
-        (catch Exception e
-          (log/error (ex-data e)))))
-    (assoc ctx :files-renamed (count files))))
-
 ;; Match and replace mentions like "@[user name](user db id)"
 ;; with new user ids
 (defn replace-comment-mention-ids [txt tempids]
@@ -327,7 +302,6 @@
              download-backup-file
              validate-empty-environment
              restore-file
-             rename-documents!
              rewrite-comment-mentions!
              replace-entity-ids!
              delete-backup-file)
