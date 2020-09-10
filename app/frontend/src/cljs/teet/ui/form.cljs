@@ -80,17 +80,20 @@
 (defn form-footer [{:keys [delete cancel validate disabled?]}]
   [:div {:class (<class form-buttons)}
    (when delete
-     [buttons/delete-button-with-confirm {:action delete}
+     [buttons/delete-button-with-confirm {:action delete
+                                          :id "delete-button"}
       (tr [:buttons :delete])])
    [:div {:style {:margin-left :auto}}
     (when cancel
       [buttons/button-secondary {:style    {:margin-right "1rem"}
                                  :disabled disabled?
+                                 :class "cancel"
                                  :on-click cancel}
        (tr [:buttons :cancel])])]
    (when validate
      [buttons/button-primary {:disabled disabled?
                               :type :submit
+                              :class "submit"
                               :on-click validate}
       (tr [:buttons :save])])])
 
@@ -118,6 +121,7 @@
   [the-atom new-value]
   #(reify t/Event
      (process-event [_ app]
+       (println "reset-atom-event fires")
        (reset! the-atom new-value)
        app)))
 
@@ -458,10 +462,12 @@
   [{:keys [form-component button-component
            modal-title
            form-value
-           open?]}]
+           open? id]}]
   (r/with-let [open-atom (r/atom (or open? false))
                form-atom (r/atom (or form-value {}))
-               close #(reset! open-atom false)
+               close #(do
+                        (println "close form modal fn")
+                        (reset! open-atom false))
                close-event (reset-atom-event open-atom false)]
     [:<>
      [panels/modal {:max-width "md"
@@ -469,7 +475,9 @@
                     :title modal-title
                     :on-close close}
       (into form-component [close-event form-atom])]
-     (assoc-in button-component [1 :on-click]
-               (fn []
-                 (reset! form-atom (or form-value {}))
-                 (reset! open-atom true)))]))
+     (-> button-component
+         (assoc-in [1 :id] id)
+         (assoc-in [1 :on-click]
+                   (fn []
+                     (reset! form-atom (or form-value {}))
+                     (reset! open-atom true))))]))

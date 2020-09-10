@@ -206,26 +206,29 @@
    [:h1 "participants"]])
 
 
-(defn add-agenda-form [e! meeting close-event form-atom]
-  [form/form {:e! e!
-              :value @form-atom
-              :on-change-event (form/update-atom-event form-atom merge)
-              :cancel-event close-event
-              :spec :meeting/agenda-form
-              :save-event #(meeting-controller/->SubmitAgendaForm
-                             meeting
-                             (-> @form-atom
-                                 (update :meeting.agenda/body
-                                         (fn [editor-state]
-                                           (when (and editor-state (not (string? editor-state)))
-                                             (rich-text-editor/editor-state->markdown editor-state)))))
-                             close-event)}
-   ^{:attribute :meeting.agenda/topic}
-   [TextField {}]
-   ^{:attribute :meeting.agenda/responsible}
-   [select/select-user {:e! e!}]
-   ^{:attribute :meeting.agenda/body}
-   [rich-text-editor/rich-text-field {}]])
+(defn agenda-form [e! meeting close-event form-atom]
+  [:<>
+   [form/form (merge {:e! e!
+                      :value @form-atom
+                      :on-change-event (form/update-atom-event form-atom merge)
+                      :cancel-event close-event
+                      :spec :meeting/agenda-form
+                      :save-event #(meeting-controller/->SubmitAgendaForm
+                                     meeting
+                                     (-> @form-atom
+                                         (update :meeting.agenda/body
+                                                 (fn [editor-state]
+                                                   (when (and editor-state (not (string? editor-state)))
+                                                     (rich-text-editor/editor-state->markdown editor-state)))))
+                                     close-event)}
+                     (when-let [agenda-id (:db/id @form-atom)]
+                       {:delete (meeting-controller/->DeleteAgendaTopic agenda-id close-event)}))
+    ^{:attribute :meeting.agenda/topic}
+    [TextField {:id "agenda-title"}]
+    ^{:attribute :meeting.agenda/responsible}
+    [select/select-user {:e! e!}]
+    ^{:attribute :meeting.agenda/body}
+    [rich-text-editor/rich-text-field {}]]])
 
 (defn meeting-participant [on-remove {:participation/keys [role participant] :as participation}]
   [:div.participant {:class (<class common-styles/flex-row)}
@@ -361,11 +364,12 @@
               :meeting.agenda/keys [topic responsible body decisions] :as agenda-topic} agenda]
          ^{:key id}
          [common/hierarchical-container2
-          {:heading [:div
+          {:heading [:div.agenda-heading
                      [typography/Heading3 {:class (<class common-styles/margin-bottom "0.5")} topic]
                      [:span (user-model/user-name responsible)]]
            :heading-button (when edit?
-                             [form/form-modal-button {:form-component [add-agenda-form e! meeting]
+                             [form/form-modal-button {:form-component [agenda-form e! meeting]
+                                                      :id (str "edit-agenda-" id)
                                                       :form-value agenda-topic
                                                       :modal-title (tr [:meeting :edit-agenda-modal-title])
                                                       :button-component [buttons/button-secondary {}
@@ -392,7 +396,8 @@
                                        [add-decision-component e! meeting agenda-topic])}
           theme-colors/gray-lighter]))]
      (when edit?
-       [form/form-modal-button {:form-component [add-agenda-form e! meeting]
+       [form/form-modal-button {:form-component [agenda-form e! meeting]
+                                :id "add-agenda"
                                 :form-value {:meeting.agenda/responsible (select-keys user [:db/id
                                                                                             :user/id
                                                                                             :user/given-name
@@ -406,26 +411,32 @@
   [authorization-context/consume
    [meeting-details* e! user meeting]])
 
+(defn meeting-main-content
+  [e! {:keys [params user query]} meeting]
+  (println "rendering meeting-main-content")
+  (let [{:meeting/keys [title number]} meeting]
+    [:div
+     [:div {:class (<class common-styles/heading-and-action-style)}
+      [typography/Heading2 title (when number (str " #" number))]
+      [authorization-context/when-authorized :edit-meeting
+       [form/form-modal-button {:form-component [meeting-form e! (:activity params)]
+                                :form-value meeting
+                                :modal-title (tr [:meeting :edit-meeting-modal-title])
+                                :id "edit-meeting"
+                                :button-component [buttons/button-secondary
+                                                   {}
+                                                   (tr [:buttons :edit])]}]]]
+     [tabs/tabs
+      query
+      [[:details [meeting-details e! user meeting]]
+       [:notes [:div [:h1 "notes"]]]]]]))
+
 
 (defn meeting-page [e! {:keys [params user query] :as app} {:keys [project meeting]}]
   [authorization-context/with
    (when (meeting-model/user-is-organizer-or-reviewer? user meeting)
      #{:edit-meeting})
    [meeting-page-structure e! app project
-    (let [{:meeting/keys [title number]} meeting]
-      [:div
-       [:div {:class (<class common-styles/heading-and-action-style)}
-        [typography/Heading2 title (when number (str " #" number))]
-        [authorization-context/when-authorized :edit-meeting
-         [form/form-modal-button {:form-component [meeting-form e! (:activity params)]
-                                  :form-value meeting
-                                  :modal-title (tr [:meeting :edit-meeting-modal-title])
-                                  :button-component [buttons/button-secondary
-                                                     {}
-                                                     (tr [:buttons :edit])]}]]]
-       [tabs/tabs
-        query
-        [[:details [meeting-details e! user meeting]]
-         [:notes [:div [:h1 "notes"]]]]]])
+    [meeting-main-content e! app meeting]
     [context/consume :user
      [meeting-participants e! meeting]]]])

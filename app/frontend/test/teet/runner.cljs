@@ -11,7 +11,8 @@
             teet.example-tuck-test
             teet.example-test
             teet.common.common-controller-test
-            teet.ui.rich-text-editor-test))
+            teet.ui.rich-text-editor-test
+            teet.meeting.meeting-view-test))
 
 ;; runner code from clj-chrome-devtools
 (def PRINTED (atom []))
@@ -54,7 +55,8 @@
                   'teet.comments.comments-view-test
                   'teet.example-tuck-test
                   'teet.example-test
-                  'teet.common.common-controller-test))
+                  'teet.common.common-controller-test
+                  'teet.meeting.meeting-view-test))
 
 
 ;; (function() {

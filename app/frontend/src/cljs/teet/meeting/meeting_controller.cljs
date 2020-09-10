@@ -11,6 +11,7 @@
 
 (defrecord SubmitAgendaForm [meeting form-data close-event])
 (defrecord DeletionSuccess [close-event response])
+(defrecord DeleteAgendaTopic [agenda-id close-event])
 
 (defrecord SubmitDecisionForm [agenda-eid form-data close-event])
 (defrecord DeleteDecision [decision-id close-event])
@@ -72,6 +73,15 @@
                      :meeting/agenda [(cu/without-nils
                                        (merge {:db/id "new-agenda-item"}
                                               form-data))]}
+           :result-event (partial common-controller/->ModalFormResult close-event)}))
+
+  DeleteAgendaTopic
+  (process-event [{:keys [agenda-id close-event]} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :meeting/delete-agenda
+           :payload {:agenda-id agenda-id}
+           :success-message (tr [:notifications :topic-deleted])
            :result-event (partial common-controller/->ModalFormResult close-event)}))
 
   RemoveParticipant
