@@ -51,7 +51,8 @@
                     old-organizer :meeting/organizer}
                    (d/pull db '[:meeting/title :meeting/organizer]
                            (:db/id form-data))
-                   new-organizer (get-in form-data [:meeting/organizer :db/id])]
+                   new-organizer (get-in form-data [:meeting/organizer :db/id])
+                   _ (def form-data* form-data)]
 
                ;; New organizer must not already be a participant
                (when (and (not= (:db/id old-organizer)
@@ -131,7 +132,8 @@
    :authorization {}
    :pre [(meeting-db/user-is-organizer-or-reviewer? db user meeting)
          ^{:error :user-is-already-participant}
-         (not (meeting-db/user-is-participating? db participant meeting))]
+         (or (string? (:db/id participant))
+             (not (meeting-db/user-is-participating? db participant meeting)))]
    :transact [(merge {:db/id "new-participation"}
                      (select-keys participation [:participation/in
                                                  :participation/role
