@@ -332,7 +332,7 @@
   "projectgroup" {"activity" "Etapp"},
   :permission/role "Roll",
   :land-exchange/area "Pindala",
-  :meeting.decision/body nil,
+  :meeting.decision/body "Otsus",
   :meeting/agenda "Päevakava",
   :thk.project/carriageway "SO",
   :land-acquisition/status "Olek",
