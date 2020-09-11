@@ -169,7 +169,7 @@
    [project-navigator-view/project-task-navigator e! project app false]])
 
 (defn add-user-form
-  [e! user project-id]
+  [e! user project-id reset-form-value-event]
   (let [roles (into []
                     (filter ac/role-can-be-granted?)
                     @ac/all-roles)]
@@ -177,7 +177,7 @@
      [form/form2 {:e! e!
                   :value @user
                   :on-change-event (form/update-atom-event user merge)
-                  :save-event #(e! (project-controller/->SaveProjectPermission project-id @user))
+                  :save-event #(e! (project-controller/->SaveProjectPermission project-id @user reset-form-value-event))
                   :spec :project/add-permission-form}
       [Grid {:container true :spacing 3
              :style {:width "100%"}}                        ;; Because material ui grid spacing causes sidescroll
@@ -251,9 +251,12 @@
   [e! {permitted-users :thk.project/permitted-users :as project}]
   (r/with-let [open? (r/atom false)
                open-dialog! #(reset! open? true)
-               close-dialog! #(reset! open? false)
+               close-dialog! #(do
+                                (println "close-dialog called")
+                                (reset! open? false))
                selected-person-id-atom (r/atom nil)
-               form-value (r/atom nil)]
+               form-value (r/atom nil)
+               reset-form-value-event (form/reset-atom-event form-value nil)]
     [:<>
      (let [person @selected-person-id-atom
            selected-person (when person
@@ -270,7 +273,7 @@
                                     selected-person-id-atom]
                        :right-panel (if selected-person
                                       [permission-information e! project selected-person]
-                                      [add-user-form e! form-value (:db/id project)])}])
+                                      [add-user-form e! form-value (:db/id project) reset-form-value-event])}])
      [when-authorized :thk.project/update
       project
       [buttons/button-secondary {:on-click open-dialog!
@@ -402,9 +405,7 @@
      [:div
       [:div {:class (<class common-styles/heading-and-action-style)}
        [typography/Heading2 (tr [:people-tab :other-users])]
-       [when-authorized :thk.project/add-permission
-        project
-        [people-modal e! project]]]
+       [people-modal e! project]]
 
       (if (empty? permitted-users)
         [typography/GreyText (tr [:people-tab :no-other-users])]
@@ -506,6 +507,7 @@
    project
    [form/form-modal-button {:modal-title (tr [:project :edit-project])
                             :form-component [edit-project-owner e!]
+                            :form-value (select-keys project [:thk.project/owner])
                             :button-component [buttons/button-secondary {:size :small}
                                                (tr [:buttons :edit])]}]])
 

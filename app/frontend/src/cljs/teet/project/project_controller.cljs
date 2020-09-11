@@ -25,7 +25,8 @@
 (defrecord SaveProjectOwnerResult [on-result-callback result])
 (defrecord OpenPeopleModal [])
 (defrecord UpdateProjectPermissionForm [form-data])
-(defrecord SaveProjectPermission [project-id form-data])
+(defrecord SaveProjectPermission [project-id form-data reset-form-value-event])
+(defrecord SaveProjectPermissionResult [reset-form-value-event response])
 (defrecord RevokeProjectPermission [permission-id])
 (defrecord RevokeProjectPermissionSuccess [result])
 
@@ -660,20 +661,29 @@
            :params           params
            :query            (assoc query :modal "people")}))
 
+  SaveProjectPermissionResult
+  (process-event [{reset-form-value-event :reset-form-value-event} app]
+    (t/fx app
+          (fn [e!]
+            (e! (reset-form-value-event)))
+          common-controller/refresh-fx))
+
   SaveProjectPermission
-  (process-event [{project-id :project-id form-data :form-data} app]
+  (process-event [{project-id :project-id form-data :form-data
+                   reset-form-value-event :reset-form-value-event} app]
     (let [participant (:project/participant form-data)
           role (:permission/role form-data)]
       (t/fx app
             {:tuck.effect/type :command!
-             :command          :thk.project/add-permission
-             :payload          {:project-id  project-id
-                                :user (if (= participant :new)
-                                        {:user/person-id (:user/person-id form-data)}
-                                        participant)
-                                :role role}
-             :success-message  (tr [:notifications :permission-added-successfully])
-             :result-event     common-controller/->Refresh})))
+             :command :thk.project/add-permission
+             :payload {:project-id project-id
+                       :user (if (= participant :new)
+                               {:user/person-id (:user/person-id form-data)}
+                               participant)
+                       :role role}
+             :success-message (tr [:notifications :permission-added-successfully])
+             :result-event (partial ->SaveProjectPermissionResult reset-form-value-event)})))
+
 
   RevokeProjectPermission
   (process-event [{permission-id :permission-id} app]
