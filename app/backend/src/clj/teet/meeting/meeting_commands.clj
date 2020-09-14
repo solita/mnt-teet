@@ -133,10 +133,20 @@
          ^{:error :user-is-already-participant}
          (or (string? (:db/id participant))
              (not (meeting-db/user-is-participating? db participant meeting)))]
-   :transact [(merge {:db/id "new-participation"}
-                     (select-keys participation [:participation/in
-                                                 :participation/role
-                                                 :participation/participant]))]})
+   :transact [(-> participation
+                  (select-keys [:participation/in
+                                :participation/role
+                                :participation/participant])
+                  (merge {:db/id "new-participation"})
+                  (update :participation/participant
+                          #(if (string? (:db/id %))
+                             ;; Don't allow adding arbitrary attributes to new users created
+                             ;; via participation
+                             (select-keys % #{:db/id
+                                              :user/given-name
+                                              :user/family-name
+                                              :user/email})
+                             %)))]})
 
 (defcommand :meeting/send-notifications
   {:doc "Send iCalendar notifications to organizer and participants."
