@@ -179,9 +179,7 @@
                     (->> array-files
                          (map (comp file-model/upload-allowed-file-types
                                     :file/type
-                                    file-model/type-by-suffix
-                                    file-model/file-info
-                                    :file-object))
+                                    file-upload/files-field-entry))
                          (some nil?)))}
       [file-upload/files-field {}]]
      (when upload-progress

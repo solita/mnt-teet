@@ -163,6 +163,12 @@
     (when file-too-large?
       (str " " (tr [:document :file-too-large])))]])
 
+(defn files-field-entry [file-entry]
+  (-> file-entry
+      :file-object
+      file-model/file-info
+      file-model/type-by-suffix))
+
 (defn files-field [{:keys [value on-change error]}]
   [:div {:class (<class files-field-style error)}
    [SectionHeading (tr [:common :files])]
@@ -173,10 +179,7 @@
         ^{:key i}
         [ListItem {}
          (let [{:file/keys [type name size] :as file}
-               (-> file
-                   :file-object
-                   file-model/file-info
-                   file-model/type-by-suffix)
+               (files-field-entry file)
                invalid-file-type? (not (file-model/upload-allowed-file-types type))
                file-too-large? (> size file-model/upload-max-file-size)]
            [ListItemText (merge
