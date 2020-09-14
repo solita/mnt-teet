@@ -145,21 +145,29 @@
            {:border (str "solid 1px " theme-colors/error)})))                 ;;This should also use material ui theme.error
 
 (defn file-info
-  [{:file/keys [type  size] :as _file} invalid-file-type? file-too-large?]
+  [{:file/keys [name type size] :as _file} invalid-file-type? file-too-large?]
   [:<>
-   [:span (merge {} (when invalid-file-type?
-                      {:style {:color theme-colors/error}}))
-    (str type) (when invalid-file-type?
-                 (str " " )
-                 [:a {:target "_blank"
-                      :href "https://confluence.mkm.ee/pages/viewpage.action?spaceKey=TEET&title=TEET+File+format+list"}
-                  (tr [:document :invalid-file-type])])]
+   (into [:span (merge {} (when invalid-file-type?
+                            {:style {:color theme-colors/error}}))
+          (str (or (not-empty type)
+                   (file-model/filename->suffix name)))]
+         (when invalid-file-type?
+           [" "
+            [:a {:target "_blank"
+                 :href "https://confluence.mkm.ee/pages/viewpage.action?spaceKey=TEET&title=TEET+File+format+list"}
+             (tr [:document :invalid-file-type])]]))
    [:span {:style (merge {:display :block}
                          (when file-too-large?
                            {:color theme-colors/error}))}
     (str (format/file-size size))
     (when file-too-large?
       (str " " (tr [:document :file-too-large])))]])
+
+(defn files-field-entry [file-entry]
+  (-> file-entry
+      :file-object
+      file-model/file-info
+      file-model/type-by-suffix))
 
 (defn files-field [{:keys [value on-change error]}]
   [:div {:class (<class files-field-style error)}
@@ -171,10 +179,7 @@
         ^{:key i}
         [ListItem {}
          (let [{:file/keys [type name size] :as file}
-               (-> file
-                   :file-object
-                   file-model/file-info
-                   file-model/type-by-suffix)
+               (files-field-entry file)
                invalid-file-type? (not (file-model/upload-allowed-file-types type))
                file-too-large? (> size file-model/upload-max-file-size)]
            [ListItemText (merge

@@ -3,7 +3,7 @@
             [datomic.client.api :as d]
             [teet.file.file-storage :as file-storage]
             teet.file.file-spec
-            [teet.meta.meta-model :refer [modification-meta creation-meta deletion-tx]]
+            [teet.meta.meta-model :refer [creation-meta deletion-tx]]
             [teet.file.file-model :as file-model]
             [teet.project.project-db :as project-db]
             [clojure.string :as str]
