@@ -122,7 +122,7 @@
                         :on-change #(on-drop (file-vector %))}]]
               children))})))
 
-(defn FileUploadButton [{:keys [id on-drop drop-message icon color multiple? button-attributes]
+(defn FileUploadButton [{:keys [id on-drop drop-message multiple? button-attributes]
                          :or {multiple? true}} & children]
   [FileUpload {:id id
                :on-drop on-drop
