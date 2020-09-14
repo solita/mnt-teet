@@ -132,16 +132,19 @@
                    (set/union provided (:provided ids))
                    entities)))))))
 
-(defn backup [_event]
-  (future
-    (let [bucket (environment/ssm-param :s3 :backup-bucket)
-          env (environment/ssm-param :env)
-          db (d/db (environment/datomic-connection))]
+(defn backup* [_event]
+  (let [bucket (environment/ssm-param :s3 :backup-bucket)
+        env (environment/ssm-param :env)
+        db (d/db (environment/datomic-connection))]
       (s3/write-file-to-s3 {:to {:bucket bucket
                                  :file-key (str env "-backup-"
                                                 (java.util.Date.)
                                                 ".edn.zip")}
                             :contents (ring-io/piped-input-stream (partial backup-to db))})))
+
+(defn backup [_event]
+  (future
+    backup* _event)
   "{\"success\": true}")
 
 (defn test-backup [db]
@@ -301,9 +304,9 @@
              :s3 {:bucket bucket :file-key file-key}
              :config config))))
 
-(defn restore [event]
-  (future
-    (try
+
+(defn restore* [event]
+  (try
       (ctx-> {:event event
               :api-url (environment/config-value :api-url)
               :api-secret (environment/config-value :auth :jwt-secret)
@@ -318,4 +321,8 @@
              delete-backup-file)
       (catch Exception e
         (log/error e "ERROR IN RESTORE" (ex-data e)))))
+
+(defn restore [event]
+  (future
+    (restore* event))
   "{\"success\": true}")
