@@ -145,15 +145,17 @@
            {:border (str "solid 1px " theme-colors/error)})))                 ;;This should also use material ui theme.error
 
 (defn file-info
-  [{:file/keys [type  size] :as _file} invalid-file-type? file-too-large?]
+  [{:file/keys [name type size] :as _file} invalid-file-type? file-too-large?]
   [:<>
-   [:span (merge {} (when invalid-file-type?
-                      {:style {:color theme-colors/error}}))
-    (str type) (when invalid-file-type?
-                 (str " " )
-                 [:a {:target "_blank"
-                      :href "https://confluence.mkm.ee/pages/viewpage.action?spaceKey=TEET&title=TEET+File+format+list"}
-                  (tr [:document :invalid-file-type])])]
+   (into [:span (merge {} (when invalid-file-type?
+                            {:style {:color theme-colors/error}}))
+          (str (or (not-empty type)
+                   (file-model/filename->suffix name)))]
+         (when invalid-file-type?
+           [" "
+            [:a {:target "_blank"
+                 :href "https://confluence.mkm.ee/pages/viewpage.action?spaceKey=TEET&title=TEET+File+format+list"}
+             (tr [:document :invalid-file-type])]]))
    [:span {:style (merge {:display :block}
                          (when file-too-large?
                            {:color theme-colors/error}))}

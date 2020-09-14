@@ -108,8 +108,11 @@
    "shx" "application/shx"
    "lin" "application/lin"})
 
+(defn filename->suffix [filename]
+  (-> filename (str/split #"\.") last))
+
 (defn type-by-suffix [{:file/keys [name] :as file}]
-  (if-let [type-by-suffix (-> name (str/split #"\.") last upload-file-suffix-type)]
+  (if-let [type-by-suffix (-> filename->suffix upload-file-suffix-type)]
     (assoc file :file/type type-by-suffix)
     file))
 

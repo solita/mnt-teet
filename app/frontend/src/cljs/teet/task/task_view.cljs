@@ -169,7 +169,7 @@
                  :save-event      #(file-controller/->AddFilesToTask (:task/files @form)
                                                                      (fn [_]
                                                                        (close!)
-                                                                       (common-controller/->Refresh)))
+                                                                       (file-controller/->AfterUploadRefresh)))
                  :cancel-fn close!
                  :in-progress?    upload-progress
                  :spec :task/add-files}

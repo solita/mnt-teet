@@ -15,6 +15,7 @@
 (defrecord UploadFileUrlReceived [file-data file document-id url on-success])
 (defrecord UploadNewVersion [file new-version])
 (defrecord UploadSuccess [file-id])
+(defrecord AfterUploadRefresh [])
 
 (defrecord DeleteFile [file-id])
 
@@ -69,6 +70,11 @@
        :params           (assoc params :file (str file-id))
        :query            query}
       common-controller/refresh-fx))
+
+  AfterUploadRefresh
+  (process-event [_ app]
+    (t/fx (dissoc app :new-document)
+          common-controller/refresh-fx))
 
   UploadNewVersion
   (process-event [{:keys [file new-version]} {params :params :as app}]
