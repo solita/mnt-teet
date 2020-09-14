@@ -14,7 +14,9 @@
             [teet.log :as log]
             [clojure.string :as str]
             [teet.integration.postgrest :as postgrest]
-            [cheshire.core :as cheshire]))
+            [cheshire.core :as cheshire])
+  (:import (java.time LocalDate)
+           (java.time.format DateTimeFormatter)))
 
 (defn prepare [form]
   (walk/prewalk
@@ -132,13 +134,16 @@
                    (set/union provided (:provided ids))
                    entities)))))))
 
+(defn current-iso-date []
+  (.format (java.time.LocalDate/now) DateTimeFormatter/ISO_LOCAL_DATE))
+
 (defn backup* [_event]
   (let [bucket (environment/ssm-param :s3 :backup-bucket)
         env (environment/ssm-param :env)
         db (d/db (environment/datomic-connection))]
       (s3/write-file-to-s3 {:to {:bucket bucket
                                  :file-key (str env "-backup-"
-                                                (java.util.Date.)
+                                                (current-iso-date)
                                                 ".edn.zip")}
                             :contents (ring-io/piped-input-stream (partial backup-to db))})))
 
