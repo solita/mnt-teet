@@ -12,7 +12,11 @@ echo "ENV: $TEET_ENV"
 echo "Enter branch name to deploy:"
 read VERSION
 
-LATEST_COMMIT=`git ls-remote https://github.com/solita/mnt-teet | grep refs/heads/$VERSION | cut -f1`
+if echo "$VERSION" | grep -E -q '^[0-9a-f]{40,}$'; then
+    LATEST_COMMIT="$VERSION"
+else  
+    LATEST_COMMIT=`git ls-remote https://github.com/solita/mnt-teet | grep refs/heads/$VERSION | cut -f1`
+fi
 
 if [ -z "$LATEST_COMMIT" ]; then
    echo "Unable to determine latest commit for branch $VERSION, exiting."

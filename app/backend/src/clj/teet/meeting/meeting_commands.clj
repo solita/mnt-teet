@@ -51,7 +51,7 @@
                     old-organizer :meeting/organizer}
                    (d/pull db '[:meeting/title :meeting/organizer]
                            (:db/id form-data))
-                   new-organizer (get-in form-data [:meeting/organizer :db/id])]
+                   new-organizer (get-in form-data [:meeting/organizer])]
 
                ;; New organizer must not already be a participant
                (when (and (not= (:db/id old-organizer)
@@ -131,11 +131,22 @@
    :authorization {}
    :pre [(meeting-db/user-is-organizer-or-reviewer? db user meeting)
          ^{:error :user-is-already-participant}
-         (not (meeting-db/user-is-participating? db participant meeting))]
-   :transact [(merge {:db/id "new-participation"}
-                     (select-keys participation [:participation/in
-                                                 :participation/role
-                                                 :participation/participant]))]})
+         (or (string? (:db/id participant))
+             (not (meeting-db/user-is-participating? db participant meeting)))]
+   :transact [(-> participation
+                  (select-keys [:participation/in
+                                :participation/role
+                                :participation/participant])
+                  (merge {:db/id "new-participation"})
+                  (update :participation/participant
+                          #(if (string? (:db/id %))
+                             ;; Don't allow adding arbitrary attributes to new users created
+                             ;; via participation
+                             (select-keys % #{:db/id
+                                              :user/given-name
+                                              :user/family-name
+                                              :user/email})
+                             %)))]})
 
 (defcommand :meeting/send-notifications
   {:doc "Send iCalendar notifications to organizer and participants."

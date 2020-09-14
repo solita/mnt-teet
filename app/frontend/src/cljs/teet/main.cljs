@@ -82,7 +82,11 @@
          [CssBaseline]
          (if (= page :login)
            ;; Show only login dialog
-           [login-view/login-page e! app]
+           [:div {:style {:display :flex
+                          :min-height "100vh"
+                          :flex-direction :column}}
+            [navigation-view/login-header e!]
+            [login-view/login-page e! app]]
            [context/provide :user (:user app)
             [main-view-content e! nav-open? app]])
          (when-feature :data-frisk

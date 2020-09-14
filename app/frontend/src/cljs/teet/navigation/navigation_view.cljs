@@ -14,7 +14,8 @@
             [herb.core :as herb :refer [<class]]
             [teet.authorization.authorization-check :refer [authorized?]]
             [teet.login.login-controller :as login-controller]
-            [teet.notification.notification-view :as notification-view]))
+            [teet.notification.notification-view :as notification-view]
+            [teet.ui.buttons :as buttons]))
 
 
 (def uri-quote (fnil js/encodeURIComponent "(nil)"))
@@ -44,7 +45,7 @@
 
 
 (defn feedback-link
-  [{:user/keys [given-name family-name person-id]}]
+  [{:user/keys [given-name family-name person-id] :as user}]
   (let [ua-string (.-userAgent js/navigator)
         current-uri (.-URL js/document)
         subject-text (str "TEET Feedback, " (.toLocaleDateString (js/Date.))
@@ -54,8 +55,9 @@
                        "Address in TEET: " current-uri "\n"
                        "TEET branch: " (aget js/window "teet_branch") "\n"
                        "TEET git hash: " (aget js/window "teet_githash") "\n"
-                       "User: " (str given-name " " family-name
-                                     " (person code:" person-id ")\n\n"))]
+                       "User: " (if user (str given-name " " family-name
+                                              " (person code:" person-id ")\n\n")
+                                         "User not logged in"))]
     [:div {:class (<class navigation-style/feedback-container-style)}
      [Link {:class (<class navigation-style/feedback-style)
             :href (str "mailto:teet-feedback@mnt.ee"
@@ -149,18 +151,24 @@
           :on-click (e! login-controller/->Logout)}
     (tr [:common :log-out])]])
 
-
-
 (defn navigation-header-links
-  [user e!]
-  [:div {:style {:display :flex
-                 :justify-content :flex-end}}
-   [feedback-link user]
-   [notification-view/notifications e!]
-   [language-selector]
-   (when-feature :my-role-display
-     [user-info user])
-   [logout e!]])
+  ([user e!]
+   [navigation-header-links user e! true])
+  ([user e! logged-in?]
+   [:div {:style {:display :flex
+                  :justify-content :flex-end}}
+    [feedback-link user]
+    (when logged-in?
+      [notification-view/notifications e!])
+    [language-selector]
+    (when logged-in?
+      (when-feature :my-role-display
+                    [user-info user]))
+    (if logged-in?
+      [logout e!]
+      [buttons/button-primary {:style {:margin "0 1rem"}
+                               :href "/oauth2/request"}
+       (tr [:login :login])])]))
 
 (defn header
   [e! {:keys [open? page quick-search]} user]
@@ -170,7 +178,7 @@
                                   (<class navigation-style/appbar-position open?))}
     [Toolbar {:className (herb/join (<class navigation-style/toolbar))}
      [:div {:class (<class navigation-style/logo-style)}
-      navigation-logo/maanteeamet-logo]
+      [navigation-logo/maanteeamet-logo false]]
      [search-view/quick-search e! quick-search]
      [navigation-header-links user e!]]]
 
@@ -180,6 +188,15 @@
             :anchor "left"
             :open open?}
     [page-listing e! open? user page]]])
+
+(defn login-header
+  [e!]
+  [AppBar {:position "sticky"
+           :className (herb/join (<class navigation-style/appbar))}
+   [Toolbar {:className (herb/join (<class navigation-style/toolbar))}
+    [:div {:class (<class navigation-style/logo-style)}
+     [navigation-logo/maanteeamet-logo true]]
+    [navigation-header-links nil e! false]]])
 
 (defn main-container [navigation-open? content]
   [:main {:class (<class navigation-style/main-container navigation-open?)}

@@ -95,10 +95,6 @@
   []
   {:margin-top "1rem"})
 
-(defn link-button-style
-  []
-  {:margin "1rem 0"})
-
 (defn project-panel-width []
   (int (* 0.35 js/window.innerWidth)))
 

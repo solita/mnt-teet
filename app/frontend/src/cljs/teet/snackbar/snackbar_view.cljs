@@ -32,8 +32,7 @@
     icons/action-done))
 
 (defn snackbar-container
-  [e! {:keys [open? message variant hide-duration action] :as snack}]
-  (println "SNACK: " snack)
+  [e! {:keys [open? message variant hide-duration action]}]
   [Snackbar {:anchor-origin {:vertical :bottom
                              :horizontal :right}
              :open open?
