@@ -7,6 +7,7 @@
             [teet.common.common-controller :as common-controller]
             [teet.common.common-styles :as common-styles]
             [teet.file.file-controller :as file-controller]
+            [teet.file.file-model :as file-model]
             [teet.file.file-view :as file-view]
             [teet.localization :refer [tr tr-enum]]
             [teet.project.project-controller :as project-controller]
@@ -169,11 +170,17 @@
                  :save-event      #(file-controller/->AddFilesToTask (:task/files @form)
                                                                      (fn [_]
                                                                        (close!)
-                                                                       (common-controller/->Refresh)))
+                                                                       (file-controller/->AfterUploadRefresh)))
                  :cancel-fn close!
                  :in-progress?    upload-progress
                  :spec :task/add-files}
-      ^{:attribute :task/files}
+      ^{:attribute :task/files
+        :validate (fn [array-files]
+                    (->> array-files
+                         (map (comp file-model/upload-allowed-file-types
+                                    :file/type
+                                    file-upload/files-field-entry))
+                         (some nil?)))}
       [file-upload/files-field {}]]
      (when upload-progress
        [LinearProgress {:variant "determinate"
