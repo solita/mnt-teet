@@ -51,8 +51,7 @@
                     old-organizer :meeting/organizer}
                    (d/pull db '[:meeting/title :meeting/organizer]
                            (:db/id form-data))
-                   new-organizer (get-in form-data [:meeting/organizer :db/id])
-                   _ (def form-data* form-data)]
+                   new-organizer (get-in form-data [:meeting/organizer])]
 
                ;; New organizer must not already be a participant
                (when (and (not= (:db/id old-organizer)
