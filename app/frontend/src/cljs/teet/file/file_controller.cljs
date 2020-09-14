@@ -7,7 +7,6 @@
             [teet.common.common-controller :as common-controller]
             [teet.localization :refer [tr]]
             [teet.file.file-model :as file-model]
-            [teet.transit :as transit]
             [clojure.string :as str]))
 
 (defrecord UploadFiles [files project-id task-id on-success progress-increment file-results]) ; Upload files (one at a time) to document
