@@ -178,7 +178,7 @@
                                   (<class navigation-style/appbar-position open?))}
     [Toolbar {:className (herb/join (<class navigation-style/toolbar))}
      [:div {:class (<class navigation-style/logo-style)}
-      navigation-logo/maanteeamet-logo]
+      [navigation-logo/maanteeamet-logo false]]
      [search-view/quick-search e! quick-search]
      [navigation-header-links user e!]]]
 
@@ -195,7 +195,7 @@
            :className (herb/join (<class navigation-style/appbar))}
    [Toolbar {:className (herb/join (<class navigation-style/toolbar))}
     [:div {:class (<class navigation-style/logo-style)}
-     navigation-logo/maanteeamet-logo]
+     [navigation-logo/maanteeamet-logo true]]
     [navigation-header-links nil e! false]]])
 
 (defn main-container [navigation-open? content]
