@@ -4,7 +4,6 @@
             [reagent.core :as r]
             [teet.activity.activity-model :as activity-model]
             [teet.authorization.authorization-check :refer [when-authorized]]
-            [teet.common.common-controller :as common-controller]
             [teet.common.common-styles :as common-styles]
             [teet.file.file-controller :as file-controller]
             [teet.file.file-model :as file-model]
@@ -13,7 +12,6 @@
             [teet.project.project-controller :as project-controller]
             [teet.project.project-model :as project-model]
             [teet.project.project-navigator-view :as project-navigator-view]
-            [teet.project.project-specs :as project-specs]
             [teet.project.task-model :as task-model]
             [teet.task.task-controller :as task-controller]
             teet.task.task-spec
@@ -24,7 +22,6 @@
             [teet.ui.form :as form]
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
-            [teet.ui.rich-text-editor :as rich-text-editor]
             [teet.ui.material-ui :refer [Grid LinearProgress]]
             [teet.ui.panels :as panels]
             [teet.ui.select :as select]
@@ -94,7 +91,8 @@
                  :cancel-event task-controller/->CloseAddTasksDialog
                  :save-event (partial task-controller/->SaveAddTasksForm
                                       activity-name)
-                 :spec :activity/add-tasks}
+                 :spec :activity/add-tasks
+                 :in-progress? (:in-progress? tasks)}
      [Grid {:container true :style {:height "90%"} :spacing 3}
       [Grid {:item true :xs 4}
        [form/field {:attribute [:task/estimated-start-date :task/estimated-end-date]}

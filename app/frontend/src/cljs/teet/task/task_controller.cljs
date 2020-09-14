@@ -232,7 +232,7 @@
     (let [tasks-to-create (tasks-for-activity-name activity-name
                                                    (:activity/tasks-to-add add-tasks-data)
                                                    (:sent-tasks add-tasks-data))]
-      (t/fx app
+      (t/fx (assoc-in app [:add-tasks-data :in-progress?] true)
             {:tuck.effect/type :command!
              :command          :activity/add-tasks
              :payload          {:db/id (:db/id add-tasks-data)
@@ -245,7 +245,8 @@
   SaveAddTasksResponse
   (process-event [{response :response} {:keys [page params query] :as app}]
     (t/fx (-> app
-              (update :stepper dissoc :dialog))
+              (update :stepper dissoc :dialog)
+              (dissoc :add-tasks-data))
           common-controller/refresh-fx))
 
   CloseAddTasksDialog
