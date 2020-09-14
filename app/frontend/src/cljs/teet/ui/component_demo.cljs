@@ -115,6 +115,8 @@
     [:div
      [Heading1 "Rich text editor"]
 
+     [:div
+      [:f> rich-text-editor/wysiwyg-editor {:value @editor-state}]]
      [:div {:style {:margin "2rem"}}
       [:f> rich-text-editor/wysiwyg-editor {:value @editor-state
                                             :on-change #(reset! editor-state %)}]]

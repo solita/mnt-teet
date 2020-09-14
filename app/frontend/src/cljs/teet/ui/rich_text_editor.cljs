@@ -9,7 +9,7 @@
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.util :as util]
             [teet.ui.buttons :as buttons]
-            [teet.ui.material-ui :refer [Divider]]
+            [teet.ui.material-ui :refer [Divider Link]]
             [teet.ui.common :as common])
   (:require-macros [teet.util.js :refer [js>]]))
 
@@ -89,12 +89,12 @@
        inline-styles)])))
 
 (defn link-comp
-  [{:keys [children contentState entityKey]} props]
+  [{:keys [children decoratedText]}]
   (js>
-   (let [url (aget (.getData (.getEntity contentState entityKey)) "url")]
-     [:a {:href url
-          :target "_blank"}
-      children])))
+    [Link {:href decoratedText
+           :target "_blank"
+           :rel "noopener noreferrer"}
+     children]))
 
 (defn findLinkEntities
   [contentBlock callback contentState]
@@ -107,6 +107,26 @@
                                   "LINK"))))
                 callback)))
 
+
+(def url-regex #"https?://(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,4}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)")
+
+(defn re-pos
+  "Returns index where the match starts and the matched string"
+  [re s]
+  (let [re (js/RegExp. (.-source re) "g")]
+    (loop [res {}]
+      (if-let [m (.exec re s)]
+        (recur (assoc res (.-index m) (first m)))
+        res))))
+
+(defn findLinkWithRegex
+  [contentBlock callback _]
+  (let [text (.getText contentBlock)]
+    (when-let [matches (re-pos url-regex text)]
+      (doall
+        (for [[index match] matches]
+          (callback index (+ index (count match))))))))
+
 (defn focus! [editor-id]
   (.focus (js/document.querySelector (str "#" editor-id " .DraftEditor-editorContainer div:nth-child(1)"))))
 
@@ -115,7 +135,7 @@
    (export-markdown/stateToMarkdown (.getCurrentContent editor-state))))
 
 (def ^:private decorator
-  (draft-js/CompositeDecorator. #js [#js {:strategy findLinkEntities
+  (draft-js/CompositeDecorator. #js [#js {:strategy findLinkWithRegex
                                           :component (r/reactify-component link-comp)}]))
 
 (defn markdown->editor-state [markdown]
@@ -135,7 +155,6 @@
   (js>
    (let [read-only? (nil? on-change)
          editorState (or value (.createEmpty draft-js/EditorState decorator))
-         [linkValue setLinkValue] (react/useState "")
 
          handle-key-command (fn [command state]
                               (let [new-state (.handleKeyCommand draft-js/RichUtils state command)]
@@ -154,20 +173,9 @@
                         )
          blockToggle (fn [type]
                        (on-change (.toggleBlockType draft-js/RichUtils editorState type))
-                       (r/after-render focus-editor))
-         set-link (fn []
-                    (let [contentState (.getCurrentContent editorState)
-                          contentStateWithEntity (.createEntity contentState "LINK" "MUTABLE" #js {:url linkValue})
-                          entityKey (.getLastCreatedEntityKey contentStateWithEntity)
-                          newEditorState (.set draft-js/EditorState editorState  #js {:currentContent contentStateWithEntity})]
-
-                      (on-change (.toggleLink draft-js/RichUtils newEditorState
-                                              (.getSelection newEditorState)
-                                              entityKey))))]
+                       (r/after-render focus-editor))]
      [:div (when id {:id id})
       [:div
-       #_[:input {:value linkValue
-                  :on-change #(setLinkValue (-> % .-target .-value))}]
        (when label
          [:label
           label (when required
@@ -179,10 +187,6 @@
           [:<>
            [block-style-controls editorState blockToggle]
            [inline-style-controls editorState inlineToggle]
-           #_[:button {:on-click (fn [e]
-                                   (.stopPropagation e)
-                                   (set-link))}
-              "set link"]
            [Divider {:style {:margin "1rem 0"}}]])
         [Editor {:ref set-editor-ref!
                  :readOnly (nil? on-change)
