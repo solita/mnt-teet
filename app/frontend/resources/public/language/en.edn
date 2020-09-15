@@ -339,6 +339,7 @@
   :meeting.decision/body "Decision",
   :meeting/agenda "Agenda",
   :thk.project/carriageway "CW",
+  :participation/participant "User",
   :land-acquisition/status "Status",
   :common {"description" "Description", "name" "Name"},
   :land-acquisition/pos-number "POS#",
@@ -382,6 +383,7 @@
   :estate-procedure/type "Procedure type",
   :thk.project/road-name "Road name",
   :thk.project/estimated-date-range "Estimated duration",
+  :participation/role "Role",
   :file/status "Status",
   :thk.project/owner "Owner"},
  :file

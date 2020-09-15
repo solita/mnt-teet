@@ -335,6 +335,7 @@
   :meeting.decision/body "Otsus",
   :meeting/agenda "Päevakava",
   :thk.project/carriageway "SO",
+  :participation/participant "Kasutaja",
   :land-acquisition/status "Olek",
   :common {"description" "Kirjeldus", "name" "Nimi"},
   :land-acquisition/pos-number "POS#",
@@ -378,6 +379,7 @@
   :estate-procedure/type "Protseduuri tüüp",
   :thk.project/road-name "Tee nimetus",
   :thk.project/estimated-date-range "Eeldatav kestus",
+  :participation/role "Roll",
   :file/status "Olek",
   :thk.project/owner "Vastutav isik"},
  :file
@@ -513,7 +515,7 @@
   :decision-topic "{topic} otsus #{num}"},
  :notifications
  {:no-unread-notifications "Uusi teavitusi ei ole",
-  :topic-deleted "Teema edukalt kustutatud",
+  :topic-deleted "Päevakavapunkt edukalt kustutatud",
   :task-status-updated "Ülesande staatus edukalt värskendatud",
   :meeting-deleted "Koosolek edukalt kustutatud",
   :meeting-updated "Koosolek edukalt uuendatud",
