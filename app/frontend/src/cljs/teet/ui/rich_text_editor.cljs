@@ -121,11 +121,12 @@
 
 (defn findLinkWithRegex
   [contentBlock callback _]
-  (let [text (.getText contentBlock)]
-    (when-let [matches (re-pos url-regex text)]
-      (doall
-        (for [[index match] matches]
-          (callback index (+ index (count match))))))))
+  (js>
+    (let [text (.getText contentBlock)]
+      (when-let [matches (re-pos url-regex text)]
+        (doall
+          (for [[index match] matches]
+            (callback index (+ index (count match)))))))))
 
 (defn focus! [editor-id]
   (.focus (js/document.querySelector (str "#" editor-id " .DraftEditor-editorContainer div:nth-child(1)"))))
