@@ -501,7 +501,7 @@
   :no-meetings "Koosolekuid ei ole",
   :send-notification-to-participants "{count} osalejat",
   :add-agenda-button "Lisan päevakavapunkti",
-  :new-decision-modal-title "Uus otsuse lisamine",
+  :new-decision-modal-title "Uue otsuse lisamine",
   :edit-decision-modal-title "Otsuse muutmine",
   :new-meeting-button "Loon uue koosoleku",
   :project-meetings-title "Projekti koosolekud",
@@ -513,6 +513,7 @@
   :decision-topic "{topic} otsus #{num}"},
  :notifications
  {:no-unread-notifications "Uusi teavitusi ei ole",
+  :topic-deleted "Teema edukalt kustutatud",
   :task-status-updated "Ülesande staatus edukalt värskendatud",
   :meeting-deleted "Koosolek edukalt kustutatud",
   :meeting-updated "Koosolek edukalt uuendatud",

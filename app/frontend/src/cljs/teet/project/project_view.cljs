@@ -251,9 +251,7 @@
   [e! {permitted-users :thk.project/permitted-users :as project}]
   (r/with-let [open? (r/atom false)
                open-dialog! #(reset! open? true)
-               close-dialog! #(do
-                                (println "close-dialog called")
-                                (reset! open? false))
+               close-dialog! #(reset! open? false)
                selected-person-id-atom (r/atom nil)
                form-value (r/atom nil)
                reset-form-value-event (form/reset-atom-event form-value nil)]

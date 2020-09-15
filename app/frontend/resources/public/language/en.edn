@@ -473,7 +473,7 @@
   :password "Password",
   :username "Username",
   :greetings-text
-  "Tee elukaare teabe ning andmete haldamise ja vahetamise keskkond TEET"},
+  "Road life cycle information management and common data environment TEET"},
  :map
  {:aerial-view "Aerial view",
   :clear-selections "Clear selections",
@@ -518,6 +518,7 @@
   :decision-topic "{topic} decision #{num}"},
  :notifications
  {:no-unread-notifications "No unread notifications",
+  :topic-deleted "Topic deleted successfully",
   :task-status-updated "Task status updated successfully",
   :meeting-deleted "Meeting deleted successfully",
   :meeting-updated "Meeting updated successfully",
