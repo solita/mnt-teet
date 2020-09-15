@@ -19,6 +19,15 @@
 (s/def :meeting/decision-form
   (s/keys :req [:meeting.decision/body]))
 
+(s/def :meeting/add-non-teet-user-form
+  (s/keys :req [:user/given-name
+                :user/family-name
+                :user/email]))
+
+(s/def :meeting/add-teet-user-form
+  (s/keys :req [:participation/role
+                :participation/participant]))
+
 (s/def :meeting/add-participant-form
   (s/keys :req [(or (and :user/given-name
                          :user/family-name

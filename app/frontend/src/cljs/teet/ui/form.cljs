@@ -376,13 +376,11 @@
                            (e! (save-event))))
 
                ;; Determine required fields by getting missing attributes of an empty map
-               required-fields (missing-attributes spec {})
 
                ctx {:invalid-attributes invalid-attributes
                     :update-attribute-fn update-attribute-fn
                     :validate validate
                     :submit! submit!
-                    :required-fields required-fields
                     :current-fields current-fields
                     :e! e!
                     :footer {:cancel   (or cancel-fn
@@ -402,6 +400,7 @@
                     {:id id}))
      (context/provide
        :form (-> ctx
+                 (assoc :required-fields (missing-attributes spec {}))
                  (assoc :value value)
                  (assoc-in [:footer :cancel] (or cancel-fn
                                                  (when cancel-event

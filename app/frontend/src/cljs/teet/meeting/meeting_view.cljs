@@ -254,35 +254,36 @@
       [:div.new-participant
        [:div
         [typography/BoldGreyText (tr [:meeting :add-person])]
+        [:span (pr-str @form)]
         [form/form2 {:e! e!
                      :value @form
                      :on-change-event (form/update-atom-event form merge)
                      :save-event save-participant!
-                     :spec :meeting/add-participant-form
+                     :spec (if non-teet?
+                             :meeting/add-non-teet-user-form
+                             :meeting/add-teet-user-form)
                      :cancel-fn (when (:non-teet-user? @form)
-                                  #(reset! form {:non-teet-user? false}))}
+                                  #(reset! form initial-form))}
          (if non-teet?
            ;; Show fields for user info when adding non-TEET user participant
            ^{:key "non-teet-user"}
            [common/column-with-space-between 0.5
             [form/field :user/given-name
-             [TextField {:label "" :placeholder (tr [:fields :user/given-name])}]]
+             [TextField {:placeholder (tr [:fields :user/given-name])}]]
             [form/field :user/family-name
-             [TextField {:label "" :placeholder (tr [:fields :user/family-name])}]]
+             [TextField {:placeholder (tr [:fields :user/family-name])}]]
             [form/field :user/email
-             [TextField {:label "" :placeholder (tr [:fields :user/email])}]]]
+             [TextField {:placeholder (tr [:fields :user/email])}]]]
 
            ;; Show user selection for selecting TEET user
            ^{:key "teet-user"}
            [common/column-with-space-between 0.5
             [form/field :participation/participant
              [select/select-user {:e! e!
-                                  :label ""
                                   :after-results-action {:title (tr [:meeting :add-non-teet-participant])
                                                          :on-click add-non-teet-user!}}]]
             [form/field :participation/role
              [select/select-enum {:e! e!
-                                  :show-label? false
                                   :show-empty-selection? false
                                   :attribute :participation/role}]]])
 
