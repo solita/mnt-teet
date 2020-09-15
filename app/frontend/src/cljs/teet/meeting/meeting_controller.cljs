@@ -7,6 +7,7 @@
             [teet.snackbar.snackbar-controller :as snackbar-controller]))
 
 (defrecord SubmitMeetingForm [activity-id form-data close-event])
+(defrecord CreateMeetingResult [activity-id close-event result])
 (defrecord DeleteMeeting [activity-id meeting-id close-event])
 
 (defrecord SubmitAgendaForm [meeting form-data close-event])
@@ -35,7 +36,25 @@
              :success-message (if editing?
                                 (tr [:notifications :meeting-updated])
                                 (tr [:notifications :meeting-created]))
-             :result-event (partial common-controller/->ModalFormResult close-event)})))
+             :result-event (if editing?
+                             (partial common-controller/->ModalFormResult close-event)
+                             (partial ->CreateMeetingResult activity-id close-event))})))
+
+  CreateMeetingResult
+  (process-event [{activity-id :activity-id
+                   result :result
+                   close-event :close-event}
+                  {:keys [params] :as app}]
+    (t/fx app
+          (fn [e!]
+            (e! (close-event)))
+          (fn [e!]
+            (e! (common-controller/->Navigate
+                  :meeting
+                  (merge params
+                         {:meeting (get-in result [:tempids "new-meeting"])
+                          :activity activity-id})
+                  {})))))
 
   DeleteMeeting
   (process-event [{:keys [activity-id meeting-id close-event]} app]
