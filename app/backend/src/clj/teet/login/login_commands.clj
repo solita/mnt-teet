@@ -148,12 +148,22 @@
    :payload _
    :project-id nil
    :authorization {}}
-  {:token (jwt-token/create-token (environment/config-value :auth :jwt-secret) "teet_user"
-                                  {:given-name given-name
-                                   :family-name family-name
-                                   :person-id person-id
-                                   :email email
-                                   :id id})
-   :user (user-db/user-info db [:user/id id])
-   :enabled-features (environment/config-value :enabled-features)
-   :api-url (environment/config-value :api-url)})
+  (log/info "BEFORE :login/refresh-token")
+  (log/info "refresh token has jwt secret? " (string? (environment/config-value :auth :jwt-secret)))
+  (let [user-info {:given-name given-name
+                   :family-name family-name
+                   :person-id person-id
+                   :email email
+                   :id id}
+        _ (log/info "create token with user info: " user-info)
+        token (jwt-token/create-token
+               (environment/config-value :auth :jwt-secret) "teet_user"
+               user-info)]
+    (log/info "TOKEN created: " token)
+    (let [resp
+          {:token token
+           :user (user-db/user-info db [:user/id id])
+           :enabled-features (environment/config-value :enabled-features)
+           :api-url (environment/config-value :api-url)}]
+      (log/info "RETURN RESP" resp)
+      resp)))
