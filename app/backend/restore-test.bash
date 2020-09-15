@@ -1,11 +1,22 @@
 #!/usr/bin/env bash
 
-set -exuo pipefail
+set -euo pipefail
 
 DEST_BUCKET=teet-restoretest-`echo $USER|head -c 2`
 SOURCE_BUCKET=teet-dev-documents
-#aws s3api create-bucket --bucket $DEST_BUCKET --create-bucket-configuration LocationConstraint=eu-central-1
-#aws s3 sync s3://$SOURCE_BUCKET s3://$DEST_BUCKET
+
+
+# uncomment these when running this for the first time / with a fresh dest bucket after manually deleting it:
+
+echo "create bucket $DEST_BUCKET & clone $SOURCE_BUCKET to $DEST_BUCKET ? (y/n)"
+read answer
+echo "answer is $answer"
+if [ x$answer = xy ]; then
+  aws s3api create-bucket --bucket $DEST_BUCKET --create-bucket-configuration LocationConstraint=eu-central-1
+  aws s3 sync s3://$SOURCE_BUCKET s3://$DEST_BUCKET
+else
+    echo "assuming test bucket $DEST_BUCKET aready exists"
+fi
 
 
 # 1. create backup using existing default config
