@@ -254,7 +254,6 @@
       [:div.new-participant
        [:div
         [typography/BoldGreyText (tr [:meeting :add-person])]
-        [:span (pr-str @form)]
         [form/form2 {:e! e!
                      :value @form
                      :on-change-event (form/update-atom-event form merge)
