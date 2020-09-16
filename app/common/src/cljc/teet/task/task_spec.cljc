@@ -31,10 +31,9 @@
 
 (s/def :task/add-files (s/keys :req [:task/files]))
 
-(s/def :task/file (s/and (s/keys :req [:file/type
-                                       :file/name
+(s/def :task/file (s/and (s/keys :req [:file/name
                                        :file/size])
-                         #(nil? (file-model/validate-file (file-model/type-by-suffix %)))))
+                         #(nil? (file-model/validate-file %))))
 
 (s/def :task/new-comment-form (s/keys :req [:comment/comment]))
 

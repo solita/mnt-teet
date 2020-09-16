@@ -26,8 +26,8 @@
               (d/q '[:find ?c
                      :where
                      [?c :meta/creator ?user]
-                     [?c :file/type ?type]
-                     [(.startsWith ^String ?type "image/")]
+                     [?c :file/name ?name]
+                     [(teet.file.file-model/image-suffix? ?name)]
                      :in $ $user [?c ...]]
                    db
                    (user-model/user-ref user)

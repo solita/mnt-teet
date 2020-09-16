@@ -233,8 +233,7 @@
                 teet.integration.integration-s3/presigned-url (constantly "url")]
     (->> (tu/local-command :file/upload {:task-id (tu/get-data :task-id)
                                          :file {:file/name "land_deals.pdf"
-                                                :file/size 666
-                                                :file/type "application/pdf"}})
+                                                :file/size 666}})
          :file
          (tu/store-data! :file)))
 

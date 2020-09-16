@@ -178,9 +178,9 @@
       (fn [i ^js/File file]
         ^{:key i}
         [ListItem {}
-         (let [{:file/keys [type name size] :as file}
+         (let [{:file/keys [name size] :as file}
                (files-field-entry file)
-               invalid-file-type? (not (file-model/upload-allowed-file-types type))
+               invalid-file-type? (not (file-model/valid-suffix? name))
                file-too-large? (> size file-model/upload-max-file-size)]
            [ListItemText (merge
                           {:primary name

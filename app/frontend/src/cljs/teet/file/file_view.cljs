@@ -7,6 +7,7 @@
             [teet.common.common-controller :as common-controller]
             [teet.common.common-styles :as common-styles]
             [teet.file.file-controller :as file-controller]
+            [teet.file.file-model :as file-model]
             [teet.file.file-style :as file-style]
             [teet.localization :refer [tr tr-enum]]
             [teet.project.project-model :as project-model]
@@ -105,7 +106,7 @@
 (def ^:private sorters
   {"meta/created-at" [(juxt :meta/created-at :file/name) >]
    "file/name"       [:file/name <]
-   "file/type"       [(juxt :file/type :file/name) <]
+   "file/type"       [(comp file-model/filename->suffix :file/name) <]
    "file/status"     [(juxt :file/status :file/name) <]})
 
 (defn- sort-items
@@ -180,12 +181,13 @@
    :top "6px"})
 
 (defn file-icon [{class :class
-                  :file/keys [type]}]
+                  :file/keys [type]
+                  :as file}]
   [:div {:class (if class
                   [class (<class file-icon-style)]
                   (<class file-icon-style))}
    (cond
-     (and type (str/starts-with? type "image/"))
+     (file-model/image? file)
      [fi/image]
 
      :else
@@ -276,7 +278,7 @@
      (if @show-preview?
        [:div
         [:div {:class (<class preview-style)}
-         (if (str/starts-with? (:file/type file) "image/")
+         (if (file-model/image? file)
            [:img {:style {:width :auto :height :auto
                           :max-height "250px"
                           :object-fit :contain}
@@ -358,7 +360,7 @@
                 :as app} project]
          (let [task (project-model/task-by-id project task-id)
                file (project-model/file-by-id project file-id false)
-               show-preview? (r/atom (and file (str/starts-with? (:file/type file) "image/")))
+               show-preview? (r/atom (and file (file-model/image? file)))
                old? (nil? file)
                file (or file (project-model/file-by-id project file-id true))
                latest-file (when old?
