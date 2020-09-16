@@ -254,18 +254,16 @@
       [:div.new-participant
        [:div
         [typography/BoldGreyText (tr [:meeting :add-person])]
-        [form/form2 {:e! e!
-                     :value @form
-                     :on-change-event (form/update-atom-event form merge)
-                     :save-event save-participant!
-                     :spec (if non-teet?
-                             :meeting/add-non-teet-user-form
-                             :meeting/add-teet-user-form)
-                     :cancel-fn (when (:non-teet-user? @form)
-                                  #(reset! form initial-form))}
-         (if non-teet?
-           ;; Show fields for user info when adding non-TEET user participant
-           ^{:key "non-teet-user"}
+        ;; Split in to 2 forms so we can have separate specs for each
+        (if non-teet?
+          ^{:key "non-teet-user"}
+          [form/form2 {:e! e!
+                       :value @form
+                       :on-change-event (form/update-atom-event form merge)
+                       :save-event save-participant!
+                       :spec :meeting/add-non-teet-user-form
+                       :cancel-fn #(reset! form initial-form)}
+           [:h1 "haloo"]
            [common/column-with-space-between 0.5
             [form/field :user/given-name
              [TextField {:placeholder (tr [:fields :user/given-name])}]]
@@ -273,8 +271,13 @@
              [TextField {:placeholder (tr [:fields :user/family-name])}]]
             [form/field :user/email
              [TextField {:placeholder (tr [:fields :user/email])}]]]
-
-           ;; Show user selection for selecting TEET user
+           [form/footer2]]
+          ^{:key "teet-user"}
+          [form/form2 {:e! e!
+                       :value @form
+                       :on-change-event (form/update-atom-event form merge)
+                       :save-event save-participant!
+                       :spec :meeting/add-teet-user-form}
            ^{:key "teet-user"}
            [common/column-with-space-between 0.5
             [form/field :participation/participant
@@ -284,9 +287,9 @@
             [form/field :participation/role
              [select/select-enum {:e! e!
                                   :show-empty-selection? false
-                                  :attribute :participation/role}]]])
+                                  :attribute :participation/role}]]]
 
-         [form/footer2]]]])))
+           [form/footer2]])]])))
 
 (defn meeting-participants [e! {organizer :meeting/organizer
                                 participations :participation/_in :as meeting} user]
