@@ -32,28 +32,31 @@
                               .refresh))
                           ;; else
                           (log/warn "nil .features in received geojson")))]
-    (-> (cond
-          (rpc-post? url-or-data)
-          (let [{:keys [url payload]} url-or-data]
-            (-> (@postgrest-ui.impl.fetch/fetch-impl
-                 #js {:body (-> payload clj->js js/JSON.stringify)
-                      :headers #js {"Accept" (or content-type
-                                                 "application/octet-stream")}})
-                (.then #(.json %))
-                (.then add-features!)))
+    (cond
+      (rpc-post? url-or-data)
+      (let [{:keys [url payload]} url-or-data]
+        (-> (@postgrest-ui.impl.fetch/fetch-impl
+             url
+             #js {:method "POST"
+                  :body (-> payload clj->js js/JSON.stringify)
+                  :headers #js {"Content-Type" "application/json"
+                                "Accept" (or content-type
+                                             "application/octet-stream")}})
+            (.then #(.json %))
+            (.then add-features!)))
 
-          (object? url-or-data)
-          (add-features! url-or-data)
+      (object? url-or-data)
+      (add-features! url-or-data)
 
-          (fn? url-or-data)
-          (add-features! (url-or-data))
+      (fn? url-or-data)
+      (add-features! (url-or-data))
 
-          :else
-          (-> (@postgrest-ui.impl.fetch/fetch-impl
-               url-or-data #js {:headers #js {"Accept" (or content-type
-                                                           "application/octet-stream")}})
-              (.then #(.json %))
-              (.then add-features!))))))
+      :else
+      (-> (@postgrest-ui.impl.fetch/fetch-impl
+           url-or-data #js {:headers #js {"Accept" (or content-type
+                                                       "application/octet-stream")}})
+          (.then #(.json %))
+          (.then add-features!)))))
 
 (defrecord GeoJSON [source-name projection extent z-index opacity_ min-resolution max-resolution
                     url-or-data content-type style-fn on-change on-select]
