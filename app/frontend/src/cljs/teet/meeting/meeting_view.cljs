@@ -263,7 +263,6 @@
                        :save-event save-participant!
                        :spec :meeting/add-non-teet-user-form
                        :cancel-fn #(reset! form initial-form)}
-           [:h1 "haloo"]
            [common/column-with-space-between 0.5
             [form/field :user/given-name
              [TextField {:placeholder (tr [:fields :user/given-name])}]]
