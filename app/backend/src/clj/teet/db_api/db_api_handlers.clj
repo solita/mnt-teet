@@ -69,7 +69,10 @@
               ;; Default to sending out transit response
               (transit/transit-response response)))))
       (catch Exception e
-        (let [{:keys [status error]} (ex-data e)]
+        (let [exd (ex-data e)
+              status (:status exd)
+              error (or (:error exd)
+                        (:teet/error exd))]
           (case error
             ;; Return JWT verification failures (likely expired token) as 401 (same as PostgREST)
             :jwt-verification-failed

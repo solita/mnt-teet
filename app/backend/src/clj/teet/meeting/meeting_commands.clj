@@ -129,24 +129,24 @@
              participant :participation/participant :as participation}
    :project-id (project-db/meeting-project-id db meeting)
    :authorization {}
-   :pre [(meeting-db/user-is-organizer-or-reviewer? db user meeting)
-         ^{:error :user-is-already-participant}
-         (or (string? (:db/id participant))
-             (not (meeting-db/user-is-participating? db participant meeting)))]
-   :transact [(-> participation
-                  (select-keys [:participation/in
-                                :participation/role
-                                :participation/participant])
-                  (merge {:db/id "new-participation"})
-                  (update :participation/participant
-                          #(if (string? (:db/id %))
-                             ;; Don't allow adding arbitrary attributes to new users created
-                             ;; via participation
-                             (select-keys % #{:db/id
-                                              :user/given-name
-                                              :user/family-name
-                                              :user/email})
-                             %)))]})
+   :pre [(meeting-db/user-is-organizer-or-reviewer? db user meeting)]
+   :transact [(list 'teet.meeting.meeting-tx/add-participation
+                    (-> participation
+                        (select-keys [:participation/in
+                                      :participation/role
+                                      :participation/participant])
+                        (merge {:db/id "new-participation"})
+                        (update :participation/participant
+                                #(if (string? (:db/id %))
+                                   ;; Don't allow adding arbitrary attributes to new users created
+                                   ;; via participation
+                                   (select-keys % #{:db/id
+                                                    :user/given-name
+                                                    :user/family-name
+                                                    :user/email})
+                                   %))))]})
+
+
 
 (defcommand :meeting/send-notifications
   {:doc "Send iCalendar notifications to organizer and participants."

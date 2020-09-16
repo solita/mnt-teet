@@ -1,4 +1,4 @@
-{:allow []
+{:allow [teet.meeting.meeting-tx/add-participation]
  :lambdas {:query
            {:fn teet.db-api.db-api-ion/db-api-query
             :integration :api-gateway/proxy
