@@ -14,9 +14,14 @@
                                      (str name "=" val))
                                    params))))
 
+(defn- rpc-post? [x]
+  (and (map? x)
+       (contains? x :url)
+       (contains? x :payload)))
+
 (defn load-features [^ol.source.Vector source url-or-data content-type _extent _resolution _projection]
   ;;(log/info "LOAD " url-or-data ", extent:" extent ", resolution: " resolution ", projection: " projection)
-  (let [add-features! (fn [json]                        
+  (let [add-features! (fn [json]
                         (assert (some? json) "null json received")
                         (if-not (nil? (.-features json))
                           (let [features (-> source
@@ -28,6 +33,15 @@
                           ;; else
                           (log/warn "nil .features in received geojson")))]
     (-> (cond
+          (rpc-post? url-or-data)
+          (let [{:keys [url payload]} url-or-data]
+            (-> (@postgrest-ui.impl.fetch/fetch-impl
+                 #js {:body (-> payload clj->js js/JSON.stringify)
+                      :headers #js {"Accept" (or content-type
+                                                 "application/octet-stream")}})
+                (.then #(.json %))
+                (.then add-features!)))
+
           (object? url-or-data)
           (add-features! url-or-data)
 

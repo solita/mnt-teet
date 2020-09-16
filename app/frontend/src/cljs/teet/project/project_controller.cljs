@@ -512,7 +512,7 @@
           {:tuck.effect/type :rpc
            :endpoint (get-in app [:config :api-url])
            :rpc "geojson_features_by_id"
-           :args {"ids" (str "{" (str/join "," feature-ids) "}")}
+           :args {"ids" feature-ids}
            :result-event (partial ->RelatedFeaturesSuccess feature-type)}))
 
   RelatedFeaturesSuccess

@@ -52,7 +52,8 @@
                              z-index opacity
                              fit-on-load? fit-padding
                              on-load on-select
-                             content-type]
+                             content-type
+                             post?]
                       :or {z-index 99
                            opacity 1
                            fit-padding [0 0 0 0]
@@ -63,7 +64,10 @@
                      z-index
                      opacity
                      min-resolution max-resolution
-                     (url (str endpoint "/rpc/" rpc-name) parameters)
+                     (if post?
+                       {:url (str endpoint "/rpc/" rpc-name)
+                        :payload parameters}
+                       (url (str endpoint "/rpc/" rpc-name) parameters))
                      content-type
                      style-fn
                      (fn [layer]

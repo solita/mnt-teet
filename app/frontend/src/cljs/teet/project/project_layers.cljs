@@ -167,9 +167,9 @@
     {:related-restrictions
      (map-layers/geojson-layer (endpoint app)
                                "geojson_features_by_id"
-                               {"ids" (str "{" (str/join "," restrictions) "}")}
+                               {"ids" restrictions}
                                map-features/project-related-restriction-style
-                               {})}))
+                               {:post? true})}))
 
 (defn related-cadastral-units [{{query :query :as app} :app
                                 {cadastral-units :thk.project/related-cadastral-units
@@ -179,9 +179,9 @@
       {:related-cadastral-units
        (map-layers/geojson-layer (endpoint app)
                                  "geojson_features_by_id"
-                                 {"ids" (str "{" (str/join "," units) "}")}
+                                 {"ids" units}
                                  map-features/cadastral-unit-style
-                                 {})})))
+                                 {:post? true})})))
 
 (defn- ags-on-select [e! {:map/keys [teet-id]}]
   (e! (map-controller/->FetchOverlayForEntityFeature [:route :project :overlays] teet-id)))
