@@ -277,7 +277,6 @@
                        :on-change-event (form/update-atom-event form merge)
                        :save-event save-participant!
                        :spec :meeting/add-teet-user-form}
-           ^{:key "teet-user"}
            [common/column-with-space-between 0.5
             [form/field :participation/participant
              [select/select-user {:e! e!
