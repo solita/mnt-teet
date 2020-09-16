@@ -87,22 +87,6 @@
                :href (common-controller/query-url :file/download-file {:file-id id})}
          [icons/file-cloud-download]]])]))
 
-(defn- other-version-row
-  [{id :db/id
-    :file/keys [name version status]
-    :meta/keys [created-at creator]
-    :as _file}]
-  [:div.file-row {:class [(<class common-styles/flex-row) (<class common-styles/margin-bottom 0.5)]}
-   [:div.file-row-name {:class (<class common-styles/flex-table-column-style 55)}
-    [url/Link {:page :file :params {:file id}}
-     name]]
-   [:div.file-row-version {:class (<class common-styles/flex-table-column-style 10 :center)}
-    [:span (str "V" version)]]
-   [:div.file-row-status {:class (<class common-styles/flex-table-column-style 10 :center)}
-    [:span (tr-enum status)]]
-   [:div.file-row-date {:class (<class common-styles/flex-table-column-style 25 :flex-end)}
-    [:span (format/date created-at)]]])
-
 (def ^:private sorters
   {"meta/created-at" [(juxt :meta/created-at :file/name) >]
    "file/name"       [:file/name <]
