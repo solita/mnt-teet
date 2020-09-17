@@ -394,6 +394,7 @@
       [file-upload/FileUploadButton
        {:id "images-field"
         :drag-container-id "new-comment-form"
+        :drop-message (tr [:drag :drop-to-comment])
         :color :secondary
         :button-attributes {:size :small}
         :on-drop #(e! (file-controller/map->UploadFiles
