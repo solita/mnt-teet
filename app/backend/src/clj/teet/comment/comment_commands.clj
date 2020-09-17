@@ -12,7 +12,6 @@
             [teet.permission.permission-db :as permission-db]
             [teet.notification.notification-db :as notification-db]
             [teet.user.user-model :as user-model]
-            [teet.util.collection :as cu]
             [teet.util.datomic :as du])
   (:import (java.util Date)))
 
