@@ -31,7 +31,9 @@
             [teet.ui.util :as util :refer [mapc]]
             [teet.user.user-model :as user-model]
             [teet.util.collection :as cu]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.log :as log]
+            [teet.ui.drag :as drag]))
 
 (defn- task-groups-for-activity [activity-name task-groups]
   (filter (comp (get activity-model/activity-name->task-groups activity-name #{})
@@ -159,8 +161,13 @@
                                    :style {:margin-left "1rem"}}
            (tr [:buttons :confirm])]]]])]))
 
-(defn- add-files-form [e! upload-progress close!]
-  (r/with-let [form (r/atom {})]
+(defn- add-files-form [e! upload-progress initial-state-atom close!]
+  (r/with-let [form (r/atom (if initial-state-atom
+                              (let [val @initial-state-atom]
+                                (reset! initial-state-atom nil)
+                                val)
+                              {}))
+               reinstate-drop-zones! (drag/suppress-drop-zones!)]
     [:<>
      [form/form {:e!              e!
                  :value           @form
@@ -182,31 +189,42 @@
       [file-upload/files-field {}]]
      (when upload-progress
        [LinearProgress {:variant "determinate"
-                        :value   upload-progress}])]))
+                        :value   upload-progress}])]
+    (finally
+      (reinstate-drop-zones!))))
 
 (defn task-details
   [e! new-document {:task/keys [description files] :as task}]
-  [:div.task-details
-   (when description
-     [typography/Paragraph description])
-   [task-basic-info task]
-   [file-view/file-table files]
-   (when (task-model/can-submit? task)
-     [:<>
-      [panels/button-with-modal {:button-component (file-view/file-upload-button)
-                                 :modal-options {:max-width "lg"}
-                                 :modal-title (tr [:task :add-document])
-                                 :modal-component [add-files-form e! (:in-progress? new-document)]}]
-      (when (seq files)
-        [when-authorized :task/submit task
-         [submit-results-button e! task]])])
-   (when (task-model/reviewing? task)
-     [when-authorized :task/review task
-      [:div.task-review-buttons {:style {:display :flex :justify-content :space-between}}
-       [buttons/button-warning {:on-click (e! task-controller/->Review :reject)}
-        (tr [:task :reject-review])]
-       [buttons/button-primary {:on-click (e! task-controller/->Review :accept)}
-        (tr [:task :accept-review])]]])])
+  (r/with-let [file-upload-open? (r/atom false)
+               dropped-files (atom nil)]
+    [:div#task-details-drop.task-details
+     (when description
+       [typography/Paragraph description])
+     [task-basic-info task]
+     [file-view/file-table files]
+     (when (task-model/can-submit? task)
+       [:<>
+        [file-upload/FileUpload {:drag-container-id "task-details-drop"
+                                 :drop-message (tr [:drag :drop-to-task])
+                                 :on-drop #(do (reset! dropped-files {:task/files %})
+                                               (reset! file-upload-open? true))}]
+        [panels/button-with-modal {:open-atom file-upload-open?
+                                   :button-component (file-view/file-upload-button)
+                                   :modal-options {:max-width "lg"}
+                                   :modal-title (tr [:task :add-document])
+                                   :modal-component [add-files-form e!
+                                                     (:in-progress? new-document)
+                                                     dropped-files]}]
+        (when (seq files)
+          [when-authorized :task/submit task
+           [submit-results-button e! task]])])
+     (when (task-model/reviewing? task)
+       [when-authorized :task/review task
+        [:div.task-review-buttons {:style {:display :flex :justify-content :space-between}}
+         [buttons/button-warning {:on-click (e! task-controller/->Review :reject)}
+          (tr [:task :reject-review])]
+         [buttons/button-primary {:on-click (e! task-controller/->Review :accept)}
+          (tr [:task :accept-review])]]])]))
 
 (defn- task-header
   [e! task]
