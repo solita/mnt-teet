@@ -18,7 +18,6 @@
             [teet.ui.form :as form]
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
-            [teet.ui.itemlist :as itemlist]
             [teet.ui.project-context :as project-context]
             [teet.ui.query :as query]
             [teet.ui.select :as select]
@@ -84,6 +83,7 @@
                                      value)))}]
    [file-upload/FileUploadButton
     {:id "images-field"
+     :drag-container-id "edit-comment-form"
      :color :secondary
      :button-attributes {:size :small}
      :on-drop #(e! (file-controller/map->UploadFiles
@@ -109,6 +109,7 @@
     ;; Don't care about updated values
     (fn [_ _ _]
       [form/form2 {:e! e!
+                   :id "edit-comment-form"
                    :value @comment-form
                    :on-change-event ->UpdateCommentForm
                    :cancel-event comments-controller/->CancelCommentEdit
@@ -392,6 +393,7 @@
                                       id)))}]
       [file-upload/FileUploadButton
        {:id "images-field"
+        :drag-container-id "new-comment-form"
         :color :secondary
         :button-attributes {:size :small}
         :on-drop #(e! (file-controller/map->UploadFiles
@@ -469,6 +471,7 @@
                   ;; only one file upload element in the dom at once.
                   (not (-> app :stepper :dialog)))
          [form/form2 {:e! e!
+                      :id "new-comment-form"
                       :value @comment-form
                       :on-change-event ->UpdateCommentForm
                       :save-event #(let [{:comment/keys [comment files visibility track? mentions]} @comment-form]
