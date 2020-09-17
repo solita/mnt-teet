@@ -8,7 +8,7 @@
 
 (defrecord SubmitMeetingForm [activity-id form-data close-event])
 (defrecord CreateMeetingResult [activity-id close-event result])
-(defrecord DeleteMeeting [activity-id meeting-id close-event])
+(defrecord CancelMeeting [activity-id meeting-id close-event])
 
 (defrecord SubmitAgendaForm [meeting form-data close-event])
 (defrecord DeletionSuccess [close-event response])
@@ -56,11 +56,11 @@
                           :activity activity-id})
                   {})))))
 
-  DeleteMeeting
+  CancelMeeting
   (process-event [{:keys [activity-id meeting-id close-event]} app]
     (t/fx app
           {:tuck.effect/type :command!
-           :command :meeting/delete
+           :command :meeting/cancel
            :payload {:activity-eid (common-controller/->long activity-id)
                      :meeting-id meeting-id}
            :success-message (tr [:notifications :meeting-deleted])
