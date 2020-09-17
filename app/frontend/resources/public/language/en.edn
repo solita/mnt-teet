@@ -104,6 +104,10 @@
   :invalid-file-type "file type is not valid",
   :new-comment "New comment",
   :updated "Updated"},
+ :drag
+ {:no-drop-zone "No drop zone",
+  :drop-to-task "Upload files to task",
+  :drop-to-comment "Add images to comment"},
  :enum
  {:estate-procedure.type/acquisition-negotiation
   "Acquisition based on evaluation",

@@ -16,6 +16,7 @@
             [teet.routes :as routes]
             [teet.ui.material-ui :refer [CssBaseline CircularProgress]]
             [teet.ui.build-info :as build-info]
+            [teet.ui.drag :as drag]
             [tuck.core :as t]
             [teet.theme.theme-provider :as theme]
             [teet.snackbar.snackbar-view :as snackbar]
@@ -52,6 +53,7 @@
   (if (get-in app [:config :api-url])               ;;config gets loaded when session is checked
     (let [{:keys [page]} (page-and-title e! app)]
       [:<>
+       [drag/drag-handler e!]
        [navigation-view/header e!
         {:open?        nav-open?
          :page         (:page app)

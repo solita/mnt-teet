@@ -11,38 +11,11 @@
             [teet.ui.format :as format]
             [teet.file.file-model :as file-model]
             teet.file.file-spec
-            [teet.ui.buttons :as buttons]))
-
-(defn overlay-style
-  "Overlay style without position coordinates"
-  []
-  {:position :fixed
-   :z-index 1500
-
-   ;; Opaque background
-   :background-color (theme-colors/primary-alpha 0.5)
-
-   ;; Border
-   :border-style :dashed
-   :border-width "5px"
-   :border-radius "10px"
-   :border-color theme-colors/secondary
-
-   ;; Text
-   :text-align :center})
-
-(defn- page-overlay []
-  (merge (overlay-style)
-         {;; Cover the whole page
-          :height "100%"
-          :width "100%"
-          :left 0
-          :top 0}))
+            [teet.ui.buttons :as buttons]
+            [teet.ui.drag :as drag]))
 
 
-(defn- page-overlay-message []
-  {:color theme-colors/white
-   :text-shadow "0px 0px 8px #333333"})
+
 
 (defn ->vector [file-list]
   (mapv (fn [i]
@@ -52,93 +25,27 @@
 (defn- file-vector [e]
   (-> e .-target .-files ->vector))
 
-(defn file-from-drop [e]
-  (-> e
-      .-dataTransfer
-      .-files
-      ->vector))
 
-(defn- on-drag-over [event]
-  (.stopPropagation event)
-  (.preventDefault event))
-
-(defn- on-drop-f [state f]
-  (fn [event]
-    (.stopPropagation event)
-    (.preventDefault event)
-    (swap! state assoc :overlay 0)
-    (f (file-from-drop event))))
-
-(defn- on
-  "Adds an event listener function `f` for `event` on HTML
-  `element`. Returns a function that when called removes the said
-  event listener."
-  [element event f]
-  (.addEventListener element event f)
-  (fn []
-    (.removeEventListener element event f)))
-
-(defn- set-overlay [state shown?]
-  (fn [_]
-    (swap! state update :overlay (if shown? inc dec))))
 
 (defn FileUpload
   "Note! Use one of the predefined file upload components, such as
   FileUploadButton instead of using this directly."
-  [{drag-container-id :drag-container-id} & _]
-  (let [state (r/atom {:overlay 0
-                       :events-to-remove []
-                       :enable-pointer-events nil})
-        window? (nil? drag-container-id)
-        drag-container #(if drag-container-id
-                          (js/document.getElementById drag-container-id)
-                          js/window)]
-    (r/create-class
-     {:display-name "file-upload"
-      :component-did-mount
-      (fn [_]
-        (swap! state assoc :events-to-remove
-               (->> [["dragenter" (set-overlay state true)]
-                     ["dragleave" (set-overlay state false)]]
-                    (mapv (partial apply on (drag-container))))))
-
-      :component-will-unmount
-      (fn [_]
-        (swap! state update :events-to-remove
-               (fn [events-to-remove]
-                 (doseq [remove-event events-to-remove]
-                   (remove-event))
-                 [])))
-      :reagent-render
-      (fn [{:keys [id on-drop drop-message multiple?]}
-           & children]
-        (into [:label
-               {:htmlFor id}
-               (when (pos? (:overlay @state))
-                 [:div.page-overlay
-                  (merge
-                   {:droppable "true"
-                    :on-drop (on-drop-f state on-drop)
-                    :on-drag-over on-drag-over}
-                   (if window?
-                     {:class (<class page-overlay)}
-                     (let [rect (-> (drag-container)
-                                    .getClientRects
-                                    (aget 0))]
-                       {:class (<class overlay-style)
-                        :style {:top (aget rect "top")
-                                :left (aget rect "left")
-                                :width (aget rect "width")
-                                :height (aget rect "height")}})))
-                  [Heading1 {:classes {:h1 (<class page-overlay-message)}}
-                   drop-message]])
-               [:input {:style {:display "none"}
-                        :id id
-                        :multiple multiple?
-                        :droppable "true"
-                        :type "file"
-                        :on-change #(on-drop (file-vector %))}]]
-              children))})))
+  [{:keys [id on-drop drop-message multiple? drag-container-id]} & children]
+  (r/with-let [remove-upload-zone!
+               (drag/register-drop-zone! {:element-id drag-container-id
+                                          :on-drop #(on-drop (drag/dropped-files %))
+                                          :label (or drop-message "")})]
+    (into [:label
+           {:htmlFor id}
+           [:input {:style {:display "none"}
+                    :id id
+                    :multiple multiple?
+                    :droppable "true"
+                    :type "file"
+                    :on-change #(on-drop (file-vector %))}]]
+          children)
+    (finally
+      (remove-upload-zone!))))
 
 (defn FileUploadButton [{:keys [id on-drop drop-message multiple? button-attributes
                                 drag-container-id]

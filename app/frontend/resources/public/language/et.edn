@@ -104,6 +104,7 @@
   :invalid-file-type "Failitüüp ei ole toetatud",
   :new-comment "Uus märkus",
   :updated "Uuendatud"},
+ :drag {:no-drop-zone nil, :drop-to-task nil, :drop-to-comment nil},
  :enum
  {:estate-procedure.type/acquisition-negotiation "Hinnangu alusel",
   :activity.name/construction "Ehitus",
