@@ -69,15 +69,16 @@
   "List user names and emails of meeting participants for
   notification sending. Includes the meeting organizer."
   [db meeting-id]
-  (let [{organizer :meeting/organizer
-         participations :participation/_in}
-        (d/pull db
-                '[:meeting/organizer
-                  {:participation/_in [:participation/participant]}]
-                meeting-id)
+  (let [{organizer :meeting/organizer}
+        (d/pull db '[:meeting/organizer] meeting-id)
         recipients (into #{(:db/id organizer)}
-                         (map (comp :db/id :participation/participant))
-                         participations)]
+                         (map first)
+                         (d/q '[:find ?u
+                                :where
+                                [?p :participation/in ?m]
+                                [(missing? $ ?p :meta/deleted?)]
+                                [?p :participation/participant ?u]
+                                :in $ ?m] db meeting-id))]
     (mapv first
           (d/q '[:find (pull ?u [:user/given-name :user/family-name
                                  :user/email])
