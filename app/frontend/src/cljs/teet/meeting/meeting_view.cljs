@@ -243,14 +243,14 @@
        [icons/content-clear {:font-size :small}]])]])
 
 
-(defn- add-meeting-participant [e! meeting user]
+(defn- add-meeting-participant [e! meeting]
   (r/with-let [initial-form {:participation/role :participation.role/participant}
                form (r/atom initial-form)
-               save-participant! #(let [form-data @form]
-                                    (reset! form initial-form)
-                                    (meeting-controller/->AddParticipant meeting form-data))
                add-non-teet-user! #(reset! form {:non-teet-user? true})]
-    (let [non-teet? (:non-teet-user? @form)]
+    (let [save-participant! #(let [form-data @form]
+                               (reset! form initial-form)
+                               (meeting-controller/->AddParticipant meeting form-data))
+          non-teet? (:non-teet-user? @form)]
       [:div.new-participant
        [:div
         [typography/BoldGreyText (tr [:meeting :add-person])]
@@ -305,7 +305,7 @@
               participations)]
        (when can-edit-participants?
          [:<>
-          [add-meeting-participant e! meeting user]
+          [add-meeting-participant e! meeting]
           [Divider {:style {:margin "1rem 0"}}]
           [typography/Heading3 {:class (<class common-styles/margin-bottom 1)}
            (tr [:meeting :notifications-title])]
