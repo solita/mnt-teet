@@ -1,7 +1,8 @@
 (ns teet.ui.file-upload
-  (:require [herb.core :refer [<class]]
+  (:require [clojure.string :as str]
+            [herb.core :refer [<class]]
             [reagent.core :as r]
-            [teet.ui.material-ui :refer [Button IconButton List ListItem
+            [teet.ui.material-ui :refer [IconButton List ListItem
                                          ListItemText ListItemSecondaryAction]]
             [teet.ui.text-field :refer [TextField]]
             [teet.theme.theme-colors :as theme-colors]
@@ -145,14 +146,13 @@
            {:border (str "solid 1px " theme-colors/error)})))                 ;;This should also use material ui theme.error
 
 (defn file-info
-  [{:file/keys [name type size] :as _file} invalid-file-type? file-too-large?]
+  [{:file/keys [name size] :as _file} invalid-file-type? file-too-large?]
   [:<>
    (into [:span (merge {} (when invalid-file-type?
-                            {:style {:color theme-colors/error}}))
-          (str (or (not-empty type)
-                   (file-model/filename->suffix name)))]
+                            {:style {:color theme-colors/error}}))]
          (when invalid-file-type?
-           [" "
+           [(str/upper-case (file-model/filename->suffix name))
+            " "
             [:a {:target "_blank"
                  :href "https://confluence.mkm.ee/pages/viewpage.action?spaceKey=TEET&title=TEET+File+format+list"}
              (tr [:document :invalid-file-type])]]))
@@ -166,8 +166,7 @@
 (defn files-field-entry [file-entry]
   (-> file-entry
       :file-object
-      file-model/file-info
-      file-model/type-by-suffix))
+      file-model/file-info))
 
 (defn files-field [{:keys [value on-change error]}]
   [:div {:class (<class files-field-style error)}
