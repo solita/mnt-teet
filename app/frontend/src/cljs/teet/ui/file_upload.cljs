@@ -28,9 +28,6 @@
    :border-radius "10px"
    :border-color theme-colors/secondary
 
-   ;; Padding
-   ;;:padding-top "25%"
-
    ;; Text
    :text-align :center})
 
