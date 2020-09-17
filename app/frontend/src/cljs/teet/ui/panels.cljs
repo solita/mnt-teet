@@ -194,8 +194,8 @@
             component])
          (partition 2 percentages-and-components))])
 
-(defn button-with-modal [{:keys [modal-title button-component modal-component modal-options]}]
-  (r/with-let [open? (r/atom false)
+(defn button-with-modal [{:keys [modal-title button-component modal-component modal-options open-atom]}]
+  (r/with-let [open? (or open-atom (r/atom false))
                open! #(reset! open? true)
                close! #(do (reset! open? false) nil)]
     [:<>
