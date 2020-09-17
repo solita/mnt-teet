@@ -13,13 +13,10 @@
             teet.file.file-spec
             [teet.ui.buttons :as buttons]))
 
-(defn- page-overlay []
-  {;; Cover the whole page
-   :height "100%"
-   :width "100%"
-   :position :fixed
-   :left 0
-   :top 0
+(defn overlay-style
+  "Overlay style without position coordinates"
+  []
+  {:position :fixed
    :z-index 1500
 
    ;; Opaque background
@@ -32,10 +29,19 @@
    :border-color theme-colors/secondary
 
    ;; Padding
-   :padding-top "25%"
+   ;;:padding-top "25%"
 
    ;; Text
    :text-align :center})
+
+(defn- page-overlay []
+  (merge (overlay-style)
+         {;; Cover the whole page
+          :height "100%"
+          :width "100%"
+          :left 0
+          :top 0}))
+
 
 (defn- page-overlay-message []
   {:color theme-colors/white
@@ -82,10 +88,14 @@
 (defn FileUpload
   "Note! Use one of the predefined file upload components, such as
   FileUploadButton instead of using this directly."
-  [_ & _]
+  [{drag-container-id :drag-container-id} & _]
   (let [state (r/atom {:overlay 0
                        :events-to-remove []
-                       :enable-pointer-events nil})]
+                       :enable-pointer-events nil})
+        window? (nil? drag-container-id)
+        drag-container #(if drag-container-id
+                          (js/document.getElementById drag-container-id)
+                          js/window)]
     (r/create-class
      {:display-name "file-upload"
       :component-did-mount
@@ -93,7 +103,7 @@
         (swap! state assoc :events-to-remove
                (->> [["dragenter" (set-overlay state true)]
                      ["dragleave" (set-overlay state false)]]
-                    (mapv (partial apply on js/window)))))
+                    (mapv (partial apply on (drag-container))))))
 
       :component-will-unmount
       (fn [_]
@@ -108,10 +118,21 @@
         (into [:label
                {:htmlFor id}
                (when (pos? (:overlay @state))
-                 [:div.page-overlay {:class (<class page-overlay)
-                        :droppable "true"
-                        :on-drop (on-drop-f state on-drop)
-                        :on-drag-over on-drag-over}
+                 [:div.page-overlay
+                  (merge
+                   {:droppable "true"
+                    :on-drop (on-drop-f state on-drop)
+                    :on-drag-over on-drag-over}
+                   (if window?
+                     {:class (<class page-overlay)}
+                     (let [rect (-> (drag-container)
+                                    .getClientRects
+                                    (aget 0))]
+                       {:class (<class overlay-style)
+                        :style {:top (aget rect "top")
+                                :left (aget rect "left")
+                                :width (aget rect "width")
+                                :height (aget rect "height")}})))
                   [Heading1 {:classes {:h1 (<class page-overlay-message)}}
                    drop-message]])
                [:input {:style {:display "none"}
@@ -122,9 +143,11 @@
                         :on-change #(on-drop (file-vector %))}]]
               children))})))
 
-(defn FileUploadButton [{:keys [id on-drop drop-message multiple? button-attributes]
+(defn FileUploadButton [{:keys [id on-drop drop-message multiple? button-attributes
+                                drag-container-id]
                          :or {multiple? true}} & children]
   [FileUpload {:id id
+               :drag-container-id drag-container-id
                :on-drop on-drop
                :drop-message drop-message
                :multiple? multiple?}
@@ -170,7 +193,8 @@
       file-model/type-by-suffix))
 
 (defn files-field [{:keys [value on-change error]}]
-  [:div {:class (<class files-field-style error)}
+  [:div {:class (<class files-field-style error)
+         :id "files-field-drag-container"}
    [SectionHeading (tr [:common :files])]
    [List {:dense true}
     (doall
@@ -198,6 +222,7 @@
            [icons/action-delete]]]])
       value))]
    [FileUploadButton {:id "files-field"
+                      :drag-container-id "files-field-drag-container"
                       :on-drop #(on-change (into (or value []) %))}
     [icons/content-file-copy]
     (tr [:common :select-files])]])
