@@ -7,126 +7,86 @@
 (def ^:const upload-max-file-size (* 1024 1024 3000))
 
 ;; See confluence page: TEET File format list
-(def ^:const upload-allowed-file-types
-  #{;; Office files
-    "application/msword"
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    "application/msexcel"
-    "application/vnd.ms-excel"
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-    "application/mspowerpoint"
-    "application/rtf"
-    "application/odf"
+(def ^:const upload-allowed-file-suffixes
+  #{;; Generic office files
+    "doc"
+    "docx"
+    "xlsx"
+    "xls"
+    "ppt"
+    "pptx"
+    "rtf"
+    "odf"
 
     ;; Portable documents
-    "application/pdf"
-    "application/dwf"
+    "pdf"
+    "dwf"
 
     ;; Design/drawing/GIS files
-    "application/dwg"
-    "application/dgn"
-    "application/dxf"
-    "application/shp"
-    "application/dbf"
-    "application/kml"
-    "application/kmz"
+    "dwg"
+    "dgn"
+    "dxf"
+    "shp"
+    "dbf"
+    "kml"
+    "kmz"
 
     ;; Design model files, Building Information Models
-    "application/ifc"
-    "application/xml"
-    "text/xml"
-    "application/bcf"
-    "application/rvt"
-    "application/skp"
-    "application/3dm"
+    "ifc"
+    "xml"
+    "bcf"
+    "rvt"
+    "skp"
+    "3dm"
 
-    ;; Speficic data files
-    "application/ags"
-    "application/gpx"
+    ;; Speficid data files
+    "ags"
+    "gpx"
 
     ;; Images
-    "image/png"
-    "image/jpeg"
-    "image/tiff"
-    "image/ecw"
+    "png"
+    "jpg"
+    "jpeg"
+    "tif"
+    "tiff"
+    "ecw"
 
     ;; Other supporting files
-    "application/shx"
-    "application/lin"})
+    "shx"
+    "lin"})
 
-(def ^:const upload-file-suffix-type
-  {;; Generic office files
-   "doc" "application/msword"
-   "docx" "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-   "xlsx" "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-   "xls" "application/msexcel"
-   "ppt" "application/mspowerpoint"
-   "pptx" "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-   "rtf" "application/rtf"
-   "odf" "application/odf"
-
-   ;; Portable documents
-   "pdf" "application/pdf"
-   "dwf" "application/dwf"
-
-   ;; Digitally signed containers
-   "ddoc" "application/ddoc"
-   "bdoc" "application/bdoc"
-   "asice" "application/asice"
-
-   ;; Design/drawing/GIS files
-   "dwg" "application/dwg"
-   "dgn" "application/dgn"
-   "dxf" "application/dxf"
-   "shp" "application/shp"
-   "dbf" "application/dbf"
-   "kml" "application/kml"
-   "kmz" "application/kmz"
-
-   ;; Design model files, Building Information Models
-   "ifc" "application/ifc"
-   "xml" "application/xml"
-   "bcf" "application/bcf"
-   "rvt" "application/rvt"
-   "skp" "application/skp"
-   "3dm" "application/3dm"
-
-   ;; Speficid data files
-   "ags" "application/ags"
-   "gpx" "application/gpx"
-
-   ;; Images
-   "png" "image/png"
-   "jpg" "image/jpeg"
-   "jpeg" "image/jpeg"
-   "tif" "image/tiff"
-   "tiff" "image/tiff"
-   "ecw" "image/ecw"
-
-   ;; Other supporting files
-   "shx" "application/shx"
-   "lin" "application/lin"})
+(def ^:const image-suffixes
+  #{"png"
+    "jpg"
+    "jpeg"
+    "tif"
+    "tiff"
+    "ecw"})
 
 (defn filename->suffix [filename]
   (-> filename (str/split #"\.") last))
 
-(defn type-by-suffix [{:file/keys [name] :as file}]
-  (if-let [type-by-suffix (-> name filename->suffix upload-file-suffix-type)]
-    (assoc file :file/type type-by-suffix)
-    file))
+(defn valid-suffix? [filename]
+  (-> filename filename->suffix upload-allowed-file-suffixes boolean))
 
-(defn validate-file [{:file/keys [type size]}]
+(defn validate-file [{:file/keys [size name]}]
   (cond
     (> size upload-max-file-size)
     {:error :file-too-large :max-allowed-size upload-max-file-size}
 
-    (not (upload-allowed-file-types type))
-    {:error :file-type-not-allowed :allowed-types upload-allowed-file-types}
+    (not (valid-suffix? name))
+    {:error :file-type-not-allowed :allowed-suffixes upload-allowed-file-suffixes}
 
     ;; No problems, upload can proceed
     :else
     nil))
+
+(defn image-suffix? [filename]
+  (-> filename filename->suffix image-suffixes boolean))
+
+(defn image? [{:file/keys [name]}]
+  (image-suffix? name))
+
 
 #?(:cljs
    (def file-info file-spec/file-info))

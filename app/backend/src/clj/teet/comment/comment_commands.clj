@@ -12,7 +12,6 @@
             [teet.permission.permission-db :as permission-db]
             [teet.notification.notification-db :as notification-db]
             [teet.user.user-model :as user-model]
-            [teet.util.collection :as cu]
             [teet.util.datomic :as du])
   (:import (java.util Date)))
 
@@ -26,8 +25,8 @@
               (d/q '[:find ?c
                      :where
                      [?c :meta/creator ?user]
-                     [?c :file/type ?type]
-                     [(.startsWith ^String ?type "image/")]
+                     [?c :file/name ?name]
+                     [(teet.file.file-model/image-suffix? ?name)]
                      :in $ $user [?c ...]]
                    db
                    (user-model/user-ref user)

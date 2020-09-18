@@ -87,7 +87,7 @@
                        (comment-counts-by-file (:db/id %))
                        {:file-seen/seen-at (seen-at-by-file (:db/id %))})
                first)
-         (d/q '[:find (pull ?f [:db/id :file/name :meta/deleted? :file/version :file/size :file/type :file/status
+         (d/q '[:find (pull ?f [:db/id :file/name :meta/deleted? :file/version :file/size :file/status
                                 {:file/previous-version [:db/id]}
                                 {:meta/creator [:user/id :user/family-name :user/given-name]}])
                 :where
