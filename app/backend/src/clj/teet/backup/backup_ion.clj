@@ -349,10 +349,21 @@
 ;; FIXME: Extract the actual :db/ident value for all :db/* attrs
 ;; so we don't need id numbers
 
+(def ignore-attributes
+  "Internal datomic stuff that we can skip"
+  #{:db.install/attribute})
+
 (defn output-tx [db attr-info-cache {:keys [data]}]
   (let [datoms (for [{:keys [e a v added]} data
                      :let [{:db/keys [ident]}
-                           (attr-info db attr-info-cache a)]]
+                           (attr-info db attr-info-cache a)
+
+                           ;; Turn :db/* values into idents
+                           v (if (and (str/starts-with? (str ident) ":db/")
+                                      (integer? v))
+                               (:db/ident (du/entity db v))
+                               v)]
+                     :when (not (ignore-attributes ident))]
                  [e ident v added])
         tx-id (:tx (first data))]
     {:tx (into {}
@@ -375,7 +386,9 @@
           out! #(pprint/pprint % out)]
       (out! {:ref-attrs
              (into #{}
-                   (map first)
+                   (comp
+                    (map first)
+                    (remove #(str/starts-with? (str %) ":db")))
                    (d/q '[:find ?id
                           :where
                           [?attr :db/ident ?id]
@@ -413,7 +426,7 @@
                     (->id v)
                     v)]]
       ;; FIXME: handle refs in tuple vals
-      [e a v add?])))
+      [(if add? :db/add :db/retract) e a v])))
 
 (defn restore-tx-file
   "Restore a TEET backup zip from `file` by running the transactions in
@@ -454,3 +467,8 @@
           (do
             (log/info "All transactions applied.")
             (assoc ctx :old->new old->new)))))))
+
+(defn do-backup []
+  (output-all-tx (environment/datomic-connection)
+                 (io/output-stream
+                  (io/file "backup-tx.edn.zip"))))
