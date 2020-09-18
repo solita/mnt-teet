@@ -178,7 +178,7 @@
                          (map (comp file-model/valid-suffix?
                                     :file/name
                                     file-upload/files-field-entry))
-                         (some nil?)))}
+                         (some false?)))}
       [file-upload/files-field {}]]
      (when upload-progress
        [LinearProgress {:variant "determinate"
