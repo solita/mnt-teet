@@ -331,3 +331,65 @@
   (future
     (restore* event))
   "{\"success\": true}")
+
+(defn- all-transactions
+  "Returns all tx identifiers in time order.
+  Skips the initial transactions empty databases have."
+  [conn]
+  (d/tx-range conn {:start (java.util.Date. 1)}))
+
+(defn- attr-info [db attr-info-cache a]
+  (get (swap! attr-info-cache
+              (fn [attrs]
+                (if (contains? attrs a)
+                  attrs
+                  (assoc attrs a (d/pull db '[:db/ident :db/valueType] a)))))
+       a))
+
+(defn output-tx [db attr-info-cache {:keys [data]}]
+  (let [datoms (for [{:keys [e a v added]} data
+                     :let [{:db/keys [ident]}
+                           (attr-info db attr-info-cache a)]]
+                 [e ident v added])
+        tx-id (:tx (first data))]
+    {:tx (into {}
+               (comp
+                (filter (fn [[e _ _ _]]
+                          (= e tx-id)))
+                (map (fn [[_ a v _]]
+                           [a v])))
+               datoms)
+     :data (vec (remove (fn [[e _ _ _]]
+                          (= e tx-id))
+                        datoms))}))
+
+(defn output-all-tx [conn ostream]
+  (with-open [zip-out (doto (java.util.zip.ZipOutputStream. ostream)
+                        (.putNextEntry (java.util.zip.ZipEntry. "backup.edn")))
+              out (io/writer zip-out)]
+    (let [db (d/db conn)
+          attr-ident-cache (atom {})
+          out! #(pprint/pprint % out)]
+      (out! {:ref-attributes
+             (into #{}
+                   (map first)
+                   (d/q '[:find ?id
+                          :where
+                          [?attr :db/ident ?id]
+                          [?attr :db/valueType :db.type/ref]]
+                        db))
+             :tuple-attrs
+             (into {}
+                   (d/q '[:find ?id ?ta
+                          :where
+                          [?attr :db/ident ?id]
+                          [?attr :db/tupleAttrs ?ta]]
+                        db))
+             :backup-timestamp (java.util.Date.)})
+      (doseq [tx (all-transactions conn)]
+        (out! (output-tx db attr-ident-cache tx))))))
+
+;; need to know ref types
+;;
+;; need to know tupleattrs
+;;
