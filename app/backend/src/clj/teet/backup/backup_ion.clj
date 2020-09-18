@@ -346,6 +346,9 @@
                   (assoc attrs a (d/pull db '[:db/ident :db/valueType] a)))))
        a))
 
+;; FIXME: Extract the actual :db/ident value for all :db/* attrs
+;; so we don't need id numbers
+
 (defn output-tx [db attr-info-cache {:keys [data]}]
   (let [datoms (for [{:keys [e a v added]} data
                      :let [{:db/keys [ident]}
@@ -365,12 +368,12 @@
 
 (defn output-all-tx [conn ostream]
   (with-open [zip-out (doto (java.util.zip.ZipOutputStream. ostream)
-                        (.putNextEntry (java.util.zip.ZipEntry. "backup.edn")))
+                        (.putNextEntry (java.util.zip.ZipEntry. "transactions.edn")))
               out (io/writer zip-out)]
     (let [db (d/db conn)
           attr-ident-cache (atom {})
           out! #(pprint/pprint % out)]
-      (out! {:ref-attributes
+      (out! {:ref-attrs
              (into #{}
                    (map first)
                    (d/q '[:find ?id
@@ -389,7 +392,65 @@
       (doseq [tx (all-transactions conn)]
         (out! (output-tx db attr-ident-cache tx))))))
 
-;; need to know ref types
+;; restore procedure for tx log
+;; keep mapping of old->new ids
+;; for each datom
+;; - lookup entity from old->new mapping
+;; - if doesn't exist change to string (eg. 123 => "123")
+;; - if attr is a ref type, do lookup/stringify for value as well
+;; - if value is a tuple, check tupleattrs for ref attrs
+;;   - do lookup/stringify for those as well
 ;;
-;; need to know tupleattrs
-;;
+;; after tx store new tempids to old->new mapping
+
+(defn- prepare-restore-tx [tx-data old->new ref-attrs tuple-attrs]
+  (let [->id #(let [s (str %)]
+                (or (old->new s) s))]
+    (for [[e a v add?] tx-data
+          :let [ref? (ref-attrs a)
+                e (->id e)
+                v (if ref?
+                    (->id v)
+                    v)]]
+      ;; FIXME: handle refs in tuple vals
+      [e a v add?])))
+
+(defn restore-tx-file
+  "Restore a TEET backup zip from `file` by running the transactions in
+  the file to the database pointed to by `conn`. It is assumed that
+  the given database is empty."
+  [{:keys [conn file] :as ctx}]
+
+  (log/info "Restoring backup from file: " file)
+  ;; read all users and transact them in one go
+  (with-open [istream (io/input-stream (io/file file))
+              zip-in (doto (java.util.zip.ZipInputStream. istream)
+                       (.getNextEntry))
+              zip-reader (io/reader zip-in)
+              rdr (java.io.PushbackReader. zip-reader)]
+    ;; Transact everything in one big transaction
+    (let [backup-forms (read-seq rdr)
+          {:keys [backup-timestamp ref-attrs tuple-attrs]} (first backup-forms)]
+      (assert (set? ref-attrs) "Expected set of :ref-attrs in 1st backup form")
+      (assert (map? tuple-attrs) "Expected map of :tuple-attrs in 1st backup form")
+      (assert (inst? backup-timestamp) "Expected :backup-timestamp in 1st backup form")
+      (log/info "Restoring from tx log backup generated at: " backup-timestamp)
+      (loop [old->new {}
+             txs (rest backup-forms)]
+        (if-let [tx (first txs)]
+          (let [tx-data (into [(merge (:tx tx)
+                                      {:db/id "datomic.tx"})]
+                              (prepare-restore-tx (:data tx)
+                                                  old->new
+                                                  ref-attrs
+                                                  tuple-attrs))
+                _ (def *tx-data tx-data)
+                {tempids :tempids}
+                (d/transact
+                 conn
+                 {:tx-data tx-data})]
+            (recur (merge old->new tempids)
+                   (rest txs)))
+          (do
+            (log/info "All transactions applied.")
+            (assoc ctx :old->new old->new)))))))
