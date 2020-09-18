@@ -163,10 +163,3 @@
   (if (and (map? a) (map b))
     (merge-with deep-merge a b)
     b))
-
-(defn remove-keys
-  "Returns a map containing only those entries in map whose key does not match pred."
-  [m pred]
-  (into {}
-        (remove (comp pred first))
-        m))

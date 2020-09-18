@@ -4,15 +4,14 @@
             [clojure.test :refer [use-fixtures deftest is testing]]
             [clojure.java.io :as io]
             [datomic.client.api :as d]
-            [clojure.walk :as walk]
-            [teet.util.collection :as cu]))
+            [clojure.walk :as walk]))
 
 (use-fixtures :each tu/with-environment)
 
 (defn- remove-db-ids [tree]
   (walk/prewalk (fn [x]
                   (if (map? x)
-                    (cu/remove-keys x #{:db/id})
+                    (dissoc x :db/id)
                     x))
                 tree))
 
