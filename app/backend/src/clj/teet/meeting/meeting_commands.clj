@@ -160,7 +160,8 @@
                                                 {:meeting.agenda/responsible [:user/given-name
                                                                               :user/family-name]}]}]
                             id)
-            ics (meeting-ics/meeting-ics meeting)
+            ics (meeting-ics/meeting-ics {:meeting meeting
+                                          :cancel? false})
             email-response
             (integration-email/send-email!
              {:from (environment/ssm-param :email :from)
@@ -195,7 +196,8 @@
                                                 {:meeting.agenda/responsible [:user/given-name
                                                                               :user/family-name]}]}]
                             meeting-id)
-            ics (meeting-ics/cancel-meeting-ics meeting)
+            ics (meeting-ics/meeting-ics {:meeting meeting
+                                          :cancel? true})
             email-response (when (:meeting/invitations-sent-at meeting) ;; check that for this meeting invitations have been sent
                              (integration-email/send-email!
                                {:from (environment/ssm-param :email :from)

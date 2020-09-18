@@ -63,8 +63,9 @@
 
 (defn meeting-ics
   "Create iCalendar event from meeting"
-  [{id :db/id :meeting/keys [location start end organizer] :as meeting}]
-  (let [[vcal-before vcal-after] vcal-wrapper
+  [{:keys [meeting cancel?]}]
+  (let [{id :db/id :meeting/keys [location start end organizer]} meeting
+        [vcal-before vcal-after] (if cancel? vcal-cancel-wrapper vcal-wrapper)
         [vevent-before vevent-after] vevent-wrapper]
     (str vcal-before
          vevent-before
@@ -76,26 +77,8 @@
           "DESCRIPTION" (escape-chars (meeting-description meeting))
           "LOCATION" (escape-chars location)
           "DTSTART" (ical-date start)
-          "DTEND" (ical-date end))
+          "DTEND" (ical-date end)
+          "STATUS" (if cancel? "CANCELLED" "CONFIRMED"))
 
-         vevent-after
-         vcal-after)))
-
-(defn cancel-meeting-ics
-  [{id :db/id :meeting/keys [location start end organizer] :as meeting}]
-  (let [[vcal-before vcal-after] vcal-cancel-wrapper
-        [vevent-before vevent-after] vevent-wrapper]
-    (str vcal-before
-         vevent-before
-         (vcal-properties
-           "UID" (str id "@teet")
-           "DTSTAMP" (ical-date (java.util.Date.))
-           "ORGANIZER" (str "mailto:" (escape-chars (:user/email organizer)))
-           "SUMMARY" (escape-chars (meeting-model/meeting-title meeting))
-           "DESCRIPTION" (escape-chars (meeting-description meeting))
-           "LOCATION" (escape-chars location)
-           "DTSTART" (ical-date start)
-           "DTEND" (ical-date end)
-           "STATUS" "CANCELLED")
          vevent-after
          vcal-after)))
