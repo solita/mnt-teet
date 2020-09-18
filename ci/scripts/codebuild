@@ -22,27 +22,47 @@
       json-out
       (get-in [:build :id])))
 
+(defn retry [func retries wait-label]
+  (let [[result ex] (try
+                      [(func) nil]
+                      (catch Throwable t
+                        [nil t]))]
+    (if ex
+      (if (pos? retries)
+        (do
+          (println wait-label)
+          (Thread/sleep 2000)
+          (recur func (dec retries) wait-label))
+        (throw ex))
+      result)))
+
+(defn get-build-info [build-id]
+  (let [{:keys [builds buildsNotFound]}
+        (-> (sh "aws" "codebuild" "batch-get-builds" "--ids" build-id)
+            json-out)]
+    (if (seq buildsNotFound)
+      (throw (ex-info "Build not found" {:build-id build-id}))
+      (first builds))))
+
 (defn get-log-info
   "Returns cloudwatch group and stream name for build logs"
   [build-id]
-  (-> (sh "aws" "codebuild" "batch-get-builds"
-          "--ids" build-id)
-      json-out
-      (get-in [:builds 0 :logs])
-      ((juxt :groupName :streamName))))
-
-(defn get-build-info [build-id]
-  (-> (sh "aws" "codebuild" "batch-get-builds" "--ids" build-id)
-      json-out
-      (get-in [:builds 0])))
+  (retry
+   #(let [{logs :logs} (get-build-info build-id)
+          {:keys [groupName streamName]} logs]
+      (if (and (string? groupName)
+               (string? streamName))
+        [groupName streamName]
+        (throw (ex-info "Logs not available yet"
+                        {:groupName groupName
+                         :streamName streamName}))))
+   30
+   "waiting for logs to be available"))
 
 (defn tail-build-logs
   ([log-info]
    (tail-build-logs log-info nil))
   ([log-info since-timestamp]
-   (assert (and (vector? log-info)
-                (= 2 (count log-info)))
-           "Expected group and stream log info")
    (let [[group stream] log-info
          logs
          (->> (sh "aws" "logs" "get-log-events"
