@@ -2,7 +2,24 @@
   "File queries"
   (:require [datomic.client.api :as d]
             [teet.user.user-model :as user-model]
-            [teet.comment.comment-db :as comment-db]))
+            [teet.comment.comment-db :as comment-db]
+            [teet.log :as log]))
+
+(defmulti attach-to
+  "Check preconditions and permissions for attaching file to
+  entity of given type and id for the user.
+
+  Return eid to attach to if attaching is allowed, nil if not.
+  May also throw an exception with :error key in the exception.
+
+  Default behaviour is to disallow."
+  (fn [_db _user _file entity-type _entity-id]
+    entity-type))
+
+(defmethod attach-to :default [_db user _file entity-type entity-id]
+  (log/info "Disallow attaching file to " entity-type " with id " entity-id
+            " for user " user)
+  nil)
 
 (defn own-file? [db user file-id]
   (boolean

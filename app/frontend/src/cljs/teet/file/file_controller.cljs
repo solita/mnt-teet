@@ -90,7 +90,8 @@
                                      :on-success (->UploadSuccess (:db/id file))})))}))
 
   UploadFiles
-  (process-event [{:keys [files project-id task-id on-success progress-increment attachment?
+  (process-event [{:keys [files project-id task-id on-success progress-increment
+                          attachment? attach-to
                           file-results]
                    :as event} app]
     (if-let [file (first files)]
@@ -108,7 +109,8 @@
                                                (when (not (str/blank? pos))
                                                  {:file/pos-number (js/parseInt pos)})))}
                                (if attachment?
-                                 {:project-id project-id}
+                                 {:project-id project-id
+                                  :attach-to attach-to}
                                  {:task-id task-id}))
                :result-event (fn [result]
                                (map->UploadFileUrlReceived

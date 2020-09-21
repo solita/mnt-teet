@@ -38,18 +38,30 @@
     (db-api/bad-request! "Not allowed as attachment")))
 
 (defcommand :file/upload-attachment
-  {:doc "Upload attachment file that is not linked to anything yet"
+  {:doc "Upload attachment file and optionally attach it to entity."
    :context {:keys [conn user db]}
    ;; TODO: Pass project id to check project authz
-   :payload {:keys [file project-id]}
+   :payload {:keys [file project-id attach-to]}
    :project-id project-id
-   :authorization {:project/upload-comment-attachment {}}}
+   :authorization {:project/upload-comment-attachment {}}
+   :pre [^{:error :comment-attachment-image-only}
+         (or attach-to (check-image-only file))
+
+         ^{:error :attach-pre-check-failed}
+         (or (nil? attach-to)
+             (and (vector? attach-to)
+                  (= 2 (count attach-to))
+                  (file-db/attach-to db user file (first attach-to) (second attach-to))))]}
   (log/debug "upload-attachment: got project-id" project-id)
-  (check-image-only file)
+
   (let [key (new-file-key file)
         res (tx [(merge (select-keys file file-keys)
                         {:db/id "new-file"
                          :file/s3-key key}
+                        (when attach-to
+                          {:file/attached-to (file-db/attach-to db user file
+                                                                (first attach-to)
+                                                                (second attach-to))})
                         (creation-meta user))])
         file-id (get-in res [:tempids "new-file"])]
 
@@ -134,6 +146,10 @@
           (catch Exception e
             (log/warn e "Unable to create S3 presigned URL")
             (throw e))))))
+
+(defcommand :file/upload-to-meeting-agenda
+  {:doc "Upload file attachment to meeting agenda"
+   :context })
 
 (defcommand :file/delete
   {:doc "Delete file"

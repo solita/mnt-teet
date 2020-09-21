@@ -1,14 +1,11 @@
 (ns teet.meeting.meeting-commands
-  (:require [clojure.spec.alpha :as s]
-            [datomic.client.api :as d]
+  (:require [datomic.client.api :as d]
             [teet.db-api.core :as db-api :refer [defcommand tx-ret]]
             [teet.meta.meta-model :as meta-model]
-            [teet.notification.notification-db :as notification-db]
+            [teet.file.file-db :as file-db]
             [teet.project.project-db :as project-db]
             teet.meeting.meeting-specs
             [teet.util.datomic :as du]
-            [teet.util.collection :as cu]
-            [teet.user.user-model :as user-model]
             [teet.meeting.meeting-db :as meeting-db]
             [teet.meeting.meeting-ics :as meeting-ics]
             [teet.integration.integration-email :as integration-email]
@@ -17,6 +14,13 @@
             [teet.log :as log]
             [clojure.string :as str])
   (:import (java.util Date)))
+
+(defmethod file-db/attach-to :meeting-agenda
+  [db user _file _ meeting-agenda-id]
+  (let [meeting (get-in (du/entity db meeting-agenda-id)
+                        [:meeting/_agenda :db/id])]
+    (when (meeting-db/user-is-organizer-or-reviewer? db user meeting)
+      meeting-agenda-id)))
 
 ;; TODO query all activity meetings
 ;; matching name found
