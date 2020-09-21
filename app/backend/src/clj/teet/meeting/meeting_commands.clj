@@ -29,6 +29,14 @@
    db user (get-in (du/entity db meeting-agenda-id)
                    [:meeting/_agenda :db/id])))
 
+(defmethod file-db/allow-delete-attachment? :meeting-agenda
+  [db user _file-id [_ meeting-agenda-id]]
+  (when (meeting-db/user-is-organizer-or-reviewer?
+         db user
+         (get-in (du/entity db meeting-agenda-id)
+                 [:meeting/_agenda :db/id]))
+    meeting-agenda-id))
+
 ;; TODO query all activity meetings
 ;; matching name found
 ;; TODO try tx function

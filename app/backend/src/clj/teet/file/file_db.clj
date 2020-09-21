@@ -35,6 +35,14 @@
   (fn [_db _user attach]
     (first (check-attach-definition attach))))
 
+(defmulti allow-delete-attachment?
+  "Check preconditions and premissions for deleting an attached file
+  to a given entity.
+
+  Default behaviour is to disallow."
+  (fn [_db _user _file-id attach]
+    (first (check-attach-definition attach))))
+
 (defmethod attach-to :default [_db user _file [entity-type entity-id]]
   (log/info "Disallow attaching file to " entity-type " with id " entity-id
             " for user " user)
@@ -44,6 +52,12 @@
   [_db user [entity-type entity-id]]
   (log/info "Disallow downloading attachments to " entity-type
             " with id " entity-id " for user " user))
+
+(defmethod allow-delete-attachment? :default
+  [_db user file-id [entity-type entity-id]]
+  (log/info "Disallow deleting attachment " file-id " to "
+            entity-type " with id " entity-id " for user " user)
+  false)
 
 (defn own-file? [db user file-id]
   (boolean
