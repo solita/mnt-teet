@@ -113,7 +113,7 @@
                            {:attached-to attached-to})))}
            [icons/file-cloud-download]])
 
-        (when (columns :delete)
+        (when (and (columns :delete) delete-action)
           [buttons/delete-button-with-confirm
            {:action #(delete-action file)
             :trashcan? true}])])]))
