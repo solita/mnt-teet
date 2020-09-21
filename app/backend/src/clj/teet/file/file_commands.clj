@@ -69,10 +69,14 @@
 (defcommand :file/delete-attachment
   {:doc "Delete an attachment"
    :context {:keys [user db]}
-   :payload {:keys [file-id]}
+   :payload {:keys [file-id attached-to]}
    :project-id nil
    :authorization {}
-   :pre [(file-db/own-file? db user file-id)]
+   :pre [(or (and attached-to
+                  (file-db/allow-delete-attachment? db user
+                                                    file-id
+                                                    attached-to))
+             (file-db/own-file? db user file-id))]
    :transact [(deletion-tx user file-id)]})
 
 (defn- file-with-metadata [{:file/keys [name] :as file}]
