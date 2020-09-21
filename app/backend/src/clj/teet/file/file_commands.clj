@@ -38,18 +38,27 @@
     (db-api/bad-request! "Not allowed as attachment")))
 
 (defcommand :file/upload-attachment
-  {:doc "Upload attachment file that is not linked to anything yet"
+  {:doc "Upload attachment file and optionally attach it to entity."
    :context {:keys [conn user db]}
    ;; TODO: Pass project id to check project authz
-   :payload {:keys [file project-id]}
+   :payload {:keys [file project-id attach-to]}
    :project-id project-id
-   :authorization {:project/upload-comment-attachment {}}}
+   :authorization {:project/upload-comment-attachment {}}
+   :pre [^{:error :comment-attachment-image-only}
+         (or attach-to (check-image-only file))
+
+         ^{:error :attach-pre-check-failed}
+         (or (nil? attach-to)
+             (file-db/attach-to db user file attach-to))]}
   (log/debug "upload-attachment: got project-id" project-id)
-  (check-image-only file)
+
   (let [key (new-file-key file)
         res (tx [(merge (select-keys file file-keys)
                         {:db/id "new-file"
                          :file/s3-key key}
+                        (when attach-to
+                          {:file/attached-to (file-db/attach-to db user file
+                                                                attach-to)})
                         (creation-meta user))])
         file-id (get-in res [:tempids "new-file"])]
 
@@ -60,10 +69,15 @@
 (defcommand :file/delete-attachment
   {:doc "Delete an attachment"
    :context {:keys [user db]}
-   :payload {:keys [file-id]}
+   :payload {:keys [file-id attached-to]}
    :project-id nil
    :authorization {}
-   :pre [(file-db/own-file? db user file-id)]
+   :pre [(or (and attached-to
+                  (file-db/allow-delete-attachment? db user
+                                                    file-id
+                                                    attached-to)
+                  (file-db/file-is-attached-to? db file-id attached-to))
+             (file-db/own-file? db user file-id))]
    :transact [(deletion-tx user file-id)]})
 
 (defn- file-with-metadata [{:file/keys [name] :as file}]

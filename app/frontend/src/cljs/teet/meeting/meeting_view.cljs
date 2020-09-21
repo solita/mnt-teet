@@ -33,7 +33,11 @@
             [teet.log :as log]
             [teet.ui.context :as context]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.authorization-context :as authorization-context]))
+            [teet.ui.authorization-context :as authorization-context]
+            [teet.ui.file-upload :as file-upload]
+            [teet.file.file-controller :as file-controller]
+            [teet.common.common-controller :as common-controller]
+            [teet.file.file-view :as file-view]))
 
 
 (defn meeting-form
@@ -347,6 +351,47 @@
                             :button-component [buttons/button-primary {} (tr [:meeting :add-decision-button])]}]])
 
 
+(defn- meeting-agenda-content [e! {id :db/id
+                                   body :meeting.agenda/body
+                                   files :file/_attached-to}]
+
+  [project-context/consume
+   (fn [{project-id :db/id}]
+     [:div {:id (str "agenda-" id)}
+      (when body
+        [:div
+         [rich-text-editor/display-markdown body]])
+
+      [typography/BoldGreyText (tr [:common :files])]
+      [file-view/file-table
+       {:filtering? false
+        :actions? true
+        :no-link? true
+        :attached-to [:meeting-agenda id]
+        :columns #{:suffix :download :delete}
+        :delete-action (fn [file]
+                         (e! (file-controller/map->DeleteAttachment
+                              {:file-id (:db/id file)
+                               :success-message (tr [:document :file-deleted-notification])
+                               :attached-to [:meeting-agenda id]})))}
+       files]
+
+      [authorization-context/when-authorized :edit-meeting
+       [file-upload/FileUpload
+        {:id (str "agenda-" id "-upload")
+         :drag-container-id (str "agenda-" id)
+         :drop-message (tr [:drag :drop-to-meeting-agenda])
+         :on-drop #(e! (file-controller/map->UploadFiles
+                        {:files %
+                         :project-id project-id
+                         :attachment? true
+                         :attach-to [:meeting-agenda id]
+                         :on-success common-controller/->Refresh}))}
+        [buttons/button-primary
+         {:start-icon (r/as-element [icons/file-cloud-upload])
+          :component :span}
+         (tr [:task :upload-files])]]]])])
+
 (defn meeting-details*
   [e! user {:meeting/keys [start end location agenda] :as meeting} rights]
   (let [edit? (get rights :edit-meeting)]
@@ -375,9 +420,7 @@
                                                       :modal-title (tr [:meeting :edit-agenda-modal-title])
                                                       :button-component [buttons/button-secondary {}
                                                                          (tr [:buttons :edit])]}])
-           :content (when body
-                      [:div
-                       [rich-text-editor/display-markdown body]])
+           :content [meeting-agenda-content e! agenda-topic]
            :children (map-indexed
                       (fn [i decision]
                         {:key (:db/id decision)

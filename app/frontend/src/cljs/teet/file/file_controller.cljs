@@ -43,12 +43,15 @@
                            (common-controller/->Navigate :activity-task (dissoc params :file) {}))}))
 
   DeleteAttachment
-  (process-event [{:keys [file-id on-success-event]} app]
+  (process-event [{:keys [file-id on-success-event attached-to success-message]} app]
     (t/fx app
           {:tuck.effect/type :command!
            :command :file/delete-attachment
-           :payload {:file-id file-id}
-           :result-event on-success-event}))
+           :payload {:file-id file-id
+                     :attached-to attached-to}
+           :result-event (or on-success-event
+                             common-controller/->Refresh)
+           :success-message success-message}))
 
   AddFilesToTask
   (process-event [{:keys [files on-success]} app]
@@ -90,7 +93,8 @@
                                      :on-success (->UploadSuccess (:db/id file))})))}))
 
   UploadFiles
-  (process-event [{:keys [files project-id task-id on-success progress-increment attachment?
+  (process-event [{:keys [files project-id task-id on-success progress-increment
+                          attachment? attach-to
                           file-results]
                    :as event} app]
     (if-let [file (first files)]
@@ -108,7 +112,8 @@
                                                (when (not (str/blank? pos))
                                                  {:file/pos-number (js/parseInt pos)})))}
                                (if attachment?
-                                 {:project-id project-id}
+                                 {:project-id project-id
+                                  :attach-to attach-to}
                                  {:task-id task-id}))
                :result-event (fn [result]
                                (map->UploadFileUrlReceived

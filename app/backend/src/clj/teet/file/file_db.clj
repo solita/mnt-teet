@@ -2,7 +2,71 @@
   "File queries"
   (:require [datomic.client.api :as d]
             [teet.user.user-model :as user-model]
-            [teet.comment.comment-db :as comment-db]))
+            [teet.comment.comment-db :as comment-db]
+            [teet.log :as log]))
+
+(defn- valid-attach-definition? [attach]
+  (and (vector? attach)
+       (= 2 (count attach))
+       (keyword? (first attach))))
+
+(defn check-attach-definition [attach]
+  (if-not (valid-attach-definition? attach)
+    (throw (ex-info "Invalid attach definition"
+                    {:invalid-attach-definition attach}))
+    attach))
+
+(defmulti attach-to
+  "Check preconditions and permissions for attaching file to
+  entity of given type and id for the user.
+
+  Return eid to attach to if attaching is allowed, nil if not.
+  May also throw an exception with :error key in the exception.
+
+  Default behaviour is to disallow."
+  (fn [_db _user _file attach]
+    (first (check-attach-definition attach))))
+
+(defmulti allow-download-attachments?
+  "Check preconditions and permissions for downloading files attached
+  to given entity.
+
+  Default behaviour is to disallow."
+  (fn [_db _user attach]
+    (first (check-attach-definition attach))))
+
+(defmulti allow-delete-attachment?
+  "Check preconditions and premissions for deleting an attached file
+  to a given entity.
+
+  Default behaviour is to disallow."
+  (fn [_db _user _file-id attach]
+    (first (check-attach-definition attach))))
+
+(defmethod attach-to :default [_db user _file [entity-type entity-id]]
+  (log/info "Disallow attaching file to " entity-type " with id " entity-id
+            " for user " user)
+  nil)
+
+(defmethod allow-download-attachments? :default
+  [_db user [entity-type entity-id]]
+  (log/info "Disallow downloading attachments to " entity-type
+            " with id " entity-id " for user " user))
+
+(defmethod allow-delete-attachment? :default
+  [_db user file-id [entity-type entity-id]]
+  (log/info "Disallow deleting attachment " file-id " to "
+            entity-type " with id " entity-id " for user " user)
+  false)
+
+(defn file-is-attached-to? [db file-id attach]
+  (and (valid-attach-definition? attach)
+       (boolean
+        (seq
+         (d/q '[:find ?eid
+                :where [?f :file/attached-to ?eid]
+                :in $ ?f ?eid]
+              db file-id (second attach))))))
 
 (defn own-file? [db user file-id]
   (boolean

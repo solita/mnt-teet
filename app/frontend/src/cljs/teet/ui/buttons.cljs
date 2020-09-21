@@ -1,9 +1,9 @@
 (ns teet.ui.buttons
   (:require [herb.core :refer [<class]]
-            [teet.ui.material-ui :refer [Button ButtonBase Link DialogActions DialogContentText]]
+            [teet.ui.material-ui :refer [Button ButtonBase Link DialogActions DialogContentText IconButton]]
+            [teet.ui.icons :as icons]
             [teet.ui.util :as util]
             [teet.localization :refer [tr]]
-            [teet.ui.icons :as icons]
             [teet.theme.theme-colors :as theme-colors]
             [reagent.core :as r]
             [teet.ui.panels :as panels]))
@@ -107,7 +107,7 @@
                              :type      :button}))
 
 (defn delete-button-with-confirm
-  [{:keys [action modal-title modal-text style small? icon-position close-on-action? id]
+  [{:keys [action modal-title modal-text style trashcan? small? icon-position close-on-action? id]
     :or {icon-position :end
          close-on-action? true}}
    button-content]
@@ -135,7 +135,12 @@
        (if modal-text
          modal-text
          (tr [:common :deletion-modal-text]))]]
-     (if small?
+     (cond
+       trashcan?
+       [IconButton {:on-click open}
+        [icons/action-delete]]
+
+       small?
        [button-text-warning (merge {:on-click open
                                     :id id
                                     :size :small}
@@ -143,6 +148,8 @@
                                      :end {:end-icon (r/as-element [icons/action-delete-outline])}
                                      :start {:start-icon (r/as-element [icons/action-delete-outline])}))
         button-content]
+
+       :else
        [button-warning {:on-click open
                         :style    style
                         :id id}
