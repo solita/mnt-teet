@@ -30,6 +30,8 @@
           (backup-ion/output-all-tx (tu/connection)
                                     (io/output-stream backup-file)))))
 
+    ;; TODO: Test backup/restore of a tupleattrs with ref that isn't
+    ;; included in the backup
     (testing "Restore to new empty database"
       (with-empty-db
         (fn []
