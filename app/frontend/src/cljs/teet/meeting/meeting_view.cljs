@@ -364,8 +364,10 @@
 
       [typography/BoldGreyText (tr [:common :files])]
       [file-view/file-table {:filtering? false
-                             :actions? false
-                             :columns #{:suffix}} files]
+                             :actions? true
+                             :no-link? true
+                             :attached-to [:meeting-agenda id]
+                             :columns #{:suffix :download}} files]
 
       [authorization-context/when-authorized :edit-meeting
        [file-upload/FileUploadButton
