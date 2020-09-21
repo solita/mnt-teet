@@ -2,7 +2,6 @@
   (:require [teet.project.project-db :as project-db]
             [teet.db-api.core :refer [defquery]]
             [teet.meta.meta-query :as meta-query]
-            [teet.project.project-model :as project-model]
             [teet.meeting.meeting-db :as meeting-db]
             [teet.user.user-model :as user-model]
             [datomic.client.api :as d]))
@@ -54,7 +53,8 @@
                                              :meeting.agenda/topic
                                              :meeting.agenda/body
                                              {:meeting.agenda/decisions [:db/id :meeting.decision/body]}
-                                             {:meeting.agenda/responsible ~user-model/user-listing-attributes}]}
+                                             {:meeting.agenda/responsible ~user-model/user-listing-attributes}
+                                             {:file/_attached-to [:db/id :file/name]}]}
                            {:participation/_in
                             [:db/id
                              :participation/role
