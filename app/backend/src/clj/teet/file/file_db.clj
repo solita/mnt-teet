@@ -59,6 +59,15 @@
             entity-type " with id " entity-id " for user " user)
   false)
 
+(defn file-is-attached-to? [db file-id attach]
+  (and (valid-attach-definition? attach)
+       (boolean
+        (seq
+         (d/q '[:find ?eid
+                :where [?f :file/attached-to ?eid]
+                :in $ ?f ?eid]
+              db file-id (second attach))))))
+
 (defn own-file? [db user file-id]
   (boolean
    (ffirst

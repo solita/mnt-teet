@@ -40,7 +40,8 @@
    :pre [(or (and comment-id
                   (file-db/file-is-attached-to-comment? db file-id comment-id))
              (and attached-to
-                  (file-db/allow-download-attachments? db user attached-to))
+                  (file-db/allow-download-attachments? db user attached-to)
+                  (file-db/file-is-attached-to? db file-id attached-to))
 
              (file-db/own-file? db user file-id))]
    :project-id (when comment-id

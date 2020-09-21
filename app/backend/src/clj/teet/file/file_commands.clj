@@ -75,7 +75,8 @@
    :pre [(or (and attached-to
                   (file-db/allow-delete-attachment? db user
                                                     file-id
-                                                    attached-to))
+                                                    attached-to)
+                  (file-db/file-is-attached-to? db file-id attached-to))
              (file-db/own-file? db user file-id))]
    :transact [(deletion-tx user file-id)]})
 
