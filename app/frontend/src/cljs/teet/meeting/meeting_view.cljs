@@ -36,7 +36,8 @@
             [teet.ui.authorization-context :as authorization-context]
             [teet.ui.file-upload :as file-upload]
             [teet.file.file-controller :as file-controller]
-            [teet.common.common-controller :as common-controller]))
+            [teet.common.common-controller :as common-controller]
+            [teet.file.file-view :as file-view]))
 
 
 (defn meeting-form
@@ -351,7 +352,8 @@
 
 
 (defn- meeting-agenda-content [e! {id :db/id
-                                   :meeting.agenda/keys [body files]}]
+                                   body :meeting.agenda/body
+                                   files :file/_attached-to}]
 
   [project-context/consume
    (fn [{project-id :db/id}]
@@ -359,6 +361,12 @@
       (when body
         [:div
          [rich-text-editor/display-markdown body]])
+
+      [typography/BoldGreyText (tr [:common :files])]
+      [file-view/file-table {:filtering? false
+                             :actions? false
+                             :columns #{:suffix}} files]
+
       [authorization-context/when-authorized :edit-meeting
        [file-upload/FileUploadButton
         {:id (str "agenda-" id "-upload")
