@@ -16,11 +16,18 @@
   (:import (java.util Date)))
 
 (defmethod file-db/attach-to :meeting-agenda
-  [db user _file _ meeting-agenda-id]
-  (let [meeting (get-in (du/entity db meeting-agenda-id)
-                        [:meeting/_agenda :db/id])]
-    (when (meeting-db/user-is-organizer-or-reviewer? db user meeting)
-      meeting-agenda-id)))
+  [db user _file [_ meeting-agenda-id]]
+  (when (meeting-db/user-is-organizer-or-reviewer?
+         db user
+         (get-in (du/entity db meeting-agenda-id)
+                 [:meeting/_agenda :db/id]))
+    meeting-agenda-id))
+
+(defmethod file-db/allow-download-attachments? :meeting-agenda
+  [db user [_ meeting-agenda-id]]
+  (meeting-db/user-is-participating?
+   db user (get-in (du/entity db meeting-agenda-id)
+                   [:meeting/_agenda :db/id])))
 
 ;; TODO query all activity meetings
 ;; matching name found

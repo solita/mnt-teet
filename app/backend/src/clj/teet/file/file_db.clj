@@ -5,6 +5,17 @@
             [teet.comment.comment-db :as comment-db]
             [teet.log :as log]))
 
+(defn- valid-attach-definition? [attach]
+  (and (vector? attach)
+       (= 2 (count attach))
+       (keyword? (first attach))))
+
+(defn check-attach-definition [attach]
+  (if-not (valid-attach-definition? attach)
+    (throw (ex-info "Invalid attach definition"
+                    {:invalid-attach-definition attach}))
+    attach))
+
 (defmulti attach-to
   "Check preconditions and permissions for attaching file to
   entity of given type and id for the user.
@@ -13,13 +24,26 @@
   May also throw an exception with :error key in the exception.
 
   Default behaviour is to disallow."
-  (fn [_db _user _file entity-type _entity-id]
-    entity-type))
+  (fn [_db _user _file attach]
+    (first (check-attach-definition attach))))
 
-(defmethod attach-to :default [_db user _file entity-type entity-id]
+(defmulti allow-download-attachments?
+  "Check preconditions and permissions for downloading files attached
+  to given entity.
+
+  Default behaviour is to disallow."
+  (fn [_db _user attach]
+    (first (check-attach-definition attach))))
+
+(defmethod attach-to :default [_db user _file [entity-type entity-id]]
   (log/info "Disallow attaching file to " entity-type " with id " entity-id
             " for user " user)
   nil)
+
+(defmethod allow-download-attachments? :default
+  [_db user [entity-type entity-id]]
+  (log/info "Disallow downloading attachments to " entity-type
+            " with id " entity-id " for user " user))
 
 (defn own-file? [db user file-id]
   (boolean

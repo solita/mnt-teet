@@ -36,9 +36,12 @@
 (defquery :file/download-attachment
   {:doc "Download comment attachment"
    :context {:keys [db user]}
-   :args {:keys [file-id comment-id]}
+   :args {:keys [file-id attached-to comment-id]}
    :pre [(or (and comment-id
                   (file-db/file-is-attached-to-comment? db file-id comment-id))
+             (and attached-to
+                  (file-db/allow-download-attachments? db user attached-to))
+
              (file-db/own-file? db user file-id))]
    :project-id (when comment-id
                  (project-db/comment-project-id db comment-id))
