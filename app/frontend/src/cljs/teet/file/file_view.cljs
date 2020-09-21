@@ -284,11 +284,13 @@
          (when (and can-replace-file?
                     (nil? latest-file)
                     (du/enum= :file.status/draft (:file/status file)))
-           [:div
-            [file-upload/FileUploadButton {:on-drop (e! file-controller/->UploadNewVersion file)
-                                           :color :secondary
-                                           :icon [icons/file-cloud-upload]
-                                           :multiple? false}
+           [:div#file-details-upload-replacement
+            [file-upload/FileUploadButton
+             {:on-drop (e! file-controller/->UploadNewVersion file)
+              :drag-container-id "file-details-upload-replacement"
+              :color :secondary
+              :icon [icons/file-cloud-upload]
+              :multiple? false}
              (tr [:file :upload-new-version])]])])
       [buttons/button-primary {:element "a"
                                :href (common-controller/query-url :file/download-file
