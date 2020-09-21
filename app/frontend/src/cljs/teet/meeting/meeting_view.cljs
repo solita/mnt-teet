@@ -33,7 +33,10 @@
             [teet.log :as log]
             [teet.ui.context :as context]
             [teet.theme.theme-colors :as theme-colors]
-            [teet.ui.authorization-context :as authorization-context]))
+            [teet.ui.authorization-context :as authorization-context]
+            [teet.ui.file-upload :as file-upload]
+            [teet.file.file-controller :as file-controller]
+            [teet.common.common-controller :as common-controller]))
 
 
 (defn meeting-form
@@ -347,6 +350,29 @@
                             :button-component [buttons/button-primary {} (tr [:meeting :add-decision-button])]}]])
 
 
+(defn- meeting-agenda-content [e! {id :db/id
+                                   :meeting.agenda/keys [body files]}]
+
+  [project-context/consume
+   (fn [{project-id :db/id}]
+     [:div {:id (str "agenda-" id)}
+      (when body
+        [:div
+         [rich-text-editor/display-markdown body]])
+      [authorization-context/when-authorized :edit-meeting
+       [file-upload/FileUploadButton
+        {:id (str "agenda-" id "-upload")
+         :drag-container-id (str "agenda-" id)
+         :drop-message (tr [:drag :drop-to-meeting-agenda])
+         :color :primary
+         :button-attributes {:icon [icons/file-cloud-upload]}
+         :on-drop #(e! (file-controller/map->UploadFiles
+                        {:files %
+                         :project-id project-id
+                         :attachment? true
+                         :attach-to [:meeting-agenda id]
+                         :on-success common-controller/->Refresh}))}
+        (tr [:task :upload-files])]]])])
 (defn meeting-details*
   [e! user {:meeting/keys [start end location agenda] :as meeting} rights]
   (let [edit? (get rights :edit-meeting)]
@@ -375,9 +401,7 @@
                                                       :modal-title (tr [:meeting :edit-agenda-modal-title])
                                                       :button-component [buttons/button-secondary {}
                                                                          (tr [:buttons :edit])]}])
-           :content (when body
-                      [:div
-                       [rich-text-editor/display-markdown body]])
+           :content [meeting-agenda-content e! agenda-topic]
            :children (map-indexed
                       (fn [i decision]
                         {:key (:db/id decision)
