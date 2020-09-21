@@ -4,7 +4,6 @@
             [teet.ui.icons :as icons]
             [teet.ui.util :as util]
             [teet.localization :refer [tr]]
-            [teet.ui.icons :as icons]
             [teet.theme.theme-colors :as theme-colors]
             [reagent.core :as r]
             [teet.ui.panels :as panels]))
