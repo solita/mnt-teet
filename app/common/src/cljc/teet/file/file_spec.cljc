@@ -41,7 +41,7 @@
      (s/def :file/file-object
        (s/and
          #(instance? js/File %)
-         #(s/valid? :file/file (file-model/file-info %))))))
+         #(s/valid? :file/file (file-info %))))))
 
 (s/def :activity/name keyword?)
 (s/def :activity/status :teet.util.datomic/enum)
