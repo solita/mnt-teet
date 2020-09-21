@@ -1137,4 +1137,10 @@
            :db/valueType :db.type/instant
            :db/cardinality :db.cardinality/one
            :db/doc "Timestamp for when the meetings calendar invitations were sent"}]]}
+
+ {:db/ident :migration/file-attached-to
+  :txes [[{:db/ident :file/attached-to
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "Entities this file is attached to."}]]}
  ]

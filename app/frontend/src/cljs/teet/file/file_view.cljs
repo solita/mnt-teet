@@ -43,9 +43,10 @@
       [name ""])))
 
 (defn- file-row
-  [{:keys [link-download? actions? comment-action]
+  [{:keys [link-download? no-link? attached-to actions? comment-action columns delete-action]
     :or {link-download? false
-         actions? true}}
+         actions? true
+         columns (constantly true)}}
    {id :db/id :file/keys [number version status name] comments :comment/counts :as file}]
   (let [[base-name suffix] (base-name-and-suffix name)
         {:comment/keys [new-comments old-comments]} comments
@@ -54,38 +55,68 @@
                             (<class common-styles/margin-bottom 0.5)]}
      [:div.file-row-name {:class [(<class file-style/file-row-name seen)
                                   (<class common-styles/flex-table-column-style 44)]}
-      (if link-download?
+      (cond
+        ;; if no-link? specified, just show the name text
+        no-link?
+        base-name
+
+        ;; if link-download? specified, download file
+        link-download?
         [Link {:target :_blank
-               :href (common-controller/query-url :file/download-file {:file-id id})}
+               :href (common-controller/query-url
+                      :file/download-file
+                      (merge {:file-id id
+                              :attached-to attached-to}))}
          base-name]
+
+        ;;  Otherwise link to task file page
+        :else
         [url/Link {:page :file :params {:file id}} base-name])]
-     [:div.file-row-number {:class (<class common-styles/flex-table-column-style 10)}
-      [:span number]]
-     [:div.file-row-suffix {:class (<class common-styles/flex-table-column-style 10)}
-      [:span suffix]]
-     [:div.file-row-version {:class (<class common-styles/flex-table-column-style 10)}
-      [:span (str "V" version)]]
-     [:div.file-row-status {:class (<class common-styles/flex-table-column-style 13)}
-      [:span (tr-enum status)]]
+     (when (columns :number)
+       [:div.file-row-number {:class (<class common-styles/flex-table-column-style 10)}
+        [:span number]])
+     (when (columns :suffix)
+       [:div.file-row-suffix {:class (<class common-styles/flex-table-column-style 10)}
+        [:span suffix]])
+     (when (columns :version)
+       [:div.file-row-version {:class (<class common-styles/flex-table-column-style 10)}
+        [:span (str "V" version)]])
+     (when (columns :status)
+       [:div.file-row-status {:class (<class common-styles/flex-table-column-style 13)}
+        [:span (tr-enum status)]])
      (when actions?
        [:div.file-row-actions {:class (<class common-styles/flex-table-column-style 13 :flex-end)}
-        [Badge {:badge-content (+ (or new-comments 0)
-                                  (or old-comments 0))
-                :color (if (pos? new-comments)
-                         :error
-                         :primary)}
-         (if comment-action
-           [IconButton {:on-click #(comment-action file)}
-            [icons/communication-comment]]
-           [url/Link {:class ["file-row-action-comments" (<class file-row-icon-style)]
-                      :page :file
-                      :params {:file id}
-                      :query {:tab "comments"}}
-            [icons/communication-comment]])]
-        [Link {:class ["file-row-action-download" (<class file-row-icon-style)]
-               :target :_blank
-               :href (common-controller/query-url :file/download-file {:file-id id})}
-         [icons/file-cloud-download]]])]))
+        (when (columns :comment)
+          [Badge {:badge-content (+ (or new-comments 0)
+                                    (or old-comments 0))
+                  :color (if (pos? new-comments)
+                           :error
+                           :primary)}
+           (if comment-action
+             [IconButton {:on-click #(comment-action file)}
+              [icons/communication-comment]]
+             [url/Link {:class ["file-row-action-comments" (<class file-row-icon-style)]
+                        :page :file
+                        :params {:file id}
+                        :query {:tab "comments"}}
+              [icons/communication-comment]])])
+        (when (columns :download)
+          [Link {:class ["file-row-action-download" (<class file-row-icon-style)]
+                 :target :_blank
+                 :href (common-controller/query-url
+                        (if attached-to
+                          :file/download-attachment
+                          :file/download-file)
+                        (merge
+                         {:file-id id}
+                         (when attached-to
+                           {:attached-to attached-to})))}
+           [icons/file-cloud-download]])
+
+        (when (and (columns :delete) delete-action)
+          [buttons/delete-button-with-confirm
+           {:action #(delete-action file)
+            :trashcan? true}])])]))
 
 (def ^:private sorters
   {"meta/created-at" [(juxt :meta/created-at :file/name) >]
@@ -138,15 +169,17 @@
 
 (defn file-table
   ([files] (file-table {} files))
-  ([opts files]
+  ([{:keys [filtering?]
+     :or {filtering? true} :as opts} files]
    (r/with-let [items-for-sort-select (sort-items)
                 filter-atom (r/atom "")
                 sort-by-atom (r/atom (first items-for-sort-select))]
      [:<>
-      [file-filter-and-sorter
-       filter-atom
-       sort-by-atom
-       items-for-sort-select]
+      (when filtering?
+        [file-filter-and-sorter
+         filter-atom
+         sort-by-atom
+         items-for-sort-select])
       [:div.file-table-files
        (->> files
             (filtered-by @filter-atom)
@@ -284,11 +317,13 @@
          (when (and can-replace-file?
                     (nil? latest-file)
                     (du/enum= :file.status/draft (:file/status file)))
-           [:div
-            [file-upload/FileUploadButton {:on-drop (e! file-controller/->UploadNewVersion file)
-                                           :color :secondary
-                                           :icon [icons/file-cloud-upload]
-                                           :multiple? false}
+           [:div#file-details-upload-replacement
+            [file-upload/FileUploadButton
+             {:on-drop (e! file-controller/->UploadNewVersion file)
+              :drag-container-id "file-details-upload-replacement"
+              :color :secondary
+              :icon [icons/file-cloud-upload]
+              :multiple? false}
              (tr [:file :upload-new-version])]])])
       [buttons/button-primary {:element "a"
                                :href (common-controller/query-url :file/download-file
