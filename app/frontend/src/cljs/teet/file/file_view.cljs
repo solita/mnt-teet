@@ -43,9 +43,10 @@
       [name ""])))
 
 (defn- file-row
-  [{:keys [link-download? actions? comment-action]
+  [{:keys [link-download? actions? comment-action columns]
     :or {link-download? false
-         actions? true}}
+         actions? true
+         columns (constantly true)}}
    {id :db/id :file/keys [number version status name] comments :comment/counts :as file}]
   (let [[base-name suffix] (base-name-and-suffix name)
         {:comment/keys [new-comments old-comments]} comments
@@ -59,14 +60,18 @@
                :href (common-controller/query-url :file/download-file {:file-id id})}
          base-name]
         [url/Link {:page :file :params {:file id}} base-name])]
-     [:div.file-row-number {:class (<class common-styles/flex-table-column-style 10)}
-      [:span number]]
-     [:div.file-row-suffix {:class (<class common-styles/flex-table-column-style 10)}
-      [:span suffix]]
-     [:div.file-row-version {:class (<class common-styles/flex-table-column-style 10)}
-      [:span (str "V" version)]]
-     [:div.file-row-status {:class (<class common-styles/flex-table-column-style 13)}
-      [:span (tr-enum status)]]
+     (when (columns :number)
+       [:div.file-row-number {:class (<class common-styles/flex-table-column-style 10)}
+        [:span number]])
+     (when (columns :suffix)
+       [:div.file-row-suffix {:class (<class common-styles/flex-table-column-style 10)}
+        [:span suffix]])
+     (when (columns :version)
+       [:div.file-row-version {:class (<class common-styles/flex-table-column-style 10)}
+        [:span (str "V" version)]])
+     (when (columns :status)
+       [:div.file-row-status {:class (<class common-styles/flex-table-column-style 13)}
+        [:span (tr-enum status)]])
      (when actions?
        [:div.file-row-actions {:class (<class common-styles/flex-table-column-style 13 :flex-end)}
         [Badge {:badge-content (+ (or new-comments 0)
@@ -138,15 +143,17 @@
 
 (defn file-table
   ([files] (file-table {} files))
-  ([opts files]
+  ([{:keys [filtering?]
+     :or {filtering? true} :as opts} files]
    (r/with-let [items-for-sort-select (sort-items)
                 filter-atom (r/atom "")
                 sort-by-atom (r/atom (first items-for-sort-select))]
      [:<>
-      [file-filter-and-sorter
-       filter-atom
-       sort-by-atom
-       items-for-sort-select]
+      (when filtering?
+        [file-filter-and-sorter
+         filter-atom
+         sort-by-atom
+         items-for-sort-select])
       [:div.file-table-files
        (->> files
             (filtered-by @filter-atom)
