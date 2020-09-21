@@ -182,10 +182,10 @@
       ^{:attribute :task/files
         :validate (fn [array-files]
                     (->> array-files
-                         (map (comp file-model/upload-allowed-file-types
-                                    :file/type
+                         (map (comp file-model/valid-suffix?
+                                    :file/name
                                     file-upload/files-field-entry))
-                         (some nil?)))}
+                         (some false?)))}
       [file-upload/files-field {}]]
      (when upload-progress
        [LinearProgress {:variant "determinate"

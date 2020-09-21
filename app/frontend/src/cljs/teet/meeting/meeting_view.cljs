@@ -48,7 +48,7 @@
                  :spec :meeting/form-data
                  :save-event #(meeting-controller/->SubmitMeetingForm activity-id @form-atom close-event)}
                 (when (:db/id @form-atom)
-                  {:delete (meeting-controller/->DeleteMeeting activity-id (:db/id @form-atom) close-event)}))
+                  {:delete (meeting-controller/->CancelMeeting activity-id (:db/id @form-atom) close-event)}))
     ^{:attribute :meeting/title}
     [TextField {}]
     ^{:attribute :meeting/location}

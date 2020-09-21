@@ -24,7 +24,7 @@
          :default-path [:ags-files]}}
   (mapv first
         (d/q
-         '[:find (pull ?file [:db/id :file/name :file/size :file/type])
+         '[:find (pull ?file [:db/id :file/name :file/size])
            :where
            [?project-id :thk.project/lifecycles ?lifecycle]
            [?lifecycle :thk.lifecycle/activities ?activity]

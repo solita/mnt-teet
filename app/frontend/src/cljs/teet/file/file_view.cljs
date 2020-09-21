@@ -7,6 +7,7 @@
             [teet.common.common-controller :as common-controller]
             [teet.common.common-styles :as common-styles]
             [teet.file.file-controller :as file-controller]
+            [teet.file.file-model :as file-model]
             [teet.file.file-style :as file-style]
             [teet.localization :refer [tr tr-enum]]
             [teet.project.project-model :as project-model]
@@ -86,26 +87,10 @@
                :href (common-controller/query-url :file/download-file {:file-id id})}
          [icons/file-cloud-download]]])]))
 
-(defn- other-version-row
-  [{id :db/id
-    :file/keys [name version status]
-    :meta/keys [created-at creator]
-    :as _file}]
-  [:div.file-row {:class [(<class common-styles/flex-row) (<class common-styles/margin-bottom 0.5)]}
-   [:div.file-row-name {:class (<class common-styles/flex-table-column-style 55)}
-    [url/Link {:page :file :params {:file id}}
-     name]]
-   [:div.file-row-version {:class (<class common-styles/flex-table-column-style 10 :center)}
-    [:span (str "V" version)]]
-   [:div.file-row-status {:class (<class common-styles/flex-table-column-style 10 :center)}
-    [:span (tr-enum status)]]
-   [:div.file-row-date {:class (<class common-styles/flex-table-column-style 25 :flex-end)}
-    [:span (format/date created-at)]]])
-
 (def ^:private sorters
   {"meta/created-at" [(juxt :meta/created-at :file/name) >]
    "file/name"       [:file/name <]
-   "file/type"       [(juxt :file/type :file/name) <]
+   "file/type"       [(comp file-model/filename->suffix :file/name) <]
    "file/status"     [(juxt :file/status :file/name) <]})
 
 (defn- sort-items
@@ -180,12 +165,13 @@
    :top "6px"})
 
 (defn file-icon [{class :class
-                  :file/keys [type]}]
+                  :file/keys [type]
+                  :as file}]
   [:div {:class (if class
                   [class (<class file-icon-style)]
                   (<class file-icon-style))}
    (cond
-     (and type (str/starts-with? type "image/"))
+     (file-model/image? file)
      [fi/image]
 
      :else
@@ -276,7 +262,7 @@
      (if @show-preview?
        [:div
         [:div {:class (<class preview-style)}
-         (if (str/starts-with? (:file/type file) "image/")
+         (if (file-model/image? file)
            [:img {:style {:width :auto :height :auto
                           :max-height "250px"
                           :object-fit :contain}
@@ -358,7 +344,7 @@
                 :as app} project]
          (let [task (project-model/task-by-id project task-id)
                file (project-model/file-by-id project file-id false)
-               show-preview? (r/atom (and file (str/starts-with? (:file/type file) "image/")))
+               show-preview? (r/atom (and file (file-model/image? file)))
                old? (nil? file)
                file (or file (project-model/file-by-id project file-id true))
                latest-file (when old?

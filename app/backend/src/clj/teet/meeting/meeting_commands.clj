@@ -15,7 +15,8 @@
             [teet.environment :as environment]
             [teet.meeting.meeting-model :as meeting-model]
             [teet.log :as log]
-            [clojure.string :as str]))
+            [clojure.string :as str])
+  (:import (java.util Date)))
 
 ;; TODO query all activity meetings
 ;; matching name found
@@ -67,15 +68,6 @@
                    ;; Changing meeting title, we need to renumber the meeting
                    {:meeting/number (meeting-db/next-meeting-number
                                      db activity-eid (:meeting/title form-data))}))])})
-
-(defcommand :meeting/delete
-  {:doc "Delete existing meeting"
-   :context {:keys [db user]}
-   :payload {:keys [activity-eid meeting-id]}
-   :project-id (project-db/meeting-project-id db meeting-id)
-   :authorization {:activity/edit-activity {}}
-   :pre [(meeting-db/activity-meeting-id db activity-eid meeting-id)]
-   :transact [(meta-model/deletion-tx user meeting-id)]})
 
 (defn- agenda-items-new-or-belong-to-meeting [db meeting-id agenda]
   (let [ids-to-update (remove string? (map :db/id agenda))
@@ -150,7 +142,7 @@
 
 (defcommand :meeting/send-notifications
   {:doc "Send iCalendar notifications to organizer and participants."
-   :context {:keys [db user]}
+   :context {:keys [db conn user]}
    :payload {id :db/id}
    :project-id (project-db/meeting-project-id db id)
    :authorization {}
@@ -163,22 +155,58 @@
                               :meeting/number
                               :meeting/title :meeting/location
                               :meeting/start :meeting/end
+                              {:meeting/organizer [:user/email :user/given-name :user/family-name]}
                               {:meeting/agenda [:meeting.agenda/topic
                                                 {:meeting.agenda/responsible [:user/given-name
                                                                               :user/family-name]}]}]
                             id)
-
-            ics (meeting-ics/meeting-ics meeting)
+            ics (meeting-ics/meeting-ics {:meeting meeting
+                                          :cancel? false})
             email-response
             (integration-email/send-email!
              {:from (environment/ssm-param :email :from)
               :to to
               :subject (meeting-model/meeting-title meeting)
-              :parts [{:headers {"Content-Type" "text/calendar"}
+              :parts [{:headers {"Content-Type" "text/calendar; method=request"}
                        :body ics}]})]
         (log/info "SES send response" email-response)
-        :ok)
+        (tx-ret [{:db/id id
+                  :meeting/invitations-sent-at (Date.)}]))
       {:error :no-participants-with-email})))
+
+
+(defcommand :meeting/cancel
+  {:doc "Delete existing meeting"
+   :context {:keys [db user conn]}
+   :payload {:keys [activity-eid meeting-id]}
+   :project-id (project-db/meeting-project-id db meeting-id)
+   :authorization {:activity/edit-activity {}}
+   :pre [(meeting-db/activity-meeting-id db activity-eid meeting-id)
+         (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)]}
+  (let [to (remove #(str/ends-with? % "@example.com")
+                   (keep :user/email (meeting-db/participants db meeting-id)))]
+    (when (seq to)
+      (let [meeting (d/pull db
+                            '[:db/id
+                              :meeting/number :meeting/invitations-sent-at
+                              :meeting/title :meeting/location
+                              :meeting/start :meeting/end
+                              {:meeting/organizer [:user/email :user/given-name :user/family-name]}
+                              {:meeting/agenda [:meeting.agenda/topic
+                                                {:meeting.agenda/responsible [:user/given-name
+                                                                              :user/family-name]}]}]
+                            meeting-id)
+            ics (meeting-ics/meeting-ics {:meeting meeting
+                                          :cancel? true})
+            email-response (when (:meeting/invitations-sent-at meeting) ;; check that for this meeting invitations have been sent
+                             (integration-email/send-email!
+                               {:from (environment/ssm-param :email :from)
+                                :to to
+                                :subject (meeting-model/meeting-title meeting)
+                                :parts [{:headers {"Content-Type" "text/calendar; method=cancel"} ;; RFC 6047 SECTION 2.4
+                                         :body ics}]}))]
+        (log/info "email response: " (or email-response "no email sent"))))
+    (tx-ret [(meta-model/deletion-tx user meeting-id)])))
 
 (defcommand :meeting/create-decision
   {:doc "Create a new decision under a topic"

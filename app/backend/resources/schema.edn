@@ -1131,4 +1131,10 @@
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
            :db/doc "Decision body made in rich text"}]]}
+
+ {:db/ident :migration/meeting-invitations-sent
+  :txes [[{:db/ident :meeting/invitations-sent-at
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "Timestamp for when the meetings calendar invitations were sent"}]]}
  ]
