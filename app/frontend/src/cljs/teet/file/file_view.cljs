@@ -43,7 +43,7 @@
       [name ""])))
 
 (defn- file-row
-  [{:keys [link-download? no-link? attached-to actions? comment-action columns]
+  [{:keys [link-download? no-link? attached-to actions? comment-action columns delete-action]
     :or {link-download? false
          actions? true
          columns (constantly true)}}
@@ -111,7 +111,12 @@
                          {:file-id id}
                          (when attached-to
                            {:attached-to attached-to})))}
-           [icons/file-cloud-download]])])]))
+           [icons/file-cloud-download]])
+
+        (when (columns :delete)
+          [buttons/delete-button-with-confirm
+           {:action #(delete-action file)
+            :trashcan? true}])])]))
 
 (def ^:private sorters
   {"meta/created-at" [(juxt :meta/created-at :file/name) >]

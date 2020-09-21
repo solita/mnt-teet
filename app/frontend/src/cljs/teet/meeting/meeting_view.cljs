@@ -363,26 +363,35 @@
          [rich-text-editor/display-markdown body]])
 
       [typography/BoldGreyText (tr [:common :files])]
-      [file-view/file-table {:filtering? false
-                             :actions? true
-                             :no-link? true
-                             :attached-to [:meeting-agenda id]
-                             :columns #{:suffix :download}} files]
+      [file-view/file-table
+       {:filtering? false
+        :actions? true
+        :no-link? true
+        :attached-to [:meeting-agenda id]
+        :columns #{:suffix :download :delete}
+        :delete-action (fn [file]
+                         (e! (file-controller/map->DeleteAttachment
+                              {:file-id (:db/id file)
+                               :success-message (tr [:document :file-deleted-notification])
+                               :attached-to [:meeting-agenda id]})))}
+       files]
 
       [authorization-context/when-authorized :edit-meeting
-       [file-upload/FileUploadButton
+       [file-upload/FileUpload
         {:id (str "agenda-" id "-upload")
          :drag-container-id (str "agenda-" id)
          :drop-message (tr [:drag :drop-to-meeting-agenda])
-         :color :primary
-         :button-attributes {:icon [icons/file-cloud-upload]}
          :on-drop #(e! (file-controller/map->UploadFiles
                         {:files %
                          :project-id project-id
                          :attachment? true
                          :attach-to [:meeting-agenda id]
                          :on-success common-controller/->Refresh}))}
-        (tr [:task :upload-files])]]])])
+        [buttons/button-primary
+         {:start-icon (r/as-element [icons/file-cloud-upload])
+          :component :span}
+         (tr [:task :upload-files])]]]])])
+
 (defn meeting-details*
   [e! user {:meeting/keys [start end location agenda] :as meeting} rights]
   (let [edit? (get rights :edit-meeting)]
