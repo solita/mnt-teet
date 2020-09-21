@@ -357,7 +357,7 @@
                              (and end (format/date end)))])]}))
 
 (defn project-owner-and-managers* [owner lifecycles show-history?]
-  (into [{:primary-text (or (user-model/user-name owner) "-") 
+  (into [{:primary-text (or (user-model/user-name owner) (tr [:common :unassigned])) 
           :secondary-text (tr [:roles :owner])}]
         ;; All activity owners        
         (mapcat         
@@ -380,9 +380,13 @@
                  {:key (str id)})))))
         lifecycles))
 
-(defn project-owner-and-managers [owner lifecycles show-history?]
+(defn project-owner-and-managers [owner lifecycles show-history? project-managers-info-missing?]  
   [itemlist/gray-bg-list
-   (util/with-keys (project-owner-and-managers* owner lifecycles show-history?))])
+   (util/with-keys (concat
+                    (project-owner-and-managers* owner lifecycles show-history?)
+                    (when project-managers-info-missing?
+                      [{:primary-text (tr [:common :unassigned]) 
+                        :secondary-text (tr [:roles :manager])}])))])
 
 (defmethod project-menu/project-tab-content :people
   [_ e! {query :query :as _app}
@@ -393,7 +397,8 @@
     [:div.project-people-tab
 
      [:div.people-tab-managers
-      [project-owner-and-managers owner lifecycles @show-history?]
+      [typography/Heading2 (tr [:project :management])]
+      [project-owner-and-managers owner lifecycles @show-history? (project-managers-info-missing project)]
       (when has-history?
         [Link {:on-click #(swap! show-history? not)
                :style {:cursor :pointer}}
