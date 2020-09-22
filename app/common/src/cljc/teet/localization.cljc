@@ -17,8 +17,9 @@
 (defn dev-mode? []
   #?(:clj false
      :cljs (when-let [host (-> js/window .-location .-host)]
-             (boolean (re-find #"localhost"
-                               host)))))
+             (boolean
+              (or (re-find #"dev-teet" host)
+                  (re-find #"localhost" host))))))
 
 (def supported-languages #{"en" "et"})
 
