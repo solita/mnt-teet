@@ -351,7 +351,7 @@
                             :button-component [buttons/button-primary {} (tr [:meeting :add-decision-button])]}]])
 
 
-(defn- file-attachments [e! drag-container-id attach-to files]
+(defn- file-attachments [{:keys [e! drag-container-id drop-message attach-to files]}]
   [project-context/consume
    (fn [{project-id :db/id}]
      [:<>
@@ -374,7 +374,7 @@
        [file-upload/FileUpload
         {:id (str drag-container-id "-upload")
          :drag-container-id drag-container-id
-         :drop-message (tr [:drag :drop-to-meeting-agenda])
+         :drop-message drop-message
          :on-drop #(e! (file-controller/map->UploadFiles
                         {:files %
                          :project-id project-id
@@ -395,7 +395,22 @@
      [:div
       [rich-text-editor/display-markdown body]])
 
-   [file-attachments e! (str "agenda-" id) [:meeting-agenda id] files]])
+   [file-attachments {:e! e!
+                      :drag-container-id (str "agenda-" id)
+                      :drop-message (tr [:drag :drop-to-meeting-agenda])
+                      :attach-to [:meeting-agenda id]
+                      :files files}]])
+
+(defn- meeting-decision-content [e! {id :db/id
+                                     body :meeting.decision/body
+                                     files :file/_attached-to}]
+  [:div {:id (str "decision-" id)}
+   [rich-text-editor/display-markdown body]
+   [file-attachments {:e! e!
+                      :drag-container-id (str "decision-" id)
+                      :drop-message (tr [:drag :drop-to-meeting-decision])
+                      :attach-to [:meeting-decision id]
+                      :files files}]])
 
 (defn meeting-details*
   [e! user {:meeting/keys [start end location agenda] :as meeting} rights]
@@ -438,8 +453,7 @@
                                              :modal-title (tr [:meeting :edit-decision-modal-title])
                                              :button-component [buttons/button-secondary {:size :small}
                                                                 (tr [:buttons :edit])]}])
-                         :content [rich-text-editor/display-markdown
-                                   (:meeting.decision/body decision)]})
+                         :content [meeting-decision-content e! decision]})
                       decisions)
            :after-children-component (when edit?
                                        [add-decision-component e! meeting agenda-topic])}

@@ -104,7 +104,12 @@
   :invalid-file-type "Failitüüp ei ole toetatud",
   :new-comment "Uus märkus",
   :updated "Uuendatud"},
- :drag {:no-drop-zone nil, :drop-to-task nil, :drop-to-comment nil},
+ :drag
+ {:no-drop-zone "Siia ei saa dokumente lohistada",
+  :drop-to-task "Lisan ülesandele dokumente",
+  :drop-to-comment "Lisan märkusele pilte",
+  :drop-to-meeting-agenda "Lisan päevakavapunktile dokumente",
+  :drop-to-meeting-decision "Lisan dokumendi koosoleku otsusele"},
  :enum
  {:estate-procedure.type/acquisition-negotiation "Hinnangu alusel",
   :activity.name/construction "Ehitus",
@@ -340,7 +345,7 @@
   :land-acquisition/status "Olek",
   :common {"description" "Kirjeldus", "name" "Nimi"},
   :land-acquisition/pos-number "POS#",
-  :meeting.agenda/responsible "Allkirjaõiguslik isik",
+  :meeting.agenda/responsible "Vastutav isik",
   :document/sub-category "Dokumendi alamtüüp",
   :user/add-global-permission
   "Lisan globaalse rolli (kehtib kõikide projektide kohta)",

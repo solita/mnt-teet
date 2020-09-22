@@ -107,7 +107,9 @@
  :drag
  {:no-drop-zone "No drop zone",
   :drop-to-task "Upload files to task",
-  :drop-to-comment "Add images to comment"},
+  :drop-to-comment "Add images to comment",
+  :drop-to-meeting-agenda "Attach file to meeting agenda",
+  :drop-to-meeting-decision "Attach file to meeting decision"},
  :enum
  {:estate-procedure.type/acquisition-negotiation
   "Acquisition based on evaluation",

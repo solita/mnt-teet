@@ -44,21 +44,23 @@
   (meta-query/without-deleted
     db
     {:project (fetch-project-meetings db (project-db/activity-project-id db activity-id)) ;; This ends up pulling duplicate information, could be refactored
-     :meeting (d/pull db `[:db/id
-                           :meeting/title :meeting/location
-                           :meeting/start :meeting/end
-                           :meeting/number
-                           {:meeting/organizer ~user-model/user-listing-attributes}
-                           {:meeting/agenda [:db/id
-                                             :meeting.agenda/topic
-                                             :meeting.agenda/body
-                                             {:meeting.agenda/decisions [:db/id :meeting.decision/body]}
-                                             {:meeting.agenda/responsible ~user-model/user-listing-attributes}
-                                             {:file/_attached-to [:db/id :file/name]}]}
-                           {:participation/_in
-                            [:db/id
-                             :participation/role
-                             {:participation/participant ~user-model/user-listing-attributes}]}
-                           ;; FIXME: all decisions etc
-                           ]
-                      (meeting-db/activity-meeting-id db activity-id meeting-id))}))
+     :meeting (d/pull
+               db
+               `[:db/id
+                 :meeting/title :meeting/location
+                 :meeting/start :meeting/end
+                 :meeting/number
+                 {:meeting/organizer ~user-model/user-listing-attributes}
+                 {:meeting/agenda [:db/id
+                                   :meeting.agenda/topic
+                                   :meeting.agenda/body
+                                   {:meeting.agenda/decisions
+                                    [:db/id :meeting.decision/body
+                                     {:file/_attached-to [:db/id :file/name]}]}
+                                   {:meeting.agenda/responsible ~user-model/user-listing-attributes}
+                                   {:file/_attached-to [:db/id :file/name]}]}
+                 {:participation/_in
+                  [:db/id
+                   :participation/role
+                   {:participation/participant ~user-model/user-listing-attributes}]}]
+               (meeting-db/activity-meeting-id db activity-id meeting-id))}))
