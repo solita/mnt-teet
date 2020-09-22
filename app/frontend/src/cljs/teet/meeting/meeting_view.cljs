@@ -362,7 +362,7 @@
         :actions? true
         :no-link? true
         :attached-to attach-to
-        :columns #{:suffix :download :delete}
+        :columns #{:suffix :download :delete :meta}
         :delete-action (fn [file]
                          (e! (file-controller/map->DeleteAttachment
                               {:file-id (:db/id file)

@@ -33,6 +33,11 @@
     db
     (fetch-project-meetings db [:thk.project/id id])))
 
+(def attachments {:file/_attached-to
+                  [:db/id :file/name
+                   :meta/created-at
+                   {:meta/creator [:user/given-name :user/family-name]}]})
+
 (defquery :meeting/fetch-meeting
   {:doc "Fetch a single meeting info and project info"
    :context {:keys [db user]}
@@ -56,9 +61,9 @@
                                    :meeting.agenda/body
                                    {:meeting.agenda/decisions
                                     [:db/id :meeting.decision/body
-                                     {:file/_attached-to [:db/id :file/name]}]}
+                                     ~attachments]}
                                    {:meeting.agenda/responsible ~user-model/user-listing-attributes}
-                                   {:file/_attached-to [:db/id :file/name]}]}
+                                   ~attachments]}
                  {:participation/_in
                   [:db/id
                    :participation/role
