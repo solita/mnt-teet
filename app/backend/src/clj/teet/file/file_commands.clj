@@ -33,10 +33,6 @@
 
 (def file-keys [:file/name :file/size :file/group-number :file/pos-number])
 
-(defn check-image-only [file]
-  (when-not (file-model/image? file)
-    (db-api/bad-request! "Not allowed as attachment")))
-
 (defcommand :file/upload-attachment
   {:doc "Upload attachment file and optionally attach it to entity."
    :context {:keys [conn user db]}
@@ -45,7 +41,8 @@
    :project-id project-id
    :authorization {:project/upload-comment-attachment {}}
    :pre [^{:error :comment-attachment-image-only}
-         (or attach-to (check-image-only file))
+         (or attach-to
+             (file-model/image? file))
 
          ^{:error :attach-pre-check-failed}
          (or (nil? attach-to)
