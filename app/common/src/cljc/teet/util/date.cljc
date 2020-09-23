@@ -31,3 +31,14 @@
              (.set Calendar/MONTH (dec month))
              (.set Calendar/DATE day)))
      :cljs (js/Date. year (dec month) day)))
+
+
+(defn start-of-today
+  []
+  #?(:clj (.getTime (doto (Calendar/getInstance)
+                      (.setTime (Date.))
+                      (.set Calendar/HOUR_OF_DAY 0)
+                      (.set Calendar/MINUTE 0)
+                      (.set Calendar/SECOND 0)
+                      (.set Calendar/MILLISECOND 0)))
+     :cljs (.setHours (js/Date.) 0 0 0 0)))

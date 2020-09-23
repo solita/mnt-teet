@@ -63,6 +63,8 @@
   :deletion-modal-text "Are you sure you want to delete this item?",
   :start-time "Starts at",
   :design-stage "Stage",
+  :this-week "This week",
+  :today "Today",
   :deselect-all "Deselect all",
   :show-details "Show details",
   :end-time "Ends at",
@@ -650,7 +652,12 @@
   :filter-by-area "Filter by area",
   :inclusion-distance-placeholder "Give value to show related areas",
   :component-title "Related features search area"},
- :tab-names {:details "Details", :notes "Notes"},
+ :tab-names
+ {:details "Details",
+  :notes "Notes",
+  :upcoming "Upcoming",
+  :history "History",
+  :decisions "Decisions"},
  :task
  {:task-overview "Task overview",
   :upload-files "Upload files",

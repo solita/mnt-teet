@@ -63,6 +63,8 @@
   "Oled sa kindel, et soovid selle üksuse kustutada?",
   :start-time "Algusaeg",
   :design-stage "Staadium",
+  :this-week nil,
+  :today nil,
   :deselect-all "Tühistan kõik valikud",
   :show-details "Vaatan arvutuskäiku",
   :end-time "Lõpuaeg",
@@ -105,11 +107,11 @@
   :new-comment "Uus märkus",
   :updated "Uuendatud"},
  :drag
- {:no-drop-zone "Siia ei saa dokumente lohistada",
-  :drop-to-task "Lisan ülesandele dokumente",
+ {:no-drop-zone "Siia ei saa faile lohistada",
+  :drop-to-task "Lisan ülesandele faile",
   :drop-to-comment "Lisan märkusele pilte",
-  :drop-to-meeting-agenda "Lisan päevakavapunktile dokumente",
-  :drop-to-meeting-decision "Lisan dokumendi koosoleku otsusele"},
+  :drop-to-meeting-agenda "Lisan päevakavapunktile faile",
+  :drop-to-meeting-decision "Lisan koosoleku otsusele faile"},
  :enum
  {:estate-procedure.type/acquisition-negotiation "Hinnangu alusel",
   :activity.name/construction "Ehitus",
@@ -647,7 +649,12 @@
   :inclusion-distance-placeholder
   "Sisestan väärtuse seotud piirkondade kuvamiseks",
   :component-title "Seotud objektide otsinguala"},
- :tab-names {:details "Üksikasjad", :notes "Märkused"},
+ :tab-names
+ {:details "Üksikasjad",
+  :notes "Märkused",
+  :upcoming nil,
+  :history nil,
+  :decisions nil},
  :task
  {:task-overview "Ülesande ülevaade",
   :upload-files "Laen failid üles",

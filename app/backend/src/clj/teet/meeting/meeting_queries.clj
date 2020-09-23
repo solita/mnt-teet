@@ -4,21 +4,55 @@
             [teet.meta.meta-query :as meta-query]
             [teet.meeting.meeting-db :as meeting-db]
             [teet.user.user-model :as user-model]
-            [datomic.client.api :as d]))
+            [datomic.client.api :as d]
+            [clojure.walk :as walk]
+            [teet.util.date :as du]))
 
+
+(defn project-upcoming-meetings
+  [db project-eid]
+  (d/q '[:find (pull ?m [* :activity/_meetings])
+         :where
+         [?p :thk.project/lifecycles ?l]
+         [?l :thk.lifecycle/activities ?a]
+         [?a :activity/meetings ?m]
+         [?m :meeting/start ?start]
+         [(.after ?start ?today)]
+         [(missing? $ ?m :meta/deleted?)]
+         :in $ ?p ?today]
+       db
+       project-eid
+       (du/start-of-today)))
+
+(defn activity-past-meetings
+  [db activity-eid]
+  (mapv first
+        (d/q '[:find (pull ?m [* :activity/_meetings])
+               :where
+               [?a :activity/meetings ?m]
+               [?m :meeting/start ?start]
+               [(.before ?start ?today)]
+               [(missing? $ ?m :meta/deleted?)]
+               :in $ ?a ?today]
+             db
+             activity-eid
+             (du/start-of-today))))
 
 (defn fetch-project-meetings
   [db eid]
-  (project-db/project-by-id db eid {:thk.lifecycle/activities
-                                    [{:activity/meetings
-                                      [:db/id
-                                       :meeting/title
-                                       :meeting/location
-                                       {:meeting/organizer [:user/person-id
-                                                            :user/given-name
-                                                            :user/family-name]}
-                                       :meeting/end :meeting/start
-                                       :meeting/number]}]}))
+  (let [activity-meetings (group-by
+                            #(-> %
+                                 :activity/_meetings
+                                 first
+                                 :db/id)
+                            (mapv first
+                                  (project-upcoming-meetings db eid)))]
+    (walk/postwalk
+      (fn [e]
+        (if-let [activity-meeting (and (map? e) (get activity-meetings (:db/id e)))]
+          (assoc e :activity/meetings activity-meeting)
+          e))
+      (project-db/project-by-id db eid {}))))
 
 (defquery :meeting/project-with-meetings
   {:doc "Fetch project data with project meetings"
@@ -69,3 +103,12 @@
                    :participation/role
                    {:participation/participant ~user-model/user-listing-attributes}]}]
                (meeting-db/activity-meeting-id db activity-id meeting-id))}))
+
+
+(defquery :meeting/activity-meeting-history
+  {:doc "Fetch past meetings for an activity"
+   :context {:keys [db user]}
+   :args {:keys [activity-eid]}
+   :project-id (project-db/activity-project-id db activity-eid)
+   :authorization {}}
+  (activity-past-meetings db activity-eid))

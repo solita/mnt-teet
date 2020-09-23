@@ -2,7 +2,8 @@
   "Common formatters for human readable data"
   (:require [clojure.string :as string]
             [cljs-time.format :as tf]
-            [goog.string :as gstr]))
+            [goog.string :as gstr]
+            [teet.localization :as localization]))
 
 (defn date
   "Format date in human readable locale specific format, eg. dd.MM.yyyy"
@@ -62,3 +63,27 @@
            " km — "
            (string/replace end-km #"\." ",")
            " km"))))
+
+(defn date-string->date
+  [string]
+  (let [[day month year] (string/split string ".")]
+    (js/Date. (str year "-" month "-" day))))
+
+(defn localization-key-by-selected-language
+  []
+  (if (= @localization/selected-language :en)
+    "en-US"
+    "et-EE"))
+
+(defn localized-month-year
+  "Takes JS date object and returns {month-name} {Year}"
+  [date]
+  (let [localization-key (localization-key-by-selected-language)]
+    (.toLocaleString date localization-key #js {:month "long" :year "numeric"})))
+
+(defn localized-day-of-the-week
+  "Takes js date object and returns a localized name for the day"
+  [date]
+  (let [localization-key (localization-key-by-selected-language)]
+    (.toLocaleString date localization-key #js {:weekday "long"})))
+

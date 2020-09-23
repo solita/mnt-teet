@@ -222,10 +222,3 @@
 (defmacro with-language [lang & body]
   `(binding [*language* ~lang]
      (load-language! *language* (fn [_# _#] ~@body))))
-
-#?(:cljs (defn localized-month-year
-               [date]
-               (let [localization-key (if (= @selected-language :en)
-                                        "en-US"
-                                        "et-EE")]
-                    (.toLocaleString date localization-key #js {:month "long" :year "numeric"}))))
