@@ -209,7 +209,7 @@
                              (tr-enum (:activity/name activity))})]
    [tabs/tabs
     query
-    [[:upcomping [upcoming-activity-meetings activity]]
+    [[:upcoming [upcoming-activity-meetings activity]]
      [:history [historical-activity-meetings e! activity]]
      [:decisions [activity-meetings-decisions e! activity]]]]])
 
