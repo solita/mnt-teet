@@ -165,24 +165,32 @@
 
          ^{:error :invalid-task-dates}
          (activity-db/valid-task-dates? db id {:task/estimated-start-date estimated-start-date
-                                               :task/estimated-end-date estimated-end-date})]
-   :transact (into [(merge
-                     {:db/id id}
-                     (meta-model/modification-meta user))]
-                   (mapcat identity
-                           (for [[task-group task-type send-to-thk?] tasks-to-add]
-                             (let [id-placeholder (str "NEW-TASK-"
-                                                       (name task-group) "-"
-                                                       (name task-type))]
-                               [(merge {:db/id id-placeholder
-                                        :task/estimated-end-date estimated-end-date
-                                        :task/estimated-start-date estimated-start-date
-                                        :task/status :task.status/not-started
-                                        :task/group task-group
-                                        :task/type task-type
-                                        :task/send-to-thk? send-to-thk?}
-                                       (meta-model/creation-meta user))
-                                [:db/add id :activity/tasks id-placeholder]]))))})
+                                               :task/estimated-end-date estimated-end-date})
+
+         ^{:error :invalid-task-for-activity}
+         (let [allowed-groups (activity-db/allowed-task-groups db id)]
+           (every? allowed-groups (map first tasks-to-add)))]
+   :transact
+   (let [status (get-in (du/entity db id) [:activity/status :db/ident])]
+     (into [(merge
+             {:db/id id}
+             (when (= status :activity.status/completed)
+               {:activity/status :activity.status/in-progress})
+             (meta-model/modification-meta user))]
+           (mapcat identity
+                   (for [[task-group task-type send-to-thk?] tasks-to-add]
+                     (let [id-placeholder (str "NEW-TASK-"
+                                               (name task-group) "-"
+                                               (name task-type))]
+                       [(merge {:db/id id-placeholder
+                                :task/estimated-end-date estimated-end-date
+                                :task/estimated-start-date estimated-start-date
+                                :task/status :task.status/not-started
+                                :task/group task-group
+                                :task/type task-type
+                                :task/send-to-thk? send-to-thk?}
+                               (meta-model/creation-meta user))
+                        [:db/add id :activity/tasks id-placeholder]])))))})
 
 
 (defcommand :activity/update

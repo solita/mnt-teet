@@ -106,35 +106,6 @@
    [Heading3 title]
    select])
 
-(defn project-activity
-  [e!
-   {thk-id :thk.project/id}
-   {:activity/keys [name tasks estimated-end-date estimated-start-date] :as _activity}]
-  [:div {:class (<class project-style/project-activity-style)}
-   [:div {:style {:display :flex
-                  :justify-content :space-between
-                  :align-items :center}}
-    [:h2 (tr [:enum (:db/ident name)])]
-    [buttons/button-secondary {:on-click (e! project-controller/->OpenEditActivityDialog)} (tr [:buttons :edit])]]
-   [:span (format/date estimated-start-date) " – " (format/date estimated-end-date)]
-
-   (if (seq tasks)
-     (doall
-       (for [{:task/keys [status type] :as t} tasks]
-         ^{:key (:db/id t)}
-         [common/list-button-link (merge {:link (str "#/projects/" thk-id "/" (:db/id t))
-                                          :label (tr [:enum (:db/ident type)])
-                                          :icon icons/file-folder-open}
-                                         (when status
-                                           {:end-text (tr [:enum (:db/ident status)])}))]))
-     [:div {:class (<class project-style/top-margin)}
-      [:em
-       (tr [:project :activity :no-tasks])]])
-   [buttons/button-primary
-    {:on-click (e! project-controller/->OpenTaskDialog)}
-    (tr [:project :add-task])]])
-
-
 (defn project-page-structure
   [e!
    app

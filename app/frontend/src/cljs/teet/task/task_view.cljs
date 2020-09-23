@@ -257,62 +257,6 @@
     [task-details e! (:new-document app) task]]])
 
 
-(defn task-form [_e!
-                 {:keys [initialization-fn]}
-                 activity
-                 {:keys [max-date min-date]}]
-  ;;Task definition (under project activity)
-  ;; Task type (a predefined list of tasks: topogeodeesia, geoloogia, liiklusuuring, KMH eelhinnang, loomastikuuuring, arheoloogiline uuring, muu)
-  ;; Description (short description of the task for clarification, 255char, in case more detailed description is needed, it will be uploaded as a file under the task)
-  ;; Responsible person (email)
-  (when initialization-fn
-    (initialization-fn))
-  (fn [e! task]
-    [form/form {:e! e!
-                :value task
-                :on-change-event task-controller/->UpdateEditTaskForm
-                :cancel-event task-controller/->CancelTaskEdit
-                :save-event task-controller/->SaveTaskForm
-                :spec :task/new-task-form}
-     ^{:xs 6 :attribute :task/group}
-     [select/select-enum {:e! e!
-                          :attribute :task/group
-                          :sort-fn task-model/task-group-order
-                          :values-filter (get activity-model/activity-name->task-groups
-                                              (-> activity :activity/name :db/ident)
-                                              #{})}]
-     ^{:xs 6 :attribute :task/type}
-     [select/select-enum {:e! e! :attribute :task/type
-                          :enum/valid-for (or (:task/group task)
-                                              :none-since-task-group-is-not-selected)
-                          :full-value? true}]
-
-     ;; Show "Send to THK" if task type has associated THK type
-     (when (-> task :task/type :thk/task-type)
-       ^{:xs 12 :attribute :task/send-to-thk?}
-       [select/checkbox {}])
-
-
-     ^{:attribute :task/description}
-     [TextField {:full-width true :multiline true :rows 4 :maxrows 4}]
-
-     ^{:attribute [:task/estimated-start-date :task/estimated-end-date] :xs 12}
-     [date-picker/date-range-input {:start-label (tr [:fields :task/estimated-start-date])
-                                    :min-date min-date
-                                    :max-date max-date
-                                    :end-label (tr [:fields :task/estimated-end-date])}]
-
-     ^{:attribute [:task/actual-start-date :task/actual-end-date] :xs 12}
-     [date-picker/date-range-input {:start-label (tr [:fields :task/actual-start-date])
-                                    :min-date min-date
-                                    :max-date max-date
-                                    :end-label (tr [:fields :task/actual-end-date])}]
-
-
-     ^{:attribute :task/assignee}
-     [select/select-user {:e! e! :attribute :task/assignee}]]))
-
-
 (defn edit-task-form [_e! {:keys [initialization-fn]} {:keys [max-date min-date]}]
   (when initialization-fn
     (initialization-fn))
@@ -343,14 +287,6 @@
                                       :end-label (tr [:fields :task/actual-end-date])}])
      ^{:attribute :task/assignee}
      [select/select-user {:e! e! :attribute :task/assignee}]]))
-
-(defmethod project-navigator-view/project-navigator-dialog :add-task
-  [{:keys [e! app project] :as _opts} _dialog]
-  (let [activity-id (get-in app [:params :activity])
-        activity (project-model/activity-by-id project activity-id)]
-    [task-form e! (:edit-task-data app) activity
-     {:max-date (:activity/estimated-end-date activity)
-      :min-date (:activity/estimated-start-date activity)}]))
 
 (defmethod project-navigator-view/project-navigator-dialog :add-tasks
   [{:keys [e! app project]} _dialog]

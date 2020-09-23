@@ -97,36 +97,6 @@
         [:task/group :task/type
          :task/send-to-thk?]))
 
-(defcommand :task/create
-  {:doc "Add task to activity"
-   :context {:keys [db conn user]}
-   :payload {activity-id :activity-id
-             task :task :as payload}
-   :project-id (project-db/activity-project-id db activity-id)
-   :pre [(new? task)
-         (valid-thk-send? db task)
-         ^{:error :invalid-task-dates}
-         (activity-db/valid-task-dates? db activity-id task)
-         ^{:error :invalid-task-for-activity}
-         (task-db/valid-task-for-activity? db activity-id task)]
-   :authorization {:task/create-task {}
-                   :activity/edit-activity {:db/id activity-id
-                                            :link :activity/manager}}
-   :transact [(merge
-               (when (:task/assignee task)
-                 {:activity/status :activity.status/in-progress})
-               {:db/id activity-id
-                :activity/tasks
-                [(merge (-> task
-                            (select-keys task-create-keys))
-                        (if (seq? (:task/assignee task))
-                          {:task/status :task.status/in-progress
-                           :task/assignee [:user/id (:user/id (:task/assignee task))]}
-                          {:task/status :task.status/not-started})
-                        (meta-model/creation-meta user))]})
-              (assignment-notification-tx db user task
-                                          (project-db/activity-project-id db activity-id))]})
-
 (defcommand :task/submit
   {:doc "Submit task results for review."
    :context {:keys [db user]}
