@@ -165,11 +165,7 @@
 
          ^{:error :invalid-task-dates}
          (activity-db/valid-task-dates? db id {:task/estimated-start-date estimated-start-date
-                                               :task/estimated-end-date estimated-end-date})
-
-         ^{:error :invalid-task-for-activity}
-         (let [allowed-groups (activity-db/allowed-task-groups db id)]
-           (every? allowed-groups (map first tasks-to-add)))]
+                                               :task/estimated-end-date estimated-end-date})]
    :transact
    (let [status (get-in (du/entity db id) [:activity/status :db/ident])]
      (into [(merge
