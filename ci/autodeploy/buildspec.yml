@@ -1,0 +1,17 @@
+version: 0.2
+
+env:
+  variables:
+    JAVA_HOME: "/usr/lib/jvm/java-8-openjdk-amd64"
+
+phases:
+  install:
+    runtime-versions:
+      java: openjdk8
+    commands:
+      - curl -s https://raw.githubusercontent.com/borkdude/babashka/master/install -o install-babashka
+      - chmod +x install-babashka
+      - ./install-babashka
+  build:
+    commands:
+      - ./ci/scripts/build-and-deploy.bash
