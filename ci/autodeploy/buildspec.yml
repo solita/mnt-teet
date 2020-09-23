@@ -7,7 +7,7 @@ env:
 phases:
   install:
     runtime-versions:
-      java: openjdk8
+      java: corretto11
     commands:
       - curl -s https://raw.githubusercontent.com/borkdude/babashka/master/install -o install-babashka
       - chmod +x install-babashka
