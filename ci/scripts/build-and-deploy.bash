@@ -9,12 +9,20 @@ TEET_ENV=`aws ssm get-parameters --names /teet/env --query Parameters[0].Value -
 echo "============================"
 echo "BUILD AND DEPLOY TEET"
 echo "ENV: $TEET_ENV"
-echo "Enter branch name to deploy:"
-read VERSION
+
+if [ -z "$CODEBUILD_RESOLVED_SOURCE_VERSION" ]; then
+    echo "Enter branch name to deploy:"
+    read VERSION
+else
+    VERSION="$CODEBUILD_RESOLVED_SOURCE_VERSION"
+    echo "Using CodeBuild source version: $VERSION"
+fi
+
+
 
 if echo "$VERSION" | grep -E -q '^[0-9a-f]{40,}$'; then
     LATEST_COMMIT="$VERSION"
-else  
+else
     LATEST_COMMIT=`git ls-remote https://github.com/solita/mnt-teet | grep refs/heads/$VERSION | cut -f1`
 fi
 
