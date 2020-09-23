@@ -84,20 +84,23 @@
    :padding "1rem 0"})
 
 (defn- day-button-class
-  [selected? is-selectable? cur-month?]
+  [selected? is-selectable? cur-month? today?]
   (merge {:width "36px"
           :height "36px"
           :font-size "14px"
           :color "rgb(0,0,0)"
           :opacity "0.5"}
-    (when cur-month?
-      {:opacity "0.85"})                                    ;;This should be in theme colors when we get right colors
-    (when selected?
-      {:background-color colors/primary
-       :color "white"})
-    (when-not is-selectable?
-      {:color "rgb(200,0,0)"                                ;;make this material ui theme error
-       :cursor :not-allowed})))
+         (when today?
+           {:color colors/primary})
+         (when cur-month?
+           {:opacity "0.85"})                               ;;This should be in theme colors when we get right colors
+         (when selected?
+           {:background-color colors/primary
+            :color "white"})
+         (when-not is-selectable?
+           {:color "rgb(200,0,0)"                           ;;make this material ui theme error
+            :cursor :not-allowed}))
+  )
 
 (defn date-picker
   "Date picker component.
@@ -171,14 +174,13 @@
                                     (= (t/year day) (t/year value)))
                         today? (and day (same-day? (t/now) day))]]
               ^{:key (str day)}
-
               [:td.pvm-paiva {:class (str
                                        (if is-selectable?
                                          "klikattava "
                                          "pvm-disabloitu "))}
                [IconButton
                 (merge
-                  {:class (<class day-button-class selected? is-selectable? (date-in-current-month? day))
+                  {:class (<class day-button-class selected? is-selectable? (date-in-current-month? day) today?)
                    :on-click #(do (.stopPropagation %)
                                   (when is-selectable?
                                     (on-change day))
