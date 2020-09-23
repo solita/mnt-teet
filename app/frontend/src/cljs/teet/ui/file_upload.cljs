@@ -13,7 +13,8 @@
             [teet.file.file-model :as file-model]
             teet.file.file-spec
             [teet.ui.buttons :as buttons]
-            [teet.ui.drag :as drag]))
+            [teet.ui.drag :as drag]
+            [teet.log :as log]))
 
 
 
@@ -31,22 +32,33 @@
 (defn FileUpload
   "Note! Use one of the predefined file upload components, such as
   FileUploadButton instead of using this directly."
-  [{:keys [id on-drop drop-message multiple? drag-container-id]} & children]
-  (r/with-let [remove-upload-zone!
-               (drag/register-drop-zone! {:element-id drag-container-id
-                                          :on-drop #(on-drop (drag/dropped-files %))
-                                          :label (or drop-message "")})]
-    (into [:label
-           {:htmlFor id}
-           [:input {:style {:display "none"}
-                    :id id
-                    :multiple multiple?
-                    :droppable "true"
-                    :type "file"
-                    :on-change #(on-drop (file-vector %))}]]
-          children)
-    (finally
-      (remove-upload-zone!))))
+  [{:keys [on-drop drop-message drag-container-id]} & _children]
+  (let [current-on-drop (atom on-drop)
+        remove-upload-zone!
+        (drag/register-drop-zone! {:element-id drag-container-id
+                                   :on-drop #(let [on-drop @current-on-drop]
+                                               (on-drop (drag/dropped-files %)))
+                                   :label (or drop-message "")})]
+    (r/create-class
+     {:component-will-receive-props
+      (fn [_this [_ {on-drop :on-drop} & _]]
+        (reset! current-on-drop on-drop))
+
+      :component-will-unmount
+      (fn [_this]
+        (remove-upload-zone!))
+
+      :reagent-render
+      (fn [{:keys [id on-drop multiple?]} & children]
+        (into [:label
+               {:htmlFor id}
+               [:input {:style {:display "none"}
+                        :id id
+                        :multiple multiple?
+                        :droppable "true"
+                        :type "file"
+                        :on-change #(on-drop (file-vector %))}]]
+              children))})))
 
 (defn FileUploadButton [{:keys [id on-drop drop-message multiple? button-attributes
                                 drag-container-id]
