@@ -236,6 +236,25 @@
                                          tempids))})
   ctx)
 
+(def skip-attributes
+  "Attributes that should be skipped when asserting backup forms.
+  Datomic internally handles composite tuples."
+  [:land-acquisition/project+cadastral-unit
+   :estate-procedure/project+estate-id
+   :estate-comments/project+estate-id
+   :owner-comments/project+owner-id
+   :unit-comments/project+unit-id
+   :file-seen/file+user
+   :comments-seen/entity+user])
+
+(defn remove-skip-attributes [form]
+  (walk/prewalk
+   (fn [x]
+     (if (map? x)
+       (apply dissoc x skip-attributes)
+       x))
+   form))
+
 (defn restore-file
   "Restore a TEET backup zip from `file` by running the transactions in
   the file to the database pointed to by `conn`. It is assumed that
@@ -250,8 +269,9 @@
               zip-reader (io/reader zip-in)
               rdr (java.io.PushbackReader. zip-reader)]
     ;; Transact everything in one big transaction
-    (let [form (doall (read-seq rdr))
-                                        ;ids (check-ids-without-attributes form)
+    (let [form (doall
+                (map remove-skip-attributes
+                     (read-seq rdr)))
           _ (log/info "Read " (count form) " forms from backup.")
           {:keys [mapping form]} (to-temp-ids form)
           {tempids :tempids} (d/transact conn {:tx-data (vec form)}) ]
