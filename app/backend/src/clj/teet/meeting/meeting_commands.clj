@@ -172,8 +172,6 @@
                                                     :user/email})
                                    %))))]})
 
-
-
 (defcommand :meeting/send-notifications
   {:doc "Send iCalendar notifications to organizer and participants."
    :context {:keys [db conn user]}
@@ -198,11 +196,12 @@
                                           :cancel? false})
             email-response
             (integration-email/send-email!
-             {:from (environment/ssm-param :email :from)
-              :to to
-              :subject (meeting-model/meeting-title meeting)
-              :parts [{:headers {"Content-Type" "text/calendar; method=request"}
-                       :body ics}]})]
+              {:from (environment/ssm-param :email :from)
+               :to to
+               :subject (str "TEET: koosoleku kutse " (meeting-model/meeting-title meeting) " / "
+                             "TEET: meeting invitation " (meeting-model/meeting-title meeting))
+               :parts [{:headers {"Content-Type" "text/calendar; method=request"}
+                        :body ics}]})]
         (log/info "SES send response" email-response)
         (tx-ret [{:db/id id
                   :meeting/invitations-sent-at (Date.)}]))
@@ -236,7 +235,8 @@
                              (integration-email/send-email!
                                {:from (environment/ssm-param :email :from)
                                 :to to
-                                :subject (meeting-model/meeting-title meeting)
+                                :subject (str "TEET: " (meeting-model/meeting-title meeting) " tühistatud" " / "
+                                              "TEET: " (meeting-model/meeting-title meeting) " cancelled")
                                 :parts [{:headers {"Content-Type" "text/calendar; method=cancel"} ;; RFC 6047 SECTION 2.4
                                          :body ics}]}))]
         (log/info "email response: " (or email-response "no email sent"))))
