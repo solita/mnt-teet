@@ -125,8 +125,11 @@
          [common/list-button-link (merge {:link (str "#/projects/" thk-id "/" (:db/id t))
                                           :label (tr [:enum (:db/ident type)])
                                           :icon icons/file-folder-open}
-                                         (when status
-                                           {:end-text (tr [:enum (:db/ident status)])}))]))
+                                         (if status
+                                           {:end-text (tr [:enum (:db/ident status)])}
+                                           ;; else
+                                           (tr [:project :no-status])
+                                           ))]))
      [:div {:class (<class project-style/top-margin)}
       [:em
        (tr [:project :activity :no-tasks])]])
