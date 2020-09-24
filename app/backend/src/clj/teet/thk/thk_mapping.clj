@@ -283,3 +283,12 @@
    "activity_cost" {:attribute :activity/cost}
    "activity_procurementno" {:attribute :activity/procurement-nr}
    "activity_procurementid" {:attribute :activity/procurement-id}})
+
+(defn uuid->number [uuid]
+  (let [bb (java.nio.ByteBuffer/wrap (byte-array 16))]
+    (.putLong bb (.getMostSignificantBits uuid))
+    (.putLong bb (.getLeastSignificantBits uuid))
+    (BigInteger. 1 (.array bb))))
+
+(defn number->uuid [n]
+  (java.util.UUID. 0 n))
