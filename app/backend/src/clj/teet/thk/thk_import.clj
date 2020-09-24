@@ -129,10 +129,10 @@
                                                 :activity/status
                                                 :activity/procurement-nr
                                                 :activity/procurement-id}))
-                       {:db/id (if teet-id
-                                 [:integration/id teet-id]
-                                 (str "act-" id))
-                        :activity/integration-info (integration-info
+                       (if teet-id
+                         {:integration/id teet-id}
+                         {:db/id (str "act-" id)})
+                       {:activity/integration-info (integration-info
                                                     activity
                                                     thk-mapping/activity-integration-info-fields)}))}))))}))]
      (task-updates rows))))
