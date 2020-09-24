@@ -123,14 +123,18 @@
                      (tu/db) [:thk.project/id "11111"]))]
     (is act-id "Project 1 has land acquisition activity")
     (tu/store-data! :act-id act-id)
-    (tu/store-data! :task-id
-                    (get-in (tu/tx {:db/id act-id
-                                    :activity/tasks [{:db/id "new-task"
-                                                      :task/type :task.type/third-party-review
-                                                      :task/send-to-thk? true
-                                                      :task/estimated-start-date #inst "2020-04-15T14:00:39.855-00:00"
-                                                      :task/estimated-end-date  #inst "2020-06-25T14:00:39.855-00:00"}]})
-                            [:tempids "new-task"])))
+    (tu/store-data! :task-uuid (java.util.UUID/randomUUID))
+
+    (tu/store-data!
+     :task-id
+     (get-in (tu/tx {:db/id act-id
+                     :activity/tasks [{:db/id "new-task"
+                                       :task/type :task.type/third-party-review
+                                       :task/send-to-thk? true
+                                       :integration/id (tu/get-data :task-uuid)
+                                       :task/estimated-start-date #inst "2020-04-15T14:00:39.855-00:00"
+                                       :task/estimated-end-date  #inst "2020-06-25T14:00:39.855-00:00"}]})
+             [:tempids "new-task"])))
 
   (testing "Export CSV to THK has row for the task"
     ;; Export projects to THK, expect row for task
@@ -141,7 +145,8 @@
       (is (= (get task-row "activity_taskdescr") "Ekspertiis")
           "task description is the estonian translation of task type")
       (is (str/blank? (get task-row "activity_id")) "task has no activity_id yet")
-      (is (= (get task-row "activity_taskid") (str (tu/get-data :task-id))))
+      (is (= (get task-row "activity_taskid")
+             (str (thk-mapping/uuid->number (tu/get-data :task-uuid)))))
       (is (= (get task-row "activity_teetid") (str (tu/get-data :act-id))))))
 
   (testing "Changing task and exporting again keeps same ids"
@@ -154,7 +159,8 @@
     (let [[task-row :as task-rows] (filter #(not (str/blank? (get % "activity_taskdescr")))
                                            (export-csv))]
       (is (= 1 (count task-rows)) "still exactly one task row")
-      (is (= (get task-row "activity_taskid") (str (tu/get-data :task-id))))
+      (is (= (get task-row "activity_taskid")
+             (str (thk-mapping/uuid->number (tu/get-data :task-uuid)))))
       (is (= (get task-row "activity_teetid") (str (tu/get-data :act-id))))))
 
   (testing "Changing activity and exporting again keeps the same ids"
@@ -167,7 +173,8 @@
     (let [[task-row :as task-rows] (filter #(not (str/blank? (get % "activity_taskdescr")))
                                            (export-csv))]
       (is (= 1 (count task-rows)) "still exactly one task row")
-      (is (= (get task-row "activity_taskid") (str (tu/get-data :task-id))))
+      (is (= (get task-row "activity_taskid")
+             (str (thk-mapping/uuid->number (tu/get-data :task-uuid)))))
       (is (= (get task-row "activity_teetid") (str (tu/get-data :act-id)))))))
 
 (defn set-csv-column [csv row-test-column row-test-value set-col set-val]

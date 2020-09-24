@@ -52,7 +52,7 @@
                           (:thk.activity/id task)
                           " having TEET id " task-id)
                 (cu/without-nils
-                 {:db/id task-id
+                 {:integration/id task-id
                   :thk.activity/id (:thk.activity/id task)
                   :task/estimated-start-date (:activity/estimated-start-date task)
                   :task/estimated-end-date (:activity/estimated-end-date task)
@@ -129,7 +129,9 @@
                                                 :activity/status
                                                 :activity/procurement-nr
                                                 :activity/procurement-id}))
-                       {:db/id (or teet-id (str "act-" id))
+                       {:db/id (if teet-id
+                                 [:integration/id teet-id]
+                                 (str "act-" id))
                         :activity/integration-info (integration-info
                                                     activity
                                                     thk-mapping/activity-integration-info-fields)}))}))))}))]

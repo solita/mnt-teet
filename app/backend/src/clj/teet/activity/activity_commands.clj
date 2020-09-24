@@ -119,6 +119,7 @@
         project-id (project-db/lifecycle-project-id db lifecycle-id)]
     (tx-ret [(merge
               {:db/id "new-activity"
+               :integration/id (java.util.UUID/randomUUID)
                :activity/status :activity.status/in-preparation}
               (-> activity
                   (select-keys [:activity/name
