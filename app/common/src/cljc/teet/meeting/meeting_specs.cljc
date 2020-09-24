@@ -35,3 +35,6 @@
                      (and
                       :participation/role
                       :participation/participant))]))
+
+(s/def :meeting/review-form
+  (s/keys :req [:review/decision]))

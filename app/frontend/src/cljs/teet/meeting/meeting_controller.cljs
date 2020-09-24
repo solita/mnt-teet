@@ -22,6 +22,9 @@
 (defrecord RemoveParticipantResult [participant-id result])
 (defrecord SendNotifications [meeting])
 
+
+(defrecord SubmitReview [meeting-id form-data close-event])
+
 (extend-protocol t/Event
   SubmitMeetingForm
   (process-event [{:keys [activity-id form-data close-event]} app]
@@ -39,6 +42,16 @@
              :result-event (if editing?
                              (partial common-controller/->ModalFormResult close-event)
                              (partial ->CreateMeetingResult activity-id close-event))})))
+
+  SubmitReview
+  (process-event [{:keys [meeting-id form-data close-event]} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :meeting/review
+           :payload {:meeting-id meeting-id
+                     :form-data (select-keys form-data [:review/comment :review/decision])}
+           :success-message "Review submitted"
+           :result-event (partial common-controller/->ModalFormResult close-event)}))
 
   CreateMeetingResult
   (process-event [{activity-id :activity-id

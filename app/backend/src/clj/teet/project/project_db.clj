@@ -131,7 +131,12 @@
             :thk.lifecycle/estimated-end-date
             :thk.lifecycle/type
             {:thk.lifecycle/activities
-             [~'*
+             [:activity/name
+              :activity/status
+              :activity/estimated-start-date
+              :activity/estimated-end-date
+              :db/id
+              :meta/deleted?
               ~@(:thk.lifecycle/activities opts)
               {:activity/manager [:user/given-name :user/family-name :db/id]}
               {:activity/tasks [~@(:activity/tasks opts)]}]}]}]))

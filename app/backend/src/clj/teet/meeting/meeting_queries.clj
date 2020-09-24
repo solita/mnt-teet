@@ -98,6 +98,10 @@
                                      ~attachments]}
                                    {:meeting.agenda/responsible ~user-model/user-listing-attributes}
                                    ~attachments]}
+                 {:review/_of [:db/id
+                               :review/decision
+                               :review/comment
+                               {:review/reviewer ~user-model/user-listing-attributes}]}
                  {:participation/_in
                   [:db/id
                    :participation/role

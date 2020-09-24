@@ -12,7 +12,8 @@
             [teet.environment :as environment]
             [teet.meeting.meeting-model :as meeting-model]
             [teet.log :as log]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [teet.user.user-model :as user-model])
   (:import (java.util Date)))
 
 (defmethod file-db/attach-to :meeting-agenda
@@ -253,7 +254,9 @@
            (get-in (du/entity db agenda-eid) [:meeting/_agenda :db/id]))]
    :transact [{:db/id agenda-eid
                :meeting.agenda/decisions [(merge (select-keys form-data [:meeting.decision/body])
-                                                 {:db/id "new decision"})]}]})
+                                                 {:db/id "new decision"})]}
+              (merge {:db/id (get-in (du/entity db agenda-eid) [:meeting/_agenda :db/id])}
+                     (meta-model/modification-meta user))]})
 
 (defcommand :meeting/update-decision
   {:doc "Create a new decision under a topic"
@@ -265,7 +268,8 @@
            db user
            (get-in (du/entity db (:db/id form-data))
                    [:meeting.agenda/_decisions :meeting/_agenda :db/id]))]
-   :transact [(merge (select-keys form-data [:meeting.decision/body :db/id]))]})
+   :transact [(merge (select-keys form-data [:meeting.decision/body :db/id])
+                     (meta-model/modification-meta user))]})
 
 (defcommand :meeting/delete-decision
   {:doc "Mark a given decision as deleted"
@@ -277,4 +281,25 @@
            db user
            (get-in (du/entity db decision-id)
                    [:meeting.agenda/_decisions :meeting/_agenda :db/id]))]
-   :transact [(meta-model/deletion-tx user decision-id)]})
+   :transact [(meta-model/deletion-tx user decision-id)
+              (merge
+                {:db/id (meeting-db/decision-meeting-id db decision-id)}
+                (meta-model/modification-meta user))]})
+
+
+; TODO query only the reviews done after last modification
+; TODO when locking meeting check the review times against modication also
+; TODO Should the meeting+user be unique in the review?
+; TODO editing of decision
+(defcommand :meeting/review
+  {:doc "Either approve or reject the meeting"
+   :context {:keys [db user]}
+   :payload {:keys [meeting-id form-data]}
+   :project-id (project-db/meeting-project-id db meeting-id)
+   :authorization {}
+   :pre [[(meeting-db/user-is-organizer-or-reviewer?
+            db user meeting-id)]]
+   :transact [(merge {:db/id (or (:db/id form-data) "new-review")
+                      :review/reviewer (user-model/user-ref user)
+                      :review/of meeting-id}
+                     (select-keys form-data [:review/comment :review/decision]))]})

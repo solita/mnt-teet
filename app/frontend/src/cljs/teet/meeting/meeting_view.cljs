@@ -545,6 +545,78 @@
                       :attach-to [:meeting-agenda id]
                       :files files}]])
 
+(defn approval-status-symbol
+  [status]
+  (case status
+    :review.decision/approved
+    [icons/action-done {:style {:color "white"}
+                        :class (<class common-styles/status-circle-style theme-colors/green)}]
+    :review.decision/rejected
+    [icons/content-clear {:style {:color "white"}
+                        :class (<class common-styles/status-circle-style theme-colors/red)}]
+    [:div {:class (<class common-styles/status-circle-style theme-colors/gray-lighter)}]))
+
+(defn participant-approval-status
+  [user review]
+  (let [review (get-in review [:review/decision :db/ident])]
+    [:div
+     [:span (pr-str review)]
+     [:div.participant {:class (<class common-styles/flex-row)}
+      [:div.participant-name {:class (<class common-styles/flex-table-column-style 45)}
+       [approval-status-symbol review]
+       [:span {:style {:margin-left "0.2rem"}}
+        [user-model/user-name user]]]
+      [:div.participant-role {:class (<class common-styles/flex-table-column-style 55)}]]]))
+
+(defn reviews
+  [e! {participations :participation/_in                    ;; TODO WHO can actually review? currently lists all participants
+       meeting-reviews :review/_of                          ;;
+       :meeting/keys [organizer]} edit?]
+  [:div
+   [typography/Heading2 {:style {:margin "1.5rem 0"}} "Approvals"]
+   [:div
+    [participant-approval-status organizer (some (fn [{:review/keys [reviewer] :as review}]
+                                                   (when (= (:db/id reviewer) (:db/id organizer))
+                                                     review)) ;;FEELS kinda hacky
+                                                 meeting-reviews)]
+    (doall
+      (for [{:participation/keys [participant] :as participation} participations]
+        ^{:key (:db/id participation)}
+        [participant-approval-status participant (some (fn [{:review/keys [reviewer] :as review}]
+                                                         (when (= (:db/id reviewer) (:db/id participant))
+                                                           review))
+                                                       meeting-reviews)]))]])
+
+(defn review-form
+  [e! meeting-id close-event form-atom]
+  [:<>
+   [:span (pr-str @form-atom)]
+   [form/form {:e! e!
+               :value @form-atom
+               :on-change-event (form/update-atom-event form-atom merge)
+               :cancel-event close-event
+               :spec :meeting/review-form
+               :save-event #(meeting-controller/->SubmitReview
+                              meeting-id
+                              @form-atom
+                              close-event)}
+    ^{:attribute :review/comment}
+    [TextField {:multiline true}]]])
+
+(defn review-actions
+  [e! meeting]
+  [:div
+   [form/form-modal-button {:form-component [review-form e! (:db/id meeting)]
+                            :form-value {:review/decision :review.decision/approved}
+                            :modal-title "Approve decision?" ;; TODO translations
+                            :button-component [buttons/button-green {}
+                                               "Approve decision"]}]
+   [form/form-modal-button {:form-component [review-form e! (:db/id meeting)]
+                            :form-value {:review/decision :review.decision/rejected}
+                            :modal-title "Reject decision?"
+                            :button-component [buttons/button-warning {}
+                                               "reject decision"]}]])
+
 (defn- meeting-decision-content [e! {id :db/id
                                      body :meeting.decision/body
                                      files :file/_attached-to}]
@@ -612,7 +684,9 @@
                                                                                             :user/email
                                                                                             :user/person-id])}
                                 :modal-title (tr [:meeting :new-agenda-modal-title])
-                                :button-component [buttons/button-primary {} (tr [:meeting :add-agenda-button])]}])]))
+                                :button-component [buttons/button-primary {} (tr [:meeting :add-agenda-button])]}])
+     [reviews e! meeting edit?]
+     [review-actions e! meeting]]))
 
 (defn meeting-details [e! user meeting]
   [authorization-context/consume
