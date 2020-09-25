@@ -2,7 +2,8 @@
         compojure {:mvn/version "1.6.1"}
         hiccup {:mvn/version "1.0.5"}
         com.taoensso/timbre {:mvn/version "4.10.0"}
-
+        clj-time {:mvn/version "0.15.2"}
+        
         ;; Data formats
         cheshire {:mvn/version "5.9.0"}
         org.clojure/data.csv {:mvn/version "0.1.4"}

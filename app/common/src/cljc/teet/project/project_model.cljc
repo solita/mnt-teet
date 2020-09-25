@@ -86,12 +86,6 @@
    :thk.project/activity-status
    :thk.project/owner-info])
 
-(defn managers [project]
-  (let [acts (mapcat :thk.lifecycle/activities
-                     (:thk.project/lifecycles project))
-        activity-managers (into #{} (keep :activity/manager acts))]
-    activity-managers))
-
 (defmulti get-column (fn [_project column] column))
 
 (defmethod get-column :default [project column]
@@ -101,20 +95,6 @@
   [(/ start-m 1000)
    (/ end-m 1000)])
 
-(defn active-activity? [now activity]
-  (let [start (:activity/actual-start-date activity)
-        end (:activity/actual-end-date activity)
-        verdict (cond
-                  (nil? start)  false ;; no start -> inactive
-                  (< now start) false ;; start date in future -> inactive
-                  (nil? end)    true  ;; no end but start date in past -> active
-                  (> now end)   false ;; has started and ended -> inactive
-                  :else         true  ;; has started and not ended -> active
-                  )]
-    ;; (log/debug "active-activity? start/end" start end "->" verdict)
-    verdict)) 
-
-
 #?(:cljs
    (defn now []
      (js/Date.)))
@@ -122,9 +102,26 @@
    (defn now []
      (java.util.Date.)))
 
-#_(defmethod get-column :thk.project/activity-status
-  [{:thk.project/keys [lifecycles]} _]
-  (mapcat :thk.lifecycle/activities lifecycles))
+(defn active-activity? [now activity]
+  (let [start (or (:activity/actual-start-date activity) (:activity/estimated-start-date activity))
+        end (or (:activity/actual-end-date activity) (:activity/estimated-end-date activity))
+        verdict (cond
+                  (nil? start)  false ;; no start -> inactive
+                  (< now start) false ;; start date in future -> inactive
+                  (nil? end)    true  ;; no end but start date in past -> active
+                  (> now end)   false ;; has started and ended -> inactive
+                  :else         true  ;; has started and not ended -> active
+                  )]
+    (log/debug "active-activity? start/end" start end "->" verdict)
+    verdict)) 
+
+(defn active-managers [project]
+  (let [acts (mapcat :thk.lifecycle/activities
+                     (:thk.project/lifecycles project))
+        active-acts (filterv (partial active-activity? (now)) acts)
+        activity-managers (into #{} (keep :activity/manager active-acts))]
+    activity-managers))
+
 
 (defmethod get-column :thk.project/activity-status
   [{:thk.project/keys [lifecycles]} _]  
@@ -153,8 +150,8 @@
   (str
    (or (some-> project :thk.project/owner user-model/user-name)
        "-")
-   (let [managers (managers project)]
-     (log/debug "get-column owner-info: managers was" (pr-str managers)
+   (let [managers (active-managers project)]     
+     (log/debug "get-column owner-info: active-managers was" (pr-str managers)
                 ;; " - lifecycle count" (count (keep :thk.project/lifecycles project))
                 "keys" (-> project
                            :thk.project/lifecycles
