@@ -93,6 +93,15 @@
                      (d/q '[:find ?id
                             :where [_ :thk.project/id ?id]]
                           db)))))
+
+        (testing "All lifecycles and activities have integration"
+          (is (every? #(contains? % :integration/id)
+                      (map first
+                           (d/q '[:find (pull ?e [:integration/id])
+                                  :where (or [?e :thk.lifecycle/id _]
+                                             [?e :thk.activity/id _])]
+                                db)))))
+
         (testing "Project 1 is owned by existing Danny"
           (let [{owner :thk.project/owner :as _p1}
                 (d/pull db '[{:thk.project/owner [*]}]

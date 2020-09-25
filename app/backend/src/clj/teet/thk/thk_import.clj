@@ -97,15 +97,28 @@
          :thk.project/lifecycles
          (into []
                (for [[id activities] phases
-                     :let [phase (first activities)]]
+                     :let [phase (first activities)
+                           lc-thk-id (:thk.lifecycle/id phase)
+                           lc-teet-id (:lifecycle-db-id phase)
+                           _ (log/info "Received lifecycle with THK id " lc-thk-id
+                                       (if lc-teet-id
+                                         (str "having TEET id " lc-teet-id)
+                                         "without TEET id => creating new activity"))]]
                  (cu/without-nils
                   (merge
                    (select-keys phase #{:thk.lifecycle/type
                                         :thk.lifecycle/estimated-start-date
                                         :thk.lifecycle/estimated-end-date
                                         :thk.lifecycle/id})
-                   {:db/id (str "lfc-" id)
-                    :thk.lifecycle/integration-info (integration-info phase
+                   (if lc-teet-id
+                     ;; Existing activity
+                     {:integration/id lc-teet-id}
+
+                     ;; New activity
+                     {:db/id (str "lfc-" id)
+                      :integration/id (java.util.UUID/randomUUID)})
+
+                   {:thk.lifecycle/integration-info (integration-info phase
                                                                       thk-mapping/phase-integration-info-fields)
                     :thk.lifecycle/activities
                     (for [{id :thk.activity/id
@@ -114,11 +127,11 @@
                            :as activity} activities
                           ;; Only process activities here
                           :when (and id name (nil? task-id))
-                          :let [{thk-id :thk.activity/id
-                                 teet-id :activity-db-id} activity
-                                _ (log/info "Received activity with THK id " thk-id
-                                            (if teet-id
-                                              (str "having TEET id " teet-id)
+                          :let [{act-thk-id :thk.activity/id
+                                 act-teet-id :activity-db-id} activity
+                                _ (log/info "Received activity with THK id " act-thk-id
+                                            (if act-teet-id
+                                              (str "having TEET id " act-teet-id)
                                               "without TEET id => creating new activity"))]]
                       (merge
                        (cu/without-nils
@@ -129,9 +142,13 @@
                                                 :activity/status
                                                 :activity/procurement-nr
                                                 :activity/procurement-id}))
-                       (if teet-id
-                         {:integration/id teet-id}
-                         {:db/id (str "act-" id)})
+                       (if act-teet-id
+                         ;; Existing activity
+                         {:integration/id act-teet-id}
+
+                         ;; New activity, create integration id
+                         {:db/id (str "act-" id)
+                          :integration/id (java.util.UUID/randomUUID)})
                        {:activity/integration-info (integration-info
                                                     activity
                                                     thk-mapping/activity-integration-info-fields)}))}))))}))]
