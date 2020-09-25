@@ -63,8 +63,8 @@
   "Oled sa kindel, et soovid selle üksuse kustutada?",
   :start-time "Algusaeg",
   :design-stage "Staadium",
-  :this-week nil,
-  :today nil,
+  :this-week "See nädal",
+  :today "Täna",
   :deselect-all "Tühistan kõik valikud",
   :show-details "Vaatan arvutuskäiku",
   :end-time "Lõpuaeg",
@@ -652,9 +652,9 @@
  :tab-names
  {:details "Üksikasjad",
   :notes "Märkused",
-  :upcoming nil,
-  :history nil,
-  :decisions nil},
+  :upcoming "Eesolevad",
+  :history "Olnud",
+  :decisions "Otsused"},
  :task
  {:task-overview "Ülesande ülevaade",
   :upload-files "Laen failid üles",
