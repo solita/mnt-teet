@@ -103,7 +103,7 @@
                            _ (log/info "Received lifecycle with THK id " lc-thk-id
                                        (if lc-teet-id
                                          (str "having TEET id " lc-teet-id)
-                                         "without TEET id => creating new activity"))]]
+                                         "without TEET id => creating new lifecycle"))]]
                  (cu/without-nils
                   (merge
                    (select-keys phase #{:thk.lifecycle/type
@@ -115,8 +115,10 @@
                      {:integration/id lc-teet-id}
 
                      ;; New activity
-                     {:db/id (str "lfc-" id)
-                      :integration/id (java.util.UUID/randomUUID)})
+                     (let [new-uuid (java.util.UUID/randomUUID)]
+                       (log/info "Creating new UUID for THK lifecycle " lc-thk-id " => " new-uuid)
+                       {:db/id (str "lfc-" id)
+                        :integration/id new-uuid}))
 
                    {:thk.lifecycle/integration-info (integration-info phase
                                                                       thk-mapping/phase-integration-info-fields)
@@ -147,8 +149,11 @@
                          {:integration/id act-teet-id}
 
                          ;; New activity, create integration id
-                         {:db/id (str "act-" id)
-                          :integration/id (java.util.UUID/randomUUID)})
+                         (let [new-uuid (java.util.UUID/randomUUID)]
+                           (log/info "Creating new UUID for THK activity " act-thk-id " => " new-uuid)
+                           {:db/id (str "act-" id)
+                            :integration/id new-uuid}))
+
                        {:activity/integration-info (integration-info
                                                     activity
                                                     thk-mapping/activity-integration-info-fields)}))}))))}))]
