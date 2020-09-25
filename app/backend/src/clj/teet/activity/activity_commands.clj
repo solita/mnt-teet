@@ -140,6 +140,8 @@
                             :task/group task-group
                             :task/type task-type
                             :task/send-to-thk? send-to-thk?}
+                           (when send-to-thk?
+                             {:integration/id (java.util.UUID/randomUUID)})
                            (meta-model/creation-meta user))))})
               (meta-model/creation-meta user))
              {:db/id lifecycle-id
