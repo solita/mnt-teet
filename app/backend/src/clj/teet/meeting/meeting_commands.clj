@@ -53,9 +53,12 @@
    db user
    (meeting-db/decision-meeting-id db meeting-decision-id)))
 
-;; TODO query all activity meetings
-;; matching name found
-;; TODO try tx function
+(defn update-meeting-tx
+  [meeting-id tx-data]
+  [(list 'teet.meeting.meeting-tx/update-meeting
+         meeting-id
+         tx-data)])
+
 (defcommand :meeting/create
   {:doc "Create new meetings to activities"
    :context {:keys [db user]}
@@ -83,26 +86,29 @@
    :authorization {}
    :pre [(meeting-db/activity-meeting-id db activity-eid (:db/id form-data))
          (meeting-db/user-is-organizer-or-reviewer? db user (:db/id form-data))]
-   :transact (let [{old-meeting-title :meeting/title
-                    old-organizer :meeting/organizer}
-                   (d/pull db '[:meeting/title :meeting/organizer]
-                           (:db/id form-data))
-                   new-organizer (get-in form-data [:meeting/organizer])]
+   :transact (update-meeting-tx
+               (:db/id form-data)
+               (let [{old-meeting-title :meeting/title
+                      old-organizer :meeting/organizer}
+                     (d/pull db '[:meeting/title :meeting/organizer]
+                             (:db/id form-data))
+                     new-organizer (get-in form-data [:meeting/organizer])]
 
-               ;; New organizer must not already be a participant
-               (when (and (not= (:db/id old-organizer)
-                                (:db/id new-organizer))
-                          (meeting-db/user-is-participating? db new-organizer (:db/id form-data)))
-                 (db-api/fail! {:error :user-is-already-participant}))
+                 ;; New organizer must not already be a participant
+                 ;; PENDING: these could be done in the update-meeting-tx db fn
+                 (when (and (not= (:db/id old-organizer)
+                                  (:db/id new-organizer))
+                            (meeting-db/user-is-participating? db new-organizer (:db/id form-data)))
+                   (db-api/fail! {:error :user-is-already-participant}))
 
-               [(merge
-                 (select-keys form-data [:db/id :meeting/organizer :meeting/title
-                                         :meeting/start :meeting/end :meeting/location])
-                 (meta-model/modification-meta user)
-                 (when (not= old-meeting-title (:meeting/title form-data))
-                   ;; Changing meeting title, we need to renumber the meeting
-                   {:meeting/number (meeting-db/next-meeting-number
-                                     db activity-eid (:meeting/title form-data))}))])})
+                 [(merge
+                    (select-keys form-data [:db/id :meeting/organizer :meeting/title
+                                            :meeting/start :meeting/end :meeting/location])
+                    (meta-model/modification-meta user)
+                    (when (not= old-meeting-title (:meeting/title form-data))
+                      ;; Changing meeting title, we need to renumber the meeting
+                      {:meeting/number (meeting-db/next-meeting-number
+                                         db activity-eid (:meeting/title form-data))}))]))})
 
 (defn- agenda-items-new-or-belong-to-meeting [db meeting-id agenda]
   (let [ids-to-update (remove string? (map :db/id agenda))
@@ -112,18 +118,20 @@
 (defcommand :meeting/update-agenda
   {:doc "Add/update agenda item(s) in a meeting"
    :context {:keys [db user]}
-   :payload {id :db/id
+   :payload {meeting-id :db/id
              agenda :meeting/agenda}
-   :project-id (project-db/meeting-project-id db id)
+   :project-id (project-db/meeting-project-id db meeting-id)
    :authorization {}
-   :pre [(meeting-db/user-is-organizer-or-reviewer? db user id)
-         (agenda-items-new-or-belong-to-meeting db id agenda)]
-   :transact [{:db/id id
-               :meeting/agenda (mapv #(select-keys % [:db/id
-                                                      :meeting.agenda/topic
-                                                      :meeting.agenda/body
-                                                      :meeting.agenda/responsible])
-                                     agenda)}]})
+   :pre [(meeting-db/user-is-organizer-or-reviewer? db user meeting-id)
+         (agenda-items-new-or-belong-to-meeting db meeting-id agenda)]
+   :transact (update-meeting-tx
+               meeting-id
+               [{:db/id meeting-id
+                 :meeting/agenda (mapv #(select-keys % [:db/id
+                                                        :meeting.agenda/topic
+                                                        :meeting.agenda/body
+                                                        :meeting.agenda/responsible])
+                                       agenda)}])})
 
 (defcommand :meeting/delete-agenda
   {:doc "Mark given agenda topic as deleted"
@@ -133,21 +141,25 @@
    :authorization {}
    :pre [(meeting-db/user-is-organizer-or-reviewer?
            db user
-           (get-in (du/entity db agenda-id) [:meeting/_agenda :db/id]))]
-   :transact [(meta-model/deletion-tx user agenda-id)]})
+           (meeting-db/agenda-meeting-id db agenda-id))]
+   :transact (update-meeting-tx
+               (meeting-db/agenda-meeting-id db agenda-id)
+               [(meta-model/deletion-tx user agenda-id)])})
 
 (defcommand :meeting/remove-participation
   {:doc "Remove a participation."
    :context {:keys [db user]}
    :payload {id :db/id}
    :project-id (project-db/meeting-project-id
-                db
-                (get-in (du/entity db id) [:participation/in :db/id]))
+                 db
+                 (get-in (du/entity db id) [:participation/in :db/id]))
    :authorization {}
    :pre [(meeting-db/user-is-organizer-or-reviewer?
-          db user
-          (get-in (du/entity db id) [:participation/in :db/id]))]
-   :transact [(meta-model/deletion-tx user id)]})
+           db user
+           (get-in (du/entity db id) [:participation/in :db/id]))]
+   :transact (update-meeting-tx
+               (get-in (du/entity db id) [:participation/in :db/id])
+               [(meta-model/deletion-tx user id)])})
 
 (defcommand :meeting/add-participation
   {:doc "Remove a participation."
@@ -218,7 +230,10 @@
    :pre [(meeting-db/activity-meeting-id db activity-eid meeting-id)
          (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)]}
   (let [to (remove #(str/ends-with? % "@example.com")
-                   (keep :user/email (meeting-db/participants db meeting-id)))]
+                   (keep :user/email (meeting-db/participants db meeting-id)))
+        tx-return (tx-ret (update-meeting-tx
+                            meeting-id
+                            [(meta-model/deletion-tx user meeting-id)]))]
     (when (seq to)
       (let [meeting (d/pull db
                             '[:db/id
@@ -241,7 +256,7 @@
                                 :parts [{:headers {"Content-Type" "text/calendar; method=cancel"} ;; RFC 6047 SECTION 2.4
                                          :body ics}]}))]
         (log/info "email response: " (or email-response "no email sent"))))
-    (tx-ret [(meta-model/deletion-tx user meeting-id)])))
+    tx-return))
 
 (defcommand :meeting/create-decision
   {:doc "Create a new decision under a topic"
@@ -252,11 +267,11 @@
    :pre [(meeting-db/user-is-organizer-or-reviewer?
            db user
            (get-in (du/entity db agenda-eid) [:meeting/_agenda :db/id]))]
-   :transact [{:db/id agenda-eid
-               :meeting.agenda/decisions [(merge (select-keys form-data [:meeting.decision/body])
-                                                 {:db/id "new decision"})]}
-              (merge {:db/id (get-in (du/entity db agenda-eid) [:meeting/_agenda :db/id])}
-                     (meta-model/modification-meta user))]})
+   :transact (update-meeting-tx
+               (meeting-db/agenda-meeting-id db agenda-eid)
+               [{:db/id agenda-eid
+                 :meeting.agenda/decisions [(merge (select-keys form-data [:meeting.decision/body])
+                                                   {:db/id "new decision"})]}])})
 
 (defcommand :meeting/update-decision
   {:doc "Create a new decision under a topic"
@@ -266,10 +281,11 @@
    :authorization {}
    :pre [(meeting-db/user-is-organizer-or-reviewer?
            db user
-           (get-in (du/entity db (:db/id form-data))
-                   [:meeting.agenda/_decisions :meeting/_agenda :db/id]))]
-   :transact [(merge (select-keys form-data [:meeting.decision/body :db/id])
-                     (meta-model/modification-meta user))]})
+           (meeting-db/decision-meeting-id db (:db/id form-data)))]
+   :transact (update-meeting-tx
+               (meeting-db/decision-meeting-id db (:db/id form-data))
+               [(merge (select-keys form-data [:meeting.decision/body :db/id])
+                       (meta-model/modification-meta user))])})
 
 (defcommand :meeting/delete-decision
   {:doc "Mark a given decision as deleted"
@@ -279,18 +295,11 @@
    :authorization {}
    :pre [(meeting-db/user-is-organizer-or-reviewer?
            db user
-           (get-in (du/entity db decision-id)
-                   [:meeting.agenda/_decisions :meeting/_agenda :db/id]))]
-   :transact [(meta-model/deletion-tx user decision-id)
-              (merge
-                {:db/id (meeting-db/decision-meeting-id db decision-id)}
-                (meta-model/modification-meta user))]})
+           (meeting-db/decision-meeting-id db decision-id))]
+   :transact (update-meeting-tx
+               (meeting-db/decision-meeting-id db decision-id)
+               [(meta-model/deletion-tx user decision-id)])})
 
-
-; TODO query only the reviews done after last modification
-; TODO when locking meeting check the review times against modication also
-; TODO Should the meeting+user be unique in the review?
-; TODO editing of decision
 (defcommand :meeting/review
   {:doc "Either approve or reject the meeting"
    :context {:keys [db user]}
@@ -302,4 +311,5 @@
    :transact [(merge {:db/id (or (:db/id form-data) "new-review")
                       :review/reviewer (user-model/user-ref user)
                       :review/of meeting-id}
-                     (select-keys form-data [:review/comment :review/decision]))]})
+                     (select-keys form-data [:review/comment :review/decision])
+                     (meta-model/creation-meta user))]})

@@ -108,3 +108,44 @@
 (defn decision-meeting-id [db meeting-decision-id]
   (get-in (du/entity db meeting-decision-id)
           [:meeting.agenda/_decisions :meeting/_agenda :db/id]))
+
+(defn reviewer-ids
+  [db meeting-id]
+  (let [{organizer :meeting/organizer}
+        (d/pull db '[:meeting/organizer] meeting-id)]
+    (into #{(:db/id organizer)}
+          (map first)
+          (d/q '[:find ?u
+                 :where
+                 [?p :participation/in ?m]
+                 [(missing? $ ?p :meta/deleted?)]
+                 [?p :participation/role :participation.role/reviewer]
+                 [?p :participation/participant ?u]
+                 :in $ ?m] db meeting-id))))
+
+(defn approved-by-users
+  [db meeting-id]
+  (let [users (d/q '[:find ?u
+                     :where
+                     [?r :review/of ?m]
+                     [?r :review/decision :review.decision/approved]
+                     [?r :review/reviewer ?u]
+                     :in $ ?m] db meeting-id)]
+    (into #{}
+          (map first)
+          users)))
+
+(defn meeting-review-retractions
+  "Returns a list of retraction transactions for all the reviews of the given meeting-id"
+  [db meeting-id]
+  (->> (d/pull db '[{:review/_of [:db/id]}] meeting-id)
+       :review/_of
+       (mapv :db/id)
+       (mapv (fn [entity-id]
+               [:db/retractEntity entity-id]))))
+
+(defn meeting-locked?
+  [db meeting-id]
+  (let [reviewers (reviewer-ids db meeting-id)
+        approvers (approved-by-users db meeting-id)]
+    (= reviewers approvers)))

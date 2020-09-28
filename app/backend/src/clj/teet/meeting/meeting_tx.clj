@@ -4,6 +4,15 @@
             [teet.meeting.meeting-db :as meeting-db]
             [clojure.string :as str]))
 
+(defn update-meeting
+  [db meeting-id tx-vec]
+  (if (meeting-db/meeting-locked? db meeting-id)
+    (ion/cancel {:cognitect.anomalies/category :cognitect.anomalies/conflict
+                 :cognitect.anomalies/message "The meeting is already approved"
+                 :teet/error :meeting-is-locked})
+    (into tx-vec
+          (meeting-db/meeting-review-retractions db meeting-id))))
+
 (defn add-participation [db {meeting :participation/in
                              participant :participation/participant
                              :as participation}]
@@ -27,4 +36,4 @@
                    :cognitect.anomalies/message "User is already participating"
                    :teet/error :user-is-already-participant})
       ;; All constraint checks ok, return tx data
-      [participation])))
+      (update-meeting db meeting [participation]))))
