@@ -583,7 +583,6 @@
     [:div {:class (<class common-styles/padding-bottom 1)}
      [typography/Heading2 {:style {:margin "1.5rem 0"}} (tr [:meeting :approvals])]
      [:div
-      [:span (pr-str meeting-reviews)]
       (doall
         (for [{:participation/keys [participant] :as participation} participations]
           ^{:key (str (:db/id participation))}
@@ -595,7 +594,6 @@
 (defn review-form
   [e! meeting-id close-event form-atom]
   [:<>
-   [:span (pr-str @form-atom)]
    [form/form {:e! e!
                :value @form-atom
                :on-change-event (form/update-atom-event form-atom merge)
@@ -703,7 +701,8 @@
   (let [{:meeting/keys [title number locked?]} meeting]
     [:div
      [:div {:class (<class common-styles/heading-and-action-style)}
-      [typography/Heading2 title (when number (str " #" number)) (when locked? [icons/action-lock])]
+      [typography/Heading2 {:class (<class common-styles/flex-align-center)}
+       title (when number (str " #" number)) (when locked? [icons/action-lock])]
       [authorization-context/when-authorized :edit-meeting
        [form/form-modal-button {:form-component [meeting-form e! (:activity params)]
                                 :form-value meeting

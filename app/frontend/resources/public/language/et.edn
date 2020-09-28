@@ -339,6 +339,7 @@
   :thk.project/start-km "Algus km",
   "projectgroup" {"activity" "Etapp"},
   :permission/role "Roll",
+  :review/comment "Kommentaar",
   :land-exchange/area "Pindala",
   :meeting.decision/body "Otsus",
   :meeting/agenda "Päevakava",

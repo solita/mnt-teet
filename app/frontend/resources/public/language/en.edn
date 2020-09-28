@@ -343,6 +343,7 @@
   :thk.project/start-km "Start km",
   "projectgroup" {"activity" "Activities"},
   :permission/role "Roles",
+  :review/comment "Comment",
   :land-exchange/area "Area",
   :meeting.decision/body "Decision",
   :meeting/agenda "Agenda",
