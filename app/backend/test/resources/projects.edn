@@ -1,16 +1,19 @@
 [{:thk.project/estimated-start-date #inst "2020-04-06T21:00:00.000-00:00",
   :thk.project/lifecycles
   [{:db/id "p1-lc1"
+    :integration/id #uuid "609A950E-33C6-473F-BB04-AB15D6AFAC17"
     :thk.lifecycle/estimated-start-date #inst "2020-04-06T21:00:00.000-00:00"
     :thk.lifecycle/estimated-end-date #inst "2022-06-24T21:00:00.000-00:00"
     :thk.lifecycle/activities
     [{:db/id "p1-lc1-act1"
+      :integration/id #uuid "ebab572f-655b-4112-86f7-b8d9a1d2d6b8"
       :activity/estimated-start-date #inst "2021-04-11T21:00:00.000-00:00"
       :activity/estimated-end-date #inst "2022-06-24T21:00:00.000-00:00"
       :activity/name :activity.name/land-acquisition
       :thk.activity/id "15906"
       :activity/integration-info "#:activity{:contract \"false\", :shortname \"Maaost\", :cost \"0.00\", :thkupdstamp \"2020-03-02 17:57:15.0\", :statusname \"Ettevalmistamisel\"}"}
      {:db/id "p1-lc1-act2"
+      :integration/id #uuid "9da76005-62bd-4ae9-8f79-c316c9c8c9c9"
       :activity/estimated-start-date #inst "2020-12-31T22:00:00.000-00:00"
       :activity/estimated-end-date #inst "2020-06-11T21:00:00.000-00:00"
       :activity/name :activity.name/detailed-design
@@ -21,10 +24,12 @@
     :thk.lifecycle/id "13906"
     :thk.lifecycle/integration-info "#:phase{:typefk \"4099\", :cost \"2.00\", :thkupdstamp \"2020-04-07 13:43:28.959\"}"}
    {:db/id "p1-lc2"
+    :integration/id #uuid "44571708-496B-404E-97DC-3BDFF8F5892F"
     :thk.lifecycle/estimated-start-date #inst "2020-12-31T22:00:00.000-00:00"
     :thk.lifecycle/estimated-end-date #inst "2022-12-30T22:00:00.000-00:00"
     :thk.lifecycle/activities
     [{:db/id "p1-lc2-act1"
+      :integration/id #uuid "8717803b-187a-4727-bf72-3394a1f5bac9"
       :activity/estimated-start-date #inst "2020-12-31T22:00:00.000-00:00"
       :activity/estimated-end-date #inst "2022-12-30T22:00:00.000-00:00"
       :activity/name :activity.name/construction
@@ -50,6 +55,7 @@
  {:thk.project/estimated-start-date #inst "2020-04-12T21:00:00.000-00:00"
   :thk.project/lifecycles
   [{:db/id "p3-lc1"
+    :integration/id #uuid "08AFA1EE-DCF1-4BEA-A195-68B66DCCF324"
     :thk.lifecycle/estimated-start-date #inst "2020-04-12T21:00:00.000-00:00"
     :thk.lifecycle/estimated-end-date #inst "2021-04-20T21:00:00.000-00:00"
     :thk.lifecycle/type :thk.lifecycle-type/design
@@ -71,6 +77,7 @@
  {:thk.project/estimated-start-date #inst "2020-04-06T21:00:00.000-00:00"
   :thk.project/lifecycles
   [{:db/id "p4-lc1"
+    :integration/id #uuid "8A83593F-6B83-4557-9E4B-A2AB6F09A8DF"
     :thk.lifecycle/estimated-start-date #inst "2020-04-06T21:00:00.000-00:00"
     :thk.lifecycle/estimated-end-date #inst "2020-07-06T21:00:00.000-00:00"
     :thk.lifecycle/type :thk.lifecycle-type/design
@@ -91,6 +98,7 @@
  {:thk.project/estimated-start-date #inst "2020-04-20T21:00:00.000-00:00"
   :thk.project/lifecycles
   [{:db/id "p5-lc1"
+    :integration/id #uuid "D56D1048-6CB3-4F2D-876A-4FF06AEA3E10"
     :thk.lifecycle/estimated-start-date #inst "2020-04-20T21:00:00.000-00:00"
     :thk.lifecycle/estimated-end-date #inst "2020-05-09T21:00:00.000-00:00"
     :thk.lifecycle/type :thk.lifecycle-type/design
@@ -112,10 +120,12 @@
  {:thk.project/estimated-start-date #inst "2020-07-05T21:00:00.000-00:00"
   :thk.project/lifecycles
   [{:db/id "p2-lc1"
+    :integration/id #uuid "A52149C2-3967-44EF-A7E2-F1C7C8CEE142"
     :thk.lifecycle/estimated-start-date #inst "2022-06-26T21:00:00.000-00:00"
     :thk.lifecycle/estimated-end-date #inst "2023-11-29T22:00:00.000-00:00"
     :thk.lifecycle/activities
     [{:db/id "p2-lc1-act1"
+      :integration/id #uuid "cf279093-f803-4f04-8b7b-c1e03909b1ba"
       :activity/estimated-start-date #inst "2022-06-26T21:00:00.000-00:00"
       :activity/estimated-end-date #inst "2023-11-29T22:00:00.000-00:00"
       :activity/name :activity.name/construction
@@ -126,10 +136,12 @@
     :thk.lifecycle/integration-info "#:phase{:typefk \"4098\", :cost \"2446500.00\", :thkupdstamp \"2020-03-11 21:40:26.603836\"}"}
 
    {:db/id "p2-lc2"
+    :integration/id #uuid "C7CC28A5-1871-417E-AF27-511A8BB034D1"
     :thk.lifecycle/estimated-start-date #inst "2020-07-05T21:00:00.000-00:00"
     :thk.lifecycle/estimated-end-date #inst "2021-11-29T22:00:00.000-00:00"
     :thk.lifecycle/activities
     [{:db/id "p2-lc2-act1"
+      :integration/id #uuid "0275fc0d-b684-4ed1-be7a-388df3955ace"
       :activity/estimated-start-date #inst "2020-07-05T21:00:00.000-00:00"
       :activity/estimated-end-date #inst "2021-08-23T21:00:00.000-00:00"
       :activity/name :activity.name/detailed-design
