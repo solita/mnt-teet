@@ -16,36 +16,38 @@
             [teet.user.user-model :as user-model])
   (:import (java.util Date)))
 
+(defn update-meeting-tx
+  [meeting-id tx-data]
+  [(list 'teet.meeting.meeting-tx/update-meeting
+         meeting-id
+         tx-data)])
+
 (defmethod file-db/attach-to :meeting-agenda
   [db user _file [_ meeting-agenda-id]]
   (let [meeting-id (meeting-db/agenda-meeting-id db meeting-agenda-id)]
     (when (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)
       {:eid meeting-agenda-id
-       :wrap-tx (fn [meeting-tx]
-                  [(list 'teet.meeting.meeting-tx/update-meeting
-                         meeting-id
-                         meeting-tx)])})))
+       :wrap-tx #(update-meeting-tx meeting-id %)})))
 
 (defmethod file-db/allow-download-attachments? :meeting-agenda
   [db user [_ meeting-agenda-id]]
   (meeting-db/user-is-participating?
    db user (meeting-db/agenda-meeting-id db meeting-agenda-id)))
 
-(defmethod file-db/allow-delete-attachment? :meeting-agenda
-  [db user _file-id [_ meeting-agenda-id]]
-  (meeting-db/user-is-organizer-or-reviewer?
-   db user
-   (meeting-db/agenda-meeting-id db meeting-agenda-id)))
+(defmethod file-db/delete-attachment :meeting-agenda
+  [db user file-id [_ meeting-agenda-id]]
+  (let [meeting-id (meeting-db/agenda-meeting-id db meeting-agenda-id)]
+    (if (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)
+      (update-meeting-tx meeting-id [(meta-model/deletion-tx user file-id)])
+      (throw (ex-info "Unauthorized attachment delete"
+                      {:error :unauthorized})))))
 
 (defmethod file-db/attach-to :meeting-decision
   [db user _file [_ meeting-decision-id]]
   (let [meeting-id (meeting-db/decision-meeting-id db meeting-decision-id)]
     (when (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)
       {:eid meeting-decision-id
-       :wrap-tx (fn [meeting-tx]
-                  [(list 'teet.meeting.meeting-tx/update-meeting
-                         meeting-id
-                         meeting-tx)])})))
+       :wrap-tx #(update-meeting-tx meeting-id %)})))
 
 (defmethod file-db/allow-download-attachments? :meeting-decision
   [db user [_ meeting-decision-id]]
@@ -53,17 +55,16 @@
    db user
    (meeting-db/decision-meeting-id db meeting-decision-id)))
 
-(defmethod file-db/allow-delete-attachment? :meeting-decision
-  [db user _file-id [_ meeting-decision-id]]
-  (meeting-db/user-is-organizer-or-reviewer?
-   db user
-   (meeting-db/decision-meeting-id db meeting-decision-id)))
+(defmethod file-db/delete-attachment :meeting-decision
+  [db user file-id [_ meeting-decision-id]]
+  (let [meeting-id (meeting-db/decision-meeting-id db meeting-decision-id)]
+    (if (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)
+      (update-meeting-tx meeting-id
+                         [(meta-model/deletion-tx user file-id)])
+      (throw (ex-info "Unauthorized attachment delete"
+                      {:error :unauthorized})))))
 
-(defn update-meeting-tx
-  [meeting-id tx-data]
-  [(list 'teet.meeting.meeting-tx/update-meeting
-         meeting-id
-         tx-data)])
+
 
 (defcommand :meeting/create
   {:doc "Create new meetings to activities"
