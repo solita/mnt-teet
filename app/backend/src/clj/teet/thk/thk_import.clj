@@ -111,9 +111,15 @@
                (for [[id activities] phases
                      :let [phase (first activities)
                            lc-thk-id (:thk.lifecycle/id phase)
-                           {lc-db-id :db/id
-                            lc-integration-id :integration/id} (lookup db [:thk.lifecycle/id lc-thk-id])
                            lc-teet-id (:lifecycle-db-id phase)
+                           {lc-db-id :db/id
+                            lc-integration-id :integration/id}
+                           (if lc-teet-id
+                             ;; If THK sent TEET id field, lookup using that
+                             (lookup db [:integration/id lc-teet-id])
+                             ;; otherwise lookup using THK id
+                             (lookup db [:thk.lifecycle/id lc-thk-id]))
+
                            _ (log/info "Received lifecycle with THK id " lc-thk-id
                                        (if lc-db-id
                                          (str "having TEET :db/id " lc-db-id)
@@ -151,7 +157,12 @@
                           :let [{act-thk-id :thk.activity/id
                                  act-teet-id :activity-db-id} activity
                                 {act-db-id :db/id
-                                 act-integration-id :integration/id} (lookup db [:thk.activity/id act-thk-id])
+                                 act-integration-id :integration/id}
+                                (if act-teet-id
+                                  ;; Lookup using TEET id
+                                  (lookup db [:integration/id act-teet-id])
+                                  ;; Lookup using THK id
+                                  (lookup db [:thk.activity/id act-thk-id]))
                                 _ (log/info "Received activity with THK id " act-thk-id
                                             (if act-db-id
                                               (str "having TEET :db/id " act-db-id)

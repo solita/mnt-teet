@@ -199,7 +199,8 @@
             (if-not (= (nth row test-col-idx) row-test-value)
               row
               (do (println "SETTING FOR ROW: " row)
-                (assoc row set-col-idx set-val))))
+                  (println "VALUE CHANGE" (nth row set-col-idx) " => " set-val)
+                  (assoc row set-col-idx set-val))))
           csv)))
 
 (deftest activity-id-round-trip
