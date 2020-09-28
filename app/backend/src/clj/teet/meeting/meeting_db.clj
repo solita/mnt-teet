@@ -135,7 +135,7 @@
           (map first)
           users)))
 
-(defn meeting-review-retractions
+(defn review-retractions
   "Returns a list of retraction transactions for all the reviews of the given meeting-id"
   [db meeting-id]
   (->> (d/pull db '[{:review/_of [:db/id]}] meeting-id)
@@ -144,7 +144,7 @@
        (mapv (fn [entity-id]
                [:db/retractEntity entity-id]))))
 
-(defn meeting-locked?
+(defn locked?
   [db meeting-id]
   (let [reviewers (reviewer-ids db meeting-id)
         approvers (approved-by-users db meeting-id)]

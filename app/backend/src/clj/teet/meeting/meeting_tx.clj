@@ -6,12 +6,12 @@
 
 (defn update-meeting
   [db meeting-id tx-vec]
-  (if (meeting-db/meeting-locked? db meeting-id)
+  (if (meeting-db/locked? db meeting-id)
     (ion/cancel {:cognitect.anomalies/category :cognitect.anomalies/conflict
                  :cognitect.anomalies/message "The meeting is already approved"
                  :teet/error :meeting-is-locked})
     (into tx-vec
-          (meeting-db/meeting-review-retractions db meeting-id))))
+          (meeting-db/review-retractions db meeting-id))))
 
 (defn add-participation [db {meeting :participation/in
                              participant :participation/participant

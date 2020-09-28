@@ -440,11 +440,11 @@
            [form/footer2]])]])))
 
 (defn meeting-participants [e! {organizer :meeting/organizer
-                                participations :participation/_in :as meeting} user]
+                                participations :participation/_in :as meeting} edit-rights? user]
   (r/with-let [remove-participant! (fn [participant]
                                      (log/info "Remove participant:" participant)
                                      (e! (meeting-controller/->RemoveParticipant (:db/id participant))))]
-    (let [can-edit-participants? (meeting-model/user-is-organizer-or-reviewer? user meeting)]
+    (let [can-edit-participants? (and edit-rights? (meeting-model/user-is-organizer-or-reviewer? user meeting))]
       [:div.meeting-participants {:style {:flex 1}}
        [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}
         (tr [:meeting :participants-title])]
@@ -580,8 +580,8 @@
                              (filter (comp #(du/enum= % :participation.role/reviewer)
                                               :participation/role))
                              participations)]
-    [:div
-     [typography/Heading2 {:style {:margin "1.5rem 0"}} "Approvals"]
+    [:div {:class (<class common-styles/padding-bottom 1)}
+     [typography/Heading2 {:style {:margin "1.5rem 0"}} (tr [:meeting :approvals])]
      [:div
       [:span (pr-str meeting-reviews)]
       (doall
@@ -610,17 +610,17 @@
 
 (defn review-actions
   [e! meeting]
-  [:div
+  [:div {:class (<class common-styles/padding-bottom 2)}
    [form/form-modal-button {:form-component [review-form e! (:db/id meeting)]
                             :form-value {:review/decision :review.decision/approved}
-                            :modal-title "Approve decision?" ;; TODO translations
-                            :button-component [buttons/button-green {}
-                                               "Approve decision"]}]
+                            :modal-title (tr [:meeting :approve-meeting-modal-title])
+                            :button-component [buttons/button-green {:style {:margin-right "1rem"}}
+                                               (tr [:meeting :approve-meeting-button])]}]
    [form/form-modal-button {:form-component [review-form e! (:db/id meeting)]
                             :form-value {:review/decision :review.decision/rejected}
-                            :modal-title "Reject decision?"
+                            :modal-title (tr [:meeting :reject-meeting-modal-title])
                             :button-component [buttons/button-warning {}
-                                               "reject decision"]}]])
+                                               (tr [:meeting :reject-meeting-button])]}]])
 
 (defn- meeting-decision-content [e! {id :db/id
                                      body :meeting.decision/body
@@ -691,7 +691,8 @@
                                 :modal-title (tr [:meeting :new-agenda-modal-title])
                                 :button-component [buttons/button-primary {} (tr [:meeting :add-agenda-button])]}])
      [reviews meeting]
-     [review-actions e! meeting]]))
+     (when edit?
+       [review-actions e! meeting])]))
 
 (defn meeting-details [e! user meeting]
   [authorization-context/consume
@@ -699,10 +700,10 @@
 
 (defn meeting-main-content
   [e! {:keys [params user query]} meeting]
-  (let [{:meeting/keys [title number]} meeting]
+  (let [{:meeting/keys [title number locked?]} meeting]
     [:div
      [:div {:class (<class common-styles/heading-and-action-style)}
-      [typography/Heading2 title (when number (str " #" number))]
+      [typography/Heading2 title (when number (str " #" number)) (when locked? [icons/action-lock])]
       [authorization-context/when-authorized :edit-meeting
        [form/form-modal-button {:form-component [meeting-form e! (:activity params)]
                                 :form-value meeting
@@ -718,13 +719,13 @@
 
 
 (defn meeting-page [e! {:keys [params user query] :as app} {:keys [project meeting]}]
-  [authorization-context/with
-   (set/union
-     (when (meeting-model/user-is-organizer-or-reviewer? user meeting)
-       #{:edit-meeting})
-     (when (meeting-model/locked? meeting)
-       #{:locked}))
-   [meeting-page-structure e! app project
-    [meeting-main-content e! app meeting]
-    [context/consume :user
-     [meeting-participants e! meeting]]]])
+  (let [edit-rights? (and (meeting-model/user-is-organizer-or-reviewer? user meeting)
+                          (not (:meeting/locked? meeting)))]
+    [authorization-context/with
+     (set/union
+       (when edit-rights?
+         #{:edit-meeting}))
+     [meeting-page-structure e! app project
+      [meeting-main-content e! app meeting]
+      [context/consume :user
+       [meeting-participants e! meeting edit-rights?]]]]))
