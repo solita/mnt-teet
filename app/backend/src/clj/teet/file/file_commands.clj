@@ -49,14 +49,18 @@
              (file-db/attach-to db user file attach-to))]}
   (log/debug "upload-attachment: got project-id" project-id)
 
-  (let [key (new-file-key file)
-        res (tx [(merge (select-keys file file-keys)
-                        {:db/id "new-file"
-                         :file/s3-key key}
-                        (when attach-to
-                          {:file/attached-to (file-db/attach-to db user file
-                                                                attach-to)})
-                        (creation-meta user))])
+  (let [{attach-to-eid :eid
+         wrap-tx :wrap-tx} (when attach-to
+                             (file-db/attach-to db user file attach-to))
+        wrap-tx (or wrap-tx identity)
+        key (new-file-key file)
+        res (tx (wrap-tx
+                 [(merge (select-keys file file-keys)
+                         {:db/id "new-file"
+                          :file/s3-key key}
+                         (when attach-to-eid
+                           {:file/attached-to attach-to-eid})
+                         (creation-meta user))]))
         file-id (get-in res [:tempids "new-file"])]
 
     {:url (file-storage/upload-url key)

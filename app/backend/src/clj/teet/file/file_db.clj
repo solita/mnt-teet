@@ -20,8 +20,11 @@
   "Check preconditions and permissions for attaching file to
   entity of given type and id for the user.
 
-  Return eid to attach to if attaching is allowed, nil if not.
+  Returna a map containing :eid to attach to if attaching is allowed, nil if not.
   May also throw an exception with :error key in the exception.
+
+  Return map may also contain :wrap-tx function which will be used to process
+  the tx-data vector before invoking the transaction.
 
   Default behaviour is to disallow."
   (fn [_db _user _file attach]

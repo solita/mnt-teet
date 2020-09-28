@@ -18,10 +18,13 @@
 
 (defmethod file-db/attach-to :meeting-agenda
   [db user _file [_ meeting-agenda-id]]
-  (when (meeting-db/user-is-organizer-or-reviewer?
-         db user
-         (meeting-db/agenda-meeting-id db meeting-agenda-id))
-    meeting-agenda-id))
+  (let [meeting-id (meeting-db/agenda-meeting-id db meeting-agenda-id)]
+    (when (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)
+      {:eid meeting-agenda-id
+       :wrap-tx (fn [meeting-tx]
+                  [(list 'teet.meeting.meeting-tx/update-meeting
+                         meeting-id
+                         meeting-tx)])})))
 
 (defmethod file-db/allow-download-attachments? :meeting-agenda
   [db user [_ meeting-agenda-id]]
@@ -36,10 +39,13 @@
 
 (defmethod file-db/attach-to :meeting-decision
   [db user _file [_ meeting-decision-id]]
-  (when (meeting-db/user-is-organizer-or-reviewer?
-         db user
-         (meeting-db/decision-meeting-id db meeting-decision-id))
-    meeting-decision-id))
+  (let [meeting-id (meeting-db/decision-meeting-id db meeting-decision-id)]
+    (when (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)
+      {:eid meeting-decision-id
+       :wrap-tx (fn [meeting-tx]
+                  [(list 'teet.meeting.meeting-tx/update-meeting
+                         meeting-id
+                         meeting-tx)])})))
 
 (defmethod file-db/allow-download-attachments? :meeting-decision
   [db user [_ meeting-decision-id]]
