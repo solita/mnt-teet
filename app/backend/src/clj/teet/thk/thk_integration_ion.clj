@@ -145,7 +145,7 @@
             :wfs-url (environment/config-value :road-registry :wfs-url)}
            file->csv
            upsert-projects
-           #_update-entity-info)
+           update-entity-info)
     (catch Exception e
       (println e "Exception in import"))))
 
