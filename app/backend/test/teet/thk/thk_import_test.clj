@@ -93,6 +93,15 @@
                      (d/q '[:find ?id
                             :where [_ :thk.project/id ?id]]
                           db)))))
+
+        (testing "All lifecycles and activities have integration"
+          (is (every? #(contains? % :integration/id)
+                      (map first
+                           (d/q '[:find (pull ?e [:integration/id])
+                                  :where (or [?e :thk.lifecycle/id _]
+                                             [?e :thk.activity/id _])]
+                                db)))))
+
         (testing "Project 1 is owned by existing Danny"
           (let [{owner :thk.project/owner :as _p1}
                 (d/pull db '[{:thk.project/owner [*]}]
@@ -123,14 +132,20 @@
                      (tu/db) [:thk.project/id "11111"]))]
     (is act-id "Project 1 has land acquisition activity")
     (tu/store-data! :act-id act-id)
-    (tu/store-data! :task-id
-                    (get-in (tu/tx {:db/id act-id
-                                    :activity/tasks [{:db/id "new-task"
-                                                      :task/type :task.type/third-party-review
-                                                      :task/send-to-thk? true
-                                                      :task/estimated-start-date #inst "2020-04-15T14:00:39.855-00:00"
-                                                      :task/estimated-end-date  #inst "2020-06-25T14:00:39.855-00:00"}]})
-                            [:tempids "new-task"])))
+    (tu/store-data! :act-uuid (java.util.UUID/randomUUID))
+    (tu/store-data! :task-uuid (java.util.UUID/randomUUID))
+
+    (tu/store-data!
+     :task-id
+     (get-in (tu/tx {:db/id act-id
+                     :integration/id (tu/get-data :act-uuid)
+                     :activity/tasks [{:db/id "new-task"
+                                       :task/type :task.type/third-party-review
+                                       :task/send-to-thk? true
+                                       :integration/id (tu/get-data :task-uuid)
+                                       :task/estimated-start-date #inst "2020-04-15T14:00:39.855-00:00"
+                                       :task/estimated-end-date  #inst "2020-06-25T14:00:39.855-00:00"}]})
+             [:tempids "new-task"])))
 
   (testing "Export CSV to THK has row for the task"
     ;; Export projects to THK, expect row for task
@@ -141,8 +156,10 @@
       (is (= (get task-row "activity_taskdescr") "Ekspertiis")
           "task description is the estonian translation of task type")
       (is (str/blank? (get task-row "activity_id")) "task has no activity_id yet")
-      (is (= (get task-row "activity_taskid") (str (tu/get-data :task-id))))
-      (is (= (get task-row "activity_teetid") (str (tu/get-data :act-id))))))
+      (is (= (get task-row "activity_taskid")
+             (str (thk-mapping/uuid->number (tu/get-data :task-uuid)))))
+      (is (= (get task-row "activity_teetid")
+             (str (thk-mapping/uuid->number (tu/get-data :act-uuid)))))))
 
   (testing "Changing task and exporting again keeps same ids"
     (tu/local-command tu/mock-user-boss
@@ -154,8 +171,10 @@
     (let [[task-row :as task-rows] (filter #(not (str/blank? (get % "activity_taskdescr")))
                                            (export-csv))]
       (is (= 1 (count task-rows)) "still exactly one task row")
-      (is (= (get task-row "activity_taskid") (str (tu/get-data :task-id))))
-      (is (= (get task-row "activity_teetid") (str (tu/get-data :act-id))))))
+      (is (= (get task-row "activity_taskid")
+             (str (thk-mapping/uuid->number (tu/get-data :task-uuid)))))
+      (is (= (get task-row "activity_teetid")
+             (str (thk-mapping/uuid->number (tu/get-data :act-uuid)))))))
 
   (testing "Changing activity and exporting again keeps the same ids"
     (tu/local-command
@@ -167,8 +186,10 @@
     (let [[task-row :as task-rows] (filter #(not (str/blank? (get % "activity_taskdescr")))
                                            (export-csv))]
       (is (= 1 (count task-rows)) "still exactly one task row")
-      (is (= (get task-row "activity_taskid") (str (tu/get-data :task-id))))
-      (is (= (get task-row "activity_teetid") (str (tu/get-data :act-id)))))))
+      (is (= (get task-row "activity_taskid")
+             (str (thk-mapping/uuid->number (tu/get-data :task-uuid)))))
+      (is (= (get task-row "activity_teetid")
+             (str (thk-mapping/uuid->number (tu/get-data :act-uuid))))))))
 
 (defn set-csv-column [csv row-test-column row-test-value set-col set-val]
   (let [test-col-idx (cu/find-idx #(= row-test-column %) thk-mapping/csv-column-names)
@@ -178,24 +199,33 @@
             (if-not (= (nth row test-col-idx) row-test-value)
               row
               (do (println "SETTING FOR ROW: " row)
-                (assoc row set-col-idx set-val))))
+                  (println "VALUE CHANGE" (nth row set-col-idx) " => " set-val)
+                  (assoc row set-col-idx set-val))))
           csv)))
 
 (deftest activity-id-round-trip
   (import-csv!)
 
   ;; Create new activity
-  (tu/store-data!
-   :act-id
-   (get-in
-    (tu/local-command tu/mock-user-boss
+  (let [{:keys [tempids]}
+        (tu/local-command tu/mock-user-boss
                       :activity/create
                       {:lifecycle-id (:db/id (tu/entity [:thk.lifecycle/id "15921"]))
                        :activity {:activity/name :activity.name/detailed-design
                                   :activity/estimated-start-date #inst "2020-04-13T21:00:00.000-00:00"
                                   :activity/estimated-end-date #inst "2021-04-19T20:00:00.000-00:00"}
                        :tasks [[:task.group/design-reports :task.type/calculation false]]})
-    [:tempids "new-activity"]))
+
+        act-id (tempids "new-activity")
+        act-uuid (ffirst (d/q '[:find ?uuid
+                                :where [?e :integration/id ?uuid]
+                                :in $ ?e]
+                              (tu/db)
+                              act-id))]
+    (is (number? act-id))
+    (is (uuid? act-uuid) "Created activity has an integration id")
+    (tu/store-data! :act-id act-id)
+    (tu/store-data! :act-uuid act-uuid))
 
   (is (some? (tu/get-data :act-id)) "new activity was created")
 
@@ -210,9 +240,9 @@
 
   (testing "Importing again with THK id sets id"
     (let [csv (tu/get-data :export-csv)
-          act-teet-id (str (tu/get-data :act-id))
+          act-teet-id (tu/get-data :act-uuid)
           csv-with-id (set-csv-column csv
-                                      "activity_teetid" act-teet-id
+                                      "activity_teetid" (str (thk-mapping/uuid->number act-teet-id))
                                       "activity_id" "99999")
           csv-data (->csv-data csv-with-id)
           lc->act->task-before (lc->act->task)]
@@ -226,21 +256,26 @@
   (testing "Roundtrip task keeps same lifecycle/activity/task hierarchy"
     ;; TEET-517 test level violation, task shouldn't be directly linked to
     ;; lifecycle, it should only be under activity
+    (tu/store-data! :task-uuid (java.util.UUID/randomUUID))
     (tu/store-data!
      :task-id
-     (get-in (tu/tx {:db/id (-> :act-id tu/get-data tu/entity :db/id)
-                     :activity/tasks [{:db/id "new-task"
-                                       :task/type :task.type/third-party-review
-                                       :task/send-to-thk? true
-                                       :task/estimated-start-date #inst "2020-04-15T14:00:39.855-00:00"
-                                       :task/estimated-end-date  #inst "2020-06-25T14:00:39.855-00:00"}]})
-             [:tempids "new-task"]))
+     (get-in
+      (tu/tx {:db/id (-> :act-id tu/get-data tu/entity :db/id)
+              :activity/tasks [{:db/id "new-task"
+                                :integration/id (tu/get-data :task-uuid)
+                                :task/type :task.type/third-party-review
+                                :task/send-to-thk? true
+                                :task/estimated-start-date #inst "2020-04-15T14:00:39.855-00:00"
+                                :task/estimated-end-date  #inst "2020-06-25T14:00:39.855-00:00"}]})
+      [:tempids "new-task"]))
     (export-csv)
-    (let [csv-with-task-id (set-csv-column (tu/get-data :export-csv)
-                                           ;; when taskid is our created task
-                                           "activity_taskid" (str (tu/get-data :task-id))
-                                           ;; mock THK generated activity id
-                                           "activity_id" "99887")
+    (let [csv-with-task-id
+          (set-csv-column
+           (tu/get-data :export-csv)
+           ;; when taskid is our created task
+           "activity_taskid" (str (thk-mapping/uuid->number (tu/get-data :task-uuid)))
+           ;; mock THK generated activity id
+           "activity_id" "99887")
           hierarchy-before (lc->act->task)]
       (io/copy (java.io.ByteArrayInputStream. (->csv-data csv-with-task-id))
                (io/file "testi.csv"))
