@@ -1,4 +1,5 @@
 {:allow [teet.meeting.meeting-tx/add-participation
+         teet.meeting.meeting-tx/update-meeting
          teet.file.file-model/image-suffix?]
  :lambdas {:query
            {:fn teet.db-api.db-api-ion/db-api-query

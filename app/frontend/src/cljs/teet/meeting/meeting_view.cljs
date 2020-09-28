@@ -40,7 +40,9 @@
             [teet.file.file-view :as file-view]
             [cljs-time.core :as t]
             [cljs-time.coerce :as tc]
-            [teet.ui.query :as query]))
+            [teet.ui.query :as query]
+            [teet.util.datomic :as du]
+            [clojure.set :as set]))
 
 
 (defn meeting-form
@@ -438,11 +440,11 @@
            [form/footer2]])]])))
 
 (defn meeting-participants [e! {organizer :meeting/organizer
-                                participations :participation/_in :as meeting} user]
+                                participations :participation/_in :as meeting} edit-rights? user]
   (r/with-let [remove-participant! (fn [participant]
                                      (log/info "Remove participant:" participant)
                                      (e! (meeting-controller/->RemoveParticipant (:db/id participant))))]
-    (let [can-edit-participants? (meeting-model/user-is-organizer-or-reviewer? user meeting)]
+    (let [can-edit-participants? (and edit-rights? (meeting-model/user-is-organizer-or-reviewer? user meeting))]
       [:div.meeting-participants {:style {:flex 1}}
        [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}
         (tr [:meeting :participants-title])]
@@ -545,6 +547,79 @@
                       :attach-to [:meeting-agenda id]
                       :files files}]])
 
+(defn approval-status-symbol
+  [status]
+  (case status
+    :review.decision/approved
+    [icons/action-done {:style {:color "white"}
+                        :class (<class common-styles/status-circle-style theme-colors/green)}]
+    :review.decision/rejected
+    [icons/content-clear {:style {:color "white"}
+                        :class (<class common-styles/status-circle-style theme-colors/red)}]
+    [:div {:class (<class common-styles/status-circle-style theme-colors/gray-lighter)}]))
+
+(defn participant-approval-status
+  [user {:review/keys [comment decision] :as review}]
+  (let [review-decision (:db/ident decision)]
+    [:div
+     [:div.participant {:class (<class common-styles/flex-row)}
+      [:div.participant-name {:class (<class common-styles/flex-table-column-style 45)}
+       [approval-status-symbol review-decision]
+       [:span {:style {:margin-left "0.2rem"}}
+        [user-model/user-name user]]]
+      [:div.participant-role {:class (<class common-styles/flex-table-column-style 55 :space-between)}
+       [:span comment]
+       [typography/GreyText (format/date-time (:meta/created-at review))]]]]))
+
+(defn reviews
+  [{participations :participation/_in
+    meeting-reviews :review/_of
+    :meeting/keys [organizer]}]
+  (let [participations (into [{:db/id "organizer"
+                               :participation/participant organizer}]
+                             (filter (comp #(du/enum= % :participation.role/reviewer)
+                                              :participation/role))
+                             participations)]
+    [:div {:class (<class common-styles/padding-bottom 1)}
+     [typography/Heading2 {:style {:margin "1.5rem 0"}} (tr [:meeting :approvals])]
+     [:div
+      (doall
+        (for [{:participation/keys [participant] :as participation} participations]
+          ^{:key (str (:db/id participation))}
+          [participant-approval-status participant (some (fn [{:review/keys [reviewer] :as review}]
+                                                           (when (= (:db/id reviewer) (:db/id participant))
+                                                             review))
+                                                         meeting-reviews)]))]]))
+
+(defn review-form
+  [e! meeting-id close-event form-atom]
+  [:<>
+   [form/form {:e! e!
+               :value @form-atom
+               :on-change-event (form/update-atom-event form-atom merge)
+               :cancel-event close-event
+               :spec :meeting/review-form
+               :save-event #(meeting-controller/->SubmitReview
+                              meeting-id
+                              @form-atom
+                              close-event)}
+    ^{:attribute :review/comment}
+    [TextField {:multiline true}]]])
+
+(defn review-actions
+  [e! meeting]
+  [:div {:class (<class common-styles/padding-bottom 2)}
+   [form/form-modal-button {:form-component [review-form e! (:db/id meeting)]
+                            :form-value {:review/decision :review.decision/approved}
+                            :modal-title (tr [:meeting :approve-meeting-modal-title])
+                            :button-component [buttons/button-green {:style {:margin-right "1rem"}}
+                                               (tr [:meeting :approve-meeting-button])]}]
+   [form/form-modal-button {:form-component [review-form e! (:db/id meeting)]
+                            :form-value {:review/decision :review.decision/rejected}
+                            :modal-title (tr [:meeting :reject-meeting-modal-title])
+                            :button-component [buttons/button-warning {}
+                                               (tr [:meeting :reject-meeting-button])]}]])
+
 (defn- meeting-decision-content [e! {id :db/id
                                      body :meeting.decision/body
                                      files :file/_attached-to}]
@@ -612,7 +687,10 @@
                                                                                             :user/email
                                                                                             :user/person-id])}
                                 :modal-title (tr [:meeting :new-agenda-modal-title])
-                                :button-component [buttons/button-primary {} (tr [:meeting :add-agenda-button])]}])]))
+                                :button-component [buttons/button-primary {} (tr [:meeting :add-agenda-button])]}])
+     [reviews meeting]
+     (when edit?
+       [review-actions e! meeting])]))
 
 (defn meeting-details [e! user meeting]
   [authorization-context/consume
@@ -620,10 +698,11 @@
 
 (defn meeting-main-content
   [e! {:keys [params user query]} meeting]
-  (let [{:meeting/keys [title number]} meeting]
+  (let [{:meeting/keys [title number locked?]} meeting]
     [:div
      [:div {:class (<class common-styles/heading-and-action-style)}
-      [typography/Heading2 title (when number (str " #" number))]
+      [typography/Heading2 {:class (<class common-styles/flex-align-center)}
+       title (when number (str " #" number)) (when locked? [icons/action-lock])]
       [authorization-context/when-authorized :edit-meeting
        [form/form-modal-button {:form-component [meeting-form e! (:activity params)]
                                 :form-value meeting
@@ -639,10 +718,13 @@
 
 
 (defn meeting-page [e! {:keys [params user query] :as app} {:keys [project meeting]}]
-  [authorization-context/with
-   (when (meeting-model/user-is-organizer-or-reviewer? user meeting)
-     #{:edit-meeting})
-   [meeting-page-structure e! app project
-    [meeting-main-content e! app meeting]
-    [context/consume :user
-     [meeting-participants e! meeting]]]])
+  (let [edit-rights? (and (meeting-model/user-is-organizer-or-reviewer? user meeting)
+                          (not (:meeting/locked? meeting)))]
+    [authorization-context/with
+     (set/union
+       (when edit-rights?
+         #{:edit-meeting}))
+     [meeting-page-structure e! app project
+      [meeting-main-content e! app meeting]
+      [context/consume :user
+       [meeting-participants e! meeting edit-rights?]]]]))

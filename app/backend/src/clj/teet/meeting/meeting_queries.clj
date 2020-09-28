@@ -6,7 +6,8 @@
             [teet.user.user-model :as user-model]
             [datomic.client.api :as d]
             [clojure.walk :as walk]
-            [teet.util.date :as du]))
+            [teet.util.date :as du]
+            [teet.meeting.meeting-model :as meeting-model]))
 
 
 (defn project-upcoming-meetings
@@ -83,26 +84,34 @@
   (meta-query/without-deleted
     db
     {:project (fetch-project-meetings db (project-db/activity-project-id db activity-id)) ;; This ends up pulling duplicate information, could be refactored
-     :meeting (d/pull
-               db
-               `[:db/id
-                 :meeting/title :meeting/location
-                 :meeting/start :meeting/end
-                 :meeting/number
-                 {:meeting/organizer ~user-model/user-listing-attributes}
-                 {:meeting/agenda [:db/id
-                                   :meeting.agenda/topic
-                                   :meeting.agenda/body
-                                   {:meeting.agenda/decisions
-                                    [:db/id :meeting.decision/body
-                                     ~attachments]}
-                                   {:meeting.agenda/responsible ~user-model/user-listing-attributes}
-                                   ~attachments]}
-                 {:participation/_in
-                  [:db/id
-                   :participation/role
-                   {:participation/participant ~user-model/user-listing-attributes}]}]
-               (meeting-db/activity-meeting-id db activity-id meeting-id))}))
+     :meeting (assoc
+                (d/pull
+                  db
+                  `[:db/id
+                    :meeting/title :meeting/location
+                    :meeting/start :meeting/end
+                    :meeting/number
+                    {:meeting/organizer ~user-model/user-listing-attributes}
+                    {:meeting/agenda [:db/id
+                                      :meeting.agenda/topic
+                                      :meeting.agenda/body
+                                      {:meeting.agenda/decisions
+                                       [:db/id :meeting.decision/body
+                                        ~attachments]}
+                                      {:meeting.agenda/responsible ~user-model/user-listing-attributes}
+                                      ~attachments]}
+                    {:review/_of [:db/id
+                                  :review/comment
+                                  :review/decision
+                                  :meta/created-at
+                                  {:review/reviewer ~user-model/user-listing-attributes}]}
+                    {:participation/_in
+                     [:db/id
+                      :participation/role
+                      {:participation/participant ~user-model/user-listing-attributes}]}]
+                  (meeting-db/activity-meeting-id db activity-id meeting-id))
+                :meeting/locked?
+                (meeting-db/locked? db meeting-id))}))
 
 
 (defquery :meeting/activity-meeting-history

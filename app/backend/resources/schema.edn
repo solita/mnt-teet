@@ -1144,7 +1144,7 @@
            :db/cardinality :db.cardinality/many
            :db/doc "Entities this file is attached to."}]]}
 
- {:db/ident :migration/stable-integration-id
+  {:db/ident :migration/stable-integration-id
   :txes [[{:db/ident :integration/id
            :db/cardinality :db.cardinality/one
            :db/valueType :db.type/uuid
@@ -1152,4 +1152,31 @@
            :db/doc "UUID identifier for THK integration that is stable across backup/restore"}]
 
          teet.migration.thk-integration-id/migrate]}
+
+ {:db/ident :migration/review
+  :txes [[{:db/ident :review/of
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "The entity for which this review exists"}
+
+          {:db/ident :review/reviewer
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Reference to the user doing the reviewing"}
+
+          {:db/ident :review/decision
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Only one decision per review"}
+
+          {:db/ident :review/comment
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Comment related to the review"}
+
+          {:db/ident :review.decision/approved
+           :enum/attribute :review/decision}
+
+          {:db/ident :review.decision/rejected
+           :enum/attribute :review/decision}]]}
  ]

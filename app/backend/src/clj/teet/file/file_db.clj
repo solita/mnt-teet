@@ -20,8 +20,11 @@
   "Check preconditions and permissions for attaching file to
   entity of given type and id for the user.
 
-  Return eid to attach to if attaching is allowed, nil if not.
+  Returna a map containing :eid to attach to if attaching is allowed, nil if not.
   May also throw an exception with :error key in the exception.
+
+  Return map may also contain :wrap-tx function which will be used to process
+  the tx-data vector before invoking the transaction.
 
   Default behaviour is to disallow."
   (fn [_db _user _file attach]
@@ -35,11 +38,12 @@
   (fn [_db _user attach]
     (first (check-attach-definition attach))))
 
-(defmulti allow-delete-attachment?
-  "Check preconditions and premissions for deleting an attached file
-  to a given entity.
+(defmulti delete-attachment
+  "Create transaction data for deleting a file attachment.
+  Must check preconditions and permissions for deleting the attached file
+  and throw exception with :error key in the data on failure.
 
-  Default behaviour is to disallow."
+  Default behaviour is to disallow and throw an exception."
   (fn [_db _user _file-id attach]
     (first (check-attach-definition attach))))
 
@@ -53,11 +57,12 @@
   (log/info "Disallow downloading attachments to " entity-type
             " with id " entity-id " for user " user))
 
-(defmethod allow-delete-attachment? :default
+(defmethod delete-attachment :default
   [_db user file-id [entity-type entity-id]]
   (log/info "Disallow deleting attachment " file-id " to "
             entity-type " with id " entity-id " for user " user)
-  false)
+  (throw (ex-info "Delete attachment not allowed"
+                  {:error :not-allowed})))
 
 (defn file-is-attached-to? [db file-id attach]
   (and (valid-attach-definition? attach)

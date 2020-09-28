@@ -49,14 +49,18 @@
              (file-db/attach-to db user file attach-to))]}
   (log/debug "upload-attachment: got project-id" project-id)
 
-  (let [key (new-file-key file)
-        res (tx [(merge (select-keys file file-keys)
-                        {:db/id "new-file"
-                         :file/s3-key key}
-                        (when attach-to
-                          {:file/attached-to (file-db/attach-to db user file
-                                                                attach-to)})
-                        (creation-meta user))])
+  (let [{attach-to-eid :eid
+         wrap-tx :wrap-tx} (when attach-to
+                             (file-db/attach-to db user file attach-to))
+        wrap-tx (or wrap-tx identity)
+        key (new-file-key file)
+        res (tx (wrap-tx
+                 [(merge (select-keys file file-keys)
+                         {:db/id "new-file"
+                          :file/s3-key key}
+                         (when attach-to-eid
+                           {:file/attached-to attach-to-eid})
+                         (creation-meta user))]))
         file-id (get-in res [:tempids "new-file"])]
 
     {:url (file-storage/upload-url key)
@@ -69,13 +73,11 @@
    :payload {:keys [file-id attached-to]}
    :project-id nil
    :authorization {}
-   :pre [(or (and attached-to
-                  (file-db/allow-delete-attachment? db user
-                                                    file-id
-                                                    attached-to)
-                  (file-db/file-is-attached-to? db file-id attached-to))
+   :pre [(or attached-to
              (file-db/own-file? db user file-id))]
-   :transact [(deletion-tx user file-id)]})
+   :transact (if attached-to
+               (file-db/delete-attachment db user file-id attached-to)
+               [(deletion-tx user file-id)])})
 
 (defn- file-with-metadata [{:file/keys [name] :as file}]
   (let [metadata (try
