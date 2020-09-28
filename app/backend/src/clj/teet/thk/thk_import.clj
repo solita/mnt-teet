@@ -13,7 +13,8 @@
             [teet.util.collection :as cu]
             [teet.thk.thk-mapping :as thk-mapping]
             [teet.log :as log]
-            [teet.project.project-db :as project-db])
+            [teet.project.project-db :as project-db]
+            [teet.util.datomic :as du])
   (:import (org.apache.commons.io.input BOMInputStream)))
 
 (def excluded-project-types #{"TUGI" "TEEMU"})
@@ -60,6 +61,17 @@
                   :task/actual-end-date (:activity/actual-end-date task)}))))
         rows))
 
+(defn- lookup
+  "Lookup :db/id and :integration/id for an eid, returns nil if entity doesn't exist."
+  [db eid]
+  (let [result
+        (ffirst
+         (d/q '[:find (pull ?e [:db/id :integration/id])
+                :in $ ?e]
+              db eid))]
+    (when (:db/id result)
+      result)))
+
 (defn project-datomic-attributes [db [project-id rows]]
   (let [prj (first rows)
         phases (group-by :thk.lifecycle/id rows)
@@ -99,26 +111,33 @@
                (for [[id activities] phases
                      :let [phase (first activities)
                            lc-thk-id (:thk.lifecycle/id phase)
+                           {lc-db-id :db/id
+                            lc-integration-id :integration/id} (lookup db [:thk.lifecycle/id lc-thk-id])
                            lc-teet-id (:lifecycle-db-id phase)
                            _ (log/info "Received lifecycle with THK id " lc-thk-id
-                                       (if lc-teet-id
-                                         (str "having TEET id " lc-teet-id)
-                                         "without TEET id => creating new lifecycle"))]]
+                                       (if lc-db-id
+                                         (str "having TEET :db/id " lc-db-id)
+                                         "without TEET id => creating new lifecycle")
+                                       (when lc-teet-id
+                                         (str "having TEET :integration/id " lc-teet-id)))
+                           lc-integration-id (or lc-integration-id
+                                                 (let [new-uuid (java.util.UUID/randomUUID)]
+                                                   (log/info "Creating new UUID for THK lifecycle " lc-thk-id " => " new-uuid)
+                                                   new-uuid))]]
                  (cu/without-nils
                   (merge
                    (select-keys phase #{:thk.lifecycle/type
                                         :thk.lifecycle/estimated-start-date
                                         :thk.lifecycle/estimated-end-date
                                         :thk.lifecycle/id})
-                   (if lc-teet-id
-                     ;; Existing activity
-                     {:integration/id lc-teet-id}
+                   (if lc-db-id
+                     ;; Existing lifecycle; will conflict if integration id and db id point to different entities
+                     {:db/id lc-db-id
+                      :integration/id lc-integration-id}
 
-                     ;; New activity
-                     (let [new-uuid (java.util.UUID/randomUUID)]
-                       (log/info "Creating new UUID for THK lifecycle " lc-thk-id " => " new-uuid)
-                       {:db/id (str "lfc-" id)
-                        :integration/id new-uuid}))
+                     ;; New lifecycle
+                     {:db/id (str "lfc-" id)
+                      :integration/id lc-integration-id})
 
                    {:thk.lifecycle/integration-info (integration-info phase
                                                                       thk-mapping/phase-integration-info-fields)
@@ -131,10 +150,18 @@
                           :when (and id name (nil? task-id))
                           :let [{act-thk-id :thk.activity/id
                                  act-teet-id :activity-db-id} activity
+                                {act-db-id :db/id
+                                 act-integration-id :integration/id} (lookup db [:thk.activity/id act-thk-id])
                                 _ (log/info "Received activity with THK id " act-thk-id
-                                            (if act-teet-id
-                                              (str "having TEET id " act-teet-id)
-                                              "without TEET id => creating new activity"))]]
+                                            (if act-db-id
+                                              (str "having TEET :db/id " act-db-id)
+                                              "without TEET id => creating new activity")
+                                            (when act-integration-id
+                                              (str "having TEET :integration/id " act-integration-id)))
+                                act-integration-id (or act-integration-id
+                                                       (let [new-uuid (java.util.UUID/randomUUID)]
+                                                         (log/info "Creating new UUID for THK activity " act-thk-id " => " new-uuid)
+                                                         new-uuid))]]
                       (merge
                        (cu/without-nils
                         (select-keys activity #{:thk.activity/id
@@ -144,15 +171,14 @@
                                                 :activity/status
                                                 :activity/procurement-nr
                                                 :activity/procurement-id}))
-                       (if act-teet-id
+                       (if act-db-id
                          ;; Existing activity
-                         {:integration/id act-teet-id}
+                         {:db/id act-db-id
+                          :integration/id act-integration-id}
 
                          ;; New activity, create integration id
-                         (let [new-uuid (java.util.UUID/randomUUID)]
-                           (log/info "Creating new UUID for THK activity " act-thk-id " => " new-uuid)
-                           {:db/id (str "act-" id)
-                            :integration/id new-uuid}))
+                         {:db/id (str "act-" id)
+                          :integration/id act-integration-id})
 
                        {:activity/integration-info (integration-info
                                                     activity
