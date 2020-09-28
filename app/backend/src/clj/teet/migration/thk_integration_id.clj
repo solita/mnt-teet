@@ -13,7 +13,7 @@
   [conn]
   (let [db (d/db conn)
         lifecycles (entities-with-attr db :thk.lifecycle/id)
-        activities (entities-with-attr db :thk.activity/id)
+        activities (entities-with-attr db :activity/name)
         tasks (entities-with-attr db :task/send-to-thk?)
         entities (set/union lifecycles activities tasks)]
     (d/transact
