@@ -95,13 +95,6 @@
   [(/ start-m 1000)
    (/ end-m 1000)])
 
-#?(:cljs
-   (defn now []
-     (js/Date.)))
-#?(:clj
-   (defn now []
-     (java.util.Date.)))
-
 (defn active-activity? [now activity]
   (let [start (or (:activity/actual-start-date activity) (:activity/estimated-start-date activity))
         end (or (:activity/actual-end-date activity) (:activity/estimated-end-date activity))
@@ -118,14 +111,14 @@
 (defn active-managers [project]
   (let [acts (mapcat :thk.lifecycle/activities
                      (:thk.project/lifecycles project))
-        active-acts (filterv (partial active-activity? (now)) acts)
+        active-acts (filterv (partial active-activity? (date/now)) acts)
         activity-managers (into #{} (keep :activity/manager active-acts))]
     activity-managers))
 
 
 (defmethod get-column :thk.project/activity-status
   [{:thk.project/keys [lifecycles]} _]  
-  (let [statuses (filterv (partial active-activity? (now))
+  (let [statuses (filterv (partial active-activity? (date/now))
                           (mapcat :thk.lifecycle/activities lifecycles))]
     (if (not-empty statuses)
       statuses

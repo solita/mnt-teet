@@ -16,10 +16,18 @@
   #?(:clj (.after a b)
      :cljs (> a b)))
 
+#?(:cljs
+   (defn now []
+     (js/Date.)))
+#?(:clj
+   (defn now []
+     (java.util.Date.)))
+
+
 (defn date-in-past?
   [date]
   #?(:clj (neg? (.compareTo (to-local-date date) (to-local-date (Date.))))
-     :cljs (t/date-after? (js/Date.) date)))
+     :cljs (t/date-after? (now) date)))
 
 (defn days-until-date
   [date]
