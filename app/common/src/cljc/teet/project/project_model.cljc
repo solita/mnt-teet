@@ -107,9 +107,9 @@
         end (or (:activity/actual-end-date activity) (:activity/estimated-end-date activity))
         verdict (cond
                   (nil? start)  false ;; no start -> inactive
-                  (< now start) false ;; start date in future -> inactive
+                  (date/date-after? start now) false ;; start date in future -> inactive
                   (nil? end)    true  ;; no end but start date in past -> active
-                  (> now end)   false ;; has started and ended -> inactive
+                  (date/date-after? now end)   false ;; has started and ended -> inactive
                   :else         true  ;; has started and not ended -> active
                   )]
     (log/debug "active-activity? start/end" start end "->" verdict)

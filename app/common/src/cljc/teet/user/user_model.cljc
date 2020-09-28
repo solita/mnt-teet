@@ -2,6 +2,7 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.string :as str]
             [teet.log :as log]
+            [teet.util.date :refer [date-after?]]
             [teet.user.user-spec :as user-spec]))
 
 (def user-listing-attributes
@@ -54,10 +55,6 @@
     (throw (ex-info "Not a valid user reference. Expected eid or user info map."
                     {:invalid-user-ref user}))))
 
-
-(defn date-after? [a b]
-  #?(:clj (.after a b)
-     :cljs (> a b)))
 
 (defn permissions-valid-at
   "Returns the user permissions that are valid during the given time."
