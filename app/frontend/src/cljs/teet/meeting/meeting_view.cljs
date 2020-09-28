@@ -40,7 +40,9 @@
             [teet.file.file-view :as file-view]
             [cljs-time.core :as t]
             [cljs-time.coerce :as tc]
-            [teet.ui.query :as query]))
+            [teet.ui.query :as query]
+            [teet.util.datomic :as du]
+            [clojure.set :as set]))
 
 
 (defn meeting-form
@@ -557,35 +559,38 @@
     [:div {:class (<class common-styles/status-circle-style theme-colors/gray-lighter)}]))
 
 (defn participant-approval-status
-  [user review]
-  (let [review (get-in review [:review/decision :db/ident])]
+  [user {:review/keys [comment decision] :as review}]
+  (let [review-decision (:db/ident decision)]
     [:div
-     [:span (pr-str review)]
      [:div.participant {:class (<class common-styles/flex-row)}
       [:div.participant-name {:class (<class common-styles/flex-table-column-style 45)}
-       [approval-status-symbol review]
+       [approval-status-symbol review-decision]
        [:span {:style {:margin-left "0.2rem"}}
         [user-model/user-name user]]]
-      [:div.participant-role {:class (<class common-styles/flex-table-column-style 55)}]]]))
+      [:div.participant-role {:class (<class common-styles/flex-table-column-style 55 :space-between)}
+       [:span comment]
+       [typography/GreyText (format/date-time (:meta/created-at review))]]]]))
 
 (defn reviews
-  [e! {participations :participation/_in                    ;; TODO WHO can actually review? currently lists all participants
-       meeting-reviews :review/_of                          ;;
-       :meeting/keys [organizer]} edit?]
-  [:div
-   [typography/Heading2 {:style {:margin "1.5rem 0"}} "Approvals"]
-   [:div
-    [participant-approval-status organizer (some (fn [{:review/keys [reviewer] :as review}]
-                                                   (when (= (:db/id reviewer) (:db/id organizer))
-                                                     review)) ;;FEELS kinda hacky
-                                                 meeting-reviews)]
-    (doall
-      (for [{:participation/keys [participant] :as participation} participations]
-        ^{:key (:db/id participation)}
-        [participant-approval-status participant (some (fn [{:review/keys [reviewer] :as review}]
-                                                         (when (= (:db/id reviewer) (:db/id participant))
-                                                           review))
-                                                       meeting-reviews)]))]])
+  [{participations :participation/_in
+    meeting-reviews :review/_of
+    :meeting/keys [organizer]}]
+  (let [participations (into [{:db/id "organizer"
+                               :participation/participant organizer}]
+                             (filter (comp #(du/enum= % :participation.role/reviewer)
+                                              :participation/role))
+                             participations)]
+    [:div
+     [typography/Heading2 {:style {:margin "1.5rem 0"}} "Approvals"]
+     [:div
+      [:span (pr-str meeting-reviews)]
+      (doall
+        (for [{:participation/keys [participant] :as participation} participations]
+          ^{:key (str (:db/id participation))}
+          [participant-approval-status participant (some (fn [{:review/keys [reviewer] :as review}]
+                                                           (when (= (:db/id reviewer) (:db/id participant))
+                                                             review))
+                                                         meeting-reviews)]))]]))
 
 (defn review-form
   [e! meeting-id close-event form-atom]
@@ -685,7 +690,7 @@
                                                                                             :user/person-id])}
                                 :modal-title (tr [:meeting :new-agenda-modal-title])
                                 :button-component [buttons/button-primary {} (tr [:meeting :add-agenda-button])]}])
-     [reviews e! meeting edit?]
+     [reviews meeting]
      [review-actions e! meeting]]))
 
 (defn meeting-details [e! user meeting]
@@ -714,8 +719,11 @@
 
 (defn meeting-page [e! {:keys [params user query] :as app} {:keys [project meeting]}]
   [authorization-context/with
-   (when (meeting-model/user-is-organizer-or-reviewer? user meeting)
-     #{:edit-meeting})
+   (set/union
+     (when (meeting-model/user-is-organizer-or-reviewer? user meeting)
+       #{:edit-meeting})
+     (when (meeting-model/locked? meeting)
+       #{:locked}))
    [meeting-page-structure e! app project
     [meeting-main-content e! app meeting]
     [context/consume :user
