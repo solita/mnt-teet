@@ -77,5 +77,5 @@
                             :extra-paths ["src/build"]
                             :extra-deps {:dk.ative/docjure {:mvn/version "1.12.0"}}}
            :clj-nvd  {:extra-deps {clj-nvd {:git/url "https://github.com/miikka/clj-nvd.git"
-                                            :sha "141d54f5304e53f6caa6e3de1677f3cfb04091f4"}}
+                                            :sha "a6fd635e2f9bc61e786d7182fa68f1e19598e325"}}
                       :main-opts ["-m" "clj-nvd.core"]}}}

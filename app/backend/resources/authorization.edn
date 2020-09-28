@@ -68,6 +68,7 @@
  {:admin :full,
   :manager :link,
   :internal-consultant :link,
+  :external-consultant :link,
   :authenticated-guest :link},
  :land/create-land-acquisition {:admin :full, :manager :full},
  :project/edit-permissions
@@ -148,7 +149,7 @@
   :guest :read},
  :activity/create-activity {:admin :full, :manager :full},
  :project/view-internal-comments
- {:admin :full, :manager :full, :internal-consultant :full},
+ {:admin :full, :manager :full, :internal-consultant :link},
  :activity/change-activity-status {:admin :full, :manager :full},
  :project/delete-comments
  {:admin :full, :manager :link, :internal-consultant :link},
@@ -174,8 +175,8 @@
  :document/comment-on-document
  {:admin :full,
   :manager :full,
-  :internal-consultant :link,
-  :external-consultant :link,
+  :internal-consultant :full,
+  :external-consultant :full,
   :authenticated-guest :link},
  :maintenance/write-asset {:admin :full, :manager :full},
  :admin/set-user-role {:admin :full, :manager :link},
@@ -213,8 +214,8 @@
  :document/view-document
  {:admin :full,
   :manager :full,
-  :internal-consultant :link,
-  :external-consultant :link,
+  :internal-consultant :full,
+  :external-consultant :full,
   :authenticated-guest :read,
   :guest :read},
  :maintenance/delete-asset {:admin :full, :manager :full},

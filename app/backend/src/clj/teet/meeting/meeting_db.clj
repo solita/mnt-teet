@@ -100,3 +100,11 @@
                      [?p :participation/participant ?u]
                      [(missing? $ ?p :meta/deleted?)]
                      :in $ ?m ?u] db meeting-id user))))))
+
+(defn agenda-meeting-id [db meeting-agenda-id]
+  (get-in (du/entity db meeting-agenda-id)
+          [:meeting/_agenda :db/id]))
+
+(defn decision-meeting-id [db meeting-decision-id]
+  (get-in (du/entity db meeting-decision-id)
+          [:meeting.agenda/_decisions :meeting/_agenda :db/id]))

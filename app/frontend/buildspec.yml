@@ -5,6 +5,8 @@ env:
     JAVA_HOME: "/usr/lib/jvm/java-8-openjdk-amd64"
     FRONTEND: "app/frontend"
     CHROMIUM_BROWSER: "/opt/google/chrome/chrome"
+  parameter-store:
+    TEET_ENV: "/teet/env"
 
 phases:
   install:

@@ -1,4 +1,5 @@
-(ns teet.file.file-style)
+(ns teet.file.file-style
+  (:require [teet.theme.theme-colors :as theme-colors]))
 
 (defn filter-sorter
   []
@@ -13,3 +14,7 @@
   (if seen?
     {:font-weight :normal}
     {:font-weight :bold}))
+
+(defn file-row-meta []
+  {:font-size "90%"
+   :color theme-colors/gray})

@@ -53,7 +53,18 @@
 
     ;; Other supporting files
     "shx"
-    "lin"})
+    "lin"
+
+    ;; Audio files
+    "wav"
+    "mp3"
+    "ogg"
+    "aac"
+
+    ;; Video files
+    "mov"
+    "mp4"
+    "m4v"})
 
 (def ^:const image-suffixes
   #{"png"

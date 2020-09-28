@@ -119,6 +119,7 @@
         project-id (project-db/lifecycle-project-id db lifecycle-id)]
     (tx-ret [(merge
               {:db/id "new-activity"
+               :integration/id (java.util.UUID/randomUUID)
                :activity/status :activity.status/in-preparation}
               (-> activity
                   (select-keys [:activity/name
@@ -139,6 +140,8 @@
                             :task/group task-group
                             :task/type task-type
                             :task/send-to-thk? send-to-thk?}
+                           (when send-to-thk?
+                             {:integration/id (java.util.UUID/randomUUID)})
                            (meta-model/creation-meta user))))})
               (meta-model/creation-meta user))
              {:db/id lifecycle-id
@@ -166,23 +169,29 @@
          ^{:error :invalid-task-dates}
          (activity-db/valid-task-dates? db id {:task/estimated-start-date estimated-start-date
                                                :task/estimated-end-date estimated-end-date})]
-   :transact (into [(merge
-                     {:db/id id}
-                     (meta-model/modification-meta user))]
-                   (mapcat identity
-                           (for [[task-group task-type send-to-thk?] tasks-to-add]
-                             (let [id-placeholder (str "NEW-TASK-"
-                                                       (name task-group) "-"
-                                                       (name task-type))]
-                               [(merge {:db/id id-placeholder
-                                        :task/estimated-end-date estimated-end-date
-                                        :task/estimated-start-date estimated-start-date
-                                        :task/status :task.status/not-started
-                                        :task/group task-group
-                                        :task/type task-type
-                                        :task/send-to-thk? send-to-thk?}
-                                       (meta-model/creation-meta user))
-                                [:db/add id :activity/tasks id-placeholder]]))))})
+   :transact
+   (let [status (get-in (du/entity db id) [:activity/status :db/ident])]
+     (into [(merge
+             {:db/id id}
+             (when (= status :activity.status/completed)
+               {:activity/status :activity.status/in-progress})
+             (meta-model/modification-meta user))]
+           (mapcat identity
+                   (for [[task-group task-type send-to-thk?] tasks-to-add]
+                     (let [id-placeholder (str "NEW-TASK-"
+                                               (name task-group) "-"
+                                               (name task-type))]
+                       [(merge {:db/id id-placeholder
+                                :task/estimated-end-date estimated-end-date
+                                :task/estimated-start-date estimated-start-date
+                                :task/status :task.status/not-started
+                                :task/group task-group
+                                :task/type task-type
+                                :task/send-to-thk? send-to-thk?}
+                               (when send-to-thk?
+                                 {:integration/id (java.util.UUID/randomUUID)})
+                               (meta-model/creation-meta user))
+                        [:db/add id :activity/tasks id-placeholder]])))))})
 
 
 (defcommand :activity/update

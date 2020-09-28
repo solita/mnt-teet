@@ -153,6 +153,7 @@
                first)
          (d/q '[:find (pull ?f [:db/id :file/name :meta/deleted? :file/version :file/size :file/status
                                 {:file/previous-version [:db/id]}
+                                :meta/created-at
                                 {:meta/creator [:user/id :user/family-name :user/given-name]}])
                 :where
                 [?f :file/upload-complete? true]

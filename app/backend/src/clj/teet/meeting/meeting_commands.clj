@@ -19,23 +19,38 @@
   [db user _file [_ meeting-agenda-id]]
   (when (meeting-db/user-is-organizer-or-reviewer?
          db user
-         (get-in (du/entity db meeting-agenda-id)
-                 [:meeting/_agenda :db/id]))
+         (meeting-db/agenda-meeting-id db meeting-agenda-id))
     meeting-agenda-id))
 
 (defmethod file-db/allow-download-attachments? :meeting-agenda
   [db user [_ meeting-agenda-id]]
   (meeting-db/user-is-participating?
-   db user (get-in (du/entity db meeting-agenda-id)
-                   [:meeting/_agenda :db/id])))
+   db user (meeting-db/agenda-meeting-id db meeting-agenda-id)))
 
 (defmethod file-db/allow-delete-attachment? :meeting-agenda
   [db user _file-id [_ meeting-agenda-id]]
+  (meeting-db/user-is-organizer-or-reviewer?
+   db user
+   (meeting-db/agenda-meeting-id db meeting-agenda-id)))
+
+(defmethod file-db/attach-to :meeting-decision
+  [db user _file [_ meeting-decision-id]]
   (when (meeting-db/user-is-organizer-or-reviewer?
          db user
-         (get-in (du/entity db meeting-agenda-id)
-                 [:meeting/_agenda :db/id]))
-    meeting-agenda-id))
+         (meeting-db/decision-meeting-id db meeting-decision-id))
+    meeting-decision-id))
+
+(defmethod file-db/allow-download-attachments? :meeting-decision
+  [db user [_ meeting-decision-id]]
+  (meeting-db/user-is-participating?
+   db user
+   (meeting-db/decision-meeting-id db meeting-decision-id)))
+
+(defmethod file-db/allow-delete-attachment? :meeting-decision
+  [db user _file-id [_ meeting-decision-id]]
+  (meeting-db/user-is-organizer-or-reviewer?
+   db user
+   (meeting-db/decision-meeting-id db meeting-decision-id)))
 
 ;; TODO query all activity meetings
 ;; matching name found
@@ -157,8 +172,6 @@
                                                     :user/email})
                                    %))))]})
 
-
-
 (defcommand :meeting/send-notifications
   {:doc "Send iCalendar notifications to organizer and participants."
    :context {:keys [db conn user]}
@@ -183,11 +196,12 @@
                                           :cancel? false})
             email-response
             (integration-email/send-email!
-             {:from (environment/ssm-param :email :from)
-              :to to
-              :subject (meeting-model/meeting-title meeting)
-              :parts [{:headers {"Content-Type" "text/calendar; method=request"}
-                       :body ics}]})]
+              {:from (environment/ssm-param :email :from)
+               :to to
+               :subject (str "TEET: koosoleku kutse " (meeting-model/meeting-title meeting) " / "
+                             "TEET: meeting invitation " (meeting-model/meeting-title meeting))
+               :parts [{:headers {"Content-Type" "text/calendar; method=request"}
+                        :body ics}]})]
         (log/info "SES send response" email-response)
         (tx-ret [{:db/id id
                   :meeting/invitations-sent-at (Date.)}]))
@@ -221,7 +235,8 @@
                              (integration-email/send-email!
                                {:from (environment/ssm-param :email :from)
                                 :to to
-                                :subject (meeting-model/meeting-title meeting)
+                                :subject (str "TEET: " (meeting-model/meeting-title meeting) " tühistatud" " / "
+                                              "TEET: " (meeting-model/meeting-title meeting) " cancelled")
                                 :parts [{:headers {"Content-Type" "text/calendar; method=cancel"} ;; RFC 6047 SECTION 2.4
                                          :body ics}]}))]
         (log/info "email response: " (or email-response "no email sent"))))

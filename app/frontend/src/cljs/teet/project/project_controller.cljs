@@ -16,7 +16,6 @@
             [teet.util.collection :as cu]))
 
 (defrecord OpenActivityDialog [lifecycle])                  ; open add activity modal dialog
-(defrecord OpenTaskDialog [activity])
 (defrecord OpenEditProjectDialog [])
 (defrecord OpenEditDetailsDialog [])
 (defrecord PostProjectEdit [on-result-callback])
@@ -720,13 +719,6 @@
            :page             page
            :params           params
            :query            (dissoc query :modal :add :edit :activity :lifecycle :modal-target :modal-page)}))
-
-  OpenTaskDialog
-  (process-event [{activity :activity} {:keys [page params query] :as app}]
-    (-> app
-        (assoc-in [:stepper :dialog] {:type :add-task
-                                      :activity-id activity})
-        (assoc-in [:edit-task-data :task/send-to-thk?] false)))
 
   OpenEditDetailsDialog
   (process-event [_ {:keys [page params query] :as app}]

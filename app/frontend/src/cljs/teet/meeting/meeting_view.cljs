@@ -11,7 +11,7 @@
             [garden.color :refer [lighten as-hex]]
             [teet.task.task-style :as task-style]
             [teet.project.project-style :as project-style]
-            [teet.ui.material-ui :refer [Paper Grid IconButton Divider]]
+            [teet.ui.material-ui :refer [Paper Grid IconButton Divider Link]]
             [teet.ui.buttons :as buttons]
             [teet.ui.form :as form]
             [teet.meeting.meeting-controller :as meeting-controller]
@@ -37,7 +37,10 @@
             [teet.ui.file-upload :as file-upload]
             [teet.file.file-controller :as file-controller]
             [teet.common.common-controller :as common-controller]
-            [teet.file.file-view :as file-view]))
+            [teet.file.file-view :as file-view]
+            [cljs-time.core :as t]
+            [cljs-time.coerce :as tc]
+            [teet.ui.query :as query]))
 
 
 (defn meeting-form
@@ -62,12 +65,153 @@
     ^{:attribute :meeting/organizer}
     [select/select-user {:e! e!}]]])
 
-(defn meetings-page-content
+(defn activity-meetings-decisions
   [e! activity]
+  [:h1 "decisions"])
+
+
+
+(defn meeting-information
+  [{:meeting/keys [start location end title] :as meeting}]
+  [:div {:class (<class common-styles/flex-row-space-between)}
+
+   [:div {:style {:display :flex}}
+    [:div {:style {:width "120px"
+                   :margin-right "0.5rem"}}
+     [:span (str (format/time* start)
+                 "–"
+                 (format/time* end))]]
+    [:div [url/Link {:page :meeting :params {:meeting (str (:db/id meeting))}}
+           title]]]
+   [:div {:style {:text-align :right}}
+    [typography/GreyText location]]])
+
+
+(defn meetings-by-month-year
+  [meetings]
+  (let [month-year-meetings (group-by
+                              (fn [meeting]
+                                (if-let [meeting-start (:meeting/start meeting)]
+                                  (format/localized-month-year meeting-start)
+                                  "no date given"))
+                              meetings)]
+    (when (seq meetings)
+      [:div {:class (<class common-styles/margin-bottom 1)}
+       (doall
+         (for [[key value] month-year-meetings]
+           ^{:key key}
+           [:div {:class (<class common-styles/margin-bottom 1)}
+            [typography/Heading2 {:class (<class common-styles/margin-bottom 0.5)}
+             key]
+            (doall
+              (for [[date meetings]
+                    (group-by
+                      (fn [meeting]
+                        (format/date (:meeting/start meeting)))
+                      value)]
+                ^{:key date}
+                [:div {:class (<class common-styles/margin-bottom 1)}
+                 [typography/Heading3 {:class (<class common-styles/margin-bottom 0.5)}
+                  date]
+                 (doall
+                   (for [meeting meetings]
+                     ^{:key (:db/id meeting)}
+                     [meeting-information meeting]))]))]))])))
+
+
+(defn activity-meeting-history-view
+  [e! meetings]
+  [:div
+   [meetings-by-month-year (sort-by
+                             :meeting/start
+                             (fn [x y]
+                               (t/after? (tc/from-date x)
+                                          (tc/from-date y)))
+                             meetings)]])
+
+(defn historical-activity-meetings
+  [e! activity]
+  [query/query {:e! e!
+                :query :meeting/activity-meeting-history
+                :args {:activity-eid (:db/id activity)}
+                :simple-view [activity-meeting-history-view e!]}])
+
+
+(defn meeting-with-time-slot
+  [meetings]
+  (let [today-date (tc/to-local-date (t/now))]
+    (mapv (fn [{:meeting/keys [start] :as meeting}]
+            (let [start-date (tc/from-date start)]
+              (cond
+                (t/equal? (tc/to-local-date start-date) today-date)
+                (assoc meeting :meeting/time-slot :today)
+
+                (and (= (t/week-number-of-year start-date)
+                        (t/week-number-of-year today-date))
+                     (= (t/week-year start-date)
+                        (t/week-year today-date)))
+                (assoc meeting :meeting/time-slot :this-week)
+                :else
+                (assoc meeting :meeting/time-slot :rest))))
+          (sort-by :meeting/start meetings))))
+
+(defn upcoming-activity-meetings
+  [activity]
+  (let [{:keys [today this-week rest]}
+        (group-by
+          (fn [meeting]
+            (:meeting/time-slot meeting))
+          (meeting-with-time-slot (:activity/meetings activity)))
+        this-week-by-days-of-week
+        (group-by
+          (fn [meeting]
+            (if-let [meeting-start (:meeting/start meeting)]
+              (format/date meeting-start)
+              "No date given"))
+          this-week)]
+    [:div
+     [:div {:class (<class common-styles/margin-bottom 1)}
+      [typography/Heading2 {:class (<class common-styles/margin-bottom 0.5)}
+       (tr [:common :today])]
+      (if (seq today)
+        (doall
+          (for [meeting today]
+            ^{:key (:db/id meeting)}
+            [meeting-information meeting]))
+        [typography/GreyText (tr [:meeting :no-meetings])])]
+     [:div {:class (<class common-styles/margin-bottom 1)}
+      [typography/Heading2 {:class (<class common-styles/margin-bottom 0.5)}
+       (tr [:common :this-week])]
+      [:div
+       (if (seq this-week-by-days-of-week)
+         (doall
+           (for [[date meetings] this-week-by-days-of-week]
+             ^{:key date}
+             [:div {:class (<class common-styles/margin-bottom 1)}
+              [:div {:style {:display :flex}}
+               [typography/Heading3 {:class (<class common-styles/margin-bottom 0.5)}
+                (format/localized-day-of-the-week (format/date-string->date date))]
+               [typography/GreyText {:style {:margin-left "0.5rem"}}
+                date]]
+              (doall
+                (for [meeting meetings]
+                  ^{:key (:db/id meeting)}
+                  [meeting-information meeting]))]))
+         [typography/GreyText (tr [:meeting :no-meetings])])]]
+     [meetings-by-month-year rest]]))
+
+
+(defn activity-meetings-page-content
+  [e! activity {:keys [query] :as app}]
   [:div
    [typography/Heading1 (tr [:meeting :activity-meetings-title]
                             {:activity-name
-                             (tr-enum (:activity/name activity))})]])
+                             (tr-enum (:activity/name activity))})]
+   [tabs/tabs
+    query
+    [[:upcoming [upcoming-activity-meetings activity]]
+     [:history [historical-activity-meetings e! activity]]
+     [:decisions [activity-meetings-decisions e! activity]]]]])
 
 (defn activity-meetings-list
   [{:keys [e! dark-theme? disable-buttons? user rect-button]}
@@ -105,7 +249,7 @@
           ;; group tasks by the task group
           (group-by (fn [meeting]
                       (if-let [meeting-start (:meeting/start meeting)]
-                        (localization/localized-month-year meeting-start)
+                        (format/localized-month-year meeting-start)
                         "No date for meeting"               ;; TODO add localization
                         ))
                     (sort-by :meeting/start meetings)))]
@@ -170,7 +314,7 @@
   "Page structure showing project navigator along with content."
   [e! {{:keys [activity]} :params :as app} project]
   [meeting-page-structure e! app project
-   [meetings-page-content e! (project-model/activity-by-id project activity)]
+   [activity-meetings-page-content e! (project-model/activity-by-id project activity) app]
    [:h1 "participants"]])
 
 (defn meeting-list [meetings]
@@ -351,46 +495,66 @@
                             :button-component [buttons/button-primary {} (tr [:meeting :add-decision-button])]}]])
 
 
-(defn- meeting-agenda-content [e! {id :db/id
-                                   body :meeting.agenda/body
-                                   files :file/_attached-to}]
-
+(defn- file-attachments [{:keys [e! drag-container-id drop-message attach-to files]}]
   [project-context/consume
    (fn [{project-id :db/id}]
-     [:div {:id (str "agenda-" id)}
-      (when body
-        [:div
-         [rich-text-editor/display-markdown body]])
+     [:<>
 
       [typography/BoldGreyText (tr [:common :files])]
       [file-view/file-table
        {:filtering? false
         :actions? true
         :no-link? true
-        :attached-to [:meeting-agenda id]
-        :columns #{:suffix :download :delete}
+        :attached-to attach-to
+        :columns #{:suffix :download :delete :meta}
         :delete-action (fn [file]
                          (e! (file-controller/map->DeleteAttachment
                               {:file-id (:db/id file)
                                :success-message (tr [:document :file-deleted-notification])
-                               :attached-to [:meeting-agenda id]})))}
+                               :attached-to attach-to})))}
        files]
 
       [authorization-context/when-authorized :edit-meeting
        [file-upload/FileUpload
-        {:id (str "agenda-" id "-upload")
-         :drag-container-id (str "agenda-" id)
-         :drop-message (tr [:drag :drop-to-meeting-agenda])
+        {:id (str drag-container-id "-upload")
+         :drag-container-id drag-container-id
+         :drop-message drop-message
          :on-drop #(e! (file-controller/map->UploadFiles
                         {:files %
                          :project-id project-id
                          :attachment? true
-                         :attach-to [:meeting-agenda id]
+                         :attach-to attach-to
                          :on-success common-controller/->Refresh}))}
         [buttons/button-primary
          {:start-icon (r/as-element [icons/file-cloud-upload])
           :component :span}
          (tr [:task :upload-files])]]]])])
+
+(defn- meeting-agenda-content [e! {id :db/id
+                                   body :meeting.agenda/body
+                                   files :file/_attached-to}]
+
+  [:div {:id (str "agenda-" id)}
+   (when body
+     [:div
+      [rich-text-editor/display-markdown body]])
+
+   [file-attachments {:e! e!
+                      :drag-container-id (str "agenda-" id)
+                      :drop-message (tr [:drag :drop-to-meeting-agenda])
+                      :attach-to [:meeting-agenda id]
+                      :files files}]])
+
+(defn- meeting-decision-content [e! {id :db/id
+                                     body :meeting.decision/body
+                                     files :file/_attached-to}]
+  [:div {:id (str "decision-" id)}
+   [rich-text-editor/display-markdown body]
+   [file-attachments {:e! e!
+                      :drag-container-id (str "decision-" id)
+                      :drop-message (tr [:drag :drop-to-meeting-decision])
+                      :attach-to [:meeting-decision id]
+                      :files files}]])
 
 (defn meeting-details*
   [e! user {:meeting/keys [start end location agenda] :as meeting} rights]
@@ -433,8 +597,7 @@
                                              :modal-title (tr [:meeting :edit-decision-modal-title])
                                              :button-component [buttons/button-secondary {:size :small}
                                                                 (tr [:buttons :edit])]}])
-                         :content [rich-text-editor/display-markdown
-                                   (:meeting.decision/body decision)]})
+                         :content [meeting-decision-content e! decision]})
                       decisions)
            :after-children-component (when edit?
                                        [add-decision-component e! meeting agenda-topic])}
@@ -457,7 +620,6 @@
 
 (defn meeting-main-content
   [e! {:keys [params user query]} meeting]
-  (println "rendering meeting-main-content")
   (let [{:meeting/keys [title number]} meeting]
     [:div
      [:div {:class (<class common-styles/heading-and-action-style)}
