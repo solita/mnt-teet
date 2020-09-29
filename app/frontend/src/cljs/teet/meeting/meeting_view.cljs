@@ -48,8 +48,9 @@
 (defn update-meeting-warning?
   [show?]
   (when show?
-    [typography/WarningText {:class (<class common-styles/margin-bottom 1)}
-     (tr [:meeting :reviews-invalidated-warning-text])]))
+    [:div {:class (<class common-styles/margin-bottom 1)}
+     [typography/WarningText
+      (tr [:meeting :reviews-invalidated-warning-text])]]))
 
 (defn meeting-form
   [e! activity-id close-event form-atom]
