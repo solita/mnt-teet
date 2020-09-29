@@ -27,17 +27,18 @@
 
 (defn activity-past-meetings
   [db activity-eid]
-  (mapv first
-        (d/q '[:find (pull ?m [* :activity/_meetings])
-               :where
-               [?a :activity/meetings ?m]
-               [?m :meeting/start ?start]
-               [(.before ?start ?today)]
-               [(missing? $ ?m :meta/deleted?)]
-               :in $ ?a ?today]
-             db
-             activity-eid
-             (du/start-of-today))))
+  (->> (d/q '[:find (pull ?m [* :activity/_meetings])
+              :where
+              [?a :activity/meetings ?m]
+              [?m :meeting/start ?start]
+              [(.before ?start ?today)]
+              [(missing? $ ?m :meta/deleted?)]
+              :in $ ?a ?today]
+            db
+            activity-eid
+            (du/start-of-today))
+       (mapv first)
+       (sort-by :meeting/start #(.after %1 %2))))
 
 (defn fetch-project-meetings
   [db eid]

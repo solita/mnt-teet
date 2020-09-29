@@ -307,6 +307,20 @@
                (meeting-db/decision-meeting-id db decision-id)
                [(meta-model/deletion-tx user decision-id)])})
 
+(defn user-previous-reviews-retract-tx
+  [db meeting-id user-id]
+  (->> (d/q '[:find ?r
+              :where
+              [?r :review/of ?m]
+              [?r :review/reviewer ?u]
+              :in $ ?m ?u]
+            db
+            meeting-id
+            user-id)
+       (mapv first)
+       (mapv (fn [entity-id]
+               [:db/retractEntity entity-id]))))
+
 (defcommand :meeting/review
   {:doc "Either approve or reject the meeting"
    :context {:keys [db user]}
@@ -315,8 +329,9 @@
    :authorization {}
    :pre [[(meeting-db/user-is-organizer-or-reviewer?
             db user meeting-id)]]
-   :transact [(merge {:db/id (or (:db/id form-data) "new-review")
-                      :review/reviewer (user-model/user-ref user)
-                      :review/of meeting-id}
-                     (select-keys form-data [:review/comment :review/decision])
-                     (meta-model/creation-meta user))]})
+   :transact (into [(merge {:db/id (or (:db/id form-data) "new-review")
+                              :review/reviewer (user-model/user-ref user)
+                              :review/of meeting-id}
+                             (select-keys form-data [:review/comment :review/decision])
+                             (meta-model/creation-meta user))]
+                     (user-previous-reviews-retract-tx db meeting-id (:db/id user)))})

@@ -12,10 +12,23 @@
          (.atZone (ZoneId/systemDefault))
          .toLocalDate)))
 
+#?(:cljs
+   (defn now []
+     (js/Date.)))
+#?(:clj
+   (defn now []
+     (java.util.Date.)))
+
+
+
+(defn date-after? [a b]
+  #?(:clj (.after a b)
+     :cljs (> a b)))
+
 (defn date-in-past?
   [date]
   #?(:clj (neg? (.compareTo (to-local-date date) (to-local-date (Date.))))
-     :cljs (t/before? date (js/Date.))))
+     :cljs (date-after? (now) date)))
 
 (defn days-until-date
   [date]
