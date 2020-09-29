@@ -71,3 +71,33 @@
      [create-user-form e! form]
      [buttons/button-primary {:on-click (e! admin-controller/->CreateUser)}
       (tr [:admin :create-user])])])
+
+(defn- inspector-value [link? value]
+  (if link?
+    [:a {:href (str "#/admin/inspect/" (:db/id value))}
+     (str (:db/id value))]
+    (str value)))
+
+(defn inspector-page [e! {query :query} {:keys [entity ref-attrs]}]
+  [:div
+   [Table {}
+    [TableHead {}
+     [TableRow
+      [TableCell {} "Attribute"]
+      [TableCell {} "Value"]]]
+    [TableBody {}
+     (doall
+      (for [[k v] (sort-by first (seq entity))
+            :let [link? (ref-attrs k)]]
+        ^{:key (str k)}
+        [TableRow {}
+         [TableCell {} (str k)]
+         [TableCell {}
+          (if (vector? v)
+            [:ul
+             (doall
+              (map-indexed
+               (fn [i v]
+                 ^{:key (str i)}
+                 [:li [inspector-value link? v]]) v))]
+            [inspector-value link? v])]]))]]])

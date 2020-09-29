@@ -1,5 +1,7 @@
 (ns teet.admin.admin-queries
-  (:require [teet.db-api.core :as db-api :refer [defquery]]))
+  (:require [teet.db-api.core :as db-api :refer [defquery]]
+            [teet.user.user-model :as user-model]
+            [datomic.client.api :as d]))
 
 (defquery :admin/list-users
   {:doc "List users who have been given access"
@@ -16,3 +18,47 @@
             :where [?e :user/id _]]
    :args [db]
    :result-fn (partial mapv first)})
+
+(defn- user-is-admin? [db user]
+  (boolean
+   (seq (d/q '[:find ?u :where [?u :user/roles ?role] :in $ ?u ?role]
+             db
+             (user-model/user-ref user)
+             :admin))))
+
+(defn- ref-attrs [db data]
+  (into #{}
+        (map first)
+        (d/q '[:find ?attr
+               :where [?attr :db/valueType :db.type/ref]
+               :in $ [?attr ...]]
+             db
+             (keys (dissoc data :db/id)))))
+
+(defn- linked-from [db id]
+  (let [links (group-by :a (d/datoms db {:index :vaet :components [id]}))]
+    (into {}
+          (keep (fn [[attr datoms]]
+                  (let [{:db/keys [ident valueType]}
+                        (d/pull db [:db/ident :db/valueType] attr)]
+                    (when (= :db.type/ref (:db/ident valueType))
+                      [ident
+                       (reduce (fn [links datom]
+                                 (if (:added datom)
+                                   (conj links (:e datom))
+                                   (disj links (:e datom))))
+                               #{} datoms)]))))
+          links)))
+
+(defquery :admin/entity-info
+  {:doc "Pull all information about an entity"
+   :context {:keys [user db]}
+   :args {id :db/id}
+   :project-id nil
+   :authorization {}
+   :pre [^{:error :unauthorized}
+         (user-is-admin? db user)]}
+  (let [entity (d/pull db '[*] id)]
+    {:entity entity
+     :ref-attrs (ref-attrs db entity)
+     :linked-from (linked-from db id)}))
