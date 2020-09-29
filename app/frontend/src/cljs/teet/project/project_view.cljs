@@ -294,59 +294,70 @@
      (contains-nils? activity-managers)
      (empty? activity-managers))))
 
-(defn- project-owner-and-managers [owner lifecycles show-history?]
-  (let [now (js/Date.)
-        active-manager (fn [manager name]
-                          {:primary-text (user-model/user-name manager)
-                           :secondary-text (tr [:roles :manager])
-                           :tertiary-text [:span (tr-enum name)
-                                           [:div.activity-manager-active
-                                            {:class [(<class common-styles/green-text)
-                                                     (<class common-styles/inline-block)
-                                                     (<class common-styles/margin-left 1)]}
-                                            (tr [:people-tab :active])]]})]
-    [itemlist/gray-bg-list
-     (util/with-keys
-       (into [{:primary-text (str (:user/given-name owner) " " (:user/family-name owner))
-               :secondary-text (tr [:roles :owner])}]
-             ;; All activity owners
-             (mapcat (fn [{activities :thk.lifecycle/activities}]
-                       (if show-history?
-                         (mapcat (fn [{:activity/keys [manager-history manager name]}]
-                                   (if (and (empty? manager-history) manager)
-                                     ;; No manager history, manager has been set when created
-                                     ;; and has never been changed
-                                     [(active-manager manager name)]
 
-                                     ;; Has histories containing previous and current managers
-                                     (for [{:keys [manager period]} manager-history
-                                           :let [[start end] period]]
-                                       {:primary-text (user-model/user-name manager)
-                                        :secondary-text (tr [:roles :manager])
-                                        :tertiary-text [:span (tr-enum name)
-                                                        (if (and (or (nil? start) (<= start now))
-                                                                 (or (nil? end) (>= end now)))
-                                                          [:div.activity-manager-active
-                                                           {:class [(<class common-styles/green-text)
-                                                                    (<class common-styles/inline-block)
-                                                                    (<class common-styles/margin-left 1)]}
-                                                           (tr [:people-tab :active])]
-                                                          [:div.activity-manager-inactive
-                                                           {:class [(<class common-styles/gray-text)
-                                                                    (<class common-styles/inline-block)
-                                                                    (<class common-styles/margin-left 1)]}
-                                                           (str (and start (format/date start))
-                                                                "\u2013"
-                                                                (and end (format/date end)))])]})))
-                                 activities)
-                         ;; else - show-history? = false
-                         (for [{:activity/keys [manager name]
-                                id :db/id} activities
-                               :when manager]
-                           (with-meta
-                             (active-manager manager name)
-                             {:key (str id)})))))
-             lifecycles))]))
+(defn active-manager [manager name]
+  {:primary-text (user-model/user-name manager)
+   :secondary-text (tr [:roles :manager])
+   :tertiary-text [:span (tr-enum name) ;; activity name
+                   [:div.activity-manager-active
+                    {:class [(<class common-styles/green-text)
+                             (<class common-styles/inline-block)
+                             (<class common-styles/margin-left 1)]}
+                    (tr [:people-tab :active])]]})
+
+(defn manager-history [manager name manager-history]
+  (for [{:keys [manager period]} manager-history
+        :let [[start end] period
+              now (js/Date.)]]
+    {:primary-text (user-model/user-name manager)
+     :secondary-text (tr [:roles :manager])
+     :tertiary-text [:span (tr-enum name)
+                     (if (and (or (nil? start) (<= start now))
+                              (or (nil? end) (>= end now)))
+                       [:div.activity-manager-active
+                        {:class [(<class common-styles/green-text)
+                                 (<class common-styles/inline-block)
+                                 (<class common-styles/margin-left 1)]}
+                        (tr [:people-tab :active])]
+                       [:div.activity-manager-inactive
+                        {:class [(<class common-styles/gray-text)
+                                 (<class common-styles/inline-block)
+                                 (<class common-styles/margin-left 1)]}
+                        (str (and start (format/date start))
+                             "\u2013"
+                             (and end (format/date end)))])]}))
+
+(defn project-owner-and-managers* [owner lifecycles show-history?]
+  (into [{:primary-text (or (user-model/user-name owner) (tr [:common :unassigned])) 
+          :secondary-text (tr [:roles :owner])}]
+        ;; All activity owners        
+        (mapcat         
+         (fn [{activities :thk.lifecycle/activities}]
+           (if show-history?
+             (mapcat (fn [{:activity/keys [manager-history manager name]}]
+                       (if (and (empty? manager-history) manager)
+                         ;; No manager history, manager has been set when created
+                         ;; and has never been changed
+                         [(active-manager manager name)]
+                         ;; Has histories containing previous and current managers
+                         [(manager-history manager name manager-history)]))
+                     activities)
+             ;; else - show-history? = false
+             (for [{:activity/keys [manager name]
+                    id :db/id} activities
+                   :when manager]
+               (with-meta
+                 (active-manager manager name)
+                 {:key (str id)})))))
+        lifecycles))
+
+(defn project-owner-and-managers [owner lifecycles show-history? project-managers-info-missing?]  
+  [itemlist/gray-bg-list
+   (util/with-keys (concat
+                    (project-owner-and-managers* owner lifecycles show-history?)
+                    (when project-managers-info-missing?
+                      [{:primary-text (tr [:common :unassigned]) 
+                        :secondary-text (tr [:roles :manager])}])))])
 
 (defmethod project-menu/project-tab-content :people
   [_ e! {query :query :as _app}
@@ -357,7 +368,8 @@
     [:div.project-people-tab
 
      [:div.people-tab-managers
-      [project-owner-and-managers owner lifecycles @show-history?]
+      [typography/Heading2 (tr [:project :management])]
+      [project-owner-and-managers owner lifecycles @show-history? (project-managers-info-missing project)]
       (when has-history?
         [Link {:on-click #(swap! show-history? not)
                :style {:cursor :pointer}}

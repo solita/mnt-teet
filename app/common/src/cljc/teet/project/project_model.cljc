@@ -9,6 +9,7 @@
             [teet.project.task-model :as task-model]
             [clojure.spec.alpha :as s]
             [teet.util.collection :as cu]
+            [taoensso.timbre :as log]
             [teet.util.date :as date]))
 
 ;; A valid project id is either the :db/id in datomic or
@@ -47,6 +48,7 @@
                                      :activity/estimated-start-date
                                      :activity/name
                                      :activity/status
+                                     {:activity/manager [:user/given-name :user/family-name]}
                                      :meta/deleted?
                                      {:activity/tasks [:db/id
                                                        :task/status
@@ -93,9 +95,35 @@
   [(/ start-m 1000)
    (/ end-m 1000)])
 
+(defn active-activity? [now activity]
+  (let [start (or (:activity/actual-start-date activity) (:activity/estimated-start-date activity))
+        end (or (:activity/actual-end-date activity) (:activity/estimated-end-date activity))
+        verdict (cond
+                  (nil? start)  false ;; no start -> inactive
+                  (date/date-after? start now) false ;; start date in future -> inactive
+                  (nil? end)    true  ;; no end but start date in past -> active
+                  (date/date-after? now end)   false ;; has started and ended -> inactive
+                  :else         true  ;; has started and not ended -> active
+                  )]
+    (log/debug "active-activity? start/end" start end "->" verdict)
+    verdict)) 
+
+(defn active-managers [project]
+  (let [acts (mapcat :thk.lifecycle/activities
+                     (:thk.project/lifecycles project))
+        active-acts (filterv (partial active-activity? (date/now)) acts)
+        activity-managers (into #{} (keep :activity/manager active-acts))]
+    activity-managers))
+
+
 (defmethod get-column :thk.project/activity-status
-  [{:thk.project/keys [lifecycles]} _]
-  (mapcat :thk.lifecycle/activities lifecycles))
+  [{:thk.project/keys [lifecycles]} _]  
+  (let [statuses (filterv (partial active-activity? (date/now))
+                          (mapcat :thk.lifecycle/activities lifecycles))]
+    (if (not-empty statuses)
+      statuses
+      ;; else
+      nil)))
 
 (defmethod get-column :thk.project/effective-km-range [{:thk.project/keys [start-m end-m custom-start-m custom-end-m]} _]
   [(/ (or custom-start-m start-m) 1000)
@@ -112,7 +140,23 @@
     name))
 
 (defmethod get-column :thk.project/owner-info [project]
-  (some-> project :thk.project/owner user-model/user-name))
+  (str
+   (or (some-> project :thk.project/owner user-model/user-name)
+       "-")
+   (let [managers (active-managers project)]     
+     (log/debug "get-column owner-info: active-managers was" (pr-str managers)
+                ;; " - lifecycle count" (count (keep :thk.project/lifecycles project))
+                "keys" (-> project
+                           :thk.project/lifecycles
+                           first
+                           :thk.lifecycle/activities
+                           first
+                           keys)
+                )
+     (str " / "
+          (if (not-empty managers)
+            (clojure.string/join ", " (map user-model/user-name managers))
+            "-")))))
 
 (defn filtered-projects [projects filters]
   (filter (fn [project]
