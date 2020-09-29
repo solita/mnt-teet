@@ -49,7 +49,7 @@
   [show?]
   (when show?
     [typography/WarningText {:class (<class common-styles/margin-bottom 1)}
-     (tr [:meeting :reviews-validated-warning-text])]))
+     (tr [:meeting :reviews-invalidated-warning-text])]))
 
 (defn meeting-form
   [e! activity-id close-event form-atom]
@@ -103,17 +103,22 @@
     (when (seq meetings)
       [:div {:class (<class common-styles/margin-bottom 1)}
        (doall
-         (for [[key value] month-year-meetings]
-           ^{:key key}
+         (for [[month-year meetings] month-year-meetings]
+           ^{:key month-year}
            [:div {:class (<class common-styles/margin-bottom 1)}
             [typography/Heading2 {:class (<class common-styles/margin-bottom 0.5)}
-             key]
+             month-year]
             (doall
               (for [[date meetings]
-                    (group-by
-                      (fn [meeting]
-                        (format/date (:meeting/start meeting)))
-                      value)]
+                    (->> meetings
+                         (sort-by
+                           :meeting/start
+                           (fn [x y]
+                             (t/after? (tc/from-date x)
+                                       (tc/from-date y))))
+                         (group-by
+                           (fn [meeting]
+                             (format/date (:meeting/start meeting)))))]
                 ^{:key date}
                 [:div {:class (<class common-styles/margin-bottom 1)}
                  [typography/Heading3 {:class (<class common-styles/margin-bottom 0.5)}
