@@ -302,6 +302,8 @@
   "Permission for this user is already granted",
   :conflicting-activities
   "Only one activity of a type can be active at the same time.",
+  :meeting-is-locked
+  "The meeting is accepted and can no longer be changed",
   :request-timeout "The server did not respond.",
   :invalid-activity-dates "Check activity dates",
   :bad-request "Bad request"},
