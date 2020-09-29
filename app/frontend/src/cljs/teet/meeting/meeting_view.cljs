@@ -116,14 +116,14 @@
             (doall
               (for [[date meetings]
                     (->> meetings
-                         (sort-by
-                           :meeting/start
-                           (fn [x y]
-                             (t/after? (tc/from-date x)
-                                       (tc/from-date y))))
                          (group-by
                            (fn [meeting]
-                             (format/date (:meeting/start meeting)))))]
+                             (format/date (:meeting/start meeting))))
+                         (sort-by                           ;; gets [date-string meetings] sort the dates
+                           first
+                           (fn [x y]
+                             (t/after? (tc/from-date (format/date-string->date x))
+                                       (tc/from-date (format/date-string->date y))))))]
                 ^{:key date}
                 [:div {:class (<class common-styles/margin-bottom 1)}
                  [typography/Heading3 {:class (<class common-styles/margin-bottom 0.5)}
