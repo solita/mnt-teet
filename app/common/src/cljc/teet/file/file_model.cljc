@@ -75,7 +75,7 @@
     "ecw"})
 
 (defn filename->suffix [filename]
-  (-> filename (str/split #"\.") last))
+  (-> filename (str/split #"\.") last str/lower-case))
 
 (defn valid-suffix? [filename]
   (-> filename filename->suffix upload-allowed-file-suffixes boolean))
