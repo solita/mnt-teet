@@ -501,8 +501,9 @@
   [project-context/consume
    (fn [{project-id :db/id}]
      [:<>
-
-      [typography/BoldGreyText (tr [:common :files])]
+      [typography/BoldGreyText
+       {:style {:margin "1rem 0"}}
+       (tr [:common :files])]
       [file-view/file-table
        {:filtering? false
         :actions? true
@@ -511,9 +512,9 @@
         :columns #{:suffix :download :delete :meta}
         :delete-action (fn [file]
                          (e! (file-controller/map->DeleteAttachment
-                              {:file-id (:db/id file)
-                               :success-message (tr [:document :file-deleted-notification])
-                               :attached-to attach-to})))}
+                               {:file-id (:db/id file)
+                                :success-message (tr [:document :file-deleted-notification])
+                                :attached-to attach-to})))}
        files]
 
       [authorization-context/when-authorized :edit-meeting
