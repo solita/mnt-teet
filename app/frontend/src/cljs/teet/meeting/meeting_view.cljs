@@ -45,10 +45,15 @@
             [clojure.set :as set]))
 
 
+(defn update-meeting-warning?
+  [show?]
+  (when show?
+    [typography/WarningText {:class (<class common-styles/margin-bottom 1)}
+     (tr [:meeting :reviews-validated-warning-text])]))
+
 (defn meeting-form
   [e! activity-id close-event form-atom]
   [:<>
-   ;[:span (pr-str @form-atom)]                            ;debug form values
    [form/form (merge
                 {:e! e!
                  :value @form-atom
@@ -70,8 +75,6 @@
 (defn activity-meetings-decisions
   [e! activity]
   [:h1 "decisions"])
-
-
 
 (defn meeting-information
   [{:meeting/keys [start location end title] :as meeting}]
@@ -358,6 +361,8 @@
 
 (defn agenda-form [e! meeting close-event form-atom]
   [:<>
+   [context/consume :reviews?
+    [update-meeting-warning?]]
    [form/form (merge {:e! e!
                       :value @form-atom
                       :on-change-event (form/update-atom-event form-atom merge)
@@ -403,7 +408,10 @@
           non-teet? (:non-teet-user? @form)]
       [:div.new-participant
        [:div
-        [typography/BoldGreyText (tr [:meeting :add-person])]
+        [typography/BoldGreyText {:style {:margin-bottom "1rem"}}
+         (tr [:meeting :add-person])]
+        [context/consume :reviews?
+         [update-meeting-warning?]]
         ;; Split in to 2 forms so we can have separate specs for each
         (if non-teet?
           ^{:key "non-teet-user"}
@@ -470,24 +478,27 @@
 
 (defn decision-form
   [e! agenda-eid close-event form-atom]
-  [form/form (merge {:e! e!
-                     :value @form-atom
-                     :on-change-event (form/update-atom-event form-atom merge)
-                     :cancel-event close-event
-                     :spec :meeting/decision-form
-                     :save-event #(meeting-controller/->SubmitDecisionForm
-                                    agenda-eid
-                                    (-> @form-atom
-                                        (update :meeting.decision/body
-                                                (fn [editor-state]
-                                                  (when (and editor-state (not (string? editor-state)))
-                                                    (rich-text-editor/editor-state->markdown editor-state)))))
-                                    close-event)}
-                    (when (:db/id @form-atom)
-                      {:delete (meeting-controller/->DeleteDecision (:db/id @form-atom) close-event)}))
+  [:<>
+   [context/consume :reviews?
+    [update-meeting-warning?]]
+   [form/form (merge {:e! e!
+                      :value @form-atom
+                      :on-change-event (form/update-atom-event form-atom merge)
+                      :cancel-event close-event
+                      :spec :meeting/decision-form
+                      :save-event #(meeting-controller/->SubmitDecisionForm
+                                     agenda-eid
+                                     (-> @form-atom
+                                         (update :meeting.decision/body
+                                                 (fn [editor-state]
+                                                   (when (and editor-state (not (string? editor-state)))
+                                                     (rich-text-editor/editor-state->markdown editor-state)))))
+                                     close-event)}
+                     (when (:db/id @form-atom)
+                       {:delete (meeting-controller/->DeleteDecision (:db/id @form-atom) close-event)}))
 
-   ^{:attribute :meeting.decision/body}
-   [rich-text-editor/rich-text-field {}]])
+    ^{:attribute :meeting.decision/body}
+    [rich-text-editor/rich-text-field {}]]])
 
 (defn add-decision-component
   [e! meeting agenda-topic]
@@ -725,7 +736,8 @@
      (set/union
        (when edit-rights?
          #{:edit-meeting}))
-     [meeting-page-structure e! app project
-      [meeting-main-content e! app meeting]
-      [context/consume :user
-       [meeting-participants e! meeting edit-rights?]]]]))
+     [context/provide :reviews? (seq (:review/_of meeting))
+      [meeting-page-structure e! app project
+       [meeting-main-content e! app meeting]
+       [context/consume :user
+        [meeting-participants e! meeting edit-rights?]]]]]))

@@ -21,6 +21,10 @@
    :color theme-colors/gray
    :font-weight :bold})
 
+(defn- warning-text-style
+  []
+  {:color theme-colors/warning})
+
 (def Heading1 (util/make-component Typography {:variant "h1"}))
 
 (def Heading2 (util/make-component Typography {:variant "h2"}))
@@ -40,3 +44,5 @@
 (def GreyText (util/make-component :span {:class (<class grey-text-style)}))
 
 (def BoldGreyText (util/make-component :span {:class (<class dark-grey-text-style)}))
+
+(def WarningText (util/make-component :p {:class (<class warning-text-style)}))

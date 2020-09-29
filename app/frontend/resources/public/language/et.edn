@@ -518,6 +518,7 @@
   :add-agenda-button "Lisan päevakavapunkti",
   :approvals "Kinnitused",
   :new-decision-modal-title "Uue otsuse lisamine",
+  :reviews-invalidated-warning-text nil,
   :edit-decision-modal-title "Otsuse muutmine",
   :new-meeting-button "Loon uue koosoleku",
   :project-meetings-title "Projekti koosolekud",
