@@ -54,24 +54,28 @@
 
 (defn meeting-form
   [e! activity-id close-event form-atom]
-  [:<>
-   [form/form (merge
-                {:e! e!
-                 :value @form-atom
-                 :on-change-event (form/update-atom-event form-atom merge)
-                 :cancel-event close-event
-                 :spec :meeting/form-data
-                 :save-event #(meeting-controller/->SubmitMeetingForm activity-id @form-atom close-event)}
-                (when (:db/id @form-atom)
-                  {:delete (meeting-controller/->CancelMeeting activity-id (:db/id @form-atom) close-event)}))
-    ^{:attribute :meeting/title}
-    [TextField {}]
-    ^{:attribute :meeting/location}
-    [TextField {}]
-    ^{:attribute [:meeting/start :meeting/end]}
-    [date-picker/date-time-range-input {}]
-    ^{:attribute :meeting/organizer}
-    [select/select-user {:e! e!}]]])
+  (let [editing? (:db/id @form-atom)]
+    [:<>
+     (when editing?
+       [context/consume :reviews?
+        [update-meeting-warning?]])
+     [form/form (merge
+                  {:e! e!
+                   :value @form-atom
+                   :on-change-event (form/update-atom-event form-atom merge)
+                   :cancel-event close-event
+                   :spec :meeting/form-data
+                   :save-event #(meeting-controller/->SubmitMeetingForm activity-id @form-atom close-event)}
+                  (when editing?
+                    {:delete (meeting-controller/->CancelMeeting activity-id (:db/id @form-atom) close-event)}))
+      ^{:attribute :meeting/title}
+      [TextField {}]
+      ^{:attribute :meeting/location}
+      [TextField {}]
+      ^{:attribute [:meeting/start :meeting/end]}
+      [date-picker/date-time-range-input {}]
+      ^{:attribute :meeting/organizer}
+      [select/select-user {:e! e!}]]]))
 
 (defn activity-meetings-decisions
   [e! activity]
