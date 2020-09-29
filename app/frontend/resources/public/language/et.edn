@@ -518,7 +518,8 @@
   :add-agenda-button "Lisan päevakavapunkti",
   :approvals "Kinnitused",
   :new-decision-modal-title "Uue otsuse lisamine",
-  :reviews-invalidated-warning-text nil,
+  :reviews-invalidated-warning-text
+  "Muutes koosoleku sisu tühistatakse kõik juba antud kinnitused.",
   :edit-decision-modal-title "Otsuse muutmine",
   :new-meeting-button "Loon uue koosoleku",
   :project-meetings-title "Projekti koosolekud",
@@ -662,7 +663,7 @@
  {:details "Üksikasjad",
   :notes "Märkused",
   :upcoming "Eesolevad",
-  :history "Olnud",
+  :history "Möödunud",
   :decisions "Otsused"},
  :task
  {:task-overview "Ülesande ülevaade",
