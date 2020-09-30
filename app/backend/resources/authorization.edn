@@ -149,7 +149,7 @@
   :guest :read},
  :activity/create-activity {:admin :full, :manager :full},
  :project/view-internal-comments
- {:admin :full, :manager :full, :internal-consultant :link},
+ {:admin :full, :manager :full, :internal-consultant :full},
  :activity/change-activity-status {:admin :full, :manager :full},
  :project/delete-comments
  {:admin :full, :manager :link, :internal-consultant :link},
