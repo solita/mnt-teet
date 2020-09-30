@@ -1180,18 +1180,24 @@
           {:db/ident :review.decision/rejected
            :enum/attribute :review/decision}]]}
 
- {:db/ident :migration/link-entity-or-external
+ {:db/ident :migration/link-with-type
   :txes [[{:db/ident :link/from
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
            :db/doc "The entity this link originates from."}
+
+          {:db/ident :link/type
+           :db/valueType :db.type/keyword
+           :db/cardinality :db.cardinality/one
+           :db/doc "Keyword describing the role of the destination entity. May be entity type or external datasource name."}
+
           {:db/ident :link/to
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
-           :db/doc "The destination entity this link points to."}
-          {:db/ident :link/to-external
-           :db/valueType :db.type/tuple
-           :db/tupleTypes [:db.type/keyword :db.type/string]
+           :db/doc "The destination entity this link points to. When link type points to an internal entity"}
+
+          {:db/ident :link/external-id
+           :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
-           :db/doc "The destination in an external datasource. Contains keyword naming the datasource and identifier in the datasource."}]]}
+           :db/doc "Id of destination in the external datasource referred to by link type"}]]}
  ]
