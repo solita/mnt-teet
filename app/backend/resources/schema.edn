@@ -1179,4 +1179,14 @@
 
           {:db/ident :review.decision/rejected
            :enum/attribute :review/decision}]]}
+
+ {:db/ident :migration/link-entity
+  :txes [[{:db/ident :link/from
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "The entity this link originates from."}
+          {:db/ident :link/to
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "The destination entity this link points to."}]]}
  ]
