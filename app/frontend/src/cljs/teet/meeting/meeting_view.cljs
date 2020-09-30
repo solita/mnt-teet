@@ -585,13 +585,15 @@
   (let [review-decision (:db/ident decision)]
     [:div
      [:div.participant {:class (<class common-styles/flex-row)}
-      [:div.participant-name {:class (<class common-styles/flex-table-column-style 45)}
+      [:div.participant-name {:class (<class common-styles/flex-table-column-style 30)}
        [approval-status-symbol review-decision]
        [:span {:style {:margin-left "0.2rem"}}
         [user-model/user-name user]]]
-      [:div.participant-role {:class (<class common-styles/flex-table-column-style 55 :space-between)}
-       [:span comment]
-       [typography/GreyText (format/date-time (:meta/created-at review))]]]]))
+      [:div.participant-comment {:class (<class common-styles/flex-table-column-style 70 :space-between)}
+       [:p comment]
+       [typography/GreyText
+        {:style {:margin-left "0.5rem"}}
+        (format/date-time (:meta/created-at review))]]]]))
 
 (defn reviews
   [{participations :participation/_in
