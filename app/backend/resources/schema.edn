@@ -1180,7 +1180,7 @@
           {:db/ident :review.decision/rejected
            :enum/attribute :review/decision}]]}
 
- {:db/ident :migration/link-entity
+ {:db/ident :migration/link-entity-or-external
   :txes [[{:db/ident :link/from
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
@@ -1188,5 +1188,10 @@
           {:db/ident :link/to
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
-           :db/doc "The destination entity this link points to."}]]}
+           :db/doc "The destination entity this link points to."}
+          {:db/ident :link/to-external
+           :db/valueType :db.type/tuple
+           :db/tupleTypes [:db.type/keyword :db.type/string]
+           :db/cardinality :db.cardinality/one
+           :db/doc "The destination in an external datasource. Contains keyword naming the datasource and identifier in the datasource."}]]}
  ]
