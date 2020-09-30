@@ -1,5 +1,7 @@
 # TEET backend app
 
+release-v43.20.09.2
+
 Backend app hosts the index page and SPA application JS.
 
 # Environment variables
