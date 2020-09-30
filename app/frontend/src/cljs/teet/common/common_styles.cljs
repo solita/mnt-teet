@@ -164,7 +164,6 @@
     :border-width "2px 2px 0 0"
     :flex-grow grow
     :flex-shrink 0
-    :word-break :break-all
     :display :flex
     :align-items :center
     :padding "0.5rem 0.25rem"

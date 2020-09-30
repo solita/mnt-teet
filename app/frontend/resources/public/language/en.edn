@@ -525,7 +525,7 @@
   :approvals "Approvals",
   :new-decision-modal-title "Create a new decision",
   :reviews-invalidated-warning-text
-  "If this meeting is changed all existing reviews will be invalidated.",
+  "If this meeting is changed all existing approvals will be invalidated.",
   :edit-decision-modal-title "Edit decision",
   :new-meeting-button "Create meeting",
   :project-meetings-title "Project meetings",
