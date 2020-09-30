@@ -7,7 +7,9 @@
             [datomic.client.api :as d]
             [clojure.walk :as walk]
             [teet.util.date :as du]
-            [teet.meeting.meeting-model :as meeting-model]))
+            [teet.meeting.meeting-model :as meeting-model]
+            [teet.localization :refer [with-language tr-enum]]
+            [teet.util.string :as string]))
 
 
 (defn project-upcoming-meetings
@@ -122,3 +124,34 @@
    :project-id (project-db/activity-project-id db activity-eid)
    :authorization {}}
   (activity-past-meetings db activity-eid))
+
+
+(defquery :meeting/search-link-task
+  {:doc "Search tasks that can be linked to meeting"
+   :context {:keys [db user]}
+   :args {:keys [meeting-id text lang]}
+   :project-id (project-db/meeting-project-id db meeting-id)
+   :authorization {}}
+  (with-language lang
+    (let [project (project-db/meeting-project-id db meeting-id)
+
+          all-project-tasks
+          (d/q '[:find (pull ?t [:task/type :db/id])
+                 :where
+                 [?p :thk.project/lifecycles ?l]
+                 [?l :thk.lifecycle/activities ?a]
+                 [?a :activity/tasks ?t]
+                 [(missing? $ ?t :meta/deleted)]
+                 :in $ ?p]
+               db project)
+
+          matching-project-tasks
+          (into []
+                (comp
+                 (map first)
+                 (map #(assoc % :searchable-text (tr-enum (:task/type %))))
+                 (filter #(string/contains-words? (:searchable-text %)
+                                                  text)))
+                all-project-tasks)]
+
+      matching-project-tasks)))
