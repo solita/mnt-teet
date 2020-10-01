@@ -32,9 +32,7 @@
         com.cognitect.aws/ssm {:mvn/version "798.2.672.0"}
         com.cognitect.aws/s3 {:mvn/version "799.2.682.0"}
         com.cognitect.aws/sts {:mvn/version "798.2.678.0"}
-        com.cognitect.aws/logs {:mvn/version "798.2.672.0"}
-
-        teet/common {:local/root "../common"}}
+        com.cognitect.aws/logs {:mvn/version "798.2.672.0"}}
 
 
 
@@ -43,8 +41,11 @@
              "datomic-cloud" {:url "s3://datomic-releases-1fc2183a/maven/releases"}
 
              }
- :paths ["src/clj" "../common/src/cljc" "../common/src/clj" "resources"
-         "../frontend/resources/public/language"]
+ :paths ["src/clj"
+         "resources"
+         "common/src/cljc"
+         "common/src/clj"
+         "common/resources"]
  :aliases {:ion {:extra-deps {com.datomic/ion-dev {:mvn/version "0.9.276"}}}
            :dev {:extra-deps {com.datomic/ion-dev {:mvn/version "0.9.276"}
                               org.clojure/tools.namespace {:mvn/version "0.3.1"}
