@@ -527,7 +527,7 @@
    [select/select-search
     {:e! e!
      :query (fn [text]
-              {:args {:lang :en  ;; FIXME: take current language
+              {:args {:lang @localization/selected-language
                       :text text
                       :from from}
                :query :meeting/search-link-task})
