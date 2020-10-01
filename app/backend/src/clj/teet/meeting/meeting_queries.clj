@@ -151,7 +151,16 @@
                  (map first)
                  (map #(assoc % :searchable-text (tr-enum (:task/type %))))
                  (filter #(string/contains-words? (:searchable-text %)
-                                                  text)))
+                                                  text))
+                 (map :db/id))
                 all-project-tasks)]
 
-      matching-project-tasks)))
+      (mapv
+       first
+       (d/q '[:find (pull ?t [:db/id :task/type
+                              :task/estimated-start-date
+                              :task/estimated-end-date
+                              {:task/assignee [:user/given-name :user/family-name]}
+                              {:activity/_tasks [:activity/name]}])
+              :in $ [?t ...]]
+            db matching-project-tasks)))))
