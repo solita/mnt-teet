@@ -518,11 +518,15 @@
                             :button-component [buttons/button-primary {} (tr [:meeting :add-decision-button])]}]])
 
 
+(defn- link [{:link/keys [type info]}]
+  [:div "Link to " (name type) ": " (pr-str info)])
+
 (defn- links
   "List links to other entities (like tasks).
   Shows input for adding new links."
   [{:keys [e! links from]}]
   [:div.links
+   (mapc link links)
    (tr [:link :search])
    [select/select-search
     {:e! e!
@@ -575,14 +579,16 @@
 
 (defn- meeting-agenda-content [e! {id :db/id
                                    body :meeting.agenda/body
-                                   files :file/_attached-to}]
+                                   files :file/_attached-to
+                                   links-from :link/_from}]
 
   [:div {:id (str "agenda-" id)}
    (when body
      [:div
       [rich-text-editor/display-markdown body]])
 
-   [links {:e! e! :links nil
+   [links {:e! e!
+           :links links-from
            :from [:meeting-agenda id]}]
 
    [file-attachments {:e! e!
