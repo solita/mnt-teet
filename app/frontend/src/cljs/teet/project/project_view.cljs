@@ -259,7 +259,7 @@
   [:div {:style {:margin-bottom "1rem"}}
    [:div {:class (<class common-styles/heading-and-action-style)}
     [typography/Heading2 (tr [:people-tab :consultants])]]
-   (log/debug "assignees:" (pr-str assignees))
+   #_(log/debug "assignees:" (pr-str assignees))
    (mapc (fn [[activity assignees]]
            [common/hierarchical-container
             {:heading-color theme-colors/gray
@@ -286,7 +286,7 @@
                      (:thk.project/lifecycles project))
         activity-managers (mapv :activity/manager acts)
         owner (:thk.project/owner project)]
-    (log/debug "people info-missing badge tests:" (nil? owner)
+    #_(log/debug "people info-missing badge tests:" (nil? owner)
                (contains-nils? activity-managers)
                (empty? activity-managers) " - managers:" activity-managers)
     (or
@@ -305,7 +305,7 @@
                              (<class common-styles/margin-left 1)]}
                     (tr [:people-tab :active])]]})
 
-(defn manager-history [manager name manager-history]
+(defn manager-history-display [manager name manager-history]
   (for [{:keys [manager period]} manager-history
         :let [[start end] period
               now (js/Date.)]]
@@ -336,11 +336,12 @@
            (if show-history?
              (mapcat (fn [{:activity/keys [manager-history manager name]}]
                        (if (and (empty? manager-history) manager)
-                         ;; No manager history, manager has been set when created
-                         ;; and has never been changed
+                         ;; No manager history, manager has been set
+                         ;; when created and has never been changed
                          [(active-manager manager name)]
-                         ;; Has histories containing previous and current managers
-                         [(manager-history manager name manager-history)]))
+                         ;; Has histories containing previous and current
+                         ;; managers                         
+                         (manager-history-display manager name manager-history)))
                      activities)
              ;; else - show-history? = false
              (for [{:activity/keys [manager name]
