@@ -9,7 +9,8 @@
             [teet.util.date :as du]
             [teet.meeting.meeting-model :as meeting-model]
             [teet.localization :refer [with-language tr-enum]]
-            [teet.util.string :as string]))
+            [teet.util.string :as string]
+            [teet.link.link-db :as link-db]))
 
 
 (defn project-upcoming-meetings
@@ -76,6 +77,8 @@
                    :meta/created-at
                    {:meta/creator [:user/given-name :user/family-name]}]})
 
+(def links {:link/_from [:link/to :link/type]})
+
 (defquery :meeting/fetch-meeting
   {:doc "Fetch a single meeting info and project info"
    :context {:keys [db user]}
@@ -87,34 +90,38 @@
   (meta-query/without-deleted
     db
     {:project (fetch-project-meetings db (project-db/activity-project-id db activity-id)) ;; This ends up pulling duplicate information, could be refactored
-     :meeting (assoc
+     :meeting (link-db/expand-links
+               db
+               (assoc
                 (d/pull
-                  db
-                  `[:db/id
-                    :meeting/title :meeting/location
-                    :meeting/start :meeting/end
-                    :meeting/number
-                    {:meeting/organizer ~user-model/user-listing-attributes}
-                    {:meeting/agenda [:db/id
-                                      :meeting.agenda/topic
-                                      :meeting.agenda/body
-                                      {:meeting.agenda/decisions
-                                       [:db/id :meeting.decision/body
-                                        ~attachments]}
-                                      {:meeting.agenda/responsible ~user-model/user-listing-attributes}
-                                      ~attachments]}
-                    {:review/_of [:db/id
-                                  :review/comment
-                                  :review/decision
-                                  :meta/created-at
-                                  {:review/reviewer ~user-model/user-listing-attributes}]}
-                    {:participation/_in
-                     [:db/id
-                      :participation/role
-                      {:participation/participant ~user-model/user-listing-attributes}]}]
-                  (meeting-db/activity-meeting-id db activity-id meeting-id))
+                 db
+                 `[:db/id
+                   :meeting/title :meeting/location
+                   :meeting/start :meeting/end
+                   :meeting/number
+                   {:meeting/organizer ~user-model/user-listing-attributes}
+                   {:meeting/agenda [:db/id
+                                     :meeting.agenda/topic
+                                     :meeting.agenda/body
+                                     {:meeting.agenda/decisions
+                                      [:db/id :meeting.decision/body
+                                       ~attachments
+                                       ~links]}
+                                     {:meeting.agenda/responsible ~user-model/user-listing-attributes}
+                                     ~attachments
+                                     ~links]}
+                   {:review/_of [:db/id
+                                 :review/comment
+                                 :review/decision
+                                 :meta/created-at
+                                 {:review/reviewer ~user-model/user-listing-attributes}]}
+                   {:participation/_in
+                    [:db/id
+                     :participation/role
+                     {:participation/participant ~user-model/user-listing-attributes}]}]
+                 (meeting-db/activity-meeting-id db activity-id meeting-id))
                 :meeting/locked?
-                (meeting-db/locked? db meeting-id))}))
+                (meeting-db/locked? db meeting-id)))}))
 
 
 (defquery :meeting/activity-meeting-history
