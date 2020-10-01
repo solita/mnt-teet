@@ -179,7 +179,7 @@
 
 (defonce estonian-translations
   (delay
-    (-> "et.edn"
+    (-> "public/language/et.edn"
         io/resource io/reader slurp
         read-string)))
 
