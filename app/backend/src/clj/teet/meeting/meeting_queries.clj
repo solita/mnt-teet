@@ -125,15 +125,19 @@
    :authorization {}}
   (activity-past-meetings db activity-eid))
 
+(defn link-from->project [db [type id]]
+  (case type
+    :meeting-agenda (project-db/agenda-project-id db id)
+    :meeting-decision (project-db/decision-project-id db id)))
 
 (defquery :meeting/search-link-task
   {:doc "Search tasks that can be linked to meeting"
    :context {:keys [db user]}
-   :args {:keys [meeting-id text lang]}
-   :project-id (project-db/meeting-project-id db meeting-id)
+   :args {:keys [from text lang]}
+   :project-id (link-from->project db from)
    :authorization {}}
   (with-language lang
-    (let [project (project-db/meeting-project-id db meeting-id)
+    (let [project (link-from->project db from)
 
           all-project-tasks
           (d/q '[:find (pull ?t [:task/type :db/id])
