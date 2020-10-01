@@ -12,7 +12,8 @@
             #?(:cljs [postgrest-ui.display :as postgrest-display])
             #?(:cljs [alandipert.storage-atom :refer [local-storage]])
             [teet.util.string :as string]
-            [teet.log :as log]))
+            [teet.log :as log]
+            #?(:clj [clojure.java.io :as io])))
 
 (defn dev-mode? []
   #?(:clj false
@@ -46,8 +47,8 @@
          (.then #(reader/read-string %))
          (.then callback))
      :clj
-     (-> (str "../frontend/resources/public/language/" (name language) ".edn")
-         slurp read-string
+     (-> (str "public/language/" (name language) ".edn")
+         io/resource slurp read-string
          callback)))
 
 (defn load-language!

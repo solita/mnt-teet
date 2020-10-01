@@ -3,7 +3,7 @@
         hiccup {:mvn/version "1.0.5"}
         com.taoensso/timbre {:mvn/version "4.10.0"}
         clj-time {:mvn/version "0.15.2"}
-        
+
         ;; Data formats
         cheshire {:mvn/version "5.9.0"}
         org.clojure/data.csv {:mvn/version "0.1.4"}
@@ -32,7 +32,9 @@
         com.cognitect.aws/ssm {:mvn/version "798.2.672.0"}
         com.cognitect.aws/s3 {:mvn/version "799.2.682.0"}
         com.cognitect.aws/sts {:mvn/version "798.2.678.0"}
-        com.cognitect.aws/logs {:mvn/version "798.2.672.0"}}
+        com.cognitect.aws/logs {:mvn/version "798.2.672.0"}
+
+        teet/common {:local/root "../common"}}
 
 
 
