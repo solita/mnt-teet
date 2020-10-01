@@ -518,6 +518,25 @@
                             :button-component [buttons/button-primary {} (tr [:meeting :add-decision-button])]}]])
 
 
+(defn- links
+  "List links to other entities (like tasks).
+  Shows input for adding new links."
+  [{:keys [e! links from]}]
+  [:div.links
+   (tr [:link :search])
+   [select/select-search
+    {:e! e!
+     :query (fn [text]
+              {:args {:lang :en  ;; FIXME: take current language
+                      :text text
+                      :from from}
+               :query :meeting/search-link-task})
+     :format-result (fn [{:task/keys [type assignee estimated-end-date]}]
+                      [:div {:class (<class common-styles/flex-row-space-between)}
+                       [:div (tr-enum type)]
+                       [:div (user-model/user-name assignee)]
+                       [:div (format/date estimated-end-date)]])}]])
+
 (defn- file-attachments [{:keys [e! drag-container-id drop-message attach-to files]}]
   [project-context/consume
    (fn [{project-id :db/id}]
@@ -533,9 +552,9 @@
         :columns #{:suffix :download :delete :meta}
         :delete-action (fn [file]
                          (e! (file-controller/map->DeleteAttachment
-                               {:file-id (:db/id file)
-                                :success-message (tr [:document :file-deleted-notification])
-                                :attached-to attach-to})))}
+                              {:file-id (:db/id file)
+                               :success-message (tr [:document :file-deleted-notification])
+                               :attached-to attach-to})))}
        files]
 
       [authorization-context/when-authorized :edit-meeting
@@ -562,6 +581,9 @@
    (when body
      [:div
       [rich-text-editor/display-markdown body]])
+
+   [links {:e! e! :links nil
+           :from [:meeting-agenda id]}]
 
    [file-attachments {:e! e!
                       :drag-container-id (str "agenda-" id)
