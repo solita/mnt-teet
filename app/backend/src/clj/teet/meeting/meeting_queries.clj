@@ -43,6 +43,27 @@
        (mapv first)
        (sort-by :meeting/start #(.after %1 %2))))
 
+(defn activity-decisions
+  [db activity-id]
+  (->> (d/q '[:find
+              (pull ?m [* :activity/_meetings
+                        {:review/_of
+                         [{:review/reviewer [:user/given-name
+                                             :user/family-name]}]}])
+              (max ?cr)
+              :where
+              [?a :activity/meetings ?m]
+              [?m :meeting/agenda ?ag]
+              [?m :meeting/locked? true]
+              [?ag :meeting.agenda/decisions ?d]
+              [?r :review/of ?m]
+              [?r :meta/created-at ?cr]
+              :in $ ?a]
+            db activity-id)
+       (map #(assoc (first %) :meeting/locked-at (second %)))
+       (sort-by :meeting/start)
+       reverse))
+
 (defn fetch-project-meetings
   [db eid]
   (let [activity-meetings (group-by
@@ -131,6 +152,14 @@
    :project-id (project-db/activity-project-id db activity-eid)
    :authorization {}}
   (activity-past-meetings db activity-eid))
+
+(defquery :meeting/activity-decision-history
+  {:doc "Fetch all the decisions for activity"
+   :context {:keys [db user]}
+   :args {:keys [activity-id]}
+   :project-id (project-db/activity-project-id db activity-id)
+   :authorization {}}
+  (activity-decisions db activity-id))
 
 (defn link-from->project [db [type id]]
   (case type

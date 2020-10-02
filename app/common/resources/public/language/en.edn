@@ -306,7 +306,9 @@
   "The meeting is accepted and can no longer be changed",
   :request-timeout "The server did not respond.",
   :invalid-activity-dates "Check activity dates",
-  :bad-request "Bad request"},
+  :bad-request "Bad request",
+  :meeting-has-no-decisions
+  "The meeting doesn't contain anything to review"},
  :fields
  {:land-acquisition/registry-number "State estate registry number",
   :comment/visibility "Visibility",
@@ -534,6 +536,7 @@
   :new-agenda-modal-title "New topic",
   :reject-meeting-button "Reject decisions",
   :add-person "Add person",
+  :approved-by "Approved by {approvers}",
   :notifications-sent "Calendar notification sent",
   :decision-topic "{topic} decision #{num}"},
  :notifications

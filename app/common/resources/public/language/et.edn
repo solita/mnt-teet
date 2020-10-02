@@ -301,7 +301,8 @@
   :meeting-is-locked nil,
   :request-timeout "Ei saanud serveriga ühendust",
   :invalid-activity-dates "Kontrolli tegevuse kuupäevi",
-  :bad-request "Vigane päring"},
+  :bad-request "Vigane päring",
+  :meeting-has-no-decisions nil},
  :fields
  {:land-acquisition/registry-number "Riigivara registrinumber",
   :comment/visibility "Nähtavus",
@@ -528,6 +529,7 @@
   :new-agenda-modal-title "Uus päevakavapunkt",
   :reject-meeting-button "Lükkan tagasi",
   :add-person "Osaleja lisamine",
+  :approved-by nil,
   :notifications-sent "Kalendri teavitus saadetud",
   :decision-topic "{topic} otsus #{num}"},
  :notifications

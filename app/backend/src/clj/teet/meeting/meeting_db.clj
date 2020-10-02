@@ -144,8 +144,45 @@
        (mapv (fn [entity-id]
                [:db/retractEntity entity-id]))))
 
+(defn users-review-retractions
+  [db user-id meeting-id]
+  (->> (d/q '[:find ?r
+              :where
+              [?r :review/of ?m]
+              [?r :review/reviewer ?u]
+              :in $ ?m ?u]
+            db
+            meeting-id
+            user-id)
+       (mapv first)
+       (mapv (fn [entity-id]
+               [:db/retractEntity entity-id]))))
+
+(defn will-review-lock-meeting?
+  "Check if the given review will lock the meeting being reviewed"
+  [db {:review/keys [decision reviewer of]}]
+  (if (= decision :review.decision/approved)
+    (let [reviewers (reviewer-ids db of)
+          approvers (conj (approved-by-users db of) reviewer)]
+      (= reviewers approvers))
+    false))
+
 (defn locked?
   [db meeting-id]
-  (let [reviewers (reviewer-ids db meeting-id)
-        approvers (approved-by-users db meeting-id)]
-    (= reviewers approvers)))
+  (-> (d/pull db '[:meeting/locked?] meeting-id)
+      :meeting/locked?
+      boolean))
+
+(defn has-decisions?
+  "Checks if the given meeting has any decisions made on it"
+  [db meeting-id]
+  (-> (d/q '[:find ?m
+             :where
+             [?m :meeting/agenda ?a]
+             [?a :meeting.agenda/decisions ?d]
+             [(missing? $ ?d :meta/deleted?)]
+             :in $ ?m]
+           db
+           meeting-id)
+      seq
+      boolean))

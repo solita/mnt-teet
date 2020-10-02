@@ -77,6 +77,96 @@
       ^{:attribute :meeting/organizer}
       [select/select-user {:e! e!}]]]))
 
+(defn- file-attachments [{:keys [e! drag-container-id drop-message attach-to files]}]
+  [project-context/consume
+   (fn [{project-id :db/id}]
+     [:<>
+      [typography/BoldGreyText
+       {:style {:margin "1rem 0"}}
+       (tr [:common :files])]
+      [file-view/file-table
+       {:filtering? false
+        :actions? true
+        :no-link? true
+        :attached-to attach-to
+        :columns #{:suffix :download :delete :meta}
+        :delete-action (fn [file]
+                         (e! (file-controller/map->DeleteAttachment
+                               {:file-id (:db/id file)
+                                :success-message (tr [:document :file-deleted-notification])
+                                :attached-to attach-to})))}
+       files]
+
+      [authorization-context/when-authorized :edit-meeting
+       [file-upload/FileUpload
+        {:id (str drag-container-id "-upload")
+         :drag-container-id drag-container-id
+         :drop-message drop-message
+         :on-drop #(e! (file-controller/map->UploadFiles
+                         {:files %
+                          :project-id project-id
+                          :attachment? true
+                          :attach-to attach-to
+                          :on-success common-controller/->Refresh}))}
+        [buttons/button-primary
+         {:start-icon (r/as-element [icons/file-cloud-upload])
+          :component :span}
+         (tr [:task :upload-files])]]]])])
+
+(defn- meeting-decision-content [e! {id :db/id
+                                     body :meeting.decision/body
+                                     files :file/_attached-to}]
+  [:div {:id (str "decision-" id)}
+   [rich-text-editor/display-markdown body]
+   [file-attachments {:e! e!
+                      :drag-container-id (str "decision-" id)
+                      :drop-message (tr [:drag :drop-to-meeting-decision])
+                      :attach-to [:meeting-decision id]
+                      :files files}]])
+
+(defn decision-history-view
+  [e! meetings]
+  [:div
+   [:div
+    ;;[TextField {:label "Search"}]
+    (doall
+      (for [{reviews :review/_of
+             :meeting/keys [title start end location agenda locked-at] :as meeting} meetings]
+        ^{:key (str (:db/id meeting))}
+        [common/hierarchical-container2
+         {:open? true
+          :heading [:div.meeting-heading {:style {:color :white}}
+                    [typography/Heading3 title]
+                    [:p (format/date-with-time-range start end) " " location]]
+          :heading-button [url/Link
+                           {:page :meeting :params {:meeting (str (:db/id meeting))}
+                            :component buttons/button-secondary}
+                           (tr [:dashboard :open])]
+          :children (map-indexed
+                      (fn [i {:meeting.agenda/keys [topic decisions] :as agenda}]
+                        {:key (str (:db/id agenda))
+                         :open? true
+                         :heading [:div
+                                   [typography/Heading3 topic]
+                                   [:p (tr [:meeting :approved-by]
+                                           {:approvers
+                                            (str/join ", " (map
+                                                             #(user-model/user-name (:review/reviewer %))
+                                                             reviews))})
+                                    [:strong " " (format/date locked-at)]]]
+                         :children (map-indexed
+                                     (fn [i decision]
+                                       {:key (:db/id decision)
+                                        :open? true
+                                        :heading [typography/Heading3
+                                                  (tr [:meeting :decision-topic] {:topic topic
+                                                                                  :num (inc i)})]
+                                        :content [meeting-decision-content e! decision]})
+                                     decisions)
+                         :color theme-colors/gray-light})
+                      agenda)}
+         theme-colors/gray]))]])
+
 (defn activity-meetings-decisions
   [e! activity]
   [:h1 "decisions"])
@@ -541,42 +631,6 @@
                        [:div (user-model/user-name assignee)]
                        [:div (format/date estimated-end-date)]])}]])
 
-(defn- file-attachments [{:keys [e! drag-container-id drop-message attach-to files]}]
-  [project-context/consume
-   (fn [{project-id :db/id}]
-     [:<>
-      [typography/BoldGreyText
-       {:style {:margin "1rem 0"}}
-       (tr [:common :files])]
-      [file-view/file-table
-       {:filtering? false
-        :actions? true
-        :no-link? true
-        :attached-to attach-to
-        :columns #{:suffix :download :delete :meta}
-        :delete-action (fn [file]
-                         (e! (file-controller/map->DeleteAttachment
-                              {:file-id (:db/id file)
-                               :success-message (tr [:document :file-deleted-notification])
-                               :attached-to attach-to})))}
-       files]
-
-      [authorization-context/when-authorized :edit-meeting
-       [file-upload/FileUpload
-        {:id (str drag-container-id "-upload")
-         :drag-container-id drag-container-id
-         :drop-message drop-message
-         :on-drop #(e! (file-controller/map->UploadFiles
-                        {:files %
-                         :project-id project-id
-                         :attachment? true
-                         :attach-to attach-to
-                         :on-success common-controller/->Refresh}))}
-        [buttons/button-primary
-         {:start-icon (r/as-element [icons/file-cloud-upload])
-          :component :span}
-         (tr [:task :upload-files])]]]])])
-
 (defn- meeting-agenda-content [e! {id :db/id
                                    body :meeting.agenda/body
                                    files :file/_attached-to
@@ -660,28 +714,20 @@
 
 (defn review-actions
   [e! meeting]
-  [:div {:class (<class common-styles/padding-bottom 2)}
-   [form/form-modal-button {:form-component [review-form e! (:db/id meeting)]
-                            :form-value {:review/decision :review.decision/approved}
-                            :modal-title (tr [:meeting :approve-meeting-modal-title])
-                            :button-component [buttons/button-green {:style {:margin-right "1rem"}}
-                                               (tr [:meeting :approve-meeting-button])]}]
-   [form/form-modal-button {:form-component [review-form e! (:db/id meeting)]
-                            :form-value {:review/decision :review.decision/rejected}
-                            :modal-title (tr [:meeting :reject-meeting-modal-title])
-                            :button-component [buttons/button-warning {}
-                                               (tr [:meeting :reject-meeting-button])]}]])
-
-(defn- meeting-decision-content [e! {id :db/id
-                                     body :meeting.decision/body
-                                     files :file/_attached-to}]
-  [:div {:id (str "decision-" id)}
-   [rich-text-editor/display-markdown body]
-   [file-attachments {:e! e!
-                      :drag-container-id (str "decision-" id)
-                      :drop-message (tr [:drag :drop-to-meeting-decision])
-                      :attach-to [:meeting-decision id]
-                      :files files}]])
+  (when (some
+          #(seq (:meeting.agenda/decisions %))              ;; check that the meeting has decisions
+          (:meeting/agenda meeting))
+    [:div {:class (<class common-styles/padding-bottom 2)}
+     [form/form-modal-button {:form-component [review-form e! (:db/id meeting)]
+                              :form-value {:review/decision :review.decision/approved}
+                              :modal-title (tr [:meeting :approve-meeting-modal-title])
+                              :button-component [buttons/button-green {:style {:margin-right "1rem"}}
+                                                 (tr [:meeting :approve-meeting-button])]}]
+     [form/form-modal-button {:form-component [review-form e! (:db/id meeting)]
+                              :form-value {:review/decision :review.decision/rejected}
+                              :modal-title (tr [:meeting :reject-meeting-modal-title])
+                              :button-component [buttons/button-warning {}
+                                                 (tr [:meeting :reject-meeting-button])]}]]))
 
 (defn meeting-details*
   [e! user {:meeting/keys [start end location agenda] :as meeting} rights]
