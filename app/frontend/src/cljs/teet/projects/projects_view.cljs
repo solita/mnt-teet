@@ -54,10 +54,17 @@
       (str (format/date start) " \u2013 " (format/date end)))
 
     :thk.project/owner-info
-    (if value
-       value
-       [:span {:class (<class common-styles/gray-text)}
-        (tr [:common :unassigned])])
+    (let [[owner managers] value]
+      [:div
+       (if owner
+         [:span owner]
+         [:span {:class (<class common-styles/gray-text)}
+          (tr [:common :unassigned])])
+       " / "
+       (if managers
+         [:span managers]
+         [:span {:class (<class common-styles/gray-text)}
+          (tr [:common :unassigned])])])
 
     :thk.project/activity-status
     (if (empty? value)
