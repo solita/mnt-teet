@@ -42,7 +42,8 @@
             [cljs-time.coerce :as tc]
             [teet.ui.query :as query]
             [teet.util.datomic :as du]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [clojure.string :as str]))
 
 
 (defn update-meeting-warning?
@@ -169,7 +170,10 @@
 
 (defn activity-meetings-decisions
   [e! activity]
-  [:h1 "decisions"])
+  [query/query {:e! e!
+                :query :meeting/activity-decision-history
+                :args {:activity-id (:db/id activity)}
+                :simple-view [decision-history-view e!]}])
 
 (defn meeting-information
   [{:meeting/keys [start location end title] :as meeting}]

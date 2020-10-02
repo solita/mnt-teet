@@ -321,9 +321,11 @@
 (defn hierarchical-container2
   ([param]
    [hierarchical-container2 param theme-colors/gray-light])
-  ([{:keys [text-color content heading heading-button children after-children-component]
-     :or {text-color :inherit}} bg-color]
-   (r/with-let [open? (r/atom false)
+  ([{:keys [text-color content open? heading heading-button children after-children-component]
+     :or {text-color :inherit
+          open? false}}
+    bg-color]
+   (r/with-let [open? (r/atom open?)
                 toggle-open! #(do
                                 (.stopPropagation %)
                                 (swap! open? not))]
@@ -362,7 +364,7 @@
               (with-meta
                 (if (vector? child)                         ;;Check if it's component and render that instaed
                   child
-                  [hierarchical-container2 child (as-hex (lighten bg-color 5))])
+                  [hierarchical-container2 child (or (:color child) (as-hex (lighten bg-color 5)))])
                 {:key (:key child)})))
           after-children-component]])])))
 
