@@ -7,10 +7,9 @@
             [datomic.client.api :as d]
             [clojure.walk :as walk]
             [teet.util.date :as du]
-            [teet.meeting.meeting-model :as meeting-model]
-            [teet.localization :refer [with-language tr-enum]]
             [teet.util.string :as string]
-            [teet.link.link-db :as link-db]))
+            [teet.link.link-db :as link-db]
+            [teet.link.link-model :as link-model]))
 
 
 (defn project-upcoming-meetings
@@ -134,8 +133,6 @@
                    :meta/created-at
                    {:meta/creator [:user/given-name :user/family-name]}]})
 
-(def links {:link/_from [:link/to :link/type]})
-
 (defquery :meeting/fetch-meeting
   {:doc "Fetch a single meeting info and project info"
    :context {:keys [db user]}
@@ -163,10 +160,10 @@
                                      {:meeting.agenda/decisions
                                       [:db/id :meeting.decision/body
                                        ~attachments
-                                       ~links]}
+                                       ~link-model/links-from-pattern]}
                                      {:meeting.agenda/responsible ~user-model/user-listing-attributes}
                                      ~attachments
-                                     ~links]}
+                                     ~link-model/links-from-pattern]}
                    {:review/_of [:db/id
                                  :review/comment
                                  :review/decision

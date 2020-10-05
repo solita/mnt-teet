@@ -3,6 +3,7 @@
             [teet.common.common-controller :as common-controller]))
 
 (defrecord AddLink [from to type in-progress-atom])
+(defrecord DeleteLink [id])
 
 (extend-protocol t/Event
   AddLink
@@ -18,4 +19,12 @@
            :result-event (fn [_]
                            (when in-progress-atom
                              (reset! in-progress-atom false))
-                           (common-controller/->Refresh))})))
+                           (common-controller/->Refresh))}))
+
+  DeleteLink
+  (process-event [{id :id} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :link/delete
+           :payload {:db/id id}
+           :result-event common-controller/->Refresh})))

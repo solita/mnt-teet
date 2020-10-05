@@ -8,7 +8,9 @@
             [teet.ui.format :as format]
             [teet.common.common-styles :as common-styles]
             [herb.core :refer [<class]]
-            [teet.ui.util :refer [mapc]]))
+            [teet.ui.util :refer [mapc]]
+            [teet.ui.icons :as icons]
+            [teet.ui.material-ui :refer [IconButton]]))
 
 (defmulti display :link/type)
 
@@ -25,6 +27,12 @@
      [:div (user-model/user-name assignee)]
      [:div (format/date estimated-end-date)]]))
 
+(defn- link-wrapper [e! {id :db/id :as link}]
+  [:div {:class (<class common-styles/flex-row-space-between)}
+   [display link]
+   [IconButton {:on-click (e! link-controller/->DeleteLink id)}
+    [icons/action-delete]]])
+
 (defn links
   "List links to other entities (like tasks).
   Shows input for adding new links."
@@ -33,7 +41,7 @@
                add-link! (fn [to]
                            (e! (link-controller/->AddLink from (:db/id to) :task in-progress)))]
     [:div.links
-     (mapc display links)
+     (mapc (r/partial link-wrapper e!) links)
      (tr [:link :search])
      (when-not @in-progress
        [select/select-search
