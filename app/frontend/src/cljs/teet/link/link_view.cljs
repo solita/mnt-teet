@@ -16,6 +16,15 @@
   [link]
   [:div "Unknown link type: " (pr-str link)])
 
+
+(defmethod display :task
+  [{:link/keys [info]}]
+  (let [{:task/keys [type estimated-end-date assignee]} info]
+    [:div {:class (<class common-styles/flex-row-space-between)}
+     [:div (tr-enum type)]
+     [:div (user-model/user-name assignee)]
+     [:div (format/date estimated-end-date)]]))
+
 (defn links
   "List links to other entities (like tasks).
   Shows input for adding new links."
