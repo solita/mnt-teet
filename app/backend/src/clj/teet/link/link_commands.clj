@@ -11,7 +11,8 @@
    :authorization {}
    :pre [(link-model/valid-from? from)
          (link-db/allow-link? db user from type to)]
-   :transact [{:db/id "add-link"
-               :link/from (nth from 1)
-               :link/to to
-               :link/type type}]})
+   :transact
+   [{:db/id "add-link"
+     :link/from (nth from 1)
+     :link/to to
+     :link/type type}]})
