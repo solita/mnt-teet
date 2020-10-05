@@ -318,6 +318,46 @@
   {:padding "0.5rem"
    :background-color theme-colors/gray-lightest})
 
+(defn- arrow-navigation
+  "Arrow navigation key handler for select-search results"
+  [state on-change e]
+  (let [{:keys [results open? highlight]} @state
+        hl-idx (and (seq results) highlight
+                    (cu/find-idx #(= highlight %) results))]
+    (case (.-key e)
+      ;; Move highlight down
+      "ArrowDown"
+      (when hl-idx
+        (swap! state assoc
+               :highlight (nth results
+                               (if (< hl-idx (dec (count results)))
+                                 (inc hl-idx)
+                                 0)))
+        (.preventDefault e))
+
+      ;; Move highlight up
+      "ArrowUp"
+      (when hl-idx
+        (swap! state assoc
+               :highlight (nth results
+                               (if (zero? hl-idx)
+                                 (dec (count results))
+                                 (dec hl-idx))))
+        (.preventDefault e))
+
+      "Enter"
+      (when hl-idx
+        (on-change highlight)
+        (swap! state assoc :open? false)
+        (.preventDefault e))
+
+      "Escape"
+      (when open?
+        (swap! state assoc :open? false)
+        (.stopPropagation e))
+
+      nil)))
+
 (defn select-search
   "Generic select with asynchronous database search.
 
@@ -335,7 +375,8 @@
                               :results nil
                               :open? false
                               :input ""})
-               input-ref (atom nil)]
+               input-ref (atom nil)
+               on-key-down (partial arrow-navigation state on-change)]
     (let [{:keys [loading? results open? input highlight]} @state]
       [:<>
        [TextField {:ref #(reset! input-ref %)
@@ -344,42 +385,7 @@
                    :required required
                    :error error
                    :placeholder (tr [:user :autocomplete :placeholder])
-                   :on-key-down (fn [e]
-                                  (let [hl-idx (and (seq results) highlight
-                                                    (cu/find-idx #(= highlight %) results))]
-                                    (case (.-key e)
-                                      ;; Move highlight down
-                                      "ArrowDown"
-                                      (when hl-idx
-                                        (swap! state assoc
-                                               :highlight (nth results
-                                                               (if (< hl-idx (dec (count results)))
-                                                                 (inc hl-idx)
-                                                                 0)))
-                                        (.preventDefault e))
-
-                                      ;; Move highlight up
-                                      "ArrowUp"
-                                      (when hl-idx
-                                        (swap! state assoc
-                                               :highlight (nth results
-                                                               (if (zero? hl-idx)
-                                                                 (dec (count results))
-                                                                 (dec hl-idx))))
-                                        (.preventDefault e))
-
-                                      "Enter"
-                                      (when hl-idx
-                                        (on-change highlight)
-                                        (swap! state assoc :open? false)
-                                        (.preventDefault e))
-
-                                      "Escape"
-                                      (when open?
-                                        (swap! state assoc :open? false)
-                                        (.stopPropagation e))
-
-                                      nil)))
+                   :on-key-down on-key-down
                    :on-blur #(js/setTimeout
                               ;; Delay closing because we might be blurring
                               ;; because user clicked one of the options
