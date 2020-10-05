@@ -125,13 +125,13 @@
              [container/collapsible-container
               {:on-toggle (fn [_]
                             (e! (project-controller/->ToggleRestrictionCategory
-                                 (into #{}
-                                       (mapv :teet-id restrictions))
-                                 group)))
+                                  (into #{}
+                                        (mapv :teet-id restrictions))
+                                  group)))
                :open? (open-types group)
-               :side-component [typography/SmallText (tr [:project :wizard :selected-count]
-                                                         {:selected (count group-checked)
-                                                          :total (count restrictions)})]}
+               :side-component [typography/SmallGrayText (tr [:project :wizard :selected-count]
+                                                             {:selected (count group-checked)
+                                                              :total (count restrictions)})]}
               group
               [itemlist/checkbox-list
                {:on-select-all #(e! (project-controller/->SelectRestrictions (set restrictions)))
