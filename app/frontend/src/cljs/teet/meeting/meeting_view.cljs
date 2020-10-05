@@ -640,21 +640,22 @@
                            (e! (meeting-controller/->AddLink from (:db/id to) :task)))]
     [:div.links
      (mapc link links)
-     (tr [:link :search])
-     [select/select-search
-      {:e! e!
-       :query (fn [text]
-                {:args {:lang @localization/selected-language
-                        :text text
-                        :from from
-                        :types #{:task}}
-                 :query :link/search})
-       :on-change add-link!
-       :format-result (fn [{:task/keys [type assignee estimated-end-date]}]
-                        [:div {:class (<class common-styles/flex-row-space-between)}
-                         [:div (tr-enum type)]
-                         [:div (user-model/user-name assignee)]
-                         [:div (format/date estimated-end-date)]])}]]))
+     [:div {:style {:margin "1rem 0"}}
+      [select/select-search
+       {:e! e!
+        :label (tr [:link :search])
+        :query (fn [text]
+                 {:args {:lang @localization/selected-language
+                         :text text
+                         :from from
+                         :types #{:task}}
+                  :query :link/search})
+        :on-change add-link!
+        :format-result (fn [{:task/keys [type assignee estimated-end-date]}]
+                         [:div {:class (<class common-styles/flex-row-space-between)}
+                          [:div (tr-enum type)]
+                          [:div (user-model/user-name assignee)]
+                          [:div (format/date estimated-end-date)]])}]]]))
 
 (defn- meeting-agenda-content [e! {id :db/id
                                    body :meeting.agenda/body
