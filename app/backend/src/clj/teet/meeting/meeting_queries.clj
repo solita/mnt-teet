@@ -7,6 +7,9 @@
             [datomic.client.api :as d]
             [clojure.walk :as walk]
             [teet.util.date :as du]
+            [teet.meeting.meeting-model :as meeting-model]
+            [teet.localization :refer [with-language tr-enum]]
+            [teet.util.string :as string]
             [teet.link.link-db :as link-db]))
 
 
@@ -40,26 +43,62 @@
        (mapv first)
        (sort-by :meeting/start #(.after %1 %2))))
 
+(defn matching-decision-ids
+  [search-term meetings]
+  (set
+    (for [m meetings
+          a (:meeting/agenda m)
+          d (:meeting.agenda/decisions a)
+          :let [candidate-text (str (:meeting/title m)
+                                    " "
+                                    (:meeting.agenda/topic a)
+                                    " "
+                                    (:meeting.decision/body d))]
+          :when (string/contains-words? candidate-text search-term)]
+      (:db/id d))))
+
+(defn filter-decisions
+  [decision-ids meetings]
+  (for [m meetings
+        :when (some decision-ids
+                    (map :db/id
+                      (mapcat
+                        :meeting.agenda/decisions
+                        (:meeting/agenda m))))]
+    (assoc m :meeting/agenda
+             (for [a (:meeting/agenda m)
+                   :when (some decision-ids
+                               (map :db/id
+                                    (:meeting.agenda/decisions a)))]
+               (assoc a :meeting.agenda/decisions
+                        (for [d (:meeting.agenda/decisions a)
+                              :when (decision-ids (:db/id d))]
+                          d))))))
+
 (defn activity-decisions
-  [db activity-id]
-  (->> (d/q '[:find
-              (pull ?m [* :activity/_meetings
-                        {:review/_of
-                         [{:review/reviewer [:user/given-name
-                                             :user/family-name]}]}])
-              (max ?cr)
-              :where
-              [?a :activity/meetings ?m]
-              [?m :meeting/agenda ?ag]
-              [?m :meeting/locked? true]
-              [?ag :meeting.agenda/decisions ?d]
-              [?r :review/of ?m]
-              [?r :meta/created-at ?cr]
-              :in $ ?a]
-            db activity-id)
-       (map #(assoc (first %) :meeting/locked-at (second %)))
-       (sort-by :meeting/start)
-       reverse))
+  [db activity-id search-term]
+  (let [meetings (meta-query/without-deleted
+                   db
+                   (->> (d/q '[:find
+                               (pull ?m [* :activity/_meetings
+                                         {:review/_of
+                                          [{:review/reviewer [:user/given-name
+                                                              :user/family-name]}]}])
+                               (max ?cr)
+                               :where
+                               [?a :activity/meetings ?m]
+                               [?m :meeting/agenda ?ag]
+                               [?m :meeting/locked? true]
+                               [?ag :meeting.agenda/decisions ?d]
+                               [?r :review/of ?m]
+                               [?r :meta/created-at ?cr]
+                               :in $ ?a]
+                             db activity-id)
+                        (map #(assoc (first %) :meeting/locked-at (second %)))
+                        (sort-by :meeting/start)
+                        reverse))
+        decision-ids (matching-decision-ids search-term meetings)]
+    (filter-decisions decision-ids meetings)))
 
 (defn fetch-project-meetings
   [db eid]
@@ -153,7 +192,8 @@
 (defquery :meeting/activity-decision-history
   {:doc "Fetch all the decisions for activity"
    :context {:keys [db user]}
-   :args {:keys [activity-id]}
+   :args {:keys [activity-id
+                 search-term]}
    :project-id (project-db/activity-project-id db activity-id)
    :authorization {}}
-  (activity-decisions db activity-id))
+  (activity-decisions db activity-id search-term))
