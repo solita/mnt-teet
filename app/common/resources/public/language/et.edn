@@ -298,11 +298,12 @@
   :permission-already-granted "Selle kasutaja luba on juba antud",
   :conflicting-activities
   "Korraga võib aktiivne olla ainult üht tüüpi tegevus.",
-  :meeting-is-locked nil,
+  :meeting-is-locked
+  "Koosoleku otsused on kinnitatud ning seda ei saa enam muuta",
   :request-timeout "Ei saanud serveriga ühendust",
   :invalid-activity-dates "Kontrolli tegevuse kuupäevi",
   :bad-request "Vigane päring",
-  :meeting-has-no-decisions nil},
+  :meeting-has-no-decisions "Koosolekule ei ole otsuseid lisatud"},
  :fields
  {:land-acquisition/registry-number "Riigivara registrinumber",
   :comment/visibility "Nähtavus",
@@ -529,7 +530,7 @@
   :new-agenda-modal-title "Uus päevakavapunkt",
   :reject-meeting-button "Lükkan tagasi",
   :add-person "Osaleja lisamine",
-  :approved-by nil,
+  :approved-by "Kinnitatud {approvers} poolt",
   :notifications-sent "Kalendri teavitus saadetud",
   :decision-topic "{topic} otsus #{num}"},
  :notifications
