@@ -58,6 +58,11 @@
 (def internal-consultant-id tu/internal-consultant-id)
 (def boss-uid tu/boss-id)
 
+(defn set-email
+  [user-eid email-address]
+  (tx {:db/id      user-eid
+       :user/email email-address}))
+
 (defn give-admin-permission
   [user-eid]
   (tx {:db/id            user-eid

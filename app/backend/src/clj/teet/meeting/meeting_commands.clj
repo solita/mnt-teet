@@ -13,7 +13,8 @@
             [teet.meeting.meeting-model :as meeting-model]
             [teet.log :as log]
             [clojure.string :as str]
-            [teet.user.user-model :as user-model])
+            [teet.user.user-model :as user-model]
+            [teet.util.date :refer [date-in-past?]])
   (:import (java.util Date)))
 
 (defn update-meeting-tx
@@ -192,6 +193,17 @@
                                                     :user/email})
                                    %))))]})
 
+(defn meeting-link [db base-url meeting project-eid]
+  (let [{:keys [meeting-eid project-thk-id activity-eid]}
+        (project-db/meeting-parents db meeting project-eid)]
+    (str base-url
+         (if (str/ends-with? base-url "/")
+           ""
+           "/")
+         "#/projects/" project-thk-id
+         "/meetings/" activity-eid
+         "/" meeting-eid)))
+
 (defcommand :meeting/send-notifications
   {:doc "Send iCalendar notifications to organizer and participants."
    :context {:keys [db conn user]}
@@ -200,19 +212,30 @@
    :authorization {}
    :pre [(meeting-db/user-is-organizer-or-reviewer? db user id)]}
   (let [to (remove #(str/ends-with? % "@example.com")
-                   (keep :user/email (meeting-db/participants db id)))]
-    (if (seq to)
-      (let [meeting (d/pull db
-                            '[:db/id
-                              :meeting/number
-                              :meeting/title :meeting/location
-                              :meeting/start :meeting/end
-                              {:meeting/organizer [:user/email :user/given-name :user/family-name]}
-                              {:meeting/agenda [:meeting.agenda/topic
-                                                {:meeting.agenda/responsible [:user/given-name
-                                                                              :user/family-name]}]}]
-                            id)
+                   (keep :user/email (meeting-db/participants db id)))
+        meeting (d/pull db
+                        '[:db/id
+                          :meeting/number
+                          :meeting/title :meeting/location
+                          :meeting/start :meeting/end
+                          {:meeting/organizer [:user/email :user/given-name :user/family-name]}
+                          {:meeting/agenda [:meeting.agenda/topic
+                                            {:meeting.agenda/responsible [:user/given-name
+                                                                          :user/family-name]}]}] id)]
+    (cond
+      (date-in-past? (:meeting/end meeting))
+      {:error :no-emails-after-meeting-end}
+
+      (not (seq to))
+      {:error :no-participants-with-email}
+
+      :else
+      (let [project-eid (project-db/meeting-project-id db id)
+            meeting-link (meeting-link db
+                          (environment/config-value :base-url)
+                          meeting project-eid)
             ics (meeting-ics/meeting-ics {:meeting meeting
+                                          :meeting-link meeting-link
                                           :cancel? false})
             email-response
             (integration-email/send-email!
@@ -225,7 +248,7 @@
         (log/info "SES send response" email-response)
         (tx-ret [{:db/id id
                   :meeting/invitations-sent-at (Date.)}]))
-      {:error :no-participants-with-email})))
+      )))
 
 
 (defcommand :meeting/cancel
