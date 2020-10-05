@@ -14,7 +14,8 @@
             [teet.log :as log]
             [clojure.string :as str]
             [teet.user.user-model :as user-model]
-            [teet.util.date :refer [date-in-past?]])
+            [teet.util.date :refer [date-in-past?]]
+            [teet.notification.notification-db] :as notification-db)
   (:import (java.util Date)))
 
 (defn update-meeting-tx
@@ -204,6 +205,18 @@
          "/meetings/" activity-eid
          "/" meeting-eid)))
 
+
+(defn historical-meeting-notify [db meeting from-user participants project-eid]
+  (tx-ret    
+   (for [to-user participants]
+     (notification-db/notification-tx
+      db
+      {:from from-user
+       :to to-user
+       :target (:db/id meeting)
+       :type :notification.type/meeting-updated
+       :project project-eid}))))
+
 (defcommand :meeting/send-notifications
   {:doc "Send iCalendar notifications to organizer and participants."
    :context {:keys [db conn user]}
@@ -211,7 +224,8 @@
    :project-id (project-db/meeting-project-id db id)
    :authorization {}
    :pre [(meeting-db/user-is-organizer-or-reviewer? db user id)]}
-  (let [to (remove #(str/ends-with? % "@example.com")
+  (let [project-eid (project-db/meeting-project-id db id)
+        to (remove #(str/ends-with? % "@example.com")
                    (keep :user/email (meeting-db/participants db id)))
         meeting (d/pull db
                         '[:db/id
@@ -224,14 +238,15 @@
                                                                           :user/family-name]}]}] id)]
     (cond
       (date-in-past? (:meeting/end meeting))
-      {:error :no-emails-after-meeting-end}
+      (historical-meeting-notify db meeting user
+                                 (meeting-db/participants db id)
+                                 project-eid)
 
       (not (seq to))
       {:error :no-participants-with-email}
 
       :else
-      (let [project-eid (project-db/meeting-project-id db id)
-            meeting-link (meeting-link db
+      (let [meeting-link (meeting-link db
                           (environment/config-value :base-url)
                           meeting project-eid)
             ics (meeting-ics/meeting-ics {:meeting meeting
