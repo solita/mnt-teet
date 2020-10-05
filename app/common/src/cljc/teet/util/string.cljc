@@ -23,9 +23,10 @@
                     (interpolate-get parameters param-name))))))
 
 (defn words
-  "Split input text by spaces. Returns sequence of words."
+  "Split text into sequence of words."
   [text]
-  (str/split text #"\s+"))
+  (re-seq #?(:clj #"\p{IsLatin}+"
+             :cljs #"[^\s\d-_*]+") text))
 
 (defn unique-words
   "Return unique words in input text."
