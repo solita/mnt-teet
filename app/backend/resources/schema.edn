@@ -1200,4 +1200,10 @@
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
            :db/doc "Id of destination in the external datasource referred to by link type"}]]}
+
+ {:db/ident :migration/lock-meeting
+  :txes [[{:db/ident :meeting/locked?
+           :db/valueType :db.type/boolean
+           :db/cardinality :db.cardinality/one
+           :db/doc "Transacted to true once all reviewers have accepted the meeting"}]]}
  ]
