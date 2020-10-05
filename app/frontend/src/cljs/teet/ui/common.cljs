@@ -6,7 +6,7 @@
             [garden.color :refer [darken lighten as-hex]]
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.material-ui :refer [ButtonBase Link Chip Collapse]]
-            [teet.ui.typography :refer [Text SmallText] :as typography]
+            [teet.ui.typography :refer [Text SmallGrayText] :as typography]
             [teet.common.common-styles :as common-styles]
             [teet.ui.buttons :as buttons]
             [teet.ui.format :as format]))
@@ -155,9 +155,9 @@
    [:div {:style {:margin-right :auto}}
     [:span label]
     (when sub-label
-      [SmallText sub-label])]
+      [SmallGrayText sub-label])]
    (when end-text
-     [SmallText end-text])])
+     [SmallGrayText end-text])])
 
 (defn heading-buttons-style
   []

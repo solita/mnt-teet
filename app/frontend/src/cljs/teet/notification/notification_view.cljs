@@ -142,7 +142,7 @@
                    [:div
                     (tr-enum type)]
                    [:div
-                    [typography/SmallText
+                    [typography/SmallGrayText
                      (format/date-time created-at)]]]]))])
           (grouped-notifications notifications))
         [MenuItem {:on-click handle-close!}
