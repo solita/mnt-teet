@@ -619,21 +619,25 @@
   "List links to other entities (like tasks).
   Shows input for adding new links."
   [{:keys [e! links from]}]
-  [:div.links
-   (mapc link links)
-   (tr [:link :search])
-   [select/select-search
-    {:e! e!
-     :query (fn [text]
-              {:args {:lang @localization/selected-language
-                      :text text
-                      :from from}
-               :query :meeting/search-link-task})
-     :format-result (fn [{:task/keys [type assignee estimated-end-date]}]
-                      [:div {:class (<class common-styles/flex-row-space-between)}
-                       [:div (tr-enum type)]
-                       [:div (user-model/user-name assignee)]
-                       [:div (format/date estimated-end-date)]])}]])
+  (r/with-let [add-link! (fn [to]
+                           (e! (meeting-controller/->AddLink from (:db/id to) :task)))]
+    [:div.links
+     (mapc link links)
+     (tr [:link :search])
+     [select/select-search
+      {:e! e!
+       :query (fn [text]
+                {:args {:lang @localization/selected-language
+                        :text text
+                        :from from
+                        :types #{:task}}
+                 :query :link/search})
+       :on-change add-link!
+       :format-result (fn [{:task/keys [type assignee estimated-end-date]}]
+                        [:div {:class (<class common-styles/flex-row-space-between)}
+                         [:div (tr-enum type)]
+                         [:div (user-model/user-name assignee)]
+                         [:div (format/date estimated-end-date)]])}]]))
 
 (defn- meeting-agenda-content [e! {id :db/id
                                    body :meeting.agenda/body

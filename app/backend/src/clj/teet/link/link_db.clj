@@ -1,12 +1,21 @@
 (ns teet.link.link-db
   "Common db queries for fetching links between entities"
   (:require [clojure.walk :as walk]
-            [datomic.client.api :as d]))
+            [datomic.client.api :as d]
+            [teet.link.link-model :as link-model]
+            [teet.log :as log]))
 
-(defmulti link-info
-  "Fetch link display info by type and target entity id. Should return map
-  of the info needed to display the link in human readable format."
-  (fn [_db type _id] type))
+(defmulti allow-link?
+  "Check permissions for linking. Returns true if linking is allowed or
+  false if not. May also throw exception with error code for frontend.
+
+  Dispatches on from type and link type.
+  Default behaviour is to disallow."
+  (fn [_db _user [from-type _from-id] type _to] [from-type type]))
+
+(defmethod allow-link? :default [_ user from type to]
+  (log/warn "Disallow link by user" user "from" from "to" to "(" type ")")
+  false)
 
 (defn expand-links
   "Expand all links in the given form to their display representations.
@@ -18,12 +27,9 @@
      (if (and (map? x)
               (contains? x :link/type)
               (contains? x :link/to))
-       (assoc x :link/info (link-info db (:link/type x) (:db/id (:link/to x))))
-       x)) form))
-
-(defmethod link-info :task [db _ task-id]
-  (d/pull db [:task/type
-              {:task/assignee [:user/given-name :user/family-name]}
-              :task/estimated-end-date
-              {:activity/_tasks [:activity/name]}]
-          task-id))
+       (merge x
+              {:link/info (d/pull db (get-in link-model/link-types
+                                             [(:link/type x) :display-attributes])
+                                  (:db/id (:link/to x)))})
+       x))
+   form))

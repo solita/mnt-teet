@@ -7,9 +7,6 @@
             [datomic.client.api :as d]
             [clojure.walk :as walk]
             [teet.util.date :as du]
-            [teet.meeting.meeting-model :as meeting-model]
-            [teet.localization :refer [with-language tr-enum]]
-            [teet.util.string :as string]
             [teet.link.link-db :as link-db]))
 
 
@@ -160,47 +157,3 @@
    :project-id (project-db/activity-project-id db activity-id)
    :authorization {}}
   (activity-decisions db activity-id))
-
-(defn link-from->project [db [type id]]
-  (case type
-    :meeting-agenda (project-db/agenda-project-id db id)
-    :meeting-decision (project-db/decision-project-id db id)))
-
-(defquery :meeting/search-link-task
-  {:doc "Search tasks that can be linked to meeting"
-   :context {:keys [db user]}
-   :args {:keys [from text lang]}
-   :project-id (link-from->project db from)
-   :authorization {}}
-  (with-language lang
-    (let [project (link-from->project db from)
-
-          all-project-tasks
-          (d/q '[:find (pull ?t [:task/type :db/id])
-                 :where
-                 [?p :thk.project/lifecycles ?l]
-                 [?l :thk.lifecycle/activities ?a]
-                 [?a :activity/tasks ?t]
-                 [(missing? $ ?t :meta/deleted)]
-                 :in $ ?p]
-               db project)
-
-          matching-project-tasks
-          (into []
-                (comp
-                 (map first)
-                 (map #(assoc % :searchable-text (tr-enum (:task/type %))))
-                 (filter #(string/contains-words? (:searchable-text %)
-                                                  text))
-                 (map :db/id))
-                all-project-tasks)]
-
-      (mapv
-       first
-       (d/q '[:find (pull ?t [:db/id :task/type
-                              :task/estimated-start-date
-                              :task/estimated-end-date
-                              {:task/assignee [:user/given-name :user/family-name]}
-                              {:activity/_tasks [:activity/name]}])
-              :in $ [?t ...]]
-            db matching-project-tasks)))))

@@ -3,7 +3,8 @@
             [teet.user.user-model :as user-model]
             [teet.db-api.core :as db-api]
             [teet.util.datomic :as du]
-            [teet.meeting.meeting-model :as meeting-model]))
+            [teet.meeting.meeting-model :as meeting-model]
+            [teet.project.project-db :as project-db]))
 
 (defn meetings
   "Fetch a listing of meetings for the given where
@@ -186,3 +187,13 @@
            meeting-id)
       seq
       boolean))
+
+(defn link-from->project [db [type id]]
+  (case type
+    :meeting-agenda (project-db/agenda-project-id db id)
+    :meeting-decision (project-db/decision-project-id db id)))
+
+(defn link-from->meeting [db [type id]]
+  (case type
+    :meeting-agenda (get-in (du/entity db id) [:meeting/_agenda :db/id])
+    :meeting-decision (get-in (du/entity db id) [:meeting.agenda/_decisions :meeting/_agenda :db/id])))
