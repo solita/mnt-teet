@@ -279,16 +279,16 @@
         children))]])
 
 (defn hierarchical-container-button-style
-  [bg-color]
+  [bg-color separator?]
   ^{:pseudo {:hover {:background-color (darken bg-color 10)}}}
   {:width "100%"
    :justify-content :space-between
    :flex-direction :column
    :align-items :flex-start
    :cursor :pointer
-   :border-bottom "1px solid white"
    :background-color bg-color
    :padding "1rem"
+   :border-bottom (if separator? "1px solid white" "none")
    :transition "0.2s ease-in-out background-color"})
 
 (defn hierarchical-container-style
@@ -305,8 +305,7 @@
   (with-meta
     {:background-color bg-color
      :position :relative
-     :color font-color
-     :border-bottom "1px solid white"}
+     :color font-color}
     (when show-polygon
       {:pseudo {:before {:content "''"
                          :width 0
@@ -331,11 +330,10 @@
                                 (swap! open? not))]
      [:div {:style {:border-bottom "3px solid white"}}
       [:div {:class (<class hierarchical-heading-container2 bg-color text-color (and
-                                                                                  content
                                                                                   (or (seq children) after-children-component)
                                                                                   @open?))}
        [:div                                                ;; This is a div because buttons shouldn't contain buttons even though this is bad practice as well
-        {:class (<class hierarchical-container-button-style bg-color)
+        {:class (<class hierarchical-container-button-style bg-color (seq content))
          :on-click toggle-open!}
         [:div {:style {:width "100%"
                        :display :flex
