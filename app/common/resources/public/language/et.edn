@@ -505,6 +505,7 @@
  {:notifications-help
   "Saatke koosoleku osalejatele teavitus koosoleku sisu muudatuste kohta.",
   :add-non-teet-participant "Lisan TEET-u välise osaleja",
+  :search-decisions nil,
   :add-decision-button "Lisan otsuse",
   :participant-removed "Osaleja eemaldatud",
   :approve-meeting-modal-title "Kinnitan otsused?",
@@ -520,6 +521,7 @@
   :add-agenda-button "Lisan päevakavapunkti",
   :approvals "Kinnitused",
   :new-decision-modal-title "Uue otsuse lisamine",
+  :no-decisions-found nil,
   :reviews-invalidated-warning-text
   "Muutes koosoleku sisu tühistatakse kõik juba antud kinnitused.",
   :edit-decision-modal-title "Otsuse muutmine",
