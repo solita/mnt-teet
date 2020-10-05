@@ -15,8 +15,8 @@
             [clojure.string :as str]
             [teet.user.user-model :as user-model]
             [teet.util.date :refer [date-in-past?]]
-            [teet.notification.notification-db] :as notification-db)
-  (:import (java.util Date)))
+            [teet.notification.notification-db :as notification-db])
+  (:import (java.util Date))) 
 
 (defn update-meeting-tx
   [meeting-id tx-data]
