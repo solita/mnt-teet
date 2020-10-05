@@ -24,8 +24,6 @@
 
 (defrecord SubmitReview [meeting-id form-data close-event])
 
-(defrecord AddLink [from to type])
-
 (extend-protocol t/Event
   SubmitMeetingForm
   (process-event [{:keys [activity-id form-data close-event]} app]
@@ -177,12 +175,4 @@
                                 (tr [:notifications :decision-created]))
              :result-event (partial common-controller/->ModalFormResult close-event)})))
 
-  AddLink
-  (process-event [{:keys [from to type]} app]
-    (t/fx (assoc-in app [:route :meeting :add-link-in-progress?] true)
-          {:tuck.effect/type :command!
-           :command :link/add-link
-           :payload {:from from
-                     :to to
-                     :type type}
-           :result-event common-controller/->Refresh})))
+  )
