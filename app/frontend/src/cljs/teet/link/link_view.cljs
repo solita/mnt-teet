@@ -60,10 +60,11 @@
                                     :from from
                                     :in-progress-atom in-progress})
            links)
-     (tr [:link :search])
      (when-not @in-progress
        [select/select-search
         {:e! e!
+         :placeholder (tr [:link :search :placeholder])
+         :no-results (tr [:link :search :no-results])
          :query (fn [text]
                   {:args {:lang @localization/selected-language
                           :text text
@@ -71,6 +72,7 @@
                           :types #{:task}}
                    :query :link/search})
          :on-change add-link!
+
          :format-result (fn [{:task/keys [type assignee estimated-end-date]}]
                           [:div {:class (<class common-styles/flex-row-space-between)}
                            [:div (tr-enum type)]

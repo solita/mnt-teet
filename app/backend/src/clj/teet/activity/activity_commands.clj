@@ -12,7 +12,8 @@
             [teet.util.datomic :as du]
             [teet.permission.permission-db :as permission-db]
             [teet.util.collection :as cu]
-            [teet.user.user-model :as user-model]))
+            [teet.user.user-model :as user-model]
+            [teet.thk.thk-mapping :as thk-mapping]))
 
 (defn valid-activity-name?
   "Check if the activity name is valid for the lifecycle it's being added to"
@@ -119,7 +120,7 @@
         project-id (project-db/lifecycle-project-id db lifecycle-id)]
     (tx-ret [(merge
               {:db/id "new-activity"
-               :integration/id (java.util.UUID/randomUUID)
+               :integration/id (thk-mapping/unused-random-small-uuid db)
                :activity/status :activity.status/in-preparation}
               (-> activity
                   (select-keys [:activity/name
@@ -141,7 +142,7 @@
                             :task/type task-type
                             :task/send-to-thk? send-to-thk?}
                            (when send-to-thk?
-                             {:integration/id (java.util.UUID/randomUUID)})
+                             {:integration/id (thk-mapping/unused-random-small-uuid db)})
                            (meta-model/creation-meta user))))})
               (meta-model/creation-meta user))
              {:db/id lifecycle-id
@@ -189,7 +190,7 @@
                                 :task/type task-type
                                 :task/send-to-thk? send-to-thk?}
                                (when send-to-thk?
-                                 {:integration/id (java.util.UUID/randomUUID)})
+                                 {:integration/id (thk-mapping/unused-random-small-uuid db)})
                                (meta-model/creation-meta user))
                         [:db/add id :activity/tasks id-placeholder]])))))})
 
