@@ -209,3 +209,11 @@
 (defmethod link-db/allow-link? [:meeting-decision :task]
   [db user from _type _to]
   (allow-link-to-meeting? db user from))
+
+(defmethod link-db/allow-link-delete? [:meeting-agenda :task]
+  [db user from _type _to]
+  (allow-link-to-meeting? db user from))
+
+(defmethod link-db/allow-link-delete? [:meeting-decision :task]
+  [db user from _type _to]
+  (allow-link-to-meeting? db user from))

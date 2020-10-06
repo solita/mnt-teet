@@ -27,10 +27,14 @@
      [:div (user-model/user-name assignee)]
      [:div (format/date estimated-end-date)]]))
 
-(defn- link-wrapper [e! {id :db/id :as link}]
+(defn- link-wrapper [{:keys [e! from in-progress-atom]}
+                     {id :db/id
+                      :link/keys [to type] :as link}]
   [:div {:class (<class common-styles/flex-row-space-between)}
    [display link]
-   [IconButton {:on-click (e! link-controller/->DeleteLink id)}
+   [IconButton
+    {:on-click #(e! (link-controller/->DeleteLink from to type id
+                                                  in-progress-atom))}
     [icons/action-delete]]])
 
 (defn links
@@ -41,7 +45,10 @@
                add-link! (fn [to]
                            (e! (link-controller/->AddLink from (:db/id to) :task in-progress)))]
     [:div.links
-     (mapc (r/partial link-wrapper e!) links)
+     (mapc (r/partial link-wrapper {:e! e!
+                                    :from from
+                                    :in-progress-atom in-progress})
+           links)
      (tr [:link :search])
      (when-not @in-progress
        [select/select-search

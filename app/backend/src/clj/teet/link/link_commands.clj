@@ -21,11 +21,10 @@
 (defcommand :link/delete
   {:doc "Delete link by id"
    :context {:keys [db user]}
-   ;; FIXME: we need the same :from to check deletion access
-   ;; with multimethod and then verify that this link is the same
-   :payload {id :db/id}
-   :pre [^{:error :no-such-link}
-         (:link/type (du/entity db id))]
+   :payload {:keys [from to type]
+             id :db/id}
+   :pre [(link-db/is-link? db id from to type)
+         (link-db/allow-link-delete? db user from type to)]
    :project-id nil
    :authorization {}
    :transact [[:db/retractEntity id]]})
