@@ -686,6 +686,7 @@
   :add-document "Add document",
   :submit-results "Submit results",
   :submit-results-success "Results submitted successfully",
+  :link-info "Responsible person - {assignee}. Deadline - {deadline}.",
   :submit-results-confirm
   "Are you sure you want to submit the results to {task}?",
   :no-documents "No documents",
