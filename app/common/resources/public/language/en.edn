@@ -483,6 +483,7 @@
   :files "Files attached to this unit",
   :burden "Burden",
   :no-mortgages "No mortgages"},
+ :link {:search {:placeholder "Link...", :no-results "No results"}},
  :login
  {:login "Login",
   :password "Password",

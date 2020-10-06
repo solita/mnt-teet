@@ -477,6 +477,10 @@
   :files "Üksusega seotud failid",
   :burden "Koormatis",
   :no-mortgages "Hüpoteeke pole"},
+ :link
+ {:search
+  {:placeholder "Lisan viite...",
+   :no-results "Ei leitud ühtki vastet"}},
  :login
  {:login "Sisenen",
   :password "Salasõna",
