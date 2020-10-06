@@ -203,17 +203,21 @@
                    :simple-view [decision-history-view e!]}]]))
 
 (defn meeting-information
-  [{:meeting/keys [start location end title] :as meeting}]
+  [{:meeting/keys [start location end title activity-name] :as meeting}]
   [:div {:class (<class common-styles/flex-row-space-between)}
 
    [:div {:style {:display :flex}}
     [:div {:style {:width "120px"
                    :margin-right "0.5rem"}}
-     [:span (str (format/time* start)
+     [:strong (str (format/time* start)
                  "–"
                  (format/time* end))]]
-    [:div [url/Link {:page :meeting :params {:meeting (str (:db/id meeting))}}
-           title]]]
+    [:div {:class (<class common-styles/margin-bottom 0.5)}
+     [url/Link {:page :meeting :params {:meeting (str (:db/id meeting))}}
+      title]
+     (when activity-name
+       [typography/SmallText
+        (tr-enum activity-name)])]]
    [:div {:style {:text-align :right}}
     [typography/GreyText location]]])
 
@@ -291,13 +295,13 @@
                 (assoc meeting :meeting/time-slot :rest))))
           (sort-by :meeting/start meetings))))
 
-(defn upcoming-activity-meetings
-  [activity]
+(defn upcoming-meetings
+  [meetings]
   (let [{:keys [today this-week rest]}
         (group-by
           (fn [meeting]
             (:meeting/time-slot meeting))
-          (meeting-with-time-slot (:activity/meetings activity)))
+          (meeting-with-time-slot meetings))
         this-week-by-days-of-week
         (group-by
           (fn [meeting]
@@ -338,14 +342,14 @@
 
 
 (defn activity-meetings-page-content
-  [e! activity {:keys [query] :as app}]
+  [e! {:keys [query] :as app} activity]
   [:div
    [typography/Heading1 (tr [:meeting :activity-meetings-title]
                             {:activity-name
                              (tr-enum (:activity/name activity))})]
    [tabs/tabs
     query
-    [[:upcoming [upcoming-activity-meetings activity]]
+    [[:upcoming [upcoming-meetings (:activity/meetings activity)]]
      [:history [historical-activity-meetings e! activity]]
      [:decisions [activity-meetings-decisions e! activity]]]]])
 
@@ -450,7 +454,7 @@
   "Page structure showing project navigator along with content."
   [e! {{:keys [activity]} :params :as app} project]
   [meeting-page-structure e! app project
-   [activity-meetings-page-content e! (project-model/activity-by-id project activity) app]
+   [activity-meetings-page-content e! app (project-model/activity-by-id project activity)]
    [:h1 "participants"]])
 
 (defn meeting-list [meetings]
@@ -471,7 +475,27 @@
              "(" location ") "
              (format/date-time start) " ")]])]])
 
-(defn project-meetings-page-content [e! project]
+(defn upcoming-project-meetings
+  [project]
+  (let [meetings (->> project
+                     :thk.project/lifecycles
+                     (mapcat :thk.lifecycle/activities)
+                     (mapcat (fn [activity]
+                               (map
+                                 #(assoc % :meeting/activity-name (:activity/name activity))
+                                 (:activity/meetings activity)))))]
+    [:<>
+     [upcoming-meetings meetings]]))
+
+(defn project-meeting-history
+  [e! project]
+  [:h1 "project meeting history"])
+
+(defn project-decisions
+  [e! project]
+  [:h1 "decisionsa"])
+
+(defn project-meetings-page-content [e! {query :query :as app} project]
   (let [meetings (mapcat
                   (fn [{:thk.lifecycle/keys [activities]}]
                     (mapcat (fn [{meetings :activity/meetings
@@ -479,14 +503,19 @@
                               (map #(assoc % :activity-id id) meetings))
                             activities))
                   (:thk.project/lifecycles project))]
-
-    [meeting-list meetings]))
+    [:<>
+     [typography/Heading1 (tr [:meeting :project-meetings-title])]
+     [tabs/tabs
+      query
+      [[:upcoming [upcoming-project-meetings project]]
+       [:history [project-meeting-history e! project]]
+       [:decisions [project-decisions e! project]]]]]))
 
 (defn project-meetings-view
   "Project meetings"
   [e! app project]
   [meeting-page-structure e! app project
-   [project-meetings-page-content e! project]
+   [project-meetings-page-content e! app project]
    [:h1 "participants"]])
 
 
