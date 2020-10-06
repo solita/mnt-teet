@@ -505,7 +505,7 @@
  {:notifications-help
   "Saatke koosoleku osalejatele teavitus koosoleku sisu muudatuste kohta.",
   :add-non-teet-participant "Lisan TEET-u välise osaleja",
-  :search-decisions "Otsi otsuseid",
+  :search-decisions "Otsin otsuseid",
   :add-decision-button "Lisan otsuse",
   :participant-removed "Osaleja eemaldatud",
   :approve-meeting-modal-title "Kinnitan otsused?",
