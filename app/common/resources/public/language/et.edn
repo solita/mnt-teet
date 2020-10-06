@@ -505,7 +505,7 @@
  {:notifications-help
   "Saatke koosoleku osalejatele teavitus koosoleku sisu muudatuste kohta.",
   :add-non-teet-participant "Lisan TEET-u välise osaleja",
-  :search-decisions nil,
+  :search-decisions "Otsi otsuseid",
   :add-decision-button "Lisan otsuse",
   :participant-removed "Osaleja eemaldatud",
   :approve-meeting-modal-title "Kinnitan otsused?",
@@ -521,7 +521,7 @@
   :add-agenda-button "Lisan päevakavapunkti",
   :approvals "Kinnitused",
   :new-decision-modal-title "Uue otsuse lisamine",
-  :no-decisions-found nil,
+  :no-decisions-found "Ühtegi otsust ei leitud",
   :reviews-invalidated-warning-text
   "Muutes koosoleku sisu tühistatakse kõik juba antud kinnitused.",
   :edit-decision-modal-title "Otsuse muutmine",
@@ -682,6 +682,7 @@
   :add-document "Lisan dokumendi",
   :submit-results "Esitan tulemused",
   :submit-results-success "Tulemused edukalt esitatud",
+  :link-info "Vastutav isik - {assignee}. Tähtaeg - {deadline}.",
   :submit-results-confirm
   "Oled kindel, et soovid {task} vastused saata?",
   :no-documents "Dokumente ei ole",

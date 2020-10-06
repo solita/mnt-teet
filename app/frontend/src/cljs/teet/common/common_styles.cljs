@@ -247,3 +247,8 @@
   {:display :flex
    :justify-content :space-between
    :flex-wrap :wrap})
+
+(defn divider-border
+  "Top border to divide multiple items"
+  []
+  {:border-top (str "solid 1px " theme-colors/gray-light)})

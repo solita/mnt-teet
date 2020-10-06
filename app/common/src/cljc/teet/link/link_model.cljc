@@ -28,7 +28,7 @@ linked entity."
   {:task {:display-attributes [:task/type
                                {:task/assignee [:user/given-name :user/family-name]}
                                :task/estimated-end-date
-                               {:activity/_tasks [:activity/name]}]}})
+                               {:activity/_tasks [:db/id :activity/name]}]}})
 
 (defn valid-from? [from]
   (and (vector? from)

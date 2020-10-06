@@ -10,7 +10,9 @@
             [herb.core :refer [<class]]
             [teet.ui.util :refer [mapc]]
             [teet.ui.icons :as icons]
-            [teet.ui.material-ui :refer [IconButton]]))
+            [teet.ui.material-ui :refer [IconButton]]
+            [teet.ui.typography :as typography]
+            [teet.ui.url :as url]))
 
 (defmulti display :link/type)
 
@@ -20,17 +22,26 @@
 
 
 (defmethod display :task
-  [{:link/keys [info]}]
-  (let [{:task/keys [type estimated-end-date assignee]} info]
-    [:div {:class (<class common-styles/flex-row-space-between)}
-     [:div (tr-enum type)]
-     [:div (user-model/user-name assignee)]
-     [:div (format/date estimated-end-date)]]))
+  [{:link/keys [info to]}]
+  (let [{:task/keys [type estimated-end-date assignee]} info
+        activity (get-in info [:activity/_tasks 0 :db/id])]
+    [:span
+     [:div [url/Link
+            {:page :activity-task
+             :params {:activity activity
+                      :task (:db/id to)}}
+            (tr-enum type)]]
+     [:div
+      [typography/SmallGrayText
+       (tr [:task :link-info]
+           {:assignee (user-model/user-name assignee)
+            :deadline (format/date estimated-end-date)})]]]))
 
 (defn- link-wrapper [{:keys [e! from in-progress-atom]}
                      {id :db/id
                       :link/keys [to type] :as link}]
-  [:div {:class (<class common-styles/flex-row-space-between)}
+  [:div {:class [(<class common-styles/flex-row-space-between)
+                 (<class common-styles/divider-border)]}
    [display link]
    [IconButton
     {:on-click #(e! (link-controller/->DeleteLink from to type id
