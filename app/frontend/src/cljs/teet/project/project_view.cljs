@@ -476,11 +476,6 @@
      100)
     [restrictions-list e! checked-restrictions]))
 
-(defn activities-tab-footer [_e! _app project]
-  [:div {:class (<class project-style/activities-tab-footer)}
-   [project-timeline-view/timeline project]])
-
-
 (defmethod project-menu/project-tab-badge :people [_ project]
   (when (project-managers-info-missing project)
     [Badge {:badge-content (r/as-element [information-missing-icon])}]))
@@ -505,6 +500,9 @@
                             :form-value (select-keys project [:thk.project/owner])
                             :button-component [buttons/button-secondary {:size :small}
                                                (tr [:buttons :edit])]}]])
+
+(defmethod project-menu/project-tab-action :activities [_ e! _app project]
+  [project-timeline-view/timeline project])
 
 (defn edit-project-details
   [e! project close!]
