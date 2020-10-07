@@ -25,7 +25,7 @@
 (defn words
   "Split text into sequence of words."
   [text]
-  (re-seq #?(:clj #"\p{IsLatin}+"
+  (re-seq #?(:clj #"[\p{IsLatin}\d]+"
              :cljs #"[^\s\d-_*]+") text))
 
 (defn unique-words
