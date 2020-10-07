@@ -91,12 +91,6 @@
            :thk.lifecycle/_activities 0
            :thk.project/_lifecycles 0 :db/id]))
 
-(defn project-thk-id [db meeting-id]
-  (get-in (du/entity db meeting-id)
-          [:activity/_meetings 0
-           :thk.lifecycle/_activities 0
-           :thk.project/_lifecycles 0 :thk.project/id]))
-
 (defn meeting-activity-id [db meeting-id]
   (get-in (du/entity db meeting-id)
           [:activity/_meetings 0
