@@ -61,9 +61,10 @@
                         " (" (user-model/user-name responsible) ")"))
                  agenda)))
 
+
 (defn meeting-ics
   "Create iCalendar event from meeting"
-  [{:keys [meeting cancel?]}]
+  [{:keys [meeting-link meeting cancel?]}]
   (let [{id :db/id :meeting/keys [location start end organizer]} meeting
         [vcal-before vcal-after] (if cancel? vcal-cancel-wrapper vcal-wrapper)
         [vevent-before vevent-after] vevent-wrapper]
@@ -74,7 +75,10 @@
           "DTSTAMP" (ical-date (java.util.Date.))
           "ORGANIZER" (str "mailto:" (escape-chars (:user/email organizer)))
           "SUMMARY" (escape-chars (meeting-model/meeting-title meeting))
-          "DESCRIPTION" (escape-chars (meeting-description meeting))
+          "DESCRIPTION" (escape-chars
+                         (str meeting-link
+                              "\n\n"
+                              (meeting-description meeting)))
           "LOCATION" (escape-chars location)
           "DTSTART" (ical-date start)
           "DTEND" (ical-date end)
