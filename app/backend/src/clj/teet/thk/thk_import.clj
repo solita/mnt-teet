@@ -127,7 +127,7 @@
                                        (when lc-teet-id
                                          (str "having TEET :integration/id " lc-teet-id)))
                            lc-integration-id (or lc-integration-id
-                                                 (let [new-uuid (java.util.UUID/randomUUID)]
+                                                 (let [new-uuid (thk-mapping/unused-random-small-uuid db)]
                                                    (log/info "Creating new UUID for THK lifecycle " lc-thk-id " => " new-uuid)
                                                    new-uuid))]]
                  (cu/without-nils
@@ -170,7 +170,7 @@
                                             (when act-integration-id
                                               (str "having TEET :integration/id " act-integration-id)))
                                 act-integration-id (or act-integration-id
-                                                       (let [new-uuid (java.util.UUID/randomUUID)]
+                                                       (let [new-uuid (thk-mapping/unused-random-small-uuid db)]
                                                          (log/info "Creating new UUID for THK activity " act-thk-id " => " new-uuid)
                                                          new-uuid))]]
                       (merge
