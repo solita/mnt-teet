@@ -122,9 +122,13 @@
 
 (defn- meeting-decision-content [e! {id :db/id
                                      body :meeting.decision/body
-                                     files :file/_attached-to}]
+                                     files :file/_attached-to
+                                     links-from :link/_from}]
   [:div {:id (str "decision-" id)}
    [rich-text-editor/display-markdown body]
+   [link-view/links {:e! e!
+                     :links links-from
+                     :from [:meeting-decision id]}]
    [file-attachments {:e! e!
                       :drag-container-id (str "decision-" id)
                       :drop-message (tr [:drag :drop-to-meeting-decision])
