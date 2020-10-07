@@ -259,7 +259,7 @@
   [:div {:style {:margin-bottom "1rem"}}
    [:div {:class (<class common-styles/heading-and-action-style)}
     [typography/Heading2 (tr [:people-tab :consultants])]]
-   (log/debug "assignees:" (pr-str assignees))
+   #_(log/debug "assignees:" (pr-str assignees))
    (mapc (fn [[activity assignees]]
            [common/hierarchical-container
             {:heading-color theme-colors/gray
@@ -281,12 +281,21 @@
   ;; (contains? doesn't work for vecs)
   (not-every? some? seq))
 
+(defn activities-with-no-manager
+  [project]
+  (let [acts (mapcat :thk.lifecycle/activities
+                     (:thk.project/lifecycles project))]
+    (filterv
+      (fn [activity]
+        (nil? (:activity/manager activity)))
+      acts)))
+
 (defn- project-managers-info-missing [project]
   (let [acts (mapcat :thk.lifecycle/activities
                      (:thk.project/lifecycles project))
         activity-managers (mapv :activity/manager acts)
         owner (:thk.project/owner project)]
-    (log/debug "people info-missing badge tests:" (nil? owner)
+    #_(log/debug "people info-missing badge tests:" (nil? owner)
                (contains-nils? activity-managers)
                (empty? activity-managers) " - managers:" activity-managers)
     (or
@@ -305,7 +314,7 @@
                              (<class common-styles/margin-left 1)]}
                     (tr [:people-tab :active])]]})
 
-(defn manager-history [manager name manager-history]
+(defn manager-history-display [manager name manager-history]
   (for [{:keys [manager period]} manager-history
         :let [[start end] period
               now (js/Date.)]]
@@ -328,19 +337,20 @@
                              (and end (format/date end)))])]}))
 
 (defn project-owner-and-managers* [owner lifecycles show-history?]
-  (into [{:primary-text (or (user-model/user-name owner) (tr [:common :unassigned])) 
+  (into [{:primary-text (or (user-model/user-name owner) (tr [:common :unassigned]))
           :secondary-text (tr [:roles :owner])}]
-        ;; All activity owners        
-        (mapcat         
+        ;; All activity owners
+        (mapcat
          (fn [{activities :thk.lifecycle/activities}]
            (if show-history?
              (mapcat (fn [{:activity/keys [manager-history manager name]}]
                        (if (and (empty? manager-history) manager)
-                         ;; No manager history, manager has been set when created
-                         ;; and has never been changed
+                         ;; No manager history, manager has been set
+                         ;; when created and has never been changed
                          [(active-manager manager name)]
-                         ;; Has histories containing previous and current managers
-                         [(manager-history manager name manager-history)]))
+                         ;; Has histories containing previous and current
+                         ;; managers
+                         (manager-history-display manager name manager-history)))
                      activities)
              ;; else - show-history? = false
              (for [{:activity/keys [manager name]
@@ -351,13 +361,17 @@
                  {:key (str id)})))))
         lifecycles))
 
-(defn project-owner-and-managers [owner lifecycles show-history? project-managers-info-missing?]  
+(defn project-owner-and-managers [owner lifecycles show-history? activities-missing-manager]
   [itemlist/gray-bg-list
-   (util/with-keys (concat
-                    (project-owner-and-managers* owner lifecycles show-history?)
-                    (when project-managers-info-missing?
-                      [{:primary-text (tr [:common :unassigned]) 
-                        :secondary-text (tr [:roles :manager])}])))])
+   (concat
+     (project-owner-and-managers* owner lifecycles show-history?)
+     (mapv
+       (fn [activity]
+         {:id (:db/id activity)
+          :primary-text [:span (tr [:common :unassigned])]
+          :secondary-text [:span (tr [:roles :manager])]
+          :tertiary-text [:span (tr-enum (:activity/name activity))]})
+       activities-missing-manager))])
 
 (defmethod project-menu/project-tab-content :people
   [_ e! {query :query :as _app}
@@ -369,7 +383,7 @@
 
      [:div.people-tab-managers
       [typography/Heading2 (tr [:project :management])]
-      [project-owner-and-managers owner lifecycles @show-history? (project-managers-info-missing project)]
+      [project-owner-and-managers owner lifecycles @show-history? (activities-with-no-manager project)]
       (when has-history?
         [Link {:on-click #(swap! show-history? not)
                :style {:cursor :pointer}}
