@@ -13,7 +13,8 @@
             [teet.meeting.meeting-model :as meeting-model]
             [teet.log :as log]
             [clojure.string :as str]
-            [teet.user.user-model :as user-model])
+            [teet.user.user-model :as user-model]
+            [teet.link.link-db :as link-db])
   (:import (java.util Date)))
 
 (defn update-meeting-tx
@@ -65,6 +66,26 @@
                       {:error :unauthorized})))))
 
 
+(defn- link-from-meeting [db user from]
+  (let [meeting-id (meeting-db/link-from->meeting db from)]
+    (when (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)
+      {:wrap-tx #(update-meeting-tx meeting-id %)})))
+
+(defmethod link-db/link-from [:meeting-agenda :task]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
+(defmethod link-db/link-from [:meeting-decision :task]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
+(defmethod link-db/delete-link-from [:meeting-agenda :task]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
+(defmethod link-db/delete-link-from [:meeting-decision :task]
+  [db user from _type _to]
+  (link-from-meeting db user from))
 
 (defcommand :meeting/create
   {:doc "Create new meetings to activities"

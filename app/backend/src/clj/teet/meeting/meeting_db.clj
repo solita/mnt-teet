@@ -198,22 +198,3 @@
   (case type
     :meeting-agenda (get-in (du/entity db id) [:meeting/_agenda :db/id])
     :meeting-decision (get-in (du/entity db id) [:meeting.agenda/_decisions :meeting/_agenda :db/id])))
-
-(defn allow-link-to-meeting? [db user from]
-  (user-is-organizer-or-reviewer? db user (link-from->meeting db from)))
-
-(defmethod link-db/allow-link? [:meeting-agenda :task]
-  [db user from _type _to]
-  (allow-link-to-meeting? db user from))
-
-(defmethod link-db/allow-link? [:meeting-decision :task]
-  [db user from _type _to]
-  (allow-link-to-meeting? db user from))
-
-(defmethod link-db/allow-link-delete? [:meeting-agenda :task]
-  [db user from _type _to]
-  (allow-link-to-meeting? db user from))
-
-(defmethod link-db/allow-link-delete? [:meeting-decision :task]
-  [db user from _type _to]
-  (allow-link-to-meeting? db user from))

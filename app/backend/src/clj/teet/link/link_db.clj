@@ -5,28 +5,37 @@
             [teet.link.link-model :as link-model]
             [teet.log :as log]))
 
-(defmulti allow-link?
-  "Check permissions for linking. Returns true if linking is allowed or
-  false if not. May also throw exception with error code for frontend.
+(defmulti link-from
+  "Check permissions and preconditions for linking from an entity.
 
-  Dispatches on from type and link type.
+  Returns falsy value if linking is not allowed.
+  May also throw exception with error code for frontend.
+
+  If return value is a map and contains :wrap-tx function the
+  link data will be passed through the function before being
+  transacted.
+
   Default behaviour is to disallow."
   (fn [_db _user [from-type _from-id] type _to] [from-type type]))
 
-(defmulti allow-link-delete?
-  "Check permissions for deleting an existing link. Returns true if
-  deleting the link is allowed or false if not. May also throw an
-  exception with error code for the frontend.
+(defmulti delete-link-from
+  "Check permissions and preconditions for deleting an existing link.
 
-  Dispatches on from type and link type.
+  Returns falsy value if linking is not allowed.
+  May also throw exception with error code for frontend.
+
+  If return value is a map and contains :wrap-tx function the
+  link data will be passed through the function before being
+  transacted.
+
   Default behaviour is to disallow."
   (fn [_db _user [from-type _from-id] type _to] [from-type type]))
 
-(defmethod allow-link? :default [_ user from type to]
+(defmethod link-from :default [_ user from type to]
   (log/warn "Disallow link by user" user "from" from "to" to "(" type ")")
   false)
 
-(defmethod allow-link-delete? :default [_ user from type to]
+(defmethod delete-link-from :default [_ user from type to]
   (log/warn "Disallow link delete by user" user "from" from "to" to "(" type ")")
   false)
 

@@ -1,5 +1,5 @@
 (ns teet.link.link-commands
-  (:require [teet.db-api.core :as db-api :refer [defcommand]]
+  (:require [teet.db-api.core :as db-api :refer [defcommand tx]]
             [teet.link.link-model :as link-model]
             [teet.link.link-db :as link-db]
             [teet.util.datomic :as du]))
@@ -10,21 +10,26 @@
    :payload {:keys [from to type]}
    :project-id nil
    :authorization {}
-   :pre [(link-model/valid-from? from)
-         (link-db/allow-link? db user from type to)]
-   :transact
-   [{:db/id "add-link"
-     :link/from (nth from 1)
-     :link/to to
-     :link/type type}]})
+   :pre [(link-model/valid-from? from)]}
+
+  (when-let [{wrap-tx :wrap-tx} (link-db/link-from db user from type to)]
+    (select-keys
+     (tx ((or wrap-tx identity)
+          [{:db/id "add-link"
+            :link/from (nth from 1)
+            :link/to to
+            :link/type type}]))
+     [:tempids])))
 
 (defcommand :link/delete
   {:doc "Delete link by id"
    :context {:keys [db user]}
    :payload {:keys [from to type]
              id :db/id}
-   :pre [(link-db/is-link? db id from to type)
-         (link-db/allow-link-delete? db user from type to)]
+   :pre [(link-db/is-link? db id from to type)]
    :project-id nil
-   :authorization {}
-   :transact [[:db/retractEntity id]]})
+   :authorization {}}
+  (when-let [{wrap-tx :wrap-tx} (link-db/delete-link-from db user from type to)]
+    (tx ((or wrap-tx identity)
+         [[:db/retractEntity id]]))
+    :ok))
