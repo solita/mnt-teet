@@ -480,7 +480,8 @@
  :link
  {:search
   {:placeholder "Lisan viite...",
-   :no-results "Ei leitud ühtki vastet"}},
+   :no-results "Ei leitud ühtki vastet"},
+  :target-deleted nil},
  :login
  {:login "Sisenen",
   :password "Salasõna",

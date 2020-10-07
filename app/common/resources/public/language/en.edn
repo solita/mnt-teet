@@ -483,7 +483,9 @@
   :files "Files attached to this unit",
   :burden "Burden",
   :no-mortgages "No mortgages"},
- :link {:search {:placeholder "Link...", :no-results "No results"}},
+ :link
+ {:search {:placeholder "Link...", :no-results "No results"},
+  :target-deleted "Deleted by {user} at {at}"},
  :login
  {:login "Login",
   :password "Password",

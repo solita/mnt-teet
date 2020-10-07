@@ -23,14 +23,24 @@
 
 (defmethod display :task
   [{:link/keys [info to]}]
-  (let [{:task/keys [type estimated-end-date assignee]} info
+  (let [{:task/keys [type estimated-end-date assignee]
+         :meta/keys [deleted? modifier modified-at]} info
         activity (get-in info [:activity/_tasks 0 :db/id])]
     [:span
-     [:div [url/Link
-            {:page :activity-task
-             :params {:activity activity
-                      :task (:db/id to)}}
-            (tr-enum type)]]
+     [:div
+      (if deleted?
+        [:<>
+         [typography/GreyText
+          (tr-enum type)]
+         [typography/SmallText
+          (tr [:link :target-deleted]
+              {:user (user-model/user-name modifier)
+               :at (format/date-time modified-at)})]]
+        [url/Link
+         {:page :activity-task
+          :params {:activity activity
+                   :task (:db/id to)}}
+         (tr-enum type)])]
      [:div
       [typography/SmallGrayText
        (tr [:task :link-info]
