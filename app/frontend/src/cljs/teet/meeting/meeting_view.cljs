@@ -160,24 +160,27 @@
                             {:page :meeting :params {:meeting (str (:db/id meeting))}
                              :component buttons/button-secondary}
                             (tr [:dashboard :open])]
-           :children (for [topic agenda
-                           d (:meeting.agenda/decisions topic)
-                           i (range (count d))]
-                       {:key (:db/id d)
-                        :color theme-colors/gray-lighter
-                        :open? true
-                        :heading [:div
-                                  [typography/Heading3 {:class (<class common-styles/margin-bottom "0.3")}
-                                   (tr [:meeting :decision-topic] {:topic (:meeting.agenda/topic topic)
-                                                                   :num (inc i)})]
-                                  [typography/SmallText
-                                   (tr [:meeting :approved-by]
-                                       {:approvers
-                                        (str/join ", " (map
-                                                         #(user-model/user-name (:review/reviewer %))
-                                                         reviews))})
-                                   [:b " " (format/date locked-at)]]]
-                        :content [meeting-decision-content e! d]})}
+           :children
+           (map-indexed
+             (fn [i [topic decision]]
+               {:key (:db/id decision)
+                :color theme-colors/gray-lighter
+                :open? true
+                :heading [:div
+                          [typography/Heading3 {:class (<class common-styles/margin-bottom "0.3")}
+                           (tr [:meeting :decision-topic] {:topic (:meeting.agenda/topic topic)
+                                                           :num (inc i)})]
+                          [typography/SmallText
+                           (tr [:meeting :approved-by]
+                               {:approvers
+                                (str/join ", " (map
+                                                 #(user-model/user-name (:review/reviewer %))
+                                                 reviews))})
+                           [:b " " (format/date locked-at)]]]
+                :content [meeting-decision-content e! decision]})
+             (for [topic agenda
+                   d (:meeting.agenda/decisions topic)]
+               [topic d]))}
           theme-colors/gray]))]
     [typography/GreyText (tr [:meeting :no-decisions-found])]))
 
