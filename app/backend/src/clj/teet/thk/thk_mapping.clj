@@ -27,11 +27,15 @@
 
 (defonce random (java.security.SecureRandom.))
 
+
 (defn random-small-uuid
   "Create a UUID that only has 64bits number. This is because THK
   teet id numbers are only int8 sized and cannot fit a full UUID"
   []
-  (number->uuid (.nextLong random)))
+  (let [n (.nextLong random)]
+    (if (pos? n)
+      (number->uuid n)
+      (recur))))
 
 (defn- used-integration-id? [db id]
   (boolean
