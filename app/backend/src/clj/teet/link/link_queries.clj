@@ -16,7 +16,7 @@
                  [?p :thk.project/lifecycles ?l]
                  [?l :thk.lifecycle/activities ?a]
                  [?a :activity/tasks ?t]
-                 [(missing? $ ?t :meta/deleted)]
+                 [(missing? $ ?t :meta/deleted?)]
                  :in $ ?p]
                db project)
 
