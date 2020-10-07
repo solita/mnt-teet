@@ -47,6 +47,7 @@
     :notification.type/activity-accepted [icons/action-thumb-up]
     :notification.type/activity-rejected [icons/action-thumb-down]
     :notification.type/comment-mention [icons/communication-chat-bubble]
+    :notification.type/meeting-updated [icons/communication-forum]
     [icons/navigation-more-horiz]))
 
 (defn notification-menu-style

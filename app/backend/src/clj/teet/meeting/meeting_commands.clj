@@ -207,15 +207,20 @@
 
 
 (defn historical-meeting-notify [db meeting from-user participants project-eid]
-  (tx-ret    
-   (for [to-user participants]
-     (notification-db/notification-tx
-      db
-      {:from from-user
-       :to to-user
-       :target (:db/id meeting)
-       :type :notification.type/meeting-updated
-       :project project-eid}))))
+  (log/debug "from-user is" from-user)
+  (tx-ret
+   (vec
+    (for [to-user participants]
+      (notification-db/notification-tx
+       db
+       (do
+         (log/debug "to-user is" to-user)
+           
+         {:from from-user
+          :to to-user
+          :target (:db/id meeting)
+          :type :notification.type/meeting-updated
+          :project project-eid}))))))
 
 (defcommand :meeting/send-notifications
   {:doc "Send iCalendar notifications to organizer and participants."
@@ -236,6 +241,7 @@
                           {:meeting/agenda [:meeting.agenda/topic
                                             {:meeting.agenda/responsible [:user/given-name
                                                                           :user/family-name]}]}] id)]
+    (assert (:db/id user))
     (cond
       (date-in-past? (:meeting/end meeting))
       (historical-meeting-notify db meeting user
