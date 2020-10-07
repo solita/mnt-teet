@@ -58,6 +58,11 @@
 (def internal-consultant-id tu/internal-consultant-id)
 (def boss-uid tu/boss-id)
 
+(defn set-email
+  [user-eid email-address]
+  (tx {:db/id      user-eid
+       :user/email email-address}))
+
 (defn give-admin-permission
   [user-eid]
   (tx {:db/id            user-eid
@@ -285,3 +290,24 @@
     (tx (merge {:db/id activity-id
                 :activity/manager [:user/id manager-user-id]}
                (meta-model/modification-meta adding-user)))))
+
+(defn user-by-person-id [person-id]
+  (ffirst
+       (q '[:find (pull ?e [*])
+            :in $ ?wanted-pid
+            :where [?e :user/person-id ?wanted-pid]] (db) person-id)))
+
+(defn testenv-privilege-clears-20201007 []
+  (let [;; person-ids ["EE94837264730"] ; dev
+        person-ids ["EE60001018800" "EE60001019906" "EE10101010005"]  ;; test
+        dry-run? false]
+    (doseq [pid person-ids]
+      (let [user (user-by-person-id pid)]
+        (println "doing user" (:db/id user)  pid" found with" (count (:user/permissions user)) "permissions")
+        (doseq [perm (:user/permissions user)]
+          
+          (println "remove-permission" (:user/id user) (:db/id perm))
+          (when-not dry-run?
+            (println 
+             (remove-permission (:user/id user)
+                                (:db/id perm)))))))))
