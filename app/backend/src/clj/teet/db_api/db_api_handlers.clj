@@ -32,6 +32,8 @@
             teet.meeting.meeting-queries
             teet.meeting.meeting-commands
             teet.meta.meta-commands
+            teet.link.link-queries
+            teet.link.link-commands
 
             [teet.log :as log]
             [teet.auth.jwt-token :as jwt-token]

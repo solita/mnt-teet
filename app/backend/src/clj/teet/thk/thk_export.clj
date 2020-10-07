@@ -81,9 +81,9 @@
 
                  ;; TEET id for phase and activity
                  "phase_teetid"
-                 (str (:db/id lifecycle))
+                 (str (thk-mapping/uuid->number (:integration/id lifecycle)))
                  "activity_teetid"
-                 (str (:db/id activity))
+                 (str (thk-mapping/uuid->number (:integration/id activity)))
 
                  ;; Regular columns
                  (let [{task-mapping :task :as mapping}

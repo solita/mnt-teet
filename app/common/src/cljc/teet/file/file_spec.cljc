@@ -7,13 +7,12 @@
 #?(:cljs
    (defn file-info [^js/File f]
      {:file/name (.-name f)
-      :file/size (.-size f)
-      :file/type (.-type f)}))
+      :file/size (.-size f)}))
 
 (s/def ::task-id integer?)
 (s/def ::file-id integer?)
 (s/def ::previous-version-id integer?)
-(s/def ::file (s/keys :req [:file/name :file/size :file/type]))
+(s/def ::file (s/keys :req [:file/name :file/size]))
 
 (s/def :file/upload (s/keys :req-un [::task-id ::file]
                             :opt-un [::previous-version-id]))
@@ -23,7 +22,6 @@
 (s/def :file/download-file (s/keys :req-un [::file-id]))
 (s/def :file/status keyword?)
 (s/def :file/name (s/and string? (complement str/blank?)))
-(s/def :file/type string?)
 (s/def :file/size integer?)
 (s/def :file/description (s/and string? (complement str/blank?)))
 (s/def :file/category keyword?)
@@ -43,7 +41,7 @@
      (s/def :file/file-object
        (s/and
          #(instance? js/File %)
-         #(s/valid? :file/file (file-model/file-info %))))))
+         #(s/valid? :file/file (file-info %))))))
 
 (s/def :activity/name keyword?)
 (s/def :activity/status :teet.util.datomic/enum)

@@ -15,7 +15,8 @@
 (deftest commenting-tasks-requires-authorization
   (let [task-id (tu/create-task {:user tu/mock-user-boss
                                  :activity (tu/->db-id "p1-lc1-act1")
-                                 :task {:task/type :task.type/plot-allocation-plan}}
+                                 :task {:task/type :task.type/plot-allocation-plan
+                                        :task/group :task.group/land-purchase}}
                                 :task-id)]
     (is (some? task-id)))
 
@@ -70,7 +71,8 @@
   ;; Create a task for commenting
   (let [task-id (tu/create-task {:user tu/mock-user-manager
                                  :activity (tu/->db-id "p1-lc1-act1")
-                                 :task {:task/type :task.type/plot-allocation-plan}}
+                                 :task {:task/type :task.type/plot-allocation-plan
+                                        :task/group :task.group/land-purchase}}
                                 :task-id)]
     (is (some? task-id)))
 
@@ -146,7 +148,8 @@
     ;; Create a new task for multi resolve
     (let [task-id (tu/create-task {:user tu/mock-user-manager
                                    :activity (tu/->db-id "p1-lc1-act1")
-                                   :task {:task/type :task.type/plot-allocation-plan}}
+                                   :task {:task/type :task.type/plot-allocation-plan
+                                          :task/group :task.group/land-purchase}}
                                   :multi-resolve-task-id)]
       (is (some? task-id)))
 
@@ -192,7 +195,8 @@
     ;; Create a new task for multi resolve
     (let [task-id (tu/create-task {:user tu/mock-user-manager
                                    :activity (tu/->db-id "p1-lc1-act1")
-                                   :task {:task/type :task.type/plot-allocation-plan}}
+                                   :task {:task/type :task.type/plot-allocation-plan
+                                          :task/group :task.group/land-purchase}}
                                   :external-multi-resolve-task-id)]
       (is (some? task-id)))
 
@@ -222,6 +226,7 @@
   (tu/create-task {:user tu/mock-user-boss
                    :activity (tu/->db-id "p1-lc1-act1")
                    :task {:task/type :task.type/plot-allocation-plan
+                          :task/group :task.group/land-purchase
                           :task/assignee {:user/id (second tu/mock-user-carla-consultant)}}} :task-id)
   ;; Create new file
   (is (= (second tu/mock-user-carla-consultant)
@@ -233,8 +238,7 @@
                 teet.integration.integration-s3/presigned-url (constantly "url")]
     (->> (tu/local-command :file/upload {:task-id (tu/get-data :task-id)
                                          :file {:file/name "land_deals.pdf"
-                                                :file/size 666
-                                                :file/type "application/pdf"}})
+                                                :file/size 666}})
          :file
          (tu/store-data! :file)))
 

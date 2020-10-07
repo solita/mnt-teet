@@ -1,5 +1,8 @@
 (ns teet.thk.thk-integration-ion
-  "THK integration lambdas"
+  "THK integration lambdas.
+
+  Examining CSV output can be done with csvq and jq tools:
+  csvq -d \\; -f json \"select * from csvfile\" | jq"
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [teet.log :as log]

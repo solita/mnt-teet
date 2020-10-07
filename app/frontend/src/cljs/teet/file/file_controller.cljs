@@ -7,7 +7,8 @@
             [teet.common.common-controller :as common-controller]
             [teet.localization :refer [tr]]
             [teet.file.file-model :as file-model]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.snackbar.snackbar-controller :as snackbar-controller]))
 
 (defrecord UploadFiles [files project-id task-id on-success progress-increment file-results]) ; Upload files (one at a time) to document
 (defrecord UploadFinished []) ; upload completed, can close dialog
@@ -43,12 +44,15 @@
                            (common-controller/->Navigate :activity-task (dissoc params :file) {}))}))
 
   DeleteAttachment
-  (process-event [{:keys [file-id on-success-event]} app]
+  (process-event [{:keys [file-id on-success-event attached-to success-message]} app]
     (t/fx app
           {:tuck.effect/type :command!
            :command :file/delete-attachment
-           :payload {:file-id file-id}
-           :result-event on-success-event}))
+           :payload {:file-id file-id
+                     :attached-to attached-to}
+           :result-event (or on-success-event
+                             common-controller/->Refresh)
+           :success-message success-message}))
 
   AddFilesToTask
   (process-event [{:keys [files on-success]} app]
@@ -90,38 +94,52 @@
                                      :on-success (->UploadSuccess (:db/id file))})))}))
 
   UploadFiles
-  (process-event [{:keys [files project-id task-id on-success progress-increment attachment?
+  (process-event [{:keys [files project-id task-id on-success progress-increment
+                          attachment? attach-to
                           file-results]
                    :as event} app]
-    (if-let [file (first files)]
-      ;; More files to upload
-      (do
-        (log/info "More files to upload. Uploading: " file)
-        (t/fx (if progress-increment
-                (update-in app [:new-document :in-progress?]
-                           + progress-increment)
-                app)
-              {:tuck.effect/type :command!
-               :command (if attachment? :file/upload-attachment :file/upload)
-               :payload (merge {:file (merge (file-model/file-info (:file-object file))
-                                             (when-let [pos (:file/pos-number file)]
-                                               (when (not (str/blank? pos))
-                                                 {:file/pos-number (js/parseInt pos)})))}
-                               (if attachment?
-                                 {:project-id project-id}
-                                 {:task-id task-id}))
-               :result-event (fn [result]
-                               (map->UploadFileUrlReceived
-                                (merge result
-                                       {:file-data (:file-object file)
-                                        :on-success (update event :files rest)})))}))
-      (do
-        (log/info "No more files to upload. Return on-success event: " on-success)
-        (t/fx app
-              (fn [e!]
-                ;; Invoke on-success and if it returns an event, apply it
-                (when-let [evt (on-success file-results)]
-                  (e! evt)))))))
+    ;; Validate files
+    (if-let [error (some (comp file-model/validate-file
+                               file-model/file-info
+                               :file-object)
+                         files)]
+      (snackbar-controller/open-snack-bar
+       app
+       (case (:error error)
+         :file-too-large (tr [:document :file-too-large])
+         :file-type-not-allowed (tr [:document :invalid-file-type])
+         "Error")
+       :error)
+      (if-let [file (first files)]
+        ;; More files to upload
+        (do
+          (log/info "More files to upload. Uploading: " file)
+          (t/fx (if progress-increment
+                  (update-in app [:new-document :in-progress?]
+                             + progress-increment)
+                  app)
+                {:tuck.effect/type :command!
+                 :command (if attachment? :file/upload-attachment :file/upload)
+                 :payload (merge {:file (merge (file-model/file-info (:file-object file))
+                                               (when-let [pos (:file/pos-number file)]
+                                                 (when (not (str/blank? pos))
+                                                   {:file/pos-number (js/parseInt pos)})))}
+                                 (if attachment?
+                                   {:project-id project-id
+                                    :attach-to attach-to}
+                                   {:task-id task-id}))
+                 :result-event (fn [result]
+                                 (map->UploadFileUrlReceived
+                                  (merge result
+                                         {:file-data (:file-object file)
+                                          :on-success (update event :files rest)})))}))
+        (do
+          (log/info "No more files to upload. Return on-success event: " on-success)
+          (t/fx app
+                (fn [e!]
+                  ;; Invoke on-success and if it returns an event, apply it
+                  (when-let [evt (on-success file-results)]
+                    (e! evt))))))))
 
   UploadFileUrlReceived
   (process-event [{:keys [file file-data document-id url on-success]} app]

@@ -43,7 +43,8 @@
                                     :timestamp "Mon Feb 10 13:51:35 UTC 2020"})})
       (files "/" {:root "../frontend"})
       (files "/" {:root "../frontend/target/public"})
-      (files "/" {:root "../frontend/resources/public"}))
+      (files "/" {:root "../frontend/resources/public"})
+      (files "/" {:root "../common/resources/public"}))
 
      ;; In prod mode, serve packaged resources
      (resources "/"))))

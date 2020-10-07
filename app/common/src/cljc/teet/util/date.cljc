@@ -12,10 +12,23 @@
          (.atZone (ZoneId/systemDefault))
          .toLocalDate)))
 
+#?(:cljs
+   (defn now []
+     (js/Date.)))
+#?(:clj
+   (defn now []
+     (java.util.Date.)))
+
+
+
+(defn date-after? [a b]
+  #?(:clj (.after a b)
+     :cljs (> a b)))
+
 (defn date-in-past?
   [date]
   #?(:clj (neg? (.compareTo (to-local-date date) (to-local-date (Date.))))
-     :cljs (t/before? date (js/Date.))))
+     :cljs (date-after? (now) date)))
 
 (defn days-until-date
   [date]
@@ -31,3 +44,14 @@
              (.set Calendar/MONTH (dec month))
              (.set Calendar/DATE day)))
      :cljs (js/Date. year (dec month) day)))
+
+
+(defn start-of-today
+  []
+  #?(:clj (.getTime (doto (Calendar/getInstance)
+                      (.setTime (Date.))
+                      (.set Calendar/HOUR_OF_DAY 0)
+                      (.set Calendar/MINUTE 0)
+                      (.set Calendar/SECOND 0)
+                      (.set Calendar/MILLISECOND 0)))
+     :cljs (.setHours (js/Date.) 0 0 0 0)))

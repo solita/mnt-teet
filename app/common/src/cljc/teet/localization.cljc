@@ -12,13 +12,15 @@
             #?(:cljs [postgrest-ui.display :as postgrest-display])
             #?(:cljs [alandipert.storage-atom :refer [local-storage]])
             [teet.util.string :as string]
-            [teet.log :as log]))
+            [teet.log :as log]
+            #?(:clj [clojure.java.io :as io])))
 
 (defn dev-mode? []
   #?(:clj false
      :cljs (when-let [host (-> js/window .-location .-host)]
-             (boolean (re-find #"localhost"
-                               host)))))
+             (boolean
+              (or (re-find #"dev-teet" host)
+                  (re-find #"localhost" host))))))
 
 (def supported-languages #{"en" "et"})
 
@@ -45,8 +47,8 @@
          (.then #(reader/read-string %))
          (.then callback))
      :clj
-     (-> (str "../frontend/resources/public/language/" (name language) ".edn")
-         slurp read-string
+     (-> (str "public/language/" (name language) ".edn")
+         io/resource slurp read-string
          callback)))
 
 (defn load-language!
@@ -221,10 +223,3 @@
 (defmacro with-language [lang & body]
   `(binding [*language* ~lang]
      (load-language! *language* (fn [_# _#] ~@body))))
-
-#?(:cljs (defn localized-month-year
-               [date]
-               (let [localization-key (if (= @selected-language :en)
-                                        "en-US"
-                                        "et-EE")]
-                    (.toLocaleString date localization-key #js {:month "long" :year "numeric"}))))

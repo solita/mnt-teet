@@ -31,41 +31,53 @@
     old-file
     (db-api/bad-request! "Can't find previous version")))
 
-(def file-keys [:file/name :file/size :file/type :file/group-number :file/pos-number])
-
-(defn check-image-only [file]
-  (when-not (str/starts-with? (:file/type file) "image/")
-    (db-api/bad-request! "Not allowed as attachment")))
+(def file-keys [:file/name :file/size :file/group-number :file/pos-number])
 
 (defcommand :file/upload-attachment
-  {:doc "Upload attachment file that is not linked to anything yet"
+  {:doc "Upload attachment file and optionally attach it to entity."
    :context {:keys [conn user db]}
    ;; TODO: Pass project id to check project authz
-   :payload {:keys [file project-id]}
+   :payload {:keys [file project-id attach-to]}
    :project-id project-id
-   :authorization {:project/upload-comment-attachment {}}}
-  (log/debug "upload-attachment: got project-id" project-id)
-  (let [file (file-model/type-by-suffix file)]
-    (check-image-only file)
-    (let [key (new-file-key file)
-          res (tx [(merge (select-keys file file-keys)
-                          {:db/id "new-file"
-                           :file/s3-key key}
-                          (creation-meta user))])
-          file-id (get-in res [:tempids "new-file"])]
+   :authorization {:project/upload-comment-attachment {}}
+   :pre [^{:error :comment-attachment-image-only}
+         (or attach-to
+             (file-model/image? file))
 
-      {:url (file-storage/upload-url key)
-       :file (d/pull (:db-after res) '[*] file-id)})))
+         ^{:error :attach-pre-check-failed}
+         (or (nil? attach-to)
+             (file-db/attach-to db user file attach-to))]}
+  (log/debug "upload-attachment: got project-id" project-id)
+
+  (let [{attach-to-eid :eid
+         wrap-tx :wrap-tx} (when attach-to
+                             (file-db/attach-to db user file attach-to))
+        wrap-tx (or wrap-tx identity)
+        key (new-file-key file)
+        res (tx (wrap-tx
+                 [(merge (select-keys file file-keys)
+                         {:db/id "new-file"
+                          :file/s3-key key}
+                         (when attach-to-eid
+                           {:file/attached-to attach-to-eid})
+                         (creation-meta user))]))
+        file-id (get-in res [:tempids "new-file"])]
+
+    {:url (file-storage/upload-url key)
+     :file (d/pull (:db-after res) '[*] file-id)}))
 
 
 (defcommand :file/delete-attachment
   {:doc "Delete an attachment"
    :context {:keys [user db]}
-   :payload {:keys [file-id]}
+   :payload {:keys [file-id attached-to]}
    :project-id nil
    :authorization {}
-   :pre [(file-db/own-file? db user file-id)]
-   :transact [(deletion-tx user file-id)]})
+   :pre [(or attached-to
+             (file-db/own-file? db user file-id))]
+   :transact (if attached-to
+               (file-db/delete-attachment db user file-id attached-to)
+               [(deletion-tx user file-id)])})
 
 (defn- file-with-metadata [{:file/keys [name] :as file}]
   (let [metadata (try
@@ -109,33 +121,32 @@
              (file-belong-to-task? db task-id previous-version-id))]
    :authorization {:document/upload-document {:db/id task-id
                                               :link :task/assignee}}}
-  (let [file (file-model/type-by-suffix file)]
-    (or (file-model/validate-file file)
-        (let [old-file (when previous-version-id
-                         (find-previous-version db task-id previous-version-id))
-              version (or (some-> old-file :file/version inc) 1)
-              file (file-with-metadata file)
-              key (new-file-key file)
-              res (tx [{:db/id (or task-id "new-task")
-                        :task/files [(merge (select-keys file file-keys)
-                                            {:db/id "new-file"
-                                             :file/s3-key key
-                                             :file/status :file.status/draft
-                                             :file/version version}
-                                            (when old-file
-                                              {:file/previous-version (:db/id old-file)})
-                                            (when-let [old-pos-number (:file/pos-number old-file)]
-                                              {:file/pos-number old-pos-number})
-                                            (creation-meta user))]}])
-              t-id (or task-id (get-in res [:tempids "new-task"]))
-              file-id (get-in res [:tempids "new-file"])]
-          (try
-            {:url (file-storage/upload-url key)
-             :task-id t-id
-             :file (d/pull (:db-after res) '[*] file-id)}
-            (catch Exception e
-              (log/warn e "Unable to create S3 presigned URL")
-              (throw e)))))))
+  (or (file-model/validate-file file)
+      (let [old-file (when previous-version-id
+                       (find-previous-version db task-id previous-version-id))
+            version (or (some-> old-file :file/version inc) 1)
+            file (file-with-metadata file)
+            key (new-file-key file)
+            res (tx [{:db/id (or task-id "new-task")
+                      :task/files [(merge (select-keys file file-keys)
+                                          {:db/id "new-file"
+                                           :file/s3-key key
+                                           :file/status :file.status/draft
+                                           :file/version version}
+                                          (when old-file
+                                            {:file/previous-version (:db/id old-file)})
+                                          (when-let [old-pos-number (:file/pos-number old-file)]
+                                            {:file/pos-number old-pos-number})
+                                          (creation-meta user))]}])
+            t-id (or task-id (get-in res [:tempids "new-task"]))
+            file-id (get-in res [:tempids "new-file"])]
+        (try
+          {:url (file-storage/upload-url key)
+           :task-id t-id
+           :file (d/pull (:db-after res) '[*] file-id)}
+          (catch Exception e
+            (log/warn e "Unable to create S3 presigned URL")
+            (throw e))))))
 
 (defcommand :file/delete
   {:doc "Delete file"

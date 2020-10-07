@@ -7,7 +7,8 @@
             [teet.localization :refer [tr]]
             [teet.log :as log]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [teet.project.task-model :as task-model]))
 
 (defn tasks-for-activity-name
   "Given `selected-tasks` of form `[<task-group> <task-type>]`, and
@@ -28,7 +29,6 @@
 (defrecord UpdateTask [task updated-task]) ; update task info to database
 (defrecord UpdateTaskResponse [response])
 (defrecord UpdateTaskStatus [status])
-(defrecord UpdateTaskForm [form-data])
 
 (defrecord DeleteTask [task-id])
 (defrecord DeleteTaskResult [response])
@@ -161,31 +161,14 @@
   SaveTaskForm
   (process-event [_ {edit-task-data :edit-task-data
                      stepper :stepper :as app}]
-    (let [{id :db/id :as task}
-          (-> edit-task-data
-              (update :db/id #(or % "new-task"))
-
-              ;; Ensure only task with THK type can be sent
-              (update :task/send-to-thk?
-                      (fn [send?]
-                        (boolean (and send? (get-in edit-task-data [:task/type :thk/task-type])))))
-
-              ;; Take keyword value for task type
-              (update :task/type :db/ident)
-              cu/without-nils)]
-      (t/fx app
-            (merge
-             {:tuck.effect/type :command!
-              :result-event ->SaveTaskSuccess}
-             (if (not= "new-task" id)
-               {:command :task/update
-                :payload task
-                :success-message (tr [:notifications :task-updated])}
-               {:command :task/create
-
-                :payload {:activity-id (common-controller/->long (get-in stepper [:dialog :activity-id]))
-                          :task task}
-                :success-message (tr [:notifications :task-created])})))))
+    (t/fx app
+          (merge
+           {:tuck.effect/type :command!
+            :result-event ->SaveTaskSuccess}
+           {:command :task/update
+            :payload (select-keys edit-task-data
+                                  task-model/edit-form-keys)
+            :success-message (tr [:notifications :task-updated])})))
 
   SaveTaskSuccess
   (process-event [_ {:keys [page query params] :as app}]
@@ -210,11 +193,6 @@
   (process-event [{response :response} app]
     (log/info "GOT RESPONSE: " response)
     app)
-
-  UpdateTaskForm
-  (process-event [{form-data :form-data} app]
-    (update-in app [:route :project :add-task] merge form-data))
-
 
   OpenAddTasksDialog
   (process-event [{activity-id :activity-id} {:keys [page params query] :as app}]

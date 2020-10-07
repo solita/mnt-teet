@@ -13,7 +13,8 @@
             [teet.util.collection :as cu]
             [teet.thk.thk-mapping :as thk-mapping]
             [teet.log :as log]
-            [teet.project.project-db :as project-db])
+            [teet.project.project-db :as project-db]
+            [teet.util.datomic :as du])
   (:import (org.apache.commons.io.input BOMInputStream)))
 
 (def excluded-project-types #{"TUGI" "TEEMU"})
@@ -52,13 +53,24 @@
                           (:thk.activity/id task)
                           " having TEET id " task-id)
                 (cu/without-nils
-                 {:db/id task-id
+                 {:integration/id task-id
                   :thk.activity/id (:thk.activity/id task)
                   :task/estimated-start-date (:activity/estimated-start-date task)
                   :task/estimated-end-date (:activity/estimated-end-date task)
                   :task/actual-start-date (:activity/actual-start-date task)
                   :task/actual-end-date (:activity/actual-end-date task)}))))
         rows))
+
+(defn- lookup
+  "Lookup :db/id and :integration/id for an eid, returns nil if entity doesn't exist."
+  [db eid]
+  (let [result
+        (ffirst
+         (d/q '[:find (pull ?e [:db/id :integration/id])
+                :in $ ?e]
+              db eid))]
+    (when (:db/id result)
+      result)))
 
 (defn project-datomic-attributes [db [project-id rows]]
   (let [prj (first rows)
@@ -97,15 +109,43 @@
          :thk.project/lifecycles
          (into []
                (for [[id activities] phases
-                     :let [phase (first activities)]]
+                     :let [phase (first activities)
+                           lc-thk-id (:thk.lifecycle/id phase)
+                           lc-teet-id (:lifecycle-db-id phase)
+                           {lc-db-id :db/id
+                            lc-integration-id :integration/id}
+                           (if lc-teet-id
+                             ;; If THK sent TEET id field, lookup using that
+                             (lookup db [:integration/id lc-teet-id])
+                             ;; otherwise lookup using THK id
+                             (lookup db [:thk.lifecycle/id lc-thk-id]))
+
+                           _ (log/info "Received lifecycle with THK id " lc-thk-id
+                                       (if lc-db-id
+                                         (str "having TEET :db/id " lc-db-id)
+                                         "without TEET id => creating new lifecycle")
+                                       (when lc-teet-id
+                                         (str "having TEET :integration/id " lc-teet-id)))
+                           lc-integration-id (or lc-integration-id
+                                                 (let [new-uuid (thk-mapping/unused-random-small-uuid db)]
+                                                   (log/info "Creating new UUID for THK lifecycle " lc-thk-id " => " new-uuid)
+                                                   new-uuid))]]
                  (cu/without-nils
                   (merge
                    (select-keys phase #{:thk.lifecycle/type
                                         :thk.lifecycle/estimated-start-date
                                         :thk.lifecycle/estimated-end-date
                                         :thk.lifecycle/id})
-                   {:db/id (str "lfc-" id)
-                    :thk.lifecycle/integration-info (integration-info phase
+                   (if lc-db-id
+                     ;; Existing lifecycle; will conflict if integration id and db id point to different entities
+                     {:db/id lc-db-id
+                      :integration/id lc-integration-id}
+
+                     ;; New lifecycle
+                     {:db/id (str "lfc-" id)
+                      :integration/id lc-integration-id})
+
+                   {:thk.lifecycle/integration-info (integration-info phase
                                                                       thk-mapping/phase-integration-info-fields)
                     :thk.lifecycle/activities
                     (for [{id :thk.activity/id
@@ -114,12 +154,25 @@
                            :as activity} activities
                           ;; Only process activities here
                           :when (and id name (nil? task-id))
-                          :let [{thk-id :thk.activity/id
-                                 teet-id :activity-db-id} activity
-                                _ (log/info "Received activity with THK id " thk-id
-                                            (if teet-id
-                                              (str "having TEET id " teet-id)
-                                              "without TEET id => creating new activity"))]]
+                          :let [{act-thk-id :thk.activity/id
+                                 act-teet-id :activity-db-id} activity
+                                {act-db-id :db/id
+                                 act-integration-id :integration/id}
+                                (if act-teet-id
+                                  ;; Lookup using TEET id
+                                  (lookup db [:integration/id act-teet-id])
+                                  ;; Lookup using THK id
+                                  (lookup db [:thk.activity/id act-thk-id]))
+                                _ (log/info "Received activity with THK id " act-thk-id
+                                            (if act-db-id
+                                              (str "having TEET :db/id " act-db-id)
+                                              "without TEET id => creating new activity")
+                                            (when act-integration-id
+                                              (str "having TEET :integration/id " act-integration-id)))
+                                act-integration-id (or act-integration-id
+                                                       (let [new-uuid (thk-mapping/unused-random-small-uuid db)]
+                                                         (log/info "Creating new UUID for THK activity " act-thk-id " => " new-uuid)
+                                                         new-uuid))]]
                       (merge
                        (cu/without-nils
                         (select-keys activity #{:thk.activity/id
@@ -129,8 +182,16 @@
                                                 :activity/status
                                                 :activity/procurement-nr
                                                 :activity/procurement-id}))
-                       {:db/id (or teet-id (str "act-" id))
-                        :activity/integration-info (integration-info
+                       (if act-db-id
+                         ;; Existing activity
+                         {:db/id act-db-id
+                          :integration/id act-integration-id}
+
+                         ;; New activity, create integration id
+                         {:db/id (str "act-" id)
+                          :integration/id act-integration-id})
+
+                       {:activity/integration-info (integration-info
                                                     activity
                                                     thk-mapping/activity-integration-info-fields)}))}))))}))]
      (task-updates rows))))

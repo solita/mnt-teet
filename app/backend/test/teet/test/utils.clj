@@ -260,23 +260,38 @@
 ;; Various helpers
 ;;
 (defn create-task [{:keys [user activity task]} & [global-test-data-key]]
-  (local-login user)
+  (when user
+    (local-login user))
   (let [activity-entity (du/entity (db) activity)
-        task-id (-> (local-command :task/create {:activity-id activity
-                                                 :task (merge {:task/send-to-thk? false
-                                                               :task/type :task.type/design-requirements
-                                                               :task/group :task.group/base-data
-                                                               :db/id "new-id"
-                                                               :task/description "Design requirements for testing."
-                                                               :task/assignee {:user/id (second user)}
-                                                               :task/estimated-start-date (:activity/estimated-start-date activity-entity)
-                                                               :task/estimated-end-date (:activity/estimated-end-date activity-entity)}
-                                                              task)})
+        task (merge (merge {:task/send-to-thk? false
+                            :task/type :task.type/design-requirements
+                            :task/group :task.group/base-data
+                            :db/id "new-id"
+                            :task/description "Design requirements for testing."
+                            :task/assignee {:user/id (second user)}
+                            :task/estimated-start-date (:activity/estimated-start-date activity-entity)
+                            :task/estimated-end-date (:activity/estimated-end-date activity-entity)}
+                           task))
+        payload {:db/id activity
+                 :task/estimated-start-date (:task/estimated-start-date task)
+                 :task/estimated-end-date (:task/estimated-end-date task)
+                 :activity/tasks-to-add [[(:task/group task)
+                                          (:task/type task)
+                                          (:task/send-to-thk? task)]]}
+        tempid (str "NEW-TASK-" (name (:task/group task)) "-" (name (:task/type task)))
+        task-id (-> (local-command :activity/add-tasks payload)
                     :tempids
-                    (get "new-id"))]
+                    (get tempid))]
+    (local-command :task/update
+                   (merge
+                    {:db/id task-id}
+                    (select-keys task [:task/assignee :task/description])))
     (if global-test-data-key
       (store-data! global-test-data-key task-id)
       task-id)))
+
+
+
 
 (defn create-comment [{:keys [user entity-type entity-id comment]} & [global-test-data-key]]
   (local-login user)

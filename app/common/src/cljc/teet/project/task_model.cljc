@@ -3,6 +3,15 @@
             [teet.util.collection :refer [find-idx]]
             [teet.util.date :as date]))
 
+(def edit-form-keys
+  #{:db/id
+    :task/description
+    :task/estimated-start-date
+    :task/estimated-end-date
+    :task/actual-start-date
+    :task/actual-end-date
+    :task/assignee})
+
 (def task-group-order
   {:task.group/base-data 1
    :task.group/study 2

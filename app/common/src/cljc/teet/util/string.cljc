@@ -21,3 +21,36 @@
                         (apply special-fn args)
                         (interpolate-get parameters param-name)))
                     (interpolate-get parameters param-name))))))
+
+(defn words
+  "Split text into sequence of words."
+  [text]
+  (re-seq #?(:clj #"[\p{IsLatin}\d]+"
+             :cljs #"[^\s\d-_*]+") text))
+
+(defn unique-words
+  "Return unique words in input text."
+  [text]
+  (into #{} (words text)))
+
+(defn contains-words?
+  "Check that candidate text contains all the words (or parts of words)
+  in search-words string.
+
+  Both are split into words and each element in search-text must be
+  a substring of some element in cadidate-text.
+
+  Comparison is case insensitive."
+  [candidate-text search-text]
+  (let [candidate-words (unique-words (str/lower-case candidate-text))
+        search-words (unique-words (str/lower-case search-text))]
+    (every? (fn [search-word]
+              (or
+               ;; Candidate words includes this word fully
+               (candidate-words search-word)
+
+               ;; or this word is a substring of some candidate word
+               (some (fn [candidate-word]
+                       (str/includes? candidate-word search-word))
+                     candidate-words)))
+            search-words)))

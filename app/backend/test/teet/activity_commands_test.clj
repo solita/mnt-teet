@@ -30,7 +30,8 @@
                      :role :internal-consultant})
 
   (let [task-id (tu/create-task {:user tu/mock-user-manager :activity (act1-id)
-                                 :task {:task/type :task.type/plot-allocation-plan}})]
+                                 :task {:task/type :task.type/plot-allocation-plan
+                                        :task/group :task.group/land-purchase}})]
     (is (number? task-id))
 
     (tu/complete-task {:user tu/mock-user-manager

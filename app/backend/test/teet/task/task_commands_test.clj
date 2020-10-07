@@ -15,15 +15,13 @@
   (tu/local-login tu/mock-user-boss)
   (let [activity-id (tu/->db-id "p1-lc1-act1")
         activity-entity (du/entity (tu/db) activity-id)
-        result (tu/local-command
-                 :task/create
-                 {:activity-id activity-id
-                  :task {:db/id "new-task"
+        task-id (tu/create-task
+                 {:activity activity-id
+                  :task {:task/group :task.group/land-purchase
                          :task/type :task.type/plot-allocation-plan
                          :task/assignee {:user/id (second tu/mock-user-edna-consultant)}
                          :task/estimated-start-date (:activity/estimated-start-date activity-entity)
-                         :task/estimated-end-date (:activity/estimated-end-date activity-entity)}})
-        task-id (get-in result [:tempids "new-task"])]
+                         :task/estimated-end-date (:activity/estimated-end-date activity-entity)}})]
     (is (some? task-id) "Task was created successfully")))
 
 (deftest creating-task-not-possible-outside-activity-dates
@@ -34,39 +32,35 @@
         after-end-date (Date. (+ (.getTime (:activity/estimated-end-date activity-entity)) (* 1000 60 60 24)))]
     (testing "Can not create task with start date outside of activity start date"
       (is (thrown? Exception
-                   (tu/local-command
-                     :task/create
-                     {:activity-id activity-id
-                      :task {:db/id "new-task"
-                             :task/type :task.type/plot-allocation-plan
-                             :task/assignee {:user/id (second tu/mock-user-edna-consultant)}
-                             :task/estimated-start-date before-start-date
-                             :task/estimated-end-date (:activity/estimated-end-date activity-entity)}}))))
+                   (tu/create-task
+                    {:activity activity-id
+                     :task {:task/group :task.group/land-purchase
+                            :task/type :task.type/plot-allocation-plan
+                            :task/assignee {:user/id (second tu/mock-user-edna-consultant)}
+                            :task/estimated-start-date before-start-date
+                            :task/estimated-end-date (:activity/estimated-end-date activity-entity)}}))))
     (testing "Can not create task with end date outside of activity end date"
       (is (thrown? Exception
-                   (tu/local-command
-                     :task/create
-                     {:activity-id activity-id
-                      :task {:db/id "new-task"
-                             :task/type :task.type/plot-allocation-plan
-                             :task/assignee {:user/id (second tu/mock-user-edna-consultant)}
-                             :task/estimated-start-date (:activity/estiated-start-date activity-entity)
-                             :task/estimated-end-date after-end-date}}))))))
+                   (tu/create-task
+                    {:activity activity-id
+                     :task {:task/group :task.group/land-purchase
+                            :task/type :task.type/plot-allocation-plan
+                            :task/assignee {:user/id (second tu/mock-user-edna-consultant)}
+                            :task/estimated-start-date (:activity/estiated-start-date activity-entity)
+                            :task/estimated-end-date after-end-date}}))))))
 
 (deftest task-assignment-creates-notification-to-assignee
   (tu/local-login tu/mock-user-boss)
   (let [activity-id (tu/->db-id "p1-lc1-act1")
         activity-entity (du/entity (tu/db) activity-id)
-        result
-        (tu/local-command
-         :task/create
-         {:activity-id activity-id
-          :task {:db/id "new-task"
+        task-id
+        (tu/create-task
+         {:activity activity-id
+          :task {:task/group :task.group/land-purchase
                  :task/type :task.type/plot-allocation-plan
                  :task/assignee {:user/id (second tu/mock-user-edna-consultant)}
                  :task/estimated-start-date (:activity/estimated-start-date activity-entity)
-                 :task/estimated-end-date (:activity/estimated-end-date activity-entity)}})
-        task-id (get-in result [:tempids "new-task"])]
+                 :task/estimated-end-date (:activity/estimated-end-date activity-entity)}})]
     (is (some? task-id) "task was created")
 
     (testing "Edna has new notification targeting the task"
@@ -103,10 +97,9 @@
     (let [activity-id (tu/->db-id "p1-lc1-act1")
           activity-entity (du/entity (tu/db) activity-id)]
       (is (thrown? Exception
-                   (tu/local-command
-                    :task/create
-                    {:activity-id activity-id
-                     :task {:db/id "new-task"
+                   (tu/create-task
+                    {:activity activity-id
+                     :task {:task/group :task.group/study
                             :task/type :task.type/feasibility-study
                             :task/assignee {:user/id (second tu/mock-user-edna-consultant)}
                             :task/estimated-start-date (:activity/estimated-start-date activity-entity)

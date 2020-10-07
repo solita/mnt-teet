@@ -2,7 +2,76 @@
   "File queries"
   (:require [datomic.client.api :as d]
             [teet.user.user-model :as user-model]
-            [teet.comment.comment-db :as comment-db]))
+            [teet.comment.comment-db :as comment-db]
+            [teet.log :as log]))
+
+(defn- valid-attach-definition? [attach]
+  (and (vector? attach)
+       (= 2 (count attach))
+       (keyword? (first attach))))
+
+(defn check-attach-definition [attach]
+  (if-not (valid-attach-definition? attach)
+    (throw (ex-info "Invalid attach definition"
+                    {:invalid-attach-definition attach}))
+    attach))
+
+(defmulti attach-to
+  "Check preconditions and permissions for attaching file to
+  entity of given type and id for the user.
+
+  Returna a map containing :eid to attach to if attaching is allowed, nil if not.
+  May also throw an exception with :error key in the exception.
+
+  Return map may also contain :wrap-tx function which will be used to process
+  the tx-data vector before invoking the transaction.
+
+  Default behaviour is to disallow."
+  (fn [_db _user _file attach]
+    (first (check-attach-definition attach))))
+
+(defmulti allow-download-attachments?
+  "Check preconditions and permissions for downloading files attached
+  to given entity.
+
+  Default behaviour is to disallow."
+  (fn [_db _user attach]
+    (first (check-attach-definition attach))))
+
+(defmulti delete-attachment
+  "Create transaction data for deleting a file attachment.
+  Must check preconditions and permissions for deleting the attached file
+  and throw exception with :error key in the data on failure.
+
+  Default behaviour is to disallow and throw an exception."
+  (fn [_db _user _file-id attach]
+    (first (check-attach-definition attach))))
+
+(defmethod attach-to :default [_db user _file [entity-type entity-id]]
+  (log/info "Disallow attaching file to " entity-type " with id " entity-id
+            " for user " user)
+  nil)
+
+(defmethod allow-download-attachments? :default
+  [_db user [entity-type entity-id]]
+  (log/info "Disallow downloading attachments to " entity-type
+            " with id " entity-id " for user " user))
+
+(defmethod delete-attachment :default
+  [_db user file-id [entity-type entity-id]]
+  (log/info "Disallow deleting attachment " file-id " to "
+            entity-type " with id " entity-id " for user " user)
+  (throw (ex-info "Delete attachment not allowed"
+                  {:error :not-allowed})))
+
+(defn file-is-attached-to? [db file-id attach]
+  (and (valid-attach-definition? attach)
+       (boolean
+        (seq
+         (d/q '[:find ?eid
+                :where [?f :file/attached-to ?eid]
+                :in $ ?f ?eid]
+              db file-id (second attach))))))
 
 (defn own-file? [db user file-id]
   (boolean
@@ -87,8 +156,9 @@
                        (comment-counts-by-file (:db/id %))
                        {:file-seen/seen-at (seen-at-by-file (:db/id %))})
                first)
-         (d/q '[:find (pull ?f [:db/id :file/name :meta/deleted? :file/version :file/size :file/type :file/status
+         (d/q '[:find (pull ?f [:db/id :file/name :meta/deleted? :file/version :file/size :file/status
                                 {:file/previous-version [:db/id]}
+                                :meta/created-at
                                 {:meta/creator [:user/id :user/family-name :user/given-name]}])
                 :where
                 [?f :file/upload-complete? true]

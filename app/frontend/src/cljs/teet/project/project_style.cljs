@@ -152,11 +152,6 @@
    :border-top (str "1px solid" theme-colors/gray-lighter)
    :align-items :center})
 
-(defn activities-tab-footer
-  []
-  (assoc (wizard-footer)
-         :justify-content :start))
-
 (defn project-timeline-link
   []
   ^{:pseudo {:hover {:color theme-colors/blue-dark}}}

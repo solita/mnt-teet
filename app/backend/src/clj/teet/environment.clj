@@ -31,6 +31,38 @@
                         {:param-path param-path :default-value default-value}
                         e))))))
 
+(defn- ssm-parameters [parameter-paths default-values]
+  (let [name->path (into {}
+                         (map (fn [path]
+                                [(str "/teet/" (str/join "/" (map name path)))
+                                 path]))
+                         parameter-paths)
+
+        ;; GetParameters supports at most 10 parameters in a single call
+        ;; so we partition keys and invoke the operation for each batch
+        responses (for [keys (partition-all 10 (keys name->path))]
+                    (aws/invoke @ssm-client
+                                {:op :GetParameters
+                                 :request {:Names (vec keys)}}))]
+    (reduce
+     merge
+     (for [response responses]
+       (merge
+        (into {}
+              (map (fn [{:keys [Name Value]}]
+                     [(name->path Name) Value]))
+              (:Parameters response))
+        (into {}
+              (map (fn [missing-parameter-name]
+                     (let [path (name->path missing-parameter-name)
+                           value (get default-values path)]
+                       (if (nil? value)
+                         (throw (ex-info "Missing parameter that has no default value"
+                                         {:parameter-name missing-parameter-name
+                                          :parameter-path path}))
+                         [path value]))))
+              (:InvalidParameters response)))))))
+
 (def init-config {:datomic {:db-name "teet"
                             :client {:server-type :ion}}
 

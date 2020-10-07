@@ -164,7 +164,6 @@
     :border-width "2px 2px 0 0"
     :flex-grow grow
     :flex-shrink 0
-    :word-break :break-all
     :display :flex
     :align-items :center
     :padding "0.5rem 0.25rem"
@@ -248,3 +247,8 @@
   {:display :flex
    :justify-content :space-between
    :flex-wrap :wrap})
+
+(defn divider-border
+  "Top border to divide multiple items"
+  []
+  {:border-top (str "solid 1px " theme-colors/gray-light)})

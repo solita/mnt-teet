@@ -63,6 +63,8 @@
   :deletion-modal-text "Are you sure you want to delete this item?",
   :start-time "Starts at",
   :design-stage "Stage",
+  :this-week "This week",
+  :today "Today",
   :deselect-all "Deselect all",
   :show-details "Show details",
   :end-time "Ends at",
@@ -107,7 +109,9 @@
  :drag
  {:no-drop-zone "No drop zone",
   :drop-to-task "Upload files to task",
-  :drop-to-comment "Add images to comment"},
+  :drop-to-comment "Add images to comment",
+  :drop-to-meeting-agenda "Attach file to meeting agenda",
+  :drop-to-meeting-decision "Attach file to meeting decision"},
  :enum
  {:estate-procedure.type/acquisition-negotiation
   "Acquisition based on evaluation",
@@ -298,9 +302,13 @@
   "Permission for this user is already granted",
   :conflicting-activities
   "Only one activity of a type can be active at the same time.",
+  :meeting-is-locked
+  "The meeting is accepted and can no longer be changed",
   :request-timeout "The server did not respond.",
   :invalid-activity-dates "Check activity dates",
-  :bad-request "Bad request"},
+  :bad-request "Bad request",
+  :meeting-has-no-decisions
+  "The meeting doesn't contain anything to review"},
  :fields
  {:land-acquisition/registry-number "State estate registry number",
   :comment/visibility "Visibility",
@@ -316,7 +324,7 @@
   :meeting/date-and-time "Date and time",
   :task/assignee "Responsible person",
   :land-exchange/price-per-sqm "Price/m²",
-  :thk.project/owner-info "Owner",
+  :thk.project/owner-info "Owner / Project Manager",
   :activity/manager "Project manager",
   :activity/status "Status",
   :task/group "Task group",
@@ -339,6 +347,7 @@
   :thk.project/start-km "Start km",
   "projectgroup" {"activity" "Activities"},
   :permission/role "Roles",
+  :review/comment "Comment",
   :land-exchange/area "Area",
   :meeting.decision/body "Decision",
   :meeting/agenda "Agenda",
@@ -474,6 +483,9 @@
   :files "Files attached to this unit",
   :burden "Burden",
   :no-mortgages "No mortgages"},
+ :link
+ {:search {:placeholder "Link...", :no-results "No results"},
+  :target-deleted "Deleted by {user} at {at}"},
  :login
  {:login "Login",
   :password "Password",
@@ -502,24 +514,34 @@
  {:notifications-help
   "Send notifications to meeting participants about relevant changes to the meeting contents.",
   :add-non-teet-participant "Add person not in TEET",
+  :search-decisions "Search decisions",
   :add-decision-button "Add decision",
   :participant-removed "Participant removed",
+  :approve-meeting-modal-title "Approve decisions?",
   :edit-meeting-modal-title "Edit meeting",
   :activity-meetings-title "{activity-name} meetings",
   :new-meeting-modal-title "New meeting",
   :participants-title "Participants",
+  :reject-meeting-modal-title "Reject decisions?",
   :meetings-title "Meetings",
+  :approve-meeting-button "Approve decisions",
   :no-meetings "No meetings",
   :send-notification-to-participants "{count} participants",
   :add-agenda-button "Add new topic",
+  :approvals "Approvals",
   :new-decision-modal-title "Create a new decision",
+  :no-decisions-found "No decisions found",
+  :reviews-invalidated-warning-text
+  "If this meeting is changed all existing approvals will be invalidated.",
   :edit-decision-modal-title "Edit decision",
   :new-meeting-button "Create meeting",
   :project-meetings-title "Project meetings",
   :notifications-title "Notifications",
   :edit-agenda-modal-title "Edit topic",
   :new-agenda-modal-title "New topic",
+  :reject-meeting-button "Reject decisions",
   :add-person "Add person",
+  :approved-by "Approved by {approvers}",
   :notifications-sent "Calendar notification sent",
   :decision-topic "{topic} decision #{num}"},
  :notifications
@@ -609,6 +631,7 @@
   :activities "Project activities",
   :cadastral-units-tab "Lands",
   :edit-project-details-modal-title "Edit project details",
+  :management "Management",
   :no-selected-restrictions
   "No selected restrictions for this project",
   :activities-tab "Activities"},
@@ -648,7 +671,12 @@
   :filter-by-area "Filter by area",
   :inclusion-distance-placeholder "Give value to show related areas",
   :component-title "Related features search area"},
- :tab-names {:details "Details", :notes "Notes"},
+ :tab-names
+ {:details "Details",
+  :notes "Notes",
+  :upcoming "Upcoming",
+  :history "History",
+  :decisions "Decisions"},
  :task
  {:task-overview "Task overview",
   :upload-files "Upload files",
@@ -661,6 +689,7 @@
   :add-document "Add document",
   :submit-results "Submit results",
   :submit-results-success "Results submitted successfully",
+  :link-info "Responsible person - {assignee}. Deadline - {deadline}.",
   :submit-results-confirm
   "Are you sure you want to submit the results to {task}?",
   :no-documents "No documents",

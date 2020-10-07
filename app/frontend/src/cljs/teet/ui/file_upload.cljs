@@ -1,7 +1,8 @@
 (ns teet.ui.file-upload
-  (:require [herb.core :refer [<class]]
+  (:require [clojure.string :as str]
+            [herb.core :refer [<class]]
             [reagent.core :as r]
-            [teet.ui.material-ui :refer [Button IconButton List ListItem
+            [teet.ui.material-ui :refer [IconButton List ListItem
                                          ListItemText ListItemSecondaryAction]]
             [teet.ui.text-field :refer [TextField]]
             [teet.theme.theme-colors :as theme-colors]
@@ -12,7 +13,8 @@
             [teet.file.file-model :as file-model]
             teet.file.file-spec
             [teet.ui.buttons :as buttons]
-            [teet.ui.drag :as drag]))
+            [teet.ui.drag :as drag]
+            [teet.log :as log]))
 
 
 
@@ -30,22 +32,33 @@
 (defn FileUpload
   "Note! Use one of the predefined file upload components, such as
   FileUploadButton instead of using this directly."
-  [{:keys [id on-drop drop-message multiple? drag-container-id]} & children]
-  (r/with-let [remove-upload-zone!
-               (drag/register-drop-zone! {:element-id drag-container-id
-                                          :on-drop #(on-drop (drag/dropped-files %))
-                                          :label (or drop-message "")})]
-    (into [:label
-           {:htmlFor id}
-           [:input {:style {:display "none"}
-                    :id id
-                    :multiple multiple?
-                    :droppable "true"
-                    :type "file"
-                    :on-change #(on-drop (file-vector %))}]]
-          children)
-    (finally
-      (remove-upload-zone!))))
+  [{:keys [on-drop drop-message drag-container-id]} & _children]
+  (let [current-on-drop (atom on-drop)
+        remove-upload-zone!
+        (drag/register-drop-zone! {:element-id drag-container-id
+                                   :on-drop #(let [on-drop @current-on-drop]
+                                               (on-drop (drag/dropped-files %)))
+                                   :label (or drop-message "")})]
+    (r/create-class
+     {:component-will-receive-props
+      (fn [_this [_ {on-drop :on-drop} & _]]
+        (reset! current-on-drop on-drop))
+
+      :component-will-unmount
+      (fn [_this]
+        (remove-upload-zone!))
+
+      :reagent-render
+      (fn [{:keys [id on-drop multiple?]} & children]
+        (into [:label
+               {:htmlFor id}
+               [:input {:style {:display "none"}
+                        :id id
+                        :multiple multiple?
+                        :droppable "true"
+                        :type "file"
+                        :on-change #(on-drop (file-vector %))}]]
+              children))})))
 
 (defn FileUploadButton [{:keys [id on-drop drop-message multiple? button-attributes
                                 drag-container-id]
@@ -72,14 +85,13 @@
            {:border (str "solid 1px " theme-colors/error)})))                 ;;This should also use material ui theme.error
 
 (defn file-info
-  [{:file/keys [name type size] :as _file} invalid-file-type? file-too-large?]
+  [{:file/keys [name size] :as _file} invalid-file-type? file-too-large?]
   [:<>
    (into [:span (merge {} (when invalid-file-type?
-                            {:style {:color theme-colors/error}}))
-          (str (or (not-empty type)
-                   (file-model/filename->suffix name)))]
+                            {:style {:color theme-colors/error}}))]
          (when invalid-file-type?
-           [" "
+           [(str/upper-case (file-model/filename->suffix name))
+            " "
             [:a {:target "_blank"
                  :href "https://confluence.mkm.ee/pages/viewpage.action?spaceKey=TEET&title=TEET+File+format+list"}
              (tr [:document :invalid-file-type])]]))
@@ -93,8 +105,7 @@
 (defn files-field-entry [file-entry]
   (-> file-entry
       :file-object
-      file-model/file-info
-      file-model/type-by-suffix))
+      file-model/file-info))
 
 (defn files-field [{:keys [value on-change error]}]
   [:div {:class (<class files-field-style error)
@@ -106,9 +117,9 @@
       (fn [i ^js/File file]
         ^{:key i}
         [ListItem {}
-         (let [{:file/keys [type name size] :as file}
+         (let [{:file/keys [name size] :as file}
                (files-field-entry file)
-               invalid-file-type? (not (file-model/upload-allowed-file-types type))
+               invalid-file-type? (not (file-model/valid-suffix? name))
                file-too-large? (> size file-model/upload-max-file-size)]
            [ListItemText (merge
                           {:primary name

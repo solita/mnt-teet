@@ -3,7 +3,8 @@
   (:require [datomic.client.api :as d]
             [teet.activity.activity-model :as activity-model]
             [teet.util.datomic :as du]
-            [teet.file.file-db :as file-db]))
+            [teet.file.file-db :as file-db]
+            [teet.activity.activity-db :as activity-db]))
 
 (defn activity-for-task-id
   [db task-id]
@@ -22,12 +23,12 @@
                                              :in $ ?t]
                                            db task-eid))))
 
+
+
 (defn valid-task-for-activity? [db activity-id {task-type :task/type :as _task}]
-  (boolean ((get activity-model/activity-name->task-groups
-                 (-> (du/entity db activity-id)
-                     :activity/name :db/ident)
-                 #{})
-            (:enum/valid-for (du/entity db [:db/ident task-type])))))
+  (let [task-groups (activity-db/allowed-task-groups db activity-id)]
+    (boolean (task-groups
+              (:enum/valid-for (du/entity db [:db/ident task-type]))))))
 
 (defn task-type-can-be-sent-to-thk? [db task-type]
   (ffirst (d/q '[:find ?thk-type

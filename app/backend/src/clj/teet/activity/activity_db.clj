@@ -172,3 +172,12 @@
                             activity-candidate)]
     (some (partial activity-model/conflicts? new-activity)
           existing-activities)))
+
+(defn allowed-task-groups
+  "Returns set of task group keywords that are allowed for the
+  given activity."
+  [db activity-id]
+  (get activity-model/activity-name->task-groups
+       (-> (du/entity db activity-id)
+           :activity/name :db/ident)
+       #{}))

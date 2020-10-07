@@ -13,6 +13,10 @@
   ["BEGIN:VEVENT\r\n"
    "END:VEVENT\r\n"])
 
+(def ^:const vcal-cancel-wrapper
+  ["BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//mnt/teet//NONSGML v1.0//EN\r\nMETHOD:CANCEL\r\nVERSION:2.0\r\n"
+   "END:VCALENDAR"])
+
 (def utc-tz (java.time.ZoneId/of "UTC"))
 (def ical-date-format (java.time.format.DateTimeFormatter/ofPattern "yyyyMMdd'T'HHmmss'Z'"))
 
@@ -30,10 +34,12 @@
                     [";" "\\;"]])
 
 (defn- escape-chars [text]
-  (reduce (fn [text [from to]]
-            (str/replace text from to))
-          text
-          escaped-chars))
+  (if text
+    (reduce (fn [text [from to]]
+              (str/replace text from to))
+            text
+            escaped-chars)
+    ""))
 
 (defn- fold-text [text]
   (if (<= (.length text) fold-length)
@@ -55,22 +61,28 @@
                         " (" (user-model/user-name responsible) ")"))
                  agenda)))
 
+
 (defn meeting-ics
   "Create iCalendar event from meeting"
-  [{id :db/id :meeting/keys [location start end] :as meeting}]
-  (let [[vcal-before vcal-after] vcal-wrapper
+  [{:keys [meeting-link meeting cancel?]}]
+  (let [{id :db/id :meeting/keys [location start end organizer]} meeting
+        [vcal-before vcal-after] (if cancel? vcal-cancel-wrapper vcal-wrapper)
         [vevent-before vevent-after] vevent-wrapper]
-
     (str vcal-before
          vevent-before
          (vcal-properties
           "UID" (str id "@teet")
           "DTSTAMP" (ical-date (java.util.Date.))
+          "ORGANIZER" (str "mailto:" (escape-chars (:user/email organizer)))
           "SUMMARY" (escape-chars (meeting-model/meeting-title meeting))
-          "DESCRIPTION" (escape-chars (meeting-description meeting))
+          "DESCRIPTION" (escape-chars
+                         (str meeting-link
+                              "\n\n"
+                              (meeting-description meeting)))
           "LOCATION" (escape-chars location)
           "DTSTART" (ical-date start)
-          "DTEND" (ical-date end))
+          "DTEND" (ical-date end)
+          "STATUS" (if cancel? "CANCELLED" "CONFIRMED"))
 
          vevent-after
          vcal-after)))

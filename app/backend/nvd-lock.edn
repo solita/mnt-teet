@@ -21,4 +21,5 @@
 
   ;; Github enterprise doesn't affect us
   "CVE-2020-10517" "CVE-2020-10518"
+  "CVE-2020-24750" ;; jackson-databind serialization - we don't use
   }
