@@ -51,9 +51,30 @@
               (contains? x :link/type)
               (contains? x :link/to))
        (merge x
-              {:link/info (d/pull db (get-in link-model/link-types
-                                             [(:link/type x) :display-attributes])
+              {:link/info (d/pull db (into link-model/common-link-target-attributes
+                                           (get-in link-model/link-types
+                                                   [(:link/type x) :display-attributes]))
                                   (:db/id (:link/to x)))})
+       x))
+   form))
+
+(defn fetch-links
+  "Fetch links for all entities in form that match fetch-links-pred?.
+  Associates :link/_from with list of linked entities and expands the
+  linked to entities."
+  [db fetch-links-pred? form]
+  (walk/prewalk
+   (fn [x]
+     (if (and (map? x)
+              (contains? x :db/id)
+              (fetch-links-pred? x))
+       (assoc x :link/_from
+              (expand-links
+               db (mapv first
+                        (d/q '[:find (pull ?l [:db/id :link/to :link/type])
+                               :where [?l :link/from ?e]
+                               :in $ ?e]
+                             db (:db/id x)))))
        x))
    form))
 

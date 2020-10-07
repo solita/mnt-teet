@@ -1,6 +1,7 @@
 (ns teet.link.link-model
   "Generic links between entities. Contains specifications about types
-  of from entities and the types of links.")
+  of from entities and the types of links."
+  (:require [teet.user.user-model :as user-model]))
 
 (def links-from-pattern
   "Pull pattern to fetch link info originating from this entity.
@@ -29,6 +30,9 @@ linked entity."
                                {:task/assignee [:user/given-name :user/family-name]}
                                :task/estimated-end-date
                                {:activity/_tasks [:db/id :activity/name]}]}})
+
+(def common-link-target-attributes [:meta/deleted? :meta/modified-at
+                                    {:meta/modifier user-model/user-display-attributes}])
 
 (defn valid-from? [from]
   (and (vector? from)

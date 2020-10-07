@@ -5,6 +5,9 @@
             [teet.util.date :refer [date-after?]]
             [teet.user.user-spec :as user-spec]))
 
+(def user-display-attributes
+  [:user/given-name :user/family-name])
+
 (def user-listing-attributes
   [:db/id
    :user/id
