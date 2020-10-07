@@ -69,7 +69,8 @@
   [{:keys [e! links from editable?]}]
   (r/with-let [in-progress (r/atom false)
                add-link! (fn [to]
-                           (e! (link-controller/->AddLink from (:db/id to) :task in-progress)))]
+                           (when to
+                             (e! (link-controller/->AddLink from (:db/id to) :task in-progress))))]
     [:div.links
      (mapc (r/partial link-wrapper {:e! e!
                                     :from from
