@@ -37,30 +37,36 @@
            {:assignee (user-model/user-name assignee)
             :deadline (format/date estimated-end-date)})]]]))
 
-(defn- link-wrapper [{:keys [e! from in-progress-atom]}
+(defn- link-wrapper [{:keys [e! from editable?
+                             in-progress-atom]}
                      {id :db/id
                       :link/keys [to type] :as link}]
   [:div {:class [(<class common-styles/flex-row-space-between)
                  (<class common-styles/divider-border)]}
    [display link]
-   [IconButton
-    {:on-click #(e! (link-controller/->DeleteLink from to type id
-                                                  in-progress-atom))}
-    [icons/action-delete]]])
+   (when editable?
+     [IconButton
+      {:on-click #(e! (link-controller/->DeleteLink from to type id
+                                                    in-progress-atom))}
+      [icons/action-delete]])])
 
 (defn links
   "List links to other entities (like tasks).
-  Shows input for adding new links."
-  [{:keys [e! links from]}]
+  Shows input for adding new links.
+
+  If editable? is true, links can be removed and added.
+  Otherwise the view is read-only."
+  [{:keys [e! links from editable?]}]
   (r/with-let [in-progress (r/atom false)
                add-link! (fn [to]
                            (e! (link-controller/->AddLink from (:db/id to) :task in-progress)))]
     [:div.links
      (mapc (r/partial link-wrapper {:e! e!
                                     :from from
-                                    :in-progress-atom in-progress})
+                                    :in-progress-atom in-progress
+                                    :editable? editable?})
            links)
-     (when-not @in-progress
+     (when (and editable? (not @in-progress))
        [select/select-search
         {:e! e!
          :placeholder (tr [:link :search :placeholder])

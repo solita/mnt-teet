@@ -120,15 +120,20 @@
           :style {:margin "0.5rem 0"}}
          (tr [:task :upload-files])]]]])])
 
+(defn- links-content [e! from links auth]
+  [link-view/links {:e! e!
+                    :links links
+                    :from from
+                    :editable? (:edit-meeting auth)}])
+
 (defn- meeting-decision-content [e! {id :db/id
                                      body :meeting.decision/body
                                      files :file/_attached-to
                                      links-from :link/_from}]
   [:div {:id (str "decision-" id)}
    [rich-text-editor/display-markdown body]
-   [link-view/links {:e! e!
-                     :links links-from
-                     :from [:meeting-decision id]}]
+   [authorization-context/consume
+    [links-content e! [:meeting-decision id] links-from]]
    [file-attachments {:e! e!
                       :drag-container-id (str "decision-" id)
                       :drop-message (tr [:drag :drop-to-meeting-decision])
@@ -644,9 +649,8 @@
      [:div
       [rich-text-editor/display-markdown body]])
 
-   [link-view/links {:e! e!
-                     :links links-from
-                     :from [:meeting-agenda id]}]
+   [authorization-context/consume
+    [links-content e! [:meeting-agenda id] links-from]]
 
    [file-attachments {:e! e!
                       :drag-container-id (str "agenda-" id)
