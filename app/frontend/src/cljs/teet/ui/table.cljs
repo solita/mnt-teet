@@ -124,7 +124,10 @@
                       (let [v (get-column row filter-attribute)]
                         (cond
                           (string? filter-value)
-                          (and v (str/includes? (str/lower-case v)
+                          ;; v can be a vector in case of :thk.project/owner-info
+                          ;; and this component is being replaced shortly
+                          ;; hence the use of str
+                          (and v (str/includes? (str/lower-case (str v))
                                                 (str/lower-case filter-value)))
 
                           (number? filter-value)
