@@ -83,7 +83,7 @@
 
 (defn- meeting-navigation-info [db meeting-eid]  
   (let [{:keys [project-thk-id activity-eid]}
-        (project-db/meeting-parents db meeting-eid (project-db/meeting-project-id db meeting-eid))]
+        (project-db/meeting-parents db {:db/id meeting-eid} (project-db/meeting-project-id db meeting-eid))]
     (if (and project-thk-id activity-eid meeting-eid)
       {:page :activity-meetings
        :params {:project project-thk-id

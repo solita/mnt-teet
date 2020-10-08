@@ -99,6 +99,8 @@
 (defn meeting-parents [db meeting project-eid]
   (let [project (du/entity db project-eid)
         activity-eid (meeting-activity-id db (:db/id meeting))]
+    (assert (some? (:db/id meeting)) meeting)
+    (assert (some? project-eid))
     {:meeting-eid (:db/id meeting)
      :project-thk-id (:thk.project/id project)
      :activity-eid activity-eid}))
