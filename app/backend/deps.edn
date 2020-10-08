@@ -32,7 +32,9 @@
         com.cognitect.aws/ssm {:mvn/version "798.2.672.0"}
         com.cognitect.aws/s3 {:mvn/version "799.2.682.0"}
         com.cognitect.aws/sts {:mvn/version "798.2.678.0"}
-        com.cognitect.aws/logs {:mvn/version "798.2.672.0"}}
+        com.cognitect.aws/logs {:mvn/version "798.2.672.0"}
+
+        instaparse {:mvn/version "1.4.10"}}
 
 
 

@@ -1,0 +1,31 @@
+STEP-FILE-HEADER = <STARTLINE> HEADER
+<WS> = #"\s*"
+STARTLINE = <'ISO-10303-21;'> <WS>
+HEADER = <'HEADER;'> <WS> ENTRIES <'ENDSEC;'> <WS>
+DATA = <'DATA;'> <WS> DATAENTRIES <'ENDSEC;'> <WS>
+ENDLINE = 'END-ISO-10303-21;'
+<ENTRIES> = ENTRY ENTRIES*
+ENTRY = NAME <#"\s*"> <'('> ARGS <');'> <#"\s*">
+ARGS = ARGLIST
+<ARGLIST> = ARG ( <','> ARGLIST )*
+<ARG> = <#"\s*"> ARGVALUE <#"\s*">
+ARGVALUES = ARG (<','> ARGVALUES)*
+<ARGVALUE> = LIST | STRING | REF | INTEGER | FLOAT | UNSET | ENUM | EXPLICIT | TYPECAST
+
+LIST = <'('> LISTITEMS <')'>
+<LISTITEMS> = ARGVALUE ( <','> LISTITEMS )*
+STRING = <"'"> #"[^']*" <"'">
+REF = <#"#"> #"\d+"
+INTEGER = #"\d+"
+FLOAT = #"\d+\.\d*" | #"\d+.E(-|\+)\d+"
+UNSET = '$'
+ENUM = <'.'> #"[A-Z_]+" <'.'>
+EXPLICIT = '*'
+<TYPECAST> = <IFCTYPE> <'('> ARGVALUE <')'>
+IFCTYPE = 'IFCREAL' | 'IFCTEXT'
+
+NAME = #"[A-Z][A-Z0-9_]+"
+
+<DATAENTRIES> = DATAENTRY DATAENTRIES*
+DATAENTRY = ID ENTRY
+ID = <#"#"> #"\d+" <#"=">
