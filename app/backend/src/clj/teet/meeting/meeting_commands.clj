@@ -222,37 +222,8 @@
           :type :notification.type/meeting-updated
           :project project-eid}))))))
 
-(defcommand :meeting/send-notifications
-  {:doc "Send iCalendar notifications to organizer and participants."
-   :context {:keys [db conn user]}
-   :payload {id :db/id}
-   :project-id (project-db/meeting-project-id db id)
-   :authorization {}
-   :pre [(meeting-db/user-is-organizer-or-reviewer? db user id)]}
-  (let [project-eid (project-db/meeting-project-id db id)
-        to (remove #(str/ends-with? % "@example.com")
-                   (keep :user/email (meeting-db/participants db id)))
-        meeting (d/pull db
-                        '[:db/id
-                          :meeting/number
-                          :meeting/title :meeting/location
-                          :meeting/start :meeting/end
-                          {:meeting/organizer [:user/email :user/given-name :user/family-name]}
-                          {:meeting/agenda [:meeting.agenda/topic
-                                            {:meeting.agenda/responsible [:user/given-name
-                                                                          :user/family-name]}]}] id)]
-    (assert (:db/id user))
-    (cond
-      (date-in-past? (:meeting/end meeting))
-      (historical-meeting-notify db meeting user
-                                 (meeting-db/participants db id)
-                                 project-eid)
-
-      (not (seq to))
-      {:error :no-participants-with-email}
-
-      :else
-      (let [meeting-link (meeting-link db
+(defn send-meeting-email! [db meeting project-eid meeting-link to meeting-eid]
+  (let [meeting-link (meeting-link db
                           (environment/config-value :base-url)
                           meeting project-eid)
             ics (meeting-ics/meeting-ics {:meeting meeting
@@ -267,9 +238,40 @@
                :parts [{:headers {"Content-Type" "text/calendar; method=request"}
                         :body ics}]})]
         (log/info "SES send response" email-response)
-        (tx-ret [{:db/id id
-                  :meeting/invitations-sent-at (Date.)}]))
-      )))
+        (tx-ret [{:db/id meeting-eid
+                  :meeting/invitations-sent-at (Date.)}])))
+
+(defcommand :meeting/send-notifications
+  {:doc "Send iCalendar notifications to organizer and participants."
+   :context {:keys [db conn user]}
+   :payload {meeting-eid :db/id}
+   :project-id (project-db/meeting-project-id db meeting-eid)
+   :authorization {}
+   :pre [(meeting-db/user-is-organizer-or-reviewer? db user meeting-eid)]}
+  (let [project-eid (project-db/meeting-project-id db meeting-eid)
+        to (remove #(str/ends-with? % "@example.com")
+                   (keep :user/email (meeting-db/participants db meeting-eid)))
+        meeting (d/pull db
+                        '[:db/id
+                          :meeting/number
+                          :meeting/title :meeting/location
+                          :meeting/start :meeting/end
+                          {:meeting/organizer [:user/email :user/given-name :user/family-name]}
+                          {:meeting/agenda [:meeting.agenda/topic
+                                            {:meeting.agenda/responsible [:user/given-name
+                                                                          :user/family-name]}]}] meeting-eid)]
+    (assert (:db/id user))
+    (cond
+      (date-in-past? (:meeting/end meeting))
+      (historical-meeting-notify db meeting user
+                                 (meeting-db/participants db meeting-eid)
+                                 project-eid)
+
+      (not (seq to))
+      {:error :no-participants-with-email}
+
+      :else
+      (send-meeting-email! db meeting project-eid meeting-link to meeting-eid))))
 
 
 (defcommand :meeting/cancel
