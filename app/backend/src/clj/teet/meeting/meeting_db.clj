@@ -58,6 +58,18 @@
               inc)
       1))
 
+(defn next-decision-number
+  [db agenda-topic-id]
+  (or (some-> (d/q '[:find (max ?n)
+                     :in $ ?at
+                     :where
+                     [?at :meeting.agenda/decisions ?d]
+                     [(missing? $ ?d :meta/deleted?)]
+                     [?d :meeting.decision/number ?n]]
+                   db agenda-topic-id)
+              ffirst
+              inc)
+      1))
 
 (defn user-is-organizer-or-reviewer? [db user meeting-id]
   (meeting-model/user-is-organizer-or-reviewer?

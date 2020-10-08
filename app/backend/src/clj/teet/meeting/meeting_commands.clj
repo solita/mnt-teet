@@ -268,9 +268,7 @@
                         :body ics}]})]
         (log/info "SES send response" email-response)
         (tx-ret [{:db/id id
-                  :meeting/invitations-sent-at (Date.)}]))
-      )))
-
+                  :meeting/invitations-sent-at (Date.)}])))))
 
 (defcommand :meeting/cancel
   {:doc "Delete existing meeting"
@@ -322,7 +320,8 @@
                (meeting-db/agenda-meeting-id db agenda-eid)
                [{:db/id agenda-eid
                  :meeting.agenda/decisions [(merge (select-keys form-data [:meeting.decision/body])
-                                                   {:db/id "new decision"}
+                                                   {:db/id "new decision"
+                                                    :meeting.decision/number (meeting-db/next-decision-number db agenda-eid)}
                                                    (meta-model/creation-meta user))]}])})
 
 (defcommand :meeting/update-decision

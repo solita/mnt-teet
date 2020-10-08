@@ -42,6 +42,25 @@
        (mapv first)
        (sort-by :meeting/start #(.after %1 %2))))
 
+(defn project-past-meetings
+  [db project-id]
+  (->> (d/q '[:find (pull ?m [* {:activity/_meetings [:activity/name :db/id]}])
+              :in $ ?project ?today
+              :where
+              [?project :thk.project/lifecycles ?l]
+              [?l :thk.lifecycle/activities ?a]
+              [?a :activity/meetings ?m]
+              [?m :meeting/start ?start]
+              [(.before ?start ?today)]
+              [(missing? $ ?m :meta/deleted?)]]
+            db
+            project-id
+            (du/start-of-today))
+       (mapv first)
+       (mapv #(assoc % :meeting/activity-name (get-in % [:activity/_meetings 0 :activity/name]))) ;; This is done to have the activity name in easier place for frontend
+       (sort-by :meeting/start)
+       reverse))
+
 (defn matching-decision-ids
   [search-term meetings]
   (set
@@ -50,9 +69,15 @@
           d (:meeting.agenda/decisions a)
           :let [candidate-text (str (:meeting/title m)
                                     " "
+                                    (:meeting/number m)
+                                    " "
+                                    (:meeting/location m)
+                                    " "
                                     (:meeting.agenda/topic a)
                                     " "
-                                    (:meeting.decision/body d))]
+                                    (:meeting.decision/body d)
+                                    " "
+                                    (:meeting.decision/number d))]
           :when (string/contains-words? candidate-text search-term)]
       (:db/id d))))
 
@@ -93,6 +118,34 @@
                                [?r :meta/created-at ?cr]
                                :in $ ?a]
                              db activity-id)
+                        (map #(assoc (first %) :meeting/locked-at (second %)))
+                        (sort-by :meeting/start)
+                        reverse))
+        decision-ids (matching-decision-ids search-term meetings)]
+    (filter-decisions decision-ids meetings)))
+
+(defn project-decisions
+  [db project-id search-term]
+  (let [meetings (meta-query/without-deleted
+                   db
+                   (->> (d/q '[:find
+                               (pull ?m [* {:activity/_meetings [:activity/name
+                                                                 :db/id]}
+                                         {:review/_of
+                                          [{:review/reviewer [:user/given-name
+                                                              :user/family-name]}]}])
+                               (max ?cr)
+                               :where
+                               [?p :thk.project/lifecycles ?l]
+                               [?l :thk.lifecycle/activities ?a]
+                               [?a :activity/meetings ?m]
+                               [?m :meeting/agenda ?ag]
+                               [?m :meeting/locked? true]
+                               [?ag :meeting.agenda/decisions ?d]
+                               [?r :review/of ?m]
+                               [?r :meta/created-at ?cr]
+                               :in $ ?p]
+                             db project-id)
                         (map #(assoc (first %) :meeting/locked-at (second %)))
                         (sort-by :meeting/start)
                         reverse))
@@ -160,6 +213,7 @@
                                     :meeting.agenda/body
                                     {:meeting.agenda/decisions
                                      [:db/id :meeting.decision/body
+                                      :meeting.decision/number
                                       ~attachments]}
                                     {:meeting.agenda/responsible ~user-model/user-listing-attributes}
                                     ~attachments]}
@@ -182,16 +236,34 @@
 (defquery :meeting/activity-meeting-history
   {:doc "Fetch past meetings for an activity"
    :context {:keys [db user]}
-   :args {:keys [activity-eid]}
-   :project-id (project-db/activity-project-id db activity-eid)
+   :args {:keys [activity-id]}
+   :project-id (project-db/activity-project-id db activity-id)
    :authorization {}}
-  (activity-past-meetings db activity-eid))
+  (activity-past-meetings db activity-id))
 
 (defquery :meeting/activity-decision-history
-  {:doc "Fetch all the decisions for activity"
+  {:doc "Fetch all the decisions for activity matching the given string"
    :context {:keys [db user]}
    :args {:keys [activity-id
                  search-term]}
    :project-id (project-db/activity-project-id db activity-id)
    :authorization {}}
   (activity-decisions db activity-id search-term))
+
+
+(defquery :meeting/project-meeting-history
+  {:doc "Fetch all the meetings from the history of the project"
+   :context {:keys [db user]}
+   :args {:keys [project-id]}
+   :project-id project-id
+   :authorization {}}
+  (project-past-meetings db project-id))
+
+(defquery :meeting/project-decision-history
+  {:doc "Fetch all decisions for project matching the given string"
+   :context {:keys [db user]}
+   :args {:keys [project-id
+                 search-term]}
+   :project-id project-id
+   :authorization {}}
+  (project-decisions db project-id search-term))
