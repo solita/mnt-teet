@@ -166,6 +166,7 @@
   :estate-procedure.type/expropriation "Sundvõõrandamine",
   :task.type/state-estate-registry "Riigivara registrisse kandmine",
   :task.status/submitted "Esitatud",
+  :notification.type/meeting-updated nil,
   :activity.name/other "Muu",
   :task.type/animal-study "Loomastiku uuring",
   :activity.name/pre-design "Eskiisprojekt",
@@ -481,7 +482,7 @@
  {:search
   {:placeholder "Lisan viite...",
    :no-results "Ei leitud ühtki vastet"},
-  :target-deleted nil},
+  :target-deleted "Kustutatud {user} poolt {at}"},
  :login
  {:login "Sisenen",
   :password "Salasõna",
@@ -551,6 +552,7 @@
   :decision-updated "Otsus edukalt uuendatud",
   :meeting-created "Koosolek edukalt loodud",
   :comments-resolved "Märkus edukalt lahendatud",
+  :topic-updated "Päevakavapunkt edukalt uuendatud",
   :comment-edited "Kommentaar edukalt muudetud",
   :comment-deleted "Kommentaar edukalt kustutatud",
   :activity-created "Tegevus edukalt loodud",
@@ -565,7 +567,8 @@
   :activity-deleted "Tegevus edukalt kustutatud",
   :mark-all-read "Märgin kõik loetuks",
   :activity-updated "Tegevus edukalt värskendatud",
-  :cadastral-units-updated "Katastriüksused edukalt värskendatud"},
+  :cadastral-units-updated "Katastriüksused edukalt värskendatud",
+  :topic-created "Päevakavapunkt edukalt lisatud"},
  :page-title {:project-list "{name} projekt"},
  :people-tab
  {:active "AKTIIVNE",

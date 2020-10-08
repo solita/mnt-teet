@@ -554,7 +554,8 @@
                                      (-> @form-atom
                                          (update :meeting.agenda/body
                                                  (fn [editor-state]
-                                                   (when (and editor-state (not (string? editor-state)))
+                                                   (if (string? editor-state)
+                                                     editor-state
                                                      (rich-text-editor/editor-state->markdown editor-state)))))
                                      close-event)}
                      (when-let [agenda-id (:db/id @form-atom)]
@@ -672,7 +673,8 @@
                                      (-> @form-atom
                                          (update :meeting.decision/body
                                                  (fn [editor-state]
-                                                   (when (and editor-state (not (string? editor-state)))
+                                                   (if (string? editor-state)
+                                                     editor-state
                                                      (rich-text-editor/editor-state->markdown editor-state)))))
                                      close-event)}
                      (when (:db/id @form-atom)

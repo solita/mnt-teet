@@ -71,7 +71,7 @@
                add-link! (fn [to]
                            (when to
                              (e! (link-controller/->AddLink from (:db/id to) :task in-progress))))]
-    [:div.links
+    [:div.links {:style {:margin "1rem 0"}}
      (mapc (r/partial link-wrapper {:e! e!
                                     :from from
                                     :in-progress-atom in-progress
