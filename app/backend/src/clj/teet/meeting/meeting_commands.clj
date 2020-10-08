@@ -262,7 +262,7 @@
                                                                           :user/family-name]}]}] meeting-eid)]
     (assert (:db/id user))
     (cond
-      (date-in-past? (:meeting/end meeting))
+      (date-in-past? (:meeting/start meeting))
       (historical-meeting-notify db meeting user
                                  (meeting-db/participants db meeting-eid)
                                  project-eid)
