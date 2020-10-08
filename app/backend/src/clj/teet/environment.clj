@@ -198,6 +198,20 @@
 
 (def ^:dynamic *connection* nil)
 
+(defn connection
+  "Gets a Datomic connection to the named database, creating it if necessary.
+  If migrate? is true, the migrations in schema will be transacted before
+  returning the connection."
+  [db-name migrate?]
+  (let [db db-name
+        client (datomic-client)
+        db-status (ensure-database client db)
+        conn (d/connect client {:db-name db})]
+    (log/info "Using database: " db db-status)
+    (when migrate?
+      (migrate conn))
+    conn))
+
 (defn datomic-connection
   "Returns thread bound connection or creates a new one."
   []
