@@ -373,7 +373,7 @@
   "Internal datomic stuff that we can skip"
   #{:db.install/attribute})
 
-(defn output-tx [db attr-info-cache {:keys [data]}]
+(defn output-tx [db attr-info-cache {:keys [data]} ignore-attributes]
   (let [datoms (for [{:keys [e a v added]} data
                      :let [{:db/keys [ident]}
                            (attr-info db attr-info-cache a)
@@ -403,36 +403,41 @@
               out (io/writer zip-out)]
     (let [db (d/db conn)
           attr-ident-cache (atom {})
-          out! #(pprint/pprint % out)]
-      (out! {:ref-attrs
-             (into #{}
-                   (comp
-                    (map first)
-                    (remove #(str/starts-with? (str %) ":db")))
-                   (d/q '[:find ?id
-                          :where
-                          [?attr :db/ident ?id]
-                          [?attr :db/valueType :db.type/ref]]
-                        db))
-             :tuple-attrs
-             (into {}
-                   (d/q '[:find ?id ?ta
-                          :where
-                          [?attr :db/ident ?id]
-                          [?attr :db/tupleAttrs ?ta]]
-                        db))
+          out! #(pprint/pprint % out)
+          ref-attrs (into #{}
+                          (comp
+                           (map first)
+                           (remove #(str/starts-with? (str %) ":db")))
+                          (d/q '[:find ?id
+                                 :where
+                                 [?attr :db/ident ?id]
+                                 [?attr :db/valueType :db.type/ref]]
+                               db))
+          tuple-attrs (into {}
+                            (d/q '[:find ?id ?ta
+                                   :where
+                                   [?attr :db/ident ?id]
+                                   [?attr :db/tupleAttrs ?ta]]
+                                 db))
+          ignore-attributes (into ignore-attributes
+                                  (keys tuple-attrs))]
+
+      (out! {:ref-attrs ref-attrs
+             :tuple-attrs tuple-attrs
              :backup-timestamp (java.util.Date.)})
       (doseq [tx (all-transactions conn)]
-        (out! (output-tx db attr-ident-cache tx))))))
+        (out! (output-tx db attr-ident-cache tx
+                         ignore-attributes))))))
 
 ;; restore procedure for tx log
 ;; keep mapping of old->new ids
 ;; for each datom
 ;; - lookup entity from old->new mapping
+
 ;; - if doesn't exist change to string (eg. 123 => "123")
 ;; - if attr is a ref type, do lookup/stringify for value as well
 ;; - if value is a tuple, check tupleattrs for ref attrs
-;;   - do lookup/stringify for those as well
+;;   -> ignore tuple attrs (datomic handles internally)
 ;;
 ;; after tx store new tempids to old->new mapping
 
