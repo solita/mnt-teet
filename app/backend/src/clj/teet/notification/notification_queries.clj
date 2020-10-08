@@ -85,10 +85,10 @@
   (let [{:keys [project-thk-id activity-eid]}
         (project-db/meeting-parents db {:db/id meeting-eid} (project-db/meeting-project-id db meeting-eid))]
     (if (and project-thk-id activity-eid meeting-eid)
-      {:page :activity-meetings
+      {:page :meeting
        :params {:project project-thk-id
-                :activity activity-eid
-                :meeting meeting-eid}}
+                :activity (str activity-eid)
+                :meeting (str meeting-eid)}}
       ;; else
       (do
         (log/info "meeting-navigation-info couldn't answer for meeting eid" meeting-eid)
