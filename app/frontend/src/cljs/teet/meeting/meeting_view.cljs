@@ -152,9 +152,10 @@
             [:div
              {:style {:margin "1rem 0"}}
              [typography/Heading3 (tr-enum (:activity/name activity))]])
-          (map
-            (fn [{reviews :review/_of
-                  :meeting/keys [title start number end location agenda locked-at] :as meeting}]
+          (doall
+            (for [{reviews :review/_of
+                   :meeting/keys [title start number end location agenda locked-at] :as meeting} grouped-meetings]
+              ^{:key (:db/id meeting)}
               [common/hierarchical-container2
                {:open? true
                 :heading [:div.meeting-heading {:style {:color :white}}
@@ -171,35 +172,32 @@
                                   :component buttons/button-secondary}
                                  (tr [:dashboard :open])]
                 :children
-                (for [topic agenda
-                      d (:meeting.agenda/decisions topic)]
-                  {:key (:db/id d)
-                   :color theme-colors/gray-lighter
-                   :open? true
-                   :heading [:div
-                             [typography/Heading3 {:class (<class common-styles/margin-bottom "0.3")}
-                              (tr [:meeting :decision-topic] {:topic (:meeting.agenda/topic topic)
-                                                              :num (:meeting.decision/number d)})]
-                             [typography/SmallText
-                              (tr [:meeting :approved-by]
-                                  {:approvers
-                                   (str/join ", " (map
-                                                    #(user-model/user-name (:review/reviewer %))
-                                                    reviews))})
-                              [:b " " (format/date locked-at)]]]
-                   :content [meeting-decision-content e! d]})}
-               theme-colors/gray])
-            grouped-meetings)]))]
+                (doall
+                  (for [topic agenda
+                        d (:meeting.agenda/decisions topic)]
+                    {:key (:db/id d)
+                     :color theme-colors/gray-lighter
+                     :open? true
+                     :heading [:div
+                               [typography/Heading3 {:class (<class common-styles/margin-bottom "0.3")}
+                                (tr [:meeting :decision-topic] {:topic (:meeting.agenda/topic topic)
+                                                                :num (:meeting.decision/number d)})]
+                               [typography/SmallText
+                                (tr [:meeting :approved-by]
+                                    {:approvers
+                                     (str/join ", " (map
+                                                      #(user-model/user-name (:review/reviewer %))
+                                                      reviews))})
+                                [:b " " (format/date locked-at)]]]
+                     :content [meeting-decision-content e! d]}))}
+               theme-colors/gray]))]))]
     [typography/GreyText (tr [:meeting :no-decisions-found])]))
 
 (defn activity-meetings-decisions
   [e! activity]
   (r/with-let [input-value (r/atom "")
-               search-value (r/atom "")
-               debounce-change (functions/debounce #(reset! search-value %) 250)
                on-change (fn [e]
-                           (reset! input-value (-> e .-target .-value))
-                           (debounce-change @input-value))]
+                           (reset! input-value (-> e .-target .-value)))]
     [:<>
      [TextField {:value @input-value
                  :placeholder (tr [:meeting :search-decisions])
@@ -207,11 +205,13 @@
                  :style {:display :block
                          :max-width "300px"
                          :margin-bottom "1rem"}}]
-     [query/query {:e! e!
-                   :query :meeting/activity-decision-history
-                   :args {:activity-id (:db/id activity)
-                          :search-term @search-value}
-                   :simple-view [decision-history-view e!]}]]))
+     [query/debounce-query
+      {:e! e!
+       :query :meeting/activity-decision-history
+       :args {:activity-id (:db/id activity)
+              :search-term @input-value}
+       :simple-view [decision-history-view e!]}
+      250]]))
 
 (defn meeting-information
   [{:meeting/keys [start location end title activity-name] :as meeting}]
@@ -506,11 +506,8 @@
 (defn project-decisions
   [e! project]
   (r/with-let [input-value (r/atom "")
-               search-value (r/atom "")
-               debounce-change (functions/debounce #(reset! search-value %) 250)
                on-change (fn [e]
-                           (reset! input-value (-> e .-target .-value))
-                           (debounce-change @input-value))]
+                           (reset! input-value (-> e .-target .-value)))]
     [:<>
      [TextField {:value @input-value
                  :placeholder (tr [:meeting :search-decisions])
@@ -518,11 +515,13 @@
                  :style {:display :block
                          :max-width "300px"
                          :margin-bottom "1rem"}}]
-     [query/query {:e! e!
-                   :query :meeting/project-decision-history
-                   :args {:project-id (:db/id project)
-                          :search-term @search-value}
-                   :simple-view [decision-history-view e!]}]]))
+     [query/debounce-query
+      {:e! e!
+       :query :meeting/project-decision-history
+       :args {:project-id (:db/id project)
+              :search-term @input-value}
+       :simple-view [decision-history-view e!]}
+      250]]))
 
 (defn project-meetings-page-content [e! {query :query :as app} project]
   [:<>
