@@ -15,12 +15,12 @@ links can be added."
   {:meeting-agenda {:path-to-project [:meeting/_agenda :activity/_meetings 0
                                       :thk.lifecycle/_activities 0
                                       :thk.project/_lifecycles 0 :db/id]
-                    :allowed-link-types #{:task}}
+                    :allowed-link-types #{:task :cadastral-unit :estate}}
    :meeting-decision {:path-to-project [:meeting.agenda/_decisions
                                         :meeting/_agenda :activity/_meetings 0
                                         :thk.lifecycle/_activities 0
                                         :thk.project/_lifecycles 0 :db/id]
-                      :allowed-link-types #{:task}}})
+                      :allowed-link-types #{:task :cadastral-unit :estate}}})
 
 (def link-types
   "Defines what types of links can be added. Each link type
