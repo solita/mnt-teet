@@ -682,7 +682,8 @@
                      (when (:db/id @form-atom)
                        {:delete (meeting-controller/->DeleteDecision (:db/id @form-atom) close-event)}))
 
-    ^{:attribute :meeting.decision/body}
+    ^{:attribute :meeting.decision/body
+      :validate #(rich-text-editor/validate-rich-text-form-field-not-empty %)}
     [rich-text-editor/rich-text-field {}]]])
 
 (defn add-decision-component
