@@ -60,6 +60,20 @@
                                                     in-progress-atom))}
       [icons/action-delete]])])
 
+(defmulti display-result :link/type)
+
+(defmethod display-result :task [{:task/keys [type assignee estimated-end-date]}]
+  [:div {:class (<class common-styles/flex-row-space-between)}
+   [:div (tr-enum type)]
+   [:div (user-model/user-name assignee)]
+   [:div (format/date estimated-end-date)]])
+
+(defmethod display-result :cadastral-unit [u]
+  [:div "PALSTA " (pr-str u)])
+
+(defmethod display-result :estate [u]
+  [:div "KIINTEISTÖ " (pr-str u)])
+
 (defn links
   "List links to other entities (like tasks).
   Shows input for adding new links.
@@ -86,12 +100,8 @@
                   {:args {:lang @localization/selected-language
                           :text text
                           :from from
-                          :types #{:task}}
+                          :types #{:estate}}
                    :query :link/search})
          :on-change add-link!
 
-         :format-result (fn [{:task/keys [type assignee estimated-end-date]}]
-                          [:div {:class (<class common-styles/flex-row-space-between)}
-                           [:div (tr-enum type)]
-                           [:div (user-model/user-name assignee)]
-                           [:div (format/date estimated-end-date)]])}])]))
+         :format-result display-result}])]))
