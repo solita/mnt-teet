@@ -138,29 +138,40 @@
 
 (defn project-decisions
   [db project-id search-term]
-  (let [meetings (meta-query/without-deleted
+  (let [meetings (link-db/fetch-links
                    db
-                   (->> (d/q '[:find
-                               (pull ?m [* {:activity/_meetings [:activity/name
+                   #(contains? % :meeting.decision/body)
+                   (meta-query/without-deleted
+                     db
+                     (->> (d/q '[:find
+                                 (pull ?m [* {:activity/_meetings [:activity/name
                                                                    :db/id]}
+                                           {:meeting/agenda
+                                            [* {:meeting.agenda/decisions
+                                                [:db/id :meeting.decision/body
+                                                 :meeting.decision/number
+                                                 {:file/_attached-to
+                                                  [:db/id :file/name
+                                                   :meta/created-at
+                                                   {:meta/creator [:user/given-name :user/family-name]}]}]}]}
                                            {:review/_of
                                             [{:review/reviewer [:user/given-name
                                                                 :user/family-name]}]}])
-                               (max ?cr)
-                               :where
-                               [?p :thk.project/lifecycles ?l]
-                               [?l :thk.lifecycle/activities ?a]
-                               [?a :activity/meetings ?m]
-                               [?m :meeting/agenda ?ag]
-                               [?m :meeting/locked? true]
-                               [?ag :meeting.agenda/decisions ?d]
-                               [?r :review/of ?m]
-                               [?r :meta/created-at ?cr]
-                               :in $ ?p]
-                             db project-id)
-                        (map #(assoc (first %) :meeting/locked-at (second %)))
-                        (sort-by :meeting/start)
-                        reverse))
+                                 (max ?cr)
+                                 :where
+                                 [?p :thk.project/lifecycles ?l]
+                                 [?l :thk.lifecycle/activities ?a]
+                                 [?a :activity/meetings ?m]
+                                 [?m :meeting/agenda ?ag]
+                                 [?m :meeting/locked? true]
+                                 [?ag :meeting.agenda/decisions ?d]
+                                 [?r :review/of ?m]
+                                 [?r :meta/created-at ?cr]
+                                 :in $ ?p]
+                               db project-id)
+                          (map #(assoc (first %) :meeting/locked-at (second %)))
+                          (sort-by :meeting/start)
+                          reverse)))
         decision-ids (matching-decision-ids search-term meetings)]
     (filter-decisions decision-ids meetings)))
 
