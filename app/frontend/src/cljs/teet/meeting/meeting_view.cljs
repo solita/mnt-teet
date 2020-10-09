@@ -556,7 +556,7 @@
                                      (-> @form-atom
                                          (update :meeting.agenda/body
                                                  (fn [editor-state]
-                                                   (if (string? editor-state)
+                                                   (if (or (string? editor-state) (nil? editor-state))
                                                      editor-state
                                                      (rich-text-editor/editor-state->markdown editor-state)))))
                                      close-event)}
@@ -675,7 +675,7 @@
                                      (-> @form-atom
                                          (update :meeting.decision/body
                                                  (fn [editor-state]
-                                                   (if (string? editor-state)
+                                                   (if (or (string? editor-state) (nil? editor-state))
                                                      editor-state
                                                      (rich-text-editor/editor-state->markdown editor-state)))))
                                      close-event)}
