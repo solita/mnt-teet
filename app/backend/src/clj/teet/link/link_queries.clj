@@ -1,6 +1,7 @@
 (ns teet.link.link-queries
   (:require [teet.db-api.core :as db-api :refer [defquery]]
             [datomic.client.api :as d]
+            [teet.integration.postgrest :as postgrest]
             [teet.link.link-model :as link-model]
             [teet.localization :refer [with-language tr-enum]]
             [teet.util.string :as string]
@@ -40,16 +41,42 @@
               :in $ [?t ...]]
             db matching-project-tasks)))))
 
+(defn search-cadastral-unit [db {:keys [api-url api-secret]} project text]
+  (let [related-cadastral-unit-ids (-> (d/q '[:find (pull ?p [:thk.project/related-cadastral-units])
+                                              :in $ ?p]
+                                            db project)
+                                       ffirst
+                                       :thk.project/related-cadastral-units)]
+    (->> (postgrest/rpc {:api-url api-url :api-secret api-secret}
+                        :select_feature_properties
+                        {:ids related-cadastral-unit-ids
+                         :properties ["KINNISTU" "AY_NIMI" "TUNNUS"]})
+         vals
+         (filterv #(or (string/contains-words? (:TUNNUS %) text)
+                       (string/contains-words? (:AY_NIMI %) text))))))
+
+;; Estate id: fetch all units, distinct from properties
+
 (defmethod search-link :task
-  [db _user project _ lang text]
+  [db _user _config project _ lang text]
   (search-task db project lang text))
+
+(defmethod search-link :cadastral-unit
+  [db _user config project _ _lang text]
+  (search-cadastral-unit db config project text))
 
 (defquery :link/search
   {:doc "Search for items that can be linked"
    :context {:keys [db user]}
-   :args {:keys [from text lang types]}
+   :args {:keys [from  ;; The referring entity
+                 text  ;; Free text search
+                 lang  ;; Selected session language
+                 types ;; Set of link types, example elements: `:task`, `:cadastral-unit`
+                 ]}
    :project-id nil
    :authorization {}
+   :config {api-url [:api-url]
+            api-secret [:auth :jwt-secret]}
    :pre [(link-model/valid-from? from)]}
   (let [{:keys [path-to-project allowed-link-types]} (link-model/from-types (first from))
         project (get-in (du/entity db (nth from 1)) path-to-project)]
@@ -60,5 +87,7 @@
             (mapcat (fn [type]
                       (when (allowed-link-types type)
                         (map #(assoc % :link/type type)
-                             (search-link db user project type lang text)))))
+                             (search-link db user
+                                          {:api-url api-url :api-secret api-secret}
+                                          project type lang text)))))
             types))))
