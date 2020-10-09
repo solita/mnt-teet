@@ -137,7 +137,8 @@
          (tr [:common :deletion-modal-text]))]]
      (cond
        trashcan?
-       [IconButton {:on-click open}
+       [IconButton {:on-click open
+                    :size :small}
         [icons/action-delete]]
 
        small?

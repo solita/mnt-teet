@@ -80,7 +80,7 @@
       ^{:attribute :meeting/organizer}
       [select/select-user {:e! e!}]]]))
 
-(defn- file-attachments [{:keys [e! drag-container-id drop-message attach-to files]}]
+(defn- file-attachments [{:keys [e! drag-container-id allow-delete? drop-message attach-to files]}]
   [project-context/consume
    (fn [{project-id :db/id}]
      [:<>
@@ -90,17 +90,17 @@
           {:style {:margin "1rem 0"}}
           (tr [:common :files])]
          [file-view/file-table
-          {:filtering? false
-           :actions? true
-           :border-color theme-colors/gray
-           :no-link? true
-           :attached-to attach-to
-           :columns #{:suffix :download :delete :meta}
-           :delete-action (fn [file]
-                            (e! (file-controller/map->DeleteAttachment
-                                  {:file-id (:db/id file)
-                                   :success-message (tr [:document :file-deleted-notification])
-                                   :attached-to attach-to})))}
+          (merge {:filtering? false
+                  :actions? true
+                  :no-link? true
+                  :attached-to attach-to
+                  :columns #{:suffix :download :delete :meta}}
+                 (when allow-delete?
+                   {:delete-action (fn [file]
+                                     (e! (file-controller/map->DeleteAttachment
+                                           {:file-id (:db/id file)
+                                            :success-message (tr [:document :file-deleted-notification])
+                                            :attached-to attach-to})))}))
           files]])
 
       [authorization-context/when-authorized :edit-meeting
@@ -120,22 +120,23 @@
           :style {:margin "0.5rem 0"}}
          (tr [:task :upload-files])]]]])])
 
-(defn- links-content [e! from links auth]
+(defn- links-content [e! from links editable?]
   [link-view/links {:e! e!
                     :links links
                     :from from
-                    :editable? (:edit-meeting auth)}])
+                    :editable? editable?}])
 
 (defn- meeting-decision-content [e! {id :db/id
                                      body :meeting.decision/body
                                      files :file/_attached-to
-                                     links-from :link/_from}]
+                                     links-from :link/_from}
+                                 edit?]
   [:div {:id (str "decision-" id)}
    [rich-text-editor/display-markdown body]
-   [authorization-context/consume
-    [links-content e! [:meeting-decision id] links-from]]
+   [links-content e! [:meeting-decision id] links-from edit?]
    [file-attachments {:e! e!
                       :drag-container-id (str "decision-" id)
+                      :allow-delete? edit?
                       :drop-message (tr [:drag :drop-to-meeting-decision])
                       :attach-to [:meeting-decision id]
                       :files files}]])
@@ -189,7 +190,8 @@
                                                       #(user-model/user-name (:review/reviewer %))
                                                       reviews))})
                                 [:b " " (format/date locked-at)]]]
-                     :content [meeting-decision-content e! d]}))}
+                     :content [meeting-decision-content e! d false ;in history view never allow editing
+                               ]}))}
                theme-colors/gray]))]))]
     [typography/GreyText (tr [:meeting :no-decisions-found])]))
 
@@ -571,13 +573,13 @@
   [:div.participant {:class (<class common-styles/flex-row)}
    [:div.participant-name {:class (<class common-styles/flex-table-column-style 45)}
     [user-model/user-name participant]]
-   [:div.participant-role {:class (<class common-styles/flex-table-column-style 45)}
-    (tr-enum role)]
-   [:div.participant-remove {:class (<class common-styles/flex-table-column-style 10)}
-    (when on-remove
-      [IconButton {:size :small
-                   :on-click #(on-remove participation)}
-       [icons/content-clear {:font-size :small}]])]])
+   [:div.participant-role {:class (<class common-styles/flex-table-column-style 55 :space-between)}
+    [:span (tr-enum role)]
+    [:div
+     (when on-remove
+       [IconButton {:size :small
+                    :on-click #(on-remove participation)}
+        [icons/content-clear {:font-size :small}]])]]])
 
 
 (defn- add-meeting-participant [e! meeting]
@@ -694,21 +696,22 @@
 (defn- meeting-agenda-content [e! {id :db/id
                                    body :meeting.agenda/body
                                    files :file/_attached-to
-                                   links-from :link/_from}]
+                                   links-from :link/_from}
+                               edit?]
 
   [:div {:id (str "agenda-" id)}
    (when body
      [:div
       [rich-text-editor/display-markdown body]])
 
-   [authorization-context/consume
-    [links-content e! [:meeting-agenda id] links-from]]
+   [links-content e! [:meeting-agenda id] links-from edit?]
 
    [file-attachments {:e! e!
                       :drag-container-id (str "agenda-" id)
                       :drop-message (tr [:drag :drop-to-meeting-agenda])
                       :attach-to [:meeting-agenda id]
-                      :files files}]])
+                      :files files
+                      :allow-delete? edit?}]])
 
 (defn approval-status-symbol
   [status]
@@ -816,7 +819,7 @@
                                                       :modal-title (tr [:meeting :edit-agenda-modal-title])
                                                       :button-component [buttons/button-secondary {}
                                                                          (tr [:buttons :edit])]}])
-           :content [meeting-agenda-content e! agenda-topic]
+           :content [meeting-agenda-content e! agenda-topic edit?]
            :children (for [d decisions]
                        {:key (:db/id d)
                         :heading [typography/Heading3 (tr [:meeting :decision-topic] {:topic topic
@@ -828,7 +831,7 @@
                                             :modal-title (tr [:meeting :edit-decision-modal-title])
                                             :button-component [buttons/button-secondary {:size :small}
                                                                (tr [:buttons :edit])]}])
-                        :content [meeting-decision-content e! d]})
+                        :content [meeting-decision-content e! d edit?]})
            :after-children-component (when edit?
                                        [add-decision-component e! meeting agenda-topic])}
           theme-colors/gray-lighter]))]

@@ -34,7 +34,9 @@
 
 (defn- file-row-icon-style
   []
-  {:margin "0 0.25rem"})
+  {:margin "0 0.25rem"
+   :display :flex
+   :justify-content :center})
 
 (defn- base-name-and-suffix [name]
   (let [[_ base-name suffix] (re-matches #"^(.*)\.([^\.]+)$" name)]
