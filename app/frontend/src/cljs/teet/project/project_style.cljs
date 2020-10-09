@@ -153,10 +153,13 @@
    :align-items :center})
 
 (defn project-timeline-link
-  []
+  [dark-theme?]
   ^{:pseudo {:hover {:color theme-colors/blue-dark}}}
-  {:margin-left "1rem"
-   :text-decoration :none})
+  (merge
+   {:margin-left "1rem"
+    :text-decoration :none}
+   (when dark-theme?
+     {:color theme-colors/white})))
 
 (defn page-container []
   {:padding        "0 1.875rem 1.5rem 1.875rem"

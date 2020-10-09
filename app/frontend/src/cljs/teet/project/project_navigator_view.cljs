@@ -363,8 +363,8 @@
 (defn project-task-navigator
   [e! project app dark-theme?]
   [project-navigator e! project app {:dark-theme? dark-theme?
-                                                :activity-section-content activity-task-list
-                                                :add-activity? true}])
+                                     :activity-section-content activity-task-list
+                                     :add-activity? true}])
 
 (defmulti project-navigator-dialog (fn [_opts dialog]
                                      (:type dialog)))
