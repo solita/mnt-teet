@@ -1,12 +1,44 @@
 (ns teet.link.link-db
   "Common db queries for fetching links between entities"
   (:require [clojure.walk :as walk]
-            [datomic.client.api :as d]))
+            [datomic.client.api :as d]
+            [teet.link.link-model :as link-model]
+            [teet.log :as log]))
 
-(defmulti link-info
-  "Fetch link display info by type and target entity id. Should return map
-  of the info needed to display the link in human readable format."
-  (fn [_db type _id] type))
+(defmulti link-from
+  "Check permissions and preconditions for linking from an entity.
+
+  Returns falsy value if linking is not allowed.
+  May also throw exception with error code for frontend.
+
+  If return value is a map and contains :wrap-tx function the
+  link data will be passed through the function before being
+  transacted.
+
+  Default behaviour is to disallow."
+  (fn [_db _user [from-type _from-id] type _to] [from-type type]))
+
+(defmulti delete-link-from
+  "Check permissions and preconditions for deleting an existing link.
+
+  Returns falsy value if linking is not allowed.
+  May also throw exception with error code for frontend.
+
+  If return value is a map and contains :wrap-tx function the
+  link data will be passed through the function before being
+  transacted.
+
+  Default behaviour is to disallow."
+  (fn [_db _user [from-type _from-id] type _to] [from-type type]))
+
+(defmethod link-from :default [_ user from type to]
+  (log/warn "Disallow link by user" user "from" from "to" to "(" type ")")
+  false)
+
+(defmethod delete-link-from :default [_ user from type to]
+  (log/warn "Disallow link delete by user" user "from" from "to" to "(" type ")")
+  false)
+
 
 (defn expand-links
   "Expand all links in the given form to their display representations.
@@ -18,12 +50,38 @@
      (if (and (map? x)
               (contains? x :link/type)
               (contains? x :link/to))
-       (assoc x :link/info (link-info db (:link/type x) (:db/id (:link/to x))))
-       x)) form))
+       (merge x
+              {:link/info (d/pull db (into link-model/common-link-target-attributes
+                                           (get-in link-model/link-types
+                                                   [(:link/type x) :display-attributes]))
+                                  (:db/id (:link/to x)))})
+       x))
+   form))
 
-(defmethod link-info :task [db _ task-id]
-  (d/pull db [:task/type
-              {:task/assignee [:user/given-name :user/family-name]}
-              :task/estimated-end-date
-              {:activity/_tasks [:activity/name]}]
-          task-id))
+(defn fetch-links
+  "Fetch links for all entities in form that match fetch-links-pred?.
+  Associates :link/_from with list of linked entities and expands the
+  linked to entities."
+  [db fetch-links-pred? form]
+  (walk/prewalk
+   (fn [x]
+     (if (and (map? x)
+              (contains? x :db/id)
+              (fetch-links-pred? x))
+       (assoc x :link/_from
+              (expand-links
+               db (mapv first
+                        (d/q '[:find (pull ?l [:db/id :link/to :link/type])
+                               :where [?l :link/from ?e]
+                               :in $ ?e]
+                             db (:db/id x)))))
+       x))
+   form))
+
+(defn is-link?
+  "Check that the given link has the type and from/to entities."
+  [db link-id [_from-type from-id] to type]
+  (let [link (d/pull db [:link/from :link/to :link/type] link-id)]
+    (and (= from-id (get-in link [:link/from :db/id]))
+         (= (:db/id to) (get-in link [:link/to :db/id]))
+         (= type (:link/type link)))))

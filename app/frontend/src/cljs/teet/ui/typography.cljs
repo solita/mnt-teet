@@ -4,11 +4,15 @@
             [teet.ui.util :as util]
             [teet.theme.theme-colors :as theme-colors]))
 
-(defn- small-text-style
+(defn- small-gray-text-style
   []
   {:display :block
    :color theme-colors/gray-light
    :font-size "0.75rem"})
+
+(defn- small-text-style
+  []
+  {:font-size "0.875rem"})
 
 (defn- grey-text-style
   []
@@ -39,10 +43,12 @@
 
 (def DataLabel (util/make-component Typography {:variant "subtitle1"}))
 
-(def SmallText (util/make-component :span {:class (<class small-text-style)}))
+(def SmallGrayText (util/make-component :span {:class (<class small-gray-text-style)}))
 
 (def GreyText (util/make-component :span {:class (<class grey-text-style)}))
 
 (def BoldGreyText (util/make-component :span {:class (<class dark-grey-text-style)}))
 
 (def WarningText (util/make-component :p {:class (<class warning-text-style)}))
+
+(def SmallText (util/make-component :p {:class (<class small-text-style)}))

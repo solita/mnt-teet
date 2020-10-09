@@ -15,6 +15,7 @@
             [clojure.string :as str]
             [teet.user.user-model :as user-model]
             [teet.util.date :refer [date-in-past?]]
+            [teet.link.link-db :as link-db]
             [teet.notification.notification-db :as notification-db])
   (:import (java.util Date))) 
 
@@ -67,6 +68,26 @@
                       {:error :unauthorized})))))
 
 
+(defn- link-from-meeting [db user from]
+  (let [meeting-id (meeting-db/link-from->meeting db from)]
+    (when (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)
+      {:wrap-tx #(update-meeting-tx meeting-id %)})))
+
+(defmethod link-db/link-from [:meeting-agenda :task]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
+(defmethod link-db/link-from [:meeting-decision :task]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
+(defmethod link-db/delete-link-from [:meeting-agenda :task]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
+(defmethod link-db/delete-link-from [:meeting-decision :task]
+  [db user from _type _to]
+  (link-from-meeting db user from))
 
 (defcommand :meeting/create
   {:doc "Create new meetings to activities"
@@ -348,7 +369,8 @@
                (meeting-db/agenda-meeting-id db agenda-eid)
                [{:db/id agenda-eid
                  :meeting.agenda/decisions [(merge (select-keys form-data [:meeting.decision/body])
-                                                   {:db/id "new decision"}
+                                                   {:db/id "new decision"
+                                                    :meeting.decision/number (meeting-db/next-decision-number db agenda-eid)}
                                                    (meta-model/creation-meta user))]}])})
 
 (defcommand :meeting/update-decision

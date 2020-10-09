@@ -369,8 +369,10 @@
   [{:keys [e! value on-change label required error
            format-result
            show-label? after-results-action
-           query]
-    :or {show-label? true}}]
+           query placeholder no-results]
+    :or {show-label? true
+         placeholder (tr [:user :autocomplete :placeholder])
+         no-results (tr [:user :autocomplete :no-options])}}]
   (r/with-let [state (r/atom {:loading? false
                               :results nil
                               :open? false
@@ -384,7 +386,7 @@
                    :show-label? show-label?
                    :required required
                    :error error
-                   :placeholder (tr [:user :autocomplete :placeholder])
+                   :placeholder placeholder
                    :on-key-down on-key-down
                    :on-blur #(js/setTimeout
                               ;; Delay closing because we might be blurring
@@ -449,7 +451,8 @@
                                          (on-change result))}
                            (format-result result)])
                         results)
-                [:span.select-user-no-results {:style {:padding "0.5rem"}} (tr [:user :autocomplete :no-options])])
+                [:span.select-user-no-results {:style {:padding "0.5rem"}}
+                 no-results])
               (when-let [{:keys [title on-click]} after-results-action]
                 [:<>
                  [Divider]

@@ -227,7 +227,7 @@
                    :style {:padding-bottom "0.5rem"}}
               [:li.task-group-label
                [:div
-                [typography/SmallText {:style {:text-transform :uppercase
+                [typography/SmallGrayText {:style {:text-transform :uppercase
                                                :font-weight :bold}}
                  (tr-enum group)]]]
               (doall
@@ -279,7 +279,7 @@
                                                          :dark-theme? dark-theme?})}
           (tr [:enum (:db/ident (:activity/name activity))])]
          [:span.project-navigator-activity-dates
-          [typography/SmallText
+          [typography/SmallGrayText
            (format/date activity-est-start) " – " (format/date activity-est-end)]]]]
        (when activity-open?
          [:div {:class (<class task-list-container-style dark-theme?)}
@@ -325,7 +325,7 @@
                       :on-click #(e! (project-controller/->ToggleStepperLifecycle lc-id))}
                      (tr [:enum (get-in lifecycle [:thk.lifecycle/type :db/ident])])]
                     [:span.project-navigator-lifecycle-dates
-                     [typography/SmallText
+                     [typography/SmallGrayText
                       (format/date estimated-start-date) " – " (format/date estimated-end-date)]]]]]
                  [:div
                   [Collapse {:in open?}

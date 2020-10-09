@@ -76,7 +76,6 @@
                                         (sort-by :thk.lifecycle/estimated-start-date lifecycles))]]
 
         [:<>
-         [icons/action-date-range]
          [buttons/link-button {:on-click #(reset! show-in-modal? true)
                                :class (<class project-style/project-timeline-link)}
           (tr [:project :show-timeline])]

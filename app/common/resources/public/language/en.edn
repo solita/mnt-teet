@@ -165,6 +165,7 @@
   :estate-procedure.type/expropriation "Expropriation",
   :task.type/state-estate-registry "State estate registry",
   :task.status/submitted "Submitted",
+  :notification.type/meeting-updated "Meeting updated",
   :activity.name/other "Other",
   :task.type/animal-study "Animal study",
   :activity.name/pre-design "Pre design",
@@ -483,6 +484,9 @@
   :files "Files attached to this unit",
   :burden "Burden",
   :no-mortgages "No mortgages"},
+ :link
+ {:search {:placeholder "Link...", :no-results "No results"},
+  :target-deleted "Deleted by {user} at {at}"},
  :login
  {:login "Login",
   :password "Password",
@@ -511,6 +515,7 @@
  {:notifications-help
   "Send notifications to meeting participants about relevant changes to the meeting contents.",
   :add-non-teet-participant "Add person not in TEET",
+  :search-decisions "Search decisions",
   :add-decision-button "Add decision",
   :participant-removed "Participant removed",
   :approve-meeting-modal-title "Approve decisions?",
@@ -526,6 +531,7 @@
   :add-agenda-button "Add new topic",
   :approvals "Approvals",
   :new-decision-modal-title "Create a new decision",
+  :no-decisions-found "No decisions found",
   :reviews-invalidated-warning-text
   "If this meeting is changed all existing approvals will be invalidated.",
   :edit-decision-modal-title "Edit decision",
@@ -550,6 +556,7 @@
   :decision-updated "Decision updated successfully",
   :meeting-created "Meeting created successfully",
   :comments-resolved "Comments resolved successfully",
+  :topic-updated "Topic updated successfully",
   :comment-edited "Comment edited successfully",
   :comment-deleted "Comment deleted successfully",
   :activity-created "Activity created succesfully",
@@ -564,7 +571,8 @@
   :activity-deleted "Activity deleted successfully",
   :mark-all-read "Mark all read",
   :activity-updated "Activity updated successfully",
-  :cadastral-units-updated "Cadastral units updated successfully"},
+  :cadastral-units-updated "Cadastral units updated successfully",
+  :topic-created "Topic created succesfully"},
  :page-title {:project-list "{name} project"},
  :people-tab
  {:active "ACTIVE",
@@ -684,6 +692,7 @@
   :add-document "Add document",
   :submit-results "Submit results",
   :submit-results-success "Results submitted successfully",
+  :link-info "Responsible person - {assignee}. Deadline - {deadline}.",
   :submit-results-confirm
   "Are you sure you want to submit the results to {task}?",
   :no-documents "No documents",
