@@ -1211,4 +1211,8 @@
   :txes [[{:db/ident :meeting.decision/number
            :db/valueType :db.type/long
            :db/cardinality :db.cardinality/one
-           :db/doc "All decisions get an incrementing number based on the agenda topic."}]]}]
+           :db/doc "All decisions get an incrementing number based on the agenda topic."}]]}
+  {:db/ident :migration/meeting-updated-notification
+   :txes [[{:db/ident :notification.type/meeting-updated :enum/attribute :notification/type}]]}
+
+]

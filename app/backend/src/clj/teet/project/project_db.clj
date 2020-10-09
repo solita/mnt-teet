@@ -91,12 +91,6 @@
            :thk.lifecycle/_activities 0
            :thk.project/_lifecycles 0 :db/id]))
 
-(defn project-thk-id [db meeting-id]
-  (get-in (du/entity db meeting-id)
-          [:activity/_meetings 0
-           :thk.lifecycle/_activities 0
-           :thk.project/_lifecycles 0 :thk.project/id]))
-
 (defn meeting-activity-id [db meeting-id]
   (get-in (du/entity db meeting-id)
           [:activity/_meetings 0
@@ -105,6 +99,8 @@
 (defn meeting-parents [db meeting project-eid]
   (let [project (du/entity db project-eid)
         activity-eid (meeting-activity-id db (:db/id meeting))]
+    (assert (some? (:db/id meeting)) meeting)
+    (assert (some? project-eid))
     {:meeting-eid (:db/id meeting)
      :project-thk-id (:thk.project/id project)
      :activity-eid activity-eid}))

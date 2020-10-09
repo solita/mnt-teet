@@ -14,9 +14,10 @@
             [teet.log :as log]
             [clojure.string :as str]
             [teet.user.user-model :as user-model]
+            [teet.util.date :refer [date-in-past?]]
             [teet.link.link-db :as link-db]
-            [teet.util.date :refer [date-in-past?]])
-  (:import (java.util Date)))
+            [teet.notification.notification-db :as notification-db])
+  (:import (java.util Date))) 
 
 (defn update-meeting-tx
   [meeting-id tx-data]
@@ -225,34 +226,43 @@
          "/meetings/" activity-eid
          "/" meeting-eid)))
 
-(defcommand :meeting/send-notifications
-  {:doc "Send iCalendar notifications to organizer and participants."
-   :context {:keys [db conn user]}
-   :payload {id :db/id}
-   :project-id (project-db/meeting-project-id db id)
-   :authorization {}
-   :pre [(meeting-db/user-is-organizer-or-reviewer? db user id)]}
-  (let [to (remove #(str/ends-with? % "@example.com")
-                   (keep :user/email (meeting-db/participants db id)))
-        meeting (d/pull db
-                        '[:db/id
-                          :meeting/number
-                          :meeting/title :meeting/location
-                          :meeting/start :meeting/end
-                          {:meeting/organizer [:user/email :user/given-name :user/family-name]}
-                          {:meeting/agenda [:meeting.agenda/topic
-                                            {:meeting.agenda/responsible [:user/given-name
-                                                                          :user/family-name]}]}] id)]
-    (cond
-      (date-in-past? (:meeting/end meeting))
-      {:error :no-emails-after-meeting-end}
 
-      (not (seq to))
-      {:error :no-participants-with-email}
+(defn historical-meeting-notify [db meeting from-user participants project-eid]
+  (log/debug "from-user is" from-user)
+  (tx-ret
+   (vec
+    (for [to-user participants]
+      (notification-db/notification-tx
+       db
+       (do
+         (log/debug "to-user is" to-user)
+           
+         {:from from-user
+          :to to-user
+          :target (:db/id meeting)
+          :type :notification.type/meeting-updated
+          :project project-eid}))))))
 
-      :else
-      (let [project-eid (project-db/meeting-project-id db id)
-            meeting-link (meeting-link db
+(defn email-subject-for-type [meeting type]
+  (case type
+    :invitation
+    (str "TEET: koosoleku kutse: " (meeting-model/meeting-title meeting) " / "
+         "TEET: meeting invitation: " (meeting-model/meeting-title meeting))
+
+    :past-update
+    (str "TEET: koosolek uuendatud: " (meeting-model/meeting-title meeting) " / "
+         "TEET: meeting updated: " (meeting-model/meeting-title meeting))))
+
+(defn email-parts-for-ical-invitation [ics]
+  [{:headers {"Content-Type" "text/calendar; method=request"}
+    :body ics}])
+
+(defn email-parts-for-past-update [meeting meeting-link]
+  [{:headers {"Content-Type" "text/plain; charset=utf-8"}
+    :body (str "Koosolek / meeting: " meeting-link "\n\n")}])
+
+(defn send-meeting-email! [db meeting project-eid meeting-link to meeting-eid invitation-or-past-update?]
+  (let [meeting-link (meeting-link db
                           (environment/config-value :base-url)
                           meeting project-eid)
             ics (meeting-ics/meeting-ics {:meeting meeting
@@ -262,13 +272,52 @@
             (integration-email/send-email!
               {:from (environment/ssm-param :email :from)
                :to to
-               :subject (str "TEET: koosoleku kutse " (meeting-model/meeting-title meeting) " / "
-                             "TEET: meeting invitation " (meeting-model/meeting-title meeting))
-               :parts [{:headers {"Content-Type" "text/calendar; method=request"}
-                        :body ics}]})]
+               :subject (email-subject-for-type meeting
+                                                invitation-or-past-update?)
+               :parts (case invitation-or-past-update?
+                        :past-update
+                        (email-parts-for-past-update meeting meeting-link)
+                        :invitation
+                        (email-parts-for-ical-invitation ics))
+               })]
         (log/info "SES send response" email-response)
-        (tx-ret [{:db/id id
-                  :meeting/invitations-sent-at (Date.)}])))))
+        (tx-ret [{:db/id meeting-eid
+                  :meeting/invitations-sent-at (Date.)}])))
+
+(defcommand :meeting/send-notifications
+  {:doc "Send iCalendar notifications to organizer and participants."
+   :context {:keys [db conn user]}
+   :payload {meeting-eid :db/id}
+   :project-id (project-db/meeting-project-id db meeting-eid)
+   :authorization {}
+   :pre [(meeting-db/user-is-organizer-or-reviewer? db user meeting-eid)]}
+  (let [project-eid (project-db/meeting-project-id db meeting-eid)
+        to (remove #(str/ends-with? % "@example.com")
+                   (keep :user/email (meeting-db/participants db meeting-eid)))
+        meeting (d/pull db
+                        '[:db/id
+                          :meeting/number
+                          :meeting/title :meeting/location
+                          :meeting/start :meeting/end
+                          {:meeting/organizer [:user/email :user/given-name :user/family-name]}
+                          {:meeting/agenda [:meeting.agenda/topic
+                                            {:meeting.agenda/responsible [:user/given-name
+                                                                          :user/family-name]}]}] meeting-eid)]
+    (assert (:db/id user))
+    (cond
+      (date-in-past? (:meeting/start meeting))
+      (do
+        (send-meeting-email! db meeting project-eid meeting-link to meeting-eid :past-update)
+        (historical-meeting-notify db meeting user
+                                   (meeting-db/participants db meeting-eid)
+                                   project-eid))
+
+      (not (seq to))
+      {:error :no-participants-with-email}
+
+      :else
+      (send-meeting-email! db meeting project-eid meeting-link to meeting-eid :invitation))))
+
 
 (defcommand :meeting/cancel
   {:doc "Delete existing meeting"
