@@ -1,5 +1,6 @@
 (ns teet.link.link-queries
-  (:require [teet.db-api.core :as db-api :refer [defquery]]
+  (:require [clojure.string :as str]
+            [teet.db-api.core :as db-api :refer [defquery]]
             [datomic.client.api :as d]
             [teet.integration.postgrest :as postgrest]
             [teet.link.link-model :as link-model]
@@ -7,7 +8,7 @@
             [teet.util.string :as string]
             [teet.util.datomic :as du]))
 
-(defmulti search-link (fn [_db _user _project type _lang _text] type))
+(defmulti search-link (fn [_db _user _config _project type _lang _text] type))
 
 (defn search-task [db project lang text]
   (with-language lang
@@ -55,6 +56,21 @@
          (filterv #(or (string/contains-words? (:TUNNUS %) text)
                        (string/contains-words? (:AY_NIMI %) text))))))
 
+(defn search-estate [db {:keys [api-url api-secret]} project text]
+  (let [related-cadastral-unit-ids (-> (d/q '[:find (pull ?p [:thk.project/related-cadastral-units])
+                                              :in $ ?p]
+                                            db project)
+                                       ffirst
+                                       :thk.project/related-cadastral-units)]
+    (->> (postgrest/rpc {:api-url api-url :api-secret api-secret}
+                        :select_feature_properties
+                        {:ids related-cadastral-unit-ids
+                         :properties ["KINNISTU"]})
+         vals
+         distinct
+         (filterv #(and (not (str/blank? (:KINNISTU %)))
+                        (string/contains-words? (:KINNISTU %) text))))))
+
 ;; Estate id: fetch all units, distinct from properties
 
 (defmethod search-link :task
@@ -64,6 +80,10 @@
 (defmethod search-link :cadastral-unit
   [db _user config project _ _lang text]
   (search-cadastral-unit db config project text))
+
+(defmethod search-link :estate
+  [db _user config project _ _lang text]
+  (search-estate db config project text))
 
 (defquery :link/search
   {:doc "Search for items that can be linked"
@@ -87,7 +107,8 @@
             (mapcat (fn [type]
                       (when (allowed-link-types type)
                         (map #(assoc % :link/type type)
-                             (search-link db user
+                             (search-link db
+                                          user
                                           {:api-url api-url :api-secret api-secret}
                                           project type lang text)))))
             types))))
