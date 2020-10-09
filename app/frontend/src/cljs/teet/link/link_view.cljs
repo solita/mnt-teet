@@ -60,6 +60,8 @@
                                                     in-progress-atom))}
       [icons/action-delete]])])
 
+(def type-options [:task :cadastral-unit :estate])
+
 (defmulti display-result :link/type)
 
 (defmethod display-result :task [{:task/keys [type assignee estimated-end-date]}]
@@ -82,6 +84,8 @@
   Otherwise the view is read-only."
   [{:keys [e! links from editable?]}]
   (r/with-let [in-progress (r/atom false)
+               selected-type (r/atom (first type-options))
+               change-search-value #(reset! selected-type %)
                add-link! (fn [to]
                            (when to
                              (e! (link-controller/->AddLink from (:db/id to) :task in-progress))))]
@@ -92,16 +96,28 @@
                                     :editable? editable?})
            links)
      (when (and editable? (not @in-progress))
-       [select/select-search
-        {:e! e!
-         :placeholder (tr [:link :search :placeholder])
-         :no-results (tr [:link :search :no-results])
-         :query (fn [text]
-                  {:args {:lang @localization/selected-language
-                          :text text
-                          :from from
-                          :types #{:estate}}
-                   :query :link/search})
-         :on-change add-link!
+       [:div {:style {:display :flex}}
+        [:div {:style {:flex-grow 1}}
+         [select/select-search
+          {:e! e!
+           :placeholder (tr [:link :search :placeholder])
+           :no-results (tr [:link :search :no-results])
+           :query (fn [text]
+                    {:args {:lang @localization/selected-language
+                            :text text
+                            :from from
+                            :types #{@selected-type}}
+                     :query :link/search})
+           :on-change add-link!
 
-         :format-result display-result}])]))
+           :format-result display-result}]]
+        [:div {:style {:background-color :white
+                       :min-width "100px"}}
+         [select/form-select {:value {:value @selected-type :label (tr [:link :option-label @selected-type])}
+                              :items (doall
+                                       (mapv
+                                         (fn [opt]
+                                           {:value opt :label (tr [:link :option-label opt])})
+                                         type-options))
+                              :on-change (fn [val]
+                                           (change-search-value (:value val)))}]]])]))

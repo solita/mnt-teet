@@ -174,7 +174,7 @@
              [:option {:value i
                        :key i
                        :class (<class select-opt)}
-              (format-item item)])
+              (pr-str item)])
            items))]]]))
 
 (defn query-enums-for-attribute! [attribute]
@@ -386,13 +386,14 @@
                    :show-label? show-label?
                    :required required
                    :error error
+                   :start-icon icons/action-search
                    :placeholder placeholder
                    :on-key-down on-key-down
                    :on-blur #(js/setTimeout
-                              ;; Delay closing because we might be blurring
-                              ;; because user clicked one of the options
-                              (fn [] (swap! state assoc :open? false))
-                              200)
+                               ;; Delay closing because we might be blurring
+                               ;; because user clicked one of the options
+                               (fn [] (swap! state assoc :open? false))
+                               200)
                    :value (if value
                             (format-result value)
                             input)
