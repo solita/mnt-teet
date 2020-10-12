@@ -60,6 +60,16 @@
        " "
        TUNNUS)]]))
 
+(defmethod display :estate
+  [{:link/keys [external-id]}]
+  [:<>
+   [url/Link
+    {:page :project
+     :query {:tab "land"
+             :estate-id external-id}}
+    external-id]
+   [typography/SmallGrayText (tr [:link :type-label :estate])]])
+
 (defn- link-wrapper [{:keys [e! from editable?
                              in-progress-atom]}
                      {id :db/id
@@ -137,7 +147,7 @@
                               :items (doall
                                        (mapv
                                          (fn [opt]
-                                           {:value opt :label (tr [:link :option-label opt])})
+                                           {:value opt :label (tr [:link :type-label opt])})
                                          type-options))
                               :on-change (fn [val]
                                            (change-search-value (:value val)))}]]])]))

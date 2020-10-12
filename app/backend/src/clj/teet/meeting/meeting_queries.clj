@@ -142,8 +142,9 @@
                                        :link :thk.project/owner
                                        :access :read}}}
   (link-db/fetch-links
-   db #(or (contains? % :meeting.agenda/body)
-           (contains? % :meeting.decision/body))
+   db user
+   #(or (contains? % :meeting.agenda/body)
+        (contains? % :meeting.decision/body))
    (meta-query/without-deleted
     db
     {:project (fetch-project-meetings db (project-db/activity-project-id db activity-id)) ;; This ends up pulling duplicate information, could be refactored

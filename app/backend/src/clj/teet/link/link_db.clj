@@ -41,7 +41,7 @@
   (log/warn "Disallow link delete by user" user "from" from "to" to "(" type ")")
   false)
 
-(defmulti fetch-external-link-info (fn [type _external-id]
+(defmulti fetch-external-link-info (fn [_user type _external-id]
                                      type))
 
 
@@ -49,7 +49,7 @@
   "Expand all links in the given form to their display representations.
   Each link is added with a :link/info which is the fetched display
   representation."
-  [db form]
+  [db user form]
   (walk/prewalk
    (fn [x]
      (if (and (map? x)
@@ -59,7 +59,7 @@
 
                (cond
                  (:link/external-id x)
-                 (fetch-external-link-info (:link/type x) (:link/external-id x))
+                 (fetch-external-link-info user (:link/type x) (:link/external-id x))
 
                  (:link/to x)
                  (d/pull db (into link-model/common-link-target-attributes
@@ -73,7 +73,7 @@
   "Fetch links for all entities in form that match fetch-links-pred?.
   Associates :link/_from with list of linked entities and expands the
   linked to entities."
-  [db fetch-links-pred? form]
+  [db user fetch-links-pred? form]
   (walk/prewalk
    (fn [x]
      (if (and (map? x)
@@ -81,11 +81,12 @@
               (fetch-links-pred? x))
        (assoc x :link/_from
               (expand-links
-               db (mapv first
-                        (d/q '[:find (pull ?l [:db/id :link/to :link/external-id :link/type])
-                               :where [?l :link/from ?e]
-                               :in $ ?e]
-                             db (:db/id x)))))
+               db user
+               (mapv first
+                     (d/q '[:find (pull ?l [:db/id :link/to :link/external-id :link/type])
+                            :where [?l :link/from ?e]
+                            :in $ ?e]
+                          db (:db/id x)))))
        x))
    form))
 

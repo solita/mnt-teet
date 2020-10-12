@@ -72,7 +72,8 @@
          vals
          distinct
          (filterv #(and (not (str/blank? (:KINNISTU %)))
-                        (string/contains-words? (:KINNISTU %) text))))))
+                        (string/contains-words? (:KINNISTU %) text)))
+         (map #(assoc % :link/external-id (:KINNISTU %))))))
 
 ;; Estate id: fetch all units, distinct from properties
 
@@ -116,7 +117,7 @@
                                           project type lang text)))))
             types))))
 
-(defmethod link-db/fetch-external-link-info :cadastral-unit [_ id]
+(defmethod link-db/fetch-external-link-info :cadastral-unit [_user _ id]
   ;; PENDING: this should have a better place?
   (-> (postgrest/rpc (environment/api-context) :select_feature_properties
                      {:ids [id]
