@@ -174,7 +174,7 @@
              [:option {:value i
                        :key i
                        :class (<class select-opt)}
-              (pr-str item)])
+              (format-item item)])
            items))]]]))
 
 (defn query-enums-for-attribute! [attribute]
