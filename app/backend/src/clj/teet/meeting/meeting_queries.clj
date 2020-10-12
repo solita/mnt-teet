@@ -137,9 +137,9 @@
     (filter-decisions decision-ids meetings)))
 
 (defn project-decisions
-  [db project-id search-term]
+  [db user project-id search-term]
   (let [meetings (link-db/fetch-links
-                   db
+                   db user
                    #(contains? % :meeting.decision/body)
                    (meta-query/without-deleted
                      db
@@ -290,4 +290,4 @@
                  search-term]}
    :project-id project-id
    :authorization {}}
-  (project-decisions db project-id search-term))
+  (project-decisions db user project-id search-term))
