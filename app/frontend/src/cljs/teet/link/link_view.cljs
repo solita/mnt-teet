@@ -54,7 +54,8 @@
 (defmethod display :cadastral-unit
   [{:link/keys [info external-id]}]
   (let [{:keys [AY_NIMI TUNNUS]} info]
-    [:<>
+    [:div {:style {:display :flex
+                   :align-items :center}}
      [url/Link
       {:page :project
        :query {:tab "land"
@@ -62,17 +63,19 @@
       (str
        AY_NIMI
        " "
-       TUNNUS)]]))
+       TUNNUS)]
+     [typography/SmallGrayText "\u00a0" (tr [:link :type-label :cadastral-unit])]]))
 
 (defmethod display :estate
   [{:link/keys [external-id]}]
-  [:<>
+  [:div {:style {:display :flex
+                 :align-items :center}}
    [url/Link
     {:page :project
      :query {:tab "land"
              :estate-id external-id}}
     external-id]
-   [typography/SmallGrayText (tr [:link :type-label :estate])]])
+   [typography/SmallGrayText "\u00a0" (tr [:link :type-label :estate])]])
 
 (defn- link-wrapper [{:keys [e! from editable?
                              in-progress-atom]}
