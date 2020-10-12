@@ -2,7 +2,8 @@
   (:require [teet.db-api.core :as db-api :refer [defcommand tx]]
             [teet.link.link-model :as link-model]
             [teet.link.link-db :as link-db]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.meta.meta-model :as meta-model]))
 
 (defcommand :link/add-link
   {:doc "Add link from one entity to another"
@@ -29,7 +30,8 @@
 
               :else
               (throw (ex-info "Invalid link. Target missing."
-                              {:teet/error :invalid-link}))))]))
+                              {:teet/error :invalid-link})))
+            (meta-model/creation-meta user))]))
      [:tempids])
     (throw (ex-info "Invalid link"
                     (merge p {:teet/error :invalid-link})))))

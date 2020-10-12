@@ -82,11 +82,13 @@
        (assoc x :link/_from
               (expand-links
                db user
-               (mapv first
-                     (d/q '[:find (pull ?l [:db/id :link/to :link/external-id :link/type])
-                            :where [?l :link/from ?e]
-                            :in $ ?e]
-                          db (:db/id x)))))
+               (sort-by :meta/created-at
+                        (mapv first
+                              (d/q '[:find (pull ?l [:db/id :link/to :link/external-id :link/type
+                                                     :meta/created-at])
+                                     :where [?l :link/from ?e]
+                                     :in $ ?e]
+                                   db (:db/id x))))))
        x))
    form))
 
