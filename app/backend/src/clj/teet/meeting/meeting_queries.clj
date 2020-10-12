@@ -100,10 +100,10 @@
                           d))))))
 
 (defn activity-decisions
-  [db activity-id search-term]
+  [db user activity-id search-term]
   (let [meetings
         (link-db/fetch-links
-          db
+          db user
           #(contains? % :meeting.decision/body)
           (meta-query/without-deleted
             db
@@ -272,7 +272,7 @@
                  search-term]}
    :project-id (project-db/activity-project-id db activity-id)
    :authorization {}}
-  (activity-decisions db activity-id search-term))
+  (activity-decisions db user activity-id search-term))
 
 
 (defquery :meeting/project-meeting-history
