@@ -70,11 +70,14 @@
    [:div (user-model/user-name assignee)]
    [:div (format/date estimated-end-date)]])
 
-(defmethod display-result :cadastral-unit [u]
-  [:div "PALSTA " (pr-str u)])
+(defmethod display-result :cadastral-unit [{:keys [AY_NIMI TUNNUS]}]
+  [:div {:class (<class common-styles/flex-row-space-between)}
+   [:div AY_NIMI]
+   [:div TUNNUS]])
 
-(defmethod display-result :estate [u]
-  [:div "KIINTEISTÖ " (pr-str u)])
+(defmethod display-result :estate [{:keys [KINNISTU]}]
+  [:div {:class (<class common-styles/flex-row-space-between)}
+   [:div KINNISTU]])
 
 (defn links
   "List links to other entities (like tasks).
