@@ -147,7 +147,7 @@
 
            :format-result display-result}]]
         [:div {:style {:background-color :white
-                       :min-width "100px"}}
+                       :max-width "150px"}}
          [select/form-select {:value {:value @selected-type
                                       :label (tr [:link :type-label @selected-type])}
                               :items (doall
