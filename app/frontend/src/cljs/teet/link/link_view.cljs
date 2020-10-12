@@ -48,7 +48,7 @@
             :deadline (format/date estimated-end-date)})]]]))
 
 (defmethod display :cadastral-unit
-  [{:link/keys [info external-id] :as link}]
+  [{:link/keys [info external-id]}]
   (let [{:keys [AY_NIMI TUNNUS]} info]
     [:<>
      [url/Link
@@ -128,6 +128,7 @@
      (when (and editable? (not @in-progress))
        [:div {:style {:display :flex}}
         [:div {:style {:flex-grow 1}}
+         ^{:key (name @selected-type)} ; force remount if type changes
          [select/select-search
           {:e! e!
            :placeholder (tr [:link :search :placeholder])
@@ -143,7 +144,8 @@
            :format-result display-result}]]
         [:div {:style {:background-color :white
                        :min-width "100px"}}
-         [select/form-select {:value {:value @selected-type :label (tr [:link :option-label @selected-type])}
+         [select/form-select {:value {:value @selected-type
+                                      :label (tr [:link :type-label @selected-type])}
                               :items (doall
                                        (mapv
                                          (fn [opt]
