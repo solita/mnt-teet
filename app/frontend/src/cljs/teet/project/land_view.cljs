@@ -476,7 +476,6 @@
 (defn estate-group
   [e! project-info open-estates cadastral-forms estate-form [estate-id units]]
   (let [estate (:estate (first units))
-
         ;;these are all done just to calculate the total cost for the estate, there might be an easier way
         estates-land-acquisitions (land-model/estate-land-acquisitions estate-id
                                                                        (:land/units project-info)
