@@ -58,7 +58,7 @@
      [IconButton
       {:on-click #(e! (link-controller/->DeleteLink from to type id
                                                     in-progress-atom))}
-      [icons/action-delete]])])
+      [icons/content-clear]])])
 
 (def type-options [:task :cadastral-unit :estate])
 
