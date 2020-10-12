@@ -49,7 +49,7 @@
   "Expand all links in the given form to their display representations.
   Each link is added with a :link/info which is the fetched display
   representation."
-  [db user form]
+  [db user valid-external-ids-by-type form]
   (walk/prewalk
    (fn [x]
      (if (and (map? x)
@@ -59,7 +59,11 @@
 
                (cond
                  (:link/external-id x)
-                 (fetch-external-link-info user (:link/type x) (:link/external-id x))
+                 (let [valid-ids (or (valid-external-ids-by-type (:link/type x))
+                                     (constantly true))]
+                   (assoc (fetch-external-link-info user (:link/type x) (:link/external-id x))
+                     :link/valid?
+                     (boolean (valid-ids (:link/external-id x)))))
 
                  (:link/to x)
                  (d/pull db (into link-model/common-link-target-attributes
@@ -73,7 +77,7 @@
   "Fetch links for all entities in form that match fetch-links-pred?.
   Associates :link/_from with list of linked entities and expands the
   linked to entities."
-  [db user fetch-links-pred? form]
+  [db user valid-external-ids-by-type fetch-links-pred? form]
   (walk/prewalk
    (fn [x]
      (if (and (map? x)
@@ -82,6 +86,7 @@
        (assoc x :link/_from
               (expand-links
                db user
+               valid-external-ids-by-type
                (sort-by :meta/created-at
                         (mapv first
                               (d/q '[:find (pull ?l [:db/id :link/to :link/external-id :link/type

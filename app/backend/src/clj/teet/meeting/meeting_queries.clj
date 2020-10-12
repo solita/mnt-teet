@@ -9,8 +9,23 @@
             [teet.util.date :as du]
             [teet.util.string :as string]
             [teet.link.link-db :as link-db]
-            [teet.link.link-model :as link-model]))
+            [teet.link.link-model :as link-model]
+            [teet.util.datomic :as datomic-util]
+            [teet.integration.postgrest :as postgrest]
+            [teet.environment :as environment]))
 
+
+(defn project-related-unit-ids
+  [db api-context project-eid]
+  (let [units (:thk.project/related-cadastral-units (datomic-util/entity db project-eid))]
+    {:cadastral-unit (set units)
+     :estate (->> (postgrest/rpc api-context
+                                 :select_feature_properties
+                                 {:ids units
+                                  :properties ["KINNISTU"]})
+                  vals
+                  (mapv :KINNISTU)
+                  set)}))
 
 (defn project-upcoming-meetings
   [db project-eid]
@@ -104,6 +119,7 @@
   (let [meetings
         (link-db/fetch-links
           db user
+          (project-related-unit-ids db (environment/api-context) (project-db/activity-project-id db activity-id))
           #(contains? % :meeting.decision/body)
           (meta-query/without-deleted
             db
@@ -140,6 +156,7 @@
   [db user project-id search-term]
   (let [meetings (link-db/fetch-links
                    db user
+                   (project-related-unit-ids db (environment/api-context) project-id)
                    #(contains? % :meeting.decision/body)
                    (meta-query/without-deleted
                      db
@@ -217,44 +234,47 @@
    :authorization {:project/read-info {:eid (project-db/activity-project-id db activity-id)
                                        :link :thk.project/owner
                                        :access :read}}}
-  (link-db/fetch-links
-   db user
-   #(or (contains? % :meeting.agenda/body)
-        (contains? % :meeting.decision/body))
-   (meta-query/without-deleted
-    db
-    {:project (fetch-project-meetings db (project-db/activity-project-id db activity-id)) ;; This ends up pulling duplicate information, could be refactored
-     :meeting (assoc
-               (d/pull
-                db
-                `[:db/id
-                  :meeting/title :meeting/location
-                  :meeting/start :meeting/end
-                  :meeting/number
-                  {:meeting/organizer ~user-model/user-listing-attributes}
-                  {:meeting/agenda [:db/id
-                                    :meeting.agenda/topic
-                                    :meeting.agenda/body
-                                    {:meeting.agenda/decisions
-                                     [:db/id :meeting.decision/body
-                                      :meeting.decision/number
-                                      ~attachments]}
-                                    {:meeting.agenda/responsible ~user-model/user-listing-attributes}
-                                    ~attachments]}
-                  {:review/_of [:db/id
-                                :review/comment
-                                :review/decision
-                                :meta/created-at
-                                {:review/reviewer ~user-model/user-listing-attributes}]}
-                  {:participation/_in
-                   [:db/id
-                    :participation/role
-                    {:participation/participant ~user-model/user-listing-attributes}]}]
-                (meeting-db/activity-meeting-id db activity-id meeting-id))
-               :meeting/locked?
-               (meeting-db/locked? db meeting-id))}
-    (fn [entity]
-      (contains? entity :link/to)))))
+  (let [valid-external-ids (project-related-unit-ids db (environment/api-context) (project-db/activity-project-id db activity-id))]
+    (link-db/fetch-links
+      db user
+      valid-external-ids
+      #(or (contains? % :meeting.agenda/body)
+           (contains? % :meeting.decision/body))
+      (meta-query/without-deleted
+        db
+        {:project (fetch-project-meetings db (project-db/activity-project-id db activity-id)) ;; This ends up pulling duplicate information, could be refactored
+         :meeting (assoc
+                    (d/pull
+                      db
+                      `[:db/id
+                        :meeting/title :meeting/location
+                        :meeting/start :meeting/end
+                        :meeting/number
+                        {:meeting/organizer ~user-model/user-listing-attributes}
+                        {:meeting/agenda [:db/id
+                                          :meeting.agenda/topic
+                                          :meeting.agenda/body
+                                          {:meeting.agenda/decisions
+                                           [:db/id :meeting.decision/body
+                                            :meeting.decision/number
+                                            ~attachments]}
+                                          {:meeting.agenda/responsible ~user-model/user-listing-attributes}
+                                          ~attachments]}
+                        {:review/_of [:db/id
+                                      :review/comment
+                                      :review/decision
+                                      :meta/created-at
+                                      {:review/reviewer ~user-model/user-listing-attributes}]}
+                        {:participation/_in
+                         [:db/id
+                          :participation/role
+                          {:participation/participant ~user-model/user-listing-attributes}]}]
+                      (meeting-db/activity-meeting-id db activity-id meeting-id))
+                    :meeting/locked?
+                    (meeting-db/locked? db meeting-id))}
+
+        (fn [entity]
+          (contains? entity :link/to))))))
 
 
 (defquery :meeting/activity-meeting-history
