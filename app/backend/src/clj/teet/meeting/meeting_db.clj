@@ -58,6 +58,18 @@
               inc)
       1))
 
+(defn next-decision-number
+  [db agenda-topic-id]
+  (or (some-> (d/q '[:find (max ?n)
+                     :in $ ?at
+                     :where
+                     [?at :meeting.agenda/decisions ?d]
+                     [(missing? $ ?d :meta/deleted?)]
+                     [?d :meeting.decision/number ?n]]
+                   db agenda-topic-id)
+              ffirst
+              inc)
+      1))
 
 (defn user-is-organizer-or-reviewer? [db user meeting-id]
   (meeting-model/user-is-organizer-or-reviewer?
@@ -82,7 +94,7 @@
                                 [?p :participation/participant ?u]
                                 :in $ ?m] db meeting-id))]
     (mapv first
-          (d/q '[:find (pull ?u [:user/given-name :user/family-name
+          (d/q '[:find (pull ?u [:user/given-name :user/family-name :db/id
                                  :user/email])
                  :in $ [?u ...]]
                db recipients))))

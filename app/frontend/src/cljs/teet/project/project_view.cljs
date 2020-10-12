@@ -501,8 +501,9 @@
                             :button-component [buttons/button-secondary {:size :small}
                                                (tr [:buttons :edit])]}]])
 
-(defmethod project-menu/project-tab-action :activities [_ e! _app project]
-  [project-timeline-view/timeline project])
+(defmethod project-menu/project-tab-action :activities [_ e! {page :page :as _app} project]
+
+  [project-timeline-view/timeline (not= page :project) project])
 
 (defn edit-project-details
   [e! project close!]

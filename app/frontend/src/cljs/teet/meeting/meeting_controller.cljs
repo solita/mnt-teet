@@ -100,6 +100,9 @@
     (t/fx app
           {:tuck.effect/type :command!
            :command :meeting/update-agenda
+           :success-message (if (:db/id form-data)
+                              (tr [:notifications :topic-updated])
+                              (tr [:notifications :topic-created]))
            :payload {:db/id (:db/id meeting)
                      :meeting/agenda [(cu/without-nils
                                        (merge {:db/id "new-agenda-item"}

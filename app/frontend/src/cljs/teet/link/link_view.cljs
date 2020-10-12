@@ -123,7 +123,7 @@
                                                             (:link/external-id to)
                                                             @selected-type
                                                             in-progress))))]
-    [:div.links
+    [:div.links {:style {:margin "1rem 0"}}
      (mapc (r/partial link-wrapper {:e! e!
                                     :from from
                                     :in-progress-atom in-progress

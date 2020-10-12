@@ -5,7 +5,8 @@
             [teet.project.project-db :as project-db]
             [teet.file.file-db :as file-db]
             [teet.file.filename-metadata :as filename-metadata]
-            [teet.util.datomic :as du])
+            [teet.util.datomic :as du]
+            [teet.authorization.authorization-check :as authorization-check])
   (:import (java.net URLEncoder)))
 
 
@@ -38,13 +39,14 @@
    :context {:keys [db user]}
    :args {:keys [file-id attached-to comment-id]}
    :pre [(or (and comment-id
-                  (file-db/file-is-attached-to-comment? db file-id comment-id))
+                  (file-db/file-is-attached-to-comment? db file-id comment-id)
+                  (authorization-check/authorized? user :document/view-document
+                                                   (url-for-file db file-id false)))
              (and attached-to
                   (file-db/allow-download-attachments? db user attached-to)
                   (file-db/file-is-attached-to? db file-id attached-to))
 
              (file-db/own-file? db user file-id))]
-   :project-id (when comment-id
-                 (project-db/comment-project-id db comment-id))
-   :authorization {:document/view-document {:db/id comment-id}}}
+   :project-id nil
+   :authorization {}}
   (url-for-file db file-id false))

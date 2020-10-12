@@ -1,6 +1,7 @@
 (ns teet.common.common-styles
   (:require [teet.theme.theme-colors :as theme-colors]
-            [herb.core :refer [defglobal]]))
+            [herb.core :refer [defglobal]]
+            [garden.color :refer [darken]]))
 
 (defn gray-light-border
   []
@@ -159,7 +160,7 @@
    ^{:pseudo {:first-child {:border-left 0}
               :last-child {:border-right 0}}}
    {:flex-basis (str basis "%")
-    :border-color theme-colors/gray-lighter
+    :border-color (darken theme-colors/gray-lighter 10)
     :border-style :solid
     :border-width "2px 2px 0 0"
     :flex-grow grow

@@ -6,7 +6,8 @@
             [teet.ui.material-ui :refer [CircularProgress]]
             [teet.common.common-styles :as common-styles]
             [teet.ui.breadcrumbs :as breadcrumbs]
-            [teet.project.project-style :as project-style]))
+            [teet.project.project-style :as project-style]
+            [goog.functions :as functions]))
 
 (defrecord Query [query args state-path state-atom])
 (defrecord QueryResult [state-path state-atom result])
@@ -77,6 +78,13 @@
               skeleton
               [:div {:class (<class common-styles/spinner-style)}
                [CircularProgress]]))))})))
+
+(defn debounce-query
+  [{:keys [args] :as params} debounce-time]
+  (r/with-let [args-atom (r/atom args)
+               args-change-fn (functions/debounce #(reset! args-atom %) debounce-time)]
+    (args-change-fn args)
+    [query (assoc params :args @args-atom)]))
 
 (defn query-page-view [page-content-view e! app state breadcrumbs]
   [:<>
