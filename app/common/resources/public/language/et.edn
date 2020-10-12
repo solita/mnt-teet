@@ -166,7 +166,7 @@
   :estate-procedure.type/expropriation "Sundvõõrandamine",
   :task.type/state-estate-registry "Riigivara registrisse kandmine",
   :task.status/submitted "Esitatud",
-  :notification.type/meeting-updated nil,
+  :notification.type/meeting-updated "Koosolekut on uuendatud",
   :activity.name/other "Muu",
   :task.type/animal-study "Loomastiku uuring",
   :activity.name/pre-design "Eskiisprojekt",
@@ -482,7 +482,11 @@
  {:search
   {:placeholder "Lisan viite...",
    :no-results "Ei leitud ühtki vastet"},
-  :target-deleted "Kustutatud {user} poolt {at}"},
+  :target-deleted "Kustutatud {user} poolt {at}",
+  :type-label
+  {:task "Ülesanne",
+   :estate "Kinnistu",
+   :cadastral-unit "Katastriüksus"}},
  :login
  {:login "Sisenen",
   :password "Salasõna",

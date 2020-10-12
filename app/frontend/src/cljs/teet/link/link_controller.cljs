@@ -2,7 +2,7 @@
   (:require [tuck.core :as t]
             [teet.common.common-controller :as common-controller]))
 
-(defrecord AddLink [from to type in-progress-atom])
+(defrecord AddLink [from to external-id type in-progress-atom])
 (defrecord DeleteLink [from to type id in-progress-atom])
 
 (defn command-with-progress [app in-progress-atom command payload]
@@ -18,13 +18,22 @@
                            (common-controller/->Refresh))}))
 (extend-protocol t/Event
   AddLink
-  (process-event [{:keys [from to type in-progress-atom]} app]
+  (process-event [{:keys [from to external-id type in-progress-atom] :as event} app]
     (command-with-progress
      app in-progress-atom
      :link/add-link
-     {:from from
-      :to to
-      :type type}))
+     (merge {:from from
+             :type type}
+            (cond
+              external-id
+              {:external-id external-id}
+
+              to
+              {:to to}
+
+              :else
+              (throw (ex-info "Add link requires :to or :external-id"
+                              {:event event}))))))
 
   DeleteLink
   (process-event [{:keys [from to type id in-progress-atom]} app]

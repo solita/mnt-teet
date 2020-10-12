@@ -3,7 +3,9 @@
   (:require [clojure.walk :as walk]
             [datomic.client.api :as d]
             [teet.link.link-model :as link-model]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.integration.postgrest :as postgrest]
+            [teet.environment :as environment]))
 
 (defmulti link-from
   "Check permissions and preconditions for linking from an entity.
@@ -39,22 +41,31 @@
   (log/warn "Disallow link delete by user" user "from" from "to" to "(" type ")")
   false)
 
+(defmulti fetch-external-link-info (fn [_user type _external-id]
+                                     type))
+
 
 (defn expand-links
   "Expand all links in the given form to their display representations.
   Each link is added with a :link/info which is the fetched display
   representation."
-  [db form]
+  [db user form]
   (walk/prewalk
    (fn [x]
      (if (and (map? x)
-              (contains? x :link/type)
-              (contains? x :link/to))
+              (contains? x :link/type))
        (merge x
-              {:link/info (d/pull db (into link-model/common-link-target-attributes
-                                           (get-in link-model/link-types
-                                                   [(:link/type x) :display-attributes]))
-                                  (:db/id (:link/to x)))})
+              {:link/info
+
+               (cond
+                 (:link/external-id x)
+                 (fetch-external-link-info user (:link/type x) (:link/external-id x))
+
+                 (:link/to x)
+                 (d/pull db (into link-model/common-link-target-attributes
+                                  (get-in link-model/link-types
+                                          [(:link/type x) :display-attributes]))
+                         (:db/id (:link/to x))))})
        x))
    form))
 
@@ -62,7 +73,7 @@
   "Fetch links for all entities in form that match fetch-links-pred?.
   Associates :link/_from with list of linked entities and expands the
   linked to entities."
-  [db fetch-links-pred? form]
+  [db user fetch-links-pred? form]
   (walk/prewalk
    (fn [x]
      (if (and (map? x)
@@ -70,11 +81,14 @@
               (fetch-links-pred? x))
        (assoc x :link/_from
               (expand-links
-               db (mapv first
-                        (d/q '[:find (pull ?l [:db/id :link/to :link/type])
-                               :where [?l :link/from ?e]
-                               :in $ ?e]
-                             db (:db/id x)))))
+               db user
+               (sort-by :meta/created-at
+                        (mapv first
+                              (d/q '[:find (pull ?l [:db/id :link/to :link/external-id :link/type
+                                                     :meta/created-at])
+                                     :where [?l :link/from ?e]
+                                     :in $ ?e]
+                                   db (:db/id x))))))
        x))
    form))
 

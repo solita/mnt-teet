@@ -26,7 +26,7 @@
   (let [{:task/keys [type estimated-end-date assignee]
          :meta/keys [deleted? modifier modified-at]} info
         activity (get-in info [:activity/_tasks 0 :db/id])]
-    [:span
+    [:div
      [:div
       (if deleted?
         [:<>
@@ -36,16 +36,46 @@
           (tr [:link :target-deleted]
               {:user (user-model/user-name modifier)
                :at (format/date-time modified-at)})]]
-        [url/Link
-         {:page :activity-task
-          :params {:activity activity
-                   :task (:db/id to)}}
-         (tr-enum type)])]
+        [:div {:style {:display :flex
+                       :align-items :center}}
+         [url/Link
+          {:page :activity-task
+           :params {:activity activity
+                    :task (:db/id to)}}
+          (tr-enum type)]
+         [typography/SmallGrayText
+          (str "\u00a0" (tr [:link :type-label :task]))]])]
      [:div
       [typography/SmallGrayText
        (tr [:task :link-info]
            {:assignee (user-model/user-name assignee)
             :deadline (format/date estimated-end-date)})]]]))
+
+(defmethod display :cadastral-unit
+  [{:link/keys [info external-id]}]
+  (let [{:keys [AY_NIMI TUNNUS]} info]
+    [:div {:style {:display :flex
+                   :align-items :center}}
+     [url/Link
+      {:page :project
+       :query {:tab "land"
+               :land-id external-id}}
+      (str
+       AY_NIMI
+       " "
+       TUNNUS)]
+     [typography/SmallGrayText "\u00a0" (tr [:link :type-label :cadastral-unit])]]))
+
+(defmethod display :estate
+  [{:link/keys [external-id]}]
+  [:div {:style {:display :flex
+                 :align-items :center}}
+   [url/Link
+    {:page :project
+     :query {:tab "land"
+             :estate-id external-id}}
+    external-id]
+   [typography/SmallGrayText "\u00a0" (tr [:link :type-label :estate])]])
 
 (defn- link-wrapper [{:keys [e! from editable?
                              in-progress-atom]}
@@ -58,7 +88,26 @@
      [IconButton
       {:on-click #(e! (link-controller/->DeleteLink from to type id
                                                     in-progress-atom))}
-      [icons/action-delete]])])
+      [icons/content-clear]])])
+
+(def type-options [:task :cadastral-unit :estate])
+
+(defmulti display-result :link/type)
+
+(defmethod display-result :task [{:task/keys [type assignee estimated-end-date]}]
+  [:div {:class (<class common-styles/flex-row-space-between)}
+   [:div (tr-enum type)]
+   [:div (user-model/user-name assignee)]
+   [:div (format/date estimated-end-date)]])
+
+(defmethod display-result :cadastral-unit [{:keys [AY_NIMI TUNNUS]}]
+  [:div {:class (<class common-styles/flex-row-space-between)}
+   [:div AY_NIMI]
+   [:div TUNNUS]])
+
+(defmethod display-result :estate [{:keys [KINNISTU]}]
+  [:div {:class (<class common-styles/flex-row-space-between)}
+   [:div KINNISTU]])
 
 (defn links
   "List links to other entities (like tasks).
@@ -68,9 +117,15 @@
   Otherwise the view is read-only."
   [{:keys [e! links from editable?]}]
   (r/with-let [in-progress (r/atom false)
+               selected-type (r/atom (first type-options))
+               change-search-value #(reset! selected-type %)
                add-link! (fn [to]
                            (when to
-                             (e! (link-controller/->AddLink from (:db/id to) :task in-progress))))]
+                             (e! (link-controller/->AddLink from
+                                                            (:db/id to)
+                                                            (:link/external-id to)
+                                                            @selected-type
+                                                            in-progress))))]
     [:div.links {:style {:margin "1rem 0"}}
      (mapc (r/partial link-wrapper {:e! e!
                                     :from from
@@ -78,20 +133,30 @@
                                     :editable? editable?})
            links)
      (when (and editable? (not @in-progress))
-       [select/select-search
-        {:e! e!
-         :placeholder (tr [:link :search :placeholder])
-         :no-results (tr [:link :search :no-results])
-         :query (fn [text]
-                  {:args {:lang @localization/selected-language
-                          :text text
-                          :from from
-                          :types #{:task}}
-                   :query :link/search})
-         :on-change add-link!
+       [:div {:style {:display :flex}}
+        [:div {:style {:flex-grow 1}}
+         ^{:key (name @selected-type)} ; force remount if type changes
+         [select/select-search
+          {:e! e!
+           :placeholder (tr [:link :search :placeholder])
+           :no-results (tr [:link :search :no-results])
+           :query (fn [text]
+                    {:args {:lang @localization/selected-language
+                            :text text
+                            :from from
+                            :types #{@selected-type}}
+                     :query :link/search})
+           :on-change add-link!
 
-         :format-result (fn [{:task/keys [type assignee estimated-end-date]}]
-                          [:div {:class (<class common-styles/flex-row-space-between)}
-                           [:div (tr-enum type)]
-                           [:div (user-model/user-name assignee)]
-                           [:div (format/date estimated-end-date)]])}])]))
+           :format-result display-result}]]
+        [:div {:style {:background-color :white
+                       :max-width "150px"}}
+         [select/form-select {:value {:value @selected-type
+                                      :label (tr [:link :type-label @selected-type])}
+                              :items (doall
+                                       (mapv
+                                         (fn [opt]
+                                           {:value opt :label (tr [:link :type-label opt])})
+                                         type-options))
+                              :on-change (fn [val]
+                                           (change-search-value (:value val)))}]]])]))

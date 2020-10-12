@@ -486,7 +486,9 @@
   :no-mortgages "No mortgages"},
  :link
  {:search {:placeholder "Link...", :no-results "No results"},
-  :target-deleted "Deleted by {user} at {at}"},
+  :target-deleted "Deleted by {user} at {at}",
+  :type-label
+  {:task "Task", :estate "Estate", :cadastral-unit "Cadastral unit"}},
  :login
  {:login "Login",
   :password "Password",

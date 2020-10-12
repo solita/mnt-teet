@@ -100,10 +100,10 @@
                           d))))))
 
 (defn activity-decisions
-  [db activity-id search-term]
+  [db user activity-id search-term]
   (let [meetings
         (link-db/fetch-links
-          db
+          db user
           #(contains? % :meeting.decision/body)
           (meta-query/without-deleted
             db
@@ -137,9 +137,9 @@
     (filter-decisions decision-ids meetings)))
 
 (defn project-decisions
-  [db project-id search-term]
+  [db user project-id search-term]
   (let [meetings (link-db/fetch-links
-                   db
+                   db user
                    #(contains? % :meeting.decision/body)
                    (meta-query/without-deleted
                      db
@@ -218,8 +218,9 @@
                                        :link :thk.project/owner
                                        :access :read}}}
   (link-db/fetch-links
-   db #(or (contains? % :meeting.agenda/body)
-           (contains? % :meeting.decision/body))
+   db user
+   #(or (contains? % :meeting.agenda/body)
+        (contains? % :meeting.decision/body))
    (meta-query/without-deleted
     db
     {:project (fetch-project-meetings db (project-db/activity-project-id db activity-id)) ;; This ends up pulling duplicate information, could be refactored
@@ -271,7 +272,7 @@
                  search-term]}
    :project-id (project-db/activity-project-id db activity-id)
    :authorization {}}
-  (activity-decisions db activity-id search-term))
+  (activity-decisions db user activity-id search-term))
 
 
 (defquery :meeting/project-meeting-history
@@ -289,4 +290,4 @@
                  search-term]}
    :project-id project-id
    :authorization {}}
-  (project-decisions db project-id search-term))
+  (project-decisions db user project-id search-term))
