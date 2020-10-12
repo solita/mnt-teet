@@ -26,7 +26,7 @@
   (let [{:task/keys [type estimated-end-date assignee]
          :meta/keys [deleted? modifier modified-at]} info
         activity (get-in info [:activity/_tasks 0 :db/id])]
-    [:span
+    [:<>
      [:div
       (if deleted?
         [:<>
@@ -46,6 +46,19 @@
        (tr [:task :link-info]
            {:assignee (user-model/user-name assignee)
             :deadline (format/date estimated-end-date)})]]]))
+
+(defmethod display :cadastral-unit
+  [{:link/keys [info external-id] :as link}]
+  (let [{:keys [AY_NIMI TUNNUS]} info]
+    [:<>
+     [url/Link
+      {:page :project
+       :query {:tab "land"
+               :land-id external-id}}
+      (str
+       AY_NIMI
+       " "
+       TUNNUS)]]))
 
 (defn- link-wrapper [{:keys [e! from editable?
                              in-progress-atom]}
@@ -91,7 +104,11 @@
                change-search-value #(reset! selected-type %)
                add-link! (fn [to]
                            (when to
-                             (e! (link-controller/->AddLink from (:db/id to) :task in-progress))))]
+                             (e! (link-controller/->AddLink from
+                                                            (:db/id to)
+                                                            (:link/external-id to)
+                                                            @selected-type
+                                                            in-progress))))]
     [:div.links
      (mapc (r/partial link-wrapper {:e! e!
                                     :from from

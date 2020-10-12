@@ -80,6 +80,22 @@
   [db user from _type _to]
   (link-from-meeting db user from))
 
+(defmethod link-db/link-from [:meeting-agenda :cadastral-unit]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
+(defmethod link-db/link-from [:meeting-agenda :estate]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
+(defmethod link-db/link-from [:meeting-decision :cadastral-unit]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
+(defmethod link-db/link-from [:meeting-decision :estate]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
 (defmethod link-db/delete-link-from [:meeting-agenda :task]
   [db user from _type _to]
   (link-from-meeting db user from))
@@ -87,6 +103,23 @@
 (defmethod link-db/delete-link-from [:meeting-decision :task]
   [db user from _type _to]
   (link-from-meeting db user from))
+
+(defmethod link-db/delete-link-from [:meeting-agenda :cadastral-unit]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
+(defmethod link-db/delete-link-from [:meeting-agenda :estate]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
+(defmethod link-db/delete-link-from [:meeting-decision :cadastral-unit]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
+(defmethod link-db/delete-link-from [:meeting-decision :estate]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
 
 (defcommand :meeting/create
   {:doc "Create new meetings to activities"

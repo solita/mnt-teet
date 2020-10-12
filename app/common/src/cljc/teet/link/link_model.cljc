@@ -6,7 +6,7 @@
 (def links-from-pattern
   "Pull pattern to fetch link info originating from this entity.
   Fetches data needed for expand-links to operate on."
-  {:link/_from [:db/id :link/to :link/type]})
+  {:link/_from [:db/id :link/to :link/external-id :link/type]})
 
 (def from-types
   "Defines the types of entities that can be the source of the link.

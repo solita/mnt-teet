@@ -6,7 +6,9 @@
             [teet.link.link-model :as link-model]
             [teet.localization :refer [with-language tr-enum]]
             [teet.util.string :as string]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.link.link-db :as link-db]
+            [teet.environment :as environment]))
 
 (defmulti search-link (fn [_db _user _config _project type _lang _text] type))
 
@@ -52,7 +54,8 @@
                         :select_feature_properties
                         {:ids related-cadastral-unit-ids
                          :properties ["KINNISTU" "AY_NIMI" "TUNNUS"]})
-         vals
+         (map (fn [[key properties]]
+                (assoc properties :link/external-id (name key))))
          (filterv #(or (string/contains-words? (:TUNNUS %) text)
                        (string/contains-words? (:AY_NIMI %) text))))))
 
@@ -112,3 +115,11 @@
                                           {:api-url api-url :api-secret api-secret}
                                           project type lang text)))))
             types))))
+
+(defmethod link-db/fetch-external-link-info :cadastral-unit [_ id]
+  ;; PENDING: this should have a better place?
+  (-> (postgrest/rpc (environment/api-context) :select_feature_properties
+                     {:ids [id]
+                      :properties ["TUNNUS" "AY_NIMI"]})
+      vals
+      first))
