@@ -486,7 +486,9 @@
   :type-label
   {:task "Ülesanne",
    :estate "Kinnistu",
-   :cadastral-unit "Katastriüksus"}},
+   :cadastral-unit "Katastriüksus"},
+  :land-unit-not-in-project "Projektis pole valitud",
+  :no-units-in-estate-selected "Projektis pole valitud üksusi"},
  :login
  {:login "Sisenen",
   :password "Salasõna",
