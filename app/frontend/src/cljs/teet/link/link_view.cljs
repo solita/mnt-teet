@@ -53,29 +53,48 @@
 
 (defmethod display :cadastral-unit
   [{:link/keys [info external-id]}]
-  (let [{:keys [AY_NIMI TUNNUS]} info]
+  (let [{:keys [AY_NIMI TUNNUS]} info
+        valid? (:link/valid? info)]
     [:div {:style {:display :flex
-                   :align-items :center}}
-     [url/Link
-      {:page :project
-       :query {:tab "land"
-               :land-id external-id}}
-      (str
-       AY_NIMI
-       " "
-       TUNNUS)]
-     [typography/SmallGrayText "\u00a0" (tr [:link :type-label :cadastral-unit])]]))
+                   :flex-direction :column
+                   :justify-content :center}}
+     [:div {:style {:display :flex
+                    :align-items :center}}
+      (if valid?
+        [url/Link
+         {:page :project
+          :query {:tab "land"
+                  :unit-id external-id}}
+         (str
+           AY_NIMI
+           " "
+           TUNNUS)]
+        [:p (str
+              AY_NIMI
+              " "
+              TUNNUS)])
+      [typography/SmallGrayText "\u00a0" (tr [:link :type-label :cadastral-unit])]]
+     (when (not valid?)
+       [typography/SmallGrayText (tr [:link :land-unit-not-in-project])])]))
 
 (defmethod display :estate
-  [{:link/keys [external-id]}]
-  [:div {:style {:display :flex
-                 :align-items :center}}
-   [url/Link
-    {:page :project
-     :query {:tab "land"
-             :estate-id external-id}}
-    external-id]
-   [typography/SmallGrayText "\u00a0" (tr [:link :type-label :estate])]])
+  [{:link/keys [external-id] :as link}]
+  (let [valid? (get-in link [:link/info :link/valid?])]
+    [:div {:style {:display :flex
+                   :flex-direction :column
+                   :justify-content :center}}
+     [:div {:style {:display :flex
+                    :align-items :center}}
+      (if valid?
+        [url/Link
+         {:page :project
+          :query {:tab "land"
+                  :estate-id external-id}}
+         external-id]
+        [:p external-id])
+      [typography/SmallGrayText "\u00a0" (tr [:link :type-label :estate])]]
+     (when (not valid?)
+       [typography/SmallGrayText (tr [:link :no-units-in-estate-selected])])]))
 
 (defn- link-wrapper [{:keys [e! from editable?
                              in-progress-atom]}
