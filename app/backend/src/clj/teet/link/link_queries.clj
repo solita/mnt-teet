@@ -102,19 +102,31 @@
    :config {api-url [:api-url]
             api-secret [:auth :jwt-secret]}
    :pre [(link-model/valid-from? from)]}
-  (let [{:keys [path-to-project allowed-link-types]} (link-model/from-types (first from))
+  (let [existing-links (into #{}
+                             (map first)
+                             (d/q '[:find ?to
+                                    :where
+                                    [?link :link/from ?e]
+                                    [?link :link/to ?to]
+                                    [(missing? $ ?link :meta/deleted?)]
+                                    :in $ ?e]
+                                  db (second from)))
+        {:keys [path-to-project allowed-link-types]} (link-model/from-types (first from))
         project (get-in (du/entity db (nth from 1)) path-to-project)]
     (if-not project
       (throw (ex-info "Could not resolve project context"
                       {:teet/error :project-not-found}))
       (into []
-            (mapcat (fn [type]
-                      (when (allowed-link-types type)
-                        (map #(assoc % :link/type type)
-                             (search-link db
-                                          user
-                                          {:api-url api-url :api-secret api-secret}
-                                          project type lang text)))))
+            (comp
+             (mapcat (fn [type]
+                       (when (allowed-link-types type)
+                         (map #(assoc % :link/type type)
+                              (search-link db
+                                           user
+                                           {:api-url api-url :api-secret api-secret}
+                                           project type lang text)))))
+             (remove (fn [{id :db/id}]
+                       (existing-links id))))
             types))))
 
 (defmethod link-db/fetch-external-link-info :cadastral-unit [_user _ id]
