@@ -26,7 +26,7 @@
   (let [{:task/keys [type estimated-end-date assignee]
          :meta/keys [deleted? modifier modified-at]} info
         activity (get-in info [:activity/_tasks 0 :db/id])]
-    [:<>
+    [:div
      [:div
       (if deleted?
         [:<>
@@ -36,11 +36,15 @@
           (tr [:link :target-deleted]
               {:user (user-model/user-name modifier)
                :at (format/date-time modified-at)})]]
-        [url/Link
-         {:page :activity-task
-          :params {:activity activity
-                   :task (:db/id to)}}
-         (tr-enum type)])]
+        [:div {:style {:display :flex
+                       :align-items :center}}
+         [url/Link
+          {:page :activity-task
+           :params {:activity activity
+                    :task (:db/id to)}}
+          (tr-enum type)]
+         [typography/SmallGrayText
+          (str "\u00a0" (tr [:link :type-label :task]))]])]
      [:div
       [typography/SmallGrayText
        (tr [:task :link-info]
