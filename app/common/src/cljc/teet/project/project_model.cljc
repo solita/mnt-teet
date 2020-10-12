@@ -106,7 +106,7 @@
                   :else         true  ;; has started and not ended -> active
                   )]
     (log/debug "active-activity? start/end" start end "->" verdict)
-    verdict)) 
+    verdict))
 
 (defn active-managers [project]
   (let [acts (mapcat :thk.lifecycle/activities
@@ -117,7 +117,7 @@
 
 
 (defmethod get-column :thk.project/activity-status
-  [{:thk.project/keys [lifecycles]} _]  
+  [{:thk.project/keys [lifecycles]} _]
   (let [statuses (filterv (partial active-activity? (date/now))
                           (mapcat :thk.lifecycle/activities lifecycles))]
     (if (not-empty statuses)
@@ -140,10 +140,8 @@
     name))
 
 (defmethod get-column :thk.project/owner-info [project]
-  (str
-   (or (some-> project :thk.project/owner user-model/user-name)
-       "-")
-   (let [managers (active-managers project)]     
+  [(some-> project :thk.project/owner user-model/user-name)
+   (let [managers (active-managers project)]
      (log/debug "get-column owner-info: active-managers was" (pr-str managers)
                 ;; " - lifecycle count" (count (keep :thk.project/lifecycles project))
                 "keys" (-> project
@@ -153,10 +151,8 @@
                            first
                            keys)
                 )
-     (str " / "
-          (if (not-empty managers)
-            (clojure.string/join ", " (map user-model/user-name managers))
-            "-")))))
+     (when (not-empty managers)
+       (clojure.string/join ", " (map user-model/user-name managers))))])
 
 (defn filtered-projects [projects filters]
   (filter (fn [project]

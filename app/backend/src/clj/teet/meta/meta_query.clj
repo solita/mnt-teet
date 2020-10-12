@@ -32,19 +32,25 @@
   (walk/prewalk
    (fn [entity]
      (cond
-        (and (map? entity) (ids-to-remove (:db/id entity)))
-        nil
+       (and (map? entity) (ids-to-remove (:db/id entity)))
+       nil
 
-        (sequential? entity)
-        (filterv (fn [item]
-                   (if-let [id (and (map? item) (:db/id item))]
-                     (not (ids-to-remove id))
-                     true))
-                 entity)
+       (map-entry? entity)
+       (let [[_ v] entity]
+         (if (and (map? v) (ids-to-remove (:db/id v)))
+           nil
+           entity))
 
-        :else
-        entity))
-    entities))
+       (sequential? entity)
+       (filterv (fn [item]
+                  (if-let [id (and (map? item) (:db/id item))]
+                    (not (ids-to-remove id))
+                    true))
+                entity)
+
+       :else
+       entity))
+   entities))
 
 (defn without-deleted
   "Removes all deleted entities from result.

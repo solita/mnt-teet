@@ -152,16 +152,14 @@
    :border-top (str "1px solid" theme-colors/gray-lighter)
    :align-items :center})
 
-(defn activities-tab-footer
-  []
-  (assoc (wizard-footer)
-         :justify-content :start))
-
 (defn project-timeline-link
-  []
+  [dark-theme?]
   ^{:pseudo {:hover {:color theme-colors/blue-dark}}}
-  {:margin-left "1rem"
-   :text-decoration :none})
+  (merge
+   {:margin-left "1rem"
+    :text-decoration :none}
+   (when dark-theme?
+     {:color theme-colors/white})))
 
 (defn page-container []
   {:padding        "0 1.875rem 1.5rem 1.875rem"

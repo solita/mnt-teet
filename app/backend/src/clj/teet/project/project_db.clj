@@ -91,6 +91,20 @@
            :thk.lifecycle/_activities 0
            :thk.project/_lifecycles 0 :db/id]))
 
+(defn meeting-activity-id [db meeting-id]
+  (get-in (du/entity db meeting-id)
+          [:activity/_meetings 0
+           :db/id]))
+
+(defn meeting-parents [db meeting project-eid]
+  (let [project (du/entity db project-eid)
+        activity-eid (meeting-activity-id db (:db/id meeting))]
+    (assert (some? (:db/id meeting)) meeting)
+    (assert (some? project-eid))
+    {:meeting-eid (:db/id meeting)
+     :project-thk-id (:thk.project/id project)
+     :activity-eid activity-eid}))
+
 (defn agenda-project-id [db agenda-eid]
   (get-in (du/entity db agenda-eid)
           [:meeting/_agenda :activity/_meetings 0

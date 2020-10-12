@@ -1179,4 +1179,40 @@
 
           {:db/ident :review.decision/rejected
            :enum/attribute :review/decision}]]}
- ]
+
+ {:db/ident :migration/link-with-type
+  :txes [[{:db/ident :link/from
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "The entity this link originates from."}
+
+          {:db/ident :link/type
+           :db/valueType :db.type/keyword
+           :db/cardinality :db.cardinality/one
+           :db/doc "Keyword describing the role of the destination entity. May be entity type or external datasource name."}
+
+          {:db/ident :link/to
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "The destination entity this link points to. When link type points to an internal entity"}
+
+          {:db/ident :link/external-id
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Id of destination in the external datasource referred to by link type"}]]}
+
+ {:db/ident :migration/lock-meeting
+  :txes [[{:db/ident :meeting/locked?
+           :db/valueType :db.type/boolean
+           :db/cardinality :db.cardinality/one
+           :db/doc "Transacted to true once all reviewers have accepted the meeting"}]]}
+
+ {:db/ident :migration/decision-number
+  :txes [[{:db/ident :meeting.decision/number
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one
+           :db/doc "All decisions get an incrementing number based on the agenda topic."}]]}
+  {:db/ident :migration/meeting-updated-notification
+   :txes [[{:db/ident :notification.type/meeting-updated :enum/attribute :notification/type}]]}
+
+]

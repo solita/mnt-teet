@@ -23,6 +23,11 @@
   (when date
     (gstr/format "%02d:%02d" (.getHours date) (.getMinutes date))))
 
+
+(defn date-with-time-range
+  [date1 date2]
+  (str (date date1) " " (time* date1) " - " (time* date2)))
+
 (defn file-size [b]
   (let [kb (/ b 1024)]
     (cond

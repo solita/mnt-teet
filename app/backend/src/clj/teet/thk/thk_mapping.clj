@@ -1,7 +1,8 @@
 (ns teet.thk.thk-mapping
   "Mapping of information between THK CSV and TEET attribute keywords"
   (:require [clojure.string :as str]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [datomic.client.api :as d])
   (:import (java.text SimpleDateFormat)))
 
 (defn- blank? [s]
@@ -23,6 +24,28 @@
     (let [lsb (.longValue n)
           msb (.longValue (.shiftRight n 64))]
       (java.util.UUID. msb lsb))))
+
+(defonce random (java.security.SecureRandom.))
+
+
+(defn random-small-uuid
+  "Create a UUID that only has 64bits number. This is because THK
+  teet id numbers are only int8 sized and cannot fit a full UUID"
+  []
+  (let [n (.nextLong random)]
+    (if (pos? n)
+      (number->uuid n)
+      (recur))))
+
+(defn- used-integration-id? [db id]
+  (boolean
+   (seq
+    (d/q '[:find ?e :where [?e :integration/id ?v] :in $ ?v] db id))))
+
+(defn unused-random-small-uuid [db]
+  (first
+   (drop-while (partial used-integration-id? db)
+               (repeatedly random-small-uuid))))
 
 (defn ->num [str]
   (when-not (blank? str)
@@ -179,7 +202,7 @@
 
 (defonce estonian-translations
   (delay
-    (-> "et.edn"
+    (-> "public/language/et.edn"
         io/resource io/reader slurp
         read-string)))
 

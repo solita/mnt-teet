@@ -272,7 +272,7 @@
     (reset! selectable-users users)
     app))
 
-(defrecord CompleteUserResult [callback result]
+(defrecord CompleteSearchResult [callback result]
   t/Event
   (process-event [_ app]
     (callback result)
@@ -285,7 +285,15 @@
           {:tuck.effect/type :query
            :query :user/list
            :args {:search search}
-           :result-event (partial ->CompleteUserResult callback)})))
+           :result-event (partial ->CompleteSearchResult callback)})))
+
+(defrecord CompleteSearch [query callback]
+  t/Event
+  (process-event [_ app]
+    (t/fx app
+          (merge {:tuck.effect/type :query
+                  :result-event (partial ->CompleteSearchResult callback)}
+                 (select-keys query [:query :args])))))
 
 
 (defn- format-user [{:user/keys [family-name person-id] :as user}]
@@ -309,6 +317,149 @@
   []
   {:padding "0.5rem"
    :background-color theme-colors/gray-lightest})
+
+(defn- arrow-navigation
+  "Arrow navigation key handler for select-search results"
+  [state on-change e]
+  (let [{:keys [results open? highlight]} @state
+        hl-idx (and (seq results) highlight
+                    (cu/find-idx #(= highlight %) results))]
+    (case (.-key e)
+      ;; Move highlight down
+      "ArrowDown"
+      (when hl-idx
+        (swap! state assoc
+               :highlight (nth results
+                               (if (< hl-idx (dec (count results)))
+                                 (inc hl-idx)
+                                 0)))
+        (.preventDefault e))
+
+      ;; Move highlight up
+      "ArrowUp"
+      (when hl-idx
+        (swap! state assoc
+               :highlight (nth results
+                               (if (zero? hl-idx)
+                                 (dec (count results))
+                                 (dec hl-idx))))
+        (.preventDefault e))
+
+      "Enter"
+      (when hl-idx
+        (on-change highlight)
+        (swap! state assoc :open? false)
+        (.preventDefault e))
+
+      "Escape"
+      (when open?
+        (swap! state assoc :open? false)
+        (.stopPropagation e))
+
+      nil)))
+
+(defn select-search
+  "Generic select with asynchronous database search.
+
+  :query  function from input search text to map that specifies
+          what query is to be run on the backend.
+          The returned map must contain :query and :args.
+
+         "
+  [{:keys [e! value on-change label required error
+           format-result
+           show-label? after-results-action
+           query placeholder no-results]
+    :or {show-label? true
+         placeholder (tr [:user :autocomplete :placeholder])
+         no-results (tr [:user :autocomplete :no-options])}}]
+  (r/with-let [state (r/atom {:loading? false
+                              :results nil
+                              :open? false
+                              :input ""})
+               input-ref (atom nil)
+               on-key-down (partial arrow-navigation state on-change)]
+    (let [{:keys [loading? results open? input highlight]} @state]
+      [:<>
+       [TextField {:ref #(reset! input-ref %)
+                   :label label
+                   :show-label? show-label?
+                   :required required
+                   :error error
+                   :start-icon icons/action-search
+                   :placeholder placeholder
+                   :on-key-down on-key-down
+                   :on-blur #(js/setTimeout
+                               ;; Delay closing because we might be blurring
+                               ;; because user clicked one of the options
+                               (fn [] (swap! state assoc :open? false))
+                               200)
+                   :value (if value
+                            (format-result value)
+                            input)
+                   :on-focus #(when (and (seq results) (>= (count input) 2))
+                                (swap! state assoc :open? true))
+                   :on-change (fn [e]
+                                (let [t (-> e .-target .-value)
+                                      loading? (>= (count t) 2)]
+                                  (when value
+                                    (on-change nil))
+
+                                  (swap! state
+                                         #(assoc %
+                                            :input t
+                                            :open? loading?
+                                            :loading? loading?))
+
+                                  (when loading?
+                                    (e! (->CompleteSearch (query t)
+                                                          (fn [results]
+                                                            (swap! state assoc
+                                                                   :loading? false
+                                                                   :open? true
+                                                                   :results results
+                                                                   :highlight (first results))))))))
+                   :input-button-click #(do
+                                          (on-change nil)
+                                          (swap! state assoc :input "")
+                                          (r/after-render
+                                            (fn []
+                                              (.focus @input-ref))))
+                   :input-button-icon icons/content-clear}]
+       (when open?
+         [Popper {:open true
+                  :anchorEl @input-ref
+                  :placement "bottom"
+                  :modifiers #js {:hide #js {:enabled false}
+                                  :preventOverflow #js {:enabled false}}
+
+                  :style {:z-index 9999} ; Must have high z-index to use in modals
+                  }
+          [Paper  {:style {:width (.-clientWidth @input-ref)}
+                   :class ["user-select-popper" (<class user-select-popper)]}
+           (if loading?
+             [CircularProgress {:size 20}]
+             [:div.select-user-list
+              (if (seq results)
+                (mapc (fn [result]
+                          [:div.select-user-entry
+                           {:class [(if (= result highlight)
+                                      "active"
+                                      "inactive")
+                                    (<class user-select-entry (= result highlight))]
+                            :on-click #(do
+                                         (swap! state assoc :open? false)
+                                         (on-change result))}
+                           (format-result result)])
+                        results)
+                [:span.select-user-no-results {:style {:padding "0.5rem"}}
+                 no-results])
+              (when-let [{:keys [title on-click]} after-results-action]
+                [:<>
+                 [Divider]
+                 [:div {:class (<class after-result-entry)}
+                  [buttons/link-button
+                   {:on-click on-click} title]]])])]])])))
 
 (defn select-user
   "Select user"

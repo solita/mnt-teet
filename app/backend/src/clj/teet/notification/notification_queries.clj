@@ -4,6 +4,7 @@
             [teet.project.project-db :as project-db]
             [datomic.client.api :as d]
             [teet.util.datomic :as du]
+            [teet.log :as log]
             [teet.comment.comment-db :as comment-db]))
 
 (defquery :notification/unread-notifications
@@ -80,6 +81,19 @@
   {:page :project
    :params {:project (str (:thk.project/id (du/entity db project-id)))}})
 
+(defn- meeting-navigation-info [db meeting-eid]  
+  (let [{:keys [project-thk-id activity-eid]}
+        (project-db/meeting-parents db {:db/id meeting-eid} (project-db/meeting-project-id db meeting-eid))]
+    (if (and project-thk-id activity-eid meeting-eid)
+      {:page :meeting
+       :params {:project project-thk-id
+                :activity (str activity-eid)
+                :meeting (str meeting-eid)}}
+      ;; else
+      (do
+        (log/info "meeting-navigation-info couldn't answer for meeting eid" meeting-eid)
+        (db-api/bad-request! "No such meeting")))))
+
 (defn notification-navigation-info [db user notification-id]
   (when-let [{:notification/keys [type target]}
              (notification-db/navigation-info db user notification-id)]
@@ -100,7 +114,10 @@
       (comment-navigation-info db (:db/id target))
 
       :notification.type/project-manager-assigned
-      (project-navigation-info db (:db/id target)))))
+      (project-navigation-info db (:db/id target))
+
+      :notification.type/meeting-updated
+      (meeting-navigation-info db (:db/id target)))))
 
 (defquery :notification/navigate
   {:doc "Fetch navigation info for notification."

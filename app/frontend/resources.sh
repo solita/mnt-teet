@@ -6,6 +6,9 @@ echo "Fetch resources"
 mkdir resources/public/js
 
 cp out/main.js resources/public/js/main.js
+
+cp -R ../common/resources/public/language resources/public/
+
 echo "Package artifact"
 
 COMMIT=`git rev-parse HEAD`

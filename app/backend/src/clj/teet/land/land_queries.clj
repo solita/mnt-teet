@@ -10,7 +10,9 @@
             [teet.land.land-db :as land-db]
             [teet.file.file-db :as file-db]
             [teet.util.collection :as cu]
-            [teet.meta.meta-query :as meta-query])
+            [teet.meta.meta-query :as meta-query]
+            [teet.environment :as environment]
+            [teet.link.link-db :as link-db])
   (:import (java.time LocalDate)
            (java.time.format DateTimeFormatter)))
 
@@ -29,6 +31,15 @@
              (decimal? x) (str x)
              (and (map? x) (contains? x :db/ident)) (:db/ident x)
              :else x)))))
+
+(defn- property-registry-context [user]
+  (merge (environment/config-map
+          {:instance-id [:xroad :instance-id]
+           :xroad-url [:xroad :query-url]
+           :xroad-kr-subsystem-id  [:xroad :kr-subsystem-id]
+           :api-url [:api-url]
+           :api-secret [:auth :jwt-secret]})
+         {:requesting-eid (:user/person-id user)}))
 
 (defquery :land/fetch-land-acquisitions
   {:doc "Fetch all land acquisitions and related cadastral units from a project"
@@ -197,3 +208,8 @@ and the compensation info as the value."
    :pre [(some? pos)]}
   (file-db/file-count-by-project-and-pos-number
     db user [:thk.project/id id] pos))
+
+(defmethod link-db/fetch-external-link-info :estate [user _ id]
+  ;; PENDING: estates have no name, show just the id
+  #_(property-registry/fetch-estate-info (property-registry-context user) id)
+  {:estate-id id})

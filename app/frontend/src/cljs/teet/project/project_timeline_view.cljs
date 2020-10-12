@@ -34,8 +34,8 @@
           :label-class (<class task-label)}})
 
 
-(defn timeline [{:thk.project/keys [estimated-start-date estimated-end-date lifecycles]
-                 :as project}]
+(defn timeline [dark-theme? {:thk.project/keys [estimated-start-date estimated-end-date lifecycles]
+                             :as project}]
   (r/with-let [show-in-modal? (r/atom false)]
     (when (and estimated-start-date estimated-end-date)
       (let [tr* (tr-tree [:enum])
@@ -76,9 +76,8 @@
                                         (sort-by :thk.lifecycle/estimated-start-date lifecycles))]]
 
         [:<>
-         [icons/action-date-range]
          [buttons/link-button {:on-click #(reset! show-in-modal? true)
-                               :class (<class project-style/project-timeline-link)}
+                               :class (<class project-style/project-timeline-link dark-theme?)}
           (tr [:project :show-timeline])]
          (when @show-in-modal?
            [panels/modal {:title (str project-name " "

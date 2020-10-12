@@ -13,8 +13,11 @@
             [teet.meeting.meeting-model :as meeting-model]
             [teet.log :as log]
             [clojure.string :as str]
-            [teet.user.user-model :as user-model])
-  (:import (java.util Date)))
+            [teet.user.user-model :as user-model]
+            [teet.util.date :refer [date-in-past?]]
+            [teet.link.link-db :as link-db]
+            [teet.notification.notification-db :as notification-db])
+  (:import (java.util Date))) 
 
 (defn update-meeting-tx
   [meeting-id tx-data]
@@ -64,6 +67,59 @@
       (throw (ex-info "Unauthorized attachment delete"
                       {:error :unauthorized})))))
 
+
+(defn- link-from-meeting [db user from]
+  (let [meeting-id (meeting-db/link-from->meeting db from)]
+    (when (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)
+      {:wrap-tx #(update-meeting-tx meeting-id %)})))
+
+(defmethod link-db/link-from [:meeting-agenda :task]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
+(defmethod link-db/link-from [:meeting-decision :task]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
+(defmethod link-db/link-from [:meeting-agenda :cadastral-unit]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
+(defmethod link-db/link-from [:meeting-agenda :estate]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
+(defmethod link-db/link-from [:meeting-decision :cadastral-unit]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
+(defmethod link-db/link-from [:meeting-decision :estate]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
+(defmethod link-db/delete-link-from [:meeting-agenda :task]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
+(defmethod link-db/delete-link-from [:meeting-decision :task]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
+(defmethod link-db/delete-link-from [:meeting-agenda :cadastral-unit]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
+(defmethod link-db/delete-link-from [:meeting-agenda :estate]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
+(defmethod link-db/delete-link-from [:meeting-decision :cadastral-unit]
+  [db user from _type _to]
+  (link-from-meeting db user from))
+
+(defmethod link-db/delete-link-from [:meeting-decision :estate]
+  [db user from _type _to]
+  (link-from-meeting db user from))
 
 
 (defcommand :meeting/create
@@ -192,40 +248,108 @@
                                                     :user/email})
                                    %))))]})
 
-(defcommand :meeting/send-notifications
-  {:doc "Send iCalendar notifications to organizer and participants."
-   :context {:keys [db conn user]}
-   :payload {id :db/id}
-   :project-id (project-db/meeting-project-id db id)
-   :authorization {}
-   :pre [(meeting-db/user-is-organizer-or-reviewer? db user id)]}
-  (let [to (remove #(str/ends-with? % "@example.com")
-                   (keep :user/email (meeting-db/participants db id)))]
-    (if (seq to)
-      (let [meeting (d/pull db
-                            '[:db/id
-                              :meeting/number
-                              :meeting/title :meeting/location
-                              :meeting/start :meeting/end
-                              {:meeting/organizer [:user/email :user/given-name :user/family-name]}
-                              {:meeting/agenda [:meeting.agenda/topic
-                                                {:meeting.agenda/responsible [:user/given-name
-                                                                              :user/family-name]}]}]
-                            id)
+(defn meeting-link [db base-url meeting project-eid]
+  (let [{:keys [meeting-eid project-thk-id activity-eid]}
+        (project-db/meeting-parents db meeting project-eid)]
+    (str base-url
+         (if (str/ends-with? base-url "/")
+           ""
+           "/")
+         "#/projects/" project-thk-id
+         "/meetings/" activity-eid
+         "/" meeting-eid)))
+
+
+(defn historical-meeting-notify [db meeting from-user participants project-eid]
+  (log/debug "from-user is" from-user)
+  (tx-ret
+   (vec
+    (for [to-user participants]
+      (notification-db/notification-tx
+       db
+       (do
+         (log/debug "to-user is" to-user)
+           
+         {:from from-user
+          :to to-user
+          :target (:db/id meeting)
+          :type :notification.type/meeting-updated
+          :project project-eid}))))))
+
+(defn email-subject-for-type [meeting type]
+  (case type
+    :invitation
+    (str "TEET: koosoleku kutse: " (meeting-model/meeting-title meeting) " / "
+         "TEET: meeting invitation: " (meeting-model/meeting-title meeting))
+
+    :past-update
+    (str "TEET: koosolek uuendatud: " (meeting-model/meeting-title meeting) " / "
+         "TEET: meeting updated: " (meeting-model/meeting-title meeting))))
+
+(defn email-parts-for-ical-invitation [ics]
+  [{:headers {"Content-Type" "text/calendar; method=request"}
+    :body ics}])
+
+(defn email-parts-for-past-update [meeting meeting-link]
+  [{:headers {"Content-Type" "text/plain; charset=utf-8"}
+    :body (str "Koosolek / meeting: " meeting-link "\n\n")}])
+
+(defn send-meeting-email! [db meeting project-eid meeting-link to meeting-eid invitation-or-past-update?]
+  (let [meeting-link (meeting-link db
+                          (environment/config-value :base-url)
+                          meeting project-eid)
             ics (meeting-ics/meeting-ics {:meeting meeting
+                                          :meeting-link meeting-link
                                           :cancel? false})
             email-response
             (integration-email/send-email!
               {:from (environment/ssm-param :email :from)
                :to to
-               :subject (str "TEET: koosoleku kutse " (meeting-model/meeting-title meeting) " / "
-                             "TEET: meeting invitation " (meeting-model/meeting-title meeting))
-               :parts [{:headers {"Content-Type" "text/calendar; method=request"}
-                        :body ics}]})]
+               :subject (email-subject-for-type meeting
+                                                invitation-or-past-update?)
+               :parts (case invitation-or-past-update?
+                        :past-update
+                        (email-parts-for-past-update meeting meeting-link)
+                        :invitation
+                        (email-parts-for-ical-invitation ics))
+               })]
         (log/info "SES send response" email-response)
-        (tx-ret [{:db/id id
-                  :meeting/invitations-sent-at (Date.)}]))
-      {:error :no-participants-with-email})))
+        (tx-ret [{:db/id meeting-eid
+                  :meeting/invitations-sent-at (Date.)}])))
+
+(defcommand :meeting/send-notifications
+  {:doc "Send iCalendar notifications to organizer and participants."
+   :context {:keys [db conn user]}
+   :payload {meeting-eid :db/id}
+   :project-id (project-db/meeting-project-id db meeting-eid)
+   :authorization {}
+   :pre [(meeting-db/user-is-organizer-or-reviewer? db user meeting-eid)]}
+  (let [project-eid (project-db/meeting-project-id db meeting-eid)
+        to (remove #(str/ends-with? % "@example.com")
+                   (keep :user/email (meeting-db/participants db meeting-eid)))
+        meeting (d/pull db
+                        '[:db/id
+                          :meeting/number
+                          :meeting/title :meeting/location
+                          :meeting/start :meeting/end
+                          {:meeting/organizer [:user/email :user/given-name :user/family-name]}
+                          {:meeting/agenda [:meeting.agenda/topic
+                                            {:meeting.agenda/responsible [:user/given-name
+                                                                          :user/family-name]}]}] meeting-eid)]
+    (assert (:db/id user))
+    (cond
+      (date-in-past? (:meeting/start meeting))
+      (do
+        (send-meeting-email! db meeting project-eid meeting-link to meeting-eid :past-update)
+        (historical-meeting-notify db meeting user
+                                   (meeting-db/participants db meeting-eid)
+                                   project-eid))
+
+      (not (seq to))
+      {:error :no-participants-with-email}
+
+      :else
+      (send-meeting-email! db meeting project-eid meeting-link to meeting-eid :invitation))))
 
 
 (defcommand :meeting/cancel
@@ -278,7 +402,9 @@
                (meeting-db/agenda-meeting-id db agenda-eid)
                [{:db/id agenda-eid
                  :meeting.agenda/decisions [(merge (select-keys form-data [:meeting.decision/body])
-                                                   {:db/id "new decision"})]}])})
+                                                   {:db/id "new decision"
+                                                    :meeting.decision/number (meeting-db/next-decision-number db agenda-eid)}
+                                                   (meta-model/creation-meta user))]}])})
 
 (defcommand :meeting/update-decision
   {:doc "Create a new decision under a topic"
@@ -307,20 +433,6 @@
                (meeting-db/decision-meeting-id db decision-id)
                [(meta-model/deletion-tx user decision-id)])})
 
-(defn user-previous-reviews-retract-tx
-  [db meeting-id user-id]
-  (->> (d/q '[:find ?r
-              :where
-              [?r :review/of ?m]
-              [?r :review/reviewer ?u]
-              :in $ ?m ?u]
-            db
-            meeting-id
-            user-id)
-       (mapv first)
-       (mapv (fn [entity-id]
-               [:db/retractEntity entity-id]))))
-
 (defcommand :meeting/review
   {:doc "Either approve or reject the meeting"
    :context {:keys [db user]}
@@ -329,9 +441,7 @@
    :authorization {}
    :pre [[(meeting-db/user-is-organizer-or-reviewer?
             db user meeting-id)]]
-   :transact (into [(merge {:db/id (or (:db/id form-data) "new-review")
-                              :review/reviewer (user-model/user-ref user)
-                              :review/of meeting-id}
-                             (select-keys form-data [:review/comment :review/decision])
-                             (meta-model/creation-meta user))]
-                     (user-previous-reviews-retract-tx db meeting-id (:db/id user)))})
+   :transact [(list 'teet.meeting.meeting-tx/review-meeting
+                    user
+                    meeting-id
+                    (select-keys form-data [:review/comment :review/decision]))]})

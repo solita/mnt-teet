@@ -166,6 +166,7 @@
   :estate-procedure.type/expropriation "Sundvõõrandamine",
   :task.type/state-estate-registry "Riigivara registrisse kandmine",
   :task.status/submitted "Esitatud",
+  :notification.type/meeting-updated "Koosolekut on uuendatud",
   :activity.name/other "Muu",
   :task.type/animal-study "Loomastiku uuring",
   :activity.name/pre-design "Eskiisprojekt",
@@ -298,10 +299,12 @@
   :permission-already-granted "Selle kasutaja luba on juba antud",
   :conflicting-activities
   "Korraga võib aktiivne olla ainult üht tüüpi tegevus.",
-  :meeting-is-locked nil,
+  :meeting-is-locked
+  "Koosoleku otsused on kinnitatud ning seda ei saa enam muuta",
   :request-timeout "Ei saanud serveriga ühendust",
   :invalid-activity-dates "Kontrolli tegevuse kuupäevi",
-  :bad-request "Vigane päring"},
+  :bad-request "Vigane päring",
+  :meeting-has-no-decisions "Koosolekule ei ole otsuseid lisatud"},
  :fields
  {:land-acquisition/registry-number "Riigivara registrinumber",
   :comment/visibility "Nähtavus",
@@ -475,6 +478,17 @@
   :files "Üksusega seotud failid",
   :burden "Koormatis",
   :no-mortgages "Hüpoteeke pole"},
+ :link
+ {:search
+  {:placeholder "Lisan viite...",
+   :no-results "Ei leitud ühtki vastet"},
+  :target-deleted "Kustutatud {user} poolt {at}",
+  :type-label
+  {:task "Ülesanne",
+   :estate "Kinnistu",
+   :cadastral-unit "Katastriüksus"},
+  :land-unit-not-in-project "Projektis pole valitud",
+  :no-units-in-estate-selected "Projektis pole valitud üksusi"},
  :login
  {:login "Sisenen",
   :password "Salasõna",
@@ -503,6 +517,7 @@
  {:notifications-help
   "Saatke koosoleku osalejatele teavitus koosoleku sisu muudatuste kohta.",
   :add-non-teet-participant "Lisan TEET-u välise osaleja",
+  :search-decisions "Otsin otsuseid",
   :add-decision-button "Lisan otsuse",
   :participant-removed "Osaleja eemaldatud",
   :approve-meeting-modal-title "Kinnitan otsused?",
@@ -518,7 +533,9 @@
   :add-agenda-button "Lisan päevakavapunkti",
   :approvals "Kinnitused",
   :new-decision-modal-title "Uue otsuse lisamine",
-  :reviews-invalidated-warning-text nil,
+  :no-decisions-found "Ühtegi otsust ei leitud",
+  :reviews-invalidated-warning-text
+  "Muutes koosoleku sisu tühistatakse kõik juba antud kinnitused.",
   :edit-decision-modal-title "Otsuse muutmine",
   :new-meeting-button "Loon uue koosoleku",
   :project-meetings-title "Projekti koosolekud",
@@ -527,6 +544,7 @@
   :new-agenda-modal-title "Uus päevakavapunkt",
   :reject-meeting-button "Lükkan tagasi",
   :add-person "Osaleja lisamine",
+  :approved-by "Kinnitatud {approvers} poolt",
   :notifications-sent "Kalendri teavitus saadetud",
   :decision-topic "{topic} otsus #{num}"},
  :notifications
@@ -540,6 +558,7 @@
   :decision-updated "Otsus edukalt uuendatud",
   :meeting-created "Koosolek edukalt loodud",
   :comments-resolved "Märkus edukalt lahendatud",
+  :topic-updated "Päevakavapunkt edukalt uuendatud",
   :comment-edited "Kommentaar edukalt muudetud",
   :comment-deleted "Kommentaar edukalt kustutatud",
   :activity-created "Tegevus edukalt loodud",
@@ -554,7 +573,8 @@
   :activity-deleted "Tegevus edukalt kustutatud",
   :mark-all-read "Märgin kõik loetuks",
   :activity-updated "Tegevus edukalt värskendatud",
-  :cadastral-units-updated "Katastriüksused edukalt värskendatud"},
+  :cadastral-units-updated "Katastriüksused edukalt värskendatud",
+  :topic-created "Päevakavapunkt edukalt lisatud"},
  :page-title {:project-list "{name} projekt"},
  :people-tab
  {:active "AKTIIVNE",
@@ -662,7 +682,7 @@
  {:details "Üksikasjad",
   :notes "Märkused",
   :upcoming "Eesolevad",
-  :history "Olnud",
+  :history "Möödunud",
   :decisions "Otsused"},
  :task
  {:task-overview "Ülesande ülevaade",
@@ -676,6 +696,7 @@
   :add-document "Lisan dokumendi",
   :submit-results "Esitan tulemused",
   :submit-results-success "Tulemused edukalt esitatud",
+  :link-info "Vastutav isik - {assignee}. Tähtaeg - {deadline}.",
   :submit-results-confirm
   "Oled kindel, et soovid {task} vastused saata?",
   :no-documents "Dokumente ei ole",
