@@ -11,6 +11,7 @@
             [teet.app-state :as app-state]
             [teet.transit :as transit]
             [teet.localization :refer [tr tr-or]]
+            [alandipert.storage-atom :refer [local-storage]]
             postgrest-ui.impl.fetch
             [goog.math.Long
              :refer [fromString fromNumber]
@@ -44,6 +45,7 @@
 
 (def api-token routes/api-token)
 (defonce enabled-features (r/cursor app-state/app [:enabled-features]))
+(defonce navigation-data-atom (local-storage (atom nil) :navigation-data))
 
 ;; Helpers for faking backend requests in unit tests
 (defonce test-mode? (atom false))
@@ -165,12 +167,10 @@
 (defmethod on-server-error :default [err app]
   (default-server-error-handler err app))
 
-(defmethod on-server-error :authorization-failure [_ {:keys [page params query] :as app}]
+(defmethod on-server-error :authorization-failure [_ app]
   (reset! api-token nil)
+  (reset! navigation-data-atom (select-keys app [:page :params :query]))
   (t/fx (-> app
-            (assoc-in [:login :navigate-to] {:page page
-                                             :params params
-                                             :query query})
             (dissoc :user)
             (snackbar-controller/open-snack-bar (tr [:error :authorization-failure])
                                                 :warning))
