@@ -238,13 +238,16 @@
 
 
 (defn meetings-by-month-year
-  [meetings]
+  [meetings historical-order?]
   (let [month-year-meetings (group-by
                               (fn [meeting]
                                 (if-let [meeting-start (:meeting/start meeting)]
                                   (format/localized-month-year meeting-start)
                                   "no date given"))
-                              meetings)]
+                              meetings)
+        date-compare-fn (if historical-order?
+                          t/after?
+                          t/before?)]
     (when (seq meetings)
       [:div {:class (<class common-styles/margin-bottom 1)}
        (doall
@@ -262,8 +265,8 @@
                          (sort-by                           ;; gets [date-string meetings] sort the dates
                            first
                            (fn [x y]
-                             (t/after? (tc/from-date (format/date-string->date x))
-                                       (tc/from-date (format/date-string->date y))))))]
+                             (date-compare-fn (tc/from-date (format/date-string->date x))
+                                              (tc/from-date (format/date-string->date y))))))]
                 ^{:key date}
                 [:div {:class (<class common-styles/margin-bottom 1)}
                  [typography/Heading3 {:class (<class common-styles/margin-bottom 0.5)}
@@ -275,19 +278,20 @@
 
 
 (defn meeting-history-view
-  [e! meetings]
+  [meetings]
   [:div
    [meetings-by-month-year (->> meetings
                                 (sort-by
                                   :meeting/start)
-                                reverse)]])
+                                reverse)
+    true]])
 
 (defn historical-activity-meetings
   [e! activity]
   [query/query {:e! e!
                 :query :meeting/activity-meeting-history
                 :args {:activity-id (:db/id activity)}
-                :simple-view [meeting-history-view e!]}])
+                :simple-view [meeting-history-view]}])
 
 (defn meeting-with-time-slot
   [meetings]
@@ -350,7 +354,7 @@
                   ^{:key (:db/id meeting)}
                   [meeting-information meeting]))]))
          [typography/GreyText (tr [:meeting :no-meetings])])]]
-     [meetings-by-month-year rest]]))
+     [meetings-by-month-year rest false]]))
 
 (defn activity-meetings-page-content
   [e! {:keys [query] :as app} activity]
@@ -503,7 +507,7 @@
   [query/query {:e! e!
                 :query :meeting/project-meeting-history
                 :args {:project-id (:db/id project)}
-                :simple-view [meeting-history-view e!]}])
+                :simple-view [meeting-history-view]}])
 
 (defn project-decisions
   [e! project]
