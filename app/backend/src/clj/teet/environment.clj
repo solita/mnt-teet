@@ -4,7 +4,8 @@
             [clojure.java.io :as io]
             [teet.log :as log]
             [datomic.client.api :as d]
-            [cognitect.aws.client.api :as aws]))
+            [cognitect.aws.client.api :as aws])
+  (:import (java.time ZoneId)))
 
 (def ^:private ssm-client (delay (aws/client {:api :ssm})))
 
@@ -97,7 +98,11 @@
      :client-id (p :clientid)
      :client-secret (p :secret)}))
 
+(defn log-timezone-config! []
+  (log/info "local timezone:" (ZoneId/systemDefault)))
+
 (defn init-ion-config! [ion-config]
+  (log-timezone-config!)
   (swap! config
          (fn [base-config]
            (let [config (merge base-config ion-config)
