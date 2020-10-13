@@ -140,16 +140,19 @@
 (defn backup* [_event]
   (let [bucket (environment/ssm-param :s3 :backup-bucket)
         env (environment/ssm-param :env)
-        db (d/db (environment/datomic-connection))]
-      (s3/write-file-to-s3 {:to {:bucket bucket
-                                 :file-key (str env "-backup-"
-                                                (current-iso-date)
-                                                ".edn.zip")}
-                            :contents (ring-io/piped-input-stream (partial backup-to db))})))
+        db (d/db (environment/datomic-connection))
+        file-key (str env "-backup-"
+                      (current-iso-date)
+                      ".edn.zip")]
+    (log/info "Starting TEET backup to bucket: "
+              bucket ", file: " file-key)
+    (s3/write-file-to-s3 {:to {:bucket bucket
+                               :file-key file-key}
+                          :contents (ring-io/piped-input-stream (partial backup-to db))})))
 
 (defn backup [_event]
   (future
-    backup* _event)
+    (backup* _event))
   "{\"success\": true}")
 
 (defn test-backup [db]
