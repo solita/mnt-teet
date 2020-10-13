@@ -53,7 +53,7 @@
 
 (defmethod display :cadastral-unit
   [{:link/keys [info external-id]}]
-  (let [{:keys [AY_NIMI TUNNUS]} info
+  (let [{:keys [L_AADRESS TUNNUS]} info
         valid? (:link/valid? info)]
     [:div {:style {:display :flex
                    :flex-direction :column
@@ -66,13 +66,13 @@
           :query {:tab "land"
                   :unit-id external-id}}
          (str
-           AY_NIMI
+           L_AADRESS
            " "
            TUNNUS)]
         [:p (str
-              AY_NIMI
-              " "
-              TUNNUS)])
+             L_AADRESS
+             " "
+             TUNNUS)])
       [typography/SmallGrayText "\u00a0" (tr [:link :type-label :cadastral-unit])]]
      (when (not valid?)
        [typography/SmallGrayText (tr [:link :land-unit-not-in-project])])]))
@@ -119,9 +119,9 @@
    [:div (user-model/user-name assignee)]
    [:div (format/date estimated-end-date)]])
 
-(defmethod display-result :cadastral-unit [{:keys [AY_NIMI TUNNUS]}]
+(defmethod display-result :cadastral-unit [{:keys [L_AADRESS TUNNUS]}]
   [:div {:class (<class common-styles/flex-row-space-between)}
-   [:div AY_NIMI]
+   [:div L_AADRESS]
    [:div TUNNUS]])
 
 (defmethod display-result :estate [{:keys [KINNISTU]}]

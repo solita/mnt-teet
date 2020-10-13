@@ -53,11 +53,11 @@
     (->> (postgrest/rpc {:api-url api-url :api-secret api-secret}
                         :select_feature_properties
                         {:ids related-cadastral-unit-ids
-                         :properties ["KINNISTU" "AY_NIMI" "TUNNUS"]})
+                         :properties ["KINNISTU" "L_AADRESS" "TUNNUS"]})
          (map (fn [[key properties]]
                 (assoc properties :link/external-id (name key))))
          (filterv #(or (string/contains-words? (:TUNNUS %) text)
-                       (string/contains-words? (:AY_NIMI %) text))))))
+                       (string/contains-words? (:L_AADRESS %) text))))))
 
 (defn search-estate [db {:keys [api-url api-secret]} project text]
   (let [related-cadastral-unit-ids (-> (d/q '[:find (pull ?p [:thk.project/related-cadastral-units])
@@ -133,6 +133,6 @@
   ;; PENDING: this should have a better place?
   (-> (postgrest/rpc (environment/api-context) :select_feature_properties
                      {:ids [id]
-                      :properties ["TUNNUS" "AY_NIMI"]})
+                      :properties ["TUNNUS" "L_AADRESS"]})
       vals
       first))
