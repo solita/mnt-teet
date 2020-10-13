@@ -24,7 +24,6 @@
   CheckExistingSession ; Check existing token from browser localstorage storage
   (process-event [_ app]
     (let [app (assoc app :initialized? true)]
-      (reset! common-controller/navigation-data-atom (select-keys app [:page :params :query]))
       (if @common-controller/api-token
         (t/fx (assoc app :checking-session? true)
               {::tuck-effect/type :command!
