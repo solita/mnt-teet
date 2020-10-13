@@ -83,9 +83,7 @@
                           v)))]
     (str value)))
 
-(defn inspector-page [e!
-                      {query :query}
-                      {:keys [entity ref-attrs linked-from]}]
+(defn inspector-page [_e! _app {:keys [entity ref-attrs linked-from]}]
   [:div
    [typography/Heading2 "Attribute values for entity"]
    [Table {}
