@@ -169,7 +169,8 @@
 
 (defmethod on-server-error :authorization-failure [_ app]
   (reset! api-token nil)
-  (reset! navigation-data-atom (select-keys app [:page :params :query]))
+  (when-not (= :login (:page app))
+    (reset! navigation-data-atom (select-keys app [:page :params :query])))
   (t/fx (-> app
             (dissoc :user)
             (snackbar-controller/open-snack-bar (tr [:error :authorization-failure])

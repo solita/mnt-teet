@@ -24,6 +24,8 @@
   CheckExistingSession ; Check existing token from browser localstorage storage
   (process-event [_ app]
     (let [app (assoc app :initialized? true)]
+      (when (and (not @common-controller/api-token) (not= (:page app) :login))
+        (reset! common-controller/navigation-data-atom (select-keys app [:page :params :query])))
       (if @common-controller/api-token
         (t/fx (assoc app :checking-session? true)
               {::tuck-effect/type :command!
@@ -31,11 +33,9 @@
                :payload           {}
                :error-event       ->CheckSessionError
                :result-event      (partial ->SetSessionInfo false)})
-        (do
-          (reset! common-controller/navigation-data-atom (select-keys app [:page :params :query]))
-          (t/fx app
-                {::tuck-effect/type :navigate
-                 :page :login})))))
+        (t/fx app
+              {::tuck-effect/type :navigate
+               :page :login}))))
 
   CheckSessionError
   (process-event [_ app]
@@ -105,7 +105,7 @@
               effects (if after-login?
                         (conj effects (merge {::tuck-effect/type :navigate
                                               :page :projects}
-                                             (when (and (not (= :login (:page navigation-data)))
+                                             (when (and (not= :login (:page navigation-data))
                                                         (:page navigation-data))
                                                navigation-data)))
                         effects)]
