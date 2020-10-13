@@ -71,3 +71,61 @@
      [create-user-form e! form]
      [buttons/button-primary {:on-click (e! admin-controller/->CreateUser)}
       (tr [:admin :create-user])])])
+
+(defn- inspector-value [link? value]
+  (if link?
+    [:<>
+     [:a {:href (str "#/admin/inspect/" (:db/id value))}
+      (str (:db/id value))]
+     (str " " (str/join ", "
+                        (for [[k v] (sort-by first value)
+                              :when (not= k :db/id)]
+                          v)))]
+    (str value)))
+
+(defn inspector-page [_e! _app {:keys [entity ref-attrs linked-from]}]
+  [:div
+   [typography/Heading2 "Attribute values for entity"]
+   [Table {}
+    [TableHead {}
+     [TableRow
+      [TableCell {} "Attribute"]
+      [TableCell {} "Value"]]]
+    [TableBody {}
+     (doall
+      (for [[k v] (sort-by first (seq entity))
+            :let [link? (ref-attrs k)]]
+        ^{:key (str k)}
+        [TableRow {}
+         [TableCell {} (str k)]
+         [TableCell {}
+          (if (vector? v)
+            [:ul
+             (doall
+              (map-indexed
+               (fn [i v]
+                 ^{:key (str i)}
+                 [:li [inspector-value link? v]]) v))]
+            [inspector-value link? v])]]))]]
+
+   (when (seq linked-from)
+     [:<>
+      [typography/Heading2 "Links from other entities"]
+      [Table {}
+       [TableHead {}
+        [TableRow
+         [TableCell {} "Attribute"]
+         [TableCell {} "Entities"]]]
+       [TableBody {}
+        (doall
+         (for [[k v] (sort-by first (seq linked-from))]
+           ^{:key (str k)}
+           [TableRow {}
+            [TableCell {} (str k)]
+            [TableCell {}
+             [:ul
+              (doall
+               (map-indexed
+                (fn [i v]
+                  ^{:key (str i)}
+                  [:li [inspector-value true {:db/id v}]]) v))]]]))]]])])
