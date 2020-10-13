@@ -1,7 +1,11 @@
 (ns teet.admin.admin-queries
   (:require [teet.db-api.core :as db-api :refer [defquery]]
             [teet.user.user-model :as user-model]
-            [datomic.client.api :as d]))
+            [datomic.client.api :as d]
+            [clojure.string :as str]
+            [teet.util.datomic :as du]
+            [teet.environment :as environment]
+            [clojure.walk :as walk]))
 
 (defquery :admin/list-users
   {:doc "List users who have been given access"
@@ -50,15 +54,71 @@
                                #{} datoms)]))))
           links)))
 
+(defn ->eid [id]
+  (cond
+    (str/starts-with? id "project-")
+    [:thk.project/id (subs id 8)]
+
+    (str/starts-with? id "user-")
+    [:user/person-id (subs id 5)]
+
+    (re-matches #"^\d+$" id)
+    (Long/parseLong id)
+
+    :else
+    (throw (ex-info "Unrecognized entity id"
+                    {:teet/error :unrecognized-entity-id
+                     :id id}))))
+
+(defn inspector-enabled? []
+  (boolean
+   (environment/when-feature :admin-inspector true)))
+
+(def user-info [:user/person-id :user/given-name :user/family-name])
+
+(def user-info-attrs
+  #{:meta/creator
+    :meta/modifier
+    :notification/target
+    :task/assignee
+    :activity/manager
+    :file-seen/user
+    :meeting/organizer
+    :meeting.agenda/responsible
+    :participation/participant
+    :review/reviewer
+    :thk.project/owner
+    :thk.project/manager})
+
+(def extra-attrs
+  (into {}
+        (for [u user-info-attrs] [u user-info])))
+
+(defn- expand-extra-attrs [db form]
+  (walk/prewalk
+   (fn [x]
+     (if-let [attrs (and (map-entry? x)
+                         (extra-attrs (first x)))]
+       (let [[k v] x]
+         [k
+          (merge v
+                 (d/pull db attrs (:db/id v)))])
+       x))
+   form))
+
 (defquery :admin/entity-info
   {:doc "Pull all information about an entity"
    :context {:keys [user db]}
-   :args {id :db/id}
+   :args {string-id :id}
    :project-id nil
    :authorization {}
    :pre [^{:error :unauthorized}
-         (user-is-admin? db user)]}
-  (let [entity (d/pull db '[*] id)]
-    {:entity entity
+         (user-is-admin? db user)
+
+         ^{:error :not-found}
+         (inspector-enabled?)]}
+  (let [id (:db/id (du/entity db (->eid string-id)))
+        entity (d/pull db '[*] id)]
+    {:entity (expand-extra-attrs db entity)
      :ref-attrs (ref-attrs db entity)
      :linked-from (linked-from db id)}))

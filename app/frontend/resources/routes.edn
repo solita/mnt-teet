@@ -136,4 +136,4 @@
                    :crumb (tr [:admin :inspector-title])
                    :parent :admin
                    :state {:query :admin/entity-info
-                           :args {:db/id (->long id)}}}}
+                           :args {:id id}}}}
