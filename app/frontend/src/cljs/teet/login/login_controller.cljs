@@ -31,9 +31,11 @@
                :payload           {}
                :error-event       ->CheckSessionError
                :result-event      (partial ->SetSessionInfo false)})
-        (t/fx app
-              {::tuck-effect/type :navigate
-               :page :login}))))
+        (do
+          (reset! common-controller/navigation-data-atom (select-keys app [:page :params :query]))
+          (t/fx app
+                {::tuck-effect/type :navigate
+                 :page :login})))))
 
   CheckSessionError
   (process-event [_ app]
@@ -47,7 +49,6 @@
   CheckSessionToken ; Get token from cookie session when logging in
   (process-event [_ app]
     (if-let [token (get-in app [:query :token])]
-
       (t/fx app
             ;; Set the JWT token and immediately refresh
             ;; to get other session info
@@ -89,6 +90,7 @@
     (let [navigation-data @common-controller/navigation-data-atom
           {:keys [token error roles user enabled-features api-url]} session-info
           app (assoc app :initialized? true :checking-session? false)]
+      (reset! common-controller/navigation-data-atom nil)
       (if error
         (do (js/alert (str "Login error: " (str error)))
             app)
