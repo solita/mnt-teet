@@ -17,7 +17,7 @@
             [teet.util.date :refer [date-in-past?]]
             [teet.link.link-db :as link-db]
             [teet.notification.notification-db :as notification-db])
-  (:import (java.util Date))) 
+  (:import (java.util Date)))
 
 (defn update-meeting-tx
   [meeting-id tx-data]
@@ -269,7 +269,7 @@
        db
        (do
          (log/debug "to-user is" to-user)
-           
+
          {:from from-user
           :to to-user
           :target (:db/id meeting)
@@ -296,26 +296,27 @@
 
 (defn send-meeting-email! [db meeting project-eid meeting-link to meeting-eid invitation-or-past-update?]
   (let [meeting-link (meeting-link db
-                          (environment/config-value :base-url)
-                          meeting project-eid)
-            ics (meeting-ics/meeting-ics {:meeting meeting
-                                          :meeting-link meeting-link
-                                          :cancel? false})
-            email-response
-            (integration-email/send-email!
-              {:from (environment/ssm-param :email :from)
-               :to to
-               :subject (email-subject-for-type meeting
-                                                invitation-or-past-update?)
-               :parts (case invitation-or-past-update?
-                        :past-update
-                        (email-parts-for-past-update meeting meeting-link)
-                        :invitation
-                        (email-parts-for-ical-invitation ics))
-               })]
-        (log/info "SES send response" email-response)
-        (tx-ret [{:db/id meeting-eid
-                  :meeting/invitations-sent-at (Date.)}])))
+                                   (environment/config-value :base-url)
+                                   meeting project-eid)
+        ics (meeting-ics/meeting-ics {:meeting meeting
+                                      :meeting-link meeting-link
+                                      :cancel? false})
+        email-response
+        (integration-email/send-email!
+          {:from (environment/ssm-param :email :from)
+           :to to
+           :subject (email-subject-for-type meeting
+                                            invitation-or-past-update?)
+           :parts (case invitation-or-past-update?
+                    :past-update
+                    (email-parts-for-past-update meeting meeting-link)
+                    :invitation
+                    (email-parts-for-ical-invitation ics))})]
+
+    (log/info "SES send response" email-response)
+    (log/info "SES emails sent to: " (pr-str to))
+    (tx-ret [{:db/id meeting-eid
+              :meeting/invitations-sent-at (Date.)}])))
 
 (defcommand :meeting/send-notifications
   {:doc "Send iCalendar notifications to organizer and participants."
