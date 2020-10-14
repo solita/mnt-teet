@@ -1215,4 +1215,65 @@
   {:db/ident :migration/meeting-updated-notification
    :txes [[{:db/ident :notification.type/meeting-updated :enum/attribute :notification/type}]]}
 
+ {:db/ident :migration/new-file-metadata
+  :txes [;; New file grouping by part (folders within task)
+         [{:db/ident :file/part
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Part this file belongs to."}
+
+          {:db/ident :file.part/task
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Task this part belongs to."}
+          {:db/ident :file.part/name
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Human readable name of this part."}
+          {:db/ident :file.part/number
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one
+           :db/doc "Incrementing number of this part from 1 to 99. Unique within task."}]
+
+         ;; Document group
+         [{:db/ident :file/document-group
+           :db/type :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Enum reference to document group"}
+
+          {:db/ident :file.document-group/general
+           :enum/attribute :file/document-group
+           :filename/code "0"}
+
+          {:db/enum :file.document-group/drawings-and-plans
+           :enum/attribute :file/document-group
+           :filename/code "1"}
+
+          {:db/enum :file.document-group/models
+           :enum/attribute :file/document-group
+           :filename/code "2"}
+
+          {:db/enum :file.document-group/reports
+           :enum/attribute :file/document-group
+           :filename/code "3"}
+
+          {:db/enum :file.document-group/specifications
+           :enum/attribute :file/document-group
+           :filename/code "4"}
+
+          ;; 5-8 are reserved for future use
+
+          {:db/enum :file.document-group/annexes
+           :enum/attribute :file/document-group
+           :filename/code "9"}]
+
+         ;; Sequence number
+         [{:db/ident :file/sequence-number
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one
+           :db/doc "Sequence number of this file"}]
+
+         ;; Migrate POS# for land task files to sequence number
+         teet.migration.file-sequence-number/pos-number->sequence-number]}
+
 ]
