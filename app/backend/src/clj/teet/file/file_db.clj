@@ -3,7 +3,8 @@
   (:require [datomic.client.api :as d]
             [teet.user.user-model :as user-model]
             [teet.comment.comment-db :as comment-db]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.util.datomic :as du]))
 
 (defn- valid-attach-definition? [attach]
   (and (vector? attach)
@@ -206,3 +207,50 @@
   [db user project-id pos-number]
   ;; Could be improved with some distinct query magic to query only the count
   (count (files-by-project-and-pos-number db user project-id pos-number)))
+
+(defn resolve-metadata
+  "Given metadata parsed from a file name, resolve the coded references to
+  database values."
+  [db {project-thk-id :thk.project/id
+       :keys [part activity task document-group]
+       :as metadata}]
+  (let [project-eid [:thk.project/id project-thk-id]
+        activity-id (ffirst
+                     (d/q '[:find ?act
+                            :where
+                            [?project :thk.project/lifecycles ?lc]
+                            [?lc :thk.lifecycle/activities ?act]
+                            [?act :activity/name ?name]
+                            [?name :filename/code ?code]
+                            :in $ ?project ?code]
+                          db project-eid activity))
+        task-id (when activity-id
+                  (ffirst
+                   (d/q '[:find ?task
+                          :where
+                          [?act :activity/tasks ?task]
+                          [?task :task/type ?type]
+                          [?type :filename/code ?code]
+                          :in $ ?act ?code]
+                        db activity-id task)))
+        part (when (and task-id part)
+               (ffirst
+                (d/q '[:find (pull ?part [:db/id :file.part/name])
+                       :where
+                       [?part :file.part/task ?task]
+                       [?part :file.part/number ?number]
+                       :in $ ?task ?number]
+                     db task-id (Long/parseLong part))))
+        doc-group (when document-group
+                    (ffirst (d/q '[:find ?ident
+                                   :where
+                                   [?dg :filename/code ?code]
+                                   [?dg :db/ident ?ident]
+                                   :in $ ?code]
+                                 db document-group)))]
+    (merge metadata
+           {:project-eid project-eid
+            :activity-id activity-id
+            :task-id task-id
+            :part part
+            :document-group doc-group})))
