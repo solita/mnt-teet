@@ -107,7 +107,8 @@
                              (d/q '[:find ?to
                                     :where
                                     [?link :link/from ?e]
-                                    [?link :link/to ?to]
+                                    (or [?link :link/external-id ?to]
+                                        [?link :link/to ?to])
                                     [(missing? $ ?link :meta/deleted?)]
                                     :in $ ?e]
                                   db (second from)))
@@ -125,8 +126,9 @@
                                            user
                                            {:api-url api-url :api-secret api-secret}
                                            project type lang text)))))
-             (remove (fn [{id :db/id}]
-                       (existing-links id))))
+             (remove (fn [{id :db/id
+                           ext-id :link/external-id}]
+                       (existing-links (or id ext-id)))))
             types))))
 
 (defmethod link-db/fetch-external-link-info :cadastral-unit [_user _ id]
