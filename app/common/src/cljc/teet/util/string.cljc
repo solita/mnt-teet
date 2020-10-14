@@ -54,3 +54,11 @@
                        (str/includes? candidate-word search-word))
                      candidate-words)))
             search-words)))
+
+(defn strip-leading-zeroes
+  "Strip leading zeroes from numbers in string."
+  [string]
+  (str/replace string
+               #"([^\d])0+(\d+)"
+               (fn [[_ before after]]
+                 (str before after))))

@@ -4,45 +4,58 @@
   filenames based on metadata.
 
   Filename naming pattern:
-  MA<THK object code>_<activity>_TL<-part?>_<task>_<group>_<name and suffix>"
+  MA<THK object code>_<activity>_TL_<task>_<task-part>_<document-group>-<sequence#>_<name and suffix>"
 
   (:require [clojure.spec.alpha :as s]
             [clojure.string :as str]))
 
 
-(def ^{:private true
-       :doc "Parser functions for filename parts. Functions return a map of parsed values."}
-  filename-part-parser
+(defn name->description-and-extension [string]
+  (let [ext-pos (str/last-index-of string ".")]
+    {:description (subs string 0 ext-pos)
+     :extension (subs string (inc ext-pos))}))
+
+(def filename-part-parser
+  "Parser functions for filename parts. Functions return a map of parsed values."
   {:prefix-and-object #(when-let [[_ object] (re-matches #"MA(\d+)" %)]
                          {:thk.project/id object})
-
-   ;; PENDING: 3.4.2020 these are placeholders until metadata model finalized
-   ;; all code values should have mappings to actual codes (add filename mappings
-   ;; to the database as attributes of the enum values?)
 
    :activity (fn [string]
                {:activity string})
    :part (fn [string]
            {:part string})
+   :field (fn [string]
+            {:field string})
    :task (fn [string]
            {:task string})
-   :group (fn [string]
-            {:group
-             #?(:clj (Long/parseLong string)
-                :cljs (js/parseInt string))})
-   :name (fn [strings]
-           {:name (str/join "_" strings)})})
+   :group-and-sequence (fn [string]
+                         (when-not (str/blank? string)
+                           (let [[group sequence] (str/split string #"-")]
+                             {:document-group group
+                              :sequence-number (when sequence
+                                                 (#?(:cljs js/parseInt
+                                                     :clj Long/parseLong) sequence))})))
+   :description-and-extension (fn [filename-parts]
+                                (name->description-and-extension
+                                 (str/join "_" filename-parts)))})
+
+(defn number-string? [s]
+  (and (string? s)
+       (re-matches #"^\d+$" s)))
 
 (s/def ::prefix-and-object #(re-matches #"^MA\d+$" %))
-(s/def ::part (s/and string? #(re-matches #"^TL(-\d+)?$" %)))
-(s/def ::group (s/and string? #(re-matches #"^\d+$" %)))
+(s/def ::field (s/and string? #(= "TL" %)))
+(s/def ::group-and-sequence (s/and string? #(re-matches #"^(\d+)(-(\d+))$" %)))
+(s/def ::part (s/and string? #(re-matches #"^\d{1,2}$" %)))
+(s/def ::description-and-extension (s/and string? #(re-matches #"^.+\.[A-Za-z0-9]+" %)))
 
 (s/def ::filename-parts (s/cat :prefix-and-object ::prefix-and-object
                                :activity string?
-                               :part ::part
+                               :field #(= "TL" %)
                                :task string?
-                               :group ::group
-                               :name (s/* string?)))
+                               :part ::part
+                               :group-and-sequence (s/? ::group-and-sequence)
+                               :description-and-extension (s/* string?)))
 
 (defn filename->metadata [filename]
   (let [parts (s/conform ::filename-parts (str/split filename #"_"))]
@@ -55,14 +68,23 @@
             parts))))
 
 (defn metadata->filename [{object :thk.project/id
-                           :keys [activity part task group name]}]
-  (str/join "_"
-            [(str "MA" object)
-             activity
-             (or part "TL")
-             task
-             group
-             name]))
+                           :keys [activity task part
+                                  document-group
+                                  sequence-number
+                                  description extension]}]
+  (str/join
+   "_"
+   (remove nil?
+           [(str "MA" object)
+            activity
+            "TL"
+            task
+            part
+            (when document-group
+              (str document-group
+                   (when sequence-number
+                     (str "-" sequence-number))))
+            (str description "." extension)])))
 
 
 

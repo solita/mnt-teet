@@ -3,7 +3,8 @@
   (:require [datomic.client.api :as d]
             [teet.user.user-model :as user-model]
             [teet.comment.comment-db :as comment-db]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.file.filename-metadata :as filename-metadata]))
 
 (defn- valid-attach-definition? [attach]
   (and (vector? attach)
@@ -90,28 +91,6 @@
            :where [?c :comment/files ?f]
            :in $ ?f ?c]
          db file-id comment-id))))
-
-(defn file-metadata [db file-id]
-  (let [[project activity task file]
-        (first
-         (d/q '[:find
-                (pull ?project [:thk.project/id])
-                (pull ?activity [{:activity/name [:filename/code]}])
-                (pull ?task [{:task/type [:filename/code]}])
-                (pull ?file [:file/name :file/group-number])
-                :where
-                [?task :task/files ?file]
-                [?activity :activity/tasks ?task]
-                [?lifecycle :thk.lifecycle/activities ?activity]
-                [?project :thk.project/lifecycles ?lifecycle]
-                :in
-                $ ?file]
-              db file-id))]
-    {:thk.project/id (:thk.project/id project)
-     :activity (get-in activity [:activity/name :filename/code])
-     :task (get-in task [:task/type :filename/code])
-     :group (:file/group-number file)
-     :name (:file/name file)}))
 
 (defn files-seen-at
   "Return mapping of file-id to timestamp when the given user has seen a given
@@ -206,3 +185,80 @@
   [db user project-id pos-number]
   ;; Could be improved with some distinct query magic to query only the count
   (count (files-by-project-and-pos-number db user project-id pos-number)))
+
+(defn resolve-metadata
+  "Given metadata parsed from a file name, resolve the coded references to
+  database values."
+  [db {project-thk-id :thk.project/id
+       :keys [part activity task document-group]
+       :as metadata}]
+  (let [project-eid [:thk.project/id project-thk-id]
+        activity-id (ffirst
+                     (d/q '[:find ?act
+                            :where
+                            [?project :thk.project/lifecycles ?lc]
+                            [?lc :thk.lifecycle/activities ?act]
+                            [?act :activity/name ?name]
+                            [?name :filename/code ?code]
+                            :in $ ?project ?code]
+                          db project-eid activity))
+        task-id (when activity-id
+                  (ffirst
+                   (d/q '[:find ?task
+                          :where
+                          [?act :activity/tasks ?task]
+                          [?task :task/type ?type]
+                          [?type :filename/code ?code]
+                          :in $ ?act ?code]
+                        db activity-id task)))
+        part (when (and task-id part)
+               (ffirst
+                (d/q '[:find (pull ?part [:db/id :file.part/name])
+                       :where
+                       [?part :file.part/task ?task]
+                       [?part :file.part/number ?number]
+                       :in $ ?task ?number]
+                     db task-id (Long/parseLong part))))
+        doc-group (when document-group
+                    (ffirst (d/q '[:find ?ident
+                                   :where
+                                   [?dg :filename/code ?code]
+                                   [?dg :db/ident ?ident]
+                                   :in $ ?code]
+                                 db document-group)))]
+    (merge metadata
+           {:project-eid project-eid
+            :activity-id activity-id
+            :task-id task-id
+            :part part
+            :document-group doc-group})))
+
+(defn file-metadata
+  "Return file metadata for a given file id."
+  [db file-id]
+  (let [{:file/keys [name sequence-number] :as file}
+        (d/pull db [:file/name
+                    :file/sequence-number
+                    {:file/document-group [:filename/code]}
+                    {:task/_files [:db/id
+                                   {:task/type [:filename/code]}
+                                   {:activity/_tasks
+                                    [{:activity/name [:filename/code]}
+                                     {:thk.lifecycle/_activities
+                                      [{:thk.project/_lifecycles
+                                        [:thk.project/id]}]}]}]}
+                    {:file/part [:file.part/number]}] file-id)]
+    (merge
+     (filename-metadata/name->description-and-extension name)
+     (when-let [p (get-in file [:task/_files 0 :activity/_tasks 0 :thk.lifecycle/_activities 0 :thk.project/_lifecycles 0 :thk.project/id])]
+       {:thk.project/id p})
+     (when sequence-number
+       {:sequence-number sequence-number})
+     (when-let [dg (get-in file [:file/document-group :filename/code])]
+       {:document-group dg})
+     (when-let [act (get-in file [:task/_files 0 :activity/_tasks 0 :activity/name :filename/code])]
+       {:activity act})
+     (when-let [task (get-in file [:task/_files 0 :task/type :filename/code])]
+       {:task task})
+     {:part (or (format "%02d" (get-in file [:file/part :file.part/number]))
+                "00")})))
