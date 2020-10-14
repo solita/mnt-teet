@@ -10,9 +10,13 @@
             [clojure.string :as str]))
 
 
-(def ^{:private true
-       :doc "Parser functions for filename parts. Functions return a map of parsed values."}
-  filename-part-parser
+(defn name->description-and-extension [string]
+  (let [ext-pos (str/last-index-of string ".")]
+    {:description (subs string 0 ext-pos)
+     :extension (subs string (inc ext-pos))}))
+
+(def filename-part-parser
+  "Parser functions for filename parts. Functions return a map of parsed values."
   {:prefix-and-object #(when-let [[_ object] (re-matches #"MA(\d+)" %)]
                          {:thk.project/id object})
 
@@ -32,10 +36,8 @@
                                                  (#?(:cljs js/parseInt
                                                      :clj Long/parseLong) sequence))})))
    :description-and-extension (fn [filename-parts]
-                                (let [string (str/join "_" filename-parts)
-                                      ext-pos (str/last-index-of string ".")]
-                                  {:description (subs string 0 ext-pos)
-                                   :extension (subs string (inc ext-pos))}))})
+                                (name->description-and-extension
+                                 (str/join "_" filename-parts)))})
 
 (defn number-string? [s]
   (and (string? s)
