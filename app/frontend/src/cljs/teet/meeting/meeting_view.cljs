@@ -428,7 +428,7 @@
 
 (defn meeting-page-structure [e! app project
                               main-content right-panel-content]
-  (let [[nav-w content-w] [3 6]]
+  (let [[navigator-w content-w] [3 (if right-panel-content 6 9)]]
     [project-context/provide
      {:project-id (:db/id project)
       :thk.project/id (:thk.project/id project)}
@@ -439,9 +439,9 @@
       [Paper {:class (<class task-style/task-page-paper-style)}
        [Grid {:container true
               :wrap :nowrap
-              :spacing   0}
+              :spacing 0}
         [Grid {:item true
-               :xs nav-w
+               :xs navigator-w
                :class (<class navigation-style/navigator-left-panel-style)}
          [project-menu/project-menu e! app project true]
          [project-navigator-view/project-navigator e! project app
@@ -457,20 +457,21 @@
                        ;; want map to stay in place without scrolling it
                        }}
          main-content]
-        [Grid {:item  true
-               :xs :auto
-               :style {:display :flex
-                       :flex    1
-                       :padding "1rem 1.5rem"
-                       :background-color theme-colors/gray-lightest}}
-         right-panel-content]]]]]))
+        (when right-panel-content
+          [Grid {:item true
+                 :xs :auto
+                 :style {:display :flex
+                         :flex 1
+                         :padding "1rem 1.5rem"
+                         :background-color theme-colors/gray-lightest}}
+           right-panel-content])]]]]))
 
 (defn activity-meetings-view
   "Page structure showing project navigator along with content."
   [e! {{:keys [activity]} :params :as app} project]
   [meeting-page-structure e! app project
    [activity-meetings-page-content e! app (project-model/activity-by-id project activity)]
-   [:h1 "participants"]])
+   nil])
 
 (defn meeting-list [meetings]
   [:div
@@ -543,7 +544,7 @@
   [e! app project]
   [meeting-page-structure e! app project
    [project-meetings-page-content e! app project]
-   [:h1 "participants"]])
+   nil])
 
 
 (defn agenda-form [e! meeting close-event form-atom]
