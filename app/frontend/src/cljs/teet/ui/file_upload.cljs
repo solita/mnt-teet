@@ -2,8 +2,7 @@
   (:require [clojure.string :as str]
             [herb.core :refer [<class]]
             [reagent.core :as r]
-            [teet.ui.material-ui :refer [IconButton List ListItem
-                                         ListItemText ListItemSecondaryAction]]
+            [teet.ui.material-ui :refer [IconButton Table TableBody TableRow TableCell]]
             [teet.ui.text-field :refer [TextField]]
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.icons :as icons]
@@ -14,7 +13,8 @@
             teet.file.file-spec
             [teet.ui.buttons :as buttons]
             [teet.ui.drag :as drag]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.ui.select :as select]))
 
 
 
@@ -107,37 +107,48 @@
       :file-object
       file-model/file-info))
 
-(defn files-field [{:keys [value on-change error]}]
-  [:div {:class (<class files-field-style error)
-         :id "files-field-drag-container"}
-   [SectionHeading (tr [:common :files])]
-   [List {:dense true}
-    (doall
-     (map-indexed
-      (fn [i ^js/File file]
-        ^{:key i}
-        [ListItem {}
-         (let [{:file/keys [name size] :as file}
-               (files-field-entry file)
-               invalid-file-type? (not (file-model/valid-suffix? name))
-               file-too-large? (> size file-model/upload-max-file-size)]
-           [ListItemText (merge
-                          {:primary name
-                           :secondary (r/as-element [file-info file invalid-file-type? file-too-large?])})])
-         [ListItemSecondaryAction
-          [TextField {:value (or (:file/pos-number file) "")
-                      :type :number
-                      :placeholder "POS#"
-                      :inline? true
-                      :on-change #(on-change (assoc-in value [i :file/pos-number]
-                                                       (-> % .-target .-value)))}]
-          [IconButton {:edge "end"
-                       :on-click #(on-change (into (subvec value 0 i)
-                                                   (subvec value (inc i))))}
-           [icons/action-delete]]]])
-      value))]
-   [FileUploadButton {:id "files-field"
-                      :drag-container-id "files-field-drag-container"
-                      :on-drop #(on-change (into (or value []) %))}
-    [icons/content-file-copy]
-    (tr [:common :select-files])]])
+(defn files-field [{:keys [e! value on-change error]}]
+  (let [update-file (fn [i new-file-data]
+                      (on-change (update value i merge new-file-data)))]
+    [:div {:class (<class files-field-style error)
+           :id "files-field-drag-container"}
+     [SectionHeading (tr [:common :files])]
+     [Table {}
+      [TableBody {}
+       (doall
+        (map-indexed
+         (fn [i file-row]
+           (let [{:file/keys [name size] :as file}
+                 (files-field-entry file-row)
+                 invalid-file-type? (not (file-model/valid-suffix? name))
+                 file-too-large? (> size file-model/upload-max-file-size)]
+             ^{:key i}
+             [TableRow {}
+              [TableCell {}
+               name
+               [file-info file invalid-file-type? file-too-large?]]
+              [TableCell {}
+               [select/select-enum {:e! e!
+                                    :attribute :file/document-group
+                                    :value (:file/document-group file-row)
+                                    :on-change #(update-file i {:file/document-group %})}]]
+              [TableCell {}
+               [TextField {:label "#"
+                           :value (or (:file/sequence-number file-row) "")
+                           :type :number
+                           :placeholder "0000"
+                           :inline? true
+                           :on-change #(update-file
+                                        i
+                                        {:file/sequence-number (-> % .-target .-value)})}]]
+              [TableCell {}
+               [IconButton {:edge "end"
+                            :on-click #(on-change (into (subvec value 0 i)
+                                                        (subvec value (inc i))))}
+                [icons/action-delete]]]]))
+         value))]]
+     [FileUploadButton {:id "files-field"
+                        :drag-container-id "files-field-drag-container"
+                        :on-drop #(on-change (into (or value []) %))}
+      [icons/content-file-copy]
+      (tr [:common :select-files])]]))

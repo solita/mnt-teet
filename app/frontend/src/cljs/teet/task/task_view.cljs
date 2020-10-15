@@ -171,7 +171,7 @@
     [:<>
      [form/form {:e!              e!
                  :value           @form
-                 :on-change-event (form/update-atom-event form merge)
+                 :on-change-event (partial file-controller/->UpdateFilesForm :task/files form)
                  :save-event      #(file-controller/->AddFilesToTask (:task/files @form)
                                                                      (fn [_]
                                                                        (close!)
@@ -186,7 +186,7 @@
                                     :file/name
                                     file-upload/files-field-entry))
                          (some false?)))}
-      [file-upload/files-field {}]]
+      [file-upload/files-field {:e! e!}]]
      (when upload-progress
        [LinearProgress {:variant "determinate"
                         :value   upload-progress}])]

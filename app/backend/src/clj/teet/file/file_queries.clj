@@ -50,3 +50,18 @@
    :project-id nil
    :authorization {}}
   (url-for-file db file-id false))
+
+(defquery :file/resolve-metadata
+  {:doc "Resolve file metadata"
+   :context {:keys [db]}
+   :args {name :file/name}
+   :project-id nil
+   :authorization {}}
+  (try
+    (->> name
+         filename-metadata/filename->metadata
+         (file-db/resolve-metadata db))
+    (catch Exception _e
+      ;; If metadata can't be parsed, return empty map, frontend will
+      ;; know that filename is not valid
+      {})))
