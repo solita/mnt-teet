@@ -230,8 +230,8 @@
            {:project-eid project-eid
             :activity-id activity-id
             :task-id task-id
-            :part part
-            :document-group doc-group})))
+            :part-info part
+            :document-group-kw doc-group})))
 
 (defn file-metadata
   "Return file metadata for a given file id."
