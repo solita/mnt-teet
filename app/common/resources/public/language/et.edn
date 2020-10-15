@@ -135,6 +135,7 @@
   :document.category/project-doc "Projektdokumentatsioon",
   :task.type/plot-allocation-plan
   "Ümberkruntimiskava (krundijaotuskava)",
+  :file.document-group/general "Üldosa, seletuskirjad ",
   :task.type/railroad "Raudtee",
   :document.sub-category/design-requirements
   "Projekteerimistingimused",
@@ -204,6 +205,7 @@
   :task.type/topogeodesy "Topogeodeesia",
   :land-acquisition.status/in-progress-ready "Töös - ehituseks valmis",
   :task.type/equipment "Seadmed",
+  :file.document-group/annexes "Lisad, muud",
   :task.type/structures "Konstruktsioonid",
   :activity.name/design-requirements "Projekteerimistingimused",
   :task.type/calculation "Konstruktsiooni arvutused",
@@ -220,6 +222,7 @@
   :task.type/traffic-study "Liiklusuuring",
   :task.status/accepted "Aktsepteeritud",
   :task.type/allotment-plan "Krundijaotuskava",
+  :file.document-group/models "Mudelid",
   :estate-compensation.reason/crops "Vili",
   :thk.task-type/design-requirements "Projekteerimistingimused",
   :task.group/base-data "Lähteandmed",
@@ -242,6 +245,7 @@
   :land-acquisition.status/completed "Lõpetatud",
   :task.status/in-preparation "Ettevalmistamisel",
   :document.category/as-built-doc "Täitedokumentatsioon",
+  :file.document-group/drawings-and-plans "Joonised, plaanid",
   :task.type/cadastral-works "Maakorraldustööd",
   :activity.status/other "Muu",
   :notification.type/activity-rejected
@@ -260,6 +264,7 @@
   :estate-compensation.reason/premature-ending-of-agricultural-agreement
   "Põllumajanduskokkuleppe ennetähtaegne lõppemine",
   :task.type/cleanup "Riigivara registrisse kandmine",
+  :file.document-group/reports "Aruanded",
   :notification.type/comment-unresolved "Lahendamata",
   :task.type/general-part "Ülddokumendid",
   :activity.status/completed "Valmis",
@@ -268,6 +273,7 @@
   :task.type/drainage "Drenaaž",
   :task.type/design-requirements "Projekteerimistingimused",
   :file.status/updated "Korrigeeritud",
+  :file.document-group/specifications "Spetsifikatsioonid",
   :task.type/other-facilities "Muud rajatised",
   :task.type/preliminary-agreements "Eelkokkulepped",
   :task.type/buildings "Hooned",
@@ -410,6 +416,11 @@
    :file/type "Sorteerin failitüübi järgi",
    :meta/created-at "Sorteerin kuupäeva järgi"},
   :download "Laen faili alla"},
+ :file-upload
+ {:description nil,
+  :document-group nil,
+  :sequence-number "#",
+  :original-filename nil},
  :land
  {:show-owner-info "Vaatan omanike andmeid",
   :no-active-mortgages "Aktiivsed hüpoteegid puuduvad",

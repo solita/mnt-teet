@@ -135,6 +135,7 @@
   :task.status/reviewing "Reviewing",
   :document.category/project-doc "Project documentation",
   :task.type/plot-allocation-plan "Plot allocation plan",
+  :file.document-group/general "General",
   :task.type/railroad "Railroad",
   :document.sub-category/design-requirements "Design requirements",
   :task.group/design-approval "Design approval",
@@ -204,6 +205,7 @@
   :land-acquisition.status/in-progress-ready
   "In progress - ready for construction ",
   :task.type/equipment "Equipment",
+  :file.document-group/annexes "Annexes",
   :task.type/structures "Structures",
   :activity.name/design-requirements "Design requirements",
   :task.type/calculation "Calculation",
@@ -221,6 +223,7 @@
   :task.type/traffic-study "Traffic study",
   :task.status/accepted "Accepted",
   :task.type/allotment-plan "Allotment plan",
+  :file.document-group/models "Models",
   :estate-compensation.reason/crops "Crops",
   :thk.task-type/design-requirements "Design requirements",
   :task.group/base-data "Base data ",
@@ -244,6 +247,7 @@
   :land-acquisition.status/completed "Completed",
   :task.status/in-preparation "In preparation",
   :document.category/as-built-doc "Construction documentation",
+  :file.document-group/drawings-and-plans "Drawings, plans",
   :task.type/cadastral-works "Cadastral works",
   :activity.status/other "Other",
   :notification.type/activity-rejected
@@ -263,6 +267,7 @@
   :estate-compensation.reason/premature-ending-of-agricultural-agreement
   "Premature ending of agricultural agreement",
   :task.type/cleanup "Registering state estate",
+  :file.document-group/reports "Reports",
   :notification.type/comment-unresolved "Comment unresolved",
   :task.type/general-part "General part",
   :activity.status/completed "Completed",
@@ -271,6 +276,7 @@
   :task.type/drainage "Drainage",
   :task.type/design-requirements "Design requirements",
   :file.status/updated "Updated",
+  :file.document-group/specifications "Specifications",
   :task.type/other-facilities "Other facilities",
   :task.type/preliminary-agreements "Preliminary agreements",
   :task.type/buildings "Buildings",
@@ -415,6 +421,11 @@
    :file/type "Sort by file type",
    :meta/created-at "Sort by date"},
   :download "Download file"},
+ :file-upload
+ {:description "File description",
+  :document-group "Group",
+  :sequence-number "#",
+  :original-filename "Original filename: {name}"},
  :land
  {:show-owner-info "Show owner information",
   :no-active-mortgages
