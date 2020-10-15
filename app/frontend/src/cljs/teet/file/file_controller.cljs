@@ -8,7 +8,8 @@
             [teet.localization :refer [tr]]
             [teet.file.file-model :as file-model]
             [clojure.string :as str]
-            [teet.snackbar.snackbar-controller :as snackbar-controller]))
+            [teet.snackbar.snackbar-controller :as snackbar-controller]
+            [teet.file.filename-metadata :as filename-metadata]))
 
 (defrecord UploadFiles [files project-id task-id on-success progress-increment file-results]) ; Upload files (one at a time) to document
 (defrecord UploadFinished []) ; upload completed, can close dialog
@@ -245,10 +246,19 @@
              (mapv (fn [{fo :file-object :as file}]
                      (if (= (:file/name (file-model/file-info fo))
                             filename)
-                       (-> file
-                           (assoc :metadata metadata)
-                           (assoc :file/document-group (:document-group metadata))
-                           (assoc :file/sequence-number (:sequence-number metadata)))
+                       (merge
+                        file
+                        {:metadata metadata
+                         :file/document-group (:document-group-kw metadata)
+                         :file/sequence-number (:sequence-number metadata)
+                         :file/original-name filename}
+                        (if (:description metadata)
+                          {:file/description (:description metadata)
+                           :file/extension (:extension metadata)}
+                          (let [{:keys [description extension]}
+                                (filename-metadata/name->description-and-extension filename)]
+                            {:file/description description
+                             :file/extension extension})))
                        file))
                    files)))
     app))

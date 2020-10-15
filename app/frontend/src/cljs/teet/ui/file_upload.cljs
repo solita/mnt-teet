@@ -2,8 +2,8 @@
   (:require [clojure.string :as str]
             [herb.core :refer [<class]]
             [reagent.core :as r]
-            [teet.ui.material-ui :refer [IconButton Table TableBody TableRow TableCell]]
-            [teet.ui.text-field :refer [TextField]]
+            [teet.ui.material-ui :refer [IconButton Table TableHead TableBody TableRow TableCell]]
+            [teet.ui.text-field :refer [TextField] :as text-field]
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.icons :as icons]
             [teet.localization :refer [tr]]
@@ -14,7 +14,8 @@
             [teet.ui.buttons :as buttons]
             [teet.ui.drag :as drag]
             [teet.log :as log]
-            [teet.ui.select :as select]))
+            [teet.ui.select :as select]
+            [teet.file.filename-metadata :as filename-metadata]))
 
 
 
@@ -109,11 +110,21 @@
 
 (defn files-field [{:keys [e! value on-change error]}]
   (let [update-file (fn [i new-file-data]
-                      (on-change (update value i merge new-file-data)))]
+                      (on-change (update value i merge new-file-data
+                                         {:changed? true})))]
     [:div {:class (<class files-field-style error)
            :id "files-field-drag-container"}
      [SectionHeading (tr [:common :files])]
      [Table {}
+      [TableHead {}
+       [TableRow {}
+        [TableCell {:colSpan 2}
+         (tr [:file-upload :description])]
+        [TableCell {}
+         (tr [:file-upload :document-group])]
+        [TableCell {}
+         (tr [:file-upload :sequence-number])]]]
+
       [TableBody {}
        (doall
         (map-indexed
@@ -123,29 +134,40 @@
                  invalid-file-type? (not (file-model/valid-suffix? name))
                  file-too-large? (> size file-model/upload-max-file-size)]
              ^{:key i}
-             [TableRow {}
-              [TableCell {}
-               name
-               [file-info file invalid-file-type? file-too-large?]]
-              [TableCell {}
-               [select/select-enum {:e! e!
-                                    :attribute :file/document-group
-                                    :value (:file/document-group file-row)
-                                    :on-change #(update-file i {:file/document-group %})}]]
-              [TableCell {}
-               [TextField {:label "#"
-                           :value (or (:file/sequence-number file-row) "")
-                           :type :number
-                           :placeholder "0000"
-                           :inline? true
-                           :on-change #(update-file
-                                        i
-                                        {:file/sequence-number (-> % .-target .-value)})}]]
-              [TableCell {}
-               [IconButton {:edge "end"
-                            :on-click #(on-change (into (subvec value 0 i)
-                                                        (subvec value (inc i))))}
-                [icons/action-delete]]]]))
+             [:<>
+              [TableRow {}
+               [TableCell {:style {:border :none}}
+                [TextField {:value (:file/description file-row)
+                            :on-change #(update-file i {:file/description
+                                                        (-> % .-target .-value)})}]]
+               [TableCell {:style {:border :none}
+                           :padding "none"
+                           :align :left}
+                (:file/extension file-row)]
+               [TableCell {:style {:border :none}}
+                [select/select-enum {:e! e!
+                                     :show-label? false
+                                     :attribute :file/document-group
+                                     :value (:file/document-group file-row)
+                                     :on-change #(update-file i {:file/document-group %})}]]
+               [TableCell {:style {:border :none}}
+                [TextField {:value (or (:file/sequence-number file-row) "")
+                            :type :number
+                            :placeholder "0000"
+                            :inline? true
+                            :on-change #(update-file
+                                         i
+                                         {:file/sequence-number (-> % .-target .-value)})}]]
+               [TableCell {:style {:border :none}}
+                [IconButton {:edge "end"
+                             :on-click #(on-change (into (subvec value 0 i)
+                                                         (subvec value (inc i))))}
+                 [icons/action-delete]]]]
+              [TableRow {}
+               [TableCell {:colSpan 5}
+                (when (:changed? file-row)
+                  (tr [:file-upload :original-filename] {:name name}))
+                [file-info file invalid-file-type? file-too-large?]]]]))
          value))]]
      [FileUploadButton {:id "files-field"
                         :drag-container-id "files-field-drag-container"
