@@ -161,24 +161,24 @@
                                    :style {:margin-left "1rem"}}
            (tr [:buttons :confirm])]]]])]))
 
-(defn- add-files-form [e! upload-progress initial-state-atom close!]
-  (r/with-let [form (r/atom (if initial-state-atom
-                              (let [val @initial-state-atom]
-                                (reset! initial-state-atom nil)
-                                val)
-                              {}))
+(defn- add-files-form [e! task upload-progress initial-state-atom close!]
+  (r/with-let [form (r/atom {})
+               _ (when-let [val (some-> initial-state-atom deref)]
+                   (e! (file-controller/->UpdateFilesForm :task/files form val))
+                   (reset! initial-state-atom nil))
                reinstate-drop-zones! (drag/suppress-drop-zones!)]
     [:<>
-     [form/form {:e!              e!
-                 :value           @form
-                 :on-change-event (partial file-controller/->UpdateFilesForm :task/files form)
-                 :save-event      #(file-controller/->AddFilesToTask (:task/files @form)
-                                                                     (fn [_]
-                                                                       (close!)
-                                                                       (file-controller/->AfterUploadRefresh)))
-                 :cancel-fn close!
-                 :in-progress?    upload-progress
-                 :spec :task/add-files}
+     [form/form
+      {:e!              e!
+       :value           @form
+       :on-change-event (partial file-controller/->UpdateFilesForm :task/files form)
+       :save-event      #(file-controller/->AddFilesToTask (:task/files @form)
+                                                           (fn [_]
+                                                             (close!)
+                                                             (file-controller/->AfterUploadRefresh)))
+       :cancel-fn close!
+       :in-progress?    upload-progress
+       :spec :task/add-files}
       ^{:attribute :task/files
         :validate (fn [array-files]
                     (->> array-files
@@ -212,7 +212,7 @@
                                    :button-component (file-view/file-upload-button)
                                    :modal-options {:max-width "lg"}
                                    :modal-title (tr [:task :add-document])
-                                   :modal-component [add-files-form e!
+                                   :modal-component [add-files-form e! task
                                                      (:in-progress? new-document)
                                                      dropped-files]}]
         (when (seq files)
