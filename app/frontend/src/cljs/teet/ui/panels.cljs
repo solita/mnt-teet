@@ -194,10 +194,16 @@
             component])
          (partition 2 percentages-and-components))])
 
-(defn button-with-modal [{:keys [modal-title button-component modal-component modal-options open-atom]}]
+(defn button-with-modal [{:keys [modal-title button-component modal-component modal-options open-atom
+                                 on-open on-close]}]
   (r/with-let [open? (or open-atom (r/atom false))
-               open! #(reset! open? true)
-               close! #(do (reset! open? false) nil)]
+               open! #(do (reset! open? true)
+                          (when on-open
+                            (on-open)))
+               close! #(do (reset! open? false)
+                           (when on-close
+                             (on-close))
+                           nil)]
     [:<>
      (assoc-in button-component [1 :on-click] open!)
      [modal (merge modal-options

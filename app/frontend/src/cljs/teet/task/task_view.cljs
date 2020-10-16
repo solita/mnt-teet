@@ -170,10 +170,7 @@
       {:e!              e!
        :value           files-form
        :on-change-event file-controller/->UpdateFilesForm
-       :save-event      #(file-controller/->AddFilesToTask files-form
-                                                           (fn [_]
-                                                             (close!)
-                                                             (file-controller/->AfterUploadRefresh)))
+       :save-event      #(file-controller/->AddFilesToTask files-form close!)
        :cancel-fn close!
        :in-progress?    upload-progress
        :spec :task/add-files}
@@ -194,7 +191,9 @@
 
 (defn task-details
   [e! new-document {:task/keys [description files] :as task} files-form]
-  (r/with-let [file-upload-open? (r/atom false)]
+  (r/with-let [file-upload-open? (r/atom false)
+               close! #(do (reset! file-upload-open? false)
+                           (e! (file-controller/->AfterUploadRefresh)))]
     [:div#task-details-drop.task-details
      (when description
        [typography/Paragraph description])
@@ -212,7 +211,8 @@
                                    :modal-title (tr [:task :add-document])
                                    :modal-component [add-files-form e! task files-form
                                                      (:in-progress? new-document)
-                                                     #(reset! file-upload-open? false)]}
+                                                     close!]
+                                   :on-close close!}
          (when (seq files)
            [when-authorized :task/submit task
             [submit-results-button e! task]])]])
