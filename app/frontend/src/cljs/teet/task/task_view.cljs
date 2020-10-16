@@ -33,7 +33,9 @@
             [teet.util.collection :as cu]
             [teet.util.datomic :as du]
             [teet.log :as log]
-            [teet.ui.drag :as drag]))
+            [teet.ui.drag :as drag]
+            [teet.common.common-controller :as common-controller]))
+
 
 (defn- task-groups-for-activity [activity-name task-groups]
   (filter (comp (get activity-model/activity-name->task-groups activity-name #{})
@@ -161,18 +163,14 @@
                                    :style {:margin-left "1rem"}}
            (tr [:buttons :confirm])]]]])]))
 
-(defn- add-files-form [e! task upload-progress initial-state-atom close!]
-  (r/with-let [form (r/atom {})
-               _ (when-let [val (some-> initial-state-atom deref)]
-                   (e! (file-controller/->UpdateFilesForm :task/files form val))
-                   (reset! initial-state-atom nil))
-               reinstate-drop-zones! (drag/suppress-drop-zones!)]
+(defn- add-files-form [e! task files-form upload-progress close!]
+  (r/with-let [reinstate-drop-zones! (drag/suppress-drop-zones!)]
     [:<>
      [form/form
       {:e!              e!
-       :value           @form
-       :on-change-event (partial file-controller/->UpdateFilesForm :task/files form)
-       :save-event      #(file-controller/->AddFilesToTask (:task/files @form)
+       :value           files-form
+       :on-change-event file-controller/->UpdateFilesForm
+       :save-event      #(file-controller/->AddFilesToTask files-form
                                                            (fn [_]
                                                              (close!)
                                                              (file-controller/->AfterUploadRefresh)))
@@ -194,9 +192,8 @@
       (reinstate-drop-zones!))))
 
 (defn task-details
-  [e! new-document {:task/keys [description files] :as task}]
-  (r/with-let [file-upload-open? (r/atom false)
-               dropped-files (atom nil)]
+  [e! new-document {:task/keys [description files] :as task} files-form]
+  (r/with-let [file-upload-open? (r/atom false)]
     [:div#task-details-drop.task-details
      (when description
        [typography/Paragraph description])
@@ -206,18 +203,18 @@
        [:<>
         [file-upload/FileUpload {:drag-container-id "task-details-drop"
                                  :drop-message (tr [:drag :drop-to-task])
-                                 :on-drop #(do (reset! dropped-files {:task/files %})
+                                 :on-drop #(do (e! (file-controller/->UpdateFilesForm {:task/files %}))
                                                (reset! file-upload-open? true))}]
         [panels/button-with-modal {:open-atom file-upload-open?
                                    :button-component (file-view/file-upload-button)
                                    :modal-options {:max-width "lg"}
                                    :modal-title (tr [:task :add-document])
-                                   :modal-component [add-files-form e! task
+                                   :modal-component [add-files-form e! task files-form
                                                      (:in-progress? new-document)
-                                                     dropped-files]}]
-        (when (seq files)
-          [when-authorized :task/submit task
-           [submit-results-button e! task]])])
+                                                     #(reset! file-upload-open? false)]}
+         (when (seq files)
+           [when-authorized :task/submit task
+            [submit-results-button e! task]])]])
      (when (task-model/reviewing? task)
        [when-authorized :task/review task
         [:div.task-review-buttons {:style {:display :flex :justify-content :space-between}}
@@ -241,7 +238,7 @@
     [:span]))
 
 (defn task-page-content
-  [e! app {status :task/status :as task} pm?]
+  [e! app {status :task/status :as task} pm? files-form]
   [:div.task-page
    (when (and pm? (du/enum= status :task.status/waiting-for-review))
      [when-authorized :task/start-review task
@@ -254,7 +251,7 @@
      :comment-command :comment/comment-on-task
      :entity-type :task
      :entity-id (:db/id task)}
-    [task-details e! (:new-document app) task]]])
+    [task-details e! (:new-document app) task files-form]]])
 
 
 (defn edit-task-form [_e! {:keys [initialization-fn]} {:keys [max-date min-date]}]
@@ -307,6 +304,7 @@
 
 (defn task-page [e! {{task-id :task :as _params} :params user :user :as app}
                  project]
+  (log/info "task-page render")
   (let [activity-manager (cu/find-> project
                                     :thk.project/lifecycles some?
                                     :thk.lifecycle/activities (fn [{:activity/keys [tasks]}]
@@ -320,4 +318,5 @@
      [task-page-content e! app
       (project-model/task-by-id project task-id)
       (= (:db/id user)
-         (:db/id activity-manager))]]))
+         (:db/id activity-manager))
+      (:files-form project)]]))

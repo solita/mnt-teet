@@ -31,8 +31,8 @@
 (defrecord UpdateFileSeen [file-id])
 (defrecord UpdateFileSeenResponse [response])
 
-(defrecord UpdateFilesForm [files-key form-atom new-value])
-(defrecord FilesFormMetadataReceived [files-key form-atom filename metadata])
+(defrecord UpdateFilesForm [new-value])
+(defrecord FilesFormMetadataReceived [filename metadata])
 
 (extend-protocol t/Event
 
@@ -221,44 +221,46 @@
   ;; When file form changes, initiate metadata fetch for any new
   ;; files
   UpdateFilesForm
-  (process-event [{:keys [files-key form-atom new-value]} app]
-    (log/info "NEW value for " files-key " => " new-value)
-    (let [files (get (swap! form-atom merge new-value) files-key)
+  (process-event [{:keys [new-value]} app]
+    (let [form (merge (common-controller/page-state app :files-form)
+                      new-value)
+          files (:task/files form)
           files-to-fetch (filter (complement :metadata)
-                                 files)]
+                                 files)
+          new-app (common-controller/update-page-state app [:files-form] (constantly form))]
+
       (if (seq files-to-fetch)
-        (apply t/fx app
+        (apply t/fx new-app
                (for [{f :file-object} files-to-fetch
                      :let [name (:file/name (file-model/file-info f))]]
                  {:tuck.effect/type :query
                   :query :file/resolve-metadata
                   :args {:file/name name}
-                  :result-event (partial ->FilesFormMetadataReceived
-                                         files-key form-atom
-                                         name)}))
-        app)))
+                  :result-event (partial ->FilesFormMetadataReceived name)}))
+        new-app)))
 
   ;; When we receive new metadata for the file of a given name
   FilesFormMetadataReceived
-  (process-event [{:keys [files-key form-atom filename metadata]} app]
-    (swap! form-atom update files-key
-           (fn [files]
-             (mapv (fn [{fo :file-object :as file}]
-                     (if (= (:file/name (file-model/file-info fo))
-                            filename)
-                       (merge
-                        file
-                        {:metadata metadata
-                         :file/document-group (:document-group-kw metadata)
-                         :file/sequence-number (:sequence-number metadata)
-                         :file/original-name filename}
-                        (if (:description metadata)
-                          {:file/description (:description metadata)
-                           :file/extension (:extension metadata)}
-                          (let [{:keys [description extension]}
-                                (filename-metadata/name->description-and-extension filename)]
-                            {:file/description description
-                             :file/extension extension})))
-                       file))
-                   files)))
-    app))
+  (process-event [{:keys [filename metadata]} app]
+    (common-controller/update-page-state
+     app
+     [:files-form :task/files]
+     (fn [files]
+       (mapv (fn [{fo :file-object :as file}]
+               (if (= (:file/name (file-model/file-info fo))
+                      filename)
+                 (merge
+                  file
+                  {:metadata metadata
+                   :file/document-group (:document-group-kw metadata)
+                   :file/sequence-number (:sequence-number metadata)
+                   :file/original-name filename}
+                  (if (:description metadata)
+                    {:file/description (:description metadata)
+                     :file/extension (:extension metadata)}
+                    (let [{:keys [description extension]}
+                          (filename-metadata/name->description-and-extension filename)]
+                      {:file/description description
+                       :file/extension extension})))
+                 file))
+             files)))))
