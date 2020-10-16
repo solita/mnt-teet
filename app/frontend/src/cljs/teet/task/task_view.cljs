@@ -184,7 +184,8 @@
                                     :file/name
                                     file-upload/files-field-entry))
                          (some false?)))}
-      [file-upload/files-field {:e! e!}]]
+      [file-upload/files-field {:e! e!
+                                :task task}]]
      (when upload-progress
        [LinearProgress {:variant "determinate"
                         :value   upload-progress}])]

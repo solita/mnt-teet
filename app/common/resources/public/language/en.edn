@@ -425,7 +425,9 @@
  {:description "File description",
   :document-group "Group",
   :sequence-number "#",
-  :original-filename "Original filename: {name}"},
+  :original-filename "Original filename: {name}",
+  :wrong-task "Cannot add file to this task",
+  :file-belongs-to-task "This file belongs to {task} task"},
  :land
  {:show-owner-info "Show owner information",
   :no-active-mortgages

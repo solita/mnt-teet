@@ -417,10 +417,12 @@
    :meta/created-at "Sorteerin kuupäeva järgi"},
   :download "Laen faili alla"},
  :file-upload
- {:description nil,
-  :document-group nil,
+ {:description "Faili kirjeldus",
+  :document-group "Dokumendi grupp",
   :sequence-number "#",
-  :original-filename nil},
+  :original-filename "Algupärane failinimi: {name}",
+  :wrong-task nil,
+  :file-belongs-to-task nil},
  :land
  {:show-owner-info "Vaatan omanike andmeid",
   :no-active-mortgages "Aktiivsed hüpoteegid puuduvad",

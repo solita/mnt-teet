@@ -6,7 +6,7 @@
             [teet.ui.text-field :refer [TextField] :as text-field]
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.icons :as icons]
-            [teet.localization :refer [tr]]
+            [teet.localization :refer [tr tr-enum]]
             [teet.ui.typography :refer [Heading1 SectionHeading]]
             [teet.ui.format :as format]
             [teet.file.file-model :as file-model]
@@ -15,7 +15,9 @@
             [teet.ui.drag :as drag]
             [teet.log :as log]
             [teet.ui.select :as select]
-            [teet.file.filename-metadata :as filename-metadata]))
+            [teet.file.filename-metadata :as filename-metadata]
+            [teet.ui.typography :as typography]
+            [teet.common.common-styles :as common-styles]))
 
 
 
@@ -108,7 +110,30 @@
       :file-object
       file-model/file-info))
 
-(defn files-field [{:keys [e! value on-change error]}]
+(defn wrong-task-error [expected-task-type task-types]
+  (let [correct-task (some #(when (= (:filename/code %) expected-task-type)
+                              (:db/ident %))
+                           task-types)]
+    (tr [:file-upload :file-belongs-to-task] {:task (tr-enum correct-task)})))
+
+(defn validate-file [e! task {:keys [metadata] :as file-row}]
+  (def *vf [task file-row])
+  (when (seq metadata)
+    ;; Only validate if there is metadata
+    (or
+     (cond
+       ;; Check for wrong task
+       (not= (:db/id task) (:task-id metadata))
+       {:title (tr [:file-upload :wrong-task])
+        :description [select/with-enum-values
+                      {:e! e!
+                       :attribute :task/type}
+                      [wrong-task-error (:task metadata)]]}
+
+       ;; All validations ok
+       :else nil))))
+
+(defn files-field [{:keys [e! value on-change error task]}]
   (let [update-file (fn [i new-file-data]
                       (on-change (update value i merge new-file-data
                                          {:changed? true})))]
@@ -165,9 +190,14 @@
                  [icons/action-delete]]]]
               [TableRow {}
                [TableCell {:colSpan 5}
-                (when (:changed? file-row)
-                  (tr [:file-upload :original-filename] {:name name}))
-                [file-info file invalid-file-type? file-too-large?]]]]))
+                (if-let [{:keys [title description] :as error} (validate-file e! task file-row)]
+                  [:div {:class (<class common-styles/error-area)}
+                   [:b [icons/alert-error-outline] " " title]
+                   description]
+                  [:<>
+                   (when (:changed? file-row)
+                     (tr [:file-upload :original-filename] {:name name}))
+                   [file-info file invalid-file-type? file-too-large?]])]]]))
          value))]]
      [FileUploadButton {:id "files-field"
                         :drag-container-id "files-field-drag-container"

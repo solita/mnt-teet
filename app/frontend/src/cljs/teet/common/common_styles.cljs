@@ -253,3 +253,11 @@
   "Top border to divide multiple items"
   []
   {:border-top (str "solid 1px " theme-colors/gray-light)})
+
+(defn error-area []
+  {:border (str "solid 2px #D73E3E")
+   :border-radius "3px"
+   :background-color "#FCEEEE"
+   :padding "1rem"
+   :display :flex
+   :flex-direction :column})
