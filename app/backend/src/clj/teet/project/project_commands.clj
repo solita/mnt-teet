@@ -138,7 +138,8 @@
    :project-id project-id
    :pre [(:user/person-id user)
          (user-spec/estonian-person-id? (:user/person-id user))]
-   :authorization {:project/edit-permissions {:link :thk.project/owner}}}
+   :authorization {:project/edit-permissions {:link :thk.project/owner}}
+   :audit? true}
   (assert (authorization-check/role-can-be-granted? role) "Can't grant role")
   (let [user-person-id (-> user
                            :user/person-id

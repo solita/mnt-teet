@@ -88,6 +88,11 @@
          (and (keyword? audit-event)
               (some? (namespace audit-event)))
          (map? audit-event-args)]}
+  ;; This is for testing purposes, to ensure that audit gets called.
+  ;; Remove as part of TEET-785
+  (timbre/info {:audit/event audit-event
+                :audit/user-id user-id
+                :audit/event-args audit-event-args})
   (event "Audit"
          {:audit/event audit-event
           :audit/user-id user-id
