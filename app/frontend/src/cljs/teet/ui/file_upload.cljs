@@ -87,23 +87,6 @@
          (when error
            {:border (str "solid 1px " theme-colors/error)})))                 ;;This should also use material ui theme.error
 
-(defn file-info
-  [{:file/keys [name size] :as _file} invalid-file-type? file-too-large?]
-  [:<>
-   (into [:span (merge {} (when invalid-file-type?
-                            {:style {:color theme-colors/error}}))]
-         (when invalid-file-type?
-           [(str/upper-case (file-model/filename->suffix name))
-            " "
-            [:a {:target "_blank"
-                 :href "https://confluence.mkm.ee/pages/viewpage.action?spaceKey=TEET&title=TEET+File+format+list"}
-             (tr [:document :invalid-file-type])]]))
-   [:span {:style (merge {:display :block}
-                         (when file-too-large?
-                           {:color theme-colors/error}))}
-    (str (format/file-size size))
-    (when file-too-large?
-      (str " " (tr [:document :file-too-large])))]])
 
 (defn files-field-entry [file-entry]
   (-> file-entry
@@ -117,21 +100,33 @@
     (tr [:file-upload :file-belongs-to-task] {:task (tr-enum correct-task)})))
 
 (defn validate-file [e! task {:keys [metadata] :as file-row}]
-  (def *vf [task file-row])
-  (when (seq metadata)
-    ;; Only validate if there is metadata
-    (or
-     (cond
-       ;; Check for wrong task
-       (not= (:db/id task) (:task-id metadata))
-       {:title (tr [:file-upload :wrong-task])
-        :description [select/with-enum-values
-                      {:e! e!
-                       :attribute :task/type}
-                      [wrong-task-error (:task metadata)]]}
+  (let [{:file/keys [name size]} (files-field-entry file-row)]
+    (cond
+      ;; Check allowed suffix
+      (not (file-model/valid-suffix? name))
+      {:title (tr [:document :invalid-file-type])
+       :description [:<>
+                     (str/upper-case (file-model/filename->suffix name))
+                     " "
+                     [:a {:target "_blank"
+                          :href "https://confluence.mkm.ee/pages/viewpage.action?spaceKey=TEET&title=TEET+File+format+list"}
+                      (tr [:document :invalid-file-type])]]}
 
-       ;; All validations ok
-       :else nil))))
+      (> size file-model/upload-max-file-size)
+      {:title (tr [:document :file-too-large])
+       :description ""}
+
+      ;; Check for wrong task (if metadata can be parsed)
+      (and (seq metadata)
+           (not= (:db/id task) (:task-id metadata)))
+      {:title (tr [:file-upload :wrong-task])
+       :description [select/with-enum-values
+                     {:e! e!
+                      :attribute :task/type}
+                     [wrong-task-error (:task metadata)]]}
+
+      ;; All validations ok
+      :else nil)))
 
 (defn files-field [{:keys [e! value on-change error task]}]
   (let [update-file (fn [i new-file-data]
@@ -154,50 +149,46 @@
        (doall
         (map-indexed
          (fn [i file-row]
-           (let [{:file/keys [name size] :as file}
-                 (files-field-entry file-row)
-                 invalid-file-type? (not (file-model/valid-suffix? name))
-                 file-too-large? (> size file-model/upload-max-file-size)]
-             ^{:key i}
-             [:<>
-              [TableRow {}
-               [TableCell {:style {:border :none}}
-                [TextField {:value (:file/description file-row)
-                            :on-change #(update-file i {:file/description
-                                                        (-> % .-target .-value)})}]]
-               [TableCell {:style {:border :none}
-                           :padding "none"
-                           :align :left}
-                (:file/extension file-row)]
-               [TableCell {:style {:border :none}}
-                [select/select-enum {:e! e!
-                                     :show-label? false
-                                     :attribute :file/document-group
-                                     :value (:file/document-group file-row)
-                                     :on-change #(update-file i {:file/document-group %})}]]
-               [TableCell {:style {:border :none}}
-                [TextField {:value (or (:file/sequence-number file-row) "")
-                            :type :number
-                            :placeholder "0000"
-                            :inline? true
-                            :on-change #(update-file
-                                         i
-                                         {:file/sequence-number (-> % .-target .-value)})}]]
-               [TableCell {:style {:border :none}}
-                [IconButton {:edge "end"
-                             :on-click #(on-change (into (subvec value 0 i)
-                                                         (subvec value (inc i))))}
-                 [icons/action-delete]]]]
-              [TableRow {}
-               [TableCell {:colSpan 5}
-                (if-let [{:keys [title description] :as error} (validate-file e! task file-row)]
-                  [:div {:class (<class common-styles/error-area)}
-                   [:b [icons/alert-error-outline] " " title]
-                   description]
-                  [:<>
-                   (when (:changed? file-row)
-                     (tr [:file-upload :original-filename] {:name name}))
-                   [file-info file invalid-file-type? file-too-large?]])]]]))
+           ^{:key i}
+           [:<>
+            [TableRow {}
+             [TableCell {:style {:border :none}}
+              [TextField {:value (:file/description file-row)
+                          :on-change #(update-file i {:file/description
+                                                      (-> % .-target .-value)})}]]
+             [TableCell {:style {:border :none}
+                         :padding "none"
+                         :align :left}
+              (:file/extension file-row)]
+             [TableCell {:style {:border :none}}
+              [select/select-enum {:e! e!
+                                   :show-label? false
+                                   :attribute :file/document-group
+                                   :value (:file/document-group file-row)
+                                   :on-change #(update-file i {:file/document-group %})}]]
+             [TableCell {:style {:border :none}}
+              [TextField {:value (or (:file/sequence-number file-row) "")
+                          :type :number
+                          :placeholder "0000"
+                          :inline? true
+                          :on-change #(update-file
+                                       i
+                                       {:file/sequence-number (-> % .-target .-value)})}]]
+             [TableCell {:style {:border :none}}
+              [IconButton {:edge "end"
+                           :on-click #(on-change (into (subvec value 0 i)
+                                                       (subvec value (inc i))))}
+               [icons/action-delete]]]]
+            [TableRow {}
+             [TableCell {:colSpan 5}
+              (if-let [{:keys [title description] :as error} (validate-file e! task file-row)]
+                [:div {:class (<class common-styles/error-area)}
+                 [:b [icons/alert-error-outline] " " title]
+                 description]
+                [:<>
+                 (when (:changed? file-row)
+                   (tr [:file-upload :original-filename] {:name name}))
+                 (-> file-row files-field-entry :file/size format/file-size str)])]]])
          value))]]
      [FileUploadButton {:id "files-field"
                         :drag-container-id "files-field-drag-container"

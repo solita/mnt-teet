@@ -175,12 +175,8 @@
        :in-progress?    upload-progress
        :spec :task/add-files}
       ^{:attribute :task/files
-        :validate (fn [array-files]
-                    (->> array-files
-                         (map (comp file-model/valid-suffix?
-                                    :file/name
-                                    file-upload/files-field-entry))
-                         (some false?)))}
+        :validate (fn [files]
+                    (some some? (map (partial file-upload/validate-file e! task) files)))}
       [file-upload/files-field {:e! e!
                                 :task task}]]
      (when upload-progress
