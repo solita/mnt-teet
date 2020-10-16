@@ -114,7 +114,9 @@
          (not (activity-db/conflicting-activities? db activity lifecycle-id))
 
          ^{:error :invalid-tasks}
-         (valid-tasks? db (:activity/name activity) tasks)]}
+         (valid-tasks? db (:activity/name activity) tasks)]
+   ;; Audited as the command can grant privileges
+   :audit? true}
 
   (let [manager (:activity/manager activity)
         project-id (project-db/lifecycle-project-id db lifecycle-id)]
