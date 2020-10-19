@@ -348,6 +348,23 @@
         [:div.file-table-other-versions
          [file-table other-versions]]])]))
 
+(defn file-part-heading
+  [e! part opts]
+  [:div {:style {:margin-bottom "1.5rem"
+                 :display :flex
+                 :justify-content :space-between}}
+   [typography/Heading2 (:file.part/name part)]
+   [:div
+    (when-let [action-comp (:action opts)]
+      action-comp)]])
+
+(defn no-files
+  []
+  [typography/GreyText {:class [(<class typography/grey-text-style)
+                                (<class common-styles/flex-row)
+                                (<class common-styles/margin-bottom 1)]}
+   [ti/file {:style {:margin-right "0.5rem"}}]
+   [:span (tr [:file :no-files])]])
 
 (defn- file-edit-dialog [{:keys [e! on-close file]}]
   [panels/modal {:title (tr [:file :edit])

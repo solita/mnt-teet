@@ -185,6 +185,62 @@
     (finally
       (reinstate-drop-zones!))))
 
+(defn file-part-form
+  [e! task-id close-event form-data]
+  [:div
+   [:span (pr-str form-data)]
+   [form/form {:e! e!
+               :value @form-data
+               :on-change-event (form/update-atom-event form-data merge)
+               :cancel-event close-event
+               :save-event #(task-controller/->SavePartForm close-event task-id @form-data)
+               :delete (when-let [part-id (:db/id @form-data)]
+                         (task-controller/->DeleteFilePart close-event part-id))}
+    ^{:attribute :file.part/name}
+    [TextField {}]]])
+
+(defn file-part-view
+  [e! task-id file-part files]
+  [:div
+   [file-view/file-part-heading e! file-part
+    {:action [:div
+              [form/form-modal-button
+               {:form-component [file-part-form e! task-id]
+                :form-value file-part
+                :modal-title (tr [:file :edit-part-modal-title])
+                :button-component
+                [buttons/button-secondary
+                 {:size :small
+                  :style {:margin-right "0.5rem"}}
+                 (tr [:buttons :edit])]}]
+              [buttons/button-primary {:size :small}
+               "Upload"]]}]
+   (if (seq files)
+     [file-view/file-table files]
+     [file-view/no-files])])
+
+(defn task-file-view
+  [e! task]
+  (let [parts (:file.part/_task task)]
+    [:div
+     [:div
+      (mapc (fn [part]
+              [file-part-view e! (:db/id task) part
+               (filter
+                 (fn [file]
+                   (= (:db/id part) (get-in file [:file/part :db/id])))
+                 (:task/files task))])
+            parts)]
+
+     [form/form-modal-button
+      {:form-component [file-part-form e! (:db/id task)]
+       :modal-title (tr [:task :task-add-part-modal-title])
+       :button-component
+       [buttons/button-secondary
+        {:start-icon (r/as-element
+                       [icons/content-add])}
+        (tr [:task :add-part])]}]]))
+
 (defn task-details
   [e! new-document {:task/keys [description files] :as task} files-form]
   (r/with-let [file-upload-open? (r/atom false)
@@ -194,7 +250,8 @@
      (when description
        [typography/Paragraph description])
      [task-basic-info task]
-     [file-view/file-table files]
+     [file-view/file-table (remove #(contains? % :file/part) files)]
+     [task-file-view e! task]
      (when (task-model/can-submit? task)
        [:<>
         [file-upload/FileUpload {:drag-container-id "task-details-drop"

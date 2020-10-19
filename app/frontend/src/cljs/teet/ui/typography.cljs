@@ -14,7 +14,7 @@
   []
   {:font-size "0.875rem"})
 
-(defn- grey-text-style
+(defn grey-text-style
   []
   {:display :block
    :color theme-colors/gray-light})

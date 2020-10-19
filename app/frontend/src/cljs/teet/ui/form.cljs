@@ -389,7 +389,7 @@
                              :validate  (when save-event
                                           (fn [value]
                                             (validate value @current-fields)))
-                             :delete (when delete
+                             :delete (when delete           ;;TODO inconsistent with save-event and cancel event
                                        #(e! delete))}}]
     [:form (merge {:on-submit #(submit! e! save-event value @current-fields %)
                    :style {:flex 1
