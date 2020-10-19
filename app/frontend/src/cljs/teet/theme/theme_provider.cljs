@@ -104,7 +104,8 @@
                                        "&:focus" theme-colors/button-focus-style
                                        :box-shadow "none"
                                        "&:hover" {:box-shadow "none"}}
-                           :containedPrimary {"&:disabled" {:opacity "0.8"
+                           :containedPrimary {:border (str "2px solid " theme-colors/primary)
+                                              "&:disabled" {:opacity "0.8"
                                                             :background-color theme-colors/primary
                                                             :color theme-colors/white}}
                            :root {:text-transform :none
