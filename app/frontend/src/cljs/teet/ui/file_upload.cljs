@@ -179,15 +179,19 @@
             [TableRow {}
              [TableCell {:colSpan 4}
               (if-let [{:keys [title description] :as error} (validate-file e! task file-row)]
-
                 [common-ui/info-box {:variant :error
                                      :title title
                                      :content description}]
-                (let [{:file/keys [name size]} (files-field-entry file-row)]
-                  [:<>
-                   (when (:changed? file-row)
-                     (tr [:file-upload :original-filename] {:name name}))
-                   (format/file-size size)]))]]])
+                [:<>
+                 (when (get-in file-row [:metadata :file-id])
+                   [common-ui/info-box {:title (tr [:file-upload :already-uploaded])
+                                        :content (tr [:file-upload :new-version-will-be-created])}])
+                 (let [{:file/keys [name size]} (files-field-entry file-row)]
+                   [:<>
+                    (when (:changed? file-row)
+                      (tr [:file-upload :original-filename] {:name name}))
+                    " "
+                    (format/file-size size)])])]]])
          value))]]
      [FileUploadButton {:id "files-field"
                         :drag-container-id "files-field-drag-container"

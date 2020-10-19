@@ -60,6 +60,7 @@
   (try
     (->> name
          filename-metadata/filename->metadata
+         (merge {:original-name name})
          (file-db/resolve-metadata db))
     (catch Exception _e
       ;; If metadata can't be parsed, return empty map, frontend will

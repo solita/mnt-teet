@@ -190,7 +190,7 @@
   "Given metadata parsed from a file name, resolve the coded references to
   database values."
   [db {project-thk-id :thk.project/id
-       :keys [part activity task document-group]
+       :keys [part activity task document-group original-name]
        :as metadata}]
   (let [project-eid [:thk.project/id project-thk-id]
         activity-id (ffirst
@@ -225,13 +225,22 @@
                                    [?dg :filename/code ?code]
                                    [?dg :db/ident ?ident]
                                    :in $ ?code]
-                                 db document-group)))]
+                                 db document-group)))
+        file-id (when (and task-id original-name)
+                  (ffirst
+                   (d/q '[:find ?f
+                          :where
+                          [?f :file/original-name ?n]
+                          [?t :task/files ?f]
+                          :in $ ?t ?n]
+                        db task-id original-name)))]
     (merge metadata
            {:project-eid project-eid
             :activity-id activity-id
             :task-id task-id
             :part-info part
-            :document-group-kw doc-group})))
+            :document-group-kw doc-group
+            :file-id file-id})))
 
 (defn file-metadata
   "Return file metadata for a given file id."
