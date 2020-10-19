@@ -14,7 +14,7 @@
             [teet.log :as log]
             [clojure.string :as str]
             [teet.user.user-model :as user-model]
-            [teet.util.date :refer [date-in-past?]]
+            [teet.util.date :refer [date-before-today?]]
             [teet.link.link-db :as link-db]
             [teet.notification.notification-db :as notification-db])
   (:import (java.util Date)))
@@ -339,7 +339,7 @@
                                                                           :user/family-name]}]}] meeting-eid)]
     (assert (:db/id user))
     (cond
-      (date-in-past? (:meeting/start meeting))
+      (date-before-today? (:meeting/start meeting))
       (do
         (send-meeting-email! db meeting project-eid meeting-link to meeting-eid :past-update)
         (historical-meeting-notify db meeting user

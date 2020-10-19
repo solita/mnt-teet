@@ -222,7 +222,7 @@
   [{:activity/keys [estimated-end-date] :as activity}]
   (and (not (activity-model/activity-finished-statuses (get-in activity [:activity/status :db/ident])))
        estimated-end-date
-       (date/date-in-past? estimated-end-date)))
+       (date/date-before-today? estimated-end-date)))
 
 (defn- atleast-one-activity-over-deadline?
   [activities]
@@ -234,7 +234,7 @@
   [{:task/keys [estimated-end-date] :as task}]
   (and (not (task-model/completed? task))
        estimated-end-date
-       (date/date-in-past? estimated-end-date)))
+       (date/date-before-today? estimated-end-date)))
 
 (defn- atleast-one-task-over-deadline?
   [tasks]
@@ -252,7 +252,7 @@
                    (mapcat :activity/tasks))]
     (assoc project :thk.project/status
                    (cond
-                     (and (nil? owner) (date/date-in-past? estimated-start-date))
+                     (and (nil? owner) (date/date-before-today? estimated-start-date))
                      :unassigned-over-start-date
                      (atleast-one-activity-over-deadline? activities)
                      :activity-over-deadline
