@@ -33,16 +33,6 @@
      :cljs (> a b)))
 
 
-;; date-in-past? rename to date-before-today? [x]
-;; - and fix cljs version to work in day-based way [x]
-;; - date-in-past? rename to in-past? [x]
-;; - find out which timezone aws env / ion is in [x]
-;; - fix LocalDate vs timezone problem (Ion is in UTC) [x]
-;; - ensure dev env uses same default timezone as ion [ ]
-;; - tests [x]
-;; - ensure the original use case is fixed (meeting invitation start time) [x]
-
-
 (defn date-before-today?
   "Converts parameter to a calendar day (lopping off time of day) and returns true if it's previous day or earlier compared to today, false if it's today or a day after today. Works according to configured local timezone of the JVM environment so yields different results in local dev env vs AWS usually."
   [date]
