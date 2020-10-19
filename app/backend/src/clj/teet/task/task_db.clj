@@ -14,7 +14,10 @@
 
 (defn task-file-parts
   [db task-id]
-  (meta-query/without-deleted db (d/pull db '[{:file.part/_task [:file.part/name :db/id :file.part/number :meta/deleted?]}] task-id)))
+  (update
+    (meta-query/without-deleted db (d/pull db '[{:file.part/_task [:file.part/name :db/id :file.part/number :meta/deleted?]}] task-id))
+    :file.part/_task
+    #(sort-by :file.part/number %)))
 
 (defn task-file-listing
   "Returns files for a given task. Returns latest versions of files as vector

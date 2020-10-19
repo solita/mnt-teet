@@ -144,6 +144,12 @@
   {:display :flex
    :flex-direction :row})
 
+(defn flex-row-center
+  []
+  {:display :flex
+   :flex-direction :row
+   :align-items :center})
+
 (defn flex-row-wrap
   []
   {:display :flex
