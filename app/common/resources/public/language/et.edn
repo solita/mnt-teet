@@ -23,7 +23,8 @@
   :back "Tagasi",
   :send "Saadan teavituse",
   :cancel "Tühistan",
-  :add "Lisan"},
+  :add "Lisan",
+  :upload "Laadi üles"},
  :cadastral-group
  {"" "Määratlemata",
   "Avalik-õiguslik omand" "Avalik-õiguslik omand",
@@ -422,7 +423,9 @@
   :sequence-number "#",
   :original-filename "Algupärane failinimi: {name}",
   :wrong-task nil,
-  :file-belongs-to-task nil},
+  :file-belongs-to-task nil,
+  :already-uploaded nil,
+  :new-version-will-be-created nil},
  :land
  {:show-owner-info "Vaatan omanike andmeid",
   :no-active-mortgages "Aktiivsed hüpoteegid puuduvad",

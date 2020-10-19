@@ -23,7 +23,8 @@
   :back "Back",
   :send "Send",
   :cancel "Cancel",
-  :add "Add"},
+  :add "Add",
+  :upload "Upload"},
  :cadastral-group
  {"" "Undefined",
   "Avalik-õiguslik omand" "Public property",
@@ -427,7 +428,10 @@
   :sequence-number "#",
   :original-filename "Original filename: {name}",
   :wrong-task "Cannot add file to this task",
-  :file-belongs-to-task "This file belongs to {task} task"},
+  :file-belongs-to-task "This file belongs to {task} task",
+  :already-uploaded "This file has already been uploaded",
+  :new-version-will-be-created
+  "Saving will create new version for the file"},
  :land
  {:show-owner-info "Show owner information",
   :no-active-mortgages
