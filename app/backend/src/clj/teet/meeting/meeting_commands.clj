@@ -14,7 +14,7 @@
             [teet.log :as log]
             [clojure.string :as str]
             [teet.user.user-model :as user-model]
-            [teet.util.date :refer [date-before-today?]]
+            [teet.util.date :refer [in-past?]]
             [teet.link.link-db :as link-db]
             [teet.notification.notification-db :as notification-db])
   (:import (java.util Date)))
@@ -319,15 +319,16 @@
               :meeting/invitations-sent-at (Date.)}])))
 
 (defcommand :meeting/send-notifications
-  {:doc "Send iCalendar notifications to organizer and participants."
+  {:doc "Send email / ical / in-app notifications to organizer and participants. iCalendar events are sent if the meeting hasn't started yet."
    :context {:keys [db conn user]}
    :payload {meeting-eid :db/id}
    :project-id (project-db/meeting-project-id db meeting-eid)
    :authorization {}
    :pre [(meeting-db/user-is-organizer-or-reviewer? db user meeting-eid)]}
   (let [project-eid (project-db/meeting-project-id db meeting-eid)
+        all-to (meeting-db/participants db meeting-eid)
         to (remove #(str/ends-with? % "@example.com")
-                   (keep :user/email (meeting-db/participants db meeting-eid)))
+                   (keep :user/email all-to))
         meeting (d/pull db
                         '[:db/id
                           :meeting/number
@@ -338,19 +339,25 @@
                                             {:meeting.agenda/responsible [:user/given-name
                                                                           :user/family-name]}]}] meeting-eid)]
     (assert (:db/id user))
+    (log/debug "to-list participant counts before / after filtering:" (count all-to) (count to))
     (cond
-      (date-before-today? (:meeting/start meeting))
+      (in-past? (:meeting/start meeting))
       (do
+        (log/debug "send-meeting-email in historical mode because meeting in past")
         (send-meeting-email! db meeting project-eid meeting-link to meeting-eid :past-update)
         (historical-meeting-notify db meeting user
                                    (meeting-db/participants db meeting-eid)
                                    project-eid))
 
       (not (seq to))
-      {:error :no-participants-with-email}
+      (do
+        (log/debug "not sending email because no participants with email")
+        {:error :no-participants-with-email})
 
       :else
-      (send-meeting-email! db meeting project-eid meeting-link to meeting-eid :invitation))))
+      (do
+        (log/debug "send-meeting-email in future mode because meeting in future")
+        (send-meeting-email! db meeting project-eid meeting-link to meeting-eid :invitation)))))
 
 
 (defcommand :meeting/cancel

@@ -26,7 +26,9 @@
 
 
 
-(defn date-after? [a b]
+(defn date-after?
+  "compare dates as timestamps (NOT calendar days)"
+  [a b]
   #?(:clj (.after a b)
      :cljs (> a b)))
 
@@ -38,6 +40,7 @@
 ;; - fix LocalDate vs timezone problem (Ion is in UTC) [x]
 ;; - ensure dev env uses same default timezone as ion [ ]
 ;; - tests [x]
+;; - ensure the original use case is fixed (meeting invitation start time) [x]
 
 
 (defn date-before-today?
@@ -50,10 +53,10 @@
              (neg? (compare (to-local-date date) (to-local-date (now)))))))
 
 
-(defn in-past?
-    [date]
-    #?(:clj (date-after? (now) date)
-       :cljs (date-after? (now) date)))
+(defn in-past?  
+  [date]
+  #?(:clj (date-after? (now) date)
+     :cljs (date-after? (now) date)))
 
 (defn days-until-date
   [date]
