@@ -125,10 +125,8 @@
    :project-id (project-db/task-project-id db task-id)
    :authorization {:task/task-information {:db/id task-id
                                            :link :task/assignee}}
-   :transact [{:db/id "new-part"
-               :file.part/task task-id
-               :file.part/name part-name
-               :file.part/number (file-db/next-task-part-number db task-id)}]})
+   :transact [(list 'teet.file.file-tx/create-task-file-part
+                    task-id part-name)]})
 
 (defcommand :task/edit-part
   {:doc "Edit the name of an existing part"

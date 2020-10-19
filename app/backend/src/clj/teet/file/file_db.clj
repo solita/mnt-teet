@@ -264,13 +264,21 @@
                          (format "%02d"))
                 "00")})))
 
-(defn next-task-part-number                                 ;;TODO move to file-tx
+(defn next-task-part-number
+  "Return next available file part number for the given task.
+  Part numbers start from 1 and end in 99. If no part number
+  is available, returns nil.
+
+  Numbers used by parts that have been removed are not considered
+  available."
   [db task-id]
-  (->> (d/q '[:find (max ?n)
-              :in $ ?task
-              :where
-              [?part :file.part/task ?task]
-              [?part :file.part/number ?n]]
-            db task-id)
-       ffirst
-       inc))
+  (let [used-numbers
+        (into #{}
+              (map first)
+              (d/q '[:find ?n
+                     :where
+                     [?e :file.part/task ?task]
+                     [?e :file.part/number ?n]
+                     :in $ ?task]
+                   (d/history db) task-id))]
+    (first (remove used-numbers (drop 1 (range 1 100))))))
