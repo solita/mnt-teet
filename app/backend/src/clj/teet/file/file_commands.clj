@@ -31,7 +31,7 @@
     old-file
     (db-api/bad-request! "Can't find previous version")))
 
-(def file-keys [:file/name :file/size :file/group-number :file/pos-number])
+(def file-keys [:file/name :file/size :file/document-group :file/sequence-number])
 
 (defcommand :file/upload-attachment
   {:doc "Upload attachment file and optionally attach it to entity."
@@ -114,7 +114,7 @@
 (defcommand :file/upload
   {:doc "Upload new file to task."
    :context {:keys [conn user db]}
-   :payload {:keys [task-id attachment? file previous-version-id]}
+   :payload {:keys [task-id attachment? file previous-version-id] :as p}
    :project-id (project-db/task-project-id db task-id)
    :pre [^{:error :invalid-previous-file}
          (or (nil? previous-version-id)
@@ -125,18 +125,22 @@
       (let [old-file (when previous-version-id
                        (find-previous-version db task-id previous-version-id))
             version (or (some-> old-file :file/version inc) 1)
-            file (file-with-metadata file)
+
+            ;file (file-with-metadata file)
             key (new-file-key file)
             res (tx [{:db/id (or task-id "new-task")
                       :task/files [(merge (select-keys file file-keys)
                                           {:db/id "new-file"
                                            :file/s3-key key
                                            :file/status :file.status/draft
-                                           :file/version version}
+                                           :file/version version
+                                           :file/original-name (:file/name file)}
+                                          (when (:file/description file)
+                                            {:file/name (str (:file/description file) "." (:file/extension file))})
                                           (when old-file
                                             {:file/previous-version (:db/id old-file)})
-                                          (when-let [old-pos-number (:file/pos-number old-file)]
-                                            {:file/pos-number old-pos-number})
+                                          (when-let [old-seq-number (:file/sequence-number old-file)]
+                                            {:file/sequence-number old-seq-number})
                                           (creation-meta user))]}])
             t-id (or task-id (get-in res [:tempids "new-task"]))
             file-id (get-in res [:tempids "new-file"])]

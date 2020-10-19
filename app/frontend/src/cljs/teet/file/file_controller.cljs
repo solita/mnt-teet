@@ -102,6 +102,7 @@
                           attachment? attach-to
                           file-results]
                    :as event} app]
+    (log/info "FILES: " files)
     ;; Validate files
     (if-let [error (some (comp file-model/validate-file
                                file-model/file-info
@@ -125,9 +126,9 @@
                 {:tuck.effect/type :command!
                  :command (if attachment? :file/upload-attachment :file/upload)
                  :payload (merge {:file (merge (file-model/file-info (:file-object file))
-                                               (when-let [pos (:file/pos-number file)]
-                                                 (when (not (str/blank? pos))
-                                                   {:file/pos-number (js/parseInt pos)})))}
+                                               (select-keys file [:file/description :file/extension
+                                                                  :file/sequence-number
+                                                                  :file/document-group]))}
                                  (if attachment?
                                    {:project-id project-id
                                     :attach-to attach-to}

@@ -100,10 +100,10 @@
     (tr [:file-upload :file-belongs-to-task] {:task (tr-enum correct-task)})))
 
 (defn validate-file [e! task {:keys [metadata] :as file-row}]
-  (let [{:file/keys [name size]} (files-field-entry file-row)]
-    (cond
-      ;; Check allowed suffix
-      (not (file-model/valid-suffix? name))
+  (when-let [error (or (file-model/validate-file (files-field-entry file-row))
+                       (file-model/validate-file-metadata task metadata))]
+    (case (:error error)
+      :file-type-now-allowed
       {:title (tr [:document :invalid-file-type])
        :description [:<>
                      (str/upper-case (file-model/filename->suffix name))
@@ -112,13 +112,12 @@
                           :href "https://confluence.mkm.ee/pages/viewpage.action?spaceKey=TEET&title=TEET+File+format+list"}
                       (tr [:document :invalid-file-type])]]}
 
-      (> size file-model/upload-max-file-size)
+      :file-too-large
       {:title (tr [:document :file-too-large])
        :description ""}
 
       ;; Check for wrong task (if metadata can be parsed)
-      (and (seq metadata)
-           (not= (:db/id task) (:task-id metadata)))
+      :wrong-task
       {:title (tr [:file-upload :wrong-task])
        :description [select/with-enum-values
                      {:e! e!
@@ -185,10 +184,11 @@
                 [:div {:class (<class common-styles/error-area)}
                  [:b [icons/alert-error-outline] " " title]
                  description]
-                [:<>
-                 (when (:changed? file-row)
-                   (tr [:file-upload :original-filename] {:name name}))
-                 (-> file-row files-field-entry :file/size format/file-size str)])]]])
+                (let [{:file/keys [name size]} (files-field-entry file-row)]
+                  [:<>
+                   (when (:changed? file-row)
+                     (tr [:file-upload :original-filename] {:name name}))
+                   (format/file-size size)]))]]])
          value))]]
      [FileUploadButton {:id "files-field"
                         :drag-container-id "files-field-drag-container"

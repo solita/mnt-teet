@@ -80,7 +80,10 @@
 (defn valid-suffix? [filename]
   (-> filename filename->suffix upload-allowed-file-suffixes boolean))
 
-(defn validate-file [{:file/keys [size name]}]
+(defn validate-file
+  "Validate allowed file type and max size. Returns map with error description
+  or nil if there are no problems."
+  [{:file/keys [size name]}]
   (cond
     (> size upload-max-file-size)
     {:error :file-too-large :max-allowed-size upload-max-file-size}
@@ -91,6 +94,14 @@
     ;; No problems, upload can proceed
     :else
     nil))
+
+(defn validate-file-metadata
+  "Validate the metadata extracted from filename against a task. Returns map with
+  error description or nil if there are no problems."
+  [task metadata]
+  (when (and (seq metadata)
+             (not= (:db/id task) (:task-id metadata)))
+    {:error :wrong-task}))
 
 (defn image-suffix? [filename]
   (-> filename filename->suffix image-suffixes boolean))
