@@ -209,7 +209,7 @@
     [TextField {}]]])
 
 (defn file-part-view
-  [e! task-id file-part files]
+  [{:keys [e! upload!]} task-id file-part files]
   [:div
    [file-view/file-part-heading e! file-part
     {:action [:div
@@ -222,19 +222,22 @@
                  {:size :small
                   :style {:margin-right "0.5rem"}}
                  (tr [:buttons :edit])]}]
-              [buttons/button-primary {:size :small}
-               "Upload"]]}]
+              [buttons/button-primary {:size :small
+                                       :on-click #(upload! {:file/part file-part})}
+               (tr [:buttons :upload])]]}]
    (if (seq files)
      [file-view/file-table files]
      [file-view/no-files])])
 
 (defn task-file-view
-  [e! task]
+  [e! task upload!]
   (let [parts (:file.part/_task task)]
     [:div
      [:div
       (mapc (fn [part]
-              [file-part-view e! (:db/id task) part
+              [file-part-view {:e! e!
+                               :upload! upload!}
+               (:db/id task) part
                (filter
                  (fn [file]
                    (= (:db/id part) (get-in file [:file/part :db/id])))
@@ -253,6 +256,8 @@
 (defn task-details
   [e! new-document {:task/keys [description files] :as task} files-form]
   (r/with-let [file-upload-open? (r/atom false)
+               upload! #(do (e! (file-controller/->UpdateFilesForm %))
+                            (reset! file-upload-open? true))
                close! #(do (reset! file-upload-open? false)
                            (e! (file-controller/->AfterUploadRefresh)))]
     [:div#task-details-drop.task-details
@@ -260,13 +265,12 @@
        [typography/Paragraph description])
      [task-basic-info task]
      [file-view/file-table (remove #(contains? % :file/part) files)]
-     [task-file-view e! task]
+     [task-file-view e! task upload!]
      (when (task-model/can-submit? task)
        [:<>
         [file-upload/FileUpload {:drag-container-id "task-details-drop"
                                  :drop-message (tr [:drag :drop-to-task])
-                                 :on-drop #(do (e! (file-controller/->UpdateFilesForm {:task/files %}))
-                                               (reset! file-upload-open? true))}]
+                                 :on-drop #(upload! {:task/files %})}]
         [panels/button-with-modal {:open-atom file-upload-open?
                                    :button-component (file-view/file-upload-button)
                                    :modal-options {:max-width "lg"}
