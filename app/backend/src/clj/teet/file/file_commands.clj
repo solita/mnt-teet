@@ -11,7 +11,8 @@
             [teet.file.filename-metadata :as filename-metadata]
             [teet.log :as log]
             [teet.user.user-model :as user-model]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            teet.file.file-tx))
 
 (defn- new-file-key [{name :file/name}]
   (str (java.util.UUID/randomUUID) "-" name))
@@ -31,7 +32,7 @@
     old-file
     (db-api/bad-request! "Can't find previous version")))
 
-(def file-keys [:file/name :file/size :file/document-group :file/sequence-number])
+(def file-keys [:file/name :file/size :file/document-group :file/sequence-number :file/part])
 
 (defcommand :file/upload-attachment
   {:doc "Upload attachment file and optionally attach it to entity."
@@ -127,7 +128,7 @@
             version (or (some-> old-file :file/version inc) 1)
 
             key (new-file-key file)
-            res (tx [(list 'teet.file.file-tx/upload-file-to-task
+            tx-data [(list 'teet.file.file-tx/upload-file-to-task
                            {:db/id (or task-id "new-task")
                             :task/files [(merge (select-keys file file-keys)
                                                 {:db/id "new-file"
@@ -141,7 +142,9 @@
                                                   {:file/previous-version (:db/id old-file)})
                                                 (when-let [old-seq-number (:file/sequence-number old-file)]
                                                   {:file/sequence-number old-seq-number})
-                                                (creation-meta user))]})])
+                                                (creation-meta user))]})]
+            _ (def *tx-data tx-data)
+            res (tx tx-data)
             t-id (or task-id (get-in res [:tempids "new-task"]))
             file-id (get-in res [:tempids "new-file"])]
         (try

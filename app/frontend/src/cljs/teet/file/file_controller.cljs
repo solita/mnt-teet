@@ -20,7 +20,7 @@
 
 (defrecord DeleteFile [file-id])
 
-(defrecord AddFilesToTask [files on-success]) ;; upload more files to existing document
+(defrecord AddFilesToTask [files-form on-success]) ;; upload more files to existing document
 (defrecord NavigateToFile [file])
 
 (defrecord DeleteAttachment [on-success-event file-id])
@@ -59,8 +59,10 @@
            :success-message success-message}))
 
   AddFilesToTask
-  (process-event [{:keys [files on-success]} app]
-    (let [task-id (common-controller/->long (get-in app [:params :task]))]
+  (process-event [{:keys [files-form on-success]} app]
+    (let [files (mapv #(merge {:file/part (:file/part files-form)} %)
+                      (:task/files files-form))
+          task-id (common-controller/->long (get-in app [:params :task]))]
       (t/fx app
             (fn [e!]
               (e! (map->UploadFiles {:files files
@@ -126,9 +128,11 @@
                 {:tuck.effect/type :command!
                  :command (if attachment? :file/upload-attachment :file/upload)
                  :payload (merge {:file (merge (file-model/file-info (:file-object file))
-                                               (select-keys file [:file/description :file/extension
+                                               (select-keys file [:file/description
+                                                                  :file/extension
                                                                   :file/sequence-number
-                                                                  :file/document-group]))}
+                                                                  :file/document-group
+                                                                  :file/part]))}
                                  (if attachment?
                                    {:project-id project-id
                                     :attach-to attach-to}
