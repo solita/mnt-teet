@@ -353,7 +353,7 @@
   [:div {:style {:margin-bottom "1.5rem"
                  :display :flex
                  :justify-content :space-between}}
-   [:div {:class (<class common-styles/flex-row-center)}
+   [:div {:class (<class common-styles/flex-row-end)}
     [typography/Heading2 {:style {:margin-right "0.5rem"}}
      (:file.part/name part)]
     [typography/GreyText (goog.string/format "#%02d" (:file.part/number part))]]
