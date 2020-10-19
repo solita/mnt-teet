@@ -136,6 +136,20 @@
       (db-api/bad-request! "No such document")
       default-value))))
 
+(defn file-part-project-id
+  [db file-part-id]
+  (or
+    (ffirst
+      (d/q '[:find ?project
+             :in $ ?part
+             :where
+             [?part :file.part/task ?task]
+             [?activity :activity/tasks ?task]
+             [?lifecycle :thk.lifecycle/activities ?activity]
+             [?project :thk.project/lifecycles ?lifecycle]]
+           db file-part-id))
+    (db-api/bad-request! "No such filepart")))
+
 (defn project-fetch-pattern
   [opts]
   (into project-model/project-info-attributes

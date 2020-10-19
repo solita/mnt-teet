@@ -10,7 +10,8 @@
             [teet.project.task-model :as task-model]
             [teet.util.datomic :as du]
             [clojure.spec.alpha :as s]
-            [teet.task.task-db :as task-db]))
+            [teet.task.task-db :as task-db]
+            [teet.file.file-db :as file-db]))
 
 (defn- send-to-thk? [db task-id]
   (:task/send-to-thk? (d/pull db [:task/send-to-thk?] task-id)))
@@ -115,6 +116,43 @@
                    :type :notification.type/task-waiting-for-review
                    :project (project-db/task-project-id db task-id)})
                 {})]})
+
+(defcommand :task/create-part
+  {:doc "Create a new 'part' aka folder for files to be put in"
+   :context {:keys [db user]}
+   :payload {task-id :task-id
+             part-name :part-name}
+   :project-id (project-db/task-project-id db task-id)
+   :authorization {:task/task-information {:db/id task-id
+                                           :link :task/assignee}}
+   :transact [{:db/id "new-part"
+               :file.part/task task-id
+               :file.part/name part-name
+               :file.part/number (file-db/next-task-part-number db task-id)}]})
+
+(defcommand :task/edit-part
+  {:doc "Edit the name of an existing part"
+   :context {:keys [db user]}
+   :payload {task-id :task-id
+             part-name :part-name
+             part-id :part-id}
+   :project-id (project-db/task-project-id db task-id)
+   :authorization {:task/task-information {:db/id task-id
+                                           :link :task/assignee}}
+   :transact [(let [_ (println "task-id: " part-id)]
+                (merge
+                  (meta-model/modification-meta user)
+                  {:db/id part-id                           ;; todo check that this is actually a part
+                   :file.part/name part-name}))]})
+
+(defcommand :task/delete-part
+  {:doc "Delete the given part"
+   :context {:keys [db user]}
+   :payload {part-id :part-id}
+   :project-id (project-db/file-part-project-id db part-id)
+   :authorization {:task/task-information {:db/id (project-db/file-part-project-id db part-id)
+                                           :link :task/assignee}}
+   :transact [(meta-model/deletion-tx user part-id)]})
 
 (defcommand :task/start-review
   {:doc "Start review for task, sets status."

@@ -4,14 +4,17 @@
             [teet.activity.activity-model :as activity-model]
             [teet.util.datomic :as du]
             [teet.file.file-db :as file-db]
-            [teet.activity.activity-db :as activity-db]))
+            [teet.activity.activity-db :as activity-db]
+            [teet.meta.meta-query :as meta-query]))
 
 (defn activity-for-task-id
   [db task-id]
   (let [task (du/entity db task-id)]
     (get-in task [:activity/_tasks 0 :db/id])))
 
-
+(defn task-file-parts
+  [db task-id]
+  (meta-query/without-deleted db (d/pull db '[{:file.part/_task [:file.part/name :db/id :file.part/number :meta/deleted?]}] task-id)))
 
 (defn task-file-listing
   "Returns files for a given task. Returns latest versions of files as vector

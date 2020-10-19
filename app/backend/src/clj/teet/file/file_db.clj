@@ -135,7 +135,7 @@
                        (comment-counts-by-file (:db/id %))
                        {:file-seen/seen-at (seen-at-by-file (:db/id %))})
                first)
-         (d/q '[:find (pull ?f [:db/id :file/name :meta/deleted? :file/version :file/size :file/status
+         (d/q '[:find (pull ?f [:db/id :file/name :meta/deleted? :file/version :file/size :file/status :file/part
                                 {:file/previous-version [:db/id]}
                                 :meta/created-at
                                 {:meta/creator [:user/id :user/family-name :user/given-name]}])
@@ -263,3 +263,14 @@
      {:part (or (some->> file :file/part :file.part/number
                          (format "%02d"))
                 "00")})))
+
+(defn next-task-part-number                                 ;;TODO move to file-tx
+  [db task-id]
+  (->> (d/q '[:find (max ?n)
+              :in $ ?task
+              :where
+              [?part :file.part/task ?task]
+              [?part :file.part/number ?n]]
+            db task-id)
+       ffirst
+       inc))
