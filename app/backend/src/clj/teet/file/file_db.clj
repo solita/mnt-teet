@@ -254,11 +254,12 @@
        {:thk.project/id p})
      (when sequence-number
        {:sequence-number sequence-number})
-     (when-let [dg (get-in file [:file/document-group :filename/code])]
+     (if-let [dg (get-in file [:file/document-group :filename/code])]
        {:document-group dg})
      (when-let [act (get-in file [:task/_files 0 :activity/_tasks 0 :activity/name :filename/code])]
        {:activity act})
      (when-let [task (get-in file [:task/_files 0 :task/type :filename/code])]
        {:task task})
-     {:part (or (format "%02d" (get-in file [:file/part :file.part/number]))
+     {:part (or (some->> file :file/part :file.part/number
+                         (format "%02d"))
                 "00")})))

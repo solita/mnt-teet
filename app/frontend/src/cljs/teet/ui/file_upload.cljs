@@ -172,7 +172,7 @@
                           :inline? true
                           :on-change #(update-file
                                        i
-                                       {:file/sequence-number (-> % .-target .-value)})}]]
+                                       {:file/sequence-number (js/parseInt (-> % .-target .-value))})}]]
              [TableCell {:style {:border :none}}
               [IconButton {:edge "end"
                            :on-click #(on-change (into (subvec value 0 i)
