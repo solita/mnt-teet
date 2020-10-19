@@ -260,10 +260,13 @@
   []
   {:border-top (str "solid 1px " theme-colors/gray-light)})
 
-(defn error-area []
-  {:border (str "solid 2px #D73E3E")
-   :border-radius "3px"
-   :background-color "#FCEEEE"
-   :padding "1rem"
-   :display :flex
-   :flex-direction :column})
+(defn info-box [variant]
+  (let [[border background] (case variant
+                              :error [theme-colors/red theme-colors/red-lightest]
+                              :info [theme-colors/blue theme-colors/blue-lightest])]
+    {:border (str "solid 2px " border)
+     :border-radius "3px"
+     :background-color background
+     :padding "1rem"
+     :display :flex
+     :flex-direction :column}))

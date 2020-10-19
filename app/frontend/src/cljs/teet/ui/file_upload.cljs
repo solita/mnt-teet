@@ -17,7 +17,8 @@
             [teet.ui.select :as select]
             [teet.file.filename-metadata :as filename-metadata]
             [teet.ui.typography :as typography]
-            [teet.common.common-styles :as common-styles]))
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.common :as common-ui]))
 
 
 
@@ -178,9 +179,10 @@
             [TableRow {}
              [TableCell {:colSpan 4}
               (if-let [{:keys [title description] :as error} (validate-file e! task file-row)]
-                [:div {:class (<class common-styles/error-area)}
-                 [:b [icons/alert-error-outline] " " title]
-                 description]
+
+                [common-ui/info-box {:variant :error
+                                     :title title
+                                     :content description}]
                 (let [{:file/keys [name size]} (files-field-entry file-row)]
                   [:<>
                    (when (:changed? file-row)
