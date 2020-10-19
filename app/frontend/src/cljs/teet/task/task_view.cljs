@@ -34,7 +34,8 @@
             [teet.util.datomic :as du]
             [teet.log :as log]
             [teet.ui.drag :as drag]
-            [teet.common.common-controller :as common-controller]))
+            [teet.common.common-controller :as common-controller]
+            [goog.string :as gstr]))
 
 
 (defn- task-groups-for-activity [activity-name task-groups]
@@ -174,6 +175,14 @@
        :cancel-fn close!
        :in-progress?    upload-progress
        :spec :task/add-files}
+      (when (seq (:file.part/_task task))
+        ^{:attribute :file/part}
+        [select/form-select {:items (:file.part/_task task)
+                             :label (tr [:file-upload :select-part-to-upload])
+                             :show-empty-selection? true
+                             :empty-selection-label (tr [:file-upload :general-part])
+                             :format-item (fn [{:file.part/keys [name number]}]
+                                            (gstr/format "%s #%02d" name number))}])
       ^{:attribute :task/files
         :validate (fn [files]
                     (some some? (map (partial file-upload/validate-file e! task) files)))}

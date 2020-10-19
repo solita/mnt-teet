@@ -137,7 +137,7 @@
      [Table {}
       [TableHead {}
        [TableRow {}
-        [TableCell {:colSpan 2}
+        [TableCell {}
          (tr [:file-upload :description])]
         [TableCell {}
          (tr [:file-upload :document-group])]
@@ -154,11 +154,8 @@
              [TableCell {:style {:border :none}}
               [TextField {:value (:file/description file-row)
                           :on-change #(update-file i {:file/description
-                                                      (-> % .-target .-value)})}]]
-             [TableCell {:style {:border :none}
-                         :padding "none"
-                         :align :left}
-              (:file/extension file-row)]
+                                                      (-> % .-target .-value)})
+                          :end-icon [text-field/file-end-icon (:file/extension file-row)]}]]
              [TableCell {:style {:border :none}}
               [select/select-enum {:e! e!
                                    :show-label? false
@@ -179,7 +176,7 @@
                                                        (subvec value (inc i))))}
                [icons/action-delete]]]]
             [TableRow {}
-             [TableCell {:colSpan 5}
+             [TableCell {:colSpan 4}
               (if-let [{:keys [title description] :as error} (validate-file e! task file-row)]
                 [:div {:class (<class common-styles/error-area)}
                  [:b [icons/alert-error-outline] " " title]
