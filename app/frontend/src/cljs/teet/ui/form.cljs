@@ -106,7 +106,7 @@
         (not= step current-step))))
 
 (defn update-atom-event
-  "Returns a tuck event that updates the given atom when processed.
+  "Returns a tuck event constructor that updates the given atom when processed.
   Leaves app state unaffected."
   ([the-atom] (update-atom-event the-atom (fn [_old new] new)))
   ([the-atom update-fn]
@@ -116,13 +116,23 @@
         app))))
 
 (defn reset-atom-event
-  "Returns a tuck event that resets the given atom when processed.
+  "Returns a tuck event constructor that resets the given atom when processed.
   Leaves app state unaffected."
   [the-atom new-value]
   #(reify t/Event
      (process-event [_ app]
        (println "reset-atom-event fires")
        (reset! the-atom new-value)
+       app)))
+
+(defn callback-event
+  "Returns a tuck event that calls the given 0-arity callback
+  when processed.
+  Leaves app state unaffected."
+  [callback]
+  #(reify t/Event
+     (process-event [_ app]
+       (callback)
        app)))
 
 (defn required-field? [attribute required-fields]
