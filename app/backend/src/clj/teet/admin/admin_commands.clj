@@ -74,6 +74,7 @@
    :pre [(:user/person-id user-data)
          (user-spec/estonian-person-id? (:user/person-id user-data))]
    :authorization {:admin/add-user {}}
+   :audit? true
    :transact (let [user-person-id (user-model/normalize-person-id (:user/person-id user-data))
                    user-info (user-db/user-info-by-person-id db user-person-id)
                    global-permission (:user/add-global-permission user-data)]

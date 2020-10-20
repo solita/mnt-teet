@@ -84,7 +84,7 @@
   "Do not call directly. Use defcommand and defquery."
   [request-type request-name
    {:keys [spec payload args context unauthenticated? authorization project-id transact
-           config] :as options}
+           config audit?] :as options}
    & body]
 
   (assert (or (and unauthenticated?
@@ -102,6 +102,9 @@
   (assert (map? options) "Options must be a map")
   (assert (or (not (contains? options :authorization))
               (map? authorization)) "Authorization option must be a map")
+  (assert (or (not (contains? options :audit?))
+              (boolean? audit?))
+          ":audit? must be boolean")
   (let [authz-rule-names (authorization-check/authorization-rule-names)]
     (doseq [[k _] authorization]
       (assert (authz-rule-names k)
@@ -137,6 +140,12 @@
                                  [symbol `(teet.environment/config-value ~@path)])
                                config))]
 
+               ;; Add the attempted call of the action to audit log
+               ~(when audit?
+                  ;; Unauthenticated commands may not have user id
+                  `(when (:user/id ~-user)
+                     (audit ~request-name
+                            ~-payload)))
                ;; Check user is logged in
                ~@(when-not unauthenticated?
                    [`(when (nil? ~-user)
@@ -243,6 +252,9 @@
                   Datomic. If specified, body must be omitted.
                   The command will automatically return the tempids
                   as the result when transact is used.
+
+  :audit?         Optional boolean (default false) that determines whether the
+                  attempt to call the given action is logged in the audit log.
 
 
   Authorization rules:
