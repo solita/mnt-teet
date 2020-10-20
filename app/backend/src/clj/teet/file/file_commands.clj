@@ -12,7 +12,8 @@
             [teet.log :as log]
             [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]
-            teet.file.file-tx))
+            teet.file.file-tx
+            [teet.util.collection :as cu]))
 
 (defn- new-file-key [{name :file/name}]
   (str (java.util.UUID/randomUUID) "-" name))
@@ -24,7 +25,7 @@
     file-id))
 
 (defn- find-previous-version [db task-id previous-version]
-  (if-let [old-file (ffirst (d/q '[:find (pull ?f [:db/id :file/version :file/pos-number])
+  (if-let [old-file (ffirst (d/q '[:find (pull ?f [:db/id :file/version :file/sequence-number])
                                    :in $ ?f ?t
                                    :where
                                    [?t :task/files ?f]]
@@ -130,19 +131,20 @@
             key (new-file-key file)
             tx-data [(list 'teet.file.file-tx/upload-file-to-task
                            {:db/id (or task-id "new-task")
-                            :task/files [(merge (select-keys file file-keys)
-                                                {:db/id "new-file"
-                                                 :file/s3-key key
-                                                 :file/status :file.status/draft
-                                                 :file/version version
-                                                 :file/original-name (:file/name file)}
-                                                (when (:file/description file)
-                                                  {:file/name (str (:file/description file) "." (:file/extension file))})
-                                                (when old-file
-                                                  {:file/previous-version (:db/id old-file)})
-                                                (when-let [old-seq-number (:file/sequence-number old-file)]
-                                                  {:file/sequence-number old-seq-number})
-                                                (creation-meta user))]})]
+                            :task/files [(cu/without-nils
+                                          (merge (select-keys file file-keys)
+                                                 {:db/id "new-file"
+                                                  :file/s3-key key
+                                                  :file/status :file.status/draft
+                                                  :file/version version
+                                                  :file/original-name (:file/name file)}
+                                                 (when (:file/description file)
+                                                   {:file/name (str (:file/description file) "." (:file/extension file))})
+                                                 (when old-file
+                                                   {:file/previous-version (:db/id old-file)})
+                                                 (when-let [old-seq-number (:file/sequence-number old-file)]
+                                                   {:file/sequence-number old-seq-number})
+                                                 (creation-meta user)))]})]
             _ (def *tx-data tx-data)
             res (tx tx-data)
             t-id (or task-id (get-in res [:tempids "new-task"]))

@@ -133,6 +133,8 @@
                                                                   :file/sequence-number
                                                                   :file/document-group
                                                                   :file/part]))}
+                                 (when-let [prev-file-id (get-in file [:metadata :file-id])]
+                                   {:previous-version-id prev-file-id})
                                  (if attachment?
                                    {:project-id project-id
                                     :attach-to attach-to}
