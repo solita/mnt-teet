@@ -164,7 +164,8 @@
                                    :style {:margin-left "1rem"}}
            (tr [:buttons :confirm])]]]])]))
 
-(defn- add-files-form [e! task files-form upload-progress close!]
+(defn- add-files-form [e! task act-name files-form upload-progress close!]
+  (log/info "add-files-form: act-name" act-name)
   (r/with-let [reinstate-drop-zones! (drag/suppress-drop-zones!)]
     [:<>
      [form/form
@@ -183,11 +184,18 @@
                              :empty-selection-label (tr [:file-upload :general-part])
                              :format-item (fn [{:file.part/keys [name number]}]
                                             (gstr/format "%s #%02d" name number))}])
-      ^{:attribute :task/files
+            
+      (with-meta
+        (if (= act-name :activity.name/land-acquisition)
+          
+          [file-upload/files-field-land {:e! e!
+                                         :task task}]
+          ;; else
+          [file-upload/files-field {:e! e!
+                                    :task task}])
+        {:attribute :task/files
         :validate (fn [files]
-                    (some some? (map (partial file-upload/validate-file e! task) files)))}
-      [file-upload/files-field {:e! e!
-                                :task task}]]
+                    (some some? (map (partial file-upload/validate-file e! task) files)))})]
      (when upload-progress
        [LinearProgress {:variant "determinate"
                         :value   upload-progress}])]
@@ -253,7 +261,8 @@
         (tr [:task :add-part])]}]]))
 
 (defn task-details
-  [e! new-document {:task/keys [description files] :as task} files-form]
+  [e! new-document {:task/keys [description files] :as task} act-name files-form]
+  (log/info "task-details: act-name" act-name)
   (r/with-let [file-upload-open? (r/atom false)
                upload! #(do (e! (file-controller/->UpdateFilesForm %))
                             (reset! file-upload-open? true))
@@ -274,7 +283,7 @@
                                    :button-component (file-view/file-upload-button)
                                    :modal-options {:max-width "lg"}
                                    :modal-title (tr [:task :add-document])
-                                   :modal-component [add-files-form e! task files-form
+                                   :modal-component [add-files-form e! task act-name files-form
                                                      (:in-progress? new-document)
                                                      close!]
                                    :on-close close!}
@@ -304,7 +313,7 @@
     [:span]))
 
 (defn task-page-content
-  [e! app {status :task/status :as task} pm? files-form]
+  [e! app {status :task/status :as task} pm? act-name files-form]
   [:div.task-page
    (when (and pm? (du/enum= status :task.status/waiting-for-review))
      [when-authorized :task/start-review task
@@ -317,7 +326,7 @@
      :comment-command :comment/comment-on-task
      :entity-type :task
      :entity-id (:db/id task)}
-    [task-details e! (:new-document app) task files-form]]])
+    [task-details e! (:new-document app) task act-name files-form]]])
 
 
 (defn edit-task-form [_e! {:keys [initialization-fn]} {:keys [max-date min-date]}]
@@ -371,11 +380,17 @@
 (defn task-page [e! {{task-id :task :as _params} :params user :user :as app}
                  project]
   (log/info "task-page render")
-  (let [activity-manager (cu/find-> project
+  (let [activity-id (get-in app [:params :activity])
+        activity-name (-> project
+                          (project-model/activity-by-id activity-id)
+                          :activity/name
+                          :db/ident)
+        activity-manager (cu/find-> project
                                     :thk.project/lifecycles some?
                                     :thk.lifecycle/activities (fn [{:activity/keys [tasks]}]
                                                                 (du/find-by-id task-id tasks))
                                     :activity/manager)]
+    (log/info "activity-name is" activity-name)
     [project-navigator-view/project-navigator-with-content
      {:e! e!
       :project project
@@ -385,4 +400,5 @@
       (project-model/task-by-id project task-id)
       (= (:db/id user)
          (:db/id activity-manager))
+      activity-name
       (:files-form project)]]))

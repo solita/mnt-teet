@@ -1105,3 +1105,16 @@
               [:div
                [filter-units e! (:land-acquisition-filters project)]
                [cadastral-groups e! (dissoc project :land-acquisition-filters) (:land/units project)]]))]))}))
+
+
+;; TEET-913 todo:
+;; + when uploading a file to Land Acquisition tasks the # number is used as the POS number so display POS not # in the UI [x]
+;;     - code term for # seems to be sequence-number
+
+;; + cadastral unit related files should only display files that are under Land Acquisition tasks for the project and have matching #POS number. [ ]
+
+;; + file name links to the file detail page (not download) [ ]
+
+;; + view uses the listing style as the task file list [ ]
+
+;; Files attached to this unit page of the Cadastral unit info modal should not have a left to right scroll bar for the file listing. [ ]

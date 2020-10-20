@@ -128,7 +128,8 @@
       ;; All validations ok
       :else nil)))
 
-(defn files-field [{:keys [e! value on-change error task]}]
+
+(defn files-field* [{:keys [e! value on-change error task sequence-number-heading]}]
   (let [update-file (fn [i new-file-data]
                       (on-change (update value i merge new-file-data
                                          {:changed? true})))]
@@ -143,7 +144,7 @@
         [TableCell {}
          (tr [:file-upload :document-group])]
         [TableCell {}
-         (tr [:file-upload :sequence-number])]]]
+         sequence-number-heading]]]
 
       [TableBody {}
        (doall
@@ -198,3 +199,11 @@
                         :on-drop #(on-change (into (or value []) %))}
       [icons/content-file-copy]
       (tr [:common :select-files])]]))
+
+(defn files-field [params]
+  (files-field* (assoc params :sequence-number-heading
+                       (tr [:file-upload :sequence-number]))))
+
+(defn files-field-land [params]
+  (files-field* (assoc params :sequence-number-heading
+                       (tr [:fields :land-acquisition/pos-number]))))
