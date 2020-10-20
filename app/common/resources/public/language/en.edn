@@ -423,15 +423,18 @@
    :meta/created-at "Sort by date"},
   :download "Download file"},
  :file-upload
- {:description "File description",
-  :document-group "Group",
+ {:original-filename "Original filename: {name}",
+  :description "File description",
+  :general-part "General",
+  :select-part-to-upload
+  "Select part where uploaded files will be added to",
   :sequence-number "#",
-  :original-filename "Original filename: {name}",
-  :wrong-task "Cannot add file to this task",
   :file-belongs-to-task "This file belongs to {task} task",
-  :already-uploaded "This file has already been uploaded",
   :new-version-will-be-created
-  "Saving will create new version for the file"},
+  "Saving will create new version for the file",
+  :wrong-task "Cannot add file to this task",
+  :document-group "Group",
+  :already-uploaded "This file has already been uploaded"},
  :land
  {:show-owner-info "Show owner information",
   :no-active-mortgages
