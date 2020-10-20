@@ -26,10 +26,12 @@
 (defn- write-file-to-s3 [{{:keys [bucket-name file-key]} :s3
                           file :file
                           :as ctx}]
-  (assoc ctx file-key
-         (integration-s3/put-object bucket-name
+  (log/info "Starting S3 write")
+  (let [s3-ret (integration-s3/put-object bucket-name
                                     file-key
-                                    (io/input-stream file))))
+                                    (io/input-stream file))]
+    (log/info "S3 write finished")
+    (assoc ctx file-key s3-ret)))
 
 (defn- file->csv [{:keys [file] :as ctx}]
   (assoc ctx :csv
@@ -43,7 +45,7 @@
     (.write baos (int 0xBB))
     (.write baos (int 0xBF))
     (csv/write-csv writer csv :separator \;)
-    (.flush writer)
+    (.flush writer)    
     (assoc ctx :file (.toByteArray baos))))
 
 (defn- upsert-projects [{:keys [bucket file-key csv connection] :as ctx}]
@@ -161,6 +163,7 @@
 
 (defn export-projects-to-thk
   [_event] ; ignore event (cron lambda trigger with no payload)
+  (log/info "Starting export")
   (try
     (ctx-> {:connection (environment/datomic-connection)
             :s3 {:bucket-name (environment/config-value :thk :export-bucket-name)
@@ -171,7 +174,9 @@
            export-projects
            csv->file
            write-file-to-s3)
-    "{\"success\": true}"
+    (do
+      (log/info "THK export returning success ")
+      "{\"success\": true}")
     (catch Exception e
       (log/error "Error exporting projects CSV to S3: " (pr-str (ex-data e))))))
 
