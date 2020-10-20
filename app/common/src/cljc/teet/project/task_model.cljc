@@ -62,9 +62,9 @@
                 :done
                 (or (nil? estimated-end-date) (nil? estimated-start-date))
                 :unknown-status
-                (and (nil? assignee) (date/date-in-past? estimated-start-date))
+                (and (nil? assignee) (date/date-before-today? estimated-start-date))
                 :unassigned-past-start-date
-                (and (date/date-in-past? estimated-end-date) (not (completed? task)))
+                (and (date/date-before-today? estimated-end-date) (not (completed? task)))
                 :task-over-deadline
                 (and (> 7 (date/days-until-date estimated-end-date)) (not (completed? task)))
                 :close-to-deadline
