@@ -197,7 +197,6 @@
 (defn file-part-form
   [e! task-id close-event form-data]
   [:div
-   [:span (pr-str form-data)]
    [form/form {:e! e!
                :value @form-data
                :on-change-event (form/update-atom-event form-data merge)
