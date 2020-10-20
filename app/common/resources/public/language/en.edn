@@ -336,6 +336,7 @@
   :activity/manager "Project manager",
   :activity/status "Status",
   :task/group "Task group",
+  :file/part "Part",
   :file/version "Version",
   :estate-procedure/pos "POS#",
   :user/family-name "Family name",
@@ -387,6 +388,7 @@
   :file/timestamp "Upload date",
   :user/email "Email",
   :land-acquisition/area-to-obtain "Area to obtain",
+  :file/sequence-number "#",
   :meeting/location "Location",
   :thk.project/repair-method "Method",
   :land-acquisition/impact "Impact",
@@ -400,6 +402,7 @@
   :estate-compensation/amount "Amount",
   :document/category "Document type",
   :file/description "Description",
+  :file/document-group "Group",
   :meeting.agenda/body "Body",
   :estate-procedure/type "Procedure type",
   :thk.project/road-name "Road name",
@@ -422,20 +425,19 @@
    :file/status "Sort by status",
    :file/type "Sort by file type",
    :meta/created-at "Sort by date"},
+  :version "Version {num}",
   :download "Download file"},
  :file-upload
- {:original-filename "Original filename: {name}",
-  :description "File description",
-  :general-part "General",
-  :select-part-to-upload
-  "Select part where uploaded files will be added to",
-  :sequence-number "#",
+ {:description "File description",
+  :original-filename "Original filename: {name}",
+  :wrong-task "Cannot add file to this task",
   :file-belongs-to-task "This file belongs to {task} task",
+  :already-uploaded "This file has already been uploaded",
   :new-version-will-be-created
   "Saving will create new version for the file",
-  :wrong-task "Cannot add file to this task",
-  :document-group "Group",
-  :already-uploaded "This file has already been uploaded"},
+  :select-part-to-upload
+  "Select part where uploaded files will be added to",
+  :general-part "General"},
  :land
  {:show-owner-info "Show owner information",
   :no-active-mortgages

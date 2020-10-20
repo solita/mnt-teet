@@ -25,10 +25,13 @@
             [teet.ui.typography :as typography]
             [teet.ui.url :as url]
             [teet.ui.util :refer [mapc]]
+            [teet.ui.form :as form]
             [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]
             [teet.log :as log]
-            [teet.project.task-model :as task-model]))
+            [teet.project.task-model :as task-model]
+            [teet.file.filename-metadata :as filename-metadata]
+            [teet.ui.text-field :as text-field]))
 
 
 
@@ -369,25 +372,45 @@
    [ti/file {:style {:margin-right "0.5rem"}}]
    [:span (tr [:file :no-files])]])
 
+(defn- file-edit-name [{:keys [value on-change]}]
+  (let [[name original-name] value
+        {:keys [description extension]} (filename-metadata/name->description-and-extension name)]
+    [:<>
+     [TextField {:label (tr [:file-upload :description])
+                 :value description
+                 :on-change (fn [e]
+                              (let [descr (-> e .-target .-value)]
+                                (on-change [(str descr "." extension)
+                                            original-name])))
+                 :end-icon [text-field/file-end-icon extension]}]
+     (when-not (str/blank? original-name)
+       [:div
+        [typography/SmallGrayText {}
+         [:b (tr [:file-upload :original-filename] {:name original-name})]]])]))
+
 (defn- file-edit-dialog [{:keys [e! on-close file]}]
-  [panels/modal {:title (tr [:file :edit])
-                 :on-close on-close}
-   [:div
-    [:div {:style {:background-color theme-colors/gray-lighter
-                   :width "100%"
-                   :height "150px"
-                   :margin-bottom "1rem"}}
-     (:file/name file)]
-    [:div {:style {:display :flex
-                   :justify-content :space-between}}
-     [:div {:style {:flex-basis "50%"}}
-      [buttons/button-warning {:on-click (e! file-controller/->DeleteFile (:db/id file))}
-       (tr [:buttons :delete])]]
+  (r/with-let [form-data (r/atom file)]
+    [panels/modal {:title (tr [:file :edit])
+                   :on-close on-close}
      [:div
-      [buttons/button-secondary {:on-click on-close}
-       (tr [:buttons :cancel])]
-      [buttons/button-primary {:on-click on-close}
-       (tr [:buttons :save])]]]]])
+      [form/form {:value @form-data
+                  :e! e!
+                  :on-change-event (form/update-atom-event form-data merge)
+                  :save-event :D
+                  :cancel-event (form/callback-event on-close)
+                  :delete (e! file-controller/->DeleteFile (:db/id file))}
+       ^{:attribute :file/part}
+       [select/form-select {:items [] ;;FIXME: task parts
+                            :empty-selection-label (tr [:file-upload :general-part])
+                            :show-empty-selection? true}]
+       ^{:attribute :file/document-group :xs 8}
+       [select/select-enum {:e! e!
+                            :attribute :file/document-group}]
+       ^{:attribute :file/sequence-number :xs 4}
+       [TextField {:type :number :label "#"}]
+
+       ^{:attribute [:file/name :file/original-name]}
+       [file-edit-name {}]]]]))
 
 (defn file-page [e! {{file-id :file} :params} _project]
   ;; Update the file seen timestamp for this user

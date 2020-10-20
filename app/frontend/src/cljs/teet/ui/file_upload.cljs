@@ -141,9 +141,9 @@
         [TableCell {}
          (tr [:file-upload :description])]
         [TableCell {}
-         (tr [:file-upload :document-group])]
+         (tr [:fields :file/document-group])]
         [TableCell {}
-         (tr [:file-upload :sequence-number])]]]
+         (tr [:fields :file/sequence-number])]]]
 
       [TableBody {}
        (doall
