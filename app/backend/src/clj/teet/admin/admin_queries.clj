@@ -1,6 +1,5 @@
 (ns teet.admin.admin-queries
   (:require [teet.db-api.core :as db-api :refer [defquery]]
-            [teet.user.user-model :as user-model]
             [datomic.client.api :as d]
             [clojure.string :as str]
             [teet.util.datomic :as du]
@@ -22,13 +21,6 @@
             :where [?e :user/id _]]
    :args [db]
    :result-fn (partial mapv first)})
-
-(defn- user-is-admin? [db user]
-  (boolean
-   (seq (d/q '[:find ?u :where [?u :user/roles ?role] :in $ ?u ?role]
-             db
-             (user-model/user-ref user)
-             :admin))))
 
 (defn- ref-attrs [db data]
   (into #{}
@@ -111,11 +103,8 @@
    :context {:keys [user db]}
    :args {string-id :id}
    :project-id nil
-   :authorization {}
-   :pre [^{:error :unauthorized}
-         (user-is-admin? db user)
-
-         ^{:error :not-found}
+   :authorization {:admin/inspector {}}
+   :pre [^{:error :not-found}
          (inspector-enabled?)]}
   (let [id (:db/id (du/entity db (->eid string-id)))
         entity (d/pull db '[*] id)]
