@@ -76,4 +76,5 @@
 
 (s/def :land/fetch-estate-compensations (s/keys :req [:thk.project/id]))
 
+(s/def :land/files-by-sequence-number (s/keys :req [:thk.project/id :file/sequence-number]))
 (s/def :land/file-count-by-sequence-number (s/keys :req [:thk.project/id :file/sequence-number]))

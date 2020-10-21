@@ -439,9 +439,9 @@
          [Link {:style {:display :block}
                 :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "files")}
           [query/query {:e! e!
-                        :query :land/land-file-count-by-position-number
+                        :query :land/file-count-by-sequence-number
                         :args {:thk.project/id (:thk.project/id project-info)
-                               :file/pos-number saved-pos}
+                               :file/sequence-number saved-pos}
                         :simple-view [(fn estate-comment-count [c]
                                         [common/count-chip {:label c}])]
                         :loading-state "-"}]
@@ -985,9 +985,9 @@
                            (:land-acquisition/pos-number %))
                         (:land-acquisitions project))]
        [query/query {:e! e!
-                     :query :land/land-files-by-position-number
+                     :query :land/files-by-sequence-number
                      :args {:thk.project/id (:thk.project/id project)
-                            :file/pos-number pos}
+                            :file/sequence-number pos}
                      :simple-view [file-view/file-table {:link-download? true
                                                          :actions? true
                                                          :comment-action #(reset! selected-file %)}]}]
@@ -1123,3 +1123,5 @@
 ;; + view uses the listing style as the task file list [ ]
 
 ;; Files attached to this unit page of the Cadastral unit info modal should not have a left to right scroll bar for the file listing. [ ]
+
+
