@@ -34,6 +34,9 @@
 (defrecord UpdateFilesForm [new-value])
 (defrecord FilesFormMetadataReceived [filename metadata])
 
+;; Modify file info
+(defrecord ModifyFile [file callback])
+
 (extend-protocol t/Event
 
   DeleteFile
@@ -222,6 +225,16 @@
 (defn download-url [file-id]
   (common-controller/query-url :file/download-file {:file-id file-id}))
 
+(defn file-updated
+  "Processing to run when a file in upload form was changed.
+  Handles dependencies between fields."
+  [{:file/keys [document-group] :as file}]
+  (as-> file file
+    ;; IF document-group is not selected, file can't have seq#
+    (if (nil? document-group)
+      (dissoc file :file/sequence-number)
+      file)))
+
 ;; Implement metadata fetching for file upload forms
 (extend-protocol t/Event
 
@@ -270,4 +283,13 @@
                       {:file/description description
                        :file/extension extension})))
                  file))
-             files)))))
+             files))))
+
+  ModifyFile
+  (process-event [{:keys [file callback]} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :file/modify
+           :payload (update file :file/sequence-number
+                            #(if (int? %) % (js/parseInt %)))
+           :result-event common-controller/->Refresh})))

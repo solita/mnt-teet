@@ -138,6 +138,8 @@
          (d/q '[:find (pull ?f [:db/id :file/name :meta/deleted? :file/version :file/size
                                 :file/status :file/part
                                 :file/original-name
+                                :file/document-group
+                                :file/sequence-number
                                 {:file/previous-version [:db/id]}
                                 :meta/created-at
                                 {:meta/creator [:user/id :user/family-name :user/given-name]}])

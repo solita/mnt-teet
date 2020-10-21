@@ -151,3 +151,24 @@
        (:db/ident x)
        x))
    m))
+
+(defn modify-entity-tx
+  "Create transaction data that asserts new changed attributes
+  and retracts attributes that are no longer present.
+  If there are no changes between old and new entity, returns empty vector."
+  [old-entity {id :db/id :as new-entity}]
+  (assert (= (:db/id old-entity) id)
+          "This is not the same entity (different :db/id values)")
+  (let [retractions
+        (for [[k v] old-entity
+              :when (not (contains? new-entity k))]
+          [:db/retract id k v])
+        changes (into {}
+                      (filter (fn [[k v]]
+                                (not= v (get old-entity k))))
+                      new-entity)]
+    (if (or (seq retractions)
+            (seq changes))
+      (vec
+       (concat retractions [changes]))
+      [])))

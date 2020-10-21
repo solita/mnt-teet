@@ -31,7 +31,8 @@
             [teet.log :as log]
             [teet.project.task-model :as task-model]
             [teet.file.filename-metadata :as filename-metadata]
-            [teet.ui.text-field :as text-field]))
+            [teet.ui.text-field :as text-field]
+            [goog.string :as gstr]))
 
 
 
@@ -388,26 +389,44 @@
         [typography/SmallGrayText {}
          [:b (tr [:file-upload :original-filename] {:name original-name})]]])]))
 
-(defn- file-edit-dialog [{:keys [e! on-close file]}]
-  (r/with-let [form-data (r/atom file)]
+(defn- file-edit-dialog [{:keys [e! on-close file parts]}]
+  (r/with-let [form-data (r/atom (update file :file/part
+                                         (fn [p]
+                                           ;; Part in file only has id,
+                                           ;; fetch it from parts list
+                                           (some #(when (= (:db/id p)
+                                                           (:db/id %))
+                                                    %)
+                                                 parts))))
+               change-event (form/update-atom-event
+                             form-data
+                             #(file-controller/file-updated (merge %1 %2)))
+               save-event #(file-controller/->ModifyFile @form-data on-close)
+               delete (file-controller/->DeleteFile (:db/id file))
+               cancel-event (form/callback-event on-close)]
     [panels/modal {:title (tr [:file :edit])
                    :on-close on-close}
      [:div
+      (pr-str @form-data)
       [form/form {:value @form-data
                   :e! e!
-                  :on-change-event (form/update-atom-event form-data merge)
-                  :save-event :D
-                  :cancel-event (form/callback-event on-close)
-                  :delete (e! file-controller/->DeleteFile (:db/id file))}
+                  :on-change-event change-event
+                  :save-event save-event
+                  :cancel-event cancel-event
+                  :delete delete}
        ^{:attribute :file/part}
-       [select/form-select {:items [] ;;FIXME: task parts
+       [select/form-select {:items parts
+                            :format-item #(gstr/format "%s #%02d"
+                                                       (:file.part/name %)
+                                                       (:file.part/number %))
                             :empty-selection-label (tr [:file-upload :general-part])
                             :show-empty-selection? true}]
        ^{:attribute :file/document-group :xs 8}
        [select/select-enum {:e! e!
                             :attribute :file/document-group}]
        ^{:attribute :file/sequence-number :xs 4}
-       [TextField {:type :number :label "#"}]
+       [TextField {:type :number :label "#"
+                   :disabled (nil? (:file/document-group @form-data))}]
 
        ^{:attribute [:file/name :file/original-name]}
        [file-edit-name {}]]]]))
@@ -445,7 +464,10 @@
              [Grid {:item true :xs 9 :xl 10}
               [:<>
                (when @edit-open?
-                 [file-edit-dialog {:e! e! :on-close #(reset! edit-open? false) :file file}])]
+                 [file-edit-dialog {:e! e!
+                                    :on-close #(reset! edit-open? false)
+                                    :file file
+                                    :parts (:file.part/_task task)}])]
               [tabs/details-and-comments-tabs
                {:e! e!
                 :app app

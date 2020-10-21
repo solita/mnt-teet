@@ -13,7 +13,8 @@
             [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]
             teet.file.file-tx
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [teet.meta.meta-model :as meta-model]))
 
 (defn- new-file-key [{name :file/name}]
   (str (java.util.UUID/randomUUID) "-" name))
@@ -177,3 +178,13 @@
                  :file-seen/user user-id
                  :file-seen/file+user [file-id user-id]
                  :file-seen/seen-at (java.util.Date.)})]})
+
+(defcommand :file/modify
+  {:doc "Modify task file info: part, group, sequence and name."
+   :context {:keys [user db]}
+   :payload {id :db/id :as file}
+   :project-id (project-db/file-project-id db id)
+   :authorization {:document/overwrite-document {:db/id id}}
+   :transact [(list 'teet.file.file-tx/modify-file
+                    (merge file
+                           (meta-model/modification-meta user)))]})

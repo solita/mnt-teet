@@ -1,7 +1,10 @@
 (ns teet.file.file-tx
   "File transactions"
   (:require [datomic.client.api :as d]
-            [teet.file.file-db :as file-db]))
+            [teet.file.file-db :as file-db]
+            [teet.util.collection :as cu]
+            [teet.util.datomic :as du]
+            [datomic.ion :as ion]))
 
 (defn upload-file-to-task
   "Upload file to task. Takes tx data and resolves the part.
@@ -37,3 +40,21 @@
     :file.part/task task-id
     :file.part/name part-name
     :file.part/number (file-db/next-task-part-number db task-id)}])
+
+(def modify-file-keys [:db/id :file/name :file/sequence-number :file/document-group :file/part
+                       :meta/modified-at :meta/modifier])
+
+(defn modify-file
+  "Modify file."
+  [db {id :db/id :as file}]
+  (let [old-file (d/pull db modify-file-keys id)
+        new-file (-> file
+                     (select-keys modify-file-keys)
+                     (update :file/part :db/id)
+                     cu/without-nils)]
+    (if (and (contains? new-file :file/sequence-number)
+             (not (contains? new-file :file/document-group)))
+      (ion/cancel {:cognitect.anomalies/category :cognitect.anomalies/incorrect
+                   :cognitect.anomalies/message "Can't have seq# without document group"
+                   :teet/error :sequence-number-without-document-group})
+      (du/modify-entity-tx old-file new-file))))
