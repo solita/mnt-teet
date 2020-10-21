@@ -407,7 +407,6 @@
     [panels/modal {:title (tr [:file :edit])
                    :on-close on-close}
      [:div
-      (pr-str @form-data)
       [form/form {:value @form-data
                   :e! e!
                   :on-change-event change-event
