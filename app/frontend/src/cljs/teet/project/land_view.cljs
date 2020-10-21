@@ -439,7 +439,7 @@
          [Link {:style {:display :block}
                 :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "files")}
           [query/query {:e! e!
-                        :query :land/file-count-by-position-number
+                        :query :land/land-file-count-by-position-number
                         :args {:thk.project/id (:thk.project/id project-info)
                                :file/pos-number saved-pos}
                         :simple-view [(fn estate-comment-count [c]
@@ -985,7 +985,7 @@
                            (:land-acquisition/pos-number %))
                         (:land-acquisitions project))]
        [query/query {:e! e!
-                     :query :land/files-by-position-number
+                     :query :land/land-files-by-position-number
                      :args {:thk.project/id (:thk.project/id project)
                             :file/pos-number pos}
                      :simple-view [file-view/file-table {:link-download? true
@@ -1116,7 +1116,8 @@
 ;;  - step 1: fix file from task not showing up under cadastral despite same POS#
 ;;     - code change: use new sequence-number attribute name [x]
 ;;  - step 2: address the actual requirement, show from land-part tasks only
-;;     - code change: file-db/files-by-project-and-sequence-number changed to optionally return land file infos only
+;;     - code change 1: file-db/files-by-project-and-sequence-number changed to optionally return land file infos only
+;;      - code change 2: discover that there are no other users -> roll back optionality and always filter by land-acquisition activity type in the funcs, but rename them as land specific
 ;; + file name links to the file detail page (not download) [ ]
 
 ;; + view uses the listing style as the task file list [ ]

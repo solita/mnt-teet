@@ -163,31 +163,23 @@
        (assoc latest-version
               :versions previous-versions)))))
 
-(defn files-by-project-and-sequence-number [db user project-id sequence-number land-only?]
-  (let [extra-condition (when land-only?
-                      ;; is it a land-acquisition activity?
-                      '[?act :activity/name :activity.name/land-acquisition])
-        query-result (d/q `[:find ?f
+(defn land-files-by-project-and-sequence-number [db user project-id sequence-number]
+  (let [query-result (d/q '[:find ?f
                             :where
                             ;; File has this sequence number
                             [?f :file/sequence-number ?seqno]
                             
-                            ;; File belongs to the project
+                            ;; File belongs to the project & is in land-acquisition
                             [?task :task/files ?f]
                             [?act :activity/tasks ?task]
+                            [?act :activity/name :activity.name/land-acquisition]
                             [?lc :thk.lifecycle/activities ?act]
                             [?project :thk.project/lifecycles ?lc]
-                            ~@extra-condition
                             
                             :in $ ?project ?seqno]
                           db project-id sequence-number)]
     (file-listing
      db user (mapv first query-result))))
-
-(defn file-count-by-project-and-sequence-number
-  [db user project-id sequence-number]
-  ;; Could be improved with some distinct query magic to query only the count
-  (count (files-by-project-and-sequence-number db user project-id sequence-number true)))
 
 (defn resolve-metadata
   "Given metadata parsed from a file name, resolve the coded references to
