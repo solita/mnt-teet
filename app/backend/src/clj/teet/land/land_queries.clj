@@ -195,10 +195,10 @@ and the compensation info as the value."
    :authorization {:land/view-cadastral-data {:eid [:thk.project/id id]
                                               :link :thk.project/owner}}}
   (file-db/files-by-project-and-sequence-number
-   db user [:thk.project/id id] pos))
+   db user [:thk.project/id id] pos false))
 
 (defquery :land/file-count-by-sequence-number
-  {:doc "Fetch files by sequence number"
+  {:doc "Fetch land acquisition tasks' file counts by sequence number"
    :context {:keys [db user]}
    :args {id :thk.project/id
           sequence-number :file/sequence-number}
@@ -207,7 +207,7 @@ and the compensation info as the value."
                                               :link :thk.project/owner}}
    :pre [(some? sequence-number)]}
   (file-db/file-count-by-project-and-sequence-number
-    db user [:thk.project/id id] sequence-number))
+    db user [:thk.project/id id] sequence-number) true)
 
 (defmethod link-db/fetch-external-link-info :estate [user _ id]
   ;; PENDING: estates have no name, show just the id

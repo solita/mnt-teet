@@ -1116,7 +1116,7 @@
 ;;  - step 1: fix file from task not showing up under cadastral despite same POS#
 ;;     - code change: use new sequence-number attribute name [x]
 ;;  - step 2: address the actual requirement, show from land-part tasks only
-;;     - code change: tbd 
+;;     - code change: file-db/files-by-project-and-sequence-number changed to optionally return land file infos only
 ;; + file name links to the file detail page (not download) [ ]
 
 ;; + view uses the listing style as the task file list [ ]
