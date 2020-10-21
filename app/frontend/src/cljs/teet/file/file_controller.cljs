@@ -291,5 +291,11 @@
           {:tuck.effect/type :command!
            :command :file/modify
            :payload (update file :file/sequence-number
-                            #(if (int? %) % (js/parseInt %)))
-           :result-event common-controller/->Refresh})))
+                            #(if (or (nil? %)
+                                     (int? %))
+                               %
+                               (js/parseInt %)))
+           :result-event #(do
+                            (when callback
+                              (callback))
+                            (common-controller/->Refresh))})))
