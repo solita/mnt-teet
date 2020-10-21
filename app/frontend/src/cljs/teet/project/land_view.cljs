@@ -1111,8 +1111,12 @@
 ;; + when uploading a file to Land Acquisition tasks the # number is used as the POS number so display POS not # in the UI [x]
 ;;     - code term for # seems to be sequence-number
 
-;; + cadastral unit related files should only display files that are under Land Acquisition tasks for the project and have matching #POS number. [ ]
-
+;; + cadastral unit related files should only display files that are under Land Acquisition tasks for the project an d have matching #POS number. [ ]
+;;   - background: cadastral units recently gained a "files attached to this unit" section in the ui, and if you input a POS# that's the same as a POS# of a task file it should show up there .. land/file-count-by-position-number or something is the back  query for it (shows the number in the ball that shows up in the cadastral ui).. change the query to only look in land-acquisiton tasks
+;;  - step 1: fix file from task not showing up under cadastral despite same POS#
+;;     - code change: use new sequence-number attribute name [x]
+;;  - step 2: address the actual requirement, show from land-part tasks only
+;;     - code change: tbd 
 ;; + file name links to the file detail page (not download) [ ]
 
 ;; + view uses the listing style as the task file list [ ]
