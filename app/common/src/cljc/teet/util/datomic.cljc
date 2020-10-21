@@ -152,6 +152,15 @@
        x))
    m))
 
+(defn- refs->id
+  "Turn maps with {:db/id <num>} into just <num> values."
+  [m]
+  (cu/map-vals
+   #(if-let [id (and (map? %) (:db/id %))]
+      id
+      %)
+   m))
+
 (defn modify-entity-tx
   "Create transaction data that asserts new changed attributes
   and retracts attributes that are no longer present.
@@ -159,7 +168,9 @@
   [old-entity {id :db/id :as new-entity}]
   (assert (= (:db/id old-entity) id)
           "This is not the same entity (different :db/id values)")
-  (let [retractions
+  (let [old-entity (refs->id old-entity)
+        new-entity (refs->id new-entity)
+        retractions
         (for [[k v] old-entity
               :when (not (contains? new-entity k))]
           [:db/retract id k v])
@@ -170,5 +181,5 @@
     (if (or (seq retractions)
             (seq changes))
       (vec
-       (concat retractions [changes]))
+       (concat retractions [(assoc changes :db/id id)]))
       [])))

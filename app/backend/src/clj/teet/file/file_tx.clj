@@ -52,9 +52,4 @@
                      (select-keys modify-file-keys)
                      (update :file/part :db/id)
                      cu/without-nils)]
-    (if (and (contains? new-file :file/sequence-number)
-             (not (contains? new-file :file/document-group)))
-      (ion/cancel {:cognitect.anomalies/category :cognitect.anomalies/incorrect
-                   :cognitect.anomalies/message "Can't have seq# without document group"
-                   :teet/error :sequence-number-without-document-group})
-      (du/modify-entity-tx old-file new-file))))
+    (du/modify-entity-tx old-file new-file)))
