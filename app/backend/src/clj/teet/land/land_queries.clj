@@ -194,7 +194,7 @@ and the compensation info as the value."
    :project-id [:thk.project/id id]
    :authorization {:land/view-cadastral-data {:eid [:thk.project/id id]
                                               :link :thk.project/owner}}}
-  (file-db/files-by-project-and-pos-number
+  (file-db/files-by-project-and-sequence-number
    db user [:thk.project/id id] pos))
 
 (defquery :land/file-count-by-sequence-number
