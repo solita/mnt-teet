@@ -38,36 +38,45 @@
    :authorization {:document/view-document {:db/id file-id}}}
   (url-for-file db file-id true))
 
+
 (defquery :file/thumbnail
   {:doc "Download small image preview of the given file (must be an image)"
    :context {db :db}
    :args {file-id :file-id
-          size :size}
+          thumbnail-size :size}
    :project-id (project-db/file-project-id db file-id)
    :authorization {:document/view-document {:db/id file-id}}
    :pre [(file-model/image? (d/pull db [:file/name] file-id))
-         (<= 32 size 256)]}
+         (<= 32 thumbnail-size 256)]}
   (let [bucket (file-storage/storage-bucket)
-        file-key (:file/s3-key (du/entity db file-id))
-        thumbnail-key (str file-key "-thumbnail-" size ".png")]
+        {:file/keys [s3-key size]} (d/pull db [:file/s3-key :file/size] file-id)
+        thumbnail-key (str s3-key "-thumbnail-" thumbnail-size ".png")]
 
-    ;; If thumbnail does not exist yet, generate and upload it
-    (when-not (integration-s3/exists? bucket thumbnail-key)
-      (log/info "Generating thumbnail:" thumbnail-key)
-      (integration-s3/put-object
-       bucket thumbnail-key
-       (ring-io/piped-input-stream
-        (fn [out]
-          (Thumbnailator/createThumbnail
-           (integration-s3/get-object (file-storage/storage-bucket)
-                                      file-key)
-           out "png" size size)))))
+    (if (< size file-model/image-thumbnail-size-threshold)
+      ;; This file is too small to bother with thumbnails, let user download it as is
+      (url-for-file db file-id false)
 
-    ;; then return a presigned URL for it
-    ^{:format :raw}
-    {:status 302
-     :headers {"Location" (file-storage/download-url "inline"
-                                                     thumbnail-key)}}))
+      (do
+        ;; If thumbnail does not exist yet, generate and upload it
+        (when-not (integration-s3/exists? bucket thumbnail-key)
+          (log/info "Generating thumbnail:" thumbnail-key)
+          (integration-s3/put-object
+           bucket thumbnail-key
+           (ring-io/piped-input-stream
+            (fn [out]
+              (try
+                (Thumbnailator/createThumbnail
+                 (integration-s3/get-object (file-storage/storage-bucket)
+                                            s3-key)
+                 out "png" thumbnail-size thumbnail-size)
+                (catch Exception e
+                  (log/error e "Error generating thumbnail")))))))
+
+        ;; then return a presigned URL for it
+        ^{:format :raw}
+        {:status 302
+         :headers {"Location" (file-storage/download-url "inline"
+                                                         thumbnail-key)}}))))
 
 
 
