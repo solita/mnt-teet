@@ -36,7 +36,8 @@
             [teet.ui.common :as common]
             [goog.functions :as gfunc]
             [teet.util.string :as string]
-            [goog.string :as gstr]))
+            [goog.string :as gstr]
+            [teet.ui.query :as query]))
 
 
 
@@ -406,82 +407,95 @@
    :flex-direction :column
    :margin "2rem 0 2rem 0"})
 
-(defn- replace-file-form [e! file]
-  [:div
-   ;; FIXME: first select file then open modal
-   [file-upload/FileUploadButton
-    {:on-drop (e! file-controller/->UploadNewVersion file)
-     :drag-container-id "file-details-upload-replacement"
-     :color :secondary
-     :icon [icons/file-cloud-upload]
-     :multiple? false}
-    (tr [:file :upload-new-version])]])
+(defn- replace-file-form* [e! task file form new-metadata]
+  (let [{:keys [description extension]} (filename-metadata/name->description-and-extension
+                                         (:file/name file))]
+    [panels/modal {:max-width "lg"
+                   :title [:<>
+                           (tr [:file :replace-dialog-title])
+                           [typography/GreyText
+                            (str description "." extension)]]}
+     [:div
+      (pr-str new-metadata)
+      [common/info-box {:title (tr [:file :replace-dialog-info-title])
+                        :content (tr [:file :replace-dialog-info-text])}]]]))
 
-(defn- file-details [e! {:keys [replacement-upload-progress] :as file}
+(defn- replace-file-form [e! task file form]
+  [query/query {:e! e!
+                :query :file/resolve-metadata
+                :args (-> form :file-object file-model/file-info)
+                :simple-view [replace-file-form* e! task file form]}])
+
+(defn- file-details [e! task {:keys [replacement-upload-progress] :as file}
                      latest-file can-replace-file?]
-  (let [old? (some? latest-file)
-        other-versions (if old?
-                         (into [latest-file]
-                               (filter #(not= (:db/id file) (:db/id %))
-                                       (:versions latest-file)))
-                         (:versions file))]
-    [:div.file-details
-     [:div.file-details-original-name
-      [typography/GreyText
-       [:strong (str (tr [:fields :file/original-name]) ": ")]
-       [:span (:file/original-name file)]]]
-     [:div.file-details-upload-info
-      (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator file))
-                                :date (format/date (:meta/created-at file))})]
+  (r/with-let [replacement-form (r/atom nil)]
+    (let [old? (some? latest-file)
+          other-versions (if old?
+                           (into [latest-file]
+                                 (filter #(not= (:db/id file) (:db/id %))
+                                         (:versions latest-file)))
+                           (:versions file))]
+      [:div.file-details
+       [:div.file-details-original-name
+        [typography/GreyText
+         [:strong (str (tr [:fields :file/original-name]) ": ")]
+         [:span (:file/original-name file)]]]
+       [:div.file-details-upload-info
+        (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator file))
+                                  :date (format/date (:meta/created-at file))})]
 
 
 
-     ;; size, upload new version and download buttons
-     [:div {:class (<class common-styles/flex-row-space-between)}
-      [common/labeled-data {:class "file-details-size"
-                            :label (tr [:fields :file/size])
-                            :data (format/file-size (:file/size file))}]
-      (if replacement-upload-progress
-        [LinearProgress {:variant :determinate
-                         :value replacement-upload-progress}]
-        [:<>
-         (when (and can-replace-file?
-                    (nil? latest-file)
-                    (du/enum= :file.status/draft (:file/status file)))
-           [:div#file-details-upload-replacement
-            [panels/button-with-modal
-             {:modal-title "Upload replacement"
-              :button-component [buttons/button-secondary
-                                 {:start-icon (r/as-element [icons/file-cloud-upload-outlined])}
-                                 (tr [:file :upload-new-version])]
-              :modal-component [replace-file-form e! file]
-              }]
-            ])])
-      [buttons/button-primary {:element "a"
-                               :href (common-controller/query-url :file/download-file
-                                                                  {:file-id (:db/id file)})
-                               :target "_blank"
-                               :start-icon (r/as-element
-                                             [icons/file-cloud-download])}
-       (tr [:file :download])]]
+       ;; size, upload new version and download buttons
+       [:div {:class (<class common-styles/flex-row-space-between)}
+        [common/labeled-data {:class "file-details-size"
+                              :label (tr [:fields :file/size])
+                              :data (format/file-size (:file/size file))}]
+        (if replacement-upload-progress
+          [LinearProgress {:variant :determinate
+                           :value replacement-upload-progress}]
+          [:<>
+           (when (and can-replace-file?
+                      (nil? latest-file)
+                      (du/enum= :file.status/draft (:file/status file)))
+             [:div#file-details-upload-replacement
+              [file-upload/FileUpload
+               {:on-drop #(swap! replacement-form %)
+                :drag-container-id "file-details-upload-replacement"
+                :color :secondary
+                :icon [icons/file-cloud-upload]
+                :multiple? false}
+               [buttons/button-secondary
+                {:component :span
+                 :start-icon (r/as-element [icons/file-cloud-upload-outlined])}
+                (tr [:file :upload-new-version])]]
+              (when-let [form @replacement-form]
+                [replace-file-form e! task file form])])])
+        [buttons/button-primary {:element "a"
+                                 :href (common-controller/query-url :file/download-file
+                                                                    {:file-id (:db/id file)})
+                                 :target "_blank"
+                                 :start-icon (r/as-element
+                                              [icons/file-cloud-download])}
+         (tr [:file :download])]]
 
-     (when (file-model/image? file)
-       [:div {:class (<class preview-style)}
-        [:img {:style {:width :auto :height :auto
-                       :max-height "250px"
-                       :object-fit :contain}
-               :src (common-controller/query-url
-                     :file/thumbnail
-                     {:file-id (:db/id file)
-                      :size 250})}]])
+       (when (file-model/image? file)
+         [:div {:class (<class preview-style)}
+          [:img {:style {:width :auto :height :auto
+                         :max-height "250px"
+                         :object-fit :contain}
+                 :src (common-controller/query-url
+                       :file/thumbnail
+                       {:file-id (:db/id file)
+                        :size 250})}]])
 
-     ;; list previous versions
-     (when (seq other-versions)
-       [:<>
-        [:br]
-        [typography/Heading2 (tr [:file :other-versions])]
-        [:div.file-table-other-versions
-         [file-table other-versions]]])]))
+       ;; list previous versions
+       (when (seq other-versions)
+         [:<>
+          [:br]
+          [typography/Heading2 (tr [:file :other-versions])]
+          [:div.file-table-other-versions
+           [file-table other-versions]]])])))
 
 (defn file-part-heading
   [{heading :heading
@@ -633,4 +647,4 @@
                 :show-comment-form? (not old?)
                 :tab-wrapper (r/partial file-tab-wrapper file-part)}
                (when file
-                 [file-details e! file latest-file (task-model/can-submit? task)])]]]]))})))
+                 [file-details e! task file latest-file (task-model/can-submit? task)])]]]]))})))
