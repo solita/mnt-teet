@@ -159,12 +159,14 @@
             (throw e))))))
 
 (defcommand :file/delete
-  {:doc "Delete file"
+  {:doc "Delete file and all its versions."
    :context {:keys [user db]}
    :payload {:keys [file-id status]}
    :project-id (project-db/file-project-id db file-id)
    :authorization {:document/delete-document {:db/id file-id}}
-   :transact [(deletion-tx user file-id)]})
+   :transact (vec
+              (for [version-id (file-db/file-versions db file-id)]
+                (deletion-tx user version-id)))})
 
 (defcommand :file/seen
   {:doc "Mark that I have seen this file"
