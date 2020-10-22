@@ -146,7 +146,6 @@
                                                  (when-let [old-seq-number (:file/sequence-number old-file)]
                                                    {:file/sequence-number old-seq-number})
                                                  (creation-meta user)))]})]
-            _ (def *tx-data tx-data)
             res (tx tx-data)
             t-id (or task-id (get-in res [:tempids "new-task"]))
             file-id (get-in res [:tempids "new-file"])]
