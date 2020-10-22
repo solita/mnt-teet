@@ -19,7 +19,9 @@
   (r/create-class
     {:component-will-unmount #(e! (comments-controller/->ClearCommentField))
      :reagent-render
-     (fn [{:keys [app] :as opts} details]
+     (fn [{:keys [app tab-wrapper]
+           :or {tab-wrapper :span}
+           :as opts} details]
        (let [query (:query app)
              comments-component [:div
                                  (when (common/wide-display?)
@@ -37,18 +39,19 @@
 
            ;; Not a wide display, show tabbed interface
            [:div.page-content-tabs
-            [:div.tab-links {:style {:margin "1rem 0 1rem 0"}}
-             [:div {:style {:display :inline-block}}            ;;TODO cleanup inline-styles and html structure
-              [:div {:class (if (= (:tab query) "comments") "tab-inactive" "tab-active")}
-               (if (= (:tab query) "comments")
-                 [Link {:href (url/remove-query-param :tab)} (tr [:project :tabs :details])]
-                 [typography/SectionHeading (tr [:project :tabs :details])])]]
-             [:div {:style {:display :inline-block
-                            :margin-left "2rem"}}
-              [:div {:class (if (= (:tab query) "comments") "tab-active" "tab-inactive")}
-               (if (= (:tab query) "comments")
-                 [typography/SectionHeading (tr [:document :comments])]
-                 [Link {:href (url/set-query-param :tab "comments")} (tr [:document :comments])])]]]
+            [tab-wrapper
+             [:div.tab-links {:style {:margin "1rem 0 1rem 0"}}
+              [:div {:style {:display :inline-block}} ;;TODO cleanup inline-styles and html structure
+               [:div {:class (if (= (:tab query) "comments") "tab-inactive" "tab-active")}
+                (if (= (:tab query) "comments")
+                  [Link {:href (url/remove-query-param :tab)} (tr [:project :tabs :details])]
+                  [typography/SectionHeading (tr [:project :tabs :details])])]]
+              [:div {:style {:display :inline-block
+                             :margin-left "2rem"}}
+               [:div {:class (if (= (:tab query) "comments") "tab-active" "tab-inactive")}
+                (if (= (:tab query) "comments")
+                  [typography/SectionHeading (tr [:document :comments])]
+                  [Link {:href (url/set-query-param :tab "comments")} (tr [:document :comments])])]]]]
             (if (= (:tab query) "comments")
               comments-component
               (with-meta

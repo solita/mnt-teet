@@ -437,6 +437,12 @@
        ^{:attribute [:file/name :file/original-name]}
        [file-edit-name {}]]]]))
 
+(defn- file-tab-wrapper [{:file.part/keys [name number]} tab-links]
+  [:div {:class (<class common-styles/flex-row-space-between)
+         :style {:align-items :center}}
+   [typography/Heading3 (gstr/format "%s #%02d" name number)]
+   [:div tab-links]])
+
 (defn file-page [e! {{file-id :file} :params} _project]
   ;; Update the file seen timestamp for this user
   (e! (file-controller/->UpdateFileSeen file-id))
@@ -460,7 +466,13 @@
                latest-file (when old?
                              (project-model/latest-version-for-file-id project file-id))
                {:keys [description extension]}
-               (filename-metadata/name->description-and-extension (:file/name file))]
+               (filename-metadata/name->description-and-extension (:file/name file))
+               file-part (or (some #(when (= (:db/id %)
+                                             (get-in file [:file/part :db/id]))
+                                      %)
+                                   (:file.part/_task task))
+                             {:file.part/name (tr [:file-upload :general-part])
+                              :file.part/number 0})]
            [project-navigator-view/project-navigator-with-content
             {:e! e!
              :app app
@@ -492,6 +504,7 @@
                 :app app
                 :entity-id (:db/id file)
                 :entity-type :file
-                :show-comment-form? (not old?)}
+                :show-comment-form? (not old?)
+                :tab-wrapper (r/partial file-tab-wrapper file-part)}
                (when file
                  [file-details e! file latest-file edit-open? show-preview? (task-model/can-submit? task)])]]]]))})))
