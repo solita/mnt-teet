@@ -3,6 +3,7 @@
             [herb.core :refer [<class]]
             [teet.common.common-styles :as common-styles]
             [teet.ui.buttons :as buttons]
+            [teet.ui.context :as context]
             [teet.localization :refer [tr tr-enum tr-or]]
             [teet.ui.util :refer [mapc]]
             [reagent.core :as r]
@@ -988,7 +989,7 @@
                      :query :land/files-by-sequence-number
                      :args {:thk.project/id (:thk.project/id project)
                             :file/sequence-number pos}
-                     :simple-view [file-view/file-table {:link-download? true
+                     :simple-view [file-view/file-table {:link-download? false
                                                          :actions? true
                                                          :comment-action #(reset! selected-file %)}]}]
        [:span (tr [:land :no-position-number])])
@@ -1053,17 +1054,21 @@
                         (when (= (get-in unit [:estate :estate-id]) target)
                           (:estate unit)))
                       (:land/units project))]
-    [panels/modal+ (merge {:title (tr [:land-acquisition modal])
-                           :open-atom (r/wrap (boolean modal) :_)
-                           :on-close (e! project-controller/->CloseDialog)
-                           :max-width :md}
-                          (land-view-modal {:e! e!
-                                            :app app
-                                            :modal modal
-                                            :target target
-                                            :modal-page modal-page
-                                            :project project
-                                            :estate-info estate-info}))]))
+    [context/update-context :navigation-info
+     (fn [m]
+       (log/debug "update-context update-fn got" (pr-str m))
+       (update m :params assoc :task 4242 :activity 34534))
+     [panels/modal+ (merge {:title (tr [:land-acquisition modal])
+                            :open-atom (r/wrap (boolean modal) :_)
+                            :on-close (e! project-controller/->CloseDialog)
+                            :max-width :md}
+                           (land-view-modal {:e! e!
+                                             :app app
+                                             :modal modal
+                                             :target target
+                                             :modal-page modal-page
+                                             :project project
+                                             :estate-info estate-info}))]]))
 
 (defn related-cadastral-units-info
   [e! _app project]
@@ -1119,7 +1124,26 @@
 ;;     - code change 1: file-db/files-by-project-and-sequence-number changed to optionally return land file infos only
 ;;      - code change 2: discover that there are no other users -> roll back optionality and always filter by land-acquisition activity type in the funcs, but rename them as land specific
 ;; + file name links to the file detail page (not download) [ ]
-
+;;   - step 1: figure out what this means
+;;    - file link under cadastral unit file info shows file info modal alreay
+;;    - but in the modal the link is direct link, -> change to same as in task files 
+;;   - step 2: figure out how to link to the location above
+;;    - locate task view code where the link is
+;;       - looks like both use the file-table component, but land part is giving it a :link-download? true flag -> just flip it
+;;       - nope, generates broken link when used from land view, debug or just generate our own link?
+;;       - broken link:            http://localhost:4000/#/projects/17546///83562883711824
+;;       - working from task view: http://localhost:4000/#/projects/17546/83562883711773/83562883711774/83562883711824
+;;       -  so it's missing 2 entity ids in the path element.
+;;         -> after some debug insturmentation the mystery is that how the download-link? false code path could work, not why it fails in land view, because the required activity and task ids are not passed to teet.ui.url/Link component
+;;         -> turns out url/Link component relies on some context magic that pulls the extra params successfully in some cases and in some cases not. they can't be passed normally to file-view either so need to figure out how to fix the context or mod file-view.
+;;          -> after some false starts got the advice to use update-context, but which context to update?
+;;          -> we get project thk number from context but not activity/task. trying update-conect :project then
+;;           -> ui-context/contexts atom inspection at repl gives some clues
+;;           -> contains a bunch of js native reactContexts... but at leas got the active context names from it
+;;           -> :navigation-context was the winning horse, got dummy data passed to the link now
+;;   - step 3:
+;;     - code change: 
+;;    
 ;; + view uses the listing style as the task file list [ ]
 
 ;; Files attached to this unit page of the Cadastral unit info modal should not have a left to right scroll bar for the file listing. [ ]
