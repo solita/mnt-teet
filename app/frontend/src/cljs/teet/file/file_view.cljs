@@ -50,9 +50,12 @@
          actions? true
          columns (constantly true)}}
    {id :db/id :file/keys [number version status name] comments :comment/counts :as file}]
+  (log/debug "file + name are" file  name)
   (let [[base-name suffix] (base-name-and-suffix name)
         {:comment/keys [new-comments old-comments]} comments
-        seen (:file-seen/seen-at file)]
+        seen (:file-seen/seen-at file)
+        task-eid (:task-eid file)
+        activity-eid (:activity-eid file)]
     [:div {:class (<class common-styles/margin-bottom 0.5)}
      [:div.file-row {:class (<class common-styles/flex-row)}
       [:div.file-row-name {:class [(<class file-style/file-row-name seen)
@@ -73,7 +76,11 @@
 
          ;;  Otherwise link to task file page
          :else
-         [url/Link {:page :file :params {:file id}} base-name])]
+         (do
+           (log/debug "generating link to task file page by default as no-link and link-download options are false - eids" activity-eid task-eid)
+           [url/Link {:page :file :params {:file id
+                                           :activity activity-eid
+                                           :task task-eid}} base-name]))]
       (when (columns :number)
         [:div.file-row-number {:class (<class common-styles/flex-table-column-style 10)}
          [:span number]])
@@ -178,6 +185,8 @@
   ([files] (file-table {} files))
   ([{:keys [filtering?]
      :or {filtering? true} :as opts} files]
+   (log/debug "file-table: first f is" (first files))
+
    (r/with-let [items-for-sort-select (sort-items)
                 filter-atom (r/atom "")
                 sort-by-atom (r/atom (first items-for-sort-select))]

@@ -1053,22 +1053,19 @@
                       (fn [unit]
                         (when (= (get-in unit [:estate :estate-id]) target)
                           (:estate unit)))
-                      (:land/units project))]
-    [context/update-context :navigation-info
-     (fn [m]
-       (log/debug "update-context update-fn got" (pr-str m))
-       (update m :params assoc :task 4242 :activity 34534))
-     [panels/modal+ (merge {:title (tr [:land-acquisition modal])
-                            :open-atom (r/wrap (boolean modal) :_)
-                            :on-close (e! project-controller/->CloseDialog)
-                            :max-width :md}
-                           (land-view-modal {:e! e!
-                                             :app app
-                                             :modal modal
-                                             :target target
-                                             :modal-page modal-page
-                                             :project project
-                                             :estate-info estate-info}))]]))
+                      (:land/units project))
+        ]
+    [panels/modal+ (merge {:title (tr [:land-acquisition modal])
+                           :open-atom (r/wrap (boolean modal) :_)
+                           :on-close (e! project-controller/->CloseDialog)
+                           :max-width :md}
+                          (land-view-modal {:e! e!
+                                            :app app
+                                            :modal modal
+                                            :target target
+                                            :modal-page modal-page
+                                            :project project
+                                            :estate-info estate-info}))]))
 
 (defn related-cadastral-units-info
   [e! _app project]
@@ -1141,11 +1138,12 @@
 ;;           -> ui-context/contexts atom inspection at repl gives some clues
 ;;           -> contains a bunch of js native reactContexts... but at leas got the active context names from it
 ;;           -> :navigation-context was the winning horse, got dummy data passed to the link now
+;;           -> but wait, file-view comp assumes all files are from same act/task?
+;;              -> next idea needed
 ;;   - step 3:
-;;     - code change: 
-;;    
+;;     - refactor file-view code to allow files from mixed tasks
+;;       - todo: wip code works for this case but normal task page links now bugged
 ;; + view uses the listing style as the task file list [ ]
 
 ;; Files attached to this unit page of the Cadastral unit info modal should not have a left to right scroll bar for the file listing. [ ]
-
 

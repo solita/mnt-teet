@@ -97,13 +97,18 @@
    content]
   [consume-navigation-info
    (fn [{context-params :params}]
-     (let [url-fn (route-url-fns page)]
+     (let [url-fn (route-url-fns page)
+           url-fn-params (merge context-params params
+                                (when query
+                                  {::query query}))]
        (when (nil? url-fn)
          (log/error "No such page:" page))
        [component
-        (merge {:href (url-fn (merge context-params params
-                                     (when query
-                                       {::query query})))}
-               (when class
-                 {:class class}))
+        (do
+          (log/debug "calling url-fn for" page "with params" url-fn-params "  - context-params was" context-params)
+          (merge {:href (url-fn url-fn-params)}
+                 (when class
+                   {:class class})))
         content]))])
+
+

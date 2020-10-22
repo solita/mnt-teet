@@ -682,6 +682,7 @@
 (defn project-page
   "Shows the normal project view for initialized projects, setup wizard otherwise."
   [e! app project]
+  (log/debug "project-page: project id" (:thk.project/id project))
   [project-context/provide
    {:db/id (:db/id project)
     :thk.project/id (:thk.project/id project)}

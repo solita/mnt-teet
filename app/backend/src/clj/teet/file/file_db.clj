@@ -120,15 +120,22 @@
   as :versions key.
 
   Includes the timestamp user has seen the file (if any) as :file-seen/seen-at."
-  [db user file-ids]
+  [db user file-rows]
   ;; TODO separate comment-count per file and file listing
+  (log/debug "firs row" (first file-rows))
   (let [;; File seen statuses
+        file-ids (mapv first file-rows)
         seen-at-by-file (files-seen-at db user file-ids)
 
         ;; Get comment counts for files
         comment-counts-by-file
         (file-ids-with-comment-counts db file-ids user)
 
+        file-eid->task-eids (into {}
+                                  (map (fn [[file-eid activity-eid task-eid]]
+                                         [file-eid [activity-eid task-eid]])
+                                       file-rows))
+        
         files
         (mapv
          (comp #(merge %
@@ -141,8 +148,14 @@
                                 {:meta/creator [:user/id :user/family-name :user/given-name]}])
                 :where
                 [?f :file/upload-complete? true]
-                :in $ [?f ...]] db file-ids))
-
+                :in $ [?f ...]] db file-ids))        
+        file-with-task-eids (fn [file]
+                              (let [file-eid (:db/id file)
+                                    [activity-eid task-eid] (get file-eid->task-eids file-eid)]
+                                (assoc file
+                                       :activity-eid activity-eid
+                                       :task-eid task-eid)))
+        files (map file-with-task-eids files)
         ;; Group files to first versions and next versions
         {next-versions true
          first-versions false}
@@ -164,7 +177,7 @@
               :versions previous-versions)))))
 
 (defn land-files-by-project-and-sequence-number [db user project-id sequence-number]
-  (let [query-result (d/q '[:find ?f
+  (let [query-result (d/q '[:find ?f ?act ?task
                             :where
                             ;; File has this sequence number
                             [?f :file/sequence-number ?seqno]
@@ -178,8 +191,9 @@
                             
                             :in $ ?project ?seqno]
                           db project-id sequence-number)]
+    (log/debug "first of query-result" (first query-result))
     (file-listing
-     db user (mapv first query-result))))
+     db user query-result)))
 
 (defn resolve-metadata
   "Given metadata parsed from a file name, resolve the coded references to
