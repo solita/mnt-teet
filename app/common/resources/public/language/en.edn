@@ -357,6 +357,7 @@
   :thk.project/end-km "End km",
   :thk.project/start-km "Start km",
   "projectgroup" {"activity" "Activities"},
+  :file/original-name "Original filename",
   :permission/role "Roles",
   :review/comment "Comment",
   :land-exchange/area "Area",
@@ -424,6 +425,8 @@
   :add-part-modal-title "Add part",
   :other-versions "Other versions",
   :filter-file-listing "Filter file listing",
+  :all-parts "All parts",
+  :full-name "TEET Full name",
   :switch-to-latest-version "Switch back to latest version",
   :sort-by
   {:file/name "Sort by name",

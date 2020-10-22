@@ -123,8 +123,8 @@
    :payload {task-id :task-id
              part-name :part-name}
    :project-id (project-db/task-project-id db task-id)
-   :authorization {:task/task-information {:db/id task-id
-                                           :link :task/assignee}}
+   :authorization {:document/upload-document {:db/id task-id
+                                              :link :task/assignee}}
    :transact [(list 'teet.file.file-tx/create-task-file-part
                     task-id part-name)]})
 
@@ -135,8 +135,8 @@
              part-name :part-name
              part-id :part-id}
    :project-id (project-db/task-project-id db task-id)
-   :authorization {:task/task-information {:db/id task-id
-                                           :link :task/assignee}}
+   :authorization {:document/upload-document {:db/id task-id
+                                              :link :task/assignee}}
    :transact [(let [_ (println "task-id: " part-id)]
                 (merge
                   (meta-model/modification-meta user)

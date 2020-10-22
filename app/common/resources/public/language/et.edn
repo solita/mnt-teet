@@ -352,6 +352,7 @@
   :thk.project/end-km "Lõpp km",
   :thk.project/start-km "Algus km",
   "projectgroup" {"activity" "Etapp"},
+  :file/original-name "Algupärane failinimi",
   :permission/role "Roll",
   :review/comment "Kommentaar",
   :land-exchange/area "Pindala",
@@ -419,6 +420,8 @@
   :add-part-modal-title nil,
   :other-versions "Muud versioonid",
   :filter-file-listing nil,
+  :all-parts nil,
+  :full-name nil,
   :switch-to-latest-version "Lülitan tagasi uusimale versioonile",
   :sort-by
   {:file/name "Sorteerin nime järgi",

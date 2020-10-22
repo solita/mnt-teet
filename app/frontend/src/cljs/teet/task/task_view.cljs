@@ -208,46 +208,50 @@
     [TextField {}]]])
 
 (defn file-section-view
-  [{:keys [e! upload!]} task-id file-part files]
+  [{:keys [e! upload!]} task file-part files]
   [:div
    [file-view/file-part-heading {:heading (:file.part/name file-part)
                                  :number (:file.part/number file-part)}
-    {:action [:div
-              [form/form-modal-button
-               {:form-component [file-part-form e! task-id]
-                :form-value file-part
-                :modal-title (tr [:file :edit-part-modal-title])
-                :button-component
-                [buttons/button-secondary
-                 {:size :small
-                  :style {:margin-right "0.5rem"}}
-                 (tr [:buttons :edit])]}]
-              [buttons/button-primary {:size :small
-                                       :start-icon (r/as-element [icons/content-add])
-                                       :on-click #(upload! {:file/part file-part})}
-               (tr [:buttons :upload])]]}]
+    {:action [when-authorized
+              :task/create-part task
+              [:div
+               [form/form-modal-button
+                {:form-component [file-part-form e! (:db/id task)]
+                 :form-value file-part
+                 :modal-title (tr [:file :edit-part-modal-title])
+                 :button-component
+                 [buttons/button-secondary
+                  {:size :small
+                   :style {:margin-right "0.5rem"}}
+                  (tr [:buttons :edit])]}]
+               [buttons/button-primary {:size :small
+                                        :start-icon (r/as-element [icons/content-add])
+                                        :on-click #(upload! {:file/part file-part})}
+                (tr [:buttons :upload])]]]}]
    (if (seq files)
      [file-view/file-list2 {:e! e!
                             :download? true} files]
      [file-view/no-files])])
 
 (defn task-file-heading
-  [upload!]
+  [task upload!]
   [:div {:class [(<class common-styles/space-between-center)
                  (<class common-styles/margin-bottom 1)]}
 
    [typography/Heading2 {:style {:margin-right "0.5rem"
                                  :display :inline-block}}
     (tr [:common :files])]
-   [:div
-    [buttons/button-primary {:start-icon (r/as-element [icons/content-add])
-                             :on-click #(upload! {})}
-     (tr [:buttons :upload])]]])
+   [when-authorized :file/upload
+    task
+    [:div
+     [buttons/button-primary {:start-icon (r/as-element [icons/content-add])
+                              :on-click #(upload! {})}
+      (tr [:buttons :upload])]]]])
 
 (defn file-content-view
   [e! upload! task files parts]
   [:<>
-   [task-file-heading upload!]
+   [task-file-heading task upload!]
    (when (not= (count parts) 1)                             ;; if some other part is selected hide this
      (let [general-files (remove #(contains? % :file/part) files)]
        [file-view/file-list2 {:e! e!
@@ -257,7 +261,7 @@
     (mapc (fn [part]
             [file-section-view {:e! e!
                                 :upload! upload!}
-             (:db/id task) part
+             task part
              (filterv
                (fn [file]
                  (= (:db/id part) (get-in file [:file/part :db/id])))
@@ -271,15 +275,16 @@
     [:div
      [file-view/file-search files parts
       (r/partial file-content-view e! upload! task)]
-
-     [form/form-modal-button
-      {:form-component [file-part-form e! (:db/id task)]
-       :modal-title (tr [:task :task-add-part-modal-title])
-       :button-component
-       [buttons/button-secondary
-        {:start-icon (r/as-element
-                       [icons/content-add])}
-        (tr [:task :add-part])]}]]))
+     [when-authorized :task/create-part
+      task
+      [form/form-modal-button
+       {:form-component [file-part-form e! (:db/id task)]
+        :modal-title (tr [:task :task-add-part-modal-title])
+        :button-component
+        [buttons/button-secondary
+         {:start-icon (r/as-element
+                        [icons/content-add])}
+         (tr [:task :add-part])]}]]]))
 
 (defn task-details
   [e! new-document {:task/keys [description files] :as task} files-form]
