@@ -89,7 +89,7 @@
          [typography/BoldGreyText
           {:style {:margin "1rem 0"}}
           (tr [:common :files])]
-         [file-view/file-table
+         [file-view/file-list2
           (merge {:filtering? false
                   :actions? true
                   :no-link? true

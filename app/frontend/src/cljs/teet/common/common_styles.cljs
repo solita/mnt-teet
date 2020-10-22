@@ -188,6 +188,11 @@
   {:display :flex
    :align-items :center})
 
+(defn flex-align-end
+  []
+  {:display :flex
+   :align-items :end})
+
 (defn status-circle-style
   [color]
   {:height "15px"

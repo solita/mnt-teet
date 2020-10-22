@@ -23,6 +23,9 @@
 (def gray-lightest "#F2F3F3")
 (def white "#FFFFFF")
 
+
+(def black-coral-1 "#D2D3D8")                               ;;not sure how these should be used, straight from the design
+
 ;; Accent colors
 (def orange-light "#FF6000")
 (def green "#008936")

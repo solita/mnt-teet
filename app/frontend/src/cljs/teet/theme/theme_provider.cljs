@@ -39,6 +39,9 @@
                                         :margin-right 0}}
                :MuiDialogContentText {:root {:padding "2rem 1rem"
                                              :background-color theme-colors/gray-lightest}}
+               :MuiChip {:sizeSmall {:height "20px"}
+                         :labelSmall {:padding-left "6px"
+                                      :padding-right "6px"}}
                :MuiToolBar {:root {:min-height "80px"}} ;This doesn't properly target the toolbar inside appbar
                :MuiFab {:root {:border-radius "2px"}}
                :MuiFilledInput {:root {:border-top-left-radius 0

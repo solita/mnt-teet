@@ -17,7 +17,7 @@
             [teet.ui.file-upload :as file-upload]
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
-            [teet.ui.material-ui :refer [Grid Link LinearProgress IconButton Badge]]
+            [teet.ui.material-ui :refer [Grid Link LinearProgress IconButton Badge Icon]]
             [teet.ui.panels :as panels]
             [teet.ui.select :as select]
             [teet.ui.tabs :as tabs]
@@ -32,6 +32,9 @@
             [teet.project.task-model :as task-model]
             [teet.file.filename-metadata :as filename-metadata]
             [teet.ui.text-field :as text-field]
+            [teet.ui.common :as common]
+            [goog.functions :as gfunc]
+            [teet.util.string :as string]
             [goog.string :as gstr]))
 
 
@@ -189,6 +192,132 @@
 (defn- sorted-by [{:keys [value]} files]
   (let [[sort-fn comparator] (sorters value)]
     (sort-by sort-fn comparator files)))
+
+(defn file-search
+  "Given original parts and files passes searched files and parts to component view"
+  [files parts file-component]                       ;; if files/parts change
+  (r/with-let [search-term (r/atom "")
+               on-change #(let [val (-> % .-target .-value)]
+                            (reset! search-term val))
+               selected-part (r/atom nil)
+               change-part #(do (reset! selected-part %))]
+    [:div
+     [:div {:class (<class common-styles/flex-row)}
+      [TextField {:value @search-term
+                  :style {:margin-right "1rem"}
+                  :placeholder (tr [:files :filter-file-listing])
+                  :start-icon icons/action-search
+                  :on-change on-change}]
+      [:div {:style {:max-width "200px"}}
+       [select/form-select {:items (concat [{:file.part/name (tr [:file-upload :general-part])
+                                             :file.part/number 0}]
+                                           parts)
+                            :format-item (fn [{:file.part/keys [name number]}]
+                                           (gstr/format "%s #%02d" name number))
+                            :on-change change-part
+                            :value @selected-part
+                            :empty-selection-label (tr [:file :all-parts])
+                            :show-empty-selection? true}]]]
+     [file-component
+      (filterv
+        (fn [{:file/keys [name original-name] :as file}]
+          (and
+            (string/contains-words? (str name " " original-name) @search-term)
+            file))
+        files)
+      (cond                                                 ;; This feels hacky
+        (= (:file.part/number @selected-part) 0)
+        []
+        @selected-part
+        [@selected-part]
+        :else
+        parts)]]))
+
+(defn file-comments-link
+  [{comment-counts :comment/counts :as file}]
+  (let [{:comment/keys [new-comments old-comments]} comment-counts
+        comments? (not (zero? (+ new-comments old-comments)))
+        new-comments? (not (zero? new-comments))]
+    [url/Link {:class (<class file-style/file-comments-link-style new-comments?)
+               :page :file
+               :params {:file (:db/id file)}
+               :query {:tab "comments"}}
+     (if comments?
+       (if new-comments?
+           [:span [common/comment-count-chip file] (tr [:common :new])]
+           [:span {:style {:text-transform :lowercase}}
+            [common/comment-count-chip file] (tr [:document :comments])])
+       [:span (tr [:land-modal-page :no-comments])])]))
+
+(defn file-row2
+  [{e! :e!
+    no-link? :no-link?
+    delete-action :delete-action
+    attached-to :attached-to} {:file/keys [document-group sequence-number status version] :as file}]
+  (let [{:keys [description extension]} (filename-metadata/name->description-and-extension (:file/name file))]
+    [:div {:class (<class file-style/file-row-style)}
+     [:div {:class (<class file-style/file-base-column-style)}
+      [:div {:class (<class file-style/file-icon-container-style)}
+       [fi/file {:style {:color theme-colors/primary}}]]    ;; This icon could be made dynamic baseed on the file-type
+      [:div
+       [:div {:class [(<class common-styles/flex-align-center)
+                      (<class common-styles/margin-bottom 0.5)]}
+
+        (if no-link?
+          [:p {:class (<class file-style/file-list-entity-name-style)}
+           description]
+          [url/Link {:class (<class file-style/file-list-entity-name-style)
+                     :page :file :params {:file (:db/id file)}}
+           description])
+        [typography/SmallGrayText {:style {:text-transform :uppercase}}
+         extension]]
+       [:div.file-info
+        [:strong (str/join " / " (filterv some?
+                                         [(when document-group
+                                            (tr-enum document-group))
+                                          (when sequence-number
+                                            (str "#" sequence-number))
+                                          (when version
+                                            (tr [:file :version] {:num version}))]))]
+        [typography/SmallText
+         (tr [:file :upload-info]
+             {:date (format/date-time (:meta/created-at file))
+              :author (user-model/user-name
+                        (:meta/creator file))})]
+        (when status
+          [typography/SmallBoldText (tr-enum status)])]]]
+     [:div {:class (<class file-style/file-actions-column-style)}
+      [:div {:style {:display :flex}}
+       #_[file-upload/FileUploadButton
+        {:on-drop (e! file-controller/->UploadNewVersion file)
+         :drag-container-id (str (:db/id file) "-file-row")
+         :color :primary
+         :multiple? false}
+        [icons/file-cloud-upload-outlined]]                 ;;  TODO this should be done after file edit modal is working
+       [IconButton
+        {:target :_blank
+         :size :small
+         :style {:margin-left "0.25rem"}
+         :href (common-controller/query-url
+                 (if attached-to
+                   :file/download-attachment
+                   :file/download-file)
+                 (merge
+                   {:file-id (:db/id file)}
+                   (when attached-to
+                     {:attached-to attached-to})))}
+        [icons/file-cloud-download-outlined {:style {:color theme-colors/primary}}]]
+       (when delete-action
+         [buttons/delete-button-with-confirm
+          {:action #(delete-action file)
+           :trashcan? true}])]
+      (when (:comment/counts file)
+        [file-comments-link file])]]))
+
+(defn file-list2
+  [opts files]
+  [:div {:class (<class common-styles/margin-bottom 1.5)}
+   (mapc (r/partial file-row2 opts) files)])
 
 (defn file-table
   ([files] (file-table {} files))
@@ -360,14 +489,16 @@
          [file-table other-versions]]])]))
 
 (defn file-part-heading
-  [e! part opts]
+  [{heading :heading
+       number :number} opts]
   [:div {:style {:margin-bottom "1.5rem"
                  :display :flex
                  :justify-content :space-between}}
    [:div {:class (<class common-styles/flex-row-end)}
     [typography/Heading2 {:style {:margin-right "0.5rem"}}
-     (:file.part/name part)]
-    [typography/GreyText (goog.string/format "#%02d" (:file.part/number part))]]
+     heading]
+    (when number
+      [typography/GreyText (goog.string/format "#%02d" number)])]
    [:div
     (when-let [action-comp (:action opts)]
       action-comp)]])

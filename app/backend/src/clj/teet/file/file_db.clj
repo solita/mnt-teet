@@ -137,7 +137,7 @@
                        {:file-seen/seen-at (seen-at-by-file (:db/id %))})
                first)
          (d/q '[:find (pull ?f [:db/id :file/name :meta/deleted? :file/version :file/size
-                                :file/status :file/part
+                                :file/status :file/part :file/group-number
                                 :file/original-name
                                 :file/document-group
                                 :file/sequence-number

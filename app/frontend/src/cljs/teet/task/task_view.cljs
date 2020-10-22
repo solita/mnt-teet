@@ -207,10 +207,11 @@
     ^{:attribute :file.part/name}
     [TextField {}]]])
 
-(defn file-part-view
+(defn file-section-view
   [{:keys [e! upload!]} task-id file-part files]
   [:div
-   [file-view/file-part-heading e! file-part
+   [file-view/file-part-heading {:heading (:file.part/name file-part)
+                                 :number (:file.part/number file-part)}
     {:action [:div
               [form/form-modal-button
                {:form-component [file-part-form e! task-id]
@@ -222,26 +223,54 @@
                   :style {:margin-right "0.5rem"}}
                  (tr [:buttons :edit])]}]
               [buttons/button-primary {:size :small
+                                       :start-icon (r/as-element [icons/content-add])
                                        :on-click #(upload! {:file/part file-part})}
                (tr [:buttons :upload])]]}]
    (if (seq files)
-     [file-view/file-table files]
+     [file-view/file-list2 {:e! e!
+                            :download? true} files]
      [file-view/no-files])])
+
+(defn task-file-heading
+  [upload!]
+  [:div {:class [(<class common-styles/space-between-center)
+                 (<class common-styles/margin-bottom 1)]}
+
+   [typography/Heading2 {:style {:margin-right "0.5rem"
+                                 :display :inline-block}}
+    (tr [:common :files])]
+   [:div
+    [buttons/button-primary {:start-icon (r/as-element [icons/content-add])
+                             :on-click #(upload! {})}
+     (tr [:buttons :upload])]]])
+
+(defn file-content-view
+  [e! upload! task files parts]
+  [:<>
+   [task-file-heading upload!]
+   (when (not= (count parts) 1)                             ;; if some other part is selected hide this
+     (let [general-files (remove #(contains? % :file/part) files)]
+       [file-view/file-list2 {:e! e!
+                              :download? true}
+        general-files]))
+   [:div
+    (mapc (fn [part]
+            [file-section-view {:e! e!
+                                :upload! upload!}
+             (:db/id task) part
+             (filterv
+               (fn [file]
+                 (= (:db/id part) (get-in file [:file/part :db/id])))
+               files)])
+          parts)]])
 
 (defn task-file-view
   [e! task upload!]
-  (let [parts (:file.part/_task task)]
+  (let [parts (:file.part/_task task)
+        files (:task/files task)]
     [:div
-     [:div
-      (mapc (fn [part]
-              [file-part-view {:e! e!
-                               :upload! upload!}
-               (:db/id task) part
-               (filter
-                 (fn [file]
-                   (= (:db/id part) (get-in file [:file/part :db/id])))
-                 (:task/files task))])
-            parts)]
+     [file-view/file-search files parts
+      (r/partial file-content-view e! upload! task)]
 
      [form/form-modal-button
       {:form-component [file-part-form e! (:db/id task)]
@@ -263,24 +292,26 @@
      (when description
        [typography/Paragraph description])
      [task-basic-info task]
-     [file-view/file-table (remove #(contains? % :file/part) files)]
      [task-file-view e! task upload!]
      (when (task-model/can-submit? task)
        [:<>
         [file-upload/FileUpload {:drag-container-id "task-details-drop"
                                  :drop-message (tr [:drag :drop-to-task])
                                  :on-drop #(upload! {:task/files %})}]
-        [panels/button-with-modal {:open-atom file-upload-open?
-                                   :button-component (file-view/file-upload-button)
-                                   :modal-options {:max-width "lg"}
-                                   :modal-title (tr [:task :add-document])
-                                   :modal-component [add-files-form e! task files-form
-                                                     (:in-progress? new-document)
-                                                     close!]
-                                   :on-close close!}
-         (when (seq files)
-           [when-authorized :task/submit task
-            [submit-results-button e! task]])]])
+        [panels/modal {:open-atom file-upload-open?
+                       :button-component (file-view/file-upload-button)
+                       :max-width "lg"
+                       :title (tr [:task :add-document])
+                       :modal-component [add-files-form e! task files-form
+                                         (:in-progress? new-document)
+                                         close!]
+                       :on-close close!}
+         [add-files-form e! task files-form
+          (:in-progress? new-document)
+          close!]]
+        (when (seq files)
+          [when-authorized :task/submit task
+           [submit-results-button e! task]])])
      (when (task-model/reviewing? task)
        [when-authorized :task/review task
         [:div.task-review-buttons {:style {:display :flex :justify-content :space-between}}
