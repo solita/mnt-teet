@@ -456,7 +456,8 @@
             {:e! e!
              :app app
              :project project
-             :column-widths [2 8 2]}
+             :column-widths [3 9 :auto]
+             :show-map? false}
             [Grid {:container true}
              [Grid {:item true :xs 3 :xl 2}
               [file-list (:task/files task) (:db/id file)]]

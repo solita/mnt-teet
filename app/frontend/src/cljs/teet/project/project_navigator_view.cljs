@@ -394,8 +394,9 @@
 
 (defn project-navigator-with-content
   "Page structure showing project navigator along with content."
-  [{:keys [e! project app column-widths]
-    :or {column-widths [3 6 :auto]}
+  [{:keys [e! project app column-widths show-map?]
+    :or {column-widths [3 6 :auto]
+         show-map? true}
     :as opts} content]
   (let [[nav-w content-w] column-widths]
     [project-context/provide
@@ -422,8 +423,9 @@
                        ;; want map to stay in place without scrolling it
                        }}
          content]
-        [Grid {:item  true
-               :xs :auto
-               :style {:display :flex
-                       :flex    1}}
-         [project-map-view/project-map e! app project]]]]]]))
+        (when show-map?
+          [Grid {:item  true
+                 :xs :auto
+                 :style {:display :flex
+                         :flex    1}}
+           [project-map-view/project-map e! app project]])]]]]))
