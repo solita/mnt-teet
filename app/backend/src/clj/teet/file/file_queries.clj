@@ -51,8 +51,6 @@
         file-key (:file/s3-key (du/entity db file-id))
         thumbnail-key (str file-key "-thumbnail-" size ".png")]
 
-    (def *bucket bucket)
-    (def *key thumbnail-key)
     ;; If thumbnail does not exist yet, generate and upload it
     (when-not (integration-s3/exists? bucket thumbnail-key)
       (log/info "Generating thumbnail:" thumbnail-key)
