@@ -32,10 +32,12 @@
             [teet.project.task-model :as task-model]
             [teet.file.filename-metadata :as filename-metadata]
             [teet.ui.text-field :as text-field]
+
             [teet.ui.common :as common]
             [goog.functions :as gfunc]
             [teet.util.string :as string]
             [goog.string :as gstr]))
+
 
 
 (defn file-identifying-info
@@ -393,11 +395,6 @@
                   [:span.file-list-status {:class (<class file-list-field-style)} (tr-enum status)])]]))
           files)]])
 
-(defn- labeled-data [[class label data]]
-  [:div {:class [class (<class common-styles/inline-block)]}
-   [:div [:b label]]
-   [:div data]])
-
 (defn preview-style []
   {:background-color theme-colors/gray-lightest
    :width "100%"
@@ -409,8 +406,19 @@
    :flex-direction :column
    :margin "2rem 0 2rem 0"})
 
-(defn- file-details [e! {:keys [replacement-upload-progress] :as file} latest-file edit-open? show-preview? can-replace-file?]
-  (log/info "file-details: file map is" (pr-str file))
+(defn- replace-file-form [e! file]
+  [:div
+   ;; FIXME: first select file then open modal
+   [file-upload/FileUploadButton
+    {:on-drop (e! file-controller/->UploadNewVersion file)
+     :drag-container-id "file-details-upload-replacement"
+     :color :secondary
+     :icon [icons/file-cloud-upload]
+     :multiple? false}
+    (tr [:file :upload-new-version])]])
+
+(defn- file-details [e! {:keys [replacement-upload-progress] :as file}
+                     latest-file can-replace-file?]
   (let [old? (some? latest-file)
         other-versions (if old?
                          (into [latest-file]
@@ -418,45 +426,21 @@
                                        (:versions latest-file)))
                          (:versions file))]
     [:div.file-details
-     [:div.file-details-name [:span (:file/name file)]]
+     [:div.file-details-original-name
+      [typography/GreyText
+       [:strong (str (tr [:fields :file/original-name]) ": ")]
+       [:span (:file/original-name file)]]]
      [:div.file-details-upload-info
       (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator file))
                                 :date (format/date (:meta/created-at file))})]
-     [:div {:class (<class common-styles/flex-row-space-between)}
-      (mapc labeled-data
-            [["file-details-number" (tr [:fields :file/number]) (:file/number file)]
-             ["file-details-version" (tr [:fields :file/version]) [:span (when old?
-                                                                           {:class (<class common-styles/warning-text)})
-                                                                   (str "V" (:file/version file)
-                                                                        (when old?
-                                                                          (str " " (tr [:file :old-version]))))]]
-             (if old?
-               ["file-details-latest"
-                "" [url/Link {:page :file
-                              :params {:file (:db/id latest-file)}}
-                    (tr [:file :switch-to-latest-version])]]
-               ["file-details-status"
-                (tr [:fields :file/status])
-                (tr-enum (:file/status file))])])]
 
-     (if @show-preview?
-       [:div
-        [:div {:class (<class preview-style)}
-         (if (file-model/image? file)
-           [:img {:style {:width :auto :height :auto
-                          :max-height "250px"
-                          :object-fit :contain}
-                  :src (common-controller/query-url :file/download-file {:file-id (:db/id file)})}]
-           "Preview")]
-        [buttons/button-primary {:on-click #(reset! show-preview? false)}
-          (tr [:file :hide-preview])]]
-       ;; else
-       [buttons/button-primary {:on-click #(reset! show-preview? true)}
-        (tr [:file :show-preview])])
+
 
      ;; size, upload new version and download buttons
      [:div {:class (<class common-styles/flex-row-space-between)}
-      [labeled-data ["file-details-size" (tr [:fields :file/size]) (format/file-size (:file/size file))]]
+      [common/labeled-data {:class "file-details-size"
+                            :label (tr [:fields :file/size])
+                            :data (format/file-size (:file/size file))}]
       (if replacement-upload-progress
         [LinearProgress {:variant :determinate
                          :value replacement-upload-progress}]
@@ -465,13 +449,14 @@
                     (nil? latest-file)
                     (du/enum= :file.status/draft (:file/status file)))
            [:div#file-details-upload-replacement
-            [file-upload/FileUploadButton
-             {:on-drop (e! file-controller/->UploadNewVersion file)
-              :drag-container-id "file-details-upload-replacement"
-              :color :secondary
-              :icon [icons/file-cloud-upload]
-              :multiple? false}
-             (tr [:file :upload-new-version])]])])
+            [panels/button-with-modal
+             {:modal-title "Upload replacement"
+              :button-component [buttons/button-secondary
+                                 {:start-icon (r/as-element [icons/file-cloud-upload-outlined])}
+                                 (tr [:file :upload-new-version])]
+              :modal-component [replace-file-form e! file]
+              }]
+            ])])
       [buttons/button-primary {:element "a"
                                :href (common-controller/query-url :file/download-file
                                                                   {:file-id (:db/id file)})
@@ -479,6 +464,16 @@
                                :start-icon (r/as-element
                                              [icons/file-cloud-download])}
        (tr [:file :download])]]
+
+     (when (file-model/image? file)
+       [:div {:class (<class preview-style)}
+        [:img {:style {:width :auto :height :auto
+                       :max-height "250px"
+                       :object-fit :contain}
+               :src (common-controller/query-url
+                     :file/thumbnail
+                     {:file-id (:db/id file)
+                      :size 250})}]])
 
      ;; list previous versions
      (when (seq other-versions)
@@ -591,7 +586,6 @@
                 :as app} project]
          (let [task (project-model/task-by-id project task-id)
                file (project-model/file-by-id project file-id false)
-               show-preview? (r/atom (and file (file-model/image? file)))
                old? (nil? file)
                file (or file (project-model/file-by-id project file-id true))
                latest-file (when old?
@@ -630,6 +624,7 @@
                  [buttons/button-secondary {:on-click #(reset! edit-open? true)}
                   (tr [:buttons :edit])]]]]
               [file-identifying-info file]
+              [typography/SmallText [:strong (tr-enum (:file/status file))]]
               [tabs/details-and-comments-tabs
                {:e! e!
                 :app app
@@ -638,4 +633,4 @@
                 :show-comment-form? (not old?)
                 :tab-wrapper (r/partial file-tab-wrapper file-part)}
                (when file
-                 [file-details e! file latest-file edit-open? show-preview? (task-model/can-submit? task)])]]]]))})))
+                 [file-details e! file latest-file (task-model/can-submit? task)])]]]]))})))
