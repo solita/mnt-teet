@@ -205,10 +205,11 @@
                selected-part (r/atom nil)
                change-part #(do (reset! selected-part %))]
     [:div
-     [:div {:class (<class common-styles/flex-row)}
+     [:div {:class [(<class common-styles/flex-row)
+                    (<class common-styles/margin-bottom 1)]}
       [TextField {:value @search-term
                   :style {:margin-right "1rem"}
-                  :placeholder (tr [:files :filter-file-listing])
+                  :placeholder (tr [:file :filter-file-listing])
                   :start-icon icons/action-search
                   :on-change on-change}]
       [:div {:style {:max-width "200px"}}
