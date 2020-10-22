@@ -35,6 +35,18 @@
             [goog.string :as gstr]))
 
 
+(defn file-identifying-info
+  "Show file identifying info: document group, seq# and version."
+  [{:file/keys [document-group sequence-number version]}]
+  [:strong.file-identifying-info
+   (str/join " / "
+             (remove nil?
+                     [(when document-group
+                        (tr-enum document-group))
+                      (when sequence-number
+                        (str "#" sequence-number))
+                      (when version
+                        (tr [:file :version] {:num version}))]))])
 
 (defn- file-row-icon-style
   []
@@ -474,6 +486,7 @@
                                :text-align :end}}
                  [buttons/button-secondary {:on-click #(reset! edit-open? true)}
                   (tr [:buttons :edit])]]]]
+              [file-identifying-info file]
               [tabs/details-and-comments-tabs
                {:e! e!
                 :app app
