@@ -277,11 +277,6 @@
                                        (:versions latest-file)))
                          (:versions file))]
     [:div.file-details
-     [:div.file-details-header {:class [(<class common-styles/heading-and-action-style) (<class common-styles/margin-bottom 2)]}
-      [typography/Heading2 [file-icon file] (:file/name file)]
-
-      [buttons/button-secondary {:on-click #(reset! edit-open? true)}
-       (tr [:buttons :edit])]]
      [:div.file-details-name [:span (:file/name file)]]
      [:div.file-details-upload-info
       (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator file))
@@ -451,7 +446,9 @@
                old? (nil? file)
                file (or file (project-model/file-by-id project file-id true))
                latest-file (when old?
-                             (project-model/latest-version-for-file-id project file-id))]
+                             (project-model/latest-version-for-file-id project file-id))
+               {:keys [description extension]}
+               (filename-metadata/name->description-and-extension (:file/name file))]
            [project-navigator-view/project-navigator-with-content
             {:e! e!
              :app app
@@ -468,6 +465,15 @@
                                     :on-close #(reset! edit-open? false)
                                     :file file
                                     :parts (:file.part/_task task)}])]
+              [typography/Heading2
+               [:div {:class (<class common-styles/flex-row)}
+                description
+                [typography/GreyText {:style {:margin-left "0.5rem"}}
+                 (str/upper-case extension)]
+                [:div {:style {:flex-grow 1
+                               :text-align :end}}
+                 [buttons/button-secondary {:on-click #(reset! edit-open? true)}
+                  (tr [:buttons :edit])]]]]
               [tabs/details-and-comments-tabs
                {:e! e!
                 :app app
