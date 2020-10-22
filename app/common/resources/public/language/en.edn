@@ -717,7 +717,7 @@
   :accept-review "Accept review",
   :reject-review "Reject review",
   :documents "Documents",
-  :add-part-modal-title "Add part",
+  :add-part-modal-title "Add task part",
   :add-document "Add document",
   :submit-results "Submit results",
   :submit-results-success "Results submitted successfully",
