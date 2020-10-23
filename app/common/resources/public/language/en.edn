@@ -721,7 +721,7 @@
   :decisions "Decisions"},
  :task
  {:task-overview "Task overview",
-  :edit-part-modal-title "Edir task part",
+  :edit-part-modal-title "Edit task part",
   :upload-files "Upload files",
   :edit-document "Edit document",
   :create-success-notification "Task created successfully",
