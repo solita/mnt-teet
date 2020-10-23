@@ -737,6 +737,7 @@
   :reject-review "Lükkan tagasi",
   :documents "Dokumendid",
   :add-part-modal-title "Lisan ülesande osa",
+  :part-deleted-successfully "Ülesande osa edukalt kustutatud",
   :submit-results "Esitan tulemused",
   :submit-results-success "Tulemused edukalt esitatud",
   :link-info "Vastutav isik - {assignee}. Tähtaeg - {deadline}.",
