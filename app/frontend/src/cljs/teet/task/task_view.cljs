@@ -212,22 +212,23 @@
   [:div
    [file-view/file-part-heading {:heading (:file.part/name file-part)
                                  :number (:file.part/number file-part)}
-    {:action [when-authorized
-              :task/create-part task
-              [:div
-               [form/form-modal-button
-                {:form-component [file-part-form e! (:db/id task)]
-                 :form-value file-part
-                 :modal-title (tr [:task :edit-part-modal-title])
-                 :button-component
-                 [buttons/button-secondary
-                  {:size :small
-                   :style {:margin-right "0.5rem"}}
-                  (tr [:buttons :edit])]}]
-               [buttons/button-primary {:size :small
-                                        :start-icon (r/as-element [icons/content-add])
-                                        :on-click #(upload! {:file/part file-part})}
-                (tr [:buttons :upload])]]]}]
+    {:action (when (task-model/can-submit? task)
+               [when-authorized
+                :task/create-part task
+                [:div
+                 [form/form-modal-button
+                  {:form-component [file-part-form e! (:db/id task)]
+                   :form-value file-part
+                   :modal-title (tr [:task :edit-part-modal-title])
+                   :button-component
+                   [buttons/button-secondary
+                    {:size :small
+                     :style {:margin-right "0.5rem"}}
+                    (tr [:buttons :edit])]}]
+                 [buttons/button-primary {:size :small
+                                          :start-icon (r/as-element [icons/content-add])
+                                          :on-click #(upload! {:file/part file-part})}
+                  (tr [:buttons :upload])]]])}]
    (if (seq files)
      [file-view/file-list2 {:e! e!
                             :download? true} files]
@@ -241,12 +242,13 @@
    [typography/Heading2 {:style {:margin-right "0.5rem"
                                  :display :inline-block}}
     (tr [:common :files])]
-   [when-authorized :file/upload
-    task
-    [:div
-     [buttons/button-primary {:start-icon (r/as-element [icons/content-add])
-                              :on-click #(upload! {})}
-      (tr [:buttons :upload])]]]])
+   (when (task-model/can-submit? task)
+     [when-authorized :file/upload
+      task
+      [:div
+       [buttons/button-primary {:start-icon (r/as-element [icons/content-add])
+                                :on-click #(upload! {})}
+        (tr [:buttons :upload])]]])])
 
 (defn file-content-view
   [e! upload! task files parts]
@@ -275,16 +277,17 @@
     [:div
      [file-view/file-search files parts
       (r/partial file-content-view e! upload! task)]
-     [when-authorized :task/create-part
-      task
-      [form/form-modal-button
-       {:form-component [file-part-form e! (:db/id task)]
-        :modal-title (tr [:task :add-part-modal-title])
-        :button-component
-        [buttons/button-secondary
-         {:start-icon (r/as-element
-                        [icons/content-add])}
-         (tr [:task :add-part])]}]]]))
+     (when (task-model/can-submit? task)
+       [when-authorized :task/create-part
+        task
+        [form/form-modal-button
+         {:form-component [file-part-form e! (:db/id task)]
+          :modal-title (tr [:task :add-part-modal-title])
+          :button-component
+          [buttons/button-secondary
+           {:start-icon (r/as-element
+                          [icons/content-add])}
+           (tr [:task :add-part])]}]])]))
 
 (defn task-details
   [e! new-document {:task/keys [description files] :as task} files-form]
