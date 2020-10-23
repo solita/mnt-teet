@@ -39,7 +39,7 @@
   [db task-id part-name]
   [{:db/id "new-part"
     :file.part/task task-id
-    :file.part/name part-name
+    :file.part/name (or part-name "")
     :file.part/number (file-db/next-task-part-number db task-id)}])
 
 (defn remove-task-file-part

@@ -201,6 +201,7 @@
                :value @form-data
                :on-change-event (form/update-atom-event form-data merge)
                :cancel-event close-event
+               :spec :task/create-part
                :save-event #(task-controller/->SavePartForm close-event task-id @form-data)
                :delete (when-let [part-id (:db/id @form-data)]
                          (task-controller/->DeleteFilePart close-event part-id))}
