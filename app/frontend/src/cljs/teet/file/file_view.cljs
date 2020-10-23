@@ -33,7 +33,8 @@
             [teet.ui.common :as common]
             [teet.util.string :as string]
             [goog.string :as gstr]
-            [teet.ui.format :as fmt]))
+            [teet.ui.format :as fmt]
+            [teet.log :as log]))
 
 
 
@@ -365,33 +366,46 @@
 (defn- file-list-field-style []
   {:flex-basis "25%" :flex-shrink 0 :flex-grow 0})
 
-(defn- file-list [files current-file-id]
-  [:div.file-list
-   [typography/Heading2 (tr [:task :results])]
-   [:div
-    (mapc (fn [{id :db/id :file/keys [name version number status] :as f}]
-            (let [[_ base-name suffix] (re-matches #"^(.*)\.([^\.]+)$" name)]
-              [:div.file-list-entry
-               [:div
-                [file-icon (assoc f :class "file-list-icon")]
-                (if (= current-file-id id)
-                  [:b.file-list-name-active (or base-name name)]
-                  [url/Link {:page :file
-                             :params {:file id}
-                             :class "file-list-name"}
-                   (or base-name name)])]
-               [:div {:style {:font-size "12px" :display :flex
-                              :justify-content :space-between
-                              :margin "0 1rem 1rem 1rem"}}
-                [:span.file-list-suffix {:class (<class file-list-field-style)}
-                 (if suffix
-                    (str/upper-case suffix)
-                    "")]
-                [:span.file-list-number {:class (<class file-list-field-style)} number]
-                [:span.file-list-version {:class (<class file-list-field-style)} (str "V" version)]
-                (when status
-                  [:span.file-list-status {:class (<class file-list-field-style)} (tr-enum status)])]]))
-          files)]])
+(defn- file-list [parts files current-file-id]
+  (let [parts (sort-by :file.part/number
+                       (concat [{:file.part/number 0 :file.part/name (tr [:file-upload :general-part])}]
+                               parts))]
+    [:div.file-list
+     (mapc
+      (fn [{part-id :db/id :file.part/keys [name number]}]
+        (let [files (filter (fn [{part :file/part}]
+                              (or (and (nil? part)
+                                       (zero? number))
+                                  (= part-id (:db/id part))))
+                            files)]
+          (when (seq files)
+            [:<>
+             [typography/Heading3 (gstr/format "%s #%02d" name number)]
+             [:div
+              (mapc (fn [{id :db/id :file/keys [name version number status] :as f}]
+                      (let [[_ base-name suffix] (re-matches #"^(.*)\.([^\.]+)$" name)]
+                        [:div.file-list-entry
+                         [:div
+                          [file-icon (assoc f :class "file-list-icon")]
+                          (if (= current-file-id id)
+                            [:b.file-list-name-active (or base-name name)]
+                            [url/Link {:page :file
+                                       :params {:file id}
+                                       :class "file-list-name"}
+                             (or base-name name)])]
+                         [:div {:style {:font-size "12px" :display :flex
+                                        :justify-content :space-between
+                                        :margin "0 1rem 1rem 1rem"}}
+                          [:span.file-list-suffix {:class (<class file-list-field-style)}
+                           (if suffix
+                             (str/upper-case suffix)
+                             "")]
+                          [:span.file-list-number {:class (<class file-list-field-style)} number]
+                          [:span.file-list-version {:class (<class file-list-field-style)} (str "V" version)]
+                          (when status
+                            [:span.file-list-status {:class (<class file-list-field-style)} (tr-enum status)])]]))
+                    files)]])))
+      parts)]))
 
 (defn preview-style []
   {:background-color theme-colors/gray-lightest
@@ -652,7 +666,7 @@
                  :show-map? false}
                 [Grid {:container true}
                  [Grid {:item true :xs 3 :xl 2}
-                  [file-list (:task/files task) (:db/id file)]]
+                  [file-list (:file.part/_task task) (:task/files task) (:db/id file)]]
                  [Grid {:item true :xs 9 :xl 10}
                   [:<>
                    (when @edit-open?
