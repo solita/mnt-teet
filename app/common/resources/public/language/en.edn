@@ -90,8 +90,8 @@
  :contact
  {:address "Address",
   :email "Email",
-  :phone "Phone",
-  :phone2 "Phone2"},
+  :phone "Mobile",
+  :phone2 "Phone"},
  :dashboard
  {:activities-and-tasks "Activities and tasks",
   :my-projects "My projects",

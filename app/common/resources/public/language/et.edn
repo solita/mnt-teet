@@ -90,8 +90,8 @@
  :contact
  {:address "Aadress",
   :email "E-post",
-  :phone "Telefon",
-  :phone2 "Telefon2"},
+  :phone "Mobile",
+  :phone2 "Telefon"},
  :dashboard
  {:activities-and-tasks "Tegevused ja ülesanded",
   :my-projects "Minu projektid",
