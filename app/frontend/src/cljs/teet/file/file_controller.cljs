@@ -37,10 +37,9 @@
 ;; Modify file info
 (defrecord ModifyFile [file callback])
 
-;; Fetch latest version of given file id
-(defrecord OpenLatestVersion [file-id])
-;; Open the latest version
-(defrecord OpenLatestVersionResult [file-id])
+;; Open the latest version by id
+(defrecord OpenFileVersion [file-id])
+
 
 (extend-protocol t/Event
 
@@ -112,21 +111,13 @@
            :result-event (fn [{file :file :as result}]
                            (map->UploadFileUrlReceived
                              (merge result
-                                    {:file-data (:file-object (first new-version))
-                                     :on-success (->OpenLatestVersion (:db/id file))})))}))
+                                    {:file-data (:file-object new-version)
+                                     :on-success (->OpenFileVersion (:db/id file))})))}))
 
-  OpenLatestVersion
-  (process-event [{:keys [file-id]} app]
-    (t/fx app
-          common-controller/refresh-fx
-          {:tuck.effect/type :query
-           :query :file/latest-version
-           :args {:file-id file-id}
-           :result-event ->OpenLatestVersionResult}))
-
-  OpenLatestVersionResult
+  OpenFileVersion
   (process-event [{:keys [file-id]} {:keys [page params query] :as app}]
     (t/fx app
+          common-controller/refresh-fx
           {:tuck.effect/type :navigate
            :page page
            :params (assoc params :file (str file-id))
