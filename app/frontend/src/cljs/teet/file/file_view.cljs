@@ -17,7 +17,7 @@
             [teet.ui.file-upload :as file-upload]
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
-            [teet.ui.material-ui :refer [Grid Link LinearProgress IconButton Badge Icon]]
+            [teet.ui.material-ui :refer [Grid Link LinearProgress IconButton Badge Icon CircularProgress]]
             [teet.ui.panels :as panels]
             [teet.ui.select :as select]
             [teet.ui.tabs :as tabs]
@@ -408,28 +408,44 @@
    :flex-direction :column
    :margin "2rem 0 2rem 0"})
 
-(defn- replace-file-form* [e! task file form new-metadata]
+(defn- replace-file-form [e! task file form close!]
   (let [{:keys [description extension]} (filename-metadata/name->description-and-extension
                                          (:file/name file))]
     [panels/modal {:max-width "lg"
+                   :on-close close!
                    :title [:<>
                            (tr [:file :replace-dialog-title])
                            [typography/GreyText
                             (str description "." extension)]]}
      [:div
-      (pr-str new-metadata)
-      [common/info-box {:title (tr [:file :replace-dialog-info-title])
-                        :content (tr [:file :replace-dialog-info-text])}]]]))
 
-(defn- replace-file-form [e! task file form]
-  [query/query {:e! e!
-                :query :file/resolve-metadata
-                :args (-> form :file-object file-model/file-info)
-                :simple-view [replace-file-form* e! task file form]}])
+      [common/info-box {:title (tr [:file :replace-dialog-info-title])
+                        :content (tr [:file :replace-dialog-info-text])}]
+
+      [form/form {:e! e!
+                  :value form
+                  :on-change-event file-controller/->UpdateFilesForm
+                  :save-event #(file-controller/->UploadNewVersion
+                                file
+                                (get-in form [:task/files 0]))
+                  :cancel-fn close!}
+       ^{:attribute :task/files
+         :validate (fn [files]
+                     (or
+                      (some some? (map (partial file-upload/validate-file e! task) files))
+                      (when (not= 1 (count files))
+                        "expect exactly one file")))}
+       [file-upload/files-field {:e! e!
+                                 :task task
+                                 :single? true}]]]]))
 
 (defn- file-details [e! task {:keys [replacement-upload-progress] :as file}
-                     latest-file can-replace-file?]
-  (r/with-let [replacement-form (r/atom nil)]
+                     latest-file can-replace-file? replace-form]
+  (r/with-let [replacement-form-open? (r/atom false)
+               upload! #(do (e! (file-controller/->UpdateFilesForm %))
+                            (reset! replacement-form-open? true))
+               close! #(do (reset! replacement-form-open? false)
+                           (e! (file-controller/->AfterUploadRefresh)))]
     (let [old? (some? latest-file)
           other-versions (if old?
                            (into [latest-file]
@@ -461,7 +477,7 @@
                       (du/enum= :file.status/draft (:file/status file)))
              [:div#file-details-upload-replacement
               [file-upload/FileUpload
-               {:on-drop #(swap! replacement-form %)
+               {:on-drop #(upload! {:task/files %})
                 :drag-container-id "file-details-upload-replacement"
                 :color :secondary
                 :icon [icons/file-cloud-upload]
@@ -470,8 +486,8 @@
                 {:component :span
                  :start-icon (r/as-element [icons/file-cloud-upload-outlined])}
                 (tr [:file :upload-new-version])]]
-              (when-let [form @replacement-form]
-                [replace-file-form e! task file form])])])
+              (when @replacement-form-open?
+                [replace-file-form e! task file replace-form close!])])])
         [buttons/button-primary {:element "a"
                                  :href (common-controller/query-url :file/download-file
                                                                     {:file-id (:db/id file)})
@@ -600,52 +616,56 @@
                  task-id :task} :params
                 :as app} project]
          (let [task (project-model/task-by-id project task-id)
-               file (project-model/file-by-id project file-id false)
-               old? (nil? file)
-               file (or file (project-model/file-by-id project file-id true))
-               latest-file (when old?
-                             (project-model/latest-version-for-file-id project file-id))
-               {:keys [description extension]}
-               (filename-metadata/name->description-and-extension (:file/name file))
-               file-part (or (some #(when (= (:db/id %)
-                                             (get-in file [:file/part :db/id]))
-                                      %)
-                                   (:file.part/_task task))
-                             {:file.part/name (tr [:file-upload :general-part])
-                              :file.part/number 0})]
-           [project-navigator-view/project-navigator-with-content
-            {:e! e!
-             :app app
-             :project project
-             :column-widths [3 9 :auto]
-             :show-map? false}
-            [Grid {:container true}
-             [Grid {:item true :xs 3 :xl 2}
-              [file-list (:task/files task) (:db/id file)]]
-             [Grid {:item true :xs 9 :xl 10}
-              [:<>
-               (when @edit-open?
-                 [file-edit-dialog {:e! e!
-                                    :on-close #(reset! edit-open? false)
-                                    :file file
-                                    :parts (:file.part/_task task)}])]
-              [typography/Heading2
-               [:div {:class (<class common-styles/flex-row)}
-                description
-                [typography/GreyText {:style {:margin-left "0.5rem"}}
-                 (str/upper-case extension)]
-                [:div {:style {:flex-grow 1
-                               :text-align :end}}
-                 [buttons/button-secondary {:on-click #(reset! edit-open? true)}
-                  (tr [:buttons :edit])]]]]
-              [file-identifying-info file]
-              [typography/SmallText [:strong (tr-enum (:file/status file))]]
-              [tabs/details-and-comments-tabs
-               {:e! e!
-                :app app
-                :entity-id (:db/id file)
-                :entity-type :file
-                :show-comment-form? (not old?)
-                :tab-wrapper (r/partial file-tab-wrapper file-part)}
-               (when file
-                 [file-details e! task file latest-file (task-model/can-submit? task)])]]]]))})))
+               file (project-model/file-by-id project file-id false)]
+           (if (nil? file)
+             [CircularProgress {}]
+             (let [old? (nil? file)
+                   file (or file (project-model/file-by-id project file-id true))
+                   latest-file (when old?
+                                 (project-model/latest-version-for-file-id project file-id))
+                   {:keys [description extension]}
+                   (filename-metadata/name->description-and-extension (:file/name file))
+                   file-part (or (some #(when (= (:db/id %)
+                                                 (get-in file [:file/part :db/id]))
+                                          %)
+                                       (:file.part/_task task))
+                                 {:file.part/name (tr [:file-upload :general-part])
+                                  :file.part/number 0})]
+               [project-navigator-view/project-navigator-with-content
+                {:e! e!
+                 :app app
+                 :project project
+                 :column-widths [3 9 :auto]
+                 :show-map? false}
+                [Grid {:container true}
+                 [Grid {:item true :xs 3 :xl 2}
+                  [file-list (:task/files task) (:db/id file)]]
+                 [Grid {:item true :xs 9 :xl 10}
+                  [:<>
+                   (when @edit-open?
+                     [file-edit-dialog {:e! e!
+                                        :on-close #(reset! edit-open? false)
+                                        :file file
+                                        :parts (:file.part/_task task)}])]
+                  [typography/Heading2
+                   [:div {:class (<class common-styles/flex-row)}
+                    description
+                    [typography/GreyText {:style {:margin-left "0.5rem"}}
+                     (str/upper-case extension)]
+                    [:div {:style {:flex-grow 1
+                                   :text-align :end}}
+                     [buttons/button-secondary {:on-click #(reset! edit-open? true)}
+                      (tr [:buttons :edit])]]]]
+                  [file-identifying-info file]
+                  [typography/SmallText [:strong (tr-enum (:file/status file))]]
+                  [tabs/details-and-comments-tabs
+                   {:e! e!
+                    :app app
+                    :entity-id (:db/id file)
+                    :entity-type :file
+                    :show-comment-form? (not old?)
+                    :tab-wrapper (r/partial file-tab-wrapper file-part)}
+                   (when file
+                     [file-details e! task file latest-file
+                      (task-model/can-submit? task)
+                      (:files-form project)])]]]]))))})))

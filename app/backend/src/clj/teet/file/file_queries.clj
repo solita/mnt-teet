@@ -38,6 +38,13 @@
    :authorization {:document/view-document {:db/id file-id}}}
   (url-for-file db file-id true))
 
+(defquery :file/latest-version
+  {:doc "Get the id of the latest version of a file"
+   :context {db :db}
+   :args {file-id :file-id}
+   :project-id (project-db/file-project-id db file-id)
+   :authorization {:document/view-document {:db/id file-id}}}
+  (file-db/latest-version db file-id))
 
 (defquery :file/thumbnail
   {:doc "Download small image preview of the given file (must be an image)"

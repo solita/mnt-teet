@@ -26,7 +26,8 @@
     file-id))
 
 (defn- find-previous-version [db task-id previous-version]
-  (if-let [old-file (ffirst (d/q '[:find (pull ?f [:db/id :file/version :file/sequence-number])
+  (if-let [old-file (ffirst (d/q '[:find (pull ?f [:db/id :file/version :file/sequence-number
+                                                   {:file/part [:db/id :file.part/number :file.part/name]}])
                                    :in $ ?f ?t
                                    :where
                                    [?t :task/files ?f]]
@@ -143,6 +144,10 @@
                                                    {:file/name (str (:file/description file) "." (:file/extension file))})
                                                  (when old-file
                                                    {:file/previous-version (:db/id old-file)})
+
+                                                 ;; Replacement version is uploaded to the same part
+                                                 (when-let [old-part (:file/part old-file)]
+                                                   {:file/part old-part})
                                                  (when-let [old-seq-number (:file/sequence-number old-file)]
                                                    {:file/sequence-number old-seq-number})
                                                  (creation-meta user)))]})]

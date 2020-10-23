@@ -37,6 +37,11 @@
 ;; Modify file info
 (defrecord ModifyFile [file callback])
 
+;; Fetch latest version of given file id
+(defrecord OpenLatestVersion [file-id])
+;; Open the latest version
+(defrecord OpenLatestVersionResult [file-id])
+
 (extend-protocol t/Event
 
   DeleteFile
@@ -85,22 +90,48 @@
 
   AfterUploadRefresh
   (process-event [_ app]
-    (t/fx (dissoc app :new-document)
+    (t/fx (-> app
+              (common-controller/update-page-state [] dissoc :files-form)
+              (dissoc :new-document))
           common-controller/refresh-fx))
 
   UploadNewVersion
   (process-event [{:keys [file new-version]} {params :params :as app}]
+    (log/info "UploadNewVersion file:" file ", new-version: " new-version)
+    app
     (t/fx app
           {:tuck.effect/type :command!
            :command :file/upload
            :payload {:task-id (common-controller/->long (get-in app [:params :task]))
-                     :file (file-model/file-info (:file-object (first new-version)))
+                     :file (merge (file-model/file-info (:file-object new-version))
+                                  (select-keys new-version
+                                               [:file/document-group
+                                                :file/sequence-number
+                                                :file/original-name]))
                      :previous-version-id (:db/id file)}
            :result-event (fn [{file :file :as result}]
                            (map->UploadFileUrlReceived
                              (merge result
                                     {:file-data (:file-object (first new-version))
-                                     :on-success (->UploadSuccess (:db/id file))})))}))
+                                     :on-success (->OpenLatestVersion (:db/id file))})))}))
+
+  OpenLatestVersion
+  (process-event [{:keys [file-id]} app]
+    (t/fx app
+          common-controller/refresh-fx
+          {:tuck.effect/type :query
+           :query :file/latest-version
+           :args {:file-id file-id}
+           :result-event ->OpenLatestVersionResult}))
+
+  OpenLatestVersionResult
+  (process-event [{:keys [file-id]} {:keys [page params query] :as app}]
+    (t/fx app
+          {:tuck.effect/type :navigate
+           :page page
+           :params (assoc params :file (str file-id))
+           :query query}))
+
 
   UploadFiles
   (process-event [{:keys [files project-id task-id on-success progress-increment
