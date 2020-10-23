@@ -454,13 +454,16 @@
          [:strong (str (tr [:fields :file/original-name]) ": ")]
          [:span (:file/original-name file)]]]
 
-       (when-let [first-version (last other-versions)]
-         [:div.file-details-upload-info
-          (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator first-version))
-                                    :date (format/date (:meta/created-at first-version))})])
-       [:div.file-details-edit-info
-        (tr [:file :edit-info] {:author (user-model/user-name (:meta/creator file))
-                                :date (format/date (:meta/created-at file))})]
+       (let [first-version (or (last other-versions) file)
+             edited? (not= first-version file)]
+         [:<>
+          [:div.file-details-upload-info
+           (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator first-version))
+                                     :date (format/date (:meta/created-at first-version))})]
+          (when edited?
+            [:div.file-details-edit-info
+             (tr [:file :edit-info] {:author (user-model/user-name (:meta/creator file))
+                                     :date (format/date (:meta/created-at file))})])])
 
 
 
