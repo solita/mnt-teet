@@ -291,7 +291,7 @@
            (tr [:task :add-part])]}]])]))
 
 (defn task-details
-  [e! new-document {:task/keys [description files] :as task} files-form]
+  [e! new-document activity {:task/keys [description files] :as task} files-form]
   (r/with-let [file-upload-open? (r/atom false)
                upload! #(do (e! (file-controller/->UpdateFilesForm %))
                             (reset! file-upload-open? true))
@@ -310,7 +310,13 @@
         [panels/modal {:open-atom file-upload-open?
                        :button-component (file-view/file-upload-button)
                        :max-width "lg"
-                       :title (tr [:task :add-document])
+                       :title [:<>
+                               (tr [:task :upload-files])
+                               [typography/GreyText {:style {:display :inline
+                                                             :margin-left "1rem"}}
+                                (str (tr-enum (:activity/name activity))
+                                     " / "
+                                     (tr-enum (:task/type task)))]]
                        :modal-component [add-files-form e! task files-form
                                          (:in-progress? new-document)
                                          close!]
@@ -344,7 +350,7 @@
     [:span]))
 
 (defn task-page-content
-  [e! app {status :task/status :as task} pm? files-form]
+  [e! app activity {status :task/status :as task} pm? files-form]
   [:div.task-page
    (when (and pm? (du/enum= status :task.status/waiting-for-review))
      [when-authorized :task/start-review task
@@ -357,7 +363,7 @@
      :comment-command :comment/comment-on-task
      :entity-type :task
      :entity-id (:db/id task)}
-    [task-details e! (:new-document app) task files-form]]])
+    [task-details e! (:new-document app) activity task files-form]]])
 
 
 (defn edit-task-form [_e! {:keys [initialization-fn]} {:keys [max-date min-date]}]
@@ -411,17 +417,19 @@
 (defn task-page [e! {{task-id :task :as _params} :params user :user :as app}
                  project]
   (log/info "task-page render")
-  (let [activity-manager (cu/find-> project
-                                    :thk.project/lifecycles some?
-                                    :thk.lifecycle/activities (fn [{:activity/keys [tasks]}]
-                                                                (du/find-by-id task-id tasks))
-                                    :activity/manager)]
+  (let [{activity-manager :activity/manager
+         :as activity}
+        (cu/find-> project
+                   :thk.project/lifecycles some?
+                   :thk.lifecycle/activities (fn [{:activity/keys [tasks]}]
+                                               (du/find-by-id task-id tasks)))]
     [project-navigator-view/project-navigator-with-content
      {:e! e!
       :project project
       :app app}
 
      [task-page-content e! app
+      activity
       (project-model/task-by-id project task-id)
       (= (:db/id user)
          (:db/id activity-manager))
