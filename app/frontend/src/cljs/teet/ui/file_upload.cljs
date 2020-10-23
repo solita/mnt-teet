@@ -145,6 +145,7 @@
                           :on-change #(update-file {:file/document-group %})}]]
     [TableCell {:style {:border :none}}
      [TextField {:value (or (:file/sequence-number file-row) "")
+                 :disabled (nil? (:file/document-group file-row))
                  :type :number
                  :placeholder "0000"
                  :inline? true

@@ -264,8 +264,10 @@
   ;; files
   UpdateFilesForm
   (process-event [{:keys [new-value]} app]
-    (let [form (merge (common-controller/page-state app :files-form)
-                      new-value)
+    (let [form (-> (common-controller/page-state app :files-form)
+                   (merge new-value)
+                   (update :task/files
+                           #(mapv file-updated %)))
           files (:task/files form)
           files-to-fetch (filter (complement :metadata)
                                  files)
