@@ -302,7 +302,8 @@
   "You are using the development build of teet. Information saved here may be lost.",
   :version "Version"},
  :error
- {:part-has-files "Can't delete a part that has files",
+ {:part-has-files
+  "Can't delete a part that has files. Move the files before deleting the task part",
   :authorization-failure "Session expired. Please login again.",
   :invalid-task-dates "Check task dates",
   :user-is-already-participant "User is already participant",
@@ -723,9 +724,9 @@
  {:task-overview "Task overview",
   :edit-part-modal-title "Edit task part",
   :upload-files "Upload files",
-  :part-added-succesfully nil,
+  :part-added-succesfully "Task part added successfully",
   :edit-document "Edit document",
-  :part-edited-succesfully nil,
+  :part-edited-succesfully "Task part edited successfully",
   :create-success-notification "Task created successfully",
   :start-review-success "Review started",
   :add-part "Add part",
