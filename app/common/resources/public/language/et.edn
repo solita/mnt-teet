@@ -720,6 +720,7 @@
   :decisions "Otsused"},
  :task
  {:task-overview "Ülesande ülevaade",
+  :edit-part-modal-title nil,
   :upload-files "Laen failid üles",
   :edit-document "Muudan dokumenti",
   :create-success-notification "Ülesanne edukalt loodud",
