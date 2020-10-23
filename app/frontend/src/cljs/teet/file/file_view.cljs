@@ -32,7 +32,8 @@
             [teet.file.filename-metadata :as filename-metadata]
             [teet.ui.common :as common]
             [teet.util.string :as string]
-            [goog.string :as gstr]))
+            [goog.string :as gstr]
+            [teet.ui.format :as fmt]))
 
 
 
@@ -506,8 +507,17 @@
          [:<>
           [:br]
           [typography/Heading2 (tr [:file :other-versions])]
-          [:div.file-table-other-versions
-           [file-table other-versions]]])])))
+          (mapc (fn [file]
+                  [:div {:class (<class common-styles/flex-row)}
+
+                   [:div {:class (<class common-styles/flex-table-column-style 80)}
+                    [Link {:target :_blank
+                          :href (common-controller/query-url :file/download-file
+                                                             {:file-id (:db/id file)})}
+                     (:file/name file)]]
+                   [:div {:class (<class common-styles/flex-table-column-style 20)}
+                    (fmt/date (:meta/created-at file))]])
+                other-versions)])])))
 
 (defn file-part-heading
   [{heading :heading
