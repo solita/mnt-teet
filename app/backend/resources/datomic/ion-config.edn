@@ -4,6 +4,7 @@
          teet.file.file-model/image-suffix?
          teet.file.file-tx/upload-file-to-task
          teet.file.file-tx/create-task-file-part
+         teet.file.file-tx/remove-task-file-part
          teet.file.file-tx/modify-file]
  :lambdas {:query
            {:fn teet.db-api.db-api-ion/db-api-query

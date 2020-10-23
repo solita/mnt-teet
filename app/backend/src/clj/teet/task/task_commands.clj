@@ -150,7 +150,8 @@
    :project-id (project-db/file-part-project-id db part-id)
    :authorization {:task/task-information {:db/id (project-db/file-part-project-id db part-id)
                                            :link :task/assignee}}
-   :transact [(meta-model/deletion-tx user part-id)]})
+   :transact [(list 'teet.file.file-tx/remove-task-file-part
+                    part-id user)]})
 
 (defcommand :task/start-review
   {:doc "Start review for task, sets status."

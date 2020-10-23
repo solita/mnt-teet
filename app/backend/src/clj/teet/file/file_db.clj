@@ -295,7 +295,7 @@
                      [?e :file.part/number ?n]
                      :in $ ?task]
                    (d/history db) task-id))]
-    (first (remove used-numbers (drop 1 (range 1 100))))))
+    (first (remove used-numbers (range 1 100)))))
 
 (defn latest-version
   "Return the :db/id of the latest version of the given file."
