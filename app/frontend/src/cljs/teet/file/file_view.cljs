@@ -17,27 +17,22 @@
             [teet.ui.file-upload :as file-upload]
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
-            [teet.ui.material-ui :refer [Grid Link LinearProgress IconButton Badge Icon CircularProgress]]
+            [teet.ui.material-ui :refer [Grid Link LinearProgress IconButton Badge CircularProgress]]
             [teet.ui.panels :as panels]
             [teet.ui.select :as select]
             [teet.ui.tabs :as tabs]
-            [teet.ui.text-field :refer [TextField]]
+            [teet.ui.text-field :refer [TextField] :as text-field]
             [teet.ui.typography :as typography]
             [teet.ui.url :as url]
             [teet.ui.util :refer [mapc]]
             [teet.ui.form :as form]
             [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]
-            [teet.log :as log]
             [teet.project.task-model :as task-model]
             [teet.file.filename-metadata :as filename-metadata]
-            [teet.ui.text-field :as text-field]
-
             [teet.ui.common :as common]
-            [goog.functions :as gfunc]
             [teet.util.string :as string]
-            [goog.string :as gstr]
-            [teet.ui.query :as query]))
+            [goog.string :as gstr]))
 
 
 
