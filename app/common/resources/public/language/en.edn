@@ -302,7 +302,8 @@
   "You are using the development build of teet. Information saved here may be lost.",
   :version "Version"},
  :error
- {:authorization-failure "Session expired. Please login again.",
+ {:part-has-files "Can't delete a part that has files",
+  :authorization-failure "Session expired. Please login again.",
   :invalid-task-dates "Check task dates",
   :user-is-already-participant "User is already participant",
   :server-error "Server error.",
@@ -423,6 +424,7 @@
   :upload-info "Uploaded {date} by {author}",
   :hide-preview "Hide preview",
   :replace-dialog-title "Upload new version ",
+  :edit-info "Last edited {date} by {author}",
   :add-part-modal-title "Add part",
   :other-versions "Other versions",
   :filter-file-listing "Filter file listing",
@@ -721,7 +723,7 @@
   :decisions "Decisions"},
  :task
  {:task-overview "Task overview",
-  :edit-part-modal-title "Edir task part",
+  :edit-part-modal-title "Edit task part",
   :upload-files "Upload files",
   :edit-document "Edit document",
   :create-success-notification "Task created successfully",
