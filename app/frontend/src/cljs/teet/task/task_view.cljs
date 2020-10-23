@@ -218,7 +218,7 @@
                [form/form-modal-button
                 {:form-component [file-part-form e! (:db/id task)]
                  :form-value file-part
-                 :modal-title (tr [:file :edit-part-modal-title])
+                 :modal-title (tr [:task :edit-part-modal-title])
                  :button-component
                  [buttons/button-secondary
                   {:size :small
@@ -279,7 +279,7 @@
       task
       [form/form-modal-button
        {:form-component [file-part-form e! (:db/id task)]
-        :modal-title (tr [:task :task-add-part-modal-title])
+        :modal-title (tr [:task :add-part-modal-title])
         :button-component
         [buttons/button-secondary
          {:start-icon (r/as-element
