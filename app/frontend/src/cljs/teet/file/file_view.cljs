@@ -226,6 +226,7 @@
             (string/contains-words? (str name " " original-name) @search-term)
             file))
         files)
+      parts
       (cond                                                 ;; This feels hacky
         (= (:file.part/number @selected-part) 0)
         []
@@ -270,7 +271,8 @@
           [url/Link {:class (<class file-style/file-list-entity-name-style)
                      :page :file :params {:file (:db/id file)}}
            description])
-        [typography/SmallGrayText {:style {:text-transform :uppercase}}
+        [typography/SmallGrayText {:style {:text-transform :uppercase
+                                           :white-space :nowrap}}
          extension]]
        [:div.file-info
         [:strong (str/join " / " (filterv some?

@@ -251,10 +251,10 @@
         (tr [:buttons :upload])]]])])
 
 (defn file-content-view
-  [e! upload! task files parts]
+  [e! upload! task files parts filtered-parts]
   [:<>
    [task-file-heading task upload!]
-   (when (not= (count parts) 1)                             ;; if some other part is selected hide this
+   (when (or (empty? filtered-parts) (= (count parts) (count filtered-parts))) ;; if some other part is selected hide this
      (let [general-files (remove #(contains? % :file/part) files)]
        [file-view/file-list2 {:e! e!
                               :download? true}
@@ -268,7 +268,7 @@
                (fn [file]
                  (= (:db/id part) (get-in file [:file/part :db/id])))
                files)])
-          parts)]])
+          filtered-parts)]])
 
 (defn task-file-view
   [e! task upload!]
