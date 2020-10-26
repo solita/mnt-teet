@@ -114,6 +114,10 @@
    :color theme-colors/error
    :text-align :center})
 
+(defn white-space-nowrap
+  []
+  {:white-space :nowrap})
+
 (defn input-start-text-adornment
   "Style for a short text adornment before input text"
   []
@@ -149,6 +153,10 @@
   {:display :flex
    :flex-direction :row
    :align-items :end})
+
+(defn margin-right
+  [rem]
+  {:margin-right (str rem "rem")})
 
 (defn flex-row-wrap
   []

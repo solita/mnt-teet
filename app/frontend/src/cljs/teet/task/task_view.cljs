@@ -216,11 +216,14 @@
     {:action (when (task-model/can-submit? task)
                [when-authorized
                 :task/create-part task
-                [:div
+                [:div {:class (<class common-styles/flex-row)}
                  [form/form-modal-button
                   {:form-component [file-part-form e! (:db/id task)]
                    :form-value file-part
-                   :modal-title (tr [:task :edit-part-modal-title])
+                   :modal-title [:div {:style {:display :flex}}
+                                 [:p {:class (<class common-styles/margin-right 0.5)}
+                                  (tr [:task :edit-part-modal-title])]
+                                 [typography/GreyText (gstr/format "#%02d" (:file.part/number file-part))]]
                    :button-component
                    [buttons/button-secondary
                     {:size :small
@@ -297,6 +300,7 @@
                             (reset! file-upload-open? true))
                close! #(do (reset! file-upload-open? false)
                            (e! (file-controller/->AfterUploadRefresh)))]
+    ^{:key (str "task-content" (:db/id task))}
     [:div#task-details-drop.task-details
      (when description
        [typography/Paragraph description])

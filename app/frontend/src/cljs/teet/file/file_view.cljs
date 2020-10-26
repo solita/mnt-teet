@@ -205,11 +205,12 @@
      [:div {:class [(<class common-styles/flex-row)
                     (<class common-styles/margin-bottom 1)]}
       [TextField {:value @search-term
-                  :style {:margin-right "1rem"}
+                  :style {:margin-right "1rem"
+                          :flex 1}
                   :placeholder (tr [:file :filter-file-listing])
                   :start-icon icons/action-search
                   :on-change on-change}]
-      [:div {:style {:max-width "200px"}}
+      [:div {:style {:flex 1}}
        [select/form-select {:items (concat [{:file.part/name (tr [:file-upload :general-part])
                                              :file.part/number 0}]
                                            parts)
@@ -549,11 +550,14 @@
   [:div {:style {:margin-bottom "1.5rem"
                  :display :flex
                  :justify-content :space-between}}
-   [:div {:class (<class common-styles/flex-row-end)}
+   [:div {:class (<class common-styles/flex-row-end)
+          :style {:margin-right "0.5rem"}}
     [typography/Heading2 {:style {:margin-right "0.5rem"}}
      heading]
     (when number
-      [typography/GreyText (goog.string/format "#%02d" number)])]
+      [typography/GreyText
+       {:style {:white-space :nowrap}}
+       (goog.string/format "#%02d" number)])]
    [:div
     (when-let [action-comp (:action opts)]
       action-comp)]])
