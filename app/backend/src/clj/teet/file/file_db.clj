@@ -239,6 +239,7 @@
                           :where
                           [?f :file/original-name ?n]
                           [?t :task/files ?f]
+                          [(missing? $ ?f :meta/deleted?)]
                           :in $ ?t ?n]
                         db task-id original-name)))]
     (merge metadata
