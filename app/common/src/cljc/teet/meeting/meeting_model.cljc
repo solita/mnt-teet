@@ -13,3 +13,16 @@
     (println "User id: " user-id ", org: " organizer ", participations: " participations)
     (or (= user-id (:db/id organizer))
         (participation-model/user-in-role? participations user :participation.role/reviewer))))
+
+
+(def order {:participation.role/reviewer 1
+            :participation.role/participant 2})
+
+(def role-order
+  (comp order #(get-in % [:participation/role :db/ident])))
+
+(def role-id-name
+  (juxt role-order
+        #(not (get-in % [:participation/participant :user/id]))
+        #(get-in % [:participation/participant :user/given-name])))
+

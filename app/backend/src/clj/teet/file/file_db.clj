@@ -143,6 +143,8 @@
                                 :file/sequence-number
                                 {:file/previous-version [:db/id]}
                                 :meta/created-at
+                                :meta/modified-at
+                                {:meta/modifier [:user/id :user/family-name :user/given-name]}
                                 {:meta/creator [:user/id :user/family-name :user/given-name]}])
                 :where
                 [?f :file/upload-complete? true]
