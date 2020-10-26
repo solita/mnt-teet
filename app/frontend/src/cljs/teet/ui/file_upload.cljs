@@ -105,9 +105,16 @@
             (str/blank? extension))
     {:error :description-and-extension-required}))
 
+(defn validate-seq-number [{:file/keys [sequence-number]}]
+  (when (and sequence-number
+             ;; Valid sequence number 1 - 10000
+             (not (< 0 sequence-number 10000)))
+    {:error :invalid-sequence-number}))
+
 (defn validate-file [e! task {:keys [metadata] :as file-row}]
   (let [file-info (files-field-entry file-row)]
     (when-let [error (or (and metadata (validate-name file-row))
+                         (validate-seq-number file-row)
                          (file-model/validate-file file-info)
                          (file-model/validate-file-metadata task metadata))]
       (case (:error error)
@@ -136,6 +143,10 @@
         {:title (tr [:file-upload :description-required])
          :description ""}
 
+        :invalid-sequence-number
+        {:title (tr [:file-upload :invalid-sequence-number])
+         :description ""}
+
         ;; All validations ok
         :else nil))))
 
@@ -160,8 +171,11 @@
                  :type :number
                  :placeholder "0000"
                  :inline? true
-                 :on-change #(update-file
-                              {:file/sequence-number (js/parseInt (-> % .-target .-value))})}]]
+                 :on-change #(let [n (-> % .-target .-value)]
+                               (update-file
+                                {:file/sequence-number (if (str/blank? n)
+                                                         nil
+                                                         (js/parseInt n))}))}]]
     [TableCell {:style {:border :none}}
      [IconButton {:edge "end"
                   :on-click delete-file}

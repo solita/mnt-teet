@@ -460,6 +460,7 @@
   "Saving will create new version for the file",
   :wrong-task "Cannot add file to this task",
   :file-new-part-text "TEET is designed to make you life easier",
+  :invalid-sequence-number "Invalid sequence number",
   :already-uploaded "This file has already been uploaded",
   :file-will-be-added-to-part
   "This file will be added to {part} part"},
