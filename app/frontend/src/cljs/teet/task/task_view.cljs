@@ -223,7 +223,7 @@
                    :modal-title [:div {:style {:display :flex}}
                                  [:p {:class (<class common-styles/margin-right 0.5)}
                                   (tr [:task :edit-part-modal-title])]
-                                 [typography/GreyText (str " #" (:file.part/number file-part))]]
+                                 [typography/GreyText (gstr/format "#%02d" (:file.part/number file-part))]]
                    :button-component
                    [buttons/button-secondary
                     {:size :small
