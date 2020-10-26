@@ -913,7 +913,7 @@
       (for [{:keys [kirje-id type content lopp-kpv]} contact-methods
             :when (and content
                        (not lopp-kpv)
-                       (or (= type :email) (= type :phone)))]
+                       (or (= type :email) (= type :phone) (= type :phone2)))]
         ^{:key (str kirje-id)}
         [key-value [(tr [:contact type]) content]]))]))
 

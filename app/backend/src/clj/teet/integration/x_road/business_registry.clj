@@ -58,6 +58,7 @@
             :type [:ns1:liik z/text #(case %
                                        "EMAIL" :email
                                        "MOB" :phone
+                                       "TEL" :phone2
                                        %)]
             :type-text [:ns1:liik_tekstina]
             :content [:ns1:sisu]
