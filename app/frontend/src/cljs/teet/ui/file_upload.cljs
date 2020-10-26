@@ -100,33 +100,44 @@
                            task-types)]
     (tr [:file-upload :file-belongs-to-task] {:task (tr-enum correct-task)})))
 
+(defn validate-name [{:file/keys [description extension] :as _file-row}]
+  (when (or (str/blank? description)
+            (str/blank? extension))
+    {:error :description-and-extension-required}))
+
 (defn validate-file [e! task {:keys [metadata] :as file-row}]
-  (when-let [error (or (file-model/validate-file (files-field-entry file-row))
-                       (file-model/validate-file-metadata task metadata))]
-    (case (:error error)
-      :file-type-now-allowed
-      {:title (tr [:document :invalid-file-type])
-       :description [:<>
-                     (str/upper-case (file-model/filename->suffix name))
-                     " "
-                     [:a {:target "_blank"
-                          :href "https://confluence.mkm.ee/pages/viewpage.action?spaceKey=TEET&title=TEET+File+format+list"}
-                      (tr [:document :invalid-file-type])]]}
+  (let [file-info (files-field-entry file-row)]
+    (when-let [error (or (and metadata (validate-name file-row))
+                         (file-model/validate-file file-info)
+                         (file-model/validate-file-metadata task metadata))]
+      (case (:error error)
+        :file-type-now-allowed
+        {:title (tr [:document :invalid-file-type])
+         :description [:<>
+                       (str/upper-case (file-model/filename->suffix name))
+                       " "
+                       [:a {:target "_blank"
+                            :href "https://confluence.mkm.ee/pages/viewpage.action?spaceKey=TEET&title=TEET+File+format+list"}
+                        (tr [:document :invalid-file-type])]]}
 
-      :file-too-large
-      {:title (tr [:document :file-too-large])
-       :description ""}
+        :file-too-large
+        {:title (tr [:document :file-too-large])
+         :description ""}
 
-      ;; Check for wrong task (if metadata can be parsed)
-      :wrong-task
-      {:title (tr [:file-upload :wrong-task])
-       :description [select/with-enum-values
-                     {:e! e!
-                      :attribute :task/type}
-                     [wrong-task-error (:task metadata)]]}
+        ;; Check for wrong task (if metadata can be parsed)
+        :wrong-task
+        {:title (tr [:file-upload :wrong-task])
+         :description [select/with-enum-values
+                       {:e! e!
+                        :attribute :task/type}
+                       [wrong-task-error (:task metadata)]]}
 
-      ;; All validations ok
-      :else nil)))
+        :description-and-extension-required
+        {:title (tr [:file-upload :description-required])
+         :description ""}
+
+        ;; All validations ok
+        :else nil))))
 
 (defn files-field-row [{:keys [e! update-file delete-file
                                task]} file-row]

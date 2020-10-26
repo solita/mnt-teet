@@ -11,7 +11,8 @@
 
 
 (defn name->description-and-extension [string]
-  (let [ext-pos (str/last-index-of string ".")]
+  (let [string (str/trim string)
+        ext-pos (str/last-index-of string ".")]
     {:description (subs string 0 ext-pos)
      :extension (subs string (inc ext-pos))}))
 

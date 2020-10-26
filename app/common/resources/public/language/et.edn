@@ -87,7 +87,11 @@
   :design-stage-activities "Ülesanded",
   :select {:empty "- Valin"},
   :clear "Puhastan"},
- :contact {:address "Aadress", :email "E-post", :phone "Telefon"},
+ :contact
+ {:address "Aadress",
+  :email "E-post",
+  :phone "Mobile",
+  :phone2 "Telefon"},
  :dashboard
  {:activities-and-tasks "Tegevused ja ülesanded",
   :my-projects "Minu projektid",
@@ -299,7 +303,8 @@
   "Kasutad TEETu arenduskeskkonda. Siia salvestatud andmed võivad kustuda.",
   :version "Versioon"},
  :error
- {:part-has-files nil,
+ {:part-has-files
+  "Ülesande osa alla on lisatud faile. Kui soovid ülesande kustutada liiguta ennem kõik failid selle alt ära.",
   :authorization-failure "Sessioon aegus. Palun sisene uuesti.",
   :invalid-task-dates "Kontrollige ülesande kuupäevi",
   :user-is-already-participant "Kasutaja on juba osaleja",
@@ -418,7 +423,7 @@
   :upload-info "Üles laadinud {author} {date} ",
   :hide-preview "Peidan eelvaate",
   :replace-dialog-title "Laen üles uue versiooni",
-  :edit-info nil,
+  :edit-info "Viimati muudetud {author} {date} ",
   :other-versions "Muud versioonid",
   :filter-file-listing "Otsin faile",
   :all-parts "Kõik ülesande osad",
@@ -434,16 +439,17 @@
   :replace-dialog-info-title "Hakkad üles laadima uut versiooni",
   :download "Laen faili alla"},
  :file-upload
- {:description "Faili kirjeldus",
-  :original-filename "Algupärane failinimi: {name}",
-  :wrong-task "Sellesse ülesandesse ei saa seda faili lisada",
-  :file-belongs-to-task "See fail kuulub ülesandele {task}",
-  :already-uploaded "See fail on juba üles laaditud",
-  :new-version-will-be-created
-  "Salvestamine loob failile uue versiooni",
+ {:original-filename "Algupärane failinimi: {name}",
+  :description "Faili kirjeldus",
+  :description-required nil,
+  :general-part "Üldine",
   :select-part-to-upload
   "Valige osa, kuhu üleslaaditud failid lisatakse",
-  :general-part "Üldine"},
+  :file-belongs-to-task "See fail kuulub ülesandele {task}",
+  :new-version-will-be-created
+  "Salvestamine loob failile uue versiooni",
+  :wrong-task "Sellesse ülesandesse ei saa seda faili lisada",
+  :already-uploaded "See fail on juba üles laaditud"},
  :land
  {:show-owner-info "Vaatan omanike andmeid",
   :no-active-mortgages "Aktiivsed hüpoteegid puuduvad",
@@ -722,9 +728,9 @@
  {:task-overview "Ülesande ülevaade",
   :edit-part-modal-title "Muudan ülesande osa",
   :upload-files "Laen failid üles",
-  :part-added-succesfully nil,
+  :part-added-succesfully "Ülesande osa edukalt lisatud",
   :edit-document "Muudan dokumenti",
-  :part-edited-succesfully nil,
+  :part-edited-succesfully "Ülesande osa edukalt muudetud",
   :create-success-notification "Ülesanne edukalt loodud",
   :start-review-success "Ülevaatus algas",
   :add-part "Lisan osa",
@@ -732,6 +738,7 @@
   :reject-review "Lükkan tagasi",
   :documents "Dokumendid",
   :add-part-modal-title "Lisan ülesande osa",
+  :part-deleted-successfully "Ülesande osa edukalt kustutatud",
   :submit-results "Esitan tulemused",
   :submit-results-success "Tulemused edukalt esitatud",
   :link-info "Vastutav isik - {assignee}. Tähtaeg - {deadline}.",
