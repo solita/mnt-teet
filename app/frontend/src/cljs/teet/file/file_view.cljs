@@ -284,10 +284,15 @@
                                           (when version
                                             (tr [:file :version] {:num version}))]))]
         [typography/SmallText
-         (tr [:file :upload-info]
-             {:date (format/date-time (:meta/created-at file))
-              :author (user-model/user-name
-                        (:meta/creator file))})]
+         (if-let [modified-at (:meta/modified-at file)]
+           (tr [:file :edit-info]
+               {:date (format/date-time modified-at)
+                :author (user-model/user-name
+                          (:meta/modifier file))})
+           (tr [:file :upload-info]
+                 {:date (format/date-time (:meta/created-at file))
+                  :author (user-model/user-name
+                            (:meta/creator file))}))]
         (when status
           [typography/SmallBoldText (tr-enum status)])]]]
      [:div {:class (<class file-style/file-actions-column-style)}

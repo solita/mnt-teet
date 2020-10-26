@@ -152,7 +152,7 @@
   []
   {:display :flex
    :flex-direction :row
-   :align-items :end})
+   :align-items :flex-end})
 
 (defn margin-right
   [rem]
