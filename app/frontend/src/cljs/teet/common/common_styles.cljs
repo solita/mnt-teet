@@ -154,6 +154,10 @@
    :flex-direction :row
    :align-items :end})
 
+(defn margin-right
+  [rem]
+  {:margin-right (str rem "rem")})
+
 (defn flex-row-wrap
   []
   {:display :flex

@@ -220,7 +220,10 @@
                  [form/form-modal-button
                   {:form-component [file-part-form e! (:db/id task)]
                    :form-value file-part
-                   :modal-title (tr [:task :edit-part-modal-title])
+                   :modal-title [:div {:style {:display :flex}}
+                                 [:p {:class (<class common-styles/margin-right 0.5)}
+                                  (tr [:task :edit-part-modal-title])]
+                                 [typography/GreyText (str " #" (:file.part/number file-part))]]
                    :button-component
                    [buttons/button-secondary
                     {:size :small
