@@ -191,18 +191,19 @@
           [common-ui/info-box {:title (tr [:file-upload :already-uploaded])
                                :content (tr [:file-upload :new-version-will-be-created])}])
         (when-let [part-number (some-> file-row :metadata :part js/parseInt)]
-          (if-let [existing-part (some #(when (= part-number
-                                                 (:file.part/number %))
-                                          %)
-                                       (:file.part/_task task))]
-            ;; Existing file part
-            [common-ui/info-box {:title (tr [:file-upload :file-will-be-added-to-part]
-                                            {:part (:file.part/name existing-part)})
-                                 :content (tr [:file-upload :file-will-be-added-to-part-text])}]
+          (when (not (zero? part-number))
+            (if-let [existing-part (some #(when (= part-number
+                                                   (:file.part/number %))
+                                            %)
+                                         (:file.part/_task task))]
+              ;; Existing file part
+              [common-ui/info-box {:title (tr [:file-upload :file-will-be-added-to-part]
+                                              {:part (:file.part/name existing-part)})
+                                   :content (tr [:file-upload :file-will-be-added-to-part-text])}]
 
-            ;; New file part
-            [common-ui/info-box {:title (tr [:file-upload :file-new-part])
-                                 :content (tr [:file-upload :file-new-part-text])}]))
+              ;; New file part
+              [common-ui/info-box {:title (tr [:file-upload :file-new-part])
+                                   :content (tr [:file-upload :file-new-part-text])}])))
         (let [{:file/keys [name size]} (files-field-entry file-row)]
           [:<>
            (when (:changed? file-row)
