@@ -434,27 +434,30 @@
    :file/status "Sorteerin staatuse järgi",
    :file/type "Sorteerin failitüübi järgi",
    :meta/created-at "Sorteerin kuupäeva järgi"},
-  :replace-dialog-info-text "Eelmine versioon jääb alles",
+  :replace-dialog-info-text
+  "Ära muretse, eelmine versioon jääb alles ning sa leiad selle faili detailvaatest.",
   :version "Versioon {num}",
   :replace-dialog-info-title "Hakkad üles laadima uut versiooni",
   :download "Laen faili alla"},
  :file-upload
  {:original-filename "Algupärane failinimi: {name}",
   :description "Faili kirjeldus",
-  :description-required nil,
+  :description-required "Faili kirjeldus on puudu",
   :general-part "Üldine",
   :select-part-to-upload
   "Valige osa, kuhu üleslaaditud failid lisatakse",
-  :file-will-be-added-to-part-text nil,
+  :file-will-be-added-to-part-text
+  "TEET tuvastas ülesande osa automaatselt failinimest",
   :file-belongs-to-task "See fail kuulub ülesandele {task}",
-  :file-new-part nil,
+  :file-new-part
+  "Faili nimes on uus osa sees, seetõttu lõime uue ülesande osa automaatselt",
   :new-version-will-be-created
   "Salvestamine loob failile uue versiooni",
   :wrong-task "Sellesse ülesandesse ei saa seda faili lisada",
-  :file-new-part-text nil,
-  :invalid-sequence-number nil,
+  :file-new-part-text "TEET püüab Sinu elu lihtsamaks teha",
+  :invalid-sequence-number "Järjekorranumber ei ole korrektne",
   :already-uploaded "See fail on juba üles laaditud",
-  :file-will-be-added-to-part nil},
+  :file-will-be-added-to-part "See fail lisatakse {part} osasse"},
  :land
  {:show-owner-info "Vaatan omanike andmeid",
   :no-active-mortgages "Aktiivsed hüpoteegid puuduvad",
