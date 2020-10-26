@@ -426,7 +426,7 @@
    :flex-direction :column
    :margin "2rem 0 2rem 0"})
 
-(defn- replace-file-form [e! task file form close!]
+(defn- replace-file-form [e! project-id task file form close!]
   (let [{:keys [description extension]} (filename-metadata/name->description-and-extension
                                          (:file/name file))]
     [panels/modal {:max-width "lg"
@@ -450,14 +450,15 @@
        ^{:attribute :task/files
          :validate (fn [files]
                      (or
-                      (some some? (map (partial file-upload/validate-file e! task) files))
+                      (some some? (map (partial file-upload/validate-file e! project-id task) files))
                       (when (not= 1 (count files))
                         "expect exactly one file")))}
        [file-upload/files-field {:e! e!
+                                 :project-id project-id
                                  :task task
                                  :single? true}]]]]))
 
-(defn- file-details [e! task {:keys [replacement-upload-progress] :as file}
+(defn- file-details [e! project-id task {:keys [replacement-upload-progress] :as file}
                      latest-file can-replace-file? replace-form]
   (r/with-let [replacement-form-open? (r/atom false)
                upload! #(do (e! (file-controller/->UpdateFilesForm %))
@@ -513,7 +514,7 @@
                  :start-icon (r/as-element [icons/file-cloud-upload-outlined])}
                 (tr [:file :upload-new-version])]]
               (when @replacement-form-open?
-                [replace-file-form e! task file replace-form close!])])])
+                [replace-file-form e! project-id task file replace-form close!])])])
         [buttons/button-primary {:element "a"
                                  :href (common-controller/query-url :file/download-file
                                                                     {:file-id (:db/id file)})
@@ -638,7 +639,8 @@
    [typography/Heading3 (gstr/format "%s #%02d" name number)]
    [:div tab-links]])
 
-(defn file-page [e! {{file-id :file} :params} _project]
+(defn file-page [e! {{file-id :file
+                      project-id :project} :params} _project]
   ;; Update the file seen timestamp for this user
   (e! (file-controller/->UpdateFileSeen file-id))
   (let [edit-open? (r/atom false)]
@@ -704,6 +706,6 @@
                     :show-comment-form? (not old?)
                     :tab-wrapper (r/partial file-tab-wrapper file-part)}
                    (when file
-                     [file-details e! task file latest-file
+                     [file-details e! project-id task file latest-file
                       (task-model/can-submit? task)
                       (:files-form project)])]]]]))))})))

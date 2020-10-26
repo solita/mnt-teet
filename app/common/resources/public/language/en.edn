@@ -454,6 +454,7 @@
   :file-will-be-added-to-part-text
   "TEET has automatically detected the file part based on the name",
   :file-belongs-to-task "This file belongs to {task} task",
+  :wrong-project "Cannot add file to this project",
   :file-new-part
   "Filename had new task part in it, so we added new task part here automatically",
   :new-version-will-be-created

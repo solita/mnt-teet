@@ -111,12 +111,12 @@
              (not (< 0 sequence-number 10000)))
     {:error :invalid-sequence-number}))
 
-(defn validate-file [e! task {:keys [metadata] :as file-row}]
+(defn validate-file [e! project-id task {:keys [metadata] :as file-row}]
   (let [file-info (files-field-entry file-row)]
     (when-let [error (or (and metadata (validate-name file-row))
                          (validate-seq-number file-row)
                          (file-model/validate-file file-info)
-                         (file-model/validate-file-metadata task metadata))]
+                         (file-model/validate-file-metadata project-id task metadata))]
       (case (:error error)
         :file-type-now-allowed
         {:title (tr [:document :invalid-file-type])
@@ -129,6 +129,11 @@
 
         :file-too-large
         {:title (tr [:document :file-too-large])
+         :description ""}
+
+        ;; Check for wrong project
+        :wrong-project
+        {:title (tr [:file-upload :wrong-project])
          :description ""}
 
         ;; Check for wrong task (if metadata can be parsed)
@@ -151,7 +156,7 @@
         :else nil))))
 
 (defn files-field-row [{:keys [e! update-file delete-file
-                               task]} file-row]
+                               project-id task]} file-row]
   [:<>
    [TableRow {}
     [TableCell {:style {:border :none}}
@@ -182,7 +187,7 @@
       [icons/action-delete]]]]
    [TableRow {}
     [TableCell {:colSpan 4}
-     (if-let [{:keys [title description] :as error} (validate-file e! task file-row)]
+     (if-let [{:keys [title description] :as error} (validate-file e! project-id task file-row)]
        [common-ui/info-box {:variant :error
                             :title title
                             :content description}]
@@ -211,7 +216,7 @@
            " "
            (format/file-size size)])])]]])
 
-(defn files-field [{:keys [e! value on-change error task
+(defn files-field [{:keys [e! value on-change error project-id task
                            single?]}]
   (let [update-file (fn [i new-file-data]
                       (on-change (update value i merge new-file-data
@@ -238,6 +243,7 @@
          (fn [i file-row]
            ^{:key i}
            [files-field-row {:e! e!
+                             :project-id project-id
                              :task task
                              :update-file (r/partial update-file i)
                              :delete-file (r/partial delete-file i)}

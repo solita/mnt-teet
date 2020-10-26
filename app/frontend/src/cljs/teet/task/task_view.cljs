@@ -164,7 +164,7 @@
                                    :style {:margin-left "1rem"}}
            (tr [:buttons :confirm])]]]])]))
 
-(defn- add-files-form [e! task files-form upload-progress close!]
+(defn- add-files-form [e! project-id task files-form upload-progress close!]
   (r/with-let [reinstate-drop-zones! (drag/suppress-drop-zones!)]
     [:<>
      [form/form
@@ -185,8 +185,9 @@
                                             (gstr/format "%s #%02d" name number))}])
       ^{:attribute :task/files
         :validate (fn [files]
-                    (some some? (map (partial file-upload/validate-file e! task) files)))}
+                    (some some? (map (partial file-upload/validate-file e! project-id task) files)))}
       [file-upload/files-field {:e! e!
+                                :project-id project-id
                                 :task task}]]
      (when upload-progress
        [LinearProgress {:variant "determinate"
@@ -294,7 +295,7 @@
            (tr [:task :add-part])]}]])]))
 
 (defn task-details
-  [e! new-document activity {:task/keys [description files] :as task} files-form]
+  [e! new-document project-id activity {:task/keys [description files] :as task} files-form]
   (r/with-let [file-upload-open? (r/atom false)
                upload! #(do (e! (file-controller/->UpdateFilesForm %))
                             (reset! file-upload-open? true))
@@ -321,11 +322,8 @@
                                 (str (tr-enum (:activity/name activity))
                                      " / "
                                      (tr-enum (:task/type task)))]]
-                       :modal-component [add-files-form e! task files-form
-                                         (:in-progress? new-document)
-                                         close!]
                        :on-close close!}
-         [add-files-form e! task files-form
+         [add-files-form e! project-id task files-form
           (:in-progress? new-document)
           close!]]
         (when (seq files)
@@ -367,7 +365,9 @@
      :comment-command :comment/comment-on-task
      :entity-type :task
      :entity-id (:db/id task)}
-    [task-details e! (:new-document app) activity task files-form]]])
+    [task-details e! (:new-document app)
+     (get-in app [:params :project])
+     activity task files-form]]])
 
 
 (defn edit-task-form [_e! {:keys [initialization-fn]} {:keys [max-date min-date]}]
