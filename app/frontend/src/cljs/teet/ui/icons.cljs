@@ -595,7 +595,6 @@
   "functions"
   "highlight"
   "insert_chart"
-  "insert_chart_outlined"
   "insert_comment"
   "insert_drive_file"
   "insert_emoticon"

@@ -1,7 +1,11 @@
 (ns teet.file.file-tx
   "File transactions"
   (:require [datomic.client.api :as d]
-            [teet.file.file-db :as file-db]))
+            [teet.file.file-db :as file-db]
+            [teet.util.collection :as cu]
+            [teet.util.datomic :as du]
+            [datomic.ion :as ion]
+            [teet.meta.meta-model :as meta-model]))
 
 (defn upload-file-to-task
   "Upload file to task. Takes tx data and resolves the part.
@@ -35,5 +39,34 @@
   [db task-id part-name]
   [{:db/id "new-part"
     :file.part/task task-id
-    :file.part/name part-name
+    :file.part/name (or part-name "")
     :file.part/number (file-db/next-task-part-number db task-id)}])
+
+(defn remove-task-file-part
+  "Mark a task file part as deleted if it doesn't have any files"
+  [db part-id user]
+  (let [files (->> (d/q '[:find ?file
+                          :in $ ?part
+                          :where
+                          [?file :file/part ?part]
+                          [(missing? $ ?file :meta/deleted?)]]
+                        db part-id)
+                   (mapv first))]
+    (if (seq files)
+      (ion/cancel {:cognitect.anomalies/category :cognitect.anomalies/conflict
+                   :cognitect.anomalies/message "The part being deleted contains files so it can't be removed"
+                   :teet/error :part-has-files})
+      [(meta-model/deletion-tx user part-id)])))
+
+(def modify-file-keys [:db/id :file/name :file/sequence-number :file/document-group :file/part
+                       :meta/modified-at :meta/modifier])
+
+(defn modify-file
+  "Modify file."
+  [db {id :db/id :as file}]
+  (let [old-file (d/pull db modify-file-keys id)
+        new-file (-> file
+                     (select-keys modify-file-keys)
+                     (update :file/part :db/id)
+                     cu/without-nils)]
+    (du/modify-entity-tx old-file new-file)))

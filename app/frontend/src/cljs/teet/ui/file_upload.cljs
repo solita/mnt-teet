@@ -128,11 +128,59 @@
       ;; All validations ok
       :else nil)))
 
+(defn files-field-row [{:keys [e! update-file delete-file
+                               task]} file-row]
+  [:<>
+   [TableRow {}
+    [TableCell {:style {:border :none}}
+     [TextField {:value (:file/description file-row)
+                 :on-change #(update-file {:file/description
+                                           (-> % .-target .-value)})
+                 :end-icon [text-field/file-end-icon (:file/extension file-row)]}]]
+    [TableCell {:style {:border :none}}
+     [select/select-enum {:e! e!
+                          :show-label? false
+                          :attribute :file/document-group
+                          :value (:file/document-group file-row)
+                          :on-change #(update-file {:file/document-group %})}]]
+    [TableCell {:style {:border :none}}
+     ;; todo: figure out how to change the POS# heading for this
+     [TextField {:value (or (:file/sequence-number file-row) "")
+                 :disabled (nil? (:file/document-group file-row))
+                 :type :number
+                 :placeholder "0000"
+                 :inline? true
+                 :on-change #(update-file
+                              {:file/sequence-number (js/parseInt (-> % .-target .-value))})}]]
+    [TableCell {:style {:border :none}}
+     [IconButton {:edge "end"
+                  :on-click delete-file}
+      [icons/action-delete]]]]
+   [TableRow {}
+    [TableCell {:colSpan 4}
+     (if-let [{:keys [title description] :as error} (validate-file e! task file-row)]
+       [common-ui/info-box {:variant :error
+                            :title title
+                            :content description}]
+       [:<>
+        (when (get-in file-row [:metadata :file-id])
+          [common-ui/info-box {:title (tr [:file-upload :already-uploaded])
+                               :content (tr [:file-upload :new-version-will-be-created])}])
+        (let [{:file/keys [name size]} (files-field-entry file-row)]
+          [:<>
+           (when (:changed? file-row)
+             (tr [:file-upload :original-filename] {:name name}))
+           " "
+           (format/file-size size)])])]]])
 
-(defn files-field* [{:keys [e! value on-change error task sequence-number-heading]}]
+(defn files-field* [{:keys [e! value on-change error task
+                           single?]}]
   (let [update-file (fn [i new-file-data]
                       (on-change (update value i merge new-file-data
-                                         {:changed? true})))]
+                                         {:changed? true})))
+        delete-file (fn [i]
+                      (on-change (into (subvec value 0 i)
+                                       (subvec value (inc i)))))]
     [:div {:class (<class files-field-style error)
            :id "files-field-drag-container"}
      [SectionHeading (tr [:common :files])]
@@ -142,68 +190,31 @@
         [TableCell {}
          (tr [:file-upload :description])]
         [TableCell {}
-         (tr [:file-upload :document-group])]
+         (tr [:fields :file/document-group])]
         [TableCell {}
-         sequence-number-heading]]]
+         (tr [:fields :file/sequence-number])]]]
 
       [TableBody {}
        (doall
         (map-indexed
          (fn [i file-row]
            ^{:key i}
-           [:<>
-            [TableRow {}
-             [TableCell {:style {:border :none}}
-              [TextField {:value (:file/description file-row)
-                          :on-change #(update-file i {:file/description
-                                                      (-> % .-target .-value)})
-                          :end-icon [text-field/file-end-icon (:file/extension file-row)]}]]
-             [TableCell {:style {:border :none}}
-              [select/select-enum {:e! e!
-                                   :show-label? false
-                                   :attribute :file/document-group
-                                   :value (:file/document-group file-row)
-                                   :on-change #(update-file i {:file/document-group %})}]]
-             [TableCell {:style {:border :none}}
-              [TextField {:value (or (:file/sequence-number file-row) "")
-                          :type :number
-                          :placeholder "0000"
-                          :inline? true
-                          :on-change #(update-file
-                                       i
-                                       {:file/sequence-number (js/parseInt (-> % .-target .-value))})}]]
-             [TableCell {:style {:border :none}}
-              [IconButton {:edge "end"
-                           :on-click #(on-change (into (subvec value 0 i)
-                                                       (subvec value (inc i))))}
-               [icons/action-delete]]]]
-            [TableRow {}
-             [TableCell {:colSpan 4}
-              (if-let [{:keys [title description] :as error} (validate-file e! task file-row)]
-                [common-ui/info-box {:variant :error
-                                     :title title
-                                     :content description}]
-                [:<>
-                 (when (get-in file-row [:metadata :file-id])
-                   [common-ui/info-box {:title (tr [:file-upload :already-uploaded])
-                                        :content (tr [:file-upload :new-version-will-be-created])}])
-                 (let [{:file/keys [name size]} (files-field-entry file-row)]
-                   [:<>
-                    (when (:changed? file-row)
-                      (tr [:file-upload :original-filename] {:name name}))
-                    " "
-                    (format/file-size size)])])]]])
+           [files-field-row {:e! e!
+                             :task task
+                             :update-file (r/partial update-file i)
+                             :delete-file (r/partial delete-file i)}
+            file-row])
          value))]]
-     [FileUploadButton {:id "files-field"
-                        :drag-container-id "files-field-drag-container"
-                        :on-drop #(on-change (into (or value []) %))}
-      [icons/content-file-copy]
-      (tr [:common :select-files])]]))
+     (when (not (and single? (pos? (count value))))
+       [FileUploadButton {:id "files-field"
+                          :drag-container-id "files-field-drag-container"
+                          :on-drop #(on-change (into (or value []) %))}
+        [icons/content-file-copy]
+        (tr [:common :select-files])])]))
+
 
 (defn files-field [params]
-  (files-field* (assoc params :sequence-number-heading
-                       (tr [:file-upload :sequence-number]))))
+  (files-field* (assoc params :sequence-number-heading "#")))
 
 (defn files-field-land [params]
-  (files-field* (assoc params :sequence-number-heading
-                       (tr [:fields :land-acquisition/pos-number]))))
+  (files-field* (assoc params :sequence-number-heading "POS#")))

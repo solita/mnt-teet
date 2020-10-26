@@ -8,7 +8,7 @@
   []
   {:display :block
    :color theme-colors/gray-light
-   :font-size "0.75rem"})
+   :font-size "0.875rem"})
 
 (defn- small-text-style
   []
@@ -28,6 +28,11 @@
 (defn- warning-text-style
   []
   {:color theme-colors/warning})
+
+(defn- small-bold-text-style
+  []
+  {:font-weight 700
+   :font-size "0.875rem"})
 
 (def Heading1 (util/make-component Typography {:variant "h1"}))
 
@@ -52,3 +57,5 @@
 (def WarningText (util/make-component :p {:class (<class warning-text-style)}))
 
 (def SmallText (util/make-component :p {:class (<class small-text-style)}))
+
+(def SmallBoldText (util/make-component :span {:class (<class small-bold-text-style)}))

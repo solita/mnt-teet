@@ -4,7 +4,8 @@
             [teet.user.user-model :as user-model]
             [teet.comment.comment-db :as comment-db]
             [teet.log :as log]
-            [teet.file.filename-metadata :as filename-metadata]))
+            [teet.file.filename-metadata :as filename-metadata]
+            [teet.util.datomic :as du]))
 
 (defn- valid-attach-definition? [attach]
   (and (vector? attach)
@@ -142,7 +143,11 @@
                        (comment-counts-by-file (:db/id %))
                        {:file-seen/seen-at (seen-at-by-file (:db/id %))})
                first)
-         (d/q '[:find (pull ?f [:db/id :file/name :meta/deleted? :file/version :file/size :file/status :file/part
+         (d/q '[:find (pull ?f [:db/id :file/name :meta/deleted? :file/version :file/size
+                                :file/status :file/part :file/group-number
+                                :file/original-name
+                                :file/document-group
+                                :file/sequence-number
                                 {:file/previous-version [:db/id]}
                                 :meta/created-at
                                 {:meta/creator [:user/id :user/family-name :user/given-name]}])
@@ -299,4 +304,30 @@
                      [?e :file.part/number ?n]
                      :in $ ?task]
                    (d/history db) task-id))]
-    (first (remove used-numbers (drop 1 (range 1 100))))))
+    (first (remove used-numbers (range 1 100)))))
+
+(defn latest-version
+  "Return the :db/id of the latest version of the given file."
+  [db file-id]
+  (loop [file (du/entity db file-id)]
+    (if-let [newer-version (first (:file/_previous-version file))]
+      (recur newer-version)
+      (:db/id file))))
+
+(defn previous-version
+  "Return the id of the previous version of the given file."
+  [db file-id]
+  (->> file-id
+       (du/entity db)
+       :file/previous-version :db/id))
+
+(defn file-versions
+  "Returns all version of the given file.
+  Chases down :file/previous-version links in both directions
+  and returns the file ids in a vector (newest first, earliest last)."
+  [db id]
+
+  (vec
+   (take-while some?
+               (iterate (partial previous-version db)
+                        (latest-version db id)))))

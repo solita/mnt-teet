@@ -34,6 +34,13 @@
 (defrecord UpdateFilesForm [new-value])
 (defrecord FilesFormMetadataReceived [filename metadata])
 
+;; Modify file info
+(defrecord ModifyFile [file callback])
+
+;; Open the latest version by id
+(defrecord OpenFileVersion [file-id])
+
+
 (extend-protocol t/Event
 
   DeleteFile
@@ -82,22 +89,40 @@
 
   AfterUploadRefresh
   (process-event [_ app]
-    (t/fx (dissoc app :new-document)
+    (t/fx (-> app
+              (common-controller/update-page-state [] dissoc :files-form)
+              (dissoc :new-document))
           common-controller/refresh-fx))
 
   UploadNewVersion
   (process-event [{:keys [file new-version]} {params :params :as app}]
+    (log/info "UploadNewVersion file:" file ", new-version: " new-version)
+    app
     (t/fx app
           {:tuck.effect/type :command!
            :command :file/upload
            :payload {:task-id (common-controller/->long (get-in app [:params :task]))
-                     :file (file-model/file-info (:file-object (first new-version)))
+                     :file (merge (file-model/file-info (:file-object new-version))
+                                  (select-keys new-version
+                                               [:file/document-group
+                                                :file/sequence-number
+                                                :file/original-name]))
                      :previous-version-id (:db/id file)}
            :result-event (fn [{file :file :as result}]
                            (map->UploadFileUrlReceived
                              (merge result
-                                    {:file-data (:file-object (first new-version))
-                                     :on-success (->UploadSuccess (:db/id file))})))}))
+                                    {:file-data (:file-object new-version)
+                                     :on-success (->OpenFileVersion (:db/id file))})))}))
+
+  OpenFileVersion
+  (process-event [{:keys [file-id]} {:keys [page params query] :as app}]
+    (t/fx app
+          common-controller/refresh-fx
+          {:tuck.effect/type :navigate
+           :page page
+           :params (assoc params :file (str file-id))
+           :query query}))
+
 
   UploadFiles
   (process-event [{:keys [files project-id task-id on-success progress-increment
@@ -222,6 +247,16 @@
 (defn download-url [file-id]
   (common-controller/query-url :file/download-file {:file-id file-id}))
 
+(defn file-updated
+  "Processing to run when a file in upload form was changed.
+  Handles dependencies between fields."
+  [{:file/keys [document-group] :as file}]
+  (as-> file file
+    ;; IF document-group is not selected, file can't have seq#
+    (if (nil? document-group)
+      (dissoc file :file/sequence-number)
+      file)))
+
 ;; Implement metadata fetching for file upload forms
 (extend-protocol t/Event
 
@@ -229,8 +264,10 @@
   ;; files
   UpdateFilesForm
   (process-event [{:keys [new-value]} app]
-    (let [form (merge (common-controller/page-state app :files-form)
-                      new-value)
+    (let [form (-> (common-controller/page-state app :files-form)
+                   (merge new-value)
+                   (update :task/files
+                           #(mapv file-updated %)))
           files (:task/files form)
           files-to-fetch (filter (complement :metadata)
                                  files)
@@ -270,4 +307,19 @@
                       {:file/description description
                        :file/extension extension})))
                  file))
-             files)))))
+             files))))
+
+  ModifyFile
+  (process-event [{:keys [file callback]} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :file/modify
+           :payload (update file :file/sequence-number
+                            #(if (or (nil? %)
+                                     (int? %))
+                               %
+                               (js/parseInt %)))
+           :result-event #(do
+                            (when callback
+                              (callback))
+                            (common-controller/->Refresh))})))

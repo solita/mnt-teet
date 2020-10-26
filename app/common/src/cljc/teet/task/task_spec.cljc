@@ -38,3 +38,7 @@
 (s/def :task/new-comment-form (s/keys :req [:comment/comment]))
 
 (s/def :comment/comment (s/and string? #(not-empty (str/trim %))))
+
+(s/def :file.part/name (s/and string? #(< (count %) 100)))
+
+(s/def :task/create-part (s/keys :opt [:file.part/name]))

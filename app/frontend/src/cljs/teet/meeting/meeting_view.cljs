@@ -89,7 +89,7 @@
          [typography/BoldGreyText
           {:style {:margin "1rem 0"}}
           (tr [:common :files])]
-         [file-view/file-table
+         [file-view/file-list2
           (merge {:filtering? false
                   :actions? true
                   :no-link? true
@@ -216,7 +216,7 @@
       250]]))
 
 (defn meeting-information
-  [{:meeting/keys [start location end title activity-name] :as meeting}]
+  [{:meeting/keys [start number location end title activity-name] :as meeting}]
   [:div {:class (<class common-styles/flex-row-space-between)}
    [:div {:style {:display :flex}}
     [:div {:style {:width "120px"
@@ -229,7 +229,8 @@
                                          {:meeting (str (:db/id meeting))}
                                          (when-let [activity-id (get-in meeting [:activity/_meetings 0 :db/id])]
                                            {:activity (str activity-id)}))}
-      title]
+      (str title (when number
+                   (str " #" number)))]
      (when activity-name
        [typography/SmallText
         (tr-enum activity-name)])]]

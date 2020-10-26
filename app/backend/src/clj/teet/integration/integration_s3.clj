@@ -59,6 +59,22 @@
    (invoke :GetObject {:Bucket bucket
                        :Key file-key})))
 
+(defn exists?
+  "Check if S3 object exists. Returns true if it does, false otherwise."
+  [bucket file-key]
+  {:pre [(string? bucket)
+         (string? file-key)]
+   :post [(boolean? %)]}
+  (try
+    (invoke :HeadObject {:Bucket bucket
+                         :Key file-key})
+    true
+    (catch Exception e
+      (if (= :cognitect.anomalies/not-found
+             (-> e ex-data :response :cognitect.anomalies/category))
+        false
+        (throw e)))))
+
 (defn put-object
   "Write S3 object. Returns response map."
   [bucket file-key body]

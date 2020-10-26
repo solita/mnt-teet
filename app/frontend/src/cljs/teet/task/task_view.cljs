@@ -209,87 +209,133 @@
                :value @form-data
                :on-change-event (form/update-atom-event form-data merge)
                :cancel-event close-event
+               :spec :task/create-part
                :save-event #(task-controller/->SavePartForm close-event task-id @form-data)
                :delete (when-let [part-id (:db/id @form-data)]
                          (task-controller/->DeleteFilePart close-event part-id))}
     ^{:attribute :file.part/name}
     [TextField {}]]])
 
-(defn file-part-view
-  [{:keys [e! upload!]} task-id file-part files]
+(defn file-section-view
+  [{:keys [e! upload!]} task file-part files]
   [:div
-   [file-view/file-part-heading e! file-part
-    {:action [:div
-              [form/form-modal-button
-               {:form-component [file-part-form e! task-id]
-                :form-value file-part
-                :modal-title (tr [:file :edit-part-modal-title])
-                :button-component
-                [buttons/button-secondary
-                 {:size :small
-                  :style {:margin-right "0.5rem"}}
-                 (tr [:buttons :edit])]}]
-              [buttons/button-primary {:size :small
-                                       :on-click #(upload! {:file/part file-part})}
-               (tr [:buttons :upload])]]}]
+   [file-view/file-part-heading {:heading (:file.part/name file-part)
+                                 :number (:file.part/number file-part)}
+    {:action (when (task-model/can-submit? task)
+               [when-authorized
+                :task/create-part task
+                [:div
+                 [form/form-modal-button
+                  {:form-component [file-part-form e! (:db/id task)]
+                   :form-value file-part
+                   :modal-title (tr [:task :edit-part-modal-title])
+                   :button-component
+                   [buttons/button-secondary
+                    {:size :small
+                     :style {:margin-right "0.5rem"}}
+                    (tr [:buttons :edit])]}]
+                 [buttons/button-primary {:size :small
+                                          :start-icon (r/as-element [icons/content-add])
+                                          :on-click #(upload! {:file/part file-part})}
+                  (tr [:buttons :upload])]]])}]
    (if (seq files)
-     [file-view/file-table files]
+     [file-view/file-list2 {:e! e!
+                            :download? true} files]
      [file-view/no-files])])
+
+(defn task-file-heading
+  [task upload!]
+  [:div {:class [(<class common-styles/space-between-center)
+                 (<class common-styles/margin-bottom 1)]}
+
+   [typography/Heading2 {:style {:margin-right "0.5rem"
+                                 :display :inline-block}}
+    (tr [:common :files])]
+   (when (task-model/can-submit? task)
+     [when-authorized :file/upload
+      task
+      [:div
+       [buttons/button-primary {:start-icon (r/as-element [icons/content-add])
+                                :on-click #(upload! {})}
+        (tr [:buttons :upload])]]])])
+
+(defn file-content-view
+  [e! upload! task files parts filtered-parts]
+  [:<>
+   [task-file-heading task upload!]
+   (when (or (empty? filtered-parts) (= (count parts) (count filtered-parts))) ;; if some other part is selected hide this
+     (let [general-files (remove #(contains? % :file/part) files)]
+       [file-view/file-list2 {:e! e!
+                              :download? true}
+        general-files]))
+   [:div
+    (mapc (fn [part]
+            [file-section-view {:e! e!
+                                :upload! upload!}
+             task part
+             (filterv
+               (fn [file]
+                 (= (:db/id part) (get-in file [:file/part :db/id])))
+               files)])
+          filtered-parts)]])
 
 (defn task-file-view
   [e! task upload!]
-  (let [parts (:file.part/_task task)]
+  (let [parts (:file.part/_task task)
+        files (:task/files task)]
     [:div
-     [:div
-      (mapc (fn [part]
-              [file-part-view {:e! e!
-                               :upload! upload!}
-               (:db/id task) part
-               (filter
-                 (fn [file]
-                   (= (:db/id part) (get-in file [:file/part :db/id])))
-                 (:task/files task))])
-            parts)]
-
-     [form/form-modal-button
-      {:form-component [file-part-form e! (:db/id task)]
-       :modal-title (tr [:task :task-add-part-modal-title])
-       :button-component
-       [buttons/button-secondary
-        {:start-icon (r/as-element
-                       [icons/content-add])}
-        (tr [:task :add-part])]}]]))
+     [file-view/file-search files parts
+      (r/partial file-content-view e! upload! task)]
+     (when (task-model/can-submit? task)
+       [when-authorized :task/create-part
+        task
+        [form/form-modal-button
+         {:form-component [file-part-form e! (:db/id task)]
+          :modal-title (tr [:task :add-part-modal-title])
+          :button-component
+          [buttons/button-secondary
+           {:start-icon (r/as-element
+                          [icons/content-add])}
+           (tr [:task :add-part])]}]])]))
 
 (defn task-details
-  [e! new-document {:task/keys [description files] :as task} act-name files-form]
-  (log/info "task-details: act-name" act-name)
+  [e! new-document activity {:task/keys [description files] :as task} files-form]
   (r/with-let [file-upload-open? (r/atom false)
                upload! #(do (e! (file-controller/->UpdateFilesForm %))
                             (reset! file-upload-open? true))
                close! #(do (reset! file-upload-open? false)
-                           (e! (file-controller/->AfterUploadRefresh)))]
+                           (e! (file-controller/->AfterUploadRefresh)))
+               act-name (:activity/name activity)]
     [:div#task-details-drop.task-details
      (when description
        [typography/Paragraph description])
      [task-basic-info task]
-     [file-view/file-table (remove #(contains? % :file/part) files)]
      [task-file-view e! task upload!]
      (when (task-model/can-submit? task)
        [:<>
         [file-upload/FileUpload {:drag-container-id "task-details-drop"
                                  :drop-message (tr [:drag :drop-to-task])
                                  :on-drop #(upload! {:task/files %})}]
-        [panels/button-with-modal {:open-atom file-upload-open?
-                                   :button-component (file-view/file-upload-button)
-                                   :modal-options {:max-width "lg"}
-                                   :modal-title (tr [:task :add-document])
-                                   :modal-component [add-files-form e! task act-name files-form
-                                                     (:in-progress? new-document)
-                                                     close!]
-                                   :on-close close!}
-         (when (seq files)
-           [when-authorized :task/submit task
-            [submit-results-button e! task]])]])
+        [panels/modal {:open-atom file-upload-open?
+                       :button-component (file-view/file-upload-button)
+                       :max-width "lg"
+                       :title [:<>
+                               (tr [:task :upload-files])
+                               [typography/GreyText {:style {:display :inline
+                                                             :margin-left "1rem"}}
+                                (str (tr-enum (:activity/name activity))
+                                     " / "
+                                     (tr-enum (:task/type task)))]]
+                       :modal-component [add-files-form e! task act-name files-form
+                                         (:in-progress? new-document)
+                                         close!]
+                       :on-close close!}
+         [add-files-form e! task act-name files-form
+          (:in-progress? new-document)
+          close!]]
+        (when (seq files)
+          [when-authorized :task/submit task
+           [submit-results-button e! task]])])
      (when (task-model/reviewing? task)
        [when-authorized :task/review task
         [:div.task-review-buttons {:style {:display :flex :justify-content :space-between}}
@@ -313,7 +359,7 @@
     [:span]))
 
 (defn task-page-content
-  [e! app {status :task/status :as task} pm? act-name files-form]
+  [e! app activity {status :task/status :as task} pm? files-form]
   [:div.task-page
    (when (and pm? (du/enum= status :task.status/waiting-for-review))
      [when-authorized :task/start-review task
@@ -326,7 +372,7 @@
      :comment-command :comment/comment-on-task
      :entity-type :task
      :entity-id (:db/id task)}
-    [task-details e! (:new-document app) task act-name files-form]]])
+    [task-details e! (:new-document app) activity task files-form]]])
 
 
 (defn edit-task-form [_e! {:keys [initialization-fn]} {:keys [max-date min-date]}]
@@ -380,25 +426,20 @@
 (defn task-page [e! {{task-id :task :as _params} :params user :user :as app}
                  project]
   (log/info "task-page render")
-  (let [activity-id (get-in app [:params :activity])
-        activity-name (-> project
-                          (project-model/activity-by-id activity-id)
-                          :activity/name
-                          :db/ident)
-        activity-manager (cu/find-> project
-                                    :thk.project/lifecycles some?
-                                    :thk.lifecycle/activities (fn [{:activity/keys [tasks]}]
-                                                                (du/find-by-id task-id tasks))
-                                    :activity/manager)]
-    (log/info "activity-name is" activity-name)
+  (let [{activity-manager :activity/manager
+         :as activity}
+        (cu/find-> project
+                   :thk.project/lifecycles some?
+                   :thk.lifecycle/activities (fn [{:activity/keys [tasks]}]
+                                               (du/find-by-id task-id tasks)))]
     [project-navigator-view/project-navigator-with-content
      {:e! e!
       :project project
       :app app}
 
      [task-page-content e! app
+      activity
       (project-model/task-by-id project task-id)
       (= (:db/id user)
          (:db/id activity-manager))
-      activity-name
       (:files-form project)]]))

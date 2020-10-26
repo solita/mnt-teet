@@ -6,6 +6,8 @@
 
 (def ^:const upload-max-file-size (* 1024 1024 3000))
 
+(def ^:const image-thumbnail-size-threshold (* 1024 250))
+
 ;; See confluence page: TEET File format list
 (def ^:const upload-allowed-file-suffixes
   #{;; Generic office files

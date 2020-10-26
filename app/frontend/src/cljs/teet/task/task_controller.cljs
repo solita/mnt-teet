@@ -77,8 +77,8 @@
                         :task/edit-part
                         :task/create-part)
              :success-message (if editing?
-                                (tr [:file :file-part-edited-succesfully])
-                                (tr [:file :file-part-added-succesfully]))
+                                (tr [:task :part-edited-succesfully])
+                                (tr [:task :part-added-succesfully]))
              :payload {:task-id task-id
                        :part-id (:db/id form-data)
                        :part-name (:file.part/name form-data)}
@@ -91,7 +91,7 @@
           {:tuck.effect/type :command!
            :command :task/delete-part
            :payload {:part-id part-id}
-           :success-message (tr [:file :file-part-deleted-successfully])
+           :success-message (tr [:task :part-deleted-successfully])
            :result-event (partial common-controller/->ModalFormResult close-event)}))
 
   StartReview

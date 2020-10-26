@@ -139,7 +139,7 @@
        trashcan?
        [IconButton {:on-click open
                     :size :small}
-        [icons/action-delete]]
+        [icons/action-delete-outlined]]
 
        small?
        [button-text-warning (merge {:on-click open
