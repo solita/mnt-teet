@@ -216,7 +216,7 @@
     {:action (when (task-model/can-submit? task)
                [when-authorized
                 :task/create-part task
-                [:div
+                [:div {:class (<class common-styles/flex-row)}
                  [form/form-modal-button
                   {:form-component [file-part-form e! (:db/id task)]
                    :form-value file-part
@@ -297,6 +297,7 @@
                             (reset! file-upload-open? true))
                close! #(do (reset! file-upload-open? false)
                            (e! (file-controller/->AfterUploadRefresh)))]
+    ^{:key (str "task-content" (:db/id task))}
     [:div#task-details-drop.task-details
      (when description
        [typography/Paragraph description])
