@@ -20,7 +20,7 @@
 
 (defrecord DeleteFile [file-id])
 
-(defrecord AddFilesToTask [files-form on-success]) ;; upload more files to existing document
+(defrecord AddFilesToTask [files-form task on-success])
 (defrecord NavigateToFile [file])
 
 (defrecord DeleteAttachment [on-success-event file-id])
@@ -66,10 +66,18 @@
            :success-message success-message}))
 
   AddFilesToTask
-  (process-event [{:keys [files-form on-success]} app]
-    (let [files (mapv #(merge {:file/part (:file/part files-form)} %)
+  (process-event [{:keys [files-form task on-success]} app]
+    (let [files (mapv (fn [file]
+                        (merge file
+
+                               (if-let [part-number (some-> file :metadata :part js/parseInt)]
+                                 ;; Use detected part
+                                 {:file/part {:file.part/number part-number}}
+
+                                 ;; Use part selected from pulldown
+                                 {:file/part (:file/part files-form)})))
                       (:task/files files-form))
-          task-id (common-controller/->long (get-in app [:params :task]))]
+          task-id (:db/id task)]
       (t/fx app
             (fn [e!]
               (e! (map->UploadFiles {:files files

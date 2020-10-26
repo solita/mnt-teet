@@ -445,11 +445,15 @@
   :general-part "Üldine",
   :select-part-to-upload
   "Valige osa, kuhu üleslaaditud failid lisatakse",
+  :file-will-be-added-to-part-text nil,
   :file-belongs-to-task "See fail kuulub ülesandele {task}",
+  :file-new-part nil,
   :new-version-will-be-created
   "Salvestamine loob failile uue versiooni",
   :wrong-task "Sellesse ülesandesse ei saa seda faili lisada",
-  :already-uploaded "See fail on juba üles laaditud"},
+  :file-new-part-text nil,
+  :already-uploaded "See fail on juba üles laaditud",
+  :file-will-be-added-to-part nil},
  :land
  {:show-owner-info "Vaatan omanike andmeid",
   :no-active-mortgages "Aktiivsed hüpoteegid puuduvad",

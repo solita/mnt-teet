@@ -171,7 +171,7 @@
       {:e!              e!
        :value           files-form
        :on-change-event file-controller/->UpdateFilesForm
-       :save-event      #(file-controller/->AddFilesToTask files-form close!)
+       :save-event      #(file-controller/->AddFilesToTask files-form task close!)
        :cancel-fn close!
        :in-progress?    upload-progress
        :spec :task/add-files}
