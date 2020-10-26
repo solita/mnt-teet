@@ -77,10 +77,15 @@
          ;;  Otherwise link to task file page
          :else
          (do
-           (log/debug "generating link to task file page by default as no-link and link-download options are false - eids" activity-eid task-eid)
-           [url/Link {:page :file :params {:file id
-                                           :activity activity-eid
-                                           :task task-eid}} base-name]))]
+           
+           (let [params (if (and task-eid activity-eid)
+                          {:file id
+                           :activity activity-eid
+                           :task task-eid}
+                          ;; else
+                          {:file id})]
+             (log/debug "generating link to task file page by default as no-link and link-download options are false - params" params)
+             [url/Link {:page :file :params params} base-name])))]
       (when (columns :number)
         [:div.file-row-number {:class (<class common-styles/flex-table-column-style 10)}
          [:span number]])

@@ -23,11 +23,10 @@
   "Returns files for a given task. Returns latest versions of files as vector
   and adds all previous versions of a files as :versions key."
   [db user task-eid]
-  (file-db/file-listing db user (mapv first
-                                      (d/q '[:find ?f
-                                             :where [?t :task/files ?f]
-                                             :in $ ?t]
-                                           db task-eid))))
+  (file-db/file-listing db user (d/q '[:find ?f
+                                       :where [?t :task/files ?f]
+                                       :in $ ?t]
+                                     db task-eid)))
 
 
 

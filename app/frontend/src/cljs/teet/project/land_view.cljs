@@ -3,7 +3,6 @@
             [herb.core :refer [<class]]
             [teet.common.common-styles :as common-styles]
             [teet.ui.buttons :as buttons]
-            [teet.ui.context :as context]
             [teet.localization :refer [tr tr-enum tr-or]]
             [teet.ui.util :refer [mapc]]
             [reagent.core :as r]
