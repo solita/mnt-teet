@@ -254,7 +254,9 @@
         new-comments? (not (zero? new-comments))]
     [url/Link {:class (<class file-style/file-comments-link-style new-comments?)
                :page :file
-               :params {:file (:db/id file)}
+               :params {:file (:db/id file)
+                        :activity (get-in file [:task/_files 0 :activity/_tasks 0 :db/id])
+                        :task (get-in file [:task/_files 0 :db/id])}
                :query {:tab "comments"}}
      (if comments?
        (if new-comments?
@@ -281,7 +283,9 @@
           [:p {:class (<class file-style/file-list-entity-name-style)}
            description]
           [url/Link {:class (<class file-style/file-list-entity-name-style)
-                     :page :file :params {:file (:db/id file)}}
+                     :page :file :params {:file (:db/id file)
+                                          :activity (get-in file [:task/_files 0 :activity/_tasks 0 :db/id])
+                                          :task (get-in file [:task/_files 0 :db/id])}}
            description])
         [typography/SmallGrayText {:style {:text-transform :uppercase
                                            :white-space :nowrap}}
@@ -341,6 +345,20 @@
          (sorted-by
            sort-by-value
            files))])
+
+(defn file-list2-with-search
+  [opts files]
+  (r/with-let [items-for-sort-select (sort-items)
+               filter-atom (r/atom "")
+               sort-by-atom (r/atom (first items-for-sort-select))]
+    [:<>
+     [file-filter-and-sorter
+      filter-atom
+      sort-by-atom
+      items-for-sort-select]
+     [file-list2 (assoc opts :sort-by-value @sort-by-atom)
+      (->> files
+           (filtered-by @filter-atom))]]))
 
 (defn file-table
   ([files] (file-table {} files))
