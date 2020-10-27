@@ -306,10 +306,7 @@
                upload! #(do (e! (file-controller/->UpdateFilesForm %))
                             (reset! replacement-form-open? true))
                close! #(do (reset! replacement-form-open? false)
-                           (e! (file-controller/->AfterUploadRefresh)))
-               _ (println " button mount")]
-
-    (println "button render" @replacement-form-open? "--- " (:db/id file))
+                           (e! (file-controller/->AfterUploadRefresh)))]
     [:div.file-details-upload-replacement
      [when-authorized
       :file/upload task
