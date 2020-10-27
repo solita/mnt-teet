@@ -206,7 +206,10 @@
                :save-event #(task-controller/->SavePartForm close-event task-id @form-data)
                :delete (when-let [part-id (:db/id @form-data)]
                          (task-controller/->DeleteFilePart close-event part-id))}
-    ^{:attribute :file.part/name}
+    ^{:attribute :file.part/name
+      :validate (fn [name]
+                  (when (> (count name) 99)
+                    (tr [:fields :validation-error :file.part/name])))}
     [TextField {}]]])
 
 (defn file-section-view

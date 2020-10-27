@@ -347,6 +347,8 @@
   :file/part "Part",
   :file/version "Version",
   :estate-procedure/pos "POS#",
+  :validation-error
+  #:file.part{:name "Part name can have up to 99 characters."},
   :user/family-name "Family name",
   :estate-procedure/compensations "Compensations",
   :estate-procedure/third-party-compensations
