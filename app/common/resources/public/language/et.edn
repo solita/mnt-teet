@@ -90,7 +90,7 @@
  :contact
  {:address "Aadress",
   :email "E-post",
-  :phone "Mobile",
+  :phone "Mobiil",
   :phone2 "Telefon"},
  :dashboard
  {:activities-and-tasks "Tegevused ja ülesanded",
@@ -342,6 +342,9 @@
   :file/part "Osa",
   :file/version "Versioon",
   :estate-procedure/pos "POS#",
+  :validation-error
+  #:file.part{:name
+              "Ülesande osa nimi on liiga pikk. Maksimaalne lubatud pikkus on 99 tähemärki. "},
   :user/family-name "Perekonnanimi",
   :estate-procedure/compensations "Hüvitis",
   :estate-procedure/third-party-compensations
