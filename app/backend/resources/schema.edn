@@ -1282,4 +1282,10 @@
          ;; Migrate POS# for land task files to sequence number
          teet.migration.file-sequence-number/pos-number->sequence-number]}
 
+ ;; TEET-822 Add Warranty activity for Construction lifecycle
+ {:db/ident :migration/add-warranty-activity
+  :txes [[{:db/ident :activity.name/warranty,
+           :enum/attribute :activity/name,
+           :enum/valid-for :thk.lifecycle-type/construction,
+           :filename/code "GA"}]]}
 ]
