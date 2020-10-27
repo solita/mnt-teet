@@ -24,5 +24,6 @@
 (def role-id-name
   (juxt role-order
         #(not (get-in % [:participation/participant :user/id]))
-        #(get-in % [:participation/participant :user/given-name])))
+        #(get-in % [:participation/participant :user/given-name])
+        #(get-in % [:participation/participant :user/family-name])))
 
