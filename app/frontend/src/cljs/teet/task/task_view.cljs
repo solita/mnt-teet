@@ -210,7 +210,7 @@
     [TextField {}]]])
 
 (defn file-section-view
-  [{:keys [e! upload!]} task file-part files]
+  [{:keys [e! upload! sort-by-value]} task file-part files]
   [:div
    [file-view/file-part-heading {:heading (:file.part/name file-part)
                                  :number (:file.part/number file-part)}
@@ -236,17 +236,23 @@
                   (tr [:buttons :upload])]]])}]
    (if (seq files)
      [file-view/file-list2 {:e! e!
+                            :sort-by-value sort-by-value
                             :download? true} files]
      [file-view/no-files])])
 
 (defn task-file-heading
-  [task upload!]
+  [task upload! {:keys [sort-by-atom
+                        items]}]
   [:div {:class [(<class common-styles/space-between-center)
                  (<class common-styles/margin-bottom 1)]}
 
-   [typography/Heading2 {:style {:margin-right "0.5rem"
-                                 :display :inline-block}}
-    (tr [:common :files])]
+   [:div {:style {:margin-right "0.5rem"
+                  :display :flex
+                  :align-items :flex-end}}
+    [typography/Heading2 {:style {:margin-right "0.5rem"
+                                  :display :inline-block}}
+     (tr [:common :files])]
+    [file-view/file-sorter sort-by-atom items]]
    (when (task-model/can-submit? task)
      [when-authorized :file/upload
       task
@@ -257,23 +263,28 @@
 
 (defn file-content-view
   [e! upload! task files parts filtered-parts]
-  [:<>
-   [task-file-heading task upload!]
-   (when (or (empty? filtered-parts) (= (count parts) (count filtered-parts))) ;; if some other part is selected hide this
-     (let [general-files (remove #(contains? % :file/part) files)]
-       [file-view/file-list2 {:e! e!
-                              :download? true}
-        general-files]))
-   [:div
-    (mapc (fn [part]
-            [file-section-view {:e! e!
-                                :upload! upload!}
-             task part
-             (filterv
-               (fn [file]
-                 (= (:db/id part) (get-in file [:file/part :db/id])))
-               files)])
-          filtered-parts)]])
+  (r/with-let [items-for-sort-select (file-view/sort-items)
+               sort-by-atom (r/atom (first items-for-sort-select))]
+    [:<>
+     [task-file-heading task upload! {:sort-by-atom sort-by-atom
+                                      :items items-for-sort-select}]
+     (when (or (empty? filtered-parts) (= (count parts) (count filtered-parts))) ;; if some other part is selected hide this
+       (let [general-files (remove #(contains? % :file/part) files)]
+         [file-view/file-list2 {:e! e!
+                                :sort-by-value @sort-by-atom
+                                :download? true}
+          general-files]))
+     [:div
+      (mapc (fn [part]
+              [file-section-view {:e! e!
+                                  :sort-by-value @sort-by-atom
+                                  :upload! upload!}
+               task part
+               (filterv
+                 (fn [file]
+                   (= (:db/id part) (get-in file [:file/part :db/id])))
+                 files)])
+            filtered-parts)]]))
 
 (defn task-file-view
   [e! task upload!]
@@ -301,7 +312,7 @@
                             (reset! file-upload-open? true))
                close! #(do (reset! file-upload-open? false)
                            (e! (file-controller/->AfterUploadRefresh)))]
-    ^{:key (str "task-content" (:db/id task))}
+    ^{:key (str "task-content-" (:db/id task))}
     [:div#task-details-drop.task-details
      (when description
        [typography/Paragraph description])

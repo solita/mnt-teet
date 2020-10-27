@@ -150,7 +150,7 @@
    "file/type"       [(comp file-model/filename->suffix :file/name) <]
    "file/status"     [(juxt :file/status :file/name) <]})
 
-(defn- sort-items
+(defn sort-items
   []
   (mapv #(assoc % :label (tr (conj [:file :sort-by (-> % :value keyword)])))
         [{:value "meta/created-at"}
@@ -172,6 +172,15 @@
       :value @sort-by-atom
       :items items
       :on-change #(reset! sort-by-atom %)}]]])
+
+(defn file-sorter [sort-by-atom items]
+  [select/select-with-action
+   {:id "file-sort-select"
+    :name "file-sort"
+    :show-label? false
+    :value @sort-by-atom
+    :items items
+    :on-change #(reset! sort-by-atom %)}])
 
 (defn- filter-predicate
   "matches files whose name contains one of the whitespace separated
@@ -324,9 +333,12 @@
         [file-comments-link file])]]))
 
 (defn file-list2
-  [opts files]
+  [{:keys [sort-by-value] :as opts} files]
   [:div {:class (<class common-styles/margin-bottom 1.5)}
-   (mapc (r/partial file-row2 opts) files)])
+   (mapc (r/partial file-row2 opts)
+         (sorted-by
+           sort-by-value
+           files))])
 
 (defn file-table
   ([files] (file-table {} files))

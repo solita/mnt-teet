@@ -52,8 +52,6 @@
        (not (reviewing? task))
        (not (completed? task))))
 
-
-
 (defn task-with-status
   [{:task/keys [assignee estimated-start-date estimated-end-date] :as task}]
   (assoc task :task/derived-status
