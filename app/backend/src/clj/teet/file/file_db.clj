@@ -177,11 +177,12 @@
          (d/q '[:find ?f
                 :where
                 ;; File has this position number
-                [?f :file/pos-number ?pos]
+                [?f :file/sequence-number ?pos]
 
                 ;; File belongs to the project
                 [?task :task/files ?f]
                 [?act :activity/tasks ?task]
+                [?act :activity/name :activity.name/land-acquisition]
                 [?lc :thk.lifecycle/activities ?act]
                 [?project :thk.project/lifecycles ?lc]
 
