@@ -198,9 +198,11 @@
     (let [filter-fn (filter-predicate filter-value)]
       (filter filter-fn files))))
 
-(defn- sorted-by [{:keys [value]} files]
-  (let [[sort-fn comparator] (sorters value)]
-    (sort-by sort-fn comparator files)))
+(defn- sorted-by [{:keys [value] :as sort-by-value} files]
+  (if-not sort-by-value
+    files
+    (let [[sort-fn comparator] (sorters value)]
+      (sort-by sort-fn comparator files))))
 
 (defn file-search
   "Given original parts and files passes searched files and parts to component view"
