@@ -139,6 +139,7 @@
          (d/q '[:find (pull ?f [:db/id :file/name :meta/deleted? :file/version :file/size
                                 :file/status :file/part :file/group-number
                                 :file/original-name
+                                {:task/_files [:db/id :activity/_tasks]}
                                 :file/document-group
                                 :file/sequence-number
                                 {:file/previous-version [:db/id]}
