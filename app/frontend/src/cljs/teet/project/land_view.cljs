@@ -988,9 +988,9 @@
                      :query :land/files-by-position-number
                      :args {:thk.project/id (:thk.project/id project)
                             :file/pos-number pos}
-                     :simple-view [file-view/file-table {:link-download? true
-                                                         :actions? true
-                                                         :comment-action #(reset! selected-file %)}]}]
+                     :simple-view [file-view/file-list2-with-search
+                                   {}]}]
+
        [:span (tr [:land :no-position-number])])
      (when-let [f @selected-file]
        [comments-view/lazy-comments {:e! e!
