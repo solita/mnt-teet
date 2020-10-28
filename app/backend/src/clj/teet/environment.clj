@@ -102,7 +102,8 @@
           :client-id (->ssm [:auth :tara :clientid])
           :client-secret (->ssm [:auth :tara :secret])}
    :session-cookie-key (->ssm [:auth :session-key])
-   :auth {:basic-auth-password (->ssm [:api :basic-auth-password] nil)}
+   :auth {:basic-auth-password (->ssm [:api :basic-auth-password] nil)
+          :jwt-secret (->ssm [:api :jwt-secret])}
    :base-url (->ssm [:base-url])
    :api-url (->ssm [:api :url])
    :document-storage {:bucket-name (->ssm [:s3 :document-bucket])}
