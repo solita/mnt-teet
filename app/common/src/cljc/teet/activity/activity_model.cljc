@@ -50,6 +50,14 @@
 (def activity-finished-statuses
   #{:activity.status/completed :activity.status/expired :activity.status/canceled :activity.status/archived})
 
+(def activity-types-not-sent-to-thk
+  "A set of activity types which are not sent to THK during export"
+  #{:activity.name/warranty
+    :activity.name/land-acquisition})
+
+(defn exported-to-thk? [activity]
+  (not (activity-types-not-sent-to-thk (:activity/name activity))))
+
 (defn deletable?
   "Can the activity be deleted? It can if it has no procurement number."
   [activity]
