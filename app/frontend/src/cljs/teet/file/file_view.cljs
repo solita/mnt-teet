@@ -148,7 +148,7 @@
 
 (def ^:private sorters
   {"meta/created-at" [(juxt :meta/created-at :file/name) >]
-   "file/name"       [:file/name <]
+   "file/name"       [(comp str/lower-case :file/name) <]
    "file/type"       [(comp file-model/filename->suffix :file/name) <]
    "file/status"     [(juxt :file/status :file/name) <]})
 
