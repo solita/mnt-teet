@@ -5,7 +5,6 @@
             [teet.log :as log]
             [datomic.client.api :as d]
             [cognitect.aws.client.api :as aws]
-            [clojure.walk :as walk]
             [teet.util.collection :as cu])
   (:import (java.time ZoneId)
            (java.util.concurrent TimeUnit Executors)))
