@@ -471,11 +471,14 @@
 (defn- file-list-field-style []
   {:flex-basis "25%" :flex-shrink 0 :flex-grow 0})
 
+(defn- file-list-style []
+  {:overflow :hidden})
+
 (defn- file-list [parts files current-file-id]
   (let [parts (sort-by :file.part/number
                        (concat [{:file.part/number 0 :file.part/name (tr [:file-upload :general-part])}]
                                parts))]
-    [:div.file-list
+    [:div.file-list {:class (<class file-list-style)}
      (mapc
       (fn [{part-id :db/id :file.part/keys [name number]}]
         (let [files (filter (fn [{part :file/part}]
