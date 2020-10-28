@@ -15,8 +15,7 @@
             [clojure.string :as str]
             [teet.integration.postgrest :as postgrest]
             [cheshire.core :as cheshire])
-  (:import (java.time LocalDate)
-           (java.time.format DateTimeFormatter)))
+  (:import (java.time.format DateTimeFormatter)))
 
 (defn prepare [form]
   (walk/prewalk
