@@ -18,7 +18,12 @@
    :task.group/design 3
    :task.group/design-approval 4
    :task.group/design-reports 5
-   :task.group/land-purchase 6})
+   :task.group/land-purchase 6
+   :task.group/working-design 7
+   :task.group/construction 8
+   :task.group/construction-quality-assurance 9
+   :task.group/construction-approval 10
+   :task.group/warranty 11})
 
 (defn file-by-id-path
   "Returns vector path to the given file in task."
