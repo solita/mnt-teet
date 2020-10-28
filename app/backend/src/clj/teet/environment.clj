@@ -12,29 +12,6 @@
 
 (def ^:private ssm-client (delay (aws/client {:api :ssm})))
 
-(defn ssm-param
-  [& param-path]
-  (let [name (str "/teet/" (str/join "/" (map name param-path)))
-        response (aws/invoke @ssm-client {:op :GetParameter
-                                          :request {:Name name}})]
-    (if (:cognitect.anomalies/category response)
-      (throw (ex-info "Anomaly in SSM invocation"
-                      {:response response}))
-      (let [value (get-in response [:Parameter :Value])]
-        (if (string? value)
-          (str/trim value)
-          value)))))
-
-(defn- ssm-param-default [param-path default-value]
-  (try
-    (apply ssm-param param-path)
-    (catch Exception e
-      (if (= (get-in (ex-data e) [:response :__type]) "ParameterNotFound")
-        default-value
-        (throw (ex-info "Exception in SSM invocation (not ParameterNotfound)"
-                        {:param-path param-path :default-value default-value}
-                        e))))))
-
 (def init-config {:datomic {:db-name "teet"
                             :client {:server-type :ion}}
 
@@ -47,7 +24,7 @@
   (reset! config init-config))
 
 ;; "road-information-view, component-view"
-(defn parse-enabled-features [ssm-param]
+(defn- parse-enabled-features [ssm-param]
   (->> (str/split ssm-param #",")
        (remove str/blank?)
        (map str/trim)
@@ -118,7 +95,9 @@
    form))
 
 (def teet-ssm-config
-  {:enabled-features (->ssm [:enabled-features] #{} parse-enabled-features)
+  {:env (->ssm [:env])
+   :backup {:bucket-name (->ssm [:s3 :backup-bucket])}
+   :enabled-features (->ssm [:enabled-features] #{} parse-enabled-features)
    :tara {:endpoint-url (->ssm [:auth :tara :endpoint])
           :base-url (->ssm [:auth :tara :baseurl])
           :client-id (->ssm [:auth :tara :clientid])
@@ -135,7 +114,8 @@
    :xroad {:query-url (->ssm [:xroad-query-url] nil)
            :instance-id (->ssm [:xroad-instance-id] nil)
            :kr-subsystem-id (->ssm [:xroad-kr-subsystem-id] nil)}
-   :eelis {:wms-url (->ssm [:eelis :wms-url] nil)}})
+   :eelis {:wms-url (->ssm [:eelis :wms-url] nil)}
+   :email {:from (->ssm [:email :from] nil)}})
 
 (defn- load-ssm-config! [base-config]
   (let [old-config @config
