@@ -323,10 +323,10 @@
           {:tuck.effect/type :command!
            :command :file/modify
            :payload (update file :file/sequence-number
-                            #(if (or (nil? %)
-                                     (int? %))
-                               %
-                               (js/parseInt %)))
+                            #(cond
+                               (or (nil? %) (int? %)) %
+                               (str/blank? %) nil
+                               :else (js/parseInt %)))
            :result-event #(do
                             (when callback
                               (callback))
