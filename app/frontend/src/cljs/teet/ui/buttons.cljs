@@ -1,6 +1,8 @@
 (ns teet.ui.buttons
   (:require [herb.core :refer [<class]]
-            [teet.ui.material-ui :refer [Button ButtonBase Link DialogActions DialogContentText IconButton]]
+            [teet.ui.material-ui :refer [Button ButtonBase Link DialogActions DialogContentText
+                                         IconButton MenuList MenuItem
+                                         ClickAwayListener Popper Paper]]
             [teet.ui.icons :as icons]
             [teet.ui.util :as util]
             [teet.localization :refer [tr]]
@@ -179,3 +181,27 @@
                :disabled disabled?
                :class (<class add-button-style disabled?)}
    label])
+
+(defn- button-with-menu-item [{:keys [label on-click]}]
+  [MenuItem {:on-click on-click}
+   label])
+
+(defn button-with-menu [{:keys [on-click items]} content]
+  (r/with-let [open? (r/atom false)
+               anchor-el (atom nil)
+               set-anchor! #(reset! anchor-el %)
+               open! #(reset! open? true)
+               close! #(reset! open? false)]
+    [:div.button-with-menu
+     [button-primary {:on-click on-click}
+      content]
+     [IconButton {:on-click open!
+                  :ref set-anchor!}
+      [icons/navigation-expand-more]]
+     [Popper {:open @open?
+              :anchor-el @anchor-el
+              :placement "bottom-start"}
+      [ClickAwayListener {:on-click-away close!}
+       [Paper
+        [MenuList {}
+         (util/mapc button-with-menu-item items)]]]]]))
