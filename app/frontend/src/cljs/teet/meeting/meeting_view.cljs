@@ -875,9 +875,11 @@
                                 :form-value meeting
                                 :modal-title (tr [:meeting :edit-meeting-modal-title])
                                 :id "edit-meeting"
-                                :button-component [buttons/button-secondary
-                                                   {}
-                                                   (tr [:buttons :edit])]}]]]
+                                :button-component
+                                [buttons/button-with-menu
+                                 {:items [{:label (tr [:buttons :duplicate])
+                                           :on-click #(js/alert "implement me")}]}
+                                 (tr [:buttons :edit])]}]]]
      [tabs/tabs
       query
       [[:details [meeting-details e! user meeting]]
