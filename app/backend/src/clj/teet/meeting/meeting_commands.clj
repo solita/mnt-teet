@@ -303,7 +303,7 @@
                                       :cancel? false})
         email-response
         (integration-email/send-email!
-          {:from (environment/ssm-param :email :from)
+          {:from (environment/config-value :email :from)
            :to to
            :subject (email-subject-for-type meeting
                                             invitation-or-past-update?)
@@ -388,7 +388,7 @@
                                           :cancel? true})
             email-response (when (:meeting/invitations-sent-at meeting) ;; check that for this meeting invitations have been sent
                              (integration-email/send-email!
-                               {:from (environment/ssm-param :email :from)
+                               {:from (environment/config-value :email :from)
                                 :to to
                                 :subject (str "TEET: " (meeting-model/meeting-title meeting) " tühistatud" " / "
                                               "TEET: " (meeting-model/meeting-title meeting) " cancelled")
