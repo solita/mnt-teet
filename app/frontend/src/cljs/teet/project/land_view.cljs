@@ -989,7 +989,7 @@
                      :args {:thk.project/id (:thk.project/id project)
                             :file/pos-number pos}
                      :simple-view [file-view/file-list2-with-search
-                                   {}]}]
+                                   {:link-to-new-tab? true}]}]
 
        [:span (tr [:land :no-position-number])])
      (when-let [f @selected-file]

@@ -331,6 +331,7 @@
 
 (defn file-row2
   [{e! :e!
+    link-to-new-tab? :link-to-new-tab?
     no-link? :no-link?
     allow-replacement-opts :allow-replacement-opts
     delete-action :delete-action
@@ -343,14 +344,16 @@
       [:div
        [:div {:class [(<class common-styles/flex-align-center)
                       (<class common-styles/margin-bottom 0.5)]}
-
         (if no-link?
           [:p {:class (<class file-style/file-list-entity-name-style)}
            description]
-          [url/Link {:class (<class file-style/file-list-entity-name-style)
-                     :page :file :params {:file (:db/id file)
-                                          :activity (get-in file [:task/_files 0 :activity/_tasks 0 :db/id])
-                                          :task (get-in file [:task/_files 0 :db/id])}}
+          [url/Link (merge
+                      {:class (<class file-style/file-list-entity-name-style)
+                       :page :file :params {:file (:db/id file)
+                                            :activity (get-in file [:task/_files 0 :activity/_tasks 0 :db/id])
+                                            :task (get-in file [:task/_files 0 :db/id])}}
+                      (when link-to-new-tab?
+                        {:target :_blank}))
            description])
         [typography/SmallGrayText {:style {:text-transform :uppercase
                                            :white-space :nowrap}}
@@ -657,8 +660,8 @@
                                                     %)
                                                  parts))))
                change-event (form/update-atom-event
-                             form-data
-                             #(file-controller/file-updated (merge %1 %2)))
+                              form-data
+                              #(file-controller/file-updated (merge %1 %2)))
                save-event #(file-controller/->ModifyFile @form-data on-close)
                delete (file-controller/->DeleteFile (:db/id file))
                cancel-event (form/callback-event on-close)]
