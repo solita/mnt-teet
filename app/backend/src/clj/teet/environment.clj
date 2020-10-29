@@ -128,10 +128,11 @@
 (defn init-ion-config! [ion-config]
   (log-timezone-config!)
   (let [base-config (merge init-config ion-config)]
+    (load-ssm-config! base-config)
     (.scheduleWithFixedDelay
      (Executors/newScheduledThreadPool 1)
      #(load-ssm-config! base-config)
-     0 1 TimeUnit/MINUTES)))
+     1 1 TimeUnit/MINUTES)))
 
 (defn load-local-config!
   "Load local development configuration from outside repository"
