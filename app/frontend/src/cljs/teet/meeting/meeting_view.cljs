@@ -11,7 +11,7 @@
             [garden.color :refer [lighten as-hex]]
             [teet.task.task-style :as task-style]
             [teet.project.project-style :as project-style]
-            [teet.ui.material-ui :refer [Paper Grid IconButton Divider Link]]
+            [teet.ui.material-ui :refer [Paper Grid IconButton Divider]]
             [teet.ui.buttons :as buttons]
             [teet.ui.form :as form]
             [teet.meeting.meeting-controller :as meeting-controller]
@@ -44,8 +44,7 @@
             [teet.util.datomic :as du]
             [clojure.set :as set]
             [clojure.string :as str]
-            [teet.link.link-view :as link-view]
-            [goog.functions :as functions]))
+            [teet.link.link-view :as link-view]))
 
 
 (defn update-meeting-warning?
