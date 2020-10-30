@@ -236,9 +236,9 @@
      (conj
        file-component
        (filterv
-         (fn [{:file/keys [name original-name] :as file}]
+         (fn [{:file/keys [name] :as file}]
            (and
-             (string/contains-words? (str name " " original-name) @search-term)
+             (str/includes? (str/lower-case name) (str/lower-case @search-term))
              file))
          files)
        parts
