@@ -190,7 +190,7 @@
                 :in $ ?project ?pos]
               db project-id pos-number))))
 
-(defn file-count-by-project-and-pos-number
+(defn file-count-by-project-and-sequence-number
   [db user project-id pos-number]
   ;; Could be improved with some distinct query magic to query only the count
   (count (files-by-project-and-pos-number db user project-id pos-number)))
