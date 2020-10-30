@@ -724,7 +724,9 @@
                                         :parts (:file.part/_task task)}])]
                   [typography/Heading2
                    [:div {:class (<class common-styles/flex-row)}
-                    description
+                    [:div {:class [(<class common-styles/inline-block)
+                                   (<class common-styles/text-ellipsis "40vw")]
+                           :title description} description]
                     [typography/GreyText {:style {:margin-left "0.5rem"}}
                      (str/upper-case extension)]
                     [:div {:style {:flex-grow 1

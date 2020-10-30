@@ -283,3 +283,8 @@
      :padding "1rem"
      :display :flex
      :flex-direction :column}))
+
+(defn text-ellipsis [max-width]
+  {:text-overflow :ellipsis
+   :overflow :hidden
+   :max-width max-width})
