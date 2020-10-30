@@ -171,14 +171,14 @@
        (assoc latest-version
               :versions previous-versions)))))
 
-(defn files-by-project-and-pos-number [db user project-id pos-number]
+(defn land-files-by-project-and-sequence-number [db user project-id sequence-number]
   (file-listing
    db user
    (mapv first
          (d/q '[:find ?f
                 :where
-                ;; File has this position number
-                [?f :file/sequence-number ?pos]
+                ;; File has this sequence number
+                [?f :file/sequence-number ?seqno]
 
                 ;; File belongs to the project
                 [?task :task/files ?f]
@@ -187,13 +187,8 @@
                 [?lc :thk.lifecycle/activities ?act]
                 [?project :thk.project/lifecycles ?lc]
 
-                :in $ ?project ?pos]
-              db project-id pos-number))))
-
-(defn file-count-by-project-and-sequence-number
-  [db user project-id pos-number]
-  ;; Could be improved with some distinct query magic to query only the count
-  (count (files-by-project-and-pos-number db user project-id pos-number)))
+                :in $ ?project ?seqno]
+              db project-id sequence-number))))
 
 (defn resolve-metadata
   "Given metadata parsed from a file name, resolve the coded references to
