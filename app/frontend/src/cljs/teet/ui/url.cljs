@@ -92,7 +92,7 @@
 (defn Link
   "Convenience component to create Material UI Link to given page with params.
   Missing path parameters are filled from navigation context."
-  [{:keys [page params query class component]
+  [{:keys [page params query class component target]
     :or {component teet.ui.material-ui/Link}}
    content]
   [consume-navigation-info
@@ -105,5 +105,7 @@
                                      (when query
                                        {::query query})))}
                (when class
-                 {:class class}))
+                 {:class class})
+               (when target
+                 {:target target}))
         content]))])

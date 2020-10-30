@@ -6,8 +6,8 @@
 
 #?(:cljs
    (defn file-info [^js/File f]
-     {:file/name (.-name f)
-      :file/size (.-size f)}))
+         {:file/name (.normalize (.-name f))
+          :file/size (.-size f)}))
 
 (s/def ::task-id integer?)
 (s/def ::file-id integer?)
