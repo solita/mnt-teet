@@ -186,28 +186,28 @@ and the compensation info as the value."
          x))
      response)))
 
-(defquery :land/files-by-position-number
-  {:doc "Fetch files by position number"
+(defquery :land/files-by-sequence-number
+  {:doc "Fetch land acquisition tasks' file infos by sequence number"
    :context {:keys [db user]}
    :args {id :thk.project/id
-          pos :file/pos-number}
+          sequence-number :file/sequence-number}
    :project-id [:thk.project/id id]
    :authorization {:land/view-cadastral-data {:eid [:thk.project/id id]
                                               :link :thk.project/owner}}}
-  (file-db/files-by-project-and-pos-number
-   db user [:thk.project/id id] pos))
+  (file-db/land-files-by-project-and-sequence-number
+   db user [:thk.project/id id] sequence-number))
 
-(defquery :land/file-count-by-position-number
-  {:doc "Fetch files by position number"
+(defquery :land/file-count-by-sequence-number
+  {:doc "Fetch land acquisition tasks' file counts by sequence number"
    :context {:keys [db user]}
    :args {id :thk.project/id
-          pos :file/pos-number}
+          sequence-number :file/sequence-number}
    :project-id [:thk.project/id id]
    :authorization {:land/view-cadastral-data {:eid [:thk.project/id id]
                                               :link :thk.project/owner}}
-   :pre [(some? pos)]}
-  (file-db/file-count-by-project-and-pos-number
-    db user [:thk.project/id id] pos))
+   :pre [(some? sequence-number)]}
+  (count (file-db/land-files-by-project-and-sequence-number
+          db user [:thk.project/id id] sequence-number)))
 
 (defmethod link-db/fetch-external-link-info :estate [user _ id]
   ;; PENDING: estates have no name, show just the id

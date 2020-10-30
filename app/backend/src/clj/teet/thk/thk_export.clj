@@ -46,6 +46,7 @@
                               #(some? (:thk.activity/id %))))
 
 (defn export-thk-projects [connection]
+  
   (let [db (d/db connection)
         projects (->> db
                       all-projects
