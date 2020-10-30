@@ -16,7 +16,8 @@
             [teet.user.user-model :as user-model]
             [teet.util.date :refer [in-past?]]
             [teet.link.link-db :as link-db]
-            [teet.notification.notification-db :as notification-db])
+            [teet.notification.notification-db :as notification-db]
+            [teet.util.collection :as cu])
   (:import (java.util Date)))
 
 (defn update-meeting-tx
@@ -463,12 +464,13 @@
       [(list 'teet.meeting.meeting-tx/create-meeting
              (get-in old-meeting [:activity/_meetings 0 :db/id])
              (merge (select-keys old-meeting [:meeting/title :meeting/location :meeting/organizer])
-                    {:db/id "new-meeting"
-                     :meeting/title title
-                     :meeting/location location
-                     :meeting/organizer organizer
-                     :meeting/start start
-                     :meeting/end end}
+                    (cu/without-nils
+                     {:db/id "new-meeting"
+                      :meeting/title title
+                      :meeting/location location
+                      :meeting/organizer organizer
+                      :meeting/start start
+                      :meeting/end end})
                     (when (seq agenda)
                       {:meeting/agenda (vec (for [a agenda]
                                               (merge
