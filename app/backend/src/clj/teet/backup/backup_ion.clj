@@ -15,8 +15,7 @@
             [clojure.string :as str]
             [teet.integration.postgrest :as postgrest]
             [cheshire.core :as cheshire])
-  (:import (java.time LocalDate)
-           (java.time.format DateTimeFormatter)))
+  (:import (java.time.format DateTimeFormatter)))
 
 (defn prepare [form]
   (walk/prewalk
@@ -138,8 +137,8 @@
   (.format (java.time.LocalDate/now) DateTimeFormatter/ISO_LOCAL_DATE))
 
 (defn backup* [_event]
-  (let [bucket (environment/ssm-param :s3 :backup-bucket)
-        env (environment/ssm-param :env)
+  (let [bucket (environment/config-value :backup :bucket-name)
+        env (environment/config-value :env)
         db (d/db (environment/datomic-connection))
         file-key (str env "-backup-"
                       (current-iso-date)

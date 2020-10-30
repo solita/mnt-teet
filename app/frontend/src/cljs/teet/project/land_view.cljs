@@ -988,9 +988,9 @@
                      :query :land/files-by-sequence-number
                      :args {:thk.project/id (:thk.project/id project)
                             :file/sequence-number pos}
-                     :simple-view [file-view/file-table {:link-download? false
-                                                         :actions? true
-                                                         :comment-action #(reset! selected-file %)}]}]
+                     :simple-view [file-view/file-list2-with-search
+                                   {:link-to-new-tab? true}]}]
+
        [:span (tr [:land :no-position-number])])
      (when-let [f @selected-file]
        [comments-view/lazy-comments {:e! e!
@@ -1052,8 +1052,7 @@
                       (fn [unit]
                         (when (= (get-in unit [:estate :estate-id]) target)
                           (:estate unit)))
-                      (:land/units project))
-        ]
+                      (:land/units project))]
     [panels/modal+ (merge {:title (tr [:land-acquisition modal])
                            :open-atom (r/wrap (boolean modal) :_)
                            :on-close (e! project-controller/->CloseDialog)
@@ -1106,43 +1105,3 @@
               [:div
                [filter-units e! (:land-acquisition-filters project)]
                [cadastral-groups e! (dissoc project :land-acquisition-filters) (:land/units project)]]))]))}))
-
-
-;; TEET-913 todo:
-;; + when uploading a file to Land Acquisition tasks the # number is used as the POS number so display POS not # in the UI [x]
-;;     - code term for # seems to be sequence-number
-
-;; + cadastral unit related files should only display files that are under Land Acquisition tasks for the project an d have matching #POS number. [ ]
-;;   - background: cadastral units recently gained a "files attached to this unit" section in the ui, and if you input a POS# that's the same as a POS# of a task file it should show up there .. land/file-count-by-position-number or something is the back  query for it (shows the number in the ball that shows up in the cadastral ui).. change the query to only look in land-acquisiton tasks
-;;  - step 1: fix file from task not showing up under cadastral despite same POS#
-;;     - code change: use new sequence-number attribute name [x]
-;;  - step 2: address the actual requirement, show from land-part tasks only
-;;     - code change 1: file-db/files-by-project-and-sequence-number changed to optionally return land file infos only
-;;      - code change 2: discover that there are no other users -> roll back optionality and always filter by land-acquisition activity type in the funcs, but rename them as land specific
-;; + file name links to the file detail page (not download) [ ]
-;;   - step 1: figure out what this means
-;;    - file link under cadastral unit file info shows file info modal alreay
-;;    - but in the modal the link is direct link, -> change to same as in task files 
-;;   - step 2: figure out how to link to the location above
-;;    - locate task view code where the link is
-;;       - looks like both use the file-table component, but land part is giving it a :link-download? true flag -> just flip it
-;;       - nope, generates broken link when used from land view, debug or just generate our own link?
-;;       - broken link:            http://localhost:4000/#/projects/17546///83562883711824
-;;       - working from task view: http://localhost:4000/#/projects/17546/83562883711773/83562883711774/83562883711824
-;;       -  so it's missing 2 entity ids in the path element.
-;;         -> after some debug insturmentation the mystery is that how the download-link? false code path could work, not why it fails in land view, because the required activity and task ids are not passed to teet.ui.url/Link component
-;;         -> turns out url/Link component relies on some context magic that pulls the extra params successfully in some cases and in some cases not. they can't be passed normally to file-view either so need to figure out how to fix the context or mod file-view.
-;;          -> after some false starts got the advice to use update-context, but which context to update?
-;;          -> we get project thk number from context but not activity/task. trying update-conect :project then
-;;           -> ui-context/contexts atom inspection at repl gives some clues
-;;           -> contains a bunch of js native reactContexts... but at leas got the active context names from it
-;;           -> :navigation-context was the winning horse, got dummy data passed to the link now
-;;           -> but wait, file-view comp assumes all files are from same act/task?
-;;              -> next idea needed
-;;   - step 3:
-;;     - refactor file-view code to allow files from mixed tasks
-;;       - todo: wip code works for this case but normal task page links now bugged
-;; + view uses the listing style as the task file list [ ]
-
-;; Files attached to this unit page of the Cadastral unit info modal should not have a left to right scroll bar for the file listing. [ ]
-

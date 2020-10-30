@@ -164,15 +164,14 @@
                                    :style {:margin-left "1rem"}}
            (tr [:buttons :confirm])]]]])]))
 
-(defn- add-files-form [e! task act-name files-form upload-progress close!]
-  (log/info "add-files-form: act-name" act-name)
+(defn- add-files-form [e! project-id task files-form upload-progress close!]
   (r/with-let [reinstate-drop-zones! (drag/suppress-drop-zones!)]
     [:<>
      [form/form
       {:e!              e!
        :value           files-form
        :on-change-event file-controller/->UpdateFilesForm
-       :save-event      #(file-controller/->AddFilesToTask files-form close!)
+       :save-event      #(file-controller/->AddFilesToTask files-form task close!)
        :cancel-fn close!
        :in-progress?    upload-progress
        :spec :task/add-files}
@@ -184,18 +183,12 @@
                              :empty-selection-label (tr [:file-upload :general-part])
                              :format-item (fn [{:file.part/keys [name number]}]
                                             (gstr/format "%s #%02d" name number))}])
-            
-      (with-meta
-        (if (= act-name :activity.name/land-acquisition)
-          
-          [file-upload/files-field-land {:e! e!
-                                         :task task}]
-          ;; else
-          [file-upload/files-field {:e! e!
-                                    :task task}])
-        {:attribute :task/files
+      ^{:attribute :task/files
         :validate (fn [files]
-                    (some some? (map (partial file-upload/validate-file e! task) files)))})]
+                    (some some? (map (partial file-upload/validate-file e! project-id task) files)))}
+      [file-upload/files-field {:e! e!
+                                :project-id project-id
+                                :task task}]]
      (when upload-progress
        [LinearProgress {:variant "determinate"
                         :value   upload-progress}])]
@@ -213,22 +206,28 @@
                :save-event #(task-controller/->SavePartForm close-event task-id @form-data)
                :delete (when-let [part-id (:db/id @form-data)]
                          (task-controller/->DeleteFilePart close-event part-id))}
-    ^{:attribute :file.part/name}
+    ^{:attribute :file.part/name
+      :validate (fn [name]
+                  (when (> (count name) 99)
+                    (tr [:fields :validation-error :file.part/name])))}
     [TextField {}]]])
 
 (defn file-section-view
-  [{:keys [e! upload!]} task file-part files]
+  [{:keys [e! upload! sort-by-value allow-replacement-opts]} task file-part files]
   [:div
    [file-view/file-part-heading {:heading (:file.part/name file-part)
                                  :number (:file.part/number file-part)}
     {:action (when (task-model/can-submit? task)
                [when-authorized
                 :task/create-part task
-                [:div
+                [:div {:class (<class common-styles/flex-row)}
                  [form/form-modal-button
                   {:form-component [file-part-form e! (:db/id task)]
                    :form-value file-part
-                   :modal-title (tr [:task :edit-part-modal-title])
+                   :modal-title [:div {:style {:display :flex}}
+                                 [:p {:class (<class common-styles/margin-right 0.5)}
+                                  (tr [:task :edit-part-modal-title])]
+                                 [typography/GreyText (gstr/format "#%02d" (:file.part/number file-part))]]
                    :button-component
                    [buttons/button-secondary
                     {:size :small
@@ -240,17 +239,24 @@
                   (tr [:buttons :upload])]]])}]
    (if (seq files)
      [file-view/file-list2 {:e! e!
+                            :allow-replacement-opts allow-replacement-opts
+                            :sort-by-value sort-by-value
                             :download? true} files]
      [file-view/no-files])])
 
 (defn task-file-heading
-  [task upload!]
+  [task upload! {:keys [sort-by-atom
+                        items]}]
   [:div {:class [(<class common-styles/space-between-center)
                  (<class common-styles/margin-bottom 1)]}
 
-   [typography/Heading2 {:style {:margin-right "0.5rem"
-                                 :display :inline-block}}
-    (tr [:common :files])]
+   [:div {:style {:margin-right "0.5rem"
+                  :display :flex
+                  :align-items :flex-end}}
+    [typography/Heading2 {:style {:margin-right "0.5rem"
+                                  :display :inline-block}}
+     (tr [:common :files])]
+    [file-view/file-sorter sort-by-atom items]]
    (when (task-model/can-submit? task)
      [when-authorized :file/upload
       task
@@ -260,32 +266,43 @@
         (tr [:buttons :upload])]]])])
 
 (defn file-content-view
-  [e! upload! task files parts filtered-parts]
-  [:<>
-   [task-file-heading task upload!]
-   (when (or (empty? filtered-parts) (= (count parts) (count filtered-parts))) ;; if some other part is selected hide this
-     (let [general-files (remove #(contains? % :file/part) files)]
-       [file-view/file-list2 {:e! e!
-                              :download? true}
-        general-files]))
-   [:div
-    (mapc (fn [part]
-            [file-section-view {:e! e!
-                                :upload! upload!}
-             task part
-             (filterv
-               (fn [file]
-                 (= (:db/id part) (get-in file [:file/part :db/id])))
-               files)])
-          filtered-parts)]])
+  [e! upload! task files-form project-id files parts filtered-parts]
+  (r/with-let [items-for-sort-select (file-view/sort-items)
+               sort-by-atom (r/atom (first items-for-sort-select))]
+    (let [allow-replacement-opts {:e! e!
+                                  :task task
+                                  :project-id project-id
+                                  :replace-form files-form}]
+      [:<>
+       [task-file-heading task upload! {:sort-by-atom sort-by-atom
+                                        :items items-for-sort-select}]
+       (when (or (empty? filtered-parts) (= (count parts) (count filtered-parts))) ;; if some other part is selected hide this
+         (let [general-files (remove #(contains? % :file/part) files)]
+           [file-view/file-list2 {:e! e!
+                                  :allow-replacement-opts allow-replacement-opts
+                                  :sort-by-value @sort-by-atom
+                                  :download? true}
+            general-files]))
+       [:div
+        (mapc (fn [part]
+                [file-section-view {:e! e!
+                                    :sort-by-value @sort-by-atom
+                                    :allow-replacement-opts allow-replacement-opts
+                                    :upload! upload!}
+                 task part
+                 (filterv
+                   (fn [file]
+                     (= (:db/id part) (get-in file [:file/part :db/id])))
+                   files)])
+              filtered-parts)]])))
 
 (defn task-file-view
-  [e! task upload!]
+  [e! task upload! files-form project-id]
   (let [parts (:file.part/_task task)
         files (:task/files task)]
     [:div
      [file-view/file-search files parts
-      (r/partial file-content-view e! upload! task)]
+      [file-content-view e! upload! task files-form project-id]]
      (when (task-model/can-submit? task)
        [when-authorized :task/create-part
         task
@@ -299,18 +316,18 @@
            (tr [:task :add-part])]}]])]))
 
 (defn task-details
-  [e! new-document activity {:task/keys [description files] :as task} files-form]
+  [e! new-document project-id activity {:task/keys [description files] :as task} files-form]
   (r/with-let [file-upload-open? (r/atom false)
                upload! #(do (e! (file-controller/->UpdateFilesForm %))
                             (reset! file-upload-open? true))
                close! #(do (reset! file-upload-open? false)
-                           (e! (file-controller/->AfterUploadRefresh)))
-               act-name (:activity/name activity)]
+                           (e! (file-controller/->AfterUploadRefresh)))]
+    ^{:key (str "task-content-" (:db/id task))}
     [:div#task-details-drop.task-details
      (when description
        [typography/Paragraph description])
      [task-basic-info task]
-     [task-file-view e! task upload!]
+     [task-file-view e! task upload! files-form project-id]
      (when (task-model/can-submit? task)
        [:<>
         [file-upload/FileUpload {:drag-container-id "task-details-drop"
@@ -326,11 +343,8 @@
                                 (str (tr-enum (:activity/name activity))
                                      " / "
                                      (tr-enum (:task/type task)))]]
-                       :modal-component [add-files-form e! task act-name files-form
-                                         (:in-progress? new-document)
-                                         close!]
                        :on-close close!}
-         [add-files-form e! task act-name files-form
+         [add-files-form e! project-id task files-form
           (:in-progress? new-document)
           close!]]
         (when (seq files)
@@ -372,7 +386,9 @@
      :comment-command :comment/comment-on-task
      :entity-type :task
      :entity-id (:db/id task)}
-    [task-details e! (:new-document app) activity task files-form]]])
+    [task-details e! (:new-document app)
+     (get-in app [:params :project])
+     activity task files-form]]])
 
 
 (defn edit-task-form [_e! {:keys [initialization-fn]} {:keys [max-date min-date]}]
@@ -437,7 +453,9 @@
       :project project
       :app app}
 
-     [task-page-content e! app
+     [task-page-content
+      e!
+      app
       activity
       (project-model/task-by-id project task-id)
       (= (:db/id user)

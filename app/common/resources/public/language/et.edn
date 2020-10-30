@@ -90,7 +90,7 @@
  :contact
  {:address "Aadress",
   :email "E-post",
-  :phone "Mobile",
+  :phone "Mobiil",
   :phone2 "Telefon"},
  :dashboard
  {:activities-and-tasks "Tegevused ja ülesanded",
@@ -304,7 +304,7 @@
   :version "Versioon"},
  :error
  {:part-has-files
-  "Ülesande osa alla on lisatud faile. Kui soovid ülesande kustutada liiguta ennem kõik failid selle alt ära.",
+  "Ülesande osale on lisatud faile. Kui soovid ülesande osa kustutada, siis tõsta enne failid teise osa külge või kustuta failid.",
   :authorization-failure "Sessioon aegus. Palun sisene uuesti.",
   :invalid-task-dates "Kontrollige ülesande kuupäevi",
   :user-is-already-participant "Kasutaja on juba osaleja",
@@ -342,6 +342,9 @@
   :file/part "Osa",
   :file/version "Versioon",
   :estate-procedure/pos "POS#",
+  :validation-error
+  #:file.part{:name
+              "Ülesande osa nimi on liiga pikk. Maksimaalne lubatud pikkus on 99 tähemärki. "},
   :user/family-name "Perekonnanimi",
   :estate-procedure/compensations "Hüvitis",
   :estate-procedure/third-party-compensations
@@ -434,21 +437,31 @@
    :file/status "Sorteerin staatuse järgi",
    :file/type "Sorteerin failitüübi järgi",
    :meta/created-at "Sorteerin kuupäeva järgi"},
-  :replace-dialog-info-text "Eelmine versioon jääb alles",
+  :replace-dialog-info-text
+  "Ära muretse, eelmine versioon jääb alles ning sa leiad selle faili detailvaatest.",
   :version "Versioon {num}",
   :replace-dialog-info-title "Hakkad üles laadima uut versiooni",
   :download "Laen faili alla"},
  :file-upload
- {:description "Faili kirjeldus",
-  :original-filename "Algupärane failinimi: {name}",
-  :wrong-task "Sellesse ülesandesse ei saa seda faili lisada",
-  :file-belongs-to-task "See fail kuulub ülesandele {task}",
-  :already-uploaded "See fail on juba üles laaditud",
-  :new-version-will-be-created
-  "Salvestamine loob failile uue versiooni",
+ {:original-filename "Algupärane failinimi: {name}",
+  :description "Faili kirjeldus",
+  :description-required "Faili kirjeldus on puudu",
+  :general-part "Üldine",
   :select-part-to-upload
   "Valige osa, kuhu üleslaaditud failid lisatakse",
-  :general-part "Üldine"},
+  :file-will-be-added-to-part-text
+  "TEET tuvastas ülesande osa automaatselt failinimest",
+  :file-belongs-to-task "See fail kuulub ülesandele {task}",
+  :wrong-project "See fail ei kuulu selle projekti alla",
+  :file-new-part
+  "Faili nimes on uus osa sees, seetõttu lõime uue ülesande osa automaatselt",
+  :new-version-will-be-created
+  "Salvestamine loob failile uue versiooni",
+  :wrong-task "Sellesse ülesandesse ei saa seda faili lisada",
+  :file-new-part-text "TEET püüab Sinu elu lihtsamaks teha",
+  :invalid-sequence-number "Järjekorranumber ei ole korrektne",
+  :already-uploaded "See fail on juba üles laaditud",
+  :file-will-be-added-to-part "See fail lisatakse {part} osasse"},
  :land
  {:show-owner-info "Vaatan omanike andmeid",
   :no-active-mortgages "Aktiivsed hüpoteegid puuduvad",

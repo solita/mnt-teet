@@ -1,5 +1,6 @@
 (ns teet.util.collection
-  "Collection utilities")
+  "Collection utilities"
+  (:require [clojure.walk :as walk]))
 
 (defn contains-value? [coll v]
   (some #(when (= % v) true) coll))
@@ -163,3 +164,27 @@
   (if (and (map? a) (map b))
     (merge-with deep-merge a b)
     b))
+
+(defn collect
+  "Walk form and collect all items that match pred.
+  Retuns set of items."
+  [pred form]
+  (let [items (volatile! (transient #{}))]
+    (walk/prewalk (fn [x]
+                    (when (pred x)
+                      (vswap! items conj! x))
+                    x)
+                  form)
+    (-> items deref persistent!)))
+
+(defn replace-deep
+  "Walk form and replace any items in replacements.
+  Returns updated form."
+  [replacements form]
+  (walk/postwalk
+   (fn [x]
+     (let [replacement (replacements x ::no-replacement)]
+       (if (= replacement ::no-replacement)
+         x
+         replacement)))
+   form))

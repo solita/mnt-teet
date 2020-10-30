@@ -100,36 +100,63 @@
                            task-types)]
     (tr [:file-upload :file-belongs-to-task] {:task (tr-enum correct-task)})))
 
-(defn validate-file [e! task {:keys [metadata] :as file-row}]
-  (when-let [error (or (file-model/validate-file (files-field-entry file-row))
-                       (file-model/validate-file-metadata task metadata))]
-    (case (:error error)
-      :file-type-now-allowed
-      {:title (tr [:document :invalid-file-type])
-       :description [:<>
-                     (str/upper-case (file-model/filename->suffix name))
-                     " "
-                     [:a {:target "_blank"
-                          :href "https://confluence.mkm.ee/pages/viewpage.action?spaceKey=TEET&title=TEET+File+format+list"}
-                      (tr [:document :invalid-file-type])]]}
+(defn validate-name [{:file/keys [description extension] :as _file-row}]
+  (when (or (str/blank? description)
+            (str/blank? extension))
+    {:error :description-and-extension-required}))
 
-      :file-too-large
-      {:title (tr [:document :file-too-large])
-       :description ""}
+(defn validate-seq-number [{:file/keys [sequence-number]}]
+  (when (and sequence-number
+             ;; Valid sequence number 1 - 10000
+             (not (< 0 sequence-number 10000)))
+    {:error :invalid-sequence-number}))
 
-      ;; Check for wrong task (if metadata can be parsed)
-      :wrong-task
-      {:title (tr [:file-upload :wrong-task])
-       :description [select/with-enum-values
-                     {:e! e!
-                      :attribute :task/type}
-                     [wrong-task-error (:task metadata)]]}
+(defn validate-file [e! project-id task {:keys [metadata] :as file-row}]
+  (let [file-info (files-field-entry file-row)]
+    (when-let [error (or (and metadata (validate-name file-row))
+                         (validate-seq-number file-row)
+                         (file-model/validate-file file-info)
+                         (file-model/validate-file-metadata project-id task metadata))]
+      (case (:error error)
+        :file-type-now-allowed
+        {:title (tr [:document :invalid-file-type])
+         :description [:<>
+                       (str/upper-case (file-model/filename->suffix name))
+                       " "
+                       [:a {:target "_blank"
+                            :href "https://confluence.mkm.ee/pages/viewpage.action?spaceKey=TEET&title=TEET+File+format+list"}
+                        (tr [:document :invalid-file-type])]]}
 
-      ;; All validations ok
-      :else nil)))
+        :file-too-large
+        {:title (tr [:document :file-too-large])
+         :description ""}
+
+        ;; Check for wrong project
+        :wrong-project
+        {:title (tr [:file-upload :wrong-project])
+         :description ""}
+
+        ;; Check for wrong task (if metadata can be parsed)
+        :wrong-task
+        {:title (tr [:file-upload :wrong-task])
+         :description [select/with-enum-values
+                       {:e! e!
+                        :attribute :task/type}
+                       [wrong-task-error (:task metadata)]]}
+
+        :description-and-extension-required
+        {:title (tr [:file-upload :description-required])
+         :description ""}
+
+        :invalid-sequence-number
+        {:title (tr [:file-upload :invalid-sequence-number])
+         :description ""}
+
+        ;; All validations ok
+        :else nil))))
 
 (defn files-field-row [{:keys [e! update-file delete-file
-                               task]} file-row]
+                               project-id task]} file-row]
   [:<>
    [TableRow {}
     [TableCell {:style {:border :none}}
@@ -144,21 +171,23 @@
                           :value (:file/document-group file-row)
                           :on-change #(update-file {:file/document-group %})}]]
     [TableCell {:style {:border :none}}
-     ;; todo: figure out how to change the POS# heading for this
      [TextField {:value (or (:file/sequence-number file-row) "")
                  :disabled (nil? (:file/document-group file-row))
                  :type :number
                  :placeholder "0000"
                  :inline? true
-                 :on-change #(update-file
-                              {:file/sequence-number (js/parseInt (-> % .-target .-value))})}]]
+                 :on-change #(let [n (-> % .-target .-value)]
+                               (update-file
+                                {:file/sequence-number (if (str/blank? n)
+                                                         nil
+                                                         (js/parseInt n))}))}]]
     [TableCell {:style {:border :none}}
      [IconButton {:edge "end"
                   :on-click delete-file}
       [icons/action-delete]]]]
    [TableRow {}
     [TableCell {:colSpan 4}
-     (if-let [{:keys [title description] :as error} (validate-file e! task file-row)]
+     (if-let [{:keys [title description] :as error} (validate-file e! project-id task file-row)]
        [common-ui/info-box {:variant :error
                             :title title
                             :content description}]
@@ -166,6 +195,20 @@
         (when (get-in file-row [:metadata :file-id])
           [common-ui/info-box {:title (tr [:file-upload :already-uploaded])
                                :content (tr [:file-upload :new-version-will-be-created])}])
+        (when-let [part-number (some-> file-row :metadata :part js/parseInt)]
+          (when (not (zero? part-number))
+            (if-let [existing-part (some #(when (= part-number
+                                                   (:file.part/number %))
+                                            %)
+                                         (:file.part/_task task))]
+              ;; Existing file part
+              [common-ui/info-box {:title (tr [:file-upload :file-will-be-added-to-part]
+                                              {:part (:file.part/name existing-part)})
+                                   :content (tr [:file-upload :file-will-be-added-to-part-text])}]
+
+              ;; New file part
+              [common-ui/info-box {:title (tr [:file-upload :file-new-part])
+                                   :content (tr [:file-upload :file-new-part-text])}])))
         (let [{:file/keys [name size]} (files-field-entry file-row)]
           [:<>
            (when (:changed? file-row)
@@ -173,7 +216,7 @@
            " "
            (format/file-size size)])])]]])
 
-(defn files-field* [{:keys [e! value on-change error task
+(defn files-field [{:keys [e! value on-change error project-id task
                            single?]}]
   (let [update-file (fn [i new-file-data]
                       (on-change (update value i merge new-file-data
@@ -200,6 +243,7 @@
          (fn [i file-row]
            ^{:key i}
            [files-field-row {:e! e!
+                             :project-id project-id
                              :task task
                              :update-file (r/partial update-file i)
                              :delete-file (r/partial delete-file i)}
@@ -211,10 +255,3 @@
                           :on-drop #(on-change (into (or value []) %))}
         [icons/content-file-copy]
         (tr [:common :select-files])])]))
-
-
-(defn files-field [params]
-  (files-field* (assoc params :sequence-number-heading "#")))
-
-(defn files-field-land [params]
-  (files-field* (assoc params :sequence-number-heading "POS#")))

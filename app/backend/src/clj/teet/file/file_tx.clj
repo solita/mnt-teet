@@ -15,21 +15,26 @@
     ;; Contains a part reference, get or create the part
     (let [task-id (:db/id task-file-tx)
           part-number (:file.part/number part)
-          part-id (ffirst
-                   (d/q '[:find ?part
-                          :where
-                          [?part :file.part/task ?task]
-                          [?part :file.part/number ?n]
-                          :in $ ?task ?n]
-                        db task-id part-number))]
-      [(assoc-in task-file-tx [:task/files 0 :file/part]
-                 (if part-id
-                   ;; Existing part, just refer to it
-                   {:db/id part-id}
-                   ;; New part, create it
-                   (merge (select-keys part [:file.part/name :file.part/number])
-                          {:db/id "new-part"
-                           :file.part/task task-id})))])
+          part-id (when (and part-number (not= 0 part-number))
+                    (ffirst
+                     (d/q '[:find ?part
+                            :where
+                            [?part :file.part/task ?task]
+                            [?part :file.part/number ?n]
+                            :in $ ?task ?n]
+                          db task-id part-number)))]
+      (if (zero? part-number)
+        ;; Part is zero, that means general (no part)
+        [(update-in task-file-tx [:task/files 0]
+                    dissoc :file/part)]
+        [(assoc-in task-file-tx [:task/files 0 :file/part]
+                   (if part-id
+                     ;; Existing part, just refer to it
+                     {:db/id part-id}
+                     ;; New part, create it
+                     (merge (select-keys part [:file.part/name :file.part/number])
+                            {:db/id "new-part"
+                             :file.part/task task-id})))]))
 
     ;; No part, return tx data as is
     [task-file-tx]))

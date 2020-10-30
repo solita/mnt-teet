@@ -347,6 +347,8 @@
   :file/part "Part",
   :file/version "Version",
   :estate-procedure/pos "POS#",
+  :validation-error
+  #:file.part{:name "Part name can have up to 99 characters."},
   :user/family-name "Family name",
   :estate-procedure/compensations "Compensations",
   :estate-procedure/third-party-compensations
@@ -445,16 +447,26 @@
   :replace-dialog-info-title "You are about to upload a new version",
   :download "Download file"},
  :file-upload
- {:description "File description",
-  :original-filename "Original filename: {name}",
-  :wrong-task "Cannot add file to this task",
-  :file-belongs-to-task "This file belongs to {task} task",
-  :already-uploaded "This file has already been uploaded",
-  :new-version-will-be-created
-  "Saving will create new version for the file",
+ {:original-filename "Original filename: {name}",
+  :description "File description",
+  :description-required "Description required",
+  :general-part "General",
   :select-part-to-upload
   "Select part where uploaded files will be added to",
-  :general-part "General"},
+  :file-will-be-added-to-part-text
+  "TEET has automatically detected the file part based on the name",
+  :file-belongs-to-task "This file belongs to {task} task",
+  :wrong-project "Cannot add file to this project",
+  :file-new-part
+  "Filename had new task part in it, so we added new task part here automatically",
+  :new-version-will-be-created
+  "Saving will create new version for the file",
+  :wrong-task "Cannot add file to this task",
+  :file-new-part-text "TEET is designed to make you life easier",
+  :invalid-sequence-number "Invalid sequence number",
+  :already-uploaded "This file has already been uploaded",
+  :file-will-be-added-to-part
+  "This file will be added to {part} part"},
  :land
  {:show-owner-info "Show owner information",
   :no-active-mortgages

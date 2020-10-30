@@ -642,7 +642,10 @@
   (r/with-let [remove-participant! (fn [participant]
                                      (log/info "Remove participant:" participant)
                                      (e! (meeting-controller/->RemoveParticipant (:db/id participant))))]
-    (let [can-edit-participants? (and edit-rights? (meeting-model/user-is-organizer-or-reviewer? user meeting))]
+    (let [can-edit-participants? (and edit-rights? (meeting-model/user-is-organizer-or-reviewer? user meeting))
+          participations (sort-by
+                         meeting-model/role-id-name
+                         participations)]
       [:div.meeting-participants {:style {:flex 1}}
        [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}
         (tr [:meeting :participants-title])]

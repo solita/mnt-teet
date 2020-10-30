@@ -11,7 +11,8 @@
 
 
 (defn name->description-and-extension [string]
-  (let [ext-pos (str/last-index-of string ".")]
+  (let [string (str/trim string)
+        ext-pos (str/last-index-of string ".")]
     {:description (subs string 0 ext-pos)
      :extension (subs string (inc ext-pos))}))
 
@@ -45,7 +46,7 @@
 
 (s/def ::prefix-and-object #(re-matches #"^MA\d+$" %))
 (s/def ::field (s/and string? #(= "TL" %)))
-(s/def ::group-and-sequence (s/and string? #(re-matches #"^(\d+)(-(\d+))$" %)))
+(s/def ::group-and-sequence (s/and string? #(re-matches #"^(\d+)(-(\d+))?$" %)))
 (s/def ::part (s/and string? #(re-matches #"^\d{1,2}$" %)))
 (s/def ::description-and-extension (s/and string? #(re-matches #"^.+\.[A-Za-z0-9]+" %)))
 

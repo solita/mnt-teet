@@ -98,12 +98,17 @@
     nil))
 
 (defn validate-file-metadata
-  "Validate the metadata extracted from filename against a task. Returns map with
-  error description or nil if there are no problems."
-  [task metadata]
-  (when (and (seq metadata)
-             (not= (:db/id task) (:task-id metadata)))
-    {:error :wrong-task}))
+  "Validate the metadata extracted from filename against project and task.
+  Returns map with error description or nil if there are no problems."
+  [project-id task metadata]
+  (def *v [project-id task metadata])
+  (when (seq metadata)
+    (cond
+      (not= [:thk.project/id project-id] (:project-eid metadata))
+      {:error :wrong-project}
+
+      (not= (:db/id task) (:task-id metadata))
+      {:error :wrong-task})))
 
 (defn image-suffix? [filename]
   (-> filename filename->suffix image-suffixes boolean))

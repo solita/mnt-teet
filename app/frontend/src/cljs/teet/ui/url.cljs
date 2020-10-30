@@ -92,23 +92,20 @@
 (defn Link
   "Convenience component to create Material UI Link to given page with params.
   Missing path parameters are filled from navigation context."
-  [{:keys [page params query class component]
+  [{:keys [page params query class component target]
     :or {component teet.ui.material-ui/Link}}
    content]
   [consume-navigation-info
    (fn [{context-params :params}]
-     (let [url-fn (route-url-fns page)
-           url-fn-params (merge context-params params
-                                (when query
-                                  {::query query}))]
+     (let [url-fn (route-url-fns page)]
        (when (nil? url-fn)
          (log/error "No such page:" page))
        [component
-        (do
-          (log/debug "calling url-fn for" page "with params" url-fn-params "  - context-params was" context-params)
-          (merge {:href (url-fn url-fn-params)}
-                 (when class
-                   {:class class})))
+        (merge {:href (url-fn (merge context-params params
+                                     (when query
+                                       {::query query})))}
+               (when class
+                 {:class class})
+               (when target
+                 {:target target}))
         content]))])
-
-

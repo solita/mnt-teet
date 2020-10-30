@@ -27,5 +27,5 @@
 
 (deftest parse-enabled-features
   (testing "parses a comma separated list of feature names into keyword set, trimming whitespace"
-    (is (= (environment/parse-enabled-features " foo , bar-bar,quux,,,")
+    (is (= (#'environment/parse-enabled-features " foo , bar-bar,quux,,,")
            #{:foo :bar-bar :quux}))))
