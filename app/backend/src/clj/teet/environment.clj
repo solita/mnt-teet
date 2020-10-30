@@ -236,3 +236,12 @@
   []
   {:api-url (config-value :api-url)
    :api-secret (config-value :auth :jwt-secret)})
+
+
+;; file type whitelist todo:
+;; - want to retrieve a subhierarchy of keys from ssm param store.
+;;  awscli can stuff like
+;;  $ aws ssm get-parameters-by-path --path /teet/email/
+;;  to retrieve params with keys under that path. this would be a good
+;;  data model for file types too, eg /teet/file-policy/suffix/docx/allowed = true
+;;  - todo: check pricing 
