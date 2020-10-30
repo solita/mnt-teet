@@ -15,6 +15,7 @@
  :admin {:create-user "Add user", :title "Admin"},
  :buttons
  {:confirm "Confirm",
+  :duplicate "Duplicate",
   :continue "Continue",
   :edit "Edit",
   :delete "Delete",
@@ -594,6 +595,7 @@
   :new-meeting-button "Create meeting",
   :project-meetings-title "Project meetings",
   :notifications-title "Notifications",
+  :duplicate-meeting-modal-title "Duplicate meeting",
   :edit-agenda-modal-title "Edit topic",
   :new-agenda-modal-title "New topic",
   :reject-meeting-button "Reject decisions",

@@ -1,4 +1,5 @@
-{:allow [teet.meeting.meeting-tx/add-participation
+{:allow [teet.meeting.meeting-tx/create-meeting
+         teet.meeting.meeting-tx/add-participation
          teet.meeting.meeting-tx/update-meeting
          teet.meeting.meeting-tx/review-meeting
          teet.file.file-model/image-suffix?

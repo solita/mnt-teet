@@ -210,3 +210,17 @@
   (case type
     :meeting-agenda (get-in (du/entity db id) [:meeting/_agenda :db/id])
     :meeting-decision (get-in (du/entity db id) [:meeting.agenda/_decisions :meeting/_agenda :db/id])))
+
+(defn duplicate-info
+  "Fetch meeting info required to duplicate the meeting"
+  [db id]
+  (d/pull db '[:meeting/title
+               :meeting/location
+               :meeting/organizer
+               {:activity/_meetings [:db/id]}
+               {:meeting/agenda [:db/id
+                                 :meeting.agenda/topic
+                                 :meeting.agenda/body
+                                 :meeting.agenda/responsible]}
+               {:participation/_in [:participation/role
+                                    {:participation/participant [:db/id :meta/deleted?]}]}] id))

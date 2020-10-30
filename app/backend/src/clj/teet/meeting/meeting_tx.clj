@@ -64,3 +64,14 @@
                 [{:db/id meeting-id
                   :meeting/locked? true}]))))))
 
+(defn create-meeting
+  "Create new meeting in activity. Automatically sets meeting number."
+  [db activity-eid meeting]
+  (let [meeting
+        (merge meeting
+               {:meeting/number (meeting-db/next-meeting-number
+                                 db
+                                 activity-eid
+                                 (:meeting/title meeting))})]
+    [{:db/id activity-eid
+      :activity/meetings [meeting]}]))

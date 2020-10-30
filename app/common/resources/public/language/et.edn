@@ -15,6 +15,7 @@
  :admin {:create-user "Lisan kasutaja", :title "Admin"},
  :buttons
  {:confirm "Kinnitan",
+  :duplicate nil,
   :continue "Jätkan",
   :edit "Muudan",
   :delete "Kustutan",
@@ -592,6 +593,7 @@
   :new-meeting-button "Loon uue koosoleku",
   :project-meetings-title "Projekti koosolekud",
   :notifications-title "Teavitused",
+  :duplicate-meeting-modal-title nil,
   :edit-agenda-modal-title "Päevakavapunkti muutmine",
   :new-agenda-modal-title "Uus päevakavapunkt",
   :reject-meeting-button "Lükkan tagasi",
