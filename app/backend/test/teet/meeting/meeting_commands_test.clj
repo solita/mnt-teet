@@ -1,5 +1,5 @@
-(ns teet.meeting.meeting-commands-test
-  (:require [teet.meeting.meeting-commands :as meeting-commands]
+(ns ^:db teet.meeting.meeting-commands-test
+  (:require teet.meeting.meeting-commands
             [teet.test.utils :as tu]
             [clojure.test :refer [deftest is testing use-fixtures]]
             [datomic.client.api :as d]))
