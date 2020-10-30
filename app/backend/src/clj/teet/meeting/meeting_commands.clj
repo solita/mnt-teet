@@ -129,16 +129,11 @@
              :meeting/keys [form-data]}
    :project-id (project-db/activity-project-id db activity-eid)
    :authorization {:activity/edit-activity {}}
-   :transact (let [meeting
-                   (merge {:db/id "new-meeting"}
-                          form-data
-                          (meta-model/creation-meta user)
-                          {:meeting/number (meeting-db/next-meeting-number
-                                            db
-                                            activity-eid
-                                            (:meeting/title form-data))})]
-               [{:db/id activity-eid
-                 :activity/meetings [meeting]}])})
+   :transact [(list 'teet.meeting.meeting-tx/create-meeting
+                    activity-eid
+                    (merge {:db/id "new-meeting"}
+                           form-data
+                           (meta-model/creation-meta user)))]})
 
 (defcommand :meeting/update
   {:doc "Update existing meeting"
@@ -453,3 +448,37 @@
                     user
                     meeting-id
                     (select-keys form-data [:review/comment :review/decision]))]})
+
+(defcommand :meeting/duplicate
+  {:doc "Duplicate this meeting into a new instance"
+   :context {:keys [db user]}
+   :payload {id :db/id
+             :meeting/keys [start end]}
+   :project-id (project-db/meeting-project-id db id)
+   :authorization {:meeting/add-meeting {}}
+   :transact
+   (let [{:meeting/keys [title location agenda organizer] :as old-meeting}
+         (meeting-db/duplicate-info db id)]
+     (into
+      [(list 'teet.meeting.meeting-tx/create-meeting
+             (get-in old-meeting [:activity/_meetings 0 :db/id])
+             (merge {:db/id "new-meeting"
+                     :meeting/title title
+                     :meeting/location location
+                     :meeting/organizer organizer
+                     :meeting/start start
+                     :meeting/end end}
+                    (when (seq agenda)
+                      {:meeting/agenda (vec (for [a agenda]
+                                              (merge
+                                               {:db/id (str "new-agenda-" (:db/id a))}
+                                               (select-keys a [:meeting.agenda/topic
+                                                               :meeting.agenda/body
+                                                               :meeting.agenda/responsible]))))})
+                    (meta-model/creation-meta user)))]
+      (for [{:participation/keys [role participant]} (:participation/_in old-meeting)
+            :when (not (:meta/deleted? participant))]
+        {:db/id (str "new-participation-" (:db/id participant))
+         :participation/in "new-meeting"
+         :participation/role (:db/ident role)
+         :participation/participant (:db/id participant)})))})
