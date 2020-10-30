@@ -453,16 +453,17 @@
   {:doc "Duplicate this meeting into a new instance"
    :context {:keys [db user]}
    :payload {id :db/id
-             :meeting/keys [start end]}
+             :meeting/keys [title location organizer start end]}
    :project-id (project-db/meeting-project-id db id)
    :authorization {:meeting/add-meeting {}}
    :transact
-   (let [{:meeting/keys [title location agenda organizer] :as old-meeting}
+   (let [{:meeting/keys [agenda] :as old-meeting}
          (meeting-db/duplicate-info db id)]
      (into
       [(list 'teet.meeting.meeting-tx/create-meeting
              (get-in old-meeting [:activity/_meetings 0 :db/id])
-             (merge {:db/id "new-meeting"
+             (merge (select-keys old-meeting [:meeting/title :meeting/location :meeting/organizer])
+                    {:db/id "new-meeting"
                      :meeting/title title
                      :meeting/location location
                      :meeting/organizer organizer

@@ -44,7 +44,8 @@
             [teet.util.datomic :as du]
             [clojure.set :as set]
             [clojure.string :as str]
-            [teet.link.link-view :as link-view]))
+            [teet.link.link-view :as link-view]
+            [teet.ui.panels :as panels]))
 
 
 (defn update-meeting-warning?
@@ -55,8 +56,8 @@
       (tr [:meeting :reviews-invalidated-warning-text])]]))
 
 (defn meeting-form
-  [e! activity-id close-event form-atom]
-  (let [editing? (:db/id @form-atom)]
+  [{:keys [e! activity-id duplicate?]} close-event form-atom]
+  (let [editing? (and (not duplicate?) (:db/id @form-atom))]
     [:<>
      (when editing?
        [context/consume :reviews?
@@ -67,7 +68,7 @@
                    :on-change-event (form/update-atom-event form-atom merge)
                    :cancel-event close-event
                    :spec :meeting/form-data
-                   :save-event #(meeting-controller/->SubmitMeetingForm activity-id @form-atom close-event)}
+                   :save-event #(meeting-controller/->SubmitMeetingForm duplicate? activity-id @form-atom close-event)}
                   (when editing?
                     {:delete (meeting-controller/->CancelMeeting activity-id (:db/id @form-atom) close-event)}))
       ^{:attribute :meeting/title}
@@ -413,7 +414,7 @@
      [:div
       [:div.project-navigator-add-meeting
 
-       [form/form-modal-button {:form-component [meeting-form e! activity-id]
+       [form/form-modal-button {:form-component [meeting-form {:e! e! :activity-id activity-id}]
                                 :form-value {:meeting/organizer (select-keys user [:db/id
                                                                                    :user/id
                                                                                    :user/given-name
@@ -863,27 +864,43 @@
   [authorization-context/consume
    [meeting-details* e! user meeting]])
 
+(defn meeting-duplicate [e! activity-id meeting close!]
+  (r/with-let [form (r/atom meeting)
+               close-event (form/callback-event close!)]
+    [panels/modal {:title (tr [:meeting :duplicate-meeting-modal-title])
+                   :max-width "md"}
+     [meeting-form {:e! e!
+                    :activity-id activity-id
+                    :duplicate? true}
+      close-event
+      form]]))
+
 (defn meeting-main-content
   [e! {:keys [params user query]} meeting]
-  (let [{:meeting/keys [title number locked?]} meeting]
-    [:div
-     [:div {:class (<class common-styles/heading-and-action-style)}
-      [typography/Heading2 {:class (<class common-styles/flex-align-center)}
-       title (when number (str " #" number)) (when locked? [icons/action-lock])]
-      [authorization-context/when-authorized :edit-meeting
-       [form/form-modal-button {:form-component [meeting-form e! (:activity params)]
-                                :form-value meeting
-                                :modal-title (tr [:meeting :edit-meeting-modal-title])
-                                :id "edit-meeting"
-                                :button-component
-                                [buttons/button-with-menu
-                                 {:items [{:label (tr [:buttons :duplicate])
-                                           :on-click #(js/alert "implement me")}]}
-                                 (tr [:buttons :edit])]}]]]
-     [tabs/tabs
-      query
-      [[:details [meeting-details e! user meeting]]
-       [:notes [:div [:h1 "notes"]]]]]]))
+  (r/with-let [duplicate-open? (r/atom false)
+               open-duplicate! #(reset! duplicate-open? true)
+               close-duplicate! #(reset! duplicate-open? false)]
+    (let [{:meeting/keys [title number locked?]} meeting]
+      [:div
+       [:div {:class (<class common-styles/heading-and-action-style)}
+        [typography/Heading2 {:class (<class common-styles/flex-align-center)}
+         title (when number (str " #" number)) (when locked? [icons/action-lock])]
+        [authorization-context/when-authorized :edit-meeting
+         [form/form-modal-button {:form-component [meeting-form {:e! e! :activity-id (:activity params)}]
+                                  :form-value meeting
+                                  :modal-title (tr [:meeting :edit-meeting-modal-title])
+                                  :id "edit-meeting"
+                                  :button-component
+                                  [buttons/button-with-menu
+                                   {:items [{:label (tr [:buttons :duplicate])
+                                             :on-click open-duplicate!}]}
+                                   (tr [:buttons :edit])]}]]]
+       (when @duplicate-open?
+         [meeting-duplicate e! (:activity params) meeting close-duplicate!])
+       [tabs/tabs
+        query
+        [[:details [meeting-details e! user meeting]]
+         [:notes [:div [:h1 "notes"]]]]]])))
 
 
 (defn meeting-page [e! {:keys [params user query] :as app} {:keys [project meeting]}]
