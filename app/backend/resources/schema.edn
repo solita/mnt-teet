@@ -1288,4 +1288,133 @@
            :enum/attribute :activity/name,
            :enum/valid-for :thk.lifecycle-type/construction,
            :filename/code "GA"}]]}
+ {:db/ident :migration/construction-lifecycle
+  :txes [[;; new THK task types
+          {:db/ident :thk.task-type/owners-supervision :thk/code "4006"}
+          {:db/ident :thk.task-type/electricity :thk/code "4007"}
+          {:db/ident :thk.task-type/construction-other :thk/code "4008"}
+          {:db/ident :thk.task-type/road-safety-audit :thk/code "4009"}]
+         [;; new construction task groups
+          {:db/ident :task.group/working-design :enum/attribute :task/group}
+          {:db/ident :task.group/construction :enum/attribute :task/group}
+          {:db/ident :task.group/construction-quality-assurance :enum/attribute :task/group}
+          {:db/ident :task.group/construction-approval :enum/attribute :task/group}
+          {:db/ident :task.group/warranty :enum/attribute :task/group}]
+         [;; remove land-owners task
+          [:db/retractEntity [:db/ident :task.type/land-owners]]
+
+          ;; new task types for construction
+          {:db/ident :task.type/construction-general-part,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/design,
+           :filename/code "AA"}
+          {:db/ident :task.type/construction-road,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/working-design,
+           :filename/code "TL"}
+          {:db/ident :task.type/construction-railroad,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/working-design,
+           :filename/code "TR"}
+          {:db/ident :task.type/construction-drainage,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/working-design,
+           :filename/code "DR"}
+          {:db/ident :task.type/construction-landscaping,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/working-design,
+           :filename/code "MA"}
+          {:db/ident :task.type/construction-lighting,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/working-design,
+           :filename/code "EL"}
+          {:db/ident :task.type/construction-equipment,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/working-design,
+           :filename/code "EQ"}
+          {:db/ident :task.type/construction-structures,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/working-design,
+           :filename/code "TS"}
+          {:db/ident :task.type/construction-utilities,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/working-design,
+           :filename/code "TV"}
+          {:db/ident :task.type/construction-other-facilities,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/working-design,
+           :filename/code "MR"}
+
+          ;; move building permit to construction
+          {:db/ident :task.type/building-permit
+           :enum/valid-for :task.group/construction}
+          {:db/ident :task.type/project-management,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/construction,
+           :filename/code "PM"}
+          {:db/ident :task.type/collaboration,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/construction,
+           :filename/code "KK"}
+          {:db/ident :task.type/key-persons,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/construction,
+           :filename/code "KP"}
+          ;; Bill of Quantities, cost-list used for consistency with design phase
+          {:db/ident :task.type/construction-cost-list,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/construction,
+           :filename/code "CL"}
+          {:db/ident :task.type/instructions,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/construction,
+           :filename/code "JU"}
+          {:db/ident :task.type/grid-connections,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/construction,
+           :thk/task-type :thk.task-type/electricity,
+           :filename/code "GC"}
+          {:db/ident :task.type/traffic-arrangement,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/construction,
+           :filename/code "TA"}
+
+          {:db/ident :task.type/owners-supervision,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/quality-assurance,
+           :thk/task-type :thk.task-type/owners-supervision,
+           :filename/code "OJ"}
+          {:db/ident :task.type/materials-and-products,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/quality-assurance,
+           :thk/task-type :thk.task-type/construction-other,
+           :filename/code "MT"}
+          {:db/ident :task.type/measurements,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/quality-assurance,
+           :filename/code "ME"}
+          {:db/ident :task.type/laboratory,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/quality-assurance,
+           :thk/task-type :thk.task-type/construction-other,
+           :filename/code "LT"}
+
+          {:db/ident :task.type/road-safety-audit,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/construction-approval,
+           :thk/task-type :thk.task-type/road-safety-audit,
+           :filename/code "LA"}
+          {:db/ident :task.type/acceptance,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/construction-approval,
+           :filename/code "VV"}
+
+          {:db/ident :task.type/inspections,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/warranty,
+           :filename/code "GY"}
+          {:db/ident :task.type/construction-other,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/warranty,
+           :filename/code "ZZ"}]]}
 ]

@@ -30,7 +30,7 @@
                      :role :internal-consultant})
 
   (let [task-id (tu/create-task {:user tu/mock-user-manager :activity (act1-id)
-                                 :task {:task/type :task.type/plot-allocation-plan
+                                 :task {:task/type :task.type/third-party-review
                                         :task/group :task.group/land-purchase}})]
     (is (number? task-id))
 
@@ -111,7 +111,7 @@
                           {:activity {:activity/estimated-start-date #inst "2020-04-12T21:00:00.000-00:00"
                                       :activity/estimated-end-date #inst "2020-04-13T21:00:00.000-00:00"
                                       :activity/name :activity.name/land-acquisition}
-                           :tasks [[:task.group/land-purchase :task.type/land-owners false]]
+                           :tasks [[:task.group/land-purchase :task.type/road-safety-audit false]]
                            :lifecycle-id (tu/->db-id "p3-lc1")}))))
 
 (deftest add-tasks
@@ -122,7 +122,7 @@
                                   :task/estimated-start-date #inst "2020-04-11T21:00:00.000-00:00" ;; Oops, too early
                                   :task/estimated-end-date #inst "2020-04-13T21:00:00.000-00:00"
                                   :activity/tasks-to-add [[:task.group/land-purchase :task.type/cadastral-works false]
-                                                          [:task.group/land-purchase :task.type/plot-allocation-plan false]]}))
+                                                          [:task.group/land-purchase :task.type/third-party-review false]]}))
       "Tasks can only be added to an existing activity")
 
   (tu/store-data! :new-activity-id
@@ -131,7 +131,7 @@
                                         {:activity {:activity/estimated-start-date #inst "2020-04-12T21:00:00.000-00:00"
                                                     :activity/estimated-end-date #inst "2020-04-13T21:00:00.000-00:00"
                                                     :activity/name :activity.name/land-acquisition}
-                                         :tasks [[:task.group/land-purchase :task.type/land-owners false]]
+                                         :tasks [[:task.group/land-purchase :task.type/third-party-review false]]
                                          :lifecycle-id (tu/->db-id "p3-lc1")})
                       :tempids
                       (get "new-activity")))
@@ -145,7 +145,7 @@
                                   :task/estimated-start-date #inst "2020-04-11T21:00:00.000-00:00" ;; Oops, too early
                                   :task/estimated-end-date #inst "2020-04-13T21:00:00.000-00:00"
                                   :activity/tasks-to-add [[:task.group/land-purchase :task.type/cadastral-works false]
-                                                          [:task.group/land-purchase :task.type/plot-allocation-plan false]]}))
+                                                          [:task.group/land-purchase :task.type/third-party-review false]]}))
       "Tasks' estimated start and end dates need to occur within acitivity's start and end dates")
 
   (is (tu/local-command tu/mock-user-boss
@@ -154,7 +154,7 @@
                          :task/estimated-start-date #inst "2020-04-12T22:00:00.000-00:00"
                          :task/estimated-end-date #inst "2020-04-13T21:00:00.000-00:00"
                          :activity/tasks-to-add [[:task.group/land-purchase :task.type/cadastral-works false]
-                                                 [:task.group/land-purchase :task.type/plot-allocation-plan false]]})
+                                                 [:task.group/land-purchase :task.type/third-party-review false]]})
       "New tasks are added")
 
   (is (= (-> (du/entity (tu/db) (tu/get-data :new-activity-id)) :activity/tasks count)
@@ -169,7 +169,7 @@
                                           {:activity {:activity/estimated-start-date #inst "2020-04-12T21:00:00.000-00:00"
                                                       :activity/estimated-end-date #inst "2020-04-13T21:00:00.000-00:00"
                                                       :activity/name :activity.name/land-acquisition}
-                                           :tasks [[:task.group/land-purchase :task.type/land-owners false]]
+                                           :tasks [[:task.group/land-purchase :task.type/third-party-review false]]
                                            :lifecycle-id (tu/->db-id "p3-lc1")})
                         :tempids
                         (get "new-activity")))
