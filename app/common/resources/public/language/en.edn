@@ -601,7 +601,7 @@
   :reject-meeting-button "Reject decisions",
   :add-person "Add person",
   :approved-by "Approved by {approvers}",
-  :notifications-sent "Calendar notification sent",
+  :notifications-sent "Notifications sent",
   :decision-topic "{topic} decision #{num}"},
  :notifications
  {:no-unread-notifications "No unread notifications",
