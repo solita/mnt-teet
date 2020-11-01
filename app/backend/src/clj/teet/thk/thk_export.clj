@@ -1,6 +1,7 @@
 (ns teet.thk.thk-export
   "Export project lifecycle and activity data to THK"
   (:require [datomic.client.api :as d]
+            [teet.activity.activity-model :as activity-model]
             [teet.thk.thk-mapping :as thk-mapping]
             [teet.log :as log]
             [teet.meta.meta-query :as meta-query]))
@@ -61,7 +62,8 @@
      [thk-mapping/csv-column-names]
      (for [project projects
            lifecycle (:thk.project/lifecycles project)
-           activity (:thk.lifecycle/activities lifecycle)
+           activity (filter activity-model/exported-to-thk?
+                            (:thk.lifecycle/activities lifecycle))
 
            ;; THK only has activities, so activities and tasks under it are sent as activity rows
            activity-or-task (into [activity] (tasks-to-send db (:db/id activity)))
