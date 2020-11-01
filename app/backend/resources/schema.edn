@@ -1283,23 +1283,29 @@
          teet.migration.file-sequence-number/pos-number->sequence-number]}
 
  ;; TEET-822 Add Warranty activity for Construction lifecycle
- {:db/ident :migration/add-warranty-activity
-  :txes [[{:db/ident :activity.name/warranty,
+ {:db/ident :migration/construction-lifecycle
+  :txes [[;; Add warranty, add lifecycle for construction
+          {:db/ident :activity.name/warranty,
            :enum/attribute :activity/name,
            :enum/valid-for :thk.lifecycle-type/construction,
-           :filename/code "GA"}]]}
- {:db/ident :migration/construction-lifecycle
-  :txes [[;; new THK task types
+           :filename/code "GA"}
+          {:db/ident :activity.name/construction,
+           :enum/valid-for :thk.lifecycle-type/construction}
+          [:db/retractEntity [:db/ident :activity.name/workshop-design]]]
+
+         [;; new THK task types
           {:db/ident :thk.task-type/owners-supervision :thk/code "4006"}
           {:db/ident :thk.task-type/electricity :thk/code "4007"}
           {:db/ident :thk.task-type/construction-other :thk/code "4008"}
           {:db/ident :thk.task-type/road-safety-audit :thk/code "4009"}]
+
          [;; new construction task groups
           {:db/ident :task.group/working-design :enum/attribute :task/group}
           {:db/ident :task.group/construction :enum/attribute :task/group}
           {:db/ident :task.group/construction-quality-assurance :enum/attribute :task/group}
           {:db/ident :task.group/construction-approval :enum/attribute :task/group}
           {:db/ident :task.group/warranty :enum/attribute :task/group}]
+
          [;; remove land-owners task
           [:db/retractEntity [:db/ident :task.type/land-owners]]
 

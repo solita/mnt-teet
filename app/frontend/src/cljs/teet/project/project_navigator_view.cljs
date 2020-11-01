@@ -310,7 +310,7 @@
                     :thk.lifecycle/keys [activities estimated-end-date estimated-start-date type] :as lifecycle}]
               (let [last? (= (+ i 1) (count lifecycles))
                     lc-type (:db/ident type)
-                    disable-buttons? (= :thk.lifecycle-type/construction lc-type) ;; Disable buttons related to adding stages or tasks in construction until that part is more planned out
+                    disable-buttons? false
                     first-activity-status (activity-step-state (first activities))
                     lc-status (lifecycle-status lifecycle)
                     open? (= (str lc-id) (str (:lifecycle stepper)))]

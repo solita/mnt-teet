@@ -22,7 +22,8 @@
    :activity.name/detailed-design 3
    :activity.name/land-acquisition 4
    :activity.name/workshop-design 5
-   :activity.name/construction 6})
+   :activity.name/construction 6
+   :activity.name/warranty 7})
 
 (def activity-name->task-groups
   {:activity.name/pre-design #{:task.group/base-data
