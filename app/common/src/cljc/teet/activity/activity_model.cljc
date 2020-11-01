@@ -41,8 +41,11 @@
                                     :task.group/design-approval
                                     :task.group/design-reports}
    :activity.name/land-acquisition #{:task.group/land-purchase}
-   ;; TODO: No known task groups for these yet
-   :activity.name/construction #{}
+   :activity.name/construction #{:task.group/working-design
+                                 :task.group/construction
+                                 :task.group/construction-quality-assurance
+                                 :task.group/construction-approval}
+   :activity.name/warranty #{:task.group/warranty}
    :activity.name/workshop-design #{}})
 
 (def activity-in-progress-statuses
