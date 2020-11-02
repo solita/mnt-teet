@@ -474,14 +474,17 @@
 (defn- file-list-field-style []
   {:flex-basis "25%" :flex-shrink 0 :flex-grow 0})
 
-(defn- file-list-style []
-  {:overflow :hidden})
+(defn- file-list-name-style [selected?]
+  {:display :block
+   :overflow :hidden
+   :text-overflow :ellipsis
+   :font-weight (if selected? :bold :normal)})
 
 (defn- file-list [parts files current-file-id]
   (let [parts (sort-by :file.part/number
                        (concat [{:file.part/number 0 :file.part/name (tr [:file-upload :general-part])}]
                                parts))]
-    [:div.file-list {:class (<class file-list-style)}
+    [:div.file-list
      (mapc
       (fn [{part-id :db/id :file.part/keys [name number]}]
         (let [files (filter (fn [{part :file/part}]
@@ -494,22 +497,25 @@
              [typography/Heading3 (gstr/format "%s #%02d" name number)]
              [:div
               (mapc (fn [{id :db/id :file/keys [name version number status] :as f}]
-                      (let [[_ base-name suffix] (re-matches #"^(.*)\.([^\.]+)$" name)]
+                      (let [{:keys [description extension]}
+                            (filename-metadata/name->description-and-extension name)
+                            active? (= current-file-id id)]
                         [:div.file-list-entry
-                         [:div
+                         [:div {:class (<class common-styles/flex-row-center)}
                           [file-icon (assoc f :class "file-list-icon")]
-                          (if (= current-file-id id)
-                            [:b.file-list-name-active (or base-name name)]
-                            [url/Link {:page :file
-                                       :params {:file id}
-                                       :class "file-list-name"}
-                             (or base-name name)])]
+                          [:div.file-list-name {:class (<class file-list-name-style active?)}
+                           (if active?
+                             description
+                             [url/Link {:page :file
+                                        :params {:file id}
+                                        :class "file-list-name"}
+                              description])]]
                          [:div {:style {:font-size "12px" :display :flex
                                         :justify-content :space-between
                                         :margin "0 1rem 1rem 1rem"}}
                           [:span.file-list-suffix {:class (<class file-list-field-style)}
-                           (if suffix
-                             (str/upper-case suffix)
+                           (if extension
+                             (str/upper-case extension)
                              "")]
                           [:span.file-list-number {:class (<class file-list-field-style)} number]
                           [:span.file-list-version {:class (<class file-list-field-style)} (str "V" version)]
