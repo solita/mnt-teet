@@ -88,7 +88,7 @@
   (process-event [{:keys [session-info after-login?]} app]
     (log/info "TOKEN: " session-info ", after-login? " after-login?)
     (let [navigation-data @common-controller/navigation-data-atom
-          {:keys [token error roles user enabled-features api-url]} session-info
+          {:keys [token error roles user enabled-features config]} session-info
           app (assoc app :initialized? true :checking-session? false)]
       (reset! common-controller/navigation-data-atom nil)
       (if error
@@ -111,7 +111,7 @@
                         effects)]
           (apply t/fx
                  (-> app
-                     (assoc-in [:config :api-url] api-url)
+                     (assoc :config config)
                      (assoc :user (assoc user :roles roles))
                      (assoc :enabled-features enabled-features)
                      (assoc-in login-paths/api-token token)

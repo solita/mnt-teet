@@ -108,7 +108,8 @@
    :api-url (->ssm [:api :url])
    :document-storage {:bucket-name (->ssm [:s3 :document-bucket])}
    :thk {:export-bucket-name (->ssm [:thk :teet-to-thk :bucket-name] nil)
-         :export-dir (->ssm [:thk :teet-to-thk :unprocesseddir] nil)}
+         :export-dir (->ssm [:thk :teet-to-thk :unprocesseddir] nil)
+         :url (->ssm [:thk :url] nil)}
    :road-registry {:wfs-url (->ssm [:road-registry :wfs-url] nil)
                    :wms-url (->ssm [:road-registry :wms-url] nil)}
    :xroad {:query-url (->ssm [:xroad-query-url] nil)
