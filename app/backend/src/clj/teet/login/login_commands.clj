@@ -63,6 +63,12 @@
 
 
 
+(defn config
+  "Configuration that is sent to the frontend."
+  []
+  {:thk {:url (environment/config-value :thk :url)}
+   :api-url (environment/config-value :api-url)})
+
 ;; dummy-login trust person-id etc information from
 ;; the frontend (command could be renamed to dummy-login)
 
@@ -93,7 +99,7 @@
                                        :id id})
        :user (user-db/user-info db [:user/id id])
        :enabled-features (environment/config-value :enabled-features)
-       :api-url (environment/config-value :api-url)})
+       :config (config)})
     {:error :incorrect-site-password}))
 
 
@@ -156,4 +162,4 @@
                                    :id id})
    :user (user-db/user-info db [:user/id id])
    :enabled-features (environment/config-value :enabled-features)
-   :api-url (environment/config-value :api-url)})
+   :config (config)})
