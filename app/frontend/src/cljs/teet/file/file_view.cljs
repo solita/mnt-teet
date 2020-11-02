@@ -656,7 +656,7 @@
         [typography/SmallGrayText {}
          [:b (tr [:file-upload :original-filename] {:name original-name})]]])]))
 
-(defn- file-edit-dialog [{:keys [e! on-close file parts]}]
+(defn- file-edit-dialog [{:keys [e! on-close file parts activity]}]
   (r/with-let [form-data (r/atom (update file :file/part
                                          (fn [p]
                                            ;; Part in file only has id,
@@ -691,7 +691,11 @@
        [select/select-enum {:e! e!
                             :attribute :file/document-group}]
        ^{:attribute :file/sequence-number :xs 4}
-       [TextField {:type :number :label "#"
+       [TextField {:type :number
+                   :label (if (du/enum= :activity.name/land-acquisition
+                                        (:activity/name activity))
+                            (tr [:fields :file/position-number])
+                            (tr [:fields :file/sequence-number]))
                    :disabled (nil? (:file/document-group @form-data))}]
 
        ^{:attribute [:file/name :file/original-name]}
@@ -717,9 +721,11 @@
 
        :reagent-render
        (fn [e! {{file-id :file
-                 task-id :task} :params
+                 task-id :task
+                 activity-id :activity} :params
                 :as app} project]
-         (let [task (project-model/task-by-id project task-id)
+         (let [activity (project-model/activity-by-id project activity-id)
+               task (project-model/task-by-id project task-id)
                file (project-model/file-by-id project file-id false)]
            (if (nil? file)
              [CircularProgress {}]
@@ -749,6 +755,7 @@
                    (when @edit-open?
                      [file-edit-dialog {:e! e!
                                         :on-close #(reset! edit-open? false)
+                                        :activity activity
                                         :file file
                                         :parts (:file.part/_task task)}])]
                   [typography/Heading2
