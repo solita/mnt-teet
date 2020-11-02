@@ -3,6 +3,7 @@
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
             [teet.log :as log]
+            [teet.file.file-model :as file-model]
             [datomic.client.api :as d]
             [cognitect.aws.client.api :as aws]
             [teet.util.collection :as cu])
@@ -118,13 +119,33 @@
    :eelis {:wms-url (->ssm [:eelis :wms-url] nil)}
    :email {:from (->ssm [:email :from] nil)}})
 
+(defn- describe-all-the-params!
+  "Returns names and other metadata without values"
+  []
+
+  (let [q-params {:op :DescribeParameters :request {:MaxResults 50}}
+        get-first! #(aws/invoke @ssm-client q-params)
+        get-next! #(aws/invoke @ssm-client (assoc-in q-params
+                                                    [:request :NextToken]
+                                                    %))]
+    (loop [results [(get-first!)]]
+      (if-let [next-token (:NextToken (last results))]
+        (do
+          (log/debug "ssm describe-params: got next-token, calling again")
+          (recur (conj results (get-next! next-token))))
+        ;; else
+        (do
+          (log/debug "ssm describe-params: no next-token, returning what we got")
+          (mapcat :Parameters results))))))
+
 (defn- load-ssm-config! [base-config]
   (let [old-config @config
         new-config (merge base-config
                           (resolve-ssm-parameters teet-ssm-config))]
     (when (not= old-config new-config)
       (log/info "Configuration changed")
-      (reset! config new-config))))
+      (reset! config new-config)
+      (file-model/apply-ssm-file-policy! (describe-all-the-params!)))))
 
 (defn init-ion-config! [ion-config]
   (log-timezone-config!)
@@ -245,4 +266,5 @@
 ;;  $ aws ssm get-parameters-by-path --path /teet/email/
 ;;  to retrieve params with keys under that path. this would be a good
 ;;  data model for file types too, eg /teet/file-policy/suffix/docx/allowed = true
-;;  - todo: check pricing 
+;;  todo:
+;;    - replace constant file-model/upload-allowed-file-suffixes set with atom

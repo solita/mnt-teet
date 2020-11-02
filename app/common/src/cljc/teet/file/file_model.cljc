@@ -1,72 +1,28 @@
 (ns teet.file.file-model
   (:require [clojure.string :as str]
+            [teet.log :as log]
             #?(:cljs [teet.file.file-spec :as file-spec])))
-
-;; "In THK module is allowed to upload file extensions: gif, jpg, jpeg, png, pdf, csv, txt, xlsx, docx, xls, doc, dwg, ppt, pptx.""
 
 (def ^:const upload-max-file-size (* 1024 1024 3000))
 
 (def ^:const image-thumbnail-size-threshold (* 1024 250))
 
-;; See confluence page: TEET File format list
-(def ^:const upload-allowed-file-suffixes
-  #{;; Generic office files
-    "doc"
-    "docx"
-    "xlsx"
-    "xls"
-    "ppt"
-    "pptx"
-    "rtf"
-    "odf"
 
-    ;; Portable documents
-    "pdf"
-    "dwf"
+(defonce upload-allowed-file-suffixes (atom nil))
 
-    ;; Design/drawing/GIS files
-    "dwg"
-    "dgn"
-    "dxf"
-    "shp"
-    "dbf"
-    "kml"
-    "kmz"
-
-    ;; Design model files, Building Information Models
-    "ifc"
-    "xml"
-    "bcf"
-    "rvt"
-    "skp"
-    "3dm"
-
-    ;; Speficid data files
-    "ags"
-    "gpx"
-
-    ;; Images
-    "png"
-    "jpg"
-    "jpeg"
-    "tif"
-    "tiff"
-    "ecw"
-
-    ;; Other supporting files
-    "shx"
-    "lin"
-
-    ;; Audio files
-    "wav"
-    "mp3"
-    "ogg"
-    "aac"
-
-    ;; Video files
-    "mov"
-    "mp4"
-    "m4v"})
+(defn apply-attachment-policy! [ssm-params-description]
+  (let [ap-prefix "/teet/attachment-policy/suffix/"
+        ap-suffix "/allowed"]
+    (reset! upload-allowed-file-suffixes
+            (into #{}
+                  (for [p-info ssm-params-description
+                        :let [name (:Name p-info)]
+                        :when (and
+                               (str/starts-with? name ap-prefix)
+                               (str/ends-with? name ap-suffix))]   
+                    (-> name
+                        (str/replace-first ap-suffix "")
+                        (str/replace-first ap-prefix "")))))))
 
 (def ^:const image-suffixes
   #{"png"
@@ -80,7 +36,12 @@
   (-> filename (str/split #"\.") last str/lower-case))
 
 (defn valid-suffix? [filename]
-  (-> filename filename->suffix upload-allowed-file-suffixes boolean))
+  (if-let [whitelist @upload-allowed-file-suffixes]
+    (-> filename filename->suffix whitelist boolean)
+    ;; else
+    (do
+      (log/debug "valid-suffix? called before whitelist initialized")
+      false)))
 
 (defn validate-file
   "Validate allowed file type and max size. Returns map with error description
@@ -91,7 +52,7 @@
     {:error :file-too-large :max-allowed-size upload-max-file-size}
 
     (not (valid-suffix? name))
-    {:error :file-type-not-allowed :allowed-suffixes upload-allowed-file-suffixes}
+    {:error :file-type-not-allowed :allowed-suffixes @upload-allowed-file-suffixes}
 
     ;; No problems, upload can proceed
     :else
@@ -101,7 +62,6 @@
   "Validate the metadata extracted from filename against project and task.
   Returns map with error description or nil if there are no problems."
   [project-id task metadata]
-  (def *v [project-id task metadata])
   (when (seq metadata)
     (cond
       (not= [:thk.project/id project-id] (:project-eid metadata))
