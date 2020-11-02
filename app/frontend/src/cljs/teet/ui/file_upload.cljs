@@ -18,7 +18,8 @@
             [teet.file.filename-metadata :as filename-metadata]
             [teet.ui.typography :as typography]
             [teet.common.common-styles :as common-styles]
-            [teet.ui.common :as common-ui]))
+            [teet.ui.common :as common-ui]
+            [teet.util.datomic :as du]))
 
 
 
@@ -216,7 +217,8 @@
            " "
            (format/file-size size)])])]]])
 
-(defn files-field [{:keys [e! value on-change error project-id task
+(defn files-field [{:keys [e! value on-change error project-id
+                           activity task
                            single?]}]
   (let [update-file (fn [i new-file-data]
                       (on-change (update value i merge new-file-data
@@ -235,7 +237,9 @@
         [TableCell {}
          (tr [:fields :file/document-group])]
         [TableCell {}
-         (tr [:fields :file/sequence-number])]]]
+         (if (du/enum= :activity.name/land-acquisition (:activity/name activity))
+           (tr [:fields :file/position-number])
+           (tr [:fields :file/sequence-number]))]]]
 
       [TableBody {}
        (doall

@@ -370,6 +370,7 @@
   :permission/role "Roles",
   :review/comment "Comment",
   :land-exchange/area "Area",
+  :file/position-number "POS#",
   :meeting.decision/body "Decision",
   :meeting/agenda "Agenda",
   :thk.project/carriageway "CW",

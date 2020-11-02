@@ -164,7 +164,7 @@
                                    :style {:margin-left "1rem"}}
            (tr [:buttons :confirm])]]]])]))
 
-(defn- add-files-form [e! project-id task files-form upload-progress close!]
+(defn- add-files-form [e! project-id activity task files-form upload-progress close!]
   (r/with-let [reinstate-drop-zones! (drag/suppress-drop-zones!)]
     [:<>
      [form/form
@@ -188,6 +188,7 @@
                     (some some? (map (partial file-upload/validate-file e! project-id task) files)))}
       [file-upload/files-field {:e! e!
                                 :project-id project-id
+                                :activity activity
                                 :task task}]]
      (when upload-progress
        [LinearProgress {:variant "determinate"
@@ -344,7 +345,7 @@
                                      " / "
                                      (tr-enum (:task/type task)))]]
                        :on-close close!}
-         [add-files-form e! project-id task files-form
+         [add-files-form e! project-id activity task files-form
           (:in-progress? new-document)
           close!]]
         (when (seq files)
