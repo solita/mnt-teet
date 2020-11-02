@@ -365,6 +365,7 @@
   :permission/role "Roll",
   :review/comment "Kommentaar",
   :land-exchange/area "Pindala",
+  :file/position-number "POS#",
   :meeting.decision/body "Otsus",
   :meeting/agenda "Päevakava",
   :thk.project/carriageway "SO",
