@@ -133,7 +133,9 @@
    :transact [(list 'teet.meeting.meeting-tx/create-meeting
                     activity-eid
                     (merge {:db/id "new-meeting"}
-                           form-data
+                           (select-keys form-data [:meeting/title :meeting/location
+                                                   :meeting/start :meeting/end
+                                                   :meeting/organizer])
                            (meta-model/creation-meta user)))]})
 
 (defcommand :meeting/update

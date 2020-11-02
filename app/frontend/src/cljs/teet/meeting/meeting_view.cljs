@@ -55,28 +55,35 @@
      [typography/WarningText
       (tr [:meeting :reviews-invalidated-warning-text])]]))
 
+(defn- meeting-merge [old new]
+  (merge old new
+         (when (contains? new :meeting/start)
+           {:date-set? true})))
+
 (defn meeting-form
   [{:keys [e! activity-id duplicate?]} close-event form-atom]
-  (let [editing? (and (not duplicate?) (:db/id @form-atom))]
+  (let [editing? (and (not duplicate?) (:db/id @form-atom))
+        form-data @form-atom]
     [:<>
      (when editing?
        [context/consume :reviews?
         [update-meeting-warning?]])
      [form/form (merge
                   {:e! e!
-                   :value @form-atom
-                   :on-change-event (form/update-atom-event form-atom merge)
+                   :value form-data
+                   :on-change-event (form/update-atom-event form-atom meeting-merge)
                    :cancel-event close-event
                    :spec :meeting/form-data
-                   :save-event #(meeting-controller/->SubmitMeetingForm duplicate? activity-id @form-atom close-event)}
+                   :save-event #(meeting-controller/->SubmitMeetingForm duplicate? activity-id form-data close-event)}
                   (when editing?
-                    {:delete (meeting-controller/->CancelMeeting activity-id (:db/id @form-atom) close-event)}))
+                    {:delete (meeting-controller/->CancelMeeting activity-id (:db/id form-data) close-event)}))
       ^{:attribute :meeting/title}
       [TextField {}]
       ^{:attribute :meeting/location}
       [TextField {}]
       ^{:attribute [:meeting/start :meeting/end]}
-      [date-picker/date-time-range-input {}]
+      [date-picker/date-time-range-input {:empty-date? (and duplicate?
+                                                            (not (:date-set? form-data)))}]
       ^{:attribute :meeting/organizer}
       [select/select-user {:e! e!}]]]))
 
