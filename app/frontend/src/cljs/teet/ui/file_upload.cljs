@@ -119,7 +119,7 @@
                          (file-model/validate-file file-info)
                          (file-model/validate-file-metadata project-id task metadata))]
       (case (:error error)
-        :file-type-now-allowed
+        :file-type-not-allowed
         {:title (tr [:document :invalid-file-type])
          :description [:<>
                        (str/upper-case (file-model/filename->suffix name))
