@@ -435,7 +435,8 @@
                         [:div.file-list-entry
                          [:div {:class (<class common-styles/flex-row-center)}
                           [file-icon (assoc f :class "file-list-icon")]
-                          [:div.file-list-name {:class (<class file-list-name-style active?)}
+                          [:div.file-list-name {:class (<class file-list-name-style active?)
+                                                :title description}
                            (if active?
                              description
                              [url/Link {:page :file
