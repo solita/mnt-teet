@@ -989,8 +989,8 @@
                      :args {:thk.project/id (:thk.project/id project)
                             :file/pos-number pos}
                      :simple-view [file-view/file-list2-with-search
-                                   {}]}]
-
+                                   {:link-to-new-tab? true
+                                    :land-acquisition? true}]}]
        [:span (tr [:land :no-position-number])])
      (when-let [f @selected-file]
        [comments-view/lazy-comments {:e! e!
