@@ -10,13 +10,12 @@
 
 (defonce upload-allowed-file-suffixes (atom nil))
 
-(defn apply-attachment-policy! [ssm-params-description]
+(defn apply-attachment-policy! [param-names]
   (let [ap-prefix "/teet/attachment-policy/suffix/"
         ap-suffix "/allowed"]
     (reset! upload-allowed-file-suffixes
             (into #{}
-                  (for [p-info ssm-params-description
-                        :let [name (:Name p-info)]
+                  (for [name param-names
                         :when (and
                                (str/starts-with? name ap-prefix)
                                (str/ends-with? name ap-suffix))]   

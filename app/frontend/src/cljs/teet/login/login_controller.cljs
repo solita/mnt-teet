@@ -4,6 +4,7 @@
             [teet.log :as log]
             [teet.login.login-paths :as login-paths]
             [teet.user.user-info :as user-info]
+            [teet.file.file-model :as file-model]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
             [teet.common.common-controller :as common-controller]))
 
@@ -109,6 +110,7 @@
                                                         (:page navigation-data))
                                                navigation-data)))
                         effects)]
+          (reset! file-model/upload-allowed-file-suffixes (:upload-allowed-file-suffixes config))
           (apply t/fx
                  (-> app
                      (assoc :config config)

@@ -145,7 +145,8 @@
     (when (not= old-config new-config)
       (log/info "Configuration changed")
       (reset! config new-config)
-      (file-model/apply-ssm-file-policy! (describe-all-the-params!)))))
+      ;; do after config reset, don't block other config reload in case of errors
+      (file-model/apply-attachment-policy! (map :Name (describe-all-the-params!))))))
 
 (defn init-ion-config! [ion-config]
   (log-timezone-config!)
@@ -161,6 +162,7 @@
   ([] (load-local-config! (io/file ".." ".." ".." "mnt-teet-private" "config.edn")))
   ([file]
    (when (.exists file)
+     (file-model/apply-attachment-policy! (map :Name (describe-all-the-params!)))
      (log/info "Loading local config file: " file)
      (reset! config (merge-with (fn [a b]
                                   (if (and (map? a) (map? b))

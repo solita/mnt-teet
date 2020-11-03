@@ -6,6 +6,7 @@
             [datomic.client.api :as d]
             [teet.log :as log]
             [teet.permission.permission-db :as permission-db]
+            [teet.file.file-model :as file-model]
             [teet.user.user-db :as user-db]))
 
 
@@ -67,7 +68,8 @@
   "Configuration that is sent to the frontend."
   []
   {:thk {:url (environment/config-value :thk :url)}
-   :api-url (environment/config-value :api-url)})
+   :api-url (environment/config-value :api-url)
+   :upload-allowed-file-suffixes @file-model/upload-allowed-file-suffixes})
 
 ;; dummy-login trust person-id etc information from
 ;; the frontend (command could be renamed to dummy-login)
