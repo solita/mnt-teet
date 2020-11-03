@@ -38,14 +38,16 @@
 
 (defn file-identifying-info
   "Show file identifying info: document group, seq# and version."
-  [{:file/keys [document-group sequence-number version]}]
+  [land-acquisition? {:file/keys [document-group sequence-number version]}]
   [:strong.file-identifying-info
    (str/join " / "
              (remove nil?
                      [(when document-group
                         (tr-enum document-group))
                       (when sequence-number
-                        (str "#" sequence-number))
+                        (str (tr [:fields (if land-acquisition?
+                                            :file/position-number
+                                            :file/sequence-number)]) sequence-number))
                       (when version
                         (tr [:file :version] {:num version}))]))])
 
@@ -325,7 +327,9 @@
     no-link? :no-link?
     allow-replacement-opts :allow-replacement-opts
     delete-action :delete-action
-    attached-to :attached-to} {:file/keys [document-group sequence-number status version] :as file}]
+    attached-to :attached-to
+    land-acquisition? :land-acquisition?}
+   {:file/keys [status] :as file}]
   (let [{:keys [description extension]} (filename-metadata/name->description-and-extension (:file/name file))]
     [:div {:class (<class file-style/file-row-style)}
      [:div {:class (<class file-style/file-base-column-style)}
@@ -349,13 +353,7 @@
                                            :white-space :nowrap}}
          extension]]
        [:div.file-info
-        [:strong (str/join " / " (filterv some?
-                                         [(when document-group
-                                            (tr-enum document-group))
-                                          (when sequence-number
-                                            (str "#" sequence-number))
-                                          (when version
-                                            (tr [:file :version] {:num version}))]))]
+        [file-identifying-info land-acquisition? file]
         [typography/SmallText
          (if-let [modified-at (:meta/modified-at file)]
            (tr [:file :edit-info]
@@ -760,7 +758,9 @@
                                    :text-align :end}}
                      [buttons/button-secondary {:on-click #(reset! edit-open? true)}
                       (tr [:buttons :edit])]]]]
-                  [file-identifying-info file]
+                  [file-identifying-info (du/enum= :activity.name/land-acquisition
+                                                   (:activity/name activity))
+                   file]
                   [typography/SmallText [:strong (tr-enum (:file/status file))]]
                   [tabs/details-and-comments-tabs
                    {:e! e!

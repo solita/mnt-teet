@@ -214,7 +214,8 @@
     [TextField {}]]])
 
 (defn file-section-view
-  [{:keys [e! upload! sort-by-value allow-replacement-opts]} task file-part files]
+  [{:keys [e! upload! sort-by-value allow-replacement-opts
+           land-acquisition?]} task file-part files]
   [:div
    [file-view/file-part-heading {:heading (:file.part/name file-part)
                                  :number (:file.part/number file-part)}
@@ -242,7 +243,8 @@
      [file-view/file-list2 {:e! e!
                             :allow-replacement-opts allow-replacement-opts
                             :sort-by-value sort-by-value
-                            :download? true} files]
+                            :download? true
+                            :land-acquisition? land-acquisition?} files]
      [file-view/no-files])])
 
 (defn task-file-heading
@@ -267,13 +269,15 @@
         (tr [:buttons :upload])]]])])
 
 (defn file-content-view
-  [e! upload! task files-form project-id files parts selected-part]
+  [e! upload! activity task files-form project-id files parts selected-part]
   (r/with-let [items-for-sort-select (file-view/sort-items)
                sort-by-atom (r/atom (first items-for-sort-select))]
     (let [allow-replacement-opts {:e! e!
                                   :task task
                                   :project-id project-id
-                                  :replace-form files-form}]
+                                  :replace-form files-form}
+          land-acquisition? (du/enum= :activity.name/land-acquisition
+                                      (:activity/name activity))]
       [:<>
        [task-file-heading task upload! {:sort-by-atom sort-by-atom
                                         :items items-for-sort-select}]
@@ -282,7 +286,8 @@
            [file-view/file-list2 {:e! e!
                                   :allow-replacement-opts allow-replacement-opts
                                   :sort-by-value @sort-by-atom
-                                  :download? true}
+                                  :download? true
+                                  :land-acquisition? land-acquisition?}
             general-files]))
        [:div
         (when (not (zero? (:file.part/number selected-part)))
@@ -291,7 +296,8 @@
               [file-section-view {:e! e!
                                   :sort-by-value @sort-by-atom
                                   :allow-replacement-opts allow-replacement-opts
-                                  :upload! upload!}
+                                  :upload! upload!
+                                  :land-acquisition? land-acquisition?}
                task part
                (filterv
                  (fn [file]
@@ -302,12 +308,12 @@
               [selected-part])))]])))
 
 (defn task-file-view
-  [e! task upload! files-form project-id]
+  [e! activity task upload! files-form project-id]
   (let [parts (:file.part/_task task)
         files (:task/files task)]
     [:div
      [file-view/file-search files parts
-      [file-content-view e! upload! task files-form project-id]]
+      [file-content-view e! upload! activity task files-form project-id]]
      (when (task-model/can-submit? task)
        [when-authorized :task/create-part
         task
@@ -332,7 +338,7 @@
      (when description
        [typography/Paragraph description])
      [task-basic-info task]
-     [task-file-view e! task upload! files-form project-id]
+     [task-file-view e! activity task upload! files-form project-id]
      (when (task-model/can-submit? task)
        [:<>
         [file-upload/FileUpload {:drag-container-id "task-details-drop"
