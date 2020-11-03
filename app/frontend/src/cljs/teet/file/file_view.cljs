@@ -238,13 +238,7 @@
              file))
          files)
        parts
-       (cond                                                ;; This feels hacky
-         (= (:file.part/number @selected-part) 0)
-         []
-         @selected-part
-         [@selected-part]
-         :else
-         parts))]))
+       @selected-part)]))
 
 (defn file-comments-link
   [{comment-counts :comment/counts :as file}]
