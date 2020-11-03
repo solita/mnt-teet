@@ -4,6 +4,7 @@
             teet.comment.comment-queries
             [teet.db-api.db-api-handlers :as db-api-handlers]
             [teet.environment :as environment]
+            [teet.file.file-model :as file-model]
             [teet.log :as log]
             teet.task.task-commands
             [teet.user.user-model :as user-model]
@@ -125,7 +126,9 @@
 
 
 (defn with-environment [f]
-  (let [client (datomic-client-env)]
+  (let [client (datomic-client-env)
+        saved-suffixes @file-model/upload-allowed-file-suffixes]
+    (reset! file-model/upload-allowed-file-suffixes #{"pdf" "doc" "xslx" "mp4" "png"})
     (if client
       (do
         (log/info "Using environment client.")
@@ -137,10 +140,13 @@
       (do
         (log/info "Loading local config.")
         (environment/load-local-config!)))
-    (f)
-    (when-not client
-      (log/info "Reloading local config.")
-      (environment/load-local-config!))))
+    (try
+      (f)
+      (finally
+        (reset! file-model/upload-allowed-file-suffixes saved-suffixes)
+        (when-not client
+          (log/info "Reloading local config.")
+          (environment/load-local-config!))))))
 
 (defn with-db
   ([] (with-db {}))

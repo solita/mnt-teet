@@ -1,9 +1,11 @@
 (ns teet.file.file-commands-test
   (:require [clojure.test :refer :all]
+            [teet.test.utils :as tu]
             [teet.file.file-model :as file-model]))
 
+(use-fixtures :each tu/with-environment)
+
 (deftest validate-document
-  (reset! file-model/upload-allowed-file-suffixes #{"doc" "xslx" "mp4" "png"})
   (testing "too large files are invalid"
     (is (= (:error (file-model/validate-file {:file/name "image.png"
                                               :file/size (* 1024 1024 3001)}))

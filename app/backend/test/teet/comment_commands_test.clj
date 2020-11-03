@@ -236,9 +236,7 @@
       "task is assigned to carla")
   (tu/local-login tu/mock-user-carla-consultant)
   (with-redefs [;; Mock out URL generation (we don't use it for anything)
-                teet.integration.integration-s3/presigned-url (constantly "url")
-                ;; these normally come from ssm
-                file-model/upload-allowed-file-suffixes (atom #{"pdf" "doc" "xslx" "mp4" "png"})]
+                teet.integration.integration-s3/presigned-url (constantly "url")]
     (->> (tu/local-command :file/upload {:task-id (tu/get-data :task-id)
                                          :file {:file/name "land_deals.pdf"
                                                 :file/size 666}})
