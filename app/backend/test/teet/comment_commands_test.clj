@@ -4,6 +4,7 @@
             teet.comment.comment-commands
             [teet.comment.comment-model :as comment-model]
             teet.project.project-commands
+            [teet.file.file-model :as file-model]
             [teet.test.utils :as tu]
             [teet.util.collection :as cu]
             [teet.util.datomic :as du]
@@ -235,7 +236,9 @@
       "task is assigned to carla")
   (tu/local-login tu/mock-user-carla-consultant)
   (with-redefs [;; Mock out URL generation (we don't use it for anything)
-                teet.integration.integration-s3/presigned-url (constantly "url")]
+                teet.integration.integration-s3/presigned-url (constantly "url")
+                ;; these normally come from ssm
+                file-model/upload-allowed-file-suffixes (atom #{"pdf" "doc" "xslx" "mp4" "png"})]
     (->> (tu/local-command :file/upload {:task-id (tu/get-data :task-id)
                                          :file {:file/name "land_deals.pdf"
                                                 :file/size 666}})
