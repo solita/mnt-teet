@@ -13,6 +13,19 @@
            (java.util.zip ZipEntry ZipInputStream)
            (org.apache.commons.io FileUtils)))
 
+(defonce start-ts (System/currentTimeMillis))
+
+(def fmt (java.text.SimpleDateFormat. "yyy-MM-dd HH:mm:ss"))
+
+(defn- timestamp []
+  (let [elapsed (/ (- (System/currentTimeMillis) start-ts) 1000)]
+    (format "(%ds) [%s] "
+            (int elapsed)
+            (.format fmt (java.util.Date.)))))
+
+(defn- log [& things]
+  (println (timestamp) (str/join " " things)))
+
 (defn valid-api? [{:keys [api-url api-secret]}]
   (and (not (str/blank? api-url))
        (not (str/blank? api-secret))))
@@ -28,7 +41,7 @@
   (let [response (client/get (str api-url "/datasource?id=eq." datasource-id)
                              {:as :json
                               :headers (auth-headers ctx)})]
-    (println "fetched datasource config")
+    (log "fetched datasource config")
     (flush)
     (assoc ctx :datasource (-> response :body first))))
 
@@ -38,7 +51,7 @@
                        (into-array FileAttribute []))
         download-file (io/file (.toFile download-path)
                                "datasource")]
-    (println "Downloading" url "to" (.getAbsolutePath download-file))
+    (log "Downloading" url "to" (.getAbsolutePath download-file))
     (with-open [out (io/output-stream download-file)]
       (let [{in :body
              headers :headers} (client/get url {:as :stream})]
@@ -56,15 +69,15 @@
         (when-let [entry (.getNextEntry in)]
           (let [file (io/file (.toFile (:path dds))
                               (.getName entry))]
-            (println "Extract" (.getName entry) "to"
-                     (.getAbsolutePath file))
+            (log "Extract" (.getName entry) "to"
+                 (.getAbsolutePath file))
             (with-open [out (io/output-stream file)]
               (io/copy in out)))
           (recur)))))
   ctx)
 
 (defn existing-features-ids [{:keys [api-url api-secret] :as ctx}]
-  (println "getting existing features from data source id #" (:datasource-id ctx))
+  (log "getting existing features from data source id #" (:datasource-id ctx))
   (flush)
   (assoc ctx :old-features
          (future
@@ -133,7 +146,7 @@
                          params)
             'ok
             (catch clojure.lang.ExceptionInfo e
-              (println "caught exception, status" (:status (ex-data e)))
+              (log "caught exception, status" (:status (ex-data e)))
               (if (retry-statuses (:status (ex-data e)))
                 (do
                   (reset! last-exception e)
@@ -142,8 +155,8 @@
                 (throw e))))]
       (if (and (pos? tries) (= 'retry result))
         (let [delay (get retry-delay-ms tries 20000)]
-          (println "retry #" (- 5 tries))
-          (println "retry delay" delay)
+          (log "retry #" (- 5 tries))
+          (log "retry delay" delay)
           ; (Thread/sleep delay)
           (recur (dec tries)))
         ;; else
@@ -151,12 +164,15 @@
           (throw (deref last-exception))
           result)))))
 
+
+
 (defn- do-chunked [description chunk-size all-items chunk-fn]
   (loop [processed 0
          [chunk & chunks] (partition-all chunk-size all-items)]
     (when (seq chunk)
       (if (zero? (rem processed (* 40 chunk-size)))
-        (println "\n" processed description)
+        (do (print "\n")
+            (log processed description))
         (do
           (print ".")
           (flush)))
@@ -167,7 +183,7 @@
   (let [->label (property-pattern-fn (:label_pattern datasource))
         ->id (property-pattern-fn (:id_pattern datasource))
         new-feature-ids (volatile! #{})]
-    (println "POSTing to " (str api-url "/feature"))
+    (log "POSTing to " (str api-url "/feature"))
     (do-chunked "features upserted" 50 (features)
                 (fn [chunk]
                   (patient-post
@@ -189,7 +205,8 @@
                               :properties attributes}))})))
     (let [deleted-feature-id-set (set/difference @old-features @new-feature-ids)]
       (when (seq deleted-feature-id-set)
-        (print "\nMarking " (count deleted-feature-id-set) " features absent from import file as deleted.\n")
+        (print "\n")
+        (log "Marking " (count deleted-feature-id-set) " features absent from import file as deleted.\n")
         (do-chunked "features marked as deleted" 50 deleted-feature-id-set
                     (fn [chunk]
                       (patient-post
@@ -213,13 +230,13 @@
             :let [id (->id f)]]
       (if (@seen-feature-ids id)
         (do
-          (println "Duplicate feature id: " id)
+          (log "Duplicate feature id: " id)
           (vswap! duplicate-ids conj id))
         (vswap! seen-feature-ids conj id)))
     (assoc ctx :duplicate-ids @duplicate-ids)))
 
 (defn delete-working-files [{{path :path} :downloaded-datasource :as ctx}]
-  (println "Delete path:" path)
+  (log "Delete path:" path)
   (FileUtils/deleteDirectory (.toFile path))
   ctx)
 
@@ -253,7 +270,7 @@
            (or (some-> datasource-id
                        Long/parseLong
                        vector)
-               (do (println "No datasource id provided, importing all of them.")
+               (do (log "No datasource id provided, importing all of them.")
                    (get-all-datasource-ids config))))))
 
 (defn import-datasource [config datasource-id]
@@ -279,7 +296,7 @@
 
 (defn -main [& args]
   (let [config (make-config args)]
-    (println "Starting import")
+    (log "Starting import")
     (doseq [datasource-id (:datasources config)]
       (import-datasource config datasource-id))))
 
