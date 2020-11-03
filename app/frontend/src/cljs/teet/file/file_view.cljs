@@ -31,12 +31,8 @@
             [teet.project.task-model :as task-model]
             [teet.file.filename-metadata :as filename-metadata]
             [teet.ui.common :as common]
-            [teet.util.string :as string]
             [goog.string :as gstr]
-            [teet.ui.format :as fmt]
-            [teet.log :as log]
-            [teet.authorization.authorization-check :refer [when-authorized]]
-            [teet.ui.project-context :as project-context]))
+            [teet.authorization.authorization-check :refer [when-authorized]]))
 
 
 
@@ -503,7 +499,8 @@
                         [:div.file-list-entry
                          [:div {:class (<class common-styles/flex-row-center)}
                           [file-icon (assoc f :class "file-list-icon")]
-                          [:div.file-list-name {:class (<class file-list-name-style active?)}
+                          [:div.file-list-name {:class (<class file-list-name-style active?)
+                                                :title description}
                            (if active?
                              description
                              [url/Link {:page :file
@@ -611,7 +608,7 @@
                                                             {:file-id (:db/id file)})}
                    (:file/name file)]]
                  [:div {:class (<class common-styles/flex-table-column-style 20)}
-                  (fmt/date (:meta/created-at file))]])
+                  (format/date (:meta/created-at file))]])
               other-versions)])]))
 
 (defn file-part-heading
