@@ -274,8 +274,18 @@
 ;; Have the ability to change start input and not have to touch the end
 ;; WIP in a sense that all functionality should work, but might require some fine-tuning and error support
 (defn date-time-range-input
-  "Give date-picker and two time inputs to form datetime rante"
-  [{:keys [error value on-change required]}]
+  "Give date-picker and two time inputs to form datetime range.
+
+  Options:
+  :value       vector of [start end] which must have the same date part
+  :on-change   callback to change value, receives new [start end] vector
+  :required    true if value is required
+  :empty-date? if true, pretend that date is empty (even if it is set)
+               this will just show the time fields
+
+  "
+  [{:keys [error value on-change required
+           empty-date?]}]
   (let [[start end] value]
     (r/with-let [time-input-value (fn [date]
                                     (when date
@@ -303,7 +313,7 @@
       [:div
        [Grid {:container true :spacing 1 :style {:align-items :flex-end}}
         [Grid {:item true :xs 8 :md 9}
-         [date-input {:value @date
+         [date-input {:value (if empty-date? nil @date)
                       :label (tr [:fields :meeting/date-and-time])
                       :required required
                       :on-change date-change}]]

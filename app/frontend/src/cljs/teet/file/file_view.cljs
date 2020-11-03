@@ -31,12 +31,8 @@
             [teet.project.task-model :as task-model]
             [teet.file.filename-metadata :as filename-metadata]
             [teet.ui.common :as common]
-            [teet.util.string :as string]
             [goog.string :as gstr]
-            [teet.ui.format :as fmt]
-            [teet.log :as log]
-            [teet.authorization.authorization-check :refer [when-authorized]]
-            [teet.ui.project-context :as project-context]))
+            [teet.authorization.authorization-check :refer [when-authorized]]))
 
 
 
@@ -242,13 +238,7 @@
              file))
          files)
        parts
-       (cond                                                ;; This feels hacky
-         (= (:file.part/number @selected-part) 0)
-         []
-         @selected-part
-         [@selected-part]
-         :else
-         parts))]))
+       @selected-part)]))
 
 (defn file-comments-link
   [{comment-counts :comment/counts :as file}]
@@ -474,14 +464,17 @@
 (defn- file-list-field-style []
   {:flex-basis "25%" :flex-shrink 0 :flex-grow 0})
 
-(defn- file-list-style []
-  {:overflow :hidden})
+(defn- file-list-name-style [selected?]
+  {:display :block
+   :overflow :hidden
+   :text-overflow :ellipsis
+   :font-weight (if selected? :bold :normal)})
 
 (defn- file-list [parts files current-file-id]
   (let [parts (sort-by :file.part/number
                        (concat [{:file.part/number 0 :file.part/name (tr [:file-upload :general-part])}]
                                parts))]
-    [:div.file-list {:class (<class file-list-style)}
+    [:div.file-list
      (mapc
       (fn [{part-id :db/id :file.part/keys [name number]}]
         (let [files (filter (fn [{part :file/part}]
@@ -494,22 +487,26 @@
              [typography/Heading3 (gstr/format "%s #%02d" name number)]
              [:div
               (mapc (fn [{id :db/id :file/keys [name version number status] :as f}]
-                      (let [[_ base-name suffix] (re-matches #"^(.*)\.([^\.]+)$" name)]
+                      (let [{:keys [description extension]}
+                            (filename-metadata/name->description-and-extension name)
+                            active? (= current-file-id id)]
                         [:div.file-list-entry
-                         [:div
+                         [:div {:class (<class common-styles/flex-row-center)}
                           [file-icon (assoc f :class "file-list-icon")]
-                          (if (= current-file-id id)
-                            [:b.file-list-name-active (or base-name name)]
-                            [url/Link {:page :file
-                                       :params {:file id}
-                                       :class "file-list-name"}
-                             (or base-name name)])]
+                          [:div.file-list-name {:class (<class file-list-name-style active?)
+                                                :title description}
+                           (if active?
+                             description
+                             [url/Link {:page :file
+                                        :params {:file id}
+                                        :class "file-list-name"}
+                              description])]]
                          [:div {:style {:font-size "12px" :display :flex
                                         :justify-content :space-between
                                         :margin "0 1rem 1rem 1rem"}}
                           [:span.file-list-suffix {:class (<class file-list-field-style)}
-                           (if suffix
-                             (str/upper-case suffix)
+                           (if extension
+                             (str/upper-case extension)
                              "")]
                           [:span.file-list-number {:class (<class file-list-field-style)} number]
                           [:span.file-list-version {:class (<class file-list-field-style)} (str "V" version)]
@@ -605,7 +602,7 @@
                                                             {:file-id (:db/id file)})}
                    (:file/name file)]]
                  [:div {:class (<class common-styles/flex-table-column-style 20)}
-                  (fmt/date (:meta/created-at file))]])
+                  (format/date (:meta/created-at file))]])
               other-versions)])]))
 
 (defn file-part-heading
@@ -650,7 +647,7 @@
         [typography/SmallGrayText {}
          [:b (tr [:file-upload :original-filename] {:name original-name})]]])]))
 
-(defn- file-edit-dialog [{:keys [e! on-close file parts]}]
+(defn- file-edit-dialog [{:keys [e! on-close file parts activity]}]
   (r/with-let [form-data (r/atom (update file :file/part
                                          (fn [p]
                                            ;; Part in file only has id,
@@ -685,7 +682,11 @@
        [select/select-enum {:e! e!
                             :attribute :file/document-group}]
        ^{:attribute :file/sequence-number :xs 4}
-       [TextField {:type :number :label "#"
+       [TextField {:type :number
+                   :label (if (du/enum= :activity.name/land-acquisition
+                                        (:activity/name activity))
+                            (tr [:fields :file/position-number])
+                            (tr [:fields :file/sequence-number]))
                    :disabled (nil? (:file/document-group @form-data))}]
 
        ^{:attribute [:file/name :file/original-name]}
@@ -711,9 +712,11 @@
 
        :reagent-render
        (fn [e! {{file-id :file
-                 task-id :task} :params
+                 task-id :task
+                 activity-id :activity} :params
                 :as app} project]
-         (let [task (project-model/task-by-id project task-id)
+         (let [activity (project-model/activity-by-id project activity-id)
+               task (project-model/task-by-id project task-id)
                file (project-model/file-by-id project file-id false)]
            (if (nil? file)
              [CircularProgress {}]
@@ -743,6 +746,7 @@
                    (when @edit-open?
                      [file-edit-dialog {:e! e!
                                         :on-close #(reset! edit-open? false)
+                                        :activity activity
                                         :file file
                                         :parts (:file.part/_task task)}])]
                   [typography/Heading2

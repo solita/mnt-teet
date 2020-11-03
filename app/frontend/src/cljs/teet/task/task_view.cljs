@@ -267,7 +267,7 @@
         (tr [:buttons :upload])]]])])
 
 (defn file-content-view
-  [e! upload! task files-form project-id files parts filtered-parts]
+  [e! upload! task files-form project-id files parts selected-part]
   (r/with-let [items-for-sort-select (file-view/sort-items)
                sort-by-atom (r/atom (first items-for-sort-select))]
     (let [allow-replacement-opts {:e! e!
@@ -277,7 +277,7 @@
       [:<>
        [task-file-heading task upload! {:sort-by-atom sort-by-atom
                                         :items items-for-sort-select}]
-       (when (or (empty? filtered-parts) (= (count parts) (count filtered-parts))) ;; if some other part is selected hide this
+       (when (or (nil? selected-part) (zero? (:file.part/number selected-part))) ;; if some other part is selected hide this
          (let [general-files (remove #(contains? % :file/part) files)]
            [file-view/file-list2 {:e! e!
                                   :allow-replacement-opts allow-replacement-opts
@@ -285,17 +285,21 @@
                                   :download? true}
             general-files]))
        [:div
-        (mapc (fn [part]
-                [file-section-view {:e! e!
-                                    :sort-by-value @sort-by-atom
-                                    :allow-replacement-opts allow-replacement-opts
-                                    :upload! upload!}
-                 task part
-                 (filterv
-                   (fn [file]
-                     (= (:db/id part) (get-in file [:file/part :db/id])))
-                   files)])
-              filtered-parts)]])))
+        (when (not (zero? (:file.part/number selected-part)))
+          (mapc
+            (fn [part]
+              [file-section-view {:e! e!
+                                  :sort-by-value @sort-by-atom
+                                  :allow-replacement-opts allow-replacement-opts
+                                  :upload! upload!}
+               task part
+               (filterv
+                 (fn [file]
+                   (= (:db/id part) (get-in file [:file/part :db/id])))
+                 files)])
+            (if (nil? selected-part)
+              parts
+              [selected-part])))]])))
 
 (defn task-file-view
   [e! task upload! files-form project-id]
