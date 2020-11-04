@@ -12,7 +12,8 @@
             [teet.ui.icons :as icons]
             [teet.ui.material-ui :refer [IconButton]]
             [teet.ui.typography :as typography]
-            [teet.ui.url :as url]))
+            [teet.ui.url :as url]
+            [teet.file.file-view :as file-view]))
 
 (defmulti display :link/type)
 
@@ -96,6 +97,11 @@
      (when (not valid?)
        [typography/SmallGrayText (tr [:link :no-units-in-estate-selected])])]))
 
+(defmethod display :file
+  [{file :link/info}]
+  [file-view/file-row2 {:no-link? true
+                        :comments-link? false} file])
+
 (defn- link-wrapper [{:keys [e! from editable?
                              in-progress-atom]}
                      {id :db/id
@@ -109,7 +115,7 @@
                                                     in-progress-atom))}
       [icons/content-clear]])])
 
-(def type-options [:task :cadastral-unit :estate])
+(def type-options [:task :file :cadastral-unit :estate])
 
 (defmulti display-result :link/type)
 
@@ -127,6 +133,10 @@
 (defmethod display-result :estate [{:keys [KINNISTU]}]
   [:div {:class (<class common-styles/flex-row-space-between)}
    [:div KINNISTU]])
+
+(defmethod display-result :file [file]
+  [file-view/file-row2 {:no-link? true
+                        :comments-link? false} file])
 
 (defn links
   "List links to other entities (like tasks).
