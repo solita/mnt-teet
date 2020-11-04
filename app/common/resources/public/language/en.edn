@@ -542,7 +542,10 @@
  {:search {:placeholder "Link...", :no-results "No results"},
   :target-deleted "Deleted by {user} at {at}",
   :type-label
-  {:task "Task", :estate "Estate", :cadastral-unit "Cadastral unit"},
+  {:task "Task",
+   :estate "Estate",
+   :cadastral-unit "Cadastral unit",
+   :file "File"},
   :land-unit-not-in-project "Not selected in project",
   :no-units-in-estate-selected "No units selected in the project"},
  :login
