@@ -272,7 +272,7 @@
        {:thk.project/id p})
      (when sequence-number
        {:sequence-number sequence-number})
-     (if-let [dg (get-in file [:file/document-group :filename/code])]
+     (when-let [dg (get-in file [:file/document-group :filename/code])]
        {:document-group dg})
      (when-let [act (get-in file [:task/_files 0 :activity/_tasks 0 :activity/name :filename/code])]
        {:activity act})
