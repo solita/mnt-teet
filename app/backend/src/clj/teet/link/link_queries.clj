@@ -8,7 +8,8 @@
             [teet.util.string :as string]
             [teet.util.datomic :as du]
             [teet.link.link-db :as link-db]
-            [teet.environment :as environment]))
+            [teet.environment :as environment]
+            [teet.file.file-db :as file-db]))
 
 (defmulti search-link (fn [_db _user _config _project type _lang _text] type))
 
@@ -89,6 +90,12 @@
   [db _user config project _ _lang text]
   (search-estate db config project text))
 
+(defmethod search-link :file
+  [db user _config project _ _lang text]
+  (file-db/file-listing
+   db user
+   (file-db/search-files-in-project db project text)))
+
 (defquery :link/search
   {:doc "Search for items that can be linked"
    :context {:keys [db user]}
@@ -138,3 +145,6 @@
                       :properties ["TUNNUS" "L_AADRESS"]})
       vals
       first))
+
+(defmethod link-db/fetch-link-info :file [db user _ file-id]
+  (first (file-db/file-listing-info db user [file-id])))
