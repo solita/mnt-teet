@@ -21,23 +21,26 @@
 (defn file-row-style
   []
   {:display :flex
-   :border-top (str "2px solid " theme-colors/black-coral-1)})
+   :border-top (str "2px solid " theme-colors/black-coral-1)
+   :min-width 0})
 
 (defn file-base-column-style
-  []
-  {:flex 3
-   :padding "0.25rem 0.25rem 0.25rem"
-   :border-right (str "2px solid " theme-colors/black-coral-1)
-   :display :flex})
+  [flex-width right-border?]
+  (merge {:flex flex-width
+          :padding "0.25rem 0.25rem 0.25rem"
+          :display :flex
+          :min-width 0}
+         (when right-border?
+           {:border-right (str "2px solid " theme-colors/black-coral-1)})))
 
 (defn file-actions-column-style
-  []
+  [flex-width]
   {:padding "0.25 0 0.25rem 0.25rem"
    :display :flex
    :justify-content :center
    :align-items :flex-end
    :flex-direction :column
-   :flex 1})
+   :flex flex-width})
 
 (defn file-comments-link-style
   [new?]
@@ -52,7 +55,16 @@
    :margin-right "0.25rem"
    :padding-top "0.25rem"})
 
+(defn file-name-truncated [selected?]
+  (merge
+   {:display :block
+    :overflow :hidden
+    :text-overflow :ellipsis}
+   (when selected?
+     {:font-weight :bold})))
+
 (defn file-list-entity-name-style
   []
-  {:font-size "1.25rem"
-   :margin-right "0.25rem"})
+  (merge (file-name-truncated false)
+         {:font-size "1.25rem"
+          :margin-right "0.25rem"}))

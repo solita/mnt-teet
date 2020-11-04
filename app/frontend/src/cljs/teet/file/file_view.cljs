@@ -322,28 +322,33 @@
        [replace-file-form e! project-id task file replace-form close!])]))
 
 (defn file-row2
-  [{e! :e!
-    link-to-new-tab? :link-to-new-tab?
-    no-link? :no-link?
-    allow-replacement-opts :allow-replacement-opts
-    delete-action :delete-action
-    attached-to :attached-to
-    land-acquisition? :land-acquisition?}
+  [{:keys [link-to-new-tab? no-link?
+           allow-replacement-opts delete-action
+           attached-to land-acquisition?
+           comments-link? actions?
+           column-widths]
+    :or {comments-link? true
+         actions? true
+         column-widths [3 1]}}
    {:file/keys [status] :as file}]
-  (let [{:keys [description extension]} (filename-metadata/name->description-and-extension (:file/name file))]
+  (let [{:keys [description extension]} (filename-metadata/name->description-and-extension (:file/name file))
+        [base-column-width action-column-width] column-widths]
     [:div {:class (<class file-style/file-row-style)}
-     [:div {:class (<class file-style/file-base-column-style)}
+     [:div {:class (<class file-style/file-base-column-style
+                           base-column-width actions?)}
       [:div {:class (<class file-style/file-icon-container-style)}
        [fi/file {:style {:color theme-colors/primary}}]]    ;; This icon could be made dynamic baseed on the file-type
-      [:div
+      [:div {:style {:min-width 0}}
        [:div {:class [(<class common-styles/flex-align-center)
                       (<class common-styles/margin-bottom 0.5)]}
         (if no-link?
-          [:p {:class (<class file-style/file-list-entity-name-style)}
+          [:p {:class (<class file-style/file-list-entity-name-style)
+               :title description}
            description]
           [url/Link (merge
-                      {:class (<class file-style/file-list-entity-name-style)
-                       :page :file :params {:file (:db/id file)
+                     {:title description
+                      :class (<class file-style/file-list-entity-name-style)
+                      :page :file :params {:file (:db/id file)
                                             :activity (get-in file [:task/_files 0 :activity/_tasks 0 :db/id])
                                             :task (get-in file [:task/_files 0 :db/id])}}
                       (when link-to-new-tab?
@@ -366,33 +371,34 @@
                             (:meta/creator file))}))]
         (when status
           [typography/SmallBoldText (tr-enum status)])]]]
-     [:div {:class (<class file-style/file-actions-column-style)}
-      [:div {:style {:display :flex}}
-       (when allow-replacement-opts
-         (with-meta
-           [file-replacement-modal-button (merge allow-replacement-opts
-                                                 {:file file
-                                                  :small? true})]
-           {:key (str "file-replace-button-" (:db/id file))}))
-       [IconButton
-        {:target :_blank
-         :size :small
-         :style {:margin-left "0.25rem"}
-         :href (common-controller/query-url
-                 (if attached-to
-                   :file/download-attachment
-                   :file/download-file)
-                 (merge
+     (when actions?
+       [:div {:class (<class file-style/file-actions-column-style action-column-width)}
+        [:div {:style {:display :flex}}
+         (when allow-replacement-opts
+           (with-meta
+             [file-replacement-modal-button (merge allow-replacement-opts
+                                                   {:file file
+                                                    :small? true})]
+             {:key (str "file-replace-button-" (:db/id file))}))
+         [IconButton
+          {:target :_blank
+           :size :small
+           :style {:margin-left "0.25rem"}
+           :href (common-controller/query-url
+                  (if attached-to
+                    :file/download-attachment
+                    :file/download-file)
+                  (merge
                    {:file-id (:db/id file)}
                    (when attached-to
                      {:attached-to attached-to})))}
-        [icons/file-cloud-download-outlined {:style {:color theme-colors/primary}}]]
-       (when delete-action
-         [buttons/delete-button-with-confirm
-          {:action #(delete-action file)
-           :trashcan? true}])]
-      (when (:comment/counts file)
-        [file-comments-link file])]]))
+          [icons/file-cloud-download-outlined {:style {:color theme-colors/primary}}]]
+         (when delete-action
+           [buttons/delete-button-with-confirm
+            {:action #(delete-action file)
+             :trashcan? true}])]
+        (when (and comments-link? (:comment/counts file))
+          [file-comments-link file])])]))
 
 (defn file-list2
   [{:keys [sort-by-value] :as opts} files]
@@ -462,11 +468,7 @@
 (defn- file-list-field-style []
   {:flex-basis "25%" :flex-shrink 0 :flex-grow 0})
 
-(defn- file-list-name-style [selected?]
-  {:display :block
-   :overflow :hidden
-   :text-overflow :ellipsis
-   :font-weight (if selected? :bold :normal)})
+
 
 (defn- file-list [parts files current-file-id]
   (let [parts (sort-by :file.part/number
@@ -491,7 +493,7 @@
                         [:div.file-list-entry
                          [:div {:class (<class common-styles/flex-row-center)}
                           [file-icon (assoc f :class "file-list-icon")]
-                          [:div.file-list-name {:class (<class file-list-name-style active?)
+                          [:div.file-list-name {:class (<class file-style/file-name-truncated active?)
                                                 :title description}
                            (if active?
                              description

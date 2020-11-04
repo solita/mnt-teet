@@ -115,6 +115,37 @@
     {}
     file-ids))
 
+(defn file-listing-info
+  "Fetch file listing info for the set of file ids, returns info for all
+  files without grouping them by version."
+  [db user file-ids]
+  (let [;; File seen statuses
+        seen-at-by-file (files-seen-at db user file-ids)
+
+        ;; Get comment counts for files
+        comment-counts-by-file
+        (file-ids-with-comment-counts db file-ids user)]
+
+    (mapv
+     (comp #(merge %
+                   (comment-counts-by-file (:db/id %))
+                   {:file-seen/seen-at (seen-at-by-file (:db/id %))})
+           first)
+     (d/q '[:find (pull ?f [:db/id :file/name :meta/deleted? :file/version :file/size
+                            :file/status :file/part :file/group-number
+                            :file/original-name
+                            {:task/_files [:db/id :activity/_tasks]}
+                            :file/document-group
+                            :file/sequence-number
+                            {:file/previous-version [:db/id]}
+                            :meta/created-at
+                            :meta/modified-at
+                            {:meta/modifier [:user/id :user/family-name :user/given-name]}
+                            {:meta/creator [:user/id :user/family-name :user/given-name]}])
+            :where
+            [?f :file/upload-complete? true]
+            :in $ [?f ...]] db file-ids))))
+
 (defn file-listing
   "Fetch file information suitable for file listing. Returns all file attributes
   and owner info. Returns only the latest version of each file with previous versions
@@ -122,34 +153,7 @@
 
   Includes the timestamp user has seen the file (if any) as :file-seen/seen-at."
   [db user file-ids]
-  ;; TODO separate comment-count per file and file listing
-  (let [;; File seen statuses
-        seen-at-by-file (files-seen-at db user file-ids)
-
-        ;; Get comment counts for files
-        comment-counts-by-file
-        (file-ids-with-comment-counts db file-ids user)
-
-        files
-        (mapv
-         (comp #(merge %
-                       (comment-counts-by-file (:db/id %))
-                       {:file-seen/seen-at (seen-at-by-file (:db/id %))})
-               first)
-         (d/q '[:find (pull ?f [:db/id :file/name :meta/deleted? :file/version :file/size
-                                :file/status :file/part :file/group-number
-                                :file/original-name
-                                {:task/_files [:db/id :activity/_tasks]}
-                                :file/document-group
-                                :file/sequence-number
-                                {:file/previous-version [:db/id]}
-                                :meta/created-at
-                                :meta/modified-at
-                                {:meta/modifier [:user/id :user/family-name :user/given-name]}
-                                {:meta/creator [:user/id :user/family-name :user/given-name]}])
-                :where
-                [?f :file/upload-complete? true]
-                :in $ [?f ...]] db file-ids))
+  (let [files (file-listing-info db user file-ids)
 
         ;; Group files to first versions and next versions
         {next-versions true
@@ -268,7 +272,7 @@
        {:thk.project/id p})
      (when sequence-number
        {:sequence-number sequence-number})
-     (if-let [dg (get-in file [:file/document-group :filename/code])]
+     (when-let [dg (get-in file [:file/document-group :filename/code])]
        {:document-group dg})
      (when-let [act (get-in file [:task/_files 0 :activity/_tasks 0 :activity/name :filename/code])]
        {:activity act})
@@ -322,3 +326,21 @@
    (take-while some?
                (iterate (partial previous-version db)
                         (latest-version db id)))))
+
+
+(defn search-files-in-project
+  "Search for files in project that contain given text in their name.
+  Returns list of file ids."
+  [db project text]
+  (mapv first
+        (d/q '[:find ?f
+               :in $ ?p ?text
+               :where
+               [?p :thk.project/lifecycles ?lc]
+               [?lc :thk.lifecycle/activities ?a]
+               [?a :activity/tasks ?t]
+               [?t :task/files ?f]
+               [(missing? $ ?f :meta/deleted?)]
+               [?f :file/name ?file-name]
+               [(teet.util.string/contains-words? ?file-name ?text)]]
+             db project text)))

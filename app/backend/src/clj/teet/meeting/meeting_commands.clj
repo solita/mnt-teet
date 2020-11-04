@@ -74,53 +74,23 @@
     (when (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)
       {:wrap-tx #(update-meeting-tx meeting-id %)})))
 
-(defmethod link-db/link-from [:meeting-agenda :task]
-  [db user from _type _to]
-  (link-from-meeting db user from))
+(def link-types [[:meeting-agenda :task]
+                 [:meeting-decision :task]
+                 [:meeting-agenda :cadastral-unit]
+                 [:meeting-agenda :estate]
+                 [:meeting-decision :cadastral-unit]
+                 [:meeting-decision :estate]
+                 [:meeting-agenda :file]
+                 [:meeting-decision :file]])
 
-(defmethod link-db/link-from [:meeting-decision :task]
-  [db user from _type _to]
-  (link-from-meeting db user from))
+(doseq [link-type link-types]
+  (defmethod link-db/link-from link-type
+    [db user from _type _to]
+    (link-from-meeting db user from))
+  (defmethod link-db/delete-link-from link-type
+    [db user from _type _to]
+    (link-from-meeting db user from)))
 
-(defmethod link-db/link-from [:meeting-agenda :cadastral-unit]
-  [db user from _type _to]
-  (link-from-meeting db user from))
-
-(defmethod link-db/link-from [:meeting-agenda :estate]
-  [db user from _type _to]
-  (link-from-meeting db user from))
-
-(defmethod link-db/link-from [:meeting-decision :cadastral-unit]
-  [db user from _type _to]
-  (link-from-meeting db user from))
-
-(defmethod link-db/link-from [:meeting-decision :estate]
-  [db user from _type _to]
-  (link-from-meeting db user from))
-
-(defmethod link-db/delete-link-from [:meeting-agenda :task]
-  [db user from _type _to]
-  (link-from-meeting db user from))
-
-(defmethod link-db/delete-link-from [:meeting-decision :task]
-  [db user from _type _to]
-  (link-from-meeting db user from))
-
-(defmethod link-db/delete-link-from [:meeting-agenda :cadastral-unit]
-  [db user from _type _to]
-  (link-from-meeting db user from))
-
-(defmethod link-db/delete-link-from [:meeting-agenda :estate]
-  [db user from _type _to]
-  (link-from-meeting db user from))
-
-(defmethod link-db/delete-link-from [:meeting-decision :cadastral-unit]
-  [db user from _type _to]
-  (link-from-meeting db user from))
-
-(defmethod link-db/delete-link-from [:meeting-decision :estate]
-  [db user from _type _to]
-  (link-from-meeting db user from))
 
 
 (defcommand :meeting/create

@@ -12,7 +12,8 @@
             [teet.ui.icons :as icons]
             [teet.ui.material-ui :refer [IconButton]]
             [teet.ui.typography :as typography]
-            [teet.ui.url :as url]))
+            [teet.ui.url :as url]
+            [teet.file.file-view :as file-view]))
 
 (defmulti display :link/type)
 
@@ -96,20 +97,28 @@
      (when (not valid?)
        [typography/SmallGrayText (tr [:link :no-units-in-estate-selected])])]))
 
+(defmethod display :file
+  [{file :link/info}]
+  [file-view/file-row2 {:comments-link? false
+                        :column-widths [10 1]} file])
+
 (defn- link-wrapper [{:keys [e! from editable?
                              in-progress-atom]}
                      {id :db/id
                       :link/keys [to type] :as link}]
   [:div {:class [(<class common-styles/flex-row-space-between)
                  (<class common-styles/divider-border)]}
-   [display link]
+   [:div {:style {:flex :auto
+                  :min-width 0}}
+    [display link]]
    (when editable?
-     [IconButton
-      {:on-click #(e! (link-controller/->DeleteLink from to type id
-                                                    in-progress-atom))}
-      [icons/content-clear]])])
+     [:div {:style {:flex 0 :align-self :center}}
+      [IconButton
+       {:on-click #(e! (link-controller/->DeleteLink from to type id
+                                                     in-progress-atom))}
+       [icons/content-clear]]])])
 
-(def type-options [:task :cadastral-unit :estate])
+(def type-options [:task :file :cadastral-unit :estate])
 
 (defmulti display-result :link/type)
 
@@ -127,6 +136,11 @@
 (defmethod display-result :estate [{:keys [KINNISTU]}]
   [:div {:class (<class common-styles/flex-row-space-between)}
    [:div KINNISTU]])
+
+(defmethod display-result :file [file]
+  [file-view/file-row2 {:no-link? true
+                        :comments-link? false
+                        :actions? false} file])
 
 (defn links
   "List links to other entities (like tasks).

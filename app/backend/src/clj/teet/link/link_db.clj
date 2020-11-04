@@ -44,6 +44,14 @@
 (defmulti fetch-external-link-info (fn [_user type _external-id]
                                      type))
 
+(defmulti fetch-link-info (fn [_db _user type _link-to] type))
+
+(defmethod fetch-link-info :default
+  [db _ type link-to]
+  (d/pull db (into link-model/common-link-target-attributes
+                   (get-in link-model/link-types
+                           [type :display-attributes]))
+          link-to))
 
 (defn expand-links
   "Expand all links in the given form to their display representations.
@@ -66,10 +74,7 @@
                      (boolean (valid-ids (:link/external-id x)))))
 
                  (:link/to x)
-                 (d/pull db (into link-model/common-link-target-attributes
-                                  (get-in link-model/link-types
-                                          [(:link/type x) :display-attributes]))
-                         (:db/id (:link/to x))))})
+                 (fetch-link-info db user (:link/type x) (:db/id (:link/to x))))})
        x))
    form))
 
