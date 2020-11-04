@@ -322,13 +322,11 @@
        [replace-file-form e! project-id task file replace-form close!])]))
 
 (defn file-row2
-  [{e! :e!
-    link-to-new-tab? :link-to-new-tab?
-    no-link? :no-link?
-    allow-replacement-opts :allow-replacement-opts
-    delete-action :delete-action
-    attached-to :attached-to
-    land-acquisition? :land-acquisition?}
+  [{:keys [e! link-to-new-tab? no-link?
+           allow-replacement-opts delete-action
+           attached-to land-acquisition?
+           comments-link?]
+    :or {comments-link? true}}
    {:file/keys [status] :as file}]
   (let [{:keys [description extension]} (filename-metadata/name->description-and-extension (:file/name file))]
     [:div {:class (<class file-style/file-row-style)}
@@ -391,7 +389,7 @@
          [buttons/delete-button-with-confirm
           {:action #(delete-action file)
            :trashcan? true}])]
-      (when (:comment/counts file)
+      (when (and comments-link? (:comment/counts file))
         [file-comments-link file])]]))
 
 (defn file-list2
