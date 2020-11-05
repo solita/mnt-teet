@@ -22,7 +22,8 @@
    :activity.name/detailed-design 3
    :activity.name/land-acquisition 4
    :activity.name/workshop-design 5
-   :activity.name/construction 6})
+   :activity.name/construction 6
+   :activity.name/warranty 7})
 
 (def activity-name->task-groups
   {:activity.name/pre-design #{:task.group/base-data
@@ -40,8 +41,11 @@
                                     :task.group/design-approval
                                     :task.group/design-reports}
    :activity.name/land-acquisition #{:task.group/land-purchase}
-   ;; TODO: No known task groups for these yet
-   :activity.name/construction #{}
+   :activity.name/construction #{:task.group/working-design
+                                 :task.group/construction
+                                 :task.group/construction-quality-assurance
+                                 :task.group/construction-approval}
+   :activity.name/warranty #{:task.group/warranty}
    :activity.name/workshop-design #{}})
 
 (def activity-in-progress-statuses
@@ -49,6 +53,14 @@
 
 (def activity-finished-statuses
   #{:activity.status/completed :activity.status/expired :activity.status/canceled :activity.status/archived})
+
+(def activity-types-not-sent-to-thk
+  "A set of activity types which are not sent to THK during export"
+  #{:activity.name/warranty
+    :activity.name/land-acquisition})
+
+(defn exported-to-thk? [activity]
+  (not (activity-types-not-sent-to-thk (du/enum->kw (:activity/name activity)))))
 
 (defn deletable?
   "Can the activity be deleted? It can if it has no procurement number."
