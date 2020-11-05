@@ -94,3 +94,55 @@
                            (map (juxt :participation/role :participation/participant))
                            p)))
             "participants are the same")))))
+
+(deftest meeting-edit-authorization
+  (tu/local-login tu/mock-user-boss)
+  ;; Add consultant permissions for Carla and Edna
+  (let [now (java.util.Date.)]
+    (tu/tx {:user/id tu/external-consultant-id
+            :user/permissions [{:db/id "new-permission-carla"
+                                :permission/role :external-consultant
+                                :permission/valid-from now}]}
+           {:user/id tu/internal-consultant-id
+            :user/permissions [{:db/id "new-permission-edna"
+                                :permission/role :internal-consultant
+                                :permission/valid-from now}]}))
+
+  (let [activity (tu/->db-id "p1-lc1-act1")
+        organizer (ffirst (d/q '[:find ?u :where [?u :user/id ?id] :in $ ?id]
+                               (tu/db) tu/external-consultant-id))
+        meeting (merge (test-meeting)
+                       {:meeting/organizer {:db/id organizer}})
+        id (create-meeting! activity meeting)
+        meeting (assoc meeting :db/id id)]
+
+    (testing "Edna is not allowed to edit"
+      (is (thrown-with-msg?
+           Exception #"Request authorization failed"
+           (tu/local-command tu/mock-user-edna-consultant
+                             :meeting/update
+                             {:activity-eid activity
+                              :meeting/form-data (assoc meeting :meeting/title "NOT UPDATED")}))))
+
+    (testing "Carla (the organizer) is allowed to edit"
+      (tu/local-command tu/mock-user-carla-consultant
+                        :meeting/update
+                        {:activity-eid activity
+                         :meeting/form-data (assoc meeting :meeting/title "UPDATED")})
+      (is (= "UPDATED"
+             (:meeting/title (d/pull (tu/db) '[:meeting/title] id)))))
+
+    (testing "Carla adds Edna as reviewer"
+      (tu/local-command tu/mock-user-carla-consultant
+                        :meeting/add-participation
+                        {:participation/in id
+                         :participation/participant tu/mock-user-edna-consultant
+                         :participation/role :participation.role/reviewer})
+
+      (testing "Edna can now edit"
+        (tu/local-command tu/mock-user-edna-consultant
+                          :meeting/update
+                          {:activity-eid activity
+                           :meeting/form-data (assoc meeting :meeting/title "EDNA UPDATED")})
+        (is (= "EDNA UPDATED"
+               (:meeting/title (d/pull (tu/db) '[:meeting/title] id))))))))
