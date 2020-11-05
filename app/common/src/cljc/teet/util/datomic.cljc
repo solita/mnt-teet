@@ -113,6 +113,7 @@
                          {:db/id eid}
                          {})))
        ([db eid fetched-attrs]
+        (assert eid "entity requires an eid")
         (Entity. db eid (atom fetched-attrs))))))
 
 (defn db-ids
