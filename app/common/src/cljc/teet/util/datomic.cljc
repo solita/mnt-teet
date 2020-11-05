@@ -68,7 +68,7 @@
        (cond
          (and (map? val)
               (contains? val :db/id))
-         (entity db (:db/id val))
+         (entity db (:db/id val) val)
 
          (vector? val)
          (mapv (partial transform-entity-value db) val)
@@ -77,23 +77,25 @@
          val))
 
      (defn- fetch-entity-attr! [db eid fetched-attrs attr default-value]
-       (let [v (get
-                (swap! fetched-attrs
-                       (fn [fetched-attrs]
-                         (if (contains? fetched-attrs attr)
-                           fetched-attrs
-                           (assoc fetched-attrs attr
-                                  (transform-entity-value
-                                   db (get (d/pull db [attr] eid)
-                                           attr ::not-found))))))
-                             attr)]
-                      (if (not= ::not-found v)
-                        v
-                        default-value)))
+       (let [attrs
+             (swap! fetched-attrs
+                    (fn [fetched-attrs]
+                      (if (contains? fetched-attrs attr)
+                        fetched-attrs
+                        (reduce-kv
+                         (fn [attrs k v]
+                           (if (contains? attrs k)
+                             attrs
+                             (assoc attrs k
+                                    (transform-entity-value db v))))
+                         fetched-attrs
+                         (d/pull db [attr] eid)))))]
+         (get attrs attr default-value)))
      (deftype Entity [db eid fetched-attrs]
        java.lang.Object
        (toString [_]
-         (str "#<Entity, eid: " eid ">"))
+         (str "#<Entity, eid: " eid
+              ", fetched-attrs: " (pr-str @fetched-attrs) ">"))
 
        clojure.lang.ILookup
        (valAt [_ kw]
@@ -106,10 +108,12 @@
        (print-simple entity writer))
      (defn entity
        "Returns a navigable entity that lazily fetches attributes."
-       [db eid]
-       (Entity. db eid (atom (if (number? eid)
-                               {:db/id eid}
-                               {}))))))
+       ([db eid]
+        (entity db eid (if (number? eid)
+                         {:db/id eid}
+                         {})))
+       ([db eid fetched-attrs]
+        (Entity. db eid (atom fetched-attrs))))))
 
 (defn db-ids
   "Recursively gather non-string :db/id values of form.
