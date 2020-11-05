@@ -36,6 +36,16 @@
   [rule role]
   (-> @authorization-rules (get rule) (get role)))
 
+(defmulti check-user-link (fn [_user _entity link] link))
+
+(defmethod check-user-link :default [user entity link]
+  (log/debug "checking for link access for user " (:db/id user)
+             " under key " link
+             " - id " (get-in entity [link :db/id])
+             " - match? " (= (get-in entity [link :db/id]) (:db/id user)))
+  (= (get-in entity [link :db/id])
+     (:db/id user)))
+
 (defn authorized?
   ([user functionality]
    (authorized? user functionality nil))
@@ -66,12 +76,7 @@
 
                ;; link access required check ownership
                (and (= access-for-role :link) user entity
-                    (=
-                     (do
-                       (log/debug "checking for link access for user " (:db/id user) " under key " link " - id " (get-in entity [link :db/id]) " - match? " (= (get-in entity [link :db/id]) (:db/id user)))
-
-                       (get-in entity [link :db/id]))
-                       (:db/id user)))))))
+                    (check-user-link user entity link))))))
          (:user/permissions user))))
 
 #?(:clj
