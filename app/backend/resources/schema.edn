@@ -1378,7 +1378,7 @@
           {:db/ident :task.type/grid-connections,
            :enum/attribute :task/type,
            :enum/valid-for :task.group/construction,
-           :thk/task-type :thk.task-type/electricity,
+           ;; :thk/task-type :thk.task-type/electricity,
            :filename/code "GC"}
           {:db/ident :task.type/traffic-arrangement,
            :enum/attribute :task/type,
@@ -1388,12 +1388,12 @@
           {:db/ident :task.type/owners-supervision,
            :enum/attribute :task/type,
            :enum/valid-for :task.group/construction-quality-assurance,
-           :thk/task-type :thk.task-type/owners-supervision,
+           ;; :thk/task-type :thk.task-type/owners-supervision,
            :filename/code "OJ"}
           {:db/ident :task.type/materials-and-products,
            :enum/attribute :task/type,
            :enum/valid-for :task.group/construction-quality-assurance,
-           :thk/task-type :thk.task-type/construction-other,
+           ;; :thk/task-type :thk.task-type/construction-other,
            :filename/code "MT"}
           {:db/ident :task.type/measurements,
            :enum/attribute :task/type,
@@ -1402,13 +1402,13 @@
           {:db/ident :task.type/laboratory,
            :enum/attribute :task/type,
            :enum/valid-for :task.group/construction-quality-assurance,
-           :thk/task-type :thk.task-type/construction-other,
+           ;; :thk/task-type :thk.task-type/construction-other,
            :filename/code "LT"}
 
           {:db/ident :task.type/road-safety-audit,
            :enum/attribute :task/type,
            :enum/valid-for :task.group/construction-approval,
-           :thk/task-type :thk.task-type/road-safety-audit,
+           ;; :thk/task-type :thk.task-type/road-safety-audit,
            :filename/code "LA"}
           {:db/ident :task.type/acceptance,
            :enum/attribute :task/type,
