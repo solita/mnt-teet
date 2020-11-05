@@ -29,12 +29,14 @@
         #(get-in % [:participation/participant :user/given-name])
         #(get-in % [:participation/participant :user/family-name])))
 
-(defmethod authorization-check/check-user-link :meeting/organizer-or-reviewer [user entity _link]
-  (log/info "user is meeting org or reviewer, user:  " user ", entity: "
-            entity)
-  ;; (meeting-db/user-is-organizer-or-reviewer? db user (:db/id form-data))
-  (or (= (get-in entity [:meeting/organizer :db/id])
+(defmethod authorization-check/check-user-link :meeting/organizer-or-reviewer [user meeting _link]
+  (log/info "user is meeting org or reviewer"
+            ", user:  " user
+            ", meeting: " meeting)
+  (or (= (get-in meeting [:meeting/organizer :db/id])
          (:db/id user))
       (some #(and (= :participation.role/reviewer
-                     (get-in % [:participation/role :db/ident])) ())))
-  true)
+                     (get-in % [:participation/role :db/ident]))
+                  (= (:db/id user)
+                     (get-in % [:participation/participant :db/id])))
+            (:participation/_in meeting))))
