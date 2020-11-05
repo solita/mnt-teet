@@ -1,6 +1,7 @@
 (ns teet.file.file-model
   (:require [clojure.string :as str]
             [teet.environment :as environment]
+            #?(:cljs [teet.file.file-spec :as file-spec])
             #?(:cljs [teet.app-state :as app-state])))
 
 ;; "In THK module is allowed to upload file extensions: gif, jpg, jpeg, png, pdf, csv, txt, xlsx, docx, xls, doc, dwg, ppt, pptx.""
