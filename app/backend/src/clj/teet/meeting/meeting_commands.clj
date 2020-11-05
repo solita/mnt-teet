@@ -99,7 +99,7 @@
    :payload {:keys [activity-eid]
              :meeting/keys [form-data]}
    :project-id (project-db/activity-project-id db activity-eid)
-   :authorization {:activity/edit-activity {}}
+   :authorization {:meeting/add-meeting {}}
    :transact [(list 'teet.meeting.meeting-tx/create-meeting
                     activity-eid
                     (merge {:db/id "new-meeting"}
@@ -114,9 +114,9 @@
    :payload {:keys [activity-eid]
              :meeting/keys [form-data]}
    :project-id (project-db/activity-project-id db activity-eid)
-   :authorization {}
-   :pre [(meeting-db/activity-meeting-id db activity-eid (:db/id form-data))
-         (meeting-db/user-is-organizer-or-reviewer? db user (:db/id form-data))]
+   :authorization {:meeting/edit-meeting {:db/id (:db/id form-data)
+                                          :link :meeting/organizer-or-reviewer}}
+   :pre [(meeting-db/activity-meeting-id db activity-eid (:db/id form-data))]
    :transact (update-meeting-tx
                (:db/id form-data)
                (let [{old-meeting-title :meeting/title
@@ -152,9 +152,9 @@
    :payload {meeting-id :db/id
              agenda :meeting/agenda}
    :project-id (project-db/meeting-project-id db meeting-id)
-   :authorization {}
-   :pre [(meeting-db/user-is-organizer-or-reviewer? db user meeting-id)
-         (agenda-items-new-or-belong-to-meeting db meeting-id agenda)]
+   :authorization {:meeting/edit-meeting {:db/id meeting-id
+                                          :link :meeting/organizer-or-reviewer}}
+   :pre [(agenda-items-new-or-belong-to-meeting db meeting-id agenda)]
    :transact (update-meeting-tx
                meeting-id
                [{:db/id meeting-id
@@ -169,10 +169,8 @@
    :context {:keys [db user]}
    :payload {agenda-id :agenda-id}
    :project-id (project-db/agenda-project-id db agenda-id)
-   :authorization {}
-   :pre [(meeting-db/user-is-organizer-or-reviewer?
-           db user
-           (meeting-db/agenda-meeting-id db agenda-id))]
+   :authorization {:meeting/edit-meeting {:db/id (meeting-db/agenda-meeting-id db agenda-id)
+                                          :link :meeting/organizer-or-reviewer}}
    :transact (update-meeting-tx
                (meeting-db/agenda-meeting-id db agenda-id)
                [(meta-model/deletion-tx user agenda-id)])})
@@ -184,10 +182,8 @@
    :project-id (project-db/meeting-project-id
                  db
                  (get-in (du/entity db id) [:participation/in :db/id]))
-   :authorization {}
-   :pre [(meeting-db/user-is-organizer-or-reviewer?
-           db user
-           (get-in (du/entity db id) [:participation/in :db/id]))]
+   :authorization {:meeting/edit-meeting {:db/id (get-in (du/entity db id) [:participation/in :db/id])
+                                          :link :meeting/organizer-or-reviewer}}
    :transact (update-meeting-tx
                (get-in (du/entity db id) [:participation/in :db/id])
                [(meta-model/deletion-tx user id)])})
@@ -198,8 +194,8 @@
    :payload {meeting :participation/in
              participant :participation/participant :as participation}
    :project-id (project-db/meeting-project-id db meeting)
-   :authorization {}
-   :pre [(meeting-db/user-is-organizer-or-reviewer? db user meeting)]
+   :authorization {:meeting/edit-meeting {:db/id meeting
+                                          :link :meeting/organizer-or-reviewer}}
    :transact [(list 'teet.meeting.meeting-tx/add-participation
                     (-> participation
                         (select-keys [:participation/in
@@ -291,8 +287,8 @@
    :context {:keys [db conn user]}
    :payload {meeting-eid :db/id}
    :project-id (project-db/meeting-project-id db meeting-eid)
-   :authorization {}
-   :pre [(meeting-db/user-is-organizer-or-reviewer? db user meeting-eid)]}
+   :authorization {:meeting/send-notifications {:db/id meeting-eid
+                                                :link :meeting/organizer-or-reviewer}}}
   (let [project-eid (project-db/meeting-project-id db meeting-eid)
         all-to (meeting-db/participants db meeting-eid)
         to (remove #(str/ends-with? % "@example.com")
@@ -333,9 +329,9 @@
    :context {:keys [db user conn]}
    :payload {:keys [activity-eid meeting-id]}
    :project-id (project-db/meeting-project-id db meeting-id)
-   :authorization {:activity/edit-activity {}}
-   :pre [(meeting-db/activity-meeting-id db activity-eid meeting-id)
-         (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)]}
+   :authorization {:meeting/edit-meeting {:db/id meeting-id
+                                          :link :meeting/organizer-or-reviewer}}
+   :pre [(meeting-db/activity-meeting-id db activity-eid meeting-id)]}
   (let [to (remove #(str/ends-with? % "@example.com")
                    (keep :user/email (meeting-db/participants db meeting-id)))
         tx-return (tx-ret (update-meeting-tx
@@ -370,10 +366,9 @@
    :context {:keys [db user]}
    :payload {:keys [agenda-eid form-data]}
    :project-id (project-db/agenda-project-id db agenda-eid)
-   :authorization {}
-   :pre [(meeting-db/user-is-organizer-or-reviewer?
-           db user
-           (get-in (du/entity db agenda-eid) [:meeting/_agenda :db/id]))]
+   :authorization {:meeting/edit-meeting {:db/id (get-in (du/entity db agenda-eid)
+                                                         [:meeting/_agenda :db/id])
+                                          :link :meeting/organizer-or-reviewer}}
    :transact (update-meeting-tx
                (meeting-db/agenda-meeting-id db agenda-eid)
                [{:db/id agenda-eid
@@ -387,10 +382,8 @@
    :context {:keys [db user]}
    :payload {:keys [form-data]}
    :project-id (project-db/decision-project-id db (:db/id form-data))
-   :authorization {}
-   :pre [(meeting-db/user-is-organizer-or-reviewer?
-           db user
-           (meeting-db/decision-meeting-id db (:db/id form-data)))]
+   :authorization {:meeting/edit-meeting {:db/id (meeting-db/decision-meeting-id db (:db/id form-data))
+                                          :link :meeting/organizer-or-reviewer}}
    :transact (update-meeting-tx
                (meeting-db/decision-meeting-id db (:db/id form-data))
                [(merge (select-keys form-data [:meeting.decision/body :db/id])
@@ -401,10 +394,8 @@
    :context {:keys [db user]}
    :payload {:keys [decision-id]}
    :project-id (project-db/decision-project-id db decision-id)
-   :authorization {}
-   :pre [(meeting-db/user-is-organizer-or-reviewer?
-           db user
-           (meeting-db/decision-meeting-id db decision-id))]
+   :authorization {:meeting/edit-meeting {:db/id (meeting-db/decision-meeting-id db decision-id)
+                                          :link :meeting/organizer-or-reviewer}}
    :transact (update-meeting-tx
                (meeting-db/decision-meeting-id db decision-id)
                [(meta-model/deletion-tx user decision-id)])})
@@ -414,9 +405,8 @@
    :context {:keys [db user]}
    :payload {:keys [meeting-id form-data]}
    :project-id (project-db/meeting-project-id db meeting-id)
-   :authorization {}
-   :pre [[(meeting-db/user-is-organizer-or-reviewer?
-            db user meeting-id)]]
+   :authorization {:meeting/edit-meeting {:db/id meeting-id
+                                          :link :meeting/organizer-or-reviewer}}
    :transact [(list 'teet.meeting.meeting-tx/review-meeting
                     user
                     meeting-id
