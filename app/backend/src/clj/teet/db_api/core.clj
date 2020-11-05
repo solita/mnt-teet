@@ -164,14 +164,15 @@
                                                 access# :access
                                                 link# :link
                                                 :as options#}]]
-                            (authorization-check/authorized?
-                             ~-user functionality#
-                             (merge
-                              (when link#
-                                {:link link#})
-                              {:access access#
-                               :project-id ~-proj-id
-                               :entity (du/entity ~-db (or entity-id# eid#))})))
+                            (let [id# (or entity-id# eid#)]
+                              (authorization-check/authorized?
+                               ~-user functionality#
+                               (merge
+                                (when link#
+                                  {:link link#})
+                                {:access access#
+                                 :project-id ~-proj-id
+                                 :entity (when id# (du/entity ~-db id#))}))))
                           ~authorization)
                        (log/warn "Failed to authorize " ~request-name " for user " ~-user)
                        (throw (ex-info "Request authorization failed"
