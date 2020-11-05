@@ -1,5 +1,7 @@
 (ns teet.meeting.meeting-model
-  (:require [teet.participation.participation-model :as participation-model]))
+  (:require [teet.participation.participation-model :as participation-model]
+            [teet.authorization.authorization-check :as authorization-check]
+            [teet.log :as log]))
 
 (defn meeting-title
   [{:meeting/keys [title number]}]
@@ -27,3 +29,12 @@
         #(get-in % [:participation/participant :user/given-name])
         #(get-in % [:participation/participant :user/family-name])))
 
+(defmethod authorization-check/check-user-link :meeting/organizer-or-reviewer [user entity _link]
+  (log/info "user is meeting org or reviewer, user:  " user ", entity: "
+            entity)
+  ;; (meeting-db/user-is-organizer-or-reviewer? db user (:db/id form-data))
+  (or (= (get-in entity [:meeting/organizer :db/id])
+         (:db/id user))
+      (some #(and (= :participation.role/reviewer
+                     (get-in % [:participation/role :db/ident])) ())))
+  true)
