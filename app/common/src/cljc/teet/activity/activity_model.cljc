@@ -60,7 +60,7 @@
     :activity.name/land-acquisition})
 
 (defn exported-to-thk? [activity]
-  (not (activity-types-not-sent-to-thk (:activity/name activity))))
+  (not (activity-types-not-sent-to-thk (du/enum->kw (:activity/name activity)))))
 
 (defn deletable?
   "Can the activity be deleted? It can if it has no procurement number."

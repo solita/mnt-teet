@@ -23,18 +23,22 @@
   "Find first element in `collection` whose `:db/id` is `id`"
   [id collection]
   (cu/find-first (comp (partial id= id) :db/id)
-              collection))
+                 collection))
+
+(defn enum->kw
+  "Accept enum map or keyword, return keyword"
+  [enum-map-or-kw]
+  {:pre [(s/valid? ::enum enum-map-or-kw)]}
+  (if (keyword? enum-map-or-kw)
+    enum-map-or-kw
+    (:db/ident enum-map-or-kw)))
+
 (defn enum=
   "Compare two enum values.
   Enum may be a keyword or a map containing :db/ident."
   [e1 e2]
-  (let [v1 (if (keyword? e1)
-             e1
-             (:db/ident e1))
-        v2 (if (keyword? e2)
-             e2
-             (:db/ident e2))]
-    (= v1 v2)))
+  (= (enum->kw e1)
+     (enum->kw e2)))
 
 (defn changed-entity-ids
   "Returns all :db/id values of entities that were \"changed\" by the given transaction."

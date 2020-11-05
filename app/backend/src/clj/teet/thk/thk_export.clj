@@ -3,7 +3,6 @@
   (:require [datomic.client.api :as d]
             [teet.activity.activity-model :as activity-model]
             [teet.thk.thk-mapping :as thk-mapping]
-            [teet.log :as log]
             [teet.meta.meta-query :as meta-query]))
 
 (defn- all-projects [db]
