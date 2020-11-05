@@ -215,7 +215,7 @@
    :padding "0.5rem"
    :margin-left "1rem"})
 
-(defn- activity-task-list [{:keys [e! dark-theme? disable-buttons? project-id rect-button]}
+(defn- activity-task-list [{:keys [e! dark-theme? project-id rect-button]}
                            {:keys [activity activity-state activity-id]}]
   (let [tasks (:activity/tasks activity)]
     [:<>
@@ -253,7 +253,6 @@
        activity
        [:div.project-navigator-add-task
         [rect-button {:size :small
-                      :disabled disable-buttons?
                       :on-click (e! task-controller/->OpenAddTasksDialog activity-id)
                       :start-icon (r/as-element
                                     [icons/content-add])}
@@ -310,7 +309,6 @@
                     :thk.lifecycle/keys [activities estimated-end-date estimated-start-date type] :as lifecycle}]
               (let [last? (= (+ i 1) (count lifecycles))
                     lc-type (:db/ident type)
-                    disable-buttons? false
                     first-activity-status (activity-step-state (first activities))
                     lc-status (lifecycle-status lifecycle)
                     open? (= (str lc-id) (str (:lifecycle stepper)))]
@@ -338,7 +336,6 @@
                                             :activity-link-page activity-link-page
                                             :activity-section-content activity-section-content
                                             :dark-theme? dark-theme?
-                                            :disable-buttons? disable-buttons?
                                             :lc-id lc-id
                                             :rect-button rect-button
                                             :project-id id
@@ -357,7 +354,6 @@
                                          {:top "-3px"
                                           :padding-bottom "0.5rem"}))}
                         [rect-button {:size :small
-                                      :disabled disable-buttons?
                                       :on-click (e! project-controller/->OpenActivityDialog (str lc-id))
                                       :start-icon (r/as-element
                                                     [icons/content-add])}
