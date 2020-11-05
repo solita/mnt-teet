@@ -380,6 +380,7 @@
   :file/part "Part",
   :file/version "Version",
   :estate-procedure/pos "POS#",
+  :user/global-role "Global role",
   :validation-error
   #:file.part{:name "Part name can have up to 99 characters."},
   :user/family-name "Family name",
@@ -418,6 +419,7 @@
   :activity/estimated-end-date "Estimated end date",
   :user/given-name "Given name",
   :user/person-id "Person ID",
+  :project "Project name or THK-ID",
   :thk.project/m-range-change-reason "Reason for start/end change",
   :task/estimated-start-date "Estimated start date",
   :meeting.agenda/topic "Topic",
@@ -439,6 +441,7 @@
   :land-acquisition/impact "Impact",
   :estate-compensation/reason "Reason",
   :file/type "Type",
+  :user/company "Company",
   :task/actual-start-date "Start date",
   :meeting/organizer "Organizer",
   :thk.project/road-nr "Road number",

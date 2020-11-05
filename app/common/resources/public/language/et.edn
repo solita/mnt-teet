@@ -375,6 +375,7 @@
   :file/part "Osa",
   :file/version "Versioon",
   :estate-procedure/pos "POS#",
+  :user/global-role nil,
   :validation-error
   #:file.part{:name
               "Ülesande osa nimi on liiga pikk. Maksimaalne lubatud pikkus on 99 tähemärki. "},
@@ -414,6 +415,7 @@
   :activity/estimated-end-date "Eeldatav lõppkuupäev",
   :user/given-name "Eesnimi",
   :user/person-id "Isikukood",
+  :project nil,
   :thk.project/m-range-change-reason "Muudatuse alguse / lõpu põhjus",
   :task/estimated-start-date "Eeldatav alguskuupäev",
   :meeting.agenda/topic "Teema",
@@ -435,6 +437,7 @@
   :land-acquisition/impact "Mõju",
   :estate-compensation/reason "Põhjendus",
   :file/type "Tüüp",
+  :user/company nil,
   :task/actual-start-date "Alguskuupäev",
   :meeting/organizer "Korraldaja",
   :thk.project/road-nr "Tee number",
