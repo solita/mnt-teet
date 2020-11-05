@@ -93,6 +93,11 @@
     (cu/collect (partial instance? SSMParameter) form))
    form))
 
+(defn- suffix-list [string]
+  (into #{}
+        (map str/trim)
+        (str/split string #",")))
+
 (def teet-ssm-config
   {:env (->ssm [:env])
    :backup {:bucket-name (->ssm [:s3 :backup-bucket])}
@@ -107,6 +112,8 @@
    :base-url (->ssm [:base-url])
    :api-url (->ssm [:api :url])
    :document-storage {:bucket-name (->ssm [:s3 :document-bucket])}
+   :file {:allowed-suffixes (->ssm [:file :allowed-suffixes] #{} suffix-list)
+          :image-suffixes (->ssm [:file :image-suffixes] #{} suffix-list)}
    :thk {:export-bucket-name (->ssm [:thk :teet-to-thk :bucket-name] nil)
          :export-dir (->ssm [:thk :teet-to-thk :unprocesseddir] nil)
          :url (->ssm [:thk :url] nil)}

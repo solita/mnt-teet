@@ -67,7 +67,9 @@
   "Configuration that is sent to the frontend."
   []
   {:thk {:url (environment/config-value :thk :url)}
-   :api-url (environment/config-value :api-url)})
+   :api-url (environment/config-value :api-url)
+   :file {:allowed-suffixes (environment/config-value :file :allowed-suffixes)
+          :image-suffixes (environment/config-value :file :image-suffixes)}})
 
 ;; dummy-login trust person-id etc information from
 ;; the frontend (command could be renamed to dummy-login)

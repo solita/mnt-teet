@@ -1,6 +1,7 @@
 (ns teet.file.file-model
   (:require [clojure.string :as str]
-            #?(:cljs [teet.file.file-spec :as file-spec])))
+            [teet.environment :as environment]
+            #?(:cljs [teet.app-state :as app-state])))
 
 ;; "In THK module is allowed to upload file extensions: gif, jpg, jpeg, png, pdf, csv, txt, xlsx, docx, xls, doc, dwg, ppt, pptx.""
 
@@ -9,78 +10,21 @@
 (def ^:const image-thumbnail-size-threshold (* 1024 250))
 
 ;; See confluence page: TEET File format list
-(def ^:const upload-allowed-file-suffixes
-  #{;; Generic office files
-    "doc"
-    "docx"
-    "xlsx"
-    "xls"
-    "ppt"
-    "pptx"
-    "rtf"
-    "odf"
+(defn upload-allowed-file-suffixes []
+  (environment/config-value :file :allowed-suffixes))
 
-    ;; Portable documents
-    "pdf"
-    "dwf"
-
-    ;; Design/drawing/GIS files
-    "dwg"
-    "dgn"
-    "dxf"
-    "shp"
-    "dbf"
-    "kml"
-    "kmz"
-
-    ;; Design model files, Building Information Models
-    "ifc"
-    "xml"
-    "bcf"
-    "rvt"
-    "skp"
-    "3dm"
-
-    ;; Speficid data files
-    "ags"
-    "gpx"
-
-    ;; Images
-    "png"
-    "jpg"
-    "jpeg"
-    "tif"
-    "tiff"
-    "ecw"
-
-    ;; Other supporting files
-    "shx"
-    "lin"
-
-    ;; Audio files
-    "wav"
-    "mp3"
-    "ogg"
-    "aac"
-
-    ;; Video files
-    "mov"
-    "mp4"
-    "m4v"})
-
-(def ^:const image-suffixes
-  #{"png"
-    "jpg"
-    "jpeg"
-    "tif"
-    "tiff"
-    "ecw"})
+(defn image-suffixes []
+  (#?(:clj environment/config-value
+      :cljs app-state/config-value) :file :image-suffixes))
 
 (defn filename->suffix [filename]
   (-> filename (str/split #"\.") last str/lower-case))
 
-(defn valid-suffix? [filename]
-  (-> filename filename->suffix upload-allowed-file-suffixes boolean))
+(defn- has-suffix? [allowed-suffixes-fn filename]
+  (let [allowed-suffixes (allowed-suffixes-fn)]
+    (-> filename filename->suffix allowed-suffixes boolean)))
+
+(def valid-suffix? (partial has-suffix? upload-allowed-file-suffixes))
 
 (defn validate-file
   "Validate allowed file type and max size. Returns map with error description
@@ -101,7 +45,6 @@
   "Validate the metadata extracted from filename against project and task.
   Returns map with error description or nil if there are no problems."
   [project-id task metadata]
-  (def *v [project-id task metadata])
   (when (seq metadata)
     (cond
       (not= [:thk.project/id project-id] (:project-eid metadata))
@@ -110,8 +53,7 @@
       (not= (:db/id task) (:task-id metadata))
       {:error :wrong-task})))
 
-(defn image-suffix? [filename]
-  (-> filename filename->suffix image-suffixes boolean))
+(def image-suffix? (partial has-suffix? image-suffixes))
 
 (defn image? [{:file/keys [name]}]
   (image-suffix? name))
