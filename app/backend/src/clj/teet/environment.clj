@@ -142,18 +142,18 @@
      #(load-ssm-config! base-config)
      1 1 TimeUnit/MINUTES)))
 
+(defn merge-config! [new-config]
+  (swap! config (fn [old-config]
+                  (cu/deep-merge old-config new-config))))
+
 (defn load-local-config!
   "Load local development configuration from outside repository"
   ([] (load-local-config! (io/file ".." ".." ".." "mnt-teet-private" "config.edn")))
   ([file]
    (when (.exists file)
      (log/info "Loading local config file: " file)
-     (reset! config (merge-with (fn [a b]
-                                  (if (and (map? a) (map? b))
-                                    (merge a b)
-                                    b))
-                                init-config
-                                (read-string (slurp file)))))))
+     (reset! config (cu/deep-merge init-config
+                                   (read-string (slurp file)))))))
 
 (defn db-name []
   (-> @config

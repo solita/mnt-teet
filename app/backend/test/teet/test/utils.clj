@@ -191,6 +191,14 @@
     (assert (contains? data key) (str key " was never stored with store-data!"))
     (get data key)))
 
+(defn with-config [nested-config-map]
+  (fn with-config-fixture [t]
+    (let [old-config @environment/config]
+      (try
+        (environment/merge-config! nested-config-map)
+        (t)
+        (finally
+          (reset! environment/config old-config))))))
 ;;
 ;; Database
 ;;

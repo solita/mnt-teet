@@ -35,7 +35,7 @@
     {:error :file-too-large :max-allowed-size upload-max-file-size}
 
     (not (valid-suffix? name))
-    {:error :file-type-not-allowed :allowed-suffixes upload-allowed-file-suffixes}
+    {:error :file-type-not-allowed :allowed-suffixes (upload-allowed-file-suffixes)}
 
     ;; No problems, upload can proceed
     :else
