@@ -1,8 +1,7 @@
 (ns teet.file.file-model
   (:require [clojure.string :as str]
             [teet.environment :as environment]
-            #?(:cljs [teet.file.file-spec :as file-spec])
-            #?(:cljs [teet.app-state :as app-state])))
+            #?(:cljs [teet.file.file-spec :as file-spec])))
 
 ;; "In THK module is allowed to upload file extensions: gif, jpg, jpeg, png, pdf, csv, txt, xlsx, docx, xls, doc, dwg, ppt, pptx.""
 
@@ -15,8 +14,7 @@
   (environment/config-value :file :allowed-suffixes))
 
 (defn image-suffixes []
-  (#?(:clj environment/config-value
-      :cljs app-state/config-value) :file :image-suffixes))
+  (environment/config-value :file :image-suffixes))
 
 (defn filename->suffix [filename]
   (-> filename (str/split #"\.") last str/lower-case))

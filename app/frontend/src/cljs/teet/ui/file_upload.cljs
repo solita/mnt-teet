@@ -122,7 +122,7 @@
         :file-type-not-allowed
         {:title (tr [:document :invalid-file-type])
          :description [:<>
-                       (str/upper-case (file-model/filename->suffix name))
+                       (str/upper-case (file-model/filename->suffix (:file/name file-info)))
                        " "
                        [:a {:target "_blank"
                             :href "https://confluence.mkm.ee/pages/viewpage.action?spaceKey=TEET&title=TEET+File+format+list"}
