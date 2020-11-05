@@ -41,11 +41,6 @@
                  always-selected-keys
                  (concat always-selected-keys thk-provided-keys))))
 
-(defn- valid-thk-send? [db {:task/keys [send-to-thk? type]}]
-  (boolean
-   (or (not send-to-thk?)
-       (task-db/task-type-can-be-sent-to-thk? db type))))
-
 (defn- new? [{id :db/id}]
   (string? id))
 
