@@ -1212,8 +1212,8 @@
            :db/valueType :db.type/long
            :db/cardinality :db.cardinality/one
            :db/doc "All decisions get an incrementing number based on the agenda topic."}]]}
-  {:db/ident :migration/meeting-updated-notification
-   :txes [[{:db/ident :notification.type/meeting-updated :enum/attribute :notification/type}]]}
+ {:db/ident :migration/meeting-updated-notification
+  :txes [[{:db/ident :notification.type/meeting-updated :enum/attribute :notification/type}]]}
 
  {:db/ident :migration/new-file-metadata
   :txes [;; Also store the original name of the file
@@ -1423,4 +1423,9 @@
            :enum/attribute :task/type,
            :enum/valid-for :task.group/warranty,
            :filename/code "ZZ"}]]}
+ ;; The tasks below should not be sent to THK
+ {:db/ident :migration/TEET-822-retract-thk-task-types
+  :txes [[[:db/retract [:db/ident :task.type/design-requirements] :thk/task-type :thk.task-type/design-requirements]
+          [:db/retract [:db/ident :task.type/building-permit] :thk/task-type :thk.task-type/building-permit]]]}
+
 ]
