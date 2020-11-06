@@ -23,10 +23,7 @@
                              [(clojure.string/includes? ?txt "@[")]]
                            db))
         id->uuid (memoize (fn [id]
-                            (println "ID: " (pr-str id))
-                            (let [uuid (:user/id (du/entity db (Long/parseLong id)))]
-                              (println "ID" id  " => UUID" uuid)
-                              uuid)))]
+                            (:user/id (du/entity db (Long/parseLong id)))))]
     (log/info "Rewriting " (count comments) " with user mentions")
     (d/transact conn
      {:tx-data (vec (for [{id :db/id txt :comment/comment} comments
