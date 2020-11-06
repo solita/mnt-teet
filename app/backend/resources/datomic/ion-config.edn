@@ -8,7 +8,8 @@
          teet.file.file-tx/remove-task-file-part
          teet.file.file-tx/modify-file
          teet.util.string/contains-words?
-         teet.user.user-tx/set-global-role]
+         teet.user.user-tx/set-global-role
+         clojure.string/includes?]
  :lambdas {:query
            {:fn teet.db-api.db-api-ion/db-api-query
             :integration :api-gateway/proxy
