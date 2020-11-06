@@ -26,16 +26,18 @@
                  collection))
 
 (defn enum->kw
-  "Accept enum map or keyword, return keyword"
+  "Accept enum map or keyword or `nil`, return keyword, or `nil` if argument is `nil`"
   [enum-map-or-kw]
-  {:pre [(s/valid? ::enum enum-map-or-kw)]}
-  (if (keyword? enum-map-or-kw)
-    enum-map-or-kw
-    (:db/ident enum-map-or-kw)))
+  {:pre [(or (nil? enum-map-or-kw)
+             (s/valid? ::enum enum-map-or-kw))]}
+  (when enum-map-or-kw
+    (if (keyword? enum-map-or-kw)
+      enum-map-or-kw
+      (:db/ident enum-map-or-kw))))
 
 (defn enum=
   "Compare two enum values.
-  Enum may be a keyword or a map containing :db/ident."
+  Enum may be a keyword or a map containing :db/ident, or `nil`."
   [e1 e2]
   (= (enum->kw e1)
      (enum->kw e2)))
