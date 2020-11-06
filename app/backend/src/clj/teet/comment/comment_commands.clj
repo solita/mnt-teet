@@ -115,8 +115,16 @@
   (into #{}
         (keep (fn [[mention _]]
                 (when-let [[_ id] (re-matches comment-model/user-mention-id-pattern mention)]
-                  (Long/parseLong id))))
+                  (java.util.UUID/fromString id))))
         (re-seq comment-model/user-mention-pattern text)))
+
+(defn user-uuids->ids [db uuids]
+  (into #{}
+        (map first)
+        (d/q '[:find ?u
+               :where [?u :user/id ?uuid]
+               :in $ [?uuid ...]]
+             db uuids)))
 
 (defn comment-entity-tx
   [entity-tuple transaction-id]
@@ -161,7 +169,7 @@
                                      (project-db/entity-project-id db entity-type entity-id)                                                                  {:meta/creator {:db/id (:db/id user)}}
                                      visibility)]
    :transact
-   (let [mentioned-ids (extract-mentions comment)
+   (let [mentioned-ids (user-uuids->ids db (extract-mentions comment))
          project-id (project-db/entity-project-id db entity-type entity-id)
          resolved-id (if (number? entity-id)
                        entity-id
@@ -176,7 +184,7 @@
                       :comment/comment comment
                       ;; TODO: Can external partners set visibility?
                       :comment/visibility visibility
-                      :comment/mentions (extract-mentions comment)
+                      :comment/mentions mentioned-ids
                       :comment/timestamp (Date.)
                       :comment/status (comment-status user
                                                       (project-db/entity-project-id db entity-type entity-id)

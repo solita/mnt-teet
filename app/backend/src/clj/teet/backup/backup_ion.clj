@@ -201,31 +201,6 @@
               :where [?f :file/name _]]
             (d/db conn))))
 
-;; Match and replace mentions like "@[user name](user db id)"
-;; with new user ids
-(defn replace-comment-mention-ids [txt tempids]
-  (str/replace txt
-               #"@\[([^\]]+)\]\((\d+)\)"
-               (fn [[_ name id]]
-                 (str "@[" name "](" (tempids id) ")"))))
-
-;; "hei @[Benjamin Boss](92358976733956) mitä kuuluu?"
-(defn rewrite-comment-mentions! [{:keys [conn tempids] :as ctx}]
-  (let [comments (map first
-                      (d/q '[:find (pull ?c [:db/id :comment/comment])
-                             :where
-                             [?c :comment/comment ?txt]
-                             [(clojure.string/includes? ?txt "@[")]]
-                           (d/db conn)))]
-    (log/info "Rewriting " (count comments) " with user mentions")
-    (d/transact conn
-                {:tx-data (vec (for [{id :db/id txt :comment/comment} comments
-                                     :let [new-txt (replace-comment-mention-ids txt tempids)]]
-                                 {:db/id id
-                                  :comment/comment new-txt}))})
-    (assoc ctx :comments-with-mentions-rewritten (count comments))))
-
-
 (defn replace-entity-ids!
   "Replace entity ids in postgres entity table. List of ids
   is comma separated list of old_id=new_id."
@@ -343,7 +318,6 @@
              download-backup-file
              prepare-database-for-restore
              restore-file
-             rewrite-comment-mentions!
              replace-entity-ids!
              delete-backup-file)
       (catch Exception e
