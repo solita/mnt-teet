@@ -18,7 +18,9 @@
 
 (defn- find-all-users [db]
   (d/q '[:find (pull ?e [:db/id :user/id :user/given-name :user/family-name :user/email :user/person-id])
-         :where [?e :user/id _]]
+         :where
+         [(missing? ?e :user/deactivated?)]
+         [?e :user/id _]]
        db))
 
 (s/def ::search string?)

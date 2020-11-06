@@ -132,11 +132,10 @@
    :project-id (project-db/task-project-id db task-id)
    :authorization {:document/upload-document {:db/id task-id
                                               :link :task/assignee}}
-   :transact [(let [_ (println "task-id: " part-id)]
-                (merge
-                  (meta-model/modification-meta user)
-                  {:db/id part-id                           ;; todo check that this is actually a part
-                   :file.part/name part-name}))]})
+   :transact [(merge
+                (meta-model/modification-meta user)
+                {:db/id part-id                             ;; todo check that this is actually a part
+                 :file.part/name part-name})]})
 
 (defcommand :task/delete-part
   {:doc "Delete the given part"

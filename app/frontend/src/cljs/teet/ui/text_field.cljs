@@ -83,6 +83,10 @@
   [file-type]
   [:span {:class (<class file-end-style)} (str file-type)])
 
+(defn form-label-style
+  []
+  {:display :block})
+
 (defn TextField
   [{:keys [label id type error style input-button-icon read-only? inline?
            input-button-click required input-style
@@ -94,6 +98,7 @@
                   :textarea
                   :input)]
     [:label {:for id
+             :class (<class form-label-style)
              :style style}
      (when-not hide-label?
        (if label-element

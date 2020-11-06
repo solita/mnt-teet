@@ -24,7 +24,8 @@
 
 (s/def :user/person-id estonian-person-id?)
 
-(s/def :admin/create-user (s/keys :req [:user/person-id]))
+(s/def :admin/create-user (s/keys :req [:user/person-id :user/email]))
+(s/def :admin/edit-user (s/keys :req [:user/email]))
 (s/def :admin/list-users (s/keys))
 
 ;; User entity id

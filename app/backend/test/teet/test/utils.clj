@@ -148,11 +148,13 @@
      :or {data-fixtures [:projects]} :as _opts}]
    (fn with-db-fixture [f]
      (log/redirect-ion-casts! :stderr)
-     (let [test-db-name (str "test-db-" (System/currentTimeMillis))]
-       (log/info "Creating database " test-db-name)
-       (swap! environment/config assoc-in [:datomic :db-name] test-db-name)
-       (let [client (d/client (environment/config-value :datomic :client))
-             db-name {:db-name test-db-name}]
+     (let [test-db-name (str "test-db-" (System/currentTimeMillis))
+           original-db (get-in @environment/config [:datomic :db-name])
+           client (d/client (environment/config-value :datomic :client))
+           db-name {:db-name test-db-name}]
+       (try
+         (log/info "Creating database " test-db-name)
+         (swap! environment/config assoc-in [:datomic :db-name] test-db-name)
          (d/create-database client db-name)
          (binding [*connection* (d/connect client db-name)
                    *data-fixture-ids* (atom {})]
@@ -173,8 +175,10 @@
                                             {:duplicates duplicates}))
                             (merge current-tempids tempids))))))
              (f)))
-         (log/info "Deleting database " test-db-name)
-         (d/delete-database client db-name))))))
+         (finally
+           (log/info "Deleting database " test-db-name)
+           (swap! environment/config assoc-in [:datomic :db-name] original-db)
+           (d/delete-database client db-name)))))))
 
 (defn with-global-data [f]
   (binding [*global-test-data* (atom {})]

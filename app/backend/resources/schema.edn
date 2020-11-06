@@ -1427,7 +1427,28 @@
  {:db/ident :migration/TEET-822-retract-thk-task-types
   :txes [[[:db/retract [:db/ident :task.type/design-requirements] :thk/task-type :thk.task-type/design-requirements]
           [:db/retract [:db/ident :task.type/building-permit] :thk/task-type :thk.task-type/building-permit]]]}
+ 
+ {:db/ident :migration/extra-user-info
+  :txes [[{:db/ident :user/phone-number
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Phone number associated with the user"}
+
+          {:db/ident :user/company
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Name of the company the user is associated with"}]]}
+
+ {:db/ident :migration/deactivate-user
+  :txes [[{:db/ident :user/deactivated?
+           :db/valueType :db.type/boolean
+           :db/cardinality :db.cardinality/one
+           :db/doc "Is the user disabled? If so can't login or select the user in user selections"}]]}
+
+ {:db/ident :migration/remove-overlapping-global-rights
+  :txes [teet.migration.user-permissions/remove-overlapping-global-rights]}
 
  {:db/ident :migration/comment-mention-using-uuid
   :txes [teet.migration.comment-mention-userid/rewrite-comment-mentions!]}
-]
+
+ ]
