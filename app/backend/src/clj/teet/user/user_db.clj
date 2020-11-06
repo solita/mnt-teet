@@ -29,3 +29,19 @@
   (let [user (user-info db {:user/person-id person-id})]
     (when (:db/id user)
       user)))
+
+(defn is-user-deactivated?
+  [db user-id]
+  (boolean (:user/deactivated? (d/pull db '[:user/deactivated?] user-id))))
+
+(defn users-valid-global-permissions
+  [db user-id]
+  (->> (d/q '[:find (pull ?p [:permission/role])
+              :in $ ?u
+             :where
+             [?u :user/permissions ?p]
+             [(missing? $ ?p :permission/projects)]
+             [?p :permission/role _]
+             [(missing? $ ?p :permission/valid-until)]]
+           db user-id)
+      (mapv first)))

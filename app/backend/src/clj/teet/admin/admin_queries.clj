@@ -6,21 +6,103 @@
             [teet.environment :as environment]
             [clojure.walk :as walk]))
 
+(defmulti search-clause (fn [[field _value]] field))
+
+(defmethod search-clause :user/family-name
+  [[_ search-param]]
+  (when (seq search-param)
+    {:where '[[?u :user/family-name ?fname]
+              [(.toLowerCase ^String ?fname) ?lower-fname]
+              [(.contains ?lower-fname ?text)]]
+     :in {'?text (str/lower-case search-param)}}))
+
+(defmethod search-clause :user/given-name
+  [[_ search-param]]
+  (when (seq search-param)
+    {:where '[[?u :user/given-name ?name]
+              [(.toLowerCase ^String ?name) ?lower-name]
+              [(.contains ?lower-name ?text)]]
+     :in {'?text (str/lower-case search-param)}}))
+
+(defmethod search-clause :id-code
+  [[_ id-code]]
+  (when (seq id-code)
+    {:in {'?id-code (str/lower-case id-code)}
+     :where '[[?u :user/person-id ?code]
+              [(.toLowerCase ^String ?code) ?lower-code]
+              [(.contains ?lower-code ?id-code)]]}))
+
+(defmethod search-clause :user-group
+  [[_ user-group]]
+  (if (some? user-group)
+    (if (= :deactivated user-group)
+      {:where '[[?u :user/deactivated? true]]}
+
+      {:where '[[?u :user/permissions ?p]
+                [(missing? $ ?p :permission/projects)]
+                [?p :permission/role ?role]
+                [(missing? $ ?p :permission/valid-until)]
+                [(missing? $ ?u :user/deactivated?)]]
+       :in {'?role user-group}})
+    {:where '[[(missing? $ ?u :user/deactivated?)]]}))
+
+(defmethod search-clause :project [[_ project-string]]
+  ;; Search by free text
+  (when (seq project-string)
+    {:in {'?text (str/lower-case project-string)}
+     :where '[[?project :thk.project/id _]
+              (or-join [?project ?text]
+                       (and
+                         (or [?project :thk.project/project-name ?name]
+                             [?project :thk.project/name ?name])
+                         [(.toLowerCase ^String ?name) ?lower-name]
+                         [(.contains ?lower-name ?text)])
+                       [?project :thk.project/id ?text])
+
+              [?project :thk.project/lifecycles ?lc]
+              (or-join [?u ?project ?lc]
+                       (and
+                         [?lc :thk.lifecycle/activities ?act]
+                         [?act :activity/tasks ?task]
+                         [?task :task/assignee ?u])
+                       [?project :thk.project/owner ?u]
+                       (and
+                         [?lc :thk.lifecycle/activities ?act]
+                         [?act :activity/manager ?u]))]}))
+
+(defn user-list-query
+  [db payload]
+  (let [{:keys [where in]}
+        (reduce (fn [clauses-and-args search]
+                  (let [{:keys [where in]} (search-clause search)]
+                    (-> clauses-and-args
+                        (update :where concat where)
+                        (update :in merge in))))
+                {:where []
+                 :in {}}
+                payload)
+        arglist (seq in)
+        in (into '[$] (map first) arglist)
+        args (into [db] (map second) arglist)]
+    (->> (d/q {:query {:find '[(pull ?u [*
+                                         {:user/permissions
+                                          [*
+                                           {:permission/projects
+                                            [:thk.project/name
+                                             :thk.project/project-name
+                                             :thk.project/id]}]}])]
+                       :where (into '[[?u :user/id _]] where)
+                       :in in}
+               :args args})
+         (mapv first))))
+
 (defquery :admin/list-users
   {:doc "List users who have been given access"
    :context {db :db user :user}
-   :args _
+   :args {payload :payload}
    :project-id nil
    :authorization {:admin/add-user {}}}
-  {:query '[:find (pull ?e [*
-                            {:user/permissions
-                             [*
-                              {:permission/projects
-                               [:thk.project/name
-                                :thk.project/id]}]}])
-            :where [?e :user/id _]]
-   :args [db]
-   :result-fn (partial mapv first)})
+  (user-list-query db payload))
 
 (defn- ref-attrs [db data]
   (into #{}

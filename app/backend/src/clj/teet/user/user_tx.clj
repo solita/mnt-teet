@@ -17,7 +17,7 @@
                              [(missing? $ ?p :permission/projects)]
                              [(missing? $ ?p :permission/valid-until)]]
                            db
-                           user-eid
+                           user-id
                            now))
         existing-role (some
                         #(when (= (:permission/role %) role)
