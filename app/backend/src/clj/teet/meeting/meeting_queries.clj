@@ -238,7 +238,7 @@
     (link-db/fetch-links
       db user
       valid-external-ids
-      #(or (contains? % :meeting.agenda/body)
+      #(or (contains? % :meeting.agenda/topic)
            (contains? % :meeting.decision/body))
       (meta-query/without-deleted
         db
