@@ -42,8 +42,12 @@
                                  [(.getFullYear d) (.getMonth d) (.getDay d)])]
              (neg? (compare (to-local-date date) (to-local-date (now)))))))
 
+(defn in-future?
+  [date]
+  #?(:clj (date-after? date (now))
+     :cljs (date-after? date (now))))
 
-(defn in-past?  
+(defn in-past?
   [date]
   #?(:clj (date-after? (now) date)
      :cljs (date-after? (now) date)))

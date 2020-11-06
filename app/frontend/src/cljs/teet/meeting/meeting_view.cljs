@@ -7,6 +7,7 @@
             [teet.localization :refer [tr tr-enum] :as localization]
             teet.meeting.meeting-specs
             [teet.ui.project-context :as project-context]
+            [teet.project.project-view :as project-view]
             [teet.ui.icons :as icons]
             [garden.color :refer [lighten as-hex]]
             [teet.task.task-style :as task-style]
@@ -440,39 +441,38 @@
     [project-context/provide
      {:project-id (:db/id project)
       :thk.project/id (:thk.project/id project)}
-     [:div.project-navigator-with-content {:class (<class project-style/page-container)}
-
-      [typography/Heading1 (or (:thk.project/project-name project)
-                               (:thk.project/name project))]
-      [Paper {:class (<class task-style/task-page-paper-style)}
-       [Grid {:container true
-              :wrap :nowrap
-              :spacing 0}
-        [Grid {:item true
-               :xs navigator-w
-               :class (<class navigation-style/navigator-left-panel-style)}
-         [project-menu/project-menu e! app project true]
-         [project-navigator-view/project-navigator e! project app
-          {:dark-theme? true
-           :activity-link-page :activity-meetings
-           :activity-section-content activity-meetings-list
-           :add-activity? false}]]
-        [Grid {:item  true
-               :xs content-w
-               :style {:padding "2rem 1.5rem"
-                       :overflow-y :auto
-                       ;; content area should scroll, not the whole page because we
-                       ;; want map to stay in place without scrolling it
-                       }}
-         main-content]
-        (when right-panel-content
-          [Grid {:item true
-                 :xs :auto
-                 :style {:display :flex
-                         :flex 1
-                         :padding "1rem 1.5rem"
-                         :background-color theme-colors/gray-lightest}}
-           right-panel-content])]]]]))
+     [:<>
+      [project-view/project-header project]
+      [:div.project-navigator-with-content {:class (<class project-style/page-container)}
+       [Paper {:class (<class task-style/task-page-paper-style)}
+        [Grid {:container true
+               :wrap :nowrap
+               :spacing 0}
+         [Grid {:item true
+                :xs navigator-w
+                :class (<class navigation-style/navigator-left-panel-style)}
+          [project-menu/project-menu e! app project true]
+          [project-navigator-view/project-navigator e! project app
+           {:dark-theme? true
+            :activity-link-page :activity-meetings
+            :activity-section-content activity-meetings-list
+            :add-activity? false}]]
+         [Grid {:item true
+                :xs content-w
+                :style {:padding "2rem 1.5rem"
+                        :overflow-y :auto
+                        ;; content area should scroll, not the whole page because we
+                        ;; want map to stay in place without scrolling it
+                        }}
+          main-content]
+         (when right-panel-content
+           [Grid {:item true
+                  :xs :auto
+                  :style {:display :flex
+                          :flex 1
+                          :padding "1rem 1.5rem"
+                          :background-color theme-colors/gray-lightest}}
+            right-panel-content])]]]]]))
 
 (defn activity-meetings-view
   "Page structure showing project navigator along with content."
