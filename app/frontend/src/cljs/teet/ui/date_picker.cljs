@@ -312,12 +312,12 @@
                                    (on-change [start-date end-date]))))]
       [:div
        [Grid {:container true :spacing 1 :style {:align-items :flex-end}}
-        [Grid {:item true :xs 8 :md 9}
+        [Grid {:item true :xs 8}
          [date-input {:value (if empty-date? nil @date)
                       :label (tr [:fields :meeting/date-and-time])
                       :required required
                       :on-change date-change}]]
-        [Grid {:item true :xs 4 :md 3}
+        [Grid {:item true :xs 4}
          [:div {:style {:display :flex
                         :flex-direction :row
                         :align-items :center

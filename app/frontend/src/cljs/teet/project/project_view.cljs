@@ -77,7 +77,7 @@
   []
   {:padding "0 1.875rem 1.5rem 1.875rem"})
 
-(defn- project-header [project]
+(defn project-header [project]
   (let [thk-url (project-info/thk-url project)]
     [:div {:class (<class project-header-style)}
      [:div {:style {:display :flex

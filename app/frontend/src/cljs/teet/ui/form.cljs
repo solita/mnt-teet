@@ -121,7 +121,6 @@
   [the-atom new-value]
   #(reify t/Event
      (process-event [_ app]
-       (println "reset-atom-event fires")
        (reset! the-atom new-value)
        app)))
 

@@ -22,9 +22,10 @@
    :display         :flex
    :justify-content :center})
 
-(defn grid-left-item
+(defn flex-column-start
   []
-  {:display        :flex
+  {:display :flex
+   :align-items :flex-start
    :flex-direction :column})
 
 (defn tab-link [current?]
