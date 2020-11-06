@@ -35,20 +35,6 @@
     (.before a b)
     false))
 
-(defn- redundant-with-existing-permission? [user-info new-permission]
-  (let [redundant (fn [existing]
-                    (and (= (:permission/role new-permission)
-                            (:permission/role existing)) ;; same role
-                         (nil? (:permission/valid-to new-permission)) ;; no expiration
-                         (nil? (:permission/valid-to existing)) ;; no expiration
-
-                         (date-before? (:permission/valid-from existing)
-                                       (:permission/valid-from new-permission))))]
-
-    (->> (:user/permissions user-info)
-         (filter redundant)
-         not-empty)))
-
 (defn- new-permission [granting-user role date]
   {:user/permissions [(merge (meta-model/creation-meta granting-user)
                              {:db/id "new-permission"
