@@ -545,11 +545,11 @@
        [:<>
         [:div.file-details-upload-info
          (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator first-version))
-                                   :date (format/date (:meta/created-at first-version))})]
+                                   :date (format/date-time (:meta/created-at first-version))})]
         (when edited?
           [:div.file-details-edit-info
            (tr [:file :edit-info] {:author (user-model/user-name (:meta/creator file))
-                                   :date (format/date (:meta/created-at file))})])])
+                                   :date (format/date-time (:meta/created-at file))})])])
 
 
 
