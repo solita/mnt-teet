@@ -119,9 +119,10 @@
 
 (defn user-row-heading
   [{:user/keys [company email phone-number global-role] :as user} open? toggle-open]
-  (let [contact-info (str/join " / " (filterv
-                          some?
-                          [company email phone-number]))]
+  (let [contact-info (str/join " / "
+                               (filterv
+                                 not-empty
+                                 [company email phone-number]))]
     [:div {:class (<class common-styles/flex-row-space-between)
            :style {:padding "1rem"}}
      [:div {:style {:flex 1
