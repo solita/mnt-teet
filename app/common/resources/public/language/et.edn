@@ -380,6 +380,7 @@
   "Korraga võib aktiivne olla ainult üht tüüpi tegevus.",
   :meeting-is-locked
   "Koosoleku otsused on kinnitatud ning seda ei saa enam muuta",
+  :user-already-exists nil,
   :request-timeout "Ei saanud serveriga ühendust",
   :invalid-activity-dates "Kontrolli tegevuse kuupäevi",
   :bad-request "Vigane päring",
