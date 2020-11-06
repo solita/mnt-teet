@@ -105,14 +105,15 @@
   UploadNewVersion
   (process-event [{:keys [file new-version]} {params :params :as app}]
     (log/info "UploadNewVersion file:" file ", new-version: " new-version)
-    app
     (t/fx app
           {:tuck.effect/type :command!
            :command :file/upload
            :payload {:task-id (common-controller/->long (get-in app [:params :task]))
                      :file (merge (file-model/file-info (:file-object new-version))
                                   (select-keys new-version
-                                               [:file/document-group
+                                               [:file/description
+                                                :file/extension
+                                                :file/document-group
                                                 :file/sequence-number
                                                 :file/original-name]))
                      :previous-version-id (:db/id file)}
