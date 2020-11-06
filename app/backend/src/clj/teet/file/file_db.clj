@@ -146,6 +146,37 @@
             [?f :file/upload-complete? true]
             :in $ [?f ...]] db file-ids))))
 
+(defn file-metadata
+  "Return file metadata for a given file id."
+  [db file-id]
+  (let [{:file/keys [name sequence-number] :as file}
+        (d/pull db [:file/name
+                    :file/sequence-number
+                    {:file/document-group [:filename/code]}
+                    {:task/_files [:db/id
+                                   {:task/type [:filename/code]}
+                                   {:activity/_tasks
+                                    [{:activity/name [:filename/code]}
+                                     {:thk.lifecycle/_activities
+                                      [{:thk.project/_lifecycles
+                                        [:thk.project/id]}]}]}]}
+                    {:file/part [:file.part/number]}] file-id)]
+    (merge
+     (filename-metadata/name->description-and-extension name)
+     (when-let [p (get-in file [:task/_files 0 :activity/_tasks 0 :thk.lifecycle/_activities 0 :thk.project/_lifecycles 0 :thk.project/id])]
+       {:thk.project/id p})
+     (when sequence-number
+       {:sequence-number sequence-number})
+     (when-let [dg (get-in file [:file/document-group :filename/code])]
+       {:document-group dg})
+     (when-let [act (get-in file [:task/_files 0 :activity/_tasks 0 :activity/name :filename/code])]
+       {:activity act})
+     (when-let [task (get-in file [:task/_files 0 :task/type :filename/code])]
+       {:task task})
+     {:part (or (some->> file :file/part :file.part/number
+                         (format "%02d"))
+                "00")})))
+
 (defn file-listing
   "Fetch file information suitable for file listing. Returns all file attributes
   and owner info. Returns only the latest version of each file with previous versions
@@ -173,6 +204,8 @@
                  [latest-version & previous-versions] versions]
            :when latest-version]
        (assoc latest-version
+              :file/full-name (filename-metadata/metadata->filename
+                               (file-metadata db (:db/id latest-version)))
               :versions previous-versions)))))
 
 (defn land-files-by-project-and-sequence-number [db user project-id sequence-number]
@@ -251,36 +284,7 @@
             :document-group-kw doc-group
             :file-id file-id})))
 
-(defn file-metadata
-  "Return file metadata for a given file id."
-  [db file-id]
-  (let [{:file/keys [name sequence-number] :as file}
-        (d/pull db [:file/name
-                    :file/sequence-number
-                    {:file/document-group [:filename/code]}
-                    {:task/_files [:db/id
-                                   {:task/type [:filename/code]}
-                                   {:activity/_tasks
-                                    [{:activity/name [:filename/code]}
-                                     {:thk.lifecycle/_activities
-                                      [{:thk.project/_lifecycles
-                                        [:thk.project/id]}]}]}]}
-                    {:file/part [:file.part/number]}] file-id)]
-    (merge
-     (filename-metadata/name->description-and-extension name)
-     (when-let [p (get-in file [:task/_files 0 :activity/_tasks 0 :thk.lifecycle/_activities 0 :thk.project/_lifecycles 0 :thk.project/id])]
-       {:thk.project/id p})
-     (when sequence-number
-       {:sequence-number sequence-number})
-     (when-let [dg (get-in file [:file/document-group :filename/code])]
-       {:document-group dg})
-     (when-let [act (get-in file [:task/_files 0 :activity/_tasks 0 :activity/name :filename/code])]
-       {:activity act})
-     (when-let [task (get-in file [:task/_files 0 :task/type :filename/code])]
-       {:task task})
-     {:part (or (some->> file :file/part :file.part/number
-                         (format "%02d"))
-                "00")})))
+
 
 (defn next-task-part-number
   "Return next available file part number for the given task.

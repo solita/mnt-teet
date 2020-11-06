@@ -535,6 +535,9 @@
                                        (:versions latest-file)))
                          (:versions file))]
     [:div.file-details
+     [:div.file-details-full-name
+      [typography/BoldGreyText
+       (str (tr [:file :full-name]) ": " (:file/full-name file))]]
      [:div.file-details-original-name
       [typography/GreyText
        [:strong (str (tr [:fields :file/original-name]) ": ")]
