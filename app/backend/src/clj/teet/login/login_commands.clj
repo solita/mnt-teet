@@ -118,7 +118,7 @@
          {:strs [given_name family_name]} "profile_attributes"} claims
         id (ensure-user! conn person-id given_name family_name)
         db (d/db conn)
-        deactivated? (user-db/is-user-deactivated? db id)
+        deactivated? (user-db/is-user-deactivated? db [:user/id id])
         permissions (permission-db/user-permissions db [:user/id id])
         response {:status 302
                   :headers {"Location"

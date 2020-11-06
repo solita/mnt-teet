@@ -31,8 +31,8 @@
       user)))
 
 (defn is-user-deactivated?
-  [db user-id]
-  (boolean (:user/deactivated? (d/pull db '[:user/deactivated?] user-id))))
+  [db user-eid]
+  (boolean (:user/deactivated? (d/pull db '[:user/deactivated?] user-eid))))
 
 (defn users-valid-global-permissions
   [db user-id]
