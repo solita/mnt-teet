@@ -71,7 +71,13 @@
                          [?act :activity/manager ?u]))]}))
 
 (defn user-list-query
-  [db payload]
+  "Query users based on search criteria map
+
+  ex:
+  Given the criteria {:project \"foobar\"} invoke search-clause matching :project with search-param of foobar
+  Return datomic where clauses and in clauses that are added to the final query
+   "
+  [db criteria]
   (let [{:keys [where in]}
         (reduce (fn [clauses-and-args search]
                   (let [{:keys [where in]} (search-clause search)]
@@ -80,7 +86,7 @@
                         (update :in merge in))))
                 {:where []
                  :in {}}
-                payload)
+                criteria)
         arglist (seq in)
         in (into '[$] (map first) arglist)
         args (into [db] (map second) arglist)]
