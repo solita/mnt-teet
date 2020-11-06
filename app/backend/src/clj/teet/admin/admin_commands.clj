@@ -69,13 +69,6 @@
    :transact (let [user-person-id (user-model/normalize-person-id (:user/person-id user-data))
                    global-role (:user/global-role user-data)]
                ;; New user, no need to check
-               (println "tx: " (pr-str [(merge (user-model/new-user user-person-id)
-                                               (select-keys user-data [:user/email :user/company :user/phone-number])
-                                               (meta-model/creation-meta user)
-                                               (when global-role
-                                                 (new-permission user
-                                                                 global-role
-                                                                 (java.util.Date.))))]))
                [(merge (user-model/new-user user-person-id)
                        (select-keys user-data [:user/email :user/company :user/phone-number])
                        (meta-model/creation-meta user)
