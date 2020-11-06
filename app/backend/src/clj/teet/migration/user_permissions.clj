@@ -15,6 +15,8 @@
    :external-consultant 4})
 
 (defn remove-overlapping-global-rights
+  "Migration to go over all users and their permissions to see if there are multiple simultaneous global permissions
+  for the user."
   [conn]
   (let [db (d/db conn)
         user-permissions
@@ -32,6 +34,8 @@
              (mapv (fn [user]
                      (update user :user/permissions
                              (fn [permissions]
+                               ;; Go through all users permissions and only take the ones which are not invalidated
+                               ;; Or which are related to some projects
                                (->> permissions
                                     (filterv (fn [perm]
                                                (when (and
