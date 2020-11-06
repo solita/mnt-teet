@@ -55,7 +55,7 @@
     (t/fx app
           {:tuck.effect/type :command!
            :command :admin/deactivate-user
-           :success-message (tr [:admin :reactivated-successfully])
+           :success-message (tr [:admin :deactivated-successfully])
            :payload user-to-deactivate
            :result-event common-controller/->Refresh}))
 
@@ -64,7 +64,7 @@
     (t/fx app
           {:tuck.effect/type :command!
            :command :admin/reactivate-user
-           :success-message (tr [:admin :deactivated-successfully])
+           :success-message (tr [:admin :reactivated-successfully])
            :payload user-to-reactivate
            :result-event common-controller/->Refresh}))
 
