@@ -92,5 +92,5 @@
           ]
       (is (= (count existing-user-permissions) 1) "Can't add multiple global roles")
       (is (= (->> existing-user-permissions (map :permission/role) set)
-             #{:internal-consultant}
-             "The latest global role stays as the only valid role")))))
+             #{:internal-consultant})
+          "The latest global role stays as the only valid role"))))
