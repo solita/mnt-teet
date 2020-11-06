@@ -116,23 +116,27 @@
         ;; Destructure person info from claims
         {person-id "sub"
          {:strs [given_name family_name]} "profile_attributes"} claims
-
         id (ensure-user! conn person-id given_name family_name)
         db (d/db conn)
+        deactivated? (user-db/is-user-deactivated? db id)
         permissions (permission-db/user-permissions db [:user/id id])
         response {:status 302
                   :headers {"Location"
                             (str (environment/config-value :base-url)
                                  "#/login"
-                                 (if (empty? permissions)
+                                 (cond
+                                   deactivated?
+                                   "?error=user-deactivated"
+                                   (empty? permissions)
                                    "?error=no-roles"
+                                   :else
                                    (str "?token="
                                         (jwt-token/create-token
-                                         secret "teet_user"
-                                         {:given-name given_name
-                                          :family-name family_name
-                                          :person-id person-id
-                                          :id id}))))}
+                                          secret "teet_user"
+                                          {:given-name given_name
+                                           :family-name family_name
+                                           :person-id person-id
+                                           :id id}))))}
                   :body "Redirecting to TEET"}]
     (log/info "on-tara-login response: " response)
     response))
