@@ -1428,4 +1428,6 @@
   :txes [[[:db/retract [:db/ident :task.type/design-requirements] :thk/task-type :thk.task-type/design-requirements]
           [:db/retract [:db/ident :task.type/building-permit] :thk/task-type :thk.task-type/building-permit]]]}
 
+ {:db/ident :migration/comment-mention-using-uuid
+  :txes [teet.migration.comment-mention-userid/rewrite-comment-mentions!]}
 ]

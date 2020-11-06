@@ -79,4 +79,4 @@
                                        (into-array
                                          (for [u users]
                                            #js {:display (user-model/user-name u)
-                                                :id (str (:db/id u))})))))))}]]])})))
+                                                :id (str (:user/id u))})))))))}]]])})))
