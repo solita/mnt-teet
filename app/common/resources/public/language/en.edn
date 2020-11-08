@@ -722,7 +722,7 @@
   :project-updated "Project updated successfully",
   :new-activity "Add activity",
   :add-activity
-  #:thk.lifecycle-type{:construction "Add stage", :design "Add phase"},
+  #:thk.lifecycle-type{:construction "Add phase", :design "Add phase"},
   :tabs
   {:activities "Activities",
    :details "Details",
