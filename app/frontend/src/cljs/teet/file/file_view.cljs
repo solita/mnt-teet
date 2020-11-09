@@ -526,6 +526,11 @@
    :flex-direction :column
    :margin "2rem 0 2rem 0"})
 
+(defn- edited [{:meta/keys [creator created-at modifier modified-at]}]
+  (if modified-at
+    [modifier modified-at]
+    [creator created-at]))
+
 (defn- file-details [e! project-id task {:keys [replacement-upload-progress] :as file}
                      latest-file can-replace-file? replace-form]
   (let [old? (some? latest-file)
@@ -544,15 +549,20 @@
        [:span (:file/original-name file)]]]
 
      (let [first-version (or (last other-versions) file)
-           edited? (not= first-version file)]
+           [edited-by edited-at :as edited?]
+           (if (not= first-version file)
+             (edited file)
+             (when (:meta/modified-at first-version)
+               (edited first-version)))]
        [:<>
         [:div.file-details-upload-info
          (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator first-version))
                                    :date (format/date-time (:meta/created-at first-version))})]
+
         (when edited?
           [:div.file-details-edit-info
-           (tr [:file :edit-info] {:author (user-model/user-name (:meta/creator file))
-                                   :date (format/date-time (:meta/created-at file))})])])
+           (tr [:file :edit-info] {:author (user-model/user-name edited-by)
+                                   :date (format/date-time edited-at)})])])
 
 
 
