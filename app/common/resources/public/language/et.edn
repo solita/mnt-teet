@@ -22,7 +22,7 @@
   :external-consultants "Välised konsultandid",
   :admins "Administraatorid",
   :deactivate-user-modal-text
-  "Kas oled kindel, et soovid deaktiverida kasutaja {name-to-deactivate}? Ta ei saa sisse logida kuni kasutaja uuesti aktiveeritekase",
+  "Kas oled kindel, et soovid deaktiveerida kasutaja {name-to-deactivate}? Ta ei saa sisse logida kuni kasutaja uuesti aktiveeritakse",
   :deactivate-user-btn "Deaktiveeri kasutaja",
   :user-edited-successfully "Kasutaja andmed edukalt muudetud",
   :user-has-no-name "Kasutaja pole veel sisseloginud",
@@ -31,11 +31,11 @@
   :managers "Projektijuhid",
   :title "Admin",
   :role-and-contact-information "ROLLI JA KONTAKT INFORMATSIOON",
-  :deactivate-user-modal-title "Kinnitan ",
+  :deactivate-user-modal-title "Kinnitan kasutaja deaktiveerimise",
   :internal-consultants "Sisemised konsultandid",
   :user-no-global-role "Ei ole globaalset rolli",
   :user-global-role "Globaalne roll",
-  :past-permissions "Mineviku ligipääsud",
+  :past-permissions "Kehtetud ligipääsud",
   :reactivated-successfully "Kasutaja edukalt aktiveeritud",
   :mandatory-information "Kohustuslik informatsioon",
   :show-history "Vaatan ajalugu",
@@ -380,7 +380,7 @@
   "Korraga võib aktiivne olla ainult üht tüüpi tegevus.",
   :meeting-is-locked
   "Koosoleku otsused on kinnitatud ning seda ei saa enam muuta",
-  :user-already-exists nil,
+  :user-already-exists "Sama isikukoodiga kasutaja on juba lisatud",
   :request-timeout "Ei saanud serveriga ühendust",
   :invalid-activity-dates "Kontrolli tegevuse kuupäevi",
   :bad-request "Vigane päring",
@@ -718,7 +718,7 @@
   :project-updated "Projekti värskendati edukalt",
   :new-activity "Lisan tegevuse",
   :add-activity
-  #:thk.lifecycle-type{:construction "Lisan staadiumi",
+  #:thk.lifecycle-type{:construction "Lisan etapi",
                        :design "Lisan etapi"},
   :tabs
   {:activities "Tegevused",
