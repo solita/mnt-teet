@@ -73,7 +73,7 @@
   [conn]
   (d/tx-range conn {:start (java.util.Date. 1)}))
 
-(defn- prepare-database-for-restore [{:keys [datomic-client conn config backup-format] :as ctx}]
+(defn- prepare-database-for-restore [{:keys [datomic-client conn config] :as ctx}]
   (if (:clear-database? config)
     (do
       (log/info "DELETING AND RECREATING \"teet\" DATOMIC DATABASE.")
