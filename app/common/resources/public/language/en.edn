@@ -17,6 +17,7 @@
   :no-current-permissions "No current permissions",
   :deactivated "Deactivated users",
   :user-contact-information "Contact information",
+  :teet-users "Teet users",
   :optional-information "Optional information",
   :no-user-contact-information "No contact information given",
   :external-consultants "External consultants",

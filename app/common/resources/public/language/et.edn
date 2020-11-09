@@ -17,6 +17,7 @@
   :no-current-permissions "Kehtivad ligipääsud puuduvad",
   :deactivated "Deaktiveeritud kasutajad",
   :user-contact-information "Kontakt informatsioon",
+  :teet-users "Teet kasutajad",
   :optional-information "Valikuline informatsioon",
   :no-user-contact-information "Kontakt informatsioon puudub",
   :external-consultants "Välised konsultandid",
