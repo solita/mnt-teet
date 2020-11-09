@@ -160,14 +160,14 @@
               db-name {:db-name test-db-name}]
           (try
             (log/info "Creating database " test-db-name)
-            (swap! environment/config assoc-in [:datomic :db-name] test-db-name)
             (d/create-database client db-name)
             (binding [*connection* (d/connect client db-name)
                       *data-fixture-ids* (atom {})]
               (binding [environment/*connection* *connection*]
                 (when migrate?
                   (environment/migrate *connection*))
-                (d/transact *connection* {:tx-data mock-users})
+                (when mock-users?
+                  (d/transact *connection* {:tx-data mock-users}))
                 (doseq [df data-fixtures
                         :let [resource (str "resources/" (name df) ".edn")]]
                   (log/info "Transacting data fixture: " df)
