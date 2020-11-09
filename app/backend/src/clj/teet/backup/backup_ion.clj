@@ -173,19 +173,14 @@
         (out! (output-tx db attr-ident-cache tx
                          ignore-attributes))))))
 
-;; restore procedure for tx log
-;; keep mapping of old->new ids
-;; for each datom
-;; - lookup entity from old->new mapping
+(defn- prepare-restore-tx
+  "Prepare transaction for restore.
 
-;; - if doesn't exist change to string (eg. 123 => "123")
-;; - if attr is a ref type, do lookup/stringify for value as well
-;; - if value is a tuple, check tupleattrs for ref attrs
-;;   -> ignore tuple attrs (datomic handles internally)
-;;
-;; after tx store new tempids to old->new mapping
+  Takes tx datoms, old to new id mapping and set of reference attributes.
+  Returns sequence of new datoms for the restore tx.
 
-(defn- prepare-restore-tx [tx-data old->new ref-attrs tuple-attrs]
+  Looks up entity ids and reference values from the old->new mapping."
+  [tx-data old->new ref-attrs]
   (let [->id #(let [s (str %)]
                 (or (old->new s) s))]
     (for [[e a v add?] tx-data
@@ -194,7 +189,6 @@
                 v (if ref?
                     (->id v)
                     v)]]
-      ;; FIXME: handle refs in tuple vals
       [(if add? :db/add :db/retract) e a v])))
 
 (defn- restore-tx-file
@@ -225,13 +219,13 @@
                                       {:db/id "datomic.tx"})]
                               (prepare-restore-tx (:data tx)
                                                   old->new
-                                                  ref-attrs
-                                                  tuple-attrs))
-                _ (def *tx-data tx-data)
+                                                  ref-attrs))
                 {tempids :tempids}
                 (d/transact
                  conn
                  {:tx-data tx-data})]
+
+            ;; Update old->new mapping with entity ids created in this tx
             (recur (merge old->new tempids)
                    (rest txs)))
           (do
