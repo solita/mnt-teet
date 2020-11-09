@@ -24,7 +24,7 @@
               [(.contains ?lower-name ?text)]]
      :in {'?text (str/lower-case search-param)}}))
 
-(defmethod search-clause :id-code
+(defmethod search-clause :user/person-id
   [[_ id-code]]
   (when (seq id-code)
     {:in {'?id-code (str/lower-case id-code)}
