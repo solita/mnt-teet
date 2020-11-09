@@ -63,6 +63,14 @@
 
 
 
+(defn config
+  "Configuration that is sent to the frontend."
+  []
+  {:thk {:url (environment/config-value :thk :url)}
+   :api-url (environment/config-value :api-url)
+   :file {:allowed-suffixes (environment/config-value :file :allowed-suffixes)
+          :image-suffixes (environment/config-value :file :image-suffixes)}})
+
 ;; dummy-login trust person-id etc information from
 ;; the frontend (command could be renamed to dummy-login)
 
@@ -93,7 +101,7 @@
                                        :id id})
        :user (user-db/user-info db [:user/id id])
        :enabled-features (environment/config-value :enabled-features)
-       :api-url (environment/config-value :api-url)})
+       :config (config)})
     {:error :incorrect-site-password}))
 
 
@@ -108,23 +116,27 @@
         ;; Destructure person info from claims
         {person-id "sub"
          {:strs [given_name family_name]} "profile_attributes"} claims
-
         id (ensure-user! conn person-id given_name family_name)
         db (d/db conn)
+        deactivated? (user-db/is-user-deactivated? db [:user/id id])
         permissions (permission-db/user-permissions db [:user/id id])
         response {:status 302
                   :headers {"Location"
                             (str (environment/config-value :base-url)
                                  "#/login"
-                                 (if (empty? permissions)
+                                 (cond
+                                   deactivated?
+                                   "?error=user-deactivated"
+                                   (empty? permissions)
                                    "?error=no-roles"
+                                   :else
                                    (str "?token="
                                         (jwt-token/create-token
-                                         secret "teet_user"
-                                         {:given-name given_name
-                                          :family-name family_name
-                                          :person-id person-id
-                                          :id id}))))}
+                                          secret "teet_user"
+                                          {:given-name given_name
+                                           :family-name family_name
+                                           :person-id person-id
+                                           :id id}))))}
                   :body "Redirecting to TEET"}]
     (log/info "on-tara-login response: " response)
     response))
@@ -156,4 +168,4 @@
                                    :id id})
    :user (user-db/user-info db [:user/id id])
    :enabled-features (environment/config-value :enabled-features)
-   :api-url (environment/config-value :api-url)})
+   :config (config)})

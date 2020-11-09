@@ -244,7 +244,6 @@
     [{result :result} app]
     (let [land-acquisitions (:land-acquisitions result)
           related-cadastral-units (:thk.project/related-cadastral-units result)]
-
       (-> app
           (assoc-in [:route :project :thk.project/related-cadastral-units] related-cadastral-units)
           (assoc-in [:route :project :land-acquisitions] land-acquisitions)
@@ -340,10 +339,23 @@
 
   FetchRelatedEstatesResponse
   (process-event [{{:keys [estates units estate-info]} :response} app]
-    (-> app
-        (assoc-in [:route :project :land/related-estate-ids] estates)
-        (assoc-in [:route :project :land/units] units)
-        (assoc-in [:route :project :land/estate-info-failure] false)))
+    (let [linked-estate (get-in app [:query :estate-id])
+          linked-unit (when-let [unit-id (get-in app [:query :unit-id])]
+                        (some
+                          (fn [unit]
+                            (when (= (:teet-id unit) unit-id)
+                              unit))
+                          units))]
+      (t/fx (-> app
+                (assoc-in [:route :project :land/related-estate-ids] estates)
+                (assoc-in [:route :project :land/units] units)
+                (assoc-in [:route :project :land/estate-info-failure] false))
+            (when linked-unit
+              (fn [e!]
+                (e! (->ToggleLandUnit linked-unit))))
+            (when linked-estate
+              (fn [e!]
+                (e! (->ToggleOpenEstate linked-estate)))))))
 
   RefreshEstateInfo
   (process-event [_ app]

@@ -8,7 +8,8 @@
             [teet.localization :refer [tr]]
             [teet.file.file-model :as file-model]
             [clojure.string :as str]
-            [teet.snackbar.snackbar-controller :as snackbar-controller]))
+            [teet.snackbar.snackbar-controller :as snackbar-controller]
+            [teet.file.filename-metadata :as filename-metadata]))
 
 (defrecord UploadFiles [files project-id task-id on-success progress-increment file-results]) ; Upload files (one at a time) to document
 (defrecord UploadFinished []) ; upload completed, can close dialog
@@ -19,7 +20,7 @@
 
 (defrecord DeleteFile [file-id])
 
-(defrecord AddFilesToTask [files on-success]) ;; upload more files to existing document
+(defrecord AddFilesToTask [files-form task on-success])
 (defrecord NavigateToFile [file])
 
 (defrecord DeleteAttachment [on-success-event file-id])
@@ -29,6 +30,16 @@
 
 (defrecord UpdateFileSeen [file-id])
 (defrecord UpdateFileSeenResponse [response])
+
+(defrecord UpdateFilesForm [new-value])
+(defrecord FilesFormMetadataReceived [filename metadata])
+
+;; Modify file info
+(defrecord ModifyFile [file callback])
+
+;; Open the latest version by id
+(defrecord OpenFileVersion [file-id])
+
 
 (extend-protocol t/Event
 
@@ -55,8 +66,18 @@
            :success-message success-message}))
 
   AddFilesToTask
-  (process-event [{:keys [files on-success]} app]
-    (let [task-id (common-controller/->long (get-in app [:params :task]))]
+  (process-event [{:keys [files-form task on-success]} app]
+    (let [files (mapv (fn [file]
+                        (merge file
+
+                               (if-let [part-number (some-> file :metadata :part js/parseInt)]
+                                 ;; Use detected part
+                                 {:file/part {:file.part/number part-number}}
+
+                                 ;; Use part selected from pulldown
+                                 {:file/part (:file/part files-form)})))
+                      (:task/files files-form))
+          task-id (:db/id task)]
       (t/fx app
             (fn [e!]
               (e! (map->UploadFiles {:files files
@@ -76,28 +97,48 @@
 
   AfterUploadRefresh
   (process-event [_ app]
-    (t/fx (dissoc app :new-document)
+    (t/fx (-> app
+              (common-controller/update-page-state [] dissoc :files-form)
+              (dissoc :new-document))
           common-controller/refresh-fx))
 
   UploadNewVersion
   (process-event [{:keys [file new-version]} {params :params :as app}]
+    (log/info "UploadNewVersion file:" file ", new-version: " new-version)
     (t/fx app
           {:tuck.effect/type :command!
            :command :file/upload
            :payload {:task-id (common-controller/->long (get-in app [:params :task]))
-                     :file (file-model/file-info (:file-object (first new-version)))
+                     :file (merge (file-model/file-info (:file-object new-version))
+                                  (select-keys new-version
+                                               [:file/description
+                                                :file/extension
+                                                :file/document-group
+                                                :file/sequence-number
+                                                :file/original-name]))
                      :previous-version-id (:db/id file)}
            :result-event (fn [{file :file :as result}]
                            (map->UploadFileUrlReceived
                              (merge result
-                                    {:file-data (:file-object (first new-version))
-                                     :on-success (->UploadSuccess (:db/id file))})))}))
+                                    {:file-data (:file-object new-version)
+                                     :on-success (->OpenFileVersion (:db/id file))})))}))
+
+  OpenFileVersion
+  (process-event [{:keys [file-id]} {:keys [page params query] :as app}]
+    (t/fx app
+          common-controller/refresh-fx
+          {:tuck.effect/type :navigate
+           :page page
+           :params (assoc params :file (str file-id))
+           :query query}))
+
 
   UploadFiles
   (process-event [{:keys [files project-id task-id on-success progress-increment
                           attachment? attach-to
                           file-results]
                    :as event} app]
+    (log/info "FILES: " files)
     ;; Validate files
     (if-let [error (some (comp file-model/validate-file
                                file-model/file-info
@@ -121,9 +162,13 @@
                 {:tuck.effect/type :command!
                  :command (if attachment? :file/upload-attachment :file/upload)
                  :payload (merge {:file (merge (file-model/file-info (:file-object file))
-                                               (when-let [pos (:file/pos-number file)]
-                                                 (when (not (str/blank? pos))
-                                                   {:file/pos-number (js/parseInt pos)})))}
+                                               (select-keys file [:file/description
+                                                                  :file/extension
+                                                                  :file/sequence-number
+                                                                  :file/document-group
+                                                                  :file/part]))}
+                                 (when-let [prev-file-id (get-in file [:metadata :file-id])]
+                                   {:previous-version-id prev-file-id})
                                  (if attachment?
                                    {:project-id project-id
                                     :attach-to attach-to}
@@ -210,3 +255,80 @@
 
 (defn download-url [file-id]
   (common-controller/query-url :file/download-file {:file-id file-id}))
+
+(defn file-updated
+  "Processing to run when a file in upload form was changed.
+  Handles dependencies between fields."
+  [{:file/keys [document-group] :as file}]
+  (as-> file file
+    ;; IF document-group is not selected, file can't have seq#
+    (if (nil? document-group)
+      (dissoc file :file/sequence-number)
+      file)))
+
+;; Implement metadata fetching for file upload forms
+(extend-protocol t/Event
+
+  ;; When file form changes, initiate metadata fetch for any new
+  ;; files
+  UpdateFilesForm
+  (process-event [{:keys [new-value]} app]
+    (let [form (-> (common-controller/page-state app :files-form)
+                   (merge new-value)
+                   (update :task/files
+                           #(mapv file-updated %)))
+          files (:task/files form)
+          files-to-fetch (filter (complement :metadata)
+                                 files)
+          new-app (common-controller/update-page-state app [:files-form] (constantly form))]
+
+      (if (seq files-to-fetch)
+        (apply t/fx new-app
+               (for [{f :file-object} files-to-fetch
+                     :let [name (:file/name (file-model/file-info f))]]
+                 {:tuck.effect/type :query
+                  :query :file/resolve-metadata
+                  :args {:file/name name}
+                  :result-event (partial ->FilesFormMetadataReceived name)}))
+        new-app)))
+
+  ;; When we receive new metadata for the file of a given name
+  FilesFormMetadataReceived
+  (process-event [{:keys [filename metadata]} app]
+    (common-controller/update-page-state
+     app
+     [:files-form :task/files]
+     (fn [files]
+       (mapv (fn [{fo :file-object :as file}]
+               (if (= (:file/name (file-model/file-info fo))
+                      filename)
+                 (merge
+                  file
+                  {:metadata metadata
+                   :file/document-group (:document-group-kw metadata)
+                   :file/sequence-number (:sequence-number metadata)
+                   :file/original-name filename}
+                  (if (:description metadata)
+                    {:file/description (:description metadata)
+                     :file/extension (:extension metadata)}
+                    (let [{:keys [description extension]}
+                          (filename-metadata/name->description-and-extension filename)]
+                      {:file/description description
+                       :file/extension extension})))
+                 file))
+             files))))
+
+  ModifyFile
+  (process-event [{:keys [file callback]} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :file/modify
+           :payload (update file :file/sequence-number
+                            #(cond
+                               (or (nil? %) (int? %)) %
+                               (str/blank? %) nil
+                               :else (js/parseInt %)))
+           :result-event #(do
+                            (when callback
+                              (callback))
+                            (common-controller/->Refresh))})))

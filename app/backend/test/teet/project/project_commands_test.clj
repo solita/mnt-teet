@@ -187,10 +187,11 @@
 
     ;; Give manager role to Danny
     (tu/local-command tu/mock-user-boss
-                      :admin/create-user
+                      :admin/edit-user
                       ;; Danny D. Manager
                       {:user/person-id "EE12345678900"
-                       :user/add-global-permission :manager})
+                       :user/email "required@test.com"
+                       :user/global-role :manager})
 
     ;; He can now grant the permission
     (is (tu/local-command tu/mock-user-manager

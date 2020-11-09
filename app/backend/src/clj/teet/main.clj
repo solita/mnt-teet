@@ -18,6 +18,7 @@
 (def server nil)
 
 (defn start [{:keys [port tara mode] :as config}]
+  (environment/log-timezone-config!)
   (alter-var-root
    #'server
    (fn [_]

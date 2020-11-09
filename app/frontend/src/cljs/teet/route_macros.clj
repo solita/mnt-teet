@@ -101,7 +101,9 @@
              1 `(def ~fn-name
                   (fn route# [~@param-syms]
                     (if (map? ~(first param-syms))
-                      (route# (~(first params) ~(first param-syms)))
+                      (str (route# (~(first params) ~(first param-syms)))
+                           (when-let [query# (:teet.ui.url/query ~(first param-syms))]
+                             (str "?" (teet.ui.url/format-params query#))))
                       (str "#" ~@(split-path path)))))
              ;; more than 1 parameter
              `(def ~fn-name

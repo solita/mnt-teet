@@ -5,7 +5,7 @@
 
 (def ^:const url-expiration-seconds 300)
 
-(defn- storage-bucket []
+(defn storage-bucket []
   (environment/config-value :document-storage :bucket-name))
 
 (defn download-url [content-disposition file-name]
@@ -20,6 +20,6 @@
 (defn document-s3-ref
   "Returns an integration S3 file descriptor for a document."
   [{id :db/id
-    name :file/name}]
+    key :file/s3-key}]
   {:bucket (storage-bucket)
-   :file-key (str id "-" name)})
+   :file-key key})

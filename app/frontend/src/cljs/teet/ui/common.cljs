@@ -9,7 +9,8 @@
             [teet.ui.typography :refer [Text SmallGrayText] :as typography]
             [teet.common.common-styles :as common-styles]
             [teet.ui.buttons :as buttons]
-            [teet.ui.format :as format]))
+            [teet.ui.format :as format]
+            [re-svg-icons.feather-icons :as fi]))
 
 (def lifecycle-methods
   "Supported lifecycle methods in mixins."
@@ -433,3 +434,12 @@
                  [:div {:class cls}
                   child]))
           children)))
+
+(defn info-box [{:keys [variant title content icon]
+                 :or {variant :info}}]
+  (let [icon (case variant
+               :info [fi/info]
+               :error [icons/alert-error-outline])]
+    [:div {:class (<class common-styles/info-box variant)}
+     [typography/Heading3  icon " " title]
+     content]))

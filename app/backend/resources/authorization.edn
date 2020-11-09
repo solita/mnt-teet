@@ -1,4 +1,9 @@
 {:project/update-info {:admin :full, :manager :full},
+ :meeting/send-notifications
+ {:admin :full,
+  :manager :link,
+  :internal-consultant :link,
+  :external-consultant :link},
  :task/review {:admin :full, :manager :full},
  :task/task-information
  {:admin :full,
@@ -51,6 +56,11 @@
   :external-consultant :read,
   :authenticated-guest :read,
   :guest :read},
+ :meeting/add-meeting
+ {:admin :full,
+  :manager :full,
+  :internal-consultant :full,
+  :external-consultant :full},
  :land/see-official-message-reply-subject-from-land-owner
  {:admin :full, :manager :full, :internal-consultant :full},
  :task/assign-task
@@ -92,8 +102,13 @@
   :manager :full,
   :internal-consultant :full,
   :external-consultant :link},
+ :meeting/download-attachment
+ {:admin :full,
+  :manager :full,
+  :internal-consultant :full,
+  :external-consultant :full},
  :projects/set-comment-visibility
- {:admin :full, :manager :full, :internal-consultant :link},
+ {:admin :full, :manager :full, :internal-consultant :full},
  :projects/projects-listing
  {:admin :read,
   :manager :read,
@@ -135,6 +150,11 @@
   :manager :link,
   :internal-consultant :link,
   :external-consultant :link},
+ :meeting/edit-meeting
+ {:admin :full,
+  :manager :link,
+  :internal-consultant :link,
+  :external-consultant :link},
  :task/submit-results
  {:admin :full,
   :manager :full,
@@ -165,6 +185,7 @@
   :manager :full,
   :internal-consultant :link,
   :external-consultant :link},
+ :admin/inspector {:admin :full},
  :land/initiate-official-message-sending-to-land-owner
  {:admin :full, :manager :full, :internal-consultant :full},
  :document/delete-document

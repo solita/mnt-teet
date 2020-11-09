@@ -40,7 +40,9 @@
       :activity/tasks #(= task-id (:db/id %))] ; matching task
 
      ;; Fetch and assoc the tasks
-     assoc :task/files (task-db/task-file-listing db user task-id))))
+     merge
+     {:task/files (task-db/task-file-listing db user task-id)}
+     (task-db/task-file-parts db task-id))))
 
 
 (defn tasks-with-statuses

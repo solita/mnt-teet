@@ -1206,4 +1206,249 @@
            :db/valueType :db.type/boolean
            :db/cardinality :db.cardinality/one
            :db/doc "Transacted to true once all reviewers have accepted the meeting"}]]}
+
+ {:db/ident :migration/decision-number
+  :txes [[{:db/ident :meeting.decision/number
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one
+           :db/doc "All decisions get an incrementing number based on the agenda topic."}]]}
+ {:db/ident :migration/meeting-updated-notification
+  :txes [[{:db/ident :notification.type/meeting-updated :enum/attribute :notification/type}]]}
+
+ {:db/ident :migration/new-file-metadata
+  :txes [;; Also store the original name of the file
+         [{:db/ident :file/original-name
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Original name of the file when it was uploaded."}]
+
+         ;; New file grouping by part (folders within task)
+         [{:db/ident :file/part
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Part this file belongs to."}
+
+          {:db/ident :file.part/task
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Task this part belongs to."}
+          {:db/ident :file.part/name
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Human readable name of this part."}
+          {:db/ident :file.part/number
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one
+           :db/doc "Incrementing number of this part from 1 to 99. Unique within task."}]
+
+         ;; Document group
+         [{:db/ident :file/document-group
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Enum reference to document group"}
+
+          {:db/ident :file.document-group/general
+           :enum/attribute :file/document-group
+           :filename/code "0"}
+
+          {:db/ident :file.document-group/drawings-and-plans
+           :enum/attribute :file/document-group
+           :filename/code "1"}
+
+          {:db/ident :file.document-group/models
+           :enum/attribute :file/document-group
+           :filename/code "2"}
+
+          {:db/ident :file.document-group/reports
+           :enum/attribute :file/document-group
+           :filename/code "3"}
+
+          {:db/ident :file.document-group/specifications
+           :enum/attribute :file/document-group
+           :filename/code "4"}
+
+          ;; 5-8 are reserved for future use
+
+          {:db/ident :file.document-group/annexes
+           :enum/attribute :file/document-group
+           :filename/code "9"}]
+
+         ;; Sequence number
+         [{:db/ident :file/sequence-number
+           :db/valueType :db.type/long
+           :db/cardinality :db.cardinality/one
+           :db/doc "Sequence number of this file"}]
+
+         ;; Migrate POS# for land task files to sequence number
+         teet.migration.file-sequence-number/pos-number->sequence-number]}
+
+ ;; TEET-822 Add Warranty activity for Construction lifecycle
+ {:db/ident :migration/construction-lifecycle
+  :txes [[;; Add warranty, add lifecycle for construction
+          {:db/ident :activity.name/warranty,
+           :enum/attribute :activity/name,
+           :enum/valid-for :thk.lifecycle-type/construction,
+           :filename/code "GA"}
+          {:db/ident :activity.name/construction,
+           :enum/valid-for :thk.lifecycle-type/construction}
+          [:db/retractEntity [:db/ident :activity.name/workshop-design]]]
+
+         [;; new THK task types
+          {:db/ident :thk.task-type/owners-supervision :thk/code "4006"}
+          {:db/ident :thk.task-type/electricity :thk/code "4007"}
+          {:db/ident :thk.task-type/construction-other :thk/code "4008"}
+          {:db/ident :thk.task-type/road-safety-audit :thk/code "4009"}]
+
+         [;; new construction task groups
+          {:db/ident :task.group/working-design :enum/attribute :task/group}
+          {:db/ident :task.group/construction :enum/attribute :task/group}
+          {:db/ident :task.group/construction-quality-assurance :enum/attribute :task/group}
+          {:db/ident :task.group/construction-approval :enum/attribute :task/group}
+          {:db/ident :task.group/warranty :enum/attribute :task/group}]
+
+         [;; remove land-owners task
+          [:db/retractEntity [:db/ident :task.type/land-owners]]
+
+          ;; new task types for construction
+          {:db/ident :task.type/construction-general-part,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/design,
+           :filename/code "AA"}
+          {:db/ident :task.type/construction-road,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/working-design,
+           :filename/code "TL"}
+          {:db/ident :task.type/construction-railroad,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/working-design,
+           :filename/code "TR"}
+          {:db/ident :task.type/construction-drainage,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/working-design,
+           :filename/code "DR"}
+          {:db/ident :task.type/construction-landscaping,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/working-design,
+           :filename/code "MA"}
+          {:db/ident :task.type/construction-lighting,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/working-design,
+           :filename/code "EL"}
+          {:db/ident :task.type/construction-equipment,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/working-design,
+           :filename/code "EQ"}
+          {:db/ident :task.type/construction-structures,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/working-design,
+           :filename/code "TS"}
+          {:db/ident :task.type/construction-utilities,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/working-design,
+           :filename/code "TV"}
+          {:db/ident :task.type/construction-other-facilities,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/working-design,
+           :filename/code "MR"}
+
+          ;; move building permit to construction
+          {:db/ident :task.type/building-permit
+           :enum/valid-for :task.group/construction}
+          {:db/ident :task.type/project-management,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/construction,
+           :filename/code "PM"}
+          {:db/ident :task.type/collaboration,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/construction,
+           :filename/code "KK"}
+          {:db/ident :task.type/key-persons,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/construction,
+           :filename/code "KP"}
+          ;; Bill of Quantities, cost-list used for consistency with design phase
+          {:db/ident :task.type/construction-cost-list,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/construction,
+           :filename/code "CL"}
+          {:db/ident :task.type/instructions,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/construction,
+           :filename/code "JU"}
+          {:db/ident :task.type/grid-connections,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/construction,
+           ;; :thk/task-type :thk.task-type/electricity,
+           :filename/code "GC"}
+          {:db/ident :task.type/traffic-arrangement,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/construction,
+           :filename/code "TA"}
+
+          {:db/ident :task.type/owners-supervision,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/construction-quality-assurance,
+           ;; :thk/task-type :thk.task-type/owners-supervision,
+           :filename/code "OJ"}
+          {:db/ident :task.type/materials-and-products,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/construction-quality-assurance,
+           ;; :thk/task-type :thk.task-type/construction-other,
+           :filename/code "MT"}
+          {:db/ident :task.type/measurements,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/construction-quality-assurance,
+           :filename/code "ME"}
+          {:db/ident :task.type/laboratory,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/construction-quality-assurance,
+           ;; :thk/task-type :thk.task-type/construction-other,
+           :filename/code "LT"}
+
+          {:db/ident :task.type/road-safety-audit,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/construction-approval,
+           ;; :thk/task-type :thk.task-type/road-safety-audit,
+           :filename/code "LA"}
+          {:db/ident :task.type/acceptance,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/construction-approval,
+           :filename/code "VV"}
+
+          {:db/ident :task.type/inspections,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/warranty,
+           :filename/code "GY"}
+          {:db/ident :task.type/construction-other,
+           :enum/attribute :task/type,
+           :enum/valid-for :task.group/warranty,
+           :filename/code "ZZ"}]]}
+ ;; The tasks below should not be sent to THK
+ {:db/ident :migration/TEET-822-retract-thk-task-types
+  :txes [[[:db/retract [:db/ident :task.type/design-requirements] :thk/task-type :thk.task-type/design-requirements]
+          [:db/retract [:db/ident :task.type/building-permit] :thk/task-type :thk.task-type/building-permit]]]}
+ 
+ {:db/ident :migration/extra-user-info
+  :txes [[{:db/ident :user/phone-number
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Phone number associated with the user"}
+
+          {:db/ident :user/company
+           :db/valueType :db.type/string
+           :db/cardinality :db.cardinality/one
+           :db/doc "Name of the company the user is associated with"}]]}
+
+ {:db/ident :migration/deactivate-user
+  :txes [[{:db/ident :user/deactivated?
+           :db/valueType :db.type/boolean
+           :db/cardinality :db.cardinality/one
+           :db/doc "Is the user disabled? If so can't login or select the user in user selections"}]]}
+
+ {:db/ident :migration/remove-overlapping-global-rights
+  :txes [teet.migration.user-permissions/remove-overlapping-global-rights]}
+
+ {:db/ident :migration/comment-mention-using-uuid
+  :txes [teet.migration.comment-mention-userid/rewrite-comment-mentions!]}
+
  ]

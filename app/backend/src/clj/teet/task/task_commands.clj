@@ -10,7 +10,8 @@
             [teet.project.task-model :as task-model]
             [teet.util.datomic :as du]
             [clojure.spec.alpha :as s]
-            [teet.task.task-db :as task-db]))
+            [teet.task.task-db :as task-db]
+            [teet.file.file-db :as file-db]))
 
 (defn- send-to-thk? [db task-id]
   (:task/send-to-thk? (d/pull db [:task/send-to-thk?] task-id)))
@@ -39,11 +40,6 @@
                (if send-to-thk?
                  always-selected-keys
                  (concat always-selected-keys thk-provided-keys))))
-
-(defn- valid-thk-send? [db {:task/keys [send-to-thk? type]}]
-  (boolean
-   (or (not send-to-thk?)
-       (task-db/task-type-can-be-sent-to-thk? db type))))
 
 (defn- new? [{id :db/id}]
   (string? id))
@@ -115,6 +111,41 @@
                    :type :notification.type/task-waiting-for-review
                    :project (project-db/task-project-id db task-id)})
                 {})]})
+
+(defcommand :task/create-part
+  {:doc "Create a new 'part' aka folder for files to be put in"
+   :context {:keys [db user]}
+   :payload {task-id :task-id
+             part-name :part-name}
+   :project-id (project-db/task-project-id db task-id)
+   :authorization {:document/upload-document {:db/id task-id
+                                              :link :task/assignee}}
+   :transact [(list 'teet.file.file-tx/create-task-file-part
+                    task-id part-name)]})
+
+(defcommand :task/edit-part
+  {:doc "Edit the name of an existing part"
+   :context {:keys [db user]}
+   :payload {task-id :task-id
+             part-name :part-name
+             part-id :part-id}
+   :project-id (project-db/task-project-id db task-id)
+   :authorization {:document/upload-document {:db/id task-id
+                                              :link :task/assignee}}
+   :transact [(merge
+                (meta-model/modification-meta user)
+                {:db/id part-id                             ;; todo check that this is actually a part
+                 :file.part/name part-name})]})
+
+(defcommand :task/delete-part
+  {:doc "Delete the given part"
+   :context {:keys [db user]}
+   :payload {part-id :part-id}
+   :project-id (project-db/file-part-project-id db part-id)
+   :authorization {:task/task-information {:db/id (project-db/file-part-project-id db part-id)
+                                           :link :task/assignee}}
+   :transact [(list 'teet.file.file-tx/remove-task-file-part
+                    part-id user)]})
 
 (defcommand :task/start-review
   {:doc "Start review for task, sets status."

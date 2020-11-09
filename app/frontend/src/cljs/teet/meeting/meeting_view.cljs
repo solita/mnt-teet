@@ -7,11 +7,12 @@
             [teet.localization :refer [tr tr-enum] :as localization]
             teet.meeting.meeting-specs
             [teet.ui.project-context :as project-context]
+            [teet.project.project-view :as project-view]
             [teet.ui.icons :as icons]
             [garden.color :refer [lighten as-hex]]
             [teet.task.task-style :as task-style]
             [teet.project.project-style :as project-style]
-            [teet.ui.material-ui :refer [Paper Grid IconButton Divider Link]]
+            [teet.ui.material-ui :refer [Paper Grid IconButton Divider]]
             [teet.ui.buttons :as buttons]
             [teet.ui.form :as form]
             [teet.meeting.meeting-controller :as meeting-controller]
@@ -45,7 +46,7 @@
             [clojure.set :as set]
             [clojure.string :as str]
             [teet.link.link-view :as link-view]
-            [goog.functions :as functions]))
+            [teet.ui.panels :as panels]))
 
 
 (defn update-meeting-warning?
@@ -55,32 +56,39 @@
      [typography/WarningText
       (tr [:meeting :reviews-invalidated-warning-text])]]))
 
+(defn- meeting-merge [old new]
+  (merge old new
+         (when (contains? new :meeting/start)
+           {:date-set? true})))
+
 (defn meeting-form
-  [e! activity-id close-event form-atom]
-  (let [editing? (:db/id @form-atom)]
+  [{:keys [e! activity-id duplicate?]} close-event form-atom]
+  (let [editing? (and (not duplicate?) (:db/id @form-atom))
+        form-data @form-atom]
     [:<>
      (when editing?
        [context/consume :reviews?
         [update-meeting-warning?]])
      [form/form (merge
                   {:e! e!
-                   :value @form-atom
-                   :on-change-event (form/update-atom-event form-atom merge)
+                   :value form-data
+                   :on-change-event (form/update-atom-event form-atom meeting-merge)
                    :cancel-event close-event
                    :spec :meeting/form-data
-                   :save-event #(meeting-controller/->SubmitMeetingForm activity-id @form-atom close-event)}
+                   :save-event #(meeting-controller/->SubmitMeetingForm duplicate? activity-id form-data close-event)}
                   (when editing?
-                    {:delete (meeting-controller/->CancelMeeting activity-id (:db/id @form-atom) close-event)}))
+                    {:delete (meeting-controller/->CancelMeeting activity-id (:db/id form-data) close-event)}))
       ^{:attribute :meeting/title}
       [TextField {}]
       ^{:attribute :meeting/location}
       [TextField {}]
       ^{:attribute [:meeting/start :meeting/end]}
-      [date-picker/date-time-range-input {}]
+      [date-picker/date-time-range-input {:empty-date? (and duplicate?
+                                                            (not (:date-set? form-data)))}]
       ^{:attribute :meeting/organizer}
       [select/select-user {:e! e!}]]]))
 
-(defn- file-attachments [{:keys [e! drag-container-id drop-message attach-to files]}]
+(defn- file-attachments [{:keys [e! drag-container-id allow-delete? drop-message attach-to files]}]
   [project-context/consume
    (fn [{project-id :db/id}]
      [:<>
@@ -89,18 +97,18 @@
          [typography/BoldGreyText
           {:style {:margin "1rem 0"}}
           (tr [:common :files])]
-         [file-view/file-table
-          {:filtering? false
-           :actions? true
-           :border-color theme-colors/gray
-           :no-link? true
-           :attached-to attach-to
-           :columns #{:suffix :download :delete :meta}
-           :delete-action (fn [file]
-                            (e! (file-controller/map->DeleteAttachment
-                                  {:file-id (:db/id file)
-                                   :success-message (tr [:document :file-deleted-notification])
-                                   :attached-to attach-to})))}
+         [file-view/file-list2
+          (merge {:filtering? false
+                  :actions? true
+                  :no-link? true
+                  :attached-to attach-to
+                  :columns #{:suffix :download :delete :meta}}
+                 (when allow-delete?
+                   {:delete-action (fn [file]
+                                     (e! (file-controller/map->DeleteAttachment
+                                           {:file-id (:db/id file)
+                                            :success-message (tr [:document :file-deleted-notification])
+                                            :attached-to attach-to})))}))
           files]])
 
       [authorization-context/when-authorized :edit-meeting
@@ -120,22 +128,23 @@
           :style {:margin "0.5rem 0"}}
          (tr [:task :upload-files])]]]])])
 
-(defn- links-content [e! from links auth]
+(defn- links-content [e! from links editable?]
   [link-view/links {:e! e!
                     :links links
                     :from from
-                    :editable? (:edit-meeting auth)}])
+                    :editable? editable?}])
 
 (defn- meeting-decision-content [e! {id :db/id
                                      body :meeting.decision/body
                                      files :file/_attached-to
-                                     links-from :link/_from}]
+                                     links-from :link/_from}
+                                 edit?]
   [:div {:id (str "decision-" id)}
    [rich-text-editor/display-markdown body]
-   [authorization-context/consume
-    [links-content e! [:meeting-decision id] links-from]]
+   [links-content e! [:meeting-decision id] links-from edit?]
    [file-attachments {:e! e!
                       :drag-container-id (str "decision-" id)
+                      :allow-delete? edit?
                       :drop-message (tr [:drag :drop-to-meeting-decision])
                       :attach-to [:meeting-decision id]
                       :files files}]])
@@ -145,53 +154,60 @@
   (if (seq meetings)
     [:div
      (doall
-       (for [{reviews :review/_of
-              :meeting/keys [title start end location agenda locked-at] :as meeting} meetings]
-         ^{:key (str (:db/id meeting))}
-         [common/hierarchical-container2
-          {:open? true
-           :heading [:div.meeting-heading {:style {:color :white}}
-                     [typography/Heading3 {:class (<class common-styles/margin-bottom "0.3")}
-                      title]
-                     [typography/SmallText
-                      [:b (format/date-with-time-range start end)]
-                      [:span " " location]]]
-           :heading-button [url/Link
-                            {:page :meeting :params {:meeting (str (:db/id meeting))}
-                             :component buttons/button-secondary}
-                            (tr [:dashboard :open])]
-           :children
-           (map-indexed
-             (fn [i [topic decision]]
-               {:key (:db/id decision)
-                :color theme-colors/gray-lighter
-                :open? true
-                :heading [:div
+       (for [[activity grouped-meetings] (group-by #(get-in % [:activity/_meetings 0]) meetings)]
+         ^{:key (str (:db/id activity))}
+         [:<>
+          (when (:activity/name activity)
+            [:div
+             {:style {:margin "1rem 0"}}
+             [typography/Heading3 (tr-enum (:activity/name activity))]])
+          (doall
+            (for [{reviews :review/_of
+                   :meeting/keys [title start number end location agenda locked-at] :as meeting} grouped-meetings]
+              ^{:key (:db/id meeting)}
+              [common/hierarchical-container2
+               {:open? true
+                :heading [:div.meeting-heading {:style {:color :white}}
                           [typography/Heading3 {:class (<class common-styles/margin-bottom "0.3")}
-                           (tr [:meeting :decision-topic] {:topic (:meeting.agenda/topic topic)
-                                                           :num (inc i)})]
+                           title " " (str "#" number)]
                           [typography/SmallText
-                           (tr [:meeting :approved-by]
-                               {:approvers
-                                (str/join ", " (map
-                                                 #(user-model/user-name (:review/reviewer %))
-                                                 reviews))})
-                           [:b " " (format/date locked-at)]]]
-                :content [meeting-decision-content e! decision]})
-             (for [topic agenda
-                   d (:meeting.agenda/decisions topic)]
-               [topic d]))}
-          theme-colors/gray]))]
+                           [:b (format/date-with-time-range start end)]
+                           [:span " " location]]]
+                :heading-button [url/Link
+                                 {:page :meeting :params (merge
+                                                           {:meeting (str (:db/id meeting))}
+                                                           (when-let [ac-id (:db/id activity)]
+                                                             {:activity (str ac-id)}))
+                                  :component buttons/button-secondary}
+                                 (tr [:dashboard :open])]
+                :children
+                (doall
+                  (for [topic agenda
+                        d (:meeting.agenda/decisions topic)]
+                    {:key (:db/id d)
+                     :color theme-colors/gray-lighter
+                     :open? true
+                     :heading [:div
+                               [typography/Heading3 {:class (<class common-styles/margin-bottom "0.3")}
+                                (tr [:meeting :decision-topic] {:topic (:meeting.agenda/topic topic)
+                                                                :num (:meeting.decision/number d)})]
+                               [typography/SmallText
+                                (tr [:meeting :approved-by]
+                                    {:approvers
+                                     (str/join ", " (map
+                                                      #(user-model/user-name (:review/reviewer %))
+                                                      reviews))})
+                                [:b " " (format/date locked-at)]]]
+                     :content [meeting-decision-content e! d false ;in history view never allow editing
+                               ]}))}
+               theme-colors/gray]))]))]
     [typography/GreyText (tr [:meeting :no-decisions-found])]))
 
 (defn activity-meetings-decisions
   [e! activity]
   (r/with-let [input-value (r/atom "")
-               search-value (r/atom "")
-               debounce-change (functions/debounce #(reset! search-value %) 250)
                on-change (fn [e]
-                           (reset! input-value (-> e .-target .-value))
-                           (debounce-change @input-value))]
+                           (reset! input-value (-> e .-target .-value)))]
     [:<>
      [TextField {:value @input-value
                  :placeholder (tr [:meeting :search-decisions])
@@ -199,16 +215,17 @@
                  :style {:display :block
                          :max-width "300px"
                          :margin-bottom "1rem"}}]
-     [query/query {:e! e!
-                   :query :meeting/activity-decision-history
-                   :args {:activity-id (:db/id activity)
-                          :search-term @search-value}
-                   :simple-view [decision-history-view e!]}]]))
+     [query/debounce-query
+      {:e! e!
+       :query :meeting/activity-decision-history
+       :args {:activity-id (:db/id activity)
+              :search-term @input-value}
+       :simple-view [decision-history-view e!]}
+      250]]))
 
 (defn meeting-information
-  [{:meeting/keys [start location end title activity-name] :as meeting}]
+  [{:meeting/keys [start number location end title activity-name] :as meeting}]
   [:div {:class (<class common-styles/flex-row-space-between)}
-
    [:div {:style {:display :flex}}
     [:div {:style {:width "120px"
                    :margin-right "0.5rem"}}
@@ -216,8 +233,12 @@
                  "–"
                  (format/time* end))]]
     [:div {:class (<class common-styles/margin-bottom 0.5)}
-     [url/Link {:page :meeting :params {:meeting (str (:db/id meeting))}}
-      title]
+     [url/Link {:page :meeting :params (merge
+                                         {:meeting (str (:db/id meeting))}
+                                         (when-let [activity-id (get-in meeting [:activity/_meetings 0 :db/id])]
+                                           {:activity (str activity-id)}))}
+      (str title (when number
+                   (str " #" number)))]
      (when activity-name
        [typography/SmallText
         (tr-enum activity-name)])]]
@@ -226,13 +247,16 @@
 
 
 (defn meetings-by-month-year
-  [meetings]
+  [meetings historical-order?]
   (let [month-year-meetings (group-by
                               (fn [meeting]
                                 (if-let [meeting-start (:meeting/start meeting)]
                                   (format/localized-month-year meeting-start)
                                   "no date given"))
-                              meetings)]
+                              meetings)
+        date-compare-fn (if historical-order?
+                          t/after?
+                          t/before?)]
     (when (seq meetings)
       [:div {:class (<class common-styles/margin-bottom 1)}
        (doall
@@ -250,8 +274,8 @@
                          (sort-by                           ;; gets [date-string meetings] sort the dates
                            first
                            (fn [x y]
-                             (t/after? (tc/from-date (format/date-string->date x))
-                                       (tc/from-date (format/date-string->date y))))))]
+                             (date-compare-fn (tc/from-date (format/date-string->date x))
+                                              (tc/from-date (format/date-string->date y))))))]
                 ^{:key date}
                 [:div {:class (<class common-styles/margin-bottom 1)}
                  [typography/Heading3 {:class (<class common-styles/margin-bottom 0.5)}
@@ -262,23 +286,21 @@
                      [meeting-information meeting]))]))]))])))
 
 
-(defn activity-meeting-history-view
-  [e! meetings]
+(defn meeting-history-view
+  [meetings]
   [:div
-   [meetings-by-month-year (sort-by
-                             :meeting/start
-                             (fn [x y]
-                               (t/after? (tc/from-date x)
-                                          (tc/from-date y)))
-                             meetings)]])
+   [meetings-by-month-year (->> meetings
+                                (sort-by
+                                  :meeting/start)
+                                reverse)
+    true]])
 
 (defn historical-activity-meetings
   [e! activity]
   [query/query {:e! e!
                 :query :meeting/activity-meeting-history
-                :args {:activity-eid (:db/id activity)}
-                :simple-view [activity-meeting-history-view e!]}])
-
+                :args {:activity-id (:db/id activity)}
+                :simple-view [meeting-history-view]}])
 
 (defn meeting-with-time-slot
   [meetings]
@@ -341,8 +363,7 @@
                   ^{:key (:db/id meeting)}
                   [meeting-information meeting]))]))
          [typography/GreyText (tr [:meeting :no-meetings])])]]
-     [meetings-by-month-year rest]]))
-
+     [meetings-by-month-year rest false]]))
 
 (defn activity-meetings-page-content
   [e! {:keys [query] :as app} activity]
@@ -401,7 +422,7 @@
      [:div
       [:div.project-navigator-add-meeting
 
-       [form/form-modal-button {:form-component [meeting-form e! activity-id]
+       [form/form-modal-button {:form-component [meeting-form {:e! e! :activity-id activity-id}]
                                 :form-value {:meeting/organizer (select-keys user [:db/id
                                                                                    :user/id
                                                                                    :user/given-name
@@ -416,49 +437,49 @@
 
 (defn meeting-page-structure [e! app project
                               main-content right-panel-content]
-  (let [[nav-w content-w] [3 6]]
+  (let [[navigator-w content-w] [3 (if right-panel-content 6 9)]]
     [project-context/provide
      {:project-id (:db/id project)
       :thk.project/id (:thk.project/id project)}
-     [:div.project-navigator-with-content {:class (<class project-style/page-container)}
-
-      [typography/Heading1 (or (:thk.project/project-name project)
-                               (:thk.project/name project))]
-      [Paper {:class (<class task-style/task-page-paper-style)}
-       [Grid {:container true
-              :wrap :nowrap
-              :spacing   0}
-        [Grid {:item true
-               :xs nav-w
-               :class (<class navigation-style/navigator-left-panel-style)}
-         [project-menu/project-menu e! app project true]
-         [project-navigator-view/project-navigator e! project app
-          {:dark-theme? true
-           :activity-link-page :activity-meetings
-           :activity-section-content activity-meetings-list
-           :add-activity? false}]]
-        [Grid {:item  true
-               :xs content-w
-               :style {:padding "2rem 1.5rem"
-                       :overflow-y :auto
-                       ;; content area should scroll, not the whole page because we
-                       ;; want map to stay in place without scrolling it
-                       }}
-         main-content]
-        [Grid {:item  true
-               :xs :auto
-               :style {:display :flex
-                       :flex    1
-                       :padding "1rem 1.5rem"
-                       :background-color theme-colors/gray-lightest}}
-         right-panel-content]]]]]))
+     [:<>
+      [project-view/project-header project]
+      [:div.project-navigator-with-content {:class (<class project-style/page-container)}
+       [Paper {:class (<class task-style/task-page-paper-style)}
+        [Grid {:container true
+               :wrap :nowrap
+               :spacing 0}
+         [Grid {:item true
+                :xs navigator-w
+                :class (<class navigation-style/navigator-left-panel-style)}
+          [project-menu/project-menu e! app project true]
+          [project-navigator-view/project-navigator e! project app
+           {:dark-theme? true
+            :activity-link-page :activity-meetings
+            :activity-section-content activity-meetings-list
+            :add-activity? false}]]
+         [Grid {:item true
+                :xs content-w
+                :style {:padding "2rem 1.5rem"
+                        :overflow-y :auto
+                        ;; content area should scroll, not the whole page because we
+                        ;; want map to stay in place without scrolling it
+                        }}
+          main-content]
+         (when right-panel-content
+           [Grid {:item true
+                  :xs :auto
+                  :style {:display :flex
+                          :flex 1
+                          :padding "1rem 1.5rem"
+                          :background-color theme-colors/gray-lightest}}
+            right-panel-content])]]]]]))
 
 (defn activity-meetings-view
   "Page structure showing project navigator along with content."
   [e! {{:keys [activity]} :params :as app} project]
   [meeting-page-structure e! app project
    [activity-meetings-page-content e! app (project-model/activity-by-id project activity)]
-   [:h1 "participants"]])
+   nil])
 
 (defn meeting-list [meetings]
   [:div
@@ -492,34 +513,46 @@
 
 (defn project-meeting-history
   [e! project]
-  [:h1 "project meeting history"])
+  [query/query {:e! e!
+                :query :meeting/project-meeting-history
+                :args {:project-id (:db/id project)}
+                :simple-view [meeting-history-view]}])
 
 (defn project-decisions
   [e! project]
-  [:h1 "decisionsa"])
+  (r/with-let [input-value (r/atom "")
+               on-change (fn [e]
+                           (reset! input-value (-> e .-target .-value)))]
+    [:<>
+     [TextField {:value @input-value
+                 :placeholder (tr [:meeting :search-decisions])
+                 :on-change on-change
+                 :style {:display :block
+                         :max-width "300px"
+                         :margin-bottom "1rem"}}]
+     [query/debounce-query
+      {:e! e!
+       :query :meeting/project-decision-history
+       :args {:project-id (:db/id project)
+              :search-term @input-value}
+       :simple-view [decision-history-view e!]}
+      250]]))
 
 (defn project-meetings-page-content [e! {query :query :as app} project]
-  (let [meetings (mapcat
-                  (fn [{:thk.lifecycle/keys [activities]}]
-                    (mapcat (fn [{meetings :activity/meetings
-                                  id :db/id}]
-                              (map #(assoc % :activity-id id) meetings))
-                            activities))
-                  (:thk.project/lifecycles project))]
-    [:<>
-     [typography/Heading1 (tr [:meeting :project-meetings-title])]
-     [tabs/tabs
-      query
-      [[:upcoming [upcoming-project-meetings project]]
-       [:history [project-meeting-history e! project]]
-       [:decisions [project-decisions e! project]]]]]))
+  [:<>
+   [typography/Heading1 (tr [:meeting :project-meetings-title])]
+   [tabs/tabs
+    query
+    [[:upcoming [upcoming-project-meetings project]]
+     [:history [project-meeting-history e! project]]
+     [:decisions [project-decisions e! project]]]]])
 
 (defn project-meetings-view
   "Project meetings"
   [e! app project]
   [meeting-page-structure e! app project
    [project-meetings-page-content e! app project]
-   [:h1 "participants"]])
+   nil])
 
 
 (defn agenda-form [e! meeting close-event form-atom]
@@ -536,7 +569,8 @@
                                      (-> @form-atom
                                          (update :meeting.agenda/body
                                                  (fn [editor-state]
-                                                   (when (and editor-state (not (string? editor-state)))
+                                                   (if (or (string? editor-state) (nil? editor-state))
+                                                     editor-state
                                                      (rich-text-editor/editor-state->markdown editor-state)))))
                                      close-event)}
                      (when-let [agenda-id (:db/id @form-atom)]
@@ -552,13 +586,13 @@
   [:div.participant {:class (<class common-styles/flex-row)}
    [:div.participant-name {:class (<class common-styles/flex-table-column-style 45)}
     [user-model/user-name participant]]
-   [:div.participant-role {:class (<class common-styles/flex-table-column-style 45)}
-    (tr-enum role)]
-   [:div.participant-remove {:class (<class common-styles/flex-table-column-style 10)}
-    (when on-remove
-      [IconButton {:size :small
-                   :on-click #(on-remove participation)}
-       [icons/content-clear {:font-size :small}]])]])
+   [:div.participant-role {:class (<class common-styles/flex-table-column-style 55 :space-between)}
+    [:span (tr-enum role)]
+    [:div
+     (when on-remove
+       [IconButton {:size :small
+                    :on-click #(on-remove participation)}
+        [icons/content-clear {:font-size :small}]])]]])
 
 
 (defn- add-meeting-participant [e! meeting]
@@ -615,7 +649,10 @@
   (r/with-let [remove-participant! (fn [participant]
                                      (log/info "Remove participant:" participant)
                                      (e! (meeting-controller/->RemoveParticipant (:db/id participant))))]
-    (let [can-edit-participants? (and edit-rights? (meeting-model/user-is-organizer-or-reviewer? user meeting))]
+    (let [can-edit-participants? (and edit-rights? (meeting-model/user-is-organizer-or-reviewer? user meeting))
+          participations (sort-by
+                         meeting-model/role-id-name
+                         participations)]
       [:div.meeting-participants {:style {:flex 1}}
        [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}
         (tr [:meeting :participants-title])]
@@ -654,13 +691,15 @@
                                      (-> @form-atom
                                          (update :meeting.decision/body
                                                  (fn [editor-state]
-                                                   (when (and editor-state (not (string? editor-state)))
+                                                   (if (or (string? editor-state) (nil? editor-state))
+                                                     editor-state
                                                      (rich-text-editor/editor-state->markdown editor-state)))))
                                      close-event)}
                      (when (:db/id @form-atom)
                        {:delete (meeting-controller/->DeleteDecision (:db/id @form-atom) close-event)}))
 
-    ^{:attribute :meeting.decision/body}
+    ^{:attribute :meeting.decision/body
+      :validate #(rich-text-editor/validate-rich-text-form-field-not-empty %)}
     [rich-text-editor/rich-text-field {}]]])
 
 (defn add-decision-component
@@ -674,21 +713,22 @@
 (defn- meeting-agenda-content [e! {id :db/id
                                    body :meeting.agenda/body
                                    files :file/_attached-to
-                                   links-from :link/_from}]
+                                   links-from :link/_from}
+                               edit?]
 
   [:div {:id (str "agenda-" id)}
    (when body
      [:div
       [rich-text-editor/display-markdown body]])
 
-   [authorization-context/consume
-    [links-content e! [:meeting-agenda id] links-from]]
+   [links-content e! [:meeting-agenda id] links-from edit?]
 
    [file-attachments {:e! e!
                       :drag-container-id (str "agenda-" id)
                       :drop-message (tr [:drag :drop-to-meeting-agenda])
                       :attach-to [:meeting-agenda id]
-                      :files files}]])
+                      :files files
+                      :allow-delete? edit?}]])
 
 (defn approval-status-symbol
   [status]
@@ -796,21 +836,19 @@
                                                       :modal-title (tr [:meeting :edit-agenda-modal-title])
                                                       :button-component [buttons/button-secondary {}
                                                                          (tr [:buttons :edit])]}])
-           :content [meeting-agenda-content e! agenda-topic]
-           :children (map-indexed
-                      (fn [i decision]
-                        {:key (:db/id decision)
-                         :heading [typography/Heading3 (tr [:meeting :decision-topic] {:topic topic
-                                                                                       :num (inc i)})]
-                         :heading-button (when edit?
-                                           [form/form-modal-button
-                                            {:form-component [decision-form e! (:db/id agenda-topic)]
-                                             :form-value decision
-                                             :modal-title (tr [:meeting :edit-decision-modal-title])
-                                             :button-component [buttons/button-secondary {:size :small}
-                                                                (tr [:buttons :edit])]}])
-                         :content [meeting-decision-content e! decision]})
-                      decisions)
+           :content [meeting-agenda-content e! agenda-topic edit?]
+           :children (for [d decisions]
+                       {:key (:db/id d)
+                        :heading [typography/Heading3 (tr [:meeting :decision-topic] {:topic topic
+                                                                                      :num (:meeting.decision/number d)})]
+                        :heading-button (when edit?
+                                          [form/form-modal-button
+                                           {:form-component [decision-form e! (:db/id agenda-topic)]
+                                            :form-value d
+                                            :modal-title (tr [:meeting :edit-decision-modal-title])
+                                            :button-component [buttons/button-secondary {:size :small}
+                                                               (tr [:buttons :edit])]}])
+                        :content [meeting-decision-content e! d edit?]})
            :after-children-component (when edit?
                                        [add-decision-component e! meeting agenda-topic])}
           theme-colors/gray-lighter]))]
@@ -833,25 +871,43 @@
   [authorization-context/consume
    [meeting-details* e! user meeting]])
 
+(defn meeting-duplicate [e! activity-id meeting close!]
+  (r/with-let [form (r/atom meeting)
+               close-event (form/callback-event close!)]
+    [panels/modal {:title (tr [:meeting :duplicate-meeting-modal-title])
+                   :max-width "md"}
+     [meeting-form {:e! e!
+                    :activity-id activity-id
+                    :duplicate? true}
+      close-event
+      form]]))
+
 (defn meeting-main-content
   [e! {:keys [params user query]} meeting]
-  (let [{:meeting/keys [title number locked?]} meeting]
-    [:div
-     [:div {:class (<class common-styles/heading-and-action-style)}
-      [typography/Heading2 {:class (<class common-styles/flex-align-center)}
-       title (when number (str " #" number)) (when locked? [icons/action-lock])]
-      [authorization-context/when-authorized :edit-meeting
-       [form/form-modal-button {:form-component [meeting-form e! (:activity params)]
-                                :form-value meeting
-                                :modal-title (tr [:meeting :edit-meeting-modal-title])
-                                :id "edit-meeting"
-                                :button-component [buttons/button-secondary
-                                                   {}
-                                                   (tr [:buttons :edit])]}]]]
-     [tabs/tabs
-      query
-      [[:details [meeting-details e! user meeting]]
-       [:notes [:div [:h1 "notes"]]]]]]))
+  (r/with-let [duplicate-open? (r/atom false)
+               open-duplicate! #(reset! duplicate-open? true)
+               close-duplicate! #(reset! duplicate-open? false)]
+    (let [{:meeting/keys [title number locked?]} meeting]
+      [:div
+       [:div {:class (<class common-styles/heading-and-action-style)}
+        [typography/Heading2 {:class (<class common-styles/flex-align-center)}
+         title (when number (str " #" number)) (when locked? [icons/action-lock])]
+        [authorization-context/when-authorized :edit-meeting
+         [form/form-modal-button {:form-component [meeting-form {:e! e! :activity-id (:activity params)}]
+                                  :form-value meeting
+                                  :modal-title (tr [:meeting :edit-meeting-modal-title])
+                                  :id "edit-meeting"
+                                  :button-component
+                                  [buttons/button-with-menu
+                                   {:items [{:label (tr [:buttons :duplicate])
+                                             :on-click open-duplicate!}]}
+                                   (tr [:buttons :edit])]}]]]
+       (when @duplicate-open?
+         [meeting-duplicate e! (:activity params) meeting close-duplicate!])
+       [tabs/tabs
+        query
+        [[:details [meeting-details e! user meeting]]
+         [:notes [:div [:h1 "notes"]]]]]])))
 
 
 (defn meeting-page [e! {:keys [params user query] :as app} {:keys [project meeting]}]

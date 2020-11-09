@@ -21,8 +21,11 @@
   (:import (java.util Date UUID)))
 
 
-(defn- project-custom-m-range [db project-eid]
-  (d/pull db '[:thk.project/custom-start-m :thk.project/custom-end-m] project-eid))
+(defn- geometry-update-attrs [db project-eid]
+  (d/pull db [:thk.project/project-name
+              :thk.project/custom-start-m
+              :thk.project/custom-end-m]
+          project-eid))
 
 (defcommand :thk.project/update
   {:doc "Edit project basic info"
@@ -30,7 +33,7 @@
    :payload {id :thk.project/id :as project-form}
    :project-id [:thk.project/id id]
    :authorization {:project/update-info {:eid [:thk.project/id id]
-                                          :link :thk.project/owner}}}
+                                         :link :thk.project/owner}}}
   (let [{db-before :db-before
          db :db-after} (tx [(merge (cu/without-nils
                                     (select-keys project-form
@@ -41,13 +44,13 @@
                                                   :thk.project/custom-start-m
                                                   :thk.project/custom-end-m]))
                                    (modification-meta user))])]
-    (when (not= (project-custom-m-range db-before [:thk.project/id id])
-                (project-custom-m-range db [:thk.project/id id]))
+    (when (not= (geometry-update-attrs db-before [:thk.project/id id])
+                (geometry-update-attrs db [:thk.project/id id]))
       (project-geometry/update-project-geometries!
        (environment/config-map {:api-url [:api-url]
                                 :api-secret [:auth :jwt-secret]
                                 :wfs-url [:road-registry :wfs-url]})
-        [(d/pull db '[:db/id :thk.project/name
+        [(d/pull db '[:db/id :thk.project/project-name :thk.project/name
                       :thk.project/road-nr :thk.project/carriageway
                       :thk.project/start-m :thk.project/end-m
                       :thk.project/custom-start-m :thk.project/custom-end-m]
@@ -138,7 +141,8 @@
    :project-id project-id
    :pre [(:user/person-id user)
          (user-spec/estonian-person-id? (:user/person-id user))]
-   :authorization {:project/edit-permissions {:link :thk.project/owner}}}
+   :authorization {:project/edit-permissions {:link :thk.project/owner}}
+   :audit? true}
   (assert (authorization-check/role-can-be-granted? role) "Can't grant role")
   (let [user-person-id (-> user
                            :user/person-id

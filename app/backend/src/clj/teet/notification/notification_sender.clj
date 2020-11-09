@@ -58,7 +58,7 @@
         db (d/db conn)
         notifications (notification-db/notifications-to-send db)
         now (java.util.Date.)
-        from (environment/ssm-param :email :from)
+        from (environment/config-value :email :from)
         base-url (environment/config-value :base-url)]
 
     (if (empty? notifications)

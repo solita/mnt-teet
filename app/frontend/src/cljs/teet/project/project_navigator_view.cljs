@@ -15,6 +15,7 @@
             [teet.ui.typography :as typography]
             [teet.task.task-style :as task-style]
             [teet.project.project-map-view :as project-map-view]
+            [teet.authorization.authorization-check :refer [when-authorized]]
             [teet.ui.panels :as panels]
             [teet.project.project-style :as project-style]
             [teet.project.task-model :as task-model]
@@ -214,7 +215,7 @@
    :padding "0.5rem"
    :margin-left "1rem"})
 
-(defn- activity-task-list [{:keys [e! dark-theme? disable-buttons? project-id rect-button]}
+(defn- activity-task-list [{:keys [e! dark-theme? project-id rect-button]}
                            {:keys [activity activity-state activity-id]}]
   (let [tasks (:activity/tasks activity)]
     [:<>
@@ -248,13 +249,14 @@
        [:div {:class (<class empty-section-style)}
         [typography/GreyText (tr [:project :activity :no-tasks])]])
      [:div #_{:class (<class item-class (= :done activity-state) dark-theme?)}
-      [:div.project-navigator-add-task
-       [rect-button {:size :small
-                     :disabled disable-buttons?
-                     :on-click (e! task-controller/->OpenAddTasksDialog activity-id)
-                     :start-icon (r/as-element
-                                   [icons/content-add])}
-        (tr [:project :add-task])]]]]))
+      [when-authorized :activity/add-tasks
+       activity
+       [:div.project-navigator-add-task
+        [rect-button {:size :small
+                      :on-click (e! task-controller/->OpenAddTasksDialog activity-id)
+                      :start-icon (r/as-element
+                                    [icons/content-add])}
+         (tr [:project :add-task])]]]]]))
 
 
 (defn- activity
@@ -288,7 +290,7 @@
                                          :activity-state activity-state}]])]]]))
 
 (defn project-navigator
-  [e! {:thk.project/keys [lifecycles] :as _project} {:keys [stepper] :as _app} _ _ _]
+  [e! {:thk.project/keys [lifecycles] :as project} {:keys [stepper] :as _app} _ _ _]
   (let [lifecycle-ids (mapv :db/id lifecycles)
         lc-id (:lifecycle stepper)
         old-stepper? (empty? (filter #(= lc-id %) lifecycle-ids))]
@@ -307,7 +309,6 @@
                     :thk.lifecycle/keys [activities estimated-end-date estimated-start-date type] :as lifecycle}]
               (let [last? (= (+ i 1) (count lifecycles))
                     lc-type (:db/ident type)
-                    disable-buttons? (= :thk.lifecycle-type/construction lc-type) ;; Disable buttons related to adding stages or tasks in construction until that part is more planned out
                     first-activity-status (activity-step-state (first activities))
                     lc-status (lifecycle-status lifecycle)
                     open? (= (str lc-id) (str (:lifecycle stepper)))]
@@ -335,36 +336,36 @@
                                             :activity-link-page activity-link-page
                                             :activity-section-content activity-section-content
                                             :dark-theme? dark-theme?
-                                            :disable-buttons? disable-buttons?
                                             :lc-id lc-id
                                             :rect-button rect-button
                                             :project-id id
                                             :params params})
                          (:thk.lifecycle/activities lifecycle))
                    (when add-activity?
-                     [:div {:class (<class item-class (= :done lc-status) dark-theme?)}
-                      (when last?
-                        [circle-svg {:status :not-started :size 20 :bottom? last? :dark-theme? dark-theme?}])
-                      [:div.project-navigator-add-activity
-                       {:style (merge {:position :relative}
-                                      (if last?
-                                        {:top "3px"}
-                                        {:top "-3px"
-                                         :padding-bottom "0.5rem"}))}
-                       [rect-button {:size :small
-                                     :disabled disable-buttons?
-                                     :on-click (e! project-controller/->OpenActivityDialog (str lc-id))
-                                     :start-icon (r/as-element
-                                                   [icons/content-add])}
-                        (tr [:project :add-activity lc-type])]]])]]]))
+                     [when-authorized :activity/create
+                      project
+                      [:div {:class (<class item-class (= :done lc-status) dark-theme?)}
+                       (when last?
+                         [circle-svg {:status :not-started :size 20 :bottom? last? :dark-theme? dark-theme?}])
+                       [:div.project-navigator-add-activity
+                        {:style (merge {:position :relative}
+                                       (if last?
+                                         {:top "3px"}
+                                         {:top "-3px"
+                                          :padding-bottom "0.5rem"}))}
+                        [rect-button {:size :small
+                                      :on-click (e! project-controller/->OpenActivityDialog (str lc-id))
+                                      :start-icon (r/as-element
+                                                    [icons/content-add])}
+                         (tr [:project :add-activity lc-type])]]]])]]]))
             lifecycles))]])))
 
 
 (defn project-task-navigator
   [e! project app dark-theme?]
   [project-navigator e! project app {:dark-theme? dark-theme?
-                                                :activity-section-content activity-task-list
-                                                :add-activity? true}])
+                                     :activity-section-content activity-task-list
+                                     :add-activity? true}])
 
 (defmulti project-navigator-dialog (fn [_opts dialog]
                                      (:type dialog)))
@@ -394,8 +395,9 @@
 
 (defn project-navigator-with-content
   "Page structure showing project navigator along with content."
-  [{:keys [e! project app column-widths]
-    :or {column-widths [3 6 :auto]}
+  [{:keys [e! project app column-widths show-map?]
+    :or {column-widths [3 6 :auto]
+         show-map? true}
     :as opts} content]
   (let [[nav-w content-w] column-widths]
     [project-context/provide
@@ -422,8 +424,9 @@
                        ;; want map to stay in place without scrolling it
                        }}
          content]
-        [Grid {:item  true
-               :xs :auto
-               :style {:display :flex
-                       :flex    1}}
-         [project-map-view/project-map e! app project]]]]]]))
+        (when show-map?
+          [Grid {:item  true
+                 :xs :auto
+                 :style {:display :flex
+                         :flex    1}}
+           [project-map-view/project-map e! app project]])]]]]))

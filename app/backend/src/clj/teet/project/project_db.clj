@@ -91,12 +91,6 @@
            :thk.lifecycle/_activities 0
            :thk.project/_lifecycles 0 :db/id]))
 
-(defn project-thk-id [db meeting-id]
-  (get-in (du/entity db meeting-id)
-          [:activity/_meetings 0
-           :thk.lifecycle/_activities 0
-           :thk.project/_lifecycles 0 :thk.project/id]))
-
 (defn meeting-activity-id [db meeting-id]
   (get-in (du/entity db meeting-id)
           [:activity/_meetings 0
@@ -105,6 +99,8 @@
 (defn meeting-parents [db meeting project-eid]
   (let [project (du/entity db project-eid)
         activity-eid (meeting-activity-id db (:db/id meeting))]
+    (assert (some? (:db/id meeting)) meeting)
+    (assert (some? project-eid))
     {:meeting-eid (:db/id meeting)
      :project-thk-id (:thk.project/id project)
      :activity-eid activity-eid}))
@@ -139,6 +135,20 @@
     (if (= default-value ::throw)
       (db-api/bad-request! "No such document")
       default-value))))
+
+(defn file-part-project-id
+  [db file-part-id]
+  (or
+    (ffirst
+      (d/q '[:find ?project
+             :in $ ?part
+             :where
+             [?part :file.part/task ?task]
+             [?activity :activity/tasks ?task]
+             [?lifecycle :thk.lifecycle/activities ?activity]
+             [?project :thk.project/lifecycles ?lifecycle]]
+           db file-part-id))
+    (db-api/bad-request! "No such filepart")))
 
 (defn project-fetch-pattern
   [opts]

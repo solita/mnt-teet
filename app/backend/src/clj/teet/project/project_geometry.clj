@@ -19,7 +19,7 @@
   {:pre [(valid-api-info? api)]}
   (let [road-part-cache (atom {})
         request-body (for [{id :db/id
-                            :thk.project/keys [name road-nr carriageway
+                            :thk.project/keys [project-name name road-nr carriageway
                                                start-m end-m
                                                custom-start-m custom-end-m]}
                            projects
@@ -34,7 +34,7 @@
                                                                           (or custom-end-m end-m))]]
                        {:id (str id)
                         :type "project"
-                        :tooltip name
+                        :tooltip (or project-name name)
                         :geometry_wkt (geo/line-string-to-wkt geometry)})]
     (when (not-empty request-body)
       (let [response @(client/post

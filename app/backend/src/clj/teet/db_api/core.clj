@@ -4,7 +4,8 @@
             [datomic.client.api :as d]
             [teet.meta.meta-query :as meta-query]
             [teet.log :as log]
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [teet.util.datomic :as du]))
 
 (defmulti query
   "Execute a given named query.
@@ -84,7 +85,7 @@
   "Do not call directly. Use defcommand and defquery."
   [request-type request-name
    {:keys [spec payload args context unauthenticated? authorization project-id transact
-           config] :as options}
+           config audit?] :as options}
    & body]
 
   (assert (or (and unauthenticated?
@@ -102,6 +103,9 @@
   (assert (map? options) "Options must be a map")
   (assert (or (not (contains? options :authorization))
               (map? authorization)) "Authorization option must be a map")
+  (assert (or (not (contains? options :audit?))
+              (boolean? audit?))
+          ":audit? must be boolean")
   (let [authz-rule-names (authorization-check/authorization-rule-names)]
     (doseq [[k _] authorization]
       (assert (authz-rule-names k)
@@ -137,6 +141,12 @@
                                  [symbol `(teet.environment/config-value ~@path)])
                                config))]
 
+               ;; Add the attempted call of the action to audit log
+               ~(when audit?
+                  ;; Unauthenticated commands may not have user id
+                  `(when (:user/id ~-user)
+                     (audit ~request-name
+                            ~-payload)))
                ;; Check user is logged in
                ~@(when-not unauthenticated?
                    [`(when (nil? ~-user)
@@ -147,23 +157,23 @@
 
                     ;; Go through the declared authorization requirements
                     ;; and try to find user permissions that satisfy them
-                    `(when-not (every? (fn [[functionality# {entity-id# :db/id
-                                                             eid# :eid
-                                                             access# :access
-                                                             link# :link
-                                                             :as options#}]]
-                                         (authorization-check/authorized?
-                                          ~-user functionality#
-                                          (merge
-                                           (when link#
-                                             {:link link#})
-                                           {:access access#
-                                            :project-id ~-proj-id
-                                            :entity (when (or entity-id# eid#)
-                                                      (apply meta-query/entity-meta ~-db (or entity-id# eid#)
-                                                             (when link#
-                                                               [link#])))})))
-                                       ~authorization)
+                    `(when-not
+                         (every?
+                          (fn [[functionality# {entity-id# :db/id
+                                                eid# :eid
+                                                access# :access
+                                                link# :link
+                                                :as options#}]]
+                            (let [id# (or entity-id# eid#)]
+                              (authorization-check/authorized?
+                               ~-user functionality#
+                               (merge
+                                (when link#
+                                  {:link link#})
+                                {:access access#
+                                 :project-id ~-proj-id
+                                 :entity (when id# (du/entity ~-db id#))}))))
+                          ~authorization)
                        (log/warn "Failed to authorize " ~request-name " for user " ~-user)
                        (throw (ex-info "Request authorization failed"
                                        {:status 403
@@ -243,6 +253,9 @@
                   Datomic. If specified, body must be omitted.
                   The command will automatically return the tempids
                   as the result when transact is used.
+
+  :audit?         Optional boolean (default false) that determines whether the
+                  attempt to call the given action is logged in the audit log.
 
 
   Authorization rules:

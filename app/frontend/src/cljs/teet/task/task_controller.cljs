@@ -52,6 +52,9 @@
 (defrecord SaveAddTasksForm [activity-name])
 (defrecord SaveAddTasksResponse [response])
 (defrecord CloseAddTasksDialog [])
+(defrecord SavePartForm [close-event task-id form-data])
+(defrecord DeleteFilePart [close-event part-id])
+
 
 (extend-protocol t/Event
   SubmitResults
@@ -62,6 +65,34 @@
            :payload {:task-id (common-controller/->long (:task params))}
            :success-message (tr [:task :submit-results-success])
            :result-event common-controller/->Refresh}))
+
+  SavePartForm
+  (process-event [{task-id :task-id
+                   form-data :form-data
+                   close-event :close-event} app]
+    (let [editing? (boolean (:db/id form-data))]
+      (t/fx app
+            {:tuck.effect/type :command!
+             :command (if editing?
+                        :task/edit-part
+                        :task/create-part)
+             :success-message (if editing?
+                                (tr [:task :part-edited-succesfully])
+                                (tr [:task :part-added-succesfully]))
+             :payload {:task-id task-id
+                       :part-id (:db/id form-data)
+                       :part-name (:file.part/name form-data)}
+             :result-event (partial common-controller/->ModalFormResult close-event)})))
+
+  DeleteFilePart
+  (process-event [{close-event :close-event
+                   part-id :part-id} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :task/delete-part
+           :payload {:part-id part-id}
+           :success-message (tr [:task :part-deleted-successfully])
+           :result-event (partial common-controller/->ModalFormResult close-event)}))
 
   StartReview
   (process-event [_ {params :params :as app}]

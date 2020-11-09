@@ -1,16 +1,16 @@
 (ns teet.comment.comment-model)
 
 (def user-mention-pattern
-  "Regex pattern for user mentions, like @[name](id), eg. @[Carla Consultant](123456)"
-  #"(@\[[^\]]+\]\(\d+\))")
+  "Regex pattern for user mentions, like @[name](uuid), eg. @[Carla Consultant](e521cf0a-152b-4424-9fc8-c85c093037aa)"
+  #"(@\[[^\]]+\]\([A-Fa-f0-9-]+\))")
 
 (def user-mention-name-pattern
   "Regex pattern for extracting user name from mention."
-  #"^@\[([^\]]+)\]\(\d+\)$")
+  #"^@\[([^\]]+)\]\([A-Fa-f0-9-]+\)$")
 
 (def user-mention-id-pattern
   "Regex pattern for extracting user id from mention."
-  #"^@\[[^\]]+\]\((\d+)\)$")
+  #"^@\[[^\]]+\]\(([A-Fa-f0-9-]+)\)$")
 
 (def type->comments-attribute
   {:task :task/comments

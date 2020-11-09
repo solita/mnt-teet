@@ -1,5 +1,6 @@
 (ns teet.notification.notification-controller
-  (:require [tuck.core :as t]))
+  (:require [tuck.core :as t]
+            [teet.log :as log]))
 
 (defrecord Acknowledge [notification-id on-acknowledge])
 (defrecord AcknowledgeMany [notification-ids on-acknowledge])
@@ -42,6 +43,7 @@
 
   NavigateToResult
   (process-event [{:keys [result]} app]
+    (log/debug "NavigateToResult" result)
     (t/fx app
           (merge {:tuck.effect/type :navigate
                   :params {}

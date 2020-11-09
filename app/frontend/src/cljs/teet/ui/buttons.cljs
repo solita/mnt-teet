@@ -1,6 +1,8 @@
 (ns teet.ui.buttons
   (:require [herb.core :refer [<class]]
-            [teet.ui.material-ui :refer [Button ButtonBase Link DialogActions DialogContentText IconButton]]
+            [teet.ui.material-ui :refer [Button ButtonBase Link DialogActions DialogContentText
+                                         IconButton MenuList MenuItem
+                                         ClickAwayListener Popper Paper]]
             [teet.ui.icons :as icons]
             [teet.ui.util :as util]
             [teet.localization :refer [tr]]
@@ -106,9 +108,13 @@
   (util/make-component Link {:component :button
                              :type      :button}))
 
+
 (defn delete-button-with-confirm
-  [{:keys [action modal-title modal-text style trashcan? small? icon-position close-on-action? id]
+  [{:keys [action modal-title modal-text style trashcan? small? icon-position close-on-action? id
+           confirm-button-text cancel-button-text]
     :or {icon-position :end
+         confirm-button-text (tr [:buttons :delete])
+         cancel-button-text (tr [:buttons :cancel])
          close-on-action? true}}
    button-content]
   (r/with-let [open-atom (r/atom false)
@@ -123,22 +129,23 @@
                                 [button-secondary
                                  {:on-click close
                                   :id (str "cancel-delete")}
-                                 (tr [:buttons :cancel])]
+                                 cancel-button-text]
                                 [button-warning
                                  {:id (str "confirm-delete")
                                   :on-click (if close-on-action?
                                               #(do (action)
                                                    (close))
                                               action)}
-                                 (tr [:buttons :delete])]]}
+                                 confirm-button-text]]}
       [DialogContentText
        (if modal-text
          modal-text
          (tr [:common :deletion-modal-text]))]]
      (cond
        trashcan?
-       [IconButton {:on-click open}
-        [icons/action-delete]]
+       [IconButton {:on-click open
+                    :size :small}
+        [icons/action-delete-outlined]]
 
        small?
        [button-text-warning (merge {:on-click open
@@ -178,3 +185,27 @@
                :disabled disabled?
                :class (<class add-button-style disabled?)}
    label])
+
+(defn- button-with-menu-item [{:keys [label on-click]}]
+  [MenuItem {:on-click on-click}
+   label])
+
+(defn button-with-menu [{:keys [on-click items]} content]
+  (r/with-let [open? (r/atom false)
+               anchor-el (atom nil)
+               set-anchor! #(reset! anchor-el %)
+               open! #(reset! open? true)
+               close! #(reset! open? false)]
+    [:div.button-with-menu
+     [button-primary {:on-click on-click}
+      content]
+     [IconButton {:on-click open!
+                  :ref set-anchor!}
+      [icons/navigation-expand-more]]
+     [Popper {:open @open?
+              :anchor-el @anchor-el
+              :placement "bottom-start"}
+      [ClickAwayListener {:on-click-away close!}
+       [Paper
+        [MenuList {}
+         (util/mapc button-with-menu-item items)]]]]]))

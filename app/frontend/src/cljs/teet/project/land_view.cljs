@@ -439,9 +439,9 @@
          [Link {:style {:display :block}
                 :href (url/set-query-param :modal "unit" :modal-target teet-id :modal-page "files")}
           [query/query {:e! e!
-                        :query :land/file-count-by-position-number
+                        :query :land/file-count-by-sequence-number
                         :args {:thk.project/id (:thk.project/id project-info)
-                               :file/pos-number saved-pos}
+                               :file/sequence-number saved-pos}
                         :simple-view [(fn estate-comment-count [c]
                                         [common/count-chip {:label c}])]
                         :loading-state "-"}]
@@ -476,7 +476,6 @@
 (defn estate-group
   [e! project-info open-estates cadastral-forms estate-form [estate-id units]]
   (let [estate (:estate (first units))
-
         ;;these are all done just to calculate the total cost for the estate, there might be an easier way
         estates-land-acquisitions (land-model/estate-land-acquisitions estate-id
                                                                        (:land/units project-info)
@@ -914,7 +913,7 @@
       (for [{:keys [kirje-id type content lopp-kpv]} contact-methods
             :when (and content
                        (not lopp-kpv)
-                       (or (= type :email) (= type :phone)))]
+                       (or (= type :email) (= type :phone) (= type :phone2)))]
         ^{:key (str kirje-id)}
         [key-value [(tr [:contact type]) content]]))]))
 
@@ -986,12 +985,13 @@
                            (:land-acquisition/pos-number %))
                         (:land-acquisitions project))]
        [query/query {:e! e!
-                     :query :land/files-by-position-number
+                     :query :land/files-by-sequence-number
                      :args {:thk.project/id (:thk.project/id project)
-                            :file/pos-number pos}
-                     :simple-view [file-view/file-table {:link-download? true
-                                                         :actions? true
-                                                         :comment-action #(reset! selected-file %)}]}]
+                            :file/sequence-number pos}
+                     :simple-view [file-view/file-list2-with-search
+                                   {:link-to-new-tab? true
+                                    :land-acquisition? true}]}]
+
        [:span (tr [:land :no-position-number])])
      (when-let [f @selected-file]
        [comments-view/lazy-comments {:e! e!

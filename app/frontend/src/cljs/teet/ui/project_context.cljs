@@ -2,7 +2,7 @@
   (:require [teet.ui.context :as context]))
 
 (defn provide [context child]
-  {:pre [(:thk.project/id context)]}
+  (assert (:thk.project/id context) (str "got context without project id: " (pr-str context)))
   (context/provide :project-context context child))
 
 (defn consume [component-fn]

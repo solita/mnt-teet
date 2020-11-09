@@ -15,8 +15,7 @@
             [clojure.string :as str]
             [teet.integration.postgrest :as postgrest]
             [cheshire.core :as cheshire])
-  (:import (java.time LocalDate)
-           (java.time.format DateTimeFormatter)))
+  (:import (java.time.format DateTimeFormatter)))
 
 (defn prepare [form]
   (walk/prewalk
@@ -138,18 +137,21 @@
   (.format (java.time.LocalDate/now) DateTimeFormatter/ISO_LOCAL_DATE))
 
 (defn backup* [_event]
-  (let [bucket (environment/ssm-param :s3 :backup-bucket)
-        env (environment/ssm-param :env)
-        db (d/db (environment/datomic-connection))]
-      (s3/write-file-to-s3 {:to {:bucket bucket
-                                 :file-key (str env "-backup-"
-                                                (current-iso-date)
-                                                ".edn.zip")}
-                            :contents (ring-io/piped-input-stream (partial backup-to db))})))
+  (let [bucket (environment/config-value :backup :bucket-name)
+        env (environment/config-value :env)
+        db (d/db (environment/datomic-connection))
+        file-key (str env "-backup-"
+                      (current-iso-date)
+                      ".edn.zip")]
+    (log/info "Starting TEET backup to bucket: "
+              bucket ", file: " file-key)
+    (s3/write-file-to-s3 {:to {:bucket bucket
+                               :file-key file-key}
+                          :contents (ring-io/piped-input-stream (partial backup-to db))})))
 
 (defn backup [_event]
   (future
-    backup* _event)
+    (backup* _event))
   "{\"success\": true}")
 
 (defn test-backup [db]
@@ -198,31 +200,6 @@
               :in $
               :where [?f :file/name _]]
             (d/db conn))))
-
-;; Match and replace mentions like "@[user name](user db id)"
-;; with new user ids
-(defn replace-comment-mention-ids [txt tempids]
-  (str/replace txt
-               #"@\[([^\]]+)\]\((\d+)\)"
-               (fn [[_ name id]]
-                 (str "@[" name "](" (tempids id) ")"))))
-
-;; "hei @[Benjamin Boss](92358976733956) mitä kuuluu?"
-(defn rewrite-comment-mentions! [{:keys [conn tempids] :as ctx}]
-  (let [comments (map first
-                      (d/q '[:find (pull ?c [:db/id :comment/comment])
-                             :where
-                             [?c :comment/comment ?txt]
-                             [(clojure.string/includes? ?txt "@[")]]
-                           (d/db conn)))]
-    (log/info "Rewriting " (count comments) " with user mentions")
-    (d/transact conn
-                {:tx-data (vec (for [{id :db/id txt :comment/comment} comments
-                                     :let [new-txt (replace-comment-mention-ids txt tempids)]]
-                                 {:db/id id
-                                  :comment/comment new-txt}))})
-    (assoc ctx :comments-with-mentions-rewritten (count comments))))
-
 
 (defn replace-entity-ids!
   "Replace entity ids in postgres entity table. List of ids
@@ -341,7 +318,6 @@
              download-backup-file
              prepare-database-for-restore
              restore-file
-             rewrite-comment-mentions!
              replace-entity-ids!
              delete-backup-file)
       (catch Exception e

@@ -10,7 +10,9 @@
             [teet.ui.util :as util]
             [teet.ui.buttons :as buttons]
             [teet.ui.material-ui :refer [Divider Link]]
-            [teet.ui.common :as common])
+            [teet.ui.common :as common]
+            [teet.util.string :as string]
+            [clojure.string :as cljstr])
   (:require-macros [teet.util.js :refer [js>]]))
 
 (def ^:private Editor (r/adapt-react-class draft-js/Editor))
@@ -135,6 +137,17 @@
   (js>
    (export-markdown/stateToMarkdown (.getCurrentContent editor-state))))
 
+(defn validate-rich-text-form-field-not-empty
+  [value]
+  (when (or
+          (nil? value)
+          (and (string? value) (empty? value))
+          (and (not (string? value))
+               (every?
+                 empty?
+                 (string/words (cljstr/replace (editor-state->markdown value) #"\u200b" "")))))
+    "Rich text editor can't be empty"))
+
 (def ^:private decorator
   (draft-js/CompositeDecorator. #js [#js {:strategy findLinkWithRegex
                                           :component (r/reactify-component link-comp)}]))
@@ -152,7 +165,7 @@
   :value      current draftjs EditorState object (or nil for empty)
   :on-change  callback to update editor state"
 
-  [{:keys [value on-change id label required]}]
+  [{:keys [value on-change id label required error]}]
   (js>
    (let [read-only? (nil? on-change)
          editorState (or value (.createEmpty draft-js/EditorState decorator))
@@ -182,8 +195,7 @@
           label (when required
                   [common/required-astrix])])
        [:div (merge {:on-click focus-editor}
-
-                    (when-not read-only? {:class (<class editor-style false)}))
+                    (when-not read-only? {:class (<class editor-style error)}))
         (when-not read-only?
           [:<>
            [block-style-controls editorState blockToggle]
@@ -209,10 +221,11 @@
 
 (defn rich-text-field
   "Rich text input that can be used in forms."
-  [{:keys [value on-change label required]}]
+  [{:keys [value on-change label required error]}]
   [:f> wysiwyg-editor {:value (if (string? value)
                                 (markdown->editor-state value)
                                 value)
                        :label label
                        :required required
+                       :error error
                        :on-change on-change}])

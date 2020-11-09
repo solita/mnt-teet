@@ -6,7 +6,7 @@
 (def links-from-pattern
   "Pull pattern to fetch link info originating from this entity.
   Fetches data needed for expand-links to operate on."
-  {:link/_from [:db/id :link/to :link/type]})
+  {:link/_from [:db/id :link/to :link/external-id :link/type]})
 
 (def from-types
   "Defines the types of entities that can be the source of the link.
@@ -15,17 +15,17 @@ links can be added."
   {:meeting-agenda {:path-to-project [:meeting/_agenda :activity/_meetings 0
                                       :thk.lifecycle/_activities 0
                                       :thk.project/_lifecycles 0 :db/id]
-                    :allowed-link-types #{:task}}
+                    :allowed-link-types #{:task :cadastral-unit :estate :file}}
    :meeting-decision {:path-to-project [:meeting.agenda/_decisions
                                         :meeting/_agenda :activity/_meetings 0
                                         :thk.lifecycle/_activities 0
                                         :thk.project/_lifecycles 0 :db/id]
-                      :allowed-link-types #{:task}}})
+                      :allowed-link-types #{:task :cadastral-unit :estate :file}}})
 
 (def link-types
   "Defines what types of links can be added. Each link type
-defines what fields are pulled for display when fetching the
-linked entity."
+  defines what fields are pulled for display when fetching the
+  linked entity."
   {:task {:display-attributes [:task/type
                                {:task/assignee [:user/given-name :user/family-name]}
                                :task/estimated-end-date

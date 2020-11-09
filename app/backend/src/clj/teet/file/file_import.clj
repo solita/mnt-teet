@@ -25,6 +25,18 @@
 (defmethod import-by-suffix "ags" [ctx]
   (ags-import/import-project-ags-files ctx))
 
+(defn- file-key->project-id [db file-key]
+  (ffirst
+   (d/q '[:find ?project
+          :in $ ?file-key
+          :where
+          [?file :file/s3-key ?file-key]
+          [?task :task/files ?file]
+          [?activity :activity/tasks ?task]
+          [?lifecycle :thk.lifecycle/activities ?activity]
+          [?project :thk.project/lifecycles ?lifecycle]]
+        db file-key)))
+
 (defstep extract-project-from-filename
   {:doc "Extract project by looking it up from file id"
    :in {fd {:spec ::integration-s3/file-descriptor
@@ -35,26 +47,22 @@
               :path-kw :conn}}
    :out {:spec ::project-model/id
          :default-path [:project]}}
-  (let [[_ file-id-part] (re-find #"^(\d+)-.*$" (:file-key fd))
-        file-id (Long/parseLong file-id-part)
-        file (du/entity (d/db conn) file-id)
-        project-id (get-in file [:task/_files 0
-                                 :activity/_tasks 0
-                                 :thk.lifecycle/_activities 0
-                                 :thk.project/_lifecycles 0
-                                 :db/id])]
-    (when-not project-id
-      (throw (ex-info "Unable to determine project for uploaded file"
-                      {:file-descriptor fd})))
+  (let [project-id (file-key->project-id (d/db conn) (:file-key fd))]
     (log/info "Uploaded file" (:file-key fd) "belongs to project" project-id)
     project-id))
 
+(defn import-file [ctx]
+  (when (:project ctx)
+    (import-by-suffix ctx))
+  ctx)
+
 (defn import-uploaded-file [event]
-  (ctx-> {:event event
-          :conn (environment/datomic-connection)
-          :api-url (environment/config-value :api-url)
-          :api-secret (environment/config-value :auth :jwt-secret)}
-         integration-s3/read-trigger-event
-         extract-project-from-filename
-         import-by-suffix)
-  "ok")
+  (future
+    (ctx-> {:event event
+            :conn (environment/datomic-connection)
+            :api-url (environment/config-value :api-url)
+            :api-secret (environment/config-value :auth :jwt-secret)}
+           integration-s3/read-trigger-event
+           extract-project-from-filename
+           import-file))
+  "{\"success\": true}")

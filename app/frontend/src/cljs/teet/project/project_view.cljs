@@ -77,7 +77,7 @@
   []
   {:padding "0 1.875rem 1.5rem 1.875rem"})
 
-(defn- project-header [project]
+(defn project-header [project]
   (let [thk-url (project-info/thk-url project)]
     [:div {:class (<class project-header-style)}
      [:div {:style {:display :flex
@@ -501,8 +501,9 @@
                             :button-component [buttons/button-secondary {:size :small}
                                                (tr [:buttons :edit])]}]])
 
-(defmethod project-menu/project-tab-action :activities [_ e! _app project]
-  [project-timeline-view/timeline project])
+(defmethod project-menu/project-tab-action :activities [_ e! {page :page :as _app} project]
+
+  [project-timeline-view/timeline (not= page :project) project])
 
 (defn edit-project-details
   [e! project close!]
@@ -681,6 +682,7 @@
 (defn project-page
   "Shows the normal project view for initialized projects, setup wizard otherwise."
   [e! app project]
+  (log/debug "project-page: project id" (:thk.project/id project))
   [project-context/provide
    {:db/id (:db/id project)
     :thk.project/id (:thk.project/id project)}

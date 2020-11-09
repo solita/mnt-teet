@@ -11,3 +11,5 @@
 (defonce user (r/cursor app [:user]))
 
 (defonce action-permissions (r/cursor app [:authorization/permissions]))
+
+(defonce config (r/cursor app [:config]))

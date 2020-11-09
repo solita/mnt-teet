@@ -11,18 +11,17 @@
   (when date
     (.toLocaleDateString date "et-EE")))
 
-(defn date-time
-  "Format date and time in human readable locale specific format."
-  [date]
-  (when date
-    (.toLocaleString date "et-EE")))
-
 (defn time*
   "Format time with minute resolution"
   [date]
   (when date
     (gstr/format "%02d:%02d" (.getHours date) (.getMinutes date))))
 
+(defn date-time
+  "Format date to a dd.mm.yyyy hh:mm"
+  [date-obj]
+  (when date-obj
+    (str (date date-obj) " " (time* date-obj))))
 
 (defn date-with-time-range
   [date1 date2]

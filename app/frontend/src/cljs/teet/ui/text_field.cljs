@@ -6,7 +6,7 @@
             [teet.common.common-styles :as common-styles]))
 
 (defn- input-field-style
-  [error multiline read-only? start-icon? type]
+  [error multiline read-only? start-icon? end-icon? type]
   (merge
     ^{:pseudo {:invalid {:box-shadow "inherit"
                          :outline "inherit"}
@@ -23,6 +23,8 @@
       {:resize :vertical})
     (when start-icon?
       {:padding-left "2.5rem"})
+    (when end-icon?
+      {:padding-right "2.5rem"})
     (when read-only?
       {:color :inherit
        :background-color theme-colors/gray-lighter})
@@ -51,6 +53,16 @@
    :right "10px"
    :transform "translateY(-50%)"})
 
+
+(defn file-end-style
+  []
+  {:color theme-colors/gray-light
+   :max-height "42px"
+   :position :absolute
+   :top "50%"
+   :right "10px"
+   :transform "translateY(-50%)"})
+
 (defn- start-icon-style
   []
   {:min-height "42px"
@@ -67,6 +79,14 @@
   []
   [:span {:class (<class end-icon-style)} "m²"])
 
+(defn file-end-icon
+  [file-type]
+  [:span {:class (<class file-end-style)} (str file-type)])
+
+(defn form-label-style
+  []
+  {:display :block})
+
 (defn TextField
   [{:keys [label id type error style input-button-icon read-only? inline?
            input-button-click required input-style
@@ -78,6 +98,7 @@
                   :textarea
                   :input)]
     [:label {:for id
+             :class (<class form-label-style)
              :style style}
      (when-not hide-label?
        (if label-element
@@ -97,7 +118,7 @@
                                :required :id :on-blur :placeholder :pattern])
                  {:style input-style
                   :class (herb/join (<class input-field-style error multiline read-only?
-                                            (boolean start-icon) type)
+                                            (boolean start-icon) (boolean end-icon) type)
                                     input-class)}
                  (when read-only?
                    {:disabled true})
@@ -105,7 +126,7 @@
                    {:rows rows
                     :maxrows maxrows}))]
       (when end-icon
-        [end-icon])
+        end-icon)
       (when (and input-button-click input-button-icon)
         [IconButton {:on-click input-button-click
                      :disable-ripple true

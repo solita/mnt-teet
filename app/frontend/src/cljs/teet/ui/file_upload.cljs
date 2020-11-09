@@ -2,19 +2,24 @@
   (:require [clojure.string :as str]
             [herb.core :refer [<class]]
             [reagent.core :as r]
-            [teet.ui.material-ui :refer [IconButton List ListItem
-                                         ListItemText ListItemSecondaryAction]]
-            [teet.ui.text-field :refer [TextField]]
+            [teet.ui.material-ui :refer [IconButton Table TableHead TableBody TableRow TableCell]]
+            [teet.ui.text-field :refer [TextField] :as text-field]
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.icons :as icons]
-            [teet.localization :refer [tr]]
+            [teet.localization :refer [tr tr-enum]]
             [teet.ui.typography :refer [Heading1 SectionHeading]]
             [teet.ui.format :as format]
             [teet.file.file-model :as file-model]
             teet.file.file-spec
             [teet.ui.buttons :as buttons]
             [teet.ui.drag :as drag]
-            [teet.log :as log]))
+            [teet.log :as log]
+            [teet.ui.select :as select]
+            [teet.file.filename-metadata :as filename-metadata]
+            [teet.ui.typography :as typography]
+            [teet.common.common-styles :as common-styles]
+            [teet.ui.common :as common-ui]
+            [teet.util.datomic :as du]))
 
 
 
@@ -84,60 +89,173 @@
          (when error
            {:border (str "solid 1px " theme-colors/error)})))                 ;;This should also use material ui theme.error
 
-(defn file-info
-  [{:file/keys [name size] :as _file} invalid-file-type? file-too-large?]
-  [:<>
-   (into [:span (merge {} (when invalid-file-type?
-                            {:style {:color theme-colors/error}}))]
-         (when invalid-file-type?
-           [(str/upper-case (file-model/filename->suffix name))
-            " "
-            [:a {:target "_blank"
-                 :href "https://confluence.mkm.ee/pages/viewpage.action?spaceKey=TEET&title=TEET+File+format+list"}
-             (tr [:document :invalid-file-type])]]))
-   [:span {:style (merge {:display :block}
-                         (when file-too-large?
-                           {:color theme-colors/error}))}
-    (str (format/file-size size))
-    (when file-too-large?
-      (str " " (tr [:document :file-too-large])))]])
 
 (defn files-field-entry [file-entry]
   (-> file-entry
       :file-object
       file-model/file-info))
 
-(defn files-field [{:keys [value on-change error]}]
-  [:div {:class (<class files-field-style error)
-         :id "files-field-drag-container"}
-   [SectionHeading (tr [:common :files])]
-   [List {:dense true}
-    (doall
-     (map-indexed
-      (fn [i ^js/File file]
-        ^{:key i}
-        [ListItem {}
-         (let [{:file/keys [name size] :as file}
-               (files-field-entry file)
-               invalid-file-type? (not (file-model/valid-suffix? name))
-               file-too-large? (> size file-model/upload-max-file-size)]
-           [ListItemText (merge
-                          {:primary name
-                           :secondary (r/as-element [file-info file invalid-file-type? file-too-large?])})])
-         [ListItemSecondaryAction
-          [TextField {:value (or (:file/pos-number file) "")
-                      :type :number
-                      :placeholder "POS#"
-                      :inline? true
-                      :on-change #(on-change (assoc-in value [i :file/pos-number]
-                                                       (-> % .-target .-value)))}]
-          [IconButton {:edge "end"
-                       :on-click #(on-change (into (subvec value 0 i)
-                                                   (subvec value (inc i))))}
-           [icons/action-delete]]]])
-      value))]
-   [FileUploadButton {:id "files-field"
-                      :drag-container-id "files-field-drag-container"
-                      :on-drop #(on-change (into (or value []) %))}
-    [icons/content-file-copy]
-    (tr [:common :select-files])]])
+(defn wrong-task-error [expected-task-type task-types]
+  (let [correct-task (some #(when (= (:filename/code %) expected-task-type)
+                              (:db/ident %))
+                           task-types)]
+    (tr [:file-upload :file-belongs-to-task] {:task (tr-enum correct-task)})))
+
+(defn validate-name [{:file/keys [description extension] :as _file-row}]
+  (when (or (str/blank? description)
+            (str/blank? extension))
+    {:error :description-and-extension-required}))
+
+(defn validate-seq-number [{:file/keys [sequence-number]}]
+  (when (and sequence-number
+             ;; Valid sequence number 1 - 10000
+             (not (< 0 sequence-number 10000)))
+    {:error :invalid-sequence-number}))
+
+(defn validate-file [e! project-id task {:keys [metadata] :as file-row}]
+  (let [file-info (files-field-entry file-row)]
+    (when-let [error (or (and metadata (validate-name file-row))
+                         (validate-seq-number file-row)
+                         (file-model/validate-file file-info)
+                         (file-model/validate-file-metadata project-id task metadata))]
+      (case (:error error)
+        :file-type-not-allowed
+        {:title (tr [:document :invalid-file-type])
+         :description [:<>
+                       (str/upper-case (file-model/filename->suffix (:file/name file-info)))
+                       " "
+                       [:a {:target "_blank"
+                            :href "https://confluence.mkm.ee/pages/viewpage.action?spaceKey=TEET&title=TEET+File+format+list"}
+                        (tr [:document :invalid-file-type])]]}
+
+        :file-too-large
+        {:title (tr [:document :file-too-large])
+         :description ""}
+
+        ;; Check for wrong project
+        :wrong-project
+        {:title (tr [:file-upload :wrong-project])
+         :description ""}
+
+        ;; Check for wrong task (if metadata can be parsed)
+        :wrong-task
+        {:title (tr [:file-upload :wrong-task])
+         :description [select/with-enum-values
+                       {:e! e!
+                        :attribute :task/type}
+                       [wrong-task-error (:task metadata)]]}
+
+        :description-and-extension-required
+        {:title (tr [:file-upload :description-required])
+         :description ""}
+
+        :invalid-sequence-number
+        {:title (tr [:file-upload :invalid-sequence-number])
+         :description ""}
+
+        ;; All validations ok
+        :else nil))))
+
+(defn files-field-row [{:keys [e! update-file delete-file
+                               project-id task]} file-row]
+  [:<>
+   [TableRow {}
+    [TableCell {:style {:border :none}}
+     [TextField {:value (:file/description file-row)
+                 :on-change #(update-file {:file/description
+                                           (-> % .-target .-value)})
+                 :end-icon [text-field/file-end-icon (:file/extension file-row)]}]]
+    [TableCell {:style {:border :none}}
+     [select/select-enum {:e! e!
+                          :show-label? false
+                          :attribute :file/document-group
+                          :value (:file/document-group file-row)
+                          :on-change #(update-file {:file/document-group %})}]]
+    [TableCell {:style {:border :none}}
+     [TextField {:value (or (:file/sequence-number file-row) "")
+                 :disabled (nil? (:file/document-group file-row))
+                 :type :number
+                 :placeholder "0000"
+                 :inline? true
+                 :on-change #(let [n (-> % .-target .-value)]
+                               (update-file
+                                {:file/sequence-number (if (str/blank? n)
+                                                         nil
+                                                         (js/parseInt n))}))}]]
+    [TableCell {:style {:border :none}}
+     [IconButton {:edge "end"
+                  :on-click delete-file}
+      [icons/action-delete]]]]
+   [TableRow {}
+    [TableCell {:colSpan 4}
+     (if-let [{:keys [title description] :as error} (validate-file e! project-id task file-row)]
+       [common-ui/info-box {:variant :error
+                            :title title
+                            :content description}]
+       [:<>
+        (when (get-in file-row [:metadata :file-id])
+          [common-ui/info-box {:title (tr [:file-upload :already-uploaded])
+                               :content (tr [:file-upload :new-version-will-be-created])}])
+        (when-let [part-number (some-> file-row :metadata :part js/parseInt)]
+          (when (not (zero? part-number))
+            (if-let [existing-part (some #(when (= part-number
+                                                   (:file.part/number %))
+                                            %)
+                                         (:file.part/_task task))]
+              ;; Existing file part
+              [common-ui/info-box {:title (tr [:file-upload :file-will-be-added-to-part]
+                                              {:part (:file.part/name existing-part)})
+                                   :content (tr [:file-upload :file-will-be-added-to-part-text])}]
+
+              ;; New file part
+              [common-ui/info-box {:title (tr [:file-upload :file-new-part])
+                                   :content (tr [:file-upload :file-new-part-text])}])))
+        (let [{:file/keys [name size]} (files-field-entry file-row)]
+          [:<>
+           (when (:changed? file-row)
+             (tr [:file-upload :original-filename] {:name name}))
+           " "
+           (format/file-size size)])])]]])
+
+(defn files-field [{:keys [e! value on-change error project-id
+                           activity task
+                           single?]}]
+  (let [update-file (fn [i new-file-data]
+                      (on-change (update value i merge new-file-data
+                                         {:changed? true})))
+        delete-file (fn [i]
+                      (on-change (into (subvec value 0 i)
+                                       (subvec value (inc i)))))]
+    [:div {:class (<class files-field-style error)
+           :id "files-field-drag-container"}
+     [SectionHeading (tr [:common :files])]
+     [Table {}
+      [TableHead {}
+       [TableRow {}
+        [TableCell {}
+         (tr [:file-upload :description])]
+        [TableCell {}
+         (tr [:fields :file/document-group])]
+        [TableCell {}
+         (if (du/enum= :activity.name/land-acquisition (:activity/name activity))
+           (tr [:fields :file/position-number])
+           (tr [:fields :file/sequence-number]))]]]
+
+      [TableBody {}
+       (doall
+        (map-indexed
+         (fn [i file-row]
+           ^{:key i}
+           [files-field-row {:e! e!
+                             :project-id project-id
+                             :task task
+                             :update-file (r/partial update-file i)
+                             :delete-file (r/partial delete-file i)}
+            file-row])
+         value))]]
+     (when (not (and single? (pos? (count value))))
+       [FileUploadButton {:id "files-field"
+                          :drag-container-id "files-field-drag-container"
+                          :on-drop #(on-change (into (or value []) %))}
+        [icons/content-file-copy]
+        (tr [:common :select-files])])]))

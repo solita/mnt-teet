@@ -14,7 +14,8 @@
             [tuck.core :as t]
             [teet.log :as log]
             [reagent.core :as r]
-            [teet.ui.rich-text-editor :as rich-text-editor]))
+            [teet.ui.rich-text-editor :as rich-text-editor]
+            [teet.ui.text-field :as text-field]))
 
 (defrecord TestFileUpload [files])
 (defrecord UploadFiles [files])
@@ -68,7 +69,8 @@
                       :margin-bottom "2rem"}}
         [TextField {:label "Tekstiä"
                     :value @val
-                    :on-change on-change}]
+                    :on-change on-change
+                    :end-icon [text-field/file-end-icon ".pdf"]}]
         [TextField {:label "end adonrmnet"
                     :value @val
                     :on-change on-change
@@ -199,7 +201,7 @@
        [:div {:style {:display "flex"
                       :justify-content "space-evenly"
                       :margin-bottom "2rem"}}
-        [file-upload/FileUploadButton {:id "upload-btn"
+        #_[file-upload/FileUploadButton {:id "upload-btn"
                                        :on-drop #(e! (->UploadFiles %) #_(->TestFileUpload %))
                                        :drop-message "Drop it like it's hot"}
          "Click to upload"]]]]

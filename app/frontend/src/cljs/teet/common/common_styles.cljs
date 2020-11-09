@@ -1,6 +1,7 @@
 (ns teet.common.common-styles
   (:require [teet.theme.theme-colors :as theme-colors]
-            [herb.core :refer [defglobal]]))
+            [herb.core :refer [defglobal]]
+            [garden.color :refer [darken]]))
 
 (defn gray-light-border
   []
@@ -21,9 +22,10 @@
    :display         :flex
    :justify-content :center})
 
-(defn grid-left-item
+(defn flex-column-start
   []
-  {:display        :flex
+  {:display :flex
+   :align-items :flex-start
    :flex-direction :column})
 
 (defn tab-link [current?]
@@ -113,6 +115,10 @@
    :color theme-colors/error
    :text-align :center})
 
+(defn white-space-nowrap
+  []
+  {:white-space :nowrap})
+
 (defn input-start-text-adornment
   "Style for a short text adornment before input text"
   []
@@ -143,6 +149,22 @@
   {:display :flex
    :flex-direction :row})
 
+(defn flex-row-center []
+  []
+  {:display :flex
+   :flex-direction :row
+   :align-items :center})
+
+(defn flex-row-end
+  []
+  {:display :flex
+   :flex-direction :row
+   :align-items :flex-end})
+
+(defn margin-right
+  [rem]
+  {:margin-right (str rem "rem")})
+
 (defn flex-row-wrap
   []
   {:display :flex
@@ -159,7 +181,7 @@
    ^{:pseudo {:first-child {:border-left 0}
               :last-child {:border-right 0}}}
    {:flex-basis (str basis "%")
-    :border-color theme-colors/gray-lighter
+    :border-color (darken theme-colors/gray-lighter 10)
     :border-style :solid
     :border-width "2px 2px 0 0"
     :flex-grow grow
@@ -180,6 +202,11 @@
   []
   {:display :flex
    :align-items :center})
+
+(defn flex-align-end
+  []
+  {:display :flex
+   :align-items :end})
 
 (defn status-circle-style
   [color]
@@ -252,3 +279,19 @@
   "Top border to divide multiple items"
   []
   {:border-top (str "solid 1px " theme-colors/gray-light)})
+
+(defn info-box [variant]
+  (let [[border background] (case variant
+                              :error [theme-colors/red theme-colors/red-lightest]
+                              :info [theme-colors/blue theme-colors/blue-lightest])]
+    {:border (str "solid 2px " border)
+     :border-radius "3px"
+     :background-color background
+     :padding "1rem"
+     :display :flex
+     :flex-direction :column}))
+
+(defn text-ellipsis [max-width]
+  {:text-overflow :ellipsis
+   :overflow :hidden
+   :max-width max-width})

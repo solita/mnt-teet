@@ -18,7 +18,12 @@
    :task.group/design 3
    :task.group/design-approval 4
    :task.group/design-reports 5
-   :task.group/land-purchase 6})
+   :task.group/land-purchase 6
+   :task.group/working-design 7
+   :task.group/construction 8
+   :task.group/construction-quality-assurance 9
+   :task.group/construction-approval 10
+   :task.group/warranty 11})
 
 (defn file-by-id-path
   "Returns vector path to the given file in task."
@@ -52,8 +57,6 @@
        (not (reviewing? task))
        (not (completed? task))))
 
-
-
 (defn task-with-status
   [{:task/keys [assignee estimated-start-date estimated-end-date] :as task}]
   (assoc task :task/derived-status
@@ -62,9 +65,9 @@
                 :done
                 (or (nil? estimated-end-date) (nil? estimated-start-date))
                 :unknown-status
-                (and (nil? assignee) (date/date-in-past? estimated-start-date))
+                (and (nil? assignee) (date/date-before-today? estimated-start-date))
                 :unassigned-past-start-date
-                (and (date/date-in-past? estimated-end-date) (not (completed? task)))
+                (and (date/date-before-today? estimated-end-date) (not (completed? task)))
                 :task-over-deadline
                 (and (> 7 (date/days-until-date estimated-end-date)) (not (completed? task)))
                 :close-to-deadline

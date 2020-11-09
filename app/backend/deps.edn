@@ -10,9 +10,11 @@
         com.cognitect/transit-clj {:mvn/version "0.8.313"}
         org.clojure/data.zip {:mvn/version "0.1.3"}
         dk.ative/docjure {:mvn/version "1.13.0"}
+        net.coobird/thumbnailator {:mvn/version "0.4.13"}
+
 
         ;; JWT and JWK
-        com.nimbusds/nimbus-jose-jwt {:mvn/version "7.9"
+        com.nimbusds/nimbus-jose-jwt {:mvn/version "7.9" ;; oct 2019
                                       :exclusions [net.minidev/json-smart]}
         net.minidev/json-smart {:mvn/version "2.3"}
 
@@ -46,10 +48,12 @@
          "common/src/cljc"
          "common/src/clj"
          "common/resources"]
+
  :aliases {:ion {:extra-deps {com.datomic/ion-dev {:mvn/version "0.9.276"}}}
-           :dev {:extra-deps {com.datomic/ion-dev {:mvn/version "0.9.276"}
+           :dev {:jvm-opts ["-Duser.timezone=UTC"] ;; Match AWS env
+                 :extra-deps {com.datomic/ion-dev {:mvn/version "0.9.276"}
                               org.clojure/tools.namespace {:mvn/version "0.3.1"}
-                              com.datomic/dev-local {:mvn/version "0.9.195"}}
+                              com.datomic/dev-local {:mvn/version "0.9.225"}}
                  :extra-paths ["dev-src" "test"]}
            :db-connect {:extra-deps {com.datomic/ion-dev {:mvn/version "0.9.276"}
                                      org.clojure/tools.namespace {:mvn/version "0.3.1"}}
@@ -64,17 +68,20 @@
            :pack {:extra-deps {pack/pack.alpha {:git/url "https://github.com/juxt/pack.alpha.git"
                                                 :sha "2769a6224bfb938e777906ea311b3daf7d2220f5"}}}
            :test {:main-opts ["-m" "kaocha.runner" "--skip-meta" "db"]
+                  :jvm-opts ["-Duser.timezone=UTC"] ;; Match AWS env
                   :extra-deps {lambdaisland/kaocha {:mvn/version "0.0-529"}}
                   :extra-paths ["test"]}
-           :ci-test {:main-opts ["-m" "kaocha.runner"
+           :ci-test {:jvm-opts ["-Duser.timezone=UTC"] ;; Match AWS env
+                     :main-opts ["-m" "kaocha.runner"
                                  "--no-color" ;; No ANSI codes in CI
                                  "--reporter" "teet.test.slack/report"]
                      :extra-deps {lambdaisland/kaocha {:mvn/version "1.0-612"}
-                                  com.datomic/dev-local {:mvn/version "0.9.195"}}
+                                  com.datomic/dev-local {:mvn/version "0.9.225"}}
                      :extra-paths ["test"]}
-           :test-all {:main-opts ["-m" "kaocha.runner"]
+           :test-all {:jvm-opts ["-Duser.timezone=UTC"] ;; Match AWS env
+                      :main-opts ["-m" "kaocha.runner"]
                       :extra-deps {lambdaisland/kaocha {:mvn/version "1.0-612"}
-                                   com.datomic/dev-local {:mvn/version "0.9.195"}}
+                                   com.datomic/dev-local {:mvn/version "0.9.225"}}
                       :extra-paths ["test"]}
            :authorizations {:main-opts ["-m" "teet.authorization"]
                             :extra-paths ["src/build"]

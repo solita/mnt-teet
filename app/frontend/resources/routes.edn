@@ -128,6 +128,12 @@
  :admin {:path "/admin"
          :permission :admin/add-user
          :view teet.admin.admin-view/admin-page
-         :state {:query :admin/list-users
-                 :args {}}
-         :crumb (tr [:admin :title])}}
+         :title "Admin view"
+         :crumb (tr [:admin :title])}
+
+ :admin-inspector {:path "/admin/inspect/:id"
+                   :view teet.admin.admin-view/inspector-page
+                   :crumb (tr [:admin :inspector-title])
+                   :parent :admin
+                   :state {:query :admin/entity-info
+                           :args {:id id}}}}

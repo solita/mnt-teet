@@ -5,11 +5,15 @@
             [teet.comment.comment-model :as comment-model]
             teet.project.project-commands
             [teet.test.utils :as tu]
-            [teet.util.collection :as cu]
             [teet.util.datomic :as du]
             teet.integration.integration-s3))
 
-(use-fixtures :each tu/with-environment (tu/with-db) tu/with-global-data)
+(use-fixtures :each
+  (tu/with-config {:file {:allowed-suffixes #{"pdf"}
+                          :image-suffixes #{"png"}}})
+  tu/with-environment
+  (tu/with-db)
+  tu/with-global-data)
 
 
 (deftest commenting-tasks-requires-authorization

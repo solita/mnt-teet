@@ -23,18 +23,24 @@
   "Find first element in `collection` whose `:db/id` is `id`"
   [id collection]
   (cu/find-first (comp (partial id= id) :db/id)
-              collection))
+                 collection))
+
+(defn enum->kw
+  "Accept enum map or keyword or `nil`, return keyword, or `nil` if argument is `nil`"
+  [enum-map-or-kw]
+  {:pre [(or (nil? enum-map-or-kw)
+             (s/valid? ::enum enum-map-or-kw))]}
+  (when enum-map-or-kw
+    (if (keyword? enum-map-or-kw)
+      enum-map-or-kw
+      (:db/ident enum-map-or-kw))))
+
 (defn enum=
   "Compare two enum values.
-  Enum may be a keyword or a map containing :db/ident."
+  Enum may be a keyword or a map containing :db/ident, or `nil`."
   [e1 e2]
-  (let [v1 (if (keyword? e1)
-             e1
-             (:db/ident e1))
-        v2 (if (keyword? e2)
-             e2
-             (:db/ident e2))]
-    (= v1 v2)))
+  (= (enum->kw e1)
+     (enum->kw e2)))
 
 (defn changed-entity-ids
   "Returns all :db/id values of entities that were \"changed\" by the given transaction."
@@ -68,7 +74,7 @@
        (cond
          (and (map? val)
               (contains? val :db/id))
-         (entity db (:db/id val))
+         (entity db (:db/id val) val)
 
          (vector? val)
          (mapv (partial transform-entity-value db) val)
@@ -77,23 +83,25 @@
          val))
 
      (defn- fetch-entity-attr! [db eid fetched-attrs attr default-value]
-       (let [v (get
-                (swap! fetched-attrs
-                       (fn [fetched-attrs]
-                         (if (contains? fetched-attrs attr)
-                           fetched-attrs
-                           (assoc fetched-attrs attr
-                                  (transform-entity-value
-                                   db (get (d/pull db [attr] eid)
-                                           attr ::not-found))))))
-                             attr)]
-                      (if (not= ::not-found v)
-                        v
-                        default-value)))
+       (let [attrs
+             (swap! fetched-attrs
+                    (fn [fetched-attrs]
+                      (if (contains? fetched-attrs attr)
+                        fetched-attrs
+                        (reduce-kv
+                         (fn [attrs k v]
+                           (if (contains? attrs k)
+                             attrs
+                             (assoc attrs k
+                                    (transform-entity-value db v))))
+                         fetched-attrs
+                         (d/pull db [attr] eid)))))]
+         (get attrs attr default-value)))
      (deftype Entity [db eid fetched-attrs]
        java.lang.Object
        (toString [_]
-         (str "#<Entity, eid: " eid ">"))
+         (str "#<Entity, eid: " eid
+              ", fetched-attrs: " (pr-str @fetched-attrs) ">"))
 
        clojure.lang.ILookup
        (valAt [_ kw]
@@ -106,10 +114,13 @@
        (print-simple entity writer))
      (defn entity
        "Returns a navigable entity that lazily fetches attributes."
-       [db eid]
-       (Entity. db eid (atom (if (number? eid)
-                               {:db/id eid}
-                               {}))))))
+       ([db eid]
+        (entity db eid (if (number? eid)
+                         {:db/id eid}
+                         {})))
+       ([db eid fetched-attrs]
+        (assert eid "entity requires an eid")
+        (Entity. db eid (atom fetched-attrs))))))
 
 (defn db-ids
   "Recursively gather non-string :db/id values of form.
@@ -151,3 +162,35 @@
        (:db/ident x)
        x))
    m))
+
+(defn- refs->id
+  "Turn maps with {:db/id <num>} into just <num> values."
+  [m]
+  (cu/map-vals
+   #(if-let [id (and (map? %) (:db/id %))]
+      id
+      %)
+   m))
+
+(defn modify-entity-tx
+  "Create transaction data that asserts new changed attributes
+  and retracts attributes that are no longer present.
+  If there are no changes between old and new entity, returns empty vector."
+  [old-entity {id :db/id :as new-entity}]
+  (assert (= (:db/id old-entity) id)
+          "This is not the same entity (different :db/id values)")
+  (let [old-entity (refs->id old-entity)
+        new-entity (refs->id new-entity)
+        retractions
+        (for [[k v] old-entity
+              :when (not (contains? new-entity k))]
+          [:db/retract id k v])
+        changes (into {}
+                      (filter (fn [[k v]]
+                                (not= v (get old-entity k))))
+                      new-entity)]
+    (if (or (seq retractions)
+            (seq changes))
+      (vec
+       (concat retractions [(assoc changes :db/id id)]))
+      [])))

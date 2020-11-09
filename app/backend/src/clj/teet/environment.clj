@@ -4,64 +4,12 @@
             [clojure.java.io :as io]
             [teet.log :as log]
             [datomic.client.api :as d]
-            [cognitect.aws.client.api :as aws]))
+            [cognitect.aws.client.api :as aws]
+            [teet.util.collection :as cu])
+  (:import (java.time ZoneId)
+           (java.util.concurrent TimeUnit Executors)))
 
 (def ^:private ssm-client (delay (aws/client {:api :ssm})))
-
-(defn ssm-param
-  [& param-path]
-  (let [name (str "/teet/" (str/join "/" (map name param-path)))
-        response (aws/invoke @ssm-client {:op :GetParameter
-                                          :request {:Name name}})]
-    (if (:cognitect.anomalies/category response)
-      (throw (ex-info "Anomaly in SSM invocation"
-                      {:response response}))
-      (let [value (get-in response [:Parameter :Value])]
-        (if (string? value)
-          (str/trim value)
-          value)))))
-
-(defn- ssm-param-default [param-path default-value]
-  (try
-    (apply ssm-param param-path)
-    (catch Exception e
-      (if (= (get-in (ex-data e) [:response :__type]) "ParameterNotFound")
-        default-value
-        (throw (ex-info "Exception in SSM invocation (not ParameterNotfound)"
-                        {:param-path param-path :default-value default-value}
-                        e))))))
-
-(defn- ssm-parameters [parameter-paths default-values]
-  (let [name->path (into {}
-                         (map (fn [path]
-                                [(str "/teet/" (str/join "/" (map name path)))
-                                 path]))
-                         parameter-paths)
-
-        ;; GetParameters supports at most 10 parameters in a single call
-        ;; so we partition keys and invoke the operation for each batch
-        responses (for [keys (partition-all 10 (keys name->path))]
-                    (aws/invoke @ssm-client
-                                {:op :GetParameters
-                                 :request {:Names (vec keys)}}))]
-    (reduce
-     merge
-     (for [response responses]
-       (merge
-        (into {}
-              (map (fn [{:keys [Name Value]}]
-                     [(name->path Name) Value]))
-              (:Parameters response))
-        (into {}
-              (map (fn [missing-parameter-name]
-                     (let [path (name->path missing-parameter-name)
-                           value (get default-values path)]
-                       (if (nil? value)
-                         (throw (ex-info "Missing parameter that has no default value"
-                                         {:parameter-name missing-parameter-name
-                                          :parameter-path path}))
-                         [path value]))))
-              (:InvalidParameters response)))))))
 
 (def init-config {:datomic {:db-name "teet"
                             :client {:server-type :ion}}
@@ -75,57 +23,128 @@
   (reset! config init-config))
 
 ;; "road-information-view, component-view"
-(defn parse-enabled-features [ssm-param]
+(defn- parse-enabled-features [ssm-param]
   (->> (str/split ssm-param #",")
        (remove str/blank?)
        (map str/trim)
        (map keyword)
        set))
 
-(defn enabled-features-config []
-  (or (some-> [:enabled-features]
-              (ssm-param-default nil)
-              parse-enabled-features)
-      (do
-        (log/warn "SSM parameter enabled-features not found, treating all as disabled")
-        #{})))
+(defn log-timezone-config! []
+  (log/info "local timezone:" (ZoneId/systemDefault)))
 
-(defn tara-config []
-  (let [p (partial ssm-param :auth :tara)]
-    {:endpoint-url (p :endpoint)
-     :base-url (p :baseurl)
-     :client-id (p :clientid)
-     :client-secret (p :secret)}))
+(defrecord SSMParameter [path default-value parser])
+
+(defn ->ssm
+  "Construct an SSMParameter instance"
+  ([path] (->ssm path ::no-default-value))
+  ([path default-value]
+   (->ssm path default-value identity))
+  ([path default-value parser]
+   (assert (vector? path) "Path must be a vector")
+   (assert (fn? parser) "Parser must be a function")
+   (->SSMParameter path default-value parser)))
+
+(defn- ssm-parameters
+  "Fetch a collection of SSM parameters in one go.
+  Parameters is a collection of SSMParameter instances.
+  Returns mapping from SSMParameter to the value.
+
+  If a parameter is missing and it doesn't have a default value,
+  an exception will be thrown."
+  [parameters]
+  (let [name->parameter (into {}
+                              (map (fn [{path :path :as param}]
+                                     [(str "/teet/" (str/join "/" (map name path)))
+                                      param]))
+                              parameters)
+
+        ;; GetParameters supports at most 10 parameters in a single call
+        ;; so we partition keys and invoke the operation for each batch
+        responses (for [keys (partition-all 10 (keys name->parameter))]
+                    (aws/invoke @ssm-client
+                                {:op :GetParameters
+                                 :request {:Names (vec keys)}}))]
+    (reduce
+     merge
+     (for [response responses]
+       (merge
+        (into {}
+              (map (fn [{:keys [Name Value]}]
+                     (let [{parser :parser :as param} (name->parameter Name)]
+                       [param (parser Value)])))
+              (:Parameters response))
+        (into {}
+              (map (fn [missing-parameter-name]
+                     (let [{:keys [path default-value]}
+                           (name->parameter missing-parameter-name)]
+                       (if (= default-value ::no-default-value)
+                         (throw (ex-info "Missing parameter that has no default value"
+                                         {:parameter-name missing-parameter-name
+                                          :parameter-path path}))
+                         [path default-value]))))
+              (:InvalidParameters response)))))))
+
+(defn- resolve-ssm-parameters
+  "Resolve multiple SSM parameters in a nested structure."
+  [form]
+  (cu/replace-deep
+   (ssm-parameters
+    (cu/collect (partial instance? SSMParameter) form))
+   form))
+
+(defn- suffix-list [string]
+  (into #{}
+        (map str/trim)
+        (str/split string #",")))
+
+(def teet-ssm-config
+  {:env (->ssm [:env])
+   :backup {:bucket-name (->ssm [:s3 :backup-bucket])}
+   :enabled-features (->ssm [:enabled-features] #{} parse-enabled-features)
+   :tara {:endpoint-url (->ssm [:auth :tara :endpoint])
+          :base-url (->ssm [:auth :tara :baseurl])
+          :client-id (->ssm [:auth :tara :clientid])
+          :client-secret (->ssm [:auth :tara :secret])}
+   :session-cookie-key (->ssm [:auth :session-key])
+   :auth {:basic-auth-password (->ssm [:api :basic-auth-password] nil)
+          :jwt-secret (->ssm [:api :jwt-secret])}
+   :base-url (->ssm [:base-url])
+   :api-url (->ssm [:api :url])
+   :document-storage {:bucket-name (->ssm [:s3 :document-bucket])}
+   :file {:allowed-suffixes (->ssm [:file :allowed-suffixes] #{} suffix-list)
+          :image-suffixes (->ssm [:file :image-suffixes] #{} suffix-list)}
+   :thk {:export-bucket-name (->ssm [:thk :teet-to-thk :bucket-name] nil)
+         :export-dir (->ssm [:thk :teet-to-thk :unprocesseddir] nil)
+         :url (->ssm [:thk :url] nil)}
+   :road-registry {:wfs-url (->ssm [:road-registry :wfs-url] nil)
+                   :wms-url (->ssm [:road-registry :wms-url] nil)}
+   :xroad {:query-url (->ssm [:xroad-query-url] nil)
+           :instance-id (->ssm [:xroad-instance-id] nil)
+           :kr-subsystem-id (->ssm [:xroad-kr-subsystem-id] nil)}
+   :eelis {:wms-url (->ssm [:eelis :wms-url] nil)}
+   :email {:from (->ssm [:email :from] nil)}})
+
+(defn- load-ssm-config! [base-config]
+  (let [old-config @config
+        new-config (merge base-config
+                          (resolve-ssm-parameters teet-ssm-config))]
+    (when (not= old-config new-config)
+      (log/info "Configuration changed")
+      (reset! config new-config))))
 
 (defn init-ion-config! [ion-config]
-  (swap! config
-         (fn [base-config]
-           (let [config (merge base-config ion-config)
-                 config (assoc-in config [:auth :jwt-secret]
-                                  (ssm-param :api :jwt-secret))
-                 bap (ssm-param :api :basic-auth-password)
-                 tara (tara-config)
-                 ;;
-                 config (-> config
-                            (assoc :enabled-features (enabled-features-config))
-                            (assoc :tara tara)
-                            (assoc :session-cookie-key
-                                   (ssm-param :auth :session-key))
-                            (assoc-in [:auth :basic-auth-password] bap)
-                            (assoc :base-url (ssm-param :base-url))
-                            (assoc :api-url (ssm-param :api :url))
-                            (assoc-in [:document-storage :bucket-name] (ssm-param :s3 :document-bucket))
-                            (assoc-in [:thk :export-bucket-name] (ssm-param-default [:thk :teet-to-thk :bucket-name] nil))
-                            (assoc-in [:thk :export-dir] (ssm-param-default [:thk :teet-to-thk :unprocesseddir] nil))
-                            (assoc-in [:road-registry]
-                                      {:wfs-url (ssm-param-default [:road-registry :wfs-url] nil)
-                                       :wms-url (ssm-param-default [:road-registry :wms-url] nil)})
-                            (assoc-in [:xroad] {:query-url (ssm-param-default [:xroad-query-url] nil)
-                                                :instance-id (ssm-param-default [:xroad-instance-id] nil)
-                                                :kr-subsystem-id (ssm-param-default [:xroad-kr-subsystem-id] nil)})
-                            (assoc-in [:eelis]
-                                      {:wms-url (ssm-param-default [:eelis :wms-url] nil)}))]
-             config))))
+  (log-timezone-config!)
+  (let [base-config (merge init-config ion-config)]
+    (load-ssm-config! base-config)
+    (.scheduleWithFixedDelay
+     (Executors/newScheduledThreadPool 1)
+     #(load-ssm-config! base-config)
+     1 1 TimeUnit/MINUTES)))
+
+(defn merge-config! [new-config]
+  (swap! config (fn [old-config]
+                  (cu/deep-merge old-config new-config))))
 
 (defn load-local-config!
   "Load local development configuration from outside repository"
@@ -133,12 +152,8 @@
   ([file]
    (when (.exists file)
      (log/info "Loading local config file: " file)
-     (reset! config (merge-with (fn [a b]
-                                  (if (and (map? a) (map? b))
-                                    (merge a b)
-                                    b))
-                                init-config
-                                (read-string (slurp file)))))))
+     (reset! config (cu/deep-merge init-config
+                                   (read-string (slurp file)))))))
 
 (defn db-name []
   (-> @config

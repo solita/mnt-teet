@@ -11,7 +11,10 @@
             [teet.file.filename-metadata :as filename-metadata]
             [teet.log :as log]
             [teet.user.user-model :as user-model]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            teet.file.file-tx
+            [teet.util.collection :as cu]
+            [teet.meta.meta-model :as meta-model]))
 
 (defn- new-file-key [{name :file/name}]
   (str (java.util.UUID/randomUUID) "-" name))
@@ -23,7 +26,8 @@
     file-id))
 
 (defn- find-previous-version [db task-id previous-version]
-  (if-let [old-file (ffirst (d/q '[:find (pull ?f [:db/id :file/version :file/pos-number])
+  (if-let [old-file (ffirst (d/q '[:find (pull ?f [:db/id :file/version :file/sequence-number
+                                                   {:file/part [:db/id :file.part/number :file.part/name]}])
                                    :in $ ?f ?t
                                    :where
                                    [?t :task/files ?f]]
@@ -31,7 +35,7 @@
     old-file
     (db-api/bad-request! "Can't find previous version")))
 
-(def file-keys [:file/name :file/size :file/group-number :file/pos-number])
+(def file-keys [:file/name :file/size :file/document-group :file/sequence-number :file/part])
 
 (defcommand :file/upload-attachment
   {:doc "Upload attachment file and optionally attach it to entity."
@@ -114,7 +118,7 @@
 (defcommand :file/upload
   {:doc "Upload new file to task."
    :context {:keys [conn user db]}
-   :payload {:keys [task-id attachment? file previous-version-id]}
+   :payload {:keys [task-id attachment? file previous-version-id] :as p}
    :project-id (project-db/task-project-id db task-id)
    :pre [^{:error :invalid-previous-file}
          (or (nil? previous-version-id)
@@ -125,19 +129,29 @@
       (let [old-file (when previous-version-id
                        (find-previous-version db task-id previous-version-id))
             version (or (some-> old-file :file/version inc) 1)
-            file (file-with-metadata file)
+
             key (new-file-key file)
-            res (tx [{:db/id (or task-id "new-task")
-                      :task/files [(merge (select-keys file file-keys)
-                                          {:db/id "new-file"
-                                           :file/s3-key key
-                                           :file/status :file.status/draft
-                                           :file/version version}
-                                          (when old-file
-                                            {:file/previous-version (:db/id old-file)})
-                                          (when-let [old-pos-number (:file/pos-number old-file)]
-                                            {:file/pos-number old-pos-number})
-                                          (creation-meta user))]}])
+            tx-data [(list 'teet.file.file-tx/upload-file-to-task
+                           {:db/id (or task-id "new-task")
+                            :task/files [(cu/without-nils
+                                          (merge (select-keys file file-keys)
+                                                 {:db/id "new-file"
+                                                  :file/s3-key key
+                                                  :file/status :file.status/draft
+                                                  :file/version version
+                                                  :file/original-name (:file/name file)}
+                                                 (when (:file/description file)
+                                                   {:file/name (str (:file/description file) "." (:file/extension file))})
+                                                 (when old-file
+                                                   {:file/previous-version (:db/id old-file)})
+
+                                                 ;; Replacement version is uploaded to the same part
+                                                 (when-let [old-part (:file/part old-file)]
+                                                   {:file/part old-part})
+                                                 (when-let [old-seq-number (:file/sequence-number old-file)]
+                                                   {:file/sequence-number old-seq-number})
+                                                 (creation-meta user)))]})]
+            res (tx tx-data)
             t-id (or task-id (get-in res [:tempids "new-task"]))
             file-id (get-in res [:tempids "new-file"])]
         (try
@@ -149,12 +163,14 @@
             (throw e))))))
 
 (defcommand :file/delete
-  {:doc "Delete file"
+  {:doc "Delete file and all its versions."
    :context {:keys [user db]}
    :payload {:keys [file-id status]}
    :project-id (project-db/file-project-id db file-id)
    :authorization {:document/delete-document {:db/id file-id}}
-   :transact [(deletion-tx user file-id)]})
+   :transact (vec
+              (for [version-id (file-db/file-versions db file-id)]
+                (deletion-tx user version-id)))})
 
 (defcommand :file/seen
   {:doc "Mark that I have seen this file"
@@ -168,3 +184,13 @@
                  :file-seen/user user-id
                  :file-seen/file+user [file-id user-id]
                  :file-seen/seen-at (java.util.Date.)})]})
+
+(defcommand :file/modify
+  {:doc "Modify task file info: part, group, sequence and name."
+   :context {:keys [user db]}
+   :payload {id :db/id :as file}
+   :project-id (project-db/file-project-id db id)
+   :authorization {:document/overwrite-document {:db/id id}}
+   :transact [(list 'teet.file.file-tx/modify-file
+                    (merge file
+                           (meta-model/modification-meta user)))]})

@@ -50,3 +50,11 @@
                                         {:activity/status :activity.status/in-preparation
                                          :activity/actual-start-date #inst "2020-04-12T21:00:00.000-00:00"
                                          :activity/actual-end-date #inst "2020-04-14T21:00:00.000-00:00"})))))
+
+(deftest exported-to-thk?
+  (testing "Warranty and Land acquisition are not exported to THK"
+    (is (not (activity-model/exported-to-thk? {:activity/name :activity.name/warranty})))
+    (is (not (activity-model/exported-to-thk? {:activity/name :activity.name/land-acquisition}))))
+
+  (testing "Construction (for example) is exported to THK"
+    (is (activity-model/exported-to-thk? {:activity/name :activity.name/construction}))))

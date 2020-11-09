@@ -13,6 +13,7 @@
             [tara.endpoint :as tara-endpoint]
             [teet.login.login-commands :as login-commands]))
 
+(log/enable-ion-cast-appender!)
 (some-> (ion/get-env) environment/init-ion-config!)
 
 (def cookie-store (session-cookie/cookie-store
@@ -44,4 +45,3 @@
                              (environment/config-value :tara)
                              {:on-success login-commands/on-tara-login}))))
 
-(log/enable-ion-cast-appender!)

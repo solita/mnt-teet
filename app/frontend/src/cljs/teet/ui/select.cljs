@@ -386,13 +386,14 @@
                    :show-label? show-label?
                    :required required
                    :error error
+                   :start-icon icons/action-search
                    :placeholder placeholder
                    :on-key-down on-key-down
                    :on-blur #(js/setTimeout
-                              ;; Delay closing because we might be blurring
-                              ;; because user clicked one of the options
-                              (fn [] (swap! state assoc :open? false))
-                              200)
+                               ;; Delay closing because we might be blurring
+                               ;; because user clicked one of the options
+                               (fn [] (swap! state assoc :open? false))
+                               200)
                    :value (if value
                             (format-result value)
                             input)

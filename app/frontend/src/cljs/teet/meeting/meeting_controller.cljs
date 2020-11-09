@@ -6,7 +6,7 @@
             [teet.util.collection :as cu]
             [teet.snackbar.snackbar-controller :as snackbar-controller]))
 
-(defrecord SubmitMeetingForm [activity-id form-data close-event])
+(defrecord SubmitMeetingForm [duplicate? activity-id form-data close-event])
 (defrecord CreateMeetingResult [activity-id close-event result])
 (defrecord CancelMeeting [activity-id meeting-id close-event])
 
@@ -26,15 +26,23 @@
 
 (extend-protocol t/Event
   SubmitMeetingForm
-  (process-event [{:keys [activity-id form-data close-event]} app]
-    (let [editing? (:db/id form-data)]
+  (process-event [{:keys [duplicate? activity-id form-data close-event]} app]
+    (let [editing? (and (not duplicate?) (:db/id form-data))]
       (t/fx app
             {:tuck.effect/type :command!
-             :command (if editing?
-                        :meeting/update
-                        :meeting/create)
-             :payload {:activity-eid (common-controller/->long activity-id)
-                       :meeting/form-data form-data}
+             :command (cond
+                        duplicate? :meeting/duplicate
+                        editing? :meeting/update
+                        :else :meeting/create)
+             :payload (if duplicate?
+                        (select-keys form-data [:db/id
+                                                :meeting/title
+                                                :meeting/location
+                                                :meeting/start
+                                                :meeting/end
+                                                :meeting/organizer])
+                        {:activity-eid (common-controller/->long activity-id)
+                         :meeting/form-data form-data})
              :success-message (if editing?
                                 (tr [:notifications :meeting-updated])
                                 (tr [:notifications :meeting-created]))
@@ -100,6 +108,9 @@
     (t/fx app
           {:tuck.effect/type :command!
            :command :meeting/update-agenda
+           :success-message (if (:db/id form-data)
+                              (tr [:notifications :topic-updated])
+                              (tr [:notifications :topic-created]))
            :payload {:db/id (:db/id meeting)
                      :meeting/agenda [(cu/without-nils
                                        (merge {:db/id "new-agenda-item"}

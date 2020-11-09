@@ -127,10 +127,10 @@
                        :where
                        [?p :thk.project/lifecycles ?l]
                        [?l :thk.lifecycle/activities ?a]
-                       [?a :activity/name :activity.name/land-acquisition]
+                       [?a :activity/name :activity.name/detailed-design]
                        :in $ ?p]
                      (tu/db) [:thk.project/id "11111"]))]
-    (is act-id "Project 1 has land acquisition activity")
+    (is act-id "Project 1 has a detailed design activity")
     (tu/store-data! :act-id act-id)
     (tu/store-data! :act-uuid (java.util.UUID/randomUUID))
     (tu/store-data! :task-uuid (java.util.UUID/randomUUID))
@@ -140,7 +140,7 @@
      (get-in (tu/tx {:db/id act-id
                      :integration/id (tu/get-data :act-uuid)
                      :activity/tasks [{:db/id "new-task"
-                                       :task/type :task.type/third-party-review
+                                       :task/type :task.type/design-requirements
                                        :task/send-to-thk? true
                                        :integration/id (tu/get-data :task-uuid)
                                        :task/estimated-start-date #inst "2020-04-15T14:00:39.855-00:00"
@@ -153,7 +153,7 @@
                                            (export-csv))]
       (is (= 1 (count task-rows)) "there's exactly one task row")
       (is task-row "There is a row for the task")
-      (is (= (get task-row "activity_taskdescr") "Ekspertiis")
+      (is (= (get task-row "activity_taskdescr") "Projekteerimistingimused")
           "task description is the estonian translation of task type")
       (is (str/blank? (get task-row "activity_id")) "task has no activity_id yet")
       (is (= (get task-row "activity_taskid")
@@ -235,8 +235,10 @@
           activity-ids (into #{}
                              (map #(get % "activity_id")
                                   rows))]
-      (is (= #{"" "6000" "5488" "6594" "15906" "5455"} activity-ids)
-          "rows have all existing THK activity ids and empty")))
+      (is (= #{"" "6000" "5488" "6594" "5455"} activity-ids)
+          "rows have all allowed THK activity ids and empty")
+      (is (not (activity-ids "15906"))
+          "THK activity 15906 is not present, as it's type is land acquisition, one of the types not sent to THK")))
 
   (testing "Importing again with THK id sets id"
     (let [csv (tu/get-data :export-csv)

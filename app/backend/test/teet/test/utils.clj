@@ -121,26 +121,29 @@
 (defn- datomic-client-env
   []
   {:server-type :dev-local
+   :storage-dir :mem
    :system "teet-db-test"})
 
+(defn with-config [nested-config-map]
+  (fn with-config-fixture [t]
+    (let [old-config @environment/config]
+      (try
+        (environment/merge-config! nested-config-map)
+        (t)
+        (finally
+          (reset! environment/config old-config))))))
+
+(defmacro run-with-config [config & body]
+  `(let [with-config-fn# (with-config ~config)]
+     (with-config-fn#
+       (fn []
+         ~@body))))
 
 (defn with-environment [f]
-  (let [client (datomic-client-env)]
-    (if client
-      (do
-        (log/info "Using environment client.")
-        (swap! environment/config
-               #(-> %
-                    (assoc-in [:datomic :client] client)
-                    (assoc-in [:document-storage :bucket-name]
-                              (System/getenv "DOCUMENT_BUCKET")))))
-      (do
-        (log/info "Loading local config.")
-        (environment/load-local-config!)))
-    (f)
-    (when-not client
-      (log/info "Reloading local config.")
-      (environment/load-local-config!))))
+  (run-with-config
+   {:datomic {:client (datomic-client-env)}
+    :document-storage {:bucket-name (System/getenv "DOCUMENT_BUCKET")}}
+   (f)))
 
 (defn with-db
   ([] (with-db {}))
@@ -149,36 +152,39 @@
           migrate? true
           mock-users? true} :as _opts}]
    (fn with-db-fixture [f]
-     (log/redirect-ion-casts! :stderr)
      (let [test-db-name (str "test-db-" (System/currentTimeMillis))]
-       (log/info "Creating database " test-db-name)
-       (swap! environment/config assoc-in [:datomic :db-name] test-db-name)
-       (let [client (d/client (environment/config-value :datomic :client))
-             db-name {:db-name test-db-name}]
-         (d/create-database client db-name)
-         (binding [*connection* (d/connect client db-name)
-                   *data-fixture-ids* (atom {})]
-           (binding [environment/*connection* *connection*]
-             (when migrate?
-               (environment/migrate *connection*))
-             (when mock-users?
-               (d/transact *connection* {:tx-data mock-users}))
-             (doseq [df data-fixtures
-                     :let [resource (str "resources/" (name df) ".edn")]]
-               (log/info "Transacting data fixture: " df)
-               (let [{tempids :tempids}
-                     (d/transact *connection* {:tx-data (-> resource io/resource
-                                                            slurp read-string)})]
-                 (swap! *data-fixture-ids*
-                        (fn [current-tempids]
-                          (if-let [duplicates (seq (set/intersection (set (keys current-tempids))
-                                                                     (set (keys tempids))))]
-                            (throw (ex-info "Data fixtures have duplicate tempids!"
-                                            {:duplicates duplicates}))
-                            (merge current-tempids tempids))))))
-             (f)))
-         (log/info "Deleting database " test-db-name)
-         (d/delete-database client db-name))))))
+       (run-with-config
+        {:datomic {:db-name test-db-name}}
+        (log/redirect-ion-casts! :stderr)
+        (let [client (d/client (environment/config-value :datomic :client))
+              db-name {:db-name test-db-name}]
+          (try
+            (log/info "Creating database " test-db-name)
+            (swap! environment/config assoc-in [:datomic :db-name] test-db-name)
+            (d/create-database client db-name)
+            (binding [*connection* (d/connect client db-name)
+                      *data-fixture-ids* (atom {})]
+              (binding [environment/*connection* *connection*]
+                (when migrate?
+                  (environment/migrate *connection*))
+                (d/transact *connection* {:tx-data mock-users})
+                (doseq [df data-fixtures
+                        :let [resource (str "resources/" (name df) ".edn")]]
+                  (log/info "Transacting data fixture: " df)
+                  (let [{tempids :tempids}
+                        (d/transact *connection* {:tx-data (-> resource io/resource
+                                                               slurp read-string)})]
+                    (swap! *data-fixture-ids*
+                           (fn [current-tempids]
+                             (if-let [duplicates (seq (set/intersection (set (keys current-tempids))
+                                                                        (set (keys tempids))))]
+                               (throw (ex-info "Data fixtures have duplicate tempids!"
+                                               {:duplicates duplicates}))
+                               (merge current-tempids tempids))))))
+                (f)))
+            (finally
+              (log/info "Deleting database " test-db-name)
+              (d/delete-database client db-name)))))))))
 
 (defn with-global-data [f]
   (binding [*global-test-data* (atom {})]
@@ -194,6 +200,7 @@
   (let [data @*global-test-data*]
     (assert (contains? data key) (str key " was never stored with store-data!"))
     (get data key)))
+
 
 ;;
 ;; Database
