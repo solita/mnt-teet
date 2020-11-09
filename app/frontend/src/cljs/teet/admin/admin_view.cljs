@@ -59,7 +59,7 @@
     [:div {:style {:flex 1
                    :padding "0 1rem"}}
      [typography/Heading3 {:style {:margin-bottom "1rem"}}
-      "Mandatory information"]
+      (tr [:admin :mandatory-information])]
      [:div {:style {:margin-bottom "1rem"}}
       [form/field :user/person-id
        [TextField {}]]]
@@ -69,7 +69,7 @@
     [:div {:style {:flex 1
                    :padding "0 1rem"}}
      [typography/Heading3 {:style {:margin-bottom "1rem"}}
-      "Optional information"]
+      (tr [:admin :optional-information])]
 
      [:div {:style {:margin-bottom "1rem"}}
       [form/field :user/global-role
@@ -211,7 +211,7 @@
                                   (str (format/date valid-from) " – " (format/date valid-until)))]]]))
 
 (defn user-permissions-and-history
-  [{:user/keys [permissions] :as user}]
+  [{:user/keys [permissions]}]
   (r/with-let [show-history? (r/atom false)
                toggle-show-history #(swap! show-history? not)]
     (let [current-perms (->> permissions
@@ -263,7 +263,7 @@
      (tr [:admin :deactivate-user-btn])]))
 
 (defn user-row-content
-  [e! open? user toggle-open]
+  [e! open? user]
   []
   [Collapse {:in open?
              :mount-on-enter true}
@@ -271,8 +271,7 @@
                   :padding "1rem"}}
     [edit-user-form e! user]
     [user-permissions-and-history user]
-    [user-state-controls e! user]
-    ]])
+    [user-state-controls e! user]]])
 
 (defn user-row
   [e! user]
@@ -290,7 +289,7 @@
         {:heading-content [user-row-heading user @open? toggle-open]
          :show-polygon? @open?
          :children [^{:key (str (:db/id user) "-row-content")}
-                    [user-row-content e! @open? user toggle-open]]}]])))
+                    [user-row-content e! @open? user]]}]])))
 
 
 (defn user-list
@@ -372,7 +371,7 @@
                        :max-height "calc(100vh - 170px)"
                        :padding "1rem"}}
          [:div {:class (<class common-styles/flex-row-space-between)}
-          [typography/Heading1 "Teet Users"]
+          [typography/Heading1 (tr [:admin :teet-users])]
           (when (not user-form)
             [buttons/button-primary
              {:on-click (e! admin-controller/->CreateUser)}
