@@ -8,8 +8,6 @@
             [ring.util.io :as ring-io]
             [clojure.java.io :as io]
             [clojure.pprint :as pprint]
-            [clojure.walk :as walk]
-            [clojure.set :as set]
             [teet.util.datomic :as du]
             [teet.log :as log]
             [clojure.string :as str]
@@ -17,161 +15,10 @@
             [cheshire.core :as cheshire])
   (:import (java.time.format DateTimeFormatter)))
 
-(defn prepare [form]
-  (walk/prewalk
-   (fn [x]
-     (cond
-       (and (map? x) (contains? x :db/ident))
-       (:db/ident x)
-
-       :else
-       x))
-   form))
-
-(defn pull-project [db id]
-  (d/pull db '[*
-               {:thk.project/lifecycles
-                [*
-                 {:thk.lifecycle/activities
-                  [*
-                   {:activity/tasks
-                    [*
-                     {:task/comments
-                      [* {:comment/files [*]}]}
-                     {:task/files
-                      [*
-                       {:file/comments
-                        [*
-                         {:comment/files [*]}]}]}]}]}]}] id))
-
-(defn pull-user [db id]
-  (d/pull db '[* {:user/permissions [*]}] id))
-
-(defn pull* [db id]
-  (d/pull db '[*] id))
-
-(defn pull-estate-procedure [db id]
-  (d/pull db '[*
-               {:estate-procedure/third-party-compensations [*]}
-               {:estate-procedure/land-exchanges [*]}
-               {:estate-procedure/compensations [*]}
-               {:estate-procedure/process-fees [*]}] id))
-
-(defn query-ids-with-attr [db attr]
-  (map first (d/q [:find '?e :where ['?e attr '_]] db)))
-
-(defn referred-and-provided-ids
-  "Walk form and return all map containing all ids, both referred and provided.
-  A referred id is a map with just :db/id key.
-  A provided id the :db/id of a map that contains other values as well"
-  [form]
-  (let [referred (volatile! #{})
-        provided (volatile! #{})]
-    (walk/prewalk
-     (fn [f]
-       (when (and (map? f)
-                  (contains? f :db/id))
-
-         (vswap! (if (= (set (keys f)) #{:db/id})
-                   referred
-                   provided)
-                 conj (:db/id f)))
-       f)
-     form)
-    {:referred @referred :provided @provided}))
-
-(defn fetch-entities-to-backup [db]
-  (map prepare
-       (concat
-        ;; Dump all users with
-        [";; Dump all users"]
-        (map (partial pull-user db)
-             (query-ids-with-attr db :user/id))
-
-        [";; Dump all user notifications"]
-        (map (partial pull* db)
-             (query-ids-with-attr db :notification/type))
-
-        ;; Dump all projects with all nested data
-        [";; Dump all projects"]
-        (map (partial pull-project db)
-             (query-ids-with-attr db :thk.project/id))
-
-        [";; Dump all land acquisitions"]
-        (map (partial pull* db)
-             (query-ids-with-attr db :land-acquisition/cadastral-unit))
-
-        [";; Dump all estate procedures"]
-        (map (partial pull-estate-procedure db)
-             (query-ids-with-attr db :estate-procedure/type)))))
-
-(defn backup-to [db ostream]
-  (with-open [zip-out (doto (java.util.zip.ZipOutputStream. ostream)
-                        (.putNextEntry (java.util.zip.ZipEntry. "backup.edn")))
-              out (io/writer zip-out)]
-    (loop [referred #{}
-           provided #{}
-           [entity & entities] (fetch-entities-to-backup db)]
-      (if-not entity
-        (do
-          (when (seq (set/difference referred provided))
-            (let [missing-referred-ids (set/difference referred provided)
-                  msg "Export referred to entities that were not provided! This backup is inconsistent."]
-              (log/warn msg (set/difference referred provided))
-              (throw (ex-info msg {:missing-referred-ids missing-referred-ids}))))
-          {:backed-up-entity-count (count provided)})
-        (if (string? entity)
-          (do
-            (.write out entity)
-            (.write out "\n")
-            (recur referred provided entities))
-
-          (let [ids (referred-and-provided-ids entity)]
-            (pprint/pprint entity out)
-            (.write out "\n")
-            (recur (set/union referred (:referred ids))
-                   (set/union provided (:provided ids))
-                   entities)))))))
-
-(defn current-iso-date []
+(defn- current-iso-date []
   (.format (java.time.LocalDate/now) DateTimeFormatter/ISO_LOCAL_DATE))
 
-(defn backup* [_event]
-  (let [bucket (environment/config-value :backup :bucket-name)
-        env (environment/config-value :env)
-        db (d/db (environment/datomic-connection))
-        file-key (str env "-backup-"
-                      (current-iso-date)
-                      ".edn.zip")]
-    (log/info "Starting TEET backup to bucket: "
-              bucket ", file: " file-key)
-    (s3/write-file-to-s3 {:to {:bucket bucket
-                               :file-key file-key}
-                          :contents (ring-io/piped-input-stream (partial backup-to db))})))
-
-(defn backup [_event]
-  (future
-    (backup* _event))
-  "{\"success\": true}")
-
-(defn test-backup [db]
-  (with-open [out (io/output-stream (io/file "backup.edn.zip"))]
-    (backup-to db out)))
-
-(defn to-temp-ids [form]
-  (let [mapping (volatile! {})
-        form (walk/prewalk
-              (fn [f]
-                (if (and (map? f) (contains? f :db/id))
-                  (let [id (:db/id f)]
-                    (vswap! mapping assoc (str id) id)
-                    (update f :db/id str))
-                  f))
-              form)]
-    {:mapping @mapping
-     :form form}))
-
-(defn read-seq
+(defn- read-seq
   "Lazy sequence of forms read from the given reader... don't let it escape with-open!"
   [rdr]
   (let [item (read rdr false ::eof)]
@@ -180,28 +27,7 @@
        (cons item
              (read-seq rdr))))))
 
-(defn check-ids-without-attributes [form]
-  (let [ids (volatile! (du/db-ids form))]
-    (walk/prewalk
-     (fn [x]
-       ;; This is an entity map that has more than just the :db/id
-       (when-let [id (and (map? x) (:db/id x))]
-         (when (> (count (keys x)) 1)
-           (vswap! ids disj id)))
-       x) form)
-    @ids))
-
-(defn s3-filename [db-id filename]
-  (str db-id "-" filename))
-
-(defn query-all-files! [conn]
-  (map first
-       (d/q '[:find (pull ?f [:db/id :file/name])
-              :in $
-              :where [?f :file/name _]]
-            (d/db conn))))
-
-(defn replace-entity-ids!
+(defn- replace-entity-ids!
   "Replace entity ids in postgres entity table. List of ids
   is comma separated list of old_id=new_id."
   [{:keys [tempids] :as ctx}]
@@ -212,48 +38,6 @@
                                            (str old-id "=" new-id))
                                          tempids))})
   ctx)
-
-(def skip-attributes
-  "Attributes that should be skipped when asserting backup forms.
-  Datomic internally handles composite tuples."
-  [:land-acquisition/project+cadastral-unit
-   :estate-procedure/project+estate-id
-   :estate-comments/project+estate-id
-   :owner-comments/project+owner-id
-   :unit-comments/project+unit-id
-   :file-seen/file+user
-   :comments-seen/entity+user])
-
-(defn remove-skip-attributes [form]
-  (walk/prewalk
-   (fn [x]
-     (if (map? x)
-       (apply dissoc x skip-attributes)
-       x))
-   form))
-
-(defn restore-file
-  "Restore a TEET backup zip from `file` by running the transactions in
-  the file to the database pointed to by `conn`. It is assumed that
-  the given database is empty."
-  [{:keys [conn file] :as ctx}]
-
-  (log/info "Restoring backup from file: " file)
-  ;; read all users and transact them in one go
-  (with-open [istream (io/input-stream (io/file file))
-              zip-in (doto (java.util.zip.ZipInputStream. istream)
-                       (.getNextEntry))
-              zip-reader (io/reader zip-in)
-              rdr (java.io.PushbackReader. zip-reader)]
-    ;; Transact everything in one big transaction
-    (let [form (doall
-                (map remove-skip-attributes
-                     (read-seq rdr)))
-          _ (log/info "Read " (count form) " forms from backup.")
-          {:keys [mapping form]} (to-temp-ids form)
-          {tempids :tempids} (d/transact conn {:tx-data (vec form)}) ]
-      (log/info "Restore transaction applied.")
-      (merge ctx {:mapping mapping :form form :tempids tempids}))))
 
 (defstep download-backup-file
   {:doc "Download backup file from S3 to temporary directory. Puts file path to context"
@@ -269,29 +53,41 @@
              file)
     (.getAbsolutePath file)))
 
-(defn delete-backup-file [{file :file :as ctx}]
+(defn- check-backup-format [{file :file :as ctx}]
+  (with-open [istream (io/input-stream (io/file file))
+              zip-in (java.util.zip.ZipInputStream. istream)]
+    (let [entry (.getNextEntry zip-in)]
+      (when (not= "transactions.edn" (.getName entry))
+        (throw (ex-info "Invalid transaction format"
+                        {:file-name (.getName entry)
+                         :expected-file-name "transactions.edn"})))))
+  ctx)
+
+(defn- delete-backup-file [{file :file :as ctx}]
   (.delete (io/file file))
   (dissoc ctx :file))
 
-(defn prepare-database-for-restore [{:keys [datomic-client conn config] :as ctx}]
+(defn- all-transactions
+  "Returns all tx identifiers in time order.
+  Skips the initial transactions empty databases have."
+  [conn]
+  (d/tx-range conn {:start (java.util.Date. 1)}))
+
+(defn- prepare-database-for-restore [{:keys [datomic-client conn config backup-format] :as ctx}]
   (if (:clear-database? config)
     (do
       (log/info "DELETING AND RECREATING \"teet\" DATOMIC DATABASE.")
       (d/delete-database datomic-client {:db-name "teet"})
       (d/create-database datomic-client {:db-name "teet"})
-      (let [conn (d/connect datomic-client {:db-name "teet"})]
-        (environment/migrate conn)
-        (assoc ctx :conn conn)))
+      (assoc ctx :conn (d/connect datomic-client {:db-name "teet"})))
     (do
       (log/info "Using existing \"teet\" database, checking that it is empty.")
-      (let [projects (d/q '[:find ?e :where [?e :thk.project/id _]]
-                          (d/db conn))]
-        (when (seq projects)
-          (throw (ex-info "Database is not empty!"
-                          {:found-projects (count projects)})))
-        ctx))))
+      (when-not (empty? (all-transactions conn))
+        (throw (ex-info "Database is not empty!"
+                        {:transaction-count (count (all-transactions conn))})))
+      ctx)))
 
-(defn read-restore-config [{event :event :as ctx}]
+(defn- read-restore-config [{event :event :as ctx}]
   (let [{:keys [file-key bucket] :as config*} (-> event :input (cheshire/decode keyword))
         config (dissoc config* :bucket :file-key)]
     (log/info "Read restore config from event:\n"
@@ -306,34 +102,6 @@
              :s3 {:bucket bucket :file-key file-key}
              :config config))))
 
-
-(defn restore* [event]
-  (try
-      (ctx-> {:event event
-              :api-url (environment/config-value :api-url)
-              :api-secret (environment/config-value :auth :jwt-secret)
-              :datomic-client (environment/datomic-client)
-              :conn (environment/datomic-connection)}
-             read-restore-config
-             download-backup-file
-             prepare-database-for-restore
-             restore-file
-             replace-entity-ids!
-             delete-backup-file)
-      (catch Exception e
-        (log/error e "ERROR IN RESTORE" (ex-data e)))))
-
-(defn restore [event]
-  (future
-    (restore* event))
-  "{\"success\": true}")
-
-(defn- all-transactions
-  "Returns all tx identifiers in time order.
-  Skips the initial transactions empty databases have."
-  [conn]
-  (d/tx-range conn {:start (java.util.Date. 1)}))
-
 (defn- attr-info [db attr-info-cache a]
   (get (swap! attr-info-cache
               (fn [attrs]
@@ -345,11 +113,11 @@
 ;; FIXME: Extract the actual :db/ident value for all :db/* attrs
 ;; so we don't need id numbers
 
-(def ignore-attributes
+(def ^:private ignore-attributes
   "Internal datomic stuff that we can skip"
   #{:db.install/attribute})
 
-(defn output-tx [db attr-info-cache {:keys [data]} ignore-attributes]
+(defn- output-tx [db attr-info-cache {:keys [data]} ignore-attributes]
   (let [datoms (for [{:keys [e a v added]} data
                      :let [{:db/keys [ident]}
                            (attr-info db attr-info-cache a)
@@ -373,7 +141,7 @@
                           (= e tx-id))
                         datoms))}))
 
-(defn output-all-tx [conn ostream]
+(defn- output-all-tx [conn ostream]
   (with-open [zip-out (doto (java.util.zip.ZipOutputStream. ostream)
                         (.putNextEntry (java.util.zip.ZipEntry. "transactions.edn")))
               out (io/writer zip-out)]
@@ -429,7 +197,7 @@
       ;; FIXME: handle refs in tuple vals
       [(if add? :db/add :db/retract) e a v])))
 
-(defn restore-tx-file
+(defn- restore-tx-file
   "Restore a TEET backup zip from `file` by running the transactions in
   the file to the database pointed to by `conn`. It is assumed that
   the given database is empty."
@@ -470,7 +238,57 @@
             (log/info "All transactions applied.")
             (assoc ctx :old->new old->new)))))))
 
-(defn do-backup []
+(comment
   (output-all-tx (environment/datomic-connection)
                  (io/output-stream
                   (io/file "backup-tx.edn.zip"))))
+
+(defn- backup* [_event]
+  (let [bucket (environment/config-value :backup :bucket-name)
+        env (environment/config-value :env)
+        conn (environment/datomic-connection)
+        file-key (str env "-backup-"
+                      (current-iso-date)
+                      ".edn.zip")]
+    (log/info "Starting TEET backup to bucket: "
+              bucket ", file: " file-key)
+    (try
+      (s3/write-file-to-s3 {:to {:bucket bucket
+                                 :file-key file-key}
+                            :contents (ring-io/piped-input-stream
+                                       (partial output-all-tx conn))})
+      (log/info "TEET backup finished.")
+      (catch Exception e
+        (log/error e "TEET backup failed")))))
+
+(defn backup
+  "Lambda function endpoint for backing up database as a transaction log to S3"
+  [_event]
+  (future
+    (backup* _event))
+  "{\"success\": true}")
+
+
+(defn- restore* [event]
+  (try
+      (ctx-> {:event event
+              :api-url (environment/config-value :api-url)
+              :api-secret (environment/config-value :auth :jwt-secret)
+              :datomic-client (environment/datomic-client)
+              :conn (environment/datomic-connection)}
+             read-restore-config
+             download-backup-file
+             check-backup-format
+             prepare-database-for-restore
+             restore-tx-file
+             replace-entity-ids!
+             delete-backup-file)
+      (catch Exception e
+        (log/error e "ERROR IN RESTORE" (ex-data e)))))
+
+(defn restore
+  "Lambda function endpoint for restoring database from transaction log in S3"
+  [event]
+  (future
+    (restore* event))
+  "{\"success\": true}")

@@ -40,8 +40,8 @@
                  :file-seen/file file-id
                  :file-seen/user [:user/id tu/manager-id]}))
 
-          (backup-ion/output-all-tx (tu/connection)
-                                    (io/output-stream backup-file)))))
+          (#'backup-ion/output-all-tx (tu/connection)
+                                      (io/output-stream backup-file)))))
 
     ;; TODO: Test backup/restore of a tupleattrs with ref that isn't
     ;; included in the backup
@@ -51,8 +51,8 @@
           (is (empty? (d/q '[:find ?p :where [?p :db/ident :thk.project/id]]
                            (tu/db)))
               "Database is empty before restore")
-          (backup-ion/restore-tx-file {:conn (tu/connection)
-                                       :file backup-file})
+          (#'backup-ion/restore-tx-file {:conn (tu/connection)
+                                         :file backup-file})
           (testing "Restored project matches old"
             (let [restored-project (get-project)]
               (is (= (remove-db-ids restored-project)
