@@ -4,7 +4,8 @@
             [clojure.test :refer [use-fixtures deftest is testing]]
             [clojure.java.io :as io]
             [datomic.client.api :as d]
-            [clojure.walk :as walk]))
+            [clojure.walk :as walk]
+            [teet.util.datomic :as du]))
 
 (use-fixtures :each tu/with-environment)
 
@@ -18,20 +19,28 @@
 (defn- remove-db-ids [tree]
   (remove-keys tree :db/id))
 
+(defn get-project []
+  (d/pull (tu/db)
+          '[*
+            {:thk.project/lifecycles
+             [*
+              {:thk.lifecycle/activities
+               [*
+                {:activity/tasks
+                 [*
+                  {:task/comments [*]}]}]}]}]
+          [:thk.project/id "11111"]))
+
 (deftest restore-tx-backup
   (let [with-populated-db (tu/with-db)
         with-empty-db (tu/with-db {:migrate? false
                                    :mock-users? false
                                    :data-fixtures []})
         project (atom nil)
-        backup-file (java.io.File/createTempFile "testbackup" ".zip")
-        get-project #(d/pull (tu/db) '[*] [:thk.project/id "11111"])]
+        backup-file (java.io.File/createTempFile "testbackup" ".zip")]
     (testing "Backup all transactions from a populated db"
       (with-populated-db
         (fn []
-
-          ;; Fetch project
-          (reset! project (get-project))
 
           ;; Insert file and user seen (tuple attr)
           (let [file-id (get-in (tx {:db/id "testfile" :file/name "testfile"})
@@ -39,6 +48,27 @@
             (tx {:db/id "seen-by-manager"
                  :file-seen/file file-id
                  :file-seen/user [:user/id tu/manager-id]}))
+
+          ;; Create a task and comment on it
+          (tu/local-login tu/mock-user-boss)
+          (let [activity-id (tu/->db-id "p1-lc1-act1")
+                {:activity/keys [estimated-start-date estimated-end-date]}
+                (du/entity (tu/db) activity-id)
+                task-id (tu/create-task
+                         {:activity activity-id
+                          :task {:task/group :task.group/land-purchase
+                                 :task/type :task.type/plot-allocation-plan
+                                 :task/assignee {:user/id (second tu/mock-user-edna-consultant)}
+                                 :task/estimated-start-date estimated-start-date
+                                 :task/estimated-end-date estimated-end-date}})]
+            (tu/local-command :comment/create
+                              {:entity-id task-id
+                               :entity-type :task
+                               :comment "comment should survive backup/restore"
+                               :visibility :comment.visibility/all}))
+
+          ;; Save project state before backup
+          (reset! project (get-project))
 
           (#'backup-ion/output-all-tx (tu/connection)
                                       (io/output-stream backup-file)))))
@@ -59,9 +89,7 @@
                      (remove-db-ids @project))
                   "Project is the same (expect :db/id attrs)")
               (is (integer? (:db/id restored-project)))
-              (is (integer? (:db/id @project)))
-              (is (not= (:db/id restored-project)
-                        (:db/id @project)))))
+              (is (integer? (:db/id @project)))))
 
           (testing "File seen has correct tuple"
             (let [file-with-seen
