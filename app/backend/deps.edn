@@ -53,7 +53,7 @@
            :dev {:jvm-opts ["-Duser.timezone=UTC"] ;; Match AWS env
                  :extra-deps {com.datomic/ion-dev {:mvn/version "0.9.276"}
                               org.clojure/tools.namespace {:mvn/version "0.3.1"}
-                              com.datomic/dev-local {:mvn/version "0.9.195"}}
+                              com.datomic/dev-local {:mvn/version "0.9.225"}}
                  :extra-paths ["dev-src" "test"]}
            :db-connect {:extra-deps {com.datomic/ion-dev {:mvn/version "0.9.276"}
                                      org.clojure/tools.namespace {:mvn/version "0.3.1"}}
@@ -76,12 +76,12 @@
                                  "--no-color" ;; No ANSI codes in CI
                                  "--reporter" "teet.test.slack/report"]
                      :extra-deps {lambdaisland/kaocha {:mvn/version "1.0-612"}
-                                  com.datomic/dev-local {:mvn/version "0.9.195"}}
+                                  com.datomic/dev-local {:mvn/version "0.9.225"}}
                      :extra-paths ["test"]}
            :test-all {:jvm-opts ["-Duser.timezone=UTC"] ;; Match AWS env
                       :main-opts ["-m" "kaocha.runner"]
                       :extra-deps {lambdaisland/kaocha {:mvn/version "1.0-612"}
-                                   com.datomic/dev-local {:mvn/version "0.9.195"}}
+                                   com.datomic/dev-local {:mvn/version "0.9.225"}}
                       :extra-paths ["test"]}
            :authorizations {:main-opts ["-m" "teet.authorization"]
                             :extra-paths ["src/build"]
