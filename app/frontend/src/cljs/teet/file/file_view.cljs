@@ -684,7 +684,12 @@
        ^{:attribute :file/document-group :xs 8}
        [select/select-enum {:e! e!
                             :attribute :file/document-group}]
-       ^{:attribute :file/sequence-number :xs 4}
+       ^{:attribute :file/sequence-number :xs 4
+         :validate (fn [n]
+                     (when (and (not (str/blank? n))
+                                (file-upload/validate-seq-number
+                                 {:file/sequence-number (js/parseInt n)}))
+                       (tr [:file-upload :invalid-sequence-number])))}
        [TextField {:type :number
                    :label (if (du/enum= :activity.name/land-acquisition
                                         (:activity/name activity))
