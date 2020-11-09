@@ -442,15 +442,16 @@
                        (.getNextEntry))
               zip-reader (io/reader zip-in)
               rdr (java.io.PushbackReader. zip-reader)]
-    ;; Transact everything in one big transaction
-    (let [backup-forms (read-seq rdr)
-          {:keys [backup-timestamp ref-attrs tuple-attrs]} (first backup-forms)]
+    ;; Read first form which is the mapping containing info about the backup
+    (let [{:keys [backup-timestamp ref-attrs tuple-attrs]} (read rdr)]
       (assert (set? ref-attrs) "Expected set of :ref-attrs in 1st backup form")
       (assert (map? tuple-attrs) "Expected map of :tuple-attrs in 1st backup form")
       (assert (inst? backup-timestamp) "Expected :backup-timestamp in 1st backup form")
       (log/info "Restoring from tx log backup generated at: " backup-timestamp)
       (loop [old->new {}
-             txs (rest backup-forms)]
+
+             ;; Read rest of the forms (tx data) without retaining head
+             txs (read-seq rdr)]
         (if-let [tx (first txs)]
           (let [tx-data (into [(merge (:tx tx)
                                       {:db/id "datomic.tx"})]
