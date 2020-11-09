@@ -110,9 +110,6 @@
                   (assoc attrs a (d/pull db '[:db/ident :db/valueType] a)))))
        a))
 
-;; FIXME: Extract the actual :db/ident value for all :db/* attrs
-;; so we don't need id numbers
-
 (def ^:private ignore-attributes
   "Internal datomic stuff that we can skip"
   #{:db.install/attribute})
