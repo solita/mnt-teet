@@ -37,28 +37,49 @@
                                    :mock-users? false
                                    :data-fixtures []})
         project (atom nil)
-        backup-file (java.io.File/createTempFile "testbackup" ".zip")]
+        backup-file (java.io.File/createTempFile "testbackup" ".zip")
+        test-file-name (str (gensym "testfile"))
+        pull-seen-by-manager-tx (fn []
+                                  (first
+                                   (d/q '[:find (pull ?tx [:db/txInstant :tx/author])
+                                          :in $ ?name ?manager-id
+                                          :where
+                                          [?file :file/name ?name]
+                                          [?e :file-seen/file ?file]
+                                          [?e :file-seen/seen-at _ ?tx true]]
+                                        (tu/db)
+                                        test-file-name
+                                        tu/manager-id)))]
     (testing "Backup all transactions from a populated db"
       (with-populated-db
         (fn []
 
           ;; Insert file and user seen (tuple attr)
-          (let [file-id (get-in (tx {:db/id "testfile" :file/name "testfile"})
-                                [:tempids "testfile"])]
-            (tx {:db/id "seen-by-manager"
-                 :file-seen/file file-id
-                 :file-seen/user [:user/id tu/manager-id]})
+          (let [file-id (get-in (tx {:db/id "testfile"
+                                     :file/name test-file-name})
+                                [:tempids "testfile"])
+                ;; First mark seen at to start of epoch
+                tx (tx {:db/id "seen-by-manager"
+                        :file-seen/file file-id
+                        :file-seen/user [:user/id tu/manager-id]
+                        :file-seen/seen-at (java.util.Date. 0)})
+                seen-by-id (get-in tx [:tempids "seen-by-manager"])]
+
+
+            (tu/store-data! :seen-by-manager-at
+                            (ffirst (d/q '[:find (max ?d)
+                                           :where
+                                           [_ :file-seen/seen-at _ ?tx]
+                                           [?tx :db/txInstant ?d]]
+                                         (tu/db))))
+
+            ;; Update mark seen to current time
+            (tx {:db/id seen-by-id
+                 :file-seen/seen-at (java.util.Date.)})
+
+            ;; Store tx info for latest tx
             (tu/store-data! :seen-by-manager-tx
-                            (d/q '[:find ?tx
-                                   :in $ ?file-id ?manager-id
-                                   :where
-                                   [?e :file-seen/file ?file-id ?tx true]]
-                                 (d/history (tu/db))
-                                 file-id
-                                 tu/manager-id))
-            ;; TODO get :db/txInstant from :seen-by-manager-tx
-            ;;      check that it survives the backup-restore roundtrip
-            )
+                            (pull-seen-by-manager-tx)))
 
           ;; Create a task and comment on it
           (tu/local-login tu/mock-user-boss)
@@ -89,8 +110,6 @@
       (is (.canRead backup-file) "Backup file exists")
       (is (> (.length backup-file) 10240) "It is over 10k in length"))
 
-    ;; TODO: Test backup/restore of a tupleattrs with ref that isn't
-    ;; included in the backup
     (testing "Restore to new empty database"
       (with-empty-db
         (fn []
@@ -116,15 +135,35 @@
                                        {:file-seen/_file
                                         [:file-seen/file+user
                                          {:file-seen/user [:db/id :user/given-name :user/family-name]}]}])
-                          :where [?f :file/name "testfile"]]
-                        (tu/db)))
+                          :where [?f :file/name ?name]
+                          :in $ ?name]
+                        (tu/db)
+                        test-file-name))
 
                   user-id (get-in file-with-seen [:file-seen/_file 0 :file-seen/user :db/id])
                   file-id (:db/id file-with-seen)]
               (is (= (remove-keys file-with-seen :db/id :file-seen/file+user)
-                     {:file/name "testfile"
+                     {:file/name test-file-name
                       :file-seen/_file
                       [{:file-seen/user {:user/given-name "Danny D."
                                          :user/family-name "Manager"}}]}))
               (is (= (get-in file-with-seen [:file-seen/_file 0 :file-seen/file+user])
-                     [file-id user-id])))))))))
+                     [file-id user-id]))))
+
+          (testing "File seen tx data is correct"
+            (let [old-file-seen-tx (tu/get-data :seen-by-manager-tx)
+                  restored-file-seen-tx (pull-seen-by-manager-tx)]
+              (is (= old-file-seen-tx restored-file-seen-tx))
+
+              (testing "Previous state is also present"
+                (let [db* (d/as-of (tu/db)
+                                   (java.util.Date.
+                                    (inc (.getTime (tu/get-data :seen-by-manager-at)))))
+                      seen (ffirst
+                            (d/q '[:find (pull ?e [:file-seen/seen-at])
+                                   :where
+                                   [?file :file/name ?name]
+                                   [?e :file-seen/file ?file]
+                                   :in $ ?name]
+                                 db* test-file-name))]
+                  (is (= seen {:file-seen/seen-at (java.util.Date. 0)})))))))))))
