@@ -7,7 +7,7 @@
             [clojure.walk :as walk]
             [teet.util.datomic :as du]))
 
-(use-fixtures :each tu/with-environment)
+(use-fixtures :each tu/with-environment tu/with-global-data)
 
 (defn- remove-keys [tree & keys]
   (walk/prewalk (fn [x]
@@ -47,7 +47,18 @@
                                 [:tempids "testfile"])]
             (tx {:db/id "seen-by-manager"
                  :file-seen/file file-id
-                 :file-seen/user [:user/id tu/manager-id]}))
+                 :file-seen/user [:user/id tu/manager-id]})
+            (tu/store-data! :seen-by-manager-tx
+                            (d/q '[:find ?tx
+                                   :in $ ?file-id ?manager-id
+                                   :where
+                                   [?e :file-seen/file ?file-id ?tx true]]
+                                 (d/history (tu/db))
+                                 file-id
+                                 tu/manager-id))
+            ;; TODO get :db/txInstant from :seen-by-manager-tx
+            ;;      check that it survives the backup-restore roundtrip
+            )
 
           ;; Create a task and comment on it
           (tu/local-login tu/mock-user-boss)
