@@ -782,6 +782,7 @@
                   [tabs/details-and-comments-tabs
                    {:e! e!
                     :app app
+                    :after-comment-list-rendered-event common-controller/->Refresh
                     :comment-link-comp [file-comments-link file]
                     :after-comment-added-event common-controller/->Refresh
                     :entity-id (:db/id file)

@@ -305,9 +305,9 @@
       (let [user (user-by-person-id pid)]
         (println "doing user" (:db/id user)  pid" found with" (count (:user/permissions user)) "permissions")
         (doseq [perm (:user/permissions user)]
-          
+
           (println "remove-permission" (:user/id user) (:db/id perm))
           (when-not dry-run?
-            (println 
+            (println
              (remove-permission (:user/id user)
                                 (:db/id perm)))))))))
