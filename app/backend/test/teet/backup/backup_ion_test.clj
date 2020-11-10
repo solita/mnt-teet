@@ -73,6 +73,11 @@
           (#'backup-ion/output-all-tx (tu/connection)
                                       (io/output-stream backup-file)))))
 
+
+    (testing "Backup file has been created"
+      (is (.canRead backup-file) "Backup file exists")
+      (is (> (.length backup-file) 10240) "It is over 10k in length"))
+
     ;; TODO: Test backup/restore of a tupleattrs with ref that isn't
     ;; included in the backup
     (testing "Restore to new empty database"
