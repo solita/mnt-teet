@@ -42,13 +42,6 @@
    :flex-direction :column
    :flex flex-width})
 
-(defn file-comments-link-style
-  [new?]
-  (merge
-    {}
-    (when new?
-      {:color theme-colors/red})))
-
 (defn file-icon-container-style
   []
   {:flex-grow 0

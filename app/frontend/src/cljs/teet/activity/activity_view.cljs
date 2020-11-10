@@ -27,7 +27,8 @@
             [teet.ui.typography :as typography]
             [teet.ui.url :as url]
             [teet.ui.util :as util]
-            [teet.user.user-model :as user-model]))
+            [teet.user.user-model :as user-model]
+            [teet.authorization.authorization-check :refer [when-authorized]]))
 
 (defn- names-of-unfinished-activities [existing-activities]
   (->> existing-activities
@@ -135,8 +136,11 @@
   [e! activity]
   [:div {:class (<class common-styles/heading-and-action-style)}
    [typography/Heading1 (tr-enum (:activity/name activity))]
-   [buttons/button-secondary {:on-click #(e! (project-controller/->OpenEditActivityDialog (:db/id activity)))}
-    (tr [:buttons :edit])]])
+   [when-authorized
+    :activity/update
+    activity
+    [buttons/button-secondary {:on-click #(e! (project-controller/->OpenEditActivityDialog (:db/id activity)))}
+     (tr [:buttons :edit])]]])
 
 (defn task-status-color
   [derived-status]
