@@ -245,19 +245,15 @@
 (defn file-comments-link
   [{comment-counts :comment/counts :as file}]
   (let [{:comment/keys [new-comments old-comments]} comment-counts
-        comments? (not (zero? (+ new-comments old-comments)))
-        new-comments? (not (zero? new-comments))]
-    [url/Link {:class (<class file-style/file-comments-link-style new-comments?)
-               :page :file
+        comments? (not (zero? (+ new-comments old-comments)))]
+    [url/Link {:page :file
                :params {:file (:db/id file)
                         :activity (get-in file [:task/_files 0 :activity/_tasks 0 :db/id])
                         :task (get-in file [:task/_files 0 :db/id])}
                :query {:tab "comments"}}
      (if comments?
-       (if new-comments?
-           [:span [common/comment-count-chip file] (tr [:common :new])]
-           [:span {:style {:text-transform :lowercase}}
-            [common/comment-count-chip file] (tr [:document :comments])])
+       [:span {:style {:text-transform :lowercase}}
+        [common/comment-count-chip file] (tr [:document :comments])]
        [:span (tr [:land-modal-page :no-comments])])]))
 
 (defn- replace-file-form [e! project-id task file form close!]
@@ -526,6 +522,11 @@
    :flex-direction :column
    :margin "2rem 0 2rem 0"})
 
+(defn- edited [{:meta/keys [creator created-at modifier modified-at]}]
+  (if modified-at
+    [modifier modified-at]
+    [creator created-at]))
+
 (defn- file-details [e! project-id task {:keys [replacement-upload-progress] :as file}
                      latest-file can-replace-file? replace-form]
   (let [old? (some? latest-file)
@@ -535,24 +536,30 @@
                                        (:versions latest-file)))
                          (:versions file))]
     [:div.file-details
-     [:div.file-details-full-name
-      [typography/BoldGreyText
-       (str (tr [:file :full-name]) ": " (:file/full-name file))]]
-     [:div.file-details-original-name
-      [typography/GreyText
-       [:strong (str (tr [:fields :file/original-name]) ": ")]
-       [:span (:file/original-name file)]]]
+     [:div {:class (<class common-styles/margin-bottom 1)}
+      [:div.file-details-full-name
+       [typography/BoldGreyText
+        (str (tr [:file :full-name]) ": " (:file/full-name file))]]
+      [:div.file-details-original-name
+       [typography/GreyText
+        [:strong (str (tr [:fields :file/original-name]) ": ")]
+        [:span (:file/original-name file)]]]
 
-     (let [first-version (or (last other-versions) file)
-           edited? (not= first-version file)]
-       [:<>
-        [:div.file-details-upload-info
-         (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator first-version))
-                                   :date (format/date-time (:meta/created-at first-version))})]
-        (when edited?
-          [:div.file-details-edit-info
-           (tr [:file :edit-info] {:author (user-model/user-name (:meta/creator file))
-                                   :date (format/date-time (:meta/created-at file))})])])
+      (let [first-version (or (last other-versions) file)
+            [edited-by edited-at :as edited?]
+            (if (not= first-version file)
+              (edited file)
+              (when (:meta/modified-at first-version)
+                (edited first-version)))]
+        [:<>
+         [:div.file-details-upload-info
+          (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator first-version))
+                                    :date (format/date-time (:meta/created-at first-version))})]
+
+         (when edited?
+           [:div.file-details-edit-info
+            (tr [:file :edit-info] {:author (user-model/user-name edited-by)
+                                    :date (format/date-time edited-at)})])])]
 
 
 
@@ -684,7 +691,12 @@
        ^{:attribute :file/document-group :xs 8}
        [select/select-enum {:e! e!
                             :attribute :file/document-group}]
-       ^{:attribute :file/sequence-number :xs 4}
+       ^{:attribute :file/sequence-number :xs 4
+         :validate (fn [n]
+                     (when (and (not (str/blank? n))
+                                (file-upload/validate-seq-number
+                                 {:file/sequence-number (js/parseInt n)}))
+                       (tr [:file-upload :invalid-sequence-number])))}
        [TextField {:type :number
                    :label (if (du/enum= :activity.name/land-acquisition
                                         (:activity/name activity))
@@ -770,6 +782,9 @@
                   [tabs/details-and-comments-tabs
                    {:e! e!
                     :app app
+                    :after-comment-list-rendered-event common-controller/->Refresh
+                    :comment-link-comp [file-comments-link file]
+                    :after-comment-added-event common-controller/->Refresh
                     :entity-id (:db/id file)
                     :entity-type :file
                     :show-comment-form? (not old?)
