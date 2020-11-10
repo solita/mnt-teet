@@ -719,8 +719,8 @@
   :project-updated "Projekti värskendati edukalt",
   :new-activity "Lisan tegevuse",
   :add-activity
-  #:thk.lifecycle-type{:construction "Lisan tegevuse",
-                       :design "Lisan tegevuse"},
+  #:thk.lifecycle-type{:construction "Lisan etapi",
+                       :design "Lisan etapi"},
   :tabs
   {:activities "Tegevused",
    :details "Üksikasjad",
