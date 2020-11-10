@@ -19,7 +19,7 @@
   (r/create-class
     {:component-will-unmount #(e! (comments-controller/->ClearCommentField))
      :reagent-render
-     (fn [{:keys [app tab-wrapper]
+     (fn [{:keys [app tab-wrapper comment-link-comp]
            :or {tab-wrapper :span}
            :as opts} details]
        (let [query (:query app)
@@ -51,7 +51,9 @@
                [:div {:class (if (= (:tab query) "comments") "tab-active" "tab-inactive")}
                 (if (= (:tab query) "comments")
                   [typography/SectionHeading (tr [:document :comments])]
-                  [Link {:href (url/set-query-param :tab "comments")} (tr [:document :comments])])]]]]
+                  (if comment-link-comp
+                    comment-link-comp
+                    [Link {:href (url/set-query-param :tab "comments")} (tr [:document :comments])]))]]]]
             (if (= (:tab query) "comments")
               comments-component
               (with-meta
