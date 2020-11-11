@@ -208,9 +208,6 @@
 
 (def db-connection environment/datomic-connection)
 
-(defn db []
-  (d/db (db-connection)))
-
 
 ;;
 ;; Local login, queries, commands
