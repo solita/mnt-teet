@@ -50,11 +50,12 @@
        (environment/config-map {:api-url [:api-url]
                                 :api-secret [:auth :jwt-secret]
                                 :wfs-url [:road-registry :wfs-url]})
-        [(d/pull db '[:db/id :thk.project/project-name :thk.project/name
-                      :thk.project/road-nr :thk.project/carriageway
-                      :thk.project/start-m :thk.project/end-m
-                      :thk.project/custom-start-m :thk.project/custom-end-m]
-                 [:thk.project/id id])]))
+       [(d/pull db '[:db/id :integration/id
+                     :thk.project/project-name :thk.project/name
+                     :thk.project/road-nr :thk.project/carriageway
+                     :thk.project/start-m :thk.project/end-m
+                     :thk.project/custom-start-m :thk.project/custom-end-m]
+                [:thk.project/id id])]))
     :ok))
 
 (defcommand :thk.project/revoke-permission

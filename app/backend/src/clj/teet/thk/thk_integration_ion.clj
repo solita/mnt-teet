@@ -94,7 +94,7 @@
 
 (defn- update-entity-info [{db :db :as ctx}]
   (let [projects (map first
-                      (d/q '[:find (pull ?e [:db/id
+                      (d/q '[:find (pull ?e [:db/id :integration/id
                                              :thk.project/project-name :thk.project/name
                                              :thk.project/road-nr
                                              :thk.project/carriageway

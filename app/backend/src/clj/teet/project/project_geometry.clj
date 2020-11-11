@@ -6,7 +6,8 @@
             [clojure.string :as str]
             [cheshire.core :as cheshire]
             [teet.road.road-query :as road-query]
-            [teet.util.geo :as geo]))
+            [teet.util.geo :as geo]
+            [teet.integration.integration-id :as integration-id]))
 
 (defn- valid-api-info? [{:keys [api-url api-secret]}]
   (and (not (str/blank? api-url))
@@ -18,12 +19,13 @@
   [{:keys [api-url api-secret wfs-url] :as api} projects]
   {:pre [(valid-api-info? api)]}
   (let [road-part-cache (atom {})
-        request-body (for [{id :db/id
+        request-body (for [{id :integration/id
                             :thk.project/keys [project-name name road-nr carriageway
                                                start-m end-m
                                                custom-start-m custom-end-m]}
                            projects
-                           :when (and (integer? (or custom-start-m start-m))
+                           :when (and id
+                                      (integer? (or custom-start-m start-m))
                                       (integer? (or custom-end-m end-m))
                                       (integer? road-nr)
                                       (integer? carriageway))
@@ -32,7 +34,7 @@
                                                                           road-nr carriageway
                                                                           (or custom-start-m start-m)
                                                                           (or custom-end-m end-m))]]
-                       {:id (str id)
+                       {:id (str (integration-id/uuid->number id))
                         :type "project"
                         :tooltip (or project-name name)
                         :geometry_wkt (geo/line-string-to-wkt geometry)})]
