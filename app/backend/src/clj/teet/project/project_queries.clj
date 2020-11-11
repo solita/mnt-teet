@@ -18,17 +18,31 @@
             [teet.road.road-query :as road-query]
             [teet.task.task-db :as task-db]
             [teet.user.user-model :as user-model]
-            [teet.util.collection :as cu]))
+            [teet.util.collection :as cu]
+            [teet.util.datomic :as du]
+            [teet.integration.integration-id :as integration-id]))
 
-(defquery :thk.project/db-id->thk-id
-  {:doc "Fetch THK project id for given entity :db/id"
+(defquery :thk.project/integration-id->thk-id
+  {:doc "Fetch THK project id for given entity :integration/id number"
    :context {db :db}
-   :args {id :db/id}
+   :args {id :integration/id}
    :project-id nil
    :authorization {}}
-  (-> db
-      (d/pull [:thk.project/id] id)
-      :thk.project/id))
+  (:thk.project/id
+   (du/entity db [:integration/id
+                  (cond
+                    (string? id)
+                    (integration-id/number->uuid (BigInteger. id))
+
+                    (number? id)
+                    (integration-id/number->uuid id)
+
+                    (uuid? id)
+                    id
+
+                    :else
+                    (throw (ex-info "Unrecognized integration id"
+                                    {:id id})))])))
 
 (defn maybe-fetch-task-files [project db user task-id]
   (if-not task-id
@@ -274,11 +288,13 @@
         arglist (seq in)
         in (into '[$] (map first) arglist)
         args (into [db] (map second) arglist)]
-    (mapv #(-> % first (assoc :type :project))
-          (d/q (let [q {:query {:find '[(pull ?e [:db/id
-                                                 :thk.project/project-name
-                                                 :thk.project/name
-                                                 :thk.project/id])]
+    (mapv #(-> % first
+               (assoc :type :project)
+               (update :integration/id (comp str integration-id/uuid->number)))
+          (d/q (let [q {:query {:find '[(pull ?e [:db/id :integration/id
+                                                  :thk.project/project-name
+                                                  :thk.project/name
+                                                  :thk.project/id])]
                                :where (into '[[?e :thk.project/id _]] where)
                                :in in}
                         :args args}]

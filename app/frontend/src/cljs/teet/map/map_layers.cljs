@@ -117,7 +117,7 @@
         entity-query-options
         (if (vector? projects)
           ;; Have fetched projects, show only them
-          {"ids" (str "{" (str/join "," (map :db/id projects)) "}")}
+          {"ids" (str "{" (str/join "," (map :integration/id projects)) "}")}
           ;; Show all projects
           {"type" "project"})]
     {:projects
