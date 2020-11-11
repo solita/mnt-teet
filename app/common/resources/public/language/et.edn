@@ -643,6 +643,8 @@
   "Saatke koosoleku osalejatele teavitus koosoleku sisu muudatuste kohta.",
   :add-non-teet-participant "Lisan TEET-u välise osaleja",
   :search-decisions "Otsin otsuseid",
+  :not-enough-participants
+  "Teavituste saatmiseks on vaja lisada veel vähemalt üks osaleja.",
   :add-decision-button "Lisan otsuse",
   :participant-removed "Osaleja eemaldatud",
   :approve-meeting-modal-title "Kinnitan otsused?",

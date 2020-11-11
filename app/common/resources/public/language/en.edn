@@ -647,6 +647,8 @@
   "Send notifications to meeting participants about relevant changes to the meeting contents.",
   :add-non-teet-participant "Add person not in TEET",
   :search-decisions "Search decisions",
+  :not-enough-participants
+  " To send notifications, you need to add at least one more participant.",
   :add-decision-button "Add decision",
   :participant-removed "Participant removed",
   :approve-meeting-modal-title "Approve decisions?",

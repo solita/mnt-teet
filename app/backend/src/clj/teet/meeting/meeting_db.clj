@@ -95,7 +95,7 @@
                                 :in $ ?m] db meeting-id))]
     (mapv first
           (d/q '[:find (pull ?u [:user/given-name :user/family-name :db/id
-                                 :user/email])
+                                 :user/email :user/person-id])
                  :in $ [?u ...]]
                db recipients))))
 

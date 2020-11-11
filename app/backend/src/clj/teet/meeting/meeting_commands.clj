@@ -7,7 +7,6 @@
             teet.meeting.meeting-specs
             [teet.util.datomic :as du]
             [teet.meeting.meeting-db :as meeting-db]
-            [teet.meeting.meeting-ics :as meeting-ics]
             [teet.integration.integration-email :as integration-email]
             [teet.environment :as environment]
             [teet.meeting.meeting-model :as meeting-model]
@@ -224,11 +223,12 @@
          "/" meeting-eid)))
 
 
-(defn historical-meeting-notify [db meeting from-user participants project-eid]
+(defn notify-about-meeting [db meeting from-user participants project-eid]
   (log/debug "from-user is" from-user)
   (tx-ret
    (vec
-    (for [to-user participants]
+    (for [to-user participants
+          :when (:user/person-id to-user)]
       (notification-db/notification-tx
        db
        (do
@@ -240,43 +240,26 @@
           :type :notification.type/meeting-updated
           :project project-eid}))))))
 
-(defn email-subject-for-type [meeting type]
-  (case type
-    :invitation
-    (str "TEET: koosoleku kutse: " (meeting-model/meeting-title meeting) " / "
-         "TEET: meeting invitation: " (meeting-model/meeting-title meeting))
+(defn email-subject [meeting]
+  (str "TEET: koosolek uuendatud: " (meeting-model/meeting-title meeting) " / "
+       "TEET: meeting updated: " (meeting-model/meeting-title meeting)))
 
-    :past-update
-    (str "TEET: koosolek uuendatud: " (meeting-model/meeting-title meeting) " / "
-         "TEET: meeting updated: " (meeting-model/meeting-title meeting))))
-
-(defn email-parts-for-ical-invitation [ics]
-  [{:headers {"Content-Type" "text/calendar; method=request"}
-    :body ics}])
-
-(defn email-parts-for-past-update [meeting meeting-link]
+(defn email-parts [meeting-link]
   [{:headers {"Content-Type" "text/plain; charset=utf-8"}
-    :body (str "Koosolek / meeting: " meeting-link "\n\n")}])
+    :body (str "Koosolek / Meeting: " meeting-link "\n\n")}])
 
-(defn send-meeting-email! [db meeting project-eid meeting-link to meeting-eid invitation-or-past-update?]
+(defn send-meeting-email! [db meeting project-eid meeting-link to meeting-eid]
   (let [meeting-link (meeting-link db
                                    (environment/config-value :base-url)
                                    meeting project-eid)
-        ics (meeting-ics/meeting-ics {:meeting meeting
-                                      :meeting-link meeting-link
-                                      :cancel? false})
         email-response
         (integration-email/send-email!
           {:from (environment/config-value :email :from)
            :to to
-           :subject (email-subject-for-type meeting
-                                            invitation-or-past-update?)
-           :parts (case invitation-or-past-update?
-                    :past-update
-                    (email-parts-for-past-update meeting meeting-link)
-                    :invitation
-                    (email-parts-for-ical-invitation ics))})]
+           :subject (email-subject meeting)
+           :parts (email-parts meeting-link)})]
 
+    (println "EMail from: " (environment/config-value :email :from))
     (log/info "SES send response" email-response)
     (log/info "SES emails sent to: " (pr-str to))
     (tx-ret [{:db/id meeting-eid
@@ -301,27 +284,20 @@
                           {:meeting/organizer [:user/email :user/given-name :user/family-name]}
                           {:meeting/agenda [:meeting.agenda/topic
                                             {:meeting.agenda/responsible [:user/given-name
-                                                                          :user/family-name]}]}] meeting-eid)]
+                                                                          :user/family-name]}]}]
+                        meeting-eid)]
     (assert (:db/id user))
     (log/debug "to-list participant counts before / after filtering:" (count all-to) (count to))
-    (cond
-      (in-past? (:meeting/start meeting))
-      (do
-        (log/debug "send-meeting-email in historical mode because meeting in past")
-        (send-meeting-email! db meeting project-eid meeting-link to meeting-eid :past-update)
-        (historical-meeting-notify db meeting user
-                                   (meeting-db/participants db meeting-eid)
-                                   project-eid))
-
-      (not (seq to))
+    (if (not (seq to))
       (do
         (log/debug "not sending email because no participants with email")
         {:error :no-participants-with-email})
-
-      :else
       (do
         (log/debug "send-meeting-email in future mode because meeting in future")
-        (send-meeting-email! db meeting project-eid meeting-link to meeting-eid :invitation)))))
+        (notify-about-meeting db meeting user
+                              (meeting-db/participants db meeting-eid)
+                              project-eid)
+        (send-meeting-email! db meeting project-eid meeting-link to meeting-eid)))))
 
 
 (defcommand :meeting/cancel
@@ -332,34 +308,9 @@
    :authorization {:meeting/edit-meeting {:db/id meeting-id
                                           :link :meeting/organizer-or-reviewer}}
    :pre [(meeting-db/activity-meeting-id db activity-eid meeting-id)]}
-  (let [to (remove #(str/ends-with? % "@example.com")
-                   (keep :user/email (meeting-db/participants db meeting-id)))
-        tx-return (tx-ret (update-meeting-tx
-                            meeting-id
-                            [(meta-model/deletion-tx user meeting-id)]))]
-    (when (seq to)
-      (let [meeting (d/pull db
-                            '[:db/id
-                              :meeting/number :meeting/invitations-sent-at
-                              :meeting/title :meeting/location
-                              :meeting/start :meeting/end
-                              {:meeting/organizer [:user/email :user/given-name :user/family-name]}
-                              {:meeting/agenda [:meeting.agenda/topic
-                                                {:meeting.agenda/responsible [:user/given-name
-                                                                              :user/family-name]}]}]
-                            meeting-id)
-            ics (meeting-ics/meeting-ics {:meeting meeting
-                                          :cancel? true})
-            email-response (when (:meeting/invitations-sent-at meeting) ;; check that for this meeting invitations have been sent
-                             (integration-email/send-email!
-                               {:from (environment/config-value :email :from)
-                                :to to
-                                :subject (str "TEET: " (meeting-model/meeting-title meeting) " tühistatud" " / "
-                                              "TEET: " (meeting-model/meeting-title meeting) " cancelled")
-                                :parts [{:headers {"Content-Type" "text/calendar; method=cancel"} ;; RFC 6047 SECTION 2.4
-                                         :body ics}]}))]
-        (log/info "email response: " (or email-response "no email sent"))))
-    tx-return))
+  (tx-ret (update-meeting-tx
+            meeting-id
+            [(meta-model/deletion-tx user meeting-id)])))
 
 (defcommand :meeting/create-decision
   {:doc "Create a new decision under a topic"
