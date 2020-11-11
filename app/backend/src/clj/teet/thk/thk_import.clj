@@ -13,8 +13,7 @@
             [teet.util.collection :as cu]
             [teet.thk.thk-mapping :as thk-mapping]
             [teet.log :as log]
-            [teet.project.project-db :as project-db]
-            [teet.util.datomic :as du])
+            [teet.project.project-db :as project-db])
   (:import (org.apache.commons.io.input BOMInputStream)))
 
 (def excluded-project-types #{"TUGI" "TEEMU"})
