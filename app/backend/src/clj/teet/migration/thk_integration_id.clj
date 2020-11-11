@@ -30,4 +30,16 @@
           (d/pull db [:db/id :integration/id] %)]
       (println "Check :db/id = " db-id ", :integration/id = " integration-id)
       (= db-id (thk-mapping/uuid->number integration-id)))
-   (entities-with-attr db :integration/id)))
+   (entities-with-attr db :thk.project/id)))
+
+(defn migrate-projects
+  "Migrate :integration/id for THK projects as well"
+  [conn]
+  (let [db (d/db conn)
+        projects (entities-with-attr db :thk.project/id)]
+    (d/transact
+     conn
+     {:tx-data (vec
+                (for [p projects]
+                  {:db/id p
+                   :integration/id (thk-mapping/number->uuid p)}))})))

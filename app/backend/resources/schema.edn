@@ -1454,4 +1454,7 @@
  {:db/ident :migration/remove-overlapping-global-rights-properly
   :txes [teet.migration.user-permissions/remove-overlapping-global-rights]}
 
+ {:db/ident :migration/thk-project-integration-id
+  :txes [teet.migration.thk-integration-id/migrate-projects]}
+
  ]
