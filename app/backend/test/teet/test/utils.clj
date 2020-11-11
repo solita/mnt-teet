@@ -147,8 +147,10 @@
 
 (defn with-db
   ([] (with-db {}))
-  ([{:keys [data-fixtures]
-     :or {data-fixtures [:projects]} :as _opts}]
+  ([{:keys [data-fixtures migrate? mock-users?]
+     :or {data-fixtures [:projects]
+          migrate? true
+          mock-users? true} :as _opts}]
    (fn with-db-fixture [f]
      (let [test-db-name (str "test-db-" (System/currentTimeMillis))]
        (run-with-config
@@ -158,13 +160,14 @@
               db-name {:db-name test-db-name}]
           (try
             (log/info "Creating database " test-db-name)
-            (swap! environment/config assoc-in [:datomic :db-name] test-db-name)
             (d/create-database client db-name)
             (binding [*connection* (d/connect client db-name)
                       *data-fixture-ids* (atom {})]
               (binding [environment/*connection* *connection*]
-                (environment/migrate *connection*)
-                (d/transact *connection* {:tx-data mock-users})
+                (when migrate?
+                  (environment/migrate *connection*))
+                (when mock-users?
+                  (d/transact *connection* {:tx-data mock-users}))
                 (doseq [df data-fixtures
                         :let [resource (str "resources/" (name df) ".edn")]]
                   (log/info "Transacting data fixture: " df)
@@ -204,9 +207,6 @@
 ;;
 
 (def db-connection environment/datomic-connection)
-
-(defn db []
-  (d/db (db-connection)))
 
 
 ;;
