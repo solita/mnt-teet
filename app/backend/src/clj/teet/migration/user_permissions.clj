@@ -35,7 +35,7 @@
                      (update user :user/permissions
                              (fn [permissions]
                                ;; Go through all users permissions and only take the ones which are not invalidated
-                               ;; Or which are related to some projects
+                               ;; Or which are not related to some projects
                                (->> permissions
                                     (filterv (fn [perm]
                                                (when (and
@@ -48,11 +48,7 @@
                      {:db/id (:db/id user)
                       :permission/role (get-in user [:user/permissions :permission/role])}))
              (mapv (fn [user-perm]
-                     (user-tx/set-global-role db nil (:db/id user-perm) (:permission/role user-perm))))
-             (mapv first)
-             (filterv (fn [perm]
-                        (when (not-empty perm)
-                          perm))))]
+                     (list 'teet.user.user-tx/set-global-role nil (:db/id user-perm) (:permission/role user-perm)))))]
     (d/transact
       conn
       {:tx-data transaction})))

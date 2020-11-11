@@ -1427,7 +1427,7 @@
  {:db/ident :migration/TEET-822-retract-thk-task-types
   :txes [[[:db/retract [:db/ident :task.type/design-requirements] :thk/task-type :thk.task-type/design-requirements]
           [:db/retract [:db/ident :task.type/building-permit] :thk/task-type :thk.task-type/building-permit]]]}
- 
+
  {:db/ident :migration/extra-user-info
   :txes [[{:db/ident :user/phone-number
            :db/valueType :db.type/string
@@ -1450,5 +1450,8 @@
 
  {:db/ident :migration/comment-mention-using-uuid
   :txes [teet.migration.comment-mention-userid/rewrite-comment-mentions!]}
+
+ {:db/ident :migration/remove-overlapping-global-rights-properly
+  :txes [teet.migration.user-permissions/remove-overlapping-global-rights]}
 
  ]
