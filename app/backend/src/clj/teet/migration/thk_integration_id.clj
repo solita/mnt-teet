@@ -1,7 +1,8 @@
 (ns teet.migration.thk-integration-id
   (:require [datomic.client.api :as d]
             [clojure.set :as set]
-            [teet.thk.thk-mapping :as thk-mapping]))
+            [teet.thk.thk-mapping :as thk-mapping]
+            [teet.integration.integration-id :as integration-id]))
 
 (defn- entities-with-attr [db attr]
   (into #{}
@@ -21,7 +22,7 @@
      {:tx-data (vec
                 (for [e entities]
                   {:db/id e
-                   :integration/id (thk-mapping/number->uuid e)}))})))
+                   :integration/id (integration-id/number->uuid e)}))})))
 
 (defn check-uuids [db]
   (every?
@@ -29,7 +30,7 @@
            integration-id :integration/id}
           (d/pull db [:db/id :integration/id] %)]
       (println "Check :db/id = " db-id ", :integration/id = " integration-id)
-      (= db-id (thk-mapping/uuid->number integration-id)))
+      (= db-id (integration-id/uuid->number integration-id)))
    (entities-with-attr db :thk.project/id)))
 
 (defn migrate-projects
@@ -42,4 +43,4 @@
      {:tx-data (vec
                 (for [p projects]
                   {:db/id p
-                   :integration/id (thk-mapping/number->uuid p)}))})))
+                   :integration/id (integration-id/number->uuid p)}))})))
