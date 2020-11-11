@@ -13,7 +13,8 @@
             [teet.util.collection :as cu]
             [teet.thk.thk-mapping :as thk-mapping]
             [teet.log :as log]
-            [teet.project.project-db :as project-db])
+            [teet.project.project-db :as project-db]
+            [teet.integration.integration-id :as integration-id])
   (:import (org.apache.commons.io.input BOMInputStream)))
 
 (def excluded-project-types #{"TUGI" "TEEMU"})
@@ -126,7 +127,7 @@
                                        (when lc-teet-id
                                          (str "having TEET :integration/id " lc-teet-id)))
                            lc-integration-id (or lc-integration-id
-                                                 (let [new-uuid (thk-mapping/unused-random-small-uuid db)]
+                                                 (let [new-uuid (integration-id/unused-random-small-uuid db)]
                                                    (log/info "Creating new UUID for THK lifecycle " lc-thk-id " => " new-uuid)
                                                    new-uuid))]]
                  (cu/without-nils
@@ -169,7 +170,7 @@
                                             (when act-integration-id
                                               (str "having TEET :integration/id " act-integration-id)))
                                 act-integration-id (or act-integration-id
-                                                       (let [new-uuid (thk-mapping/unused-random-small-uuid db)]
+                                                       (let [new-uuid (integration-id/unused-random-small-uuid db)]
                                                          (log/info "Creating new UUID for THK activity " act-thk-id " => " new-uuid)
                                                          new-uuid))]]
                       (merge
