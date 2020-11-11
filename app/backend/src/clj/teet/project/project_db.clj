@@ -216,7 +216,9 @@
   "Check if TEET has a project with the given THK project id"
   [db thk-project-id]
   (boolean
-   (ffirst (d/q '[:find ?e :where [?e :thk.project/id ?project-id] :in $ ?project-id]
+   (ffirst (d/q '[:find ?e
+                  :where [?e :thk.project/id ?project-id]
+                  :in $ ?project-id]
                 db thk-project-id))))
 
 (defn project-has-owner?
