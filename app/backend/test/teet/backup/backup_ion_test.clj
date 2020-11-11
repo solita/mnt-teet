@@ -64,6 +64,8 @@
                                    [?tx :db/txInstant ?d]]
                                  (tu/db))))
 
+    (Thread/sleep 5) ; make sure next transaction is some time later
+
     ;; Update mark seen to current time
     (tx {:db/id seen-by-id
          :file-seen/seen-at (java.util.Date.)})
