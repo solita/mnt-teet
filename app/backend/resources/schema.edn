@@ -1312,7 +1312,7 @@
           ;; new task types for construction
           {:db/ident :task.type/construction-general-part,
            :enum/attribute :task/type,
-           :enum/valid-for :task.group/design,
+           :enum/valid-for :task.group/design, ;; This is an error, fixed in a subsequent migration
            :filename/code "AA"}
           {:db/ident :task.type/construction-road,
            :enum/attribute :task/type,
@@ -1457,4 +1457,6 @@
  {:db/ident :migration/thk-project-integration-id
   :txes [teet.migration.thk-integration-id/migrate-projects]}
 
- ]
+ {:db/ident :migration/move-construction-general-part-to-working-design
+  :txes [[{:db/ident :task.type/construction-general-part,
+           :enum/valid-for :task.group/working-design}]]}]
