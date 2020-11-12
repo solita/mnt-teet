@@ -20,10 +20,10 @@
   ([db meeting-id {:keys [body header footer] :as layout}]
    [:fo:root {:xmlns:fo "http://www.w3.org/1999/XSL/Format"
               :xmlns:svg "http://www.w3.org/2000/svg"}
-    [:fo:layet-master-set
+    [:fo:layout-master-set
      [:fo:simple-page-master {:master-name "first"
                               :page-height (:height layout)
-                              :page-iwdth (:width layout)
+                              :page-width (:width layout)
                               :margin-top (:margin-top layout)
                               :margin-bottom (:margin-bottom layout)
                               :margin-left (:margin-left layout)
