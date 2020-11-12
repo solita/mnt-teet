@@ -12,6 +12,10 @@
         dk.ative/docjure {:mvn/version "1.13.0"}
         net.coobird/thumbnailator {:mvn/version "0.4.13"}
 
+        ;; FOP 2.5 needs jai-codec not available in central, use 2.3
+        org.apache.xmlgraphics/fop {:mvn/version "2.3"}
+
+
 
         ;; JWT and JWK
         com.nimbusds/nimbus-jose-jwt {:mvn/version "7.9" ;; oct 2019

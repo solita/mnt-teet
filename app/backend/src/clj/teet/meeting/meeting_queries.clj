@@ -9,10 +9,15 @@
             [teet.util.date :as du]
             [teet.util.string :as string]
             [teet.link.link-db :as link-db]
+            [teet.link.link-model :as link-model]
             [teet.util.datomic :as datomic-util]
             [teet.integration.postgrest :as postgrest]
             [teet.environment :as environment]
-            [teet.comment.comment-db :as comment-db]))
+            [ring.util.io :as ring-io]
+            [teet.comment.comment-db :as comment-db]
+            [teet.pdf.pdf-export :as pdf-export]
+            [teet.meeting.meeting-pdf :as meeting-pdf]
+            [teet.log :as log]))
 
 
 (defn project-related-unit-ids
@@ -314,3 +319,23 @@
    :project-id project-id
    :authorization {}}
   (project-decisions db user project-id search-term))
+
+(defquery :meeting/download-pdf
+  {:doc "Download meeting minutes as PDF"
+   :context {:keys [db user]}
+   :args {id :db/id}
+   :project-id (project-db/meeting-project-id db id)
+   :authorization {:meeting/download-attachment {:db/id id
+                                                 :link :meeting/organizer-or-reviewer}}}
+  ^{:format :raw}
+  {:status 200
+   ;; FIXME: give meeting file a better name? (meeting title and date?)
+   :headers {"Content-Disposition" "attachment; filename=meeting.pdf"}
+   :body (ring-io/piped-input-stream
+          (fn [ostream]
+            (try
+              (pdf-export/hiccup->pdf
+               (meeting-pdf/meeting-pdf db id)
+               ostream)
+              (catch Exception e
+                (log/error e "Exception while generating meeting PDF")))))})
