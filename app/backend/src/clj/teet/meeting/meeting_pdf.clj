@@ -1,5 +1,11 @@
 (ns teet.meeting.meeting-pdf
-  "Generate meeting PDF as hiccup formatted XSL-FO")
+  "Generate meeting PDF as hiccup formatted XSL-FO"
+  (:import (com.vladsch.flexmark.parser Parser)
+           (com.vladsch.flexmark.util.ast NodeIterator Document
+                                          ContentNode Block)
+           (com.vladsch.flexmark.ast
+            ;; Import node types for rendering
+            Paragraph BulletList OrderedList Heading)))
 
 (def default-layout-config
   {;; A4 portrait width/height
@@ -39,3 +45,50 @@
      [:fo:flow {:flow-name "xsl-region-body"}
       [:fo:block {:font-size "16pt"}
        "IMPLEMENT ME"]]]]))
+
+(defn- md-children [node]
+  (-> node .getChildren .iterator iterator-seq))
+
+(defmulti md->xsl-fo class)
+
+(defmethod md->xsl-fo Document [root]
+  [:fo:block {:class "md-document"}
+   (for [c (md-children root)]
+     (md->xsl-fo c))])
+
+(defmethod md->xsl-fo Paragraph [c]
+  [:fo:block
+   (for [i (range 0 (.getLineCount c))
+         :let [line (.getLineChars c i)]]
+     (str line))])
+
+
+(defmethod md->xsl-fo BulletList [ul]
+  [:fo:list-block
+   (for [item (md-children ul)]
+     [:fo:list-item
+      [:fo:list-item-label {:end-indent "label-end()"}
+       [:fo:block [:fo:inline {:font-family "Symbol"} "\u2022"]]]
+      [:fo:list-item-body {:start-indent "body-start()"}
+       [:fo:block
+        (for [c (md-children item)]
+          (md->xsl-fo c))]]])])
+
+(defmethod md->xsl-fo OrderedList [ol]
+  [:fo:list-block
+   (map-indexed
+    (fn [i item]
+      [:fo:list-item
+       [:fo:list-item-label {:end-indent "label-end()"}
+        [:fo:block [:fo:inline (str (inc i))]]]
+       [:fo:list-item-body {:start-indent "body-start()"}
+        [:fo:block
+         (for [c (md-children item)]
+           (md->xsl-fo c))]]])
+    (md-children ol))])
+
+(defmethod md->xsl-fo Heading [h]
+  [:fo:block (pr-str h)])
+
+(defn- parse-md [str]
+  (-> (Parser/builder) .build (.parse str)))
