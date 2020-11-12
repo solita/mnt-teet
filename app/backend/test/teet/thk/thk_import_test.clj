@@ -12,7 +12,8 @@
             [teet.thk.thk-mapping :as thk-mapping]
             [clojure.java.io :as io]
             [teet.meta.meta-query :as meta-query]
-            [teet.meta.meta-model :as meta-model]))
+            [teet.meta.meta-model :as meta-model]
+            [teet.integration.integration-id :as integration-id]))
 
 (use-fixtures :each
   tu/with-global-data
@@ -157,9 +158,9 @@
           "task description is the estonian translation of task type")
       (is (str/blank? (get task-row "activity_id")) "task has no activity_id yet")
       (is (= (get task-row "activity_taskid")
-             (str (thk-mapping/uuid->number (tu/get-data :task-uuid)))))
+             (str (integration-id/uuid->number (tu/get-data :task-uuid)))))
       (is (= (get task-row "activity_teetid")
-             (str (thk-mapping/uuid->number (tu/get-data :act-uuid)))))))
+             (str (integration-id/uuid->number (tu/get-data :act-uuid)))))))
 
   (testing "Changing task and exporting again keeps same ids"
     (tu/local-command tu/mock-user-boss
@@ -172,9 +173,9 @@
                                            (export-csv))]
       (is (= 1 (count task-rows)) "still exactly one task row")
       (is (= (get task-row "activity_taskid")
-             (str (thk-mapping/uuid->number (tu/get-data :task-uuid)))))
+             (str (integration-id/uuid->number (tu/get-data :task-uuid)))))
       (is (= (get task-row "activity_teetid")
-             (str (thk-mapping/uuid->number (tu/get-data :act-uuid)))))))
+             (str (integration-id/uuid->number (tu/get-data :act-uuid)))))))
 
   (testing "Changing activity and exporting again keeps the same ids"
     (tu/local-command
@@ -187,9 +188,9 @@
                                            (export-csv))]
       (is (= 1 (count task-rows)) "still exactly one task row")
       (is (= (get task-row "activity_taskid")
-             (str (thk-mapping/uuid->number (tu/get-data :task-uuid)))))
+             (str (integration-id/uuid->number (tu/get-data :task-uuid)))))
       (is (= (get task-row "activity_teetid")
-             (str (thk-mapping/uuid->number (tu/get-data :act-uuid))))))))
+             (str (integration-id/uuid->number (tu/get-data :act-uuid))))))))
 
 (defn set-csv-column [csv row-test-column row-test-value set-col set-val]
   (let [test-col-idx (cu/find-idx #(= row-test-column %) thk-mapping/csv-column-names)
@@ -244,7 +245,7 @@
     (let [csv (tu/get-data :export-csv)
           act-teet-id (tu/get-data :act-uuid)
           csv-with-id (set-csv-column csv
-                                      "activity_teetid" (str (thk-mapping/uuid->number act-teet-id))
+                                      "activity_teetid" (str (integration-id/uuid->number act-teet-id))
                                       "activity_id" "99999")
           csv-data (->csv-data csv-with-id)
           lc->act->task-before (lc->act->task)]
@@ -275,7 +276,7 @@
           (set-csv-column
            (tu/get-data :export-csv)
            ;; when taskid is our created task
-           "activity_taskid" (str (thk-mapping/uuid->number (tu/get-data :task-uuid)))
+           "activity_taskid" (str (integration-id/uuid->number (tu/get-data :task-uuid)))
            ;; mock THK generated activity id
            "activity_id" "99887")
           hierarchy-before (lc->act->task)]

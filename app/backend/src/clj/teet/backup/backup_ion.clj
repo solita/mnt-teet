@@ -11,7 +11,6 @@
             [teet.util.datomic :as du]
             [teet.log :as log]
             [clojure.string :as str]
-            [teet.integration.postgrest :as postgrest]
             [cheshire.core :as cheshire])
   (:import (java.time.format DateTimeFormatter)))
 
@@ -26,18 +25,6 @@
       (lazy-seq
        (cons item
              (read-seq rdr))))))
-
-(defn- replace-entity-ids!
-  "Replace entity ids in postgres entity table. List of ids
-  is comma separated list of old_id=new_id."
-  [{:keys [tempids] :as ctx}]
-  (log/info "Replace " (count tempids) " entity ids in PostgREST")
-  (postgrest/rpc ctx :replace_entity_ids
-                 {:idlist (str/join ","
-                                    (map (fn [[old-id new-id]]
-                                           (str old-id "=" new-id))
-                                         tempids))})
-  ctx)
 
 (defstep download-backup-file
   {:doc "Download backup file from S3 to temporary directory. Puts file path to context"
@@ -272,7 +259,6 @@
              check-backup-format
              prepare-database-for-restore
              restore-tx-file
-             replace-entity-ids!
              delete-backup-file)
       (catch Exception e
         (log/error e "ERROR IN RESTORE" (ex-data e)))))

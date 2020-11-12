@@ -630,8 +630,8 @@
   (process-event [{id :project-id} app]
     (t/fx app
           {:tuck.effect/type :query
-           :query            :thk.project/db-id->thk-id
-           :args             {:db/id (common-controller/->long id)}
+           :query            :thk.project/integration-id->thk-id
+           :args             {:integration/id (common-controller/->long id)}
            :result-event     ->NavigateToProject}))
 
   NavigateToProject
