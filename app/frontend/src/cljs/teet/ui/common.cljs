@@ -412,7 +412,7 @@
 
 (defn info-row-item-style
   []
-  ^{:pseudo {:last-child {:margin-right 0}}}
+  ^{:pseudo {:last-child {:margin-right 0 :margin-left "auto"}}}
   {:margin-right "1rem"
    :margin-bottom "1rem"})
 

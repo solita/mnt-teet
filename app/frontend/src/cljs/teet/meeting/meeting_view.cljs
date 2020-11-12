@@ -895,7 +895,8 @@
                                           " - "
                                           (format/time* end))]
                                     [(tr [:fields :meeting/location])
-                                     location]]]
+                                     location]
+                                    [(tr "PDF") [:a {:href "." :target "_blank" } "Download"]]]]
      [:div {:style {:margin-bottom "1rem"}}
       (doall
        (for [{id :db/id
