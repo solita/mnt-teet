@@ -58,7 +58,8 @@
   "Returns all tx identifiers in time order.
   Skips the initial transactions empty databases have."
   [conn]
-  (d/tx-range conn {:start (java.util.Date. 1)}))
+  (d/tx-range conn {:start #inst "2019-01-01T00:00:00.000-00:00"
+                    :limit -1}))
 
 (defn- prepare-database-for-restore [{:keys [datomic-client conn config] :as ctx}]
   (if (:clear-database? config)
@@ -174,6 +175,7 @@
                     (->id v)
                     v)]]
       [(if add? :db/add :db/retract) e a v])))
+
 
 (defn- restore-tx-file
   "Restore a TEET backup zip from `file` by running the transactions in
