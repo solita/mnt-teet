@@ -166,7 +166,7 @@
   :task.status/canceled "Tühistatud",
   :land-acquisition.impact/purchase-not-needed
   "Omandamine ei ole vajalik",
-  :task.type/funding-plan "Rahastamiskava",
+  :task.type/funding-plan "Rahastustaotlus",
   :thk.lifecycle-type/maintenance "Hoole",
   :comment.status/resolved "Muudatused sisse viidud",
   :task.type/construction-structures "Konstruktsioonid",
@@ -645,6 +645,7 @@
   :search-decisions "Otsin otsuseid",
   :not-enough-participants
   "Teavituste saatmiseks on vaja lisada veel vähemalt üks osaleja.",
+  :email-body "Koosolek",
   :add-decision-button "Lisan otsuse",
   :participant-removed "Osaleja eemaldatud",
   :approve-meeting-modal-title "Kinnitan otsused?",
@@ -669,6 +670,7 @@
   :notifications-title "Teavitused",
   :duplicate-meeting-modal-title "Koosoleku koopia",
   :edit-agenda-modal-title "Päevakavapunkti muutmine",
+  :email-title "TEET: koosolek uuendatud: {meeting-title}",
   :new-agenda-modal-title "Uus päevakavapunkt",
   :reject-meeting-button "Lükkan tagasi",
   :add-person "Osaleja lisamine",

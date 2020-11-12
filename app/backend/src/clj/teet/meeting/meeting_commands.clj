@@ -12,11 +12,10 @@
             [teet.meeting.meeting-model :as meeting-model]
             [teet.log :as log]
             [clojure.string :as str]
-            [teet.user.user-model :as user-model]
-            [teet.util.date :refer [in-past?]]
             [teet.link.link-db :as link-db]
             [teet.notification.notification-db :as notification-db]
-            [teet.util.collection :as cu])
+            [teet.util.collection :as cu]
+            [teet.localization :refer [tr with-language]])
   (:import (java.util Date)))
 
 (defn update-meeting-tx
@@ -241,12 +240,15 @@
           :project project-eid}))))))
 
 (defn email-subject [meeting]
-  (str "TEET: koosolek uuendatud: " (meeting-model/meeting-title meeting) " / "
-       "TEET: meeting updated: " (meeting-model/meeting-title meeting)))
+  (str (with-language :et (tr [:meeting :email-title] {:meeting-title (meeting-model/meeting-title meeting)}))
+       " / "
+       (with-language :en (tr [:meeting :email-title] {:meeting-title (meeting-model/meeting-title meeting)}))))
 
 (defn email-parts [meeting-link]
   [{:headers {"Content-Type" "text/plain; charset=utf-8"}
-    :body (str "Koosolek / Meeting: " meeting-link "\n\n")}])
+    :body (str (with-language :et (tr [:meeting :email-body]))
+               " / "
+               (with-language :en (tr [:meeting :email-body])) ": " meeting-link "\n\n")}])
 
 (defn send-meeting-email! [db meeting project-eid meeting-link to meeting-eid]
   (let [meeting-link (meeting-link db
@@ -258,8 +260,6 @@
            :to to
            :subject (email-subject meeting)
            :parts (email-parts meeting-link)})]
-
-    (println "EMail from: " (environment/config-value :email :from))
     (log/info "SES send response" email-response)
     (log/info "SES emails sent to: " (pr-str to))
     (tx-ret [{:db/id meeting-eid
