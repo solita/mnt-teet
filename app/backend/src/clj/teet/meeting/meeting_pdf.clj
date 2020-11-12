@@ -5,7 +5,8 @@
                                           ContentNode Block)
            (com.vladsch.flexmark.ast
             ;; Import node types for rendering
-            Paragraph BulletList OrderedList Heading)))
+            Paragraph BulletList OrderedList Heading Text
+            StrongEmphasis Emphasis)))
 
 (def default-layout-config
   {;; A4 portrait width/height
@@ -49,18 +50,19 @@
 (defn- md-children [node]
   (-> node .getChildren .iterator iterator-seq))
 
+(defn- render-children [node]
+  (for [c (md-children node)]
+    (md->xsl-fo c)))
+
 (defmulti md->xsl-fo class)
 
 (defmethod md->xsl-fo Document [root]
   [:fo:block {:class "md-document"}
-   (for [c (md-children root)]
-     (md->xsl-fo c))])
+   (render-children root)])
 
 (defmethod md->xsl-fo Paragraph [c]
   [:fo:block
-   (for [i (range 0 (.getLineCount c))
-         :let [line (.getLineChars c i)]]
-     (str line))])
+   (render-children c)])
 
 
 (defmethod md->xsl-fo BulletList [ul]
@@ -87,8 +89,27 @@
            (md->xsl-fo c))]]])
     (md-children ol))])
 
+(defmethod md->xsl-fo Text [t]
+  (str (.getChars t)))
+
+(defmethod md->xsl-fo StrongEmphasis [t]
+  [:fo:inline {:font-weight 900} (str t)])
+
+(defmethod md->xsl-fo Emphasis [t]
+  [:fo:inline {:font-weight 600}
+   (render-children t)])
+
 (defmethod md->xsl-fo Heading [h]
-  [:fo:block (pr-str h)])
+  [:fo:block {:font-size (case (.getLevel h)
+                           1 "24pt"
+                           2 "18pt"
+                           3 "16pt")}
+   (render-children h)])
 
 (defn- parse-md [str]
   (-> (Parser/builder) .build (.parse str)))
+
+(comment
+  (def md "hello **everyone**\n\n​\n\nlets\n\n​\n\n1. do\n2. some things\n3. here\n\n## level two header\n\nsome more content _italic also_\n")
+  (def doc (parse-md md))
+  (md->xsl-fo doc))
