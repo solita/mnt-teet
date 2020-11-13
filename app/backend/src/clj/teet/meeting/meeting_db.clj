@@ -254,3 +254,19 @@
            db (:db/id user) meeting-id)
       not-empty
       boolean))
+
+(defn export-meeting
+  "Fetch information required for export meeting PDF"
+  [db id]
+  (d/pull db '[:meeting/title
+               :meeting/location
+               :meeting/start
+               :meeting/end
+               {:activity/_meetings [:db/id]}
+               {:meeting/agenda [:db/id
+                                 :meeting.agenda/topic
+                                 :meeting.agenda/body
+                                 :meeting.agenda/responsible]}
+               {:participation/_in [:participation/role
+                                    {:participation/participant [:db/id :meta/deleted? :user/family-name :user/given-name :user/id]}]}] id )
+ )
