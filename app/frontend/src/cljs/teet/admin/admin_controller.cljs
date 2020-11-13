@@ -36,6 +36,7 @@
     (t/fx app
           {:tuck.effect/type :command!
            :command :admin/create-user
+           :success-message (tr [:admin :user-created-successfully])
            :payload (-> (get-in app [:admin :create-user])
                         (update :user/person-id ensure-starts-with-double-e))
            :result-event ->SaveUserResponse}))

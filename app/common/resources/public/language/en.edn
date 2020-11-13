@@ -20,6 +20,7 @@
   :teet-users "Teet users",
   :optional-information "Optional information",
   :no-user-contact-information "No contact information given",
+  :user-created-successfully "User created successfully",
   :external-consultants "External consultants",
   :admins "Admins",
   :deactivate-user-modal-text
@@ -646,9 +647,11 @@
  {:notifications-help
   "Send notifications to meeting participants about relevant changes to the meeting contents.",
   :add-non-teet-participant "Add person not in TEET",
+  :remove-participant-confirm-button "Remove",
   :search-decisions "Search decisions",
   :not-enough-participants
   " To send notifications, you need to add at least one more participant.",
+  :email-body "Meeting",
   :add-decision-button "Add decision",
   :participant-removed "Participant removed",
   :approve-meeting-modal-title "Approve decisions?",
@@ -668,7 +671,10 @@
   :reviews-invalidated-warning-text
   "If this meeting is changed all existing approvals will be invalidated.",
   :edit-decision-modal-title "Edit decision",
+  :remove-participant-confirm-title "Confirm removal of participant",
   :new-meeting-button "Create meeting",
+  :remove-participant-modal-content
+  "Are you sure you want to remove {participant} from the meeting?",
   :project-meetings-title "Project meetings",
   :notifications-title "Notifications",
   :duplicate-meeting-modal-title "Duplicate meeting",

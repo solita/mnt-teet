@@ -20,6 +20,7 @@
   :teet-users "Teet kasutajad",
   :optional-information "Valikuline informatsioon",
   :no-user-contact-information "Kontakt informatsioon puudub",
+  :user-created-successfully "Kasutaja edukalt lisatud",
   :external-consultants "Välised konsultandid",
   :admins "Administraatorid",
   :deactivate-user-modal-text
@@ -47,18 +48,18 @@
   :current-permissions "Kehtivad ligipääsud"},
  :buttons
  {:confirm "Kinnitan",
-  :duplicate "Koopia",
+  :duplicate "Kopeerin",
   :continue "Jätkan",
   :edit "Muudan",
   :delete "Kustutan",
   :save "Salvestan",
-  :close "Sulge",
+  :close "Sulgen",
   :undo "Taastan",
   :back "Tagasi",
   :send "Saadan teavituse",
   :cancel "Tühistan",
   :add "Lisan",
-  :upload "Laadi üles"},
+  :upload "Laadin üles"},
  :cadastral-group
  {"" "Määratlemata",
   "Avalik-õiguslik omand" "Avalik-õiguslik omand",
@@ -642,9 +643,11 @@
  {:notifications-help
   "Saatke koosoleku osalejatele teavitus koosoleku sisu muudatuste kohta.",
   :add-non-teet-participant "Lisan TEET-u välise osaleja",
+  :remove-participant-confirm-button "Eemaldan",
   :search-decisions "Otsin otsuseid",
   :not-enough-participants
   "Teavituste saatmiseks on vaja lisada veel vähemalt üks osaleja.",
+  :email-body "Koosolek",
   :add-decision-button "Lisan otsuse",
   :participant-removed "Osaleja eemaldatud",
   :approve-meeting-modal-title "Kinnitan otsused?",
@@ -664,7 +667,10 @@
   :reviews-invalidated-warning-text
   "Muutes koosoleku sisu tühistatakse kõik juba antud kinnitused.",
   :edit-decision-modal-title "Otsuse muutmine",
+  :remove-participant-confirm-title "Osaleja eemaldamine",
   :new-meeting-button "Loon uue koosoleku",
+  :remove-participant-modal-content
+  "Oled sa kindel, et soovid eemaldada {participant} osalejate nimekirjast?",
   :project-meetings-title "Projekti koosolekud",
   :notifications-title "Teavitused",
   :duplicate-meeting-modal-title "Koosoleku koopia",
