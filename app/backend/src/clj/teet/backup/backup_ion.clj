@@ -62,18 +62,24 @@
                     :limit -1}))
 
 (defn- prepare-database-for-restore [{:keys [datomic-client conn config] :as ctx}]
-  (if (:clear-database? config)
+  (if-let [create-database (:create-database config)]
     (do
-      (log/info "DELETING AND RECREATING \"teet\" DATOMIC DATABASE.")
-      (d/delete-database datomic-client {:db-name "teet"})
-      (d/create-database datomic-client {:db-name "teet"})
-      (assoc ctx :conn (d/connect datomic-client {:db-name "teet"})))
-    (do
-      (log/info "Using existing \"teet\" database, checking that it is empty.")
-      (when-not (empty? (all-transactions conn))
-        (throw (ex-info "Database is not empty!"
-                        {:transaction-count (count (all-transactions conn))})))
-      ctx)))
+      (log/info "CREATING NEW DATABASE: " create-database)
+      (d/create-database datomic-client {:db-name create-database})
+      (assoc ctx :conn (d/connect datomic-client {:db-name create-database})))
+    (let [db-name (environment/db-name)]
+      (if (:clear-database? config)
+        (do
+          (log/info "DELETING AND RECREATING " db-name " DATOMIC DATABASE.")
+          (d/delete-database datomic-client {:db-name db-name})
+          (d/create-database datomic-client {:db-name db-name})
+          (assoc ctx :conn (d/connect datomic-client {:db-name db-name})))
+        (do
+          (log/info "Using existing " db-name " database, checking that it is empty.")
+          (when-not (empty? (all-transactions conn))
+            (throw (ex-info "Database is not empty!"
+                            {:transaction-count (count (all-transactions conn))})))
+          ctx)))))
 
 (defn- read-restore-config [{event :event :as ctx}]
   (let [{:keys [file-key bucket] :as config*} (-> event :input (cheshire/decode keyword))
@@ -241,6 +247,10 @@
       (catch Exception e
         (log/error e "TEET backup failed")))))
 
+(defn- migrate [{conn :conn :as ctx}]
+  (environment/migrate conn)
+  ctx)
+
 (defn backup
   "Lambda function endpoint for backing up database as a transaction log to S3"
   [_event]
@@ -261,6 +271,7 @@
              check-backup-format
              prepare-database-for-restore
              restore-tx-file
+             migrate
              delete-backup-file)
       (catch Exception e
         (log/error e "ERROR IN RESTORE" (ex-data e)))))
