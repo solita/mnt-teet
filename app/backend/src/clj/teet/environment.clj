@@ -99,7 +99,8 @@
         (str/split string #",")))
 
 (def teet-ssm-config
-  {:env (->ssm [:env])
+  {:datomic {:db-name (->ssm [:datomic :db-name] "teet")}
+   :env (->ssm [:env])
    :backup {:bucket-name (->ssm [:s3 :backup-bucket])}
    :enabled-features (->ssm [:enabled-features] #{} parse-enabled-features)
    :tara {:endpoint-url (->ssm [:auth :tara :endpoint])
