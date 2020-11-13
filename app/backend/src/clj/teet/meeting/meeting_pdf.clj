@@ -50,11 +50,11 @@
 (defn- md-children [node]
   (-> node .getChildren .iterator iterator-seq))
 
+(defmulti md->xsl-fo class)
+
 (defn- render-children [node]
   (for [c (md-children node)]
     (md->xsl-fo c)))
-
-(defmulti md->xsl-fo class)
 
 (defmethod md->xsl-fo Document [root]
   [:fo:block {:class "md-document"}
