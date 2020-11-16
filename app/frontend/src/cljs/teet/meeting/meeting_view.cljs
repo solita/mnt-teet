@@ -670,11 +670,15 @@
           [:p {:class (<class common-styles/margin-bottom 1)}
            (tr [:meeting :notifications-help])]
           [:div {:class (<class common-styles/flex-align-center)}
-           [buttons/button-primary {:on-click (e! meeting-controller/->SendNotifications meeting)}
-            (tr [:buttons :send])]
-           [typography/GreyText {:style {:margin-left "1rem"}}
-            (tr [:meeting :send-notification-to-participants]
-                {:count (inc (count participations))})]]])])))
+           (if (zero? (count participations))
+             [typography/WarningText (tr [:meeting :not-enough-participants])]
+             [:<>
+              [buttons/button-primary {:disabled (zero? (count participations))
+                                       :on-click (e! meeting-controller/->SendNotifications meeting)}
+               (tr [:buttons :send])]
+              [typography/GreyText {:style {:margin-left "1rem"}}
+               (tr [:meeting :send-notification-to-participants]
+                   {:count (inc (count participations))})]])]])])))
 
 (defn decision-form
   [e! agenda-eid close-event form-atom]

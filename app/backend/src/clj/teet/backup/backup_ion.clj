@@ -54,25 +54,36 @@
   (.delete (io/file file))
   (dissoc ctx :file))
 
+(def ^{:private true
+       :doc "Start of backup transaction. TEET started in 2019."}
+  backup-start #inst "2019-01-01T00:00:00.000-00:00")
+
 (defn- all-transactions
   "Returns all tx identifiers in time order.
   Skips the initial transactions empty databases have."
   [conn]
-  (d/tx-range conn {:start (java.util.Date. 1)}))
+  (d/tx-range conn {:start backup-start
+                    :limit -1}))
 
 (defn- prepare-database-for-restore [{:keys [datomic-client conn config] :as ctx}]
-  (if (:clear-database? config)
+  (if-let [create-database (:create-database config)]
     (do
-      (log/info "DELETING AND RECREATING \"teet\" DATOMIC DATABASE.")
-      (d/delete-database datomic-client {:db-name "teet"})
-      (d/create-database datomic-client {:db-name "teet"})
-      (assoc ctx :conn (d/connect datomic-client {:db-name "teet"})))
-    (do
-      (log/info "Using existing \"teet\" database, checking that it is empty.")
-      (when-not (empty? (all-transactions conn))
-        (throw (ex-info "Database is not empty!"
-                        {:transaction-count (count (all-transactions conn))})))
-      ctx)))
+      (log/info "CREATING NEW DATABASE: " create-database)
+      (d/create-database datomic-client {:db-name create-database})
+      (assoc ctx :conn (d/connect datomic-client {:db-name create-database})))
+    (let [db-name (environment/db-name)]
+      (if (:clear-database? config)
+        (do
+          (log/info "DELETING AND RECREATING " db-name " DATOMIC DATABASE.")
+          (d/delete-database datomic-client {:db-name db-name})
+          (d/create-database datomic-client {:db-name db-name})
+          (assoc ctx :conn (d/connect datomic-client {:db-name db-name})))
+        (do
+          (log/info "Using existing " db-name " database, checking that it is empty.")
+          (when-not (empty? (all-transactions conn))
+            (throw (ex-info "Database is not empty!"
+                            {:transaction-count (count (all-transactions conn))})))
+          ctx)))))
 
 (defn- read-restore-config [{event :event :as ctx}]
   (let [{:keys [file-key bucket] :as config*} (-> event :input (cheshire/decode keyword))
@@ -153,9 +164,11 @@
       (out! {:ref-attrs ref-attrs
              :tuple-attrs tuple-attrs
              :backup-timestamp (java.util.Date.)})
-      (doseq [tx (all-transactions conn)]
-        (out! (output-tx db attr-ident-cache tx
-                         ignore-attributes))))))
+      (doseq [tx (all-transactions conn)
+              :let [tx-map (output-tx db attr-ident-cache tx
+                                      ignore-attributes)]
+              :when (.after (get-in tx-map [:tx :db/txInstant]) backup-start)]
+        (out! tx-map)))))
 
 (defn- prepare-restore-tx
   "Prepare transaction for restore.
@@ -174,6 +187,7 @@
                     (->id v)
                     v)]]
       [(if add? :db/add :db/retract) e a v])))
+
 
 (defn- restore-tx-file
   "Restore a TEET backup zip from `file` by running the transactions in
@@ -239,6 +253,10 @@
       (catch Exception e
         (log/error e "TEET backup failed")))))
 
+(defn- migrate [{conn :conn :as ctx}]
+  (environment/migrate conn)
+  ctx)
+
 (defn backup
   "Lambda function endpoint for backing up database as a transaction log to S3"
   [_event]
@@ -259,6 +277,7 @@
              check-backup-format
              prepare-database-for-restore
              restore-tx-file
+             migrate
              delete-backup-file)
       (catch Exception e
         (log/error e "ERROR IN RESTORE" (ex-data e)))))

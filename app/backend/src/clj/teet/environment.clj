@@ -76,13 +76,13 @@
               (:Parameters response))
         (into {}
               (map (fn [missing-parameter-name]
-                     (let [{:keys [path default-value]}
+                     (let [{:keys [path default-value] :as param}
                            (name->parameter missing-parameter-name)]
                        (if (= default-value ::no-default-value)
                          (throw (ex-info "Missing parameter that has no default value"
                                          {:parameter-name missing-parameter-name
                                           :parameter-path path}))
-                         [path default-value]))))
+                         [param default-value]))))
               (:InvalidParameters response)))))))
 
 (defn- resolve-ssm-parameters
@@ -99,7 +99,9 @@
         (str/split string #",")))
 
 (def teet-ssm-config
-  {:env (->ssm [:env])
+  {:datomic {:db-name (->ssm [:datomic :db-name] "teet")
+             :client {:server-type :ion}}
+   :env (->ssm [:env])
    :backup {:bucket-name (->ssm [:s3 :backup-bucket])}
    :enabled-features (->ssm [:enabled-features] #{} parse-enabled-features)
    :tara {:endpoint-url (->ssm [:auth :tara :endpoint])
