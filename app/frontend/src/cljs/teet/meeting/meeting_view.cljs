@@ -887,7 +887,7 @@
       form]]))
 
 (defn meeting-main-content
-  [e! {:keys [params user query]} meeting]
+  [e! {:keys [params user query] :as app} meeting]
   (r/with-let [duplicate-open? (r/atom false)
                open-duplicate! #(reset! duplicate-open? true)
                close-duplicate! #(reset! duplicate-open? false)]
@@ -908,10 +908,14 @@
                                    (tr [:buttons :edit])]}]]]
        (when @duplicate-open?
          [meeting-duplicate e! (:activity params) meeting close-duplicate!])
-       [tabs/tabs
-        query
-        [[:details [meeting-details e! user meeting]]
-         [:notes [:div [:h1 "notes"]]]]]])))
+       [tabs/details-and-comments-tabs
+           {:e! e!
+            :app app
+            :type :meeting-comment
+            :comment-command :comment/comment-on-meeting
+            :entity-type :meeting
+            :entity-id (:db/id meeting)}
+        [meeting-details e! user meeting]]])))
 
 
 (defn meeting-page [e! {:keys [params user query] :as app} {:keys [project meeting]}]
