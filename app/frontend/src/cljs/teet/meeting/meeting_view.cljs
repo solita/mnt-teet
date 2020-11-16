@@ -46,7 +46,8 @@
             [clojure.set :as set]
             [clojure.string :as str]
             [teet.link.link-view :as link-view]
-            [teet.ui.panels :as panels]))
+            [teet.ui.panels :as panels]
+            [teet.comments.comments-controller :as comments-controller]))
 
 
 (defn update-meeting-warning?
@@ -887,7 +888,7 @@
       form]]))
 
 (defn meeting-main-content
-  [e! {:keys [params user query]} meeting]
+  [e! {:keys [params user] :as app} meeting]
   (r/with-let [duplicate-open? (r/atom false)
                open-duplicate! #(reset! duplicate-open? true)
                close-duplicate! #(reset! duplicate-open? false)]
@@ -908,13 +909,20 @@
                                    (tr [:buttons :edit])]}]]]
        (when @duplicate-open?
          [meeting-duplicate e! (:activity params) meeting close-duplicate!])
-       [tabs/tabs
-        query
-        [[:details [meeting-details e! user meeting]]
-         [:notes [:div [:h1 "notes"]]]]]])))
+       [tabs/details-and-comments-tabs
+           {:e! e!
+            :app app
+            :type :meeting-comment
+            :entity-type :meeting
+            :entity-id (:db/id meeting)
+            :comment-counts (:comment/counts meeting)
+            :after-comment-added-event
+            #(comments-controller/->IncrementCommentCount
+              [:route :meeting :meeting :comment/counts :comment/old-comments])}
+        [meeting-details e! user meeting]]])))
 
 
-(defn meeting-page [e! {:keys [params user query] :as app} {:keys [project meeting]}]
+(defn meeting-page [e! {:keys [user] :as app} {:keys [project meeting]}]
   (let [edit-rights? (and (meeting-model/user-is-organizer-or-reviewer? user meeting)
                           (not (:meeting/locked? meeting)))]
     [authorization-context/with

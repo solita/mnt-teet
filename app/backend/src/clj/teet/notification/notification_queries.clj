@@ -67,21 +67,12 @@
               :file (str file-id)}}))
 
 
-(defn- comment-navigation-info [db comment-id]
-  (if-let [[entity-type entity-id] (comment-db/comment-parent db comment-id)]
-    (merge
-     (case entity-type
-       :task (task-navigation-info db entity-id)
-       :file (file-navigation-info db entity-id))
-     {:query {:tab "comments"
-              :focus-on (str comment-id)}})
-    (db-api/bad-request! "No such comment")))
 
 (defn- project-navigation-info [db project-id]
   {:page :project
    :params {:project (str (:thk.project/id (du/entity db project-id)))}})
 
-(defn- meeting-navigation-info [db meeting-eid]  
+(defn- meeting-navigation-info [db meeting-eid]
   (let [{:keys [project-thk-id activity-eid]}
         (project-db/meeting-parents db {:db/id meeting-eid} (project-db/meeting-project-id db meeting-eid))]
     (if (and project-thk-id activity-eid meeting-eid)
@@ -93,6 +84,17 @@
       (do
         (log/info "meeting-navigation-info couldn't answer for meeting eid" meeting-eid)
         (db-api/bad-request! "No such meeting")))))
+
+(defn- comment-navigation-info [db comment-id]
+  (if-let [[entity-type entity-id] (comment-db/comment-parent db comment-id)]
+    (merge
+     (case entity-type
+       :task (task-navigation-info db entity-id)
+       :file (file-navigation-info db entity-id)
+       :meeting (meeting-navigation-info db entity-id))
+     {:query {:tab "comments"
+              :focus-on (str comment-id)}})
+    (db-api/bad-request! "No such comment")))
 
 (defn notification-navigation-info [db user notification-id]
   (when-let [{:notification/keys [type target]}

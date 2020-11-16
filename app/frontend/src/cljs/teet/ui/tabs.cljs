@@ -1,6 +1,5 @@
 (ns teet.ui.tabs
-  (:require [teet.ui.material-ui :refer [Link Tabs Tab]]
-            [teet.common.common-controller :as common-controller]
+  (:require [teet.ui.material-ui :refer [Link]]
             [teet.ui.url :as url]
             [teet.localization :refer [tr]]
             [teet.comments.comments-view :as comments-view]
@@ -10,16 +9,25 @@
             [teet.ui.common :as common]
             [herb.core :refer [<class]]
             [teet.ui.panels :as panels]
-            [teet.log :as log]
-            [teet.common.common-styles :as common-styles]
-            [teet.util.collection :as cu]))
+            [teet.common.common-styles :as common-styles]))
+
+(defn- comments-link-content
+  [comment-counts]
+  (if-not comment-counts
+    ;; No comment counts provided, use just the comments text
+    (tr [:document :comments])
+
+    ;; Comment counts provided, show badge
+    [:span {:style {:text-transform :lowercase}}
+     [common/comment-count-chip {:comment/counts comment-counts}]
+     (tr [:document :comments])]))
 
 (defn details-and-comments-tabs
   [{:keys [e!]}]
   (r/create-class
     {:component-will-unmount #(e! (comments-controller/->ClearCommentField))
      :reagent-render
-     (fn [{:keys [app tab-wrapper comment-link-comp]
+     (fn [{:keys [app tab-wrapper comment-link-comp comment-counts]
            :or {tab-wrapper :span}
            :as opts} details]
        (let [query (:query app)
@@ -50,10 +58,11 @@
                              :margin-left "2rem"}}
                [:div {:class (if (= (:tab query) "comments") "tab-active" "tab-inactive")}
                 (if (= (:tab query) "comments")
-                  [typography/SectionHeading (tr [:document :comments])]
-                  (if comment-link-comp
-                    comment-link-comp
-                    [Link {:href (url/set-query-param :tab "comments")} (tr [:document :comments])]))]]]]
+                  [typography/SectionHeading
+                   [comments-link-content comment-counts]]
+                  (or comment-link-comp
+                      [Link {:href (url/set-query-param :tab "comments")}
+                       [comments-link-content comment-counts]]))]]]]
             (if (= (:tab query) "comments")
               comments-component
               (with-meta

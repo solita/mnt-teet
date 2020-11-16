@@ -200,7 +200,8 @@
                          (first (second entity-id)))
     :unit-comments (or (get-in (du/entity db entity-id)
                                [:unit-comments/project :db/id])
-                       (first (second entity-id)))))
+                       (first (second entity-id)))
+    :meeting (meeting-project-id db entity-id)))
 
 (defn comment-project-id [db comment-id]
   (let [ce (du/entity db comment-id)]
