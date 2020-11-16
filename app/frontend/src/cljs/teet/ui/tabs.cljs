@@ -1,6 +1,5 @@
 (ns teet.ui.tabs
-  (:require [teet.ui.material-ui :refer [Link Tabs Tab]]
-            [teet.common.common-controller :as common-controller]
+  (:require [teet.ui.material-ui :refer [Link]]
             [teet.ui.url :as url]
             [teet.localization :refer [tr]]
             [teet.comments.comments-view :as comments-view]
@@ -10,9 +9,7 @@
             [teet.ui.common :as common]
             [herb.core :refer [<class]]
             [teet.ui.panels :as panels]
-            [teet.log :as log]
-            [teet.common.common-styles :as common-styles]
-            [teet.util.collection :as cu]))
+            [teet.common.common-styles :as common-styles]))
 
 (defn details-and-comments-tabs
   [{:keys [e!]}]
