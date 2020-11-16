@@ -65,7 +65,6 @@
         isikud-get (fn [ox & path] (apply oo-get ox (concat [:a:isikud] path [text])))
         omandi-get (fn [ox & path] (apply oo-get ox (concat path [text])))
         ]
-    (def *os owner-xml-seq)
     {:omandiosad
      (mapv (fn [ox]
              (log/debug "ki count " (count  (z/xml-> ox :a:isikud :a:KinnistuIsik z/text)))

@@ -585,7 +585,7 @@
           [:div {:class (<class common-styles/flex-row-space-between)}
            [typography/SectionHeading (if (not= (count owners) 1)
                                         (str (count owners) " owners")
-                                        (:nimi (first owners)))]
+                                        (:nimi (first (:isik (first owners)))))]
            [:a {:class (<class common-styles/white-link-style false)
                 :href (url/set-query-param :modal "owner" :modal-target estate-id :modal-page "owner-info")}
             (tr [:land :show-owner-info])]]
@@ -668,7 +668,7 @@
                                   (if (:r_kood owner)
                                     (select-keys owner [:r_kood :r_riik])
                                     (select-keys owner [:isiku_tyyp :nimi]))))
-                              (get-in unit [:estate :omandiosad]))))
+                              (first (:isik (get-in unit [:estate :omandiosad]))))))
                     units)]
       [:div
        (mapc
