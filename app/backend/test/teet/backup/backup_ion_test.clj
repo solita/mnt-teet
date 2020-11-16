@@ -1,4 +1,4 @@
-(ns teet.backup.backup-ion-test
+(ns ^:db teet.backup.backup-ion-test
   (:require [teet.backup.backup-ion :as backup-ion]
             [teet.test.utils :as tu :refer [tx]]
             [clojure.test :refer [use-fixtures deftest is testing]]
