@@ -1459,4 +1459,10 @@
 
  {:db/ident :migration/move-construction-general-part-to-working-design
   :txes [[{:db/ident :task.type/construction-general-part,
-           :enum/valid-for :task.group/working-design}]]}]
+           :enum/valid-for :task.group/working-design}]]}
+
+ {:db/ident :migration/meeting-comments
+  :txes [[{:db/ident :meeting/comments
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/many
+           :db/doc "Comments for this meeting"}]]}]
