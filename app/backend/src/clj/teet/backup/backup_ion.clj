@@ -54,11 +54,15 @@
   (.delete (io/file file))
   (dissoc ctx :file))
 
+(def ^{:private true
+       :doc "Start of backup transaction. TEET started in 2019."}
+  backup-start #inst "2019-01-01T00:00:00.000-00:00")
+
 (defn- all-transactions
   "Returns all tx identifiers in time order.
   Skips the initial transactions empty databases have."
   [conn]
-  (d/tx-range conn {:start #inst "2019-01-01T00:00:00.000-00:00"
+  (d/tx-range conn {:start backup-start
                     :limit -1}))
 
 (defn- prepare-database-for-restore [{:keys [datomic-client conn config] :as ctx}]
@@ -160,9 +164,11 @@
       (out! {:ref-attrs ref-attrs
              :tuple-attrs tuple-attrs
              :backup-timestamp (java.util.Date.)})
-      (doseq [tx (all-transactions conn)]
-        (out! (output-tx db attr-ident-cache tx
-                         ignore-attributes))))))
+      (doseq [tx (all-transactions conn)
+              :let [tx-map (output-tx db attr-ident-cache tx
+                                      ignore-attributes)]
+              :when (.after (get-in tx-map [:tx :db/txInstant]) backup-start)]
+        (out! tx-map)))))
 
 (defn- prepare-restore-tx
   "Prepare transaction for restore.
