@@ -2,7 +2,6 @@
   "Utilities for comment datomic queries"
   (:require [datomic.client.api :as d]
             [teet.meta.meta-query :as meta-query]
-            [teet.db-api.core :as db-api]
             [teet.comment.comment-model :as comment-model]
             [teet.util.datomic :as du]
             [teet.user.user-model :as user-model]
