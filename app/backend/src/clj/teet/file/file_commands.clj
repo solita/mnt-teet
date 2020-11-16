@@ -83,20 +83,6 @@
                (file-db/delete-attachment db user file-id attached-to)
                [(deletion-tx user file-id)])})
 
-(defn- file-with-metadata [{:file/keys [name] :as file}]
-  (let [metadata (try
-                   (filename-metadata/filename->metadata name)
-                   (catch Exception e
-                     (log/warn e "Uploading file with invalid metadata!")
-                     nil))]
-    (if metadata
-      (merge file
-             {:file/name (:name metadata)
-              :file/group-number (:group metadata)})
-      (update file :file/name
-              (fn [n]
-                ;; Take part after last underscore to skip over invalid metadata
-                (last (str/split n #"_")))))))
 
 (defcommand :file/upload-complete
   {:doc "Mark file upload as complete"
