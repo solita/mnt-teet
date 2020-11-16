@@ -37,14 +37,18 @@
 
 (def ^:private manager-user-id-path
   {:file [:task/_files 0 :activity/_tasks 0 :activity/manager :user/id]
-   :task [:activity/_tasks 0 :activity/manager :user/id]})
+   :task [:activity/_tasks 0 :activity/manager :user/id]
+   :meeting [:meeting/organizer :user/id]})
 
 (defn- manager-user-id
-  "Get manager for comment about entity. For file or task comments
-  it is the manager assigned to the activity."
+  "Get manager for comment about entity.
+
+  For file or task comments it is the manager assigned to the activity.
+  For meetings it is the organizer."
   [db entity-type entity-id]
   (when-let [p (manager-user-id-path entity-type)]
     (get-in (du/entity db entity-id) p)))
+
 
 (defn- participants
   "Returns all participants (excluding `except-user`) in the comment thread.
