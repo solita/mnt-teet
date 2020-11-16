@@ -100,8 +100,7 @@
    :authorization {:meeting/add-meeting {}}
    :transact [(list 'teet.meeting.meeting-tx/create-meeting
                     activity-eid
-                    (merge {:db/id "new-meeting"}
-                           (select-keys form-data [:meeting/title :meeting/location
+                    (merge (select-keys form-data [:meeting/title :meeting/location
                                                    :meeting/start :meeting/end
                                                    :meeting/organizer])
                            (meta-model/creation-meta user)))]})
@@ -121,7 +120,8 @@
                       old-organizer :meeting/organizer}
                      (d/pull db '[:meeting/title :meeting/organizer]
                              (:db/id form-data))
-                     new-organizer (get-in form-data [:meeting/organizer])]
+                     new-organizer (get-in form-data [:meeting/organizer])
+                     meeting-organizer-participation (meeting-db/meeting-organizer-participation db (:db/id form-data))]
 
                  ;; New organizer must not already be a participant
                  ;; PENDING: these could be done in the update-meeting-tx db fn
@@ -137,7 +137,10 @@
                     (when (not= old-meeting-title (:meeting/title form-data))
                       ;; Changing meeting title, we need to renumber the meeting
                       {:meeting/number (meeting-db/next-meeting-number
-                                         db activity-eid (:meeting/title form-data))}))]))})
+                                         db activity-eid (:meeting/title form-data))}))
+                  ;; Change the meetings organizer participation to the new organizer
+                  {:db/id meeting-organizer-participation
+                   :participation/participant (:db/id new-organizer)}]))})
 
 (defn- agenda-items-new-or-belong-to-meeting [db meeting-id agenda]
   (let [ids-to-update (remove string? (map :db/id agenda))
@@ -209,6 +212,21 @@
                                                     :user/family-name
                                                     :user/email})
                                    %))))]})
+
+(defcommand :meeting/change-participation-absence
+  {:doc "Change the status of participation to absent or not absent"
+   :context {:keys [db user]}
+   :payload {participation-id :participation-id
+             absent? :absent?}
+   :project-id (project-db/meeting-project-id
+                 db
+                 (get-in (du/entity db participation-id) [:participation/in :db/id]))
+   :authorization {:meeting/edit-meeting {:db/id (get-in (du/entity db participation-id) [:participation/in :db/id])
+                                          :link :meeting/organizer-or-reviewer}}
+   :transact (update-meeting-tx
+               (get-in (du/entity db participation-id) [:participation/in :db/id])
+               [{:db/id participation-id
+                 :participation/absent? absent?}])})
 
 (defn meeting-link [db base-url meeting project-eid]
   (let [{:keys [meeting-eid project-thk-id activity-eid]}
@@ -361,6 +379,7 @@
    :project-id (project-db/meeting-project-id db meeting-id)
    :authorization {:meeting/edit-meeting {:db/id meeting-id
                                           :link :meeting/organizer-or-reviewer}}
+   :pre [(meeting-db/user-can-review? db user meeting-id)]
    :transact [(list 'teet.meeting.meeting-tx/review-meeting
                     user
                     meeting-id

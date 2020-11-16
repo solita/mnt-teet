@@ -69,9 +69,13 @@
   [db activity-eid meeting]
   (let [meeting
         (merge meeting
+               {:db/id "new-meeting"}
                {:meeting/number (meeting-db/next-meeting-number
                                  db
                                  activity-eid
                                  (:meeting/title meeting))})]
     [{:db/id activity-eid
-      :activity/meetings [meeting]}]))
+      :activity/meetings [meeting]}
+     {:participation/participant (get-in meeting [:meeting/organizer :db/id])
+      :participation/role :participation.role/organizer
+      :participation/in "new-meeting"}]))
