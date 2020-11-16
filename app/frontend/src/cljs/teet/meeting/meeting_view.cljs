@@ -887,7 +887,7 @@
       form]]))
 
 (defn meeting-main-content
-  [e! {:keys [params user query] :as app} meeting]
+  [e! {:keys [params user] :as app} meeting]
   (r/with-let [duplicate-open? (r/atom false)
                open-duplicate! #(reset! duplicate-open? true)
                close-duplicate! #(reset! duplicate-open? false)]
@@ -917,7 +917,7 @@
         [meeting-details e! user meeting]]])))
 
 
-(defn meeting-page [e! {:keys [params user query] :as app} {:keys [project meeting]}]
+(defn meeting-page [e! {:keys [user] :as app} {:keys [project meeting]}]
   (let [edit-rights? (and (meeting-model/user-is-organizer-or-reviewer? user meeting)
                           (not (:meeting/locked? meeting)))]
     [authorization-context/with
