@@ -913,7 +913,8 @@
             :app app
             :type :meeting-comment
             :entity-type :meeting
-            :entity-id (:db/id meeting)}
+            :entity-id (:db/id meeting)
+            :comment-counts (:comment/counts meeting)}
         [meeting-details e! user meeting]]])))
 
 
