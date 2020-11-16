@@ -46,6 +46,16 @@
   (when date
     (.format time-format date)))
 
+(defn- list-of-topics
+  "Return list of agenda topics"
+  [topics]
+  (map-indexed (fn [idx topic]
+         [:fo:list-item
+          [:fo:list-item-label {:end-indent "label-end()"}
+           [:fo:block [:fo:inline idx]]]
+          [:fo:list-item-body {:start-indent "body-start()"}
+           [:fo:block [:fo:block (:meeting.agenda/topic topic)]]]]) topics))
+
 (defn- table-2-columns
   "Returns 2 columns FO table"
   [{:keys [left-width right-width left-header right-header left-content right-content]}]
@@ -109,6 +119,9 @@
                                                       [:fo:inline {:font-weight 900} (:user/family-name user) " " (:user/given-name user)]
                                                       [:fo:inline ", " (with-language :en (tr-enum role))]])]
                           :right-content [:fo:block ]} )
+        [:fo:block
+         [:fo:list-block
+          (list-of-topics (:meeting/agenda meeting))]]
         ]]])))
 
 (defn- md-children [node]
