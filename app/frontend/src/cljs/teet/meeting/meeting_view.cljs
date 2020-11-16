@@ -912,7 +912,6 @@
            {:e! e!
             :app app
             :type :meeting-comment
-            :comment-command :comment/comment-on-meeting
             :entity-type :meeting
             :entity-id (:db/id meeting)}
         [meeting-details e! user meeting]]])))

@@ -394,7 +394,6 @@
     {:e! e!
      :app app
      :type :task-comment
-     :comment-command :comment/comment-on-task
      :entity-type :task
      :entity-id (:db/id task)}
     [task-details e! (:new-document app)
