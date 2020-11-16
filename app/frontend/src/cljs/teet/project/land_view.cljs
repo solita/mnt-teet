@@ -944,18 +944,22 @@
            ;; Since we don't have person registry integration,
            ;; show everything we have of owner.
            [:<>
-            (for [{:keys [r_kood eesnimi nimi]} isik]
+            (for [[i {:keys [r_kood eesnimi nimi]}] (map-indexed vector isik)]
+              
               [common/heading-and-grey-border-body
                {:heading [:div {:style {:display :flex
+                                        :margin "20px"
                                         :justify-content :space-between}}
                           [typography/BoldGreyText (if person?
                                                      (str eesnimi " " nimi)
                                                      nimi)]
                           [typography/GreyText r_kood]
                           (when omandiosa_suurus
-                            [typography/BoldGreyText (if (= "1" omandiosa_lugeja omandiosa_nimetaja)
-                                                       "1"
-                                                       (str omandiosa_lugeja "/" omandiosa_nimetaja))])]
+                            [typography/BoldGreyText
+                             (when (= 0 i)
+                               (if (= "1" omandiosa_lugeja omandiosa_nimetaja)
+                                 "1"
+                                 (str omandiosa_lugeja "/" omandiosa_nimetaja)))])]
                 :body [:<>
                        (when (and (= isiku_tyyp "Juriidiline isik") r_kood) ;; r_kood was null in some cases in production data
                          [query/query {:e! e!
