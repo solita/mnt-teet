@@ -76,13 +76,13 @@
               (:Parameters response))
         (into {}
               (map (fn [missing-parameter-name]
-                     (let [{:keys [path default-value]}
+                     (let [{:keys [path default-value] :as param}
                            (name->parameter missing-parameter-name)]
                        (if (= default-value ::no-default-value)
                          (throw (ex-info "Missing parameter that has no default value"
                                          {:parameter-name missing-parameter-name
                                           :parameter-path path}))
-                         [path default-value]))))
+                         [param default-value]))))
               (:InvalidParameters response)))))))
 
 (defn- resolve-ssm-parameters
