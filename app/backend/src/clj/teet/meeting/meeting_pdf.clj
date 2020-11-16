@@ -49,12 +49,16 @@
 (defn- list-of-topics
   "Return list of agenda topics"
   [topics]
-  (map-indexed (fn [idx topic]
+  (map (fn [topic]
          [:fo:list-item
-          [:fo:list-item-label {:end-indent "label-end()"}
-           [:fo:block [:fo:inline idx]]]
-          [:fo:list-item-body {:start-indent "body-start()"}
-           [:fo:block [:fo:block (:meeting.agenda/topic topic)]]]]) topics))
+          [:fo:list-item-label [:fo:block]]
+          [:fo:list-item-body
+           [:fo:block
+            [:fo:block {:font-size "16pt"} (:meeting.agenda/topic topic)
+             [:fo:block {:font-size "10pt"}
+              [:fo:inline
+               (:user/given-name (:meeting.agenda/responsible topic)) " "
+               (:user/family-name (:meeting.agenda/responsible topic))]]]]]]) topics))
 
 (defn- table-2-columns
   "Returns 2 columns FO table"
