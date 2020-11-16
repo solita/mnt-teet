@@ -274,7 +274,10 @@
                                                 :link :meeting/organizer-or-reviewer}}}
   (let [project-eid (project-db/meeting-project-id db meeting-eid)
         all-to (meeting-db/participants db meeting-eid)
-        to (remove #(str/ends-with? % "@example.com")
+        to (remove (fn [participant]
+                     (or (str/ends-with? participant "@example.com")
+                         (= (:db/id user) (:db/id participant) ;; don't want to send email to the user clicking the button
+                            )))
                    (keep :user/email all-to))
         meeting (d/pull db
                         '[:db/id
@@ -295,7 +298,7 @@
       (do
         (log/debug "send-meeting-email in future mode because meeting in future")
         (notify-about-meeting db meeting user
-                              (meeting-db/participants db meeting-eid)
+                              all-to
                               project-eid)
         (send-meeting-email! db meeting project-eid meeting-link to meeting-eid)))))
 
