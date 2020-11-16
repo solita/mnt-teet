@@ -33,6 +33,8 @@
 
 (defrecord FocusOnComment [comment-id])
 
+(defrecord IncrementCommentCount [path])
+
 (defn comments-query [commented-entity]
   {:tuck.effect/type :query
    :query :comment/fetch-comments
@@ -204,4 +206,9 @@
   (process-event [{:keys [comment-id]} {:keys [page params query] :as app}]
     (animate/scroll-into-view-by-id! (comment-dom-id comment-id)
                                      {:behavior :smooth})
-    app))
+    app)
+
+  IncrementCommentCount
+  (process-event [{path :path} app]
+    (update-in app path
+               #(inc (or % 0)))))

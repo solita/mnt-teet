@@ -46,7 +46,8 @@
             [clojure.set :as set]
             [clojure.string :as str]
             [teet.link.link-view :as link-view]
-            [teet.ui.panels :as panels]))
+            [teet.ui.panels :as panels]
+            [teet.comments.comments-controller :as comments-controller]))
 
 
 (defn update-meeting-warning?
@@ -914,7 +915,10 @@
             :type :meeting-comment
             :entity-type :meeting
             :entity-id (:db/id meeting)
-            :comment-counts (:comment/counts meeting)}
+            :comment-counts (:comment/counts meeting)
+            :after-comment-added-event
+            #(comments-controller/->IncrementCommentCount
+              [:route :meeting :meeting :comment/counts :comment/old-comments])}
         [meeting-details e! user meeting]]])))
 
 
