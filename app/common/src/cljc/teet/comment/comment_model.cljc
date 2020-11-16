@@ -17,10 +17,14 @@
    :file :file/comments
    :estate-comments :estate-comments/comments
    :owner-comments :owner-comments/comments
-   :unit-comments :unit-comments/comments})
+   :unit-comments :unit-comments/comments
+   :meeting :meeting/comments})
+
+(def ^:private activity-project-id-path
+  [:thk.lifecycle/_activities 0 :thk.project/_lifecycles 0 :db/id])
 
 (def ^:private task-project-id-path
-  [:activity/_tasks 0 :thk.lifecycle/_activities 0 :thk.project/_lifecycles 0 :db/id])
+  (into [:activity/_tasks 0 ] activity-project-id-path))
 
 (def ^{:doc "All paths from comment that lead to project id"}
   comment-project-paths
@@ -29,7 +33,7 @@
    [:unit-comments/_comments 0 :unit-comments/project :db/id] ; unit comments
    [:owner-comments/_comments 0 :owner-comments/project :db/id] ; owner comments
    [:estate-comments/_comments 0 :estate-comments/project :db/id] ; estate comments
-   ])
+   (into [:meeting/_comments 0 :activity/_meetings 0] activity-project-id-path)])
 
 
 
