@@ -3,7 +3,8 @@
   (:require [datomic.client.api :as d]
             [teet.activity.activity-model :as activity-model]
             [teet.thk.thk-mapping :as thk-mapping]
-            [teet.meta.meta-query :as meta-query]))
+            [teet.meta.meta-query :as meta-query]
+            [teet.integration.integration-id :as integration-id]))
 
 (defn- all-projects [db]
   (d/q '[:find (pull ?e [*
@@ -46,7 +47,7 @@
                               #(some? (:thk.activity/id %))))
 
 (defn export-thk-projects [connection]
-  
+
   (let [db (d/db connection)
         projects (->> db
                       all-projects
@@ -83,9 +84,9 @@
 
                  ;; TEET id for phase and activity
                  "phase_teetid"
-                 (str (thk-mapping/uuid->number (:integration/id lifecycle)))
+                 (str (integration-id/uuid->number (:integration/id lifecycle)))
                  "activity_teetid"
-                 (str (thk-mapping/uuid->number (:integration/id activity)))
+                 (str (integration-id/uuid->number (:integration/id activity)))
 
                  ;; Regular columns
                  (let [{task-mapping :task :as mapping}

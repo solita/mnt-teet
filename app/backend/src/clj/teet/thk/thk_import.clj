@@ -14,7 +14,7 @@
             [teet.thk.thk-mapping :as thk-mapping]
             [teet.log :as log]
             [teet.project.project-db :as project-db]
-            [teet.util.datomic :as du])
+            [teet.integration.integration-id :as integration-id])
   (:import (org.apache.commons.io.input BOMInputStream)))
 
 (def excluded-project-types #{"TUGI" "TEEMU"})
@@ -80,7 +80,22 @@
 
         project-est-start (first (sort phase-est-starts))
         project-est-end (last (sort phase-est-ends))
-        project-exists? (project-db/project-exists? db project-id)
+
+        ;; Lookup existing :db/id and :integration/id based on THK
+        ;; project id
+        {proj-db-id :db/id
+         proj-integration-id :integration/id}
+        (lookup db [:thk.project/id project-id])
+
+        ;; Create new :integration/id if project does not have it
+        proj-integration-id (or proj-integration-id
+                                (let [new-uuid (integration-id/unused-random-small-uuid db)]
+                                  (log/info "Creating new UUID for THK project "
+                                            project-id " => " new-uuid)
+                                  new-uuid))
+
+
+        project-exists? (some? proj-db-id)
         project-has-owner? (and project-exists?
                                 (project-db/project-has-owner? db [:thk.project/id project-id]))]
     (into
@@ -101,8 +116,13 @@
                   (not project-has-owner?))
           (select-keys prj #{:thk.project/owner}))
 
-        {:db/id (str "prj-" project-id)
-         :thk.project/estimated-start-date project-est-start
+        (if project-exists?
+          {:db/id proj-db-id
+           :integration/id proj-integration-id}
+          {:db/id (str "prj-" project-id)
+           :integration/id proj-integration-id})
+
+        {:thk.project/estimated-start-date project-est-start
          :thk.project/estimated-end-date project-est-end
          :thk.project/integration-info (integration-info
                                         prj thk-mapping/object-integration-info-fields)
@@ -127,7 +147,7 @@
                                        (when lc-teet-id
                                          (str "having TEET :integration/id " lc-teet-id)))
                            lc-integration-id (or lc-integration-id
-                                                 (let [new-uuid (thk-mapping/unused-random-small-uuid db)]
+                                                 (let [new-uuid (integration-id/unused-random-small-uuid db)]
                                                    (log/info "Creating new UUID for THK lifecycle " lc-thk-id " => " new-uuid)
                                                    new-uuid))]]
                  (cu/without-nils
@@ -170,7 +190,7 @@
                                             (when act-integration-id
                                               (str "having TEET :integration/id " act-integration-id)))
                                 act-integration-id (or act-integration-id
-                                                       (let [new-uuid (thk-mapping/unused-random-small-uuid db)]
+                                                       (let [new-uuid (integration-id/unused-random-small-uuid db)]
                                                          (log/info "Creating new UUID for THK activity " act-thk-id " => " new-uuid)
                                                          new-uuid))]]
                       (merge
