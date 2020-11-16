@@ -18,13 +18,9 @@
     (tr [:document :comments])
 
     ;; Comment counts provided, show badge
-    (let [{:comment/keys [new-comments old-comments]} comment-counts
-          comments? (not (zero? (+ new-comments old-comments)))]
-      (if comments?
-        [:span {:style {:text-transform :lowercase}}
-         [common/comment-count-chip {:comment/counts comment-counts}]
-         (tr [:document :comments])]
-        [:span (tr [:land-modal-page :no-comments])]))))
+    [:span {:style {:text-transform :lowercase}}
+     [common/comment-count-chip {:comment/counts comment-counts}]
+     (tr [:document :comments])]))
 
 (defn details-and-comments-tabs
   [{:keys [e!]}]
