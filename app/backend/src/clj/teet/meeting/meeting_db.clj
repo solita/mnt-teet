@@ -249,7 +249,7 @@
              [?p :participation/participant ?u]
              (or [?p :participation/role :participation.role/organizer]
                  [?p :participation/role :participation.role/reviewer])
-             (or [(missing? $ ?p :participation/absent?)]   ;; maybe try get-else
+             (or [(missing? $ ?p :participation/absent?)]
                  [?p :participation/absent? false])]
            db (:db/id user) meeting-id)
       not-empty
