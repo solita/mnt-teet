@@ -396,27 +396,29 @@
    (let [{:meeting/keys [agenda] :as old-meeting}
          (meeting-db/duplicate-info db id)]
      (into
-      [(list 'teet.meeting.meeting-tx/create-meeting
-             (get-in old-meeting [:activity/_meetings 0 :db/id])
-             (merge (select-keys old-meeting [:meeting/title :meeting/location :meeting/organizer])
-                    (cu/without-nils
-                     {:db/id "new-meeting"
-                      :meeting/title title
-                      :meeting/location location
-                      :meeting/organizer organizer
-                      :meeting/start start
-                      :meeting/end end})
-                    (when (seq agenda)
-                      {:meeting/agenda (vec (for [a agenda]
-                                              (merge
-                                               {:db/id (str "new-agenda-" (:db/id a))}
-                                               (select-keys a [:meeting.agenda/topic
-                                                               :meeting.agenda/body
-                                                               :meeting.agenda/responsible]))))})
-                    (meta-model/creation-meta user)))]
-      (for [{:participation/keys [role participant]} (:participation/_in old-meeting)
-            :when (not (:meta/deleted? participant))]
-        {:db/id (str "new-participation-" (:db/id participant))
-         :participation/in "new-meeting"
-         :participation/role (:db/ident role)
-         :participation/participant (:db/id participant)})))})
+       [(list 'teet.meeting.meeting-tx/create-meeting
+              (get-in old-meeting [:activity/_meetings 0 :db/id])
+              (merge (select-keys old-meeting [:meeting/title :meeting/location :meeting/organizer])
+                     (cu/without-nils
+                       {:db/id "new-meeting"
+                        :meeting/title title
+                        :meeting/location location
+                        :meeting/organizer organizer
+                        :meeting/start start
+                        :meeting/end end})
+                     (when (seq agenda)
+                       {:meeting/agenda (vec (for [a agenda]
+                                               (merge
+                                                 {:db/id (str "new-agenda-" (:db/id a))}
+                                                 (select-keys a [:meeting.agenda/topic
+                                                                 :meeting.agenda/body
+                                                                 :meeting.agenda/responsible]))))})
+                     (meta-model/creation-meta user)))]
+       (for [{:participation/keys [role participant]} (:participation/_in old-meeting)
+             :when (and (not (:meta/deleted? participant))
+                        (not (du/enum= role :participation.role/organizer)) ;; Do not duplicate organizer participation
+                        )]
+         {:db/id (str "new-participation-" (:db/id participant))
+          :participation/in "new-meeting"
+          :participation/role (:db/ident role)
+          :participation/participant (:db/id participant)})))})
