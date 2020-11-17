@@ -12,6 +12,8 @@
             Paragraph BulletList OrderedList Heading Text
             StrongEmphasis Emphasis)))
 
+(declare render-md)
+
 (def default-layout-config
   {;; A4 portrait width/height
    :width "21cm"
@@ -46,6 +48,18 @@
   (when date
     (.format time-format date)))
 
+(defn- decision-list-item
+  "Return the agenda topic descition list item"
+  [decision]
+  [:fo:list-item
+   [:fo:list-item-label [:fo:block]]
+   [:fo:list-item-body
+    [:fo:block
+     [:fo:block {:font-size "14pt"}
+      (str "Decision #" (:meeting.decision/number decision))
+      [:fo:block {:font-size "12pt"}
+       (:meeting.decision/body decision)]]]]])
+
 (defn- list-of-topics
   "Return list of agenda topics"
   [topics]
@@ -54,11 +68,12 @@
           [:fo:list-item-label [:fo:block]]
           [:fo:list-item-body
            [:fo:block
-            [:fo:block {:font-size "16pt"} (:meeting.agenda/topic topic)
-             [:fo:block {:font-size "10pt"}
-              [:fo:inline
-               (:user/given-name (:meeting.agenda/responsible topic)) " "
-               (:user/family-name (:meeting.agenda/responsible topic))]]]]]]) topics))
+            [:fo:block {:font-size "16pt"}
+             (:meeting.agenda/topic topic) [:fo:block {:font-size "10pt"}
+                                            [:fo:inline (:user/given-name (:meeting.agenda/responsible topic)) " "
+                                             (:user/family-name (:meeting.agenda/responsible topic))]]]
+            [:fo:block (:font-size "12pt") (render-md (:meeting.agenda/body topic))]
+            #_[:fo:block (apply decision-list-item (:meeting.agenda/decisions topic))]]]]) topics))
 
 (defn- table-2-columns
   "Returns 2 columns FO table"
@@ -138,7 +153,7 @@
     (md->xsl-fo c)))
 
 (defmethod md->xsl-fo Document [root]
-  [:fo:block {:class "md-document"}
+  [:fo:block
    (render-children root)])
 
 (defmethod md->xsl-fo Paragraph [c]
@@ -189,6 +204,11 @@
 
 (defn- parse-md [str]
   (-> (Parser/builder) .build (.parse str)))
+
+(defn- render-md
+  "Parse and render markdown as xsl-fo"
+  [md-formatted-text]
+  (md->xsl-fo (parse-md md-formatted-text)))
 
 (comment
   (def md "hello **everyone**\n\n​\n\nlets\n\n​\n\n1. do\n2. some things\n3. here\n\n## level two header\n\nsome more content _italic also_\n")
