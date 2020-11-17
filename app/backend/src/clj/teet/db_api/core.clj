@@ -2,7 +2,6 @@
   "TEET database API multimethods"
   (:require [teet.authorization.authorization-check :as authorization-check]
             [datomic.client.api :as d]
-            [teet.meta.meta-query :as meta-query]
             [teet.log :as log]
             [teet.util.collection :as cu]
             [teet.util.datomic :as du]))

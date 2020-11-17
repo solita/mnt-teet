@@ -7,8 +7,7 @@
             [teet.log :as log]
             [teet.environment :as environment]
             [teet.project.project-model :as project-model]
-            [datomic.client.api :as d]
-            [teet.util.datomic :as du]))
+            [datomic.client.api :as d]))
 
 (defmulti import-by-suffix
   "Import file based on suffix"

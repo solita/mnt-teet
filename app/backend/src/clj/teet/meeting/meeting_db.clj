@@ -4,8 +4,7 @@
             [teet.db-api.core :as db-api]
             [teet.util.datomic :as du]
             [teet.meeting.meeting-model :as meeting-model]
-            [teet.project.project-db :as project-db]
-            [teet.link.link-db :as link-db]))
+            [teet.project.project-db :as project-db]))
 
 (defn meetings
   "Fetch a listing of meetings for the given where
