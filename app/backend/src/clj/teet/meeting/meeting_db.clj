@@ -266,6 +266,7 @@
                {:meeting/agenda [:db/id
                                  :meeting.agenda/topic
                                  :meeting.agenda/body
-                                 {:meeting.agenda/responsible [:user/family-name :user/given-name :user/id]}]}
+                                 {:meeting.agenda/responsible [:user/family-name :user/given-name :user/id]}
+                                 {:meeting.agenda/decisions [:meeting.decision/body :meeting.decision/number]}]}
                {:participation/_in [:participation/role
                                     {:participation/participant [:db/id :meta/deleted? :user/family-name :user/given-name :user/id]}]}] id ))

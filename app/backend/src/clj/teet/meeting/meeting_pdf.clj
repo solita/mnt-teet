@@ -51,14 +51,11 @@
 (defn- decision-list-item
   "Return the agenda topic descition list item"
   [decision]
-  [:fo:list-item
-   [:fo:list-item-label [:fo:block]]
-   [:fo:list-item-body
-    [:fo:block
-     [:fo:block {:font-size "14pt"}
-      (str "Decision #" (:meeting.decision/number decision))
-      [:fo:block {:font-size "12pt"}
-       (:meeting.decision/body decision)]]]]])
+  [:fo:block
+   [:fo:block {:font-size "14pt"}
+    (str "Decision #" (:meeting.decision/number decision))
+    [:fo:block {:font-size "12pt"}
+     (render-md (:meeting.decision/body decision))]]])
 
 (defn- list-of-topics
   "Return list of agenda topics"
@@ -73,7 +70,7 @@
                                             [:fo:inline (:user/given-name (:meeting.agenda/responsible topic)) " "
                                              (:user/family-name (:meeting.agenda/responsible topic))]]]
             [:fo:block (:font-size "12pt") (render-md (:meeting.agenda/body topic))]
-            #_[:fo:block (apply decision-list-item (:meeting.agenda/decisions topic))]]]]) topics))
+            [:fo:block (map decision-list-item (:meeting.agenda/decisions topic))]]]]) topics))
 
 (defn- table-2-columns
   "Returns 2 columns FO table"
