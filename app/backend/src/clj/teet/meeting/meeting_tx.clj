@@ -76,6 +76,7 @@
                                  (:meeting/title meeting))})]
     [{:db/id activity-eid
       :activity/meetings [meeting]}
-     {:participation/participant (get-in meeting [:meeting/organizer :db/id])
+     {:participation/participant (or (get-in meeting [:meeting/organizer :db/id])
+                                     (:meeting/organizer meeting))
       :participation/role :participation.role/organizer
       :participation/in "new-meeting"}]))
