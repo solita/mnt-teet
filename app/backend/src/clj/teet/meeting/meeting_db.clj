@@ -125,17 +125,21 @@
 
 (defn reviewer-ids
   [db meeting-id]
-  (let [{organizer :meeting/organizer}
-        (d/pull db '[:meeting/organizer] meeting-id)]
-    (into #{(:db/id organizer)}
-          (map first)
-          (d/q '[:find ?u
-                 :where
-                 [?p :participation/in ?m]
-                 [(missing? $ ?p :meta/deleted?)]
+  (into #{}
+        (map first)
+        (d/q '[:find ?u
+               :where
+               [?p :participation/in ?m]
+               [(missing? $ ?p :meta/deleted?)]
+               (or
                  [?p :participation/role :participation.role/reviewer]
-                 [?p :participation/participant ?u]
-                 :in $ ?m] db meeting-id))))
+                 [?p :participation/role :participation.role/organizer])
+               (or
+                 [(missing? $ ?p :participation/absent?)]
+                 [?p :participation/absent? false])
+               [?p :participation/participant ?u]
+               :in $ ?m]
+             db meeting-id)))
 
 (defn approved-by-users
   [db meeting-id]
@@ -224,3 +228,29 @@
                                  :meeting.agenda/responsible]}
                {:participation/_in [:participation/role
                                     {:participation/participant [:db/id :meta/deleted?]}]}] id))
+
+(defn meeting-organizer-participation
+  [db meeting-id]
+  (-> (d/q '[:find ?p
+             :in $ ?m
+             :where
+             [?p :participation/in ?m]
+             [?p :participation/role :participation.role/organizer]]
+           db meeting-id)
+      ffirst))
+
+(defn user-can-review?
+  "Check that the users participation in the meeting is either reviewer or organizer"
+  [db user meeting-id]
+  (-> (d/q '[:find ?p
+             :in $ ?u ?m
+             :where
+             [?p :participation/in ?m]
+             [?p :participation/participant ?u]
+             (or [?p :participation/role :participation.role/organizer]
+                 [?p :participation/role :participation.role/reviewer])
+             (or [(missing? $ ?p :participation/absent?)]
+                 [?p :participation/absent? false])]
+           db (:db/id user) meeting-id)
+      not-empty
+      boolean))

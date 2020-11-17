@@ -1465,4 +1465,13 @@
   :txes [[{:db/ident :meeting/comments
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/many
-           :db/doc "Comments for this meeting"}]]}]
+           :db/doc "Comments for this meeting"}]]}
+
+ {:db/ident :migration/participation-absent?
+  :txes [[{:db/ident :participation/absent?
+           :db/valueType :db.type/boolean
+           :db/cardinality :db.cardinality/one
+           :db/doc "Was the participant absent in the meeting?"}
+          {:db/ident :participation.role/organizer
+           :db/doc "Participation role for organizer. Purposefully doesn't have :enum/valid-for to not show in selection"}]]}
+ ]
