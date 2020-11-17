@@ -917,6 +917,48 @@
         ^{:key (str kirje-id)}
         [key-value [(tr [:contact type]) content]]))]))
 
+(defn owner-inner-component [e! person? nimi eesnimi r_kood omandiosa_lugeja omandiosa_nimetaja omandiosa_suurus isiku_tyyp project first-in-joint?]
+  [common/heading-and-grey-border-body
+   {:heading [:div {:style {:display :flex
+                            :margin "20px"
+                            :justify-content :space-between}}
+              [typography/BoldGreyText (if person?
+                                         (str eesnimi " " nimi)
+                                         nimi)]
+              [typography/GreyText r_kood]
+              (when omandiosa_suurus
+                [typography/BoldGreyText
+                 (when first-in-joint?
+                   (if (= "1" omandiosa_lugeja omandiosa_nimetaja)
+                     "1"
+                     (str omandiosa_lugeja "/" omandiosa_nimetaja)))])]
+    :body [:<>
+           (when (and (= isiku_tyyp "Juriidiline isik") r_kood) ;; r_kood was null in some cases in production data
+             [query/query {:e! e!
+                           :query :land/estate-owner-info
+                           :args {:thk.project/id (:thk.project/id project)
+                                  :business-id r_kood}
+                           :simple-view [business-registry-info]}])]}])
+
+(defn one-owner-for-modal
+  [estate-info e! app project
+   {:keys [omandiosa_suurus omandiosa_lugeja isik omandiosa_nimetaja] :as owner}]
+  (let [isiku_tyyp (:isiku_tyyp (first isik))
+        person? (= isiku_tyyp  "Füüsiline isik")
+        business-ids (map :r_kood
+                          (filter #(not= (:isiku_tyyp %) "Füüsiline isik")
+                                  (mapcat :isik owner)))
+        joint-ownership? (> (count isik) 1)]
+    ;; (log/debug "isiku_tyyp =" isiku_tyyp ", joint-ownership?" joint-ownership?)
+    [:<>
+     (for [[i {:keys [r_kood eesnimi nimi]}] (map-indexed vector isik)]
+       
+       [owner-inner-component e! person? nimi eesnimi r_kood omandiosa_lugeja omandiosa_nimetaja omandiosa_suurus isiku_tyyp project (= i 0)])
+     (for [r_kood business-ids]
+       [comments-view/lazy-comments {:e! e!
+                                     :app app
+                                     :entity-type :owner-comments
+                                     :entity-id [:owner-comments/project+owner-id [(:db/id project) r_kood]]}])]))
 
 (defmethod owner-modal-content :owner-info
   [{:keys [estate-info e! app project]}]
@@ -931,49 +973,7 @@
     ;; - if there are more than one omandiosa, it's describing ownership shares
     
      [:div {:class (<class common-styles/gray-container-style)}
-      (mapc
-       (fn [{:keys [omandiosa_suurus omandiosa_lugeja isik omandiosa_nimetaja] :as owner}]
-         (let [ ;; assumption: > 1 isik = joint ownership, all with same isiku_tyyp
-               isiku_tyyp (:isiku_tyyp (first isik))
-               person? (= isiku_tyyp  "Füüsiline isik")
-               business-ids (map :r_kood
-                                  (filter #(not= (:isiku_tyyp %) "Füüsiline isik")
-                                          (mapcat :isik owner)))
-               joint-ownership? (> (count isik) 1)]
-           (log/debug "isiku_tyyp =" isiku_tyyp ", joint-ownership?" joint-ownership?)
-           ;; Since we don't have person registry integration,
-           ;; show everything we have of owner.
-           [:<>
-            (for [[i {:keys [r_kood eesnimi nimi]}] (map-indexed vector isik)]
-              
-              [common/heading-and-grey-border-body
-               {:heading [:div {:style {:display :flex
-                                        :margin "20px"
-                                        :justify-content :space-between}}
-                          [typography/BoldGreyText (if person?
-                                                     (str eesnimi " " nimi)
-                                                     nimi)]
-                          [typography/GreyText r_kood]
-                          (when omandiosa_suurus
-                            [typography/BoldGreyText
-                             (when (= 0 i)
-                               (if (= "1" omandiosa_lugeja omandiosa_nimetaja)
-                                 "1"
-                                 (str omandiosa_lugeja "/" omandiosa_nimetaja)))])]
-                :body [:<>
-                       (when (and (= isiku_tyyp "Juriidiline isik") r_kood) ;; r_kood was null in some cases in production data
-                         [query/query {:e! e!
-                                       :query :land/estate-owner-info
-                                       :args {:thk.project/id (:thk.project/id project)
-                                              :business-id r_kood}
-                                       :simple-view [business-registry-info]}])]}])
-            (for [r_kood business-ids]
-              [comments-view/lazy-comments {:e! e!
-                                            :app app
-                                            :entity-type :owner-comments
-                                            :entity-id [:owner-comments/project+owner-id [(:db/id project) r_kood]]}])]))
-       owners)]))
-
+      (mapc (partial one-owner-for-modal estate-info e! app project) owners)]))
 
 (defmulti unit-modal-content (fn [{:keys [modal-page]}]
                                 (keyword modal-page)))
