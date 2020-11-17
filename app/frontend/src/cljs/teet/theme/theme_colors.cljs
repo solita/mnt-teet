@@ -52,4 +52,5 @@
    :box-shadow (str "0 0 0 1px" white ", "
                     "0 0 0 3px " blue-light)})
 (def focus-style
-  {:outline (str "2px solid " blue-light)})
+  {:outline (str "2px solid " blue-light)
+   :outline-offset "3px"})

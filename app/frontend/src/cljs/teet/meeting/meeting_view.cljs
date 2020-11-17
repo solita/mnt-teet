@@ -438,7 +438,7 @@
 
 (defn meeting-page-structure [e! app project
                               main-content right-panel-content]
-  (let [[navigator-w content-w] [3 (if right-panel-content 6 9)]]
+  (let [[navigator-w content-w] [3 (if right-panel-content 6 :auto)]]
     [project-context/provide
      {:project-id (:db/id project)
       :thk.project/id (:thk.project/id project)}
@@ -460,17 +460,20 @@
             :add-activity? false}]]
          [Grid {:item true
                 :xs content-w
-                :style {:padding "2rem 1.5rem"
-                        :overflow-y :auto
-                        ;; content area should scroll, not the whole page because we
-                        ;; want map to stay in place without scrolling it
-                        }}
+                :style (merge {:padding "2rem 1.5rem"
+                               :overflow-y :auto
+                               ;; content area should scroll, not the whole page because we
+                               ;; want map to stay in place without scrolling it
+                               }
+                              (when (not right-panel-content)
+                                {:flex 1}))}
           main-content]
          (when right-panel-content
            [Grid {:item true
                   :xs :auto
                   :style {:display :flex
                           :flex 1
+                          :overflow-y :auto
                           :padding "1rem 1.5rem"
                           :background-color theme-colors/gray-lightest}}
             right-panel-content])]]]]]))
@@ -583,17 +586,56 @@
     ^{:attribute :meeting.agenda/body}
     [rich-text-editor/rich-text-field {}]]])
 
-(defn meeting-participant [on-remove {:participation/keys [role participant] :as participation}]
+(defn meeting-user-row [{:keys [actions] :as _opts} {:participation/keys [role participant] :as participation}]
   [:div.participant {:class (<class common-styles/flex-row)}
    [:div.participant-name {:class (<class common-styles/flex-table-column-style 45)}
-    [user-model/user-name participant]]
+    [:span (user-model/user-name participant)]]
    [:div.participant-role {:class (<class common-styles/flex-table-column-style 55 :space-between)}
     [:span (tr-enum role)]
     [:div
-     (when on-remove
-       [IconButton {:size :small
-                    :on-click #(on-remove participation)}
-        [icons/content-clear {:font-size :small}]])]]])
+     actions]]])
+
+(defn meeting-participation-row
+  [{:keys [remove-participant change-absence confirm-changes?]}
+   {:participation/keys [absent? role] :as participation}]
+  (let [show-remove? (and remove-participant (not (= (:db/ident role) :participation.role/organizer)))
+        icon-button [IconButton (merge {:size :small}
+                                       (when (not confirm-changes?)
+                                         {:on-click #(change-absence participation (not absent?))})
+                                       (when (not show-remove?)
+                                         {:style {:margin-right "26px"}} ;;size of the remove button
+                                         ))
+                     (if absent?
+                       [icons/navigation-arrow-upward {:font-size :small}]
+                       [icons/navigation-arrow-downward {:font-size :small}])]]
+    [meeting-user-row {:actions [:div {:class (<class common-styles/flex-row)}
+                                 (when change-absence
+                                   (if confirm-changes?
+                                     [buttons/button-with-confirm
+                                      {:action #(change-absence participation (not absent?))
+                                       :modal-title (tr [:meeting (if absent? :move-to-participants-modal-title
+                                                                              :move-to-absentees-modal-title)])
+                                       :confirm-button-text (tr [:meeting :confirm-move])
+                                       :modal-text (tr [:meeting (if absent? :move-to-participants-modal-body
+                                                                             :move-to-absentees-modal-body)]
+                                                       {:participant
+                                                        (user-model/user-name
+                                                          (:participation/participant participation))})}
+                                      icon-button]
+                                     icon-button))
+                                 (when show-remove?
+                                   [buttons/button-with-confirm
+                                    {:action #(remove-participant participation)
+                                     :modal-title (tr [:meeting :remove-participant-confirm-title])
+                                     :confirm-button-text (tr [:meeting :remove-participant-confirm-button])
+                                     :modal-text (tr [:meeting :remove-participant-modal-content]
+                                                     {:participant
+                                                      (user-model/user-name
+                                                        (:participation/participant participation))})}
+                                    [IconButton {:size :small
+                                                 :title "Remove participant from meeting"}
+                                     [icons/content-clear {:font-size :small}]]])]}
+     participation]))
 
 
 (defn- add-meeting-participant [e! meeting]
@@ -606,10 +648,10 @@
           non-teet? (:non-teet-user? @form)]
       [:div.new-participant
        [:div
-        [typography/BoldGreyText {:style {:margin-bottom "1rem"}}
-         (tr [:meeting :add-person])]
         [context/consume :reviews?
          [update-meeting-warning?]]
+        [typography/BoldGreyText {:style {:margin-bottom "1rem"}}
+         (tr [:meeting :add-person])]
         ;; Split in to 2 forms so we can have separate specs for each
         (if non-teet?
           ^{:key "non-teet-user"}
@@ -645,41 +687,68 @@
 
            [form/footer2]])]])))
 
-(defn meeting-participants [e! {organizer :meeting/organizer
-                                participations :participation/_in :as meeting} edit-rights? user]
-  (r/with-let [remove-participant! (fn [participant]
-                                     (log/info "Remove participant:" participant)
-                                     (e! (meeting-controller/->RemoveParticipant (:db/id participant))))]
-    (let [can-edit-participants? (and edit-rights? (meeting-model/user-is-organizer-or-reviewer? user meeting))
-          participations (sort-by
-                         meeting-model/role-id-name
-                         participations)]
+(defn meeting-participants [e! {participations :participation/_in :as meeting} edit-rights?]
+  (r/with-let [remove-participant! (fn [participation]
+                                     (log/info "Remove participation:" participation)
+                                     (e! (meeting-controller/->RemoveParticipant (:db/id participation))))
+               change-absence (fn [participation absent?]
+                                  (log/info "Change absent status of" participation " to " absent?)
+                                  (e! (meeting-controller/->ChangeAbsentStatus (:db/id participation) absent?)))]
+    (let [participations (sort-by
+                           meeting-model/role-id-name
+                           participations)
+          attendees (filterv
+                      #(not (:participation/absent? %))
+                      participations)
+          absentees (filterv
+                      :participation/absent?
+                      participations)
+          has-reviews? (boolean (seq (:review/_of meeting)))]
       [:div.meeting-participants {:style {:flex 1}}
        [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}
         (tr [:meeting :participants-title])]
        [:div.participant-list {:class (<class common-styles/margin-bottom 1)}
-        [meeting-participant nil {:participation/participant organizer
-                                  :participation/role :participation.role/organizer}]
-        (mapc (r/partial meeting-participant (and can-edit-participants? remove-participant!))
-              participations)]
-       (when can-edit-participants?
+        (doall
+          (for [participation attendees]
+            ^{:key (:db/id participation)}
+            [meeting-participation-row {:confirm-changes? has-reviews?
+                                        :remove-participant (when edit-rights?
+                                                              remove-participant!)
+                                        :change-absence (when edit-rights?
+                                                          change-absence)}
+             participation]))]
+       (when edit-rights?
          [:<>
           [add-meeting-participant e! meeting]
-          [Divider {:style {:margin "1rem 0"}}]
-          [typography/Heading3 {:class (<class common-styles/margin-bottom 1)}
-           (tr [:meeting :notifications-title])]
-          [:p {:class (<class common-styles/margin-bottom 1)}
-           (tr [:meeting :notifications-help])]
-          [:div {:class (<class common-styles/flex-align-center)}
-           (if (zero? (count participations))
-             [typography/WarningText (tr [:meeting :not-enough-participants])]
-             [:<>
-              [buttons/button-primary {:disabled (zero? (count participations))
-                                       :on-click (e! meeting-controller/->SendNotifications meeting)}
-               (tr [:buttons :send])]
-              [typography/GreyText {:style {:margin-left "1rem"}}
-               (tr [:meeting :send-notification-to-participants]
-                   {:count (inc (count participations))})]])]])])))
+          [Divider {:style {:margin "1rem 0"}}]])
+       [:div
+        [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}
+         (tr [:meeting :absentees-title])]
+        (if (seq absentees)
+          (doall
+            (for [participation absentees]
+              ^{:key (:db/id participation)}
+              [meeting-participation-row {:confirm-changes? has-reviews?
+                                          :remove-participant (when edit-rights?
+                                                                remove-participant!)
+                                          :change-absence (when edit-rights?
+                                                            change-absence)}
+               participation]))
+          [typography/GreyText (tr [:meeting :no-absentees])])]
+       [:div.notification {:style {:margin "1rem 0"}}
+        [typography/Heading3 {:class (<class common-styles/margin-bottom 1)}
+         (tr [:meeting :notifications-title])]
+        [:p {:class (<class common-styles/margin-bottom 1)}
+         (tr [:meeting :notifications-help])]
+        [:div {:class (<class common-styles/flex-align-center)}
+         (if (= (count participations) 1)
+           [typography/WarningText (tr [:meeting :not-enough-participants])]
+           [:<>
+            [buttons/button-primary {:on-click (e! meeting-controller/->SendNotifications meeting)}
+             (tr [:buttons :send])]
+            [typography/GreyText {:style {:margin-left "1rem"}}
+             (tr [:meeting :send-notification-to-participants]
+                 {:count (count participations)})]])]]])))
 
 (defn decision-form
   [e! agenda-eid close-event form-atom]
@@ -763,23 +832,24 @@
 
 (defn reviews
   [{participations :participation/_in
-    meeting-reviews :review/_of
-    :meeting/keys [organizer]}]
-  (let [participations (into [{:db/id "organizer"
-                               :participation/participant organizer}]
-                             (filter (comp #(du/enum= % :participation.role/reviewer)
-                                              :participation/role))
-                             participations)]
+    meeting-reviews :review/_of}]
+  (let [participations (->> (filter (comp #(not (du/enum= % :participation.role/participant))
+                                          :participation/role)
+                                    participations)
+                            (sort-by
+                              meeting-model/role-id-name))]
     [:div {:class (<class common-styles/padding-bottom 1)}
      [typography/Heading2 {:style {:margin "1.5rem 0"}} (tr [:meeting :approvals])]
      [:div
       (doall
-        (for [{:participation/keys [participant] :as participation} participations]
+        (for [{:participation/keys [participant absent?] :as participation} participations
+              :when (not absent?)]
           ^{:key (str (:db/id participation))}
-          [participant-approval-status participant (some (fn [{:review/keys [reviewer] :as review}]
-                                                           (when (= (:db/id reviewer) (:db/id participant))
-                                                             review))
-                                                         meeting-reviews)]))]]))
+          [:div
+           [participant-approval-status participant (some (fn [{:review/keys [reviewer] :as review}]
+                                                            (when (= (:db/id reviewer) (:db/id participant))
+                                                              review))
+                                                          meeting-reviews)]]))]]))
 
 (defn review-form
   [e! meeting-id close-event form-atom]
@@ -815,7 +885,8 @@
 
 (defn meeting-details*
   [e! user {:meeting/keys [start end location agenda] :as meeting} rights]
-  (let [edit? (get rights :edit-meeting)]
+  (let [edit? (get rights :edit-meeting)
+        review? (get rights :review-meeting)]
     [:div
      [common/basic-information-row [[(tr [:fields :meeting/date-and-time])
                                      (str (format/date start)
@@ -869,7 +940,7 @@
                                 :modal-title (tr [:meeting :new-agenda-modal-title])
                                 :button-component [buttons/button-primary {} (tr [:meeting :add-agenda-button])]}])
      [reviews meeting]
-     (when edit?
+     (when review?
        [review-actions e! meeting])]))
 
 (defn meeting-details [e! user meeting]
@@ -924,13 +995,16 @@
 
 (defn meeting-page [e! {:keys [user] :as app} {:keys [project meeting]}]
   (let [edit-rights? (and (meeting-model/user-is-organizer-or-reviewer? user meeting)
-                          (not (:meeting/locked? meeting)))]
+                          (not (:meeting/locked? meeting)))
+        review-rights? (and (meeting-model/user-can-review? user meeting)
+                            (not (:meeting/locked? meeting)))]
     [authorization-context/with
      (set/union
        (when edit-rights?
-         #{:edit-meeting}))
+         #{:edit-meeting})
+       (when review-rights?
+         #{:review-meeting}))
      [context/provide :reviews? (seq (:review/_of meeting))
       [meeting-page-structure e! app project
        [meeting-main-content e! app meeting]
-       [context/consume :user
-        [meeting-participants e! meeting edit-rights?]]]]]))
+       [meeting-participants e! meeting edit-rights?]]]]))

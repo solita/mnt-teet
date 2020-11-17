@@ -18,9 +18,10 @@
 (defrecord DeleteDecision [decision-id close-event])
 
 (defrecord AddParticipant [meeting participant])
-(defrecord RemoveParticipant [participant-id])
+(defrecord RemoveParticipant [participation-id])
 (defrecord RemoveParticipantResult [participant-id result])
 (defrecord SendNotifications [meeting])
+(defrecord ChangeAbsentStatus [participation-id absent?])
 
 (defrecord SubmitReview [meeting-id form-data close-event])
 
@@ -127,7 +128,7 @@
            :result-event (partial common-controller/->ModalFormResult close-event)}))
 
   RemoveParticipant
-  (process-event [{id :participant-id} app]
+  (process-event [{id :participation-id} app]
     (t/fx app
           {:tuck.effect/type :command!
            :command :meeting/remove-participation
@@ -144,6 +145,18 @@
             :action {:title (tr [:buttons :undo])
                      :event (common-controller/->UndoDelete participant-id nil)}})
           common-controller/refresh-fx))
+
+  ChangeAbsentStatus
+  (process-event [{:keys [participation-id absent?]} app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command :meeting/change-participation-absence
+           :payload {:participation-id participation-id
+                     :absent? absent?}
+           :success-message (if absent?
+                              (tr [:meeting :moved-to-absentees-successfully])
+                              (tr [:meeting :moved-to-participants-successfully]))
+           :result-event common-controller/->Refresh}))
 
   AddParticipant
   (process-event [{:keys [meeting participant]} app]
