@@ -186,10 +186,11 @@
   (str (.getChars t)))
 
 (defmethod md->xsl-fo StrongEmphasis [t]
-  [:fo:inline {:font-weight 900} (str t)])
+  [:fo:inline {:font-weight 900}
+   (render-children t)])
 
 (defmethod md->xsl-fo Emphasis [t]
-  [:fo:inline {:font-weight 600}
+  [:fo:inline {:font-style "italic"}
    (render-children t)])
 
 (defmethod md->xsl-fo Heading [h]
