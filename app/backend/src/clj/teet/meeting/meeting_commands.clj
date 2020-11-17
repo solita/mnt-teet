@@ -284,7 +284,7 @@
               :meeting/invitations-sent-at (Date.)}])))
 
 (defcommand :meeting/send-notifications
-  {:doc "Send email / ical / in-app notifications to organizer and participants. iCalendar events are sent if the meeting hasn't started yet."
+  {:doc "Send email / in-app notifications to organizer and participants."
    :context {:keys [db conn user]}
    :payload {meeting-eid :db/id}
    :project-id (project-db/meeting-project-id db meeting-eid)
