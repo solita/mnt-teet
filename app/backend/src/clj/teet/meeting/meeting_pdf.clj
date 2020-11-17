@@ -97,6 +97,30 @@
   (str (with-language :et (tr key)) " / "
        (with-language :en (tr key))))
 
+(defn- decision-text
+  "Return decision text depending on approved or rejected"
+  [db-ident]
+  (case db-ident
+    :review.decision/approved
+    "Approved"
+    :review.decision/rejected
+    "Rejected"
+    "Unknown")
+  )
+(defn- reviews
+  "Returns review information"
+  [review-of]
+  (let [review (first review-of) reviewer (:review/reviewer review)
+        reviewer-family-name (:user/family-name reviewer)
+        reviewer-given-name (:user/given-name reviewer)
+        decision (:review/decision review)
+        comment (:review/comment review)]
+    [:fo:block {:font-style "normal" :font-size "20pt"}
+     (tr+ [:meeting :approvals])
+     [:fo:block {:font-style "italic" :font-size "16pt"}
+      "Reviewer: " (str reviewer-family-name " " reviewer-given-name " "
+                        (decision-text (:db/ident decision)) " " comment " Date: " (:meta/created-at review))]]))
+
 (defn meeting-pdf
   ([db meeting-id]
    (meeting-pdf db meeting-id default-layout-config))
@@ -138,6 +162,8 @@
         [:fo:block
          [:fo:list-block
           (list-of-topics (:meeting/agenda meeting))]]
+        [:fo:block
+         (reviews (:review/_of meeting))]
         ]]])))
 
 (defn- md-children [node]
