@@ -440,7 +440,7 @@
                               main-content right-panel-content]
   (let [[navigator-w content-w] [3 (if right-panel-content 6 :auto)]]
     [project-context/provide
-     {:project-id (:db/id project)
+     {:db/id (:db/id project)
       :thk.project/id (:thk.project/id project)}
      [:<>
       [project-view/project-header project]
