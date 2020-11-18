@@ -102,56 +102,65 @@
 
 ;; TODO: Both this and the create comment form should be replaced with
 ;;       form2 to make the add image button look decent.
-(defn- edit-comment-form [e! comment-data {project-id :db/id}]
-  (let [[comment-form ->UpdateCommentForm]
-        (common-controller/internal-state comment-data
-                                          {:merge? true})]
-    ;; Don't care about updated values
-    (fn [_ _ _]
-      [form/form2 {:e! e!
-                   :id "edit-comment-form"
-                   :value @comment-form
-                   :on-change-event ->UpdateCommentForm
-                   :cancel-event comments-controller/->CancelCommentEdit
-                   :save-event #(comments-controller/->SaveEditCommentForm @comment-form)
-                   :spec :comment/edit-comment-form}
-       [:div {:class (<class common-styles/gray-container-style)}
+(defn- edit-comment-form* [e! commented-entity close-event comment-form {project-id :db/id}]
+  (let [comment-data @comment-form
+        update-event (form/update-atom-event comment-form merge)]
+
+    [form/form2 {:e! e!
+                 :id "edit-comment-form"
+                 :value comment-data
+                 :on-change-event update-event
+                 :cancel-event close-event
+                 :save-event #(comments-controller/->SaveEditCommentForm commented-entity @comment-form)
+                 :spec :comment/edit-comment-form}
+     [:div {:class (<class common-styles/gray-container-style)}
+      [:div {:class (<class form-field-spacer)}
+       [form/field :comment/comment
+        [mentions-input {:e! e!}]]
+
+       [form/field :comment/files
+        [edit-attached-images-field {:e! e!
+                                     :comment-id (:db/id comment-data)
+                                     :project-id project-id
+                                     :on-success-event update-event}]]]
+      ;; FIXME: remove UpdateCommentForm
+      (log/debug "edit-comment-form: can set visibility? ->"
+                 (authorization-check/authorized? @app-state/user
+                                                  :projects/set-comment-visibility
+                                                  {:entity comment-data
+                                                   :project-id project-id})
+                 project-id comment-data)
+      (when (authorization-check/authorized? @app-state/user
+                                             :projects/set-comment-visibility
+                                             {:entity comment-data
+                                              :project-id project-id})
         [:div {:class (<class form-field-spacer)}
-         [form/field :comment/comment
-          [mentions-input {:e! e!}]]
+         [form/field :comment/visibility
+          [select/select-enum {:e! e! :attribute :comment/visibility}]]])]
 
-         [form/field :comment/files
-          [edit-attached-images-field {:e! e!
-                                       :comment-id (:db/id comment-data)
-                                       :project-id project-id
-                                       :on-success-event ->UpdateCommentForm}]]]
-        (log/debug "edit-comment-form: can set visibility? ->"
-                   (authorization-check/authorized? @app-state/user
-                                                    :projects/set-comment-visibility
-                                                    {:entity comment-data
-                                                     :project-id project-id})
-                   project-id comment-data)
-        (when (authorization-check/authorized? @app-state/user
-                                               :projects/set-comment-visibility
-                                              {:entity comment-data
-                                               :project-id project-id})
-          [:div {:class (<class form-field-spacer)}
-           [form/field :comment/visibility
-            [select/select-enum {:e! e! :attribute :comment/visibility}]]])]
+     [form/footer2]]))
 
-       [form/footer2]])))
-
-(defmethod project-navigator-view/project-navigator-dialog :edit-comment
-  [{:keys [e! app] :as _opts} _dialog]
-  (project-context/consume
-   [edit-comment-form e! (:edit-comment-data app)]))
+(defn- edit-comment-form [e! commented-entity close-event comment-form]
+  [project-context/consume
+   [edit-comment-form* e! commented-entity close-event comment-form]])
 
 (defn- edit-comment-button [e! comment-entity commented-entity]
-  [buttons/button-text {:size :small
-                        :color :primary
-                        :start-icon (r/as-element [icons/image-edit])
-                        :on-click #(e! (comments-controller/->OpenEditCommentDialog comment-entity commented-entity))}
-   (tr [:buttons :edit])])
+  [form/form-modal-button
+   {:modal-title (tr [:project :edit-comment])
+    :button-component
+    [buttons/button-text {:size :small
+                          :color :primary
+                          :start-icon (r/as-element [icons/image-edit])}
+     (tr [:buttons :edit])]
+
+    :form-component [edit-comment-form e! commented-entity]
+    :form-value (merge {:comment/files []}
+                       comment-entity
+                       {:comment/mentions (mapv
+                                           (fn [mention]
+                                             {:user mention})
+                                           (:comment/mentions comment-entity))}
+                       {:comment/commented-entity commented-entity})}])
 
 (def ^{:private true :const true} quotation-mark "\u00bb ")
 

@@ -22,11 +22,8 @@
 (defrecord SetCommentsAsOld [update-path])
 (defrecord CommentAddSuccess [entity-id after-comment-added-event])
 
-(defrecord OpenEditCommentDialog [comment-entity commented-entity])
-(defrecord UpdateEditCommentForm [form-data])
-(defrecord CancelCommentEdit [])
-(defrecord SaveEditCommentForm [form-data])
-(defrecord SaveEditCommentSuccess [])
+(defrecord SaveEditCommentForm [commented-entity form-data])
+(defrecord SaveEditCommentSuccess [commented-entity results])
 
 (defrecord SetCommentStatus [comment-id status commented-entity])
 (defrecord ResolveCommentsOfEntity [entity-id entity-type])
@@ -118,19 +115,6 @@
     (t/fx app
           (comments-query commented-entity)))
 
-  OpenEditCommentDialog
-  (process-event [{:keys [comment-entity commented-entity]} app]
-    (-> app
-        (assoc-in [:stepper :dialog] {:type :edit-comment})
-        (assoc :edit-comment-data
-               (merge {:comment/files []}
-                      comment-entity
-                      {:comment/mentions (mapv
-                                           (fn [mention]
-                                             {:user mention})
-                                           (:comment/mentions comment-entity))}
-                      {:comment/commented-entity commented-entity}))))
-
   SetCommentsAsOld
   (process-event [{:keys [update-path]} app]
     (update-in app update-path (fn [{:comment/keys [old-comments new-comments] :as val}]
@@ -146,26 +130,12 @@
                      :for comment-target}
            :result-event :ignore}))
 
-  CancelCommentEdit
-  (process-event [_ {:keys [page params query] :as app}]
-    (t/fx (-> app
-              (dissoc :edit-comment-data)
-              (update :stepper dissoc :dialog))
-          {:tuck.effect/type :navigate
-           :page             page
-           :params           params
-           :query            query}))
-
-  UpdateEditCommentForm
-  (process-event [{form-data :form-data} app]
-    (update-in app [:edit-comment-data] merge form-data))
-
   SaveEditCommentForm
-  (process-event [{form-data :form-data} {stepper :stepper :as app}]
+  (process-event [{:keys [form-data commented-entity]} app]
     (let [mentions (vec (keep :user (:comment/mentions form-data)))]
       (t/fx app
             {:tuck.effect/type :command!
-             :result-event ->SaveEditCommentSuccess
+             :result-event (partial ->SaveEditCommentSuccess commented-entity)
              :command :comment/update
              :payload (-> form-data
                           (select-keys [:db/id :comment/comment :comment/visibility :comment/files])
@@ -174,12 +144,11 @@
              :success-message (tr [:notifications :comment-edited])})))
 
   SaveEditCommentSuccess
-  (process-event [_ app]
-    (let [commented-entity (-> app :edit-comment-data :comment/commented-entity)]
-      (t/fx (-> app
-                (dissoc :edit-comment-data)
-                (update :stepper dissoc :dialog))
-            (comments-query commented-entity))))
+  (process-event [{:keys [commented-entity]} app]
+    (t/fx (-> app
+              (dissoc :edit-comment-data)
+              (update :stepper dissoc :dialog))
+          (comments-query commented-entity)))
 
   SetCommentStatus
   (process-event [{:keys [comment-id status commented-entity]} app]
