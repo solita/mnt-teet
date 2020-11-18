@@ -108,6 +108,35 @@
   (util/make-component Link {:component :button
                              :type      :button}))
 
+(defn button-with-confirm
+  [{:keys [action modal-title modal-text confirm-button-text cancel-button-text close-on-action? id]}
+   button-comp]
+  (r/with-let [open-atom (r/atom false)
+               open #(reset! open-atom true)
+               close #(reset! open-atom false)]
+    [:<>
+     [panels/modal {:title (if modal-title
+                             modal-title
+                             (tr [:common :confirm-deletion]))
+                    :open-atom open-atom
+                    :actions [DialogActions
+                              [button-secondary
+                               {:on-click close
+                                :id (str "confirmation-cancel")}
+                               (or cancel-button-text (tr [:buttons :cancel]))]
+                              [button-warning
+                               {:id (str "confirmation-confirm")
+                                :on-click (if close-on-action?
+                                            #(do (action)
+                                                 (close))
+                                            action)}
+                               (or confirm-button-text (tr [:buttons :delete]))]]}
+      [DialogContentText
+       (if modal-text
+         modal-text
+         (tr [:common :deletion-modal-text]))]]
+     (assoc-in button-comp [1 :on-click] open)]))
+
 
 (defn delete-button-with-confirm
   [{:keys [action modal-title modal-text style trashcan? small? icon-position close-on-action? id

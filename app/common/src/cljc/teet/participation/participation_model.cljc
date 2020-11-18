@@ -8,3 +8,13 @@
   (some #(and (= (:db/id user) (:db/id (:participation/participant %)))
               (du/enum= role (:participation/role %)))
         participations))
+
+(defn user-can-review?
+  "Given a list of participations and a user, check if the user can give a review.
+  Returns true if the users participation is either organizer or reviewer and is not absent?"
+  [participations user]
+  (some #(and (= (:db/id user) (:db/id (:participation/participant %)))
+              (not (:participation/absent? %))
+              (or (du/enum= :participation.role/organizer (:participation/role %))
+                  (du/enum= :participation.role/reviewer (:participation/role %))))
+        participations))

@@ -268,6 +268,7 @@
                            {:review/reviewer ~user-model/user-listing-attributes}]}
              {:participation/_in
               [:db/id
+               :participation/absent?
                :participation/role
                {:participation/participant ~user-model/user-listing-attributes}]}]
            (meeting-db/activity-meeting-id db activity-id meeting-id))

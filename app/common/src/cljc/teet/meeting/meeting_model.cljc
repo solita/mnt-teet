@@ -9,16 +9,17 @@
                (str " " "#" number))))
 
 (defn user-is-organizer-or-reviewer? [user meeting]
-  (let [user-id (:db/id user)
-        {organizer :meeting/organizer
-         participations :participation/_in} meeting]
-    (println "User id: " user-id ", org: " organizer ", participations: " participations)
-    (or (= user-id (:db/id organizer))
+  (let [{participations :participation/_in} meeting]
+    (or (participation-model/user-in-role? participations user :participation.role/organizer)
         (participation-model/user-in-role? participations user :participation.role/reviewer))))
 
+(defn user-can-review? [user meeting]
+  (let [{participations :participation/_in} meeting]
+    (participation-model/user-can-review? participations user)))
 
-(def order {:participation.role/reviewer 1
-            :participation.role/participant 2})
+(def order {:participation.role/organizer 1
+            :participation.role/reviewer 2
+            :participation.role/participant 3})
 
 (def role-order
   (comp order #(get-in % [:participation/role :db/ident])))

@@ -48,7 +48,7 @@
               :participation/_in [{:db/id 123123123
                                    :participation/participant test-user
                                    :participation/role {:db/id 83562883711807
-                                                        :db/ident :participation.role/reviewer}}
+                                                        :db/ident :participation.role/organizer}}
                                   {:db/id 13123
                                    :participation/participant test-user-no-edit-rights
                                    :participation/role {:db/id 81241807
