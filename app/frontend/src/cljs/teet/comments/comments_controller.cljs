@@ -31,6 +31,7 @@
 (defrecord FocusOnComment [comment-id])
 
 (defrecord IncrementCommentCount [path])
+(defrecord DecrementCommentCount [path])
 
 (defn comments-query [commented-entity]
   {:tuck.effect/type :query
@@ -145,9 +146,7 @@
 
   SaveEditCommentSuccess
   (process-event [{:keys [commented-entity]} app]
-    (t/fx (-> app
-              (dissoc :edit-comment-data)
-              (update :stepper dissoc :dialog))
+    (t/fx app
           (comments-query commented-entity)))
 
   SetCommentStatus
@@ -180,4 +179,9 @@
   IncrementCommentCount
   (process-event [{path :path} app]
     (update-in app path
-               #(inc (or % 0)))))
+               #(inc (or % 0))))
+  DecrementCommentCount
+  (process-event [{path :path} app]
+    (update-in app path
+               #(when %
+                  (dec %)))))

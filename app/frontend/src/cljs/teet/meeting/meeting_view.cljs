@@ -958,6 +958,9 @@
       close-event
       form]]))
 
+(def ^:private comment-count-path
+  [:route :meeting :meeting :comment/counts :comment/old-comments])
+
 (defn meeting-main-content
   [e! {:keys [params user] :as app} meeting]
   (r/with-let [duplicate-open? (r/atom false)
@@ -988,8 +991,9 @@
             :entity-id (:db/id meeting)
             :comment-counts (:comment/counts meeting)
             :after-comment-added-event
-            #(comments-controller/->IncrementCommentCount
-              [:route :meeting :meeting :comment/counts :comment/old-comments])}
+            #(comments-controller/->IncrementCommentCount comment-count-path)
+            :after-comment-deleted-event
+            #(comments-controller/->DecrementCommentCount comment-count-path)}
         [meeting-details e! user meeting]]])))
 
 

@@ -82,7 +82,7 @@
                                      (cu/remove-by-id file-id)
                                      value)))}]
    [file-upload/FileUploadButton
-    {:id "images-field"
+    {:id (str "images-field-" comment-id)
      :drag-container-id "edit-comment-form"
      :color :secondary
      :button-attributes {:size :small}
@@ -105,7 +105,6 @@
 (defn- edit-comment-form* [e! commented-entity close-event comment-form {project-id :db/id}]
   (let [comment-data @comment-form
         update-event (form/update-atom-event comment-form merge)]
-
     [form/form2 {:e! e!
                  :id "edit-comment-form"
                  :value comment-data
@@ -123,7 +122,6 @@
                                      :comment-id (:db/id comment-data)
                                      :project-id project-id
                                      :on-success-event update-event}]]]
-      ;; FIXME: remove UpdateCommentForm
       (log/debug "edit-comment-form: can set visibility? ->"
                  (authorization-check/authorized? @app-state/user
                                                   :projects/set-comment-visibility
