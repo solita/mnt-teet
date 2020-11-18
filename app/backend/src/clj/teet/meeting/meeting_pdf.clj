@@ -121,6 +121,19 @@
       "Reviewer: " (str reviewer-family-name " " reviewer-given-name " "
                         (decision-text (:db/ident decision)) " " comment " Date: " (:meta/created-at review))]]))
 
+(defn- participants
+  "Returns the participants - attendees or absentees"
+  [meeting is-absentee?]
+  (for [{user       :participation/participant
+         role       :participation/role
+         is-absent? :participation/absent?} (:participation/_in meeting)
+        :when (if is-absentee?
+                is-absent?
+                (not is-absent?))]
+    [:fo:block
+     [:fo:inline {:font-weight 900} (:user/family-name user) " " (:user/given-name user)]
+     [:fo:inline ", " (with-language :en (tr-enum role))]]))
+
 (defn meeting-pdf
   ([db meeting-id]
    (meeting-pdf db meeting-id default-layout-config))
@@ -153,12 +166,9 @@
                                                         " " (format-time (:meeting/start meeting)) " - " (format-time (:meeting/end meeting)))]
                           :right-content [:fo:block (:meeting/location meeting)]})
         (table-2-columns {:left-width "50%"  :left-header (tr+ [:meeting :participants-title])
-                          :right-width "50%" :right-header "Puudujad"
-                          :left-content [:fo:block (for [{user :participation/participant role :participation/role} (:participation/_in meeting) ]
-                                                     [:fo:block
-                                                      [:fo:inline {:font-weight 900} (:user/family-name user) " " (:user/given-name user)]
-                                                      [:fo:inline ", " (with-language :en (tr-enum role))]])]
-                          :right-content [:fo:block ]} )
+                          :right-width "50%" :right-header (tr+ [:meeting :absentees-title])
+                          :left-content [:fo:block (participants meeting false)]
+                          :right-content [:fo:block (participants meeting true)]} )
         [:fo:block
          [:fo:list-block
           (list-of-topics (:meeting/agenda meeting))]]

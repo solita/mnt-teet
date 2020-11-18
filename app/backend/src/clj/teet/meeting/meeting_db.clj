@@ -271,4 +271,5 @@
                {:review/_of [:meta/created-at :review/comment {:review/decision [:db/id :ident]}
                              {:review/reviewer [:db/id :user/family-name :user/given-name :user/id]}]}
                {:participation/_in [:participation/role
-                                    {:participation/participant [:db/id :meta/deleted? :user/family-name :user/given-name :user/id]}]}] id))
+                                    {:participation/participant [:db/id :meta/deleted? :user/family-name :user/given-name :user/id]}
+                                    :participation/absent?]}] id))
