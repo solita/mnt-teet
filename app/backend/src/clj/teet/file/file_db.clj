@@ -234,15 +234,17 @@
        :keys [part activity task document-group original-name]
        :as metadata}]
   (let [project-eid [:thk.project/id project-thk-id]
-        activity-id (ffirst
-                     (d/q '[:find ?act
-                            :where
-                            [?project :thk.project/lifecycles ?lc]
-                            [?lc :thk.lifecycle/activities ?act]
-                            [?act :activity/name ?name]
-                            [?name :filename/code ?code]
-                            :in $ ?project ?code]
-                          db project-eid activity))
+        project-id (:db/id (du/entity db [:thk.project/id project-thk-id]))
+        activity-id (when project-id
+                      (ffirst
+                       (d/q '[:find ?act
+                              :where
+                              [?project :thk.project/lifecycles ?lc]
+                              [?lc :thk.lifecycle/activities ?act]
+                              [?act :activity/name ?name]
+                              [?name :filename/code ?code]
+                              :in $ ?project ?code]
+                            db project-eid activity)))
         task-id (when activity-id
                   (ffirst
                    (d/q '[:find ?task
