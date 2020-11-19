@@ -26,6 +26,12 @@
 
 (def black-coral-1 "#D2D3D8")                               ;;not sure how these should be used, straight from the design
 
+(def dark-tangerine-11 "#E8A510")
+(def dark-tangerine-1 "#FFF1D3")
+
+(def mint-cream "#ECF4EF")
+(def sea-green "#308653")
+
 ;; Accent colors
 (def orange-light "#FF6000")
 (def green "#008936")

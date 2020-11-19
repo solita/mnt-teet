@@ -282,6 +282,8 @@
 
 (defn info-box [variant]
   (let [[border background] (case variant
+                              :success [theme-colors/sea-green theme-colors/mint-cream]
+                              :warning [theme-colors/dark-tangerine-11 theme-colors/dark-tangerine-1]
                               :error [theme-colors/red theme-colors/red-lightest]
                               :info [theme-colors/blue theme-colors/blue-lightest])]
     {:border (str "solid 2px " border)
