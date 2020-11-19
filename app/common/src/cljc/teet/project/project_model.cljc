@@ -22,6 +22,7 @@
 
 (def project-listing-attributes
   [:db/id
+   :integration/id
    :thk.project/id
    :thk.project/name
    :thk.project/project-name
@@ -58,6 +59,7 @@
 (def default-fetch-pattern
   "Default pull pattern required for project navigation"
   [:db/id
+   :integration/id
    :task/name :task/description
    :task/status :task/type :task/group
    :task/estimated-start-date :task/estimated-end-date

@@ -4,7 +4,8 @@
             [teet.db-api.core :as db-api]
             [teet.project.project-model :as project-model]
             [teet.util.datomic :as du]
-            [teet.comment.comment-model :as comment-model]))
+            [teet.comment.comment-model :as comment-model]
+            [teet.integration.integration-id :as integration-id]))
 
 (defn task-project-id [db task-id]
   (or (ffirst
@@ -174,10 +175,9 @@
   ([db eid]
    (project-by-id db eid {:activity/tasks project-model/default-fetch-pattern}))
   ([db eid opts]
-   (update (d/pull db (project-fetch-pattern opts)
-                   eid)
-           :thk.project/lifecycles
-           project-model/sort-lifecycles)))
+   (-> (d/pull db (project-fetch-pattern opts) eid)
+       (update :thk.project/lifecycles project-model/sort-lifecycles)
+       (update :integration/id #(when % (str (integration-id/uuid->number %)))))))
 
 (defn lifecycle-dates
   [db lifecycle-id]
