@@ -8,7 +8,8 @@
             [teet.localization :refer [tr]]
             [teet.theme.theme-colors :as theme-colors]
             [reagent.core :as r]
-            [teet.ui.panels :as panels]))
+            [teet.ui.panels :as panels]
+            [teet.common.common-styles :as common-styles]))
 
 (defn- white-button-style
   []
@@ -226,11 +227,12 @@
                open! #(reset! open? true)
                close! #(reset! open? false)]
     [:div.button-with-menu
-     [button-primary {:on-click on-click}
-      content]
-     [IconButton {:on-click open!
-                  :ref set-anchor!}
-      [icons/navigation-expand-more]]
+     [:div {:class (<class common-styles/flex-row)}
+      [button-primary {:on-click on-click}
+            content]
+      [IconButton {:on-click open!
+                   :ref set-anchor!}
+       [icons/navigation-expand-more]]]
      [Popper {:open @open?
               :anchor-el @anchor-el
               :placement "bottom-start"}
