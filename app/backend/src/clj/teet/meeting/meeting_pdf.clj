@@ -47,6 +47,13 @@
   (when date
     (.format time-format date)))
 
+(defn- meeting-time
+  "Format meeting begin, end time, date"
+  [meeting]
+  (str (format-date (:meeting/start meeting))
+       " " (format-time (:meeting/start meeting)) " - "
+       (format-time (:meeting/end meeting))))
+
 (defn- decision-list-item
   "Return the agenda topic descition list item"
   [decision]
@@ -179,29 +186,30 @@
                             :extent      (:extent header)}]
         [:fo:region-after {:region-name "xsl-region-after"
                            :extent      (:extent footer)}]]]
-
       [:fo:page-sequence {:master-reference "first"}
        [:fo:flow {:flow-name "xsl-region-body"}
         [:fo:block {:font-size "24pt"}
          (:meeting/title meeting)]
-        (table-2-columns {:left-width "60%" :left-header (tr+ [:fields :meeting/date-and-time])
-                          :right-width "40%" :right-header (tr+ [:fields :meeting/location])
-                          :left-content [:fo:block (str (format-date (:meeting/start meeting))
-                                                        " " (format-time (:meeting/start meeting)) " - " (format-time (:meeting/end meeting)))]
+        (table-2-columns {:left-width    "60%" :left-header (tr+ [:fields :meeting/date-and-time])
+                          :right-width   "40%" :right-header (tr+ [:fields :meeting/location])
+                          :left-content  [:fo:block (meeting-time meeting)]
                           :right-content [:fo:block (:meeting/location meeting)]})
-        (table-2-columns {:left-width "50%"  :left-header (tr+ [:meeting :participants-title])
-                          :right-width "50%" :right-header (tr+ [:meeting :absentees-title])
-                          :left-content [:fo:block (participants meeting false)]
-                          :right-content [:fo:block (participants meeting true)]} )
+        (table-2-columns {:left-width    "50%" :left-header (tr+ [:meeting :participants-title])
+                          :right-width   "50%" :right-header (tr+ [:meeting :absentees-title])
+                          :left-content  [:fo:block (participants meeting false)]
+                          :right-content [:fo:block (participants meeting true)]})
         [:fo:block
-          (list-of-topics (:meeting/agenda meeting))]
+         (list-of-topics (:meeting/agenda meeting))]
         [:fo:block
          (reviews (:review/_of meeting))]
         [:fo:block
-         (str (tr+ [:meeting :link-to-original]) " ")
+         (str (tr+ [:meeting :link-to-original]) " ")]
+        [:fo:block
          [:fo:basic-link
           {:external-destination url}
-          [:fo:inline {:text-decoration "underline" :color "blue"} url]]]]]])))
+          [:fo:inline {:text-decoration "underline" :color "blue"} url]]]
+        [:fo:block (tr+ [:meeting :pdf-created-by])
+         [:fo:block "User comes here"]]]]])))
 
 (defn- md-children [node]
   (-> node .getChildren .iterator iterator-seq))
