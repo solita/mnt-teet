@@ -953,7 +953,7 @@
         person? (= isiku_tyyp  "Füüsiline isik")
         business-ids (map :r_kood
                           (filter #(not= (:isiku_tyyp %) "Füüsiline isik")
-                                  (mapcat :isik owner)))
+                                  isik))
         joint-ownership? (> (count isik) 1)]
     ;; (log/debug "isiku_tyyp =" isiku_tyyp ", joint-ownership?" joint-ownership?)
     [:div {:class (<class project-style/owner-container)}
