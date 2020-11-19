@@ -329,8 +329,7 @@
                                                  :link :meeting/organizer-or-reviewer}}}
   ^{:format :raw}
   {:status 200
-   ;; FIXME: give meeting file a better name? (meeting title and date?)
-   :headers {"Content-Disposition" "attachment; filename=meeting.pdf"}
+   :headers {"Content-Disposition" (str "inline; filename=meeting_" id ".pdf")}
    :body (ring-io/piped-input-stream
           (fn [ostream]
             (try

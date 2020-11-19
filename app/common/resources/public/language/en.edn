@@ -668,6 +668,7 @@
   :reject-meeting-modal-title "Reject decisions?",
   :meetings-title "Meetings",
   :approve-meeting-button "Approve decisions",
+  :link-to-original "Link to the original meeting",
   :no-meetings "No meetings",
   :send-notification-to-participants "{count} participants",
   :add-agenda-button "Add new topic",

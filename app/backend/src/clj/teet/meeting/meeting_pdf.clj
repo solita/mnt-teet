@@ -2,11 +2,11 @@
   "Generate meeting PDF as hiccup formatted XSL-FO"
   (:require
     [teet.meeting.meeting-db :as meeting-db]
-    [teet.localization :refer [with-language tr tr-enum]]
-    [teet.util.date :as date])
+    [teet.meeting.meeting-commands :as meeting-commands]
+    [teet.environment :as environment]
+    [teet.localization :refer [with-language tr tr-enum]])
   (:import (com.vladsch.flexmark.parser Parser)
-           (com.vladsch.flexmark.util.ast NodeIterator Document
-                                          ContentNode Block)
+           (com.vladsch.flexmark.util.ast Document)
            (com.vladsch.flexmark.ast
             ;; Import node types for rendering
             Paragraph BulletList OrderedList Heading Text
@@ -26,7 +26,6 @@
    :body {:margin-top "1cm"}
    :header {:extent "1cm"}
    :footer {:extent "1cm"}})
-
 
 (def date-format
   (doto (java.text.SimpleDateFormat. "MM.dd.yyyy" )
@@ -60,17 +59,19 @@
 (defn- list-of-topics
   "Return list of agenda topics"
   [topics]
-  (map (fn [topic]
-         [:fo:list-item
-          [:fo:list-item-label [:fo:block]]
-          [:fo:list-item-body
-           [:fo:block
-            [:fo:block {:font-size "16pt"}
-             (:meeting.agenda/topic topic) [:fo:block {:font-size "10pt"}
-                                            [:fo:inline (:user/given-name (:meeting.agenda/responsible topic)) " "
-                                             (:user/family-name (:meeting.agenda/responsible topic))]]]
-            [:fo:block (:font-size "12pt") (render-md (:meeting.agenda/body topic))]
-            [:fo:block (map decision-list-item (:meeting.agenda/decisions topic))]]]]) topics))
+  (when (seq topics)
+    [:fo:list-block
+     (map (fn [topic]
+            [:fo:list-item
+             [:fo:list-item-label [:fo:block]]
+             [:fo:list-item-body
+              [:fo:block
+               [:fo:block {:font-size "16pt"}
+                (:meeting.agenda/topic topic) [:fo:block {:font-size "10pt"}
+                                               [:fo:inline (:user/given-name (:meeting.agenda/responsible topic)) " "
+                                                (:user/family-name (:meeting.agenda/responsible topic))]]]
+               [:fo:block (:font-size "12pt") (render-md (:meeting.agenda/body topic))]
+               [:fo:block (map decision-list-item (:meeting.agenda/decisions topic))]]]]) topics)]))
 
 (defn- table-2-columns
   "Returns 2 columns FO table"
@@ -105,8 +106,8 @@
     "Approved"
     :review.decision/rejected
     "Rejected"
-    "Unknown")
-  )
+    "Unknown"))
+
 (defn- reviews
   "Returns review information"
   [review-of]
@@ -134,11 +135,21 @@
      [:fo:inline {:font-weight 900} (:user/family-name user) " " (:user/given-name user)]
      [:fo:inline ", " (with-language :en (tr-enum role))]]))
 
+(defn- fetch-project-id
+  "Find project id by meeting"
+  [meeting]
+  (get-in meeting [:activity/_meetings 0 :thk.lifecycle/_activities 0
+                   :thk.project/_lifecycles 0 :thk.project/id]))
+
 (defn meeting-pdf
   ([db meeting-id]
    (meeting-pdf db meeting-id default-layout-config))
   ([db meeting-id {:keys [body header footer] :as layout}]
-   (let [meeting (meeting-db/export-meeting db meeting-id)]
+   (let [meeting (meeting-db/export-meeting db meeting-id)
+         project-id (fetch-project-id meeting)
+         base-url (or (environment/config-value :base-url) "")
+         url (meeting-commands/meeting-link
+               db base-url meeting [:thk.project/id project-id])]
      [:fo:root {:xmlns:fo  "http://www.w3.org/1999/XSL/Format"
                 :xmlns:svg "http://www.w3.org/2000/svg"}
       [:fo:layout-master-set
@@ -170,11 +181,14 @@
                           :left-content [:fo:block (participants meeting false)]
                           :right-content [:fo:block (participants meeting true)]} )
         [:fo:block
-         [:fo:list-block
-          (list-of-topics (:meeting/agenda meeting))]]
+          (list-of-topics (:meeting/agenda meeting))]
         [:fo:block
          (reviews (:review/_of meeting))]
-        ]]])))
+        [:fo:block
+         (str (tr+ [:meeting :link-to-original]) " ")
+         [:fo:basic-link
+          {:external-destination url}
+          [:fo:inline {:text-decoration "underline" :color "blue"} url]]]]]])))
 
 (defn- md-children [node]
   (-> node .getChildren .iterator iterator-seq))

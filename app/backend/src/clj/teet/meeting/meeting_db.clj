@@ -258,11 +258,12 @@
 (defn export-meeting
   "Fetch information required for export meeting PDF"
   [db id]
-  (d/pull db '[:meeting/title
+  (d/pull db '[:db/id
+               :meeting/title
                :meeting/location
                :meeting/start
                :meeting/end
-               {:activity/_meetings [:db/id]}
+               {:activity/_meetings [:db/id {:thk.lifecycle/_activities [{:thk.project/_lifecycles [:thk.project/id]}]}]}
                {:meeting/agenda [:db/id
                                  :meeting.agenda/topic
                                  :meeting.agenda/body
