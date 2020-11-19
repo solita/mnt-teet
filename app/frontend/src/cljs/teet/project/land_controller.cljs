@@ -98,8 +98,8 @@
 (defn owner-filter-fn [query unit]
   (let [owners (get-in unit [:estate :omandiosad])
         match? (fn [owner]
-                 (let [fvals (vals (select-keys owner [:nimi :eesnimi :r_kood]))]
-                   ;; (println "any-includes?" fvals query)
+                 (let [fvals (mapcat #(vals (select-keys % [:nimi :eesnimi :r_kood])) (:isik owner))]
+                   ;; (println "test any-includes?" fvals query (pr-str (:isik owner)))
                    (any-includes? fvals query)))]
     (if (empty? query)
       true
