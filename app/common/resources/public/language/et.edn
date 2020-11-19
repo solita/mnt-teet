@@ -534,7 +534,8 @@
   :file-new-part-text "TEET püüab Sinu elu lihtsamaks teha",
   :invalid-sequence-number "Järjekorranumber ei ole korrektne",
   :already-uploaded "See fail on juba üles laaditud",
-  :file-will-be-added-to-part "See fail lisatakse {part} osasse"},
+  :file-will-be-added-to-part "See fail lisatakse {part} osasse",
+  :empty-file "Ei saa laadida tühje faile"},
  :land
  {:show-owner-info "Vaatan omanike andmeid",
   :no-active-mortgages "Aktiivsed hüpoteegid puuduvad",

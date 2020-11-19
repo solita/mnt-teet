@@ -153,6 +153,9 @@
         {:title (tr [:file-upload :invalid-sequence-number])
          :description ""}
 
+        :file-empty
+        {:title (tr [:file-upload :empty-file])
+         :description ""}
         ;; All validations ok
         :else nil))))
 
