@@ -125,7 +125,7 @@
 
        (map-layers/geojson-layer endpoint
                                  "geojson_entities"
-                                 {"ids" (str "{" (:db/id project) "}")}
+                                 {"ids" (str "{" (:integration/id project) "}")}
                                  style
                                  (assoc options
                                         ;; Update start/end labels from source geometry

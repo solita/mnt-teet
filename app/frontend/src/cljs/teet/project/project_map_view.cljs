@@ -68,7 +68,8 @@
                                (merge layers (layer-fn opts)))
                              {}
                              [#_project-layers/surveys-layer
-                              (partial project-layers/project-road-geometry-layer map-object-padding fitted-atom)
+                              (partial project-layers/project-road-geometry-layer
+                                       map-object-padding fitted-atom)
                               project-layers/setup-restriction-candidates
                               project-layers/project-drawn-area-layer
                               project-layers/setup-cadastral-unit-candidates
@@ -103,7 +104,8 @@
     :thk.project/related-restrictions :thk.project/start-m :setup-step :geometry
     :open-restrictions-geojsons :thk.project/related-cadastral-units :checked-cadastral-geojson
     :db/id :checked-restrictions-geojson :feature-candidates :basic-information-form
-    :thk.project/end-m})
+    :thk.project/end-m
+    :integration/id})
 
 (defn create-project-map
   "Return project-map component with only the needed keys from app and project"
