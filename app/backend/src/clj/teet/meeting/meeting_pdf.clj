@@ -56,6 +56,18 @@
     [:fo:block {:font-size "12pt"}
      (render-md (:meeting.decision/body decision))]]])
 
+(defmulti link-list-item (fn [link] (:link/type link)))
+
+(defmethod link-list-item :file [link]
+  [:fo:block
+   [:fo:block {:font-size "16pt"}
+    (get-in link [:link/to :file/original-name])]])
+
+(defmethod link-list-item :task [link]
+  [:fo:block
+   [:fo:block {:font-size "16pt"}
+    (get-in link [:link/to :task/type :db/ident])]])
+
 (defn- list-of-topics
   "Return list of agenda topics"
   [topics]
@@ -71,6 +83,7 @@
                                                [:fo:inline (:user/given-name (:meeting.agenda/responsible topic)) " "
                                                 (:user/family-name (:meeting.agenda/responsible topic))]]]
                [:fo:block (:font-size "12pt") (render-md (:meeting.agenda/body topic))]
+               [:fo:block (map link-list-item (:link/_from topic))]
                [:fo:block (map decision-list-item (:meeting.agenda/decisions topic))]]]]) topics)]))
 
 (defn- table-2-columns

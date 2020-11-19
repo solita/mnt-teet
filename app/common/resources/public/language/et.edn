@@ -654,6 +654,7 @@
   :add-decision-button "Lisan otsuse",
   :participant-removed "Osaleja eemaldatud",
   :approve-meeting-modal-title "Kinnitan otsused?",
+  :pdf-created-by "See PDF loodi",
   :confirm-move "Liigutan kasutajat",
   :edit-meeting-modal-title "Muuda koosolekut",
   :activity-meetings-title "Koosolekud - {activity-name}",

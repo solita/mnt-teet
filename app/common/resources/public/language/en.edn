@@ -657,6 +657,7 @@
   :add-decision-button "Add decision",
   :participant-removed "Participant removed",
   :approve-meeting-modal-title "Approve decisions?",
+  :pdf-created-by "This PDF was generated",
   :confirm-move "Move user",
   :edit-meeting-modal-title "Edit meeting",
   :activity-meetings-title "{activity-name} meetings",

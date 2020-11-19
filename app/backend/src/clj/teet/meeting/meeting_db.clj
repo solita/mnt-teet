@@ -267,6 +267,7 @@
                {:meeting/agenda [:db/id
                                  :meeting.agenda/topic
                                  :meeting.agenda/body
+                                 {:link/_from [:link/type {:link/to [*]}]}
                                  {:meeting.agenda/responsible [:user/family-name :user/given-name :user/id]}
                                  {:meeting.agenda/decisions [:meeting.decision/body :meeting.decision/number]}]}
                {:review/_of [:meta/created-at :review/comment {:review/decision [:db/id :ident]}
