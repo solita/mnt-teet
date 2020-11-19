@@ -188,3 +188,9 @@
     (when dark-theme?
       {:background-color theme-colors/gray-dark
        :color :white})))
+
+(defn owner-container []
+  {:margin-bottom "0.5rem"
+   :padding "1rem"
+   :padding-bottom "0.5rem"
+   :background-color theme-colors/gray-lightest})
