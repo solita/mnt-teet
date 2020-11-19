@@ -534,7 +534,8 @@
   :file-new-part-text "TEET püüab Sinu elu lihtsamaks teha",
   :invalid-sequence-number "Järjekorranumber ei ole korrektne",
   :already-uploaded "See fail on juba üles laaditud",
-  :file-will-be-added-to-part "See fail lisatakse {part} osasse"},
+  :file-will-be-added-to-part "See fail lisatakse {part} osasse",
+  :empty-file "Ei saa laadida tühje faile"},
  :land
  {:show-owner-info "Vaatan omanike andmeid",
   :no-active-mortgages "Aktiivsed hüpoteegid puuduvad",
@@ -645,7 +646,8 @@
   :add-non-teet-participant "Lisan TEET-u välise osaleja",
   :remove-participant-confirm-button "Eemaldan",
   :search-decisions "Otsin otsuseid",
-  :move-to-participants-modal-title nil,
+  :move-to-participants-modal-title
+  "Kas lisan kasutaja osalejate nimekirja?",
   :not-enough-participants
   "Teavituste saatmiseks on vaja lisada veel vähemalt üks osaleja.",
   :absentees-title "Puudujad",
@@ -653,13 +655,14 @@
   :add-decision-button "Lisan otsuse",
   :participant-removed "Osaleja eemaldatud",
   :approve-meeting-modal-title "Kinnitan otsused?",
-  :confirm-move nil,
+  :confirm-move "Liigutan kasutajat",
   :edit-meeting-modal-title "Muuda koosolekut",
   :activity-meetings-title "Koosolekud - {activity-name}",
-  :move-to-participants-modal-body nil,
+  :move-to-participants-modal-body
+  "Oled sa kindel, et soovid liigutada {participant} osalejate nimekirja? Kõik olemasolevad kinnitused tühistatakse.",
   :new-meeting-modal-title "Uus koosolek",
   :participants-title "Osalejad",
-  :moved-to-participants-successfully nil,
+  :moved-to-participants-successfully "Lisatud osalejate nimekirja",
   :reject-meeting-modal-title "Lükkan otsused tagasi?",
   :meetings-title "Koosolekud",
   :approve-meeting-button "Kinnitan otsused",
@@ -667,10 +670,12 @@
   :send-notification-to-participants "{count} osalejat",
   :add-agenda-button "Lisan päevakavapunkti",
   :no-absentees "Puudujaid pole",
-  :move-to-absentees-modal-title nil,
+  :move-to-absentees-modal-title
+  "Kas lisan kasutaja puudujate nimekirja?",
   :approvals "Kinnitused",
   :new-decision-modal-title "Uue otsuse lisamine",
-  :move-to-absentees-modal-body nil,
+  :move-to-absentees-modal-body
+  "Oled sa kindel, et soovid liigutada {participant} puudujate nimekirja? Kõik olemasolevad kinnitused tühistatakse.",
   :no-decisions-found "Ühtegi otsust ei leitud",
   :reviews-invalidated-warning-text
   "Muutes koosoleku sisu tühistatakse kõik juba antud kinnitused.",
@@ -682,7 +687,7 @@
   :project-meetings-title "Projekti koosolekud",
   :notifications-title "Teavitused",
   :duplicate-meeting-modal-title "Koosoleku koopia",
-  :moved-to-absentees-successfully nil,
+  :moved-to-absentees-successfully "Lisatud puudujate nimekirja",
   :edit-agenda-modal-title "Päevakavapunkti muutmine",
   :email-title "TEET: koosolek uuendatud: {meeting-title}",
   :new-agenda-modal-title "Uus päevakavapunkt",
