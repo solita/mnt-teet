@@ -576,6 +576,7 @@
   :filter-label "Filtreerin üksused",
   :total-excluding-process "Kokku ilma protseduuri tasudeta:",
   :no-estate-id "Üksusel puudub kinnistu number",
+  :owner-code "Kood",
   :units "üksust",
   :estate-info-fetch-failure
   "X-teest ei õnnestunud teavet hankida. Palun proovi uuesti ja kui tõrge püsib, pöörduge süsteemi administraatori poole.",
@@ -584,9 +585,9 @@
   :fetching-land-units "Toon maade andmeid",
   :refresh-estate-info "Uuendan kinnistute andmeid",
   :add-owner "+ Lisan omaniku",
-  :owner-data "Omaniku andmed"},
+  :owner-data "Registriandmed"},
  :land-modal-page
- {:owner-info "Omanikud",
+ {:owner-info "Omanikud ja omandiosad",
   :no-burdens "Koormatisi pole",
   :no-comments "Märkusi pole",
   :burdens "Koormatist",
