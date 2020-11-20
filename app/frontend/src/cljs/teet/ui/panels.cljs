@@ -178,7 +178,6 @@
    :flex-grow 0
    :flex-shrink 0
    :flex-direction :column
-   :word-break :break-all
    :display :flex
    :padding "0.5rem 0.25rem"
    :justify-content :flex-start})
