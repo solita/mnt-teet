@@ -207,3 +207,16 @@
 
 (defn owner-heading-container []
   {:margin-bottom "0.5rem"})
+
+(defn owner-info-header []
+  {:display :flex
+   :flex-direction :row
+   :justify-content :space-between})
+
+(defn owner-info-name-and-code []
+  {:margin-bottom "0.5rem"})
+
+(defn owner-info-registry-info []
+  {:padding-left "0.5rem"
+   :margin-bottom "0.5rem"
+   :border-left (str "solid 7px " theme-colors/gray-light)})

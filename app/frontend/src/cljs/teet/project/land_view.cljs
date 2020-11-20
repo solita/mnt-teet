@@ -917,10 +917,8 @@
 
 (defn owner-inner-component [e! person? nimi eesnimi r_kood omandiosa_lugeja omandiosa_nimetaja omandiosa_suurus isiku_tyyp project first-in-joint?]
   [:div {:class (<class project-style/owner-info)}
-   [:div {:style {:display :flex
-                  :flex-direction :row
-                  :justify-content :space-between}}
-    [:div {:style {:margin-bottom "0.5rem"}}
+   [:div {:class (<class project-style/owner-info-header)}
+    [:div {:class (<class project-style/owner-info-name-and-code)}
      [typography/BoldGreyText (if person?
                                 (str eesnimi " " nimi)
                                 nimi)]
@@ -933,9 +931,7 @@
             "1"
             (str omandiosa_lugeja "/" omandiosa_nimetaja)))])]]
    (when (and (= isiku_tyyp "Juriidiline isik") r_kood) ;; r_kood was null in some cases in production data
-     [:div {:style {:padding-left "0.5rem"
-                    :margin-bottom "0.5rem"
-                    :border-left (str "solid 7px " theme-colors/gray-light)}}
+     [:div {:class (<class project-style/owner-info-registry-info)}
       [query/query {:e! e!
                     :query :land/estate-owner-info
                     :args {:thk.project/id (:thk.project/id project)
