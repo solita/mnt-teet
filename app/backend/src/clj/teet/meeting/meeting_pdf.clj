@@ -27,6 +27,14 @@
    :header {:extent "1cm"}
    :footer {:extent "1cm"}})
 
+(def link-look-and-feel
+  {:font-size "16px"
+   :border-top-style "solid"
+   :border-top-width "1"
+   :border-top-color "#D2D3D8"
+   :padding-top 8
+   :padding-bottom 10})
+
 (def date-format
   (doto (java.text.SimpleDateFormat. "MM.dd.yyyy" )
     (.setTimeZone (java.util.TimeZone/getTimeZone "Europe/Tallinn"))))
@@ -59,20 +67,31 @@
   [decision]
   (let [title (str "Decision #" (:meeting.decision/number decision))
         decision-text (render-md (:meeting.decision/body decision))]
-    [:fo:block {:font-size "24px" :font-weight "400"} title
+    [:fo:block
+     [:fo:block {:font-size "24px" :font-weight "400"} title]
      [:fo:block {:font-size "14px" :font-weight "400" :space-after "40"} decision-text]]))
 
 (defmulti link-list-item (fn [link] (:link/type link)))
 
 (defmethod link-list-item :file [link]
   [:fo:block
-   [:fo:block {:font-size "16px"}
-    (get-in link [:link/to :file/original-name])]])
+   [:fo:block link-look-and-feel
+    (str "Appendix " (get-in link [:link/to :file/original-name]))]])
 
 (defmethod link-list-item :task [link]
   [:fo:block
-   [:fo:block {:font-size "16px"}
-    (get-in link [:link/to :task/type :db/ident])]])
+   [:fo:block link-look-and-feel
+    (str "Linked task " (get-in link [:link/to :task/type :db/ident]))]])
+
+(defmethod link-list-item :estate [link]
+  [:fo:block
+   [:fo:block link-look-and-feel
+    (str "Linked estate " (get-in link [:link/external-id]))]])
+
+(defmethod link-list-item :cadastral-unit [link]
+  [:fo:block
+   [:fo:block link-look-and-feel
+    (str "Linked cadastral unit "(get-in link [:link/external-id]))]])
 
 (defn- list-of-topics
   "Return list of agenda topics"
@@ -89,7 +108,7 @@
                [:fo:block {:font-size "14px" :font-weight "700" :space-after "24"}
                 [:fo:inline (:user/given-name (:meeting.agenda/responsible topic)) " "
                  (:user/family-name (:meeting.agenda/responsible topic))]]
-               [:fo:block (:font-size "16px") (render-md (:meeting.agenda/body topic))]
+               [:fo:block {:font-size "16px"} (render-md (:meeting.agenda/body topic))]
                [:fo:block {:space-after "40"} (map link-list-item (:link/_from topic))]
                [:fo:block {:space-after "40"} (map decision-list-item (:meeting.agenda/decisions topic))]]]]) topics)]))
 
