@@ -64,8 +64,8 @@
 
 (defn- decision-list-item
   "Return the agenda topic descition list item"
-  [decision]
-  (let [title (str "Decision #" (:meeting.decision/number decision))
+  [decision topic]
+  (let [title (str topic " " (tr+ [:fields :meeting.decision/body]) " #" (:meeting.decision/number decision))
         decision-text (render-md (:meeting.decision/body decision))]
     [:fo:block
      [:fo:block {:font-size "24px" :font-weight "400"} title]
@@ -110,7 +110,8 @@
                  (:user/family-name (:meeting.agenda/responsible topic))]]
                [:fo:block {:font-size "16px"} (render-md (:meeting.agenda/body topic))]
                [:fo:block {:space-after "40"} (map link-list-item (:link/_from topic))]
-               [:fo:block {:space-after "40"} (map decision-list-item (:meeting.agenda/decisions topic))]]]]) topics)]))
+               [:fo:block {:space-after "40"} (map #(decision-list-item % (:meeting.agenda/topic topic))
+                                                   (:meeting.agenda/decisions topic))]]]]) topics)]))
 
 (defn- table-2-columns
   "Returns 2 columns FO table"
