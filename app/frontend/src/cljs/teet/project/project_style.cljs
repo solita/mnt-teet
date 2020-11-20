@@ -204,3 +204,6 @@
 (defn owner-comments-container []
   {:margin-bottom "0.5rem"
    :margin-right "1rem"})
+
+(defn owner-heading-container []
+  {:margin-bottom "0.5rem"})

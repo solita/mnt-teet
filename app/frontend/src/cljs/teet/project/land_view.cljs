@@ -888,17 +888,15 @@
 
 (def date-keys #{:omandi_algus :algus-kpv :lopp-kpv})
 
-(defn- key-value [[key value]]
+(defn- key-value [key-type key value]
   [:div
    [:strong key ": "]
-   [:span (if (and (some? (tf/parse value))
-                   (date-keys key))
-            (format/parse-date-string value)
-            value)]])
-
-(defn- key-values [data]
-  [:<>
-   (mapc key-value data)])
+   (if (= key-type :email)
+     [Link {:href (str "mailto:" value)} value]
+     [:span (if (and (some? (tf/parse value))
+                     (date-keys key))
+              (format/parse-date-string value)
+              value)])])
 
 (defn- business-registry-info [{:keys [addresses contact-methods]}]
   (let [unique-addresses (into #{}
@@ -907,7 +905,7 @@
                                  (str tanav-maja-korter ", " ehak-nimetus ", " postiindeks)))]
     [:div
      (mapc (fn [a]
-             [key-value [(tr [:contact :address]) a]]) unique-addresses)
+             [key-value :address (tr [:contact :address]) a]) unique-addresses)
 
      (doall
       (for [{:keys [kirje-id type content lopp-kpv]} contact-methods
@@ -915,7 +913,7 @@
                        (not lopp-kpv)
                        (or (= type :email) (= type :phone) (= type :phone2)))]
         ^{:key (str kirje-id)}
-        [key-value [(tr [:contact type]) content]]))]))
+        [key-value type (tr [:contact type]) content]))]))
 
 (defn owner-inner-component [e! person? nimi eesnimi r_kood omandiosa_lugeja omandiosa_nimetaja omandiosa_suurus isiku_tyyp project first-in-joint?]
   [:div {:class (<class project-style/owner-info)}
@@ -926,7 +924,7 @@
      [typography/BoldGreyText (if person?
                                 (str eesnimi " " nimi)
                                 nimi)]
-     [typography/GreyText (str "Code " r_kood)]]
+     [typography/GreyText (str (tr [:land :owner-code]) " " r_kood)]]
     [:div
      (when omandiosa_suurus
        [typography/BoldGreyText
@@ -963,7 +961,8 @@
    ;; `isik`. Instead, they should target the `omandiosa` itself.
    (when (not (owner-is-person? (-> isik first)))
      [:div {:class (<class project-style/owner-comments-container)}
-      [typography/Heading2 "Comments"]
+      [:div {:class (<class project-style/owner-heading-container)}
+       [typography/Heading2 (tr [:land-modal-page :comments])]]
       [comments-view/lazy-comments {:e! e!
                                     :app app
                                     :entity-type :owner-comments
@@ -984,7 +983,9 @@
     ;; - if there are more than one omandiosa, it's describing ownership shares
 
     [:<>
-      (mapc (r/partial one-owner-for-modal estate-info e! app project) owners)]))
+     [:div {:class (<class project-style/owner-heading-container)}
+      [typography/Heading2 (tr [:land :owner-data])]]
+     (mapc (r/partial one-owner-for-modal estate-info e! app project) owners)]))
 
 (defmulti unit-modal-content (fn [{:keys [modal-page]}]
                                 (keyword modal-page)))
@@ -1068,10 +1069,6 @@
 (defmethod land-view-modal :owner
   [{:keys [e! app modal-page project estate-info]}]
   {:title (tr [:land-modal-page (keyword modal-page)])
-   :left-panel [modal-left-panel-navigation
-                modal-page
-                (tr [:land :owner-data])
-                [:owner-info]]
    :right-panel [owner-modal-content {:e! e!
                                       :modal-page modal-page
                                       :app app
