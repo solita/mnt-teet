@@ -892,7 +892,7 @@
   [:div
    [:strong key ": "]
    (if (= key-type :email)
-     [Link {:href (str "mailto:" value)} value]
+     [Link {:underline :none :href (str "mailto:" value)} value]
      [:span (if (and (some? (tf/parse value))
                      (date-keys key))
               (format/parse-date-string value)
