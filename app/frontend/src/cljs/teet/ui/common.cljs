@@ -9,7 +9,6 @@
             [teet.ui.typography :refer [Text SmallGrayText] :as typography]
             [teet.common.common-styles :as common-styles]
             [teet.ui.buttons :as buttons]
-            [teet.ui.format :as format]
             [re-svg-icons.feather-icons :as fi]))
 
 (def lifecycle-methods
