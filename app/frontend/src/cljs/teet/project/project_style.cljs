@@ -190,7 +190,17 @@
        :color :white})))
 
 (defn owner-container []
-  {:margin-bottom "0.5rem"
-   :padding "1rem"
+  {:padding "1rem"
    :padding-bottom "0.5rem"
+   :margin-bottom "0.5rem"
+   :margin-right "1rem"
    :background-color theme-colors/gray-lightest})
+
+(defn owner-info []
+  {:display :flex
+   :flex-direction :column
+   :justify-content :flex-top})
+
+(defn owner-comments-container []
+  {:margin-bottom "0.5rem"
+   :margin-right "1rem"})

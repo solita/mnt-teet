@@ -918,9 +918,7 @@
         [key-value [(tr [:contact type]) content]]))]))
 
 (defn owner-inner-component [e! person? nimi eesnimi r_kood omandiosa_lugeja omandiosa_nimetaja omandiosa_suurus isiku_tyyp project first-in-joint?]
-  [:div {:style {:display :flex
-                 :flex-direction :column
-                 :justify-content :flex-top}}
+  [:div {:class (<class project-style/owner-info)}
    [:div {:style {:display :flex
                   :flex-direction :row
                   :justify-content :space-between}}
@@ -946,24 +944,32 @@
                            :business-id r_kood}
                     :simple-view [business-registry-info]}]])])
 
+(defn- owner-is-person? [{:keys [isiku_tyyp]}]
+  (= isiku_tyyp  "Füüsiline isik"))
+
 (defn one-owner-for-modal
   [_estate-info e! app project
-   {:keys [omandiosa_suurus omandiosa_lugeja isik omandiosa_nimetaja] :as owner}]
-  (let [isiku_tyyp (:isiku_tyyp (first isik))
-        person? (= isiku_tyyp  "Füüsiline isik")
-        business-ids (map :r_kood
-                          (filter #(not= (:isiku_tyyp %) "Füüsiline isik")
-                                  isik))
-        joint-ownership? (> (count isik) 1)]
-    ;; (log/debug "isiku_tyyp =" isiku_tyyp ", joint-ownership?" joint-ownership?)
-    [:div {:class (<class project-style/owner-container)}
-     (for [[i {:keys [r_kood eesnimi nimi]}] (map-indexed vector isik)]
-       [owner-inner-component e! person? nimi eesnimi r_kood omandiosa_lugeja omandiosa_nimetaja omandiosa_suurus isiku_tyyp project (= i 0)])
-     (for [r_kood business-ids]
-       [comments-view/lazy-comments {:e! e!
-                                     :app app
-                                     :entity-type :owner-comments
-                                     :entity-id [:owner-comments/project+owner-id [(:db/id project) r_kood]]}])]))
+   {:keys [omandiosa_suurus omandiosa_lugeja isik omandiosa_nimetaja]}]
+  [:div
+   [:div {:class (<class project-style/owner-container)}
+    (for [[i {:keys [r_kood eesnimi nimi isiku_tyyp] :as owner}] (map-indexed vector isik)]
+      [:<>
+       [owner-inner-component e! (owner-is-person? owner) nimi eesnimi r_kood omandiosa_lugeja omandiosa_nimetaja omandiosa_suurus isiku_tyyp project (= i 0)]])]
+   ;; Here we're making two assumptions:
+   ;; 1) Comments are shown only for non-person owners (ie. companies and such)
+   ;; 2) There cannot be joint ownership between non-person owners
+   ;; If in the future these assumptions turn out to be false, we need to
+   ;; remodel the comments so that they do not target the `r_kood` of an
+   ;; `isik`. Instead, they should target the `omandiosa` itself.
+   (when (not (owner-is-person? (-> isik first)))
+     [:div {:class (<class project-style/owner-comments-container)}
+      [typography/Heading2 "Comments"]
+      [comments-view/lazy-comments {:e! e!
+                                    :app app
+                                    :entity-type :owner-comments
+                                    :entity-id [:owner-comments/project+owner-id
+                                                [(:db/id project) (-> isik first :r_kood)]]}]])])
+
 
 (defmethod owner-modal-content :owner-info
   [{:keys [estate-info e! app project]}]
@@ -978,7 +984,7 @@
     ;; - if there are more than one omandiosa, it's describing ownership shares
 
     [:<>
-      (mapc (partial one-owner-for-modal estate-info e! app project) owners)]))
+      (mapc (r/partial one-owner-for-modal estate-info e! app project) owners)]))
 
 (defmulti unit-modal-content (fn [{:keys [modal-page]}]
                                 (keyword modal-page)))
