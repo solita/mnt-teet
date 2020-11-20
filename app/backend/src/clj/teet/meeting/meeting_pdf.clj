@@ -57,41 +57,41 @@
 (defn- decision-list-item
   "Return the agenda topic descition list item"
   [decision]
-  [:fo:block
-   [:fo:block {:font-size "14pt"}
-    (str "Decision #" (:meeting.decision/number decision))
-    [:fo:block {:font-size "12pt"}
-     (render-md (:meeting.decision/body decision))]]])
+  (let [title (str "Decision #" (:meeting.decision/number decision))
+        decision-text (render-md (:meeting.decision/body decision))]
+    [:fo:block {:font-size "24px" :font-weight "400"} title
+     [:fo:block {:font-size "14px" :font-weight "400" :space-after "40"} decision-text]]))
 
 (defmulti link-list-item (fn [link] (:link/type link)))
 
 (defmethod link-list-item :file [link]
   [:fo:block
-   [:fo:block {:font-size "16pt"}
+   [:fo:block {:font-size "16px"}
     (get-in link [:link/to :file/original-name])]])
 
 (defmethod link-list-item :task [link]
   [:fo:block
-   [:fo:block {:font-size "16pt"}
+   [:fo:block {:font-size "16px"}
     (get-in link [:link/to :task/type :db/ident])]])
 
 (defn- list-of-topics
   "Return list of agenda topics"
   [topics]
   (when (seq topics)
-    [:fo:list-block
+    [:fo:list-block {:space-after "40"}
      (map (fn [topic]
             [:fo:list-item
              [:fo:list-item-label [:fo:block]]
              [:fo:list-item-body
               [:fo:block
-               [:fo:block {:font-size "20pt" :space-after "10mm"}
-                (:meeting.agenda/topic topic) [:fo:block {:font-size "12pt" :font-style "bold"}
-                                               [:fo:inline (:user/given-name (:meeting.agenda/responsible topic)) " "
-                                                (:user/family-name (:meeting.agenda/responsible topic))]]]
-               [:fo:block (:font-size "16pt") (render-md (:meeting.agenda/body topic))]
-               [:fo:block (map link-list-item (:link/_from topic))]
-               [:fo:block {:space-after "10mm"} (map decision-list-item (:meeting.agenda/decisions topic))]]]]) topics)]))
+               [:fo:block {:font-size "28px" :font-weight "400" :space-after "2"}
+                (:meeting.agenda/topic topic)]
+               [:fo:block {:font-size "14px" :font-weight "700" :space-after "24"}
+                [:fo:inline (:user/given-name (:meeting.agenda/responsible topic)) " "
+                 (:user/family-name (:meeting.agenda/responsible topic))]]
+               [:fo:block (:font-size "16px") (render-md (:meeting.agenda/body topic))]
+               [:fo:block {:space-after "40"} (map link-list-item (:link/_from topic))]
+               [:fo:block {:space-after "40"} (map decision-list-item (:meeting.agenda/decisions topic))]]]]) topics)]))
 
 (defn- table-2-columns
   "Returns 2 columns FO table"
@@ -145,9 +145,9 @@
         reviewer-given-name (:user/given-name reviewer)
         decision (:review/decision review)
         comment (:review/comment review)]
-    [:fo:block {:font-style "normal" :font-size "20pt"}
+    [:fo:block {:font-style "normal" :font-size "20px"}
      (tr+ [:meeting :approvals])
-     [:fo:block {:font-style "italic" :font-size "16pt"}
+     [:fo:block {:font-style "italic" :font-size "16px"}
       "Reviewer: " (str reviewer-family-name " " reviewer-given-name " "
                         (decision-text (:db/ident decision)) " " comment " Date: " (:meta/created-at review))]]))
 
@@ -174,7 +174,7 @@
   [meeting]
   [:fo:block {:font-family  "Helvetica, Arial, sans-serif"
               :font-size    "32px" :font-weight "300" :line-height "48px"
-              :font-style "normal" :space-before "5mm" :space-after "5mm"}
+              :font-style "normal" :space-before "5" :space-after "5"}
    (:meeting/title meeting)])
 
 (defn meeting-pdf
@@ -205,14 +205,14 @@
       [:fo:page-sequence {:master-reference "first"}
        [:fo:flow {:flow-name "xsl-region-body"}
         (meeting-title meeting)
-        [:fo:block {:space-after "10mm"}
+        [:fo:block {:space-after "10"}
          (table-2-columns {:left-width    "40%" :left-header (tr+ [:fields :meeting/date-and-time])
                            :right-width   "60%" :right-header (tr+ [:fields :meeting/location])
                            :left-content  [:fo:block (meeting-time meeting)]
                            :right-content [:fo:block (:meeting/location meeting)]
                            :fonts { :header-font {:font-size "12px" :font-weight "700" :font-style "normal"}
                                    :rows-font {:font-size "14px" :font-weight "400" :font-style "normal"}}})]
-        [:fo:block {:space-after "10mm"}
+        [:fo:block {:space-after "54"}
          (table-2-columns {:left-width   "45%" :left-header (tr+ [:meeting :participants-title])
                           :right-width   "55%" :right-header (tr+ [:meeting :absentees-title])
                           :left-content  [:fo:block (participants meeting false)]
