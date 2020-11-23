@@ -334,7 +334,7 @@
           (fn [ostream]
             (try
               (pdf-export/hiccup->pdf
-               (meeting-pdf/meeting-pdf db id)
+               (meeting-pdf/meeting-pdf db user id)
                ostream)
               (catch Exception e
                 (log/error e "Exception while generating meeting PDF")))))})

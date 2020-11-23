@@ -4,7 +4,8 @@
     [teet.meeting.meeting-db :as meeting-db]
     [teet.meeting.meeting-commands :as meeting-commands]
     [teet.environment :as environment]
-    [teet.localization :refer [with-language tr tr-enum]])
+    [teet.localization :refer [with-language tr tr-enum]]
+    [teet.user.user-model :as user-model])
   (:import (com.vladsch.flexmark.parser Parser)
            (com.vladsch.flexmark.util.ast Document)
            (com.vladsch.flexmark.ast
@@ -84,27 +85,31 @@
      [:fo:block {:font-size "24px" :font-weight "400"} title]
      [:fo:block {:font-size "14px" :font-weight "400" :space-after "40"} decision-text]]))
 
-(defmulti link-list-item (fn [link] (:link/type link)))
+(defmulti link-list-item (fn [link meeting project-id] (:link/type link)))
 
-(defmethod link-list-item :file [link]
+(defmethod link-list-item :file [{info :link/info}]
   [:fo:block
    [:fo:block link-look-and-feel
-    (str "Appendix " (get-in link [:link/to :file/original-name]))]])
+    (str (:file/name info))]])
 
-(defmethod link-list-item :task [link]
-  [:fo:block
-   [:fo:block link-look-and-feel
-    (str "Linked task " (get-in link [:link/to :task/type :db/ident]))]])
+(defmethod link-list-item :task [{info :link/info}]
+  (let [{:task/keys [type estimated-end-date assignee]
+         :meta/keys [deleted? modifier modified-at]} info]
+    [:fo:block
+     [:fo:block link-look-and-feel
+      (str (tr+ [:enum (:db/ident type)]) " " (tr [:task :link-info]
+                                      {:assignee (user-model/user-name assignee)
+                                       :deadline (format-date estimated-end-date)}))]]))
 
 (defmethod link-list-item :estate [link]
   [:fo:block
    [:fo:block link-look-and-feel
     (str "Linked estate " (get-in link [:link/external-id]))]])
 
-(defmethod link-list-item :cadastral-unit [link]
+(defmethod link-list-item :cadastral-unit [{info :link/info :as link}]
   [:fo:block
    [:fo:block link-look-and-feel
-    (str "Linked cadastral unit "(get-in link [:link/external-id]))]])
+    (str (:L_AADRESS info) " " (:TUNNUS info) " ")]])
 
 (defn- list-of-topics
   "Return list of agenda topics"
@@ -225,10 +230,10 @@
    (:meeting/title meeting)])
 
 (defn meeting-pdf
-  ([db meeting-id]
-   (meeting-pdf db meeting-id default-layout-config))
-  ([db meeting-id {:keys [body header footer] :as layout}]
-   (let [meeting (meeting-db/export-meeting db meeting-id)
+  ([db user meeting-id]
+   (meeting-pdf db user meeting-id default-layout-config))
+  ([db user meeting-id {:keys [body header footer] :as layout}]
+   (let [meeting (meeting-db/export-meeting db user meeting-id)
          project-id (fetch-project-id meeting)
          base-url (or (environment/config-value :base-url) "")
          url (meeting-commands/meeting-link
@@ -277,7 +282,7 @@
           {:external-destination url}
           [:fo:inline {:text-decoration "underline" :color "blue"} url]]]
         [:fo:block (tr+ [:meeting :pdf-created-by])
-         [:fo:block "User comes here"]]]]])))
+         [:fo:block (user-model/user-name user)]]]]])))
 
 (defn- md-children [node]
   (-> node .getChildren .iterator iterator-seq))

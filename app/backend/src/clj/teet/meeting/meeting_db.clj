@@ -257,21 +257,23 @@
 
 (defn export-meeting
   "Fetch information required for export meeting PDF"
-  [db id]
-  (d/pull db '[:db/id
-               :meeting/title
-               :meeting/location
-               :meeting/start
-               :meeting/end
-               {:activity/_meetings [:db/id {:thk.lifecycle/_activities [{:thk.project/_lifecycles [:thk.project/id]}]}]}
-               {:meeting/agenda [:db/id
-                                 :meeting.agenda/topic
-                                 :meeting.agenda/body
-                                 {:link/_from [:link/type {:link/to [*]} *]}
-                                 {:meeting.agenda/responsible [:user/family-name :user/given-name :user/id]}
-                                 {:meeting.agenda/decisions [:meeting.decision/body :meeting.decision/number]}]}
-               {:review/_of [:meta/created-at :review/comment {:review/decision [:db/id :ident]}
-                             {:review/reviewer [:db/id :user/family-name :user/given-name :user/id]}]}
-               {:participation/_in [:participation/role
-                                    {:participation/participant [:db/id :meta/deleted? :user/family-name :user/given-name :user/id]}
-                                    :participation/absent?]}] id))
+  [db user id]
+  (link-db/fetch-links
+    db user {} #(or (contains? % :meeting.agenda/topic)
+                    (contains? % :meeting.decision/body))
+           (d/pull db '[:db/id
+                        :meeting/title
+                        :meeting/location
+                        :meeting/start
+                        :meeting/end
+                        {:activity/_meetings [:db/id {:thk.lifecycle/_activities [{:thk.project/_lifecycles [:thk.project/id]}]}]}
+                        {:meeting/agenda [:db/id
+                                          :meeting.agenda/topic
+                                          :meeting.agenda/body
+                                          {:meeting.agenda/responsible [:user/family-name :user/given-name :user/id]}
+                                          {:meeting.agenda/decisions [:meeting.decision/body :meeting.decision/number]}]}
+                        {:review/_of [:meta/created-at :review/comment {:review/decision [:db/id :ident]}
+                                      {:review/reviewer [:db/id :user/family-name :user/given-name :user/id]}]}
+                        {:participation/_in [:participation/role
+                                             {:participation/participant [:db/id :meta/deleted? :user/family-name :user/given-name :user/id]}
+                                             :participation/absent?]}] id)))
