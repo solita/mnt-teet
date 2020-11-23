@@ -582,7 +582,7 @@
   [e! project-info open-estates cadastral-forms estate-forms [owner units]]
   ^{:key (str owner)}
   [:div {:style {:margin-bottom "2rem"}}
-   (let [owners (get-in (first units) [:estate :omandiosad])
+   (let [shares (get-in (first units) [:estate :omandiosad])
          estate-id (get-in (first units) [:estate :estate-id])]
 
      [common/hierarchical-container
@@ -592,9 +592,10 @@
        [:div {:class (<class group-style)}
         (if owner
           [:div {:class (<class common-styles/flex-row-space-between)}
-           [typography/SectionHeading (if (not= (count owners) 1)
-                                        (tr [:land :owners-number] {:num-owners (number-of-owners owners)})
-                                        (:nimi (first (:isik (first owners)))))]
+           (let [num-owners (number-of-owners shares)]
+             [typography/SectionHeading (if (not= num-owners 1)
+                                          (tr [:land :owners-number] {:num-owners num-owners})
+                                          (:nimi (first (:isik (first shares)))))])
            [:a {:class (<class common-styles/white-link-style false)
                 :href (url/set-query-param :modal "owner" :modal-target estate-id :modal-page "owner-info")}
             (tr [:land :show-owner-info])]]
@@ -670,14 +671,15 @@
                   (filter #(ids (:teet-id %)) units))
           grouped (group-by
                     (fn [unit]
-                      (when (seq (get-in unit [:estate :omandiosad])) ;; Check that the units actually have owner information
-                        (into #{}
-                              (map
-                                (fn [owner]
-                                  (if (:r_kood owner)
-                                    (select-keys owner [:r_kood :r_riik])
-                                    (select-keys owner [:isiku_tyyp :nimi]))))
-                              (first (:isik (get-in unit [:estate :omandiosad]))))))
+                      (when-let [shares (seq (get-in unit [:estate :omandiosad]))] ;; Check that the units actually have owner information
+                        (->> shares
+                             (mapcat :isik)
+                             (map
+                              (fn [owner]
+                                (if (:r_kood owner)
+                                  (select-keys owner [:r_kood :r_riik])
+                                  (select-keys owner [:isiku_tyyp :nimi]))))
+                             (into #{}))))
                     units)]
       [:div
        (mapc
@@ -913,16 +915,15 @@
                                      :when (not lopp-kpv)]
                                  (str tanav-maja-korter ", " ehak-nimetus ", " postiindeks)))]
     [:div
-     (mapc (fn [a]
-             [key-value :address (tr [:contact :address]) a]) unique-addresses)
-
      (doall
       (for [{:keys [kirje-id type content lopp-kpv]} contact-methods
             :when (and content
                        (not lopp-kpv)
                        (or (= type :email) (= type :phone) (= type :phone2)))]
         ^{:key (str kirje-id)}
-        [key-value type (tr [:contact type]) content]))]))
+        [key-value type (tr [:contact type]) content]))
+     (mapc (fn [a]
+             [key-value :address (tr [:contact :address]) a]) unique-addresses)]))
 
 (defn owner-inner-component [e! person? nimi eesnimi r_kood omandiosa_lugeja omandiosa_nimetaja omandiosa_suurus isiku_tyyp project first-in-joint?]
   [:div {:class (<class project-style/owner-info)}
