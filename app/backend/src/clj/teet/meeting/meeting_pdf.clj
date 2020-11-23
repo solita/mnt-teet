@@ -35,6 +35,14 @@
    :padding-top 8
    :padding-bottom 10})
 
+(def reviewers-look-and-feel
+  {:font-size "14px"
+   :border-top-style "solid"
+   :border-top-width "1"
+   :border-top-color "#D2D3D8"
+   :padding-top 9
+   :padding-bottom 12})
+
 (def date-format
   (doto (java.text.SimpleDateFormat. "MM.dd.yyyy" )
     (.setTimeZone (java.util.TimeZone/getTimeZone "Europe/Tallinn"))))
@@ -61,6 +69,11 @@
   (str (format-date (:meeting/start meeting))
        " " (format-time (:meeting/start meeting)) " - "
        (format-time (:meeting/end meeting))))
+
+(defn- approval-date-time
+  "Format approval review date and time"
+  [review]
+  (str (format-date review) " " (format-time review)))
 
 (defn- decision-list-item
   "Return the agenda topic descition list item"
@@ -149,7 +162,7 @@
 
 (defn- decision-text
   "Return decision text depending on approved or rejected"
-  [db-ident]
+  [{db-ident :db/ident}]
   (case db-ident
     :review.decision/approved
     "Approved"
@@ -157,19 +170,33 @@
     "Rejected"
     "Unknown"))
 
+(defn- reviewers-names
+  "Formatted names of reviewers"
+  [reviews]
+  (for [{reviewer :review/reviewer decision :review/decision} reviews]
+     [:fo:block reviewers-look-and-feel
+      (str (decision-text decision) " " (:user/family-name reviewer) " " (:user/given-name reviewer) " ")]))
+
+(defn- reviewers-decisions
+  "Formatted decisions of reviewers"
+  [reviews]
+  (for [{comment :review/comment
+         date :meta/created-at} reviews]
+    [:fo:block reviewers-look-and-feel
+     (str comment " " (approval-date-time date))]))
+
 (defn- reviews
   "Returns review information"
   [review-of]
-  (let [review (first review-of) reviewer (:review/reviewer review)
-        reviewer-family-name (:user/family-name reviewer)
-        reviewer-given-name (:user/given-name reviewer)
-        decision (:review/decision review)
-        comment (:review/comment review)]
-    [:fo:block {:font-style "normal" :font-size "20px"}
-     (tr+ [:meeting :approvals])
-     [:fo:block {:font-style "italic" :font-size "16px"}
-      "Reviewer: " (str reviewer-family-name " " reviewer-given-name " "
-                        (decision-text (:db/ident decision)) " " comment " Date: " (:meta/created-at review))]]))
+  [:fo:block
+     [:fo:block {:font-style "normal" :font-size "20px" :font-weight 400 :space-after 11}
+      (tr+ [:meeting :approvals])]
+    (table-2-columns {:left-width   "40%" :left-header ""
+                      :right-width   "60%" :right-header ""
+                      :left-content  [:fo:block (reviewers-names review-of)]
+                      :right-content [:fo:block (reviewers-decisions review-of)]
+                      :fonts {:header-font {:font-size "20px" :font-weight "400" :font-style "normal"}
+                              :rows-font {:font-size "12px" :font-weight "700" :font-style "normal"}}})])
 
 (defn- participants
   "Returns the participants - attendees or absentees"
