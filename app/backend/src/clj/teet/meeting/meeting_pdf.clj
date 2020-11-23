@@ -36,11 +36,19 @@
    :padding-top 8
    :padding-bottom 10})
 
+(def border-1-mm
+  {:border-top-style "solid"
+   :border-top-width "1"
+   :border-top-color "#D2D3D8"})
+
 (def reviewers-look-and-feel
   {:font-size "14px"
-   :border-top-style "solid"
-   :border-top-width "1"
-   :border-top-color "#D2D3D8"
+   :padding-top 9
+   :padding-bottom 12})
+
+(def reviewers-date-look-and-feel
+  {:font-size "14px"
+   :text-align "right"
    :padding-top 9
    :padding-bottom 12})
 
@@ -170,6 +178,44 @@
      [:fo:table-cell
       [:fo:block {:font-size rows-font-size :font-weight rows-font-weight :font-style rows-font-style} right-content]]]]]))
 
+(defn- table-3-columns
+  "Returns 3 columns FO table"
+  [{:keys [left-width center-width right-width
+           left-header center-header right-header
+           left-content center-content right-content
+           fonts]}]
+  (let [ {{header-font-size :font-size
+           header-font-weight :font-weight
+           header-font-style :font-style} :header-font
+          {rows-font-size :font-size
+           rows-font-weight :font-weight
+           rows-font-style :font-style} :rows-font} fonts]
+    [:fo:table {}
+     [:fo:table-column {:column-width left-width}]
+     [:fo:table-column {:column-width center-width}]
+     [:fo:table-column {:column-width right-width}]
+     [:fo:table-header
+      [:fo:table-row
+       [:fo:table-cell
+        [:fo:block {:font-size header-font-size :font-weight header-font-weight :font-style header-font-style} left-header]]
+       [:fo:table-cell
+        [:fo:block {:font-size header-font-size :font-weight header-font-weight :font-style header-font-style} center-header]]
+       [:fo:table-cell
+        [:fo:block {:font-size header-font-size :font-weight header-font-weight :font-style header-font-style} right-header]]]]
+     [:fo:table-body
+      (map (fn [left center right] [:fo:table-row border-1-mm
+               [:fo:table-cell
+                [:fo:block {:font-size rows-font-size :font-weight rows-font-weight :font-style rows-font-style} left]]
+               [:fo:table-cell
+                [:fo:block {:font-size rows-font-size :font-weight rows-font-weight :font-style rows-font-style
+                            :border-left-style "solid"
+                            :border-left-width 1
+                            :border-left-color "#D2D3D8"
+                            :padding-left 12} center]]
+               [:fo:table-cell
+                [:fo:block {:font-size rows-font-size :font-weight rows-font-weight :font-style rows-font-style} right]]])
+            left-content center-content right-content)]]))
+
 (defn- tr+
   "Give both translations"
   [key]
@@ -181,9 +227,9 @@
   [{db-ident :db/ident}]
   (case db-ident
     :review.decision/approved
-    "Approved"
+    "Yes"
     :review.decision/rejected
-    "Rejected"
+    "No"
     "Unknown"))
 
 (defn- reviewers-names
@@ -196,10 +242,15 @@
 (defn- reviewers-decisions
   "Formatted decisions of reviewers"
   [reviews]
-  (for [{comment :review/comment
-         date :meta/created-at} reviews]
-    [:fo:block reviewers-look-and-feel
-     (str comment " " (approval-date-time date))]))
+  (for [{comment :review/comment} reviews]
+    [:fo:block reviewers-look-and-feel (str comment)]))
+
+(defn- review-date
+  "Formatted date of reviewers' decision"
+  [reviews]
+  (for [{date :meta/created-at} reviews]
+    [:fo:block reviewers-date-look-and-feel
+     (approval-date-time date)]))
 
 (defn- reviews
   "Returns review information"
@@ -207,12 +258,14 @@
   [:fo:block {:space-after 40}
      [:fo:block {:font-style "normal" :font-size "20px" :font-weight 400 :space-after 11}
       (tr+ [:meeting :approvals])]
-    (table-2-columns {:left-width   "40%" :left-header ""
-                      :right-width   "60%" :right-header ""
-                      :left-content  [:fo:block (reviewers-names review-of)]
-                      :right-content [:fo:block (reviewers-decisions review-of)]
+    (table-3-columns {:left-width   "30%" :left-header ""
+                      :center-width "50%" :center-header ""
+                      :right-width   "20%" :right-header ""
+                      :left-content  (reviewers-names review-of)
+                      :center-content (reviewers-decisions review-of)
+                      :right-content (review-date review-of)
                       :fonts {:header-font {:font-size "20px" :font-weight "400" :font-style "normal"}
-                              :rows-font {:font-size "12px" :font-weight "700" :font-style "normal"}}})])
+                              :rows-font {:font-size "10px" :font-weight "400" :font-style "normal"}}})])
 
 (defn- participants
   "Returns the participants - attendees or absentees"
