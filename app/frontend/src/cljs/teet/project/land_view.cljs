@@ -909,6 +909,22 @@
               (format/parse-date-string value)
               value)])])
 
+(def ^:private contact-order
+  {:phone 1
+   :phone2 2
+   :email 3})
+
+(def ^:private shown-contact-types
+  (set (keys contact-order)))
+
+(defn- shown-contact-methods [contact-methods]
+  (->> contact-methods
+       (filter (fn [{:keys [type content lopp-kpv]}]
+                 (and content
+                      (not lopp-kpv)
+                      (shown-contact-types type))))
+       (sort-by (comp contact-order :type))))
+
 (defn- business-registry-info [{:keys [addresses contact-methods]}]
   (let [unique-addresses (into #{}
                                (for [{:keys [tanav-maja-korter postiindeks lopp-kpv ehak-nimetus]} addresses
@@ -916,10 +932,7 @@
                                  (str tanav-maja-korter ", " ehak-nimetus ", " postiindeks)))]
     [:div
      (doall
-      (for [{:keys [kirje-id type content lopp-kpv]} contact-methods
-            :when (and content
-                       (not lopp-kpv)
-                       (or (= type :email) (= type :phone) (= type :phone2)))]
+      (for [{:keys [kirje-id type content]} (shown-contact-methods contact-methods)]
         ^{:key (str kirje-id)}
         [key-value type (tr [:contact type]) content]))
      (mapc (fn [a]
