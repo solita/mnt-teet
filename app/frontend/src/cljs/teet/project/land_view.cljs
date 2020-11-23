@@ -584,7 +584,7 @@
         (if owner
           [:div {:class (<class common-styles/flex-row-space-between)}
            [typography/SectionHeading (if (not= (count owners) 1)
-                                        (str (count owners) " owners")
+                                        (tr [:land :owners-number] {:num-owners (count owners)})
                                         (:nimi (first (:isik (first owners)))))]
            [:a {:class (<class common-styles/white-link-style false)
                 :href (url/set-query-param :modal "owner" :modal-target estate-id :modal-page "owner-info")}

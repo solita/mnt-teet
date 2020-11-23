@@ -551,6 +551,7 @@
   :total-cost "Kogumaksumus",
   :land-exchange "Vahetus",
   :add-compensation "+ Lisan kompensatsiooni",
+  :owners-number "{num-owners} omanikku",
   :archived-unit "(Arhiveeritud)",
   :estate-acquisition-cost "Maa soetusmaksumus",
   :estate "Kinnistu",
