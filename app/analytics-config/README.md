@@ -34,8 +34,8 @@ Example query to fetch all tasks in all activities from every project's lifecycl
         t.type__code,  -- task type code
         t.estimated_start_date, -- task start date
         t.assignee__given_name, t.assignee__family_name -- assignee name
-   FROM thk_project_x_lifecycles p
-   JOIN thk_lifecycle_x_activities lc ON p.lifecycles = lc.db__id
+   FROM project_x_lifecycles p
+   JOIN lifecycle_x_activities lc ON p.lifecycles = lc.db__id
    JOIN activity_x_tasks a ON lc.activities = a.db__id
    JOIN task t ON a.tasks = t.db__id
   WHERE p.id = '12345'; -- some THK project id
