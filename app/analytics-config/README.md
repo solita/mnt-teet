@@ -28,14 +28,15 @@ Optionally install metabase and use that.
 Example query to fetch all tasks in all activities from every project's lifecycles:
 
 ```SQL
- SELECT p.name, -- project name
-        lc.type__code, -- lifecycle type code
-        a.name__code,  -- activity type code
-        t.type__code,  -- task type code
-        t.estimated_start_date, -- task start date
-        t.assignee__given_name, t.assignee__family_name -- assignee name
-   FROM project_x_lifecycles p
-   JOIN lifecycle_x_activities lc ON p.lifecycles = lc.db__id
-   JOIN activity_x_tasks a ON lc.activities = a.db__id
-   JOIN task t ON a.tasks = t.db__id
-  WHERE p.id = '12345'; -- some THK project id
+SELECT coalesce(p.project_name,p.name) as "Project",
+       lc.type__code as "Lifecycle type",
+       a.name__code as "Activity type",
+       t.type__code as "Task type",
+       t.estimated_start_date,
+       concat(t.assignee__given_name,' ', t.assignee__family_name) as "Assignee"
+  FROM project_x_lifecycles p
+  JOIN lifecycle_x_activities lc ON p.lifecycles = lc.db__id
+  JOIN activity_x_tasks a ON lc.activities = a.db__id
+  JOIN task t ON a.tasks = t.db__id
+ WHERE p.id='12345';
+```
