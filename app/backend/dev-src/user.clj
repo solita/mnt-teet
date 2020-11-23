@@ -177,63 +177,93 @@
          (str/join "\n" (map format-attr attrs))
          "\n}\n")))
 
-(defn output-datomic-entity-diagram []
-  (let [include-entities #{"thk.project" "thk.lifecycle" "activity"
-                           "task" "document" "file" "comment" "permission"
-                           "user" "meta"}
-        types {:permission/projects "List<thk.project>"
-               :thk.project/lifecycles "List<thk.lifecycle>"
-               :thk.lifecycle/activities "List<activity>"
-               :activity/tasks "List<task>"
-               :task/documents "List<document>"
-               :document/files "List<file>"
-               :document/comments "List<comment>"
-               :file/comments "List<comment>"
-               :thk.project/manager "user"
-               :thk.project/owner "user"
-               :file/author "user"
-               :task/assignee "user"
-               :task/author "user"
-               :task/comments "List<comment>"
-               :task/status "enum status"
-               :task/type "enum type"
-               :activity/name "enum activity name"
-               :activity/status "enum activity status"
-               :thk.lifecycle/type "enum lifecycle type"
-               :user/permissions "List<permission>"
-               :meta/creator "user"
-               :meta/modifier "user"
-               :document/category "enum category"
-               :document/sub-category "enum sub-category"
-               :document/status "enum status"
-               :comment/author "user"}
-        entities (->>
-                  (q '[:find (pull ?e [*])
-                       :where [?e :db/valueType _]]
-                     (db))
-                  (map first)
-                  (group-by (comp namespace :db/ident)))]
-    (str "@startuml\n"
-         (str/join "\n"
-                   (for [[entity-name _ :as entity] entities
-                         :when (include-entities entity-name)]
-                     (attrs->plantuml-entity entity types)))
-         "thk.project ||-d-o{ thk.lifecycle\n"
-         "thk.lifecycle ||-d-o{ activity\n"
-         "activity ||-r-o{ task\n"
-         "task ||-r-o{ document\n"
-         "document ||--o{ comment\n"
-         "file ||--o{ comment\n"
-         "document ||-r-o{ file\n"
-         "permission ||--o{ thk.project\n"
-         "meta --> user\n"
-         "thk.project -r-> user\n"
-         "user ||--o{ permission\n"
-
-         "note left of meta \n  meta fields are part of all entities but\n  modeled separately for convenience\nend note\n"
-         "\n@enduml")))
-
 (comment
+  (defn output-datomic-entity-diagram []
+    (let [include-entities #{"thk.project" "thk.lifecycle" "activity"
+                             "task" "file" "comment" "permission"
+                             "user" "meta"
+                             "meeting" "meeting.agenda" "meeting.decision"
+                             "participation" "land-acquisition" "notification"
+                             "estate-procedure" "estate-compensation"
+                             "estate-process-fee" "land-exchange"}
+          types {:permission/projects "List<thk.project>"
+                 :thk.project/lifecycles "List<thk.lifecycle>"
+                 :thk.lifecycle/activities "List<activity>"
+                 :activity/tasks "List<task>"
+                 :task/files "List<file>"
+                 :task/comments "List<comment>"
+                 :file/comments "List<comment>"
+                 :thk.project/manager "user"
+                 :thk.project/owner "user"
+                 :file/author "user"
+                 :task/assignee "user"
+                 :task/author "user"
+                 :task/status "enum status"
+                 :task/type "enum type"
+                 :activity/name "enum activity name"
+                 :activity/status "enum activity status"
+                 :thk.lifecycle/type "enum lifecycle type"
+                 :user/permissions "List<permission>"
+                 :meta/creator "user"
+                 :meta/modifier "user"
+                 :comment/author "user"
+                 :meeting/responsible "user"
+                 :participation/participant "user"
+                 :participation/in "any"
+                 :comment/mentions "List<user>"
+                 :comment/files "List<file>"
+                 :meeting.agenda/decisions "List<meeting.decision>"
+                 :meeting/agenda "List<meeting.agenda>"
+                 :meeting/comments "List<comment>"
+                 :land-acquisition/project "thk.project"
+                 :notification/project "thk.project"
+                 :notification/receiver "user"
+                 :estate-procedure/compensations "List<estate-compensation>"
+                 :estate-procedure/land-exchanges "List<land-exchange>"
+                 :estate-procedure/process-fees "List<estate-process-fee>"
+                 :estate-procedure/third-party-compensations "List<estate-process-fee>"
+                 :estate-procedure/project "thk.project"
+                 :meeting.agenda/responsible "user"}
+          entities (->>
+                    (q '[:find (pull ?e [*])
+                         :where [?e :db/valueType _]]
+                       (db))
+                    (map first)
+                    (group-by (comp namespace :db/ident)))]
+      (str "@startuml\n"
+           (str/join "\n"
+                     (for [[entity-name _ :as entity] entities
+                           :when (include-entities entity-name)]
+                       (attrs->plantuml-entity entity types)))
+           "thk.project ||-d-o{ thk.lifecycle\n"
+           "thk.lifecycle ||-d-o{ activity\n"
+           "activity ||-r-o{ task\n"
+           "task ||-r-o{ file\n"
+           "file ||--o{ comment\n"
+           "permission ||--o{ thk.project\n"
+           "meta --> user\n"
+           "thk.project -r-> user\n"
+           "user ||--o{ permission\n"
+           "comment ||--o{ file\n"
+           "task ||--o{ comment\n"
+           "activity ||--o{ meeting\n"
+           "meeting ||--o{ comment\n"
+           "meeting ||--o{ meeting.agenda\n"
+           "meeting.agenda ||--o{ meeting.decision\n"
+           "meeting ||--o{ participation\n"
+           "meeting.agenda --> user\n"
+           "\"land-acquisition\" --> thk.project\n"
+           "notification --> thk.project\n"
+           "notification --> user\n"
+           "\"estate-procedure\" ||--o{ \"estate-compensation\"\n"
+           "\"estate-procedure\" ||--o{ \"estate-process-fee\"\n"
+           "\"estate-procedure\" ||--o{ \"land-exchange\"\n"
+           "\"estate-procedure\" --> thk.project\n"
+
+
+           "note top of meta \n  meta fields are part of all entities but\n  modeled separately for convenience\nend note\n"
+           "\n@enduml")))
+
   (spit "entity-diagram.puml" (output-datomic-entity-diagram)))
 
 (defn delete-all-imported-thk-projects! []
