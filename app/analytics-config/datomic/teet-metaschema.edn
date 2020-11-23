@@ -1,21 +1,26 @@
-{:tables {:user/id {:include [:user/*]}
-          :comment/comment {:include [:comment/*]}
-          :thk.project/id {:name "project"
-                           :include [:thk.project/*]
-                           :exclude [:thk.project/integration-info]}
-          :thk.lifecycle/id {:name "lifecycle"
-                             :include [:thk.lifecycle/*]
-                             :exclude [:thk.lifecycle/integration-info]}
-          :activity/name {:include [:activity/*]
-                          :exclude [:activity/integration-info]}
-          :task/type {:include [:task/*]}
-          :file/name {:include [:file/*]}
-          :meeting/title {:include [:meeting/*]}
-          :permission/role {:include [:permission/*]}
-          :enum/attribute {:name "code"
-                           :include [:db/ident]
-                           :exclude [:enum/attribute :enum/valid-for]
-                           :rename {:db/ident "code"}}}
+{:tables
+ {:user/id {:include [:user/*]}
+  :comment/comment {:include [:comment/*]}
+  :thk.project/id {:name "project"
+                   :include [:thk.project/*]
+                   :exclude [:thk.project/integration-info]
+                   :rename-many-table {:thk.project/lifecycles "project_x_lifecycles"
+                                       :thk.project/related-cadastral-units "project_x_cadastral_units"
+                                       :thk.project/related-restrictions "project_x_restrictions"}}
+  :thk.lifecycle/id {:name "lifecycle"
+                     :include [:thk.lifecycle/*]
+                     :exclude [:thk.lifecycle/integration-info]
+                     :rename-many-table {:thk.lifecycle/activities "lifecycle_x_activities"}}
+  :activity/name {:include [:activity/*]
+                  :exclude [:activity/integration-info]}
+  :task/type {:include [:task/*]}
+  :file/name {:include [:file/*]}
+  :meeting/title {:include [:meeting/*]}
+  :permission/role {:include [:permission/*]}
+  :enum/attribute {:name "code"
+                   :include [:db/ident]
+                   :exclude [:enum/attribute :enum/valid-for]
+                   :rename {:db/ident "code"}}}
 
  ;; Joins are not needed, but make the tables "wide" for
  ;; analytics tools. They include the referenced entity
