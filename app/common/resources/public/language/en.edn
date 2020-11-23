@@ -70,7 +70,9 @@
   "Segaomand" "Mixed property"},
  :comment
  {:total-comments "{count} total",
+  :no-comments "No comments",
   :mentioned-users "Mentioned users",
+  :comments "Comments",
   :save "Save comment",
   :comment-as "Commenting as {name}",
   :add-mention "Add mention",
@@ -78,11 +80,13 @@
   :edited "Edited {date}",
   :resolve-all "Resolve all",
   :quote "Quote",
+  :comment "Comment",
   :resolve "Resolve",
   :unresolve "Unresolve",
   :new-comments "{count} new",
   :add-images "Add images",
-  :open-latest-unresolved "Open latest"},
+  :open-latest-unresolved "Open latest",
+  :comments-for "Comments for {file-name}:"},
  :common
  {:hide-menu "Hide menu",
   :send-feedback "Send feedback",
@@ -528,7 +532,7 @@
   :file-will-be-added-to-part-text
   "TEET has automatically detected the file part based on the name",
   :file-belongs-to-task "This file belongs to {task} task",
-  :wrong-project "Cannot add file to this project",
+  :wrong-project "This file can't be added to this project",
   :file-new-part
   "Filename had new task part in it, so we added new task part here automatically",
   :new-version-will-be-created
@@ -555,6 +559,7 @@
   :total-cost "Total cost",
   :land-exchange "Exchange",
   :add-compensation "+ Add compensation",
+  :owners-number "{num-owners} owners",
   :archived-unit "(Archived)",
   :estate-acquisition-cost "Estate acquisition cost",
   :estate "Estate",
@@ -580,6 +585,7 @@
   :filter-label "Filter units",
   :total-excluding-process "Total excluding process fees:",
   :no-estate-id "Units don't have any estate ids",
+  :owner-code "Code",
   :units "units",
   :estate-info-fetch-failure
   "Couldn't fetch information from xroad. Please try again and if error persists contact system administrator.",
@@ -588,9 +594,9 @@
   :fetching-land-units "Fetching land units",
   :refresh-estate-info "Refresh estates",
   :add-owner "+ Add owner",
-  :owner-data "Owner data"},
+  :owner-data "Registry data"},
  :land-modal-page
- {:owner-info "Owners",
+ {:owner-info "Owners and shares",
   :no-burdens "No burdens",
   :no-comments "No comments",
   :burdens "Burdens",
