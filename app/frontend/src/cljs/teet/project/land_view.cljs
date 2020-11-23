@@ -569,6 +569,15 @@
            unit])
         units)}]))
 
+(defn- number-of-owners
+  "Counts the number of owners of the shares (`omandiosad`). A single
+  share can have joint owners, so the number of owners can be more
+  than `(count omandiosad)`."
+  [omandiosad]
+  (->> omandiosad
+       (mapcat :isik)
+       count))
+
 (defn owner-group
   [e! project-info open-estates cadastral-forms estate-forms [owner units]]
   ^{:key (str owner)}
@@ -584,7 +593,7 @@
         (if owner
           [:div {:class (<class common-styles/flex-row-space-between)}
            [typography/SectionHeading (if (not= (count owners) 1)
-                                        (tr [:land :owners-number] {:num-owners (count owners)})
+                                        (tr [:land :owners-number] {:num-owners (number-of-owners owners)})
                                         (:nimi (first (:isik (first owners)))))]
            [:a {:class (<class common-styles/white-link-style false)
                 :href (url/set-query-param :modal "owner" :modal-target estate-id :modal-page "owner-info")}
