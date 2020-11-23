@@ -16,7 +16,7 @@ context('Login', () => {
         //cy.wait('@command')
 
         // User should be taken to map page after login
-        cy.title({timeout: 15000}).should('eq','Kaart')
+        cy.contains('Minu projektid');
     })
 
 })
