@@ -4,11 +4,13 @@
   :thk.project/id {:name "project"
                    :include [:thk.project/*]
                    :exclude [:thk.project/integration-info]
-                   :rename-many {:thk.project/lifecycles "project_x_lifecycles"}}
+                   :rename-many-table {:thk.project/lifecycles "project_x_lifecycles"
+                                       :thk.project/related-cadastral-units "project_x_cadastral_units"
+                                       :thk.project/related-restrictions "project_x_restrictions"}}
   :thk.lifecycle/id {:name "lifecycle"
                      :include [:thk.lifecycle/*]
                      :exclude [:thk.lifecycle/integration-info]
-                     :rename-many {:thk.lifecycle/activities "lifecycle_x_activities"}}
+                     :rename-many-table {:thk.lifecycle/activities "lifecycle_x_activities"}}
   :activity/name {:include [:activity/*]
                   :exclude [:activity/integration-info]}
   :task/type {:include [:task/*]}
