@@ -1,0 +1,40 @@
+{:tables {:user/id {:include [:user/*]}
+          :comment/comment {:include [:comment/*]}
+          :thk.project/id {:name "project"
+                           :include [:thk.project/*]
+                           :exclude [:thk.project/integration-info]}
+          :thk.lifecycle/id {:name "lifecycle"
+                             :include [:thk.lifecycle/*]
+                             :exclude [:thk.lifecycle/integration-info]}
+          :activity/name {:include [:activity/*]
+                          :exclude [:activity/integration-info]}
+          :task/type {:include [:task/*]}
+          :file/name {:include [:file/*]}
+          :meeting/title {:include [:meeting/*]}
+          :permission/role {:include [:permission/*]}
+          :enum/attribute {:name "code"
+                           :include [:db/ident]
+                           :exclude [:enum/attribute :enum/valid-for]
+                           :rename {:db/ident "code"}}}
+
+ ;; Joins are not needed, but make the tables "wide" for
+ ;; analytics tools. They include the referenced entity
+ ;; attributes in the referring row output.
+ :joins {:activity/tasks "task"
+         :meta/creator "user"
+         :meta/modifier "user"
+         :activity/manager "user"
+         :thk.project/owner "user"
+         :task/assignee "user"
+
+         ;; Include all the enum refs as joins to get the enum keyword
+         ;; value in the referring row. Table for enums is "code".
+         :task/type "code"
+         :activity/name "code"
+         :comment/visibility "code"
+         :file/status "code"
+         :task/group "code"
+         :thk.lifecycle/type "code"
+         :activity/status "code"
+         :comment/status "code"
+         :task/status "code"}}
