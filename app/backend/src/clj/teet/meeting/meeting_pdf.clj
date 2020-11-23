@@ -52,6 +52,10 @@
   (doto (java.text.SimpleDateFormat. "HH:mm" )
     (.setTimeZone (java.util.TimeZone/getTimeZone "Europe/Tallinn"))))
 
+(def time-sec-format
+  (doto (java.text.SimpleDateFormat. "HH:mm:ss" )
+    (.setTimeZone (java.util.TimeZone/getTimeZone "Europe/Tallinn"))))
+
 (defn format-date
   "Format date in human readable locale specific format, eg. dd.MM.yyyy"
   [date]
@@ -64,6 +68,13 @@
   (when date
     (.format time-format date)))
 
+(defn format-time-sec
+  "Format time with seconds resolution"
+  [date]
+  (when date
+    (.format time-sec-format date))
+  )
+
 (defn- meeting-time
   "Format meeting begin, end time, date"
   [meeting]
@@ -74,7 +85,7 @@
 (defn- approval-date-time
   "Format approval review date and time"
   [review]
-  (str (format-date review) " " (format-time review)))
+  (str (format-date review) " " (format-time-sec review)))
 
 (defn- decision-list-item
   "Return the agenda topic descition list item"
@@ -193,7 +204,7 @@
 (defn- reviews
   "Returns review information"
   [review-of]
-  [:fo:block
+  [:fo:block {:space-after 40}
      [:fo:block {:font-style "normal" :font-size "20px" :font-weight 400 :space-after 11}
       (tr+ [:meeting :approvals])]
     (table-2-columns {:left-width   "40%" :left-header ""
@@ -229,15 +240,23 @@
               :font-style "normal" :space-before "5" :space-after "5"}
    (:meeting/title meeting)])
 
+(defn- get-meeting-link
+  "Returns link to the original meeting"
+  [meeting db]
+  (let [project-id (fetch-project-id meeting)
+        base-url (or (environment/config-value :base-url) "")
+        url (meeting-commands/meeting-link
+              db base-url meeting [:thk.project/id project-id])]
+    [:fo:basic-link
+     {:external-destination url}
+     [:fo:inline {:text-decoration "underline" :color "blue"} url]]))
+
 (defn meeting-pdf
   ([db user meeting-id]
    (meeting-pdf db user meeting-id default-layout-config))
   ([db user meeting-id {:keys [body header footer] :as layout}]
    (let [meeting (meeting-db/export-meeting db user meeting-id)
-         project-id (fetch-project-id meeting)
-         base-url (or (environment/config-value :base-url) "")
-         url (meeting-commands/meeting-link
-               db base-url meeting [:thk.project/id project-id])]
+         now (new java.util.Date)]
      [:fo:root {:xmlns:fo  "http://www.w3.org/1999/XSL/Format"
                 :xmlns:svg "http://www.w3.org/2000/svg"}
       [:fo:layout-master-set
@@ -264,7 +283,7 @@
                            :right-content [:fo:block (:meeting/location meeting)]
                            :fonts { :header-font {:font-size "12px" :font-weight "700" :font-style "normal"}
                                    :rows-font {:font-size "14px" :font-weight "400" :font-style "normal"}}})]
-        [:fo:block {:space-after "54"}
+        [:fo:block {:space-after "10"}
          (table-2-columns {:left-width   "45%" :left-header (tr+ [:meeting :participants-title])
                           :right-width   "55%" :right-header (tr+ [:meeting :absentees-title])
                           :left-content  [:fo:block (participants meeting false)]
@@ -275,14 +294,12 @@
          (list-of-topics (:meeting/agenda meeting))]
         [:fo:block
          (reviews (:review/_of meeting))]
-        [:fo:block
+        [:fo:block {:font-style "normal" :font-size "20px" :font-weight 400 :space-after 11}
          (str (tr+ [:meeting :link-to-original]) " ")]
-        [:fo:block
-         [:fo:basic-link
-          {:external-destination url}
-          [:fo:inline {:text-decoration "underline" :color "blue"} url]]]
-        [:fo:block (tr+ [:meeting :pdf-created-by])
-         [:fo:block (user-model/user-name user)]]]]])))
+        [:fo:block {:font-style "normal" :font-size "14px" :font-weight 400 :space-after 40}
+         (get-meeting-link meeting db)]
+        [:fo:block {:font-size "20px" :font-weight 400 :space-after 16} (tr+ [:meeting :pdf-created-by])]
+         [:fo:block {:font-size "14px"} (str (format-date now) " " (format-time-sec now) " " (user-model/user-name user))]]]])))
 
 (defn- md-children [node]
   (-> node .getChildren .iterator iterator-seq))
