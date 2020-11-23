@@ -48,16 +48,15 @@
    :margin-right "0.25rem"
    :padding-top "0.25rem"})
 
-(defn file-name-truncated [selected?]
-  (merge
-   {:display :block
-    :overflow :hidden
-    :text-overflow :ellipsis}
-   (when selected?
-     {:font-weight :bold})))
+(defn file-name-truncated []
+  {:display :block
+   :overflow :hidden
+   :text-overflow :ellipsis
+   :white-space :nowrap
+   :padding "4px"})
 
 (defn file-list-entity-name-style
   []
-  (merge (file-name-truncated false)
+  (merge (file-name-truncated)
          {:font-size "1.25rem"
           :margin-right "0.25rem"}))
