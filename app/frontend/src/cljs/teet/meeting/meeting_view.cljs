@@ -36,6 +36,7 @@
             [teet.ui.context :as context]
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.authorization-context :as authorization-context]
+            [teet.authorization.authorization-check :as authorization-check]
             [teet.ui.file-upload :as file-upload]
             [teet.file.file-controller :as file-controller]
             [teet.common.common-controller :as common-controller]
@@ -1022,7 +1023,11 @@
 
 
 (defn meeting-page [e! {:keys [user] :as app} {:keys [project meeting]}]
-  (let [edit-rights? (and (meeting-model/user-is-organizer-or-reviewer? user meeting)
+  (let [edit-rights? (and (authorization-check/authorized?
+                           user :meeting/edit-meeting
+                           {:entity meeting
+                            :link :meeting/organizer-or-reviewer
+                            :project-id (:db/id project)})
                           (not (:meeting/locked? meeting)))
         review-rights? (and (meeting-model/user-can-review? user meeting)
                             (not (:meeting/locked? meeting)))]
