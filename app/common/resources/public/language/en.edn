@@ -817,7 +817,7 @@
   :component-title "Related features search area"},
  :tab-names
  {:details "Details",
-  :notes "Notes",
+  :notes "Comments",
   :upcoming "Upcoming",
   :history "History",
   :decisions "Decisions"},
