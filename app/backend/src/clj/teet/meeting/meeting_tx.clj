@@ -7,17 +7,22 @@
             [teet.user.user-model :as user-model]))
 
 (defn update-meeting
-  [db meeting-id tx-vec]
+  [db user meeting-id tx-vec]
   (if (meeting-db/locked? db meeting-id)
     (ion/cancel {:cognitect.anomalies/category :cognitect.anomalies/conflict
                  :cognitect.anomalies/message "The meeting is already approved"
                  :teet/error :meeting-is-locked})
     (into tx-vec
-          (meeting-db/review-retractions db meeting-id))))
+          (concat
+            [(merge
+               {:db/id meeting-id}
+               (meta-model/modification-meta user))]
+            (meeting-db/review-retractions db meeting-id)))))
 
-(defn add-participation [db {meeting :participation/in
-                             participant :participation/participant
-                             :as participation}]
+(defn add-participation [db user
+                         {meeting :participation/in
+                          participant :participation/participant
+                          :as participation}]
   (let [teet-user? (not (string? (:db/id participant)))]
     (if (or
          ;; If user is TEET user, check that they are not already participating
@@ -38,7 +43,7 @@
                    :cognitect.anomalies/message "User is already participating"
                    :teet/error :user-is-already-participant})
       ;; All constraint checks ok, return tx data
-      (update-meeting db meeting [participation]))))
+      (update-meeting db user meeting [participation]))))
 
 (defn review-meeting
   [db user meeting-id review]

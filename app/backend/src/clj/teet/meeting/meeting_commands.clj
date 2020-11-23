@@ -19,8 +19,9 @@
   (:import (java.util Date)))
 
 (defn update-meeting-tx
-  [meeting-id tx-data]
+  [user meeting-id tx-data]
   [(list 'teet.meeting.meeting-tx/update-meeting
+         user
          meeting-id
          tx-data)])
 
@@ -29,7 +30,7 @@
   (let [meeting-id (meeting-db/agenda-meeting-id db meeting-agenda-id)]
     (when (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)
       {:eid meeting-agenda-id
-       :wrap-tx #(update-meeting-tx meeting-id %)})))
+       :wrap-tx #(update-meeting-tx user meeting-id %)})))
 
 (defmethod file-db/allow-download-attachments? :meeting-agenda
   [db user [_ meeting-agenda-id]]
@@ -40,7 +41,7 @@
   [db user file-id [_ meeting-agenda-id]]
   (let [meeting-id (meeting-db/agenda-meeting-id db meeting-agenda-id)]
     (if (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)
-      (update-meeting-tx meeting-id [(meta-model/deletion-tx user file-id)])
+      (update-meeting-tx user meeting-id [(meta-model/deletion-tx user file-id)])
       (throw (ex-info "Unauthorized attachment delete"
                       {:error :unauthorized})))))
 
@@ -49,7 +50,7 @@
   (let [meeting-id (meeting-db/decision-meeting-id db meeting-decision-id)]
     (when (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)
       {:eid meeting-decision-id
-       :wrap-tx #(update-meeting-tx meeting-id %)})))
+       :wrap-tx #(update-meeting-tx user meeting-id %)})))
 
 (defmethod file-db/allow-download-attachments? :meeting-decision
   [db user [_ meeting-decision-id]]
@@ -61,7 +62,7 @@
   [db user file-id [_ meeting-decision-id]]
   (let [meeting-id (meeting-db/decision-meeting-id db meeting-decision-id)]
     (if (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)
-      (update-meeting-tx meeting-id
+      (update-meeting-tx user meeting-id
                          [(meta-model/deletion-tx user file-id)])
       (throw (ex-info "Unauthorized attachment delete"
                       {:error :unauthorized})))))
@@ -70,7 +71,7 @@
 (defn- link-from-meeting [db user from]
   (let [meeting-id (meeting-db/link-from->meeting db from)]
     (when (meeting-db/user-is-organizer-or-reviewer? db user meeting-id)
-      {:wrap-tx #(update-meeting-tx meeting-id %)})))
+      {:wrap-tx #(update-meeting-tx user meeting-id %)})))
 
 (def link-types [[:meeting-agenda :task]
                  [:meeting-decision :task]
@@ -115,6 +116,7 @@
                                           :link :meeting/organizer-or-reviewer}}
    :pre [(meeting-db/activity-meeting-id db activity-eid (:db/id form-data))]
    :transact (update-meeting-tx
+               user
                (:db/id form-data)
                (let [{old-meeting-title :meeting/title
                       old-organizer :meeting/organizer}
@@ -133,7 +135,6 @@
                  [(merge
                     (select-keys form-data [:db/id :meeting/organizer :meeting/title
                                             :meeting/start :meeting/end :meeting/location])
-                    (meta-model/modification-meta user)
                     (when (not= old-meeting-title (:meeting/title form-data))
                       ;; Changing meeting title, we need to renumber the meeting
                       {:meeting/number (meeting-db/next-meeting-number
@@ -157,6 +158,7 @@
                                           :link :meeting/organizer-or-reviewer}}
    :pre [(agenda-items-new-or-belong-to-meeting db meeting-id agenda)]
    :transact (update-meeting-tx
+               user
                meeting-id
                [{:db/id meeting-id
                  :meeting/agenda (mapv #(select-keys % [:db/id
@@ -173,6 +175,7 @@
    :authorization {:meeting/edit-meeting {:db/id (meeting-db/agenda-meeting-id db agenda-id)
                                           :link :meeting/organizer-or-reviewer}}
    :transact (update-meeting-tx
+               user
                (meeting-db/agenda-meeting-id db agenda-id)
                [(meta-model/deletion-tx user agenda-id)])})
 
@@ -186,6 +189,7 @@
    :authorization {:meeting/edit-meeting {:db/id (get-in (du/entity db id) [:participation/in :db/id])
                                           :link :meeting/organizer-or-reviewer}}
    :transact (update-meeting-tx
+               user
                (get-in (du/entity db id) [:participation/in :db/id])
                [(meta-model/deletion-tx user id)])})
 
@@ -198,11 +202,13 @@
    :authorization {:meeting/edit-meeting {:db/id meeting
                                           :link :meeting/organizer-or-reviewer}}
    :transact [(list 'teet.meeting.meeting-tx/add-participation
+                    user
                     (-> participation
                         (select-keys [:participation/in
                                       :participation/role
                                       :participation/participant])
                         (merge {:db/id "new-participation"})
+                        (merge (meta-model/creation-meta user))
                         (update :participation/participant
                                 #(if (string? (:db/id %))
                                    ;; Don't allow adding arbitrary attributes to new users created
@@ -224,6 +230,7 @@
    :authorization {:meeting/edit-meeting {:db/id (get-in (du/entity db participation-id) [:participation/in :db/id])
                                           :link :meeting/organizer-or-reviewer}}
    :transact (update-meeting-tx
+               user
                (get-in (du/entity db participation-id) [:participation/in :db/id])
                [{:db/id participation-id
                  :participation/absent? absent?}])})
@@ -281,7 +288,7 @@
     (log/info "SES send response" email-response)
     (log/info "SES emails sent to: " (pr-str to))
     (tx-ret [{:db/id meeting-eid
-              :meeting/invitations-sent-at (Date.)}])))
+              :meeting/notifications-sent-at (Date.)}])))
 
 (defcommand :meeting/send-notifications
   {:doc "Send email / in-app notifications to organizer and participants."
@@ -329,6 +336,7 @@
                                           :link :meeting/organizer-or-reviewer}}
    :pre [(meeting-db/activity-meeting-id db activity-eid meeting-id)]}
   (tx-ret (update-meeting-tx
+            user
             meeting-id
             [(meta-model/deletion-tx user meeting-id)])))
 
@@ -341,6 +349,7 @@
                                                          [:meeting/_agenda :db/id])
                                           :link :meeting/organizer-or-reviewer}}
    :transact (update-meeting-tx
+               user
                (meeting-db/agenda-meeting-id db agenda-eid)
                [{:db/id agenda-eid
                  :meeting.agenda/decisions [(merge (select-keys form-data [:meeting.decision/body])
@@ -356,6 +365,7 @@
    :authorization {:meeting/edit-meeting {:db/id (meeting-db/decision-meeting-id db (:db/id form-data))
                                           :link :meeting/organizer-or-reviewer}}
    :transact (update-meeting-tx
+               user
                (meeting-db/decision-meeting-id db (:db/id form-data))
                [(merge (select-keys form-data [:meeting.decision/body :db/id])
                        (meta-model/modification-meta user))])})
@@ -368,6 +378,7 @@
    :authorization {:meeting/edit-meeting {:db/id (meeting-db/decision-meeting-id db decision-id)
                                           :link :meeting/organizer-or-reviewer}}
    :transact (update-meeting-tx
+               user
                (meeting-db/decision-meeting-id db decision-id)
                [(meta-model/deletion-tx user decision-id)])})
 

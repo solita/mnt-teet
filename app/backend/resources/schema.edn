@@ -1474,4 +1474,11 @@
            :db/doc "Was the participant absent in the meeting?"}
           {:db/ident :participation.role/organizer
            :db/doc "Participation role for organizer. Purposefully doesn't have :enum/valid-for to not show in selection"}]]}
+
+ {:db/ident :migration/meeting-notifications-sent
+  :txes [[{:db/ident :meeting/notifications-sent-at
+           :db/valueType :db.type/instant
+           :db/cardinality :db.cardinality/one
+           :db/doc "Timestamp for when the email notifications of the meeting was last sent"}]]}
+
  ]
