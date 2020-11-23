@@ -33,6 +33,9 @@
     (> size upload-max-file-size)
     {:error :file-too-large :max-allowed-size upload-max-file-size}
 
+    (<= size 0)
+    {:error :file-empty}
+
     (not (valid-suffix? name))
     {:error :file-type-not-allowed :allowed-suffixes (upload-allowed-file-suffixes)}
 

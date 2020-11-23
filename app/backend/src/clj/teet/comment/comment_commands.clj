@@ -229,6 +229,7 @@
       :estate-comments (project-db/estate-comments-project-id db parent-id)
       :owner-comments (project-db/owner-comments-project-id db parent-id)
       :unit-comments (project-db/unit-comments-project-id db parent-id)
+      :meeting (project-db/meeting-project-id db parent-id)
       (db-api/bad-request! "No such comment"))))
 
 (defn- files-in-db [db comment-id]

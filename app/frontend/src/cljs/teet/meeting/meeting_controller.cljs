@@ -20,7 +20,7 @@
 (defrecord AddParticipant [meeting participant])
 (defrecord RemoveParticipant [participation-id])
 (defrecord RemoveParticipantResult [participant-id result])
-(defrecord SendNotifications [meeting])
+(defrecord SendNotifications [meeting-id])
 (defrecord ChangeAbsentStatus [participation-id absent?])
 
 (defrecord SubmitReview [meeting-id form-data close-event])
@@ -176,13 +176,13 @@
              :result-event common-controller/->Refresh})))
 
   SendNotifications
-  (process-event [{meeting :meeting} app]
+  (process-event [{meeting-id :meeting-id} app]
     (t/fx app
           {:tuck.effect/type :command!
            :command :meeting/send-notifications
-           :payload {:db/id (:db/id meeting)}
-           :result-event #(snackbar-controller/->OpenSnackBar (tr [:meeting :notifications-sent])
-                                                              :success)}))
+           :payload {:db/id meeting-id}
+           :success-message (tr [:meeting :notifications-sent])
+           :result-event common-controller/->Refresh}))
 
   SubmitDecisionForm
   (process-event [{:keys [agenda-eid form-data close-event]} app]

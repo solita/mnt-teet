@@ -63,14 +63,20 @@
         oo-get (fn oo-get [ox & path]
                   (apply z/xml1-> (concat [ox] path)))
         isikud-get (fn [ox & path] (apply oo-get ox (concat [:a:isikud] path [text])))
-        omandi-get (fn [ox & path] (apply oo-get ox (concat path [text])))]
+        omandi-get (fn [ox & path] (apply oo-get ox (concat path [text])))
+        ]
     {:omandiosad
      (mapv (fn [ox]
-             {:isiku_tyyp (isikud-get ox :a:KinnistuIsik :a:isiku_tyyp)
-              :r_kood (isikud-get ox :a:KinnistuIsik :a:isiku_koodid :a:Isiku_kood :a:r_kood)
-              :r_riik (isikud-get ox :a:KinnistuIsik :a:isiku_koodid :a:Isiku_kood :a:r_riik)
-              :nimi (isikud-get ox :a:KinnistuIsik :a:nimi)
-              :eesnimi (isikud-get ox :a:KinnistuIsik :a:eesnimi)
+             (log/debug "ki count " (count  (z/xml-> ox :a:isikud :a:KinnistuIsik z/text)))
+             {:isik (mapv (fn [k-isik]
+                            {:isiku_tyyp (z/xml1-> k-isik :a:isiku_tyyp z/text)
+                             :isiku_liik_id (z/xml1-> k-isik :a:isiku_liik_ID z/text)
+                             :isiku_liik (z/xml1-> k-isik :a:isiku_liik z/text)
+                             :r_kood (z/xml1-> k-isik  :a:isiku_koodid :a:Isiku_kood :a:r_kood z/text)
+                             :r_riik (z/xml1-> k-isik :a:isiku_koodid :a:Isiku_kood :a:r_riik z/text)
+                             :nimi (z/xml1-> k-isik :a:nimi z/text)
+                             :eesnimi (z/xml1-> k-isik :a:eesnimi z/text)})
+                          (z/xml-> ox :a:isikud :a:KinnistuIsik))
               :omandi_liik (omandi-get ox :a:omandi_liik)
               :omandi_liik_tekst (omandi-get ox :a:omandi_liik_tekst)
               :omandi_algus (omandi-get ox :a:omandi_algus)

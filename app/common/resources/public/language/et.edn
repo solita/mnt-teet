@@ -534,7 +534,8 @@
   :file-new-part-text "TEET püüab Sinu elu lihtsamaks teha",
   :invalid-sequence-number "Järjekorranumber ei ole korrektne",
   :already-uploaded "See fail on juba üles laaditud",
-  :file-will-be-added-to-part "See fail lisatakse {part} osasse"},
+  :file-will-be-added-to-part "See fail lisatakse {part} osasse",
+  :empty-file "Ei saa laadida tühje faile"},
  :land
  {:show-owner-info "Vaatan omanike andmeid",
   :no-active-mortgages "Aktiivsed hüpoteegid puuduvad",
@@ -575,6 +576,7 @@
   :filter-label "Filtreerin üksused",
   :total-excluding-process "Kokku ilma protseduuri tasudeta:",
   :no-estate-id "Üksusel puudub kinnistu number",
+  :owner-code "Kood",
   :units "üksust",
   :estate-info-fetch-failure
   "X-teest ei õnnestunud teavet hankida. Palun proovi uuesti ja kui tõrge püsib, pöörduge süsteemi administraatori poole.",
@@ -583,9 +585,9 @@
   :fetching-land-units "Toon maade andmeid",
   :refresh-estate-info "Uuendan kinnistute andmeid",
   :add-owner "+ Lisan omaniku",
-  :owner-data "Omaniku andmed"},
+  :owner-data "Registriandmed"},
  :land-modal-page
- {:owner-info "Omanikud",
+ {:owner-info "Omanikud ja omandiosad",
   :no-burdens "Koormatisi pole",
   :no-comments "Märkusi pole",
   :burdens "Koormatist",
@@ -644,6 +646,7 @@
   "Saatke koosoleku osalejatele teavitus koosoleku sisu muudatuste kohta.",
   :add-non-teet-participant "Lisan TEET-u välise osaleja",
   :remove-participant-confirm-button "Eemaldan",
+  :latest-notifications-were-sent "Viimane teavitus saadeti",
   :search-decisions "Otsin otsuseid",
   :move-to-participants-modal-title
   "Kas lisan kasutaja osalejate nimekirja?",
@@ -664,7 +667,11 @@
   :participants-title "Osalejad",
   :moved-to-participants-successfully "Lisatud osalejate nimekirja",
   :reject-meeting-modal-title "Lükkan otsused tagasi?",
+  :notifications-sent-resent "Teavitused saadetud",
+  :contents-changed
+  "Koosoleku sisu on uuendatud, kuid osalejaid ei ole veel uuendustest teavitatud.",
   :meetings-title "Koosolekud",
+  :notifications-not-sent "Uuendusi ei ole veel saadetud",
   :approve-meeting-button "Kinnitan otsused",
   :link-to-original "Viide algupärasele koosolekule",
   :no-meetings "Koosolekuid ei ole",
@@ -687,6 +694,7 @@
   "Oled sa kindel, et soovid eemaldada {participant} osalejate nimekirjast?",
   :project-meetings-title "Projekti koosolekud",
   :notifications-title "Teavitused",
+  :latest-notifications-sent "Viimane teavitus saadeti",
   :duplicate-meeting-modal-title "Koosoleku koopia",
   :moved-to-absentees-successfully "Lisatud puudujate nimekirja",
   :edit-agenda-modal-title "Päevakavapunkti muutmine",

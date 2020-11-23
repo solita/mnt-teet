@@ -5,6 +5,8 @@
 (defrecord OpenSnackBar [message variant])
 (defrecord OpenSnackBarWithOptions [options])
 
+(defonce snackbar-id (atom 0))
+
 (defn open-snack-bar
   ([app message]
    (open-snack-bar {:app app
@@ -20,6 +22,7 @@
           {:open? true
            :message message
            :variant variant
+           :key (swap! snackbar-id inc)
            :hide-duration hide-duration
            :action action})))
 

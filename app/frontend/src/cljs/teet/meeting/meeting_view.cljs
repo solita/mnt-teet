@@ -9,6 +9,7 @@
             [teet.ui.project-context :as project-context]
             [teet.project.project-view :as project-view]
             [teet.ui.icons :as icons]
+            [re-svg-icons.feather-icons :as fi]
             [garden.color :refer [lighten as-hex]]
             [teet.task.task-style :as task-style]
             [teet.project.project-style :as project-style]
@@ -47,8 +48,10 @@
             [clojure.string :as str]
             [teet.link.link-view :as link-view]
             [teet.ui.panels :as panels]
+            [teet.util.date :as dateu]
             [teet.comments.comments-controller :as comments-controller]))
 
+(def milliseconds-when-resent (* 1000 5))                  ;; 5 seconds
 
 (defn update-meeting-warning?
   [show?]
@@ -440,7 +443,7 @@
                               main-content right-panel-content]
   (let [[navigator-w content-w] [3 (if right-panel-content 6 :auto)]]
     [project-context/provide
-     {:project-id (:db/id project)
+     {:db/id (:db/id project)
       :thk.project/id (:thk.project/id project)}
      [:<>
       [project-view/project-header project]
@@ -703,7 +706,8 @@
           absentees (filterv
                       :participation/absent?
                       participations)
-          has-reviews? (boolean (seq (:review/_of meeting)))]
+          has-reviews? (boolean (seq (:review/_of meeting)))
+          notifications-sent-recently? (> milliseconds-when-resent (- (js/Date.now) (:meeting/notifications-sent-at meeting)))]
       [:div.meeting-participants {:style {:flex 1}}
        [typography/Heading2 {:class (<class common-styles/margin-bottom 1)}
         (tr [:meeting :participants-title])]
@@ -735,20 +739,37 @@
                                                             change-absence)}
                participation]))
           [typography/GreyText (tr [:meeting :no-absentees])])]
-       [:div.notification {:style {:margin "1rem 0"}}
-        [typography/Heading3 {:class (<class common-styles/margin-bottom 1)}
-         (tr [:meeting :notifications-title])]
-        [:p {:class (<class common-styles/margin-bottom 1)}
-         (tr [:meeting :notifications-help])]
-        [:div {:class (<class common-styles/flex-align-center)}
-         (if (= (count participations) 1)
-           [typography/WarningText (tr [:meeting :not-enough-participants])]
-           [:<>
-            [buttons/button-primary {:on-click (e! meeting-controller/->SendNotifications meeting)}
-             (tr [:buttons :send])]
-            [typography/GreyText {:style {:margin-left "1rem"}}
-             (tr [:meeting :send-notification-to-participants]
-                 {:count (count participations)})]])]]])))
+       (when edit-rights?
+         [:div.notification {:style {:margin "1rem 0"}}
+          [typography/Heading2 {:class [(<class common-styles/margin-bottom 1)
+                                        (<class common-styles/flex-row)]}
+           (tr [:meeting :notifications-title])
+           [typography/SmallGrayText {:style {:margin-left "1rem"}}
+            (tr [:meeting :send-notification-to-participants]
+                {:count (dec (count participations))})]]
+          [:div {:class (<class common-styles/margin-bottom 1)}
+           (if (or (nil? (:meeting/notifications-sent-at meeting))
+                   (dateu/date-after? (:meta/modified-at meeting)
+                                      (:meeting/notifications-sent-at meeting)))
+             [common/info-box {:variant :warning
+                               :icon [fi/alert-triangle]
+                               :title (tr [:meeting :notifications-not-sent])
+                               :content (tr [:meeting :contents-changed])}]
+             (if notifications-sent-recently?
+               [common/info-box {:variant :success
+                                 :title (tr [:meeting :notifications-sent-resent])
+                                 :content (str (tr [:meeting :latest-notifications-were-sent])
+                                               "\n"
+                                               (format/date-time (:meeting/notifications-sent-at meeting)))}]
+               [common/info-box {:variant :info
+                                 :title (tr [:meeting :latest-notifications-sent])
+                                 :content (format/date-time (:meeting/notifications-sent-at meeting))}]))]
+          [:div
+           (if (= (count participations) 1)
+             [typography/WarningText (tr [:meeting :not-enough-participants])]
+             [:div {:style {:text-align :right}}
+              [buttons/button-primary {:on-click (e! meeting-controller/->SendNotifications (:db/id meeting))}
+               (tr [:buttons :send])]])]])])))
 
 (defn decision-form
   [e! agenda-eid close-event form-atom]
@@ -825,7 +846,10 @@
        [:span {:style {:margin-left "0.2rem"}}
         [user-model/user-name user]]]
       [:div.participant-comment {:class (<class common-styles/flex-table-column-style 70 :space-between)}
-       [:p comment]
+       (if comment
+         [:p comment]
+         [typography/GreyText {:style {:font-style :italic}}
+          (tr [:meeting :no-review-comment])])
        [typography/GreyText
         {:style {:margin-left "0.5rem"}}
         (format/date-time (:meta/created-at review))]]]]))
@@ -963,6 +987,9 @@
       close-event
       form]]))
 
+(def ^:private comment-count-path
+  [:route :meeting :meeting :comment/counts :comment/old-comments])
+
 (defn meeting-main-content
   [e! {:keys [params user] :as app} meeting]
   (r/with-let [duplicate-open? (r/atom false)
@@ -993,8 +1020,9 @@
             :entity-id (:db/id meeting)
             :comment-counts (:comment/counts meeting)
             :after-comment-added-event
-            #(comments-controller/->IncrementCommentCount
-              [:route :meeting :meeting :comment/counts :comment/old-comments])}
+            #(comments-controller/->IncrementCommentCount comment-count-path)
+            :after-comment-deleted-event
+            #(comments-controller/->DecrementCommentCount comment-count-path)}
         [meeting-details e! user meeting]]])))
 
 

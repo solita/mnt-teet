@@ -437,9 +437,13 @@
 
 (defn info-box [{:keys [variant title content icon]
                  :or {variant :info}}]
-  (let [icon (case variant
-               :info [fi/info]
-               :error [icons/alert-error-outline])]
+  (let [icon (or icon
+                 (case variant
+                   :success [icons/action-check-circle-outline]
+                   :error [icons/alert-error-outline]
+                   [fi/info]))]
     [:div {:class (<class common-styles/info-box variant)}
-     [typography/Heading3  icon " " title]
+     [:div {:class [(<class common-styles/flex-align-center)
+                    (<class common-styles/margin-bottom 0.5)]}
+      icon [typography/Heading3 {:style {:margin-left "0.25rem"}} " " title]]
      content]))
