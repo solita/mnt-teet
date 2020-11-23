@@ -297,3 +297,7 @@
   {:text-overflow :ellipsis
    :overflow :hidden
    :max-width max-width})
+
+(defn no-break
+  []
+  {:white-space :nowrap})
