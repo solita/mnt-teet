@@ -416,13 +416,15 @@
                :class (<class navigation-style/navigator-left-panel-style)}
          [project-menu/project-menu e! app project true]
          [project-task-navigator e! project app true]]
-        [Grid {:item  true
+        [Grid {:item true
                :xs content-w
-               :style {:padding "2rem 1.5rem"
-                       :overflow-y :auto
-                       ;; content area should scroll, not the whole page because we
-                       ;; want map to stay in place without scrolling it
-                       }}
+               :style (merge {:padding "2rem 1.5rem"
+                              :overflow-y :auto
+                              ;; content area should scroll, not the whole page because we
+                              ;; want map to stay in place without scrolling it
+                              }
+                             (when (not show-map?)
+                               {:flex 1}))}
          content]
         (when show-map?
           [Grid {:item  true
