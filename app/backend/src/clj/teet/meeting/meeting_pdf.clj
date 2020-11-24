@@ -52,6 +52,12 @@
    :padding-top 9
    :padding-bottom 12})
 
+(defn- tr+
+  "Give both translations"
+  [key]
+  (str (with-language :et (tr key)) " / "
+       (with-language :en (tr key))))
+
 (def date-format
   (doto (java.text.SimpleDateFormat. "MM.dd.yyyy" )
     (.setTimeZone (java.util.TimeZone/getTimeZone "Europe/Tallinn"))))
@@ -80,8 +86,7 @@
   "Format time with seconds resolution"
   [date]
   (when date
-    (.format time-sec-format date))
-  )
+    (.format time-sec-format date)))
 
 (defn- meeting-time
   "Format meeting begin, end time, date"
@@ -104,7 +109,7 @@
      [:fo:block {:font-size "24px" :font-weight "400"} title]
      [:fo:block {:font-size "14px" :font-weight "400" :space-after "40"} decision-text]]))
 
-(defmulti link-list-item (fn [link meeting project-id] (:link/type link)))
+(defmulti link-list-item (fn [link _meeting] (:link/type link)))
 
 (defmethod link-list-item :file [{info :link/info}]
   [:fo:block
@@ -215,12 +220,6 @@
                [:fo:table-cell
                 [:fo:block {:font-size rows-font-size :font-weight rows-font-weight :font-style rows-font-style} right]]])
             left-content center-content right-content)]]))
-
-(defn- tr+
-  "Give both translations"
-  [key]
-  (str (with-language :et (tr key)) " / "
-       (with-language :en (tr key))))
 
 (defn- decision-text
   "Return decision text depending on approved or rejected"
