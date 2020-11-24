@@ -1481,4 +1481,95 @@
            :db/cardinality :db.cardinality/one
            :db/doc "Timestamp for when the email notifications of the meeting was last sent"}]]}
 
+
+ {:db/ident :migration/cooperation
+  :txes [;; Add new enum values for cooperation option lists
+         {:db/ident :cooperation.application.type/design-conditions-draft
+          :enum/valid-for :cooperation.application/type}
+         {:db/ident :cooperation.application.type/design
+          :enum/valid-for :cooperation.application/type}
+         {:db/ident :cooperation.application.type/topogeodetic-base-plan
+          :enum/valid-for :cooperation.application/type}
+         {:db/ident :cooperation.application.type/geological-survey-plan
+          :enum/valid-for :cooperation.application/type}
+         {:db/ident :cooperation.application.type/ex-ante-eia
+          :enum/valid-for :cooperation.application/type}
+         {:db/ident :cooperation.application.type/eia-report
+          :enum/valid-for :cooperation.application/type}
+         {:db/ident :cooperation.application.type/building-permit-draft
+          :enum/valid-for :cooperation.application/type}
+         {:db/ident :cooperation.application.type/building-permit-order
+          :enum/valid-for :cooperation.application/type}
+         {:db/ident :cooperation.application.type/work-permit
+          :enum/valid-for :cooperation.application/type}
+         {:db/ident :cooperation.application.type/forest-notification
+          :enum/valid-for :cooperation.application/type}
+         {:db/ident :cooperation.application.type/special-use-water-permit
+          :enum/valid-for :cooperation.application/type}
+         {:db/ident :cooperation.application.type/waste-permit
+          :enum/valid-for :cooperation.application/type}
+         {:db/ident :cooperation.application.type/use-permit
+          :enum/valid-for :cooperation.application/type}
+         {:db/ident :cooperation.application.type/other
+          :enum/valid-for :cooperation.application/type}
+
+         ;; Response type enum values
+         {:db/ident :cooperation.application.response-type/opinion
+          :enum/valid-for :cooperation.application/response-type}
+         {:db/ident :cooperation.application.response-type/coordination
+          :enum/valid-for :cooperation.application/response-type}
+         {:db/ident :cooperation.application.response-type/consent
+          :enum/valid-for :cooperation.application/response-type}
+         {:db/ident :cooperation.application.response-type/other
+          :enum/valid-for :cooperation.application/response-type}
+
+         ;; Cooperation 3rd party entity
+         {:db/ident :cooperation.3rd-party/name
+          :db/type :db.type/string
+          :db/cardinality :db.cardinality/one}
+         {:db/ident :cooperation.3rd-party/id-code
+          :db/type :db.type/string
+          :db/cardinality :db.cardinality/one
+          :db/doc "Registry id of 3rd party (business or person)"}
+         {:db/ident :cooperation.3rd-party/email
+          :db/type :db.type/string
+          :db/cardinality :db.cardinality/one
+          :db/doc "Contact email address"}
+         {:db/ident :cooperation.3rd-party/phone
+          :db/type :db.type/string
+          :db/cardinality :db.cardinality/one
+          :db/doc "Contact phone number"}
+         {:db/ident :cooperation.3rd-party/project
+          :db/type :db.type/ref
+          :db/cardinality :db.cardinality/one
+          :db/doc "Project this 3rd party relates to"}
+         {:db/ident :cooperation.3rd-party/applications
+          :db/type :db.type/ref
+          :db/cardinality :db.cardinality/many
+          :db/doc "All cooperation applications for this 3rd party"}
+
+         ;; Cooperation application entity
+         {:db/ident :cooperation.application/type
+          :db/type :db.type/ref
+          :db/doc "Enum reference to application type"}
+         {:db/ident :cooperation.application/response-type
+          :db/type :db.type/ref
+          :db/cardinality :db.cardinality/one
+          :db/doc "Enum reference to the response type"}
+         {:db/ident :cooperation.application/date
+          :db/type :db.type/instant
+          :db/cardinality :db.cardinality/one
+          :db/doc "Application date (sent out)"}
+         {:db/ident :cooperation.application/response-deadline
+          :db/type :db.type/instant
+          :db/cardinality :db.cardinality/one
+          :db/doc "Response deadline"}
+         {:db/ident :cooperation.application/comment
+          :db/type :db.type/string
+          :db/cardinality :db.cardinality/one
+          :db/doc "Free text comment"}
+
+         ]
+  }
+
  ]
