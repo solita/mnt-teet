@@ -117,8 +117,7 @@
     (str (:file/name info))]])
 
 (defmethod link-list-item :task [{info :link/info}]
-  (let [{:task/keys [type estimated-end-date assignee]
-         :meta/keys [deleted? modifier modified-at]} info]
+  (let [{:task/keys [type estimated-end-date assignee]} info]
     [:fo:block
      [:fo:block link-look-and-feel
       (str (tr+ [:enum (:db/ident type)]) " " (tr [:task :link-info]
@@ -130,7 +129,7 @@
    [:fo:block link-look-and-feel
     (str "Linked estate " (get-in link [:link/external-id]))]])
 
-(defmethod link-list-item :cadastral-unit [{info :link/info :as link}]
+(defmethod link-list-item :cadastral-unit [{info :link/info}]
   [:fo:block
    [:fo:block link-look-and-feel
     (str (:L_AADRESS info) " " (:TUNNUS info) " ")]])
