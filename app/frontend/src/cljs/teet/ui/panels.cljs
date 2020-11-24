@@ -107,8 +107,9 @@
              :full-width true}
      [:div {:class (<class modal-container-style)}
       [:<>
-       [:div {:class (<class modal-left-panel-container)}
-        left-panel]
+       (when left-panel
+         [:div {:class (<class modal-left-panel-container)}
+          left-panel])
        [:div {:class (<class modal-right-panel-container)}
         [:div {:class (<class right-panel-heading-style)}
          [typography/Heading2 title]

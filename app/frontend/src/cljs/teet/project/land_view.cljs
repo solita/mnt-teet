@@ -16,6 +16,7 @@
             [teet.ui.url :as url]
             [teet.land.land-specs]
             [teet.project.project-controller :as project-controller]
+            [teet.project.project-style :as project-style]
             [teet.ui.form :as form]
             [teet.ui.select :as select]
             [teet.ui.icons :as icons]
@@ -29,7 +30,6 @@
             [clojure.string]
             [teet.file.file-view :as file-view]
             [teet.authorization.authorization-check :as authorization-check]
-            [teet.log :as log]
             [teet.comments.comments-controller :as comments-controller]))
 
 (defn cadastral-unit-style
@@ -569,11 +569,20 @@
            unit])
         units)}]))
 
+(defn- number-of-owners
+  "Counts the number of owners of the shares (`omandiosad`). A single
+  share can have joint owners, so the number of owners can be more
+  than `(count omandiosad)`."
+  [omandiosad]
+  (->> omandiosad
+       (mapcat :isik)
+       count))
+
 (defn owner-group
   [e! project-info open-estates cadastral-forms estate-forms [owner units]]
   ^{:key (str owner)}
   [:div {:style {:margin-bottom "2rem"}}
-   (let [owners (get-in (first units) [:estate :omandiosad])
+   (let [shares (get-in (first units) [:estate :omandiosad])
          estate-id (get-in (first units) [:estate :estate-id])]
 
      [common/hierarchical-container
@@ -583,9 +592,10 @@
        [:div {:class (<class group-style)}
         (if owner
           [:div {:class (<class common-styles/flex-row-space-between)}
-           [typography/SectionHeading (if (not= (count owners) 1)
-                                        (str (count owners) " owners")
-                                        (:nimi (first (:isik (first owners)))))]
+           (let [num-owners (number-of-owners shares)]
+             [typography/SectionHeading (if (not= num-owners 1)
+                                          (tr [:land :owners-number] {:num-owners num-owners})
+                                          (:nimi (first (:isik (first shares)))))])
            [:a {:class (<class common-styles/white-link-style false)
                 :href (url/set-query-param :modal "owner" :modal-target estate-id :modal-page "owner-info")}
             (tr [:land :show-owner-info])]]
@@ -661,14 +671,15 @@
                   (filter #(ids (:teet-id %)) units))
           grouped (group-by
                     (fn [unit]
-                      (when (seq (get-in unit [:estate :omandiosad])) ;; Check that the units actually have owner information
-                        (into #{}
-                              (map
-                                (fn [owner]
-                                  (if (:r_kood owner)
-                                    (select-keys owner [:r_kood :r_riik])
-                                    (select-keys owner [:isiku_tyyp :nimi]))))
-                              (first (:isik (get-in unit [:estate :omandiosad]))))))
+                      (when-let [shares (seq (get-in unit [:estate :omandiosad]))] ;; Check that the units actually have owner information
+                        (->> shares
+                             (mapcat :isik)
+                             (map
+                              (fn [owner]
+                                (if (:r_kood owner)
+                                  (select-keys owner [:r_kood :r_riik])
+                                  (select-keys owner [:isiku_tyyp :nimi]))))
+                             (into #{}))))
                     units)]
       [:div
        (mapc
@@ -888,17 +899,31 @@
 
 (def date-keys #{:omandi_algus :algus-kpv :lopp-kpv})
 
-(defn- key-value [[key value]]
+(defn- key-value [key-type key value]
   [:div
    [:strong key ": "]
-   [:span (if (and (some? (tf/parse value))
-                   (date-keys key))
-            (format/parse-date-string value)
-            value)]])
+   (if (= key-type :email)
+     [Link {:underline :none :href (str "mailto:" value)} value]
+     [:span (if (and (some? (tf/parse value))
+                     (date-keys key))
+              (format/parse-date-string value)
+              value)])])
 
-(defn- key-values [data]
-  [:<>
-   (mapc key-value data)])
+(def ^:private contact-order
+  {:phone 1
+   :phone2 2
+   :email 3})
+
+(def ^:private shown-contact-types
+  (set (keys contact-order)))
+
+(defn- shown-contact-methods [contact-methods]
+  (->> contact-methods
+       (filter (fn [{:keys [type content lopp-kpv]}]
+                 (and content
+                      (not lopp-kpv)
+                      (shown-contact-types type))))
+       (sort-by (comp contact-order :type))))
 
 (defn- business-registry-info [{:keys [addresses contact-methods]}]
   (let [unique-addresses (into #{}
@@ -906,59 +931,63 @@
                                      :when (not lopp-kpv)]
                                  (str tanav-maja-korter ", " ehak-nimetus ", " postiindeks)))]
     [:div
-     (mapc (fn [a]
-             [key-value [(tr [:contact :address]) a]]) unique-addresses)
-
      (doall
-      (for [{:keys [kirje-id type content lopp-kpv]} contact-methods
-            :when (and content
-                       (not lopp-kpv)
-                       (or (= type :email) (= type :phone) (= type :phone2)))]
+      (for [{:keys [kirje-id type content]} (shown-contact-methods contact-methods)]
         ^{:key (str kirje-id)}
-        [key-value [(tr [:contact type]) content]]))]))
+        [key-value type (tr [:contact type]) content]))
+     (mapc (fn [a]
+             [key-value :address (tr [:contact :address]) a]) unique-addresses)]))
 
 (defn owner-inner-component [e! person? nimi eesnimi r_kood omandiosa_lugeja omandiosa_nimetaja omandiosa_suurus isiku_tyyp project first-in-joint?]
-  [common/heading-and-grey-border-body
-   {:heading [:div {:style {:display :flex
-                            :margin "20px"
-                            :justify-content :space-between}}
-              [typography/BoldGreyText (if person?
-                                         (str eesnimi " " nimi)
-                                         nimi)]
-              [typography/GreyText r_kood]
-              (when omandiosa_suurus
-                [typography/BoldGreyText
-                 (when first-in-joint?
-                   (if (= "1" omandiosa_lugeja omandiosa_nimetaja)
-                     "1"
-                     (str omandiosa_lugeja "/" omandiosa_nimetaja)))])]
-    :body [:<>
-           (when (and (= isiku_tyyp "Juriidiline isik") r_kood) ;; r_kood was null in some cases in production data
-             [query/query {:e! e!
-                           :query :land/estate-owner-info
-                           :args {:thk.project/id (:thk.project/id project)
-                                  :business-id r_kood}
-                           :simple-view [business-registry-info]}])]}])
+  [:div {:class (<class project-style/owner-info)}
+   [:div {:class (<class project-style/owner-info-header)}
+    [:div {:class (<class project-style/owner-info-name-and-code)}
+     [typography/BoldGreyText (if person?
+                                (str eesnimi " " nimi)
+                                nimi)]
+     [typography/GreyText (str (tr [:land :owner-code]) " " r_kood)]]
+    [:div
+     (when omandiosa_suurus
+       [typography/BoldGreyText
+        (when first-in-joint?
+          (if (= "1" omandiosa_lugeja omandiosa_nimetaja)
+            "1"
+            (str omandiosa_lugeja "/" omandiosa_nimetaja)))])]]
+   (when (and (= isiku_tyyp "Juriidiline isik") r_kood) ;; r_kood was null in some cases in production data
+     [:div {:class (<class project-style/owner-info-registry-info)}
+      [query/query {:e! e!
+                    :query :land/estate-owner-info
+                    :args {:thk.project/id (:thk.project/id project)
+                           :business-id r_kood}
+                    :simple-view [business-registry-info]}]])])
+
+(defn- owner-is-person? [{:keys [isiku_tyyp]}]
+  (= isiku_tyyp  "Füüsiline isik"))
 
 (defn one-owner-for-modal
-  [estate-info e! app project
-   {:keys [omandiosa_suurus omandiosa_lugeja isik omandiosa_nimetaja] :as owner}]
-  (let [isiku_tyyp (:isiku_tyyp (first isik))
-        person? (= isiku_tyyp  "Füüsiline isik")
-        business-ids (map :r_kood
-                          (filter #(not= (:isiku_tyyp %) "Füüsiline isik")
-                                  (mapcat :isik owner)))
-        joint-ownership? (> (count isik) 1)]
-    ;; (log/debug "isiku_tyyp =" isiku_tyyp ", joint-ownership?" joint-ownership?)
-    [:<>
-     (for [[i {:keys [r_kood eesnimi nimi]}] (map-indexed vector isik)]
-       
-       [owner-inner-component e! person? nimi eesnimi r_kood omandiosa_lugeja omandiosa_nimetaja omandiosa_suurus isiku_tyyp project (= i 0)])
-     (for [r_kood business-ids]
-       [comments-view/lazy-comments {:e! e!
-                                     :app app
-                                     :entity-type :owner-comments
-                                     :entity-id [:owner-comments/project+owner-id [(:db/id project) r_kood]]}])]))
+  [_estate-info e! app project
+   {:keys [omandiosa_suurus omandiosa_lugeja isik omandiosa_nimetaja]}]
+  [:div
+   [:div {:class (<class project-style/owner-container)}
+    (for [[i {:keys [r_kood eesnimi nimi isiku_tyyp] :as owner}] (map-indexed vector isik)]
+      [:<>
+       [owner-inner-component e! (owner-is-person? owner) nimi eesnimi r_kood omandiosa_lugeja omandiosa_nimetaja omandiosa_suurus isiku_tyyp project (= i 0)]])]
+   ;; Here we're making two assumptions:
+   ;; 1) Comments are shown only for non-person owners (ie. companies and such)
+   ;; 2) There cannot be joint ownership between non-person owners
+   ;; If in the future these assumptions turn out to be false, we need to
+   ;; remodel the comments so that they do not target the `r_kood` of an
+   ;; `isik`. Instead, they should target the `omandiosa` itself.
+   (when (not (owner-is-person? (-> isik first)))
+     [:div {:class (<class project-style/owner-comments-container)}
+      [:div {:class (<class project-style/owner-heading-container)}
+       [typography/Heading2 (tr [:land-modal-page :comments])]]
+      [comments-view/lazy-comments {:e! e!
+                                    :app app
+                                    :entity-type :owner-comments
+                                    :entity-id [:owner-comments/project+owner-id
+                                                [(:db/id project) (-> isik first :r_kood)]]}]])])
+
 
 (defmethod owner-modal-content :owner-info
   [{:keys [estate-info e! app project]}]
@@ -966,14 +995,16 @@
     ;; the data structure we get in owners is like
     ;; [omandiosa1 omandiosa2 ...]
     ;; where each omandiosa is like
-    ;; {:omandi_algus <date>, :omandiosa_suurus <nr>, 
+    ;; {:omandi_algus <date>, :omandiosa_suurus <nr>,
     ;;  :isik [{:nimi <lastname1> :isiku_tyyp <legal/natural person>, ..}
     ;;         {:nimi <lastname2> :isiku_tyyp <legal/natural person>, ..}  ]
     ;; - if there is more than one person in isik array, it's joint ownership (marriage eg)
     ;; - if there are more than one omandiosa, it's describing ownership shares
-    
-     [:div {:class (<class common-styles/gray-container-style)}
-      (mapc (partial one-owner-for-modal estate-info e! app project) owners)]))
+
+    [:<>
+     [:div {:class (<class project-style/owner-heading-container)}
+      [typography/Heading2 (tr [:land :owner-data])]]
+     (mapc (r/partial one-owner-for-modal estate-info e! app project) owners)]))
 
 (defmulti unit-modal-content (fn [{:keys [modal-page]}]
                                 (keyword modal-page)))
@@ -1057,10 +1088,6 @@
 (defmethod land-view-modal :owner
   [{:keys [e! app modal-page project estate-info]}]
   {:title (tr [:land-modal-page (keyword modal-page)])
-   :left-panel [modal-left-panel-navigation
-                modal-page
-                (tr [:land :owner-data])
-                [:owner-info]]
    :right-panel [owner-modal-content {:e! e!
                                       :modal-page modal-page
                                       :app app
