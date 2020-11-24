@@ -978,7 +978,8 @@
    ;; If in the future these assumptions turn out to be false, we need to
    ;; remodel the comments so that they do not target the `r_kood` of an
    ;; `isik`. Instead, they should target the `omandiosa` itself.
-   (when (not (owner-is-person? (-> isik first)))
+   (when (and (not (owner-is-person? (-> isik first)))
+              (not (nil? (-> isik first :r_kood))))
      [:div {:class (<class project-style/owner-comments-container)}
       [:div {:class (<class project-style/owner-heading-container)}
        [typography/Heading2 (tr [:land-modal-page :comments])]]
