@@ -657,6 +657,8 @@
                                                               {:num (:file/version @selected-file)}))})]
            [comments-view/lazy-comments {:e! e!
                                          :app app
+                                         :after-comment-deleted-event common-controller/->Refresh
+                                         :after-comment-list-rendered-event common-controller/->Refresh
                                          :entity-type :file
                                          :entity-id (:db/id @selected-file)
                                          :show-comment-form? false}]])]])))
