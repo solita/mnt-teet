@@ -182,34 +182,31 @@
      [:fo:table-cell
       [:fo:block {:font-size rows-font-size :font-weight rows-font-weight :font-style rows-font-style} right-content]]]]]))
 
-(defn- table-3-columns
-  "Returns 3 columns FO table"
-  [{:keys [left-width center-width right-width
-           left-header center-header right-header
-           left-content center-content right-content
+(defn- table-4-columns
+  "Returns 4 columns FO table without headers"
+  [{:keys [first-width left-width center-width right-width
+           first-content left-content center-content right-content
            fonts]}]
-  (let [ {{header-font-size :font-size
-           header-font-weight :font-weight
-           header-font-style :font-style} :header-font
-          {rows-font-size :font-size
+  (let [{{rows-font-size :font-size
            rows-font-weight :font-weight
            rows-font-style :font-style} :rows-font} fonts]
     [:fo:table {}
+     [:fo:table-column {:column-width first-width}]
      [:fo:table-column {:column-width left-width}]
      [:fo:table-column {:column-width center-width}]
      [:fo:table-column {:column-width right-width}]
-     [:fo:table-header
-      [:fo:table-row
-       [:fo:table-cell
-        [:fo:block {:font-size header-font-size :font-weight header-font-weight :font-style header-font-style} left-header]]
-       [:fo:table-cell
-        [:fo:block {:font-size header-font-size :font-weight header-font-weight :font-style header-font-style} center-header]]
-       [:fo:table-cell
-        [:fo:block {:font-size header-font-size :font-weight header-font-weight :font-style header-font-style} right-header]]]]
      [:fo:table-body
-      (map (fn [left center right] [:fo:table-row border-1-mm
-               [:fo:table-cell
-                [:fo:block {:font-size rows-font-size :font-weight rows-font-weight :font-style rows-font-style} left]]
+      (map (fn [first left center right]
+             [:fo:table-row border-1-mm
+              [:fo:table-cell
+               [:fo:block {:font-size rows-font-size :font-weight rows-font-weight :font-style rows-font-style
+                           :text-align "center"} first]]
+              [:fo:table-cell
+                [:fo:block {:font-size rows-font-size :font-weight rows-font-weight :font-style rows-font-style
+                            :border-left-style "solid"
+                            :border-left-width 1
+                            :border-left-color "#D2D3D8"
+                            :padding-left 3} left]]
                [:fo:table-cell
                 [:fo:block {:font-size rows-font-size :font-weight rows-font-weight :font-style rows-font-style
                             :border-left-style "solid"
@@ -218,24 +215,31 @@
                             :padding-left 12} center]]
                [:fo:table-cell
                 [:fo:block {:font-size rows-font-size :font-weight rows-font-weight :font-style rows-font-style} right]]])
-            left-content center-content right-content)]]))
+            first-content left-content center-content right-content)]]))
 
 (defn- decision-text
   "Return decision text depending on approved or rejected"
   [{db-ident :db/ident}]
   (case db-ident
     :review.decision/approved
-    "Yes"
+    (tr+ [:meeting :decision-yes])
     :review.decision/rejected
-    "No"
+    (tr+ [:meeting :decision-no])
     "Unknown"))
+
+(defn- reviewers-yes-no
+  "Formatted yes/no decisions of reviewers"
+  [reviews]
+  (for [{decision :review/decision} reviews]
+    [:fo:block reviewers-look-and-feel
+     (decision-text decision)]))
 
 (defn- reviewers-names
   "Formatted names of reviewers"
   [reviews]
   (for [{reviewer :review/reviewer decision :review/decision} reviews]
      [:fo:block reviewers-look-and-feel
-      (str (decision-text decision) " " (:user/family-name reviewer) " " (:user/given-name reviewer) " ")]))
+      (str (:user/family-name reviewer) " " (:user/given-name reviewer) " ")]))
 
 (defn- reviewers-decisions
   "Formatted decisions of reviewers"
@@ -254,16 +258,15 @@
   "Returns review information"
   [review-of]
   [:fo:block {:space-after 40}
-     [:fo:block {:font-style "normal" :font-size "20px" :font-weight 400 :space-after 11}
-      (tr+ [:meeting :approvals])]
-    (table-3-columns {:left-width   "30%" :left-header ""
-                      :center-width "50%" :center-header ""
-                      :right-width   "20%" :right-header ""
-                      :left-content  (reviewers-names review-of)
-                      :center-content (reviewers-decisions review-of)
-                      :right-content (review-date review-of)
-                      :fonts {:header-font {:font-size "20px" :font-weight "400" :font-style "normal"}
-                              :rows-font {:font-size "10px" :font-weight "400" :font-style "normal"}}})])
+   [:fo:block {:font-style "normal" :font-size "20px" :font-weight 400 :space-after 11}
+    (tr+ [:meeting :approvals])]
+   (if (seq (:review/decision (first review-of)))
+     (table-4-columns {:first-width    "15%" :left-width "25%" :center-width "50%" :right-width "10%"
+                       :first-content  (reviewers-yes-no review-of)
+                       :left-content   (reviewers-names review-of)
+                       :center-content (reviewers-decisions review-of)
+                       :right-content  (review-date review-of)
+                       :fonts          {:rows-font {:font-size "10px" :font-weight "400" :font-style "normal"}}}) "")])
 
 (defn- participants
   "Returns the participants - attendees or absentees"
@@ -332,25 +335,23 @@
                            :right-width   "60%" :right-header (tr+ [:fields :meeting/location])
                            :left-content  [:fo:block (meeting-time meeting)]
                            :right-content [:fo:block (:meeting/location meeting)]
-                           :fonts { :header-font {:font-size "12px" :font-weight "700" :font-style "normal"}
-                                   :rows-font {:font-size "14px" :font-weight "400" :font-style "normal"}}})]
+                           :fonts         {:header-font {:font-size "12px" :font-weight "700" :font-style "normal"}
+                                           :rows-font   {:font-size "14px" :font-weight "400" :font-style "normal"}}})]
         [:fo:block {:space-after "10"}
-         (table-2-columns {:left-width   "45%" :left-header (tr+ [:meeting :participants-title])
-                          :right-width   "55%" :right-header (tr+ [:meeting :absentees-title])
-                          :left-content  [:fo:block (participants meeting false)]
-                          :right-content [:fo:block (participants meeting true)]
-                          :fonts {:header-font {:font-size "20px" :font-weight "400" :font-style "normal"}
-                                  :rows-font {:font-size "12px" :font-weight "700" :font-style "normal"}}})]
-        [:fo:block
-         (list-of-topics (:meeting/agenda meeting))]
-        [:fo:block
-         (reviews (:review/_of meeting))]
+         (table-2-columns {:left-width    "45%" :left-header (tr+ [:meeting :participants-title])
+                           :right-width   "55%" :right-header (tr+ [:meeting :absentees-title])
+                           :left-content  [:fo:block (participants meeting false)]
+                           :right-content [:fo:block (participants meeting true)]
+                           :fonts         {:header-font {:font-size "20px" :font-weight "400" :font-style "normal"}
+                                           :rows-font   {:font-size "12px" :font-weight "700" :font-style "normal"}}})]
+        [:fo:block (list-of-topics (:meeting/agenda meeting))]
+        [:fo:block (reviews (:review/_of meeting))]
         [:fo:block {:font-style "normal" :font-size "20px" :font-weight 400 :space-after 11}
          (str (tr+ [:meeting :link-to-original]) " ")]
         [:fo:block {:font-style "normal" :font-size "14px" :font-weight 400 :space-after 40}
          (get-meeting-link meeting db)]
         [:fo:block {:font-size "20px" :font-weight 400 :space-after 16} (tr+ [:meeting :pdf-created-by])]
-         [:fo:block {:font-size "14px"} (str (format-date now) " " (format-time-sec now) " " (user-model/user-name user))]]]])))
+        [:fo:block {:font-size "14px"} (str (format-date now) " " (format-time-sec now) " " (user-model/user-name user))]]]])))
 
 (defn- md-children [node]
   (-> node .getChildren .iterator iterator-seq))
