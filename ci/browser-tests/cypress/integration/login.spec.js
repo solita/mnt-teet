@@ -1,9 +1,6 @@
 context('Login', () => {
     beforeEach(() => {
-        // do any before setup here
-        cy.visit("https://dev-teet.solitacloud.fi/")
-
-
+      cy.visit("./")
     })
 
     it("dummy login as benjamin boss should work", () => {
