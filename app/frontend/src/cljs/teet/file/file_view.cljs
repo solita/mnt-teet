@@ -799,12 +799,12 @@
                 {:e! e!
                  :app app
                  :project project
-                 :column-widths [3 9 :auto]
+                 :column-widths [3 :auto :auto]
                  :show-map? false}
                 [Grid {:container true}
-                 [Grid {:item true :xs 3 :xl 2}
+                 [Grid {:item true :xs 3}
                   [file-list (:file.part/_task task) (:task/files task) (:db/id file)]]
-                 [Grid {:item true :xs 9 :xl 10}
+                 [Grid {:item true :xs 9}
                   [:<>
                    (when @edit-open?
                      [file-edit-dialog {:e! e!
