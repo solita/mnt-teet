@@ -51,6 +51,7 @@
 (s/def :activity/new-activity-form (s/keys :req [(or :db/id :activity/name)
                                                  :activity/estimated-start-date
                                                  :activity/estimated-end-date]))
-(s/def :comment/comment (s/and string? (complement str/blank?)))
+;; comment/comment spec defined in ns comment-spec
+
 (s/def :file/file-id integer?)
 (s/def :file/comment (s/keys :req-un [:comment/comment :file/file-id]))
