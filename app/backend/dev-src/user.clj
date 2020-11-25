@@ -185,7 +185,11 @@
                              "meeting" "meeting.agenda" "meeting.decision"
                              "participation" "land-acquisition" "notification"
                              "estate-procedure" "estate-compensation"
-                             "estate-process-fee" "land-exchange"}
+                             "estate-process-fee" "land-exchange"
+                             "cooperation.3rd-party"
+                             "cooperation.application"
+                             "cooperation.response"
+                             "cooperation.position"}
           types {:permission/projects "List<thk.project>"
                  :thk.project/lifecycles "List<thk.lifecycle>"
                  :thk.lifecycle/activities "List<activity>"
@@ -223,7 +227,8 @@
                  :estate-procedure/process-fees "List<estate-process-fee>"
                  :estate-procedure/third-party-compensations "List<estate-process-fee>"
                  :estate-procedure/project "thk.project"
-                 :meeting.agenda/responsible "user"}
+                 :meeting.agenda/responsible "user"
+                 :cooperation.3rd-party/applications "List<cooperation.application>"}
           entities (->>
                     (q '[:find (pull ?e [*])
                          :where [?e :db/valueType _]]
@@ -259,7 +264,10 @@
            "\"estate-procedure\" ||--o{ \"estate-process-fee\"\n"
            "\"estate-procedure\" ||--o{ \"land-exchange\"\n"
            "\"estate-procedure\" --> thk.project\n"
-
+           "\"cooperation.3rd-party\" --> thk.project\n"
+           "\"cooperation.3rd-party\" ||--o{ cooperation.application\n"
+           "cooperation.application --> cooperation.response\n"
+           "cooperation.application --> cooperation.position\n"
 
            "note top of meta \n  meta fields are part of all entities but\n  modeled separately for convenience\nend note\n"
            "\n@enduml")))
