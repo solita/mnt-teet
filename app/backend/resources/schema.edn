@@ -1573,7 +1573,12 @@
           {:db/ident :cooperation.application/response
            :db/valueType :db.type/ref
            :db/cardinality :db.cardinality/one
-           :db/doc "Link to the response entity"}
+           :db/doc "Reference to the response entity"}
+
+          {:db/ident :cooperation.application/position
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Reference to the Maanteeamet position entity"}
 
           ;; Cooperation response statuses
           {:db/ident :cooperation.response.status/no-objection
@@ -1605,4 +1610,23 @@
           {:db/ident :cooperation.response/content
            :db/valueType :db.type/string
            :db/cardinality :db.cardinality/one
-           :db/doc "Rich text content of the response"}]]}]
+           :db/doc "Rich text content of the response"}
+
+
+          ;; Cooperation position decisions
+          {:db/ident :cooperation.position.decision/agreed
+           :enum/valid-for :cooperation.position/decision}
+          {:db/ident :cooperation.position.decision/rejected
+           :enum/valid-for :cooperation.position/decision}
+          {:db/ident :cooperation.position.decision/partially-rejected
+           :enum/valid-for :cooperation.position/decision}
+
+          ;; Cooperation position entity
+          {:db/ident :cooperation.position/decision
+           :db/cardinality :db.cardinality/one
+           :db/valueType :db.type/ref
+           :db/doc "Ref to decision type enum"}
+          {:db/ident :cooperation.position/comment
+           :db/cardinality :db.cardinality/one
+           :db/valueType :db.type/string
+           :db/doc "Rich text comment for decision"}]]}]
