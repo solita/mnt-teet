@@ -1,6 +1,5 @@
 (ns teet.cooperation.cooperation-queries
   (:require [teet.db-api.core :refer [defquery] :as db-api]
-            [datomic.client.api :as d]
             [teet.cooperation.cooperation-db :as cooperation-db]
             [teet.project.project-db :as project-db]))
 
