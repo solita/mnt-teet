@@ -114,27 +114,35 @@
 (defmethod link-list-item :file [{info :link/info}]
   [:fo:block
    [:fo:block link-look-and-feel
-    (str "Linked file: " (:file/name info))]])
+    (str "File: " (:file/name info))]])
 
 (defmethod link-list-item :task [{info :link/info}]
   (let [task-type (get-in info [:task/type :db/ident])]
     [:fo:block
      [:fo:block link-look-and-feel
-      (str "Linked task: " (tr+ [:enum task-type]))]]))
+      (str "Task: " (tr+ [:enum task-type]))]]))
 
 (defmethod link-list-item :estate [link]
   [:fo:block
    [:fo:block link-look-and-feel
-    (str "Linked estate: " (:link/external-id link))]])
+    (str "Estate: " (:link/external-id link))]])
 
 (defmethod link-list-item :cadastral-unit [{info :link/info}]
   [:fo:block
    [:fo:block link-look-and-feel
-    (str "Linked Cadastral Unit: " (:L_AADRESS info) " " (:TUNNUS info) " ")]])
+    (str "Cadastral Unit: " (:L_AADRESS info) " " (:TUNNUS info) " ")]])
+
+(defn attachment-files
+  "List of attachement for the topic"
+  [idx attachment]
+  [:fo:block
+   [:fo:block link-look-and-feel
+    (str "Appendix " idx " - " (:file/name attachment))]])
 
 (defn- list-of-topics
   "Return list of agenda topics"
   [topics]
+  (def topics* topics)
   (when (seq topics)
     [:fo:list-block {:space-after "40"}
      (map (fn [topic]
@@ -148,7 +156,8 @@
                 [:fo:inline (:user/given-name (:meeting.agenda/responsible topic)) " "
                  (:user/family-name (:meeting.agenda/responsible topic))]]
                [:fo:block {:font-size "16px"} (render-md (:meeting.agenda/body topic))]
-               [:fo:block {:space-after "40"} (map link-list-item (:link/_from topic))]
+               [:fo:block {:space-after "16"} (map link-list-item (:link/_from topic))]
+               [:fo:block {:space-after "8"} (map-indexed attachment-files (:file/_attached-to topic))]
                [:fo:block {:space-after "40"} (map #(decision-list-item % (:meeting.agenda/topic topic))
                                                    (:meeting.agenda/decisions topic))]]]]) topics)]))
 

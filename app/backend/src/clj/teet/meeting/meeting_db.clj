@@ -271,7 +271,8 @@
                                    :meeting.agenda/topic
                                    :meeting.agenda/body
                                    {:meeting.agenda/responsible [:user/family-name :user/given-name :user/id]}
-                                   {:meeting.agenda/decisions [:meeting.decision/body :meeting.decision/number]}]}
+                                   {:meeting.agenda/decisions [:meeting.decision/body :meeting.decision/number]}
+                                   {:file/_attached-to [:file/name]}]}
                  {:review/_of [:meta/created-at :review/comment {:review/decision [:db/id :ident]}
                                {:review/reviewer [:db/id :user/family-name :user/given-name :user/id]}]}
                  {:participation/_in [:participation/role
