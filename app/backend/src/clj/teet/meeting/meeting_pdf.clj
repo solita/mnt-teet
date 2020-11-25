@@ -109,30 +109,28 @@
      [:fo:block {:font-size "24px" :font-weight "400"} title]
      [:fo:block {:font-size "14px" :font-weight "400" :space-after "40"} decision-text]]))
 
-(defmulti link-list-item (fn [link _meeting] (:link/type link)))
+(defmulti link-list-item (fn [link _] (:link/type link)))
 
-(defmethod link-list-item :file [{info :link/info}]
+(defmethod link-list-item :file [{info :link/info} _]
   [:fo:block
    [:fo:block link-look-and-feel
-    (str (:file/name info))]])
+    (str "Linked file: " (:file/name info))]])
 
-(defmethod link-list-item :task [{info :link/info}]
-  (let [{:task/keys [type estimated-end-date assignee]} info]
+(defmethod link-list-item :task [{info :link/info} _]
+  (let [task-type (get-in info [:task/type :db/ident])]
     [:fo:block
      [:fo:block link-look-and-feel
-      (str (tr+ [:enum (:db/ident type)]) " " (tr [:task :link-info]
-                                      {:assignee (user-model/user-name assignee)
-                                       :deadline (format-date estimated-end-date)}))]]))
+      (str "Linked task: " (tr+ [:enum task-type]))]]))
 
-(defmethod link-list-item :estate [link]
+(defmethod link-list-item :estate [link _]
   [:fo:block
    [:fo:block link-look-and-feel
-    (str "Linked estate " (get-in link [:link/external-id]))]])
+    (str "Linked estate: " (get-in link [:link/external-id]))]])
 
-(defmethod link-list-item :cadastral-unit [{info :link/info}]
+(defmethod link-list-item :cadastral-unit [{info :link/info :as link} _]
   [:fo:block
    [:fo:block link-look-and-feel
-    (str (:L_AADRESS info) " " (:TUNNUS info) " ")]])
+    (str "Linked Cadastral Unit: "(:L_AADRESS info) " " (:TUNNUS info) " ")]])
 
 (defn- list-of-topics
   "Return list of agenda topics"
@@ -150,7 +148,7 @@
                 [:fo:inline (:user/given-name (:meeting.agenda/responsible topic)) " "
                  (:user/family-name (:meeting.agenda/responsible topic))]]
                [:fo:block {:font-size "16px"} (render-md (:meeting.agenda/body topic))]
-               [:fo:block {:space-after "40"} (map link-list-item (:link/_from topic))]
+               [:fo:block {:space-after "40"} (map link-list-item (:link/_from topic) (:link/_from topic))]
                [:fo:block {:space-after "40"} (map #(decision-list-item % (:meeting.agenda/topic topic))
                                                    (:meeting.agenda/decisions topic))]]]]) topics)]))
 
