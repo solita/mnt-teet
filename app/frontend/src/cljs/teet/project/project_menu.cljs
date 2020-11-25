@@ -65,7 +65,11 @@
    {:name :road
     :label [:project :tabs :road-objects]
     :navigate {:page :project :query {:tab "road"}}
-    :hotkey "7"}])
+    :hotkey "7"}
+   {:name :cooperation
+    :label [:project :tabs :cooperation]
+    :navigate {:page :cooperation}
+    :hotkey "9"}])
 
 (def ^:const default-tab-name :activities)
 

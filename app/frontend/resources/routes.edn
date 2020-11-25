@@ -120,6 +120,14 @@
                 :args {:thk.project/id project
                        :task-id (->long task)}}}
 
+ :cooperation {:path "/projects/:project/cooperation"
+               :parent :project
+               :crumb (tr [:cooperation :page-title])
+               :title (tr [:cooperation :page-title])
+               :view teet.cooperation.cooperation-view/cooperation-page
+               :state {:query :cooperation/overview
+                       :args {:thk.project/id project}}}
+
  :unauthorized {:path "/unauthorized" :view teet.ui.unauthorized/restricted-path}
  :components {:path "/components" :view teet.ui.component-demo/demo}
  :road {:path "/road"

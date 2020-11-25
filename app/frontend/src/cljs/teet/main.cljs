@@ -35,6 +35,7 @@
             teet.file.file-view
             teet.ui.unauthorized
             teet.meeting.meeting-view
+            teet.cooperation.cooperation-view
 
             teet.ui.query
             [teet.ui.url :as url]
