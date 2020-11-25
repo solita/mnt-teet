@@ -1,6 +1,5 @@
 (ns teet.cooperation.cooperation-db
   (:require [datomic.client.api :as d]
-            [teet.util.collection :as cu]
             [teet.cooperation.cooperation-model :as cooperation-model]))
 
 (defn overview
