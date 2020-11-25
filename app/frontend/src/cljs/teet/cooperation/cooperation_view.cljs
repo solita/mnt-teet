@@ -2,7 +2,11 @@
   (:require [teet.project.project-view :as project-view]
             [teet.ui.url :as url]
             [teet.ui.typography :as typography]
-            [teet.localization :refer [tr]]))
+            [teet.localization :refer [tr tr-enum]]
+            [teet.ui.material-ui :refer [Card CardHeader CardContent]]
+            [teet.ui.common :as common]
+            [teet.ui.format :as format]
+            [reagent.core :as r]))
 
 
 (defn- third-parties [third-parties]
@@ -14,7 +18,7 @@
                 :params {:third-party (js/encodeURIComponent name)}}
       name])])
 
-(defn cooperation-page-structure [e! app project third-parties-list main-content]
+(defn- cooperation-page-structure [e! app project third-parties-list main-content]
   [project-view/project-full-page-structure
    {:e! e!
     :app app
@@ -30,6 +34,36 @@
     [typography/BoldGreyText (tr [:cooperation :all-third-parties])]
     (pr-str overview)]])
 
+(defn- applications [{:cooperation.3rd-party/keys [applications] :as third-party}]
+  [:<>
+   (for [{id :db/id
+          :cooperation.application/keys [date type response-type response]
+          :as appl} applications]
+     ^{:key (str id)}
+     [Card {}
+      ;; Header shows type of application and response (as link to application page)
+      ;; activity for the application
+      [CardHeader {:title (r/as-element
+                           [url/Link {:page :cooperation-application
+                                      :params {:application (str id)}}
+                            (str
+                             (tr-enum type) " / " (tr-enum response-type))])}
+       ]
+
+      ;; Content shows response, dates
+      ;; responsible person
+      ;; position of mnt
+      [CardContent
+       (let [{:cooperation.response/keys [status date valid-until]} response]
+         [common/basic-information-row
+          [[(tr [:fields :cooperation.response/status])
+            ;; colored circle based on status
+            (tr-enum status)]
+           [(tr [:fields :cooperation.response/date])
+            (format/date date)]
+           [(tr [:fields :cooperation.response/valid-until])
+            (format/date valid-until)]]])]])]
+  )
 (defn third-party-page [e! {:keys [user params] :as app} {:keys [project overview]}]
   (let [third-party-name (js/decodeURIComponent (:third-party params))
         third-party (some #(when (= third-party-name
@@ -37,4 +71,14 @@
                           overview)]
     [cooperation-page-structure
      e! app project overview
-     [:div (pr-str third-party)]]))
+     [applications third-party]]))
+
+(defn application-page [e! app {:keys [project overview third-party]}]
+  (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
+    [cooperation-page-structure
+     e! app project overview
+     [:<>
+      [:br]
+      "3rd party:" (pr-str third-party)
+      [:br]
+      "application:" (pr-str application)]]))

@@ -61,3 +61,14 @@
                  [?e :cooperation.3rd-party/name ?name]
                  :in $ ?project ?name]
                db project-eid third-party-name)))
+
+(defn third-party-with-application [db third-party-id application-id]
+  (merge
+   (d/pull db cooperation-model/third-party-display-attrs
+           third-party-id)
+   {:cooperation.3rd-party/applications
+    [(ffirst (d/q '[:find (pull ?e attrs)
+                    :where [?third-party :cooperation.3rd-party/applications ?e]
+                    :in $ ?third-party ?e attrs]
+                  db third-party-id application-id
+                  cooperation-model/application-overview-attrs))]}))

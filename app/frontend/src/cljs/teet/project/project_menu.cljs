@@ -69,7 +69,7 @@
    {:name :cooperation
     :label [:project :tabs :cooperation]
     :navigate {:page :cooperation}
-    :match-pages #{:cooperation :cooperation-third-party}
+    :match-pages #{:cooperation :cooperation-third-party :cooperation-application}
     :hotkey "9"}])
 
 (def ^:const default-tab-name :activities)

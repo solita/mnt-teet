@@ -21,6 +21,14 @@
     (assoc response :cooperation.response/valid-until (valid-until response))
     (dissoc response :cooperation.response/valid-until)))
 
+(def third-party-display-attrs
+  "Attributes to pull for showing a 3rd party"
+  [:db/id
+   :cooperation.3rd-party/name
+   :cooperation.3rd-party/phone
+   :cooperation.3rd-party/email
+   :cooperation.3rd-party/id-code])
+
 (def application-overview-attrs
   "Attributes to pull for displaying an application overview.
   Includes fields from response and position."
@@ -28,4 +36,7 @@
    :cooperation.application/type
    :cooperation.application/date
    :cooperation.application/response-type
-   :cooperation.application/response-deadline])
+   :cooperation.application/response-deadline
+   {:cooperation.application/response
+    [:cooperation.response/date
+     :cooperation.response/valid-until]}])

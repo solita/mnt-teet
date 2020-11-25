@@ -111,7 +111,7 @@
 
 
 
- :file {:path "/projects/:project/:activity/:task/:file"
+ :file {:path "/projects/:project/:activity(\\d+)/:task/:file"
         :parent :activity-task
         :crumb (-> state (teet.project.project-model/file-by-id file) :file/name)
         :title (-> state (teet.project.project-model/file-by-id file) :file/name)
@@ -123,7 +123,6 @@
  :cooperation {:path "/projects/:project/cooperation"
                :parent :project
                :crumb (tr [:cooperation :page-title])
-               :title (tr [:cooperation :page-title])
                :view teet.cooperation.cooperation-view/overview-page
                :state {:query :cooperation/overview
                        :args {:thk.project/id project}}}
@@ -131,11 +130,21 @@
  :cooperation-third-party
  {:path "/projects/:project/cooperation/:third-party"
   :parent :cooperation
-  :title (-> state :third-party :cooperation.3rd-party/name)
+  :crumb (js/decodeURIComponent third-party)
   :view teet.cooperation.cooperation-view/third-party-page
   :state {:query :cooperation/third-party
           :args {:thk.project/id project
                  :cooperation.3rd-party/name (js/decodeURIComponent third-party)}}}
+
+ :cooperation-application
+ {:path "/projects/:project/cooperation/:third-party/:application"
+  :parent :cooperation-third-party
+  :crumb (tr-enum (get-in state [:third-party :cooperation.3rd-party/applications 0 :cooperation.application/type]))
+  :view teet.cooperation.cooperation-view/application-page
+  :state {:query :cooperation/application
+          :args {:thk.project/id project
+                 :cooperation.3rd-party/name (js/decodeURIComponent third-party)
+                 :db/id (->long application)}}}
 
  :unauthorized {:path "/unauthorized" :view teet.ui.unauthorized/restricted-path}
  :components {:path "/components" :view teet.ui.component-demo/demo}

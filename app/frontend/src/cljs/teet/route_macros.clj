@@ -58,7 +58,7 @@
                                                                      :page route-name
                                                                      :params (into {}
                                                                                    (for [n (param-names path)]
-                                                                                     [n `(get ~'params ~n)]))
+                                                                                     [n `(js/decodeURIComponent (get ~'params ~n))]))
                                                                      ;; FIXME: query params from :keep-query-params
                                                                      :query (if keep-query-params
                                                                               `(select-keys ~'query-params
