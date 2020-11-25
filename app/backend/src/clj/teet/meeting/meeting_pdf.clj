@@ -127,7 +127,7 @@
    [:fo:block link-look-and-feel
     (str "Linked estate: " (:link/external-id link))]])
 
-(defmethod link-list-item :cadastral-unit [{info :link/info :as link}]
+(defmethod link-list-item :cadastral-unit [{info :link/info}]
   [:fo:block
    [:fo:block link-look-and-feel
     (str "Linked Cadastral Unit: " (:L_AADRESS info) " " (:TUNNUS info) " ")]])
@@ -235,7 +235,7 @@
 (defn- reviewers-names
   "Formatted names of reviewers"
   [reviews]
-  (for [{reviewer :review/reviewer decision :review/decision} reviews]
+  (for [{reviewer :review/reviewer} reviews]
      [:fo:block reviewers-look-and-feel
       (str (:user/family-name reviewer) " " (:user/given-name reviewer) " ")]))
 
