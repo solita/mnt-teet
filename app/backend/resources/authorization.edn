@@ -37,6 +37,11 @@
   :internal-consultant :link,
   :external-consultant :link,
   :authenticated-guest :link},
+ :cooperation/edit-3rd-party
+ {:admin :full,
+  :manager :full,
+  :internal-consultant :full,
+  :external-consultant :link},
  :document/upload-document
  {:admin :full,
   :manager :full,
@@ -125,6 +130,11 @@
   :guest :read},
  :admin/remove-user {:admin :full, :manager :link},
  :admin/add-user {:admin :full, :manager :link},
+ :cooperation/edit-application
+ {:admin :full,
+  :manager :full,
+  :internal-consultant :full,
+  :external-consultant :link},
  :land/view-cadastral-data
  {:admin :full,
   :manager :full,
@@ -170,6 +180,11 @@
  :activity/create-activity {:admin :full, :manager :full},
  :project/view-internal-comments
  {:admin :full, :manager :full, :internal-consultant :full},
+ :cooperation/view-cooperation-page
+ {:admin :full,
+  :manager :full,
+  :internal-consultant :full,
+  :external-consultant :link},
  :activity/change-activity-status {:admin :full, :manager :full},
  :project/delete-comments
  {:admin :full, :manager :link, :internal-consultant :link},
@@ -180,6 +195,8 @@
   :manager :full,
   :internal-consultant :link,
   :external-consultant :link},
+ :cooperation/application-approval
+ {:admin :full, :manager :full, :internal-consultant :full},
  :task/change-task-status
  {:admin :full,
   :manager :full,

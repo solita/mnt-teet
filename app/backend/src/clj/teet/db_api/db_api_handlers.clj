@@ -34,6 +34,7 @@
             teet.meta.meta-commands
             teet.link.link-queries
             teet.link.link-commands
+            teet.cooperation.cooperation-queries
 
             [teet.log :as log]
             [teet.auth.jwt-token :as jwt-token]
