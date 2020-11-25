@@ -6,7 +6,11 @@
             [teet.ui.material-ui :refer [Card CardHeader CardContent]]
             [teet.ui.common :as common]
             [teet.ui.format :as format]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [teet.ui.buttons :as buttons]
+            [teet.ui.form :as form]
+            [teet.cooperation.cooperation-controller :as cooperation-controller]
+            [teet.ui.select :as select]))
 
 
 (defn- third-parties [third-parties]
@@ -62,8 +66,22 @@
            [(tr [:fields :cooperation.response/date])
             (format/date date)]
            [(tr [:fields :cooperation.response/valid-until])
-            (format/date valid-until)]]])]])]
-  )
+            (format/date valid-until)]]])]])])
+
+(defn- application-form [e! close-event form-atom]
+  [form/form {:e! e!
+              :value @form-atom
+              :on-change-event (form/update-atom-event form-atom merge)
+              :cancel-event close-event
+              :save-event #(cooperation-controller/->SaveApplication @form-atom)}
+   ^{:attribute :cooperation.application/type}
+   [select/select-enum {:e! e! :attribute :cooperation.application/type}]
+
+   ^{:attribute :cooperation.application/response-type}
+   [select/select-enum {:e! e! :attribute :cooperation.application/response-type}]
+
+   ])
+
 (defn third-party-page [e! {:keys [user params] :as app} {:keys [project overview]}]
   (let [third-party-name (js/decodeURIComponent (:third-party params))
         third-party (some #(when (= third-party-name
@@ -71,7 +89,13 @@
                           overview)]
     [cooperation-page-structure
      e! app project overview
-     [applications third-party]]))
+     [:<>
+      [common/header-with-actions (:cooperation.3rd-party/name third-party)]
+      [form/form-modal-button {:form-component [application-form e!]
+                               :modal-title (tr [:cooperation :new-application-title])
+                               :button-component [buttons/button-primary {}
+                                                  (tr [:cooperation :new-application])]}]
+      [applications third-party]]]))
 
 (defn application-page [e! app {:keys [project overview third-party]}]
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
