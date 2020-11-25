@@ -120,6 +120,23 @@
                 :args {:thk.project/id project
                        :task-id (->long task)}}}
 
+ :cooperation {:path "/projects/:project/cooperation"
+               :parent :project
+               :crumb (tr [:cooperation :page-title])
+               :title (tr [:cooperation :page-title])
+               :view teet.cooperation.cooperation-view/overview-page
+               :state {:query :cooperation/overview
+                       :args {:thk.project/id project}}}
+
+ :cooperation-third-party
+ {:path "/projects/:project/cooperation/:third-party"
+  :parent :cooperation
+  :title (-> state :third-party :cooperation.3rd-party/name)
+  :view teet.cooperation.cooperation-view/third-party-page
+  :state {:query :cooperation/third-party
+          :args {:thk.project/id project
+                 :cooperation.3rd-party/name (js/decodeURIComponent third-party)}}}
+
  :unauthorized {:path "/unauthorized" :view teet.ui.unauthorized/restricted-path}
  :components {:path "/components" :view teet.ui.component-demo/demo}
  :road {:path "/road"

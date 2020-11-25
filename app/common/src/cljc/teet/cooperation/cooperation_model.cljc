@@ -20,3 +20,12 @@
            (contains? response :cooperation.response/valid-months))
     (assoc response :cooperation.response/valid-until (valid-until response))
     (dissoc response :cooperation.response/valid-until)))
+
+(def application-overview-attrs
+  "Attributes to pull for displaying an application overview.
+  Includes fields from response and position."
+  [:db/id
+   :cooperation.application/type
+   :cooperation.application/date
+   :cooperation.application/response-type
+   :cooperation.application/response-deadline])
