@@ -442,45 +442,13 @@
 
 (defn meeting-page-structure [e! app project
                               main-content right-panel-content]
-  (let [[navigator-w content-w] [3 (if right-panel-content 6 :auto)]]
-    [project-context/provide
-     {:db/id (:db/id project)
-      :thk.project/id (:thk.project/id project)}
-     [:<>
-      [project-view/project-header project]
-      [:div.project-navigator-with-content {:class (<class project-style/page-container)}
-       [Paper {:class (<class task-style/task-page-paper-style)}
-        [Grid {:container true
-               :wrap :nowrap
-               :spacing 0}
-         [Grid {:item true
-                :xs navigator-w
-                :class (<class navigation-style/navigator-left-panel-style)}
-          [project-menu/project-menu e! app project true]
-          [project-navigator-view/project-navigator e! project app
-           {:dark-theme? true
-            :activity-link-page :activity-meetings
-            :activity-section-content activity-meetings-list
-            :add-activity? false}]]
-         [Grid {:item true
-                :xs content-w
-                :style (merge {:padding "2rem 1.5rem"
-                               :overflow-y :auto
-                               ;; content area should scroll, not the whole page because we
-                               ;; want map to stay in place without scrolling it
-                               }
-                              (when (not right-panel-content)
-                                {:flex 1}))}
-          main-content]
-         (when right-panel-content
-           [Grid {:item true
-                  :xs :auto
-                  :style {:display :flex
-                          :flex 1
-                          :overflow-y :auto
-                          :padding "1rem 1.5rem"
-                          :background-color theme-colors/gray-lightest}}
-            right-panel-content])]]]]]))
+  [project-view/project-full-page-structure
+   {:e! e!
+    :app app
+    :project project
+    :main main-content
+    :right-panel right-panel-content
+    :project-navigator {:activity-section-content activity-meetings-list}}])
 
 (defn activity-meetings-view
   "Page structure showing project navigator along with content."
