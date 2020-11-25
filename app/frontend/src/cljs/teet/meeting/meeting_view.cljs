@@ -983,6 +983,7 @@
             :entity-type :meeting
             :entity-id (:db/id meeting)
             :comment-counts (:comment/counts meeting)
+            :after-comment-list-rendered-event common-controller/->Refresh
             :after-comment-added-event
             #(comments-controller/->IncrementCommentCount comment-count-path)
             :after-comment-deleted-event

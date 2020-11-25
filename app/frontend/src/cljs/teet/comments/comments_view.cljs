@@ -325,9 +325,9 @@
   [{:keys [e! commented-entity after-comment-list-rendered-event]} comments]
   (when-let [eid (and (seq comments)
                       (:eid commented-entity))]
+    (e! (comments-controller/->CommentsSeen eid (:for commented-entity)))
     (when after-comment-list-rendered-event
-      (e! (after-comment-list-rendered-event)))
-    (e! (comments-controller/->CommentsSeen eid (:for commented-entity))))
+      (e! (after-comment-list-rendered-event))))
   (fn [{:keys [e! quote-comment! commented-entity show-comment-form?
                focused-comment after-comment-deleted-event]}
        comments]
