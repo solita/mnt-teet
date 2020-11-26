@@ -1,0 +1,5 @@
+To run against local dev, you can use the cypress app normally, or use the run-in-docker.sh script. 
+
+The docker script will also pass any args to cypress so you can eg use:
+
+  ./run-in-docker.sh --spec cypress/integration/login.spec.js # this runs just one spec

@@ -49,7 +49,9 @@
             [teet.ui.container :as container]
             [teet.ui.hotkeys :as hotkeys]
             [teet.project.land-controller :as land-controller]
-            [teet.project.project-menu :as project-menu]))
+            [teet.project.project-menu :as project-menu]
+            [teet.task.task-style :as task-style]
+            [teet.navigation.navigation-style :as navigation-style]))
 
 (defn project-details
   [e! {:thk.project/keys [estimated-start-date estimated-end-date road-nr
@@ -689,3 +691,47 @@
    [:<>
     [project-navigator-view/project-navigator-dialogs {:e! e! :app app :project project}]
     [project-view e! app project]]])
+
+(defn project-full-page-structure
+  "Structure for project pages that don't have map, but have
+  a left panel content, main content and optional right panel content.
+
+  If left-side content is not specified, the project navigator is used.
+  The :project-navigator map options can be used to override default parameters."
+  [{:keys [e! app project main left-panel right-panel project-navigator]}]
+  (let [[navigator-w content-w] [3 (if right-panel 6 :auto)]]
+    [project-context/provide
+     (select-keys project [:db/id :thk.project/id])
+     [:<>
+      [project-header project]
+      [:div.project-navigator-with-content {:class (<class project-style/page-container)}
+       [Paper {:class (<class task-style/task-page-paper-style)}
+        [Grid {:container true
+               :wrap :nowrap
+               :spacing 0}
+         [Grid {:item true
+                :xs navigator-w
+                :class (<class navigation-style/navigator-left-panel-style)}
+          [project-menu/project-menu e! app project true]
+          (or left-panel
+              [project-navigator-view/project-navigator e! project app
+               (merge {:dark-theme? true
+                       :activity-link-page :activity-meetings
+                       :add-activity? false}
+                      project-navigator)])]
+         [Grid {:item true
+                :xs content-w
+                :style (merge {:padding "2rem 1.5rem"
+                               :overflow-y :auto}
+                              (when (not right-panel)
+                                {:flex 1}))}
+          main]
+         (when right-panel
+           [Grid {:item true
+                  :xs :auto
+                  :style {:display :flex
+                          :flex 1
+                          :overflow-y :auto
+                          :padding "1rem 1.5rem"
+                          :background-color theme-colors/gray-lightest}}
+            right-panel])]]]]]))

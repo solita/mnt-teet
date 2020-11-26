@@ -48,6 +48,7 @@
            :string
            [TextField {:value (or (get @filters column) "")
                        :type "text"
+                       :id (str "filter input for " column)
                        :variant :filled
                        :start-icon icons/action-search
                        :input-class (<class table-filter-style)
@@ -61,6 +62,7 @@
            :number
            [TextField {:value (or (get @filters column) "")
                        :type "number"
+                       :id (str "filter input for " column)
                        :variant :filled
                        :start-icon icons/action-search
                        :input-class (<class table-filter-style)

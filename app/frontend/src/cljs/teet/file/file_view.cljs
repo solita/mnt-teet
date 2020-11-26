@@ -32,7 +32,8 @@
             [teet.file.filename-metadata :as filename-metadata]
             [teet.ui.common :as common]
             [goog.string :as gstr]
-            [teet.authorization.authorization-check :refer [when-authorized]]))
+            [teet.authorization.authorization-check :refer [when-authorized]]
+            [teet.comments.comments-view :as comments-view]))
 
 
 
@@ -242,19 +243,31 @@
        parts
        @selected-part)]))
 
+(defn file-comments-text
+  [{:comment/keys [counts] :as file}]
+  (let [{:comment/keys [new-comments old-comments]} counts
+        amount (+ new-comments
+                 old-comments)]
+    [:span {:style {:text-transform :lowercase}}
+     [common/comment-count-chip file]
+     (if (= amount 1)
+       (tr [:comment :comment])
+       (tr [:comment :comments]))]))
+
+(defn file-comments-button
+  [button-opts file]
+  [buttons/link-button (merge button-opts
+                              {:style {:pointer :cursor}})
+   [file-comments-text file]])
+
 (defn file-comments-link
-  [{comment-counts :comment/counts :as file}]
-  (let [{:comment/keys [new-comments old-comments]} comment-counts
-        comments? (not (zero? (+ new-comments old-comments)))]
-    [url/Link {:page :file
-               :params {:file (:db/id file)
-                        :activity (get-in file [:task/_files 0 :activity/_tasks 0 :db/id])
-                        :task (get-in file [:task/_files 0 :db/id])}
-               :query {:tab "comments"}}
-     (if comments?
-       [:span {:style {:text-transform :lowercase}}
-        [common/comment-count-chip file] (tr [:document :comments])]
-       [:span (tr [:land-modal-page :no-comments])])]))
+  [file]
+  [url/Link {:page :file
+             :params {:file (:db/id file)
+                      :activity (get-in file [:task/_files 0 :activity/_tasks 0 :db/id])
+                      :task (get-in file [:task/_files 0 :db/id])}
+             :query {:tab "comments"}}
+   [file-comments-text file]])
 
 (defn- replace-file-form [e! project-id task file form close!]
   (let [{:keys [description extension]} (filename-metadata/name->description-and-extension
@@ -465,12 +478,17 @@
   {:flex-basis "25%" :flex-shrink 0 :flex-grow 0})
 
 
+(defn file-list-entry-style
+  []
+  {:padding "0.5rem 0"
+   :border-top (str "2px solid " theme-colors/black-coral-1)})
 
 (defn- file-list [parts files current-file-id]
   (let [parts (sort-by :file.part/number
                        (concat [{:file.part/number 0 :file.part/name (tr [:file-upload :general-part])}]
                                parts))]
-    [:div.file-list
+    [:div.file-list {:style {:margin-right "0.5rem"
+                             :border-right (str "2px solid " theme-colors/black-coral-1)}}
      (mapc
       (fn [{part-id :db/id :file.part/keys [name number]}]
         (let [files (filter (fn [{part :file/part}]
@@ -480,19 +498,22 @@
                             files)]
           (when (seq files)
             [:<>
-             [typography/Heading3 (gstr/format "%s #%02d" name number)]
+             [:div {:style {:padding "1rem 0"}
+                    :class (<class common-styles/flex-row-end)}
+              [typography/Heading2 name]
+              [typography/GreyText {:style {:padding-left "0.25rem"}} (str "#" number)]]
              [:div
               (mapc (fn [{id :db/id :file/keys [name version number status] :as f}]
                       (let [{:keys [description extension]}
                             (filename-metadata/name->description-and-extension name)
                             active? (= current-file-id id)]
-                        [:div.file-list-entry
+                        [:div.file-list-entry {:class (<class file-list-entry-style)}
                          [:div {:class (<class common-styles/flex-row-center)}
                           [file-icon (assoc f :class "file-list-icon")]
-                          [:div.file-list-name {:class (<class file-style/file-name-truncated active?)
+                          [:div.file-list-name {:class (<class file-style/file-name-truncated)
                                                 :title description}
                            (if active?
-                             description
+                             [:strong description]
                              [url/Link {:page :file
                                         :params {:file id}
                                         :class "file-list-name"}
@@ -527,93 +548,120 @@
     [modifier modified-at]
     [creator created-at]))
 
-(defn- file-details [e! project-id task {:keys [replacement-upload-progress] :as file}
+(defn- file-details [e! app project-id task {:keys [replacement-upload-progress] :as file}
                      latest-file can-replace-file? replace-form]
-  (let [old? (some? latest-file)
-        other-versions (if old?
-                         (into [latest-file]
-                               (filter #(not= (:db/id file) (:db/id %))
-                                       (:versions latest-file)))
-                         (:versions file))]
-    [:div.file-details
-     [:div {:class (<class common-styles/margin-bottom 1)}
-      [:div.file-details-full-name
-       [typography/BoldGreyText
-        (str (tr [:file :full-name]) ": " (:file/full-name file))]]
-      [:div.file-details-original-name
-       [typography/GreyText
-        [:strong (str (tr [:fields :file/original-name]) ": ")]
-        [:span (:file/original-name file)]]]
+  (r/with-let [selected-file (r/atom nil)
+               select-file #(reset! selected-file (if (= @selected-file %)
+                                                    nil
+                                                    %))]
+    (let [old? (some? latest-file)
+          other-versions (if old?
+                           (into [latest-file]
+                                 (filter #(not= (:db/id file) (:db/id %))
+                                         (:versions latest-file)))
+                           (:versions file))]
+      ^{:key (str (:db/id file))}
+      [:div.file-details
+       [:div {:class (<class common-styles/margin-bottom 1)}
+        [:div.file-details-full-name
+         [typography/BoldGreyText
+          (str (tr [:file :full-name]) ": " (:file/full-name file))]]
+        [:div.file-details-original-name
+         [typography/GreyText
+          [:strong (str (tr [:fields :file/original-name]) ": ")]
+          [:span (:file/original-name file)]]]
 
-      (let [first-version (or (last other-versions) file)
-            [edited-by edited-at :as edited?]
-            (if (not= first-version file)
-              (edited file)
-              (when (:meta/modified-at first-version)
-                (edited first-version)))]
-        [:<>
-         [:div.file-details-upload-info
-          (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator first-version))
-                                    :date (format/date-time (:meta/created-at first-version))})]
+        (let [first-version (or (last other-versions) file)
+              [edited-by edited-at :as edited?]
+              (if (not= first-version file)
+                (edited file)
+                (when (:meta/modified-at first-version)
+                  (edited first-version)))]
+          [:<>
+           [:div.file-details-upload-info
+            (tr [:file :upload-info] {:author (user-model/user-name (:meta/creator first-version))
+                                      :date (format/date-time (:meta/created-at first-version))})]
 
-         (when edited?
-           [:div.file-details-edit-info
-            (tr [:file :edit-info] {:author (user-model/user-name edited-by)
-                                    :date (format/date-time edited-at)})])])]
+           (when edited?
+             [:div.file-details-edit-info
+              (tr [:file :edit-info] {:author (user-model/user-name edited-by)
+                                      :date (format/date-time edited-at)})])])]
 
 
 
-     ;; size, upload new version and download buttons
-     [:div {:class (<class common-styles/flex-row-space-between)}
-      [common/labeled-data {:class "file-details-size"
-                            :label (tr [:fields :file/size])
-                            :data (format/file-size (:file/size file))}]
-      (if replacement-upload-progress
-        [LinearProgress {:variant :determinate
-                         :value replacement-upload-progress}]
-        [:<>
-         (when (and can-replace-file?
-                    (nil? latest-file)
-                    (du/enum= :file.status/draft (:file/status file)))
-           [file-replacement-modal-button {:e! e!
-                                           :project-id project-id
-                                           :task task
-                                           :file file
-                                           :replace-form replace-form}])])
-      [buttons/button-primary {:element "a"
-                               :href (common-controller/query-url :file/download-file
-                                                                  {:file-id (:db/id file)})
-                               :target "_blank"
-                               :start-icon (r/as-element
-                                             [icons/file-cloud-download])}
-       (tr [:file :download])]]
+       ;; size, upload new version and download buttons
+       [:div {:class (<class common-styles/flex-row-space-between)}
+        [common/labeled-data {:class "file-details-size"
+                              :label (tr [:fields :file/size])
+                              :data (format/file-size (:file/size file))}]
+        (if replacement-upload-progress
+          [LinearProgress {:variant :determinate
+                           :value replacement-upload-progress}]
+          [:<>
+           (when (and can-replace-file?
+                      (nil? latest-file)
+                      (du/enum= :file.status/draft (:file/status file)))
+             [file-replacement-modal-button {:e! e!
+                                             :project-id project-id
+                                             :task task
+                                             :file file
+                                             :replace-form replace-form}])])
+        [buttons/button-primary {:element "a"
+                                 :href (common-controller/query-url :file/download-file
+                                                                    {:file-id (:db/id file)})
+                                 :target "_blank"
+                                 :start-icon (r/as-element
+                                               [icons/file-cloud-download])}
+         (tr [:file :download])]]
 
-     (when (file-model/image? file)
-       [:div {:class (<class preview-style)}
-        [:img {:style {:width :auto :height :auto
-                       :max-height "250px"
-                       :object-fit :contain}
-               :src (common-controller/query-url
-                      :file/thumbnail
-                      {:file-id (:db/id file)
-                       :size 250})}]])
+       (when (file-model/image? file)
+         [:div {:class (<class preview-style)}
+          [:img {:style {:width :auto :height :auto
+                         :max-height "250px"
+                         :object-fit :contain}
+                 :src (common-controller/query-url
+                        :file/thumbnail
+                        {:file-id (:db/id file)
+                         :size 250})}]])
 
-     ;; list previous versions
-     (when (seq other-versions)
-       [:<>
-        [:br]
-        [typography/Heading2 (tr [:file :other-versions])]
-        (mapc (fn [file]
-                [:div {:class (<class common-styles/flex-row)}
+       ;; list previous versions
+       (when (seq other-versions)
+         [:div {:class (<class common-styles/margin-bottom 1)}
+          [:br]
+          [typography/Heading2 (tr [:file :other-versions])]
+          (mapc (fn [file]
+                  [:div
+                   [:div {:class (<class common-styles/flex-row)
+                          :style {:padding "0.5rem 0"
+                                  :justify-content :space-between
+                                  :border-top (str "1px solid " theme-colors/gray-lighter)}}
+                    [Link {:target :_blank
+                           :href (common-controller/query-url :file/download-file
+                                                              {:file-id (:db/id file)})}
+                     (str (:file/name file) " / ") (tr [:file :version]
+                                                     {:num (:file/version file)})]
+                    [:div {:class (<class common-styles/flex-row)}
+                     [:span {:style {:margin "0 0.5rem"}}
+                      (format/date (:meta/created-at file))]
 
-                 [:div {:class (<class common-styles/flex-table-column-style 80)}
-                  [Link {:target :_blank
-                         :href (common-controller/query-url :file/download-file
-                                                            {:file-id (:db/id file)})}
-                   (:file/name file)]]
-                 [:div {:class (<class common-styles/flex-table-column-style 20)}
-                  (format/date (:meta/created-at file))]])
-              other-versions)])]))
+                     [:div {:class (<class common-styles/no-break)}
+                      [file-comments-button {:on-click #(select-file file)}
+                       file]]]]])
+                other-versions)])
+       [:div
+        (when @selected-file
+          [:<>
+           [typography/Heading3 {:class (<class common-styles/margin-bottom 1)}
+            (tr [:comment :comments-for] {:file-name (str (:file/name @selected-file) " / "
+                                                          (tr [:file :version]
+                                                              {:num (:file/version @selected-file)}))})]
+           [comments-view/lazy-comments {:e! e!
+                                         :app app
+                                         :after-comment-deleted-event common-controller/->Refresh
+                                         :after-comment-list-rendered-event common-controller/->Refresh
+                                         :entity-type :file
+                                         :entity-id (:db/id @selected-file)
+                                         :show-comment-form? false}]])]])))
 
 (defn file-part-heading
   [{heading :heading
@@ -751,12 +799,12 @@
                 {:e! e!
                  :app app
                  :project project
-                 :column-widths [3 9 :auto]
+                 :column-widths [3 :auto :auto]
                  :show-map? false}
                 [Grid {:container true}
-                 [Grid {:item true :xs 3 :xl 2}
+                 [Grid {:item true :xs 3}
                   [file-list (:file.part/_task task) (:task/files task) (:db/id file)]]
-                 [Grid {:item true :xs 9 :xl 10}
+                 [Grid {:item true :xs 9}
                   [:<>
                    (when @edit-open?
                      [file-edit-dialog {:e! e!
@@ -779,6 +827,7 @@
                                                    (:activity/name activity))
                    file]
                   [typography/SmallText [:strong (tr-enum (:file/status file))]]
+                  ^{:key (str (:db/id file) "-details-and-comments")}
                   [tabs/details-and-comments-tabs
                    {:e! e!
                     :app app
@@ -790,6 +839,6 @@
                     :show-comment-form? (not old?)
                     :tab-wrapper (r/partial file-tab-wrapper file-part)}
                    (when file
-                     [file-details e! project-id task file latest-file
+                     [file-details e! app project-id task file latest-file
                       (task-model/can-submit? task)
                       (:files-form project)])]]]]))))})))

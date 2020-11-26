@@ -13,16 +13,16 @@
   (when (seq search-param)
     {:where '[[?u :user/family-name ?fname]
               [(.toLowerCase ^String ?fname) ?lower-fname]
-              [(.contains ?lower-fname ?text)]]
-     :in {'?text (str/lower-case search-param)}}))
+              [(.contains ?lower-fname ?fname-search)]]
+     :in {'?fname-search (str/lower-case search-param)}}))
 
 (defmethod search-clause :user/given-name
   [[_ search-param]]
   (when (seq search-param)
     {:where '[[?u :user/given-name ?name]
               [(.toLowerCase ^String ?name) ?lower-name]
-              [(.contains ?lower-name ?text)]]
-     :in {'?text (str/lower-case search-param)}}))
+              [(.contains ?lower-name ?gname-search)]]
+     :in {'?gname-search (str/lower-case search-param)}}))
 
 (defmethod search-clause :user/person-id
   [[_ id-code]]
@@ -49,15 +49,15 @@
 (defmethod search-clause :project [[_ project-string]]
   ;; Search by free text
   (when (seq project-string)
-    {:in {'?text (str/lower-case project-string)}
+    {:in {'?project-string (str/lower-case project-string)}
      :where '[[?project :thk.project/id _]
-              (or-join [?project ?text]
+              (or-join [?project ?project-string]
                        (and
                          (or [?project :thk.project/project-name ?name]
                              [?project :thk.project/name ?name])
                          [(.toLowerCase ^String ?name) ?lower-name]
-                         [(.contains ?lower-name ?text)])
-                       [?project :thk.project/id ?text])
+                         [(.contains ?lower-name ?project-string)])
+                       [?project :thk.project/id ?project-string])
 
               [?project :thk.project/lifecycles ?lc]
               (or-join [?u ?project ?lc]

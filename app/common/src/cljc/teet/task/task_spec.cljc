@@ -37,7 +37,7 @@
 
 (s/def :task/new-comment-form (s/keys :req [:comment/comment]))
 
-(s/def :comment/comment (s/and string? #(not-empty (str/trim %))))
+;; comment/comment spec defined in ns comment-spec
 
 (s/def :file.part/name (s/and string? #(< (count %) 100)))
 

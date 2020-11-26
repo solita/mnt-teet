@@ -267,6 +267,7 @@
                       {:keys [e!
                               commented-entity
                               quote-comment!
+                              show-comment-form?
                               focused?
                               after-comment-deleted-event]}]
   [:div (merge {:id (comments-controller/comment-dom-id id)
@@ -282,12 +283,13 @@
       [user-info/user-name author]]
      [:span {:class (<class comments-styles/data)}
       (format/date timestamp)]
-     [buttons/button-text {:size :small
-                           :color :primary
-                           :start-icon (r/as-element [icons/editor-format-quote])
-                           :on-click #(quote-comment! (user-model/user-name author)
-                                                      comment)}
-      (tr [:comment :quote])]]
+     (when show-comment-form?
+       [buttons/button-text {:size :small
+                             :color :primary
+                             :start-icon (r/as-element [icons/editor-format-quote])
+                             :on-click #(quote-comment! (user-model/user-name author)
+                                                        comment)}
+        (tr [:comment :quote])])]
     [:span {:class (<class comments-styles/data)}
      (tr [:enum (:db/ident visibility)])]]
    [comment-contents-and-status e! comment-entity commented-entity]
@@ -323,30 +325,35 @@
   [{:keys [e! commented-entity after-comment-list-rendered-event]} comments]
   (when-let [eid (and (seq comments)
                       (:eid commented-entity))]
+    (e! (comments-controller/->CommentsSeen eid (:for commented-entity)))
     (when after-comment-list-rendered-event
-      (e! (after-comment-list-rendered-event)))
-    (e! (comments-controller/->CommentsSeen eid (:for commented-entity))))
-  (fn [{:keys [e! quote-comment! commented-entity
+      (e! (after-comment-list-rendered-event))))
+  (fn [{:keys [e! quote-comment! commented-entity show-comment-form?
                focused-comment after-comment-deleted-event]}
        comments]
-    (let [unresolved-comments (filterv comment-model/unresolved? comments)]
-           [:<>
-            (when (seq unresolved-comments)
-              [unresolved-comments-info e! commented-entity unresolved-comments])
-            (doall
-              (for [{id :db/id :as comment-entity} comments
-                    :let [focused? (= (str id) focused-comment)]]
-                (if (nil? comment-entity)
-                  ;; New comment was just added but hasn't been refetched yet, show skeleton
-                  ^{:key "loading-comment"}
-                  [comment-skeleton 1]
+    [:div
+     (if (empty? comments)
+       [:div {:class (<class common-styles/margin-bottom 1.5)}
+        [typography/GreyText (tr [:comment :no-comments])]]
+       (let [unresolved-comments (filterv comment-model/unresolved? comments)]
+         [:<>
+          (when (seq unresolved-comments)
+            [unresolved-comments-info e! commented-entity unresolved-comments])
+          (doall
+            (for [{id :db/id :as comment-entity} comments
+                  :let [focused? (= (str id) focused-comment)]]
+              (if (nil? comment-entity)
+                ;; New comment was just added but hasn't been refetched yet, show skeleton
+                ^{:key "loading-comment"}
+                [comment-skeleton 1]
 
-                  ^{:key (str id)}
-                  [comment-entry comment-entity {:e! e!
-                                                 :commented-entity commented-entity
-                                                 :quote-comment! quote-comment!
-                                                 :focused? focused?
-                                                 :after-comment-deleted-event after-comment-deleted-event}])))])))
+                ^{:key (str id)}
+                [comment-entry comment-entity {:e! e!
+                                               :show-comment-form? show-comment-form?
+                                               :commented-entity commented-entity
+                                               :quote-comment! quote-comment!
+                                               :focused? focused?
+                                               :after-comment-deleted-event after-comment-deleted-event}])))]))]))
 
 (defn strip-mentions
   "@[Carla Consultant](123456) -> @Carla Consultant"
@@ -465,6 +472,7 @@
                      :state-path [:comments-for-entity entity-id]
                      :state comments
                      :simple-view [comment-list {:e! e!
+                                                 :show-comment-form? show-comment-form?
                                                  :after-comment-list-rendered-event after-comment-list-rendered-event
                                                  :after-comment-deleted-event after-comment-deleted-event
                                                  :quote-comment! (fn [name quoted-text]

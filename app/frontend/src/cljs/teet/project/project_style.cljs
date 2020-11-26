@@ -188,3 +188,35 @@
     (when dark-theme?
       {:background-color theme-colors/gray-dark
        :color :white})))
+
+(defn owner-container []
+  {:padding "1rem"
+   :padding-bottom "0.5rem"
+   :margin-bottom "0.5rem"
+   :margin-right "1rem"
+   :background-color theme-colors/gray-lightest})
+
+(defn owner-info []
+  {:display :flex
+   :flex-direction :column
+   :justify-content :flex-top})
+
+(defn owner-comments-container []
+  {:margin-bottom "0.5rem"
+   :margin-right "1rem"})
+
+(defn owner-heading-container []
+  {:margin-bottom "0.5rem"})
+
+(defn owner-info-header []
+  {:display :flex
+   :flex-direction :row
+   :justify-content :space-between})
+
+(defn owner-info-name-and-code []
+  {:margin-bottom "0.5rem"})
+
+(defn owner-info-registry-info []
+  {:padding-left "0.5rem"
+   :margin-bottom "0.5rem"
+   :border-left (str "solid 7px " theme-colors/gray-light)})

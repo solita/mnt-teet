@@ -1,9 +1,6 @@
 context('Login', () => {
     beforeEach(() => {
-        // do any before setup here
-        cy.visit("https://dev-teet.solitacloud.fi/")
-
-
+      cy.visit("./")
     })
 
     it("dummy login as benjamin boss should work", () => {
@@ -16,7 +13,7 @@ context('Login', () => {
         //cy.wait('@command')
 
         // User should be taken to map page after login
-        cy.title({timeout: 15000}).should('eq','Kaart')
+        cy.contains('Minu projektid');
     })
 
 })
