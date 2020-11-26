@@ -1,6 +1,6 @@
 context('Land section', () => {
   beforeEach(() => {
-      cy.visit("./")
+      cy.visit("")
       cy.get("#password-textfield").type(Cypress.env("SITE_PASSWORD"));
       cy.get("button").contains("Login as Benjamin Boss").click();
       
