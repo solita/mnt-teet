@@ -400,8 +400,8 @@
   [:fo:list-block
    (for [item (md-children ul)]
      [:fo:list-item
-      [:fo:list-item-label {:end-indent "label-end()"}
-       [:fo:block [:fo:inline {:font-family "Symbol"} "\u2022"]]]
+      [:fo:list-item-label { :font-family "Symbol" :end-indent "label-end()"}
+       [:fo:block [:fo:inline "\u2022"]]]
       [:fo:list-item-body {:start-indent "body-start()"}
        [:fo:block
         (for [c (md-children item)]
