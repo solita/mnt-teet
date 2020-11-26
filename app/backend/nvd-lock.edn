@@ -25,4 +25,6 @@
 
   ;; Jetty vulnerability is about WAR file handling, a feature which we don't use
   "CVE-2020-27216"
-  }
+
+  ;; Apache Batik vulnerability that only can be triggered if we allow user specify SVG content that we don't
+  "CVE-2019-17566"}

@@ -704,7 +704,6 @@
   :notifications-title "Teavitused",
   :latest-notifications-sent "Viimane teavitus saadeti",
   :duplicate-meeting-modal-title "Koosoleku koopia",
-  :no-review-comment "Märkusi pole lisatud",
   :moved-to-absentees-successfully "Lisatud puudujate nimekirja",
   :edit-agenda-modal-title "Päevakavapunkti muutmine",
   :email-title "TEET: koosolek uuendatud: {meeting-title}",
