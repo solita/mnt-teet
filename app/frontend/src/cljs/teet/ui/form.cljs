@@ -470,7 +470,9 @@
   [{:keys [form-component button-component
            modal-title
            form-value
-           open? id]}]
+           open? id
+           max-width]
+    :or {max-width "md"}}]
   (r/with-let [open-atom (r/atom (or open? false))
                form-atom (r/atom (or form-value {}))
                close #(do
@@ -478,7 +480,7 @@
                         (reset! open-atom false))
                close-event (reset-atom-event open-atom false)]
     [:<>
-     [panels/modal {:max-width "md"
+     [panels/modal {:max-width max-width
                     :open-atom open-atom
                     :title modal-title
                     :on-close close}

@@ -10,7 +10,10 @@
             [teet.ui.buttons :as buttons]
             [teet.ui.form :as form]
             [teet.cooperation.cooperation-controller :as cooperation-controller]
-            [teet.ui.select :as select]))
+            [teet.cooperation.cooperation-model :as cooperation-model]
+            [teet.ui.select :as select]
+            [teet.ui.date-picker :as date-picker]
+            [teet.ui.text-field :as text-field]))
 
 
 (defn- third-parties [third-parties]
@@ -51,8 +54,7 @@
                            [url/Link {:page :cooperation-application
                                       :params {:application (str id)}}
                             (str
-                             (tr-enum type) " / " (tr-enum response-type))])}
-       ]
+                             (tr-enum type) " / " (tr-enum response-type))])}]
 
       ;; Content shows response, dates
       ;; responsible person
@@ -73,14 +75,25 @@
               :value @form-atom
               :on-change-event (form/update-atom-event form-atom merge)
               :cancel-event close-event
-              :save-event #(cooperation-controller/->SaveApplication @form-atom)}
+              :save-event #(cooperation-controller/->SaveApplication @form-atom)
+              :spec ::cooperation-model/application-form}
    ^{:attribute :cooperation.application/type}
    [select/select-enum {:e! e! :attribute :cooperation.application/type}]
 
    ^{:attribute :cooperation.application/response-type}
    [select/select-enum {:e! e! :attribute :cooperation.application/response-type}]
 
-   ])
+   ^{:attribute :cooperation.application/date
+     :xs 8}
+   [date-picker/date-input {}]
+
+   ^{:attribute :cooperation.application/response-deadline
+     :xs 8}
+   [date-picker/date-input {}]
+
+   ^{:attribute :cooperation.application/comment}
+   [text-field/TextField {:multiline true
+                          :rows 5}]])
 
 (defn third-party-page [e! {:keys [user params] :as app} {:keys [project overview]}]
   (let [third-party-name (js/decodeURIComponent (:third-party params))
@@ -91,7 +104,8 @@
      e! app project overview
      [:<>
       [common/header-with-actions (:cooperation.3rd-party/name third-party)]
-      [form/form-modal-button {:form-component [application-form e!]
+      [form/form-modal-button {:max-width "sm"
+                               :form-component [application-form e!]
                                :modal-title (tr [:cooperation :new-application-title])
                                :button-component [buttons/button-primary {}
                                                   (tr [:cooperation :new-application])]}]
