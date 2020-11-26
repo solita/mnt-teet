@@ -1481,4 +1481,6 @@
            :db/cardinality :db.cardinality/one
            :db/doc "Timestamp for when the email notifications of the meeting was last sent"}]]}
 
+ {:db/ident :migration/migrate-organizer-for-old-meetings
+  :txes [teet.migration.meeting-organizer-participation/migrate-meeting-organizers]}
  ]
