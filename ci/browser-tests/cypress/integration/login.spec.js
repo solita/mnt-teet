@@ -5,8 +5,8 @@ context('Login', () => {
 
     it("dummy login as benjamin boss should work", () => {
 
-        cy.server()
-        cy.route('POST', 'command*').as('command')
+        // let's make sure we're using the language we're asserting in?
+        cy.get("#language-select").select("ET")
 
         cy.get("#password-textfield").type(Cypress.env("SITE_PASSWORD"))
         cy.get("button").contains("Login as Benjamin Boss").click()
