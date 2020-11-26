@@ -1629,4 +1629,9 @@
           {:db/ident :cooperation.position/comment
            :db/cardinality :db.cardinality/one
            :db/valueType :db.type/string
-           :db/doc "Rich text comment for decision"}]]}]
+           :db/doc "Rich text comment for decision"}]]}
+
+ {:db/ident :migration/migrate-organizer-for-old-meetings
+  :txes [teet.migration.meeting-organizer-participation/migrate-meeting-organizers]}
+
+ ]
