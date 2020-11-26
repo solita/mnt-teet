@@ -131,6 +131,7 @@
   :email "Email",
   :phone "Mobile",
   :phone2 "Phone"},
+ :cooperation {:page-title "Cooperation"},
  :dashboard
  {:activities-and-tasks "Activities and tasks",
   :my-projects "My projects",
@@ -664,6 +665,7 @@
   :add-decision-button "Add decision",
   :participant-removed "Participant removed",
   :approve-meeting-modal-title "Approve decisions?",
+  :pdf-created-by "This PDF was generated",
   :confirm-move "Move user",
   :edit-meeting-modal-title "Edit meeting",
   :activity-meetings-title "{activity-name} meetings",
@@ -679,7 +681,9 @@
   :meetings-title "Meetings",
   :notifications-not-sent "Updates not yet sent",
   :approve-meeting-button "Approve decisions",
+  :link-to-original "Link to the original meeting",
   :no-meetings "No meetings",
+  :decision-no "No",
   :send-notification-to-participants "{count} participants",
   :add-agenda-button "Add new topic",
   :no-absentees "No absentees",
@@ -689,6 +693,7 @@
   :move-to-absentees-modal-body
   "Are you sure you want to move {participant} to absentees? This will revoke all existing reviews.",
   :no-decisions-found "No decisions found",
+  :decision-yes "Yes",
   :reviews-invalidated-warning-text
   "If this meeting is changed all existing approvals will be invalidated.",
   :edit-decision-modal-title "Edit decision",
@@ -764,7 +769,8 @@
    :people "People",
    :restrictions "Restrictions",
    :road-objects "Road objects",
-   :meetings "Meetings"},
+   :meetings "Meetings",
+   :cooperation "Cooperation"},
   :edit-activity "Edit activity",
   :restrictions-tab "Restrictions",
   :download-related-info "Download related info",

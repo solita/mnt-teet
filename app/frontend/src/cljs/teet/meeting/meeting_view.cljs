@@ -881,14 +881,19 @@
   (let [edit? (get rights :edit-meeting)
         review? (get rights :review-meeting)]
     [:div
-     [common/basic-information-row [[(tr [:fields :meeting/date-and-time])
-                                     (str (format/date start)
-                                          " "
-                                          (format/time* start)
-                                          " - "
-                                          (format/time* end))]
-                                    [(tr [:fields :meeting/location])
-                                     location]]]
+     [common/basic-information-row
+      [[(tr [:fields :meeting/date-and-time])
+        (str (format/date start)
+             " "
+             (format/time* start)
+             " - "
+             (format/time* end))]
+       [(tr [:fields :meeting/location])
+        location]
+       [(tr "PDF")
+        [:a {:href (common-controller/query-url :meeting/download-pdf
+                                                {:db/id (:db/id meeting)})
+             :target "_blank" } "Download"]]]]
      [:div {:style {:margin-bottom "1rem"}}
       (doall
        (for [{id :db/id
@@ -983,6 +988,7 @@
             :entity-type :meeting
             :entity-id (:db/id meeting)
             :comment-counts (:comment/counts meeting)
+            :after-comment-list-rendered-event common-controller/->Refresh
             :after-comment-added-event
             #(comments-controller/->IncrementCommentCount comment-count-path)
             :after-comment-deleted-event
