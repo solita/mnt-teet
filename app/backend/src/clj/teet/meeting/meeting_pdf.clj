@@ -53,6 +53,9 @@
    :padding-bottom 12
    :padding-left 12})
 
+(def external-link-icon
+  {:padding-right 12 :content-width "15px" :content-height "15px" :src (io/resource "img/link.svg")})
+
 (defn- tr+
   "Give both translations"
   [key]
@@ -120,24 +123,28 @@
 (defmulti link-list-item (fn [link] (:link/type link)))
 
 (defmethod link-list-item :file [{info :link/info}]
-  [:fo:block
-   [:fo:block link-look-and-feel
+  [:fo:block link-look-and-feel
+   [:fo:block
+    [:fo:external-graphic external-link-icon]
     (str "File: " (:file/name info))]])
 
 (defmethod link-list-item :task [{info :link/info}]
   (let [task-type (get-in info [:task/type :db/ident])]
-    [:fo:block
-     [:fo:block link-look-and-feel
+    [:fo:block link-look-and-feel
+     [:fo:block
+      [:fo:external-graphic external-link-icon]
       (str "Task: " (tr+ [:enum task-type]))]]))
 
 (defmethod link-list-item :estate [link]
-  [:fo:block
-   [:fo:block link-look-and-feel
+  [:fo:block link-look-and-feel
+   [:fo:block
+    [:fo:external-graphic external-link-icon]
     (str "Estate: " (:link/external-id link))]])
 
 (defmethod link-list-item :cadastral-unit [{info :link/info}]
-  [:fo:block
-   [:fo:block link-look-and-feel
+  [:fo:block link-look-and-feel
+   [:fo:block
+    [:fo:external-graphic external-link-icon]
     (str "Cadastral Unit: " (:L_AADRESS info) " " (:TUNNUS info) " ")]])
 
 (defn attachment-files
@@ -146,7 +153,7 @@
   [:fo:block link-look-and-feel
    [:fo:block
     [:fo:external-graphic
-    { :padding-right 12 :content-width "15px" :content-height "15px" :src (io/resource "img/file.svg") }]
+     {:padding-right 12 :content-width "15px" :content-height "15px" :src (io/resource "img/file.svg")}]
     (str "Appendix " idx " - " (:file/name attachment))]])
 
 (defn- list-of-topics
