@@ -5,7 +5,8 @@
     [teet.meeting.meeting-commands :as meeting-commands]
     [teet.environment :as environment]
     [teet.localization :refer [with-language tr tr-enum]]
-    [teet.user.user-model :as user-model])
+    [teet.user.user-model :as user-model]
+    [clojure.java.io :as io])
   (:import (com.vladsch.flexmark.parser Parser)
            (com.vladsch.flexmark.util.ast Document)
            (com.vladsch.flexmark.ast
@@ -223,15 +224,21 @@
                [:fo:table-cell
                 [:fo:block {:font-size rows-font-size :font-weight rows-font-weight :font-style rows-font-style} right]]])
             first-content left-content center-content right-content)]]))
+(defn- render-svg
+  "Render .SVG content"
+  [svg-file]
+  [:fo:block
+   [:fo:external-graphic
+    { :content-width "15px" :content-height "15px" :src (io/resource svg-file) } ]])
 
 (defn- decision-text
   "Return decision text depending on approved or rejected"
   [{db-ident :db/ident}]
   (case db-ident
     :review.decision/approved
-    (tr+ [:meeting :decision-yes])
+    (render-svg "img/ok-status.svg")
     :review.decision/rejected
-    (tr+ [:meeting :decision-no])
+    (render-svg "img/not-ok-status.svg")
     "Unknown"))
 
 (defn- reviewers-yes-no
@@ -268,7 +275,7 @@
    [:fo:block {:font-style "normal" :font-size "20px" :font-weight 400 :space-after 11}
     (tr+ [:meeting :approvals])]
    (if (seq (:review/decision (first review-of)))
-     (table-4-columns {:first-width    "15%" :left-width "25%" :center-width "50%" :right-width "10%"
+     (table-4-columns {:first-width    "10%" :left-width "25%" :center-width "55%" :right-width "10%"
                        :first-content  (reviewers-yes-no review-of)
                        :left-content   (reviewers-names review-of)
                        :center-content (reviewers-decisions review-of)
