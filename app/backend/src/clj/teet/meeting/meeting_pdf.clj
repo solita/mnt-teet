@@ -101,6 +101,13 @@
   [review]
   (str (format-date review) " " (format-time-sec review)))
 
+(defn- render-svg
+  "Render .SVG content"
+  [svg-file]
+  [:fo:block
+   [:fo:external-graphic
+    { :content-width "15px" :content-height "15px" :src (io/resource svg-file) } ]])
+
 (defn- decision-list-item
   "Return the agenda topic descition list item"
   [decision topic]
@@ -136,8 +143,10 @@
 (defn attachment-files
   "List of attachement for the topic"
   [idx attachment]
-  [:fo:block
-   [:fo:block link-look-and-feel
+  [:fo:block link-look-and-feel
+   [:fo:block
+    [:fo:external-graphic
+    { :padding-right 12 :content-width "15px" :content-height "15px" :src (io/resource "img/file.svg") }]
     (str "Appendix " idx " - " (:file/name attachment))]])
 
 (defn- list-of-topics
@@ -224,21 +233,16 @@
                [:fo:table-cell
                 [:fo:block {:font-size rows-font-size :font-weight rows-font-weight :font-style rows-font-style} right]]])
             first-content left-content center-content right-content)]]))
-(defn- render-svg
-  "Render .SVG content"
-  [svg-file]
-  [:fo:block
-   [:fo:external-graphic
-    { :content-width "15px" :content-height "15px" :src (io/resource svg-file) } ]])
+
 
 (defn- decision-text
   "Return decision text depending on approved or rejected"
   [{db-ident :db/ident}]
   (case db-ident
     :review.decision/approved
-    (render-svg "img/ok-status.svg")
+    (render-svg "img/approved.svg")
     :review.decision/rejected
-    (render-svg "img/not-ok-status.svg")
+    (render-svg "img/rejected.svg")
     "Unknown"))
 
 (defn- reviewers-yes-no
