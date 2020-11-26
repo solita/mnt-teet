@@ -13,7 +13,8 @@
             [teet.cooperation.cooperation-model :as cooperation-model]
             [teet.ui.select :as select]
             [teet.ui.date-picker :as date-picker]
-            [teet.ui.text-field :as text-field]))
+            [teet.ui.text-field :as text-field]
+            [teet.common.common-controller :as common-controller]))
 
 
 (defn- third-parties [third-parties]
@@ -70,12 +71,20 @@
            [(tr [:fields :cooperation.response/valid-until])
             (format/date valid-until)]]])]])])
 
-(defn- application-form [e! close-event form-atom]
+(defn- application-form [{:keys [e! project-id third-party]} close-event form-atom]
   [form/form {:e! e!
               :value @form-atom
               :on-change-event (form/update-atom-event form-atom merge)
               :cancel-event close-event
-              :save-event #(cooperation-controller/->SaveApplication @form-atom)
+              :save-event #(common-controller/->SaveForm
+                            :cooperation/create-application
+                            {:thk.project/id project-id
+                             :cooperation.3rd-party/name third-party
+                             :application @form-atom}
+                            (fn [response]
+                              (fn [e!]
+                                (e! (close-event))
+                                (e! (cooperation-controller/->ApplicationCreated response)))))
               :spec ::cooperation-model/application-form}
    ^{:attribute :cooperation.application/type}
    [select/select-enum {:e! e! :attribute :cooperation.application/type}]
@@ -105,7 +114,9 @@
      [:<>
       [common/header-with-actions (:cooperation.3rd-party/name third-party)]
       [form/form-modal-button {:max-width "sm"
-                               :form-component [application-form e!]
+                               :form-component [application-form {:e! e!
+                                                                  :project-id (:thk.project/id project)
+                                                                  :third-party third-party-name}]
                                :modal-title (tr [:cooperation :new-application-title])
                                :button-component [buttons/button-primary {}
                                                   (tr [:cooperation :new-application])]}]

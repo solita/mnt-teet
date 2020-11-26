@@ -51,6 +51,7 @@
    :cooperation.application/date
    :cooperation.application/response-type
    :cooperation.application/response-deadline
+   :cooperation.application/comment
    {:cooperation.application/response
     [:cooperation.response/date
      :cooperation.response/valid-until]}])
