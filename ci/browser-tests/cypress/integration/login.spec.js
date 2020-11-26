@@ -1,6 +1,6 @@
 context('Login', () => {
     beforeEach(() => {
-      cy.visit("./")
+      cy.visit("")
     })
 
     it("dummy login as benjamin boss should work", () => {
