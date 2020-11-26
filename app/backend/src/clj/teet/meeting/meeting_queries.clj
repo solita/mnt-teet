@@ -334,7 +334,8 @@
                                                  :link :meeting/organizer-or-reviewer}}}
   ^{:format :raw}
   {:status 200
-   :headers {"Content-Disposition" (str "inline; filename=meeting_" id ".pdf")}
+   :headers {"Content-Disposition" (str "inline; filename=meeting_" id ".pdf")
+             "Content-Type" "application/pdf"}
    :body (ring-io/piped-input-stream
           (fn [ostream]
             (try
