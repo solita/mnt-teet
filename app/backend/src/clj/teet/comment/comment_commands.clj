@@ -263,7 +263,7 @@
                                      (du/entity db comment-id)
                                      visibility)]
    :transact
-   (let [incoming-mentions (extract-mentions comment)
+   (let [incoming-mentions (user-uuids->ids db (extract-mentions comment))
          old-mentions (into #{}
                             (map :db/id (:comment/mentions (d/pull db '[:comment/mentions] comment-id))))
          un-mentioned (set/difference old-mentions incoming-mentions)
