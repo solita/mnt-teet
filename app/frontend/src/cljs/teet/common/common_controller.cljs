@@ -577,3 +577,27 @@
                            (or (and undo-result-event
                                     (undo-result-event result))
                                (->Refresh)))})))
+
+
+;; Generic form save
+
+(defrecord SaveFormResponse [on-success-fx response]
+  t/Event
+  (process-event [_ app]
+    (log/info "successfx: " on-success-fx ", response: " response)
+    (if-let [fx (if on-success-fx
+                  (on-success-fx response)
+                  refresh-fx)]
+      (do
+        (log/info "returning fx " fx)
+        (t/fx app fx))
+      app)))
+
+(defrecord SaveForm [command form-data on-success-fx]
+  t/Event
+  (process-event [_ app]
+    (t/fx app
+          {:tuck.effect/type :command!
+           :command command
+           :payload form-data
+           :result-event (partial ->SaveFormResponse on-success-fx)})))

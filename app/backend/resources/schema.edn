@@ -1485,43 +1485,43 @@
  {:db/ident :migration/cooperation
   :txes [[ ;; Add new enum values for cooperation option lists
           {:db/ident :cooperation.application.type/design-conditions-draft
-           :enum/valid-for :cooperation.application/type}
+           :enum/attribute :cooperation.application/type}
           {:db/ident :cooperation.application.type/design
-           :enum/valid-for :cooperation.application/type}
+           :enum/attribute :cooperation.application/type}
           {:db/ident :cooperation.application.type/topogeodetic-base-plan
-           :enum/valid-for :cooperation.application/type}
+           :enum/attribute :cooperation.application/type}
           {:db/ident :cooperation.application.type/geological-survey-plan
-           :enum/valid-for :cooperation.application/type}
+           :enum/attribute :cooperation.application/type}
           {:db/ident :cooperation.application.type/ex-ante-eia
-           :enum/valid-for :cooperation.application/type}
+           :enum/attribute :cooperation.application/type}
           {:db/ident :cooperation.application.type/eia-report
-           :enum/valid-for :cooperation.application/type}
+           :enum/attribute :cooperation.application/type}
           {:db/ident :cooperation.application.type/building-permit-draft
-           :enum/valid-for :cooperation.application/type}
+           :enum/attribute :cooperation.application/type}
           {:db/ident :cooperation.application.type/building-permit-order
-           :enum/valid-for :cooperation.application/type}
+           :enum/attribute :cooperation.application/type}
           {:db/ident :cooperation.application.type/work-permit
-           :enum/valid-for :cooperation.application/type}
+           :enum/attribute :cooperation.application/type}
           {:db/ident :cooperation.application.type/forest-notification
-           :enum/valid-for :cooperation.application/type}
+           :enum/attribute :cooperation.application/type}
           {:db/ident :cooperation.application.type/special-use-water-permit
-           :enum/valid-for :cooperation.application/type}
+           :enum/attribute :cooperation.application/type}
           {:db/ident :cooperation.application.type/waste-permit
-           :enum/valid-for :cooperation.application/type}
+           :enum/attribute :cooperation.application/type}
           {:db/ident :cooperation.application.type/use-permit
-           :enum/valid-for :cooperation.application/type}
+           :enum/attribute :cooperation.application/type}
           {:db/ident :cooperation.application.type/other
-           :enum/valid-for :cooperation.application/type}
+           :enum/attribute :cooperation.application/type}
 
           ;; Response type enum values
           {:db/ident :cooperation.application.response-type/opinion
-           :enum/valid-for :cooperation.application/response-type}
+           :enum/attribute :cooperation.application/response-type}
           {:db/ident :cooperation.application.response-type/coordination
-           :enum/valid-for :cooperation.application/response-type}
+           :enum/attribute :cooperation.application/response-type}
           {:db/ident :cooperation.application.response-type/consent
-           :enum/valid-for :cooperation.application/response-type}
+           :enum/attribute :cooperation.application/response-type}
           {:db/ident :cooperation.application.response-type/other
-           :enum/valid-for :cooperation.application/response-type}
+           :enum/attribute :cooperation.application/response-type}
 
           ;; Cooperation 3rd party entity
           {:db/ident :cooperation.3rd-party/name
@@ -1582,13 +1582,13 @@
 
           ;; Cooperation response statuses
           {:db/ident :cooperation.response.status/no-objection
-           :enum/valid-for :cooperation.response/status}
+           :enum/attribute :cooperation.response/status}
           {:db/ident :cooperation.response.status/no-objection-with-terms
-           :enum/valid-for :cooperation.response/status}
+           :enum/attribute :cooperation.response/status}
           {:db/ident :cooperation.response.status/objection
-           :enum/valid-for :cooperation.response/status}
+           :enum/attribute :cooperation.response/status}
           {:db/ident :cooperation.response.status/no-response
-           :enum/valid-for :cooperation.response/status}
+           :enum/attribute :cooperation.response/status}
 
           ;; Cooperation response entity
           {:db/ident :cooperation.response/status
@@ -1615,11 +1615,11 @@
 
           ;; Cooperation position decisions
           {:db/ident :cooperation.position.decision/agreed
-           :enum/valid-for :cooperation.position/decision}
+           :enum/attribute :cooperation.position/decision}
           {:db/ident :cooperation.position.decision/rejected
-           :enum/valid-for :cooperation.position/decision}
+           :enum/attribute :cooperation.position/decision}
           {:db/ident :cooperation.position.decision/partially-rejected
-           :enum/valid-for :cooperation.position/decision}
+           :enum/attribute :cooperation.position/decision}
 
           ;; Cooperation position entity
           {:db/ident :cooperation.position/decision
