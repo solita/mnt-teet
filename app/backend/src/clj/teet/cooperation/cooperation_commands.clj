@@ -12,14 +12,15 @@
    :project-id [:thk.project/id project-id]
    :authorization {:cooperation/edit-3rd-party {}}
    :transact
-   [(merge
-     (select-keys third-party
-                  [:cooperation.3rd-party/name
-                   :cooperation.3rd-party/id-code
-                   :cooperation.3rd-party/email
-                   :cooperation.3rd-party/phone])
-     {:db/id "new-third-party"
-      :cooperation.3rd-party/project [:thk.project/id project-id]})]})
+   [(list 'teet.cooperation.cooperation-tx/create-3rd-party
+          (merge
+           (select-keys third-party
+                        [:cooperation.3rd-party/name
+                         :cooperation.3rd-party/id-code
+                         :cooperation.3rd-party/email
+                         :cooperation.3rd-party/phone])
+           {:db/id "new-third-party"
+            :cooperation.3rd-party/project [:thk.project/id project-id]}))]})
 
 (defcommand :cooperation/create-application
   {:doc "Create new application in project for the given 3rd party."
