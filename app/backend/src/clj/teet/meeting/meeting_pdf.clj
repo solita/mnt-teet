@@ -4,7 +4,7 @@
     [teet.meeting.meeting-db :as meeting-db]
     [teet.meeting.meeting-commands :as meeting-commands]
     [teet.environment :as environment]
-    [teet.localization :refer [with-language tr tr-enum]]
+    [teet.localization :refer [with-language tr]]
     [teet.user.user-model :as user-model]
     [clojure.java.io :as io])
   (:import (com.vladsch.flexmark.parser Parser)
@@ -159,7 +159,6 @@
 (defn- list-of-topics
   "Return list of agenda topics"
   [topics]
-  (def topics* topics)
   (when (seq topics)
     [:fo:list-block {:space-after "40"}
      (map (fn [topic]
