@@ -1,7 +1,9 @@
 (ns teet.util.spec
-  (:require [clojure.spec.alpha :as s]))
+  "Utilities for spec manipulation and common specs."
+  (:require [clojure.spec.alpha :as s]
+            [clojure.string :as str]))
 
-
+(s/def ::non-empty-string (s/and string? (complement str/blank?)))
 
 (defn get-spec [spec]
   (try

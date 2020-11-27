@@ -17,21 +17,56 @@
             [teet.common.common-controller :as common-controller]))
 
 
-(defn- third-parties [third-parties]
+(defn- third-party-form [{:keys [e! project-id]} close-event form-atom]
+  [form/form {:e! e!
+              :value @form-atom
+              :on-change-event (form/update-atom-event form-atom merge)
+              :cancel-event close-event
+              :save-event #(common-controller/->SaveForm
+                            :cooperation/create-3rd-party
+                            {:thk.project/id project-id
+                             :third-party @form-atom}
+                            (fn [response]
+                              (fn [e!]
+                                (e! (close-event))
+                                (e! (cooperation-controller/->ThirdPartyCreated
+                                     (:cooperation.3rd-party/name @form-atom)
+                                     response)))))
+              :spec ::cooperation-model/third-party-form}
+   ^{:attribute :cooperation.3rd-party/name}
+   [text-field/TextField {}]
+
+   ^{:attribute :cooperation.3rd-party/id-code}
+   [text-field/TextField {}]
+
+   ^{:attribute :cooperation.3rd-party/email}
+   [text-field/TextField {}]
+
+   ^{:attribute :cooperation.3rd-party/phone}
+   [text-field/TextField {}]])
+
+(defn- third-parties [e! project third-parties]
   [:div
    (for [{id :db/id
           :cooperation.3rd-party/keys [name]} third-parties]
      ^{:key (str id)}
      [url/Link {:page :cooperation-third-party
                 :params {:third-party (js/encodeURIComponent name)}}
-      name])])
+      name])
+   [form/form-modal-button
+    {:max-width "sm"
+     :form-component [third-party-form {:e! e!
+                                        :project-id (:thk.project/id project)}]
+     :modal-title (tr [:cooperation :new-third-party-title])
+     :button-component [buttons/button-primary {}
+                        (tr [:cooperation :new-third-party])]}]])
 
 (defn- cooperation-page-structure [e! app project third-parties-list main-content]
   [project-view/project-full-page-structure
    {:e! e!
     :app app
     :project project
-    :left-panel [third-parties third-parties-list]
+    :left-panel [third-parties e! project third-parties-list]
     :main main-content}])
 
 (defn overview-page [e! {:keys [user] :as app} {:keys [project overview]}]

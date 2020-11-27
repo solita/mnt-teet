@@ -5,7 +5,19 @@
             #?(:clj [clj-time.coerce :as tc]
                :cljs [cljs-time.coerce :as tc])
             [clojure.spec.alpha :as s]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.util.spec :as su]))
+
+(s/def :cooperation.3rd-party/name ::su/non-empty-string)
+(s/def :cooperation.3rd-party/id-code string?)
+(s/def :cooperation.3rd-party/email string?)
+(s/def :cooperation.3rd-party/phone string?)
+
+(s/def ::third-party-form
+  (s/keys :req [:cooperation.3rd-party/name]
+          :opt [:cooperation.3rd-party/id-code
+                :cooperation.3rd-party/email
+                :cooperation.3rd-party/phone]))
 
 (s/def :cooperation.application/comment string?)
 (s/def :cooperation.application/date inst?)
@@ -18,6 +30,7 @@
                 :cooperation.application/date]
           :opt [:cooperation.application/response-deadline
                 :cooperation.application/comment]))
+
 
 (defn valid-until
   "Calculate response valid-until date based on date and valid months."
