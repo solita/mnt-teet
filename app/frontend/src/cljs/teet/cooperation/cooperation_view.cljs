@@ -46,19 +46,20 @@
    [text-field/TextField {}]])
 
 (defn- third-parties [e! project third-parties]
-  [:div
+  [:div.project-third-parties-list
    (for [{id :db/id
           :cooperation.3rd-party/keys [name]} third-parties]
      ^{:key (str id)}
-     [url/Link {:page :cooperation-third-party
-                :params {:third-party (js/encodeURIComponent name)}}
-      name])
+     [:div.project-third-party
+      [url/Link {:page :cooperation-third-party
+                 :params {:third-party (js/encodeURIComponent name)}}
+       name]])
    [form/form-modal-button
     {:max-width "sm"
      :form-component [third-party-form {:e! e!
                                         :project-id (:thk.project/id project)}]
      :modal-title (tr [:cooperation :new-third-party-title])
-     :button-component [buttons/button-primary {}
+     :button-component [buttons/button-primary {:class :new-third-party}
                         (tr [:cooperation :new-third-party])]}]])
 
 (defn- cooperation-page-structure [e! app project third-parties-list main-content]
@@ -70,12 +71,13 @@
     :main main-content}])
 
 (defn overview-page [e! {:keys [user] :as app} {:keys [project overview]}]
-  [cooperation-page-structure
-   e! app project overview
-   [:<>
-    [typography/Heading2 (tr [:cooperation :page-title])]
-    [typography/BoldGreyText (tr [:cooperation :all-third-parties])]
-    (pr-str overview)]])
+  [:span.cooperation-overview-page
+   [cooperation-page-structure
+    e! app project overview
+    [:<>
+     [typography/Heading2 (tr [:cooperation :page-title])]
+     [typography/BoldGreyText (tr [:cooperation :all-third-parties])]
+     (pr-str overview)]]])
 
 (defn- applications [{:cooperation.3rd-party/keys [applications] :as third-party}]
   [:<>
@@ -144,25 +146,27 @@
         third-party (some #(when (= third-party-name
                                     (:cooperation.3rd-party/name %)) %)
                           overview)]
-    [cooperation-page-structure
-     e! app project overview
-     [:<>
-      [common/header-with-actions (:cooperation.3rd-party/name third-party)]
-      [form/form-modal-button {:max-width "sm"
-                               :form-component [application-form {:e! e!
-                                                                  :project-id (:thk.project/id project)
-                                                                  :third-party third-party-name}]
-                               :modal-title (tr [:cooperation :new-application-title])
-                               :button-component [buttons/button-primary {}
-                                                  (tr [:cooperation :new-application])]}]
-      [applications third-party]]]))
+    [:span.cooperation-third-party-page
+     [cooperation-page-structure
+      e! app project overview
+      [:<>
+       [common/header-with-actions (:cooperation.3rd-party/name third-party)]
+       [form/form-modal-button {:max-width "sm"
+                                :form-component [application-form {:e! e!
+                                                                   :project-id (:thk.project/id project)
+                                                                   :third-party third-party-name}]
+                                :modal-title (tr [:cooperation :new-application-title])
+                                :button-component [buttons/button-primary {:class :new-application}
+                                                   (tr [:cooperation :new-application])]}]
+       [applications third-party]]]]))
 
 (defn application-page [e! app {:keys [project overview third-party]}]
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
-    [cooperation-page-structure
-     e! app project overview
-     [:<>
-      [:br]
-      "3rd party:" (pr-str third-party)
-      [:br]
-      "application:" (pr-str application)]]))
+    [:span.cooperation-application-page
+     [cooperation-page-structure
+      e! app project overview
+      [:<>
+       [:br]
+       "3rd party:" (pr-str third-party)
+       [:br]
+       "application:" (pr-str application)]]]))
