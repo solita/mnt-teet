@@ -83,6 +83,7 @@
 (defn- view-link [{:keys [open? current-page link icon name]}]
   (let [current-page? (= current-page (:page link))]
     [ListItem {:component "a"
+               :class (str "left-menu-" (cljs.core/name (:page link)))
                :href (routes/url-for link)
                :align-items "center"
                :button true
@@ -146,7 +147,7 @@
 (defn logout [e!]
   [:div {:class (herb/join (<class navigation-style/logout-container-style)
                            (<class navigation-style/divider-style))}
-   [Link {:class (<class navigation-style/logout-style)
+   [Link {:class [:header-logout (<class navigation-style/logout-style)]
           :href "/#/login"
           :on-click (e! login-controller/->Logout)}
     (tr [:common :log-out])]])

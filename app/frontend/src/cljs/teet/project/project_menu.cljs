@@ -110,6 +110,7 @@
        ;; FIXME: show badge here or when tab is selected?
        [MenuItem {:on-click activate!
                   :selected selected?
+                  :class (str "project-menu-item-" (name (:page navigate)))
                   :classes {:root (<class project-style/project-view-selection-item)}}
         [:div {:class (<class project-style/project-view-selection-item-label)} (tr label)]
         [:div {:class (<class project-style/project-view-selection-item-hotkey)} (tr [:common :hotkey] {:key hotkey})]]))))
@@ -129,7 +130,8 @@
          [:div {:class (<class project-style/project-tab-container dark-theme?)}
           [:div {:class (<class common-styles/space-between-center)}
            [:div {:class (<class common-styles/flex-align-center)}
-            [IconButton {:on-click toggle-open!
+            [IconButton {:class "project-menu"
+                         :on-click toggle-open!
                          :ref set-anchor!}
              [icons/navigation-apps (when dark-theme?
                                       {:style {:color theme-colors/white}})]]
