@@ -63,7 +63,7 @@
        (with-language :en (tr key))))
 
 (def date-format
-  (doto (java.text.SimpleDateFormat. "MM.dd.yyyy" )
+  (doto (java.text.SimpleDateFormat. "dd.MM.yyyy" )
     (.setTimeZone (java.util.TimeZone/getTimeZone "Europe/Tallinn"))))
 
 (def time-format
@@ -126,26 +126,26 @@
   [:fo:block link-look-and-feel
    [:fo:block
     [:fo:external-graphic external-link-icon]
-    (str "File: " (:file/name info))]])
+    (str (tr+ [:link :type-label :file]) ": " (:file/name info))]])
 
 (defmethod link-list-item :task [{info :link/info}]
   (let [task-type (get-in info [:task/type :db/ident])]
     [:fo:block link-look-and-feel
      [:fo:block
       [:fo:external-graphic external-link-icon]
-      (str "Task: " (tr+ [:enum task-type]))]]))
+      (str (tr+ [:link :type-label :task]) ": " (tr+ [:enum task-type]))]]))
 
 (defmethod link-list-item :estate [link]
   [:fo:block link-look-and-feel
    [:fo:block
     [:fo:external-graphic external-link-icon]
-    (str "Estate: " (:link/external-id link))]])
+    (str (tr+ [:link :type-label :estate]) ": " (:link/external-id link))]])
 
 (defmethod link-list-item :cadastral-unit [{info :link/info}]
   [:fo:block link-look-and-feel
    [:fo:block
     [:fo:external-graphic external-link-icon]
-    (str "Cadastral Unit: " (:L_AADRESS info) " " (:TUNNUS info) " ")]])
+    (str (tr+ [:link :type-label :cadastral-unit]) ": " (:L_AADRESS info) " " (:TUNNUS info) " ")]])
 
 (defn attachment-files
   "List of attachement for the topic"
@@ -154,7 +154,7 @@
    [:fo:block
     [:fo:external-graphic
      {:padding-right 12 :content-width "15px" :content-height "15px" :src (io/resource "img/file.svg")}]
-    (str "Appendix " idx " - " (:file/name attachment))]])
+    (str (tr+ [:link :type-label :appendix]) " " idx " - " (:file/name attachment))]])
 
 (defn- list-of-topics
   "Return list of agenda topics"
@@ -304,7 +304,7 @@
                 (not is-absent?))]
     [:fo:block
      [:fo:inline {:font-weight 900} (:user/family-name user) " " (:user/given-name user)]
-     [:fo:inline ", " (with-language :en (tr-enum role))]]))
+     [:fo:inline ", " (tr+ [:enum (:db/ident role)])]]))
 
 (defn- fetch-project-id
   "Find project id by meeting"
