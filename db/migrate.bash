@@ -6,4 +6,7 @@ export DB_URI=`aws ssm get-parameters --names "/teet/migrate/db-uri" --query "Pa
 export DB_USER=`aws ssm get-parameters --names "/teet/migrate/db-user" --query "Parameters[0].Value" | tr -d '"'`
 export DB_PASSWORD=`aws ssm get-parameters --names "/teet/migrate/db-password" --query "Parameters[0].Value" | tr -d '"'`
 
+echo DB_URI:
+aws ssm get-parameters --names "/teet/migrate/db-uri" --query "Parameters[0].Value"
+
 clojure -m migrate
