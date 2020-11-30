@@ -17,7 +17,8 @@
             [teet.ui.file-upload :as file-upload]
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
-            [teet.ui.material-ui :refer [Grid Link LinearProgress IconButton Badge CircularProgress]]
+            [teet.ui.material-ui :refer [Grid Link LinearProgress IconButton Badge CircularProgress
+                                         DialogActions DialogContentText CircularProgress]]
             [teet.ui.panels :as panels]
             [teet.ui.select :as select]
             [teet.ui.tabs :as tabs]
@@ -293,7 +294,8 @@
        ^{:attribute :task/files
          :validate (fn [files]
                      (or
-                       (some some? (map (partial file-upload/validate-file e! project-id task) files))
+                       (some some?
+                             (map (partial file-upload/validate-file e! project-id task) files))
                        (when (not= 1 (count files))
                          "expect exactly one file")))}
        [file-upload/files-field {:e! e!
@@ -302,17 +304,48 @@
                                  :single? true}]]]]))
 
 (defn file-replacement-modal-button
-  [{:keys [e! project-id task file replace-form small?] :as opts}]
-  (r/with-let [replacement-form-open? (r/atom false)
-               upload! #(do (e! (file-controller/->UpdateFilesForm %))
-                            (reset! replacement-form-open? true))
-               close! #(do (reset! replacement-form-open? false)
-                           (e! (file-controller/->AfterUploadRefresh)))]
-    [:div.file-details-upload-replacement
+  [{:keys [e! task file small?]}]
+  ;; The progress? and open-atom atoms are expected to go false automatically after uploading happens
+  ;; since the app state is either refreshed or navigation happens
+  (r/with-let [selected-file (r/atom nil)
+               progress? (r/atom false)
+               select-file #(reset! selected-file (first %))
+               open-atom (r/atom false)
+               open #(reset! open-atom true)
+               close #(do (reset! open-atom false)
+                          (reset! selected-file nil))]
+    [:div#file-details-upload-replacement
+
+     [panels/modal {:title (tr [:file-upload :replace-file-modal-title])
+                    :open-atom open-atom
+                    :actions [DialogActions
+                              [buttons/button-secondary
+                               {:on-click close
+                                :disabled @progress?
+                                :id (str "confirmation-cancel")}
+                               (tr [:buttons :cancel])]
+                              [buttons/button-primary
+                               {:id (str "confirmation-confirm")
+                                :disabled @progress?
+                                :on-click #(do (e! (file-controller/->UploadNewVersion file @selected-file))
+                                               (reset! progress? true))}
+                               (tr [:file-upload :replace-file-confirm])]]}
+
+      [DialogContentText
+       (if @progress?
+         [:div {:style {:display :flex
+                        :justify-content :center}}
+          [CircularProgress]]
+         (tr [:file-upload :replace-file-modal-body] {:file-full-name (:file/full-name file)
+                                                      :selected-file-name (some-> @selected-file
+                                                                                  :file-object
+                                                                                  file-model/file-info
+                                                                                  :file/name)}))]]
      [when-authorized
       :file/upload task
       [file-upload/FileUpload
-       {:on-drop #(upload! {:task/files %})
+       {:on-drop #(do (select-file %)
+                      (open))
         :drag-container-id "file-details-upload-replacement"
         :color :secondary
         :icon [icons/file-cloud-upload]
@@ -326,9 +359,7 @@
          [buttons/button-secondary
           {:component :span
            :start-icon (r/as-element [icons/file-cloud-upload-outlined])}
-          (tr [:file :upload-new-version])])]]
-     (when @replacement-form-open?
-       [replace-file-form e! project-id task file replace-form close!])]))
+          (tr [:file :upload-new-version])])]]]))
 
 (defn file-row2
   [{:keys [link-to-new-tab? no-link?
@@ -638,8 +669,8 @@
                     [Link {:target :_blank
                            :href (common-controller/query-url :file/download-file
                                                               {:file-id (:db/id file)})}
-                     (str (:file/name file) " / ") (tr [:file :version]
-                                                     {:num (:file/version file)})]
+                     (tr [:file :version]
+                         {:num (:file/version file)})]
                     [:div {:class (<class common-styles/flex-row)}
                      [:span {:style {:margin "0 0.5rem"}}
                       (format/date (:meta/created-at file))]
@@ -812,17 +843,17 @@
                                         :activity activity
                                         :file file
                                         :parts (:file.part/_task task)}])]
-                  [typography/Heading2
-                   [:div {:class (<class common-styles/flex-row)}
-                    [:div {:class [(<class common-styles/inline-block)
-                                   (<class common-styles/text-ellipsis "40vw")]
-                           :title description} description]
-                    [typography/GreyText {:style {:margin-left "0.5rem"}}
-                     (str/upper-case extension)]
-                    [:div {:style {:flex-grow 1
-                                   :text-align :end}}
-                     [buttons/button-secondary {:on-click #(reset! edit-open? true)}
-                      (tr [:buttons :edit])]]]]
+
+                  [:div {:class (<class common-styles/flex-row)}
+                   [typography/Heading2
+                    [:span description]
+                    [typography/GreyText {:style {:display :inline-block
+                                                  :margin "0 0.5rem"}}
+                     (str/upper-case extension)]]
+                   [:div {:style {:flex-grow 1
+                                  :text-align :end}}
+                    [buttons/button-secondary {:on-click #(reset! edit-open? true)}
+                     (tr [:buttons :edit])]]]
                   [file-identifying-info (du/enum= :activity.name/land-acquisition
                                                    (:activity/name activity))
                    file]
