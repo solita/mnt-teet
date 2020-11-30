@@ -134,7 +134,11 @@
  :cooperation
  {:page-title "Cooperation",
   :new-application "Add new application",
-  :new-application-title "Add new application"},
+  :new-application-title "Add new application",
+  :new-application-created "Application created successfully",
+  :new-third-party "Add third party",
+  :new-third-party-title "Add third party",
+  :new-third-party-created "Third party created successfully"},
  :dashboard
  {:activities-and-tasks "Activities and tasks",
   :my-projects "My projects",
@@ -431,6 +435,8 @@
   :request-timeout "The server did not respond.",
   :invalid-activity-dates "Check activity dates",
   :bad-request "Bad request",
+  :replaced-file-not-latest
+  "Can't replace an old version of a file. Replace newest version.",
   :meeting-has-no-decisions
   "The meeting doesn't contain anything to review"},
  :fields
@@ -456,6 +462,7 @@
   :file.part/name "Part name",
   :task/group "Task group",
   :file/part "Part",
+  :cooperation.3rd-party/name "3rd party name",
   :file/version "Version",
   :estate-procedure/pos "POS#",
   :user/global-role "Global role",
@@ -487,6 +494,7 @@
   :file/position-number "POS#",
   :meeting.decision/body "Decision",
   :meeting/agenda "Agenda",
+  :cooperation.3rd-party/id-code "3rd party registry/personal ID code",
   :user/phone-number "Phone number",
   :thk.project/carriageway "CW",
   :participation/participant "User",
@@ -505,6 +513,7 @@
   :thk.project/m-range-change-reason "Reason for start/end change",
   :task/estimated-start-date "Estimated start date",
   :meeting.agenda/topic "Topic",
+  :cooperation.3rd-party/phone "Contact phone",
   :cooperation.application/comment "Comment",
   :comment/track? "Track status",
   :user/roles "Roles",
@@ -516,6 +525,7 @@
   :estate-procedure/urgent-bonus "Urgent fee",
   :comment/comment "Comment",
   :file/timestamp "Upload date",
+  :cooperation.3rd-party/email "E-mail address",
   :user/email "Email",
   :land-acquisition/area-to-obtain "Area to obtain",
   :file/sequence-number "#",
@@ -569,6 +579,7 @@
  :file-upload
  {:original-filename "Original filename: {name}",
   :description "File description",
+  :replace-file-confirm "Yes, upload as a new version",
   :description-required "Description required",
   :general-part "General",
   :select-part-to-upload
@@ -584,9 +595,12 @@
   :wrong-task "Cannot add file to this task",
   :file-new-part-text "TEET is designed to make you life easier",
   :invalid-sequence-number "Invalid sequence number",
+  :replace-file-modal-body
+  "Are you sure you want to upload {selected-file-name} as a new version for {file-full-name}?",
   :already-uploaded "This file has already been uploaded",
   :file-will-be-added-to-part "This file will be added to {part} part",
-  :empty-file "Can't upload empty files"},
+  :empty-file "Can't upload empty files",
+  :replace-file-modal-title "Upload new version "},
  :land
  {:show-owner-info "Show owner information",
   :no-active-mortgages
