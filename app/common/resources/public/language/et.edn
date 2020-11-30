@@ -138,7 +138,8 @@
   :new-application-created "Pöördumine edukalt loodud",
   :new-third-party "Lisan 3nda osapoole",
   :new-third-party-title "3nda osapoole lisamine",
-  :new-third-party-created "3s osapool edukalt lisatud"},
+  :new-third-party-created "3s osapool edukalt lisatud",
+  :all-third-parties nil},
  :dashboard
  {:activities-and-tasks "Tegevused ja ülesanded",
   :my-projects "Minu projektid",
@@ -555,6 +556,7 @@
   :show-preview "Kuvan eelvaate",
   :edit "Muudan faili",
   :upload-info "Üles laadinud {author} {date} ",
+  :upload-success nil,
   :hide-preview "Peidan eelvaate",
   :replace-dialog-title "Laen üles uue versiooni",
   :edit-info "Viimati muudetud {author} {date} ",
