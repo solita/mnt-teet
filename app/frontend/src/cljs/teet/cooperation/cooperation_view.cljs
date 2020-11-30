@@ -70,42 +70,60 @@
     :left-panel [third-parties e! project third-parties-list]
     :main main-content}])
 
+(defn- application-link [{id :db/id :cooperation.application/keys [type response-type]}]
+  [url/Link {:page :cooperation-application
+             :params {:application (str id)}}
+   (str
+    (tr-enum type) " / " (tr-enum response-type))])
+
+(defn- application-card-content [{:cooperation.application/keys [response]}]
+  (let [{:cooperation.response/keys [status date valid-until]} response]
+    [common/basic-information-row
+     [[(tr [:fields :cooperation.response/status])
+       ;; colored circle based on status
+       (tr-enum status)]
+      [(tr [:fields :cooperation.response/date])
+       (format/date date)]
+      [(tr [:fields :cooperation.response/valid-until])
+       (format/date valid-until)]]]))
+
 (defn overview-page [e! app {:keys [project overview]}]
+
   [:span.cooperation-overview-page
    [cooperation-page-structure
     e! app project overview
     [:<>
      [typography/Heading2 (tr [:cooperation :page-title])]
      [typography/BoldGreyText (tr [:cooperation :all-third-parties])]
-     (pr-str overview)]]])
+     (for [{:cooperation.3rd-party/keys [name applications] :as tp} overview]
+       [Card {}
+        [CardHeader {:title (r/as-element
+                             [url/Link {:page :cooperation-third-party
+                                        :params {:third-party (js/encodeURIComponent name)}}
+                              name])}]
+        (when-let [application (first applications)]
+          [CardContent {}
+           [url/with-navigation-params
+            {:third-party (js/encodeURIComponent name)}
+            [application-link application]]
+           [application-card-content application]])])]]])
 
 (defn- applications [{:cooperation.3rd-party/keys [applications] :as _third-party}]
   [:<>
    (for [{id :db/id
-          :cooperation.application/keys [type response-type response]} applications]
+          :cooperation.application/keys [response]
+          :as application} applications]
      ^{:key (str id)}
      [Card {}
       ;; Header shows type of application and response (as link to application page)
       ;; activity for the application
-      [CardHeader {:title (r/as-element
-                           [url/Link {:page :cooperation-application
-                                      :params {:application (str id)}}
-                            (str
-                             (tr-enum type) " / " (tr-enum response-type))])}]
+      [CardHeader {:title (r/as-element [application-link application])}]
 
       ;; Content shows response, dates
       ;; responsible person
       ;; position of mnt
       [CardContent
-       (let [{:cooperation.response/keys [status date valid-until]} response]
-         [common/basic-information-row
-          [[(tr [:fields :cooperation.response/status])
-            ;; colored circle based on status
-            (tr-enum status)]
-           [(tr [:fields :cooperation.response/date])
-            (format/date date)]
-           [(tr [:fields :cooperation.response/valid-until])
-            (format/date valid-until)]]])]])])
+       [application-card-content application]]])])
 
 (defn- application-form [{:keys [e! project-id third-party]} close-event form-atom]
   [form/form {:e! e!
