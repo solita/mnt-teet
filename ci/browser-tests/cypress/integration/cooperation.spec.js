@@ -34,7 +34,7 @@ context('Cooperation', function() {
 
         cy.formSubmit()
 
-        // page has h1 with name of 3rd party and new application button
+        // Navigated to 3rd party page: check that it has h1 with name of 3rd party and new application button
 
         cy.get(".cooperation-third-party-page h1").contains(this.thirdparty)
         cy.get("button.new-application").click()
@@ -45,6 +45,15 @@ context('Cooperation', function() {
             ":cooperation.application/response-type", "[:cooperation.application.response-type/opinion]",
             ":cooperation.application/date", this.today,
             ":cooperation.application/response-deadline", this.twoWeeks);
+        cy.formSubmit()
+
+        // Navigated to application page:
+
+        cy.get(".cooperation-application-page")
+
+        // check we have button for entering response
+
+        cy.get("button.enter-response").click()
 
 
     })

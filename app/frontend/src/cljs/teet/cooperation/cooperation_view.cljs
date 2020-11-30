@@ -178,12 +178,26 @@
                             (tr [:cooperation :new-application])]}]
        [applications third-party]]]]))
 
+(defn- application-response-form [_close-event _form-atom]
+  [:div "TODO: application response form"])
+
 (defn application-page [e! app {:keys [project overview third-party]}]
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
     [:span.cooperation-application-page
      [cooperation-page-structure
       e! app project overview
       [:<>
+       [common/header-with-actions (:cooperation.3rd-party/name third-party)]
+       [typography/Heading2
+        (tr-enum (:cooperation.application/type application)) " / "
+        (tr-enum (:cooperation.application/response-type application))]
+       ;; FIXME: show activity name as subheading
+       [:br]
+       [form/form-modal-button
+        {:max-width "sm"
+         :form-component [application-response-form]
+         :button-component [buttons/button-primary {:class :enter-response}
+                            (tr [:cooperation :enter-response])]}]
        [:br]
        "3rd party:" (pr-str third-party)
        [:br]
