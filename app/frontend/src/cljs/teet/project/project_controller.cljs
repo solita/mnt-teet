@@ -144,7 +144,7 @@
 
 (defn fetch-related-candidates
   [app road-buffer-meters info-type]
-  (let [entity-id (str (get-in app [:route :project :db/id]))
+  (let [entity-id (str (get-in app [:route :project :integration/id]))
         [rpc args]
         (if (= (get-in app [:map :search-area :tab]) :drawn-area)
           ["geojson_related_features_for_entity_by_type"
