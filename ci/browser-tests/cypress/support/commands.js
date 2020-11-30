@@ -30,10 +30,25 @@ Cypress.Commands.add("randomName", (contextName, prefix) => {
 // Input to TEET form text input
 Cypress.Commands.add("formInput", (...attrAndText) => {
     for(let i = 0; i < attrAndText.length/2; i++) {
-        let attr = attrAndText[i*2+0]
-        let text = attrAndText[i*2+1]
-        console.log(attrAndText)
-        cy.get(`div[data-form-attribute='${attr}'] input`).type(text)
+        const attr = attrAndText[i*2+0]
+        const text = attrAndText[i*2+1]
+
+        // If text is "[:some.keyword/value]", then this is a selection
+        // that should be made in a dropdown list
+        const selection = /^\[(:.*)\]$/.exec(text)
+        if(selection != null) {
+            // Click open the dropdown
+            const select = `div[data-form-attribute='${attr}'] select`
+            const option = `${select} option[data-item='${selection[1]}']`
+
+            cy.get(option).then(($opt) => {
+                cy.get(select).select($opt.attr("value"))
+            })
+
+        } else {
+            // Regular text, just type it in
+            cy.get(`div[data-form-attribute='${attr}'] input`).type(text)
+        }
     }
 })
 
