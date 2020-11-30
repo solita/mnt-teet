@@ -48,9 +48,11 @@
   {:font-size "1rem"})
 
 (defn form-select [{:keys [label name id items on-change value format-item label-element
-                           show-label? show-empty-selection? error error-text required empty-selection-label]
+                           show-label? show-empty-selection? error error-text required empty-selection-label
+                           data-item?]
                         :or {format-item :label
-                             show-label? true}}]
+                             show-label? true
+                             data-item? false}}]
   (let [option-idx (zipmap items (range))
         change-value (fn [e]
                        (let [val (-> e .-target .-value)]
@@ -78,8 +80,10 @@
        (doall
         (map-indexed
          (fn [i item]
-           [:option {:value i
-                     :key i}
+           [:option (merge {:value i
+                            :key i}
+                           (when data-item?
+                             {:data-item (str item)}))
             (format-item item)])
          items))]]
      (when (and error-text error)
@@ -262,7 +266,8 @@
                     :items (sort-by (or sort-fn tr*) values)
                     :format-item tr*
                     :required required
-                    :class class}])))
+                    :class class
+                    :data-item? true}])))
 
 (def ^:private selectable-users (r/atom nil))
 
