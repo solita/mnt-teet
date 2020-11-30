@@ -41,7 +41,7 @@
  {:admin :full,
   :manager :full,
   :internal-consultant :full,
-  :external-consultant :link},
+  :external-consultant :full},
  :document/upload-document
  {:admin :full,
   :manager :full,
@@ -134,7 +134,7 @@
  {:admin :full,
   :manager :full,
   :internal-consultant :full,
-  :external-consultant :link},
+  :external-consultant :full},
  :land/view-cadastral-data
  {:admin :full,
   :manager :full,
@@ -184,7 +184,7 @@
  {:admin :full,
   :manager :full,
   :internal-consultant :full,
-  :external-consultant :link},
+  :external-consultant :full},
  :activity/change-activity-status {:admin :full, :manager :full},
  :project/delete-comments
  {:admin :full, :manager :link, :internal-consultant :link},

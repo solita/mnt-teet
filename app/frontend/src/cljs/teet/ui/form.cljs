@@ -457,7 +457,8 @@
                                       {:lg lg})
                                     (when md
                                       {:md md}))
-                        [:div {:class container-class}
+                        [:div {:class container-class
+                               :data-form-attribute (str attribute)}
                          [field field-meta form-field]
                          (when adornment
                            adornment)]]

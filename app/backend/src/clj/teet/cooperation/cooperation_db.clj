@@ -45,12 +45,13 @@
             :let [application-ids (applications-to-fetch id)]]
         (merge
          tp
-         {:cooperation.3rd-party/applications
-          (mapv first
-                (d/q '[:find (pull ?e attrs)
-                       :in $ [?e ...] attrs]
-                     db application-ids
-                     cooperation-model/application-overview-attrs))}))))))
+         (when (seq application-ids)
+           {:cooperation.3rd-party/applications
+            (mapv first
+                  (d/q '[:find (pull ?e attrs)
+                         :in $ [?e ...] attrs]
+                       db application-ids
+                       cooperation-model/application-overview-attrs))})))))))
 
 (defn third-party-id-by-name
   "Find 3rd party id in project by its name."

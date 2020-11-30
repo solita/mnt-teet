@@ -4,6 +4,24 @@
             [teet.cooperation.cooperation-db :as cooperation-db]
             [teet.meta.meta-model :as meta-model]))
 
+(defcommand :cooperation/create-3rd-party
+  {:doc "Create a new third party in project."
+   :context {:keys [user db]}
+   :payload {project-id :thk.project/id
+             third-party :third-party}
+   :project-id [:thk.project/id project-id]
+   :authorization {:cooperation/edit-3rd-party {}}
+   :transact
+   [(list 'teet.cooperation.cooperation-tx/create-3rd-party
+          (merge
+           (select-keys third-party
+                        [:cooperation.3rd-party/name
+                         :cooperation.3rd-party/id-code
+                         :cooperation.3rd-party/email
+                         :cooperation.3rd-party/phone])
+           {:db/id "new-third-party"
+            :cooperation.3rd-party/project [:thk.project/id project-id]}))]})
+
 (defcommand :cooperation/create-application
   {:doc "Create new application in project for the given 3rd party."
    :context {:keys [user db]}
