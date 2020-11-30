@@ -70,7 +70,7 @@
     :left-panel [third-parties e! project third-parties-list]
     :main main-content}])
 
-(defn overview-page [e! {:keys [user] :as app} {:keys [project overview]}]
+(defn overview-page [e! app {:keys [project overview]}]
   [:span.cooperation-overview-page
    [cooperation-page-structure
     e! app project overview
@@ -79,11 +79,10 @@
      [typography/BoldGreyText (tr [:cooperation :all-third-parties])]
      (pr-str overview)]]])
 
-(defn- applications [{:cooperation.3rd-party/keys [applications] :as third-party}]
+(defn- applications [{:cooperation.3rd-party/keys [applications] :as _third-party}]
   [:<>
    (for [{id :db/id
-          :cooperation.application/keys [date type response-type response]
-          :as appl} applications]
+          :cooperation.application/keys [type response-type response]} applications]
      ^{:key (str id)}
      [Card {}
       ;; Header shows type of application and response (as link to application page)
@@ -141,7 +140,7 @@
    [text-field/TextField {:multiline true
                           :rows 5}]])
 
-(defn third-party-page [e! {:keys [user params] :as app} {:keys [project overview]}]
+(defn third-party-page [e! {:keys [params] :as app} {:keys [project overview]}]
   (let [third-party-name (js/decodeURIComponent (:third-party params))
         third-party (some #(when (= third-party-name
                                     (:cooperation.3rd-party/name %)) %)
@@ -151,13 +150,14 @@
       e! app project overview
       [:<>
        [common/header-with-actions (:cooperation.3rd-party/name third-party)]
-       [form/form-modal-button {:max-width "sm"
-                                :form-component [application-form {:e! e!
-                                                                   :project-id (:thk.project/id project)
-                                                                   :third-party third-party-name}]
-                                :modal-title (tr [:cooperation :new-application-title])
-                                :button-component [buttons/button-primary {:class :new-application}
-                                                   (tr [:cooperation :new-application])]}]
+       [form/form-modal-button
+        {:max-width "sm"
+         :form-component [application-form {:e! e!
+                                            :project-id (:thk.project/id project)
+                                            :third-party third-party-name}]
+         :modal-title (tr [:cooperation :new-application-title])
+         :button-component [buttons/button-primary {:class :new-application}
+                            (tr [:cooperation :new-application])]}]
        [applications third-party]]]]))
 
 (defn application-page [e! app {:keys [project overview third-party]}]
