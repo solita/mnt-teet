@@ -2,9 +2,14 @@ context('Cooperation', function() {
     before(() => {
         cy.dummyLogin("Carla")
         cy.randomName("thirdparty", "testcompany")
+
+        const now = new Date()
+        cy.wrap(now.toLocaleDateString("et-EE")).as("today")
+        cy.wrap(new Date(now.getTime() + 1000 * 60 * 60 * 24 * 14).toLocaleDateString("et-EE")).as("twoWeeks")
+
     })
 
-    it("Cooperation workflow", function() {
+    it("Cooperation workflow", function() { // use function instead of fat arrow because we use "this"
         cy.get(".left-menu-projects-list").click()
         cy.get("td").contains("cooperation test").click()
 
@@ -32,7 +37,15 @@ context('Cooperation', function() {
         // page has h1 with name of 3rd party and new application button
 
         cy.get(".cooperation-third-party-page h1").contains(this.thirdparty)
-        cy.get("button.new-application")
+        cy.get("button.new-application").click()
+
+        // fill out new application form
+        cy.formInput(
+            ":cooperation.application/type", "[:cooperation.application.type/work-permit]",
+            ":cooperation.application/response-type", "[:cooperation.application.response-type/opinion]",
+            ":cooperation.application/date", this.today,
+            ":cooperation.application/response-deadline", this.twoWeeks);
+
 
     })
 
