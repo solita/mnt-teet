@@ -103,11 +103,11 @@
           common-controller/refresh-fx))
 
   UploadNewVersion
-  (process-event [{:keys [file new-version]} {params :params :as app}]
-    (log/info "UploadNewVersion file:" file ", new-version: " new-version)
+  (process-event [{:keys [file new-version]} app]
+    (log/info "STEP: UploadNewVersion file:" file ", new-version: " new-version)
     (t/fx app
           {:tuck.effect/type :command!
-           :command :file/upload
+           :command :file/replace
            :payload {:task-id (common-controller/->long (get-in app [:params :task]))
                      :file (merge (file-model/file-info (:file-object new-version))
                                   (select-keys new-version
@@ -187,7 +187,7 @@
                     (e! evt))))))))
 
   UploadFileUrlReceived
-  (process-event [{:keys [file file-data document-id url on-success]} app]
+  (process-event [{:keys [file file-data document-id url on-success] :as args} app]
     (t/fx (assoc-in app [:task (get-in app [:params :task]) :new-document :progress]
                     [:upload file])
           (fn [e!]
@@ -199,7 +199,8 @@
                              (e! (->MarkUploadComplete (:db/id file)
                                                        (update on-success
                                                                :file-results
-                                                               (fnil conj []) file))))
+                                                               (fnil conj [])
+                                                               file))))
                            ;; FIXME: notify somehow
                            (log/warn "Upload failed: " (.-status resp) (.-statusText resp)))))
                 (.catch (fn [error]
@@ -213,6 +214,7 @@
     (t/fx app
           {:tuck.effect/type :command!
            :command :file/upload-complete
+           :success-message (tr [:file :upload-success])
            :payload {:db/id file-id}
            :result-event (partial ->MarkUploadCompleteResponse on-success)}))
 

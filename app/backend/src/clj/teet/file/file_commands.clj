@@ -25,15 +25,23 @@
     (recur db parent)
     file-id))
 
-(defn- find-previous-version [db task-id previous-version]
-  (if-let [old-file (ffirst (d/q '[:find (pull ?f [:db/id :file/version :file/sequence-number
-                                                   {:file/part [:db/id :file.part/number :file.part/name]}])
-                                   :in $ ?f ?t
-                                   :where
-                                   [?t :task/files ?f]]
-                                 db (latest-file-version-id db previous-version) task-id))]
-    old-file
-    (db-api/bad-request! "Can't find previous version")))
+(defn- find-previous-version
+  ([db task-id previous-version]
+   (find-previous-version db task-id previous-version []))
+  ([db task-id previous-version optional-query-keys]
+   (let [query-keys (into [:db/id :file/version :file/sequence-number
+                           {:file/part [:db/id :file.part/number :file.part/name]}]
+                          optional-query-keys)]
+     (if-let [old-file (ffirst (d/q '[:find (pull ?f attrs)
+                                      :in $ ?f ?t attrs
+                                      :where
+                                      [?t :task/files ?f]]
+                                    db
+                                    (latest-file-version-id db previous-version)
+                                    task-id
+                                    query-keys))]
+       old-file
+       (db-api/bad-request! "Can't find previous version")))))
 
 (def file-keys [:file/name :file/size :file/document-group :file/sequence-number :file/part])
 
@@ -100,6 +108,46 @@
   [db task-id file-id]
   (let [file-entity (du/entity db file-id)]
     (= task-id (get-in file-entity [:task/_files 0 :db/id]))))
+
+(defcommand :file/replace
+  {:doc "replace existing file with a new version. Save file size"
+   :context {:keys [conn user db]}
+   :payload {:keys [task-id file previous-version-id]}
+   :project-id (project-db/task-project-id db task-id)
+   :pre [^{:error :invalid-previous-file}
+         (file-belong-to-task? db task-id previous-version-id)
+         ^{:error :replaced-file-not-latest}
+         (= (latest-file-version-id db previous-version-id) previous-version-id)]
+   :authorization {:document/upload-document {:db/id task-id
+                                              :link :task/assignee}}}
+  (or (file-model/validate-file file)
+      (let [old-file (find-previous-version db task-id previous-version-id [:file/name :file/document-group])
+            version (-> old-file
+                        :file/version
+                        inc)
+            key (new-file-key file)
+            tx-data [(list 'teet.file.file-tx/upload-file-to-task
+                           {:db/id task-id
+                            :task/files [(cu/without-nils
+                                           (merge
+                                             old-file
+                                             (select-keys file [:file/size])
+                                             {:db/id "new-file"
+                                              :file/s3-key key
+                                              :file/original-name (:file/name file)
+                                              :file/version version
+                                              :file/previous-version (:db/id old-file)
+                                              :file/status :file.status/draft}
+                                             (creation-meta user)))]})]
+            res (tx tx-data)
+            file-id (get-in res [:tempids "new-file"])]
+        (try
+          {:url (file-storage/upload-url key)
+           :task-id task-id
+           :file (d/pull (:db-after res) '[*] file-id)}
+          (catch Exception e
+            (log/warn e "Unable to create S3 presigned URL")
+            (throw e))))))
 
 (defcommand :file/upload
   {:doc "Upload new file to task."

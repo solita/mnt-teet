@@ -556,7 +556,7 @@
   :show-preview "Kuvan eelvaate",
   :edit "Muudan faili",
   :upload-info "Üles laadinud {author} {date} ",
-  :upload-success nil,
+  :upload-success "Fail edukalt üleslaetud",
   :hide-preview "Peidan eelvaate",
   :replace-dialog-title "Laen üles uue versiooni",
   :edit-info "Viimati muudetud {author} {date} ",
