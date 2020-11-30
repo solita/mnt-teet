@@ -4,8 +4,9 @@
     [teet.meeting.meeting-db :as meeting-db]
     [teet.meeting.meeting-commands :as meeting-commands]
     [teet.environment :as environment]
-    [teet.localization :refer [with-language tr tr-enum]]
-    [teet.user.user-model :as user-model])
+    [teet.localization :refer [with-language tr]]
+    [teet.user.user-model :as user-model]
+    [clojure.java.io :as io])
   (:import (com.vladsch.flexmark.parser Parser)
            (com.vladsch.flexmark.util.ast Document)
            (com.vladsch.flexmark.ast
@@ -52,6 +53,9 @@
    :padding-bottom 12
    :padding-left 12})
 
+(def external-link-icon
+  {:padding-right 12 :content-width "15px" :content-height "15px" :src (io/resource "img/link.svg")})
+
 (defn- tr+
   "Give both translations"
   [key]
@@ -59,7 +63,7 @@
        (with-language :en (tr key))))
 
 (def date-format
-  (doto (java.text.SimpleDateFormat. "MM.dd.yyyy" )
+  (doto (java.text.SimpleDateFormat. "dd.MM.yyyy" )
     (.setTimeZone (java.util.TimeZone/getTimeZone "Europe/Tallinn"))))
 
 (def time-format
@@ -100,6 +104,13 @@
   [review]
   (str (format-date review) " " (format-time-sec review)))
 
+(defn- render-svg
+  "Render .SVG content"
+  [svg-file]
+  [:fo:block
+   [:fo:external-graphic
+    { :content-width "15px" :content-height "15px" :src (io/resource svg-file) } ]])
+
 (defn- decision-list-item
   "Return the agenda topic descition list item"
   [decision topic]
@@ -112,37 +123,42 @@
 (defmulti link-list-item (fn [link] (:link/type link)))
 
 (defmethod link-list-item :file [{info :link/info}]
-  [:fo:block
-   [:fo:block link-look-and-feel
-    (str "File: " (:file/name info))]])
+  [:fo:block link-look-and-feel
+   [:fo:block
+    [:fo:external-graphic external-link-icon]
+    (str (tr+ [:link :type-label :file]) ": " (:file/name info))]])
 
 (defmethod link-list-item :task [{info :link/info}]
   (let [task-type (get-in info [:task/type :db/ident])]
-    [:fo:block
-     [:fo:block link-look-and-feel
-      (str "Task: " (tr+ [:enum task-type]))]]))
+    [:fo:block link-look-and-feel
+     [:fo:block
+      [:fo:external-graphic external-link-icon]
+      (str (tr+ [:link :type-label :task]) ": " (tr+ [:enum task-type]))]]))
 
 (defmethod link-list-item :estate [link]
-  [:fo:block
-   [:fo:block link-look-and-feel
-    (str "Estate: " (:link/external-id link))]])
+  [:fo:block link-look-and-feel
+   [:fo:block
+    [:fo:external-graphic external-link-icon]
+    (str (tr+ [:link :type-label :estate]) ": " (:link/external-id link))]])
 
 (defmethod link-list-item :cadastral-unit [{info :link/info}]
-  [:fo:block
-   [:fo:block link-look-and-feel
-    (str "Cadastral Unit: " (:L_AADRESS info) " " (:TUNNUS info) " ")]])
+  [:fo:block link-look-and-feel
+   [:fo:block
+    [:fo:external-graphic external-link-icon]
+    (str (tr+ [:link :type-label :cadastral-unit]) ": " (:L_AADRESS info) " " (:TUNNUS info) " ")]])
 
 (defn attachment-files
   "List of attachement for the topic"
   [idx attachment]
-  [:fo:block
-   [:fo:block link-look-and-feel
-    (str "Appendix " idx " - " (:file/name attachment))]])
+  [:fo:block link-look-and-feel
+   [:fo:block
+    [:fo:external-graphic
+     {:padding-right 12 :content-width "15px" :content-height "15px" :src (io/resource "img/file.svg")}]
+    (str (tr+ [:link :type-label :appendix]) " " idx " - " (:file/name attachment))]])
 
 (defn- list-of-topics
   "Return list of agenda topics"
   [topics]
-  (def topics* topics)
   (when (seq topics)
     [:fo:list-block {:space-after "40"}
      (map (fn [topic]
@@ -224,14 +240,15 @@
                 [:fo:block {:font-size rows-font-size :font-weight rows-font-weight :font-style rows-font-style} right]]])
             first-content left-content center-content right-content)]]))
 
+
 (defn- decision-text
   "Return decision text depending on approved or rejected"
   [{db-ident :db/ident}]
   (case db-ident
     :review.decision/approved
-    (tr+ [:meeting :decision-yes])
+    (render-svg "img/approved.svg")
     :review.decision/rejected
-    (tr+ [:meeting :decision-no])
+    (render-svg "img/rejected.svg")
     "Unknown"))
 
 (defn- reviewers-yes-no
@@ -268,7 +285,7 @@
    [:fo:block {:font-style "normal" :font-size "20px" :font-weight 400 :space-after 11}
     (tr+ [:meeting :approvals])]
    (if (seq (:review/decision (first review-of)))
-     (table-4-columns {:first-width    "15%" :left-width "25%" :center-width "50%" :right-width "10%"
+     (table-4-columns {:first-width    "10%" :left-width "25%" :center-width "55%" :right-width "10%"
                        :first-content  (reviewers-yes-no review-of)
                        :left-content   (reviewers-names review-of)
                        :center-content (reviewers-decisions review-of)
@@ -286,7 +303,7 @@
                 (not is-absent?))]
     [:fo:block
      [:fo:inline {:font-weight 900} (:user/family-name user) " " (:user/given-name user)]
-     [:fo:inline ", " (with-language :en (tr-enum role))]]))
+     [:fo:inline ", " (tr+ [:enum (:db/ident role)])]]))
 
 (defn- fetch-project-id
   "Find project id by meeting"
@@ -382,8 +399,8 @@
   [:fo:list-block
    (for [item (md-children ul)]
      [:fo:list-item
-      [:fo:list-item-label {:end-indent "label-end()"}
-       [:fo:block [:fo:inline {:font-family "Symbol"} "\u2022"]]]
+      [:fo:list-item-label { :font-family "Symbol" :end-indent "label-end()"}
+       [:fo:block [:fo:inline "\u2022"]]]
       [:fo:list-item-body {:start-indent "body-start()"}
        [:fo:block
         (for [c (md-children item)]
