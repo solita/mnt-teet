@@ -89,6 +89,12 @@
   [component-fn]
   (context/consume :navigation-info component-fn))
 
+(defn with-navigation-params
+  "Merge given navigation params to navigation context"
+  [params component]
+  (context/update-context :navigation-info #(update % :params merge params)
+                          component))
+
 (defn Link
   "Convenience component to create Material UI Link to given page with params.
   Missing path parameters are filled from navigation context."
