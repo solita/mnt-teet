@@ -17,7 +17,8 @@
              :refer [fromString fromNumber]
              :rename {fromString string->long
                       fromNumber number->long}]
-            [teet.ui.query :as query]))
+            [teet.ui.query :as query]
+            [teet.util.collection :as cu]))
 
 (defn ->long [x]
   (cond
@@ -580,6 +581,17 @@
 
 
 ;; Generic form save
+
+(defn prepare-form-data
+  "Generic form data preparation. Trims strings."
+  [form]
+  (reduce-kv
+   (fn [form k v]
+     (assoc form k
+            (if (string? v)
+              (str/trim v)
+              v)))
+   {} form))
 
 (defrecord SaveFormResponse [on-success-fx response]
   t/Event

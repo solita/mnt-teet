@@ -25,7 +25,7 @@
               :save-event #(common-controller/->SaveForm
                             :cooperation/create-3rd-party
                             {:thk.project/id project-id
-                             :third-party @form-atom}
+                             :third-party (common-controller/prepare-form-data @form-atom)}
                             (fn [response]
                               (fn [e!]
                                 (e! (close-event))
@@ -96,7 +96,7 @@
      [typography/Heading2 (tr [:cooperation :page-title])]
      [typography/BoldGreyText (tr [:cooperation :all-third-parties])]
      (for [{:cooperation.3rd-party/keys [name applications] :as tp} overview]
-       [Card {}
+       [Card {:data-third-party name}
         [CardHeader {:title (r/as-element
                              [url/Link {:page :cooperation-third-party
                                         :params {:third-party (js/encodeURIComponent name)}}
@@ -134,7 +134,7 @@
                             :cooperation/create-application
                             {:thk.project/id project-id
                              :cooperation.3rd-party/name third-party
-                             :application @form-atom}
+                             :application (common-controller/prepare-form-data @form-atom)}
                             (fn [response]
                               (fn [e!]
                                 (e! (close-event))

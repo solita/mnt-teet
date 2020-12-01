@@ -2,7 +2,8 @@
   (:require [tuck.core :as t]
             [teet.log :as log]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
-            [teet.localization :refer [tr]]))
+            [teet.localization :refer [tr]]
+            [teet.common.common-controller :as common-controller]))
 
 (defrecord SaveApplication [application])
 
@@ -18,10 +19,7 @@
   ThirdPartyCreated
   (process-event [{name :name} {params :params :as app}]
     (t/fx (snackbar-controller/open-snack-bar app (tr [:cooperation :new-third-party-created]))
-          {:tuck.effect/type :navigate
-           :page :cooperation-third-party
-           :params {:project (:project params)
-                    :third-party name}}))
+          common-controller/refresh-fx))
 
   ApplicationCreated
   (process-event [{r :save-response} {params :params :as app}]
