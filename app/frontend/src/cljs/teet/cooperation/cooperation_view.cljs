@@ -1,20 +1,25 @@
 (ns teet.cooperation.cooperation-view
-  (:require [teet.project.project-view :as project-view]
-            [teet.ui.url :as url]
-            [teet.ui.typography :as typography]
-            [teet.localization :refer [tr tr-enum]]
-            [teet.ui.material-ui :refer [Card CardHeader CardContent]]
-            [teet.ui.common :as common]
-            [teet.ui.format :as format]
+  (:require [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
-            [teet.ui.buttons :as buttons]
-            [teet.ui.form :as form]
+            [teet.common.common-controller :as common-controller]
+            [teet.common.common-styles :as common-styles]
             [teet.cooperation.cooperation-controller :as cooperation-controller]
             [teet.cooperation.cooperation-model :as cooperation-model]
-            [teet.ui.select :as select]
+            [teet.localization :refer [tr tr-enum]]
+            [teet.project.project-navigator-view :as project-navigator-view]
+            [teet.project.project-view :as project-view]
+            [teet.ui.buttons :as buttons]
+            [teet.ui.common :as common]
             [teet.ui.date-picker :as date-picker]
+            [teet.ui.form :as form]
+            [teet.ui.format :as format]
+            [teet.ui.icons :as icons]
+            [teet.ui.material-ui :refer [Card CardHeader CardContent]]
+            [teet.ui.select :as select]
             [teet.ui.text-field :as text-field]
-            [teet.common.common-controller :as common-controller]))
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.ui.typography :as typography]
+            [teet.ui.url :as url]))
 
 
 (defn- third-party-form [{:keys [e! project-id]} close-event form-atom]
@@ -45,22 +50,43 @@
    ^{:attribute :cooperation.3rd-party/phone}
    [text-field/TextField {}]])
 
+(defn- third-parties-navigator []
+  {:background-color theme-colors/gray
+   :margin-left "2rem"
+   :padding "1rem"})
+
+(defn third-party-list []
+  {:margin-left 0
+   :margin-top 0
+   :margin-bottom "1.5rem"
+   :padding-left 0
+   :list-style-type :none})
+
+(defn third-party-link [])
+
 (defn- third-parties [e! project third-parties]
-  [:div.project-third-parties-list
-   (for [{id :db/id
-          :cooperation.3rd-party/keys [name]} third-parties]
-     ^{:key (str id)}
-     [:div.project-third-party
-      [url/Link {:page :cooperation-third-party
-                 :params {:third-party (js/encodeURIComponent name)}}
-       name]])
-   [form/form-modal-button
-    {:max-width "sm"
-     :form-component [third-party-form {:e! e!
-                                        :project-id (:thk.project/id project)}]
-     :modal-title (tr [:cooperation :new-third-party-title])
-     :button-component [buttons/button-primary {:class :new-third-party}
-                        (tr [:cooperation :new-third-party])]}]])
+  [:div {:class (<class project-navigator-view/navigator-container-style true)}
+   [:div.project-third-parties-list
+    {:class (<class third-parties-navigator)}
+    [:ul {:class (<class third-party-list)}
+     (for [{id :db/id
+            :cooperation.3rd-party/keys [name]} third-parties]
+       ^{:key (str id)}
+       [:li.project-third-party
+        [url/Link {:page :cooperation-third-party
+                   :class (<class common-styles/white-link-style false)
+                   :params
+                   {:third-party (js/encodeURIComponent name)}}
+         name]])]
+    [form/form-modal-button
+     {:max-width "sm"
+      :form-component [third-party-form {:e! e!
+                                         :project-id (:thk.project/id project)}]
+      :modal-title (tr [:cooperation :new-third-party-title])
+      :button-component [buttons/rect-white {:size :small
+                                             :start-icon (r/as-element
+                                                          [icons/content-add])}
+                         (tr [:cooperation :new-third-party])]}]]])
 
 (defn- cooperation-page-structure [e! app project third-parties-list main-content]
   [project-view/project-full-page-structure
