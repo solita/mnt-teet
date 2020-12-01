@@ -1,7 +1,8 @@
 (ns teet.cooperation.cooperation-db
   (:require [datomic.client.api :as d]
             [teet.cooperation.cooperation-model :as cooperation-model]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [teet.util.date :as date]))
 
 (defn overview
   "Fetch cooperation overview for a project: returns all third parties with
@@ -76,3 +77,27 @@
                     :in $ ?third-party ?e attrs]
                   db third-party-id application-id
                   cooperation-model/application-overview-attrs))]}))
+
+
+(defn application-matched-activity-id
+  "Given project-id and application with "
+  [db project-id application]
+  (let [application-date (:cooperation.application/date application)]
+    (->> (:thk.project/lifecycles
+           (d/pull db '[{:thk.project/lifecycles
+                         [{:thk.lifecycle/activities
+                           [:db/id
+                            :activity/name
+                            :activity/estimated-start-date
+                            :activity/estimated-end-date]}]}]
+                   [:thk.project/id project-id]))
+         (mapcat
+           :thk.lifecycle/activities)
+         (some
+           (fn [{:activity/keys [estimated-start-date
+                                 estimated-end-date] :as activity}]
+             (when (and (date/date-after? estimated-end-date application-date)
+                        (date/date-after? application-date estimated-start-date)
+                        (not= (get-in activity [:activity/name :db/ident])
+                              :activity.name/land-acquisition))
+               activity))))))
