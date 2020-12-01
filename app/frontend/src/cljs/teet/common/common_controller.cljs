@@ -17,8 +17,7 @@
              :refer [fromString fromNumber]
              :rename {fromString string->long
                       fromNumber number->long}]
-            [teet.ui.query :as query]
-            [teet.util.collection :as cu]))
+            [teet.ui.query :as query]))
 
 (defn ->long [x]
   (cond
