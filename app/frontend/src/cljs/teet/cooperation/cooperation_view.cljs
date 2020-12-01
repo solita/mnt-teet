@@ -64,7 +64,7 @@
 
 (defn third-party-link [])
 
-(defn- third-parties [e! project third-parties]
+(defn- third-parties [e! project third-parties selected-third-party-name]
   [:div {:class (<class project-navigator-view/navigator-container-style true)}
    [:div.project-third-parties-list
     {:class (<class third-parties-navigator)}
@@ -72,12 +72,14 @@
      (for [{id :db/id
             :cooperation.3rd-party/keys [name]} third-parties]
        ^{:key (str id)}
-       [:li.project-third-party
-        [url/Link {:page :cooperation-third-party
-                   :class (<class common-styles/white-link-style false)
-                   :params
-                   {:third-party (js/encodeURIComponent name)}}
-         name]])]
+       (let [currently-selected-third-party? (= name selected-third-party-name)]
+         [:li.project-third-party
+          [url/Link {:page :cooperation-third-party
+                     :class (<class common-styles/white-link-style
+                                    currently-selected-third-party?)
+                     :params
+                     {:third-party (js/encodeURIComponent name)}}
+           name]]))]
     [form/form-modal-button
      {:max-width "sm"
       :form-component [third-party-form {:e! e!
@@ -88,12 +90,15 @@
                                                           [icons/content-add])}
                          (tr [:cooperation :new-third-party])]}]]])
 
+(defn- selected-third-party-name [{:keys [params] :as _app}]
+  (-> params :third-party js/decodeURIComponent))
+
 (defn- cooperation-page-structure [e! app project third-parties-list main-content]
   [project-view/project-full-page-structure
    {:e! e!
     :app app
     :project project
-    :left-panel [third-parties e! project third-parties-list]
+    :left-panel [third-parties e! project third-parties-list (selected-third-party-name app)]
     :main main-content}])
 
 (defn- application-link [{id :db/id :cooperation.application/keys [type response-type]}]
