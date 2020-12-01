@@ -120,7 +120,7 @@
 
 (defn overview-page [e! app {:keys [project overview]}]
 
-  [:span.cooperation-overview-page
+  [:div.cooperation-overview-page {:class (<class common-styles/flex-column-1)}
    [cooperation-page-structure
     e! app project overview
     [:<>
@@ -192,7 +192,7 @@
         third-party (some #(when (= third-party-name
                                     (:cooperation.3rd-party/name %)) %)
                           overview)]
-    [:span.cooperation-third-party-page
+    [:div.cooperation-third-party-page {:class (<class common-styles/flex-column-1)}
      [cooperation-page-structure
       e! app project overview
       [:<>
@@ -212,7 +212,7 @@
 
 (defn application-page [e! app {:keys [project overview third-party]}]
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
-    [:span.cooperation-application-page
+    [:div.cooperation-application-page {:class (<class common-styles/flex-column-1)}
      [cooperation-page-structure
       e! app project overview
       [:<>
