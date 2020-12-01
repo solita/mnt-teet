@@ -34,6 +34,12 @@ context('Cooperation', function() {
 
         cy.formSubmit()
 
+        cy.get(".MuiSnackbar-root") // snackbar message is shown
+
+        // new 3rd party appears in list, click it to navigate to it
+        cy.get(`.cooperation-overview-page [data-third-party='${this.thirdparty}'] a`).click()
+
+
         // Navigated to 3rd party page: check that it has h1 with name of 3rd party and new application button
 
         cy.get(".cooperation-third-party-page h1").contains(this.thirdparty)

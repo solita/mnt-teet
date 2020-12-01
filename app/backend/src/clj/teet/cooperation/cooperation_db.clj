@@ -1,6 +1,7 @@
 (ns teet.cooperation.cooperation-db
   (:require [datomic.client.api :as d]
-            [teet.cooperation.cooperation-model :as cooperation-model]))
+            [teet.cooperation.cooperation-model :as cooperation-model]
+            [clojure.string :as str]))
 
 (defn overview
   "Fetch cooperation overview for a project: returns all third parties with
@@ -40,7 +41,7 @@
                           ;; Return only the latest application
                           (take 1 (reverse (sort-by #(nth % 2) applications)))))]))
                applications-by-party)]
-     (vec
+     (->>
       (for [{id :db/id :as tp} third-parties
             :let [application-ids (applications-to-fetch id)]]
         (merge
@@ -51,7 +52,9 @@
                   (d/q '[:find (pull ?e attrs)
                          :in $ [?e ...] attrs]
                        db application-ids
-                       cooperation-model/application-overview-attrs))})))))))
+                       cooperation-model/application-overview-attrs))})))
+      (sort-by (comp str/lower-case :cooperation.3rd-party/name))
+      vec))))
 
 (defn third-party-id-by-name
   "Find 3rd party id in project by its name."
