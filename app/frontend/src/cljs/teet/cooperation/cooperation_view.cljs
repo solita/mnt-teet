@@ -95,7 +95,7 @@
     [:<>
      [typography/Heading2 (tr [:cooperation :page-title])]
      [typography/BoldGreyText (tr [:cooperation :all-third-parties])]
-     (for [{:cooperation.3rd-party/keys [name applications] :as tp} overview]
+     (for [{:cooperation.3rd-party/keys [name applications]} overview]
        [Card {:data-third-party name}
         [CardHeader {:title (r/as-element
                              [url/Link {:page :cooperation-third-party
@@ -110,9 +110,7 @@
 
 (defn- applications [{:cooperation.3rd-party/keys [applications] :as _third-party}]
   [:<>
-   (for [{id :db/id
-          :cooperation.application/keys [response]
-          :as application} applications]
+   (for [{id :db/id :as application} applications]
      ^{:key (str id)}
      [Card {}
       ;; Header shows type of application and response (as link to application page)
