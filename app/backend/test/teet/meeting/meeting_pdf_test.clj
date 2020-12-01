@@ -1,18 +1,26 @@
 (ns ^:db teet.meeting.meeting-pdf-test
   (:require teet.meeting.meeting-pdf
+            [teet.meeting.meeting-commands-test :as meeting-commands-test]
             [teet.test.utils :as tu]
             [clojure.test :refer [deftest is testing use-fixtures]]
             [datomic.client.api :as d]))
 
 (use-fixtures :each tu/with-environment (tu/with-db) tu/with-global-data)
 
+(def title-fo-block "<fo:block font-family=\"Helvetica, Arial, sans-serif\" font-size=\"32px\" font-style=\"normal\" font-weight=\"300\" line-height=\"48px\" space-after=\"5\" space-before=\"5\">Test meeting for PDF report</fo:block>")
+
+(defn test-meeting []
+  (let [now (System/currentTimeMillis)]
+    {:meeting/title "Test meeting for PDF report"
+     :meeting/location "Somewhere inside the test runner"
+     :meeting/start (java.util.Date. (+ now (* 1000 60)))
+     :meeting/end (java.util.Date. (+ now (* 1000 60 60)))
+     :meeting/organizer tu/mock-user-manager}))
+
 (deftest print-meeting-pdf
+  (let [new-meeting-id (meeting-commands-test/create-meeting! (tu/->db-id "p1-lc1-act1") (test-meeting))]
   (tu/local-login tu/mock-user-boss)
   (testing
-    "PDF fails to be printed"
-    (is (thrown?
-          Exception (teet.meeting.meeting-pdf/meeting-pdf (tu/db) (tu/logged-user) 1) {})
-        "Meeting PDF for non-existing meeting"))
-  (testing
-    "PDF succeeded to be printed"
-    (is (not (thrown? Exception (teet.meeting.meeting-pdf/meeting-pdf (tu/db) (tu/logged-user) (tu/meeting-id)))))))
+    "PDF has correct title"
+    (let [pdf (teet.meeting.meeting-pdf/meeting-pdf (tu/db) (tu/logged-user) new-meeting-id)]
+      (is (= (hiccup.core/html (nth (last (last pdf)) 2)) title-fo-block))))))
