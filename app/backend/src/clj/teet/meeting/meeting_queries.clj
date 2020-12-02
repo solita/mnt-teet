@@ -333,15 +333,15 @@
    :project-id (project-db/meeting-project-id db id)
    :authorization {:meeting/download-attachment {:db/id id
                                                  :link :meeting/organizer-or-reviewer}}}
-          ^{:format :raw}
-          {:status 200
-           :headers {"Content-Disposition" (str "inline; filename=meeting_" (meeting-model/meeting-title meeting) ".pdf")
-                     "Content-Type" "application/pdf"}
-           :body (ring-io/piped-input-stream
-                   (fn [ostream]
-                     (try
-                       (pdf-export/hiccup->pdf
-                         (meeting-pdf/meeting-pdf db user id)
-                         ostream)
-                       (catch Exception e
-                         (log/error e "Exception while generating meeting PDF")))))})
+  ^{:format :raw}
+  {:status 200
+   :headers {"Content-Disposition" (str "inline; filename=meeting_" (meeting-model/meeting-title meeting) ".pdf")
+             "Content-Type" "application/pdf"}
+   :body (ring-io/piped-input-stream
+          (fn [ostream]
+            (try
+              (pdf-export/hiccup->pdf
+               (meeting-pdf/meeting-pdf db user id)
+               ostream)
+              (catch Exception e
+                (log/error e "Exception while generating meeting PDF")))))})
