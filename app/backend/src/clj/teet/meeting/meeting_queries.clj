@@ -13,6 +13,7 @@
             [teet.util.datomic :as datomic-util]
             [teet.integration.postgrest :as postgrest]
             [teet.environment :as environment]
+            [teet.meeting.meeting-model :as meeting-model]
             [ring.util.io :as ring-io]
             [teet.comment.comment-db :as comment-db]
             [teet.pdf.pdf-export :as pdf-export]
@@ -328,19 +329,18 @@
 (defquery :meeting/download-pdf
   {:doc "Download meeting minutes as PDF"
    :context {:keys [db user]}
-   :args {id :db/id}
+   :args {id :db/id meeting :meeting}
    :project-id (project-db/meeting-project-id db id)
-   :authorization {:meeting/download-attachment {:db/id id
-                                                 :link :meeting/organizer-or-reviewer}}}
-            ^{:format :raw}
-            {:status  200
-             :headers {"Content-Disposition" (str "inline; filename=meeting_" (project-db/meeting-title db id) ".pdf")
-                       "Content-Type"        "application/pdf"}
-             :body    (ring-io/piped-input-stream
-                        (fn [ostream]
-                          (try
-                            (pdf-export/hiccup->pdf
-                              (meeting-pdf/meeting-pdf db user id)
-                              ostream)
-                            (catch Exception e
-                              (log/error e "Exception while generating meeting PDF")))))})
+   :authorization {:meeting/download-attachment {:db/id id :link  :meeting/organizer-or-reviewer}}}
+      ^{:format :raw}
+          {:status  200
+           :headers {"Content-Disposition" (str "inline; filename=meeting_" (meeting-model/meeting-title meeting) ".pdf")
+                     "Content-Type"        "application/pdf"}
+           :body    (ring-io/piped-input-stream
+                      (fn [ostream]
+                        (try
+                          (pdf-export/hiccup->pdf
+                            (meeting-pdf/meeting-pdf db user id)
+                            ostream)
+                          (catch Exception e
+                            (log/error e "Exception while generating meeting PDF")))))})

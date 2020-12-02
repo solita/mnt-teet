@@ -892,7 +892,7 @@
         location]
        [(tr "PDF")
         [:a {:href (common-controller/query-url :meeting/download-pdf
-                                                {:db/id (:db/id meeting)})
+                                                {:db/id (:db/id meeting) :meeting meeting})
              :target "_blank" } "Download"]]]]
      [:div {:style {:margin-bottom "1rem"}}
       (doall

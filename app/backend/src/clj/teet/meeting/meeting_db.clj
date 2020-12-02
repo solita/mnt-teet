@@ -266,6 +266,7 @@
                  :meeting/location
                  :meeting/start
                  :meeting/end
+                 :meeting/number
                  {:activity/_meetings [:db/id {:thk.lifecycle/_activities [{:thk.project/_lifecycles [:thk.project/id]}]}]}
                  {:meeting/agenda [:db/id
                                    :meeting.agenda/topic

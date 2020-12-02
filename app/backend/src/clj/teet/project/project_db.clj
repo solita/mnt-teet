@@ -96,10 +96,6 @@
   (get-in (du/entity db meeting-id)
           [:activity/_meetings 0
            :db/id]))
-
-(defn meeting-title [db meeting-id]
-  (:meeting/title (du/entity db meeting-id)))
-
 (defn meeting-parents [db meeting project-eid]
   (let [project (du/entity db project-eid)
         activity-eid (meeting-activity-id db (:db/id meeting))]
