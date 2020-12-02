@@ -7,7 +7,7 @@
 
 (use-fixtures :each tu/with-environment (tu/with-db) tu/with-global-data)
 
-(def title-fo-block "<fo:block font-family=\"Helvetica, Arial, sans-serif\" font-size=\"32px\" font-style=\"normal\" font-weight=\"300\" line-height=\"48px\" space-after=\"5\" space-before=\"5\">Test meeting for PDF report</fo:block>")
+(def title-fo-block "<fo:block font-family=\"Helvetica, Arial, sans-serif\" font-size=\"32px\" font-style=\"normal\" font-weight=\"300\" line-height=\"48px\" space-after=\"5\" space-before=\"5\">Test meeting for PDF report #1</fo:block>")
 
 (defn test-meeting []
   (let [now (System/currentTimeMillis)]
