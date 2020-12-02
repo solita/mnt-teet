@@ -8,8 +8,7 @@
 (t/use-fixtures
   :each
   tu/with-environment
-  (tu/with-db)
-  tu/with-global-data)
+  (tu/with-db))
 
 (deftest test-for-third-party
   (tu/local-login tu/mock-user-boss)
