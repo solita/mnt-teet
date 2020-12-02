@@ -3,7 +3,7 @@
             [teet.meeting.meeting-commands-test :as meeting-commands-test]
             [teet.test.utils :as tu]
             [clojure.test :refer [deftest is testing use-fixtures]]
-            [datomic.client.api :as d]))
+            [hiccup.core :as core]))
 
 (use-fixtures :each tu/with-environment (tu/with-db) tu/with-global-data)
 
@@ -23,4 +23,4 @@
   (testing
     "PDF has correct title"
     (let [pdf (teet.meeting.meeting-pdf/meeting-pdf (tu/db) (tu/logged-user) new-meeting-id)]
-      (is (= (hiccup.core/html (nth (last (last pdf)) 2)) title-fo-block))))))
+      (is (= (core/html (nth (last (last pdf)) 2)) title-fo-block))))))
