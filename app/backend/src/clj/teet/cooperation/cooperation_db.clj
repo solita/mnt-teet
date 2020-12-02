@@ -78,9 +78,9 @@
                   db third-party-id application-id
                   cooperation-model/application-overview-attrs))]}))
 
-
+;; This could probably be done with a single datomic query as well
 (defn application-matched-activity-id
-  "Given project-id and application with "
+  "Given project-id and an application with a date, return an activities id that is on going during the dates"
   [db project-id application]
   (let [application-date (:cooperation.application/date application)]
     (->> (:thk.project/lifecycles
@@ -100,4 +100,5 @@
                         (date/date-after? application-date estimated-start-date)
                         (not= (get-in activity [:activity/name :db/ident])
                               :activity.name/land-acquisition))
-               activity))))))
+               activity)))
+         :db/id)))
