@@ -18,8 +18,8 @@
      :meeting/organizer tu/mock-user-manager}))
 
 (deftest print-meeting-pdf
-  (let [new-meeting-id (meeting-commands-test/create-meeting! (tu/->db-id "p1-lc1-act1") (test-meeting))]
   (tu/local-login tu/mock-user-boss)
+  (let [new-meeting-id (meeting-commands-test/create-meeting! (tu/->db-id "p1-lc1-act1") (test-meeting))]
   (testing
     "PDF has correct title"
     (let [pdf (teet.meeting.meeting-pdf/meeting-pdf (tu/db) (tu/logged-user) new-meeting-id)]
