@@ -214,6 +214,11 @@
           e))
       (project-db/project-by-id db eid {}))))
 
+(defn fetch-meeting-title
+  [db eid]
+  (let [meeting (first (fetch-project-meetings db eid))]
+    {:meeting/title meeting :meeting/number meeting}))
+
 (defquery :meeting/project-with-meetings
   {:doc "Fetch project data with project meetings"
    :context {db :db
@@ -329,13 +334,13 @@
 (defquery :meeting/download-pdf
   {:doc "Download meeting minutes as PDF"
    :context {:keys [db user]}
-   :args {id :db/id meeting :meeting}
+   :args {id :db/id}
    :project-id (project-db/meeting-project-id db id)
    :authorization {:meeting/download-attachment {:db/id id
                                                  :link :meeting/organizer-or-reviewer}}}
   ^{:format :raw}
   {:status 200
-   :headers {"Content-Disposition" (str "inline; filename=meeting_" (meeting-model/meeting-title meeting) ".pdf")
+   :headers {"Content-Disposition" (str "inline; filename=meeting_" (meeting-model/meeting-title (fetch-meeting-title db id)) ".pdf")
              "Content-Type" "application/pdf"}
    :body (ring-io/piped-input-stream
           (fn [ostream]
