@@ -43,6 +43,7 @@
                              :cooperation.application/date
                              :cooperation.application/response-deadline
                              :cooperation.application/comment])
-               {:db/id "new-application"}
+               {:db/id "new-application"
+                :cooperation.application/activity (cooperation-db/application-matched-activity-id db project-id application)}
                (meta-model/creation-meta user))]}]
      (db-api/bad-request! "No such 3rd party"))})

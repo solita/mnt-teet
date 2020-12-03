@@ -62,6 +62,7 @@
   [:db/id
    :cooperation.application/type
    :cooperation.application/date
+   :cooperation.application/activity
    :cooperation.application/response-type
    :cooperation.application/response-deadline
    :cooperation.application/comment
