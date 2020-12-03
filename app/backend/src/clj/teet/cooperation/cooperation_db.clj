@@ -1,6 +1,8 @@
 (ns teet.cooperation.cooperation-db
   (:require [datomic.client.api :as d]
-            [teet.cooperation.cooperation-model :as cooperation-model]))
+            [teet.cooperation.cooperation-model :as cooperation-model]
+            [clojure.string :as str]
+            [teet.util.date :as date]))
 
 (defn overview
   "Fetch cooperation overview for a project: returns all third parties with
@@ -40,7 +42,7 @@
                           ;; Return only the latest application
                           (take 1 (reverse (sort-by #(nth % 2) applications)))))]))
                applications-by-party)]
-     (vec
+     (->>
       (for [{id :db/id :as tp} third-parties
             :let [application-ids (applications-to-fetch id)]]
         (merge
@@ -51,7 +53,9 @@
                   (d/q '[:find (pull ?e attrs)
                          :in $ [?e ...] attrs]
                        db application-ids
-                       cooperation-model/application-overview-attrs))})))))))
+                       cooperation-model/application-overview-attrs))})))
+      (sort-by (comp str/lower-case :cooperation.3rd-party/name))
+      vec))))
 
 (defn third-party-id-by-name
   "Find 3rd party id in project by its name."
@@ -73,3 +77,28 @@
                     :in $ ?third-party ?e attrs]
                   db third-party-id application-id
                   cooperation-model/application-overview-attrs))]}))
+
+;; This could probably be done with a single datomic query as well
+(defn application-matched-activity-id
+  "Given project-id and an application with a date, return an activities id that is on going during the dates"
+  [db project-id application]
+  (let [application-date (:cooperation.application/date application)]
+    (->> (:thk.project/lifecycles
+           (d/pull db '[{:thk.project/lifecycles
+                         [{:thk.lifecycle/activities
+                           [:db/id
+                            :activity/name
+                            :activity/estimated-start-date
+                            :activity/estimated-end-date]}]}]
+                   [:thk.project/id project-id]))
+         (mapcat
+           :thk.lifecycle/activities)
+         (some
+           (fn [{:activity/keys [estimated-start-date
+                                 estimated-end-date] :as activity}]
+             (when (and (date/date-after? estimated-end-date application-date)
+                        (date/date-after? application-date estimated-start-date)
+                        (not= (get-in activity [:activity/name :db/ident])
+                              :activity.name/land-acquisition))
+               activity)))
+         :db/id)))

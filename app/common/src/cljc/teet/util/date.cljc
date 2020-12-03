@@ -4,9 +4,6 @@
   #?(:clj (:import (java.util Date Calendar)
                    (java.time ZoneId))))
 
-
-
-
 #?(:clj
    (def default-localdate-timezone (ZoneId/of "Europe/Tallinn")))
 #?(:clj
@@ -25,13 +22,25 @@
      (java.util.Date.)))
 
 
-
 (defn date-after?
   "compare dates as timestamps (NOT calendar days)"
   [a b]
   #?(:clj (.after a b)
      :cljs (> a b)))
 
+#?(:clj
+   (defn inc-days [date days]
+     (-> date
+         .getTime
+         (+ (* days 24 60 60 1000))
+         Date.)))
+
+#?(:clj
+   (defn dec-days [date days]
+     (-> date
+         .getTime
+         (- (* days 24 60 60 1000))
+         Date.)))
 
 (defn date-before-today?
   "Converts parameter to a calendar day (lopping off time of day) and returns true if it's previous day or earlier compared to today, false if it's today or a day after today. Works according to configured local timezone of the JVM environment so yields different results in local dev env vs AWS usually."

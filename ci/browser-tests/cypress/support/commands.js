@@ -11,9 +11,12 @@
 //
 // -- This is a parent command --
 Cypress.Commands.add("dummyLogin", (name) => {
-    cy.visit("#/login")
-    cy.get("#password-textfield").type(Cypress.env("SITE_PASSWORD"))
-    cy.get("button").contains("Login as " + name).click()
+    cy.visit("#/")
+    cy.window().then((win) => {
+        win.teet.login.login_controller.test_login(
+            Cypress.env("SITE_PASSWORD"),
+            name)
+    })
 
     // check that logout link is in header
     cy.get("header a.header-logout")

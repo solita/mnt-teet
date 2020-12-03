@@ -581,6 +581,17 @@
 
 ;; Generic form save
 
+(defn prepare-form-data
+  "Generic form data preparation. Trims strings."
+  [form]
+  (reduce-kv
+   (fn [form k v]
+     (assoc form k
+            (if (string? v)
+              (str/trim v)
+              v)))
+   {} form))
+
 (defrecord SaveFormResponse [on-success-fx response]
   t/Event
   (process-event [_ app]

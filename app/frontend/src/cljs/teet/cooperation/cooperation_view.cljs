@@ -1,20 +1,25 @@
 (ns teet.cooperation.cooperation-view
-  (:require [teet.project.project-view :as project-view]
-            [teet.ui.url :as url]
-            [teet.ui.typography :as typography]
-            [teet.localization :refer [tr tr-enum]]
-            [teet.ui.material-ui :refer [Card CardHeader CardContent]]
-            [teet.ui.common :as common]
-            [teet.ui.format :as format]
+  (:require [herb.core :as herb :refer [<class]]
             [reagent.core :as r]
-            [teet.ui.buttons :as buttons]
-            [teet.ui.form :as form]
+            [teet.common.common-controller :as common-controller]
+            [teet.common.common-styles :as common-styles]
             [teet.cooperation.cooperation-controller :as cooperation-controller]
             [teet.cooperation.cooperation-model :as cooperation-model]
-            [teet.ui.select :as select]
+            [teet.localization :refer [tr tr-enum]]
+            [teet.project.project-navigator-view :as project-navigator-view]
+            [teet.project.project-view :as project-view]
+            [teet.ui.buttons :as buttons]
+            [teet.ui.common :as common]
             [teet.ui.date-picker :as date-picker]
+            [teet.ui.form :as form]
+            [teet.ui.format :as format]
+            [teet.ui.icons :as icons]
+            [teet.ui.material-ui :refer [Card CardHeader CardContent]]
+            [teet.ui.select :as select]
             [teet.ui.text-field :as text-field]
-            [teet.common.common-controller :as common-controller]))
+            [teet.theme.theme-colors :as theme-colors]
+            [teet.ui.typography :as typography]
+            [teet.ui.url :as url]))
 
 
 (defn- third-party-form [{:keys [e! project-id]} close-event form-atom]
@@ -25,7 +30,7 @@
               :save-event #(common-controller/->SaveForm
                             :cooperation/create-3rd-party
                             {:thk.project/id project-id
-                             :third-party @form-atom}
+                             :third-party (common-controller/prepare-form-data @form-atom)}
                             (fn [response]
                               (fn [e!]
                                 (e! (close-event))
@@ -45,29 +50,55 @@
    ^{:attribute :cooperation.3rd-party/phone}
    [text-field/TextField {}]])
 
-(defn- third-parties [e! project third-parties]
-  [:div.project-third-parties-list
-   (for [{id :db/id
-          :cooperation.3rd-party/keys [name]} third-parties]
-     ^{:key (str id)}
-     [:div.project-third-party
-      [url/Link {:page :cooperation-third-party
-                 :params {:third-party (js/encodeURIComponent name)}}
-       name]])
-   [form/form-modal-button
-    {:max-width "sm"
-     :form-component [third-party-form {:e! e!
-                                        :project-id (:thk.project/id project)}]
-     :modal-title (tr [:cooperation :new-third-party-title])
-     :button-component [buttons/button-primary {:class :new-third-party}
-                        (tr [:cooperation :new-third-party])]}]])
+(defn- third-parties-navigator []
+  {:background-color theme-colors/gray
+   :margin-left "2rem"
+   :padding "1rem"})
+
+(defn third-party-list []
+  {:margin-left 0
+   :margin-top 0
+   :margin-bottom "1.5rem"
+   :padding-left 0
+   :list-style-type :none})
+
+(defn third-party-link [])
+
+(defn- third-parties [e! project third-parties selected-third-party-name]
+  [:div {:class (<class project-navigator-view/navigator-container-style true)}
+   [:div.project-third-parties-list
+    {:class (<class third-parties-navigator)}
+    [:ul {:class (<class third-party-list)}
+     (for [{id :db/id
+            :cooperation.3rd-party/keys [name]} third-parties]
+       ^{:key (str id)}
+       (let [currently-selected-third-party? (= name selected-third-party-name)]
+         [:li.project-third-party
+          [url/Link {:page :cooperation-third-party
+                     :class (<class common-styles/white-link-style
+                                    currently-selected-third-party?)
+                     :params
+                     {:third-party (js/encodeURIComponent name)}}
+           name]]))]
+    [form/form-modal-button
+     {:max-width "sm"
+      :form-component [third-party-form {:e! e!
+                                         :project-id (:thk.project/id project)}]
+      :modal-title (tr [:cooperation :new-third-party-title])
+      :button-component [buttons/rect-white {:size :small
+                                             :start-icon (r/as-element
+                                                          [icons/content-add])}
+                         (tr [:cooperation :new-third-party])]}]]])
+
+(defn- selected-third-party-name [{:keys [params] :as _app}]
+  (-> params :third-party js/decodeURIComponent))
 
 (defn- cooperation-page-structure [e! app project third-parties-list main-content]
   [project-view/project-full-page-structure
    {:e! e!
     :app app
     :project project
-    :left-panel [third-parties e! project third-parties-list]
+    :left-panel [third-parties e! project third-parties-list (selected-third-party-name app)]
     :main main-content}])
 
 (defn- application-link [{id :db/id :cooperation.application/keys [type response-type]}]
@@ -89,14 +120,14 @@
 
 (defn overview-page [e! app {:keys [project overview]}]
 
-  [:span.cooperation-overview-page
+  [:div.cooperation-overview-page {:class (<class common-styles/flex-column-1)}
    [cooperation-page-structure
     e! app project overview
     [:<>
      [typography/Heading2 (tr [:cooperation :page-title])]
      [typography/BoldGreyText (tr [:cooperation :all-third-parties])]
-     (for [{:cooperation.3rd-party/keys [name applications] :as tp} overview]
-       [Card {}
+     (for [{:cooperation.3rd-party/keys [name applications]} overview]
+       [Card {:data-third-party name}
         [CardHeader {:title (r/as-element
                              [url/Link {:page :cooperation-third-party
                                         :params {:third-party (js/encodeURIComponent name)}}
@@ -110,9 +141,7 @@
 
 (defn- applications [{:cooperation.3rd-party/keys [applications] :as _third-party}]
   [:<>
-   (for [{id :db/id
-          :cooperation.application/keys [response]
-          :as application} applications]
+   (for [{id :db/id :as application} applications]
      ^{:key (str id)}
      [Card {}
       ;; Header shows type of application and response (as link to application page)
@@ -134,7 +163,7 @@
                             :cooperation/create-application
                             {:thk.project/id project-id
                              :cooperation.3rd-party/name third-party
-                             :application @form-atom}
+                             :application (common-controller/prepare-form-data @form-atom)}
                             (fn [response]
                               (fn [e!]
                                 (e! (close-event))
@@ -163,7 +192,7 @@
         third-party (some #(when (= third-party-name
                                     (:cooperation.3rd-party/name %)) %)
                           overview)]
-    [:span.cooperation-third-party-page
+    [:div.cooperation-third-party-page {:class (<class common-styles/flex-column-1)}
      [cooperation-page-structure
       e! app project overview
       [:<>
@@ -183,7 +212,7 @@
 
 (defn application-page [e! app {:keys [project overview third-party]}]
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
-    [:span.cooperation-application-page
+    [:div.cooperation-application-page {:class (<class common-styles/flex-column-1)}
      [cooperation-page-structure
       e! app project overview
       [:<>

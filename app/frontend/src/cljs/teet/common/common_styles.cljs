@@ -75,7 +75,7 @@
    :box-shadow "none"})
 
 (defglobal global
-           [:body :html {:height "100%"}]
+           [:body :html {:height "100vh"}]
            [:p {:margin 0}]
            ;; Richtexteditor styling
            [:h1 {:margin-top 0}]
@@ -301,3 +301,9 @@
 (defn no-break
   []
   {:white-space :nowrap})
+
+(defn flex-column-1
+  []
+  {:display :flex
+   :flex-direction :column
+   :flex 1})
