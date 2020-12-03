@@ -1639,6 +1639,7 @@
            :db/valueType :db.type/uuid
            :db/cardinality :db.cardinality/one
            :db/unique :db.unique/value
-           :db/doc "Stable document id that is always on the latest version"}]]}
+           :db/doc "Stable document id that is always on the latest version"}]
+         teet.migration.file-id/migrate]}
 
  ]
