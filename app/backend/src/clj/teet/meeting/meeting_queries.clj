@@ -13,6 +13,7 @@
             [teet.util.datomic :as datomic-util]
             [teet.integration.postgrest :as postgrest]
             [teet.environment :as environment]
+            [teet.meeting.meeting-model :as meeting-model]
             [ring.util.io :as ring-io]
             [teet.comment.comment-db :as comment-db]
             [teet.pdf.pdf-export :as pdf-export]
@@ -40,7 +41,7 @@
          [?l :thk.lifecycle/activities ?a]
          [?a :activity/meetings ?m]
          [?m :meeting/start ?start]
-         [(.after ?start ?today)]
+         [(.after ?start ?today )]
          [(missing? $ ?m :meta/deleted?)]
          :in $ ?p ?today]
        db
@@ -213,6 +214,10 @@
           e))
       (project-db/project-by-id db eid {}))))
 
+(defn fetch-meeting-title
+  [db meeting-id]
+  ( d/pull db [:meeting/title :meeting/number] meeting-id))
+
 (defquery :meeting/project-with-meetings
   {:doc "Fetch project data with project meetings"
    :context {db :db
@@ -334,7 +339,7 @@
                                                  :link :meeting/organizer-or-reviewer}}}
   ^{:format :raw}
   {:status 200
-   :headers {"Content-Disposition" (str "inline; filename=meeting_" id ".pdf")
+   :headers {"Content-Disposition" (str "inline; filename=meeting_" (meeting-model/meeting-title (fetch-meeting-title db id)) ".pdf")
              "Content-Type" "application/pdf"}
    :body (ring-io/piped-input-stream
           (fn [ostream]
