@@ -33,7 +33,7 @@
    :border (if error
              (str "1px solid " theme-colors/error)
              (str "1px solid " theme-colors/gray-light))
-   :padding "10px 13px"
+   :padding "10px 25px 10px 13px"
    :width "100%"
    :cursor :pointer
    :max-height "41px"
