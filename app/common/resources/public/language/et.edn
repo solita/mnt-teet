@@ -171,7 +171,7 @@
   :activity.name/construction "Ehitus",
   :task.type/utilities "Tehnovõrgud",
   :cooperation.response.status/no-objection-with-terms
-  "Nõusolek tingimustega olemas",
+  "Kooskõlastus tingimustega olemas",
   :task.type/site-plan "Asendiplaan",
   :notification.type/activity-accepted
   "Tegevus on vastu võetud omaniku poolt",
@@ -310,7 +310,7 @@
   :file.document-group/models "Mudelid",
   :estate-compensation.reason/crops "Vili",
   :thk.task-type/design-requirements "Projekteerimistingimused",
-  :cooperation.response.status/objection "Tagasi lükatud",
+  :cooperation.response.status/objection "Kooskõlastus tagasi lükatud",
   :task.group/base-data "Lähteandmed",
   :task.status/completed "Valmis",
   :task.type/building-permit "Ehitusluba",
@@ -323,7 +323,7 @@
   "Tegevus ootab ülevaatust",
   :activity.status/in-progress "Töös",
   :land-acquisition.impact/purchase-needed "Vaja omandada",
-  :cooperation.position.decision/rejected "Tagasi lükatud",
+  :cooperation.position.decision/rejected "Märkused jätta arvestamata",
   :task.status/assigned "Töösse antud",
   :task.type/road-safety-audit "Liiklusohutuse audit",
   :notification.type/project-manager-assigned
@@ -331,7 +331,8 @@
   :task.type/geology "Geoloogia",
   :notification.type/task-review-rejected
   "Ülesande ülevaade lükati tagasi",
-  :cooperation.response.status/no-response "Jättis vastamata",
+  :cooperation.response.status/no-response
+  "Kooskõlastustele vastamata",
   :land-acquisition.status/completed "Lõpetatud",
   :task.status/in-preparation "Ettevalmistamisel",
   :document.category/as-built-doc "Täitedokumentatsioon",
@@ -351,7 +352,7 @@
   :task.type/landscaping "Maastik",
   :file.status/invalid "Kehtetu",
   :estate-compensation.reason/road-area "Tee piirkond",
-  :cooperation.position.decision/agreed "Kooskõlastatud",
+  :cooperation.position.decision/agreed "Märkused võtta arvesse",
   :notification.type/comment-mention "Teid mainiti märkuses",
   :task.type/third-party-review "Ekspertiis",
   :task.type/project-management "Projektijuhtimine",
@@ -393,7 +394,7 @@
   :cooperation.application.type/eia-report "KMH aruanne",
   :task.type/archeological-study "Arheoloogiline uuring",
   :cooperation.position.decision/partially-rejected
-  "Kooskõlastatud, tingimustega",
+  "Märkused võtta arvesse osaliselt",
   :task.type/construction-cost-list "Kululoend",
   :document.sub-category/study-plan "Uuringu plaan (UP plaan)",
   :document.sub-category/calculation-report "Arvutus/Katendiarvutus",
@@ -405,7 +406,7 @@
   "Ehituse kvaliteedi tagamine",
   :task.group/land-purchase "Maade omandamine",
   :activity.status/canceled "Katkestatud",
-  :cooperation.response.status/no-objection "Nõusolek olemas",
+  :cooperation.response.status/no-objection "Kooskõlastus olemas",
   :cooperation.application.type/work-permit "Töö luba",
   :document.sub-category/table-of-content "Sisukord",
   :task.status/not-started "Alustamata",
@@ -596,7 +597,7 @@
   :file-new-part-text "TEET püüab Sinu elu lihtsamaks teha",
   :invalid-sequence-number "Järjekorranumber ei ole korrektne",
   :replace-file-modal-body
-  "Kas oled kindel et soovid üles laadida {selected-file-name}, {file-full-name} uueks versiooniks?",
+  "Kas soovid laadida failile {file-full-name} uue versiooni {selected-file-name} ?",
   :already-uploaded "See fail on juba üles laaditud",
   :file-will-be-added-to-part "See fail lisatakse {part} osasse",
   :empty-file "Ei saa laadida tühje faile",

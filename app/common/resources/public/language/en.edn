@@ -598,7 +598,7 @@
   :file-new-part-text "TEET is designed to make you life easier",
   :invalid-sequence-number "Invalid sequence number",
   :replace-file-modal-body
-  "Are you sure you want to upload {selected-file-name} as a new version for {file-full-name}?",
+  "Are you sure you want to upload {selected-file-name} as a new version of {file-full-name}?",
   :already-uploaded "This file has already been uploaded",
   :file-will-be-added-to-part "This file will be added to {part} part",
   :empty-file "Can't upload empty files",
