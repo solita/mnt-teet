@@ -1634,4 +1634,10 @@
  {:db/ident :migration/migrate-organizer-for-old-meetings
   :txes [teet.migration.meeting-organizer-participation/migrate-meeting-organizers]}
 
+ {:db/ident :migration/cooperation-activity-relation
+  :txes [[{:db/ident :cooperation.application/activity
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Applications need to reference an existing activity."}]]}
+
  ]
