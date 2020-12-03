@@ -3,18 +3,15 @@
             [datomic.client.api :as d]
             [teet.file.file-storage :as file-storage]
             teet.file.file-spec
-            [teet.meta.meta-model :refer [creation-meta deletion-tx]]
+            [teet.meta.meta-model :refer [creation-meta deletion-tx] :as meta-model]
             [teet.file.file-model :as file-model]
             [teet.project.project-db :as project-db]
-            [clojure.string :as str]
             [teet.file.file-db :as file-db]
-            [teet.file.filename-metadata :as filename-metadata]
             [teet.log :as log]
             [teet.user.user-model :as user-model]
             [teet.util.datomic :as du]
             teet.file.file-tx
-            [teet.util.collection :as cu]
-            [teet.meta.meta-model :as meta-model]))
+            [teet.util.collection :as cu]))
 
 (defn- new-file-key [{name :file/name}]
   (str (java.util.UUID/randomUUID) "-" name))
