@@ -1634,4 +1634,11 @@
  {:db/ident :migration/migrate-organizer-for-old-meetings
   :txes [teet.migration.meeting-organizer-participation/migrate-meeting-organizers]}
 
+ {:db/ident :migration/file-stable-id
+  :txes [[{:db/ident :file/id
+           :db/valueType :db.type/uuid
+           :db/cardinality :db.cardinality/one
+           :db/unique :db.unique/value
+           :db/doc "Stable document id that is always on the latest version"}]]}
+
  ]
