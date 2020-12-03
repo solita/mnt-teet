@@ -111,14 +111,13 @@
 
 
 
- :file {:path "/projects/:project/:activity(\\d+)/:task/:file"
-        :parent :activity-task
-        :crumb (-> state (teet.project.project-model/file-by-id file) :file/name)
-        :title (-> state (teet.project.project-model/file-by-id file) :file/name)
+ :file {:path "/file/:file"
+        :parent :activity-task ;; FIXME: parent views won't have params, need to fetch/use in query
+        :crumb (-> state :navigation :file :db/id (teet.project.project-model/file-by-id file) :file/name)
+        :title (-> state :navigation :file :db/id (teet.project.project-model/file-by-id file) :file/name)
         :view teet.file.file-view/file-page
-        :state {:query :thk.project/fetch-project
-                :args {:thk.project/id project
-                       :task-id (->long task)}}}
+        :state {:query :thk.project/fetch-project-file
+                :args {:file/id file}}}
 
  :cooperation {:path "/projects/:project/cooperation"
                :parent :project

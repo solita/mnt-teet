@@ -350,3 +350,13 @@
                [?f :file/name ?file-name]
                [(teet.util.string/contains-words? ?file-name ?text)]]
              db project text)))
+
+(defn file-by-uuid
+  "Return file :db/id based on the :file/id UUID."
+  [db uuid]
+  {:pre [(uuid? uuid)]}
+  (ffirst
+   (d/q '[:find ?f
+          :where [?f :file/id ?uuid]
+          :in $ ?uuid]
+        db uuid)))
