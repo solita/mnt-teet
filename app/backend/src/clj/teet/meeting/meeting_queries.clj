@@ -41,7 +41,7 @@
          [?l :thk.lifecycle/activities ?a]
          [?a :activity/meetings ?m]
          [?m :meeting/start ?start]
-         [(.after ?start ?today)]
+         [(.after ?start ?today )]
          [(missing? $ ?m :meta/deleted?)]
          :in $ ?p ?today]
        db
@@ -215,9 +215,8 @@
       (project-db/project-by-id db eid {}))))
 
 (defn fetch-meeting-title
-  [db eid]
-  (let [meeting (first (fetch-project-meetings db eid))]
-    {:meeting/title meeting :meeting/number meeting}))
+  [db meeting-id]
+  ( d/pull db [:meeting/title :meeting/number] meeting-id))
 
 (defquery :meeting/project-with-meetings
   {:doc "Fetch project data with project meetings"
