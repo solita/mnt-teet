@@ -433,6 +433,8 @@
   :meeting-is-locked
   "The meeting is accepted and can no longer be changed",
   :user-already-exists "User with the given person id already exists",
+  :application-outside-activities
+  "Applied date not within any project activity.",
   :request-timeout "The server did not respond.",
   :invalid-activity-dates "Check activity dates",
   :bad-request "Bad request",

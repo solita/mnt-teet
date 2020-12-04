@@ -431,6 +431,8 @@
   :meeting-is-locked
   "Koosoleku otsused on kinnitatud ning seda ei saa enam muuta",
   :user-already-exists "Sama isikukoodiga kasutaja on juba lisatud",
+  :application-outside-activities
+  "Taotlus kuupäev väljaspool projekti tegevuste aega.",
   :request-timeout "Ei saanud serveriga ühendust",
   :invalid-activity-dates "Kontrolli tegevuse kuupäevi",
   :bad-request "Vigane päring",
