@@ -8,8 +8,11 @@
     [teet.user.user-model :as user-model]
     [teet.meeting.meeting-model :as meeting-model]
     [clojure.java.io :as io])
-  (:import (com.vladsch.flexmark.parser Parser)
-           (com.vladsch.flexmark.util.ast Document)
+  (:import (com.vladsch.flexmark.parser Parser Parser$ParserExtension)
+           (com.vladsch.flexmark.util.data DataHolder)
+           (com.vladsch.flexmark.util.sequence BasedSequence)
+           (com.vladsch.flexmark.util.ast Document Node DelimitedNode)
+           (com.vladsch.flexmark.parser.delimiter DelimiterProcessor)
            (com.vladsch.flexmark.ast
             ;; Import node types for rendering
             Paragraph BulletList OrderedList Heading Text
@@ -439,8 +442,66 @@
                            3 "16pt")}
    (render-children h)])
 
+(declare create-underline-node)
+(gen-class :name "teet.markdown.Underline"
+           :extends Node
+           :implements [DelimitedNode]
+           :init create-underline-node
+           :state "state")
+
+(defn create-underline-node [opening-marker text closing-marker]
+  [[(.baseSubSequence opening-marker
+                      (.getStartOffset opening-marker)
+                      (.getEndOffset closing-marker))]
+   {:opening-marker opening-marker
+    :text text
+    :closing-marker closing-marker}])
+
+(defn- underline-delimiter-processor []
+  (reify DelimiterProcessor
+    (getOpeningCharacter [this] \+)
+    (getClosingCharacter [this] \+)
+    (getMinLength [this] 1)
+    (getDelimiterUse [this opener closer]
+      (if (and (pos? (.length opener))
+               (pos? (.length closer)))
+        1
+        0))
+    (canBeOpener [this before after leftFlanking rightFlanking beforeIsPunctuation
+                  afterIsPunctuation beforeIsWhitespace afterIsWhiteSpace]
+      leftFlanking)
+    (canBeCloser [this before after leftFlanking rightFlanking beforeIsPunctuation
+                  afterIsPunctuation beforeIsWhitespace afterIsWhiteSpace]
+      rightFlanking)
+    (unmatchedDelimiterNode [this inlineParser delimiter] nil)
+    (skipNonOpenerCloser [this] false)
+    (process [this opener closer delimitersUsed]
+      #_(.moveNodesBetweenDelimitersTo
+       (teet.markdown.Underline. (.getTailChars opener delimitersUsed)
+                                 BasedSequence/NULL
+                                 (.getLeadChars closer delimitersUsed))
+       closer))))
+
+(defn- underline-extension []
+  (reify Parser$ParserExtension
+    (parserOptions [this options]
+      (println "got parser options" options))
+
+    (extend [this parser-builder]
+      (println "trying to extend parser" parser-builder)
+      (.customDelimiterProcessor (underline-delimiter-processor)))))
+
 (defn- parse-md [str]
-  (-> (Parser/builder) .build (.parse str)))
+  (let [extensions [(underline-extension)]]
+    (-> (Parser/builder
+         (reify DataHolder
+           (get [this key]
+             (println "getting key " key)
+             (when (= key Parser/EXTENSIONS)
+               extensions))
+           (getAll [this]
+             {Parser/EXTENSIONS extensions})))
+        .build (.parse str))))
 
 (defn- render-md
   "Parse and render markdown as xsl-fo"
