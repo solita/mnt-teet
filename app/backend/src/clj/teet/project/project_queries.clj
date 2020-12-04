@@ -148,9 +148,10 @@
          (map :properties)
          maps->sheet)))
 
-(defn- road-object-sheets [ctx entity-id]
+(defn- road-object-sheets [ctx integration-id]
   (let [gml-geometry
-        (entity-features/entity-search-area-gml ctx entity-id road-model/default-road-buffer-meters)
+        (entity-features/entity-search-area-gml ctx integration-id
+                                                road-model/default-road-buffer-meters)
         road-objects (road-query/fetch-all-intersecting-objects ctx gml-geometry)]
     (mapcat
      (fn [[type objects]]
@@ -171,8 +172,8 @@
    :body (let [ctx (environment/config-map {:api-url [:api-url]
                                             :api-secret [:auth :jwt-secret]
                                             :wfs-url [:road-registry :wfs-url]})
-               {id :db/id :as project}
-               (d/pull db '[:db/id
+               {integration-id :integration/id :as project}
+               (d/pull db '[:db/id :integration/id
                             :thk.project/related-cadastral-units
                             :thk.project/related-restrictions]
                        [:thk.project/id id])
@@ -184,7 +185,7 @@
                                      ctx
                                      (:thk.project/related-restrictions project))
 
-               road-object-sheets (road-object-sheets ctx id)]
+               road-object-sheets (road-object-sheets ctx integration-id)]
 
            (ring-io/piped-input-stream
             (fn [out]
