@@ -298,10 +298,11 @@
   [meeting is-absentee?]
   (for [{user       :participation/participant
          role       :participation/role
-         is-absent? :participation/absent?} (:participation/_in meeting)
-        :when (if is-absentee?
+         is-absent? :participation/absent?
+         is-deleted? :meta/deleted?} (:participation/_in meeting)
+        :when (and (not is-deleted?) (if is-absentee?
                 is-absent?
-                (not is-absent?))]
+                (not is-absent?)))]
     [:fo:block
      [:fo:inline {:font-weight 900} (:user/family-name user) " " (:user/given-name user)]
      [:fo:inline ", " (tr+ [:enum (:db/ident role)])]]))
