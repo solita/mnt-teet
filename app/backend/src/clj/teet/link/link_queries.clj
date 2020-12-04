@@ -51,14 +51,14 @@
                                             db project)
                                        ffirst
                                        :thk.project/related-cadastral-units)]
-    (->> (postgrest/rpc {:api-url api-url :api-secret api-secret}
+    (sort-by first (->> (postgrest/rpc {:api-url api-url :api-secret api-secret}
                         :select_feature_properties
                         {:ids related-cadastral-unit-ids
                          :properties ["KINNISTU" "L_AADRESS" "TUNNUS"]})
          (map (fn [[key properties]]
                 (assoc properties :link/external-id (name key))))
          (filterv #(or (string/contains-words? (:TUNNUS %) text)
-                       (string/contains-words? (:L_AADRESS %) text))))))
+                       (string/contains-words? (:L_AADRESS %) text)))))))
 
 (defn search-estate [db {:keys [api-url api-secret]} project text]
   (let [related-cadastral-unit-ids (-> (d/q '[:find (pull ?p [:thk.project/related-cadastral-units])
@@ -66,7 +66,7 @@
                                             db project)
                                        ffirst
                                        :thk.project/related-cadastral-units)]
-    (->> (postgrest/rpc {:api-url api-url :api-secret api-secret}
+    (sort-by first (->> (postgrest/rpc {:api-url api-url :api-secret api-secret}
                         :select_feature_properties
                         {:ids related-cadastral-unit-ids
                          :properties ["KINNISTU"]})
@@ -74,7 +74,7 @@
          distinct
          (filterv #(and (not (str/blank? (:KINNISTU %)))
                         (string/contains-words? (:KINNISTU %) text)))
-         (map #(assoc % :link/external-id (:KINNISTU %))))))
+         (map #(assoc % :link/external-id (:KINNISTU %)))))))
 
 ;; Estate id: fetch all units, distinct from properties
 
