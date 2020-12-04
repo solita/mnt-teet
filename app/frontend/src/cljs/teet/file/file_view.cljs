@@ -388,9 +388,8 @@
           [url/Link (merge
                      {:title description
                       :class (<class file-style/file-list-entity-name-style)
-                      :page :file :params {:file (:db/id file)
-                                            :activity (get-in file [:task/_files 0 :activity/_tasks 0 :db/id])
-                                            :task (get-in file [:task/_files 0 :db/id])}}
+                      :page :file
+                      :params {:file (:file/id file)}}
                       (when link-to-new-tab?
                         {:target :_blank}))
            description])

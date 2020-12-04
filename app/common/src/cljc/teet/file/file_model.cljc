@@ -66,7 +66,7 @@
 
 (def file-listing-attributes
   "Attributes to fetch for file listing"
-  [:db/id :file/name :meta/deleted? :file/version :file/size
+  [:db/id :file/name :meta/deleted? :file/version :file/size :file/id
    :file/status :file/part :file/group-number
    :file/original-name
    {:task/_files [:db/id :activity/_tasks]}
