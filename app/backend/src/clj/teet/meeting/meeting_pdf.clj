@@ -410,7 +410,6 @@
   [:fo:block
    (render-children c)])
 
-
 (defmethod md->xsl-fo BulletList [ul]
   [:fo:list-block
    (for [item (md-children ul)]
@@ -447,7 +446,7 @@
    (render-children t)])
 
 (defmethod md->xsl-fo "Underline" [t]
-  [:fo:inline {:font-decoration "underline"}
+  [:fo:inline {:text-decoration "underline"}
    (render-children t)])
 
 (defmethod md->xsl-fo Heading [h]
@@ -502,11 +501,8 @@
 
 (defn- underline-extension []
   (reify Parser$ParserExtension
-    (parserOptions [this options]
-      (println "got parser options" options))
-
+    (parserOptions [this options])
     (extend [this parser-builder]
-      (println "trying to extend parser" parser-builder)
       (.customDelimiterProcessor parser-builder (underline-delimiter-processor)))))
 
 (defn- parse-md [str]
@@ -514,7 +510,6 @@
     (-> (Parser/builder
          (reify DataHolder
            (get [this key]
-             (println "getting key " key)
              (when (= key Parser/EXTENSIONS)
                extensions))
            (getAll [this]
