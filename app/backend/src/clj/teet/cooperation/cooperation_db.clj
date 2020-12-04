@@ -49,11 +49,13 @@
          tp
          (when (seq application-ids)
            {:cooperation.3rd-party/applications
-            (mapv first
-                  (d/q '[:find (pull ?e attrs)
-                         :in $ [?e ...] attrs]
-                       db application-ids
-                       cooperation-model/application-overview-attrs))})))
+            (->> (d/q '[:find (pull ?e attrs)
+                        :in $ [?e ...] attrs]
+                      db application-ids
+                      cooperation-model/application-overview-attrs)
+                 (mapv first)
+                 (sort-by :cooperation.application/date)
+                 reverse)})))
       (sort-by (comp str/lower-case :cooperation.3rd-party/name))
       vec))))
 

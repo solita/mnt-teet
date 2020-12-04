@@ -99,8 +99,7 @@
            ["input::-webkit-outer-spin-button" "input::-webkit-inner-spin-button" {"-webkit-appearance" "none" :margin 0}])
 
 (defn header-with-actions []
-  {:margin-top "2rem"
-   :justify-content :space-between
+  {:justify-content :space-between
    :display :flex})
 
 (defn space-between-center
