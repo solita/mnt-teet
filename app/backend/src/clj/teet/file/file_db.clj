@@ -5,7 +5,8 @@
             [teet.comment.comment-db :as comment-db]
             [teet.log :as log]
             [teet.file.filename-metadata :as filename-metadata]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.file.file-model :as file-model]))
 
 (defn- valid-attach-definition? [attach]
   (and (vector? attach)
@@ -131,20 +132,13 @@
                    (comment-counts-by-file (:db/id %))
                    {:file-seen/seen-at (seen-at-by-file (:db/id %))})
            first)
-     (d/q '[:find (pull ?f [:db/id :file/name :meta/deleted? :file/version :file/size
-                            :file/status :file/part :file/group-number
-                            :file/original-name
-                            {:task/_files [:db/id :activity/_tasks]}
-                            :file/document-group
-                            :file/sequence-number
-                            {:file/previous-version [:db/id]}
-                            :meta/created-at
-                            :meta/modified-at
-                            {:meta/modifier [:user/id :user/family-name :user/given-name]}
-                            {:meta/creator [:user/id :user/family-name :user/given-name]}])
+     (d/q '[:find (pull ?f file-listing-attributes)
             :where
             [?f :file/upload-complete? true]
-            :in $ [?f ...]] db file-ids))))
+            :in $ file-listing-attributes [?f ...]]
+          db
+          file-model/file-listing-attributes
+          file-ids))))
 
 (defn file-metadata
   "Return file metadata for a given file id."
