@@ -1,13 +1,14 @@
 (ns teet.meeting.meeting-pdf
   "Generate meeting PDF as hiccup formatted XSL-FO"
   (:require
-    [teet.meeting.meeting-db :as meeting-db]
-    [teet.meeting.meeting-commands :as meeting-commands]
-    [teet.environment :as environment]
-    [teet.localization :refer [with-language tr]]
-    [teet.user.user-model :as user-model]
-    [teet.meeting.meeting-model :as meeting-model]
-    [clojure.java.io :as io])
+   [teet.meeting.meeting-db :as meeting-db]
+   [teet.meeting.meeting-commands :as meeting-commands]
+   [teet.environment :as environment]
+   [teet.localization :refer [with-language tr]]
+   [teet.user.user-model :as user-model]
+   [teet.meeting.meeting-model :as meeting-model]
+   [clojure.java.io :as io]
+   [clojure.string :as str])
   (:import (com.vladsch.flexmark.parser Parser Parser$ParserExtension)
            (com.vladsch.flexmark.util.data DataHolder)
            (com.vladsch.flexmark.util.sequence BasedSequence)
@@ -385,7 +386,17 @@
 (defn- md-children [node]
   (-> node .getChildren .iterator iterator-seq))
 
-(defmulti md->xsl-fo class)
+(defmulti md->xsl-fo
+  (fn [node]
+    (let [s (str node)]
+      (cond
+        ;; Check our extension classes
+        (str/starts-with? s "#<Underline")
+        "Underline"
+
+        ;; Otherwise use Java class of node
+        :else
+        (class node)))))
 
 (defn- render-children [node]
   (for [c (md-children node)]
@@ -435,6 +446,10 @@
   [:fo:inline {:font-style "italic"}
    (render-children t)])
 
+(defmethod md->xsl-fo "Underline" [t]
+  [:fo:inline {:font-decoration "underline"}
+   (render-children t)])
+
 (defmethod md->xsl-fo Heading [h]
   [:fo:block {:font-size (case (.getLevel h)
                            1 "24pt"
@@ -442,30 +457,32 @@
                            3 "16pt")}
    (render-children h)])
 
-(declare create-underline-node)
-(gen-class :name "teet.markdown.Underline"
-           :extends Node
-           :implements [DelimitedNode]
-           :init create-underline-node
-           :state "state")
-
 (defn create-underline-node [opening-marker text closing-marker]
-  [[(.baseSubSequence opening-marker
-                      (.getStartOffset opening-marker)
-                      (.getEndOffset closing-marker))]
-   {:opening-marker opening-marker
-    :text text
-    :closing-marker closing-marker}])
+  (let [state (atom {:opening-marker opening-marker
+                     :text text
+                     :closing-marker closing-marker})]
+    (proxy [Node DelimitedNode]
+        [(.baseSubSequence opening-marker
+                           (.getStartOffset opening-marker)
+                           (.getEndOffset closing-marker))]
+      (getSegments []
+        (let [{:keys [opening-marker text closing-marker]} @state]
+          (into-array BasedSequence [opening-marker text closing-marker])))
+      (getOpeningMarker [] (:opening-marker @state))
+      (getText [] (:text @state))
+      (getClosingMarker [] (:closing-marker @state))
+      (setText [text] (swap! state assoc :text text))
+      (toString [] (str "#<Underline " (pr-str @state) ">")))))
 
 (defn- underline-delimiter-processor []
   (reify DelimiterProcessor
     (getOpeningCharacter [this] \+)
     (getClosingCharacter [this] \+)
-    (getMinLength [this] 1)
+    (getMinLength [this] 2)
     (getDelimiterUse [this opener closer]
-      (if (and (pos? (.length opener))
-               (pos? (.length closer)))
-        1
+      (if (and (>= (.length opener) 2)
+               (>= (.length closer) 2))
+        2
         0))
     (canBeOpener [this before after leftFlanking rightFlanking beforeIsPunctuation
                   afterIsPunctuation beforeIsWhitespace afterIsWhiteSpace]
@@ -476,10 +493,11 @@
     (unmatchedDelimiterNode [this inlineParser delimiter] nil)
     (skipNonOpenerCloser [this] false)
     (process [this opener closer delimitersUsed]
-      #_(.moveNodesBetweenDelimitersTo
-       (teet.markdown.Underline. (.getTailChars opener delimitersUsed)
-                                 BasedSequence/NULL
-                                 (.getLeadChars closer delimitersUsed))
+      (.moveNodesBetweenDelimitersTo
+       opener
+       (create-underline-node (.getTailChars opener delimitersUsed)
+                              BasedSequence/NULL
+                              (.getLeadChars closer delimitersUsed))
        closer))))
 
 (defn- underline-extension []
@@ -489,7 +507,7 @@
 
     (extend [this parser-builder]
       (println "trying to extend parser" parser-builder)
-      (.customDelimiterProcessor (underline-delimiter-processor)))))
+      (.customDelimiterProcessor parser-builder (underline-delimiter-processor)))))
 
 (defn- parse-md [str]
   (let [extensions [(underline-extension)]]
