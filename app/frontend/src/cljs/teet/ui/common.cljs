@@ -167,7 +167,8 @@
 (defn header-with-actions [header-text & actions]
   [:div {:class (<class common-styles/header-with-actions)}
    [typography/Heading1 header-text]
-   (into [:div {:class (<class heading-buttons-style)}] actions)])
+   (into [:div {:class (<class heading-buttons-style)}]
+         actions)])
 
 
 (defn feature-and-action-style
@@ -410,21 +411,24 @@
   (.format number-formatter s))
 
 (defn info-row-item-style
-  []
-  ^{:pseudo {:last-child {:margin-right 0 :margin-left "auto"}}}
-  {:margin-right "1rem"
-   :margin-bottom "1rem"})
+  [right-align-last?]
+  (with-meta {:margin-right "1rem"
+              :margin-bottom "1rem"}
+             (when right-align-last?
+               {:pseudo {:last-child {:margin-right 0 :margin-left "auto"}}})))
 
 (defn basic-information-row
   "[[data-title data-value]...]"
-  [data]
-  [:div {:class (<class common-styles/flex-row-wrap)}
-   (doall
-     (for [[label data] data]
-       ^{:key label}
-       [:div {:class (<class info-row-item-style)}
-        [typography/SectionHeading label]
-        [:p data]]))])
+  ([data]
+   [basic-information-row {} data])
+  ([opts data]
+   [:div {:class (<class common-styles/flex-row-wrap)}
+    (doall
+      (for [[label data] data]
+        ^{:key label}
+        [:div {:class (<class info-row-item-style (:right-align-last? opts))}
+         [typography/SectionHeading label]
+         [:p data]]))]))
 
 (defn column-with-space-between [space-between & children]
   (let [cls (<class common-styles/padding-bottom space-between)]

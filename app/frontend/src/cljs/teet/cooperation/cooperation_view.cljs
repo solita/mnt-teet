@@ -5,6 +5,7 @@
             [teet.common.common-styles :as common-styles]
             [teet.cooperation.cooperation-controller :as cooperation-controller]
             [teet.cooperation.cooperation-model :as cooperation-model]
+            [teet.cooperation.cooperation-style :as cooperation-style]
             [teet.localization :refer [tr tr-enum]]
             [teet.project.project-navigator-view :as project-navigator-view]
             [teet.project.project-view :as project-view]
@@ -19,7 +20,8 @@
             [teet.ui.text-field :as text-field]
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.typography :as typography]
-            [teet.ui.url :as url]))
+            [teet.ui.url :as url]
+            [teet.user.user-model :as user-model]))
 
 
 (defn- third-party-form [{:keys [e! project-id]} close-event form-atom]
@@ -62,7 +64,92 @@
    :padding-left 0
    :list-style-type :none})
 
-(defn third-party-link [])
+(defn- application-link [{id :db/id :cooperation.application/keys [type response-type]}]
+  [url/Link {:page :cooperation-application
+             :params {:application (str id)}}
+   (str
+     (tr-enum type) " / " (tr-enum response-type))])
+
+(defn color-and-status
+  [color text]
+  [:div {:style {:display :flex
+                 :align-items :center}}
+   [:div {:class (<class common-styles/status-circle-style color)}]
+   [:span text]])
+
+(defn response-status
+  [response]
+  (let [color (case (:cooperation.response/status response)
+                :cooperation.response.status/no-objection theme-colors/success
+                :cooperation.response.status/no-objection-with-terms theme-colors/warning
+                :cooperation.response.status/objection theme-colors/error
+                :cooperation.response.status/no-response theme-colors/error
+                theme-colors/black-coral-1)]
+    [color-and-status color (if response
+                              (tr-enum (:cooperation.response/status response))
+                              (tr [:cooperation :applied]))]))
+
+(defn position-status
+  [position]
+  (let [indicator-color (case (:cooperation.position/decision position)
+                          :cooperation.position.decision/agreed theme-colors/success
+                          :cooperation.position.decision/rejected theme-colors/error
+                          :cooperation.position.decision/partially-rejected theme-colors/warning
+                          theme-colors/black-coral-1)]
+    [color-and-status indicator-color (if position
+                                        (tr-enum (:cooperation.position/decision position))
+                                        (tr [:cooperation :unanswered]))]))
+
+(defn cooperation-position
+  [{:cooperation.application/keys [position]}]
+  [common/basic-information-row
+   {:right-align-last? false}
+   [[(tr [:cooperation :conclusion])
+     ;; colored circle based on status
+     [position-status position]]
+    (when-let [date (:meta/created-at position)]
+      [(tr [:common :date])
+       date])]])
+
+(defn- application-information [{:cooperation.application/keys [response] :as application}]
+  (if response
+    (let [{:cooperation.response/keys [status date valid-until]} response]
+      [common/basic-information-row
+       {:right-align-last? false}
+       [[(tr [:cooperation :response-of-third-party])
+         ;; colored circle based on status
+         (tr-enum status)]
+        [(tr [:fields :cooperation.response/date])
+         (format/date date)]
+        [(tr [:fields :cooperation.response/valid-until])
+         (format/date valid-until) ]]])
+    (let [{:cooperation.application/keys [date response-deadline]} application]
+      [common/basic-information-row
+       {:right-align-last? false}
+       [[(tr [:cooperation :response-of-third-party])
+         ;; colored circle based on status
+         [response-status response]]
+        [(tr [:fields :cooperation.application/date])
+         (format/date date)]
+        [(tr [:fields :cooperation.application/response-deadline])
+         (or (format/date response-deadline) (tr [:cooperation :no-deadline]))]]])))
+
+(defn application-list-item
+  [{:keys [parent-link-comp]} {:cooperation.application/keys [activity] :as application}]
+  [:div {:class (<class cooperation-style/application-list-item-style)}
+
+   (when parent-link-comp
+     parent-link-comp)
+   [:div {:class [(<class common-styles/flex-row)
+                  (<class common-styles/margin-bottom 1)]}
+    [application-link application]
+    [typography/GreyText {:style {:margin-left "0.5rem"}}
+     (tr-enum (:activity/name activity))]]
+   [application-information application]
+   [typography/Text {:class (<class common-styles/margin-bottom 1)}
+    (tr [:cooperation :responsible-person]
+        {:user-name (user-model/user-name (:activity/manager activity))})]
+   [cooperation-position application]])
 
 (defn- third-parties [e! project third-parties selected-third-party-name]
   [:div {:class (<class project-navigator-view/navigator-container-style true)}
@@ -101,58 +188,33 @@
     :left-panel [third-parties e! project third-parties-list (selected-third-party-name app)]
     :main main-content}])
 
-(defn- application-link [{id :db/id :cooperation.application/keys [type response-type]}]
-  [url/Link {:page :cooperation-application
-             :params {:application (str id)}}
-   (str
-    (tr-enum type) " / " (tr-enum response-type))])
-
-(defn- application-card-content [{:cooperation.application/keys [response]}]
-  (let [{:cooperation.response/keys [status date valid-until]} response]
-    [common/basic-information-row
-     [[(tr [:fields :cooperation.response/status])
-       ;; colored circle based on status
-       (tr-enum status)]
-      [(tr [:fields :cooperation.response/date])
-       (format/date date)]
-      [(tr [:fields :cooperation.response/valid-until])
-       (format/date valid-until)]]]))
-
 (defn overview-page [e! app {:keys [project overview]}]
 
   [:div.cooperation-overview-page {:class (<class common-styles/flex-column-1)}
    [cooperation-page-structure
     e! app project overview
     [:<>
-     [typography/Heading2 (tr [:cooperation :page-title])]
-     [typography/BoldGreyText (tr [:cooperation :all-third-parties])]
+     [:div {:class (<class common-styles/margin-bottom 1.5)}
+      [typography/Heading2 (tr [:cooperation :page-title])]
+      [typography/Heading3 (tr [:cooperation :all-third-parties])]]
      (for [{:cooperation.3rd-party/keys [name applications]} overview]
-       [Card {:data-third-party name}
-        [CardHeader {:title (r/as-element
-                             [url/Link {:page :cooperation-third-party
-                                        :params {:third-party (js/encodeURIComponent name)}}
-                              name])}]
+       [url/with-navigation-params
+        {:third-party (js/encodeURIComponent name)}
         (when-let [application (first applications)]
-          [CardContent {}
-           [url/with-navigation-params
-            {:third-party (js/encodeURIComponent name)}
-            [application-link application]]
-           [application-card-content application]])])]]])
+          [application-list-item
+           {:parent-link-comp [url/Link {:style {:font-size "1.5rem"
+                                                 :display :block}
+                                         :class (<class common-styles/margin-bottom 1.5)
+                                         :page :cooperation-third-party
+                                         :params {:third-party (js/encodeURIComponent name)}}
+                               name]}
+           application])])]]])
 
 (defn- applications [{:cooperation.3rd-party/keys [applications] :as _third-party}]
   [:<>
    (for [{id :db/id :as application} applications]
      ^{:key (str id)}
-     [Card {}
-      ;; Header shows type of application and response (as link to application page)
-      ;; activity for the application
-      [CardHeader {:title (r/as-element [application-link application])}]
-
-      ;; Content shows response, dates
-      ;; responsible person
-      ;; position of mnt
-      [CardContent
-       [application-card-content application]]])])
+     [application-list-item {} application])])
 
 (defn- application-form [{:keys [e! project-id third-party]} close-event form-atom]
   [form/form {:e! e!
@@ -196,15 +258,24 @@
      [cooperation-page-structure
       e! app project overview
       [:<>
-       [common/header-with-actions (:cooperation.3rd-party/name third-party)]
-       [form/form-modal-button
-        {:max-width "sm"
-         :form-component [application-form {:e! e!
-                                            :project-id (:thk.project/id project)
-                                            :third-party third-party-name}]
-         :modal-title (tr [:cooperation :new-application-title])
-         :button-component [buttons/button-primary {:class :new-application}
-                            (tr [:cooperation :new-application])]}]
+       [:div {:class (<class common-styles/margin-bottom 1)}
+        [common/header-with-actions
+         (:cooperation.3rd-party/name third-party)
+         [buttons/button-secondary
+
+          (tr [:buttons :edit])]]
+        [typography/Heading3
+         {:class (<class common-styles/margin-bottom 2)}
+         (tr [:cooperation :applications])]
+
+        [form/form-modal-button
+         {:max-width "sm"
+          :form-component [application-form {:e! e!
+                                             :project-id (:thk.project/id project)
+                                             :third-party third-party-name}]
+          :modal-title (tr [:cooperation :new-application-title])
+          :button-component [buttons/button-primary {:class :new-application}
+                             (tr [:cooperation :new-application])]}]]
        [applications third-party]]]]))
 
 (defn- application-response-form [_close-event _form-atom]

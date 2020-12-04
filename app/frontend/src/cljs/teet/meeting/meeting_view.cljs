@@ -882,6 +882,7 @@
         review? (get rights :review-meeting)]
     [:div
      [common/basic-information-row
+      {:right-align-last? true}
       [[(tr [:fields :meeting/date-and-time])
         (str (format/date start)
              " "
