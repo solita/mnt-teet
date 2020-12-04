@@ -140,16 +140,18 @@
 
    (when parent-link-comp
      parent-link-comp)
-   [:div {:class [(<class common-styles/flex-row)
-                  (<class common-styles/margin-bottom 1)]}
-    [application-link application]
-    [typography/GreyText {:style {:margin-left "0.5rem"}}
-     (tr-enum (:activity/name activity))]]
-   [application-information application]
-   [typography/Text {:class (<class common-styles/margin-bottom 1)}
-    (tr [:cooperation :responsible-person]
-        {:user-name (user-model/user-name (:activity/manager activity))})]
-   [cooperation-position application]])
+   (when application
+     [:div
+      [:div {:class [(<class common-styles/flex-row)
+                     (<class common-styles/margin-bottom 1)]}
+       [application-link application]
+       [typography/GreyText {:style {:margin-left "0.5rem"}}
+        (tr-enum (:activity/name activity))]]
+      [application-information application]
+      [typography/Text {:class (<class common-styles/margin-bottom 1)}
+       (tr [:cooperation :responsible-person]
+           {:user-name (user-model/user-name (:activity/manager activity))})]
+      [cooperation-position application]])])
 
 (defn- third-parties [e! project third-parties selected-third-party-name]
   [:div {:class (<class project-navigator-view/navigator-container-style true)}
@@ -196,19 +198,28 @@
     [:<>
      [:div {:class (<class common-styles/margin-bottom 1.5)}
       [typography/Heading2 (tr [:cooperation :page-title])]
-      [typography/Heading3 (tr [:cooperation :all-third-parties])]]
+      [typography/Heading3 {:class (<class common-styles/margin-bottom 1)}
+       (tr [:cooperation :all-third-parties])]
+      [form/form-modal-button
+       {:max-width "sm"
+        :form-component [third-party-form {:e! e!
+                                           :project-id (:thk.project/id project)}]
+        :modal-title (tr [:cooperation :new-third-party-title])
+        :button-component [buttons/button-primary {:class "new-third-party"}
+                           (tr [:cooperation :new-third-party])]}]]
      (for [{:cooperation.3rd-party/keys [name applications]} overview]
        [url/with-navigation-params
         {:third-party (js/encodeURIComponent name)}
-        (when-let [application (first applications)]
-          [application-list-item
-           {:parent-link-comp [url/Link {:style {:font-size "1.5rem"
-                                                 :display :block}
-                                         :class (<class common-styles/margin-bottom 1.5)
-                                         :page :cooperation-third-party
-                                         :params {:third-party (js/encodeURIComponent name)}}
-                               name]}
-           application])])]]])
+        (let [application (first applications)]
+          [:div {:data-third-party name}
+           [application-list-item
+            {:parent-link-comp [url/Link {:style {:font-size "1.5rem"
+                                                  :display :block}
+                                          :class (<class common-styles/margin-bottom 1.5)
+                                          :page :cooperation-third-party
+                                          :params {:third-party (js/encodeURIComponent name)}}
+                                name]}
+            application]])])]]])
 
 (defn- applications [{:cooperation.3rd-party/keys [applications] :as _third-party}]
   [:<>
