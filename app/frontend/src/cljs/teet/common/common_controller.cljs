@@ -308,12 +308,12 @@
                                                      {:error :request-timeout})))
                                   timeout-ms)))]))
 
-(def ^:private fetch-timeout-ms 30000)
+(def ^:private default-fetch-timeout-ms 30000)
 
 (defn- fetch*
   "Call JS fetch API. Automatically adds response code check and error handling.
   Returns a Promise yielding a response data or app-state map."
-  [e! error-event & [url authless-arg-map-js]]
+  [e! error-event & [url authless-arg-map-js fetch-timeout-ms]]
   {:post [(instance? js/Promise %)]}
   (swap! in-flight-requests inc)
   (-> (fetch-or-timeout url
@@ -321,13 +321,14 @@
                             js->clj
                             (update "headers" add-authorization)
                             clj->js)
-                        fetch-timeout-ms)
+                        (or fetch-timeout-ms
+                            default-fetch-timeout-ms))
       (.then check-response-status)
       (.catch (catch-response-error e! error-event))))
 
 (defmethod tuck-effect/process-effect :rpc [e! {:keys [rpc args result-path result-event
                                                        endpoint method loading-path
-                                                       json? error-event] :as q}]
+                                                       json? error-event timeout-ms] :as q}]
   (assert rpc "Must specify :rpc function to call")
   (assert (map? args) "Must specify :args map")
   (assert (or result-path result-event) "Must specify result-path or result-event")
@@ -347,7 +348,8 @@
                                           (name arg)
                                           arg)
                                         "=" (js/encodeURIComponent (str val))))
-                                 args))))
+                                 args))
+                  timeout-ms))
 
           ;; POST request, send parameters as JSON body
           (fetch* e! error-event
@@ -355,7 +357,8 @@
                   #js {:method "POST"
                        :headers (clj->js {"Content-Type" "application/json"
                                           "Accept" "application/json"})
-                       :body (-> args clj->js js/JSON.stringify)}))
+                       :body (-> args clj->js js/JSON.stringify)}
+                  timeout-ms))
         (.then #(when % (.json %)))
         (.then (fn [json]
                 (let [data (if json?
@@ -371,7 +374,9 @@
   (assert (some? args) "Must specify :args for query"))
 
 
-(defmethod tuck-effect/process-effect :query [e! {:keys [query args result-path result-event method error-event]
+(defmethod tuck-effect/process-effect :query [e! {:keys [query args result-path
+                                                         result-event method error-event
+                                                         timeout-ms]
                                                   :as q
                                                   :or {method "POST"}}]
   (check-query-and-args query args)
@@ -382,13 +387,15 @@
       (-> (case method
             "GET" (fetch* e! error-event
                           (str "/query/?q=" (js/encodeURIComponent payload))
-                          #js {:method "GET"})
+                          #js {:method "GET"}
+                          timeout-ms)
             "POST" (fetch* e! error-event
                            "/query/"
                            #js {:method "POST"
                                 :headers (clj->js
                                           {"Content-Type" "application/json+transit"})
-                                :body payload}))
+                                :body payload}
+                           timeout-ms))
           (.then #(.text %))
           (.then (fn [text]
                    (let [data (transit/transit->clj text)]
@@ -478,7 +485,9 @@
           (assoc query-effect-map :tuck.effect/type :query))))
 
 
-(defmethod tuck-effect/process-effect :command! [e! {:keys [command payload result-path result-event success-message error-event] :as q}]
+(defmethod tuck-effect/process-effect :command! [e! {:keys [command payload result-path
+                                                            result-event success-message error-event
+                                                            timeout-ms] :as q}]
   (assert (keyword? command)
           "Must specify :command keyword that names the command to execute")
   (assert (some? payload)
@@ -492,7 +501,8 @@
                      :headers (clj->js
                                {"Content-Type" "application/json+transit"})
                      :body (transit/clj->transit {:command command
-                                                  :payload payload})})
+                                                  :payload payload})}
+                timeout-ms)
         (.then #(.text %))
         (.then (fn [text]
                  (let [data (transit/transit->clj text)]
