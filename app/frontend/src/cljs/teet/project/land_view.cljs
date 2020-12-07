@@ -920,8 +920,11 @@
 (defn- shown-contact-methods [contact-methods]
   (->> contact-methods
        (filter (fn [{:keys [type content lopp-kpv]}]
+                      ;; Contact method is present
                  (and content
+                      ;; and it's up-to-date
                       (not lopp-kpv)
+                      ;; and it's supposed to be shown
                       (shown-contact-types type))))
        (sort-by (comp contact-order :type))))
 
