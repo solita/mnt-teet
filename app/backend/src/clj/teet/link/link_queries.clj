@@ -76,7 +76,8 @@
          (filterv #(and (not (str/blank? (:KINNISTU %)))
                         (string/contains-words? (:KINNISTU %) text)))
          (map #(assoc % :link/external-id (:KINNISTU %)))
-         (sort-by :link/external-id))))
+         (sort-by #(Integer/parseInt (:link/external-id %)))
+         )))
 
 ;; Estate id: fetch all units, distinct from properties
 
