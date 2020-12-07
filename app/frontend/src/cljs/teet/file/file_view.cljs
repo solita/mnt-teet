@@ -264,7 +264,7 @@
 (defn file-comments-link
   [file]
   [url/Link {:page :file
-             :params {:file (:db/id file)
+             :params {:file (:file/id file)
                       :activity (get-in file [:task/_files 0 :activity/_tasks 0 :db/id])
                       :task (get-in file [:task/_files 0 :db/id])}
              :query {:tab "comments"}}
