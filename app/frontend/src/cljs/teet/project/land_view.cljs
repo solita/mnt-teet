@@ -970,8 +970,8 @@
   [:div
    [:div {:class (<class project-style/owner-container)}
     (for [[i {:keys [r_kood eesnimi nimi isiku_tyyp] :as owner}] (map-indexed vector isik)]
-      [:<>
-       [owner-inner-component e! (owner-is-person? owner) nimi eesnimi r_kood omandiosa_lugeja omandiosa_nimetaja omandiosa_suurus isiku_tyyp project (= i 0)]])]
+      ^{:key r_kood}
+      [owner-inner-component e! (owner-is-person? owner) nimi eesnimi r_kood omandiosa_lugeja omandiosa_nimetaja omandiosa_suurus isiku_tyyp project (= i 0)])]
    ;; Here we're making two assumptions:
    ;; 1) Comments are shown only for non-person owners (ie. companies and such)
    ;; 2) There cannot be joint ownership between non-person owners
