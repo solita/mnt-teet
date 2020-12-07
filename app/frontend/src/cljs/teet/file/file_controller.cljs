@@ -117,11 +117,11 @@
                                                 :file/sequence-number
                                                 :file/original-name]))
                      :previous-version-id (:db/id file)}
-           :result-event (fn [{file :file :as result}]
+           :result-event (fn [result]
                            (map->UploadFileUrlReceived
                              (merge result
                                     {:file-data (:file-object new-version)
-                                     :on-success (->OpenFileVersion (:db/id file))})))}))
+                                     :on-success (common-controller/->Refresh)})))}))
 
   OpenFileVersion
   (process-event [{:keys [file-id]} {:keys [page params query] :as app}]

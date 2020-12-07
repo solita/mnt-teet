@@ -97,9 +97,19 @@
    ;; No need to check extra authorization again, as we check pre condition that this
    ;; is the user's own uploaded file
    :project-id nil
-   :authorization {}
-   :transact [{:db/id id
-               :file/upload-complete? true}]})
+   :authorization {}}
+  (let [previous-version (:file/previous-version (du/entity db id))
+        file-id (when previous-version
+                  (:file/id previous-version))
+        res (tx [{:db/id id
+                  :file/upload-complete? true
+                  :file/id (or file-id
+                               (java.util.UUID/randomUUID))}]
+                (when file-id
+                  ;; If moving :file/id from previous version, retract it from
+                  ;; previous file entity
+                  [[:db/retract (:db/id previous-version) :file/id file-id]]))]
+    (d/pull (:db-after res) '[:db/id :file/id] id)))
 
 (defn file-belong-to-task?
   [db task-id file-id]
@@ -118,33 +128,33 @@
    :authorization {:document/upload-document {:db/id task-id
                                               :link :task/assignee}}}
   (or (file-model/validate-file file)
-      (let [old-file (find-previous-version db task-id previous-version-id [:file/name :file/document-group])
-            version (-> old-file
-                        :file/version
-                        inc)
+      (let [old-file (find-previous-version db task-id previous-version-id
+                                            [:file/name :file/document-group])
+            version (-> old-file :file/version inc)
             key (new-file-key file)
-            tx-data [(list 'teet.file.file-tx/upload-file-to-task
+            res (tx [(list 'teet.file.file-tx/upload-file-to-task
                            {:db/id task-id
-                            :task/files [(cu/without-nils
-                                           (merge
-                                             old-file
-                                             (select-keys file [:file/size])
-                                             {:db/id "new-file"
-                                              :file/s3-key key
-                                              :file/original-name (:file/name file)
-                                              :file/version version
-                                              :file/previous-version (:db/id old-file)
-                                              :file/status :file.status/draft}
-                                             (creation-meta user)))]})]
-            res (tx tx-data)
+                            :task/files
+                            [(cu/without-nils
+                              (merge
+                               old-file
+                               (select-keys file [:file/size])
+                               {:db/id "new-file"
+                                :file/s3-key key
+                                :file/original-name (:file/name file)
+                                :file/version version
+                                :file/previous-version (:db/id old-file)
+                                :file/status :file.status/draft}
+                               (creation-meta user)))]})])
             file-id (get-in res [:tempids "new-file"])]
         (try
           {:url (file-storage/upload-url key)
-           :task-id task-id
            :file (d/pull (:db-after res) '[*] file-id)}
           (catch Exception e
             (log/warn e "Unable to create S3 presigned URL")
             (throw e))))))
+
+
 
 (defcommand :file/upload
   {:doc "Upload new file to task."
