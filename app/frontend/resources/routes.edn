@@ -111,7 +111,7 @@
 
 
 
- :file {:path "/file/:file"
+ :file {:path "/projects/:project/file/:file"
         ;;:parent :activity-task ;; FIXME: parent views won't have params, need to fetch/use in query
         :crumb (-> state :navigation :file :db/id (teet.project.project-model/file-by-id file) :file/name)
         :title (-> state :navigation :file :db/id (teet.project.project-model/file-by-id file) :file/name)

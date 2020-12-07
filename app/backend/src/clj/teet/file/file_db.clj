@@ -354,3 +354,21 @@
           :where [?f :file/id ?uuid]
           :in $ ?uuid]
         db uuid)))
+
+(defn file-navigation-info-by-uuid
+  "Return file navigation info by file UUID.
+  Returns file, task, activity, lifecycle and project
+  ids the file is linked to."
+  [db uuid]
+  {:pre [(uuid? uuid)]}
+  (first
+   (d/q '[:find ?f ?t ?a ?l ?p
+          :keys file task activity lifecycle project
+          :where
+          [?f :file/id ?uuid]
+          [?t :task/files ?f]
+          [?a :activity/tasks ?t]
+          [?l :thk.lifecycle/activities ?a]
+          [?p :thk.project/lifecycles ?l]
+          :in $ ?uuid]
+        db uuid)))

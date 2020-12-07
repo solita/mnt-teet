@@ -545,7 +545,7 @@
                            (if active?
                              [:strong description]
                              [url/Link {:page :file
-                                        :params {:file id}
+                                        :params {:file (:file/id f)}
                                         :class "file-list-name"}
                               description])]]
                          [:div {:style {:font-size "12px" :display :flex
@@ -791,24 +791,30 @@
    [typography/Heading3 (gstr/format "%s #%02d" name number)]
    [:div tab-links]])
 
-(defn file-page [e! {{file-id :file
-                      project-id :project} :params} _project]
+(defn- file-db-id
+  "Get the file's actual :db/id from page queried state."
+  [state]
+  (get-in state [:navigation :file]))
+
+(defn file-page [e! {{project-id :project} :params} project]
   ;; Update the file seen timestamp for this user
-  (e! (file-controller/->UpdateFileSeen file-id))
+  (e! (file-controller/->UpdateFileSeen (file-db-id project)))
   (let [edit-open? (r/atom false)]
     (r/create-class
       {:component-did-update
-       (fn [this [_ _ {{prev-file-id :file} :params} _ _ :as _prev-args] _ _]
-         (let [[_ _ {{curr-file-id :file} :params} _ _ :as _curr-args] (r/argv this)]
+       (fn [this [_ _ _ prev-project _ :as _prev-args] _ _]
+         (let [[_ _ _ curr-project _ :as _curr-args] (r/argv this)
+               prev-file-id (file-db-id prev-project)
+               curr-file-id (file-db-id curr-project)]
            (when (not= curr-file-id prev-file-id)
              (e! (file-controller/->UpdateFileSeen curr-file-id)))))
 
        :reagent-render
-       (fn [e! {{file-id :file
-                 task-id :task
-                 activity-id :activity} :params
-                :as app} project]
-         (let [activity (project-model/activity-by-id project activity-id)
+       (fn [e! app project]
+         (let [{file-id :file
+                task-id :task
+                activity-id :activity} (:navigation project)
+               activity (project-model/activity-by-id project activity-id)
                task (project-model/task-by-id project task-id)
                file (project-model/file-by-id project file-id false)]
            (if (nil? file)

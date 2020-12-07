@@ -111,16 +111,16 @@
    :project-id (project-db/file-project-id
                 db
                 (file-db/file-by-uuid db id))
-   :authorization {:project/read-info {:eid (project-db/file-project-id
-                                             db
-                                             (file-db/file-by-uuid db id))
+   :authorization {:project/read-info {:db/id (project-db/file-project-id
+                                               db
+                                               (file-db/file-by-uuid db id))
                                        :link :thk.project/owner
                                        :access :read}}}
-  (let [file-id (file-db/file-by-uuid db id)
+  (let [{file-id :file :as navigation} (file-db/file-navigation-info-by-uuid db id)
         project-id (project-db/file-project-id db file-id)
         project-thk-id (:thk.project/id (du/entity db project-id))]
     (merge
-     {:navigation {:file {:db/id file-id}}}
+     {:navigation navigation}
      (fetch-project db user {:thk.project/id project-thk-id
                              :task-id (get-in (du/entity db file-id)
                                               [:task/_files 0 :db/id])}))))
