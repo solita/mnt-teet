@@ -47,8 +47,10 @@
            :payload {:file-id file-id}
            :success-message (tr [:document :file-deleted-notification])
            :result-event (fn [_]
-                           (log/info "FILE TUHOTTU!")
-                           (common-controller/->Navigate :activity-task (dissoc params :file) {}))}))
+                           (common-controller/->Navigate
+                            :activity-task
+                            (common-controller/route-params app #{:project :activity :task})
+                            {}))}))
 
   DeleteAttachment
   (process-event [{:keys [file-id on-success-event attached-to success-message]} app]
