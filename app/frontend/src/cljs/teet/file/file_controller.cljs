@@ -37,10 +37,6 @@
 ;; Modify file info
 (defrecord ModifyFile [file callback])
 
-;; Open the latest version by id
-(defrecord OpenFileVersion [file-id])
-
-
 (extend-protocol t/Event
 
   DeleteFile
@@ -122,16 +118,6 @@
                              (merge result
                                     {:file-data (:file-object new-version)
                                      :on-success (common-controller/->Refresh)})))}))
-
-  OpenFileVersion
-  (process-event [{:keys [file-id]} {:keys [page params query] :as app}]
-    (t/fx app
-          common-controller/refresh-fx
-          {:tuck.effect/type :navigate
-           :page page
-           :params (assoc params :file (str file-id))
-           :query query}))
-
 
   UploadFiles
   (process-event [{:keys [files project-id task-id on-success progress-increment
