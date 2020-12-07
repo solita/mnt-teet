@@ -6,6 +6,7 @@
     [teet.environment :as environment]
     [teet.localization :refer [with-language tr]]
     [teet.user.user-model :as user-model]
+    [teet.meeting.meeting-model :as meeting-model]
     [clojure.java.io :as io])
   (:import (com.vladsch.flexmark.parser Parser)
            (com.vladsch.flexmark.util.ast Document)
@@ -316,7 +317,7 @@
   [:fo:block {:font-family  "Helvetica, Arial, sans-serif"
               :font-size    "32px" :font-weight "300" :line-height "48px"
               :font-style "normal" :space-before "5" :space-after "5"}
-   (:meeting/title meeting)])
+   (meeting-model/meeting-title meeting)])
 
 (defn- get-meeting-link
   "Returns link to the original meeting"

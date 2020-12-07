@@ -62,6 +62,9 @@
   [:db/id
    :cooperation.application/type
    :cooperation.application/date
+   {:cooperation.application/activity
+    [:activity/name {:activity/manager
+                     [:user/given-name :user/family-name]}]}
    :cooperation.application/response-type
    :cooperation.application/response-deadline
    :cooperation.application/comment

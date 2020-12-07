@@ -1642,4 +1642,8 @@
            :db/doc "Stable document id that is always on the latest version"}]
          teet.migration.file-id/migrate]}
 
- ]
+ {:db/ident :migration/cooperation-activity-relation
+  :txes [[{:db/ident :cooperation.application/activity
+           :db/valueType :db.type/ref
+           :db/cardinality :db.cardinality/one
+           :db/doc "Applications need to reference an existing activity."}]]}]
