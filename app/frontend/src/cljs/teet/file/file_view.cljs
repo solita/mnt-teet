@@ -270,39 +270,6 @@
              :query {:tab "comments"}}
    [file-comments-text file]])
 
-(defn- replace-file-form [e! project-id task file form close!]
-  (let [{:keys [description extension]} (filename-metadata/name->description-and-extension
-                                          (:file/name file))]
-    [panels/modal {:max-width "lg"
-                   :on-close close!
-                   :title [:<>
-                           (tr [:file :replace-dialog-title])
-                           [typography/GreyText
-                            (str description "." extension)]]}
-     [:div
-
-      [common/info-box {:title (tr [:file :replace-dialog-info-title])
-                        :content (tr [:file :replace-dialog-info-text])}]
-
-      [form/form {:e! e!
-                  :value form
-                  :on-change-event file-controller/->UpdateFilesForm
-                  :save-event #(file-controller/->UploadNewVersion
-                                 file
-                                 (get-in form [:task/files 0]))
-                  :cancel-fn close!}
-       ^{:attribute :task/files
-         :validate (fn [files]
-                     (or
-                       (some some?
-                             (map (partial file-upload/validate-file e! project-id task) files))
-                       (when (not= 1 (count files))
-                         "expect exactly one file")))}
-       [file-upload/files-field {:e! e!
-                                 :project-id project-id
-                                 :task task
-                                 :single? true}]]]]))
-
 (defn file-replacement-modal-button
   [{:keys [e! task file small?]}]
   ;; The progress? and open-atom atoms are expected to go false automatically after uploading happens
