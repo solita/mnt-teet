@@ -15,116 +15,127 @@
 ;; :query    keyword naming the query to run
 ;; :args     arguments map for the query, can refer to params by symbol name
 
-{:root {:path "/"
-        :view teet.dashboard.dashboard-view/dashboard-page
-        :state {:query :dashboard/user-dashboard
-                :args {}}}
- :login {:path "/login"
-         :title (tr [:login :login])}
+{:root
+ {:path "/"
+  :view teet.dashboard.dashboard-view/dashboard-page
+  :state {:query :dashboard/user-dashboard
+          :args {}}}
+ :login
+ {:path "/login"
+  :title (tr [:login :login])}
 
- :dashboard {:path "/dashboard"
-             :crumb "Dashboard" ;(tr [:dashboard :title])
-             :view teet.dashboard.dashboard-view/dashboard-page
-             :state {:query :dashboard/user-dashboard
-                     :args {}}}
- :projects {:path "/projects/map"
-            :crumb (tr [:projects :map-view])
-            :title (tr [:projects :map-view])
-            :view teet.projects.projects-view/projects-map-page}
+ :dashboard
+ {:path "/dashboard"
+  :crumb "Dashboard"                    ;(tr [:dashboard :title])
+  :view teet.dashboard.dashboard-view/dashboard-page
+  :state {:query :dashboard/user-dashboard
+          :args {}}}
+ :projects
+ {:path "/projects/map"
+  :crumb (tr [:projects :map-view])
+  :title (tr [:projects :map-view])
+  :view teet.projects.projects-view/projects-map-page}
 
- :projects-list {:path "/projects/list"
-                 :crumb (tr [:projects :list-view])
-                 :title (tr [:projects :list-view])
-                 :view teet.projects.projects-view/projects-list-page
-                 :state {:query :thk.project/listing
-                         :args {}}}
+ :projects-list
+ {:path "/projects/list"
+  :crumb (tr [:projects :list-view])
+  :title (tr [:projects :list-view])
+  :view teet.projects.projects-view/projects-list-page
+  :state {:query :thk.project/listing
+          :args {}}}
 
- :project {:path "/projects/:project"
-           :keep-query-params #{:tab}
-           :parent :projects-list
-           :title (:thk.project/name state)
-           :crumb (teet.project.project-model/get-column (or (some-> state :project)
-                                                           state)
-                    :thk.project/project-name)
-           :view teet.project.project-view/project-page
-           :state {:query :thk.project/fetch-project
-                   :args {:thk.project/id project}}}
+ :project
+ {:path "/projects/:project"
+  :keep-query-params #{:tab}
+  :parent :projects-list
+  :title (:thk.project/name state)
+  :crumb (teet.project.project-model/get-column (or (some-> state :project)
+                                                    state)
+                                                :thk.project/project-name)
+  :view teet.project.project-view/project-page
+  :state {:query :thk.project/fetch-project
+          :args {:thk.project/id project}}}
 
- :activity {:path "/projects/:project/:activity(\\d+)"
-            :parent :project
-            :crumb (-> state
-                     (teet.project.project-model/activity-by-id activity)
-                     :activity/name tr-enum)
-            :title (-> state
-                     (teet.project.project-model/activity-by-id activity)
-                     :activity/name tr-enum)
-            :view teet.activity.activity-view/activity-page
-            :state {:query :thk.project/fetch-project
-                    :args {:thk.project/id project
-                           :activity-id activity}}}
+ :activity
+ {:path "/projects/:project/:activity(\\d+)"
+  :parent :project
+  :crumb (-> state
+             (teet.project.project-model/activity-by-id activity)
+             :activity/name tr-enum)
+  :title (-> state
+             (teet.project.project-model/activity-by-id activity)
+             :activity/name tr-enum)
+  :view teet.activity.activity-view/activity-page
+  :state {:query :thk.project/fetch-project
+          :args {:thk.project/id project
+                 :activity-id activity}}}
 
- :activity-task {:path "/projects/:project/:activity(\\d+)/:task(\\d+)"
-                 :parent :activity
-                 :crumb (-> state
-                          (teet.project.project-model/task-by-id task)
-                          :task/type
-                          tr-enum)
-                 :title  (-> state
-                           (teet.project.project-model/task-by-id task)
-                           :task/type
-                           tr-enum)
-                 :view teet.task.task-view/task-page
-                 :state {:query :thk.project/fetch-project
-                         :args {:thk.project/id project
-                                :task-id (->long task)}}}
+ :activity-task
+ {:path "/projects/:project/:activity(\\d+)/:task(\\d+)"
+  :parent :activity
+  :crumb (-> state
+             (teet.project.project-model/task-by-id task)
+             :task/type
+             tr-enum)
+  :title  (-> state
+              (teet.project.project-model/task-by-id task)
+              :task/type
+              tr-enum)
+  :view teet.task.task-view/task-page
+  :state {:query :thk.project/fetch-project
+          :args {:thk.project/id project
+                 :task-id (->long task)}}}
 
- :project-meetings  {:path "/projects/:project/meetings"
-                     :view teet.meeting.meeting-view/project-meetings-view
-                     :title (tr [:meeting :meetings-title])
-                     :crumb (tr [:meeting :meetings-title])
-                     :parent :project
-                     :state {:query :meeting/project-with-meetings
-                             :args {:thk.project/id project}}}
+ :project-meetings
+ {:path "/projects/:project/meetings"
+  :view teet.meeting.meeting-view/project-meetings-view
+  :title (tr [:meeting :meetings-title])
+  :crumb (tr [:meeting :meetings-title])
+  :parent :project
+  :state {:query :meeting/project-with-meetings
+          :args {:thk.project/id project}}}
 
- :activity-meetings {:path "/projects/:project/meetings/:activity/"
-                     :view teet.meeting.meeting-view/activity-meetings-view
-                     :title (tr [:meeting :activity-meetings-title]
-                              {:activity-name
-                               (-> (or (:project state)
-                                     state)
-                                 (teet.project.project-model/activity-by-id activity) :activity/name tr-enum)})
-                     :crumb (-> (or (:project state)
-                                    state)
-                                (teet.project.project-model/activity-by-id activity) :activity/name tr-enum)
-                     :parent :project-meetings
-                     :state {:query :meeting/project-with-meetings
-                             :args {:thk.project/id project}}}
+ :activity-meetings
+ {:path "/projects/:project/meetings/:activity/"
+  :view teet.meeting.meeting-view/activity-meetings-view
+  :title (tr [:meeting :activity-meetings-title]
+             {:activity-name
+              (-> (or (:project state)
+                      state)
+                  (teet.project.project-model/activity-by-id activity) :activity/name tr-enum)})
+  :crumb (-> (or (:project state)
+                 state)
+             (teet.project.project-model/activity-by-id activity) :activity/name tr-enum)
+  :parent :project-meetings
+  :state {:query :meeting/project-with-meetings
+          :args {:thk.project/id project}}}
 
- :meeting {:path "/projects/:project/meetings/:activity(\\d+)/:meeting(\\d+)"
-           :view teet.meeting.meeting-view/meeting-page
-           :title (-> state :meeting :meeting/title)
-           :crumb (-> state :meeting :meeting/title)
-           :parent :activity-meetings
-           :state {:query :meeting/fetch-meeting
-                   :args {:activity-id (->long activity)
-                          :meeting-id (->long meeting)}}}
+ :meeting
+ {:path "/projects/:project/meetings/:activity(\\d+)/:meeting(\\d+)"
+  :view teet.meeting.meeting-view/meeting-page
+  :title (-> state :meeting :meeting/title)
+  :crumb (-> state :meeting :meeting/title)
+  :parent :activity-meetings
+  :state {:query :meeting/fetch-meeting
+          :args {:activity-id (->long activity)
+                 :meeting-id (->long meeting)}}}
 
+ :file
+ {:path "/projects/:project/file/:file"
+  :parent :activity-task
+  :crumb (->> state :navigation :file (teet.project.project-model/file-by-id state) :file/name)
+  :title (->> state :navigation :file (teet.project.project-model/file-by-id state) :file/name)
+  :view teet.file.file-view/file-page
+  :state {:query :thk.project/fetch-project-file
+          :args {:file/id (uuid file)}}}
 
-
- :file {:path "/projects/:project/file/:file"
-        ;;:parent :activity-task ;; FIXME: parent views won't have params, need to fetch/use in query
-        :crumb (-> state :navigation :file :db/id (teet.project.project-model/file-by-id file) :file/name)
-        :title (-> state :navigation :file :db/id (teet.project.project-model/file-by-id file) :file/name)
-        :view teet.file.file-view/file-page
-        :state {:query :thk.project/fetch-project-file
-                :args {:file/id (uuid file)}}}
-
- :cooperation {:path "/projects/:project/cooperation"
-               :parent :project
-               :crumb (tr [:cooperation :page-title])
-               :view teet.cooperation.cooperation-view/overview-page
-               :state {:query :cooperation/overview
-                       :args {:thk.project/id project}}}
+ :cooperation
+ {:path "/projects/:project/cooperation"
+  :parent :project
+  :crumb (tr [:cooperation :page-title])
+  :view teet.cooperation.cooperation-view/overview-page
+  :state {:query :cooperation/overview
+          :args {:thk.project/id project}}}
 
  :cooperation-third-party
  {:path "/projects/:project/cooperation/:third-party"
@@ -145,20 +156,25 @@
                  :cooperation.3rd-party/name (js/decodeURIComponent third-party)
                  :db/id (->long application)}}}
 
- :unauthorized {:path "/unauthorized" :view teet.ui.unauthorized/restricted-path}
- :components {:path "/components" :view teet.ui.component-demo/demo}
- :road {:path "/road"
-        :view teet.road-visualization.road-visualization-view/road-visualization}
+ :unauthorized
+ {:path "/unauthorized" :view teet.ui.unauthorized/restricted-path}
+ :components
+ {:path "/components" :view teet.ui.component-demo/demo}
+ :road
+ {:path "/road"
+  :view teet.road-visualization.road-visualization-view/road-visualization}
 
- :admin {:path "/admin"
-         :permission :admin/add-user
-         :view teet.admin.admin-view/admin-page
-         :title "Admin view"
-         :crumb (tr [:admin :title])}
+ :admin
+ {:path "/admin"
+  :permission :admin/add-user
+  :view teet.admin.admin-view/admin-page
+  :title "Admin view"
+  :crumb (tr [:admin :title])}
 
- :admin-inspector {:path "/admin/inspect/:id"
-                   :view teet.admin.admin-view/inspector-page
-                   :crumb (tr [:admin :inspector-title])
-                   :parent :admin
-                   :state {:query :admin/entity-info
-                           :args {:id id}}}}
+ :admin-inspector
+ {:path "/admin/inspect/:id"
+  :view teet.admin.admin-view/inspector-page
+  :crumb (tr [:admin :inspector-title])
+  :parent :admin
+  :state {:query :admin/entity-info
+          :args {:id id}}}}
