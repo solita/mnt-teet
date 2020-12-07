@@ -108,7 +108,7 @@
     (t/fx app
           {:tuck.effect/type :command!
            :command :file/replace
-           :payload {:task-id (common-controller/->long (get-in app [:params :task]))
+           :payload {:task-id (common-controller/page-state app :navigation :task)
                      :file (merge (file-model/file-info (:file-object new-version))
                                   (select-keys new-version
                                                [:file/description
