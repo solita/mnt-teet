@@ -38,4 +38,4 @@
   "CVE-2019-17566"
 
   ;; Apache HTTP Client vulnerability that comes from Datomic dep
-  " CVE-2020-13956"}
+  "CVE-2020-13956"}
