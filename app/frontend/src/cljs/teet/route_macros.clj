@@ -32,7 +32,12 @@
             [(symbol p)
              `(or (get ~'params ~p)
                   (get-in ~'app [:route ~route-name :navigation ~p])
-                  (teet.log/error "Missing route parameter: " ~p))])
+
+                  ;; If state is loaded, but no parameter value is available
+                  ;; log error
+                  (if ~'state
+                    (teet.log/error "Missing route parameter: " ~p)
+                    nil))])
           (breadcrumb-params defs route-name)))
 
 (defn breadcrumbs [defs route-name keep-query-params]
@@ -63,8 +68,8 @@
            ~@(mapcat
               (fn [[route-name {:keys [state view path skeleton permission keep-query-params title] :as route}]]
                 [route-name
-                 `(let [~@(breadcrumb-bindings defs route-name)
-                        ~'state (get-in ~'app [:route ~route-name])
+                 `(let [~'state (get-in ~'app [:route ~route-name])
+                        ~@(breadcrumb-bindings defs route-name)
                         title# ~title
                         ~'refresh (get-in ~'app [:route ~(keyword (str (name route-name) "-refresh"))])]
                     (set! (.-title js/document) (or title# "TEET"))
