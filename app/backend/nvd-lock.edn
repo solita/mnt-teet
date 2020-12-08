@@ -35,4 +35,10 @@
   "CVE-2020-27218"
 
   ;; Apache Batik vulnerability that only can be triggered if we allow user specify SVG content that we don't
-  "CVE-2019-17566"}
+  "CVE-2019-17566"
+
+  ;; Apache HttpClient misinterpret malformed authority, not using URLs like that or
+  ;; doing requests to user specified URLs
+  "CVE-2020-13956"
+
+  }
