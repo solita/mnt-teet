@@ -65,10 +65,13 @@
             :lopp-kpv [:ns1:lopp_kpv ->date]}))
 
 (defn parse-business-details [zipped-xml]
-  (let [body (z/xml1-> zipped-xml :SOAP-ENV:Body)
-        item (z/xml1-> body :ns1:detailandmed_v1Response :ns1:keha :ns1:ettevotjad :ns1:item)]
-    {:addresses (z/xml-> item :ns1:yldandmed :ns1:aadressid :ns1:item parse-address)
-     :contact-methods (z/xml-> item :ns1:yldandmed :ns1:sidevahendid :ns1:item parse-contact-method)}))
+  (let [item (z/xml1-> zipped-xml :SOAP-ENV:Body :ns1:detailandmed_v1Response :ns1:keha :ns1:ettevotjad :ns1:item)]
+    ;; (z/xml-> nil) raises exception
+    (if item
+      {:addresses (z/xml-> item :ns1:yldandmed :ns1:aadressid :ns1:item parse-address)
+       :contact-methods (z/xml-> item :ns1:yldandmed :ns1:sidevahendid :ns1:item parse-contact-method)}
+      {:addresses []
+       :contact-methods []})))
 
 (defn perform-detailandmed-request [url params]
   {:pre [(contains? params :business-id)]}
