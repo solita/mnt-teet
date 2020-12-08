@@ -182,6 +182,15 @@
   (assoc app :page :unauthorized)                           ;; Don't actually navigate because we want to show the unauthorized resources url
   )
 
+(defn route-params
+  "Return map of current route params for the given paramater names."
+  [{:keys [route page params] :as _app} param-names]
+  (into {}
+        (map (fn [p]
+               [p (or (get params p)
+                      (get-in route [page :navigation p]))]))
+        param-names))
+
 (extend-protocol t/Event
   DebounceEffect
   (process-event [{effect :effect} app]

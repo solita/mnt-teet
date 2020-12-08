@@ -20,7 +20,8 @@
             [teet.user.user-model :as user-model]
             [teet.util.collection :as cu]
             [teet.util.datomic :as du]
-            [teet.integration.integration-id :as integration-id]))
+            [teet.integration.integration-id :as integration-id]
+            [teet.file.file-db :as file-db]))
 
 (defquery :thk.project/integration-id->thk-id
   {:doc "Fetch THK project id for given entity :integration/id number"
@@ -75,19 +76,12 @@
        :thk.lifecycle/activities #(= activity-id (str (:db/id %)))]
       update :activity/tasks tasks-with-statuses)))
 
-(defquery :thk.project/fetch-project
-  {:doc "Fetch project information"
-   :context {:keys [db user]}
-   :args {:thk.project/keys [id]
-          task-id :task-id
-          activity-id :activity-id}
-   :project-id [:thk.project/id id]
-   :authorization {:project/read-info {:eid [:thk.project/id id]
-                                          :link :thk.project/owner
-                                          :access :read}}}
+(defn fetch-project [db user {:thk.project/keys [id]
+                              task-id :task-id
+                              activity-id :activity-id}]
   (let [project (meta-query/without-deleted
-                  db
-                  (project-db/project-by-id db [:thk.project/id id]))]
+                 db
+                 (project-db/project-by-id db [:thk.project/id id]))]
     (-> project
         (assoc :thk.project/permitted-users
                (project-model/users-with-permission
@@ -99,6 +93,37 @@
         (maybe-fetch-task-files db user task-id)
         (maybe-update-activity-tasks activity-id)
         (activity-db/update-activity-histories db))))
+
+(defquery :thk.project/fetch-project
+  {:doc "Fetch project information"
+   :context {:keys [db user]}
+   :args {id :thk.project/id :as args}
+   :project-id [:thk.project/id id]
+   :authorization {:project/read-info {:eid [:thk.project/id id]
+                                       :link :thk.project/owner
+                                       :access :read}}}
+  (fetch-project db user args))
+
+(defquery :thk.project/fetch-project-file
+  {:doc "Fetch project info with task and files based on :file/id"
+   :context {:keys [db user]}
+   :args {id :file/id}
+   :project-id (project-db/file-project-id
+                db
+                (file-db/file-by-uuid db id))
+   :authorization {:project/read-info {:db/id (project-db/file-project-id
+                                               db
+                                               (file-db/file-by-uuid db id))
+                                       :link :thk.project/owner
+                                       :access :read}}}
+  (let [{file-id :file :as navigation} (file-db/file-navigation-info-by-uuid db id)
+        project-id (project-db/file-project-id db file-id)
+        project-thk-id (:thk.project/id (du/entity db project-id))]
+    (merge
+     {:navigation navigation}
+     (fetch-project db user {:thk.project/id project-thk-id
+                             :task-id (get-in (du/entity db file-id)
+                                              [:task/_files 0 :db/id])}))))
 
 (defn- assignees-by-activity
   "Fetch all people who are assigned in some task in the given project.

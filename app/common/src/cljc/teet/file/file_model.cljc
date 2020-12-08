@@ -63,3 +63,17 @@
 
 #?(:cljs
    (def file-info file-spec/file-info))
+
+(def file-listing-attributes
+  "Attributes to fetch for file listing"
+  [:db/id :file/name :meta/deleted? :file/version :file/size :file/id
+   :file/status :file/part :file/group-number
+   :file/original-name
+   {:task/_files [:db/id :activity/_tasks]}
+   :file/document-group
+   :file/sequence-number
+   {:file/previous-version [:db/id]}
+   :meta/created-at
+   :meta/modified-at
+   {:meta/modifier [:user/id :user/family-name :user/given-name]}
+   {:meta/creator [:user/id :user/family-name :user/given-name]}])

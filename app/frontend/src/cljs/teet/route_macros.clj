@@ -2,7 +2,8 @@
   "Macros for defining the app structure"
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
-            [teet.authorization.authorization-check :refer [authorized?]]))
+            [teet.authorization.authorization-check :refer [authorized?]]
+            [clojure.set :as set]))
 
 (defn read-route-defs []
   (read-string
@@ -17,6 +18,43 @@
 (defn- param-names [path]
   (map (comp keyword second) (re-seq #":([^/(]+)" path)))
 
+(defn- breadcrumb-params
+  "Extract all params in this route or any of its parents."
+  [defs route-name]
+  (when-let [{:keys [path parent]} (defs route-name)]
+    (set/union (set (param-names path))
+               (breadcrumb-params defs parent))))
+
+(defn- breadcrumb-bindings
+  "Return list of let bindings for all breadcrumb parameters."
+  [defs route-name]
+  (mapcat (fn [p]
+            [(symbol p)
+             `(or (get ~'params ~p)
+                  (get-in ~'app [:route ~route-name :navigation ~p])
+
+                  ;; If state is loaded, but no parameter value is available
+                  ;; log error
+                  (if ~'state
+                    (teet.log/error "Missing route parameter: " ~p)
+                    nil))])
+          (breadcrumb-params defs route-name)))
+
+(defn breadcrumbs [defs route-name keep-query-params]
+  (when-let [{:keys [path parent crumb]} (get defs route-name)]
+    (cons
+     {:title crumb
+      :page route-name
+      :params (into {}
+                    (for [n (param-names path)]
+                      [n `(js/decodeURIComponent ~(symbol n))]))
+      :query (if keep-query-params
+               `(select-keys ~'query-params
+                             ~keep-query-params)
+               {})}
+     (breadcrumbs defs parent keep-query-params))))
+
+
 (defmacro define-main-page [fn-name]
   (let [defs (read-route-defs)]
     `(defn ~fn-name [~'e! {page# :page
@@ -30,8 +68,8 @@
            ~@(mapcat
               (fn [[route-name {:keys [state view path skeleton permission keep-query-params title] :as route}]]
                 [route-name
-                 `(let [{:keys [~@(param-names path)]} ~'params
-                        ~'state (get-in ~'app [:route ~route-name])
+                 `(let [~'state (get-in ~'app [:route ~route-name])
+                        ~@(breadcrumb-bindings defs route-name)
                         title# ~title
                         ~'refresh (get-in ~'app [:route ~(keyword (str (name route-name) "-refresh"))])]
                     (set! (.-title js/document) (or title# "TEET"))
@@ -46,26 +84,10 @@
                                    :args ~(:args state)
                                    :view ~view
                                    :skeleton ~skeleton
-                                   :breadcrumbs [~@(loop [crumbs (list) ;; Autogenerate breadcrumbs based on :parent links for route
-                                                          route-name route-name
-                                                          {crumb :crumb
-                                                           parent :parent
-                                                           path :path} route]
-                                                     (if-not crumb
-                                                       crumbs
-                                                       (recur (conj crumbs
-                                                                    {:title crumb
-                                                                     :page route-name
-                                                                     :params (into {}
-                                                                                   (for [n (param-names path)]
-                                                                                     [n `(js/decodeURIComponent (get ~'params ~n))]))
-                                                                     ;; FIXME: query params from :keep-query-params
-                                                                     :query (if keep-query-params
-                                                                              `(select-keys ~'query-params
-                                                                                            ~keep-query-params)
-                                                                              {})})
-                                                              parent
-                                                              (get defs parent))))]
+                                   :breadcrumbs
+                                   ~(vec
+                                     (reverse
+                                      (breadcrumbs defs route-name keep-query-params)))
                                    :state ~'state
                                    :state-path [:route ~route-name]
                                    :refresh ~'refresh}]
