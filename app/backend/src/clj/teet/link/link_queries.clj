@@ -4,7 +4,7 @@
             [datomic.client.api :as d]
             [teet.integration.postgrest :as postgrest]
             [teet.link.link-model :as link-model]
-            [teet.localization :refer [with-language tr-enum]]
+            [teet.localization :refer [with-language tr-enum tr]]
             [teet.util.string :as string]
             [teet.util.datomic :as du]
             [teet.link.link-db :as link-db]
@@ -15,35 +15,38 @@
 
 (defn search-task [db project lang text]
   (with-language lang
-    (let [all-project-tasks
-          (d/q '[:find (pull ?t [:task/type :db/id])
-                 :where
-                 [?p :thk.project/lifecycles ?l]
-                 [?l :thk.lifecycle/activities ?a]
-                 [?a :activity/tasks ?t]
-                 [(missing? $ ?t :meta/deleted?)]
-                 :in $ ?p]
-               db project)
+                 (let [all-project-tasks
+                       (d/q '[:find (pull ?t [:task/type :db/id])
+                              :where
+                              [?p :thk.project/lifecycles ?l]
+                              [?l :thk.lifecycle/activities ?a]
+                              [?a :activity/tasks ?t]
+                              [(missing? $ ?t :meta/deleted?)]
+                              :in $ ?p]
+                            db project)
 
-          matching-project-tasks
-          (into []
-                (comp
-                 (map first)
-                 (map #(assoc % :searchable-text (tr-enum (:task/type %))))
-                 (filter #(string/contains-words? (:searchable-text %)
-                                                  text))
-                 (map :db/id))
-                all-project-tasks)]
+                       matching-project-tasks
+                       (into []
+                             (comp
+                               (map first)
+                               (map #(assoc % :searchable-text (tr-enum (:task/type %))))
+                               (filter #(string/contains-words? (:searchable-text %)
+                                                                text))
+                               (map :db/id))
+                             all-project-tasks)
 
-      (mapv
-       first
-       (d/q '[:find (pull ?t [:db/id :task/type
-                              :task/estimated-start-date
-                              :task/estimated-end-date
-                              {:task/assignee [:user/given-name :user/family-name]}
-                              {:activity/_tasks [:activity/name]}])
-              :in $ [?t ...]]
-            db matching-project-tasks)))))
+                       found-tasks (mapv
+                                     first
+                                     (d/q '[:find (pull ?t [:db/id :task/type
+                                                            :task/estimated-start-date
+                                                            :task/estimated-end-date
+                                                            {:task/assignee [:user/given-name :user/family-name]}
+                                                            {:activity/_tasks [:activity/name]}])
+                                            :in $ [?t ...]]
+                                          db matching-project-tasks))]
+                   (sort-by
+                     #(tr [:enum (get-in % [:task/type :db/ident])])
+                     found-tasks))))
 
 (defn search-cadastral-unit [db {:keys [api-url api-secret]} project text]
   (let [related-cadastral-unit-ids (-> (d/q '[:find (pull ?p [:thk.project/related-cadastral-units])
@@ -53,7 +56,7 @@
                                        :thk.project/related-cadastral-units)]
     (->> (postgrest/rpc {:api-url api-url :api-secret api-secret}
                         :select_feature_properties
-                        {:ids related-cadastral-unit-ids
+                        {:ids        related-cadastral-unit-ids
                          :properties ["KINNISTU" "L_AADRESS" "TUNNUS"]})
          (map (fn [[key properties]]
                 (assoc properties :link/external-id (name key))))
@@ -61,7 +64,7 @@
                        (string/contains-words? (:L_AADRESS %) text)))
          (sort-by :L_AADRESS))))
 
-(defn search-estate [db {:keys [api-url api-secret]} project text]
+  (defn search-estate [db {:keys [api-url api-secret]} project text]
   (let [related-cadastral-unit-ids (-> (d/q '[:find (pull ?p [:thk.project/related-cadastral-units])
                                               :in $ ?p]
                                             db project)
