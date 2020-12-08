@@ -1,21 +1,14 @@
 (ns teet.meeting.meeting-pdf
   "Generate meeting PDF as hiccup formatted XSL-FO"
   (:require
-    [teet.meeting.meeting-db :as meeting-db]
-    [teet.meeting.meeting-commands :as meeting-commands]
-    [teet.environment :as environment]
-    [teet.localization :refer [with-language tr]]
-    [teet.user.user-model :as user-model]
-    [teet.meeting.meeting-model :as meeting-model]
-    [clojure.java.io :as io])
-  (:import (com.vladsch.flexmark.parser Parser)
-           (com.vladsch.flexmark.util.ast Document)
-           (com.vladsch.flexmark.ast
-            ;; Import node types for rendering
-            Paragraph BulletList OrderedList Heading Text
-            StrongEmphasis Emphasis)))
-
-(declare render-md)
+   [teet.meeting.meeting-db :as meeting-db]
+   [teet.meeting.meeting-commands :as meeting-commands]
+   [teet.environment :as environment]
+   [teet.localization :refer [with-language tr]]
+   [teet.user.user-model :as user-model]
+   [teet.meeting.meeting-model :as meeting-model]
+   [teet.util.md :as md]
+   [clojure.java.io :as io]))
 
 (def default-layout-config
   {;; A4 portrait width/height
@@ -116,7 +109,7 @@
   "Return the agenda topic descition list item"
   [decision topic]
   (let [title (str topic " " (tr+ [:fields :meeting.decision/body]) " #" (:meeting.decision/number decision))
-        decision-text (render-md (:meeting.decision/body decision))]
+        decision-text (md/render-md (:meeting.decision/body decision))]
     [:fo:block
      [:fo:block {:font-size "24px" :font-weight "400"} title]
      [:fo:block {:font-size "14px" :font-weight "400" :space-after "40"} decision-text]]))
@@ -172,7 +165,7 @@
                [:fo:block {:font-size "14px" :font-weight "700" :space-after "24"}
                 [:fo:inline (:user/given-name (:meeting.agenda/responsible topic)) " "
                  (:user/family-name (:meeting.agenda/responsible topic))]]
-               [:fo:block {:font-size "16px"} (render-md (:meeting.agenda/body topic))]
+               [:fo:block {:font-size "16px"} (md/render-md (:meeting.agenda/body topic))]
                [:fo:block {:space-after "16"} (map link-list-item (:link/_from topic))]
                [:fo:block {:space-after "8"} (map-indexed attachment-files (:file/_attached-to topic))]
                [:fo:block {:space-after "40"} (map #(decision-list-item % (:meeting.agenda/topic topic))
@@ -298,10 +291,11 @@
   [meeting is-absentee?]
   (for [{user       :participation/participant
          role       :participation/role
-         is-absent? :participation/absent?} (:participation/_in meeting)
-        :when (if is-absentee?
+         is-absent? :participation/absent?
+         is-deleted? :meta/deleted?} (:participation/_in meeting)
+        :when (and (not is-deleted?) (if is-absentee?
                 is-absent?
-                (not is-absent?))]
+                (not is-absent?)))]
     [:fo:block
      [:fo:inline {:font-weight 900} (:user/family-name user) " " (:user/given-name user)]
      [:fo:inline ", " (tr+ [:enum (:db/ident role)])]]))
@@ -377,76 +371,3 @@
          (get-meeting-link meeting db)]
         [:fo:block {:font-size "20px" :font-weight 400 :space-after 16} (tr+ [:meeting :pdf-created-by])]
         [:fo:block {:font-size "14px"} (str (format-date now) " " (format-time-sec now) " " (user-model/user-name user))]]]])))
-
-(defn- md-children [node]
-  (-> node .getChildren .iterator iterator-seq))
-
-(defmulti md->xsl-fo class)
-
-(defn- render-children [node]
-  (for [c (md-children node)]
-    (md->xsl-fo c)))
-
-(defmethod md->xsl-fo Document [root]
-  [:fo:block
-   (render-children root)])
-
-(defmethod md->xsl-fo Paragraph [c]
-  [:fo:block
-   (render-children c)])
-
-
-(defmethod md->xsl-fo BulletList [ul]
-  [:fo:list-block
-   (for [item (md-children ul)]
-     [:fo:list-item
-      [:fo:list-item-label { :font-family "Symbol" :end-indent "label-end()"}
-       [:fo:block [:fo:inline "\u2022"]]]
-      [:fo:list-item-body {:start-indent "body-start()"}
-       [:fo:block
-        (for [c (md-children item)]
-          (md->xsl-fo c))]]])])
-
-(defmethod md->xsl-fo OrderedList [ol]
-  [:fo:list-block
-   (map-indexed
-    (fn [i item]
-      [:fo:list-item
-       [:fo:list-item-label {:end-indent "label-end()"}
-        [:fo:block [:fo:inline (str (inc i))]]]
-       [:fo:list-item-body {:start-indent "body-start()"}
-        [:fo:block
-         (for [c (md-children item)]
-           (md->xsl-fo c))]]])
-    (md-children ol))])
-
-(defmethod md->xsl-fo Text [t]
-  (str (.getChars t)))
-
-(defmethod md->xsl-fo StrongEmphasis [t]
-  [:fo:inline {:font-weight 900}
-   (render-children t)])
-
-(defmethod md->xsl-fo Emphasis [t]
-  [:fo:inline {:font-style "italic"}
-   (render-children t)])
-
-(defmethod md->xsl-fo Heading [h]
-  [:fo:block {:font-size (case (.getLevel h)
-                           1 "24pt"
-                           2 "18pt"
-                           3 "16pt")}
-   (render-children h)])
-
-(defn- parse-md [str]
-  (-> (Parser/builder) .build (.parse str)))
-
-(defn- render-md
-  "Parse and render markdown as xsl-fo"
-  [md-formatted-text]
-  (md->xsl-fo (parse-md md-formatted-text)))
-
-(comment
-  (def md "hello **everyone**\n\n​\n\nlets\n\n​\n\n1. do\n2. some things\n3. here\n\n## level two header\n\nsome more content _italic also_\n")
-  (def doc (parse-md md))
-  (md->xsl-fo doc))
