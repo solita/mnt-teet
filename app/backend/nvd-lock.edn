@@ -17,7 +17,7 @@
   "CVE-2020-14061" "CVE-2020-14062" "CVE-2020-8840" "CVE-2020-9546" "CVE-2020-9547" "CVE-2020-9548"
   "CWE-611: Improper Restriction of XML External Entity Reference ('XXE')"
   "CVE-2020-14195" "CVE-2019-14892" "CVE-2018-14718"
-  "CVE-2020-24616"
+  "CVE-2020-24616" "CVE-2020-25649"
 
   ;; Github enterprise doesn't affect us
   "CVE-2020-10517" "CVE-2020-10518"
@@ -31,7 +31,7 @@
   ;; Workarounds
   ;; Disabling compressed request body inflation by GzipHandler.
   ;; By always fully consuming the request content before sending a response.
-  ;; By adding a Connection: close to any response where the servlet does not fully consume request content. 
+  ;; By adding a Connection: close to any response where the servlet does not fully consume request content.
   "CVE-2020-27218"
 
   ;; Apache Batik vulnerability that only can be triggered if we allow user specify SVG content that we don't
