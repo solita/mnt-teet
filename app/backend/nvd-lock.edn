@@ -39,6 +39,4 @@
 
   ;; Apache HttpClient misinterpret malformed authority, not using URLs like that or
   ;; doing requests to user specified URLs
-  "CVE-2020-13956"
-
-  }
+  "CVE-2020-13956"}

@@ -335,6 +335,7 @@
          {:tuck.effect/type :query
           :query :land/related-project-estates
           :args {:thk.project/id project-id}
+
           :result-event ->FetchRelatedEstatesResponse}))))
 
   FetchRelatedEstatesResponse
@@ -366,6 +367,7 @@
           {:tuck.effect/type :command!
            :command :land/refresh-estate-info
            :payload {:thk.project/id (get-in app [:params :project])}
+           :timeout-ms 120000
            :result-event common-controller/->Refresh}))
 
   IncrementEstateCommentCount

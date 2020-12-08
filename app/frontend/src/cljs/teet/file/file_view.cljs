@@ -297,17 +297,16 @@
                                 :on-click #(do (e! (file-controller/->UploadNewVersion file @selected-file))
                                                (reset! progress? true))}
                                (tr [:file-upload :replace-file-confirm])]]}
-
-      [DialogContentText
-       (if @progress?
-         [:div {:style {:display :flex
-                        :justify-content :center}}
-          [CircularProgress]]
+      (if @progress?
+        [:div {:style {:display :flex
+                       :justify-content :center}}
+         [CircularProgress]]
+        [DialogContentText
          (tr [:file-upload :replace-file-modal-body] {:file-full-name (:file/full-name file)
                                                       :selected-file-name (some-> @selected-file
                                                                                   :file-object
                                                                                   file-model/file-info
-                                                                                  :file/name)}))]]
+                                                                                  :file/name)})])]
      [when-authorized
       :file/upload task
       [file-upload/FileUpload
