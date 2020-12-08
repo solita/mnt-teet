@@ -159,7 +159,7 @@
 (defcommand :file/upload
   {:doc "Upload new file to task."
    :context {:keys [conn user db]}
-   :payload {:keys [task-id attachment? file previous-version-id] :as p}
+   :payload {:keys [task-id file previous-version-id] :as p}
    :project-id (project-db/task-project-id db task-id)
    :pre [^{:error :invalid-previous-file}
          (or (nil? previous-version-id)
