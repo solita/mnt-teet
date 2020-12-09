@@ -1,5 +1,5 @@
 (ns teet.project.task-model
-  (:require [teet.util.datomic :refer [id=]]
+  (:require [teet.util.datomic :refer [id=] :as du]
             [teet.util.collection :refer [find-idx]]
             [teet.util.date :as date]))
 
@@ -42,8 +42,8 @@
 (defn document-by-id [{documents :task/documents} document-id]
   (some #(when (id= document-id (:db/id %)) %) documents))
 
-(defn- in-status [status task]
-  (boolean (= status (get-in task [:task/status :db/ident]))))
+(defn- in-status [status {task-status :task/status}]
+  (du/enum= status task-status))
 
 (def reviewing? (partial in-status :task.status/reviewing))
 (def waiting-for-review? (partial in-status :task.status/waiting-for-review))

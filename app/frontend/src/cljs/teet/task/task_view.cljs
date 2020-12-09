@@ -272,10 +272,11 @@
   [e! upload! activity task files-form project-id files parts selected-part]
   (r/with-let [items-for-sort-select (file-view/sort-items)
                sort-by-atom (r/atom (first items-for-sort-select))]
-    (let [allow-replacement-opts {:e! e!
-                                  :task task
-                                  :project-id project-id
-                                  :replace-form files-form}
+    (let [allow-replacement-opts (when (task-model/can-submit? task)
+                                   {:e! e!
+                                    :task task
+                                    :project-id project-id
+                                    :replace-form files-form})
           land-acquisition? (du/enum= :activity.name/land-acquisition
                                       (:activity/name activity))]
       [:<>
