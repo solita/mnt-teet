@@ -67,11 +67,34 @@
                        :meta/modified-at :meta/modifier])
 
 (defn modify-file
-  "Modify file."
+  "Modify file. Ensures that the same task doesn't have
+  another file with the same metadata."
   [db {id :db/id :as file}]
-  (let [old-file (d/pull db modify-file-keys id)
+  (let [task-id (get-in (du/entity db id) [:task/_files 0 :db/id])
+        task-files (map first
+                        (d/q '[:find ?f
+                               :where
+                               [?t :task/files ?f]
+                               [(missing? $ ?f :meta/deleted?)]
+                               :in $ ?t]
+                             db task-id))
+        old-file (d/pull db modify-file-keys id)
         new-file (-> file
                      (select-keys modify-file-keys)
                      (update :file/part :db/id)
-                     cu/without-nils)]
-    (du/modify-entity-tx old-file new-file)))
+                     cu/without-nils)
+        metadata (file-db/file-metadata (du/entity db id new-file))]
+
+    ;; Check if any other file in this task already has the same metadata
+    ;; that this file would have after applying the tx
+    (if (some #(and (not= % id)
+                      (= metadata
+                         (file-db/file-metadata-by-id db %)))
+              task-files)
+      ;; Metadata already in use by some other file, abort transaction
+      (ion/cancel {:cognitect.anomalies/category :cognitect.anomalies/conflict
+                   :cognitect.anomalies/message "Two files with same metadata"
+                   :teet/error :two-files-with-same-metadata})
+
+      ;; No files with same metadata, return tx data
+      (du/modify-entity-tx old-file new-file))))
