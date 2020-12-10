@@ -15,6 +15,7 @@
             [teet.land.land-model :as land-model]
             [teet.ui.url :as url]
             [teet.land.land-specs]
+            [teet.ui.animate :as animate]
             [teet.project.project-controller :as project-controller]
             [teet.project.project-style :as project-style]
             [teet.ui.form :as form]
@@ -396,15 +397,18 @@
                         (:land-acquisitions project-info))
         deleted-unit? (:deleted unit)]
     [:div {:class (<class cadastral-unit-container-style)}
-     [:div {:class (<class cadastral-unit-quality-style quality)}
-      [:span {:title (str MOOTVIIS " – " MUUDET)} (case quality
+     [:div {:class (<class cadastral-unit-quality-style quality) :id teet-id }
+      [:span {:title (str MOOTVIIS " – " MUUDET) } (case quality
                                                     :bad "!!!"
                                                     :questionable "!"
                                                     "")]]
      [ButtonBase {:on-mouse-enter (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" true unit)
                   :on-mouse-leave (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" false unit)
-                  :on-click (e! land-controller/->ToggleLandUnit unit)
-                  :class (<class cadastral-unit-style selected?)}
+                  :on-click       #(e! (land-controller/->ToggleLandUnit unit)
+                                       (animate/scroll-into-view-by-id! teet-id {:behavior :smooth})
+                                       (js/setTimeout (fn [] (animate/focus-by-id! teet-id)) 500)
+                                       (println "Animation done!!!"))
+                  :class          (<class cadastral-unit-style selected?)}
       [typography/SectionHeading {:style {:text-align :left}}
        (str (:L_AADRESS unit)
             " (" (land-controller/cadastral-purposes TUNNUS unit) ")")]

@@ -65,7 +65,8 @@
         [url/Link
          {:page :project
           :query {:tab "land"
-                  :unit-id external-id}}
+                  :unit-id external-id}
+          :target "_blank"}
          (str
            L_AADRESS
            " "
@@ -90,7 +91,8 @@
         [url/Link
          {:page :project
           :query {:tab "land"
-                  :estate-id external-id}}
+                  :estate-id external-id}
+          :target "_blank"}
          external-id]
         [:p external-id])
       [typography/SmallGrayText "\u00a0" (tr [:link :type-label :estate])]]
