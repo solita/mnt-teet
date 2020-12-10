@@ -25,7 +25,7 @@
                              ;; Get file metadata for downloads
                              (str "attachment; filename="
                                   (->> file-id
-                                       (file-db/file-metadata db)
+                                       (file-db/file-metadata-by-id db)
                                        filename-metadata/metadata->filename
                                        URLEncoder/encode)))
                            s3-file-name)}}))
