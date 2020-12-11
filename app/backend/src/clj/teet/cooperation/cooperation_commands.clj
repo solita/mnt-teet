@@ -2,7 +2,8 @@
   "Commands for cooperation entities"
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
             [teet.cooperation.cooperation-db :as cooperation-db]
-            [teet.meta.meta-model :as meta-model]))
+            [teet.meta.meta-model :as meta-model]
+            [teet.util.collection :as cu]))
 
 (defcommand :cooperation/create-3rd-party
   {:doc "Create a new third party in project."
@@ -60,11 +61,12 @@
    :transact
    [{:db/id application-id
      :cooperation.application/response
-     (merge (select-keys response-payload
-                         [:cooperation.response/valid-months
-                          :cooperation.response/valid-until
-                          :cooperation.response/date
-                          :cooperation.response/content
-                          :cooperation.response/status])
+     (merge (cu/without-nils
+              (select-keys response-payload
+                           [:cooperation.response/valid-months
+                            :cooperation.response/valid-until
+                            :cooperation.response/date
+                            :cooperation.response/content
+                            :cooperation.response/status]))
             {:db/id "new-application-response"}
             (meta-model/creation-meta user))}]})
