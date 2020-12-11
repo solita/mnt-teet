@@ -81,6 +81,7 @@
         old-file (d/pull db modify-file-keys id)
         new-file (-> file
                      (select-keys modify-file-keys)
+                     ;; Take :db/id from map as the ref attribute value
                      (update :file/part :db/id)
                      cu/without-nils)
         metadata (file-db/file-metadata (du/entity db id new-file))]
@@ -88,8 +89,8 @@
     ;; Check if any other file in this task already has the same metadata
     ;; that this file would have after applying the tx
     (if (some #(and (not= % id)
-                      (= metadata
-                         (file-db/file-metadata-by-id db %)))
+                    (= metadata
+                       (file-db/file-metadata-by-id db %)))
               task-files)
       ;; Metadata already in use by some other file, abort transaction
       (ion/cancel {:cognitect.anomalies/category :cognitect.anomalies/conflict
