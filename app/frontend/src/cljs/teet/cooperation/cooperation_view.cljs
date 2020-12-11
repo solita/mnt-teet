@@ -326,7 +326,6 @@
                :spec ::cooperation-model/response-form}
    [:div
     [:div {:class (<class common-styles/gray-container-style)}
-     [:span (pr-str @form-atom)]
      [Grid {:container true :spacing 3}
       [Grid {:item true :xs 12}
        [form/field :cooperation.response/status
