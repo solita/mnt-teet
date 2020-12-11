@@ -129,7 +129,8 @@
           (format/date date)]
          (when valid-until
            [(tr [:fields :cooperation.response/valid-until])
-            (format/date valid-until)])]])
+            (format/date valid-until)
+            {:data-cy-test "valid-until"}])]])
      (let [{:cooperation.application/keys [date response-deadline]} application]
        [common/basic-information-row
         {:right-align-last? false}
@@ -367,7 +368,7 @@
      [Divider {:style {:margin "1.5rem 0"}}]
      [:div {:class [(<class common-styles/flex-row-space-between)
                     (<class common-styles/margin-bottom 1)]}
-      [typography/Heading2 "Response"]
+      [typography/Heading2 (tr [:cooperation :response])]
 
       [form/form-modal-button
        {:max-width "sm"
@@ -376,7 +377,7 @@
         :form-component [application-response-form {:e! e!
                                                     :project-id (:thk.project/id project)
                                                     :application-id (:db/id application)}]
-        :button-component [buttons/button-secondary {:class :enter-response
+        :button-component [buttons/button-secondary {:class :edit-response
                                                      :size :small}
                            (tr [:buttons :edit])]}]]
      [:div {:class (<class common-styles/margin-bottom 1)}
