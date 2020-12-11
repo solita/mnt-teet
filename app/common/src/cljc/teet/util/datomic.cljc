@@ -120,7 +120,9 @@
                          {})))
        ([db eid fetched-attrs]
         (assert eid "entity requires an eid")
-        (Entity. db eid (atom fetched-attrs))))))
+        (Entity. db eid (atom (cu/map-vals
+                               (partial transform-entity-value db)
+                               fetched-attrs)))))))
 
 (defn db-ids
   "Recursively gather non-string :db/id values of form.
