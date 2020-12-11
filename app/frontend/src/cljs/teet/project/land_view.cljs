@@ -397,16 +397,17 @@
                         (:land-acquisitions project-info))
         deleted-unit? (:deleted unit)]
     [:div {:class (<class cadastral-unit-container-style)}
-     [:div {:class (<class cadastral-unit-quality-style quality) :id teet-id }
+     [:div {:class (<class cadastral-unit-quality-style quality) }
       [:span {:title (str MOOTVIIS " – " MUUDET) } (case quality
                                                     :bad "!!!"
                                                     :questionable "!"
                                                     "")]]
-     [ButtonBase {:on-mouse-enter (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" true unit)
+     [ButtonBase {:id (land-controller/cadastral-unit-dom-id teet-id)
+                  :on-mouse-enter (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" true unit)
                   :on-mouse-leave (e! project-controller/->FeatureMouseOvers "geojson_features_by_id" false unit)
                   :on-click       #(e! (land-controller/->ToggleLandUnit unit)
-                                       (animate/scroll-into-view-by-id! teet-id {:behavior :smooth})
-                                       (js/setTimeout (fn [] (animate/focus-by-id! teet-id)) 500)
+                                       (animate/scroll-into-view-by-id! (land-controller/cadastral-unit-dom-id teet-id) {:behavior :smooth})
+                                       (js/setTimeout (fn [] (animate/focus-by-id! (land-controller/cadastral-unit-dom-id teet-id))) 500)
                                        (println "Animation done!!!"))
                   :class          (<class cadastral-unit-style selected?)}
       [typography/SectionHeading {:style {:text-align :left}}

@@ -4,6 +4,7 @@
             [teet.util.collection :as cu]
             [teet.localization :refer [tr]]
             [teet.map.map-controller :as map-controller]
+            [teet.ui.animate :as animate]
             [goog.math.Long]
             [teet.common.common-controller :as common-controller]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
@@ -39,10 +40,15 @@
   [id cad-units]
   (map
     (fn [unit]
-      (assoc unit :selected? (and (= (:teet-id unit)
+      (let [u (assoc unit :selected? (and (= (:teet-id unit)
                                      id)
-                                  (not (:selected? unit)))))
+                                  (not (:selected? unit))))]
+      (println (str "Unit " (:teet-id unit) " toggeled!! to " (:selected? u)))
+             u))
     cad-units))
+
+(defn cadastral-unit-dom-id [id]
+  (str "cadastral-unit-" id))
 
 
 (defn unit-last-updated [unit]
@@ -163,8 +169,8 @@
                      (not selected?))
               (.set feature "selected" true)
               (.set feature "selected" false)))))
-      (update-in app
-                 [:route :project :land/units]
+      (println "ToggleLandUnit for :teet-id " (:teet-id unit))
+      (update-in app [:route :project :land/units]
                  (partial toggle-selected-unit (:teet-id unit)))))
 
   ToggleOpenEstate
@@ -353,10 +359,17 @@
                 (assoc-in [:route :project :land/estate-info-failure] false))
             (when linked-unit
               (fn [e!]
-                (e! (->ToggleLandUnit linked-unit))))
+                (let [result (e! (->ToggleLandUnit linked-unit))]
+                  (js/setTimeout
+                    #(animate/scroll-into-view!
+                       (js/document.getElementById
+                         (cadastral-unit-dom-id (get-in app [:query :unit-id])))) 1000) result)))
             (when linked-estate
               (fn [e!]
-                (e! (->ToggleOpenEstate linked-estate)))))))
+                (let [result (e! (->ToggleOpenEstate linked-estate))]
+                  (println (str "FetchRelatedEstatesResponse->ToggleOpenEstate for estate " linked-estate))
+                  result
+                  ))))))
 
   RefreshEstateInfo
   (process-event [_ app]
