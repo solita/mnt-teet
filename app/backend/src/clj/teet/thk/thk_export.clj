@@ -88,7 +88,7 @@
                  (do
                    (when-not (:integration/id lifecycle)
                      (log/warn "no integration id in lifecycle: "
-                               pr-str lifecycle
+                               lifecycle
                                " - data was: "
                                data))
                    (str (integration-id/uuid->number (:integration/id lifecycle))))
