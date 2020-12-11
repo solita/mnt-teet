@@ -30,17 +30,20 @@
              application :application}
    :project-id [:thk.project/id project-id]
    :authorization {:cooperation/edit-application {}}
+   :pre [^{:error :application-outside-activities}
+         (cooperation-db/application-matched-activity-id db project-id application)]
    :transact
    (if-let [tp-id (cooperation-db/third-party-id-by-name
-                   db [:thk.project/id project-id] third-party-name)]
+                    db [:thk.project/id project-id] third-party-name)]
      [{:db/id tp-id
-        :cooperation.3rd-party/applications
+       :cooperation.3rd-party/applications
        [(merge (select-keys application
                             [:cooperation.application/type
                              :cooperation.application/response-type
                              :cooperation.application/date
                              :cooperation.application/response-deadline
                              :cooperation.application/comment])
-                {:db/id "new-application"}
-                (meta-model/creation-meta user))]}]
+               {:db/id "new-application"
+                :cooperation.application/activity (cooperation-db/application-matched-activity-id db project-id application)}
+               (meta-model/creation-meta user))]}]
      (db-api/bad-request! "No such 3rd party"))})

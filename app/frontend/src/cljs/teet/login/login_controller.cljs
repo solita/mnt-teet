@@ -5,7 +5,9 @@
             [teet.login.login-paths :as login-paths]
             [teet.user.user-info :as user-info]
             [teet.snackbar.snackbar-controller :as snackbar-controller]
-            [teet.common.common-controller :as common-controller]))
+            [teet.common.common-controller :as common-controller]
+            [teet.app-state :as app-state]
+            [clojure.string :as str]))
 
 (defrecord Login [demo-user])
 (defrecord Logout [])
@@ -127,3 +129,16 @@
            :result-event (partial ->SetSessionInfo false)})))
 
 (def mock-users user-info/mock-users)
+
+(defn ^:export test-login [site-password mock-user-name]
+  (swap! app-state/app assoc-in [:login :password] site-password)
+  (let [e! (t/control app-state/app)
+        user (first
+              (for [{:user/keys [given-name family-name] :as user} mock-users
+                    :let [name (str given-name " " family-name)]
+                    :when (str/includes? (str/lower-case name)
+                                         (str/lower-case mock-user-name))]
+                user))]
+    (when user
+      (e! (->Login user))
+      (str "Login as " user))))

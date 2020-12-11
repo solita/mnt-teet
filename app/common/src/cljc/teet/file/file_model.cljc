@@ -1,6 +1,7 @@
 (ns teet.file.file-model
   (:require [clojure.string :as str]
             [teet.environment :as environment]
+            [teet.util.datomic :as du]
             #?(:cljs [teet.file.file-spec :as file-spec])))
 
 ;; "In THK module is allowed to upload file extensions: gif, jpg, jpeg, png, pdf, csv, txt, xlsx, docx, xls, doc, dwg, ppt, pptx.""
@@ -63,3 +64,22 @@
 
 #?(:cljs
    (def file-info file-spec/file-info))
+
+(def file-listing-attributes
+  "Attributes to fetch for file listing"
+  [:db/id :file/name :meta/deleted? :file/version :file/size :file/id
+   :file/status :file/part :file/group-number
+   :file/original-name
+   {:task/_files [:db/id :activity/_tasks]}
+   :file/document-group
+   :file/sequence-number
+   {:file/previous-version [:db/id]}
+   :meta/created-at
+   :meta/modified-at
+   {:meta/modifier [:user/id :user/family-name :user/given-name]}
+   {:meta/creator [:user/id :user/family-name :user/given-name]}])
+
+(defn editable?
+  "Check if file edit should be allowed based on status."
+  [{status :file/status}]
+  (not (du/enum= status :file.status/final)))

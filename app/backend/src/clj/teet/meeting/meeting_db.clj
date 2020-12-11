@@ -266,6 +266,7 @@
                  :meeting/location
                  :meeting/start
                  :meeting/end
+                 :meeting/number
                  {:activity/_meetings [:db/id {:thk.lifecycle/_activities [{:thk.project/_lifecycles [:thk.project/id]}]}]}
                  {:meeting/agenda [:db/id
                                    :meeting.agenda/topic
@@ -276,5 +277,6 @@
                  {:review/_of [:meta/created-at :review/comment {:review/decision [:db/id :ident]}
                                {:review/reviewer [:db/id :user/family-name :user/given-name :user/id]}]}
                  {:participation/_in [:participation/role
-                                      {:participation/participant [:db/id :meta/deleted? :user/family-name :user/given-name :user/id]}
+                                      :meta/deleted?
+                                      {:participation/participant [:db/id :user/family-name :user/given-name :user/id]}
                                       :participation/absent?]}] id)))

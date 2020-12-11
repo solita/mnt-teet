@@ -143,12 +143,12 @@
    :project-id [:thk.project/id id]
    :authorization {:project/read-info {:eid [:thk.project/id id]
                                           :link :thk.project/owner}}}
-  (let [entity-id (:db/id (du/entity db [:thk.project/id id]))
+  (let [integration-id (:integration/id (du/entity db [:thk.project/id id]))
         ctx (environment/config-map {:api-url [:api-url]
                                      :api-secret [:auth :jwt-secret]
                                      :wfs-url [:road-registry :wfs-url]})
         search-area (entity-features/entity-search-area-gml
-                     ctx entity-id road-model/default-road-buffer-meters)
+                     ctx integration-id road-model/default-road-buffer-meters)
         feature-types (fetch-wfs-feature-types* ctx)]
     (into {}
           (map (fn [[type objects]]

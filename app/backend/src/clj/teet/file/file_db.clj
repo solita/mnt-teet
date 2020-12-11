@@ -5,7 +5,8 @@
             [teet.comment.comment-db :as comment-db]
             [teet.log :as log]
             [teet.file.filename-metadata :as filename-metadata]
-            [teet.util.datomic :as du]))
+            [teet.util.datomic :as du]
+            [teet.file.file-model :as file-model]))
 
 (defn- valid-attach-definition? [attach]
   (and (vector? attach)
@@ -131,51 +132,48 @@
                    (comment-counts-by-file (:db/id %))
                    {:file-seen/seen-at (seen-at-by-file (:db/id %))})
            first)
-     (d/q '[:find (pull ?f [:db/id :file/name :meta/deleted? :file/version :file/size
-                            :file/status :file/part :file/group-number
-                            :file/original-name
-                            {:task/_files [:db/id :activity/_tasks]}
-                            :file/document-group
-                            :file/sequence-number
-                            {:file/previous-version [:db/id]}
-                            :meta/created-at
-                            :meta/modified-at
-                            {:meta/modifier [:user/id :user/family-name :user/given-name]}
-                            {:meta/creator [:user/id :user/family-name :user/given-name]}])
+     (d/q '[:find (pull ?f file-listing-attributes)
             :where
             [?f :file/upload-complete? true]
-            :in $ [?f ...]] db file-ids))))
+            :in $ file-listing-attributes [?f ...]]
+          db
+          file-model/file-listing-attributes
+          file-ids))))
 
 (defn file-metadata
+  "Return file metadata for a fetched file entity."
+  [{:file/keys [name sequence-number] :as file}]
+  (merge
+   (filename-metadata/name->description-and-extension name)
+   (when-let [p (get-in file [:task/_files 0 :activity/_tasks 0 :thk.lifecycle/_activities 0 :thk.project/_lifecycles 0 :thk.project/id])]
+     {:thk.project/id p})
+   (when sequence-number
+     {:sequence-number sequence-number})
+   (when-let [dg (get-in file [:file/document-group :filename/code])]
+     {:document-group dg})
+   (when-let [act (get-in file [:task/_files 0 :activity/_tasks 0 :activity/name :filename/code])]
+     {:activity act})
+   (when-let [task (get-in file [:task/_files 0 :task/type :filename/code])]
+     {:task task})
+   {:part (or (some->> file :file/part :file.part/number
+                       (format "%02d"))
+              "00")}))
+
+(defn file-metadata-by-id
   "Return file metadata for a given file id."
   [db file-id]
-  (let [{:file/keys [name sequence-number] :as file}
-        (d/pull db [:file/name
-                    :file/sequence-number
-                    {:file/document-group [:filename/code]}
-                    {:task/_files [:db/id
-                                   {:task/type [:filename/code]}
-                                   {:activity/_tasks
-                                    [{:activity/name [:filename/code]}
-                                     {:thk.lifecycle/_activities
-                                      [{:thk.project/_lifecycles
-                                        [:thk.project/id]}]}]}]}
-                    {:file/part [:file.part/number]}] file-id)]
-    (merge
-     (filename-metadata/name->description-and-extension name)
-     (when-let [p (get-in file [:task/_files 0 :activity/_tasks 0 :thk.lifecycle/_activities 0 :thk.project/_lifecycles 0 :thk.project/id])]
-       {:thk.project/id p})
-     (when sequence-number
-       {:sequence-number sequence-number})
-     (when-let [dg (get-in file [:file/document-group :filename/code])]
-       {:document-group dg})
-     (when-let [act (get-in file [:task/_files 0 :activity/_tasks 0 :activity/name :filename/code])]
-       {:activity act})
-     (when-let [task (get-in file [:task/_files 0 :task/type :filename/code])]
-       {:task task})
-     {:part (or (some->> file :file/part :file.part/number
-                         (format "%02d"))
-                "00")})))
+  (file-metadata
+   (d/pull db [:file/name
+               :file/sequence-number
+               {:file/document-group [:filename/code]}
+               {:task/_files [:db/id
+                              {:task/type [:filename/code]}
+                              {:activity/_tasks
+                               [{:activity/name [:filename/code]}
+                                {:thk.lifecycle/_activities
+                                 [{:thk.project/_lifecycles
+                                   [:thk.project/id]}]}]}]}
+               {:file/part [:file.part/number]}] file-id)))
 
 (defn file-listing
   "Fetch file information suitable for file listing. Returns all file attributes
@@ -205,7 +203,7 @@
            :when latest-version]
        (assoc latest-version
               :file/full-name (filename-metadata/metadata->filename
-                               (file-metadata db (:db/id latest-version)))
+                               (file-metadata-by-id db (:db/id latest-version)))
               :versions previous-versions)))))
 
 (defn land-files-by-project-and-sequence-number [db user project-id sequence-number]
@@ -350,3 +348,31 @@
                [?f :file/name ?file-name]
                [(teet.util.string/contains-words? ?file-name ?text)]]
              db project text)))
+
+(defn file-by-uuid
+  "Return file :db/id based on the :file/id UUID."
+  [db uuid]
+  {:pre [(uuid? uuid)]}
+  (ffirst
+   (d/q '[:find ?f
+          :where [?f :file/id ?uuid]
+          :in $ ?uuid]
+        db uuid)))
+
+(defn file-navigation-info-by-uuid
+  "Return file navigation info by file UUID.
+  Returns file, task, activity, lifecycle and project
+  ids the file is linked to."
+  [db uuid]
+  {:pre [(uuid? uuid)]}
+  (first
+   (d/q '[:find ?f ?t ?a ?l ?p
+          :keys file task activity lifecycle project
+          :where
+          [?f :file/id ?uuid]
+          [?t :task/files ?f]
+          [?a :activity/tasks ?t]
+          [?l :thk.lifecycle/activities ?a]
+          [?p :thk.project/lifecycles ?l]
+          :in $ ?uuid]
+        db uuid)))

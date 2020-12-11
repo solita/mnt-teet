@@ -1,4 +1,8 @@
-To run against local dev, you can use the cypress app normally, or use the run-in-docker.sh script. 
+To run against local dev, you can use the cypress app normally, for example this way
+
+CYPRESS_SITE_PASSWORD=<password here> npx cypress run --config-file cypress-localdev.json
+
+or use the run-in-docker.sh script.
 
 The docker script will also pass any args to cypress so you can eg use:
 

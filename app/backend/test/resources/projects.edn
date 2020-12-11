@@ -14,8 +14,8 @@
       :activity/integration-info "#:activity{:contract \"false\", :shortname \"Maaost\", :cost \"0.00\", :thkupdstamp \"2020-03-02 17:57:15.0\", :statusname \"Ettevalmistamisel\"}"}
      {:db/id "p1-lc1-act2"
       :integration/id #uuid "9da76005-62bd-4ae9-8f79-c316c9c8c9c9"
-      :activity/estimated-start-date #inst "2020-12-31T22:00:00.000-00:00"
-      :activity/estimated-end-date #inst "2020-06-11T21:00:00.000-00:00"
+      :activity/estimated-start-date #inst "2020-06-30T22:00:00.000-00:00"
+      :activity/estimated-end-date #inst "2020-12-11T21:00:00.000-00:00"
       :activity/name :activity.name/detailed-design
       :activity/status :activity.status/in-progress
       :thk.activity/id "6594"

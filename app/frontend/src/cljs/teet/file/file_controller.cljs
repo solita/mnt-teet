@@ -37,10 +37,6 @@
 ;; Modify file info
 (defrecord ModifyFile [file callback])
 
-;; Open the latest version by id
-(defrecord OpenFileVersion [file-id])
-
-
 (extend-protocol t/Event
 
   DeleteFile
@@ -51,8 +47,10 @@
            :payload {:file-id file-id}
            :success-message (tr [:document :file-deleted-notification])
            :result-event (fn [_]
-                           (log/info "FILE TUHOTTU!")
-                           (common-controller/->Navigate :activity-task (dissoc params :file) {}))}))
+                           (common-controller/->Navigate
+                            :activity-task
+                            (common-controller/route-params app #{:project :activity :task})
+                            {}))}))
 
   DeleteAttachment
   (process-event [{:keys [file-id on-success-event attached-to success-message]} app]
@@ -108,7 +106,7 @@
     (t/fx app
           {:tuck.effect/type :command!
            :command :file/replace
-           :payload {:task-id (common-controller/->long (get-in app [:params :task]))
+           :payload {:task-id (common-controller/page-state app :navigation :task)
                      :file (merge (file-model/file-info (:file-object new-version))
                                   (select-keys new-version
                                                [:file/description
@@ -117,21 +115,11 @@
                                                 :file/sequence-number
                                                 :file/original-name]))
                      :previous-version-id (:db/id file)}
-           :result-event (fn [{file :file :as result}]
+           :result-event (fn [result]
                            (map->UploadFileUrlReceived
                              (merge result
                                     {:file-data (:file-object new-version)
-                                     :on-success (->OpenFileVersion (:db/id file))})))}))
-
-  OpenFileVersion
-  (process-event [{:keys [file-id]} {:keys [page params query] :as app}]
-    (t/fx app
-          common-controller/refresh-fx
-          {:tuck.effect/type :navigate
-           :page page
-           :params (assoc params :file (str file-id))
-           :query query}))
-
+                                     :on-success (common-controller/->Refresh)})))}))
 
   UploadFiles
   (process-event [{:keys [files project-id task-id on-success progress-increment

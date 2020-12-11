@@ -111,6 +111,9 @@
   (or
    (check-spec query args)
    (let [ctx (assoc ctx :query/name query)
+         _ (log/info "Query " query
+                     ", user: " (get-in ctx [:user :db/id])
+                     ", args: " args)
          query-result (db-api/query ctx args)]
      (if (and (map? query-result)
               (contains? query-result :query)
@@ -131,8 +134,12 @@
   (or
    (check-spec command payload)
    (let [ctx (assoc ctx :command/name command)
+         _ (log/info "Command: " command
+                     ", user: " (get-in ctx [:user :db/id])
+                     ", payload: " payload)
          result (db-api/command! ctx payload)]
-     (log/debug "command: " command ", payload: " payload ", result => " result)
+     (log/debug "  " command " result => " result)
+
      (if-let [error (:error result)]
        (with-meta
          error

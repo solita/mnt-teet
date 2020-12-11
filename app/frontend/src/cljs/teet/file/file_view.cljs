@@ -264,44 +264,11 @@
 (defn file-comments-link
   [file]
   [url/Link {:page :file
-             :params {:file (:db/id file)
+             :params {:file (:file/id file)
                       :activity (get-in file [:task/_files 0 :activity/_tasks 0 :db/id])
                       :task (get-in file [:task/_files 0 :db/id])}
              :query {:tab "comments"}}
    [file-comments-text file]])
-
-(defn- replace-file-form [e! project-id task file form close!]
-  (let [{:keys [description extension]} (filename-metadata/name->description-and-extension
-                                          (:file/name file))]
-    [panels/modal {:max-width "lg"
-                   :on-close close!
-                   :title [:<>
-                           (tr [:file :replace-dialog-title])
-                           [typography/GreyText
-                            (str description "." extension)]]}
-     [:div
-
-      [common/info-box {:title (tr [:file :replace-dialog-info-title])
-                        :content (tr [:file :replace-dialog-info-text])}]
-
-      [form/form {:e! e!
-                  :value form
-                  :on-change-event file-controller/->UpdateFilesForm
-                  :save-event #(file-controller/->UploadNewVersion
-                                 file
-                                 (get-in form [:task/files 0]))
-                  :cancel-fn close!}
-       ^{:attribute :task/files
-         :validate (fn [files]
-                     (or
-                       (some some?
-                             (map (partial file-upload/validate-file e! project-id task) files))
-                       (when (not= 1 (count files))
-                         "expect exactly one file")))}
-       [file-upload/files-field {:e! e!
-                                 :project-id project-id
-                                 :task task
-                                 :single? true}]]]]))
 
 (defn file-replacement-modal-button
   [{:keys [e! task file small?]}]
@@ -330,17 +297,16 @@
                                 :on-click #(do (e! (file-controller/->UploadNewVersion file @selected-file))
                                                (reset! progress? true))}
                                (tr [:file-upload :replace-file-confirm])]]}
-
-      [DialogContentText
-       (if @progress?
-         [:div {:style {:display :flex
-                        :justify-content :center}}
-          [CircularProgress]]
+      (if @progress?
+        [:div {:style {:display :flex
+                       :justify-content :center}}
+         [CircularProgress]]
+        [DialogContentText
          (tr [:file-upload :replace-file-modal-body] {:file-full-name (:file/full-name file)
                                                       :selected-file-name (some-> @selected-file
                                                                                   :file-object
                                                                                   file-model/file-info
-                                                                                  :file/name)}))]]
+                                                                                  :file/name)})])]
      [when-authorized
       :file/upload task
       [file-upload/FileUpload
@@ -388,9 +354,8 @@
           [url/Link (merge
                      {:title description
                       :class (<class file-style/file-list-entity-name-style)
-                      :page :file :params {:file (:db/id file)
-                                            :activity (get-in file [:task/_files 0 :activity/_tasks 0 :db/id])
-                                            :task (get-in file [:task/_files 0 :db/id])}}
+                      :page :file
+                      :params {:file (:file/id file)}}
                       (when link-to-new-tab?
                         {:target :_blank}))
            description])
@@ -414,7 +379,7 @@
      (when actions?
        [:div {:class (<class file-style/file-actions-column-style action-column-width)}
         [:div {:style {:display :flex}}
-         (when allow-replacement-opts
+         (when (and allow-replacement-opts (file-model/editable? file))
            (with-meta
              [file-replacement-modal-button (merge allow-replacement-opts
                                                    {:file file
@@ -546,7 +511,7 @@
                            (if active?
                              [:strong description]
                              [url/Link {:page :file
-                                        :params {:file id}
+                                        :params {:file (:file/id f)}
                                         :class "file-list-name"}
                               description])]]
                          [:div {:style {:font-size "12px" :display :flex
@@ -792,24 +757,30 @@
    [typography/Heading3 (gstr/format "%s #%02d" name number)]
    [:div tab-links]])
 
-(defn file-page [e! {{file-id :file
-                      project-id :project} :params} _project]
+(defn- file-db-id
+  "Get the file's actual :db/id from page queried state."
+  [state]
+  (get-in state [:navigation :file]))
+
+(defn file-page [e! {{project-id :project} :params} project]
   ;; Update the file seen timestamp for this user
-  (e! (file-controller/->UpdateFileSeen file-id))
+  (e! (file-controller/->UpdateFileSeen (file-db-id project)))
   (let [edit-open? (r/atom false)]
     (r/create-class
       {:component-did-update
-       (fn [this [_ _ {{prev-file-id :file} :params} _ _ :as _prev-args] _ _]
-         (let [[_ _ {{curr-file-id :file} :params} _ _ :as _curr-args] (r/argv this)]
+       (fn [this [_ _ _ prev-project _ :as _prev-args] _ _]
+         (let [[_ _ _ curr-project _ :as _curr-args] (r/argv this)
+               prev-file-id (file-db-id prev-project)
+               curr-file-id (file-db-id curr-project)]
            (when (not= curr-file-id prev-file-id)
              (e! (file-controller/->UpdateFileSeen curr-file-id)))))
 
        :reagent-render
-       (fn [e! {{file-id :file
-                 task-id :task
-                 activity-id :activity} :params
-                :as app} project]
-         (let [activity (project-model/activity-by-id project activity-id)
+       (fn [e! app project]
+         (let [{file-id :file
+                task-id :task
+                activity-id :activity} (:navigation project)
+               activity (project-model/activity-by-id project activity-id)
                task (project-model/task-by-id project task-id)
                file (project-model/file-by-id project file-id false)]
            (if (nil? file)

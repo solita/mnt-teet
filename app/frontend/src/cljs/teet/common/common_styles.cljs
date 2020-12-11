@@ -75,7 +75,7 @@
    :box-shadow "none"})
 
 (defglobal global
-           [:body :html {:height "100%"}]
+           [:body :html {:height "100vh"}]
            [:p {:margin 0}]
            ;; Richtexteditor styling
            [:h1 {:margin-top 0}]
@@ -99,8 +99,7 @@
            ["input::-webkit-outer-spin-button" "input::-webkit-inner-spin-button" {"-webkit-appearance" "none" :margin 0}])
 
 (defn header-with-actions []
-  {:margin-top "2rem"
-   :justify-content :space-between
+  {:justify-content :space-between
    :display :flex})
 
 (defn space-between-center
@@ -301,3 +300,9 @@
 (defn no-break
   []
   {:white-space :nowrap})
+
+(defn flex-column-1
+  []
+  {:display :flex
+   :flex-direction :column
+   :flex 1})
