@@ -135,6 +135,7 @@
       (log/error (.getCause e) "Exception in THK import")
       (on-import-error (ex-data e)))))
 
+;; entrypoint for thk import lambda call (from s3 event)
 (defn process-thk-file
   [event]
   (future
@@ -179,6 +180,7 @@
     (catch Exception e
       (log/error "Error exporting projects CSV to S3: " (pr-str (ex-data e))))))
 
+;; entrypoint for thk-export lambda call (from cloudwatch cron event)
 (defn export-projects-to-thk
   [_event] ; ignore event (cron lambda trigger with no payload)
   (future
