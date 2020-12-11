@@ -2,7 +2,8 @@
   (:require [datomic.client.api :as d]
             [teet.cooperation.cooperation-model :as cooperation-model]
             [clojure.string :as str]
-            [teet.util.date :as date]))
+            [teet.util.date :as date]
+            [teet.util.datomic :as du]))
 
 (defn overview
   "Fetch cooperation overview for a project: returns all third parties with
@@ -104,3 +105,7 @@
                               :activity.name/land-acquisition))
                activity)))
          :db/id)))
+
+(defn application-project-id [db application-id]
+  (get-in (du/entity db application-id)
+          [:cooperation.3rd-party/_applications 0 :cooperation.3rd-party/project :thk.project/id]))
