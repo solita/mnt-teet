@@ -139,6 +139,7 @@
          (when (and (columns :delete) delete-action)
            [buttons/delete-button-with-confirm
             {:action #(delete-action file)
+             :modal-text (tr [:file :delete])
              :trashcan? true}])])]
      (when (columns :meta)
        [:div.file-row-meta {:class (<class file-style/file-row-meta)}
@@ -294,7 +295,9 @@
                               [buttons/button-primary
                                {:id (str "confirmation-confirm")
                                 :disabled @progress?
-                                :on-click #(do (e! (file-controller/->UploadNewVersion file @selected-file))
+                                :on-click #(do (e! (file-controller/->UploadNewVersion file
+                                                                                       @selected-file
+                                                                                       (:db/id task)))
                                                (reset! progress? true))}
                                (tr [:file-upload :replace-file-confirm])]]}
       (if @progress?
@@ -724,7 +727,8 @@
                   :on-change-event change-event
                   :save-event save-event
                   :cancel-event cancel-event
-                  :delete delete}
+                  :delete delete
+                  :delete-message (tr [:file :delete])}
        ^{:attribute :file/part}
        [select/form-select {:items parts
                             :format-item #(gstr/format "%s #%02d"

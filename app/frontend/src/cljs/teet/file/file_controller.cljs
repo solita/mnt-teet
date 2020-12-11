@@ -14,7 +14,7 @@
 (defrecord UploadFiles [files project-id task-id on-success progress-increment file-results]) ; Upload files (one at a time) to document
 (defrecord UploadFinished []) ; upload completed, can close dialog
 (defrecord UploadFileUrlReceived [file-data file document-id url on-success])
-(defrecord UploadNewVersion [file new-version])
+(defrecord UploadNewVersion [file new-version task-id])
 (defrecord UploadSuccess [file-id])
 (defrecord AfterUploadRefresh [])
 
@@ -101,12 +101,12 @@
           common-controller/refresh-fx))
 
   UploadNewVersion
-  (process-event [{:keys [file new-version]} app]
-    (log/info "STEP: UploadNewVersion file:" file ", new-version: " new-version)
+  (process-event [{:keys [file new-version task-id]} app]
+    (log/info "STEP: UploadNewVersion file:" file ", new-version: " new-version ", task-id: " task-id)
     (t/fx app
           {:tuck.effect/type :command!
            :command :file/replace
-           :payload {:task-id (common-controller/page-state app :navigation :task)
+           :payload {:task-id task-id
                      :file (merge (file-model/file-info (:file-object new-version))
                                   (select-keys new-version
                                                [:file/description

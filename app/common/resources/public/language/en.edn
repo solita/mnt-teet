@@ -574,6 +574,8 @@
   :old-version "Old version",
   :show-preview "Show preview",
   :edit "Edit file",
+  :delete
+  "Are you sure you want to delete all the versions of this file?",
   :upload-info "Uploaded {date} by {author}",
   :upload-success "File uploaded successfully",
   :hide-preview "Hide preview",

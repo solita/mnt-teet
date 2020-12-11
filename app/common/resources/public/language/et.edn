@@ -573,6 +573,8 @@
   :old-version "Vana versioon",
   :show-preview "Kuvan eelvaate",
   :edit "Muudan faili",
+  :delete
+  "Oled sa kindel, et soovid kõik selle faili versioonid kustutada?",
   :upload-info "Üles laadinud {author} {date} ",
   :upload-success "Fail edukalt üleslaetud",
   :hide-preview "Peidan eelvaate",
