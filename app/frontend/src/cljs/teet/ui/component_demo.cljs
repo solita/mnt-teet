@@ -15,7 +15,8 @@
             [teet.log :as log]
             [reagent.core :as r]
             [teet.ui.rich-text-editor :as rich-text-editor]
-            [teet.ui.text-field :as text-field]))
+            [teet.ui.text-field :as text-field]
+            [teet.ui.mentions :as mentions]))
 
 (defrecord TestFileUpload [files])
 (defrecord UploadFiles [files])
@@ -260,6 +261,14 @@
   [:div
    [ui-common/labeled-data {:label "Label" :data "Some textual data"}]])
 
+(defn- mentions-demo [e!]
+  (r/with-let [state (r/atom "Hey @[Carla Consultant](ccbedb7b-ab30-405c-b389-292cdfe85271) how are you?")]
+    (println "STATE:" @state)
+    [mentions/mentions-input
+     {:e! e!
+      :value @state
+      :on-change #(reset! state (-> % .-target .-value))}]))
+
 (def demos
   [{:id :rte
     :heading "Rich text editor"
@@ -293,7 +302,10 @@
     :component [labeled-data-demo]}
    {:id :container
     :heading "Container"
-    :component [container-demo]}])
+    :component [container-demo]}
+   {:id :mentions
+    :heading "Mentions input"
+    :component [mentions-demo]}])
 
 (defn demo
   [e! {query :query :as _app}]
@@ -308,5 +320,5 @@
        ^{:key (str id)}
        [:div
         [Heading2 heading]
-        component
+        (conj component e!)
         [Divider {:style {:margin "2rem 0"}}]])]))
