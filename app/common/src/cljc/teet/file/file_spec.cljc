@@ -17,6 +17,8 @@
 (s/def :file/upload (s/keys :req-un [::task-id ::file]
                             :opt-un [::previous-version-id]))
 
+(s/def :file/replace (s/keys :req-un [::task-id ::file ::previous-version-id]))
+
 (s/def :file/upload-attachment (s/keys :req-un [::file ::project-id]))
 
 (s/def :file/download-file (s/keys :req-un [::file-id]))
