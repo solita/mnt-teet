@@ -373,7 +373,7 @@
       [form/form-modal-button
        {:max-width "sm"
         :form-value response
-        :modal-title "Edit application response"
+        :modal-title (tr [:cooperation :edit-response-title])
         :form-component [application-response-form {:e! e!
                                                     :project-id (:thk.project/id project)
                                                     :application-id (:db/id application)}]
@@ -385,7 +385,7 @@
        (:cooperation.response/content response)]]
      [buttons/button-primary {:size :small
                               :end-icon (r/as-element [icons/content-add])}
-      "Add files"]]))
+      (tr [:cooperation :add-files])]]))
 
 (defn application-page [e! app {:keys [project overview third-party]}]
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
@@ -405,7 +405,7 @@
          [application-response e! application project]
          [form/form-modal-button
           {:max-width "sm"
-           :modal-title "Add application response"
+           :modal-title (tr [:cooperation :add-application-response])
            :form-component [application-response-form {:e! e!
                                                        :project-id (:thk.project/id project)
                                                        :application-id (:db/id application)}]
