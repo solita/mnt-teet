@@ -4,6 +4,7 @@
             [teet.activity.activity-model :as activity-model]
             [teet.thk.thk-mapping :as thk-mapping]
             [teet.meta.meta-query :as meta-query]
+            [taoensso.timbre :as log]
             [teet.integration.integration-id :as integration-id]))
 
 (defn- all-projects [db]
@@ -84,9 +85,18 @@
 
                  ;; TEET id for phase and activity
                  "phase_teetid"
-                 (str (integration-id/uuid->number (:integration/id lifecycle)))
+                 (do
+                   (when-not (:integration/id lifecycle)
+                     (log/warn "no integration id in lifecycle: "
+                               pr-str lifecycle
+                               " - data was: "
+                               data))
+                   (str (integration-id/uuid->number (:integration/id lifecycle))))
                  "activity_teetid"
-                 (str (integration-id/uuid->number (:integration/id activity)))
+                 (do
+                   (when-not (:integration/id activity)
+                     (log/warn "no integration id in activity: " activity))
+                   (str (integration-id/uuid->number (:integration/id activity))))
 
                  ;; Regular columns
                  (let [{task-mapping :task :as mapping}
