@@ -133,7 +133,8 @@
   :phone "Mobile",
   :phone2 "Phone"},
  :cooperation
- {:conclusion "Conclusion",
+ {:response "Response",
+  :conclusion "Conclusion",
   :applications "APPLICATIONS",
   :edit-response-title "Edit application response",
   :new-application "Add new application",

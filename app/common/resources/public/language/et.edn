@@ -133,7 +133,8 @@
   :phone "Mobiil",
   :phone2 "Telefon"},
  :cooperation
- {:conclusion "Järeldus",
+ {:response nil,
+  :conclusion "Järeldus",
   :applications "Taotlus",
   :edit-response-title nil,
   :new-application "Lisan uue pöördumise",
