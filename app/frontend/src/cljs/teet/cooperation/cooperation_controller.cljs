@@ -5,16 +5,12 @@
             [teet.localization :refer [tr]]
             [teet.common.common-controller :as common-controller]))
 
-(defrecord SaveApplication [application])
-
 (defrecord ThirdPartyCreated [name save-response])
 (defrecord ApplicationCreated [save-response])
 
+(defrecord ResponseCreated [response edit?])
+
 (extend-protocol t/Event
-  SaveApplication
-  (process-event [{application :application} app]
-    (log/info "Save application: " application)
-    app)
 
   ThirdPartyCreated
   (process-event [{name :name} {params :params :as app}]
@@ -29,4 +25,12 @@
              :page :cooperation-application
              :params {:project (:project params)
                       :third-party (js/decodeURIComponent (:third-party params))
-                      :application (str application-id)}}))))
+                      :application (str application-id)}})))
+
+  ResponseCreated
+  (process-event [{r :response
+                   edit? :edit?} {params :params :as app}]
+    (t/fx (snackbar-controller/open-snack-bar app (if edit?
+                                                    (tr [:cooperation :response-edited])
+                                                    (tr [:cooperation :new-response-created])))
+          common-controller/refresh-fx)))

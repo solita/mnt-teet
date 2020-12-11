@@ -220,7 +220,7 @@
 
 (defn date-input*
   "Combined text field and date picker component"
-  [{:keys [label error value on-change selectable? required end start min-date max-date error-text]}]
+  [{:keys [label error value on-change selectable? required read-only? end start min-date max-date error-text]}]
   (let [[txt set-txt!] (react/useState "")
         [open? set-open?] (react/useState false)
         [ref set-ref!] (react/useState nil)
@@ -245,17 +245,19 @@
                          identity))
                     #js [value])                            ;; need to use a javascript array
     [:div
-     [TextField {:label label
-                 :value (or txt "")
-                 :ref set-ref
-                 :error error
-                 :error-text error-text
-                 :required required
-                 :variant "outlined"
-                 :full-width true
-                 :on-change on-change-text
-                 :input-button-icon icons/action-calendar-today
-                 :input-button-click open-input}]
+     [TextField (merge {:label label
+                        :read-only? read-only?
+                        :value (or txt "")
+                        :ref set-ref
+                        :error error
+                        :error-text error-text
+                        :required required
+                        :variant "outlined"
+                        :full-width true
+                        :on-change on-change-text}
+                       (when-not read-only?
+                         {:input-button-icon icons/action-calendar-today
+                          :input-button-click open-input}))]
      [Popover {:open open?
                :anchorEl ref
                :anchorOrigin {:vertical "bottom"
