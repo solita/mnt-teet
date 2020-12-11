@@ -430,25 +430,6 @@
       (->> files
            (filtered-by @filter-atom))]]))
 
-(defn file-table
-  ([files] (file-table {} files))
-  ([{:keys [filtering?]
-     :or {filtering? true} :as opts} files]
-   (r/with-let [items-for-sort-select (sort-items)
-                filter-atom (r/atom "")
-                sort-by-atom (r/atom (first items-for-sort-select))]
-     [:<>
-      (when filtering?
-        [file-filter-and-sorter
-         filter-atom
-         sort-by-atom
-         items-for-sort-select])
-      [:div.file-table-files
-       (->> files
-            (filtered-by @filter-atom)
-            (sorted-by @sort-by-atom)
-            (mapc (r/partial file-row opts)))]])))
-
 (defn file-upload-button []
   [buttons/button-primary {:start-icon (r/as-element
                                         [icons/file-cloud-upload])}
