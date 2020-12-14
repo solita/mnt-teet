@@ -40,11 +40,9 @@
   [id cad-units]
   (map
     (fn [unit]
-      (let [u (assoc unit :selected? (and (= (:teet-id unit)
+      (assoc unit :selected? (and (= (:teet-id unit)
                                      id)
-                                  (not (:selected? unit))))]
-      (println (str "Unit " (:teet-id unit) " toggeled!! to " (:selected? u)))
-             u))
+                                  (not (:selected? unit)))))
     cad-units))
 
 (defn cadastral-unit-dom-id [id]
@@ -171,8 +169,8 @@
                      (not selected?))
               (.set feature "selected" true)
               (.set feature "selected" false)))))
-      (println "ToggleLandUnit for :teet-id " (:teet-id unit))
-      (update-in app [:route :project :land/units]
+      (update-in app
+                 [:route :project :land/units]
                  (partial toggle-selected-unit (:teet-id unit)))))
 
   ToggleOpenEstate
