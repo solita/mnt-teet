@@ -116,7 +116,7 @@
        date])]])
 
 (defn- application-information [{:cooperation.application/keys [response] :as application}]
-  [:div {:<class (common-styles/margin-bottom 1)}
+  [:div {:class (common-styles/margin-bottom 1)}
    (if response
      (let [{:cooperation.response/keys [date valid-until]} response]
        [common/basic-information-row
@@ -167,8 +167,8 @@
     [:ul {:class (<class third-party-list)}
      (for [{id :db/id
             :cooperation.3rd-party/keys [name]} third-parties]
-       ^{:key (str id)}
        (let [currently-selected-third-party? (= name selected-third-party-name)]
+         ^{:key (str id)}
          [:li.project-third-party
           [url/Link {:page :cooperation-third-party
                      :class (<class common-styles/white-link-style
@@ -299,12 +299,15 @@
 (defn application-response-change-fn
   [val change]
   (-> (merge val change)
-       (update :cooperation.response/valid-months #(and (not-empty %) (js/parseInt %)))
+       (update :cooperation.response/valid-months #(and (or (number? %)
+                                                            (not-empty %))
+                                                        (js/parseInt %)))
        cu/without-empty-vals
        cooperation-model/with-valid-until))
 
 (defn- application-response-form [{:keys [e! project-id application-id]} close-event form-atom]
-  (let [max-months 1200]
+  (let [max-months 1200
+        min-months 0]
     [form/form2 {:e! e!
                  :value @form-atom
                  :on-change-event (form/update-atom-event form-atom application-response-change-fn)
@@ -344,11 +347,11 @@
                       :validate (fn [val]
                                   (when (and (some? val) (not (str/blank? val)))
                                     (let [val (js/parseInt val)]
-                                      (when (or (js/isNaN val) (>= val max-months))
+                                      (when (or (js/isNaN val) (>= val max-months) (>= min-months val))
                                         true))))}
           [text-field/TextField {:type :number
                                  :max max-months
-                                 :min 0}]]]
+                                 :min min-months}]]]
 
         [Grid {:item true :xs 6
                :style {:display :flex
