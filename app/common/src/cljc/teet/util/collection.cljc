@@ -1,9 +1,20 @@
 (ns teet.util.collection
   "Collection utilities"
-  (:require [clojure.walk :as walk]))
+  (:require [clojure.walk :as walk]
+            [clojure.string :as str]))
 
 (defn contains-value? [coll v]
   (some #(when (= % v) true) coll))
+
+(defn keep-matching-vals
+  "Given predicate and map returns a new map with only keys whose value matches predicate"
+  [pred m]
+  (reduce-kv (fn [m k v]
+               (if (pred v)
+                 (assoc m k v)
+                 m))
+             {}
+             m))
 
 (defn count-by
   "Group by and count.
@@ -22,15 +33,9 @@
               1
               0))))
 
-(defn without-nils
-  "Nonrecursively remove keys with nil values"
-  [m]
-  (reduce-kv (fn [m k v]
-               (if (some? v)
-                 (assoc m k v)
-                 m))
-             {}
-             m))
+(def ^{:doc "Nonrecursively remove keys with nil values"}
+  without-nils
+  (partial keep-matching-vals some?))
 
 (defn nil-keys
   "Returns set of keys that are nil in map"
@@ -188,3 +193,12 @@
          x
          replacement)))
    form))
+
+(def ^{:dov "remove keys with nil or blank string value from map"}
+  without-empty-vals
+  (partial keep-matching-vals #(or (and
+                                    (string? %)
+                                    (not (str/blank? %)))
+                                  (and
+                                    (some? %)
+                                    (not (string? %))))))

@@ -424,9 +424,11 @@
   ([opts data]
    [:div {:class (<class common-styles/flex-row-wrap)}
     (doall
-      (for [[label data] data]
+      (for [[label data row-options] data]
         ^{:key label}
-        [:div {:class (<class info-row-item-style (:right-align-last? opts))}
+        [:div (merge row-options
+                     {:class [(<class info-row-item-style (:right-align-last? opts))
+                              (:class row-options)]})
          [typography/SectionHeading label]
          [:p data]]))]))
 

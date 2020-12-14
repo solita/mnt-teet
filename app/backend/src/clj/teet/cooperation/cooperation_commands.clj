@@ -2,7 +2,8 @@
   "Commands for cooperation entities"
   (:require [teet.db-api.core :as db-api :refer [defcommand]]
             [teet.cooperation.cooperation-db :as cooperation-db]
-            [teet.meta.meta-model :as meta-model]))
+            [teet.meta.meta-model :as meta-model]
+            [teet.util.collection :as cu]))
 
 (defcommand :cooperation/create-3rd-party
   {:doc "Create a new third party in project."
@@ -47,3 +48,25 @@
                 :cooperation.application/activity (cooperation-db/application-matched-activity-id db project-id application)}
                (meta-model/creation-meta user))]}]
      (db-api/bad-request! "No such 3rd party"))})
+
+(defcommand :cooperation/create-application-response
+  {:doc "Create a new response to the application"
+   :context {:keys [user db]}
+   :payload {project-id :thk.project/id
+             application-id :application-id
+             response-payload :form-data}
+   :project-id [:thk.project/id (cooperation-db/application-project-id db application-id)]
+   :authorization {:cooperation/application-approval {}}
+   :pre []
+   :transact
+   [{:db/id application-id
+     :cooperation.application/response
+     (merge (cu/without-nils
+              (select-keys response-payload
+                           [:cooperation.response/valid-months
+                            :cooperation.response/valid-until
+                            :cooperation.response/date
+                            :cooperation.response/content
+                            :cooperation.response/status]))
+            {:db/id "new-application-response"}
+            (meta-model/creation-meta user))}]})

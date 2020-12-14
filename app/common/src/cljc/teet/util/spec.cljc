@@ -31,6 +31,36 @@
             (concat (:req keys) (:opt keys))))))
 
 
+(defn coerce-dispatch [spec-description]
+  (if (and (seq? spec-description) (= (first spec-description) 'and))
+    (second spec-description)
+    spec-description))
+
+(defmulti coerce (fn [spec-description _value]
+                   (coerce-dispatch spec-description)))
+
+(defmethod coerce :default
+  [_ value]
+  value)
+
+(defmethod coerce 'integer?
+  [_ value]
+  (if (integer? value)
+    value
+    (#?(:cljs js/parseInt
+        :clj Long/parseLong)
+      (str value))))
+
+(defn coerce-by-spec
+  [m]
+  (reduce-kv
+    (fn [m k v]
+      (if-let [spec-description (get-spec k)]
+        (assoc m k (coerce spec-description v))
+        (assoc m k v)))
+    {}
+    m))
+
 (defn select-by-spec
   "Select keys by spec, recursively walks through data
   and selects keys on maps that are included in spec.
