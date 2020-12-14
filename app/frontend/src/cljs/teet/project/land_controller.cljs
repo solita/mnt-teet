@@ -50,6 +50,8 @@
 (defn cadastral-unit-dom-id [id]
   (str "cadastral-unit-" id))
 
+(defn estate-dom-id [id]
+  (str "estate-" id))
 
 (defn unit-last-updated [unit]
   (let [timestamp-strs (-> unit
@@ -367,7 +369,10 @@
             (when linked-estate
               (fn [e!]
                 (let [result (e! (->ToggleOpenEstate linked-estate))]
-                  (println (str "FetchRelatedEstatesResponse->ToggleOpenEstate for estate " linked-estate))
+                  (js/setTimeout
+                    #(animate/scroll-into-view!
+                       (js/document.getElementById
+                         (estate-dom-id linked-estate))) 1000)
                   result
                   ))))))
 

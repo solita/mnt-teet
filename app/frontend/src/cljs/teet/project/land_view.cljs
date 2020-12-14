@@ -408,7 +408,7 @@
                   :on-click       #(e! (land-controller/->ToggleLandUnit unit)
                                        (animate/scroll-into-view-by-id! (land-controller/cadastral-unit-dom-id teet-id) {:behavior :smooth})
                                        (js/setTimeout (fn [] (animate/focus-by-id! (land-controller/cadastral-unit-dom-id teet-id))) 500)
-                                       (println "Animation done!!!"))
+                                       (println "Cadastral Unit Animation done!!!"))
                   :class          (<class cadastral-unit-style selected?)}
       [typography/SectionHeading {:style {:text-align :left}}
        (str (:L_AADRESS unit)
@@ -495,7 +495,11 @@
       [:<>
        (if estate-id
          [ButtonBase {:class (<class group-style)
-                      :on-click (e! land-controller/->ToggleOpenEstate estate-id)}
+                      :on-click #(e! (land-controller/->ToggleOpenEstate estate-id)
+                                     (animate/scroll-into-view-by-id! (land-controller/estate-dom-id estate-id) {:behavior :smooth})
+                                     (js/setTimeout (fn [] (animate/focus-by-id! (land-controller/estate-dom-id estate-id))) 500)
+                                     (println "Estate Animation done!!!"))
+                      :id (land-controller/estate-dom-id estate-id)}
 
           [typography/SectionHeading (tr [:land :estate]) " " estate-id]
           [:span (count units) " " (if (= 1 (count units))
