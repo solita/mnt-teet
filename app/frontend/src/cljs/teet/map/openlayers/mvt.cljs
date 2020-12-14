@@ -5,7 +5,7 @@
               [ol.format.MVT]
               [ol.extent :as ol-extent]
               [teet.map.openlayers.layer :refer [Layer]]
-              [cljs.core.async :as async]
+              [cljs.core.async :as async :refer [<!]]
               [clojure.string :as str]
               [ol.style.Style]
               [ol.style.Text]
