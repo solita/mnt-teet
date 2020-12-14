@@ -194,19 +194,18 @@
                        (some #(when (= (:db/id file)
                                        (get-in % [:file/previous-version :db/id])) %)
                              next-versions))
-        meta-files (vec
-                       (for [f first-versions
-                             :let [versions (filter (complement :meta/deleted?)
-                                                    (reverse
-                                                      (take-while some? (iterate next-version f))))
-                                   [latest-version & previous-versions] versions]
-                             :when latest-version]
-                         (assoc latest-version
-                           :file/full-name (filename-metadata/metadata->filename
-                                             (file-metadata db (:db/id latest-version)))
-                           :versions previous-versions)))]
-      (sort-by :file/name meta-files)
-      ))
+    meta-files (vec
+     (for [f first-versions
+           :let [versions (filter (complement :meta/deleted?)
+                                  (reverse
+                                   (take-while some? (iterate next-version f))))
+                 [latest-version & previous-versions] versions]
+           :when latest-version]
+       (assoc latest-version
+              :file/full-name (filename-metadata/metadata->filename
+                               (file-metadata-by-id db (:db/id latest-version)))
+              :versions previous-versions)))]
+    (sort-by :file/name meta-files)))
 
 (defn land-files-by-project-and-sequence-number [db user project-id sequence-number]
   (file-listing
