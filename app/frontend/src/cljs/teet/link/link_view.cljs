@@ -6,6 +6,7 @@
             [teet.localization :as localization :refer [tr tr-enum]]
             [teet.user.user-model :as user-model]
             [teet.ui.format :as format]
+            [teet.ui.buttons :as buttons]
             [teet.common.common-styles :as common-styles]
             [herb.core :refer [<class]]
             [teet.ui.util :refer [mapc]]
@@ -115,10 +116,12 @@
     [display link]]
    (when editable?
      [:div {:style {:flex 0 :align-self :center}}
-      [IconButton
-       {:on-click #(e! (link-controller/->DeleteLink from to type id
-                                                     in-progress-atom))}
-       [icons/content-clear]]])])
+      [buttons/delete-button-with-confirm {:clear? true
+                                           :id (str "link-delete-button-" id)
+                                           :icon-position :start
+                                           :action #(e! (link-controller/->DeleteLink from to type id
+                                                                                      in-progress-atom))}]
+      ])])
 
 (def type-options [:task :file :cadastral-unit :estate])
 
