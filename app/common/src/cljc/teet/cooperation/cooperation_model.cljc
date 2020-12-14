@@ -31,6 +31,19 @@
           :opt [:cooperation.application/response-deadline
                 :cooperation.application/comment]))
 
+(s/def :cooperation.response/status ::du/enum)
+(s/def :cooperation.response/date inst?)
+(s/def :cooperation.response/valid-until inst?)
+
+#_(s/def :cooperation.response/valid-months (s/and integer? #(< % 120)))
+;; ^ commented out because touched empty form fields have value "" and not nil
+
+(s/def ::response-form
+  (s/keys :req [:cooperation.response/status
+                :cooperation.response/date]
+          :opt [:cooperation.response/valid-months
+                :cooperation.response/valid-until
+                :cooperation.response/content]))
 
 (defn valid-until
   "Calculate response valid-until date based on date and valid months."
@@ -44,7 +57,7 @@
   "Update valid-until value for cooperation response."
   [response]
   (if (and (contains? response :cooperation.response/date)
-           (contains? response :cooperation.response/valid-months))
+           (number? (:cooperation.response/valid-months response)))
     (assoc response :cooperation.response/valid-until (valid-until response))
     (dissoc response :cooperation.response/valid-until)))
 
@@ -69,5 +82,9 @@
    :cooperation.application/response-deadline
    :cooperation.application/comment
    {:cooperation.application/response
-    [:cooperation.response/date
-     :cooperation.response/valid-until]}])
+    [:db/id
+     :cooperation.response/date
+     :cooperation.response/status
+     :cooperation.response/content
+     :cooperation.response/valid-until
+     :cooperation.response/valid-months]}])

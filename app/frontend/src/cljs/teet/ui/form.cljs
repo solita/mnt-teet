@@ -219,35 +219,36 @@
                            field-info
                            {:attribute field-info})]
     (r/create-class
-     {:component-did-mount
-      (fn [_]
-        (swap! current-fields assoc attribute field-info))
-      :component-will-unmount
-      (fn [_]
-        (swap! current-fields dissoc attribute))
-      :reagent-render
-      (fn [_ field {:keys [update-attribute-fn value]}]
-        (let [value (attribute-value value attribute
-                                     (default-value (first field)))
-              error-text (and validate-field
-                              (validate-field value))
-              error? (boolean
-                      (or error-text
-                          (some @invalid-attributes
-                                (if (vector? attribute)
-                                  attribute
-                                  [attribute]))))
-              opts {:value value
-                    :on-change (r/partial update-attribute-fn attribute)
-                    :error error?
-                    :error-text error-text
-                    :required (required-field? attribute required-fields)}]
-          (add-validation
-           (update field 1 (fn [{label :label :as input-opts}]
-                             (merge input-opts opts
-                                    (when-not label
-                                      {:label (tr [:fields attribute])}))))
-           (partial validate-attribute-fn invalid-attributes validate-field) attribute)))})))
+      {:component-did-mount
+       (fn [_]
+         (swap! current-fields assoc attribute field-info))
+       :component-will-unmount
+       (fn [_]
+         (swap! current-fields dissoc attribute))
+       :reagent-render
+       (fn [_ field {:keys [update-attribute-fn value]}]
+         (let [value (attribute-value value attribute
+                                      (default-value (first field)))
+               error-text (and validate-field
+                               (validate-field value))
+               error? (boolean
+                        (or error-text
+                            (some @invalid-attributes
+                                  (if (vector? attribute)
+                                    attribute
+                                    [attribute]))))
+               opts {:value value
+                     :on-change (r/partial update-attribute-fn attribute)
+                     :error error?
+                     :error-text error-text
+                     :required (required-field? attribute required-fields)}]
+           [:div {:data-form-attribute (str attribute)}
+            (add-validation
+                   (update field 1 (fn [{label :label :as input-opts}]
+                                     (merge input-opts opts
+                                            (when-not label
+                                              {:label (tr [:fields attribute])}))))
+                   (partial validate-attribute-fn invalid-attributes validate-field) attribute)]))})))
 
 (defn field
   "Form component in form2. Field-info is the attribute

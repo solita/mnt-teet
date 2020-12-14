@@ -15,13 +15,16 @@
             [teet.ui.form :as form]
             [teet.ui.format :as format]
             [teet.ui.icons :as icons]
-            [teet.ui.material-ui :refer [Card CardHeader CardContent]]
+            [teet.ui.material-ui :refer [Grid Divider]]
             [teet.ui.select :as select]
             [teet.ui.text-field :as text-field]
             [teet.theme.theme-colors :as theme-colors]
             [teet.ui.typography :as typography]
             [teet.ui.url :as url]
-            [teet.user.user-model :as user-model]))
+            [teet.user.user-model :as user-model]
+            [teet.ui.rich-text-editor :as rich-text-editor]
+            [teet.util.collection :as cu]
+            [clojure.string :as str]))
 
 
 (defn- third-party-form [{:keys [e! project-id]} close-event form-atom]
@@ -79,15 +82,16 @@
 
 (defn response-status
   [response]
-  (let [color (case (:cooperation.response/status response)
+  (let [color (case (or (get-in response [:cooperation.response/status :db/ident]) (:cooperation.response/status response))
                 :cooperation.response.status/no-objection theme-colors/success
                 :cooperation.response.status/no-objection-with-terms theme-colors/warning
                 :cooperation.response.status/objection theme-colors/error
                 :cooperation.response.status/no-response theme-colors/error
                 theme-colors/black-coral-1)]
-    [color-and-status color (if response
-                              (tr-enum (:cooperation.response/status response))
-                              (tr [:cooperation :applied]))]))
+    [:div
+     [color-and-status color (if response
+                               (tr-enum (:cooperation.response/status response))
+                               (tr [:cooperation :applied]))]]))
 
 (defn position-status
   [position]
@@ -112,27 +116,30 @@
        date])]])
 
 (defn- application-information [{:cooperation.application/keys [response] :as application}]
-  (if response
-    (let [{:cooperation.response/keys [status date valid-until]} response]
-      [common/basic-information-row
-       {:right-align-last? false}
-       [[(tr [:cooperation :response-of-third-party])
-         ;; colored circle based on status
-         (tr-enum status)]
-        [(tr [:fields :cooperation.response/date])
-         (format/date date)]
-        [(tr [:fields :cooperation.response/valid-until])
-         (format/date valid-until) ]]])
-    (let [{:cooperation.application/keys [date response-deadline]} application]
-      [common/basic-information-row
-       {:right-align-last? false}
-       [[(tr [:cooperation :response-of-third-party])
-         ;; colored circle based on status
-         [response-status response]]
-        [(tr [:fields :cooperation.application/date])
-         (format/date date)]
-        [(tr [:fields :cooperation.application/response-deadline])
-         (or (format/date response-deadline) (tr [:cooperation :no-deadline]))]]])))
+  [:div {:<class (common-styles/margin-bottom 1)}
+   (if response
+     (let [{:cooperation.response/keys [date valid-until]} response]
+       [common/basic-information-row
+        {:right-align-last? false}
+        [[(tr [:cooperation :response-of-third-party])
+          ;; colored circle based on status
+          [response-status response]]
+         [(tr [:fields :cooperation.response/date])
+          (format/date date)]
+         (when valid-until
+           [(tr [:fields :cooperation.response/valid-until])
+            (format/date valid-until)
+            {:data-cy-test "valid-until"}])]])
+     (let [{:cooperation.application/keys [date response-deadline]} application]
+       [common/basic-information-row
+        {:right-align-last? false}
+        [[(tr [:fields :cooperation.response/status])
+          ;; colored circle based on status
+          [response-status response]]
+         [(tr [:fields :cooperation.application/date])
+          (format/date date)]
+         [(tr [:fields :cooperation.application/response-deadline])
+          (or (format/date response-deadline) (tr [:cooperation :no-deadline]))]]]))])
 
 (defn application-list-item
   [{:keys [parent-link-comp]} {:cooperation.application/keys [activity] :as application}]
@@ -289,8 +296,95 @@
                              (tr [:cooperation :new-application])]}]]
        [applications third-party]]]]))
 
-(defn- application-response-form [_close-event _form-atom]
-  [:div "TODO: application response form"])
+(defn application-response-change-fn
+  [val change]
+  (-> (merge val change)
+       (update :cooperation.response/valid-months #(and (not-empty %) (js/parseInt %)))
+       cu/without-empty-vals
+       cooperation-model/with-valid-until))
+
+(defn- application-response-form [{:keys [e! project-id application-id]} close-event form-atom]
+  [form/form2 {:e! e!
+               :value @form-atom
+               :on-change-event (form/update-atom-event form-atom application-response-change-fn)
+               :cancel-event close-event
+               :save-event #(common-controller/->SaveForm
+                              :cooperation/create-application-response
+                              {:thk.project/id project-id
+                               :application-id application-id
+                               :form-data (common-controller/prepare-form-data
+                                            (-> @form-atom
+                                                (update :cooperation.response/content
+                                                        (fn [editor-state]
+                                                          (if (or (string? editor-state) (nil? editor-state))
+                                                            editor-state
+                                                            (rich-text-editor/editor-state->markdown editor-state))))))}
+                              (fn [response]
+                                (fn [e!]
+                                  (e! (close-event))
+                                  (e! (cooperation-controller/->ResponseCreated response (boolean (:db/id @form-atom)))))))
+               :spec ::cooperation-model/response-form}
+   [:div
+    [:div {:class (<class common-styles/gray-container-style)}
+     [Grid {:container true :spacing 3}
+      [Grid {:item true :xs 12}
+       [form/field :cooperation.response/status
+        [select/select-enum {:e! e!
+                             :attribute :cooperation.response/status}]]]
+
+      [Grid {:item true :xs 12}
+       [form/field :cooperation.response/date
+        [date-picker/date-input {}]]]
+
+      [Grid {:item true :xs 6
+             :style {:display :flex
+                     :align-items :flex-end}}
+       [form/field {:attribute :cooperation.response/valid-months
+                    :validate (fn [val]
+                                (when (and (some? val) (not (str/blank? val)))
+                                  (let [val (js/parseInt val)]
+                                    (when (or (js/isNaN val) (> val 1200))
+                                      true))))}
+        [text-field/TextField {:type :number
+                               :max 1000
+                               :min 0}]]]
+
+      [Grid {:item true :xs 6
+             :style {:display :flex
+                     :align-items :flex-end}}
+       (when (:cooperation.response/valid-until @form-atom)
+         [form/field :cooperation.response/valid-until
+          [date-picker/date-input {:read-only? true}]])]
+      [Grid {:item true :xs 12}
+       [form/field :cooperation.response/content
+        [rich-text-editor/rich-text-field {}]]]]]
+    [form/footer2]]])
+
+(defn application-response
+  [e! application project]
+  (let [response (:cooperation.application/response application)]
+    [:div
+     [Divider {:style {:margin "1.5rem 0"}}]
+     [:div {:class [(<class common-styles/flex-row-space-between)
+                    (<class common-styles/margin-bottom 1)]}
+      [typography/Heading2 (tr [:cooperation :response])]
+
+      [form/form-modal-button
+       {:max-width "sm"
+        :form-value response
+        :modal-title (tr [:cooperation :edit-response-title])
+        :form-component [application-response-form {:e! e!
+                                                    :project-id (:thk.project/id project)
+                                                    :application-id (:db/id application)}]
+        :button-component [buttons/button-secondary {:class :edit-response
+                                                     :size :small}
+                           (tr [:buttons :edit])]}]]
+     [:div {:class (<class common-styles/margin-bottom 1)}
+      [rich-text-editor/display-markdown
+       (:cooperation.response/content response)]]
+     [buttons/button-primary {:size :small
+                              :end-icon (r/as-element [icons/content-add])}
+      (tr [:cooperation :add-files])]]))
 
 (defn application-page [e! app {:keys [project overview third-party]}]
   (let [application (get-in third-party [:cooperation.3rd-party/applications 0])]
@@ -298,18 +392,21 @@
      [cooperation-page-structure
       e! app project overview
       [:<>
-       [common/header-with-actions (:cooperation.3rd-party/name third-party)]
-       [typography/Heading2
-        (tr-enum (:cooperation.application/type application)) " / "
-        (tr-enum (:cooperation.application/response-type application))]
-       ;; FIXME: show activity name as subheading
-       [:br]
-       [form/form-modal-button
-        {:max-width "sm"
-         :form-component [application-response-form]
-         :button-component [buttons/button-primary {:class :enter-response}
-                            (tr [:cooperation :enter-response])]}]
-       [:br]
-       "3rd party:" (pr-str third-party)
-       [:br]
-       "application:" (pr-str application)]]]))
+       [:div {:class (<class common-styles/margin-bottom 1)}
+        [common/header-with-actions (:cooperation.3rd-party/name third-party)]
+        [typography/Heading2
+         (tr-enum (:cooperation.application/type application)) " / "
+         (tr-enum (:cooperation.application/response-type application))]
+        [typography/SectionHeading {:style {:text-transform :uppercase}}
+         (tr-enum (get-in application [:cooperation.application/activity :activity/name]))]]
+       [application-information application]
+       (if (:cooperation.application/response application)
+         [application-response e! application project]
+         [form/form-modal-button
+          {:max-width "sm"
+           :modal-title (tr [:cooperation :add-application-response])
+           :form-component [application-response-form {:e! e!
+                                                       :project-id (:thk.project/id project)
+                                                       :application-id (:db/id application)}]
+           :button-component [buttons/button-primary {:class :enter-response}
+                              (tr [:cooperation :enter-response])]}])]]]))

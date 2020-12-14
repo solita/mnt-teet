@@ -1,7 +1,7 @@
 (ns teet.ui.component-demo
   (:require [clojure.string :as str]
             [teet.ui.material-ui :refer [Button Fab Divider Checkbox]]
-            [teet.ui.text-field :refer [TextField]]
+            [teet.ui.text-field :refer [TextField] :as text-field]
             [teet.ui.file-upload :as file-upload]
             [teet.ui.icons :as icons]
             [teet.ui.skeleton :as skeleton]
@@ -15,7 +15,7 @@
             [teet.log :as log]
             [reagent.core :as r]
             [teet.ui.rich-text-editor :as rich-text-editor]
-            [teet.ui.text-field :as text-field]))
+            [teet.ui.mentions :as mentions]))
 
 (defrecord TestFileUpload [files])
 (defrecord UploadFiles [files])
@@ -53,8 +53,7 @@
                  (if (.-ok resp)
                    (log/info "Upload ok" (.-status resp))
                    (log/warn "Upload failed: " (.-status resp) (.-statusText resp))))))
-    app)
-  )
+    app))
 
 (defn input-fields
   []
@@ -184,14 +183,16 @@
    [Checkbox {:color :secondary}]
    [Checkbox {:color :primary :disabled true}]])
 
-(defn- file-upload-demo []
-  [:div {:style {:display "flex"
+(defn- file-upload-demo [e!]
+  [:div {:id "file-upload-drag-container"
+         :style {:display "flex"
                  :justify-content "space-evenly"
                  :margin-bottom "2rem"}}
-   #_[file-upload/FileUploadButton {:id "upload-btn"
-                                    :on-drop #(e! (->UploadFiles %) #_(->TestFileUpload %))
-                                    :drop-message "Drop it like it's hot"}
-      "Click to upload"]])
+   [file-upload/FileUploadButton {:id "upload-btn"
+                                  :drag-container-id "file-upload-drag-container"
+                                  :on-drop #(e! (->UploadFiles %) #_(->TestFileUpload %))
+                                  :drop-message "Drop it like it's hot"}
+    "Click to upload"]])
 
 (defn- itemlist-demo []
   [:<>
@@ -260,6 +261,23 @@
   [:div
    [ui-common/labeled-data {:label "Label" :data "Some textual data"}]])
 
+(defn- mentions-demo [e!]
+  (r/with-let [empty-state (r/atom "")
+               existing-state (r/atom "Hey @[Carla Consultant](ccbedb7b-ab30-405c-b389-292cdfe85271) how are you?")]
+    [:<>
+     [:div {:data-cy "mentions-empty"}
+      "Mentions with initially empty data: "
+      [mentions/mentions-input
+       {:e! e!
+        :value @empty-state
+        :on-change #(reset! empty-state (-> % .-target .-value))}]]
+     [:div {:data-cy "mentions-existing"}
+      "Mentions with existing data: "
+      [mentions/mentions-input
+       {:e! e!
+        :value @existing-state
+        :on-change #(reset! existing-state (-> % .-target .-value))}]]]))
+
 (def demos
   [{:id :rte
     :heading "Rich text editor"
@@ -293,7 +311,10 @@
     :component [labeled-data-demo]}
    {:id :container
     :heading "Container"
-    :component [container-demo]}])
+    :component [container-demo]}
+   {:id :mentions
+    :heading "Mentions input"
+    :component [mentions-demo]}])
 
 (defn demo
   [e! {query :query :as _app}]
@@ -308,5 +329,5 @@
        ^{:key (str id)}
        [:div
         [Heading2 heading]
-        component
+        (conj component e!)
         [Divider {:style {:margin "2rem 0"}}]])]))
