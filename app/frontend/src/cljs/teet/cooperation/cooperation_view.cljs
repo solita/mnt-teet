@@ -118,7 +118,7 @@
 (defn- application-information [{:cooperation.application/keys [response] :as application}]
   [:div {:<class (common-styles/margin-bottom 1)}
    (if response
-     (let [{:cooperation.response/keys [status date valid-until]} response]
+     (let [{:cooperation.response/keys [date valid-until]} response]
        [common/basic-information-row
         {:right-align-last? false}
         [[(tr [:cooperation :response-of-third-party])
