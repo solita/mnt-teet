@@ -262,12 +262,21 @@
    [ui-common/labeled-data {:label "Label" :data "Some textual data"}]])
 
 (defn- mentions-demo [e!]
-  (r/with-let [state (r/atom "Hey @[Carla Consultant](ccbedb7b-ab30-405c-b389-292cdfe85271) how are you?")]
-    (println "STATE:" @state)
-    [mentions/mentions-input
-     {:e! e!
-      :value @state
-      :on-change #(reset! state (-> % .-target .-value))}]))
+  (r/with-let [empty-state (r/atom "")
+               existing-state (r/atom "Hey @[Carla Consultant](ccbedb7b-ab30-405c-b389-292cdfe85271) how are you?")]
+    [:<>
+     [:div {:data-cy "mentions-empty"}
+      "Mentions with initially empty data: "
+      [mentions/mentions-input
+       {:e! e!
+        :value @empty-state
+        :on-change #(reset! empty-state (-> % .-target .-value))}]]
+     [:div {:data-cy "mentions-existing"}
+      "Mentions with existing data: "
+      [mentions/mentions-input
+       {:e! e!
+        :value @existing-state
+        :on-change #(reset! existing-state (-> % .-target .-value))}]]]))
 
 (def demos
   [{:id :rte
