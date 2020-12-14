@@ -1,7 +1,7 @@
 (ns teet.ui.component-demo
   (:require [clojure.string :as str]
             [teet.ui.material-ui :refer [Button Fab Divider Checkbox]]
-            [teet.ui.text-field :refer [TextField]]
+            [teet.ui.text-field :refer [TextField] :as text-field]
             [teet.ui.file-upload :as file-upload]
             [teet.ui.icons :as icons]
             [teet.ui.skeleton :as skeleton]
@@ -15,7 +15,6 @@
             [teet.log :as log]
             [reagent.core :as r]
             [teet.ui.rich-text-editor :as rich-text-editor]
-            [teet.ui.text-field :as text-field]
             [teet.ui.mentions :as mentions]))
 
 (defrecord TestFileUpload [files])
@@ -54,8 +53,7 @@
                  (if (.-ok resp)
                    (log/info "Upload ok" (.-status resp))
                    (log/warn "Upload failed: " (.-status resp) (.-statusText resp))))))
-    app)
-  )
+    app))
 
 (defn input-fields
   []
@@ -185,14 +183,16 @@
    [Checkbox {:color :secondary}]
    [Checkbox {:color :primary :disabled true}]])
 
-(defn- file-upload-demo []
-  [:div {:style {:display "flex"
+(defn- file-upload-demo [e!]
+  [:div {:id "file-upload-drag-container"
+         :style {:display "flex"
                  :justify-content "space-evenly"
                  :margin-bottom "2rem"}}
-   #_[file-upload/FileUploadButton {:id "upload-btn"
-                                    :on-drop #(e! (->UploadFiles %) #_(->TestFileUpload %))
-                                    :drop-message "Drop it like it's hot"}
-      "Click to upload"]])
+   [file-upload/FileUploadButton {:id "upload-btn"
+                                  :drag-container-id "file-upload-drag-container"
+                                  :on-drop #(e! (->UploadFiles %) #_(->TestFileUpload %))
+                                  :drop-message "Drop it like it's hot"}
+    "Click to upload"]])
 
 (defn- itemlist-demo []
   [:<>
