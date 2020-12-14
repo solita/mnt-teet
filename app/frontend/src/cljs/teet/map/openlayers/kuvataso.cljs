@@ -6,7 +6,7 @@
             #_[teet.asiakas.kommunikaatio :refer [karttakuva-url]]
             [teet.map.openlayers.edistymispalkki :as palkki]
             [teet.map.openlayers.layer :refer [Layer]]
-            [cljs.core.async :as async]
+            [cljs.core.async :as async :refer [<!]]
             [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
